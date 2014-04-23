@@ -24,20 +24,30 @@ import weeutil.weeutil
 
 import gen_fake_data    # @UnresolvedImport
 
+config_path = "testgen.conf"
+cwd = None
+
 class Common(unittest.TestCase):
 
     def setUp(self):
         global config_path
+        global cwd
         
         weewx.debug = 1
 
         syslog.openlog('test_templates', syslog.LOG_CONS)
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
+        # Save and set the current working directory in case some service changes it.
+        if not cwd:
+            cwd = os.getcwd()
+        else:
+            os.chdir(cwd)
+
         try :
             self.config_dict = configobj.ConfigObj(config_path, file_error=True)
         except IOError:
-            sys.stderr.write("Unable to open configuration file %s" % self.config_path)
+            sys.stderr.write("Unable to open configuration file %s" % config_path)
             # Reraise the exception (this will eventually cause the program to exit)
             raise
         except configobj.ConfigObjError:
@@ -90,11 +100,14 @@ class Common(unittest.TestCase):
             actual   = open(actual_file)
             expected = open(expected_file)
 
-            n = 0            
-            for actual_line in actual:
+            n = 0
+            while True:
                 n += 1
+                actual_line   = actual.readline()
                 expected_line = expected.readline()
-                self.assertEqual(actual_line, expected_line)
+                if actual_line == '' or expected_line == '':
+                    break
+                self.assertEqual(actual_line, expected_line, "%s[%d]:\n%r vs\n%r" % (actual_file, n, actual_line, expected_line))
             
             print "Checked %d lines" % (n,)
 
@@ -119,12 +132,4 @@ def suite():
     return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
 
 if __name__ == '__main__':
-    global config_path
-    
-    if len(sys.argv) < 2 :
-        print "Usage: python test_templates.py path-to-configuration-file"
-        exit()
-
-    config_path = sys.argv[1]
-    del sys.argv[1:]
     unittest.TextTestRunner(verbosity=2).run(suite())

@@ -1,13 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <!-- $Revision$ -->
-  <!-- $Author$ -->
-  <!-- $Date$ -->
+  <!-- $Id$ -->
   <head>
     <meta content="en-us" http-equiv="Content-Language" />
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <title>Installation using setup.py</title>
-    <link href="weewx_docs.css" rel="stylesheet" />
+    <link href="css/weewx_docs.css" rel="stylesheet" />
     <style type="text/css">
 .os-icons {
   float: right;
@@ -63,14 +61,13 @@ function showstartup(id) {
       <img class='logo' src='logo-suse.png'/>
     </p>
     <p>These are generic instructions for installing
-      <span class="code">weewx</span>, which should work on any operating
-      system. They use the Python utility <span class="code">setup.py</span>.
-      You should use this method if you plan to customize
-      <span class="code">weewx</span>. </p>
+      <span class="code">weewx</span> using the Python utility
+      <span class="code">setup.py</span>.
+    </p>
     <p>The installation will place <span class="code">weewx</span> in the
       <span class="code">/home/weewx</span> directory with the following
       layout: </p>
-      <table class='locations'>
+    <table class='locations' style="width:40%; font-size: 90%">
         <tr>
           <td align='right'>executable: </td>
           <td class='tty'>/home/weewx/bin/weewxd</td>
@@ -128,6 +125,9 @@ function showstartup(id) {
           sudo apt-get install mysql-client
           sudo apt-get install python-mysqldb
           
+	  # required if you are on Raspbian and planning on using FTP:
+          sudo apt-get install ftp
+
           # optional for extended almanac information:
           sudo apt-get install python-dev
           sudo apt-get install python-pip
@@ -143,8 +143,9 @@ function showstartup(id) {
           sudo yum install python-imaging
           
           # required if hardware is serial or USB:
-          sudo yum install pyserial
-          sudo yum install pyusb
+          sudo yum install python-setuptools
+          sudo easy_install pyserial
+          sudo easy_install pyusb
           
           # required if using MySQL:
           sudo yum install mysql-client
@@ -156,20 +157,24 @@ function showstartup(id) {
       </div>
       <div id='prereq-suse' style='display:none'>
         <p class='tty'># suse
-          
+          # on some SuSE systems, use 'yast -i' instead of 'zypper install'
+
           # required packages:
-          sudo yast -i gcc
-          sudo yast -i python-configobj
-          sudo yast -i python-imaging
-          sudo yast -i python-devel
-          sudo yast -i setuptools
-          sudo pip install Cheetah
+          sudo zypper install python-configobj
+          sudo zypper install python-imaging
+          sudo zypper install python-Cheetah
           
           # required if hardware is serial or USB:
-          sudo yast -i pyserial
-          sudo yast -i pyusb
+          sudo zypper install python-pyserial
+          sudo zypper install pyton-usb
+          
+          # required if using MySQL:
+          sudo zypper install mysql-community-server-client
+          sudo zypper install python-mysql
           
           # optional for extended almanac information:
+          sudo zypper install python-devel
+          sudo zypper install setuptools
           sudo pip install pyephem
         </p>
       </div>
@@ -198,9 +203,13 @@ function showstartup(id) {
 
     <h3>Install <span class='code'>weewx</span></h3>
     <p>Expand the source archive:</p>
-    <p class="tty">tar xvf weewx-X.Y.Z.tar.gz</p>
+    <p class="tty">tar xvfz weewx-X.Y.Z.tar.gz</p>
     <p>Change directory:</p>
     <p class="tty">cd weewx-X.Y.Z</p>
+    <p>To specify a location different from the standard
+      <span class='code'>/home/weewx</span>, modify the parameter
+      <span class='code'>home</span> in the
+      <span class='code'>setup.cfg</span> file.</p>
     <p>Then build and install:</p>
     <p class="tty">./setup.py build
       sudo ./setup.py install</p>
@@ -208,6 +217,7 @@ function showstartup(id) {
     <h3>Configure</h3>
     <p>
       Edit the configuration file <span class='code'>/home/weewx/weewx.conf</span>.  Set at least the following:
+    </p>
       <ul>
         <li>location</li>
         <li>latitude</li>
@@ -215,8 +225,10 @@ function showstartup(id) {
         <li>altitude</li>
         <li>station_type</li>
       </ul>
+    <p>
       Also set any parameters specific to the station, such as the <span class='code'>port</span> for stations connected via serial port.
-    
+    </p>
+
     <h3>Run</h3>
     <p>Run the main program from the command line:</p>
     <p class="tty">cd /home/weewx

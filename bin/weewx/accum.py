@@ -201,7 +201,7 @@ class BaseAccum(dict):
         # The unit system is left unspecified until the first observation comes in.
         self.unit_system = None
         
-    def addRecord(self, record):
+    def addRecord(self, record, add_hilo=True):
         """Add a record to my running statistics. 
         
         The record must have keys 'dateTime' and 'usUnits'."""
@@ -213,7 +213,7 @@ class BaseAccum(dict):
         # For each type...
         for obs_type in record:
             # ... add to myself
-            self._add_value(record[obs_type], obs_type, record['dateTime'])
+            self._add_value(record[obs_type], obs_type, record['dateTime'], add_hilo)
                 
     def updateHiLo(self, accumulator):
         """Merge the high/low stats of another accumulator into me."""
@@ -248,7 +248,7 @@ class BaseAccum(dict):
         # something else.
         self[obs_type] = ScalarStats()
             
-    def _add_value(self, val, obs_type, ts):
+    def _add_value(self, val, obs_type, ts, add_hilo):
         """Add a single observation to myself."""
 
         if obs_type == 'usUnits':
@@ -259,7 +259,8 @@ class BaseAccum(dict):
             # If the type has not been seen before, initialize it
             self._init_type(obs_type)
             # Then add to highs/lows, and to the running sum:
-            self[obs_type].addHiLo(val, ts)
+            if add_hilo: 
+                self[obs_type].addHiLo(val, ts)
             self[obs_type].addSum(val)
 
     def _check_units(self, other_system):
@@ -280,7 +281,7 @@ class BaseAccum(dict):
 class WXAccum(BaseAccum):
     """Subclass of BaseAccum, which adds weather-specific logic."""
     
-    def addRecord(self, record):
+    def addRecord(self, record, add_hilo=True):
         """Add a record to my running statistics. 
         
         The record must have keys 'dateTime' and 'usUnits'.
@@ -297,10 +298,11 @@ class WXAccum(BaseAccum):
             if obs_type in ['windDir', 'windGust', 'windGustDir']:
                 continue
             elif obs_type == 'windSpeed':
-                self._add_value((record['windSpeed'], record.get('windDir')), 'wind', record['dateTime'])
-                self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir')), record['dateTime'])
+                self._add_value((record['windSpeed'], record.get('windDir')), 'wind', record['dateTime'], add_hilo)
+                if add_hilo:
+                    self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir')), record['dateTime'])
             else:
-                self._add_value(record[obs_type], obs_type, record['dateTime'])
+                self._add_value(record[obs_type], obs_type, record['dateTime'], add_hilo)
             
     def getRecord(self):
         """Extract a record out of the results in the accumulator.

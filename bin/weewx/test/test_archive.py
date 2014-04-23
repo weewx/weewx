@@ -42,6 +42,11 @@ def barfunc(i):
 def temperfunc(i):
     return 68.0 + 0.1*i
 
+def expected_record(irec):
+    _record = {'dateTime': timefunc(irec), 'interval': interval, 'usUnits' : 1, 
+               'outTemp': temperfunc(irec), 'barometer': barfunc(irec), 'inTemp': 70.0 + 0.1*irec}
+    return _record
+
 def gen_included_recs(timevec, start_ts, stop_ts, agg_interval):
     for stamp in weeutil.weeutil.intervalgen(start_ts, stop_ts, agg_interval):
         included = []
@@ -52,8 +57,7 @@ def gen_included_recs(timevec, start_ts, stop_ts, agg_interval):
     
 def genRecords():
     for irec in range(nrecs):
-        _record = {'dateTime': timefunc(irec), 'interval': interval, 'usUnits' : 1, 
-                   'outTemp': temperfunc(irec), 'barometer': barfunc(irec), 'inTemp': 70.0 + 0.1*irec}
+        _record = expected_record(irec)
         yield _record
 
 #for rec in genRecords():
@@ -101,6 +105,7 @@ class Common(unittest.TestCase):
         self.assertEqual(archive.firstGoodStamp(), None)
         self.assertEqual(archive.lastGoodStamp(), None)
         self.assertEqual(archive.getRecord(123456789), None)
+        self.assertEqual(archive.getRecord(123456789, max_delta=1800), None)
         
     def test_add_archive_records(self):
         # Test adding records using a 'with' statement:
@@ -123,7 +128,6 @@ class Common(unittest.TestCase):
                 self.assertEqual(_rec.pop('windSpeed'), None)
                 self.assertEqual(_expected_rec, _rec)
                 
-            
             # Test adding an existing record. It should just quietly swallow it:
             existing_record = {'dateTime': start_ts, 'interval': interval, 'usUnits' : 1, 'outTemp': 68.0}
             archive.addRecord(existing_record)
@@ -147,6 +151,32 @@ class Common(unittest.TestCase):
             for (irec,_row) in enumerate(archive.genSql("SELECT barometer FROM archive;")):
                 self.assertEqual(_row[0], barfunc(irec))
                 
+            # Try getRecord():
+            target_ts = timevec[nrecs/2]
+            _rec = archive.getRecord(target_ts)
+            # Check that the missing windSpeed is None, then remove it in order to do the compare:
+            self.assertEqual(_rec.pop('windSpeed'), None)
+            self.assertEqual(expected_record(nrecs/2), _rec)
+            
+            # Try finding the nearest neighbor below
+            target_ts = timevec[nrecs/2] + interval/100
+            _rec = archive.getRecord(target_ts, max_delta=interval/50)
+            # Check that the missing windSpeed is None, then remove it in order to do the compare:
+            self.assertEqual(_rec.pop('windSpeed'), None)
+            self.assertEqual(expected_record(nrecs/2), _rec)
+
+            # Try finding the nearest neighbor above
+            target_ts = timevec[nrecs/2] - interval/100
+            _rec = archive.getRecord(target_ts, max_delta=interval/50)
+            # Check that the missing windSpeed is None, then remove it in order to do the compare:
+            self.assertEqual(_rec.pop('windSpeed'), None)
+            self.assertEqual(expected_record(nrecs/2), _rec)
+            
+            # Try finding a neighbor too far away:
+            target_ts = timevec[nrecs/2] - interval/2
+            _rec = archive.getRecord(target_ts, max_delta=interval/50)
+            self.assertEqual(_rec, None)
+            
         # Now try fetching them as vectors:
         with weewx.archive.Archive.open(self.archive_db_dict) as archive:
             barvec = archive.getSqlVectors('barometer', start_ts, stop_ts)

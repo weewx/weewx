@@ -1,47 +1,50 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <!-- $Revision$ -->
-  <!-- $Author$ -->
-  <!-- $Date$ -->
+  <!-- $Id$ -->
   <head>
     <meta http-equiv="Content-Language" content="en-us" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>weewx: Upgrade Guide</title>
-    <link href="weewx_docs.css" rel="stylesheet" />
+    <link href="css/weewx_docs.css" rel="stylesheet" />
   </head>
 
   <body>
 
+    <a href='http://weewx.com'>
+      <img src='logo-weewx.png' class='logo' align='right' />
+    </a>
     <h1 class="title">Upgrading <span class="code">weewx</span><br/>
-      <span class='version'>Version: 2.5.0a1
+      <span class='version'>
+Version: 2.6.3
+      </span>
     </h1>
 
-    <p>This document has three sections:</p>
+    <p>This document contains the following sections:</p>
       <ul>
         <li><a href="#Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></li>
-        <li><a href="#Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM package</a></li>
-        <li><a href="#Instructions_for_specific_versions">Instructions for specific 
-		versions</a></li>
+        <li><a href="#Upgrading_using_DEB_package">Upgrading using DEB package</a></li>
+        <li><a href="#Upgrading_using_RPM_package">Upgrading using RPM package</a></li>
+        <li><a href="#Instructions_for_specific_versions">Instructions for specific versions</a></li>
       </ul>
-    <p>The section <em><a href="#Instructions_for_specific_versions">Instructions for 
-	  Specific Versions</a></em> applies to both installation methods.</p>
-      <p class="warning"><strong>Warning!</strong><br/>
-        You must use the same upgrade technique as your initial install!<br/>
-        <br/>
-        For example, if you used <span class="code">setup.py</span> to install
-        <span class='code'>weewx</span>, you should use
-        <span class="code">setup.py</span> to upgrade.<br/>
-        <br/>
-        If you used a DEB or RPM package to install, then you should upgrade
-        using the same package type.
-      </p>
+    <p>The section <em><a href="#Instructions_for_specific_versions">Instructions for Specific Versions</a></em> applies to each installation method.</p>
+
+    <p class="warning"><strong>Warning!</strong><br/>
+      You must use the same upgrade technique as your initial install!<br/>
+      <br/>
+      For example, if you used <span class="code">setup.py</span> to install
+      <span class='code'>weewx</span>, you should use
+      <span class="code">setup.py</span> to upgrade.<br/>
+      <br/>
+      If you used a DEB or RPM package to install, then you should upgrade
+      using the same package type.
+    </p>
 
     <h1><a name="Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></h1>
     <p>Before upgrading <span class="code">weewx</span>, check the section <em>
 	<a href="#Instructions_for_specific_versions">Instructions for Specific Versions</a></em> to see if any specific actions are
       required. Then follow the standard installation procedure:</p>
     <p>Unpack the archive:</p>
-    <p class="tty">tar xvf weewx-X.Y.Z.tar.gz</p>
+    <p class="tty">tar xvfz weewx-X.Y.Z.tar.gz</p>
     <p>Change directory into it:</p>
     <p class="tty">cd weewx-X.Y.Z </p>
     <p>Build the distribution:</p>
@@ -73,8 +76,7 @@
 	one does not already exist. </li>
     </ul>
 
-    <h1><a name="Upgrading_using_DEB/RPM_package">Upgrading using DEB/RPM package</a></h1>
-    <h2>DEB Package</h2>
+    <h1><a name="Upgrading_using_DEB_package">Upgrading using DEB package</a></h1>
     <p>Upgrade to X.Y.Z like this:</p>
     <p class='tty'>sudo dpkg -i weewx_X.Y.Z-R.deb</p>
     <p>The upgrade process will not modify the <span class='code'>weewx</span>
@@ -110,7 +112,8 @@
       <span class='code'>/etc/weewx/weewx.conf</span>
     </p>
 
-    <h2>RPM Package</h2>
+
+    <h1><a name="Upgrading_using_RPM_package">Upgrading using RPM package</a></h1>
     <p>Upgrade to X.Y.Z like this:</p>
     <p class='tty'>sudo rpm -U weewx-X.Y.Z-R.rpm</p>
     <p>The upgrade process will not modify the <span class='code'>weewx</span>
@@ -127,30 +130,52 @@
     <p class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</p>
 
     <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+    <h2>V2.5 or earlier</h2>
+    <p>Version 2.6 is backwards compatible with earlier versions, with a couple
+    of small exceptions.</p>
+    <ul>
+      <li>If you have written a custom <span class="code">weewx</span>
+      service, the install routine will try to insert its name into
+      an appropriate place in one of the five new lists of services
+      to be run. You should check
+      section <span class="code">[Engines][[WxEngine]]</span> to
+      make sure it made a reasonable guess.</li>
+      <li>If you have written a custom RESTful service, the
+      architecture for these services has completely changed. They
+      are now first class services, and are treated like any other
+      <span class="code">weewx</span> service. There are some guides
+      to writing RESTful services using the new architecture at the
+      top of the file <span class='code'>bin/weewx/restx.py</span>. 
+      I can also help you with the transition.</li>
+      <li>Option <span class='code'>interval</span> in the CWOP
+      configuration section has become option 
+      <span class='code'>post_interval</span>. This change
+      should be done automatically by the install routine. </li>
+    </ul>
     <h2>V2.3 or earlier</h2>
     <p>The option <span class="code">time_length</span> will now be the exact length 
       of the resultant plot. Before, a plot with <span class="code">time_length</span> 
       equal to 24 hours would result in a plot of 27 hours, now it's 24 hours. If you 
       want the old behavior, set it equal to 27 hours. To do this, change your section 
       in <span class="code">skin.conf</span> from</p>
-    <p class="tty">[[day_images]] 
-&nbsp;&nbsp;x_label_format = %H:%M 
-&nbsp;&nbsp;bottom_label_format = %m/%d/%y %H:%M 
-&nbsp;&nbsp;time_length = 86400 # == 24 hours</p>
+    <p class="tty">[[day_images]]
+    x_label_format = %H:%M 
+    bottom_label_format = %m/%d/%y %H:%M 
+    time_length = 86400 # == 24 hours</p>
     <p>to</p>
     <p class="tty">[[day_images]] 
-&nbsp;&nbsp;x_label_format = %H:%M 
-&nbsp;&nbsp;bottom_label_format = %m/%d/%y %H:%M 
-&nbsp;&nbsp;<span class="highlight">time_length = 97200 # == 27 hours</span></p>
+    x_label_format = %H:%M 
+    bottom_label_format = %m/%d/%y %H:%M 
+    <span class="highlight">time_length = 97200 # == 27 hours</span></p>
     <p>The service <span class="code">StdTimeSync</span> now synchronizes the console's 
      onboard clock on startup. This is nice because if the clock failed, perhaps because 
      the battery was taken out, the time is corrected first <em>before</em> data is downloaded 
      from the logger's memory. To take advantage of this, you can move service
      <span class="code">StdTimeSync</span> to the front of the list of services to be 
      run. For example:</p>
-    <p class="tty">&nbsp;[[WxEngine]]<br />
-# The list of services the main weewx engine should run:<br />
-service_list = <span class="highlight">weewx.wxengine.StdTimeSynch</span>, weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport
+    <p class="tty">[[WxEngine]]
+    # The list of services the main weewx engine should run:
+    service_list = <span class="highlight">weewx.wxengine.StdTimeSynch</span>, weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport
 </p>
 	
 	<h2>V2.2 or earlier</h2>
@@ -213,35 +238,29 @@ service_list = <span class="highlight">weewx.wxengine.StdTimeSynch</span>, weewx
 	directory. You will then need to modify your <span class="code">skin.conf</span>.
       <p>After the section that looks like</p>
       <p class='tty'>[[[Mobile]]]
-        &nbsp;&nbsp;&nbsp;&nbsp;template = mobile.html.tmpl</p>
+    template = mobile.html.tmpl</p>
       <p>add the following directives:</p>
       <p class='tty'>[[[MobileSmartphone]]]
-        &nbsp;&nbsp;&nbsp;&nbsp;template = smartphone/index.html.tmpl
-
-        [[[MobileTempOutside]]]
-        &nbsp;&nbsp;&nbsp;&nbsp;template = smartphone/temp_outside.html.tmpl
-
-        [[[MobileRain]]]
-        &nbsp;&nbsp;&nbsp;&nbsp;template = smartphone/rain.html.tmpl
-
-        [[[MobileBarometer]]]
-        &nbsp;&nbsp;&nbsp;&nbsp;template = smartphone/barometer.html.tmpl
-
-        [[[MobileWind]]]
-        &nbsp;&nbsp;&nbsp;&nbsp;template = smartphone/wind.html.tmpl
-        
-        [[[MobileRadar]]]
-        &nbsp;&nbsp;&nbsp;&nbsp;template = smartphone/radar.html.tmpl</p>
+    template = smartphone/index.html.tmpl
+    [[[MobileTempOutside]]]
+        template = smartphone/temp_outside.html.tmpl
+    [[[MobileRain]]]
+        template = smartphone/rain.html.tmpl
+    [[[MobileBarometer]]]
+        template = smartphone/barometer.html.tmpl
+    [[[MobileWind]]]
+        template = smartphone/wind.html.tmpl
+    [[[MobileRadar]]]
+        template = smartphone/radar.html.tmpl</p>
       <p>Then modify section <span class="code">[CopyGenerator]</span> 
         to add the <span class="highlight">highlighted</span> files:</p>
       <p class='tty'>[CopyGenerator]
+    #
+    # This section is used by the generator CopyGenerator
+    #
 
-        &nbsp;&nbsp;&nbsp;&nbsp;#
-        &nbsp;&nbsp;&nbsp;&nbsp;# This section is used by the generator CopyGenerator
-        &nbsp;&nbsp;&nbsp;&nbsp;#
-
-        &nbsp;&nbsp;&nbsp;&nbsp;# List of files that are to be copied at the first invocation of the generator only
-        &nbsp;&nbsp;&nbsp;&nbsp;copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">smartphone/icons/*, smartphone/custom.js</span></p>
+    # List of files that are to be copied at the first invocation of the generator only
+    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">smartphone/icons/*, smartphone/custom.js</span></p>
       </li>
     </ol>
     <p>Whichever approach you chose, the generated files will appear in
@@ -283,15 +302,15 @@ service_list = <span class="highlight">weewx.wxengine.StdTimeSynch</span>, weewx
 	with the distribution for guidance. You will then need to modify your <span class="code">skin.conf</span>.
 	<p>Add a new <span class="code">[[[Mobile]]]</span> section:</p>
 	<p class="tty">[FileGenerator]
-          &nbsp;&nbsp;&nbsp;&nbsp;...
-          &nbsp;&nbsp;&nbsp;&nbsp;[[ToDate]]
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[Mobile]]]
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;template = mobile.html.tmpl</p>
+    ...
+    [[ToDate]]
+        ...
+        [[[Mobile]]]
+            template = mobile.html.tmpl</p>
 	<p>Then add <span class="code">mobile.css</span> and <span class="code">
 	    favicon.ico</span> to the list of files to be copied on report generation:</p>
 	<p class="tty">[CopyGenerator]
-          &nbsp;&nbsp;&nbsp;&nbsp;copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico</p>
+    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico</p>
       </li>
     </ol>
     <p>Which approach you should take will depend on how extensively you have 

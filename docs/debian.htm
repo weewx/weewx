@@ -1,13 +1,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <!-- $Revision$ -->
-  <!-- $Author$ -->
-  <!-- $Date$ -->
+  <!-- $Id$ -->
   <head>
     <meta content="en-us" http-equiv="Content-Language" />
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <title>Installation on Debian systems</title>
-    <link href="weewx_docs.css" rel="stylesheet" />
+    <link href="css/weewx_docs.css" rel="stylesheet" />
     <style type="text/css">
 .os-icons {
   float: right;
@@ -29,9 +27,9 @@
       <img class='logo' src='logo-mint.png'/>
     </p>
     <p>
-      This is a guide to install <span class='code'>weewx</span> from DEB package on systems such as Debian, Ubuntu or Mint.  The installation will result in the following layout:
-    </p>
-    <table class='locations'>
+      This is a guide to install <span class='code'>weewx</span> from DEB package on systems such as Debian, Ubuntu or Mint.</p>
+    <p>The installation will result in the following layout:</p>
+    <table class='locations' style="width:40%; font-size: 90%">
       <tr>
         <td align='right'>executable: </td>
         <td class='tty'>/usr/bin/weewxd</td>
@@ -94,8 +92,8 @@ sudo apt-get -f install</p>
       To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span class='code'>/etc/weewx.conf</span>.  See the <a href="usersguide.htm">User Guide</a> and <a href="customizing.htm">Customization Guide</a> for details.
     </p>
     <p>
-      <span class='code'>weewx</span> must be restarted for changes in the configuration 
-	  files to take effect.
+      <span class='code'>weewx</span> must be restarted for configuration 
+	  file changes to take effect.
     </p>
 
     <h3>Start/Stop</h3>

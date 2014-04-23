@@ -1,3 +1,27 @@
+* Thu Apr 10 2014 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 2.6.3-1
+- new upstream release
+* Sun Feb 16 2014 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 2.6.2-1
+- new upstream release
+* Sat Feb 08 2014 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 2.6.1-1
+- new upstream release
+* Fri Feb 07 2014 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 2.6.0-1
+- new upstream release
+* Wed Feb 05 2014 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 2.6.0b2-1
+- new upstream release
+* Tue Feb 04 2014 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 2.6.0b1-1
+- new upstream release
+* Tue Jan 28 2014 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 2.6.0a6-1
+- new upstream release
+* Mon Dec 30 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.5.1-1
+- added ws23xx and te923 drivers
+* Tue Oct 29 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.5.0-1
+- new upstream release
+* Sat Oct 19 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.5.0b3-1
+- new upstream release
+* Fri Oct 18 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.5.0b2-1
+- new upstream release
+* Sat Oct 12 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.5.0b1-1
+- new upstream release
 * Sun Aug 04 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.4.0-1
 - new upstream release
 * Sat Jun 22 2013 Matthew Wall <mwall@users.sourceforge.net> - 2.3.3-1

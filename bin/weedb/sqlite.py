@@ -9,16 +9,18 @@
 #
 """Driver for sqlite"""
 
+from __future__ import with_statement
 import os.path
 
 # Import sqlite3. If it does not support the 'with' statement, then
 # import pysqlite2, which might...
 import sqlite3
-if not hasattr(sqlite3.Connection, "__exit__"):
+if not hasattr(sqlite3.Connection, "__exit__"):  # @UndefinedVariable
     del sqlite3
     from pysqlite2 import dbapi2 as sqlite3 #@Reimport @UnresolvedImport
 
 import weedb
+from weeutil.weeutil import to_bool, to_int
 
 def connect(database='', root='', driver='', **argv):
     """Factory function, to keep things compatible with DBAPI. """
@@ -36,7 +38,9 @@ def create(database='', root='', driver='', **argv):
         fileDirectory = os.path.dirname(file_path)
         if not os.path.exists(fileDirectory):
             os.makedirs(fileDirectory)
-        connection = sqlite3.connect(file_path, **argv)
+        timeout = to_int(argv.get('timeout', 5))
+        isolation_level = argv.get('isolation_level')
+        connection = sqlite3.connect(file_path, timeout=timeout, isolation_level=isolation_level)
         connection.close()
 
 def drop(database='', root='', driver='', **argv):
@@ -65,8 +69,10 @@ class Connection(weedb.Connection):
         self.file_path = os.path.join(root, database)
         if not os.path.exists(self.file_path):
             raise weedb.OperationalError("Attempt to open a non-existent database %s" % database)
+        timeout = to_int(argv.get('timeout', 5))
+        isolation_level = argv.get('isolation_level')
         try:
-            connection = sqlite3.connect(self.file_path, **argv)
+            connection = sqlite3.connect(self.file_path, timeout=timeout, isolation_level=isolation_level)
         except sqlite3.OperationalError:
             # The Pysqlite driver does not include the database file path.
             # Include it in case it might be useful.
@@ -76,6 +82,13 @@ class Connection(weedb.Connection):
     def cursor(self):
         """Return a cursor object."""
         return Cursor(self.connection)
+    
+    def execute(self, sql_string, sql_tuple=() ):
+        """Execute a sql statement. This specialized version takes advantage
+        of sqlite's ability to do an execute without a cursor."""
+        
+        with self.connection:
+            self.connection.execute(sql_string, sql_tuple)
     
     def tables(self):
         """Returns a list of tables in the database."""
@@ -87,14 +100,22 @@ class Connection(weedb.Connection):
             table_list.append(str(row[0]))
         return table_list
                 
+    def genSchemaOf(self, table):
+        """Return a summary of the schema of the specified table.
+        
+        If the table does not exist, an exception of type weedb.OperationalError is raised."""
+        for row in self.connection.execute("""PRAGMA table_info(%s);""" % table):
+            if row[2].upper().startswith('CHAR'):
+                coltype = 'STR'
+            else:
+                coltype = str(row[2]).upper()
+            yield (row[0], str(row[1]), coltype, not to_bool(row[3]), row[4], to_bool(row[5]))
+        
     def columnsOf(self, table):
         """Return a list of columns in the specified table. If the table does not exist,
         None is returned."""
-        column_list = list()
 
-        for row in self.connection.execute("""PRAGMA table_info(%s);""" % table):
-            # Append this column to the list of columns. 
-            column_list.append(str(row[1]))
+        column_list = [row[1] for row in self.genSchemaOf(table)]
 
         # If there are no columns (which means the table did not exist) raise an exceptional
         if not column_list:

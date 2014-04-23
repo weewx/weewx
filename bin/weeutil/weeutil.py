@@ -37,6 +37,12 @@ def accumulateLeaves(d):
     then having them overridden in the leaf nodes of a ConfigObj.
     
     d: instance of a configobj.Section (i.e., a section of a ConfigObj)
+    
+    Example: Supply a default color=blue, size=10. The section "dayimage" overrides the former:
+    
+    >>> c = configobj.ConfigObj({"color":"blue", "size":10, "dayimage":{"color":"red"}});
+    >>> print accumulateLeaves(c["dayimage"])
+    {'color': 'red', 'size': 10}
     """
     
     # Use recursion. If I am the root object, then there is nothing above 
@@ -59,6 +65,24 @@ def option_as_list(option):
     if hasattr(option, '__iter__'):
         return option
     return [option]
+
+def list_as_string(option):
+    """Returns the argument as a string.
+    
+    Useful for insuring that ConfigObj options are always returned
+    as a string, despite the presence of a comma in the middle.
+    
+    Example:
+    >>> print list_as_string('a string')
+    a string
+    >>> print list_as_string(['a', 'string'])
+    a, string
+    """
+    if option is None: return None
+    if hasattr(option, '__iter__'):
+        return ', '.join(option)
+    else:
+        return option
 
 def stampgen(startstamp, stopstamp, interval):
     """Generator function yielding a sequence of timestamps, spaced interval apart.
@@ -134,16 +158,6 @@ def startOfInterval(time_ts, interval, grace=1):
     figures out which interval it lies in, returning the start
     time.
     
-    Examples (human readable times shown instead of timestamps):
-    
-      time_ts     interval    returns
-      01:57:35       300      01:55:00
-      01:57:35       600      01:50:00
-      01:57:35       900      01:45:00
-      01:57:35      3600      01:00:00
-      01:57:35      7200      00:00:00
-      01:00:00       300      00:55:00
-    
     time_ts: A timestamp. The start of the interval containing this
     timestamp will be returned.
     
@@ -153,7 +167,31 @@ def startOfInterval(time_ts, interval, grace=1):
     included in the last interval. Set to zero to have an
     inclusive start of an interval. [Optional. Default is 1 second.]
     
-    Returns: A timestamp with the start of the interval."""
+    Returns: A timestamp with the start of the interval.
+
+    Examples:
+    
+    >>> start_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+    >>> time.ctime(startOfInterval(start_ts,  300))
+    'Thu Jul  4 01:55:00 2013'
+    >>> time.ctime(startOfInterval(start_ts,  600))
+    'Thu Jul  4 01:50:00 2013'
+    >>> time.ctime(startOfInterval(start_ts,  900))
+    'Thu Jul  4 01:45:00 2013'
+    >>> time.ctime(startOfInterval(start_ts, 3600))
+    'Thu Jul  4 01:00:00 2013'
+    >>> time.ctime(startOfInterval(start_ts, 7200))
+    'Thu Jul  4 00:00:00 2013'
+    >>> start_ts = time.mktime(time.strptime("2013-07-04 01:00:00", "%Y-%m-%d %H:%M:%S"))
+    >>> time.ctime(startOfInterval(start_ts,  300))
+    'Thu Jul  4 00:55:00 2013'
+    >>> start_ts = time.mktime(time.strptime("2013-07-04 01:00:01", "%Y-%m-%d %H:%M:%S"))
+    >>> time.ctime(startOfInterval(start_ts,  300))
+    'Thu Jul  4 01:00:00 2013'
+    >>> start_ts = time.mktime(time.strptime("2013-07-04 01:04:59", "%Y-%m-%d %H:%M:%S"))
+    >>> time.ctime(startOfInterval(start_ts,  300))
+    'Thu Jul  4 01:00:00 2013'
+    """
 
     interval_m = interval/60
     interval_h = interval/3600
@@ -562,7 +600,22 @@ def startOfDay(time_ts):
                             _time_tt.tm_mday,
                             0, 0, 0, 0, 0, -1))
     return int(_bod_ts)
-
+        
+def startOfDayUTC(time_ts):
+    """Calculate the unix epoch time for the start of a UTC day.
+    
+    time_ts: A timestamp somewhere in the day for which the start-of-day
+    is desired.
+    
+    returns: The timestamp for the start-of-day (00:00) in unix epoch time.
+    
+    """
+    _time_tt = time.gmtime(time_ts)
+    _bod_ts = calendar.timegm((_time_tt.tm_year,
+                               _time_tt.tm_mon,
+                               _time_tt.tm_mday,
+                               0, 0, 0, 0, 0, -1))
+    return int(_bod_ts)
 
 def startOfArchiveDay(time_ts, grace=1):
     """Given an archive time stamp, calculate its start of day.
@@ -590,24 +643,25 @@ def getDayNightTransitions(start_ts, end_ts, lat, lon):
     returns: indication of whether the period from start to first transition
     is day or night, plus array of transitions (UTC).
     """
-    first = 'day'
+    first = None
     values = []
-    for t in range(start_ts, end_ts+1, 3600*24):
-        x = startOfDay(t) + 7200
+    for t in range(start_ts-3600*24, end_ts+3600*24+1, 3600*24):
+        x = startOfDayUTC(t)
         x_tt = time.gmtime(x)
         y, m, d = x_tt[:3]
         (sunrise_utc, sunset_utc) = Sun.sunRiseSet(y, m, d, lon, lat)
-        sunrise_tt = utc_to_local_tt(y, m, d, sunrise_utc)
-        sunset_tt = utc_to_local_tt(y, m, d, sunset_utc)
-        sunrise_ts = time.mktime(sunrise_tt)
-        sunset_ts = time.mktime(sunset_tt)
+        daystart_ts = calendar.timegm((y,m,d,0,0,0,0,0,-1))
+        sunrise_ts = int(daystart_ts + sunrise_utc * 3600.0 + 0.5)
+        sunset_ts = int(daystart_ts + sunset_utc * 3600.0 + 0.5)
 
         if start_ts < sunrise_ts < end_ts:
             values.append(sunrise_ts)
+            if first is None:
+                first = 'night'
         if start_ts < sunset_ts < end_ts:
             values.append(sunset_ts)
-        if t == start_ts and (start_ts < sunrise_ts or sunset_ts < start_ts):
-            first = 'night'
+            if first is None:
+                first = 'day'
     return first, values
     
 def secs_to_string(secs):
@@ -684,16 +738,23 @@ def utc_to_local_tt(y, m, d,  hrs_utc):
     time_local_tt = time.localtime(time_ts)
     return time_local_tt
 
-def latlon_string(ll, hemi, which):
-    """Decimal degrees into a string for degrees, and one for minutes."""
+def latlon_string(ll, hemi, which, format_list=None):
+    """Decimal degrees into a string for degrees, and one for minutes.
+    ll: The decimal latitude or longitude
+    hemi: A tuple holding strings representing positive or negative values. E.g.: ('N', 'S')
+    which: 'lat' for latitude, 'long' for longitude
+    format_list: A list or tuple holding the format strings to be used. These are [whole degrees latitude, 
+                 whole degrees longitude, minutes]
+                 
+    Returns:
+    A 3-way tuple holding (latlon whole degrees, latlon minutes, hemisphere designator). 
+    Example: (022, 08.3, 'N') """
     labs = abs(ll)
     (frac, deg) = math.modf(labs)
     minutes = frac * 60.0
-    return (("%02d" if which == 'lat' else "%03d") % (deg,), "%05.2f" % (minutes,), hemi[0] if ll >= 0 else hemi[1])
-
-def utf8_to_latin1(instring):
-    """Convert from UTF-8 to Latin-1 encoding."""
-    return unicode(instring, "utf8").encode("latin1")
+    if format_list is None:
+        format_list = ["%02d", "%03d", "%05.2f"]
+    return ((format_list[0] if which == 'lat' else format_list[1]) % (deg,), format_list[2] % (minutes,), hemi[0] if ll >= 0 else hemi[1])
 
 def log_traceback(prefix=''):
     """Log the stack traceback into syslog."""
@@ -798,9 +859,9 @@ def tobool(x):
     """
 
     try:
-        if x.lower() == 'true':
+        if x.lower() in ['true', 'yes']:
             return True
-        elif x.lower() == 'false':
+        elif x.lower() in ['false', 'no']:
             return False
     except AttributeError:
         pass
@@ -809,6 +870,40 @@ def tobool(x):
     except (ValueError, TypeError):
         pass
     raise ValueError("Unknown boolean specifier: '%s'." % x)
+
+to_bool = tobool
+
+def to_int(x):
+    """Convert an object to an integer, unless it is None
+    
+    Examples:
+    >>> print to_int(123)
+    123
+    >>> print to_int('123')
+    123
+    >>> print to_int(-5.2)
+    -5
+    >>> print to_int(None)
+    None
+    """
+    if isinstance(x, str) and x.lower() == 'none':
+        x = None
+    return int(x) if x is not None else None
+
+def to_float(x):
+    """Convert an object to a float, unless it is None
+    
+    Examples:
+    >>> print to_float(12.3)
+    12.3
+    >>> print to_float('12.3')
+    12.3
+    >>> print to_float(None)
+    None
+    """
+    if isinstance(x, str) and x.lower() == 'none':
+        x = None
+    return float(x) if x is not None else None
 
 def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
     """Read the specified configuration file, return a dictionary of the
@@ -877,7 +972,7 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
         raise
 
     return config_fn, config_dict
-    
+
 if __name__ == '__main__':
     import doctest
 

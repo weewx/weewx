@@ -3,14 +3,12 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Package weewx, containing modules specific to the weewx runtime engine."""
 import time
 
-__version__="2.5.0a1"
+__version__="2.6.3"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -26,8 +24,9 @@ IO_ERROR     = 4
 DB_ERROR     = 5
 
 # Constants used to indicate a unit system:
-METRIC = 0x10
-US     = 0x01
+METRIC   = 0x10
+METRICWX = 0x11
+US       = 0x01
 
 #===============================================================================
 #           Define possible exceptions that could get thrown.
@@ -62,9 +61,6 @@ class StopNow(StandardError):
     
 class UninitializedDatabase(StandardError):
     """Exception thrown when attempting to use an unitialized database."""
-    
-class UnknownDriver(StandardError):
-    """Exception thrown when trying to use an unknown driver."""
     
 #===============================================================================
 #                       Possible event types.

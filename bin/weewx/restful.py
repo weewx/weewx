@@ -7,7 +7,11 @@
 #    $Author$
 #    $Date$
 #
-"""Publish weather data to RESTful sites such as the Weather Underground or PWSWeather."""
+"""Publish weather data to RESTful sites such as the Weather Underground or PWSWeather.
+
+        THIS MODULE IS NOW OBSOLETE! YOU SHOULD USE MODULE weewx.restx INSTEAD!
+
+"""
 from __future__ import with_statement
 import syslog
 import datetime
@@ -575,8 +579,7 @@ class CWOP(REST):
 # [StdRESTful]
 #     ...
 #     [[StationRegistry]]
-#         #description = My Little Weather Station
-#         station_url = http://example.com/weather/
+#         register_this_station = True
 #         driver = weewx.register.StationRegistry
 
 WEEWX_SERVER_URL = 'http://weewx.com/register/register.cgi'
@@ -586,20 +589,23 @@ class StationRegistry(REST):
 
     def __init__(self, site, **kwargs):
         """
+        register_this_station: indicates whether to run this service
+        [Required]
+
         station_url: URL of the weather station
         [Required]
 
         description: description of station
-        [Optional.  Default is location from weewx.conf]
+        [Optional]
 
         latitude: station latitude
-        [Optional.  Default is latitude from weewx.conf]
+        [Required]
 
         longitude: station longitude
-        [Optional.  Default is longitude from weewx.conf]
+        [Required]
 
         hardware: station hardware
-        [Optional.  Default is station_type from weewx.conf]
+        [Required]
 
         server_url - site at which to register
         [Optional.  Default is weewx.com]
@@ -611,8 +617,15 @@ class StationRegistry(REST):
         [Optional.  Default is 5]
         """
 
-        self.server_url = kwargs.get('server_url', WEEWX_SERVER_URL)
-        self.station_url = kwargs['station_url']
+        # should this service run?
+        optin = weeutil.weeutil.tobool(kwargs.get('register_this_station', 'false'))
+        if not optin:
+            raise KeyError('register_this_station')
+
+        # this uniquely identifies the station
+        self.station_url = kwargs.get('station_url', None)
+        if self.station_url is None:
+            self.station_url = kwargs['station_url']
 
         # these are defined by RESTful
         self.latitude = float(kwargs['latitude'])
@@ -620,6 +633,7 @@ class StationRegistry(REST):
         self.hardware = kwargs['hardware']
 
         # these are optional
+        self.server_url = kwargs.get('server_url', WEEWX_SERVER_URL)
         self.interval = int(kwargs.get('interval', 604800))
         self.max_tries = int(kwargs.get('max_tries', 5))
         self.description = kwargs.get('description', None)
@@ -646,40 +660,40 @@ class StationRegistry(REST):
 
         self._validateParameters()
 
-        syslog.syslog(syslog.LOG_INFO, 'register: station will register with %s' % self.server_url)
+        syslog.syslog(syslog.LOG_INFO, 'restful: station will register with %s' % self.server_url)
 
     def postData(self, archive, time_ts):
         now = time.time()
         if self._last_ts is not None and now - self._last_ts < self.interval:
-            msg = 'registration interval (%d) has not passed.' % self.interval
-            syslog.syslog(syslog.LOG_DEBUG, 'register: %s' % msg)
+            msg = 'Registration interval (%d) has not passed.' % self.interval
+            syslog.syslog(syslog.LOG_DEBUG, 'restful: %s' % msg)
             raise weewx.restful.SkippedPost, msg
 
         url = self.getURL()
         for _count in range(self.max_tries):
             # Use HTTP GET to convey the station data
             try:
-                syslog.syslog(syslog.LOG_DEBUG, "register: attempt to register using '%s'" % url)
+                syslog.syslog(syslog.LOG_DEBUG, "restful: Attempting to register using '%s'" % url)
                 _response = urllib2.urlopen(url)
             except (urllib2.URLError, socket.error,
                     httplib.BadStatusLine, httplib.IncompleteRead), e:
                 # Unsuccessful. Log it and try again
-                syslog.syslog(syslog.LOG_ERR, 'register: failed attempt %d of %d: %e' % (_count+1, self.max_tries, e))
+                syslog.syslog(syslog.LOG_ERR, 'restful: Failed attempt %d of %d: %s' % (_count+1, self.max_tries, e))
             else:
                 # Check for the server response
                 for line in _response:
                     # Registration failed, log it and bail out
                     if line.startswith('FAIL'):
-                        syslog.syslog(syslog.LOG_ERR, "register: registration server returned %s" % line)
+                        syslog.syslog(syslog.LOG_ERR, "restful: Registration server returned %s" % line)
                         raise weewx.restful.FailedPost, line
                 # Registration was successful
-                syslog.syslog(syslog.LOG_DEBUG, 'register: registration successful')
+                syslog.syslog(syslog.LOG_DEBUG, 'restful: Registration successful')
                 self._last_ts = time.time()
                 return
         else:
             # The upload failed max_tries times. Log it.
-            msg = 'failed to register after %d tries' % self.max_tries
-            syslog.syslog(syslog.LOG_ERR, 'register: %s' % msg)
+            msg = 'Failed to register after %d tries' % self.max_tries
+            syslog.syslog(syslog.LOG_ERR, 'restful: %s' % msg)
             raise IOError, msg
 
     def getURL(self):
@@ -701,9 +715,13 @@ class StationRegistry(REST):
 
     def _validateParameters(self):
         msgs = []
-        # ensure the url does not have problem characters.  do not check
-        # to see whether the site actually exists.
-        if not self._checkURL(self.station_url):
+
+        if self.station_url is None:
+            # the station url must be defined
+            msgs.append("station_url is not defined")
+        elif not self._checkURL(self.station_url):
+            # ensure the url does not have problem characters.  do not check
+            # to see whether the site actually exists.
             msgs.append("station_url '%s' is not a valid URL" %
                         self.station_url)
 
@@ -712,13 +730,16 @@ class StationRegistry(REST):
         if not self._checkURL(url):
             msgs.append("server_url '%s' is not a valid URL" % self.server_url)
 
-        if len(msgs) > 0:
-            errmsg = 'one or more unusable parameters.'
-            syslog.syslog(syslog.LOG_ERR, 'register: %s' % errmsg)
+        if msgs:
+            errmsg = 'One or more unusable parameters.'
+            syslog.syslog(syslog.LOG_ERR, 'restful: %s' % errmsg)
             for m in msgs:
                 syslog.syslog(syslog.LOG_ERR, '   **** %s' % m)
-            raise ValueError(errmsg)
-    
+            # FIXME: restful depends on a hack - throw a KeyError to indicate
+            # that a restful service should not start.  here we should throw
+            # a ValueError, but that kills StdRESTful instead of simply
+            # indicating that this restful service is not ready to run.
+            raise KeyError(errmsg)
 
 #===============================================================================
 #                             class RESTThread
@@ -809,7 +830,6 @@ class RESTThread(threading.Thread):
 
 if __name__ == '__main__':
            
-    import sys
     import configobj
     from optparse import OptionParser
     import Queue

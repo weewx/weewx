@@ -25,6 +25,8 @@
 # FineOffset support in wview was inspired by the fowsr project by Arne-Jorgen
 # Auberg (arne.jorgen.auberg@gmail.com) with hidapi mods by Bill Northcott.
 
+# USB Lockups
+#
 # the ws2080 will frequently lock up and require a power cycle to regain
 # communications.  my sample size is small (3 ws2080 consoles running
 # for 1.5 years), but fairly repeatable.  one of the consoles has never
@@ -35,9 +37,14 @@
 # hopefully the device is simply trying to tell us something.  on the other
 # hand it could just be bad firmware.  it seems to happen when the data
 # logging buffer on the console is full, but not always when the buffer
-# is full.  --mwall 30dec2012
-
-# FIXME: determine why sensor spikes happen with PERIODIC but not ADAPTIVE
+# is full.
+# --mwall 30dec2012
+#
+# the magic numbers do not seem to be correlated with lockups.  in some cases,
+# a lockup happens immediately following an unknown magic number.  in other
+# cases, data collection continues with no problem.  for example, a brand new
+# WS2080A console reports 44 bf as its magic number, but performs just fine.
+# --mwall 02oct2013
 
 """Classes and functions for interfacing with FineOffset weather stations.
 
@@ -73,6 +80,8 @@ by weewx.  The pywws code is mostly untouched - it has been modified to
 conform to weewx error handling and reporting, and some additional error
 checks have been added.
 
+Rainfall and Spurious Sensor Readings
+
 The rain counter occasionally reports incorrect rainfall.  On some stations,
 the counter decrements then increments.  Or the counter may increase by more
 than the number of bucket tips that actually occurred.  The max_rain_rate
@@ -81,10 +90,23 @@ period.  If the volume of the samples in the period divided by the sample
 period interval are greater than the maximum rain rate, the samples are
 ignored.
 
+Spurious rain counter decrements often accompany what appear to be noisy
+sensor readings.  So if we detect a spurious rain counter decrement, we ignore
+the rest of the sensor data as well.  The suspect sensor readings appear
+despite the double reading (to ensure the read is not happening mid-write)
+and do not seem to correlate to unstable reads.
+
 A single bucket tip is equivalent to 0.3 mm of rain.  The default maximum
 rate is 24 cm/hr (9.44 in/hr).  For a sample period of 5 minutes this would
 be 2 cm (0.78 in) or about 66 bucket tips, or one tip every 4 seconds.  For
 a sample period of 30 minutes this would be 12 cm (4.72 in)
+
+The rain counter is two bytes, so the maximum value is 0xffff or 65535.  This
+translates to 19660.5 mm of rainfall (19.66 m or 64.9 ft).  The console would
+have to run for two years with 2 inches of rainfall a day before the counter
+wraps around.
+
+Pressure Calculations
 
 Pressures are calculated and reported differently by pywws and wview.  These
 are the variables:
@@ -191,15 +213,18 @@ import datetime
 import math
 import time
 import syslog
-
+import threading
 import usb
 
 import weeutil.weeutil
 import weewx.abstractstation
+import weewx.units
 import weewx.wxformulas
 
+DRIVER_VERSION = '1.6'
+
 def loader(config_dict, engine):
-    altitude_m = getaltitudeM(config_dict)
+    altitude_m = weewx.units.getAltitudeM(config_dict)
     station = FineOffsetUSB(altitude=altitude_m,**config_dict['FineOffsetUSB'])
     return station
 
@@ -243,6 +268,36 @@ keymap = {
     'status'      : ('status',       1.0),
 }
 
+# formats for displaying fixed_format fields
+datum_display_formats = {
+    'magic_1' : '0x%2x',
+    'magic_2' : '0x%2x',
+    }
+
+# wrap value for rain counter
+rain_max = 0x10000
+
+# values for status:
+rain_overflow   = 0x80
+lost_connection = 0x40
+#  unknown         = 0x20
+#  unknown         = 0x10
+#  unknown         = 0x08
+#  unknown         = 0x04
+#  unknown         = 0x02
+#  unknown         = 0x01
+
+def decode_status(status):
+    result = {}
+    if status is None:
+        return result
+    for key, mask in (('rain_overflow',   0x80),
+                      ('lost_connection', 0x40),
+                      ('unknown',         0x3f),
+                      ):
+        result[key] = status & mask
+    return result
+
 def pywws2weewx(p, ts, pressure_offset, altitude,
                 last_rain, last_rain_ts, max_rain_rate):
     """Map the pywws dictionary to something weewx understands.
@@ -275,6 +330,10 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
         else:
             packet[k] = None
 
+    # track the pointer used to obtain the data
+    packet['ptr'] = int(p['ptr']) if p.has_key('ptr') else None
+    packet['delay'] = int(p['delay']) if p.has_key('delay') else None
+
     # station status is an integer
     if packet['status'] is not None:
         packet['status'] = int(packet['status'])
@@ -297,61 +356,56 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
     adjp = packet['pressure']
     if pressure_offset is not None and adjp is not None:
         adjp += pressure_offset
-    packet['barometer'] = sp2bp(adjp, altitude, packet['outTemp'])
-    packet['altimeter'] = sp2ap(adjp, altitude)
+    packet['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
+        adjp, altitude, packet['outTemp'])
+    packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
+        adjp, altitude, algorithm='aaNOAA')
 
     # calculate the rain increment from the rain total
+    # watch for spurious rain counter decrement.  if decrement is significant
+    # then it is a counter wraparound.  a small decrement is either a sensor
+    # glitch or a read from a previous record.  if the small decrement persists
+    # across multiple samples, it was probably a firmware glitch rather than
+    # a sensor glitch or old read.  a spurious increment will be filtered by
+    # the bogus rain rate check.
+    total = packet['rain']
     packet['rainTotal'] = packet['rain']
-    packet['rain'] = calculate_rain(packet['rainTotal'], last_rain)
+    if packet['rain'] is not None and last_rain is not None:
+        if packet['rain'] < last_rain:
+            pstr = '0x%04x' % packet['ptr'] if packet['ptr'] is not None else 'None'
+            if last_rain - packet['rain'] < rain_max * 0.3 * 0.5:
+                loginf('ignoring spurious rain counter decrement (%s): '
+                       'new: %s old: %s' % (pstr, packet['rain'], last_rain))
+            else:
+                loginf('rain counter wraparound detected (%s): '
+                       'new: %s old: %s' % (pstr, packet['rain'], last_rain))
+                total += rain_max * 0.3
+    packet['rain'] = weewx.wxformulas.calculate_rain(total, last_rain)
 
     # calculate the rain rate
-    packet['rainRate'] = calculate_rain_rate(packet['rain'],
-                                             packet['dateTime'], last_rain_ts)
+    packet['rainRate'] = weewx.wxformulas.calculate_rain_rate(
+        packet['rain'], packet['dateTime'], last_rain_ts)
 
     # report rainfall in log to diagnose rain counter issues
     if weewx.debug:
         if packet['rain'] is not None and packet['rain'] > 0:
-            logdbg('got rainfall of %.2f cm (new: %.2f old: %.2f)' % (packet['rain'], packet['rainTotal'], last_rain))
+            logdbg('got rainfall of %.2f cm (new: %.2f old: %.2f)' %
+                   (packet['rain'], packet['rainTotal'], last_rain))
         if packet['rainRate'] is not None and packet['rainRate'] > 0:
-            logdbg('calculated rainrate of %.2f cm/hr (%.2f cm in %d seconds)' % (packet['rainRate'], packet['rain'], int(ts - last_rain_ts)))
+            logdbg('calculated rainrate of %.2f cm/hr '
+                   '(%.2f cm in %d seconds)' % (packet['rainRate'],
+                                                packet['rain'],
+                                                int(ts - last_rain_ts)))
 
     # if the rain rate is bogus, ignore the rain and rainRate values
     if packet['rainRate'] is not None and packet['rainRate'] > max_rain_rate:
-        logerr('maximum rain rate exceeded: max: %.2f rate: %.2f cm/hr (%.2f cm in %d s)' % (max_rain_rate, packet['rainRate'], packet['rain'], int(ts - last_rain_ts)))
+        logerr('maximum rain rate exceeded: max: %.2f rate: %.2f cm/hr '
+               '(%.2f cm in %d s)' % (max_rain_rate, packet['rainRate'],
+                                      packet['rain'], int(ts - last_rain_ts)))
         packet['rain'] = None
         packet['rainRate'] = None
 
     return packet
-
-# formats for displaying fixed_format fields
-datum_display_formats = {
-    'magic_1' : '0x%2x',
-    'magic_2' : '0x%2x',
-    }
-
-# wrap value for rain counter
-#  rain_max = 0x10000
-
-# values for status:
-#  rain_overflow   = 0x80
-#  lost_connection = 0x40
-#  unknown         = 0x20
-#  unknown         = 0x10
-#  unknown         = 0x08
-#  unknown         = 0x04
-#  unknown         = 0x02
-#  unknown         = 0x01
-
-def decode_status(status):
-    result = {}
-    if status is None:
-        return result
-    for key, mask in (('rain_overflow',   0x80),
-                      ('lost_connection', 0x40),
-                      ('unknown',         0x3f),
-                      ):
-        result[key] = status & mask
-    return result
 
 # decode weather station raw data formats
 def _signed_byte(raw, offset):
@@ -442,6 +496,11 @@ def _decode(raw, fmt):
             result = raw[pos] + ((raw[pos+1] & 0xF0) << 4)
             if result == 0xFFF:
                 result = None
+        elif typ == 'wd':
+            # wind direction - check bit 7 for invalid
+            result = raw[pos]
+            if result & 0x80:
+                result = None
         elif typ == 'bf':
             # bit field - 'scale' is a list of bit names
             result = {}
@@ -458,129 +517,27 @@ def _bcd_encode(value):
     lo = value % 10
     return (hi * 16) + lo
 
+#def logmsg(level, msg):
+#    syslog.syslog(level, 'fousb: %s: %s' %
+#                  (threading.currentThread().getName(), msg))
+
+def logmsg(level, msg):
+    syslog.syslog(level, 'fousb: %s' % msg)
+
 def logdbg(msg):
-    syslog.syslog(syslog.LOG_DEBUG, 'fousb: %s' % msg)
+    logmsg(syslog.LOG_DEBUG, msg)
 
 def loginf(msg):
-    syslog.syslog(syslog.LOG_INFO, 'fousb: %s' % msg)
+    logmsg(syslog.LOG_INFO, msg)
 
 def logerr(msg):
-    syslog.syslog(syslog.LOG_ERR, 'fousb: %s' % msg)
+    logmsg(syslog.LOG_ERR, msg)
 
 def logcrt(msg):
-    syslog.syslog(syslog.LOG_CRIT, 'fousb: %s' % msg)
-
-# FIXME: the pressure calculations belong in wxformulas
-
-# noaa definitions for station pressure, altimeter setting, and sea level
-# http://www.crh.noaa.gov/bou/awebphp/definitions_pressure.php
-
-# implementation copied from wview
-def sp2ap(sp_mbar, elev_meter):
-    """Convert station pressure to sea level pressure.
-    http://www.wrh.noaa.gov/slc/projects/wxcalc/formulas/altimeterSetting.pdf
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    ap - sea level pressure (altimeter) in millibars
-    """
-
-    if sp_mbar is None or sp_mbar <= 0.3 or elev_meter is None:
-        return None
-    N = 0.190284
-    slp = 1013.25
-    ct = (slp ** N) * 0.0065 / 288
-    vt = elev_meter / ((sp_mbar - 0.3) ** N)
-    ap_mbar = (sp_mbar - 0.3) * ((ct * vt + 1) ** (1/N))
-    return ap_mbar
-
-# implementation copied from wview
-def etterm(elev_meter, t_C):
-    """Calculate elevation/temperature term for sea level calculation."""
-    if elev_meter is None or t_C is None:
-        return None
-    t_K = t_C + 273.15
-    return math.exp( - elev_meter / (t_K * 29.263))
-
-def sp2bp(sp_mbar, elev_meter, t_C):
-    """Convert station pressure to sea level pressure.
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    t_C - temperature in degrees Celsius
-
-    bp - sea level pressure (barometer) in millibars
-    """
-
-    pt = etterm(elev_meter, t_C)
-    if sp_mbar is None or pt is None:
-        return None
-    bp_mbar = sp_mbar / pt if pt != 0 else 0
-    return bp_mbar
-
-# FIXME: this goes in weeutil.weeutil or weewx.units
-def getaltitudeM(config_dict):
-    altitude_t = weeutil.weeutil.option_as_list(
-        config_dict['Station'].get('altitude', (None, None)))
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
-    return altitude_m
-
-# FIXME: this goes in weeutil.weeutil
-def calculate_rain(newtotal, oldtotal):
-    """Calculate the rain differential given two cumulative measurements."""
-    if newtotal is not None and oldtotal is not None:
-        if newtotal >= oldtotal:
-            delta = newtotal - oldtotal
-        else:  # wraparound
-            logerr('rain counter wraparound detected: new: %s old: %s' % (newtotal, oldtotal))
-            delta = None
-    else:
-        delta = None
-    return delta
-
-# FIXME: this goes in weeutil.weeutil
-def calculate_rain_rate(delta_cm, curr_ts, last_ts):
-    """Calculate the rain rate based on the time between two rain readings.
-
-    delta_cm: rainfall since last reading, in cm
-
-    curr_ts: timestamp of current reading, in seconds
-
-    last_ts: timestamp of last reading, in seconds
-
-    return: rain rate in cm per hour
-
-    If the period between readings is zero, ignore the rainfall since there
-    is no way to calculate a rate with no period."""
-
-    if curr_ts is None:
-        return None
-    if last_ts is None:
-        last_ts = curr_ts
-    if delta_cm is not None:
-        period = curr_ts - last_ts
-        if period != 0:
-            rate = 3600 * delta_cm / period
-        else:
-            rate = None
-            if delta_cm != 0:
-                loginf('rain rate period is zero, ignoring rainfall of %f cm' % delta_cm)
-    else:
-        rate = None
-    return rate
+    logmsg(syslog.LOG_CRIT, msg)
 
 class ObservationError(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-    def __repr__(self):
-        return repr(self.msg)
-    def __str__(self):
-        return self.msg
+    pass
 
 # mechanisms for polling the station
 PERIODIC_POLLING = 'PERIODIC'
@@ -625,28 +582,14 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         [Optional. Default is 15 seconds]
         
         wait_before_retry: How long to wait after a failure before retrying.
-        [Optional. Default is 5 seconds]
+        [Optional. Default is 30 seconds]
 
         max_tries: How many times to try before giving up.
         [Optional. Default is 3]
 
-        data_format: Format for data from the station
-        [Optional. Default is 1080, automatically changes to 3080 as needed]
-        
-        vendor_id: The USB vendor ID for the station.
-        [Optional. Default is 1941]
-        
-        product_id: The USB product ID for the station.
-        [Optional. Default is 8021]
-
-        interface: The USB interface.
-        [Optional. Default is 0]
-
-        usb_endpoint: The IN_endpoint for reading from USB.
-        [Optional. Default is 0x81]
-        
-        usb_read_size: Number of bytes to read from USB.
-        [Optional. Default is 32 and is the same for all FineOffset devices]
+        device_id: The USB device ID for the station.  Specify this if there
+        are multiple devices of the same type on the bus.
+        [Optional. No default]
         """
 
         self.altitude          = stn_dict['altitude']
@@ -655,17 +598,19 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.polling_interval  = int(stn_dict.get('polling_interval', 60))
         self.max_rain_rate     = int(stn_dict.get('max_rain_rate', 24))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
-        self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
+        self.wait_before_retry = float(stn_dict.get('wait_before_retry', 30.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
-        self.interface         = int(stn_dict.get('interface', 0))
-        self.vendor_id         = int(stn_dict.get('vendor_id',  '0x1941'), 0)
-        self.product_id        = int(stn_dict.get('product_id', '0x8021'), 0)
-        self.usb_endpoint      = int(stn_dict.get('usb_endpoint', '0x81'), 0)
-        self.usb_read_size     = int(stn_dict.get('usb_read_size', '0x20'), 0)
-        self.data_format       = stn_dict.get('data_format', '1080')
+        self.device_id         = stn_dict.get('device_id', None)
         self.pressure_offset   = stn_dict.get('pressure_offset', None)
         if self.pressure_offset is not None:
             self.pressure_offset = float(self.pressure_offset)
+
+        self.data_format   ='1080'
+        self.vendor_id     = 0x1941
+        self.product_id    = 0x8021
+        self.usb_interface = 0
+        self.usb_endpoint  = 0x81
+        self.usb_read_size = 0x20
 
         # avoid USB activity this many seconds each side of the time when
         # console is believed to be writing to memory.
@@ -673,7 +618,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         # minimum interval between polling for data change
         self.min_pause = 0.5
 
-        self._archive_interval = None
+        self._arcint = None
         self._last_rain_loop = None
         self._last_rain_ts_loop = None
         self._last_rain_arc = None
@@ -685,9 +630,22 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self._current_ptr = None
         self._station_clock = None
         self._sensor_clock = None
+        # start with known magic numbers.  report any additional we encounter.
+        # these are from wview: 55??, ff??, 01??, 001e, 0001
+        # these are from pywws: 55aa, ffff, 5555, c400
+        self._magic_numbers = ['55aa']
+        self._last_magic = None
+
+        # FIXME: get last_rain_arc and last_rain_ts_arc from database
+
+        loginf('driver version is %s' % DRIVER_VERSION)
+        loginf('polling mode is %s' % self.polling_mode)
+        if self.polling_mode.lower() == PERIODIC_POLLING.lower():
+            loginf('polling interval is %s' % self.polling_interval)
+        loginf('altitude is %s meters' % str(self.altitude))
+        loginf('pressure offset is %s' % str(self.pressure_offset))
 
         self.openPort()
-        self._setup()
 
     # Unfortunately there is no provision to obtain the model from the station
     # itself, so use what is specified from the configuration file.
@@ -702,27 +660,41 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         return self._archive_interval_minutes() * 60
 
     def _archive_interval_minutes(self):
-        if self._archive_interval is None:
-            self._archive_interval = self.get_fixed_block(['read_period'])
-        return self._archive_interval
+        if self._arcint is None:
+            for i in range(self.max_tries):
+                try:
+                    self._arcint = self.get_fixed_block(['read_period'])
+                    break
+                except usb.USBError, e:
+                    logcrt("get archive interval failed attempt %d of %d: %s"
+                           % (i+1, self.max_tries, e))
+            else:
+                raise weewx.WeeWxIOError("Unable to read archive interval after %d tries" % self.max_tries)
+        return self._arcint
 
     def openPort(self):
         dev = self._find_device()
         if not dev:
-            logcrt("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x" %
-                   (self.vendor_id, self.product_id))
+            logcrt("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x Device=%s" % (self.vendor_id, self.product_id, self.device_id))
             raise weewx.WeeWxIOError("Unable to find USB device")
+
         self.devh = dev.open()
-        # Detach any old claimed interfaces
+        if not self.devh:
+            raise weewx.WeeWxIOError("Open USB device failed")
+
+        # be sure kernel does not claim the interface
         try:
-            self.devh.detachKernelDriver(self.interface)
-        except:
+            self.devh.detachKernelDriver(self.usb_interface)
+        except Exception, e:
             pass
+
+        # attempt to claim the interface
         try:
-            self.devh.claimInterface(self.interface)
+            self.devh.claimInterface(self.usb_interface)
         except usb.USBError, e:
             self.closePort()
-            logcrt("Unable to claim USB interface: %s" % e)
+            logcrt("Unable to claim USB interface %s: %s" %
+                   (self.usb_interface, e))
             raise weewx.WeeWxIOError(e)
         
     def closePort(self):
@@ -730,29 +702,18 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             self.devh.releaseInterface()
         except:
             pass
-        try:
-            self.devh.detachKernelDriver(self.interface)
-        except:
-            pass
+        self.devh = None
                                
     def _find_device(self):
-        """Find the vendor and product ID on the USB bus."""
+        """Find the vendor and product ID on the USB."""
         for bus in usb.busses():
             for dev in bus.devices:
                 if dev.idVendor == self.vendor_id and dev.idProduct == self.product_id:
-                    return dev
+                    if self.device_id is None or dev.filename == self.device_id:
+                        loginf('found station on USB bus=%s device=%s' % (bus.dirname, dev.filename))
+                        return dev
         return None
 
-    # FIXME: get last_rain_arc and last_rain_ts_arc from database on startup
-    def _setup(self):
-        loginf('polling mode is %s' % self.polling_mode)
-        if self.polling_mode.lower() == PERIODIC_POLLING.lower():
-            loginf('polling interval is %s' % self.polling_interval)
-        loginf('altitude is %s meters' % str(self.altitude))
-        loginf('pressure offset is %s' % str(self.pressure_offset))
-
-# FIXME: is station UTC or local?
-# FIXME: does weewx want UTC or local?
 # There is no point in using the station clock since it cannot be trusted and
 # since we cannot synchronize it with the computer clock.
 
@@ -801,6 +762,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                                self._last_rain_arc, self._last_rain_ts_arc,
                                self.max_rain_rate)
             data['interval'] = r['interval']
+            data['ptr'] = r['ptr']
             self._last_rain_arc = data['rainTotal']
             self._last_rain_ts_arc = ts
             logdbg('returning archive record %s' % ts)
@@ -821,19 +783,31 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         If we get USB read failures, retry until we get something valid.
         """
         nerr = 0
+        old_ptr = None
+        interval = self._archive_interval_minutes()
         while True:
             try:
                 if self.polling_mode.lower() == ADAPTIVE_POLLING.lower():
                     for data,ptr,logged in self.live_data():  # @UnusedVariable
                         nerr = 0
+                        data['ptr'] = ptr
                         yield data
                 elif self.polling_mode.lower() == PERIODIC_POLLING.lower():
                     new_ptr = self.current_pos()
+                    if new_ptr < data_start:
+                        raise ObservationError('bad pointer: 0x%04x' % new_ptr)
                     block = self.get_raw_data(new_ptr, unbuffered=True)
                     if len(block) != reading_len[self.data_format]:
                         raise ObservationError('wrong block length: expected: %d actual: %d' % (reading_len[self.data_format], len(block)))
-                    nerr = 0
                     data = _decode(block, reading_format[self.data_format])
+                    delay = data.get('delay', None)
+                    if delay is None:
+                        raise ObservationError('no delay found in observation')
+                    if new_ptr != old_ptr and delay >= interval:
+                        raise ObservationError('ignoring suspected bogus data from 0x%04x (delay=%s interval=%s)' % (new_ptr, delay, interval))
+                    old_ptr = new_ptr
+                    data['ptr'] = new_ptr
+                    nerr = 0
                     yield data
                     time.sleep(self.polling_interval)
                 else:
@@ -966,7 +940,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         Use the computer clock since we cannot trust the station clock.
 
         Return an array of dict, with each dict containing a datetimestamp
-        in UTC, the pointer, the decoded data, and the raw data.
+        in UTC, the pointer, the decoded data, and the raw data.  Items in the
+        array go from oldest to newest.
         """
         nerr = 0
         while True:
@@ -1039,7 +1014,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         if last_delay is None or last_delay == 0:
             prev_date = datetime.datetime.min
         else:
-            prev_date = datetime.datetime.now()
+            prev_date = datetime.datetime.utcnow()
         maxcount = 10
         count = 0
         for data, last_ptr, logged in self.live_data(logged_only=(quality>1)):
@@ -1088,9 +1063,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 # methods for reading data from the weather station
 # the following were adapted from WeatherStation.py in pywws
 #
-# commit c853b29ee968117ca9e6cf497d9a8afe73367c76
+# commit 7d2e8ec700a652426c0114e7baebcf3460b1ef0f
 # Author: Jim Easterbrook <jim@jim-easterbrook.me.uk>
-# Date:   Mon Apr 1 11:59:54 2013 +0100
+# Date:   Thu Oct 31 13:04:29 2013 +0000
 #==============================================================================
 
     def live_data(self, logged_only=False):
@@ -1180,8 +1155,14 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 result = dict(new_data)
                 if valid_time:
                     # data has just changed, so definitely at a 48s update time
-                    self._sensor_clock = data_time
-                    logdbg('setting sensor clock %g' % (data_time % live_interval))
+                    if self._sensor_clock:
+                        diff = (data_time - self._sensor_clock) % live_interval
+                        if diff > 2.0 and diff < (live_interval - 2.0):
+                            logdbg('unexpected sensor clock change')
+                            self._sensor_clock = None
+                    if not self._sensor_clock:
+                        self._sensor_clock = data_time
+                        logdbg('setting sensor clock %g' % (data_time % live_interval))
                     if not next_live:
                         logdbg('live synchronised')
                     next_live = data_time
@@ -1215,8 +1196,14 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                 result = dict(new_data)
                 if valid_time:
                     # pointer has just changed, so definitely at a logging time
-                    self._station_clock = ptr_time
-                    logdbg('setting station clock %g' % (ptr_time % 60.0))
+                    if self._station_clock:
+                        diff = (ptr_time - self._station_clock) % 60
+                        if diff > 2 and diff < 58:
+                            logdbg('unexpected station clock change')
+                            self._station_clock = None
+                    if not self._station_clock:
+                        self._station_clock = ptr_time
+                        logdbg('setting station clock %g' % (ptr_time % 60.0))
                     if not next_log:
                         logdbg('log synchronised')
                     next_log = ptr_time
@@ -1348,7 +1335,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     self._sensor_clock = None
                 else:
                     pause = min(pause, (self.avoid - phase) % 48)
-            if pause > self.avoid * 2.0:
+            if pause >= self.avoid * 2.0:
                 return
             logdbg('avoid %s' % str(pause))
             time.sleep(pause)
@@ -1372,10 +1359,16 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         result = []
         for mempos in range(0x0000, hi, 0x0020):
             result += self._read_block(mempos)
-        # check 'magic number'
-        if result[:2] not in ([0x55, 0xAA], [0xFF, 0xFF],
-                              [0x55, 0x55], [0xC4, 0x00]):
-            logcrt('unrecognised magic number %02x %02x' % (result[0], result[1]))
+        # check 'magic number'.  log each new one we encounter.
+        magic = '%02x%02x' % (result[0], result[1])
+        if magic not in self._magic_numbers:
+            logcrt('unrecognised magic number %s' % magic)
+            self._magic_numbers.append(magic)
+        if magic != self._last_magic:
+            if self._last_magic is not None:
+                logcrt('magic number changed old=%s new=%s' %
+                       (self._last_magic, magic))
+            self._last_magic = magic
         return result
 
     def _write_byte(self, ptr, value):
@@ -1414,7 +1407,7 @@ reading_format['1080'] = {
     'abs_pressure' : (7, 'us', 0.1),
     'wind_ave'     : (9, 'wa', 0.1),
     'wind_gust'    : (10, 'wg', 0.1),
-    'wind_dir'     : (12, 'ub', None),
+    'wind_dir'     : (12, 'wd', None),
     'rain'         : (13, 'us', 0.3),
     'status'       : (15, 'pb', None),
     }

@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2013 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -7,18 +7,36 @@
 #    $Author$
 #    $Date$
 #
-"""Defines the default station data, available for processing data."""
+"""Defines (mostly static) information about a station."""
 import time
 
 import weeutil.weeutil
 import weewx.units
 
+# For MacOS:
+try:
+    from Quartz.QuartzCore import CACurrentMediaTime
+except ImportError:
+    pass
+
 class StationInfo(object):
-    """Readonly class with static station information."""
+    """Readonly class with static station information. It has no formatting information. Just a POS.
     
+    Attributes:
+    
+    altitude_vt:     Station altitude as a ValueTuple
+    hardware:        A string holding a hardware description
+    rain_year_start: The start of the rain year (1=January)
+    latitude_f:      Floating point latitude
+    longitude_f:     Floating point longitude
+    location:        String holding a description of the station location
+    week_start:      The start of the week (0=Monday)
+    station_url:     An URL with an informative website (if any) about the station
+    """
+
     def __init__(self, console=None, **stn_dict):
         """Extracts info from the console and stn_dict and stores it in self."""
-        
+
         if console and hasattr(console, "altitude_vt"):
             self.altitude_vt = console.altitude_vt
         else:
@@ -37,34 +55,54 @@ class StationInfo(object):
 
         self.latitude_f      = float(stn_dict['latitude'])
         self.longitude_f     = float(stn_dict['longitude'])
-        self.location        = stn_dict.get('location', 'Unknown')
+        # Locations frequently have commas in them. Guard against ConfigObj turning it into a list:
+        self.location        = weeutil.weeutil.list_as_string(stn_dict.get('location', 'Unknown'))
         self.week_start      = int(stn_dict.get('week_start', 6))
+        self.station_url     = stn_dict.get('station_url', None)
+        # For backwards compatibility:
+        self.webpath         = self.station_url
 
 class Station(object):
-    """Formatted data about the station. Rarely changes."""
-    def __init__(self, stn_info,  webpath, formatter, converter, skin_dict):
-        """Extracts info from the config_dict and stores it in self."""
-        self.hemispheres = skin_dict['Labels'].get('hemispheres', ('N','S','E','W'))
-        self.latitude_f  = stn_info.latitude_f
-        self.longitude_f = stn_info.longitude_f
-        self.latitude    = weeutil.weeutil.latlon_string(stn_info.latitude_f,  self.hemispheres[0:2], 'lat')
-        self.longitude   = weeutil.weeutil.latlon_string(stn_info.longitude_f, self.hemispheres[2:4], 'lon')
-        self.location    = stn_info.location
-        self.hardware    = stn_info.hardware
-        self.altitude_vt = stn_info.altitude_vt
-        self.altitude    = weewx.units.ValueHelper(value_t=stn_info.altitude_vt,
-                                                   formatter=formatter,
-                                                   converter=converter)
-        self.rain_year_start = stn_info.rain_year_start
-        self.rain_year_str   = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))
-        self.week_start      = stn_info.week_start
+    """Formatted version of StationInfo."""
+    
+    def __init__(self, stn_info, formatter, converter, skin_dict):
+        
+        # Store away my instance of StationInfo
+        self.stn_info = stn_info
+        
+        # Add a bunch of formatted attributes:
+        label_dict = skin_dict.get('Labels', {})
+        hemispheres    = label_dict.get('hemispheres', ('N','S','E','W'))
+        latlon_formats = label_dict.get('latlon_formats')
+        self.latitude  = weeutil.weeutil.latlon_string(stn_info.latitude_f,  
+                                                       hemispheres[0:2],
+                                                       'lat', latlon_formats)
+        self.longitude = weeutil.weeutil.latlon_string(stn_info.longitude_f, 
+                                                       hemispheres[2:4],
+                                                       'lon', latlon_formats)
+        self.altitude = weewx.units.ValueHelper(value_t=stn_info.altitude_vt,
+                                                formatter=formatter,
+                                                converter=converter)
+        self.rain_year_str = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))
         self.uptime = weeutil.weeutil.secs_to_string(time.time() - weewx.launchtime_ts) if weewx.launchtime_ts else ''
         self.version = weewx.__version__
-        # The following works on Linux only:
+
+        # Get the uptime. Because this is highly operating system dependent, several
+        # different strategies may have to be tried:
+        os_uptime_secs = None
         try:
-            os_uptime_secs =  float(open("/proc/uptime").read().split()[0])
-            self.os_uptime = weeutil.weeutil.secs_to_string(int(os_uptime_secs + 0.5))
+            # For Linux:
+            os_uptime_secs = float(open("/proc/uptime").read().split()[0])
         except (IOError, KeyError):
-            self.os_uptime = ''
-    
-        self.webpath = webpath
+            try:
+                # For MacOs:
+                os_uptime_secs = CACurrentMediaTime()
+            except NameError:
+                pass
+        if os_uptime_secs:
+            self.os_uptime = weeutil.weeutil.secs_to_string(int(os_uptime_secs + 0.5))
+
+    def __getattr__(self, name):
+        # For anything that is not an explicit attribute of me, try
+        # my instance of StationInfo. 
+        return getattr(self.stn_info, name)

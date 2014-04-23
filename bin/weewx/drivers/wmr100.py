@@ -38,29 +38,23 @@ import weewx.units
 import weewx.wxformulas
 
 def loader(config_dict, engine):
-
-    # The WMR driver needs the altitude in meters. Get it from the Station data
-    # and do any necessary conversions.
-    altitude_t = weeutil.weeutil.option_as_list(config_dict['Station'].get('altitude', (None, None)))
-    # Form a value-tuple:
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    # Now convert to meters, using only the first element of the returned value-tuple:
-    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
-    
-    station = WMR_USB(altitude=altitude_m, **config_dict['WMR100'])
-    
+    altitude_m = weewx.units.getAltitudeM(config_dict)
+    station = WMR100(altitude=altitude_m, **config_dict['WMR100'])    
     return station
         
-class WMR_USB(weewx.abstractstation.AbstractStation):
-    """Driver for the WMR_USB station."""
+class WMR100(weewx.abstractstation.AbstractStation):
+    """Driver for the WMR100 station."""
     
     def __init__(self, **stn_dict) :
-        """Initialize an object of type WMR_USB.
+        """Initialize an object of type WMR100.
         
         NAMED ARGUMENTS:
         
         altitude: The altitude in meters. Required.
         
+        model: Which station model is this?
+        [Optional. Default is 'WMR100']
+
         stale_wind: Max time wind speed can be used to calculate wind chill
         before being declared unusable. [Optional. Default is 30 seconds]
         
@@ -83,6 +77,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
         """
         
         self.altitude          = stn_dict['altitude']
+        self.model             = stn_dict.get('model', 'WMR100')
         # TODO: Consider changing this so these go in the driver loader instead:
         self.record_generation = stn_dict.get('record_generation', 'software')
         self.stale_wind        = float(stn_dict.get('stale_wind', 30.0))
@@ -100,7 +95,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
     def openPort(self):
         dev = self._findDevice()
         if not dev:
-            syslog.syslog(syslog.LOG_ERR, "wmrx: Unable to find USB device (0x%04x, 0x%04x)" % (self.vendor_id, self.product_id))
+            syslog.syslog(syslog.LOG_ERR, "wmr100: Unable to find USB device (0x%04x, 0x%04x)" % (self.vendor_id, self.product_id))
             raise weewx.WeeWxIOError("Unable to find USB device")
         self.devh = dev.open()
         # Detach any old claimed interfaces
@@ -112,7 +107,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
             self.devh.claimInterface(self.interface)
         except usb.USBError, e:
             self.closePort()
-            syslog.syslog(syslog.LOG_CRIT, "wmrx: Unable to claim USB interface. Reason: %s" % e)
+            syslog.syslog(syslog.LOG_CRIT, "wmr100: Unable to claim USB interface. Reason: %s" % e)
             raise weewx.WeeWxIOError(e)
         
     def closePort(self):
@@ -132,11 +127,14 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
         # observation type.
         
         for _packet in self.genPackets():
-            _packet_type = _packet[1]
-            if _packet_type in WMR_USB._dispatch_dict:
-                _record = WMR_USB._dispatch_dict[_packet_type](self, _packet)
-                if _record is not None : 
-                    yield _record
+            try:
+                _packet_type = _packet[1]
+                if _packet_type in WMR100._dispatch_dict:
+                    _record = WMR100._dispatch_dict[_packet_type](self, _packet)
+                    if _record is not None : 
+                        yield _record
+            except IndexError:
+                syslog.syslog(syslog.LOG_ERR, "wmr100: Malformed packet. %s" % _packet)
                 
     def genPackets(self):
         """Generate measurement packets. These are 8 to 17 byte long packets containing
@@ -167,7 +165,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
                     computed_checksum = reduce(operator.iadd, buff[:-2])
                 except TypeError, e:
                     if weewx.debug:
-                        syslog.syslog(syslog.LOG_DEBUG, "wmrx: Exception while calculating checksum.")
+                        syslog.syslog(syslog.LOG_DEBUG, "wmr100: Exception while calculating checksum.")
                         syslog.syslog(syslog.LOG_DEBUG, "****  %s" % e)
                 else:
                     actual_checksum   = (buff[-1] << 8) + buff[-2]
@@ -175,7 +173,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
                         # Looks good. Yield the packet
                         yield buff
                     elif weewx.debug:
-                        syslog.syslog(syslog.LOG_DEBUG, "wmrx: Bad checksum on buffer of length %d" % len(buff))
+                        syslog.syslog(syslog.LOG_DEBUG, "wmr100: Bad checksum on buffer of length %d" % len(buff))
                 # Throw away the next character (which will be 0xff):
                 genBytes.next()
                 # Start with a fresh buffer
@@ -185,7 +183,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
              
     @property
     def hardware_name(self):
-        return "WMR100"
+        return self.model
         
     #===============================================================================
     #                         USB functions
@@ -211,7 +209,7 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
                                  0x0000000,                                  # index
                                  1000)                                       # timeout
         except usb.USBError, e:
-            syslog.syslog(syslog.LOG_ERR, "wmrx: Unable to send USB control message")
+            syslog.syslog(syslog.LOG_ERR, "wmr100: Unable to send USB control message")
             syslog.syslog(syslog.LOG_ERR, "****  %s" % e)
             # Convert to a Weewx error:
             raise weewx.WakeupError(e)
@@ -230,11 +228,11 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
                     yield report[i]
                 nerrors = 0
             except (IndexError, usb.USBError), e:
-                syslog.syslog(syslog.LOG_DEBUG, "wmrx: Bad USB report received.")
+                syslog.syslog(syslog.LOG_DEBUG, "wmr100: Bad USB report received.")
                 syslog.syslog(syslog.LOG_DEBUG, "***** %s" % e)
                 nerrors += 1
                 if nerrors>self.max_tries:
-                    syslog.syslog(syslog.LOG_ERR, "wmrx: Max retries exceeded while fetching USB reports")
+                    syslog.syslog(syslog.LOG_ERR, "wmr100: Max retries exceeded while fetching USB reports")
                     raise weewx.RetriesExceeded("Max retries exceeded while fetching USB reports")
                 time.sleep(self.wait_before_retry)
     
@@ -293,6 +291,8 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
             except AttributeError:
                 pass
             _record['outTempBatteryStatus'] = (packet[0] & 0x40) >> 6
+            # Save the record containing outside temperature to be used for calculating SLP barometer
+            self.last_temperature_record = _record
         elif channel >= 2:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
@@ -327,6 +327,9 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
             except AttributeError:
                 pass
             _record['outTempBatteryStatus'] = (packet[0] & 0x40) >> 6
+            # Save the record containing outside temperature to be used for calculating SLP barometer
+            self.last_temperature_record = _record
+
         elif channel >= 2:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
@@ -336,8 +339,14 @@ class WMR_USB(weewx.abstractstation.AbstractStation):
 
     def _barometer_packet(self, packet):
         SP  = float(((packet[3] & 0x0f) << 8) + packet[2])
-        SLP = float(((packet[5] & 0x0f) << 8) + packet[4])
         SA = weewx.wxformulas.altimeter_pressure_Metric(SP, self.altitude)
+        # Although the WMR100 emits SLP, not all consoles in the series (notably, the WMRS200) allow
+        # the user to set altitude. So, we must calculate in software. 
+        # SLP = float(((packet[5] & 0x0f) << 8) + packet[4])
+        try:
+            SLP = weewx.wxformulas.sealevel_pressure_Metric(SP, self.altitude, self.last_temperature_record['outTemp'])
+        except (AttributeError, KeyError):
+            SLP = None
         _record = {'barometer'   : SLP,
                    'pressure'    : SP,
                    'altimeter'   : SA,

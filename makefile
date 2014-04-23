@@ -4,13 +4,18 @@
 #
 # this makefile controls the build and packaging of weewx
 
-# extract strings from setup.py to be inserted into package control files
+# if you do not want to sign the packages, set SIGN to 0
+SIGN=1
+
+# destination for uploading everything
+RELDIR=frs.sourceforge.net:/home/frs/project/weewx/development_versions
+
+# extract version to be used in package controls and labels
 VERSION=$(shell grep __version__ bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
 
 CWD = $(shell pwd)
 BLDDIR=build
 DSTDIR=dist
-RELDIR=frs.sourceforge.net:/home/frs/project/weewx/development_versions
 
 all: help
 
@@ -61,6 +66,7 @@ test:
 	@rm -f $(BLDDIR)/test-results
 	@mkdir -p $(BLDDIR)
 	@for f in $(SUITE); do \
+  echo running $$f; \
   echo $$f >> $(BLDDIR)/test-results; \
   PYTHONPATH=bin python $$f 2>> $(BLDDIR)/test-results; \
   echo >> $(BLDDIR)/test-results; \
@@ -88,8 +94,11 @@ weewx packages      \n\
 $(DEBPKG)\n\
    for Debian, Ubuntu, Mint\n\
 \n\
-$(RPMPKG)\n\
+weewx-$(RPMVER).rhel.$(RPMARCH).rpm\n\
    for Redhat, CentOS, Fedora\n\
+\n\
+weewx-$(RPMVER).suse.$(RPMARCH).rpm\n\
+   for SuSE, OpenSuSE\n\
 \n\
 $(SRCPKG)\n\
    for all operating systems including Linux, BSD, MacOSX\n\
@@ -130,7 +139,9 @@ deb-changelog:
 DEBARCH=all
 DEBBLDDIR=$(BLDDIR)/weewx-$(VERSION)
 DEBPKG=weewx_$(VERSION)-$(DEBREVISION)_$(DEBARCH).deb
+ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
+endif
 deb-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(BLDDIR)
 	cp $(DSTDIR)/$(SRCPKG) $(BLDDIR)
@@ -169,10 +180,11 @@ rpm-changelog:
 	cat pkg/changelog.rpm >> pkg/changelog.rpm.new
 	mv pkg/changelog.rpm.new pkg/changelog.rpm
 
-# use rpmbuild to create the redhat package
+# use rpmbuild to create the rpm package
 RPMARCH=noarch
-RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER)_$(RPMARCH)
-RPMPKG=weewx-$(RPMVER).$(RPMARCH).rpm
+RPMOS=$(shell if [ -f /etc/SuSE-release ]; then echo .suse; else echo .rhel; fi)
+RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER)$(RPMOS).$(RPMARCH)
+RPMPKG=weewx-$(RPMVER)$(RPMOS).$(RPMARCH).rpm
 rpm-package: $(DSTDIR)/$(SRCPKG)
 	rm -rf $(RPMBLDDIR)
 	mkdir -p -m 0755 $(RPMBLDDIR)
@@ -189,9 +201,11 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	rpmbuild -ba --clean --define '_topdir $(CWD)/$(RPMBLDDIR)' --target noarch $(CWD)/$(RPMBLDDIR)/SPECS/weewx.spec
 	mkdir -p $(DSTDIR)
 	mv $(RPMBLDDIR)/RPMS/$(RPMARCH)/$(RPMPKG) $(DSTDIR)
-	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER).src.rpm $(DSTDIR)
-#	rpm --addsign $(DSTDIR)/$(RPMPKG)
-#	rpm --addsign $(DSTDIR)/weewx-$(RPMVER).src.rpm
+#	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER)$(RPMOS).src.rpm $(DSTDIR)
+ifeq ("$(SIGN)","1")
+	rpm --addsign $(DSTDIR)/$(RPMPKG)
+#	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
+endif
 
 # run rpmlint on the redhat package
 check-rpm:

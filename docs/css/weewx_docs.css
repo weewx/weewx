@@ -1,0 +1,224 @@
+/* styles for weewx documentation */
+﻿/* $Id$ */
+
+html, body{
+  font-family: Verdana,arial,sans-serif;
+  font-size: 11pt;
+  color: black;
+}
+li {
+  margin-right: 10%;
+  margin-top: 10px;
+}
+#toc li {
+  margin-top: 0px;
+}
+dt {
+  margin-top: 10px;
+}
+dd {
+  margin-top: 5px;
+}
+h1 {
+  font-size: 160%;
+  font-weight: bold;
+  color: #FFFFFF;
+  border: 1px solid black;
+  background-color: #008080;
+  padding-left: .5em;
+  padding-right: .5em;
+  margin-top: 30pt;
+}
+h2 {
+  font-size: 140%;
+  font-weight: bold;
+  color: teal;
+  margin-top: 20pt;
+}
+h3 {
+  font-size: 120%;
+  font-weight: bold;
+  color: teal;
+}
+h4 {
+  font-size: 100%;
+  font-weight: bold;
+  color: teal;
+}
+table {
+  border-collapse: collapse;
+  border: 1px solid #cccccc;
+  width: 80%
+}
+tr {
+  vertical-align: top;
+}
+td {
+  border: 1px solid #cccccc;
+  padding: 5px;
+}
+caption {
+  background-color: #aacccc;
+  margin: 0;
+  margin-bottom: 8px;
+  border: 1px solid #888888;
+  padding: 6px 16px;
+  font-weight: bold;
+}
+.code {
+  font-family: "Courier New", Courier, monospace;
+}
+.symcode {
+  font-family: "Courier New", Courier, monospace;
+  font-style: italic;
+}
+.indent {
+  margin-left: 40px;
+  margin-right: 80px;
+}
+.tty {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 90%;
+  margin: 0px 20px 0px 20px;
+  background-color: #FFFFe0;
+  border: 1px solid #ddddaa;
+  padding: 3px;
+  white-space: pre;
+}
+.title {
+  margin-top: 0px;
+}
+.config_section {
+}
+.config_option {
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+  color: black;
+  margin-bottom: -12px;
+}
+.config_important {
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+  color: #bb9900;
+  margin-bottom: -12px;
+}
+.highlight {
+  background-color: #FFCC99;
+}
+.text_highlight, .first_col{
+  font-weight: bold;
+  background-color: #eef0f0;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+table .first_row {
+  font-weight: bold;
+  background-color: #ddefef;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.center {
+  text-align: center;
+}
+.example_output {
+  font-family: "Times New Roman", Times, serif;
+  padding: 5px;
+  border: thin #000000 dotted;
+  margin: 0px 20px 0px 20px;
+}
+div#toc ul {
+  list-style: none;
+}
+.image {
+  padding: 5px;
+}
+.image-right {
+  padding-left: 50px;
+  padding-right: 20px;
+  float: right;
+}
+.image_caption {
+  font-size: 80%;
+  text-align: center;	
+}
+.note {
+  background-color: #cce0d0;
+  border: 1px solid #aac0b0;
+  margin: 10px;
+  margin-left: 30px;
+  padding: 12px;
+  width: 80%;
+}
+.warning {
+  background-color: #ffeeee;
+  border: 1px solid #ffdddd;
+  margin: 10px;
+  margin-left: 30px;
+  padding: 12px;
+  width: 80%;
+}
+.copyright {
+  font-style: italic;
+  text-align: right;
+  color: #FFFFFF;
+  border: 1px solid black;
+  background-color: #008080;
+  padding-top: 5px;
+  padding-bottom: 10px;
+  padding-right: 10px;
+  margin-top: 30pt;
+}
+.prompt {
+  font-weight: bold;
+}
+.thumbnail {
+  width: 14px;
+}
+.locations {
+  margin-left: 20px;
+  border: none;
+}
+.locations tr {
+  border: none;
+  vertical-align: middle;
+}
+.locations_banner {
+  font-weight: bold;
+  border: 1px solid #447777;
+}
+.tabs {
+  float: left;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+.tab {
+  font-size: 80%;
+  font-weight: bold;
+  color: #aaaaaa;
+  margin: 0px;
+  padding: 4px 16px 4px 16px;
+  float: left;
+  cursor: pointer;
+}
+.selected {
+  color: black;
+  border-top: 1px solid #447777;
+  border-left: 1px solid #447777;
+  border-right: 1px solid #447777;
+  background-color: #aacccc;
+  //background-color: #FFFFe0;
+}
+.version {
+  font-size: 60%;
+}
+.logo {
+  width: 48px;
+  padding-right: 10px;
+}
+.popup-note {
+  font-size: 80%;
+}
+div .ui-widget-header {
+  border: 1px solid black;
+  background: #aacccc;
+}

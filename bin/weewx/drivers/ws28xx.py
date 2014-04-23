@@ -18,8 +18,8 @@
 # and reverse engineering into a functional Python implementation.  Eddie's
 # work was based on reverse engineering of HeavyWeather 2800 v 1.54
 #
-# Thanks to Luc for enumerating the console message types and for debugging
-# the transceiver/console communication timing issues.
+# Thanks to Lucas Heijst for enumerating the console message types and for
+# debugging the transceiver/console communication timing issues.
 
 """Classes and functions for interfacing with WS-28xx weather stations.
 
@@ -33,7 +33,7 @@ LaCrosse makes a number of stations in the 28xx series, including:
   WS-2815, WS-2815U-IT
   C86234
 
-The station is also sold as the TFA Primus and TechnoLine.
+The station is also sold as the TFA Primus, TFA Opus, and TechnoLine.
 
 HeavyWeather is the software provided by LaCrosse.
 
@@ -50,7 +50,7 @@ HeavyWeather provides the following weather station settings:
   time display: 12|24 hour
   temperature display: C|F
   air pressure display: inhg|hpa
-  wind speed display: m/s|knos|bft|km/h|mph
+  wind speed display: m/s|knots|bft|km/h|mph
   rain display: mm|inch
   recording interval: 1m
   keep weather station in hi-speed communication mode: true/false
@@ -61,7 +61,7 @@ on the PC.  We do not believe most users need to enable this setting.  It was
 provided at the request of users who prefer ultra-frequent uploads."
 
 The HeavyWeatherPro 'CurrentWeather' view is updated as data arrive from the
-console.  The consonle sends current weather data approximately every 13
+console.  The console sends current weather data approximately every 13
 seconds.
 
 Historical data are updated less frequently - every 2 hours in the default
@@ -106,17 +106,31 @@ by one of the following methods:
 
 In each case a Request Time message is received by the transceiver from the
 console. The 'Send Time to WS' message should be sent within ms (10 ms
-typical). The transceiver should handle the 'Time SET' message about 125 ms
-after the 'Send Time to WS' message. When complete, the console and transceiver
-will have been synchronized.
+typical). The transceiver should handle the 'Time SET' message then send a
+'Time/Config written' message about 85 ms after the 'Send Time to WS' message.
+When complete, the console and transceiver will have been synchronized.
 
 Timing
 
-Outstanding history messages follow each other after 300 - 2600 ms (typical
-500 ms). The best polling period appears to be 50 ms, with an average duration
-of the polling loop of 3 - 4 ms. This will catch both Clock SET and History
-messages. A longer polling period will catch some messages, but often misses
-History messages and results in console and transceiver becoming out of synch.
+Current Weather messages, History messages, getConfig/setConfig messages, and
+setTime messages each have their own timing.  Missed History messages - as a
+result of bad timing - result in console and transceiver becoming out of synch.
+
+Current Weather
+
+The console periodically sends Current Weather messages, each with the latest
+values from the sensors.  The CommModeInterval determines how often the console
+will send Current Weather messages.
+
+History
+
+The console records data periodically at an interval defined by the
+HistoryInterval parameter.  The factory default setting is 2 hours.
+Each history record contains a timestamp.  Timestamps use the time from the
+console clock.  The console can record up to 1797 history records.
+
+Reading 1795 history records took about 110 minutes on a raspberry pi, for
+an average of 3.6 seconds per history record.
 
 Message Types
 
@@ -132,315 +146,718 @@ d6   GetFrame           0x111 (273)
 d7   SetState           0x15  (21)
 d8   SetPreamblePattern 0x15  (21)
 d9   Execute            0x0f  (15)
-dc   ReadConfigFlash<   0x15  (21)   
-dd   ReadConfigFlash>   0x15  (21)   
+dc   ReadConfigFlash<   0x15  (21)
+dd   ReadConfigFlash>   0x15  (21)
 de   GetState           0x0a  (10)
 f0   WriteReg           0x05  (5)
 
-1. 01 message
+In the following sections, some messages are decomposed using the following
+structure:
 
-Examples:
- 0  0  0  0  0  0  0  0  0  1  1  1  1  1  1
- 1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+  start   position in message buffer
+  hi-lo   data starts on first (hi) or second (lo) nibble
+  chars   data length in characters (nibbles)
+  rem     remark
+  name    variable
 
-01 15 00 0b 08 58 3f 53 00 00 00 00 ff 15 0b (detected via USB sniffer)
-01 15 00 57 01 92 3f 53 00 00 00 00 ff 15 0a (detected via USB sniffer)
+-------------------------------------------------------------------------------
+1. 01 message (15 bytes)
 
-01:    messageID
+000:  01 15 00 0b 08 58 3f 53 00 00   00 00 ff 15 0b (detected via USB sniffer)
+000:  01 15 00 57 01 92 3f 53 00 00   00 00 ff 15 0a (detected via USB sniffer)
+
+00:    messageID
 02-15: ??
 
-2. SetRX message
+-------------------------------------------------------------------------------
+2. SetRX message (21 bytes)
 
-Example:
- 0  0  0  0  0  0  0  0  0  1  1  1  1  1  1
- 1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+000:  d0 00 00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00 00 00
+020:  00 
+  
+00:    messageID
+01-20: 00
 
-d0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 - SetRX
+-------------------------------------------------------------------------------
+3. SetTX message (21 bytes)
 
-01:    messageID
-02-15: 00
+000: d1 00 00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00 00 00
+020: 00 
+  
+00:    messageID
+01-20: 00
 
-3. SetTX message
-
-Example:
- 0  0  0  0  0  0  0  0  0  1  1  1  1  1  1
- 1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
-
-d1 00 00 00 00 00 00 00 00 00 00 00 00 00 00 - SetTX
-
-01:    messageID
-02-15: 00
-
-4. SetFrame message
-
-Example:
- 0  0  0  0  0  0  0  0  0  1  1  1  1  1  1
- 1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
-
-d5 00 09 01 2e 05 04 cb 00 40 4e 20 .. .. .. .. .. - rtGetCurrent
-d5 00 09 01 2e 00 04 cb 00 40 4e 20 .. .. .. .. .. - rtGetHistory 
-d5 00 09 01 2e 01 04 cb 00 40 4e 20 .. .. .. .. .. - rtSetTime
-d5 00 0c 01 2e c0 04 cb 06 28 09 75 51 30 01 .. .. - Send Time (2013-05-15 09:28:06)
-
-01:    messageID
-02:    00
-03:    Message Length (starting with next byte)
-04-05: DeviceID   
-06:    Action
-07-08: Checksum
-
-rtGetCurrent, rtGetHistory, rtSetTime:
-09:    ComInt-high byte
-10:    ComInt-low byte / LatestHistoryIndex-high byte
-11-12: LatestHistoryIndex-low bytes
-
-Send Time:
-09:    seconds
-10:    minutes
-11:    hours
-12:    DayOfWeek / day-low byte
-13:    month-low byte / day-high byte
-14:    (year-2000)-low byte / month-high byte
-15:    (year-2000)-high byte
+-------------------------------------------------------------------------------
+4. SetFrame message (273 bytes)
 
 Action:
-00: rtGetHistory       
-01: rtSetTime (ask console to send Request Time message)
-??: rtGetConfig
-??: rtSetConfig
-??: rtFirstConfig 
-05: rtGetCurrent
-c0: Send Time to WS console
+00: rtGetHistory - Ask for History message
+01: rtSetTime    - Ask for Send Time to weather station message
+02: rtSetConfig  - Ask for Send Config to weather station message
+03: rtGetConfig  - Ask for Config message
+05: rtGetCurrent - Ask for Current Weather message
+c0: Send Time    - Send Time to WS
+40: Send Config  - Send Config to WS
 
+000:  d5 00 09 DevID 00 CfgCS cIntThisAdr xx xx xx  rtGetHistory 
+000:  d5 00 09 DevID 01 CfgCS cIntThisAdr xx xx xx  rtReqSetTime
+000:  d5 00 09 DevID 02 CfgCS cIntThisAdr xx xx xx  rtReqSetConfig
+000:  d5 00 09 DevID 03 CfgCS cIntThisAdr xx xx xx  rtGetConfig
+000:  d5 00 09 DevID 05 CfgCS cIntThisAdr xx xx xx  rtGetCurrent
+000:  d5 00 0c DevID c0 CfgCS [TimeData . .. .. ..  Send Time
+000:  d5 00 30 DevID 40 CfgCS [ConfigData .. .. ..  Send Config
+
+All SetFrame messages:
+00:    messageID
+01:    00
+02:    Message Length (starting with next byte)
+03-04: DeviceID           [DevID]
+05:    Action
+06-07: Config checksum    [CfgCS]
+
+Additional bytes rtGetCurrent, rtGetHistory, rtSetTime messages:
+08-09hi: ComInt             [cINT]    1.5 bytes (high byte first)
+09lo-11: ThisHistoryAddress [ThisAdr] 2.5 bytes (high byte first)
+
+Additional bytes Send Time message:
+08:    seconds
+09:    minutes
+10:    hours
+11hi:  DayOfWeek
+11lo:  day_lo         (low byte)
+12hi:  month_lo       (low byte)
+12lo:  day_hi         (high byte)
+13hi:  (year-2000)_lo (low byte)
+13lo:  month_hi       (high byte)
+14lo:  (year-2000)_hi (high byte)
+
+-------------------------------------------------------------------------------
 5. GetFrame message
 
-Examples:
- 0  0  0  0  0  0  0  0  0  1  1  1  1  1  1  1  1  1  1  2  2 .. ..
- 1  2  3  4  5  6  7  8  9  0  1  2  3  4  5  6  7  8  9  0  1 .. ..
+Response type:
+20: WS SetTime / SetConfig - Data written
+40: GetConfig
+60: Current Weather
+80: Actual / Outstanding History
+a1: Request First-Time Config
+a2: Request SetConfig
+a3: Request SetTime
 
-00 00 06 01 2e 20 64 04 cb .. .. .. .. .. .. .. .. - clock SET
-00 00 1e 01 2e 80 64 04 cb 00 4e 20 00 4d fc .. .. - Outstanding History
-00 00 1e 01 2e 80 64 04 cb 00 4e 20 00 4e 20 .. .. - Actual History
-00 00 d7 01 2e 60 64 04 cb .. .. .. .. .. .. .. .. - Current Weather
-00 00 06 01 2e a3 64 04 cb .. .. .. .. .. .. .. .. - Request Time
+000:  00 00 06 DevID 20 64 CfgCS xx xx xx xx xx xx xx xx xx  Time/Config written
+000:  00 00 30 DevID 40 64 [ConfigData .. .. .. .. .. .. ..  GetConfig
+000:  00 00 d7 DevID 60 64 CfgCS [CurData .. .. .. .. .. ..  Current Weather
+000:  00 00 1e DevID 80 64 CfgCS 0LateAdr 0ThisAdr [HisData  Outstanding History
+000:  00 00 1e DevID 80 64 CfgCS 0LateAdr 0ThisAdr [HisData  Actual History
+000:  00 00 06 DevID a1 64 CfgCS xx xx xx xx xx xx xx xx xx  Request FirstConfig
+000:  00 00 06 DevID a2 64 CfgCS xx xx xx xx xx xx xx xx xx  Request SetConfig
+000:  00 00 06 DevID a3 64 CfgCS xx xx xx xx xx xx xx xx xx  Request SetTime
 
-01:    messageID
-02:    00
-03:    Message Length (starting with next byte)
-04-05: DeviceID       
-06:    responseType / BatteryStat
-07:    Quality (in steps of 5)
-08-09: Checksum
+ReadConfig example:  
+000: 01 2e 40 5f 36 53 02 00 00 00  00 81 00 04 10 00 82 00 04 20
+020: 00 71 41 72 42 00 05 00 00 00  27 10 00 02 83 60 96 01 03 07
+040: 21 04 01 00 00 00 CfgCS
 
-Outstanding History:
-10-12: LatestHistoryIndex (Latest to sent)
-13-15: ThisHistoryIndex   (Outstanding)
+WriteConfig example:
+000: 01 2e 40 64 36 53 02 00 00 00  00 00 10 04 00 81 00 20 04 00
+020: 82 41 71 42 72 00 00 05 00 00  00 10 27 01 96 60 83 02 01 04
+040: 21 07 03 10 00 00 CfgCS
 
-Actual History:
-10-12: LatestHistoryIndex (same as ThisHistoryIndex)
-13-15: ThisHistoryIndex
+00:    messageID
+01:    00
+02:    Message Length (starting with next byte)
+03-04: DeviceID [devID]
+05hi:  responseType
+06:    Quality (in steps of 5)
 
-responsetype:
-20: Clock SET (WsAck)
-40: Config
-60: CurrentData
-80: HistoryData
-a0: Request Time (NextAction)
+Additional byte GetFrame messages except Request SetConfig and Request SetTime:
+05lo:  BatteryStat 8=WS bat low; 4=TMP bat low; 2=RAIN bat low; 1=WIND bat low
 
+Additional byte Request SetConfig and Request SetTime:
+05lo:  RequestID
+
+Additional bytes all GetFrame messages except ReadConfig and WriteConfig
+07-08: Config checksum [CfgCS]
+
+Additional bytes Outstanding History:
+09lo-11: LatestHistoryAddress [LateAdr] 2.5 bytes (Latest to sent)
+12lo-14: ThisHistoryAddress   [ThisAdr] 2.5 bytes (Outstanding)
+
+Additional bytes Actual History:
+09lo-11: LatestHistoryAddress [ThisAdr] 2.5 bytes (LatestHistoryAddress is the)
+12lo-14: ThisHistoryAddress   [ThisAdr] 2.5 bytes (same as ThisHistoryAddress)
+
+Additional bytes ReadConfig and WriteConfig
+43-45: ResetMinMaxFlags (Output only; not included in checksum calculation)
+46-47: Config checksum [CfgCS] (CheckSum = sum of bytes (00-42) + 7)
+
+-------------------------------------------------------------------------------
 6. SetState message
 
-Example:
- 0  0  0  0  0  0  0  0  0  1  1  1  1  1  1
- 1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+000:  d7 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-d7 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00:    messageID
+01-14: 00
 
-01:    messageID
-02-15: 00
+-------------------------------------------------------------------------------
+7. SetPreamblePattern message
 
-7. SetPreablePattern message
+000:  d8 aa 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-Example:
- 0  0  0  0  0  0  0  0  0  1  1  1  1  1  1
- 1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+00:    messageID
+01:    ??
+02-14: 00
 
-d8 aa 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-01:    messageID
-02:    ??
-03-15: 00
-
+-------------------------------------------------------------------------------
 8. Execute message
 
-Example:
- 0  0  0  0  0  0  0  0  0  1  1  1  1  1  1
- 1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+000:  d9 05 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-d9 05 00 00 00 00 00 00 00 00 00 00 00 00 00
+00:    messageID
+01:    ??
+02-14: 00
 
-01:    messageID
-02:    ??
-03-15: 00
+-------------------------------------------------------------------------------
+9. ReadConfigFlash in - receive data
 
-9. ReadConfigFlash< message
+000: dc 0a 01 f5 00 01 78 a0 01 02  0a 0c 0c 01 2e ff ff ff ff ff - freq correction
+000: dc 0a 01 f9 01 02 0a 0c 0c 01  2e ff ff ff ff ff ff ff ff ff - transceiver data
 
-Examples:
- 0  0  0  0  0  0  0  0  0  1  1  1  1  1  1
- 1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+00:    messageID
+01:    length
+02-03: address
 
-dc 0a 01 f5 00 01 78 a0 01 02 0a 0c 0c 01 2e
-dc 0a 01 f9 01 02 0a 0c 0c 01 2e ff ff ff ff
+Additional bytes frequency correction
+05lo-07hi: frequency correction
 
-01:    messageID
-02-15: ??
+Additional bytes transceiver data
+05-10:     serial number
+09-10:     DeviceID [devID]
 
-10. ReadConfigFlash> message
+-------------------------------------------------------------------------------
+10. ReadConfigFlash out - ask for data
 
-Examples:
- 0  0  0  0  0  0  0  0  0  1  1  1  1  1  1
- 1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+000: dd 0a 01 f5 cc cc cc cc cc cc  cc cc cc cc cc - Ask for freq correction
+000: dd 0a 01 f9 cc cc cc cc cc cc  cc cc cc cc cc - Ask for transceiver data
 
-dd 0a 01 f5 cc cc cc cc cc cc cc cc cc cc cc
-dd 0a 01 f9 cc cc cc cc cc cc cc cc cc cc cc
+00:    messageID
+01:    length
+02-03: address
+04-14: cc
 
-01:    messageID
-02-15: ??
-
+-------------------------------------------------------------------------------
 11. GetState message
 
-Examples:
- 0  0  0  0  0  0
- 1  2  3  4  5  6
+000:  de 14 00 00 00 00 (between SetPreamblePattern and first de16 message)
+000:  de 15 00 00 00 00 Idle message
+000:  de 16 00 00 00 00 Normal message
+000:  de 0b 00 00 00 00 (detected via USB sniffer)
 
-de 14 00 00 00 00 (between SetPreamblePattern and first de16 message)
-de 15 00 00 00 00 Idle message
-de 16 00 00 00 00 Normal message
-de 0b 00 00 00 00 (detected via USB sniffer)
+00:    messageID
+01:    stateID
+02-05: 00
 
-01:    messageID
-02:    stateID
-03-06: 00
-
+-------------------------------------------------------------------------------
 12. Writereg message
 
-Example:
- 0  0  0  0  0
- 1  2  3  4  5 
+000: f0 08 01 00 00 - AX5051RegisterNames.IFMODE
+000: f0 10 01 41 00 - AX5051RegisterNames.MODULATION
+000: f0 11 01 07 00 - AX5051RegisterNames.ENCODING
+...
+000: f0 7b 01 88 00 - AX5051RegisterNames.TXRATEMID 
+000: f0 7c 01 23 00 - AX5051RegisterNames.TXRATELO
+000: f0 7d 01 35 00 - AX5051RegisterNames.TXDRIVER
 
-01:    messageID
-02-05: ??
+00:    messageID
+01:    register address
+02:    01
+03:    AX5051RegisterName
+04:    00
 
+-------------------------------------------------------------------------------
 13. Current Weather message
-
-start   position in message buffer
-hi-lo   data starts on first (hi) or second (lo) nuibble
-chars   data length in characters (nibbles)
-rem     remark (see below)
-name    variable
 
 start  hi-lo  chars  rem  name
 0      hi     4           DevID
 2      hi     2           Action
 3      hi     2           Quality
 4      hi     4           DeviceCS
-6      hi     4           unknown data
+6      hi     4      6    _AlarmRingingFlags
 8      hi     1           _WeatherTendency
 8      lo     1           _WeatherState
 9      hi     1           not used
 9      lo     10          _TempIndoorMinMax._Max._Time
-14     lo     10         _TempIndoorMinMax._Min._Time
-19     lo     5          _TempIndoorMinMax._Max._Value
-22     hi     5          _TempIndoorMinMax._Min._Value
-24     lo     5          _TempIndoor
-27     lo     10         _TempOutdoorMinMax._Max._Time
-32     lo     10         _TempOutdoorMinMax._Min._Time
-37     lo     5          _TempOutdoorMinMax._Max._Value
-40     hi     5          _TempOutdoorMinMax._Min._Value
-42     lo     5          _TempOutdoor
-45     hi     1          not used
-45     lo     10     1   _WindchillMinMax._Max._Time
-50     lo     10     2   _WindchillMinMax._Min._Time
-55     lo     5      1   _WindchillMinMax._Max._Value
-57     hi     5      1   _WindchillMinMax._Min._Value
-60     lo     6          _Windchill
-63     hi     1          not used
-63     lo     10         _DewpointMinMax._Max._Time
-68     lo     10         _DewpointMinMax._Min._Time
-73     lo     5          _DewpointMinMax._Max._Value
-76     hi     5          _DewpointMinMax._Min._Value
-78     lo     5          _Dewpoint
-81     hi     10         _HumidityIndoorMinMax._Max._Time
-86     hi     10         _HumidityIndoorMinMax._Min._Time
-91     hi     2          _HumidityIndoorMinMax._Max._Value
-92     hi     2          _HumidityIndoorMinMax._Min._Value
-93     hi     2          _HumidityIndoor
-94     hi     10         _HumidityOutdoorMinMax._Max._Time
-99     hi     10         _HumidityOutdoorMinMax._Min._Time
-104    hi     2          _HumidityOutdoorMinMax._Max._Value
-105    hi     2          _HumidityOutdoorMinMax._Min._Value
-106    hi     2          _HumidityOutdoor
-107    hi     10     3   _RainLastMonthMax._Time
-112    hi     6      3   _RainLastMonthMax._Max._Value
-115    hi     6          _RainLastMonth
-118    hi     10     3   _RainLastWeekMax._Time
-123    hi     6      3   _RainLastWeekMax._Max._Value
-126    hi     6          _RainLastWeek
-129    hi     10         _Rain24HMax._Time
-134    hi     6          _Rain24HMax._Max._Value
-137    hi     6          _Rain24H
-140    hi     10         _Rain24HMax._Time
-145    hi     6          _Rain24HMax._Max._Value
-148    hi     6          _Rain24H
-151    hi     1          not used
-152    lo     10         _LastRainReset
-158    lo     7          _RainTotal
-160    hi     1          _WindDirection5
-160    lo     1          _WindDirection4
-161    hi     1          _WindDirection3
-161    lo     1          _WindDirection2
-162    hi     1          _WindDirection1
-162    lo     1          _WindDirection
-163    hi     18         unknown data
-172    hi     6          _WindSpeed
-175    hi     1          _GustDirection5
-175    lo     1          _GustDirection4
-176    hi     1          _GustDirection3
-176    lo     1          _GustDirection2
-177    hi     1          _GustDirection1
-177    lo     1          _GustDirection
-178    hi     2          not used
-179    hi     10         _GustMinMax._Max._Time
-184    hi     6          _GustMinMax._Max._Value
-187    hi     6          _Gust
-190    hi     10     4   _PressureRelative_MinMax._Max/Min._Time
-195    hi     5      5   _PressureRelative_inHgMinMax._Max._Value
-197    lo     5      5   _PressureRelative_hPaMinMax._Max._Value
-200    hi     5          _PressureRelative_inHgMinMax._Max._Value
-202    lo     5          _PressureRelative_hPaMinMax._Max._Value
-205    hi     5          _PressureRelative_inHgMinMax._Min._Value
-207    lo     5          _PressureRelative_hPaMinMax._Min._Value
-210    hi     5          _PressureRelative_inHg
-212    lo     5          _PressureRelative_hPa
+14     lo     10          _TempIndoorMinMax._Min._Time
+19     lo     5           _TempIndoorMinMax._Max._Value
+22     hi     5           _TempIndoorMinMax._Min._Value
+24     lo     5           _TempIndoor
+27     lo     10          _TempOutdoorMinMax._Max._Time
+32     lo     10          _TempOutdoorMinMax._Min._Time
+37     lo     5           _TempOutdoorMinMax._Max._Value
+40     hi     5           _TempOutdoorMinMax._Min._Value
+42     lo     5           _TempOutdoor
+45     hi     1           not used
+45     lo     10     1    _WindchillMinMax._Max._Time
+50     lo     10     2    _WindchillMinMax._Min._Time
+55     lo     5      1    _WindchillMinMax._Max._Value
+57     hi     5      1    _WindchillMinMax._Min._Value
+60     lo     6           _Windchill
+63     hi     1           not used
+63     lo     10          _DewpointMinMax._Max._Time
+68     lo     10          _DewpointMinMax._Min._Time
+73     lo     5           _DewpointMinMax._Max._Value
+76     hi     5           _DewpointMinMax._Min._Value
+78     lo     5           _Dewpoint
+81     hi     10          _HumidityIndoorMinMax._Max._Time
+86     hi     10          _HumidityIndoorMinMax._Min._Time
+91     hi     2           _HumidityIndoorMinMax._Max._Value
+92     hi     2           _HumidityIndoorMinMax._Min._Value
+93     hi     2           _HumidityIndoor
+94     hi     10          _HumidityOutdoorMinMax._Max._Time
+99     hi     10          _HumidityOutdoorMinMax._Min._Time
+104    hi     2           _HumidityOutdoorMinMax._Max._Value
+105    hi     2           _HumidityOutdoorMinMax._Min._Value
+106    hi     2           _HumidityOutdoor
+107    hi     10     3    _RainLastMonthMax._Time
+112    hi     6      3    _RainLastMonthMax._Max._Value
+115    hi     6           _RainLastMonth
+118    hi     10     3    _RainLastWeekMax._Time
+123    hi     6      3    _RainLastWeekMax._Max._Value
+126    hi     6           _RainLastWeek
+129    hi     10          _Rain24HMax._Time
+134    hi     6           _Rain24HMax._Max._Value
+137    hi     6           _Rain24H
+140    hi     10          _Rain24HMax._Time
+145    hi     6           _Rain24HMax._Max._Value
+148    hi     6           _Rain24H
+151    hi     1           not used
+152    lo     10          _LastRainReset
+158    lo     7           _RainTotal
+160    hi     1           _WindDirection5
+160    lo     1           _WindDirection4
+161    hi     1           _WindDirection3
+161    lo     1           _WindDirection2
+162    hi     1           _WindDirection1
+162    lo     1           _WindDirection
+163    hi     18          unknown data
+172    hi     6           _WindSpeed
+175    hi     1           _GustDirection5
+175    lo     1           _GustDirection4
+176    hi     1           _GustDirection3
+176    lo     1           _GustDirection2
+177    hi     1           _GustDirection1
+177    lo     1           _GustDirection
+178    hi     2           not used
+179    hi     10          _GustMax._Max._Time
+184    hi     6           _GustMax._Max._Value
+187    hi     6           _Gust
+190    hi     10     4    _PressureRelative_MinMax._Max/Min._Time
+195    hi     5      5    _PressureRelative_inHgMinMax._Max._Value
+197    lo     5      5    _PressureRelative_hPaMinMax._Max._Value
+200    hi     5           _PressureRelative_inHgMinMax._Max._Value
+202    lo     5           _PressureRelative_hPaMinMax._Max._Value
+205    hi     5           _PressureRelative_inHgMinMax._Min._Value
+207    lo     5           _PressureRelative_hPaMinMax._Min._Value
+210    hi     5           _PressureRelative_inHg
+212    lo     5           _PressureRelative_hPa
 
-214    lo     430        end
+214    lo     430         end
 
 Remarks
-1  since factory reset
-2  since software reset
-3  not used?
-4  should be: _PressureRelative_MinMax._Max._Time
-5  should be: _PressureRelative_MinMax._Min._Time
+  1 since factory reset
+  2 since software reset
+  3 not used?
+  4 should be: _PressureRelative_MinMax._Max._Time
+  5 should be: _PressureRelative_MinMax._Min._Time
+  6 _AlarmRingingFlags (values in hex)
+    80 00 = Hi Al Gust
+    40 00 = Al WindDir
+    20 00 = One or more WindDirs set
+    10 00 = Hi Al Rain24H
+    08 00 = Hi Al Outdoor Humidity
+    04 00 = Lo Al Outdoor Humidity
+    02 00 = Hi Al Indoor Humidity
+    01 00 = Lo Al Indoor Humidity
+    00 80 = Hi Al Outdoor Temp
+    00 40 = Lo Al Outdoor Temp
+    00 20 = Hi Al Indoor Temp
+    00 10 = Lo Al Indoor Temp
+    00 08 = Hi Al Pressure
+    00 04 = Lo Al Pressure
+    00 02 = not used
+    00 01 = not used
+
+-------------------------------------------------------------------------------
+14. History Message
+
+start  hi-lo  chars  rem  name
+0      hi     4           DevID
+2      hi     2           Action
+3      hi     2           Quality
+4      hi     4           DeviceCS
+6      hi     6           LatestAddress
+9      hi     6           ThisAddress
+12     hi     1           not used
+12     lo     3           Gust
+14     hi     1           WindDirection
+14     lo     3           WindSpeed
+16     hi     3           RainCounterRaw
+17     lo     2           HumidityOutdoor
+18     lo     2           HumidityIndoor
+19     lo     5           PressureRelative
+22     hi     3           TempOutdoor
+23     lo     3           TempIndoor
+25     hi     10          Time
+
+29     lo     60   end
+
+-------------------------------------------------------------------------------
+15. Set Config Message
+
+start  hi-lo  chars  rem  name
+0      hi     4           DevID
+2      hi     2           Action
+3      hi     2           Quality
+4      hi     1       1   _WindspeedFormat
+4      lo     0,25    2   _RainFormat
+4      lo     0,25    3   _PressureFormat
+4      lo     0,25    4   _TemperatureFormat
+4      lo     0,25    5   _ClockMode
+5      hi     1           _WeatherThreshold
+5      lo     1           _StormThreshold
+6      hi     1           _LowBatFlags
+6      lo     1       6   _LCDContrast
+7      hi     4       7   _WindDirAlarmFlags (reverse group 1)
+9      hi     4       8   _OtherAlarmFlags   (reverse group 1)
+11     hi     10          _TempIndoorMinMax._Min._Value (reverse group 2)
+                          _TempIndoorMinMax._Max._Value (reverse group 2)
+16     hi     10          _TempOutdoorMinMax._Min._Value (reverse group 3)
+                          _TempOutdoorMinMax._Max._Value (reverse group 3)
+21     hi     2           _HumidityIndoorMinMax._Min._Value
+22     hi     2           _HumidityIndoorMinMax._Max._Value
+23     hi     2           _HumidityOutdoorMinMax._Min._Value
+24     hi     2           _HumidityOutdoorMinMax._Max._Value
+25     hi     1           not used
+25     lo     7           _Rain24HMax._Max._Value (reverse bytes)
+29     hi     2           _HistoryInterval
+30     hi     1           not used
+30     lo     5           _GustMax._Max._Value (reverse bytes)
+33     hi     10          _PressureRelative_hPaMinMax._Min._Value (rev grp4)
+                          _PressureRelative_inHgMinMax._Min._Value(rev grp4)
+38     hi     10          _PressureRelative_hPaMinMax._Max._Value (rev grp5)
+                          _PressureRelative_inHgMinMax._Max._Value(rev grp5)
+43     hi     6       9   _ResetMinMaxFlags
+46     hi     4       10  _InBufCS
+
+47     lo     96          end
+
+Remarks 
+  1 0=m/s 1=knots 2=bft 3=km/h 4=mph
+  2 0=mm   1=inch
+  3 0=inHg 2=hPa
+  4 0=F    1=C
+  5 0=24h  1=12h
+  6 values 0-7 => LCD contrast 1-8
+  7 WindDir Alarms (not-reversed values in hex)
+    80 00 = NNW
+    40 00 = NW
+    20 00 = WNW
+    10 00 = W
+    08 00 = WSW
+    04 00 = SW
+    02 00 = SSW
+    01 00 = S
+    00 80 = SSE
+    00 40 = SE
+    00 20 = ESE
+    00 10 = E
+    00 08 = ENE
+    00 04 = NE
+    00 02 = NNE
+    00 01 = N
+  8 Other Alarms (not-reversed values in hex)
+    80 00 = Hi Al Gust
+    40 00 = Al WindDir
+    20 00 = One or more WindDirs set
+    10 00 = Hi Al Rain24H
+    08 00 = Hi Al Outdoor Humidity
+    04 00 = Lo Al Outdoor Humidity
+    02 00 = Hi Al Indoor Humidity
+    01 00 = Lo Al Indoor Humidity
+    00 80 = Hi Al Outdoor Temp
+    00 40 = Lo Al Outdoor Temp
+    00 20 = Hi Al Indoor Temp
+    00 10 = Lo Al Indoor Temp
+    00 08 = Hi Al Pressure
+    00 04 = Lo Al Pressure
+    00 02 = not used
+    00 01 = not used
+  9 ResetMinMaxFlags (not-reversed values in hex)
+    "Output only; not included in checksum calc"
+    80 00 00 =  Reset DewpointMax
+    40 00 00 =  Reset DewpointMin
+    20 00 00 =  not used
+    10 00 00 =  Reset WindchillMin*
+    "*Reset dateTime only; Min._Value is preserved"
+    08 00 00 =  Reset TempOutMax
+    04 00 00 =  Reset TempOutMin
+    02 00 00 =  Reset TempInMax
+    01 00 00 =  Reset TempInMin
+    00 80 00 =  Reset Gust
+    00 40 00 =  not used
+    00 20 00 =  not used
+    00 10 00 =  not used
+    00 08 00 =  Reset HumOutMax
+    00 04 00 =  Reset HumOutMin
+    00 02 00 =  Reset HumInMax
+    00 01 00 =  Reset HumInMin
+    00 00 80 =  not used
+    00 00 40 =  Reset Rain Total
+    00 00 20 =  Reset last month?
+    00 00 10 =  Reset lastweek?
+    00 00 08 =  Reset Rain24H
+    00 00 04 =  Reset Rain1H
+    00 00 02 =  Reset PresRelMax
+    00 00 01 =  Reset PresRelMin
+  10 Checksum = sum bytes (0-42) + 7 
+
+-------------------------------------------------------------------------------
+16. Get Config Message
+
+start  hi-lo  chars  rem  name
+0      hi     4           DevID
+2      hi     2           Action
+3      hi     2           Quality
+4      hi     1      1    _WindspeedFormat
+4      lo     0,25   2    _RainFormat
+4      lo     0,25   3    _PressureFormat
+4      lo     0,25   4    _TemperatureFormat
+4      lo     0,25   5    _ClockMode
+5      hi     1           _WeatherThreshold
+5      lo     1           _StormThreshold
+6      hi     1           _LowBatFlags
+6      lo     1      6    _LCDContrast
+7      hi     4      7    _WindDirAlarmFlags
+9      hi     4      8    _OtherAlarmFlags
+11     hi     5           _TempIndoorMinMax._Min._Value
+13     lo     5           _TempIndoorMinMax._Max._Value
+16     hi     5           _TempOutdoorMinMax._Min._Value
+18     lo     5           _TempOutdoorMinMax._Max._Value
+21     hi     2           _HumidityIndoorMinMax._Max._Value
+22     hi     2           _HumidityIndoorMinMax._Min._Value
+23     hi     2           _HumidityOutdoorMinMax._Max._Value
+24     hi     2           _HumidityOutdoorMinMax._Min._Value
+25     hi     1           not used
+25     lo     7           _Rain24HMax._Max._Value
+29     hi     2           _HistoryInterval
+30     hi     5           _GustMax._Max._Value
+32     lo     1           not used
+33     hi     5           _PressureRelative_hPaMinMax._Min._Value
+35     lo     5           _PressureRelative_inHgMinMax._Min._Value
+38     hi     5           _PressureRelative_hPaMinMax._Max._Value
+40     lo     5           _PressureRelative_inHgMinMax._Max._Value
+43     hi     6      9    _ResetMinMaxFlags
+46     hi     4      10   _InBufCS
+
+47     lo     96          end
+
+Remarks
+  1 0=m/s 1=knots 2=bft 3=km/h 4=mph
+  2 0=mm   1=inch
+  3 0=inHg 2=hPa
+  4 0=F    1=C
+  5 0=24h  1=12h
+  6 values 0-7 => LCD contrast 1-8
+  7 WindDir Alarms (values in hex)
+    80 00 = NNW
+    40 00 = NW
+    20 00 = WNW
+    10 00 = W
+    08 00 = WSW
+    04 00 = SW
+    02 00 = SSW
+    01 00 = S
+    00 80 = SSE
+    00 40 = SE
+    00 20 = ESE
+    00 10 = E
+    00 08 = ENE
+    00 04 = NE
+    00 02 = NNE
+    00 01 = N
+  8 Other Alarms (values in hex)
+    80 00 = Hi Al Gust
+    40 00 = Al WindDir
+    20 00 = One or more WindDirs set
+    10 00 = Hi Al Rain24H
+    08 00 = Hi Al Outdoor Humidity
+    04 00 = Lo Al Outdoor Humidity
+    02 00 = Hi Al Indoor Humidity
+    01 00 = Lo Al Indoor Humidity
+    00 80 = Hi Al Outdoor Temp
+    00 40 = Lo Al Outdoor Temp
+    00 20 = Hi Al Indoor Temp
+    00 10 = Lo Al Indoor Temp
+    00 08 = Hi Al Pressure
+    00 04 = Lo Al Pressure
+    00 02 = not used
+    00 01 = not used
+  9 ResetMinMaxFlags (values in hex)
+    "Output only; input =  00 00 00"
+  10 Checksum = sum bytes (0-42) + 7 
+
+
+-------------------------------------------------------------------------------
+Examples of messages
+
+readCurrentWeather
+Cur   000: 01 2e 60 5f 05 1b 00 00 12 01  30 62 21 54 41 30 62 40 75 36  
+Cur   020: 59 00 60 70 06 35 00 01 30 62  31 61 21 30 62 30 55 95 92 00  
+Cur   040: 53 10 05 37 00 01 30 62 01 90  81 30 62 40 90 66 38 00 49 00  
+Cur   060: 05 37 00 01 30 62 21 53 01 30  62 22 31 75 51 11 50 40 05 13  
+Cur   080: 80 13 06 22 21 40 13 06 23 19  37 67 52 59 13 06 23 06 09 13  
+Cur   100: 06 23 16 19 91 65 86 00 00 00  00 00 00 00 00 00 00 00 00 00  
+Cur   120: 00 00 00 00 00 00 00 00 00 13  06 23 09 59 00 06 19 00 00 51  
+Cur   140: 13 06 22 20 43 00 01 54 00 00  00 01 30 62 21 51 00 00 38 70  
+Cur   160: a7 cc 7b 50 09 01 01 00 00 00  00 00 00 fc 00 a7 cc 7b 14 13  
+Cur   180: 06 23 14 06 0e a0 00 01 b0 00  13 06 23 06 34 03 00 91 01 92  
+Cur   200: 03 00 91 01 92 02 97 41 00 74  03 00 91 01 92
+ 
+WeatherState: Sunny(Good)  WeatherTendency: Rising(Up)  AlarmRingingFlags: 0000
+TempIndoor      23.500 Min:20.700 2013-06-24 07:53 Max:25.900 2013-06-22 15:44
+HumidityIndoor  59.000 Min:52.000 2013-06-23 19:37 Max:67.000 2013-06-22 21:40
+TempOutdoor     13.700 Min:13.100 2013-06-23 05:59 Max:19.200 2013-06-23 16:12
+HumidityOutdoor 86.000 Min:65.000 2013-06-23 16:19 Max:91.000 2013-06-23 06:09
+Windchill       13.700 Min: 9.000 2013-06-24 09:06 Max:23.800 2013-06-20 19:08
+Dewpoint        11.380 Min:10.400 2013-06-22 23:17 Max:15.111 2013-06-22 15:30
+WindSpeed        2.520
+Gust             4.320                             Max:37.440 2013-06-23 14:06
+WindDirection    WSW    GustDirection    WSW
+WindDirection1   SSE    GustDirection1   SSE
+WindDirection2     W    GustDirection2     W
+WindDirection3     W    GustDirection3     W
+WindDirection4   SSE    GustDirection4   SSE
+WindDirection5    SW    GustDirection5    SW
+RainLastMonth    0.000                             Max: 0.000 1900-01-01 00:00
+RainLastWeek     0.000                             Max: 0.000 1900-01-01 00:00
+Rain24H          0.510                             Max: 6.190 2013-06-23 09:59
+Rain1H           0.000                             Max: 1.540 2013-06-22 20:43
+RainTotal        3.870                    LastRainReset       2013-06-22 15:10
+PresRelhPa 1019.200 Min:1007.400 2013-06-23 06:34 Max:1019.200 2013-06-23 06:34
+PresRel_inHg 30.090 Min:  29.740 2013-06-23 06:34 Max:  30.090 2013-06-23 06:34
+Bytes with unknown meaning at 157-165: 50 09 01 01 00 00 00 00 00 
+
+-------------------------------------------------------------------------------
+readHistory
+His   000: 01 2e 80 5f 05 1b 00 7b 32 00  7b 32 00 0c 70 0a 00 08 65 91  
+His   020: 01 92 53 76 35 13 06 24 09 10 
+ 
+Time           2013-06-24 09:10:00
+TempIndoor=          23.5
+HumidityIndoor=        59
+TempOutdoor=         13.7
+HumidityOutdoor=       86
+PressureRelative=  1019.2
+RainCounterRaw=       0.0
+WindDirection=        SSE
+WindSpeed=            1.0
+Gust=                 1.2
+
+-------------------------------------------------------------------------------
+readConfig
+In   000: 01 2e 40 5f 36 53 02 00 00 00  00 81 00 04 10 00 82 00 04 20  
+In   020: 00 71 41 72 42 00 05 00 00 00  27 10 00 02 83 60 96 01 03 07  
+In   040: 21 04 01 00 00 00 05 1b
+
+-------------------------------------------------------------------------------
+writeConfig
+Out  000: 01 2e 40 64 36 53 02 00 00 00  00 00 10 04 00 81 00 20 04 00  
+Out  020: 82 41 71 42 72 00 00 05 00 00  00 10 27 01 96 60 83 02 01 04  
+Out  040: 21 07 03 10 00 00 05 1b 
+
+OutBufCS=             051b
+ClockMode=            0
+TemperatureFormat=    1
+PressureFormat=       1
+RainFormat=           0
+WindspeedFormat=      3
+WeatherThreshold=     3
+StormThreshold=       5
+LCDContrast=          2
+LowBatFlags=          0
+WindDirAlarmFlags=    0000
+OtherAlarmFlags=      0000
+HistoryInterval=      0
+TempIndoor_Min=       1.0
+TempIndoor_Max=       41.0
+TempOutdoor_Min=      2.0
+TempOutdoor_Max=      42.0
+HumidityIndoor_Min=   41
+HumidityIndoor_Max=   71
+HumidityOutdoor_Min=  42
+HumidityOutdoor_Max=  72
+Rain24HMax=           50.0
+GustMax=              100.0
+PressureRel_hPa_Min=  960.1
+PressureRel_inHg_Min= 28.36
+PressureRel_hPa_Max=  1040.1
+PressureRel_inHg_Max= 30.72
+ResetMinMaxFlags=     100000 (Output only; Input always 00 00 00)
+
+-------------------------------------------------------------------------------
+class EHistoryInterval:
+Constant  Value Message received at
+hi01Min   = 0   00:00, 00:01, 00:02, 00:03 ... 23:59
+hi05Min   = 1   00:00, 00:05, 00:10, 00:15 ... 23:55
+hi10Min   = 2   00:00, 00:10, 00:20, 00:30 ... 23:50
+hi15Min   = 3   00:00, 00:15, 00:30, 00:45 ... 23:45
+hi20Min   = 4   00:00, 00:20, 00:40, 01:00 ... 23:40
+hi30Min   = 5   00:00, 00:30, 01:00, 01:30 ... 23:30
+hi60Min   = 6   00:00, 01:00, 02:00, 03:00 ... 23:00
+hi02Std   = 7   00:00, 02:00, 04:00, 06:00 ... 22:00
+hi04Std   = 8   00:00, 04:00, 08:00, 12:00 ... 20:00
+hi06Std   = 9   00:00, 06:00, 12:00, 18:00
+hi08Std   = 0xA 00:00, 08:00, 16:00
+hi12Std   = 0xB 00:00, 12:00
+hi24Std   = 0xC 00:00
+
+-------------------------------------------------------------------------------
+WS SetTime - Send time to WS
+Time  000: 01 2e c0 05 1b 19 14 12 40 62  30 01
+time sent: 2013-06-24 12:14:19 
+
+-------------------------------------------------------------------------------
+ReadConfigFlash data
+
+Ask for frequency correction 
+rcfo  000: dd 0a 01 f5 cc cc cc cc cc cc  cc cc cc cc cc
+
+readConfigFlash frequency correction
+rcfi  000: dc 0a 01 f5 00 01 78 a0 01 02  0a 0c 0c 01 2e ff ff ff ff ff
+frequency correction: 96416 (0x178a0)
+adjusted frequency: 910574957 (3646456d)
+
+Ask for transceiver data 
+rcfo  000: dd 0a 01 f9 cc cc cc cc cc cc  cc cc cc cc cc
+
+readConfigFlash serial number and DevID
+rcfi  000: dc 0a 01 f9 01 02 0a 0c 0c 01  2e ff ff ff ff ff ff ff ff ff
+transceiver ID: 302 (0x012e)
+transceiver serial: 01021012120146
 
 """
 
 # TODO: how often is currdat.lst modified with/without hi-speed mode?
-# TODO: add conditionals around DataStore and LastStat
-# TODO: display time of rain reset
+# TODO: during weewx startup, do 'catchup' of old history records
+# TODO: thread locking around observation data
+# TODO: eliminate polling, make MainThread get data as soon as RFThread updates
+# TODO: eliminate pressure_offset and use StdCalibrate instead?
+# TODO: get rid of Length/Buffer construct, replace with a Buffer class or obj
 
 from datetime import datetime
 from datetime import timedelta
 from configobj import ConfigObj
 
+import StringIO
 import copy
 import math
 import platform
@@ -453,108 +870,74 @@ import usb
 import weeutil.weeutil
 import weewx.abstractstation
 import weewx.units
+import weewx.wxengine
+import weewx.wxformulas
 
-DRIVER_VERSION = '0.2'
-
-# name of the pseudo configuration filename
-# FIXME: consolidate with stats cache, since config comes from weewx
-CFG_CACHE = '/tmp/ws28xx.cfg'
-
-# location of the 'last status' cache file
-STATS_CACHE = '/tmp/ws28xx.tmp'
+DRIVER_VERSION = '0.26'
 
 # flags for enabling/disabling debug verbosity
 DEBUG_WRITES = 0
 DEBUG_COMM = 0
+DEBUG_CONFIG_DATA = 0
+DEBUG_WEATHER_DATA = 0
+DEBUG_HISTORY_DATA = 0
+DEBUG_DUMP_FORMAT = 'auto'
+
+def logmsg(dst, msg):
+    syslog.syslog(dst, 'ws28xx: %s: %s' %
+                  (threading.currentThread().getName(), msg))
 
 def logdbg(msg):
-    syslog.syslog(syslog.LOG_DEBUG, 'ws28xx: %s: %s' %
-                  (threading.currentThread().getName(), msg))
+    logmsg(syslog.LOG_DEBUG, msg)
 
 def loginf(msg):
-    syslog.syslog(syslog.LOG_INFO, 'ws28xx: %s: %s' %
-                  (threading.currentThread().getName(), msg))
+    logmsg(syslog.LOG_INFO, msg)
 
 def logcrt(msg):
-    syslog.syslog(syslog.LOG_CRIT, 'ws28xx: %s: %s' %
-                  (threading.currentThread().getName(), msg))
+    logmsg(syslog.LOG_CRIT, msg)
 
 def logerr(msg):
-    syslog.syslog(syslog.LOG_ERR, 'ws28xx: %s: %s' %
-                  (threading.currentThread().getName(), msg))
+    logmsg(syslog.LOG_ERR, msg)
 
-# noaa definitions for station pressure, altimeter setting, and sea level
-# http://www.crh.noaa.gov/bou/awebphp/definitions_pressure.php
+def log_traceback(dst=syslog.LOG_INFO, prefix='**** '):
+    sfd = StringIO.StringIO()
+    traceback.print_exc(file=sfd)
+    sfd.seek(0)
+    for line in sfd:
+        logmsg(dst, prefix+line)
+    del sfd
 
-# FIXME: this goes in wxformulas
-# implementation copied from wview
-def sp2ap(sp_mbar, elev_meter):
-    """Convert station pressure to sea level pressure.
-    http://www.wrh.noaa.gov/slc/projects/wxcalc/formulas/altimeterSetting.pdf
+def log_frame(n, buf):
+    logdbg('frame length is %d' % n)
+    strbuf = ''
+    for i in xrange(0,n):
+        strbuf += str('%02x ' % buf[i])
+        if (i+1) % 16 == 0:
+            logdbg(strbuf)
+            strbuf = ''
+    if strbuf:
+        logdbg(strbuf)
 
-    sp_mbar - station pressure in millibars
+def get_datum_diff(v, np):
+    if abs(np - v) > 0.001:
+        return v
+    return None
 
-    elev_meter - station elevation in meters
+def get_datum_match(v, np):
+    if np != v:
+        return v
+    return None
 
-    ap - sea level pressure (altimeter) in millibars
-    """
-
-    if sp_mbar is None or elev_meter is None:
-        return None
-    N = 0.190284
-    slp = 1013.25
-    ct = (slp ** N) * 0.0065 / 288
-    vt = elev_meter / ((sp_mbar - 0.3) ** N)
-    ap_mbar = (sp_mbar - 0.3) * ((ct * vt + 1) ** (1/N))
-    return ap_mbar
-
-# FIXME: this goes in wxformulas
-# implementation copied from wview
-def sp2bp(sp_mbar, elev_meter, t_C):
-    """Convert station pressure to sea level pressure.
-
-    sp_mbar - station pressure in millibars
-
-    elev_meter - station elevation in meters
-
-    t_C - temperature in degrees Celsius
-
-    bp - sea level pressure (barometer) in millibars
-    """
-
-    if sp_mbar is None or elev_meter is None or t_C is None:
-        return None
-    t_K = t_C + 273.15
-    pt = math.exp( - elev_meter / (t_K * 29.263))
-    bp_mbar = sp_mbar / pt if pt != 0 else 0
-    return bp_mbar
-
-# FIXME: this goes in weeutil.weeutil or weewx.units
-def getaltitudeM(config_dict):
-    # The driver needs the altitude in meters in order to calculate relative
-    # pressure. Get it from the Station data and do any necessary conversions.
-    altitude_t = weeutil.weeutil.option_as_list(
-        config_dict['Station'].get('altitude', (None, None)))
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    altitude_m = weewx.units.convert(altitude_vt, 'meter')[0]
-    return altitude_m
-
-# FIXME: this goes in weeutil.weeutil
-# let QC handle rainfall that is too big
-def calculate_rain(newtotal, oldtotal):
-    """Calculate the rain differential given two cumulative measurements."""
-    if newtotal is not None and oldtotal is not None:
-        if newtotal >= oldtotal:
-            delta = newtotal - oldtotal
-        else:  # wraparound
-            logerr('rain counter wraparound detected: new: %s old: %s' % (newtotal, oldtotal))
-            delta = None
-    else:
-        delta = None
-    return delta
+def calc_checksum(buf, start, end=None):
+    if end is None:
+        end = len(buf[0]) - start
+    cs = 0
+    for i in xrange(0, end):
+        cs += buf[0][i+start]
+    return cs
 
 def loader(config_dict, engine):
-    altitude_m = getaltitudeM(config_dict)
+    altitude_m = weewx.units.getAltitudeM(config_dict)
     station = WS28xx(altitude=altitude_m, **config_dict['WS28xx'])
     return station
 
@@ -582,140 +965,153 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         polling_interval: How often to sample the USB interface for data.
         [Optional. Default is 30 seconds]
 
+        cache_file: File in which to cache connection status, station config
+        [Optional. Default is None]
+
+        comm_interval: Communications mode interval
+        [Optional.  Default is 3]
+
         vendor_id: The USB vendor ID for the transceiver.
         [Optional. Default is 6666]
 
         product_id: The USB product ID for the transceiver.
         [Optional. Default is 5555]
+
+        device_id: The USB device ID for the transceiver.  If there are
+        multiple devices with the same vendor and product IDs on the bus,
+        each will have a unique device identifier.  Use this identifier
+        to indicate which device should be used.
+        [Optional. Default is None]
+
+        serial: The transceiver serial number.  If there are multiple
+        devices with the same vendor and product IDs on the bus, each will
+        have a unique serial number.  Use the serial number to indicate which
+        transceiver should be used.
+        [Optional. Default is None]
         """
 
         self.altitude          = stn_dict['altitude']
         self.model             = stn_dict.get('model', 'LaCrosse WS28xx')
-        self.cfgfile           = CFG_CACHE
+        self.cache_file        = stn_dict.get('cache_file', None)
         self.polling_interval  = int(stn_dict.get('polling_interval', 30))
+        self.comm_interval     = int(stn_dict.get('comm_interval', 3))
         self.frequency         = stn_dict.get('transceiver_frequency', 'US')
         self.vendor_id         = int(stn_dict.get('vendor_id',  '0x6666'), 0)
         self.product_id        = int(stn_dict.get('product_id', '0x5555'), 0)
+        self.device_id         = stn_dict.get('device_id', None)
+        self.serial            = stn_dict.get('serial', None)
         self.pressure_offset   = stn_dict.get('pressure_offset', None)
         if self.pressure_offset is not None:
             self.pressure_offset = float(self.pressure_offset)
 
+        now = int(time.time())
         self._service = None
         self._last_rain = None
         self._last_obs_ts = None
+        self._last_nodata_log_ts = now
+        self._nodata_interval = 300 # how often to check for no data
+        self._last_contact_log_ts = now
+        self._nocontact_interval = 300 # how often to check for no contact
+        self._log_interval = 600 # how often to log
+
+        global DEBUG_WRITES
+        DEBUG_WRITES = int(stn_dict.get('debug_writes', 0))
+        global DEBUG_COMM
+        DEBUG_COMM = int(stn_dict.get('debug_comm', 0))
+        global DEBUG_CONFIG_DATA
+        DEBUG_CONFIG_DATA = int(stn_dict.get('debug_config_data', 0))
+        global DEBUG_WEATHER_DATA
+        DEBUG_WEATHER_DATA = int(stn_dict.get('debug_weather_data', 0))
+        global DEBUG_HISTORY_DATA
+        DEBUG_HISTORY_DATA = int(stn_dict.get('debug_history_data', 0))
+        global DEBUG_DUMP_FORMAT
+        DEBUG_DUMP_FORMAT = stn_dict.get('debug_dump_format', 'auto')
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('frequency is %s' % self.frequency)
         loginf('altitude is %s meters' % str(self.altitude))
         loginf('pressure offset is %s' % str(self.pressure_offset))
 
+        self.startUp()
+
     @property
     def hardware_name(self):
         return self.model
 
-    def openPort(self):
-        # FIXME: init the usb here
-        pass
-
+    # this is invoked by StdEngine as it shuts down
     def closePort(self):
-        # FIXME: shutdown the usb port here
-        pass
+        self.shutDown()
 
     def genLoopPackets(self):
-        """Generator function that continuously returns decoded packets"""
-
-        self.startup()
-        maxnodata = 20
-        nodata = 0
+        """Generator function that continuously returns decoded packets."""
         while True:
-            try:
-                packet = self.get_observation()
-                if packet is not None:
-                    yield packet
-                    nodata = 0
+            now = int(time.time()+0.5)
+            packet = self.get_observation()
+            if packet is not None:
+                ts = packet['dateTime']
+                if self._last_obs_ts is None or self._last_obs_ts != ts:
+                    self._last_obs_ts = ts
+                    self._last_nodata_log_ts = now
+                    self._last_contact_log_ts = now
                 else:
-                    nodata += 1
-                if nodata >= maxnodata:
-                    dur = nodata * self.polling_interval
-                    logerr('no new data after %d seconds' % dur)
-                    nodata = 0
-                time.sleep(self.polling_interval)
-            except KeyboardInterrupt:
-                self.shutdown()
-                raise
-            except Exception, e:
-                logerr('exception in genLoopPackets: %s' % e)
-                if weewx.debug:
-                    traceback.print_exc()
-                raise
+                    packet = None
 
-    def startup(self):
+            # if no new weather data, return an empty packet
+            if packet is None:
+                packet = { 'usUnits': weewx.METRIC, 'dateTime': now }
+                # if no new weather data for awhile, log it
+                if self._last_obs_ts is None or \
+                        now - self._last_obs_ts > self._nodata_interval:
+                    if now - self._last_nodata_log_ts > self._log_interval:
+                        msg = 'no new weather data'
+                        if self._last_obs_ts is not None:
+                            msg += ' after %d seconds' % (
+                                now - self._last_obs_ts)
+                        loginf(msg)
+                        self._last_nodata_log_ts = now
+
+            # if no contact with console for awhile, log it
+            ts = self.get_last_contact()
+            if ts is None or now - ts > self._nocontact_interval:
+                if now - self._last_contact_log_ts > self._log_interval:
+                    msg = 'no contact with console'
+                    if ts is not None:
+                        msg += ' after %d seconds' % (now - ts)
+                    msg += ': press [SET] to sync'
+                    loginf(msg)
+                    self._last_contact_log_ts = now
+
+            yield packet
+            time.sleep(self.polling_interval)                    
+
+#    def genArchiveRecords(self, since_ts):
+#        pass
+
+    def startUp(self):
         if self._service is not None:
             return
-        self._service = CCommunicationService(self.cfgfile)
-        self._service.setup(self.frequency)
+        self._service = CCommunicationService(self.cache_file)
+        self._service.setup(self.frequency,
+                            self.vendor_id, self.product_id, self.device_id,
+                            self.serial, comm_interval=self.comm_interval)
         self._service.startRFThread()
 
-    def shutdown(self):
+    def shutDown(self):
         self._service.stopRFThread()
         self._service.teardown()
         self._service = None
 
-    def pair(self, msg_to_console=False, maxtries=0):
-        ntries = 0
-        while ntries < maxtries or maxtries == 0:
-            if self._service.DataStore.getDeviceRegistered():
-                return
-            ntries += 1
-            msg = 'press [v] key on station console'
-            if maxtries > 0:
-                msg += ' (attempt %d of %d)' % (ntries, maxtries)
-            else:
-                msg += ' (attempt %d)' % ntries
-            if msg_to_console:
-                print msg
-            logerr(msg)
-            timeout = 30000 # milliseconds
-            self._service.DataStore.FirstTimeConfig(timeout)
-        else:
-            raise Exception('Transceiver not paired to console.')
+    def transceiver_is_present(self):
+        return self._service.transceiverIsPresent()
 
-    def check_transceiver(self, msg_to_console=False, maxtries=3):
-        ntries = 0
-        while ntries < maxtries:
-            ntries += 1
-            t = self._service.DataStore.getFlag_FLAG_TRANSCEIVER_PRESENT()
-            if t:
-                msg = 'transceiver is present'
-            else:
-                msg = 'transceiver not found (attempt %d of %d)' % (
-                    ntries, maxtries)
-            if msg_to_console:
-                print msg
-            loginf(msg)
-            if t:
-                return
-            time.sleep(5)
-        else:
-            raise Exception('Transceiver not responding.')
-
-    def get_datum_diff(self, v, np):
-        if abs(np - v) > 0.001:
-            return v
-        return None
-
-    def get_datum_match(self, v, np):
-        if np != v:
-            return v
-        return None
+    def transceiver_is_paired(self):
+        return self._service.transceiverIsRegistered()
 
     def get_observation(self):
-        ts = self._service.DataStore.CurrentWeather._timestamp
+        data = self._service.getWeatherData()
+        ts = data._timestamp
         if ts is None:
             return None
-        if self._last_obs_ts is not None and self._last_obs_ts == ts:
-            return None
-        self._last_obs_ts = ts
 
         # add elements required for weewx LOOP packets
         packet = {}
@@ -723,54 +1119,42 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         packet['dateTime'] = int(ts + 0.5)
 
         # data from the station sensors
-        packet['inTemp'] = self.get_datum_diff(
-            self._service.DataStore.CurrentWeather._IndoorTemp,
-            CWeatherTraits.TemperatureNP())
-        packet['inHumidity'] = self.get_datum_diff(
-            self._service.DataStore.CurrentWeather._IndoorHumidity,
-            CWeatherTraits.HumidityNP())
-        packet['outTemp'] = self.get_datum_diff(
-            self._service.DataStore.CurrentWeather._OutdoorTemp,
-            CWeatherTraits.TemperatureNP())
-        packet['outHumidity'] = self.get_datum_diff(
-            self._service.DataStore.CurrentWeather._OutdoorHumidity,
-            CWeatherTraits.HumidityNP())
-        packet['pressure'] = self.get_datum_diff(
-            self._service.DataStore.CurrentWeather._PressureRelative_hPa,
-            CWeatherTraits.PressureNP())
-        packet['windSpeed'] = self.get_datum_diff(
-            self._service.DataStore.CurrentWeather._WindSpeed,
-            CWeatherTraits.WindNP())
-        packet['windGust'] = self.get_datum_diff(
-            self._service.DataStore.CurrentWeather._Gust,
-            CWeatherTraits.WindNP())
+        packet['inTemp']      = get_datum_diff(data._TempIndoor,
+                                               CWeatherTraits.TemperatureNP())
+        packet['inHumidity']  = get_datum_diff(data._HumidityIndoor,
+                                               CWeatherTraits.HumidityNP())
+        packet['outTemp']     = get_datum_diff(data._TempOutdoor,
+                                               CWeatherTraits.TemperatureNP())
+        packet['outHumidity'] = get_datum_diff(data._HumidityOutdoor,
+                                               CWeatherTraits.HumidityNP())
+        packet['pressure']    = get_datum_diff(data._PressureRelative_hPa,
+                                               CWeatherTraits.PressureNP())
+        packet['windSpeed']   = get_datum_diff(data._WindSpeed,
+                                               CWeatherTraits.WindNP())
+        packet['windGust']    = get_datum_diff(data._Gust,
+                                               CWeatherTraits.WindNP())
 
         if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
-            packet['windSpeed'] *= 3.6 # weewx wants km/h
-            packet['windDir'] = self._service.DataStore.CurrentWeather._WindDirection * 360 / 16
+            packet['windDir'] = data._WindDirection * 360 / 16
         else:
             packet['windDir'] = None
 
         if packet['windGust'] is not None and packet['windGust'] > 0:
-            packet['windGust'] *= 3.6 # weewx wants km/h
-            packet['windGustDir'] = self._service.DataStore.CurrentWeather._GustDirection * 360 / 16
+            packet['windGustDir'] = data._GustDirection * 360 / 16
         else:
             packet['windGustDir'] = None
 
         # calculated elements not directly reported by station
-        packet['rainRate'] = self.get_datum_match(
-            self._service.DataStore.CurrentWeather._Rain1H,
-            CWeatherTraits.RainNP())
+        packet['rainRate'] = get_datum_match(data._Rain1H,
+                                             CWeatherTraits.RainNP())
         if packet['rainRate'] is not None:
             packet['rainRate'] /= 10 # weewx wants cm/hr
-        rain_total = self.get_datum_match(
-            self._service.DataStore.CurrentWeather._RainTotal,
-            CWeatherTraits.RainNP())
-        delta = calculate_rain(rain_total, self._last_rain)
+        rain_total = get_datum_match(data._RainTotal, CWeatherTraits.RainNP())
+        delta = weewx.wxformulas.calculate_rain(rain_total, self._last_rain)
         self._last_rain = rain_total
         packet['rain'] = delta
         if packet['rain'] is not None:
-            packet['rain'] /= 10 # weewx wants cm/hr
+            packet['rain'] /= 10 # weewx wants cm
 
         packet['heatindex'] = weewx.wxformulas.heatindexC(
             packet['outTemp'], packet['outHumidity'])
@@ -783,27 +1167,55 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         adjp = packet['pressure']
         if self.pressure_offset is not None and adjp is not None:
             adjp += self.pressure_offset
-        packet['barometer'] = sp2bp(adjp, self.altitude, packet['outTemp'])
-        packet['altimeter'] = sp2ap(adjp, self.altitude)
+        packet['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
+            adjp, self.altitude, packet['outTemp'])
+        packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
+            adjp, self.altitude, algorithm='aaNOAA')
 
         # track the signal strength and battery levels
-        packet['signal'] = self._service.DataStore.LastStat.LastLinkQuality
-        packet['battery'] = self._service.DataStore.LastStat.LastBatteryStatus
+        laststat = self._service.getLastStat()
+        packet['rxCheckPercent'] = laststat.LastLinkQuality
+        packet['windBatteryStatus'] = getBatteryStatus(
+            laststat.LastBatteryStatus, 'wind')
+        packet['rainBatteryStatus'] = getBatteryStatus(
+            laststat.LastBatteryStatus, 'rain')
+        packet['outTempBatteryStatus'] = getBatteryStatus(
+            laststat.LastBatteryStatus, 'th')
+        packet['inTempBatteryStatus'] = getBatteryStatus(
+            laststat.LastBatteryStatus, 'console')
 
         return packet
 
     def get_config(self):
         logdbg('get station configuration')
-        self._service.DataStore.GetConfig()
+        cfg = self._service.getConfigData().asDict()
+        if cfg['checksum_device'] == 0:
+            return None
+        return cfg
+
+    def get_history(self):
+        logdbg('get historical records')
+        return self._service.getHistoryData().asDict()
+
+    def get_last_contact(self):
+        return self._service.getLastStat().last_seen_ts
+
+    def get_transceiver_serial(self):
+        return self._service.DataStore.getTransceiverSerNo()
+
+    def get_transceiver_id(self):
+        return self._service.DataStore.getDeviceID()
 
 # The following classes and methods are adapted from the implementation by
 # eddie de pieri, which is in turn based on the HeavyWeather implementation.
 
-def frame2str(n, buf):
-    strbuf = ''
-    for i in xrange(0,n):
-        strbuf += str('%.2x' % buf[i])
-    return strbuf
+class BadResponse(Exception):
+    '''raised when unexpected data found in frame buffer'''
+    pass
+
+class DataWritten(Exception):
+    '''raised when message 'data written' in frame buffer'''
+    pass
 
 class BitHandling:
     # return a nonzero result, 2**offset, if the bit at 'offset' is one.
@@ -905,6 +1317,7 @@ class EWindDirection:
     wdNNW            = 0x0F
     wdERR            = 0x10
     wdInvalid        = 0x11
+    wdNone           = 0x12
 
 class EResetMinMaxFlags:
     rmTempIndoorHi   = 0
@@ -917,8 +1330,8 @@ class EResetMinMaxFlags:
     rmDewpointLo     = 7
     rmHumidityIndoorLo  = 8
     rmHumidityIndoorHi  = 9
-    rmHumidityOutdoorLo  = 0x0A
-    rmHumidityOutdoorHi  = 0x0B
+    rmHumidityOutdoorLo = 0x0A
+    rmHumidityOutdoorHi = 0x0B
     rmWindspeedHi    = 0x0C
     rmWindspeedLo    = 0x0D
     rmGustHi         = 0x0E
@@ -928,7 +1341,7 @@ class EResetMinMaxFlags:
     rmRain1hHi       = 0x12
     rmRain24hHi      = 0x13
     rmRainLastWeekHi  = 0x14
-    rmRainLastMonthHi  = 0x15
+    rmRainLastMonthHi = 0x15
     rmRainTotal      = 0x16
     rmInvalid        = 0x17
 
@@ -941,6 +1354,15 @@ class ERequestType:
     rtFirstConfig    = 5
     rtINVALID        = 6
 
+class EAction:
+    aGetHistory      = 0
+    aReqSetTime      = 1
+    aReqSetConfig    = 2
+    aGetConfig       = 3
+    aGetCurrent      = 5
+    aSendTime        = 0xc0
+    aSendConfig      = 0x40
+
 class ERequestState:
     rsQueued         = 0
     rsRunning        = 1
@@ -951,6 +1373,16 @@ class ERequestState:
     rsError          = 6
     rsChanged        = 7
     rsINVALID        = 8
+
+class EResponseType:
+    rtDataWritten       = 0x20
+    rtGetConfig         = 0x40
+    rtGetCurrentWeather = 0x60
+    rtGetHistory        = 0x80
+    rtRequest           = 0xa0
+    rtReqFirstConfig    = 0xa1
+    rtReqSetConfig      = 0xa2
+    rtReqSetTime        = 0xa3
 
 # frequency standards and their associated transmission frequencies
 class EFrequency:
@@ -975,14 +1407,28 @@ def getFrequencyStandard(frequency):
     logerr("unknown frequency '%s', using US" % frequency)
     return EFrequency.fsUS
 
+# HWPro presents battery flags as WS/TH/RAIN/WIND
+# 0 - wind
+# 1 - rain
+# 2 - thermo-hygro
+# 3 - console
+
+batterybits = { 'wind':0, 'rain':1, 'th':2, 'console':3 }
+
+def getBatteryStatus(status, flag):
+    bit = batterybits.get(flag)
+    if bit is not None:
+        return BitHandling.testBit(status, bit)
+    return None
+
 class CWeatherTraits(object):
     windDirMap = {
         0:"N", 1:"NNE", 2:"NE", 3:"ENE", 4:"E", 5:"ESE", 6:"SE", 7:"SSE",
         8:"S", 9:"SSW", 10:"SW", 11:"WSW", 12:"W", 13:"WNW", 14:"NW",
-        15:"NWN", 16:"err", 17:"inv" }
+        15:"NWN", 16:"err", 17:"inv", 18:"None" }
     forecastMap = {
         0:"Rainy(Bad)", 1:"Cloudy(Neutral)", 2:"Sunny(Good)",  3:"Error" }
-    trends = {
+    trendMap = {
         0:"Stable(Neutral)", 1:"Rising(Up)", 2:"Falling(Down)", 3:"Error" }
 
     @staticmethod
@@ -1019,11 +1465,11 @@ class CWeatherTraits(object):
 
     @staticmethod
     def WindNP():
-        return 51.0
+        return 183.6 # km/h = 51.0 m/s
 
     @staticmethod
     def WindOFL():
-        return 51.099998
+        return 183.96 # km/h = 51.099998 m/s
 
     @staticmethod
     def TemperatureOffset():
@@ -1034,7 +1480,7 @@ class CMeasurement:
     _ResetFlag = 23
     _IsError = 1
     _IsOverflow = 1
-    _Time = time.time()
+    _Time = None
 
     def Reset(self):
         self._Value = 0.0
@@ -1047,254 +1493,108 @@ class CMinMaxMeasurement(object):
         self._Min = CMeasurement()
         self._Max = CMeasurement()
 
+# firmware XXX has bogus date values for these fields
+_bad_labels = ['RainLastMonthMax','RainLastWeekMax','PressureRelativeMin']
+
 class USBHardware(object):
     @staticmethod
-    def IsOFL2(buf, start, startOnLowNibble):
-        if startOnLowNibble :
-            result =   (buf[0][start+0] & 0xF) == 15 \
-                or (buf[0][start+0] >>  4) == 15
-        else:
+    def isOFL2(buf, start, StartOnHiNibble):
+        if StartOnHiNibble :
             result =   (buf[0][start+0] >>  4) == 15 \
-                or (buf[0][start+1] & 0xF) == 15
-        return result
-
-    @staticmethod
-    def IsOFL3(buf, start, startOnLowNibble):
-        if startOnLowNibble :
-            result =   (buf[0][start+0] & 0xF) == 15 \
-                or (buf[0][start+0] >>  4) == 15 \
-                or (buf[0][start+1] & 0xF) == 15
+                or (buf[0][start+0] & 0xF) == 15
         else:
-            result =   (buf[0][start+0] >>  4) == 15 \
-                or (buf[0][start+1] & 0xF) == 15 \
+            result =   (buf[0][start+0] & 0xF) == 15 \
                 or (buf[0][start+1] >>  4) == 15
         return result
 
     @staticmethod
-    def IsOFL5(buf, start, startOnLowNibble):
-        if startOnLowNibble :
-            result =     (buf[0][start+0] & 0xF) == 15 \
-                or (buf[0][start+0] >>  4) == 15 \
-                or (buf[0][start+1] & 0xF) == 15 \
-                or (buf[0][start+1] >>  4) == 15 \
-                or (buf[0][start+2] & 0xF) == 15
+    def isOFL3(buf, start, StartOnHiNibble):
+        if StartOnHiNibble :
+            result =   (buf[0][start+0] >>  4) == 15 \
+                or (buf[0][start+0] & 0xF) == 15 \
+                or (buf[0][start+1] >>  4) == 15
         else:
-            result =     (buf[0][start+0] >>  4) == 15 \
-                or (buf[0][start+1] & 0xF) == 15 \
+            result =   (buf[0][start+0] & 0xF) == 15 \
                 or (buf[0][start+1] >>  4) == 15 \
-                or (buf[0][start+2] & 0xF) == 15 \
-                or (buf[0][start+2] >>  4) == 15
+                or (buf[0][start+1] & 0xF) == 15
         return result
 
     @staticmethod
-    def IsErr2(buf, start, startOnLowNibble):
-        if startOnLowNibble :
-            result =    (buf[0][start+0] & 0xF) >= 10 \
-                and (buf[0][start+0] & 0xF) != 15 \
-                or (buf[0][start+0] >>  4) >= 10 \
-                and (buf[0][start+0] >>  4) != 15
+    def isOFL5(buf, start, StartOnHiNibble):
+        if StartOnHiNibble :
+            result =     (buf[0][start+0] >>  4) == 15 \
+                or (buf[0][start+0] & 0xF) == 15 \
+                or (buf[0][start+1] >>  4) == 15 \
+                or (buf[0][start+1] & 0xF) == 15 \
+                or (buf[0][start+2] >>  4) == 15
         else:
+            result =     (buf[0][start+0] & 0xF) == 15 \
+                or (buf[0][start+1] >>  4) == 15 \
+                or (buf[0][start+1] & 0xF) == 15 \
+                or (buf[0][start+2] >>  4) == 15 \
+                or (buf[0][start+2] & 0xF) == 15
+        return result
+
+    @staticmethod
+    def isErr2(buf, start, StartOnHiNibble):
+        if StartOnHiNibble :
             result =    (buf[0][start+0] >>  4) >= 10 \
                 and (buf[0][start+0] >>  4) != 15 \
-                or (buf[0][start+1] & 0xF) >= 10 \
-                and (buf[0][start+1] & 0xF) != 15
-        return result
-        
-    @staticmethod
-    def IsErr3(buf, start, startOnLowNibble):
-        if startOnLowNibble :
-            result =     (buf[0][start+0] & 0xF) >= 10 \
-                and (buf[0][start+0] & 0xF) != 15 \
-                or  (buf[0][start+0] >>  4) >= 10 \
-                and (buf[0][start+0] >>  4) != 15 \
-                or  (buf[0][start+1] & 0xF) >= 10 \
-                and (buf[0][start+1] & 0xF) != 15
+                or  (buf[0][start+0] & 0xF) >= 10 \
+                and (buf[0][start+0] & 0xF) != 15
         else:
-            result =     (buf[0][start+0] >>  4) >= 10 \
-                and (buf[0][start+0] >>  4) != 15 \
-                or  (buf[0][start+1] & 0xF) >= 10 \
-                and (buf[0][start+1] & 0xF) != 15 \
+            result =    (buf[0][start+0] & 0xF) >= 10 \
+                and (buf[0][start+0] & 0xF) != 15 \
                 or  (buf[0][start+1] >>  4) >= 10 \
-                and (buf[0][start+1] >>  4) != 10
+                and (buf[0][start+1] >>  4) != 15
         return result
         
     @staticmethod
-    def IsErr5(buf, start, startOnLowNibble):
-        if startOnLowNibble :
-            result =     (buf[0][start+0] & 0xF) >= 10 \
-                and (buf[0][start+0] & 0xF) != 15 \
-                or (buf[0][start+0] >>  4) >= 10 \
-                and (buf[0][start+0] >>  4) != 15 \
-                or (buf[0][start+1] & 0xF) >= 10 \
-                and (buf[0][start+1] & 0xF) != 15 \
-                or (buf[0][start+1] >>  4) >= 10 \
-                and (buf[0][start+1] >>  4) != 15 \
-                or (buf[0][start+2] & 0xF) >= 10 \
-                and (buf[0][start+2] & 0xF) != 15
-        else:
+    def isErr3(buf, start, StartOnHiNibble):
+        if StartOnHiNibble :
             result =     (buf[0][start+0] >>  4) >= 10 \
                 and (buf[0][start+0] >>  4) != 15 \
-                or (buf[0][start+1] & 0xF) >= 10 \
-                and (buf[0][start+1] & 0xF) != 15 \
-                or (buf[0][start+1] >>  4) >= 10 \
+                or  (buf[0][start+0] & 0xF) >= 10 \
+                and (buf[0][start+0] & 0xF) != 15 \
+                or  (buf[0][start+1] >>  4) >= 10 \
+                and (buf[0][start+1] >>  4) != 15
+        else:
+            result =     (buf[0][start+0] & 0xF) >= 10 \
+                and (buf[0][start+0] & 0xF) != 15 \
+                or  (buf[0][start+1] >>  4) >= 10 \
                 and (buf[0][start+1] >>  4) != 15 \
-                or (buf[0][start+2] & 0xF) >= 10 \
-                and (buf[0][start+2] & 0xF) != 15 \
-                or (buf[0][start+2] >>  4) >= 10 \
-                and (buf[0][start+2] >>  4) != 15
-        return result
-
-    @staticmethod
-    def ToCurrentTempBytes(bufer, c, d):
-        logdbg('ToCurrentTempBytes: NOT IMPLEMENTED')
-
-    @staticmethod
-    def To2Pre(buf, start, startOnLowNibble):
-        if startOnLowNibble:
-            rawpre  = (buf[0][start+0] & 0xf)*  1 \
-                + (buf[0][start+0]  >> 4)* 10
-        else:
-            rawpre  = (buf[0][start+0]  >> 4)*  1 \
-                + (buf[0][start+1] & 0xf)* 10
-        return rawpre
-
-    @staticmethod
-    def ToRainAlarmBytes(buf,alarm):
-        logdbg('ToRainAlarmBytes: NOT IMPLEMENTED')
-
-    @staticmethod
-    def ToDateTime(buf, start, startOnLowNibble, label):
-        result = None
-        if ( USBHardware.IsErr2(buf, start+0, startOnLowNibble)
-             or USBHardware.IsErr2(buf, start+1, startOnLowNibble)
-             or USBHardware.IsErr2(buf, start+2, startOnLowNibble)
-             or USBHardware.IsErr2(buf, start+3, startOnLowNibble)
-             or USBHardware.IsErr2(buf, start+4, startOnLowNibble)
-             or USBHardware.To2Pre(buf, start+3, startOnLowNibble) > 12):
-            logerr('ToDateTime: bogus date for %s: error status in buffer' %
-                   label)
-        else:
-            minutes = USBHardware.To2Pre(buf, start+0, startOnLowNibble)
-            hours   = USBHardware.To2Pre(buf, start+1, startOnLowNibble)
-            days    = USBHardware.To2Pre(buf, start+2, startOnLowNibble)
-            month   = USBHardware.To2Pre(buf, start+3, startOnLowNibble)
-            year    = USBHardware.To2Pre(buf, start+4, startOnLowNibble) + 2000
-            try:
-                result = datetime(year, month, days, hours, minutes)
-            except:
-                logerr(('ToDateTime: bogus date for %s:'
-                        ' bad date conversion from'
-                        ' %s %s %s %s %s') %
-                       (label, minutes, hours, days, month, year))
-        if result is None:
-            # FIXME: use None instead of a really old date to indicate invalid
-            result = datetime(1900, 01, 01, 00, 00)
+                or  (buf[0][start+1] & 0xF) >= 10 \
+                and (buf[0][start+1] & 0xF) != 15
         return result
         
     @staticmethod
-    def ToHumidity(buf, start, startOnLowNibble):
-        if USBHardware.IsErr2(buf, start+0, startOnLowNibble) :
-            result = CWeatherTraits.HumidityNP()
+    def isErr5(buf, start, StartOnHiNibble):
+        if StartOnHiNibble :
+            result =     (buf[0][start+0] >>  4) >= 10 \
+                and (buf[0][start+0] >>  4) != 15 \
+                or  (buf[0][start+0] & 0xF) >= 10 \
+                and (buf[0][start+0] & 0xF) != 15 \
+                or  (buf[0][start+1] >>  4) >= 10 \
+                and (buf[0][start+1] >>  4) != 15 \
+                or  (buf[0][start+1] & 0xF) >= 10 \
+                and (buf[0][start+1] & 0xF) != 15 \
+                or  (buf[0][start+2] >>  4) >= 10 \
+                and (buf[0][start+2] >>  4) != 15
         else:
-            if USBHardware.IsOFL2(buf, start+0, startOnLowNibble) :
-                result = CWeatherTraits.HumidityOFL()
-            else:
-                result = USBHardware.To2Pre(buf, start, startOnLowNibble)
+            result =     (buf[0][start+0] & 0xF) >= 10 \
+                and (buf[0][start+0] & 0xF) != 15 \
+                or  (buf[0][start+1] >>  4) >= 10 \
+                and (buf[0][start+1] >>  4) != 15 \
+                or  (buf[0][start+1] & 0xF) >= 10 \
+                and (buf[0][start+1] & 0xF) != 15 \
+                or  (buf[0][start+2] >>  4) >= 10 \
+                and (buf[0][start+2] >>  4) != 15 \
+                or  (buf[0][start+2] & 0xF) >= 10 \
+                and (buf[0][start+2] & 0xF) != 15
         return result
 
     @staticmethod
-    def ToTemperature(buf, start, startOnLowNibble):
-        if USBHardware.IsErr5(buf, start+0, startOnLowNibble) :
-            result = CWeatherTraits.TemperatureNP()
-        elif USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
-            result = CWeatherTraits.TemperatureOFL()
-        else:
-            if startOnLowNibble:
-                rawtemp = (buf[0][start+0] & 0xf)*  0.001 \
-                    + (buf[0][start+0] >>  4)*  0.01  \
-                    + (buf[0][start+1] & 0xf)*  0.1   \
-                    + (buf[0][start+1] >>  4)*  1     \
-                    + (buf[0][start+2] & 0xf)* 10
-            else:
-                rawtemp = (buf[0][start+0] >>  4)*  0.001 \
-                    + (buf[0][start+1] & 0xf)*  0.01  \
-                    + (buf[0][start+1] >>  4)*  0.1   \
-                    + (buf[0][start+2] & 0xf)*  1     \
-                    + (buf[0][start+2] >>  4)* 10
-            result = rawtemp - CWeatherTraits.TemperatureOffset()
-        return result
-
-    @staticmethod
-    def To4Pre3Post(buf, start):
-        if ( USBHardware.IsErr5(buf, start+0, 1) or
-             USBHardware.IsErr2(buf, start+2, 0) ):
-            result = CWeatherTraits.RainNP()
-        elif ( USBHardware.IsOFL5(buf, start+1, 1) or
-               USBHardware.IsOFL2(buf, start+2, 0) ):
-            result = CWeatherTraits.RainOFL()
-        else:
-            result  = (buf[0][start+0] & 0xf)*  0.001 \
-                + (buf[0][start+0] >>  4)*  0.01  \
-                + (buf[0][start+1] & 0xf)*  0.1   \
-                + (buf[0][start+1] >>  4)*   1    \
-                + (buf[0][start+2] & 0xf)*  10    \
-                + (buf[0][start+2] >>  4)* 100    \
-                + (buf[0][start+3] & 0xf)*1000
-        return result
-
-    @staticmethod
-    def To4Pre2Post(buf, start):
-        if ( USBHardware.IsErr2(buf,start+0,1) or
-             USBHardware.IsErr2(buf,start+1, 1) or
-             USBHardware.IsErr2(buf, start+2, 1) ):
-            result = CWeatherTraits.RainNP()
-        elif ( USBHardware.IsOFL2(buf,start+0, 1) or
-               USBHardware.IsOFL2(buf, start+1, 1) or
-               USBHardware.IsOFL2(buf, start+2, 1) ):
-            result = CWeatherTraits.RainOFL()
-        else:
-            result  = (buf[0][start+0] & 0xf)*  0.01 \
-                + (buf[0][start+0] >>  4)*  0.1  \
-                + (buf[0][start+1] & 0xf)*   1   \
-                + (buf[0][start+1] >>  4)*  10   \
-                + (buf[0][start+2] & 0xf)* 100   \
-                + (buf[0][start+2] >>  4)*1000
-        return result
-
-    @staticmethod
-    def ToWindspeed(buf, start): #m/s
-        val = USBHardware.ByteToFloat(buf, start, 1, 16, 6)
-        val = val / 256.0
-        val = val / 100.0              #km/h
-        val = val / 3.599999904632568  #m/s
-        return val
-
-    @staticmethod
-    def ByteToFloat(buf, start,startOnLowNibble, base, pre):
-        lowNibble = startOnLowNibble
-        val = 0
-        byteCounter = 0
-        i = 0
-        while i < pre:
-            if pre > 0 :
-                digit = 0
-                if lowNibble :
-                    digit = buf[0][start+byteCounter] & 0xF
-                else:
-                    digit = buf[0][start+byteCounter] >> 4
-                if not lowNibble :
-                    byteCounter += 1
-                if lowNibble == 0:
-                    lowNibble=1
-                else:
-                    lowNibble=0
-                power = base**i
-                val += digit * power
-            i += 1
-        return val
-
-    @staticmethod
-    def ReverseByteOrder(buf, start, Count):
+    def reverseByteOrder(buf, start, Count):
         nbuf=buf[0]
         for i in xrange(0, Count >> 1):
             tmp = nbuf[start + i]
@@ -1303,175 +1603,292 @@ class USBHardware(object):
         buf[0]=nbuf
 
     @staticmethod
-    def ReadWindDirectionShared(buf, start):
-        return (buf[0][0+start] & 0xf, buf[0][start] >> 4)
+    def readWindDirectionShared(buf, start):
+        return (buf[0][0+start] & 0xF, buf[0][start] >> 4)
 
     @staticmethod
-    def ReadPressureShared(buf, start):
-        return ( USBHardware.ToPressure(buf,start,1) ,
-                 USBHardware.ToPressureInhg(buf,start+2,0))
-
-    @staticmethod
-    def ToPressure(buf, start, startOnLowNibble):
-        if USBHardware.IsErr5(buf, start+0, startOnLowNibble) :
-            result = CWeatherTraits.PressureNP()
-        elif USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
-            result = CWeatherTraits.PressureOFL()
+    def toInt_2(buf, start, StartOnHiNibble):
+        '''read 2 nibbles'''
+        if StartOnHiNibble:
+            rawpre  = (buf[0][start+0] >>  4)* 10 \
+                + (buf[0][start+0] & 0xF)* 1
         else:
-            if startOnLowNibble :
-                result = (buf[0][start+2] & 0xF)* 1000   \
-                    + (buf[0][start+1] >>  4)*  100   \
-                    + (buf[0][start+1] & 0xF)*   10   \
-                    + (buf[0][start+0] >>  4)*    1   \
-                    + (buf[0][start+0] & 0xF)*    0.1
-            else:
-                result = (buf[0][start+2] >>  4)* 1000   \
-                    + (buf[0][start+2] & 0xF)*  100   \
-                    + (buf[0][start+1] >>  4)*   10   \
-                    + (buf[0][start+1] & 0xF)*    1   \
-                    + (buf[0][start+0] >>  4)*    0.1
+            rawpre  = (buf[0][start+0] & 0xF)* 10 \
+                + (buf[0][start+1] >>  4)* 1
+        return rawpre
+
+    @staticmethod
+    def toRain_7_3(buf, start, StartOnHiNibble):
+        '''read 7 nibbles, presentation with 3 decimals; units of mm'''
+        if ( USBHardware.isErr2(buf, start+0, StartOnHiNibble) or
+            USBHardware.isErr5(buf, start+1, StartOnHiNibble)):
+            result = CWeatherTraits.RainNP()
+        elif ( USBHardware.isOFL2(buf, start+0, StartOnHiNibble) or
+                USBHardware.isOFL5(buf, start+1, StartOnHiNibble) ):
+            result = CWeatherTraits.RainOFL()
+        elif StartOnHiNibble:
+            result  = (buf[0][start+0] >>  4)*  1000 \
+                + (buf[0][start+0] & 0xF)* 100    \
+                + (buf[0][start+1] >>  4)*  10    \
+                + (buf[0][start+1] & 0xF)*   1    \
+                + (buf[0][start+2] >>  4)*   0.1  \
+                + (buf[0][start+2] & 0xF)*   0.01 \
+                + (buf[0][start+3] >>  4)*   0.001
+        else:
+            result  = (buf[0][start+0] & 0xF)*  1000 \
+                + (buf[0][start+1] >>  4)* 100    \
+                + (buf[0][start+1] & 0xF)*  10    \
+                + (buf[0][start+2] >>  4)*   1    \
+                + (buf[0][start+2] & 0xF)*   0.1  \
+                + (buf[0][start+3] >>  4)*   0.01 \
+                + (buf[0][start+3] & 0xF)*   0.001
         return result
 
     @staticmethod
-    def ToPressureInhg(buf, start, startOnLowNibble):
-        if USBHardware.IsErr5(buf, start+0, startOnLowNibble) :
-            result = CWeatherTraits.PressureNP()
-        elif USBHardware.IsOFL5(buf, start+0, startOnLowNibble) :
-            result = CWeatherTraits.PressureOFL()
+    def toRain_6_2(buf, start, StartOnHiNibble):
+        '''read 6 nibbles, presentation with 2 decimals; units of mm'''
+        if ( USBHardware.isErr2(buf, start+0, StartOnHiNibble) or
+                USBHardware.isErr2(buf, start+1, StartOnHiNibble) or
+                USBHardware.isErr2(buf, start+2, StartOnHiNibble) ):
+            result = CWeatherTraits.RainNP()
+        elif ( USBHardware.isOFL2(buf, start+0, StartOnHiNibble) or
+                USBHardware.isOFL2(buf, start+1, StartOnHiNibble) or
+                USBHardware.isOFL2(buf, start+2, StartOnHiNibble) ):
+            result = CWeatherTraits.RainOFL()
+        elif StartOnHiNibble:
+            result  = (buf[0][start+0] >>  4)*  1000 \
+                + (buf[0][start+0] & 0xF)* 100   \
+                + (buf[0][start+1] >>  4)*  10   \
+                + (buf[0][start+1] & 0xF)*   1   \
+                + (buf[0][start+2] >>  4)*   0.1 \
+                + (buf[0][start+2] & 0xF)*   0.01
         else:
-            if startOnLowNibble :
-                result = (buf[0][start+2] & 0xF)* 100    \
-                    + (buf[0][start+1] >>  4)*  10    \
-                    + (buf[0][start+1] & 0xF)*   1    \
-                    + (buf[0][start+0] >>  4)*   0.1  \
-                    + (buf[0][start+0] & 0xF)*   0.01
-            else:
-                result = (buf[0][start+2] >>  4)* 100    \
-                    + (buf[0][start+2] & 0xF)*  10    \
-                    + (buf[0][start+1] >>  4)*   1    \
-                    + (buf[0][start+1] & 0xF)*   0.1  \
-                    + (buf[0][start+0] >>  4)*   0.01
+            result  = (buf[0][start+0] & 0xF)*  1000 \
+                + (buf[0][start+1] >>  4)* 100   \
+                + (buf[0][start+1] & 0xF)*  10   \
+                + (buf[0][start+2] >>  4)*   1   \
+                + (buf[0][start+2] & 0xF)*   0.1 \
+                + (buf[0][start+3] >>  4)*   0.01
         return result
 
     @staticmethod
-    def ToTemperatureRingBuffer(buf, start, startOnLowNibble):
-        if USBHardware.IsErr3(buf, start+0, startOnLowNibble) :
+    def toRain_3_1(buf, start, StartOnHiNibble):
+        '''read 3 nibbles, presentation with 1 decimal; units of mm'''
+        if StartOnHiNibble :
+            hibyte = buf[0][start+0]
+            lobyte = (buf[0][start+1] >> 4) & 0xF
+        else:
+            hibyte = 16*(buf[0][start+0] & 0xF) + ((buf[0][start+1] >> 4) & 0xF)
+            lobyte = buf[0][start+1] & 0xF            
+        if hibyte == 0xFF and lobyte == 0xE :
+            result = CWeatherTraits.RainNP()
+        elif hibyte == 0xFF and lobyte == 0xF :
+            result = CWeatherTraits.RainOFL()
+        else:
+            val = USBHardware.toFloat_3_1(buf, start, StartOnHiNibble)
+            result = val
+        return result
+
+    @staticmethod  
+    def toFloat_3_1(buf, start, StartOnHiNibble):
+        '''read 3 nibbles, presentation with 1 decimal'''
+        if StartOnHiNibble:
+            result = (buf[0][start+0] >>  4)*16**2 \
+                + (buf[0][start+0] & 0xF)*   16**1 \
+                + (buf[0][start+1] >>  4)*   16**0
+        else:
+            result = (buf[0][start+0] & 0xF)*16**2 \
+                + (buf[0][start+1] >>  4)*   16**1 \
+                + (buf[0][start+1] & 0xF)*   16**0
+        result = result / 10.0
+        return result
+
+    @staticmethod
+    def toDateTime(buf, start, StartOnHiNibble, label):
+        '''read 10 nibbles, presentation as DateTime'''
+        result = None
+        if ( USBHardware.isErr2(buf, start+0, StartOnHiNibble)
+             or USBHardware.isErr2(buf, start+1, StartOnHiNibble)
+             or USBHardware.isErr2(buf, start+2, StartOnHiNibble)
+             or USBHardware.isErr2(buf, start+3, StartOnHiNibble)
+             or USBHardware.isErr2(buf, start+4, StartOnHiNibble) ):
+            logerr('ToDateTime: bogus date for %s: error status in buffer' %
+                   label)
+        else:
+            year    = USBHardware.toInt_2(buf, start+0, StartOnHiNibble) + 2000
+            month   = USBHardware.toInt_2(buf, start+1, StartOnHiNibble)
+            days    = USBHardware.toInt_2(buf, start+2, StartOnHiNibble)
+            hours   = USBHardware.toInt_2(buf, start+3, StartOnHiNibble)
+            minutes = USBHardware.toInt_2(buf, start+4, StartOnHiNibble)
+            try:
+                result = datetime(year, month, days, hours, minutes)
+            except ValueError:
+                if label not in _bad_labels:
+                    logerr(('ToDateTime: bogus date for %s:'
+                            ' bad date conversion from'
+                            ' %s %s %s %s %s') %
+                           (label, minutes, hours, days, month, year))
+        if result is None:
+            # FIXME: use None instead of a really old date to indicate invalid
+            result = datetime(1900, 01, 01, 00, 00)
+        return result
+
+    @staticmethod
+    def toHumidity_2_0(buf, start, StartOnHiNibble):
+        '''read 2 nibbles, presentation with 0 decimal'''
+        if USBHardware.isErr2(buf, start+0, StartOnHiNibble) :
+            result = CWeatherTraits.HumidityNP()
+        elif USBHardware.isOFL2(buf, start+0, StartOnHiNibble) :
+            result = CWeatherTraits.HumidityOFL()
+        else:
+            result = USBHardware.toInt_2(buf, start, StartOnHiNibble)
+        return result
+
+    @staticmethod
+    def toTemperature_5_3(buf, start, StartOnHiNibble):
+        '''read 5 nibbles, presentation with 3 decimals; units of degree C'''
+        if USBHardware.isErr5(buf, start+0, StartOnHiNibble) :
             result = CWeatherTraits.TemperatureNP()
-        elif USBHardware.IsOFL3(buf, start+0, startOnLowNibble) :
+        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble) :
             result = CWeatherTraits.TemperatureOFL()
         else:
-            if startOnLowNibble :
-                    #rawtemp   =  (buf[0][start+0] & 0xF)* 10   \
-                    #	  +  (buf[0][start+0] >>  4)*  1   \
-                    #	  +  (buf[0][start+1] & 0xF)*  0.1
-                rawtemp   =  (buf[0][start+0] & 0xF)*  0.1 \
-                    +  (buf[0][start+0] >>  4)*  1   \
-                    +  (buf[0][start+1] & 0xF)* 10
+            if StartOnHiNibble:
+                rawtemp = (buf[0][start+0] >>  4)* 10 \
+                    + (buf[0][start+0] & 0xF)*  1     \
+                    + (buf[0][start+1] >>  4)*  0.1   \
+                    + (buf[0][start+1] & 0xF)*  0.01  \
+                    + (buf[0][start+2] >>  4)*  0.001
             else:
-                    #rawtemp   =  (buf[0][start+0] >>  4)* 10   \
-                    #	  +  (buf[0][start+1] & 0xF)*  1   \
-                    #	  +  (buf[0][start+1] >>  4)*  0.1
-                rawtemp   =  (buf[0][start+0] >>  4)*  0.1 \
-                    +  (buf[0][start+1] & 0xF)*  1   \
-                    +  (buf[0][start+1] >>  4)* 10  
+                rawtemp = (buf[0][start+0] & 0xF)* 10 \
+                    + (buf[0][start+1] >>  4)*  1     \
+                    + (buf[0][start+1] & 0xF)*  0.1   \
+                    + (buf[0][start+2] >>  4)*  0.01  \
+                    + (buf[0][start+2] & 0xF)*  0.001
             result = rawtemp - CWeatherTraits.TemperatureOffset()
         return result
 
     @staticmethod
-    def ToWindspeedRingBuffer(buf, start):
-        if buf[0][start+0] != 254 or (buf[0][start+1] & 0xF) != 1 :
-            if buf[0][start+0] != 255 or (buf[0][start+1] & 0xF) != 1 :
-                val = USBHardware.ByteToFloat(buf, start, 1, 16, 3)
-                val = val / 10.0
-                result = val
-            else:
-                result = CWeatherTraits.WindOFL()
+    def toTemperature_3_1(buf, start, StartOnHiNibble):
+        '''read 3 nibbles, presentation with 1 decimal; units of degree C'''
+        if USBHardware.isErr3(buf, start+0, StartOnHiNibble) :
+            result = CWeatherTraits.TemperatureNP()
+        elif USBHardware.isOFL3(buf, start+0, StartOnHiNibble) :
+            result = CWeatherTraits.TemperatureOFL()
         else:
-            result = CWeatherTraits.WindNP()
+            if StartOnHiNibble :
+                rawtemp   =  (buf[0][start+0] >>  4)*  10 \
+                    +  (buf[0][start+0] & 0xF)*  1   \
+                    +  (buf[0][start+1] >>  4)*  0.1
+            else:
+                rawtemp   =  (buf[0][start+0] & 0xF)*  10 \
+                    +  (buf[0][start+1] >>  4)*  1   \
+                    +  (buf[0][start+1] & 0xF)*  0.1 
+            result = rawtemp - CWeatherTraits.TemperatureOffset()
         return result
 
+    @staticmethod
+    def toWindspeed_6_2(buf, start):
+        '''read 6 nibbles, presentation with 2 decimals; units of km/h'''
+        result = (buf[0][start+0] >> 4)* 16**5 \
+            + (buf[0][start+0] & 0xF)*   16**4 \
+            + (buf[0][start+1] >>  4)*   16**3 \
+            + (buf[0][start+1] & 0xF)*   16**2 \
+            + (buf[0][start+2] >>  4)*   16**1 \
+            + (buf[0][start+2] & 0xF)
+        result = result / 256.0
+        result = result / 100.0             # km/h
+        return result
 
-def get_temperature(buf, label):
-    tbuf = [0]
-    tbuf[0] = buf
-    v = USBHardware.ToTemperature(tbuf, 0, True)
-    vmin = USBHardware.ToTemperature(tbuf, 2, False)
-    vmax = USBHardware.ToTemperature(tbuf, 5, True)
-    mm = CMinMaxMeasurement()
-    mm._Min._Value = vmin
-    mm._Min._IsError = 1 if vmin == CWeatherTraits.TemperatureNP() else 0
-    mm._Min._IsOverflow = 1 if vmin == CWeatherTraits.TemperatureOFL() else 0
-    mm._Max._Value = vmax
-    mm._Max._IsError = 1 if vmax == CWeatherTraits.TemperatureNP() else 0
-    mm._Max._IsOverflow = 1 if vmax == CWeatherTraits.TemperatureOFL() else 0
-    if mm._Min._IsError or mm._Min._IsOverflow:
-        mm._Min._Time = None
-    else:
-        mm._Min._Time = USBHardware.ToDateTime(tbuf, 7, False, label)
-    if mm._Max._IsError or mm._Max._IsOverflow:
-        mm._Max._Time = None
-    else:
-        mm._Max._Time = USBHardware.ToDateTime(tbuf, 12, False, label)
-    return (v,mm)
+    @staticmethod
+    def toWindspeed_3_1(buf, start, StartOnHiNibble):
+        '''read 3 nibbles, presentation with 1 decimal; units of km/h'''
+        if StartOnHiNibble :
+            hibyte = buf[0][start+0]
+            lobyte = (buf[0][start+1] >> 4) & 0xF
+        else:
+            hibyte = 16*(buf[0][start+0] & 0xF) + ((buf[0][start+1] >> 4) & 0xF)
+            lobyte = buf[0][start+1] & 0xF            
+        if hibyte == 0xFF and lobyte == 0xE :
+            result = CWeatherTraits.WindNP()
+        elif hibyte == 0xFF and lobyte == 0xF :
+            result = CWeatherTraits.WindOFL()
+        else:
+            result = USBHardware.toFloat_3_1(buf, start, StartOnHiNibble)
+            result = result / 10.0          # km/h
+        return result
 
-def get_humidity(buf, label):
-    tbuf = [0]
-    tbuf[0] = buf
-    v = USBHardware.ToHumidity(tbuf, 0, True)
-    vmin = USBHardware.ToHumidity(tbuf, 1, True)
-    vmax = USBHardware.ToHumidity(tbuf, 2, True)
-    mm = CMinMaxMeasurement()
-    mm._Min._Value = vmin
-    mm._Min._IsError = 1 if vmin == CWeatherTraits.HumidityNP() else 0
-    mm._Min._IsOverflow = 1 if vmin == CWeatherTraits.HumidityOFL() else 0
-    mm._Max._Value = vmax
-    mm._Max._IsError = 1 if vmax == CWeatherTraits.HumidityNP() else 0
-    mm._Max._IsOverflow = 1 if vmax == CWeatherTraits.HumidityOFL() else 0
-    if mm._Min._IsError or mm._Min._IsOverflow:
-        mm._Min._Time = None
-    else:
-        mm._Min._Time = USBHardware.ToDateTime(tbuf, 3, True, label)
-    if mm._Max._IsError or mm._Max._IsOverflow:
-        mm._Max._Time = None
-    else:
-        mm._Max._Time = USBHardware.ToDateTime(tbuf, 8, True, label)
-    return (v,mm)
+    @staticmethod
+    def readPressureShared(buf, start, StartOnHiNibble):
+        return (USBHardware.toPressure_hPa_5_1(buf,start+2,1-StartOnHiNibble),
+                USBHardware.toPressure_inHg_5_2(buf,start,StartOnHiNibble))
 
-def get_time(buf, pos, startOnLowNibble, v, vnp, vofl, label):
-    if v == vnp or v == vofl:
-        return None
-    return USBHardware.ToDateTime(buf, pos, startOnLowNibble, label)
+    @staticmethod
+    def toPressure_hPa_5_1(buf, start, StartOnHiNibble):
+        '''read 5 nibbles, presentation with 1 decimal; units of hPa (mbar)'''
+        if USBHardware.isErr5(buf, start+0, StartOnHiNibble) :
+            result = CWeatherTraits.PressureNP()
+        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble) :
+            result = CWeatherTraits.PressureOFL()
+        elif StartOnHiNibble :
+            result = (buf[0][start+0] >> 4)* 1000 \
+                + (buf[0][start+0] & 0xF)* 100  \
+                + (buf[0][start+1] >>  4)*  10  \
+                + (buf[0][start+1] & 0xF)*  1   \
+                + (buf[0][start+2] >>  4)*  0.1
+        else:
+            result = (buf[0][start+0] & 0xF)* 1000 \
+                + (buf[0][start+1] >>  4)* 100  \
+                + (buf[0][start+1] & 0xF)*  10  \
+                + (buf[0][start+2] >>  4)*  1   \
+                + (buf[0][start+2] & 0xF)*  0.1
+        return result
 
-def reverse_byte_order(buf):
-    nbuf = []
-    for i in xrange(len(buf)):
-        nbuf.append(buf[len(buf)-i-1])
-    return nbuf
+    @staticmethod
+    def toPressure_inHg_5_2(buf, start, StartOnHiNibble):
+        '''read 5 nibbles, presentation with 2 decimals; units of inHg'''
+        if USBHardware.isErr5(buf, start+0, StartOnHiNibble) :
+            result = CWeatherTraits.PressureNP()
+        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble) :
+            result = CWeatherTraits.PressureOFL()
+        elif StartOnHiNibble :
+            result = (buf[0][start+0] >> 4)* 100 \
+                + (buf[0][start+0] & 0xF)* 10   \
+                + (buf[0][start+1] >>  4)*  1   \
+                + (buf[0][start+1] & 0xF)*  0.1 \
+                + (buf[0][start+2] >>  4)*  0.01
+        else:
+            result = (buf[0][start+0] & 0xF)* 100 \
+                + (buf[0][start+1] >>  4)* 10   \
+                + (buf[0][start+1] & 0xF)*  1   \
+                + (buf[0][start+2] >>  4)*  0.1 \
+                + (buf[0][start+2] & 0xF)*  0.01
+        return result
+
 
 class CCurrentWeatherData(object):
 
     def __init__(self):
         self._timestamp = None
+        self._checksum = None
         self._PressureRelative_hPa = CWeatherTraits.PressureNP()
         self._PressureRelative_hPaMinMax = CMinMaxMeasurement()
         self._PressureRelative_inHg = CWeatherTraits.PressureNP()
         self._PressureRelative_inHgMinMax = CMinMaxMeasurement()
         self._WindSpeed = CWeatherTraits.WindNP()
-        self._WindSpeedMinMax = CMinMaxMeasurement()
-        self._WindDirection = EWindDirection.wdERR
-        self._WindDirection1 = EWindDirection.wdERR
-        self._WindDirection2 = EWindDirection.wdERR
-        self._WindDirection3 = EWindDirection.wdERR
-        self._WindDirection4 = EWindDirection.wdERR
-        self._WindDirection5 = EWindDirection.wdERR
+        self._WindDirection = EWindDirection.wdNone
+        self._WindDirection1 = EWindDirection.wdNone
+        self._WindDirection2 = EWindDirection.wdNone
+        self._WindDirection3 = EWindDirection.wdNone
+        self._WindDirection4 = EWindDirection.wdNone
+        self._WindDirection5 = EWindDirection.wdNone
         self._Gust = CWeatherTraits.WindNP()
-        self._GustMinMax = CMinMaxMeasurement()
-        self._GustDirection = EWindDirection.wdERR
-        self._GustDirection1 = EWindDirection.wdERR
-        self._GustDirection2 = EWindDirection.wdERR
-        self._GustDirection3 = EWindDirection.wdERR
-        self._GustDirection4 = EWindDirection.wdERR
-        self._GustDirection5 = EWindDirection.wdERR
+        self._GustMax = CMinMaxMeasurement()
+        self._GustDirection = EWindDirection.wdNone
+        self._GustDirection1 = EWindDirection.wdNone
+        self._GustDirection2 = EWindDirection.wdNone
+        self._GustDirection3 = EWindDirection.wdNone
+        self._GustDirection4 = EWindDirection.wdNone
+        self._GustDirection5 = EWindDirection.wdNone
         self._Rain1H = CWeatherTraits.RainNP()
         self._Rain1HMax = CMinMaxMeasurement()
         self._Rain24H = CWeatherTraits.RainNP()
@@ -1482,14 +1899,14 @@ class CCurrentWeatherData(object):
         self._RainLastMonthMax = CMinMaxMeasurement()
         self._RainTotal = CWeatherTraits.RainNP()
         self._LastRainReset = None
-        self._IndoorTemp = CWeatherTraits.TemperatureNP()
-        self._IndoorTempMinMax = CMinMaxMeasurement()
-        self._OutdoorTemp = CWeatherTraits.TemperatureNP()
-        self._OutdoorTempMinMax = CMinMaxMeasurement()
-        self._IndoorHumidity = CWeatherTraits.HumidityNP()
-        self._IndoorHumidityMinMax = CMinMaxMeasurement()
-        self._OutdoorHumidity = CWeatherTraits.HumidityNP()
-        self._OutdoorHumidityMinMax = CMinMaxMeasurement()
+        self._TempIndoor = CWeatherTraits.TemperatureNP()
+        self._TempIndoorMinMax = CMinMaxMeasurement()
+        self._TempOutdoor = CWeatherTraits.TemperatureNP()
+        self._TempOutdoorMinMax = CMinMaxMeasurement()
+        self._HumidityIndoor = CWeatherTraits.HumidityNP()
+        self._HumidityIndoorMinMax = CMinMaxMeasurement()
+        self._HumidityOutdoor = CWeatherTraits.HumidityNP()
+        self._HumidityOutdoorMinMax = CMinMaxMeasurement()
         self._Dewpoint = CWeatherTraits.TemperatureNP()
         self._DewpointMinMax = CMinMaxMeasurement()
         self._Windchill = CWeatherTraits.TemperatureNP()
@@ -1498,197 +1915,196 @@ class CCurrentWeatherData(object):
         self._WeatherTendency = EWeatherTendency.TREND_ERR
         self._AlarmRingingFlags = 0
         self._AlarmMarkedFlags = 0
+        self._PresRel_hPa_Max = 0.0
+        self._PresRel_inHg_Max = 0.0
 
-    def read(self, buf, pos):
-        logdbg('CCurrentWeatherData::read')
-        newbuf = [0]
-        newbuf[0] = buf[0]
+    @staticmethod
+    def calcChecksum(buf):
+        return calc_checksum(buf, 6)
 
-        #CCurrentWeatherData::readAlarmFlags(thisa, buf, &thisa->_AlarmRingingFlags);
+    def checksum(self):
+        return self._checksum
 
+    def read(self, buf):
         self._timestamp = time.time()
+        self._checksum = CCurrentWeatherData.calcChecksum(buf)
 
-        USBHardware.ReverseByteOrder(newbuf, pos + 0, 2);
-        self._WeatherState = newbuf[0][pos + 2] & 0xF;
-        self._WeatherTendency = (newbuf[0][pos + 2] >> 4) & 0xF;
+        nbuf = [0]
+        nbuf[0] = buf[0]
+        self._StartBytes = nbuf[0][6]*0xF + nbuf[0][7] # FIXME: what is this?
+        self._WeatherTendency = (nbuf[0][8] >> 4) & 0xF
+        if self._WeatherTendency > 3:
+            self._WeatherTendency = 3 
+        self._WeatherState = nbuf[0][8] & 0xF
+        if self._WeatherState > 3:
+            self._WeatherState = 3 
 
-        (self._IndoorTemp, self._IndoorTempMinMax) = get_temperature(
-            reverse_byte_order(newbuf[0][pos+3:pos+21]), 'IndoorTemp')
-        (self._OutdoorTemp, self._OutdoorTempMinMax) = get_temperature(
-            reverse_byte_order(newbuf[0][pos+21:pos+39]), 'OutdoorTemp')
-        (self._Windchill, self._WindchillMinMax) = get_temperature(
-            reverse_byte_order(newbuf[0][pos+39:pos+57]), 'Windchill')
-        (self._Dewpoint, self._DewpointMinMax) = get_temperature(
-            reverse_byte_order(newbuf[0][pos+57:pos+75]), 'Dewpoint')
-        (self._IndoorHumidity, self._IndoorHumidityMinMax) = get_humidity(
-            reverse_byte_order(newbuf[0][pos+75:pos+88]), 'IndoorHumidity')
-        (self._OutdoorHumidity, self._OutdoorHumidityMinMax) = get_humidity(
-            reverse_byte_order(newbuf[0][pos+88:pos+101]), 'OutdoorHumidity')
+        self._TempIndoorMinMax._Max._Value = USBHardware.toTemperature_5_3(nbuf, 19, 0)
+        self._TempIndoorMinMax._Min._Value = USBHardware.toTemperature_5_3(nbuf, 22, 1)
+        self._TempIndoor = USBHardware.toTemperature_5_3(nbuf, 24, 0)
+        self._TempIndoorMinMax._Min._IsError = (self._TempIndoorMinMax._Min._Value == CWeatherTraits.TemperatureNP())
+        self._TempIndoorMinMax._Min._IsOverflow = (self._TempIndoorMinMax._Min._Value == CWeatherTraits.TemperatureOFL())
+        self._TempIndoorMinMax._Max._IsError = (self._TempIndoorMinMax._Max._Value == CWeatherTraits.TemperatureNP())
+        self._TempIndoorMinMax._Max._IsOverflow = (self._TempIndoorMinMax._Max._Value == CWeatherTraits.TemperatureOFL())
+        self._TempIndoorMinMax._Max._Time = None if self._TempIndoorMinMax._Max._IsError or self._TempIndoorMinMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 9, 0, 'TempIndoorMax')
+        self._TempIndoorMinMax._Min._Time = None if self._TempIndoorMinMax._Min._IsError or self._TempIndoorMinMax._Min._IsOverflow else USBHardware.toDateTime(nbuf, 14, 0, 'TempIndoorMin')
 
-        USBHardware.ReverseByteOrder(newbuf, pos + 101, 0xB)
-        self._RainLastMonth = USBHardware.To4Pre2Post(newbuf, pos+101)
-        self._RainLastMonthMax._Max._Value = USBHardware.To4Pre2Post(
-            newbuf, pos+104)
-        self._RainLastMonthMax._Max._Time = get_time(
-            newbuf, pos+107, True,
-            self._RainLastMonthMax._Max._Value,
-            CWeatherTraits.RainNP(),
-            CWeatherTraits.RainOFL(),
-            'RainLastMonthMax')
+        self._TempOutdoorMinMax._Max._Value = USBHardware.toTemperature_5_3(nbuf, 37, 0)
+        self._TempOutdoorMinMax._Min._Value = USBHardware.toTemperature_5_3(nbuf, 40, 1)
+        self._TempOutdoor = USBHardware.toTemperature_5_3(nbuf, 42, 0)
+        self._TempOutdoorMinMax._Min._IsError = (self._TempOutdoorMinMax._Min._Value == CWeatherTraits.TemperatureNP())
+        self._TempOutdoorMinMax._Min._IsOverflow = (self._TempOutdoorMinMax._Min._Value == CWeatherTraits.TemperatureOFL())
+        self._TempOutdoorMinMax._Max.IsError = (self._TempOutdoorMinMax._Max._Value == CWeatherTraits.TemperatureNP())
+        self._TempOutdoorMinMax._Max.IsOverflow = (self._TempOutdoorMinMax._Max._Value == CWeatherTraits.TemperatureOFL())
+        self._TempOutdoorMinMax._Max._Time = None if self._TempOutdoorMinMax._Max._IsError or self._TempOutdoorMinMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 27, 0, 'TempOutdoorMax')
+        self._TempOutdoorMinMax._Min._Time = None if self._TempOutdoorMinMax._Min._IsError or self._TempOutdoorMinMax._Min._IsOverflow else USBHardware.toDateTime(nbuf, 32, 0, 'TempOutdoorMin')
 
-        USBHardware.ReverseByteOrder(newbuf, pos + 112, 0xB)
-        self._RainLastWeek = USBHardware.To4Pre2Post(newbuf, pos+112)
-        self._RainLastWeekMax._Max._Value = USBHardware.To4Pre2Post(
-            newbuf, pos+115)
-        self._RainLastWeekMax._Max._Time = get_time(
-            newbuf, pos+118, True,
-            self._RainLastWeekMax._Max._Value,
-            CWeatherTraits.RainNP(),
-            CWeatherTraits.RainOFL(),
-            'RainLastWeekMax')
+        self._WindchillMinMax._Max._Value = USBHardware.toTemperature_5_3(nbuf, 55, 0)
+        self._WindchillMinMax._Min._Value = USBHardware.toTemperature_5_3(nbuf, 58, 1)
+        self._Windchill = USBHardware.toTemperature_5_3(nbuf, 60, 0)
+        self._WindchillMinMax._Min._IsError = (self._WindchillMinMax._Min._Value == CWeatherTraits.TemperatureNP())
+        self._WindchillMinMax._Min._IsOverflow = (self._WindchillMinMax._Min._Value == CWeatherTraits.TemperatureOFL())
+        self._WindchillMinMax._Max._IsError = (self._WindchillMinMax._Max._Value == CWeatherTraits.TemperatureNP())
+        self._WindchillMinMax._Max._IsOverflow = (self._WindchillMinMax._Max._Value == CWeatherTraits.TemperatureOFL())
+        self._WindchillMinMax._Max._Time = None if self._WindchillMinMax._Max._IsError or self._WindchillMinMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 45, 0, 'WindchillMax')
+        self._WindchillMinMax._Min._Time = None if self._WindchillMinMax._Min._IsError or self._WindchillMinMax._Min._IsOverflow else USBHardware.toDateTime(nbuf, 50, 0, 'WindchillMin')
 
-        USBHardware.ReverseByteOrder(newbuf, pos + 123, 0xB)
-        self._Rain24H = USBHardware.To4Pre2Post(newbuf, pos+123)
-        self._Rain24HMax._Max._Value = USBHardware.To4Pre2Post(newbuf, pos+126)
-        self._Rain24HMax._Max._Time = get_time(newbuf, pos+129, True,
-                                               self._Rain24HMax._Max._Value,
-                                               CWeatherTraits.RainNP(),
-                                               CWeatherTraits.RainOFL(),
-                                               'Rain24HMax')
+        self._DewpointMinMax._Max._Value = USBHardware.toTemperature_5_3(nbuf, 73, 0)
+        self._DewpointMinMax._Min._Value = USBHardware.toTemperature_5_3(nbuf, 76, 1)
+        self._Dewpoint = USBHardware.toTemperature_5_3(nbuf, 78, 0)
+        self._DewpointMinMax._Min.IsError = (self._DewpointMinMax._Min._Value == CWeatherTraits.TemperatureNP())
+        self._DewpointMinMax._Min._IsOverflow = (self._DewpointMinMax._Min._Value == CWeatherTraits.TemperatureOFL())
+        self._DewpointMinMax._Max._IsError = (self._DewpointMinMax._Max._Value == CWeatherTraits.TemperatureNP())
+        self._DewpointMinMax._Max._IsOverflow = (self._DewpointMinMax._Max._Value == CWeatherTraits.TemperatureOFL())
+        self._DewpointMinMax._Min._Time = None if self._DewpointMinMax._Min._IsError or self._DewpointMinMax._Min._IsOverflow else USBHardware.toDateTime(nbuf, 68, 0, 'DewpointMin')
+        self._DewpointMinMax._Max._Time = None if self._DewpointMinMax._Max._IsError or self._DewpointMinMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 63, 0, 'DewpointMax')
 
-        USBHardware.ReverseByteOrder(newbuf, pos + 134, 0xB)
-        self._Rain1H = USBHardware.To4Pre2Post(newbuf,pos + 134)
-        self._Rain1HMax._Max._Value = USBHardware.To4Pre2Post(newbuf,pos + 137)
-        self._Rain1HMax._Max._Time = get_time(newbuf, pos+140, True,
-                                              self._Rain1HMax._Max._Value,
-                                              CWeatherTraits.RainNP(),
-                                              CWeatherTraits.RainOFL(),
-                                              'Rain1HMax')
+        self._HumidityIndoorMinMax._Max._Value = USBHardware.toHumidity_2_0(nbuf, 91, 1)
+        self._HumidityIndoorMinMax._Min._Value = USBHardware.toHumidity_2_0(nbuf, 92, 1)
+        self._HumidityIndoor = USBHardware.toHumidity_2_0(nbuf, 93, 1)
+        self._HumidityIndoorMinMax._Min._IsError = (self._HumidityIndoorMinMax._Min._Value == CWeatherTraits.HumidityNP())
+        self._HumidityIndoorMinMax._Min._IsOverflow = (self._HumidityIndoorMinMax._Min._Value == CWeatherTraits.HumidityOFL())
+        self._HumidityIndoorMinMax._Max._IsError = (self._HumidityIndoorMinMax._Max._Value == CWeatherTraits.HumidityNP())
+        self._HumidityIndoorMinMax._Max._IsOverflow = (self._HumidityIndoorMinMax._Max._Value == CWeatherTraits.HumidityOFL())
+        self._HumidityIndoorMinMax._Max._Time = None if self._HumidityIndoorMinMax._Max._IsError or self._HumidityIndoorMinMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 81, 1, 'HumidityIndoorMax')
+        self._HumidityIndoorMinMax._Min._Time = None if self._HumidityIndoorMinMax._Min._IsError or self._HumidityIndoorMinMax._Min._IsOverflow else USBHardware.toDateTime(nbuf, 86, 1, 'HumidityIndoorMin')
 
-        USBHardware.ReverseByteOrder(newbuf, pos + 145, 9)
-        self._RainTotal = USBHardware.To4Pre3Post(newbuf, pos + 145)
-        self._LastRainReset = USBHardware.ToDateTime(newbuf, pos+148, False, 'LastRainReset')
+        self._HumidityOutdoorMinMax._Max._Value = USBHardware.toHumidity_2_0(nbuf, 104, 1)
+        self._HumidityOutdoorMinMax._Min._Value = USBHardware.toHumidity_2_0(nbuf, 105, 1)
+        self._HumidityOutdoor = USBHardware.toHumidity_2_0(nbuf, 106, 1)
+        self._HumidityOutdoorMinMax._Min._IsError = (self._HumidityOutdoorMinMax._Min._Value == CWeatherTraits.HumidityNP())
+        self._HumidityOutdoorMinMax._Min._IsOverflow = (self._HumidityOutdoorMinMax._Min._Value == CWeatherTraits.HumidityOFL())
+        self._HumidityOutdoorMinMax._Max._IsError = (self._HumidityOutdoorMinMax._Max._Value == CWeatherTraits.HumidityNP())
+        self._HumidityOutdoorMinMax._Max._IsOverflow = (self._HumidityOutdoorMinMax._Max._Value == CWeatherTraits.HumidityOFL())
+        self._HumidityOutdoorMinMax._Max._Time = None if self._HumidityOutdoorMinMax._Max._IsError or self._HumidityOutdoorMinMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 94, 1, 'HumidityOutdoorMax')
+        self._HumidityOutdoorMinMax._Min._Time = None if self._HumidityOutdoorMinMax._Min._IsError or self._HumidityOutdoorMinMax._Min._IsOverflow else USBHardware.toDateTime(nbuf, 99, 1, 'HumidityOutdoorMin')
 
-        USBHardware.ReverseByteOrder(newbuf, pos + 154, 0xF);
-        self._WindSpeed = USBHardware.ToWindspeed(newbuf,pos + 154)
-        self._WindSpeedMinMax._Max._Value = USBHardware.ToWindspeed(newbuf, pos + 157)
-        self._WindSpeedMinMax._Max._Time = get_time(
-            newbuf, pos+160, True,
-            self._WindSpeedMinMax._Max._Value,
-            CWeatherTraits.WindNP(),
-            CWeatherTraits.WindOFL(),
-            'WindSpeedMax')
-        self._WindSpeedMinMax._Max._IsError = (
-            self._WindSpeedMinMax._Max._Value == CWeatherTraits.WindNP())
-        self._WindSpeedMinMax._Max._IsOverflow = (
-            self._WindSpeedMinMax._Max._Value == CWeatherTraits.WindOFL())
+        self._RainLastMonthMax._Max._Time = USBHardware.toDateTime(nbuf, 107, 1, 'RainLastMonthMax')
+        self._RainLastMonthMax._Max._Value = USBHardware.toRain_6_2(nbuf, 112, 1)
+        self._RainLastMonth = USBHardware.toRain_6_2(nbuf, 115, 1)
 
-        #  WindErrFlags = buf[165]
-        (w ,w1) = USBHardware.ReadWindDirectionShared(newbuf, pos + 166)
-        (w2,w3) = USBHardware.ReadWindDirectionShared(newbuf, pos + 167)
-        (w4,w5) = USBHardware.ReadWindDirectionShared(newbuf, pos + 168)
-        self._WindDirection = w;
-        self._WindDirection1 = w1;
-        self._WindDirection2 = w2;
-        self._WindDirection3 = w3;
-        self._WindDirection4 = w4;
-        self._WindDirection5 = w5;
-        #  CCurrentWeatherData::CheckWindErrFlags(
-        #    thisa,
-        #    WindErrFlags,
-        #    &thisa->_WindSpeed,
-        #    &thisa->_WindSpeedMinMax,
-        #    &thisa->_WindDirection,
-        #    &thisa->_WindDirection1,
-        #    &thisa->_WindDirection2,
-        #    &thisa->_WindDirection3,
-        #    &thisa->_WindDirection4,
-        #    &thisa->_WindDirection5)
+        self._RainLastWeekMax._Max._Time = USBHardware.toDateTime(nbuf, 118, 1, 'RainLastWeekMax')
+        self._RainLastWeekMax._Max._Value = USBHardware.toRain_6_2(nbuf, 123, 1)
+        self._RainLastWeek = USBHardware.toRain_6_2(nbuf, 126, 1)
 
-        USBHardware.ReverseByteOrder(newbuf, pos + 169, 0xF)
-        self._Gust = USBHardware.ToWindspeed(newbuf, pos + 169)
-        self._GustMinMax._Max._Value = USBHardware.ToWindspeed(newbuf, pos+172)
-        self._GustMinMax._Max._Time = get_time(newbuf, pos+175, True,
-                                               self._GustMinMax._Max._Value,
-                                               CWeatherTraits.WindNP(),
-                                               CWeatherTraits.WindOFL(),
-                                               'GustMax')
-        self._GustMinMax._Max._IsError = (
-            self._GustMinMax._Max._Value == CWeatherTraits.WindNP())
-        self._GustMinMax._Max._IsOverflow = (
-            self._GustMinMax._Max._Value == CWeatherTraits.WindOFL())
+        self._Rain24HMax._Max._Time = USBHardware.toDateTime(nbuf, 129, 1, 'Rain24HMax')
+        self._Rain24HMax._Max._Value = USBHardware.toRain_6_2(nbuf, 134, 1)
+        self._Rain24H = USBHardware.toRain_6_2(nbuf, 137, 1)
+        
+        self._Rain1HMax._Max._Time = USBHardware.toDateTime(nbuf, 140, 1, 'Rain1HMax')
+        self._Rain1HMax._Max._Value = USBHardware.toRain_6_2(nbuf, 145, 1)
+        self._Rain1H = USBHardware.toRain_6_2(nbuf, 148, 1)
 
-        GustErrFlags = newbuf[0][180];
-        (g ,g1) = USBHardware.ReadWindDirectionShared(newbuf, pos + 181)
-        (g2,g3) = USBHardware.ReadWindDirectionShared(newbuf, pos + 182)
-        (g4,g5) = USBHardware.ReadWindDirectionShared(newbuf, pos + 183)
-        self._GustDirection = g;
-        self._GustDirection1 = g1;
-        self._GustDirection2 = g2;
-        self._GustDirection3 = g3;
-        self._GustDirection4 = g4;
-        self._GustDirection5 = g5;
-        #  CCurrentWeatherData::CheckWindErrFlags(
-        #    thisa,
-        #    GustErrFlags,
-        #    &thisa->_Gust,
-        #    &thisa->_GustMinMax,
-        #    &thisa->_GustDirection,
-        #    &thisa->_GustDirection1,
-        #    &thisa->_GustDirection2,
-        #    &thisa->_GustDirection3,
-        #    &thisa->_GustDirection4,
-        #    &thisa->_GustDirection5)
+        self._LastRainReset = USBHardware.toDateTime(nbuf, 151, 0, 'LastRainReset')
+        self._RainTotal = USBHardware.toRain_7_3(nbuf, 156, 0)
 
-        USBHardware.ReverseByteOrder(newbuf, pos + 184, 0x19)
-        (self._PressureRelative_hPa, self._PressureRelative_inHg) = USBHardware.ReadPressureShared(newbuf, pos + 184)
-        (self._PressureRelative_hPaMinMax._Min._Value, self._PressureRelative_inHgMinMax._Min._Value) = USBHardware.ReadPressureShared(newbuf, pos + 189)
-        (self._PressureRelative_hPaMinMax._Max._Value, self._PressureRelative_inHgMinMax._Max._Value) = USBHardware.ReadPressureShared(newbuf, pos + 194)
-        t = get_time(
-            newbuf, pos+199, True,
-            self._PressureRelative_hPaMinMax._Min._Value,
-            CWeatherTraits.PressureNP(),
-            CWeatherTraits.PressureOFL(),
-            'PressureRelativeMin')
-        self._PressureRelative_hPaMinMax._Min._Time = t
-        self._PressureRelative_inHgMinMax._Min._Time = t
-        t = get_time(
-            newbuf, pos+204, True,
-            self._PressureRelative_hPaMinMax._Max._Value,
-            CWeatherTraits.PressureNP(),
-            CWeatherTraits.PressureOFL(),
-            'PressureRelativeMax')
-        self._PressureRelative_hPaMinMax._Max._Time = t
-        self._PressureRelative_inHgMinMax._Max._Time = t
+        (w ,w1) = USBHardware.readWindDirectionShared(nbuf, 162)
+        (w2,w3) = USBHardware.readWindDirectionShared(nbuf, 161)
+        (w4,w5) = USBHardware.readWindDirectionShared(nbuf, 160)
+        self._WindDirection = w
+        self._WindDirection1 = w1
+        self._WindDirection2 = w2
+        self._WindDirection3 = w3
+        self._WindDirection4 = w4
+        self._WindDirection5 = w5
 
-        logdbg("_WeatherState=%s _WeatherTendency=%s" % ( CWeatherTraits.forecastMap[self._WeatherState], CWeatherTraits.trends[self._WeatherTendency]))
-        logdbg("_IndoorTemp=     %7.2f _Min=%7.2f(%s) _Max=%7.2f(%s)" % (self._IndoorTemp, self._IndoorTempMinMax._Min._Value, self._IndoorTempMinMax._Min._Time, self._IndoorTempMinMax._Max._Value, self._IndoorTempMinMax._Max._Time))
-        logdbg("_IndoorHumidity= %7.2f _Min=%7.2f(%s) _Max=%7.2f(%s)" % (self._IndoorHumidity, self._IndoorHumidityMinMax._Min._Value, self._IndoorHumidityMinMax._Min._Time, self._IndoorHumidityMinMax._Max._Value, self._IndoorHumidityMinMax._Max._Time))
-        logdbg("_OutdoorTemp=    %7.2f _Min=%7.2f(%s) _Max=%7.2f(%s)" % (self._OutdoorTemp, self._OutdoorTempMinMax._Min._Value, self._OutdoorTempMinMax._Min._Time, self._OutdoorTempMinMax._Max._Value, self._OutdoorTempMinMax._Max._Time))
-        logdbg("_OutdoorHumidity=%7.2f _Min=%7.2f(%s) _Max=%7.2f(%s)" % (self._OutdoorHumidity, self._OutdoorHumidityMinMax._Min._Value, self._OutdoorHumidityMinMax._Min._Time, self._OutdoorHumidityMinMax._Max._Value, self._OutdoorHumidityMinMax._Max._Time))
-        logdbg("_Windchill=      %7.2f _Min=%7.2f(%s) _Max=%7.2f(%s)" % (self._Windchill, self._WindchillMinMax._Min._Value, self._WindchillMinMax._Min._Time, self._WindchillMinMax._Max._Value, self._WindchillMinMax._Max._Time))
-        logdbg("_Dewpoint=       %7.2f _Min=%7.2f(%s) _Max=%7.2f(%s)" % (self._Dewpoint, self._DewpointMinMax._Min._Value, self._DewpointMinMax._Min._Time, self._DewpointMinMax._Max._Value, self._DewpointMinMax._Max._Time))
-        logdbg("_WindSpeed=      %7.2f                                   _Max=%7.2f(%s)" % (self._WindSpeed * 3.6, self._WindSpeedMinMax._Max._Value * 3.6, self._WindSpeedMinMax._Max._Time))
-        logdbg("_Gust=           %7.2f                                   _Max=%7.2f(%s)" % (self._Gust * 3.6,      self._GustMinMax._Max._Value * 3.6, self._GustMinMax._Max._Time))
-        logdbg("_Pressure_hPa=   %7.2f _Min=%7.2f(%s) _Max=%7.2f(%s)" % (self._PressureRelative_hPa, self._PressureRelative_hPaMinMax._Min._Value, self._PressureRelative_hPaMinMax._Min._Time, self._PressureRelative_hPaMinMax._Max._Value, self._PressureRelative_hPaMinMax._Max._Time))
-        logdbg("_Pressure_inHg=  %7.2f _Min=%7.2f(%s) _Max=%7.2f(%s)" % (self._PressureRelative_inHg, self._PressureRelative_inHgMinMax._Min._Value, self._PressureRelative_inHgMinMax._Min._Time, self._PressureRelative_inHgMinMax._Max._Value, self._PressureRelative_inHgMinMax._Max._Time))
-        logdbg("_Rain1H=         %7.2f                                   _Max=%7.2f(%s)" % (self._Rain1H, self._Rain1HMax._Max._Value, self._Rain1HMax._Max._Time))
-        logdbg("_Rain24H=        %7.2f                                   _Max=%7.2f(%s)" % (self._Rain24H, self._Rain24HMax._Max._Value, self._Rain24HMax._Max._Time))
-        logdbg("_RainLastWeek=   %7.2f                                   _Max=%7.2f(%s)" % (self._RainLastWeek, self._RainLastWeekMax._Max._Value, self._RainLastWeekMax._Max._Time))
-        logdbg("_RainLastMonth=  %7.2f                                   _Max=%7.2f(%s)" % (self._RainLastMonth, self._RainLastMonthMax._Max._Value, self._RainLastMonthMax._Max._Time))
-        logdbg("_RainTotal=      %7.2f" % self._RainTotal)
+        if DEBUG_WEATHER_DATA > 0:
+            unknownbuf = [0]
+            unknownbuf[0] = [0]*9
+            for i in xrange(0,9):
+                unknownbuf[0][i] = nbuf[0][163+i]
+            strbuf = ""
+            for i in unknownbuf[0]:
+                strbuf += str("%.2x " % i)
+            logdbg('Bytes with unknown meaning at 157-165: %s' % strbuf)
+
+        self._WindSpeed = USBHardware.toWindspeed_6_2(nbuf, 172)
+
+        # FIXME: read the WindErrFlags
+        (g ,g1) = USBHardware.readWindDirectionShared(nbuf, 177)
+        (g2,g3) = USBHardware.readWindDirectionShared(nbuf, 176)
+        (g4,g5) = USBHardware.readWindDirectionShared(nbuf, 175)
+        self._GustDirection = g
+        self._GustDirection1 = g1
+        self._GustDirection2 = g2
+        self._GustDirection3 = g3
+        self._GustDirection4 = g4
+        self._GustDirection5 = g5
+
+        self._GustMax._Max._Value = USBHardware.toWindspeed_6_2(nbuf, 184)
+        self._GustMax._Max._IsError = (self._GustMax._Max._Value == CWeatherTraits.WindNP())
+        self._GustMax._Max._IsOverflow = (self._GustMax._Max._Value == CWeatherTraits.WindOFL())
+        self._GustMax._Max._Time = None if self._GustMax._Max._IsError or self._GustMax._Max._IsOverflow else USBHardware.toDateTime(nbuf, 179, 1, 'GustMax')
+        self._Gust = USBHardware.toWindspeed_6_2(nbuf, 187)
+
+        # Apparently the station returns only ONE date time for both hPa/inHg
+        # Min Time Reset and Max Time Reset
+        self._PressureRelative_hPaMinMax._Max._Time = USBHardware.toDateTime(nbuf, 190, 1, 'PressureRelative_hPaMax')
+        self._PressureRelative_inHgMinMax._Max._Time = self._PressureRelative_hPaMinMax._Max._Time
+        self._PressureRelative_hPaMinMax._Min._Time  = self._PressureRelative_hPaMinMax._Max._Time # firmware bug, should be: USBHardware.toDateTime(nbuf, 195, 1)
+        self._PressureRelative_inHgMinMax._Min._Time = self._PressureRelative_hPaMinMax._Min._Time        
+
+        (self._PresRel_hPa_Max, self._PresRel_inHg_Max) = USBHardware.readPressureShared(nbuf, 195, 1) # firmware bug, should be: self._PressureRelative_hPaMinMax._Min._Time
+        (self._PressureRelative_hPaMinMax._Max._Value, self._PressureRelative_inHgMinMax._Max._Value) = USBHardware.readPressureShared(nbuf, 200, 1)
+        (self._PressureRelative_hPaMinMax._Min._Value, self._PressureRelative_inHgMinMax._Min._Value) = USBHardware.readPressureShared(nbuf, 205, 1)
+        (self._PressureRelative_hPa, self._PressureRelative_inHg) = USBHardware.readPressureShared(nbuf, 210, 1)
+
+        if DEBUG_WEATHER_DATA > 0:
+            self.logWeatherData()
+
+    def logWeatherData(self):
+        logdbg("_WeatherState=%s _WeatherTendency=%s _AlarmRingingFlags %04x" % (CWeatherTraits.forecastMap[self._WeatherState], CWeatherTraits.trendMap[self._WeatherTendency], self._AlarmRingingFlags))
+        logdbg("_TempIndoor=     %8.3f _Min=%8.3f (%s)  _Max=%8.3f (%s)" % (self._TempIndoor, self._TempIndoorMinMax._Min._Value, self._TempIndoorMinMax._Min._Time, self._TempIndoorMinMax._Max._Value, self._TempIndoorMinMax._Max._Time))
+        logdbg("_HumidityIndoor= %8.3f _Min=%8.3f (%s)  _Max=%8.3f (%s)" % (self._HumidityIndoor, self._HumidityIndoorMinMax._Min._Value, self._HumidityIndoorMinMax._Min._Time, self._HumidityIndoorMinMax._Max._Value, self._HumidityIndoorMinMax._Max._Time))
+        logdbg("_TempOutdoor=    %8.3f _Min=%8.3f (%s)  _Max=%8.3f (%s)" % (self._TempOutdoor, self._TempOutdoorMinMax._Min._Value, self._TempOutdoorMinMax._Min._Time, self._TempOutdoorMinMax._Max._Value, self._TempOutdoorMinMax._Max._Time))
+        logdbg("_HumidityOutdoor=%8.3f _Min=%8.3f (%s)  _Max=%8.3f (%s)" % (self._HumidityOutdoor, self._HumidityOutdoorMinMax._Min._Value, self._HumidityOutdoorMinMax._Min._Time, self._HumidityOutdoorMinMax._Max._Value, self._HumidityOutdoorMinMax._Max._Time))
+        logdbg("_Windchill=      %8.3f _Min=%8.3f (%s)  _Max=%8.3f (%s)" % (self._Windchill, self._WindchillMinMax._Min._Value, self._WindchillMinMax._Min._Time, self._WindchillMinMax._Max._Value, self._WindchillMinMax._Max._Time))
+        logdbg("_Dewpoint=       %8.3f _Min=%8.3f (%s)  _Max=%8.3f (%s)" % (self._Dewpoint, self._DewpointMinMax._Min._Value, self._DewpointMinMax._Min._Time, self._DewpointMinMax._Max._Value, self._DewpointMinMax._Max._Time))
+        logdbg("_WindSpeed=      %8.3f" % self._WindSpeed)
+        logdbg("_Gust=           %8.3f                                      _Max=%8.3f (%s)" % (self._Gust, self._GustMax._Max._Value, self._GustMax._Max._Time))
+        logdbg('_WindDirection=    %3s    _GustDirection=    %3s' % (CWeatherTraits.windDirMap[self._WindDirection],  CWeatherTraits.windDirMap[self._GustDirection]))
+        logdbg('_WindDirection1=   %3s    _GustDirection1=   %3s' % (CWeatherTraits.windDirMap[self._WindDirection1], CWeatherTraits.windDirMap[self._GustDirection1]))
+        logdbg('_WindDirection2=   %3s    _GustDirection2=   %3s' % (CWeatherTraits.windDirMap[self._WindDirection2], CWeatherTraits.windDirMap[self._GustDirection2]))
+        logdbg('_WindDirection3=   %3s    _GustDirection3=   %3s' % (CWeatherTraits.windDirMap[self._WindDirection3], CWeatherTraits.windDirMap[self._GustDirection3]))
+        logdbg('_WindDirection4=   %3s    _GustDirection4=   %3s' % (CWeatherTraits.windDirMap[self._WindDirection4], CWeatherTraits.windDirMap[self._GustDirection4]))
+        logdbg('_WindDirection5=   %3s    _GustDirection5=   %3s' % (CWeatherTraits.windDirMap[self._WindDirection5], CWeatherTraits.windDirMap[self._GustDirection5]))
+        if (self._RainLastMonth > 0) or (self._RainLastWeek > 0):
+            logdbg("_RainLastMonth=  %8.3f                                      _Max=%8.3f (%s)" % (self._RainLastMonth, self._RainLastMonthMax._Max._Value, self._RainLastMonthMax._Max._Time))
+            logdbg("_RainLastWeek=   %8.3f                                      _Max=%8.3f (%s)" % (self._RainLastWeek, self._RainLastWeekMax._Max._Value, self._RainLastWeekMax._Max._Time))
+        logdbg("_Rain24H=        %8.3f                                      _Max=%8.3f (%s)" % (self._Rain24H, self._Rain24HMax._Max._Value, self._Rain24HMax._Max._Time))
+        logdbg("_Rain1H=         %8.3f                                      _Max=%8.3f (%s)" % (self._Rain1H, self._Rain1HMax._Max._Value, self._Rain1HMax._Max._Time))
+        logdbg("_RainTotal=      %8.3f                            _LastRainReset=         (%s)" % (self._RainTotal,  self._LastRainReset))
+        logdbg("PressureRel_hPa= %8.3f _Min=%8.3f (%s)  _Max=%8.3f (%s) " % (self._PressureRelative_hPa, self._PressureRelative_hPaMinMax._Min._Value, self._PressureRelative_hPaMinMax._Min._Time, self._PressureRelative_hPaMinMax._Max._Value, self._PressureRelative_hPaMinMax._Max._Time))                       
+        logdbg("PressureRel_inHg=%8.3f _Min=%8.3f (%s)  _Max=%8.3f (%s) " % (self._PressureRelative_inHg, self._PressureRelative_inHgMinMax._Min._Value, self._PressureRelative_inHgMinMax._Min._Time, self._PressureRelative_inHgMinMax._Max._Value, self._PressureRelative_inHgMinMax._Max._Time))                       
+        ###logdbg('(* Bug in Weather Station: PressureRelative._Min._Time is written to location of _PressureRelative._Max._Time')
+        ###logdbg('Instead of PressureRelative._Min._Time we get: _PresRel_hPa_Max= %8.3f, _PresRel_inHg_max =%8.3f;' % (self._PresRel_hPa_Max, self._PresRel_inHg_Max))
 
 
 class CWeatherStationConfig(object):
-    def __init__(self, cfgfn):
-        self.filename = cfgfn
-        config = ConfigObj(cfgfn)
-        config.filename = cfgfn
-        try:
-            self._CheckSumm = int(config['ws28xx']['CheckSumm'])
-        except:
-            self._CheckSumm = 0
-
+    def __init__(self, cache_file):
+        self.cache_file = cache_file
+        self._InBufCS = 0  # checksum of received config
+        self._OutBufCS = 0 # calculated config checksum from outbuf config
         self._ClockMode = 0
         self._TemperatureFormat = 0
         self._PressureFormat = 0
@@ -1698,369 +2114,582 @@ class CWeatherStationConfig(object):
         self._StormThreshold = 0
         self._LCDContrast = 0
         self._LowBatFlags = 0
-        self._ResetMinMaxFlags = 0
+        self._WindDirAlarmFlags = 0
+        self._OtherAlarmFlags = 0
+        self._ResetMinMaxFlags = 0 # output only
         self._HistoryInterval = 0
+        self._TempIndoorMinMax = CMinMaxMeasurement()
+        self._TempOutdoorMinMax = CMinMaxMeasurement()
+        self._HumidityIndoorMinMax = CMinMaxMeasurement()
+        self._HumidityOutdoorMinMax = CMinMaxMeasurement()
+        self._Rain24HMax = CMinMaxMeasurement()
+        self._GustMax = CMinMaxMeasurement()
+        self._PressureRelative_hPaMinMax = CMinMaxMeasurement()
+        self._PressureRelative_inHgMinMax = CMinMaxMeasurement()
 
-    def readAlertFlags(self,buf):
-        logdbg('readAlertFlags')
+    def setTemps(self,TempFormat,InTempLo,InTempHi,OutTempLo,OutTempHi):
+        f1 = TempFormat
+        t1 = InTempLo
+        t2 = InTempHi
+        t3 = OutTempLo
+        t4 = OutTempHi
+        if f1 not in [ETemperatureFormat.tfFahrenheit,
+                      ETemperatureFormat.tfCelsius]:
+            logerr('setTemps: unknown temperature format %s' % TempFormat)
+            return 0
+        if t1 < -40.0 or t1 > 59.9 or t2 < -40.0 or t2 > 59.9 or \
+                t3 < -40.0 or t3 > 59.9 or t4 < -40.0 or t4 > 59.9:
+            logerr('setTemps: one or more values out of range')
+            return 0
+        self._TemperatureFormat = f1
+        self._TempIndoorMinMax._Min._Value = t1
+        self._TempIndoorMinMax._Max._Value = t2
+        self._TempOutdoorMinMax._Min._Value = t3
+        self._TempOutdoorMinMax._Max._Value = t4
+        return 1     
+    
+    def setHums(self,InHumLo,InHumHi,OutHumLo,OutHumHi):
+        h1 = InHumLo
+        h2 = InHumHi
+        h3 = OutHumLo
+        h4 = OutHumHi
+        if h1 < 1 or h1 > 99 or h2 < 1 or h2 > 99 or \
+                h3 < 1 or h3 > 99 or h4 < 1 or h4 > 99:
+            logerr('setHums: one or more values out of range')
+            return 0
+        self._HumidityIndoorMinMax._Min._Value = h1
+        self._HumidityIndoorMinMax._Max._Value = h2
+        self._HumidityOutdoorMinMax._Min._Value = h3
+        self._HumidityOutdoorMinMax._Max._Value = h4
+        return 1
+    
+    def setRain24H(self,RainFormat,Rain24hHi):
+        f1 = RainFormat
+        r1 = Rain24hHi 
+        if f1 not in [ERainFormat.rfMm, ERainFormat.rfInch]:
+            logerr('setRain24: unknown format %s' % RainFormat)
+            return 0
+        if r1 < 0.0 or r1 > 9999.9:
+            logerr('setRain24: value outside range')
+            return 0
+        self._RainFormat = f1
+        self._Rain24HMax._Max._Value = r1
+        return 1
+    
+    def setGust(self,WindSpeedFormat,GustHi):
+        # When the units of a max gust alarm are changed in the weather
+        # station itself, automatically the value is converted to the new
+        # unit and rounded to a whole number.  Weewx receives a value
+        # converted to km/h.
+        #
+        # It is too much trouble to sort out what exactly the internal
+        # conversion algoritms are for the other wind units.
+        #
+        # Setting a value in km/h units is tested and works, so this will
+        # be the only option available.  
+        f1 = WindSpeedFormat
+        g1 = GustHi
+        if f1 < EWindspeedFormat.wfMs or f1 > EWindspeedFormat.wfMph:
+            logerr('setGust: unknown format %s' % WindSpeedFormat)
+            return 0
+        if f1 != EWindspeedFormat.wfKmh:
+            logerr('setGust: only units of km/h are supported')
+            return 0
+        if g1 < 0.0 or g1 > 180.0:
+            logerr('setGust: value outside range')
+            return 0 
+        self._WindSpeedFormat = f1
+        self._GustMax._Max._Value = int(g1) # apparently gust value is always an integer
+        return 1
+    
+    def setPresRels(self,PressureFormat,PresRelhPaLo,PresRelhPaHi,PresRelinHgLo,PresRelinHgHi):
+        f1 = PressureFormat
+        p1 = PresRelhPaLo
+        p2 = PresRelhPaHi
+        p3 = PresRelinHgLo
+        p4 = PresRelinHgHi
+        if f1 not in [EPressureFormat.pfinHg, EPressureFormat.pfHPa]:
+            logerr('setPresRel: unknown format %s' % PressureFormat)
+            return 0
+        if p1 < 920.0 or p1 > 1080.0 or p2 < 920.0 or p2 > 1080.0 or \
+                p3 < 27.10 or p3 > 31.90 or p4 < 27.10 or p4 > 31.90:
+            logerr('setPresRel: value outside range')
+            return 0
+        self._RainFormat = f1
+        self._PressureRelative_hPaMinMax._Min._Value = p1
+        self._PressureRelative_hPaMinMax._Max._Value = p2
+        self._PressureRelative_inHgMinMax._Min._Value = p3
+        self._PressureRelative_inHgMinMax._Max._Value = p4
+        return 1
+    
+    def getOutBufCS(self):
+        return self._OutBufCS
+             
+    def getInBufCS(self):
+        return self._InBufCS
+    
+    def setResetMinMaxFlags(self, resetMinMaxFlags):
+        logdbg('setResetMinMaxFlags: %s' % resetMinMaxFlags)
+        self._ResetMinMaxFlags = resetMinMaxFlags
 
-    def GetResetMinMaxFlags(self):
-        logdbg('GetResetMinMaxFlags')
-
-    def GetCheckSum(self):
-        self.CalcCheckSumm()
-        logdbg('_CheckSum=%s' % self._CheckSumm)
-        return self._CheckSumm
-
-    def CalcCheckSumm(self):
-#        logdbg('CalcCheckSum')
-        t = [0]
-        t[0] = [0]*1024
-#self._ = self.write(t);
-#print "CWeatherStationConfig._CheckSumm (should be retrieved) --> 0x%x" % self._CheckSumm
-
-    def CWeatherStationConfig_buf(self,buf,start):
-        newbuf=[0]
-        newbuf[0] = buf[0]
-#CWeatherStationHighLowAlarm::CWeatherStationHighLowAlarm(&this->_AlarmTempIndoor);
-#v4 = 0;
-#CWeatherStationHighLowAlarm::CWeatherStationHighLowAlarm(&thisa->_AlarmTempOutdoor);
-#LOBYTE(v4) = 1;
-#CWeatherStationHighLowAlarm::CWeatherStationHighLowAlarm(&thisa->_AlarmHumidityOutdoor);
-#LOBYTE(v4) = 2;
-#CWeatherStationHighLowAlarm::CWeatherStationHighLowAlarm(&thisa->_AlarmHumidityIndoor);
-#LOBYTE(v4) = 3;
-#CWeatherStationWindAlarm::CWeatherStationWindAlarm(&thisa->_AlarmGust);
-#LOBYTE(v4) = 4;
-#CWeatherStationHighLowAlarm::CWeatherStationHighLowAlarm(&thisa->_AlarmPressure);
-#LOBYTE(v4) = 5;
-#CWeatherStationHighAlarm::CWeatherStationHighAlarm(&thisa->_AlarmRain24H);
-#LOBYTE(v4) = 6;
-#CWeatherStationWindDirectionAlarm::CWeatherStationWindDirectionAlarm(&thisa->_AlarmWindDirection);
-#LOBYTE(v4) = 7;
-#std::bitset<23>::bitset<23>(&thisa->_ResetMinMaxFlags);
-        self.read(newbuf,start);
-
-    def read(self,buf,start):
-        logdbg('CWeatherStationConfig::read')
-        nbuf=[0]
-        nbuf[0]=buf[0]
-#print "read",nbuf[0]
-        CheckSumm = nbuf[0][43+start] | (nbuf[0][42+start] << 8);
-        self._CheckSumm = CheckSumm;
-        CheckSumm -= 7;
-        self._ClockMode = nbuf[0][0+start] & 1;
-        self._TemperatureFormat = (nbuf[0][0+start] >> 1) & 1;
-        self._PressureFormat = (nbuf[0][0+start] >> 2) & 1;
-        self._RainFormat = (nbuf[0][0+start] >> 3) & 1;
-        self._WindspeedFormat = (nbuf[0][0+start] >> 4) & 0xF;
-        self._WeatherThreshold = nbuf[0][1+start] & 0xF;
-        self._StormThreshold = (nbuf[0][1+start] >> 4) & 0xF;
-        self._LCDContrast = nbuf[0][2+start] & 0xF;
-        self._LowBatFlags = (nbuf[0][2+start] >> 4) & 0xF;
-
-        USBHardware.ReverseByteOrder(nbuf,3+start, 4)
-#buf=nbuf[0]
-#CWeatherStationConfig::readAlertFlags(thisa, buf + 3+start);
-        USBHardware.ReverseByteOrder(nbuf, 7+start, 5);
-#v2 = USBHardware.ToTemperature(nbuf, 7+start, 1);
-#CWeatherStationHighLowAlarm::SetLowAlarm(&self._AlarmTempIndoor, v2);
-#v3 = USBHardware.ToTemperature(nbuf + 9+start, 0);
-#self._AlarmTempIndoor.baseclass_0.baseclass_0.vfptr[2].__vecDelDtor(
-#  (CWeatherStationAlarm *)&self._AlarmTempIndoor,
-#  LODWORD(v3));
-#j___RTC_CheckEsp(v4);
-        USBHardware.ReverseByteOrder(nbuf, 12+start, 5);
-#v5 = USBHardware.ToTemperature(nbuf, 12+start, 1);
-#CWeatherStationHighLowAlarm::SetLowAlarm(&self._AlarmTempOutdoor, v5);
-#v6 = USBHardware.ToTemperature(nbuf, 14+start, 0);
-#self._AlarmTempOutdoor.baseclass_0.baseclass_0.vfptr[2].__vecDelDtor(
-#  (CWeatherStationAlarm *)&self._AlarmTempOutdoor,
-#  LODWORD(v6));
-        USBHardware.ReverseByteOrder(nbuf, 17+start, 2);
-#v8 = USBHardware.ToHumidity(nbuf, 17+start, 1);
-#CWeatherStationHighLowAlarm::SetLowAlarm(&self._AlarmHumidityIndoor, v8);
-#v9 = USBHardware.ToHumidity(nbuf, 18+start, 1);
-#self._AlarmHumidityIndoor.baseclass_0.baseclass_0.vfptr[2].__vecDelDtor(
-#  (CWeatherStationAlarm *)&self._AlarmHumidityIndoor,
-#  LODWORD(v9));
-        USBHardware.ReverseByteOrder(nbuf, 19+start, 2);
-#v11 = USBHardware.ToHumidity(nbuf, 19+start, 1);
-#CWeatherStationHighLowAlarm::SetLowAlarm(&self._AlarmHumidityOutdoor, v11);
-#v12 = USBHardware.ToHumidity(nbuf, 20+start, 1);
-#self._AlarmHumidityOutdoor.baseclass_0.baseclass_0.vfptr[2].__vecDelDtor(
-#  (CWeatherStationAlarm *)&self._AlarmHumidityOutdoor,
-#  LODWORD(v12));
-        USBHardware.ReverseByteOrder(nbuf, 21+start, 4);
-#v14 = USBHardware.To4Pre3Post(nbuf, 21+start);
-#self._AlarmRain24H.baseclass_0.vfptr[2].__vecDelDtor((CWeatherStationAlarm *)&self._AlarmRain24H, LODWORD(v14));
-        self._HistoryInterval = nbuf[0][25+start] & 0xF;
-#USBHardware.ReverseByteOrder(nbuf, 26+start, 3u);
-##v16 = USBHardware._ToWindspeed(nbuf, 26+start);
-#CWeatherStationWindAlarm::SetHighAlarmRaw(&self._AlarmGust, v16);
-#USBHardware.ReverseByteOrder(nbuf, 29+start, 5u);
-#USBHardware.ReadPressureShared(nbuf, 29+start, &a, &b);
-#v17 = Conversions::ToInhg(a);
-#v25 = b - v17;
-#if ( fabs(v25) > 1.0 )
-#{
-#  Conversions::ToInhg(a);
-#  v18 = CTracer::Instance();
-#  CTracer::WriteTrace(v18, 30, "low pressure alarm difference: %f");
-#}
-#CWeatherStationHighLowAlarm::SetLowAlarm(&self._AlarmPressure, a);
-        USBHardware.ReverseByteOrder(nbuf, 34+start, 5);
-#USBHardware.ReadPressureShared(nbuf, 34+start, &a, &b);
-#v19 = Conversions::ToInhg(a);
-#v25 = b - v19;
-#if ( fabs(v25) > 1.0 )
-#{
-#  Conversions::ToInhg(a);
-#  v20 = CTracer::Instance();
-#  CTracer::WriteTrace(v20, 30, "high pressure alarm difference: %f");
-#}
-#self._AlarmPressure.baseclass_0.baseclass_0.vfptr[2].__vecDelDtor(
-#  (CWeatherStationAlarm *)&self._AlarmPressure,
-#  LODWORD(a));
-        t = nbuf[0][39+start];
-        t <<= 8;
-        t |= nbuf[0][40+start];
-        t <<= 8;
-        t |= nbuf[0][41+start];
-#std::bitset<23>::bitset<23>((std::bitset<23> *)&v26, t);
-#self._ResetMinMaxFlags._Array[0] = v22;
-#for ( i = 0; i < 0x27; ++i )
-        for i in xrange(0, 38):
-            CheckSumm -= nbuf[0][i+start];
-#if ( CheckSumm ): for now is better to comment it
-#self._CheckSumm = -1;
-
-        config = ConfigObj(self.filename)
-        config.filename = self.filename
-        config['ws28xx'] = {}
-        config['ws28xx']['CheckSumm'] = str(self._CheckSumm)
-        config['ws28xx']['ClockMode'] = str(self._ClockMode)
+    def parseRain_3(self, number, buf, start, StartOnHiNibble, numbytes):
+        '''Parse 7-digit number with 3 decimals'''
+        num = int(number*1000)
+        parsebuf=[0]*7
+        for i in xrange(7-numbytes,7):
+            parsebuf[i] = num%10
+            num = num//10
+        if StartOnHiNibble:
+                buf[0][0+start] = parsebuf[6]*16 + parsebuf[5]
+                buf[0][1+start] = parsebuf[4]*16 + parsebuf[3]
+                buf[0][2+start] = parsebuf[2]*16 + parsebuf[1]
+                buf[0][3+start] = parsebuf[0]*16 + (buf[0][3+start] & 0xF)
+        else:
+                buf[0][0+start] = (buf[0][0+start] & 0xF0) + parsebuf[6]
+                buf[0][1+start] = parsebuf[5]*16 + parsebuf[4]
+                buf[0][2+start] = parsebuf[3]*16 + parsebuf[2]
+                buf[0][3+start] = parsebuf[1]*16 + parsebuf[0]
+                        
+    def parseWind_6(self, number, buf, start):
+        '''Parse float number to 6 bytes'''
+        num = int(number*100*256)
+        parsebuf=[0]*6
+        for i in xrange(0,6):
+            parsebuf[i] = num%16
+            num = num//16
+        buf[0][0+start] = parsebuf[5]*16 + parsebuf[4]
+        buf[0][1+start] = parsebuf[3]*16 + parsebuf[2]
+        buf[0][2+start] = parsebuf[1]*16 + parsebuf[0]
         
-        config['ws28xx']['TemperatureFormat'] = str(self._TemperatureFormat)
-        config['ws28xx']['PressureFormat'] = str(self._PressureFormat)
-        config['ws28xx']['RainFormat'] = str(self._RainFormat)
-        config['ws28xx']['WindspeedFormat'] = str(self._WindspeedFormat)
-        config['ws28xx']['WeatherThreshold'] = str(self._WeatherThreshold)
-        config['ws28xx']['StormThreshold'] = str(self._StormThreshold)
-        config['ws28xx']['LCDContrast'] = str(self._LCDContrast)
-        config['ws28xx']['LowBatFlags'] = str(self._LowBatFlags)
-        config['ws28xx']['HistoryInterval'] = str(self._HistoryInterval)
+    def parse_0(self, number, buf, start, StartOnHiNibble, numbytes):
+        '''Parse 5-digit number with 0 decimals'''
+        num = int(number)
+        nbuf=[0]*5
+        for i in xrange(5-numbytes,5):
+            nbuf[i] = num%10
+            num = num//10
+        if StartOnHiNibble:
+            buf[0][0+start] = nbuf[4]*16 + nbuf[3]
+            buf[0][1+start] = nbuf[2]*16 + nbuf[1]
+            buf[0][2+start] = nbuf[0]*16 + (buf[0][2+start] & 0x0F)
+        else:
+            buf[0][0+start] = (buf[0][0+start] & 0xF0) + nbuf[4]
+            buf[0][1+start] = nbuf[3]*16 + nbuf[2]
+            buf[0][2+start] = nbuf[1]*16 + nbuf[0]
+
+    def parse_1(self, number, buf, start, StartOnHiNibble, numbytes):
+        '''Parse 5 digit number with 1 decimal'''
+        self.parse_0(number*10.0, buf, start, StartOnHiNibble, numbytes)
+    
+    def parse_2(self, number, buf, start, StartOnHiNibble, numbytes):
+        '''Parse 5 digit number with 2 decimals'''
+        self.parse_0(number*100.0, buf, start, StartOnHiNibble, numbytes)
+    
+    def parse_3(self, number, buf, start, StartOnHiNibble, numbytes):
+        '''Parse 5 digit number with 3 decimals'''
+        self.parse_0(number*1000.0, buf, start, StartOnHiNibble, numbytes)
+
+    def write(self):
+        if self.cache_file is None:
+            return
+        config = self.asConfigObj()
+        config.filename = self.cache_file
         if DEBUG_WRITES > 0:
-            logdbg('read: write to %s' % self.filename)
+            logdbg('WeatherStationConfig.write: write to %s' % self.cache_file)
         config.write()
 
-        return 1;
+    def read(self,buf):
+        nbuf=[0]
+        nbuf[0]=buf[0]
+        self._WindspeedFormat = (nbuf[0][4] >> 4) & 0xF  
+        self._RainFormat = (nbuf[0][4] >> 3) & 1
+        self._PressureFormat = (nbuf[0][4] >> 2) & 1
+        self._TemperatureFormat = (nbuf[0][4] >> 1) & 1
+        self._ClockMode = nbuf[0][4] & 1
+        self._StormThreshold = (nbuf[0][5] >> 4) & 0xF
+        self._WeatherThreshold = nbuf[0][5] & 0xF
+        self._LowBatFlags = (nbuf[0][6] >> 4) & 0xF
+        self._LCDContrast = nbuf[0][6] & 0xF
+        self._WindDirAlarmFlags = (nbuf[0][7] << 8) | nbuf[0][8]
+        self._OtherAlarmFlags = (nbuf[0][9] << 8) | nbuf[0][10]
+        self._TempIndoorMinMax._Max._Value = USBHardware.toTemperature_5_3(nbuf, 11, 1)
+        self._TempIndoorMinMax._Min._Value = USBHardware.toTemperature_5_3(nbuf, 13, 0)
+        self._TempOutdoorMinMax._Max._Value = USBHardware.toTemperature_5_3(nbuf, 16, 1)
+        self._TempOutdoorMinMax._Min._Value = USBHardware.toTemperature_5_3(nbuf, 18, 0)
+        self._HumidityIndoorMinMax._Max._Value = USBHardware.toHumidity_2_0(nbuf, 21, 1)
+        self._HumidityIndoorMinMax._Min._Value = USBHardware.toHumidity_2_0(nbuf, 22, 1)
+        self._HumidityOutdoorMinMax._Max._Value = USBHardware.toHumidity_2_0(nbuf, 23, 1)
+        self._HumidityOutdoorMinMax._Min._Value = USBHardware.toHumidity_2_0(nbuf, 24, 1)
+        self._Rain24HMax._Max._Value = USBHardware.toRain_7_3(nbuf, 25, 0)
+        self._HistoryInterval = nbuf[0][29]
+        self._GustMax._Max._Value = USBHardware.toWindspeed_6_2(nbuf, 30)
+        (self._PressureRelative_hPaMinMax._Min._Value, self._PressureRelative_inHgMinMax._Min._Value) = USBHardware.readPressureShared(nbuf, 33, 1)
+        (self._PressureRelative_hPaMinMax._Max._Value, self._PressureRelative_inHgMinMax._Max._Value) = USBHardware.readPressureShared(nbuf, 38, 1)
+        self._ResetMinMaxFlags = (nbuf[0][43]) <<16 | (nbuf[0][44] << 8) | (nbuf[0][45])
+        self._InBufCS = (nbuf[0][46] << 8) | nbuf[0][47]
+        self._OutBufCS = calc_checksum(buf, 4, end=39) + 7
+        if DEBUG_CONFIG_DATA > 0:
+            self.logConfigData()
+        self.write()
 
-    def write(self,buf):
-        logdbg('write')
-        new_buf = [0]
-        new_buf[0]=buf[0]
-        CheckSumm = 7;
-        new_buf[0][0] = 16 * (self._WindspeedFormat & 0xF) + 8 * (self._RainFormat & 1) + 4 * (self._PressureFormat & 1) + 2 * (self._TemperatureFormat & 1) + self._ClockMode & 1;
-        new_buf[0][1] = self._WeatherThreshold & 0xF | 16 * self._StormThreshold & 0xF0;
-        new_buf[0][2] = self._LCDContrast & 0xF | 16 * self._LowBatFlags & 0xF0;
-#CWeatherStationConfig::writeAlertFlags(nbuf, 3);
-#((void (__thiscall *)(CWeatherStationHighLowAlarm *))thisa->_AlarmTempIndoor.baseclass_0.baseclass_0.vfptr[1].__vecDelDtor)(&thisa->_AlarmTempIndoor);
-#v25 = v2;
-#v24 = CWeatherTraits.TemperatureOffset() + v2;
-#v21 = v24;
-#v22 = CWeatherTraits.TemperatureOffset() + CWeatherStationHighLowAlarm::GetLowAlarm(&thisa->_AlarmTempIndoor);
-#v4 = v22;
-#USBHardware::ToTempAlarmBytes(nbuf, 7, v22, v21);
-#((void (__thiscall *)(CWeatherStationHighLowAlarm *))thisa->_AlarmTempOutdoor.baseclass_0.baseclass_0.vfptr[1].__vecDelDtor)(&thisa->_AlarmTempOutdoor);
-#v25 = v4;
-#v24 = CWeatherTraits.TemperatureOffset() + v4;
-#v21 = v24;
-#v22 = CWeatherTraits.TemperatureOffset() + CWeatherStationHighLowAlarm::GetLowAlarm(&thisa->_AlarmTempOutdoor);
-#v6 = v22;
-#USBHardware::ToTempAlarmBytes(nbuf, 12, v22, v21);
-#((void (__thiscall *)(CWeatherStationHighLowAlarm *))thisa->_AlarmHumidityIndoor.baseclass_0.baseclass_0.vfptr[1].__vecDelDtor)(&thisa->_AlarmHumidityIndoor);
-#v21 = v6;
-#v8 = CWeatherStationHighLowAlarm::GetLowAlarm(&thisa->_AlarmHumidityIndoor);
-#v9 = v8;
-#USBHardware::ToHumidityAlarmBytes(nbuf, 17, v9, v21);
-#((void (__thiscall *)(CWeatherStationHighLowAlarm *))thisa->_AlarmHumidityOutdoor.baseclass_0.baseclass_0.vfptr[1].__vecDelDtor)(&thisa->_AlarmHumidityOutdoor);
-#v21 = v8;
-#v11 = CWeatherStationHighLowAlarm::GetLowAlarm(&thisa->_AlarmHumidityOutdoor);
-#v12 = v11;
-#USBHardware::ToHumidityAlarmBytes(nbuf, 19, v12, v21);
-#((void (__thiscall *)(CWeatherStationHighAlarm *))thisa->_AlarmRain24H.baseclass_0.vfptr[1].__vecDelDtor)(&thisa->_AlarmRain24H);
-#v21 = v11;
-#USBHardware::ToRainAlarmBytes(nbuf, 21, v21);
-        new_buf[0][25] = self._HistoryInterval & 0xF;
-#v21 = CWeatherStationWindAlarm::GetHighAlarmRaw(&thisa->_AlarmGust);
-#USBHardware::_ToWindspeedAlarmBytes(nbuf, 26, v21);
-#v21 = CWeatherStationHighLowAlarm::GetLowAlarm(&thisa->_AlarmPressure);
-#v21 = Conversions::ToInhg(v21);
-#v14 = CWeatherStationHighLowAlarm::GetLowAlarm(&thisa->_AlarmPressure);
-#v15 = CWeatherStationHighLowAlarm::GetLowAlarm(&thisa->_AlarmPressure);
-#USBHardware::ToPressureBytesShared(nbuf, 29, v15, v21);
-#((void (__thiscall *)(CWeatherStationHighLowAlarm *))thisa->_AlarmPressure.baseclass_0.baseclass_0.vfptr[1].__vecDelDtor)(&thisa->_AlarmPressure);
-#((void (__thiscall *)(CWeatherStationHighLowAlarm *))thisa->_AlarmPressure.baseclass_0.baseclass_0.vfptr[1].__vecDelDtor)(&thisa->_AlarmPressure);
-#USBHardware::ToPressureBytesShared(nbuf, 34, Conversions::ToInhg(CWeatherStationHighLowAlarm::GetLowAlarm(&thisa->_AlarmPressure)), Conversions::ToInhg(CWeatherStationHighLowAlarm::GetLowAlarm(&thisa->_AlarmPressure)))
+        ###self._ResetMinMaxFlags = 0x000000
+        ###logdbg('set _ResetMinMaxFlags to %06x' % self._ResetMinMaxFlags)
+        """
+        #Reset DewpointMax    80 00 00
+        #Reset DewpointMin    40 00 00 
+        #not used             20 00 00 
+        #Reset WindchillMin*  10 00 00  *Reset dateTime only; Min._Value is preserved
+                
+        #Reset TempOutMax     08 00 00
+        #Reset TempOutMin     04 00 00
+        #Reset TempInMax      02 00 00
+        #Reset TempInMin      01 00 00 
+         
+        #Reset Gust           00 80 00
+        #not used             00 40 00
+        #not used             00 20 00
+        #not used             00 10 00 
+         
+        #Reset HumOutMax      00 08 00
+        #Reset HumOutMin      00 04 00 
+        #Reset HumInMax       00 02 00 
+        #Reset HumInMin       00 01 00 
+          
+        #not used             00 00 80
+        #Reset Rain Total     00 00 40
+        #Reset last month?    00 00 20
+        #Reset last week?     00 00 10 
+         
+        #Reset Rain24H        00 00 08
+        #Reset Rain1H         00 00 04 
+        #Reset PresRelMax     00 00 02 
+        #Reset PresRelMin     00 00 01                 
+        """
 
-#print "debugxxx ", type(self._ResetMinMaxFlags)
-        new_buf[0][39] = (self._ResetMinMaxFlags >>  0) & 0xFF;
-        new_buf[0][40] = (self._ResetMinMaxFlags >>  8) & 0xFF; #BYTE1(self._ResetMinMaxFlags);
-        new_buf[0][41] = (self._ResetMinMaxFlags >> 16) & 0xFF;
+        if DEBUG_CONFIG_DATA > 0:
+            logdbg('Preset Config data')
+        """
+        setTemps(self,TempFormat,InTempLo,InTempHi,OutTempLo,OutTempHi) 
+        setHums(self,InHumLo,InHumHi,OutHumLo,OutHumHi)
+        setPresRels(self,PressureFormat,PresRelhPaLo,PresRelhPaHi,PresRelinHgLo,PresRelinHgHi)  
+        setGust(self,WindSpeedFormat,GustHi)
+        setRain24H(self,RainFormat,Rain24hHi)
+        """
+        # Examples:
+        #self.setTemps(ETemperatureFormat.tfCelsius,1.0,41.0,2.0,42.0) 
+        #self.setHums(41,71,42,72)
+        #self.setPresRels(EPressureFormat.pfHPa,960.1,1040.1,28.36,30.72)
+        #self.setGust(EWindspeedFormat.wfKmh,040.0)
+        #self.setRain24H(ERainFormat.rfMm,50.0)        
 
-#for ( i = 0; i < 39; ++i )
-        for i in xrange(0, 38):
-            CheckSumm += new_buf[0][i];
-        new_buf[0][42] = (CheckSumm >> 8) & 0xFF #BYTE1(CheckSumm);
-        new_buf[0][43] = (CheckSumm >> 0) & 0xFF #CheckSumm;
-        buf[0] = new_buf[0]
-        return CheckSumm
+        # Preset historyInterval to 5 minutes (default: 2 hours)
+        self._HistoryInterval = EHistoryInterval.hi05Min
+        # Clear all alarm flags, otherwise the datastream from the weather
+        # station will pause during an alarm and connection will be lost.
+        self._WindDirAlarmFlags = 0x0000
+        self._OtherAlarmFlags   = 0x0000
+        return 1
+    
+    def testConfigChanged(self,buf):
+        nbuf = [0]
+        nbuf[0] = buf[0]
+        nbuf[0][0] = 16*(self._WindspeedFormat & 0xF) + 8*(self._RainFormat & 1) + 4*(self._PressureFormat & 1) + 2*(self._TemperatureFormat & 1) + (self._ClockMode & 1)
+        nbuf[0][1] = self._WeatherThreshold & 0xF | 16 * self._StormThreshold & 0xF0
+        nbuf[0][2] = self._LCDContrast & 0xF | 16 * self._LowBatFlags & 0xF0
+        nbuf[0][3] = (self._OtherAlarmFlags >> 0) & 0xFF
+        nbuf[0][4] = (self._OtherAlarmFlags >> 8) & 0xFF
+        nbuf[0][5] = (self._WindDirAlarmFlags >> 0) & 0xFF
+        nbuf[0][6] = (self._WindDirAlarmFlags >> 8) & 0xFF
+        # reverse buf from here
+        self.parse_2(self._PressureRelative_inHgMinMax._Max._Value, nbuf, 7, 1, 5)
+        self.parse_1(self._PressureRelative_hPaMinMax._Max._Value, nbuf, 9, 0, 5)
+        self.parse_2(self._PressureRelative_inHgMinMax._Min._Value, nbuf, 12, 1, 5)
+        self.parse_1(self._PressureRelative_hPaMinMax._Min._Value, nbuf, 14, 0, 5)
+        self.parseWind_6(self._GustMax._Max._Value, nbuf, 17)
+        nbuf[0][20] = self._HistoryInterval & 0xF
+        self.parseRain_3(self._Rain24HMax._Max._Value, nbuf, 21, 0, 7)
+        self.parse_0(self._HumidityOutdoorMinMax._Max._Value, nbuf, 25, 1, 2)
+        self.parse_0(self._HumidityOutdoorMinMax._Min._Value, nbuf, 26, 1, 2)
+        self.parse_0(self._HumidityIndoorMinMax._Max._Value, nbuf, 27, 1, 2)
+        self.parse_0(self._HumidityIndoorMinMax._Min._Value, nbuf, 28, 1, 2)
+        self.parse_3(self._TempOutdoorMinMax._Max._Value + CWeatherTraits.TemperatureOffset(), nbuf, 29, 1, 5)
+        self.parse_3(self._TempOutdoorMinMax._Min._Value + CWeatherTraits.TemperatureOffset(), nbuf, 31, 0, 5)
+        self.parse_3(self._TempIndoorMinMax._Max._Value + CWeatherTraits.TemperatureOffset(), nbuf, 34, 1, 5)
+        self.parse_3(self._TempIndoorMinMax._Min._Value + CWeatherTraits.TemperatureOffset(), nbuf, 36, 0, 5)
+        # reverse buf to here
+        USBHardware.reverseByteOrder(nbuf, 7, 32)
+        # do not include the ResetMinMaxFlags bytes when calculating checksum
+        nbuf[0][39] = (self._ResetMinMaxFlags >> 16) & 0xFF
+        nbuf[0][40] = (self._ResetMinMaxFlags >>  8) & 0xFF
+        nbuf[0][41] = (self._ResetMinMaxFlags >>  0) & 0xFF
+        self._OutBufCS = calc_checksum(nbuf, 0, end=39) + 7
+        nbuf[0][42] = (self._OutBufCS >> 8) & 0xFF
+        nbuf[0][43] = (self._OutBufCS >> 0) & 0xFF
+        buf[0] = nbuf[0]   
+        if self._OutBufCS == self._InBufCS and self._ResetMinMaxFlags  == 0:
+            if DEBUG_CONFIG_DATA > 0:
+                logdbg('testConfigChanged: checksum not changed: OutBufCS=%04x' % self._OutBufCS)
+            changed = 0
+        else:
+            if DEBUG_CONFIG_DATA > 0:
+                logdbg('testConfigChanged: checksum or resetMinMaxFlags changed: OutBufCS=%04x InBufCS=%04x _ResetMinMaxFlags=%06x' % (self._OutBufCS, self._InBufCS, self._ResetMinMaxFlags))
+            if DEBUG_CONFIG_DATA > 1:
+                self.logConfigData()
+            self.write()
+            changed = 1
+        return changed
+
+    def logConfigData(self):
+        logdbg('OutBufCS=             %04x' % self._OutBufCS)
+        logdbg('InBufCS=              %04x' % self._InBufCS)
+        logdbg('ClockMode=            %s' % self._ClockMode)
+        logdbg('TemperatureFormat=    %s' % self._TemperatureFormat)
+        logdbg('PressureFormat=       %s' % self._PressureFormat)
+        logdbg('RainFormat=           %s' % self._RainFormat)
+        logdbg('WindspeedFormat=      %s' % self._WindspeedFormat)
+        logdbg('WeatherThreshold=     %s' % self._WeatherThreshold)
+        logdbg('StormThreshold=       %s' % self._StormThreshold)
+        logdbg('LCDContrast=          %s' % self._LCDContrast)
+        logdbg('LowBatFlags=          %01x' % self._LowBatFlags)
+        logdbg('WindDirAlarmFlags=    %04x' % self._WindDirAlarmFlags)
+        logdbg('OtherAlarmFlags=      %04x' % self._OtherAlarmFlags)
+        logdbg('HistoryInterval=      %s' % self._HistoryInterval)
+        logdbg('TempIndoor_Min=       %s' % self._TempIndoorMinMax._Min._Value)
+        logdbg('TempIndoor_Max=       %s' % self._TempIndoorMinMax._Max._Value)
+        logdbg('TempOutdoor_Min=      %s' % self._TempOutdoorMinMax._Min._Value)
+        logdbg('TempOutdoor_Max=      %s' % self._TempOutdoorMinMax._Max._Value)
+        logdbg('HumidityIndoor_Min=   %s' % self._HumidityIndoorMinMax._Min._Value)
+        logdbg('HumidityIndoor_Max=   %s' % self._HumidityIndoorMinMax._Max._Value)
+        logdbg('HumidityOutdoor_Min=  %s' % self._HumidityOutdoorMinMax._Min._Value)
+        logdbg('HumidityOutdoor_Max=  %s' % self._HumidityOutdoorMinMax._Max._Value)
+        logdbg('Rain24HMax=           %s' % self._Rain24HMax._Max._Value)
+        logdbg('GustMax=              %s' % self._GustMax._Max._Value)
+        logdbg('PressureRel_hPa_Min=  %s' % self._PressureRelative_hPaMinMax._Min._Value)
+        logdbg('PressureRel_inHg_Min= %s' % self._PressureRelative_inHgMinMax._Min._Value)
+        logdbg('PressureRel_hPa_Max=  %s' % self._PressureRelative_hPaMinMax._Max._Value)
+        logdbg('PressureRel_inHg_Max= %s' % self._PressureRelative_inHgMinMax._Max._Value) 
+        logdbg('ResetMinMaxFlags=     %06x (Output only)' % self._ResetMinMaxFlags) 
+
+    def asConfigObj(self):
+        config = ConfigObj()
+        config['Station'] = {}
+        config['Station']['ClockMode'] = str(self._ClockMode)
+        config['Station']['TemperatureFormat'] = str(self._TemperatureFormat)
+        config['Station']['PressureFormat'] = str(self._PressureFormat)
+        config['Station']['RainFormat'] = str(self._RainFormat)
+        config['Station']['WindspeedFormat'] = str(self._WindspeedFormat)
+        config['Station']['WeatherThreshold'] = str(self._WeatherThreshold)
+        config['Station']['StormThreshold'] = str(self._StormThreshold)
+        config['Station']['LCDContrast'] = str(self._LCDContrast)
+        config['Station']['LowBatFlags'] = str(self._LowBatFlags)
+        config['Station']['WindDirAlarmFlags'] = str(self._WindDirAlarmFlags)
+        config['Station']['OtherAlarmFlags'] = str(self._OtherAlarmFlags)
+        config['Station']['HistoryInterval'] = str(self._HistoryInterval)
+        config['Station']['ResetMinMaxFlags'] = str(self._ResetMinMaxFlags)
+        config['Station']['TempIndoor_Min'] = str(self._TempIndoorMinMax._Min._Value)
+        config['Station']['TempIndoor_Max'] = str(self._TempIndoorMinMax._Max._Value)
+        config['Station']['Outdoor_Min'] = str(self._TempOutdoorMinMax._Min._Value)
+        config['Station']['TempOutdoorMax'] = str(self._TempOutdoorMinMax._Max._Value)
+        config['Station']['HumidityIndoor_Min'] = str(self._HumidityIndoorMinMax._Min._Value)
+        config['Station']['HumidityIndoor_Max'] = str(self._HumidityIndoorMinMax._Max._Value)
+        config['Station']['HumidityOutdoor_Min'] = str(self._HumidityOutdoorMinMax._Min._Value)
+        config['Station']['HumidityOutdoor_Max'] = str(self._HumidityOutdoorMinMax._Max._Value)
+        config['Station']['Rain24HMax'] = str(self._Rain24HMax._Max._Value)
+        config['Station']['GustMax'] = str(self._GustMax._Max._Value)
+        config['Station']['PressureRel_hPa_Min'] = str(self._PressureRelative_hPaMinMax._Min._Value)
+        config['Station']['PressureRel_inHg_Min'] = str(self._PressureRelative_inHgMinMax._Min._Value)
+        config['Station']['PressureRel_hPa_Max'] = str(self._PressureRelative_hPaMinMax._Max._Value)
+        config['Station']['PressureRel_inHg_Max'] = str(self._PressureRelative_inHgMinMax._Max._Value)
+        return config
+
+    def asDict(self):
+        return {
+            'checksum_in': self._InBufCS,
+            'checksum_out': self._OutBufCS,
+            'format_clock': self._ClockMode,
+            'format_temperature': self._TemperatureFormat,
+            'format_pressure': self._PressureFormat,
+            'format_rain': self._RainFormat,
+            'format_windspeed': self._WindspeedFormat,
+            'threshold_weather': self._WeatherThreshold,
+            'threshold_storm': self._StormThreshold,
+            'lcd_contrast': self._LCDContrast,
+            'low_battery_flags': self._LowBatFlags,
+            'alarm_flags_wind_dir': self._WindDirAlarmFlags,
+            'alarm_flags_other': self._OtherAlarmFlags,
+#            'reset_minmax_flags': self._ResetMinMaxFlags,
+            'history_interval': self._HistoryInterval,
+            'indoor_temp_min': self._TempIndoorMinMax._Min._Value,
+            'indoor_temp_min_time': self._TempIndoorMinMax._Min._Time,
+            'indoor_temp_max': self._TempIndoorMinMax._Max._Value,
+            'indoor_temp_max_time': self._TempIndoorMinMax._Max._Time,
+            'indoor_humidity_min': self._HumidityIndoorMinMax._Min._Value,
+            'indoor_humidity_min_time': self._HumidityIndoorMinMax._Min._Time,
+            'indoor_humidity_max': self._HumidityIndoorMinMax._Max._Value,
+            'indoor_humidity_max_time': self._HumidityIndoorMinMax._Max._Time,
+            'outdoor_temp_min': self._TempOutdoorMinMax._Min._Value,
+            'outdoor_temp_min_time': self._TempOutdoorMinMax._Min._Time,
+            'outdoor_temp_max': self._TempOutdoorMinMax._Max._Value,
+            'outdoor_temp_max_time': self._TempOutdoorMinMax._Max._Time,
+            'outdoor_humidity_min': self._HumidityOutdoorMinMax._Min._Value,
+            'outdoor_humidity_min_time':self._HumidityOutdoorMinMax._Min._Time,
+            'outdoor_humidity_max': self._HumidityOutdoorMinMax._Max._Value,
+            'outdoor_humidity_max_time':self._HumidityOutdoorMinMax._Max._Time,
+            'rain_24h_max': self._Rain24HMax._Max._Value,
+            'rain_24h_max_time': self._Rain24HMax._Max._Time,
+            'wind_gust_max': self._GustMax._Max._Value,
+            'wind_gust_max_time': self._GustMax._Max._Time,
+            'pressure_min': self._PressureRelative_hPaMinMax._Min._Value,
+            'pressure_min_time': self._PressureRelative_hPaMinMax._Min._Time,
+            'pressure_max': self._PressureRelative_hPaMinMax._Max._Value,
+            'pressure_max_time': self._PressureRelative_hPaMinMax._Max._Time
+            # do not bother with pressure inHg
+            }
 
 
 class CHistoryDataSet(object):
 
     def __init__(self):
-        self.m_Time = None
-        self.m_IndoorTemp = CWeatherTraits.TemperatureNP()
-        self.m_IndoorHumidity = CWeatherTraits.HumidityNP()
-        self.m_OutdoorTemp = CWeatherTraits.TemperatureNP()
-        self.m_OutdoorHumidity = CWeatherTraits.HumidityNP()
-        self.m_PressureRelative = None
-        self.m_WindDirection = 16
-        self.m_RainCounterRaw = 0
-        self.m_WindSpeed = CWeatherTraits.WindNP()
-        self.m_Gust = CWeatherTraits.WindNP()
+        self.Time = None
+        self.TempIndoor = CWeatherTraits.TemperatureNP()
+        self.HumidityIndoor = CWeatherTraits.HumidityNP()
+        self.TempOutdoor = CWeatherTraits.TemperatureNP()
+        self.HumidityOutdoor = CWeatherTraits.HumidityNP()
+        self.PressureRelative = None
+        self.WindDirection = EWindDirection.wdNone
+        self.RainCounterRaw = 0
+        self.WindSpeed = CWeatherTraits.WindNP()
+        self.Gust = CWeatherTraits.WindNP()
 
-    def read(self, buf, pos):
-        logdbg('CHistoryDataSet::read')
+    def read(self, buf):
+        nbuf = [0]
+        nbuf[0] = buf[0]
+        self.Gust = USBHardware.toWindspeed_3_1(nbuf, 12, 0)
+        # FIXME: what about gust direction?
+        self.WindDirection = (nbuf[0][14] >> 4) & 0xF
+        self.WindSpeed = USBHardware.toWindspeed_3_1(nbuf, 14, 0)
+        if self.WindSpeed == 0 or self.WindSpeed == CWeatherTraits.WindNP():
+            self.WindDirection = EWindDirection.wdNone
+        if self.WindDirection < 0 and self.WindDirection > 16:
+            self.WindDirection = EWindDirection.wdInvalid 
+        self.RainCounterRaw = USBHardware.toRain_3_1(nbuf, 16, 1)
+        self.HumidityOutdoor = USBHardware.toHumidity_2_0(nbuf, 17, 0)
+        self.HumidityIndoor = USBHardware.toHumidity_2_0(nbuf, 18, 0)    
+        self.PressureRelative = USBHardware.toPressure_hPa_5_1(nbuf, 19, 0)
+        self.TempIndoor = USBHardware.toTemperature_3_1(nbuf, 23, 0)
+        self.TempOutdoor = USBHardware.toTemperature_3_1(nbuf, 22, 1)
+        self.Time = USBHardware.toDateTime(nbuf, 25, 1, 'HistoryDataSet')
+        if DEBUG_HISTORY_DATA > 0:
+            self.logHistoryData()
 
-        USBHardware.ReverseByteOrder(buf, pos + 0, 0x12)
-        self.m_Time = USBHardware.ToDateTime(buf, pos, 1, 'History')
-        self.m_IndoorTemp = USBHardware.ToTemperatureRingBuffer(buf, pos+5, 1)
-        self.m_OutdoorTemp = USBHardware.ToTemperatureRingBuffer(buf, pos+6, 0)
-        self.m_PressureRelative = USBHardware.ToPressure(buf, pos+8 , 1)
-        self.m_IndoorHumidity = USBHardware.ToHumidity(buf, pos+10, 0)
-        self.m_OutdoorHumidity = USBHardware.ToHumidity(buf, pos+11, 0)
-        self.m_RainCounterRaw = USBHardware.ByteToFloat(buf, pos+12, 0, 16, 3)
-        self.m_WindSpeed = USBHardware.ToWindspeedRingBuffer(buf, pos+14)
-        self.m_WindDirection = (buf[0][pos + 15] >> 4) & 0xF
-        if ( self.m_WindSpeed == CWeatherTraits.WindNP() ):
-            self.m_WindDirection = 16
-        if ( self.m_WindDirection < 0 or self.m_WindDirection > 16 ):
-            self.m_WindDirection = 16
-        self.m_Gust = USBHardware.ToWindspeedRingBuffer(buf, pos + 16)
+    def logHistoryData(self):
+        logdbg("Time              %s"    % self.Time)
+        logdbg("TempIndoor=       %7.1f" % self.TempIndoor)
+        logdbg("HumidityIndoor=   %7.0f" % self.HumidityIndoor)
+        logdbg("TempOutdoor=      %7.1f" % self.TempOutdoor)
+        logdbg("HumidityOutdoor=  %7.0f" % self.HumidityOutdoor)
+        logdbg("PressureRelative= %7.1f" % self.PressureRelative)
+        logdbg("RainCounterRaw=   %7.1f" % self.RainCounterRaw)
+        logdbg("WindDirection=    % 3s" % CWeatherTraits.windDirMap[self.WindDirection])
+        logdbg("WindSpeed=        %7.1f" % self.WindSpeed)
+        logdbg("Gust=             %7.1f" % self.Gust)
 
-        logdbg("Time              %s"    % self.m_Time)
-        logdbg("IndoorTemp=       %7.2f" % self.m_IndoorTemp)
-        logdbg("IndoorHumidity=   %7.2f" % self.m_IndoorHumidity)
-        logdbg("OutdoorTemp=      %7.2f" % self.m_OutdoorTemp)
-        logdbg("OutdoorHumidity=  %7.2f" % self.m_OutdoorHumidity)
-        logdbg("PressureRelative= %7.2f" % self.m_PressureRelative)
-        logdbg("RainCounterRaw=   %7.2f" % self.m_RainCounterRaw)
-        logdbg("WindDirection=    %7.2f" % self.m_WindDirection)
-        logdbg("WindSpeed=        %7.2f" % self.m_WindSpeed)
-        logdbg("Gust=             %7.2f" % self.m_Gust)
+    def asDict(self):
+        return {
+            'time': self.Time,
+            'inTemp': self.TempIndoor,
+            'inHumidity': self.HumidityIndoor,
+            'outTemp': self.TempOutdoor,
+            'outHumidity': self.HumidityOutdoor,
+            'pressure': self.PressureRelative,
+            'rainTotal': self.RainCounterRaw,
+            'windDir': self.WindDirection,
+            'windSpeed': self.WindSpeed,
+            'windGust': self.Gust
+            }
 
 
 class CDataStore(object):
 
     class TTransceiverSettings(object): 
         def __init__(self):
-            self.VendorId	= 0x6666
-            self.ProductId	= 0x5555
-            self.VersionNo	= 1
-            self.manufacturer	= "LA CROSSE TECHNOLOGY"
+            self.VendorId       = 0x6666
+            self.ProductId      = 0x5555
+            self.VersionNo      = 1
+            self.manufacturer   = "LA CROSSE TECHNOLOGY"
             self.product        = "Weather Direct Light Wireless Device"
             self.FrequencyStandard = EFrequency.fsUS
-            self.Frequency	= getFrequency(self.FrequencyStandard)
+            self.Frequency      = getFrequency(self.FrequencyStandard)
             self.SerialNumber   = None
             self.DeviceID       = None
 
-    class TRequest(object):
-        def __init__(self):
-            self.Type = 6
-            self.State = ERequestState.rsError
-            self.TTL = 90000
-            self.Lock = threading.Lock()
-            self.CondFinish = threading.Condition()
-
-    class TLastStat(object):
-        def __init__(self):
-            self.LastBatteryStatus = [0]
-            self.LastLinkQuality = 0
-            self.OutstandingHistorySets = -1
-            self.LastCurrentWeatherTime = datetime(1900, 01, 01, 00, 00)
-            self.LastHistoryDataTime = datetime(1900, 01, 01, 00, 00)
-            self.LastConfigTime = datetime(1900, 01, 01, 00, 00)
-            self.LastSeen = None
-            self.LastHistoryIndex = 0xffff
-
-            filename = STATS_CACHE
-            config = ConfigObj(filename)
-            config.filename = filename
-            try:
-                self.LastHistoryIndex = int(config['LastStat']['HistoryIndex'])
-            except:
-                pass
-
-    class TSettings(object):
+    class TCommunicationSettings(object):
         def __init__(self):
             self.CommModeInterval = 3
             self.PreambleDuration = 5000
             self.RegisterWaitTime = 20000
             self.DeviceID = None
 
-    def __init__(self, cfgfn):
-        self.filename = cfgfn
-        self.Guards = 0
-        self.Flags = 0
-        self.FrontEndConfig = 0
-        self.LastHistTimeStamp = 0
-        self.BufferCheck = 0
+    class TRequest(object):
+        def __init__(self):
+            self.Type = ERequestType.rtINVALID
+            self.State = ERequestState.rsError
+            self.TTL = 90000
+
+    class TLastStat(object):
+        def __init__(self, cache_file):
+            self.LastBatteryStatus = None
+            self.LastLinkQuality = None
+            self.OutstandingHistorySets = -1
+            self.LastHistoryIndex = 0xffff
+            self.last_seen_ts = None
+            self.last_weather_ts = 0
+            self.last_history_ts = 0
+            self.last_config_ts = 0
+
+    def __init__(self, cache_file):
+        self.cache_file = cache_file
+        self.transceiverPresent = False
 
         self.Request = CDataStore.TRequest()
-        self.LastStat = CDataStore.TLastStat()
-        self.Settings = CDataStore.TSettings()
+        self.LastStat = CDataStore.TLastStat(self.cache_file)
+        self.CommunicationSettings = CDataStore.TCommunicationSettings()
         self.TransceiverSettings = CDataStore.TTransceiverSettings()
-        self.DeviceConfig = CWeatherStationConfig(cfgfn)
-        self.HistoryData = CHistoryDataSet();
-        self.CurrentWeather = CCurrentWeatherData();
+        self.StationConfig = CWeatherStationConfig(self.cache_file)
+        self.HistoryData = CHistoryDataSet()
+        self.CurrentWeather = CCurrentWeatherData()
 
     def writeLastStat(self):
-        filename = STATS_CACHE
-        config = ConfigObj(filename)
-        config.filename = filename
+        if self.cache_file is None:
+            return
+        config = ConfigObj(self.cache_file)
+        config.filename = self.cache_file
         config['LastStat'] = {}
-        config['LastStat']['LastSeen'] = str(self.LastStat.LastSeen)
+        config['LastStat']['LastSeen'] = self.LastStat.last_seen_ts
         config['LastStat']['LinkQuality'] = str(self.LastStat.LastLinkQuality)
         config['LastStat']['BatteryStatus'] = str(self.LastStat.LastBatteryStatus)
         config['LastStat']['HistoryIndex'] = str(self.LastStat.LastHistoryIndex)
-        config['LastStat']['CurrentWeatherTime'] = str(self.LastStat.LastCurrentWeatherTime)
-        config['LastStat']['HistoryDataTime'] = str(self.LastStat.LastHistoryDataTime)
-        config['LastStat']['ConfigTime'] = str(self.LastStat.LastConfigTime)
+        config['LastStat']['CurrentWeatherTime'] = self.LastStat.last_weather_ts
+        config['LastStat']['HistoryDataTime'] = self.LastStat.last_history_ts
+        config['LastStat']['ConfigTime'] = self.LastStat.last_config_ts
         if DEBUG_WRITES > 0:
-            logdbg('writeLastStat: write to %s' % filename)
+            logdbg('writeLastStat: write to %s' % self.cache_file)
         config.write()
 
     def writeTransceiverSettings(self):
-        config = ConfigObj(self.filename)
-        config.filename = self.filename
+        if self.cache_file is None:
+            return
+        config = ConfigObj(self.cache_file)
+        config.filename = self.cache_file
         config['TransceiverSettings'] = {}
         config['TransceiverSettings']['SerialNumber'] = self.TransceiverSettings.SerialNumber
         config['TransceiverSettings']['DeviceID'] = self.TransceiverSettings.DeviceID
         config['TransceiverSettings']['FrequencyStandard'] = self.TransceiverSettings.FrequencyStandard
         if DEBUG_WRITES > 0:
-            logdbg('writeTransceiverSettings: write to %s' % self.filename)
-        config.write()        
+            logdbg('writeTransceiverSettings: write to %s' % self.cache_file)
+        config.write()
 
     def getFrequencyStandard(self):
-        config = ConfigObj(self.filename)
-        config.filename = self.filename
-        try:
-            self.TransceiverSettings.FrequencyStandard = config['TransceiverSettings'].get('FrequencyStandard', EFrequency.fsUS)
-        except:
-            pass
         return self.TransceiverSettings.FrequencyStandard
 
     def setFrequencyStandard(self, val):
@@ -2070,173 +2699,70 @@ class CDataStore(object):
         self.writeTransceiverSettings()
 
     def getDeviceID(self):
-        config = ConfigObj(self.filename)
-        config.filename = self.filename
-        try:
-            self.TransceiverSettings.DeviceID = int(config['TransceiverSettings']['DeviceID'])
-        except:
-            pass
         return self.TransceiverSettings.DeviceID
 
     def setDeviceID(self,val):
-        logdbg("setDeviceID: %x" % val)
+        logdbg("setDeviceID: %04x" % val)
         self.TransceiverSettings.DeviceID = val
         self.writeTransceiverSettings()
 
     def getRegisteredDeviceID(self):
-        return self.Settings.DeviceID
+        return self.CommunicationSettings.DeviceID
 
     def setRegisteredDeviceID(self, val):
-        if val != self.Settings.DeviceID:
-            loginf("console is paired to device with ID %x" % val)
-        self.Settings.DeviceID = val
+        if val != self.CommunicationSettings.DeviceID:
+            loginf("console is paired to device with ID %04x" % val)
+        self.CommunicationSettings.DeviceID = val
 
-    def getFlag_FLAG_TRANSCEIVER_SETTING_CHANGE(self):  # <4>
-        flag = BitHandling.testBit(self.Flags, 4)
-        #std::bitset<5>::at(thisa->Flags, &result, 4u);
-        return flag
+    def getTransceiverPresent(self):
+        return self.transceiverPresent
 
-    def getFlag_FLAG_FAST_CURRENT_WEATHER(self):        # <2>
-        flag = BitHandling.testBit(self.Flags, 2)
-        #return self.Flags_FLAG_SERVICE_RUNNING
-        #std::bitset<5>::at(thisa->Flags, &result, 2u);
-        return flag
+    def setTransceiverPresent(self, val):
+        self.transceiverPresent = val
 
-    def getFlag_FLAG_TRANSCEIVER_PRESENT(self):         # <0>
-        flag = BitHandling.testBit(self.Flags, 0)
-        #return self.Flags_FLAG_TRANSCEIVER_PRESENT
-        return flag
-
-    def getFlag_FLAG_SERVICE_RUNNING(self):             # <3>
-        flag = BitHandling.testBit(self.Flags, 3)
-        #return self.Flags_FLAG_SERVICE_RUNNING
-        return flag
-
-    def setFlag_FLAG_TRANSCEIVER_SETTING_CHANGE(self,val):  # <4>
-        logdbg('set FLAG_TRANSCEIVER_SETTING_CHANGE to %s' % val)
-        #std::bitset<5>::set(thisa->Flags, 4u, val);
-        self.Flags = BitHandling.setBitVal(self.Flags,4,val)
-
-    def setFlag_FLAG_FAST_CURRENT_WEATHER(self,val):        # <2>
-        logdbg('set FLAG_FAST_CURRENT_WEATHER to %s' % val)
-        #std::bitset<5>::set(thisa->Flags, 2u, val);
-        self.Flags = BitHandling.setBitVal(self.Flags,2,val)
-
-    def setFlag_FLAG_TRANSCEIVER_PRESENT(self,val):         # <0>
-        logdbg('set FLAG_TRANSCEIVER_PRESENT to %s' % val)
-        #std::bitset<5>::set(thisa->Flags, 0, val);
-        self.Flags = BitHandling.setBitVal(self.Flags,0,val)
-
-    def setFlag_FLAG_SERVICE_RUNNING(self,val):             # <3>
-        logdbg('set FLAG_SERVICE_RUNNING to %s' % val)
-        #std::bitset<5>::set(thisa->Flags, 3u, val);
-        self.Flags = BitHandling.setBitVal(self.Flags,3,val)
-
-    def setLastLinkQuality(self, val):
-        logdbg("setLastLinkQuality: quality=%d" % val)
-        self.LastStat.LastLinkQuality = val
+    def setLastStatCache(self, seen_ts=None,
+                         quality=None, battery=None,
+                         weather_ts=None,
+                         history_ts=None,
+                         config_ts=None):
+        if DEBUG_COMM > 0:
+            logdbg('setLastStatCache: seen=%s quality=%s battery=%s weather=%s history=%s config=%s' %
+                   (seen_ts, quality, battery, weather_ts, history_ts, config_ts))
+        if seen_ts is not None:
+            self.LastStat.last_seen_ts = seen_ts
+        if quality is not None:
+            self.LastStat.LastLinkQuality = quality
+        if battery is not None:
+            self.LastStat.LastBatteryStatus = battery
+        if weather_ts is not None:
+            self.LastStat.last_weather_ts = weather_ts
+        if history_ts is not None:
+            self.LastStat.last_history_ts = history_ts
+        if config_ts is not None:
+            self.LastStat.last_config_ts = config_ts
         self.writeLastStat()
 
-    def setLastSeen(self, val):
-        logdbg("setLastSeen: time=%s" % val)
-        self.LastStat.LastSeen = val
+    def setLastHistoryIndex(self,val):
+        logdbg("setLastHistoryIndex to %i (0x%x)" % (val, val))
+        self.LastStat.LastHistoryIndex = val
         self.writeLastStat()
 
-    def getLastSeen(self):
-        return self.LastStat.LastSeen
-
-    def setLastBatteryStatus(self, status):
-        # console, thermo-hygro sensor, rain sensor, wind sensor (solar)
-        # 0 - ?
-        # 1 - ?
-        # 2 - ?
-        # 3 - display battery
-        logdbg('setLastBatteryStatus: 3=%d 0=%d 1=%d 2=%d' %
-               (BitHandling.testBit(status,3),
-                BitHandling.testBit(status,0),
-                BitHandling.testBit(status,1),
-                BitHandling.testBit(status,2)))
-        self.LastStat.LastBatteryStatus = status
-        self.writeLastStat()
+    def getLastHistoryIndex(self):
+        return self.LastStat.LastHistoryIndex
 
     def setCurrentWeather(self, data):
-        logdbg('setCurrentWeather')
+        if DEBUG_WEATHER_DATA > 0:
+            logdbg('setCurrentWeather')
         self.CurrentWeather = data
 
     def setHistoryData(self, data):
         logdbg('setHistoryData')
         self.HistoryData = data
 
-    def getHistoryData(self,clear):
-        logdbg('getHistoryData')
-        self.Request.Lock.acquire()
-        History = copy.copy(self.HistoryData)
-        self.Request.Lock.release()
-        return History
-    
-    def RequestNotify(self):
-        logdbg('RequestNotify: not implemented')
-#ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(
-#    &FuncName,
-#    "void __thiscall CDataStore::RequestNotify(void) const");
-#v6 = 0;
-#ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(
-#    &Name,
-#    "Request->Lock");
-#LOBYTE(v6) = 1;
-#CScopedLock::CScopedLock(&lock, &thisa->Request->Lock, &Name, &FuncName);
-#LOBYTE(v6) = 3;
-#ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::_CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(&Name);
-#LOBYTE(v6) = 4;
-#ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::_CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(&FuncName);
-#boost::interprocess::interprocess_condition::notify_all(&thisa->Request->CondFinish);
-#v6 = -1;
-#self.Request.CondFinish.notifyAll()
-#CScopedLock::_CScopedLock(&lock);
-
-    def setLastCurrentWeatherTime(self, val):
-        logdbg("setLastCurrentWeatherTime to %s" % val)
-        self.LastStat.LastCurrentWeatherTime = val
-        self.writeLastStat()
-
-    def setLastHistoryDataTime(self, val):
-        logdbg("setLastHistoryDataTime to %s" % val)
-        self.LastStat.LastHistoryDataTime = val
-        self.writeLastStat()
-
-    def setLastConfigTime(self, val):
-        logdbg("setLastConfigTime to %s" % val)
-        self.LastStat.LastConfigTime = val
-        self.writeLastStat()
-
-    def getBufferCheck(self):
-        logdbg("BufferCheck=%x" % self.BufferCheck)
-        return self.BufferCheck
-
-    def setBufferCheck(self, val):
-        logdbg("setBufferCheck to %x" % val)
-        self.BufferCheck = val
-
-    def operator(self):
-        logdbg('operator')
-        return (self.Guards
-                and self.HistoryData
-                and self.Flags
-                and self.Settings
-                and self.TransceiverSettings
-                and self.LastSeen
-                and self.CurrentWeather
-                and self.DeviceConfig
-                and self.FrontEndConfig
-                and self.LastStat
-                and self.Request
-                and self.LastHistTimeStamp
-                and self.BufferCheck);
-
     def getDeviceRegistered(self):
-        if ( self.Settings.DeviceID is None
+        if ( self.CommunicationSettings.DeviceID is None
              or self.TransceiverSettings.DeviceID is None
-             or self.Settings.DeviceID != self.TransceiverSettings.DeviceID ):
+             or self.CommunicationSettings.DeviceID != self.TransceiverSettings.DeviceID ):
             return False
         return True
 
@@ -2244,34 +2770,16 @@ class CDataStore(object):
         return self.Request.Type
 
     def setRequestType(self, val):
-        logdbg('setRequestType to %s' % val)
+        if DEBUG_COMM > 0:
+            logdbg('setRequestType to %s' % val)
         self.Request.Type = val
 
-    def getRequestState(self):
-        return self.Request.State
-
-    def setRequestState(self,state):
-        logdbg("setRequestState to %x" % state)
-        self.Request.State = state;
-
-    def getPreambleDuration(self):
-        return self.Settings.PreambleDuration
-
-    def getRegisterWaitTime(self):
-        return self.Settings.RegisterWaitTime
-
     def getCommModeInterval(self):
-#        logdbg("Settings.CommModeInterval=%x" % self.Settings.CommModeInterval)
-        return self.Settings.CommModeInterval
+        return self.CommunicationSettings.CommModeInterval
 
     def setCommModeInterval(self,val):
         logdbg("setCommModeInterval to %x" % val)
-        self.Settings.CommModeInterval = val
-
-    def setOutstandingHistorySets(self,val):
-        logdbg("setOutstandingHistorySets to %d" % val)
-        self.LastStat.OutstandingHistorySets = val
-        pass
+        self.CommunicationSettings.CommModeInterval = val
 
     def setTransceiverSerNo(self,val):
         logdbg("setTransceiverSerialNumber to %s" % val)
@@ -2279,175 +2787,7 @@ class CDataStore(object):
         self.writeTransceiverSettings()
 
     def getTransceiverSerNo(self):
-        logdbg("TransceiverSerNo=%s" % self.TransceiverSerNo)
         return self.TransceiverSettings.SerialNumber
-
-    def setLastHistoryIndex(self,val):
-        logdbg("setLastHistoryIndex to %x" % val)
-        self.LastStat.LastHistoryIndex = val
-        self.writeLastStat()
-
-    def getLastHistoryIndex(self):
-        logdbg("LastHistoryIndex=%x" % self.LastStat.LastHistoryIndex)
-        return self.LastStat.LastHistoryIndex
-
-    def FirstTimeConfig(self, timeout):
-        logdbg('FirstTimeConfig: timeout=%s' % timeout)
-        if not self.getFlag_FLAG_TRANSCEIVER_PRESENT():
-            logerr('FirstTimeConfig: no transceiver')
-            return
-
-        self.DataStore.DeviceID = None
-        self.Request.Type = ERequestType.rtFirstConfig
-        self.Request.State = ERequestState.rsQueued
-        self.Request.TTL = 90000
-        self.BufferCheck = 0
-
-        try:
-            self.Request.CondFinish.acquire()
-        except:
-            pass
-
-        if self.Request.CondFinish.wait(timedelta(milliseconds=timeout).seconds):
-            logdbg('FirstTimeConfig: wait completed with state %s' %
-                   self.Request.State)
-            if self.Request.State == ERequestState.rsFinished: #2
-                tid = self.DataStore.getDeviceID()
-                rid = self.DataStore.getRegisteredDeviceID()
-                if tid == rid:
-                    loginf('FirstTimeConfig: found device ID %s' % tid)
-                else:
-                    logerr('FirstTimeConfig: pairing failed')
-            else:
-                logerr('FirstTimeConfig: failed to obtain device ID')
-            self.Request.Type = ERequestType.rtINVALID #6;
-            self.Request.State = ERequestState.rsINVALID #8;
-        else:
-            logerr('FirstTimeConfig: timeout before obtaining device ID')
-
-        self.Request.CondFinish.release()
-
-    def GetCurrentWeather(self, data, timeout):
-        logdbg('GetCurrentWeather: timeout=%s' % timeout)
-        if not self.getFlag_FLAG_TRANSCEIVER_PRESENT():
-            logerr('GetCurrentWeather: no transceiver')
-            return
-        if not self.getDeviceRegistered():
-            logerr('GetCurrentWeather: transceiver is not paired')
-            return
-
-        self.Request.Type = ERequestType.rtGetCurrent
-        self.Request.State = ERequestState.rsQueued
-        self.Request.TTL = 90000;
-
-        try:
-            self.Request.CondFinish.acquire()
-        except:
-            pass
-
-        if self.Request.CondFinish.wait(timedelta(milliseconds=timeout).seconds):
-            # FIXME: implement getCurrentWeather
-            #CDataStore::getCurrentWeather(thisa, Weather);
-            pass
-        else:
-            pass
-        self.Request.Type = ERequestType.rtINVALID #6;
-        self.Request.State = ERequestState.rsINVALID #8;
-        
-        self.Request.CondFinish.release()
-
-    def GetHistory(self, data, timeout):
-        logdbg('GetHistory: timeout=%s' % timeout)
-        if not self.getFlag_FLAG_TRANSCEIVER_PRESENT():
-            logerr('GetHistory: no transceiver')
-            return
-        if not self.getDeviceRegistered():
-            logerr('GetHistory: transceiver is not paired')
-            return
-
-        self.Request.Type = ERequestType.rtGetHistory
-        self.Request.State = ERequestState.rsQueued
-        self.Request.TTL = 90000
-
-        try:
-            self.Request.CondFinish.acquire()
-        except:
-            pass
-        if self.Request.CondFinish.wait(timedelta(milliseconds=timeout).seconds):
-            # FIXME: implement getHistory
-            #CDataStore::getHistoryData(thisa, History, 1);
-            pass
-        else:
-            pass
-        self.Request.Type = ERequestType.rtINVALID #6;
-        self.Request.State = ERequestState.rsINVALID #8;
-
-        self.Request.CondFinish.release()
-
-    def GetConfig(self):
-        logdbg('GetConfig')
-        if not self.getFlag_FLAG_TRANSCEIVER_PRESENT():
-            logerr('GetConfig: no transceiver')
-            return
-        if not self.getDeviceRegistered():
-            logerr('GetConfig: transceiver is not paired')
-            return
-
-        # FIXME: implement GetConfig
-
-        self.Request.Type = ERequestType.rtGetConfig
-        self.Request.State = ERequestState.rsQueued
-        self.Request.TTL = 90000
-
-    def SetConfig(self):
-        logdbg('SetConfig')
-        if not self.getFlag_FLAG_TRANSCEIVER_PRESENT():
-            logerr('SetConfig: no transceiver')
-            return
-        if not self.getDeviceRegistered():
-            logerr('SetConfig: transceiver is not paired')
-            return
-
-        self.Request.Type = ERequestType.rtSetConfig
-        self.Request.State = ERequestState.rsQueued
-        self.Request.TTL = 90000
-
-    def SetTime(self):
-        logdbg('SetTime')
-        if not self.getFlag_FLAG_TRANSCEIVER_PRESENT():
-            logerr('SetTime: no transceiver')
-            return
-        if not self.getDeviceRegistered():
-            logerr('SetTime: transceiver is not paired')
-            return
-
-        # FIXME: implement SetTime
-
-        self.Request.Type = ERequestType.rtSetTime
-        self.Request.State = ERequestState.rsQueued
-        self.Request.TTL = 90000
-
-    def GetDeviceConfigCS(self):
-        #logdbg('GetDeviceConfigCS')
-        #CWeatherStationConfig::CWeatherStationConfig((CWeatherStationConfig *)&v8, &result);
-        #v4 = v1;
-        #v3 = v1;
-        #LOBYTE(v12) = 6;
-        #v7 = CWeatherStationConfig::GetCheckSum((CWeatherStationConfig *)v1);
-        #LOBYTE(v12) = 5;
-        #CWeatherStationConfig::_CWeatherStationConfig((CWeatherStationConfig *)&v8);
-        #LOBYTE(v12) = 4;
-        #CWeatherStationConfig::_CWeatherStationConfig(&result);
-        #v12 = -1;
-        return self.DeviceConfig.GetCheckSum()
-
-    def RequestTick(self):
-        if self.Request.Type != ERequestType.rtINVALID:
-            self.Request.TTL -= 1
-            if self.Request.TTL <= 0:
-                self.Request.Type = ERequestType.rtINVALID
-                self.Request.State = ERequestState.rsINVALID
-                logerr("RequestTick: internal timeout, request aborted")
 
 
 class sHID(object):
@@ -2455,44 +2795,75 @@ class sHID(object):
 
     def __init__(self):
         self.devh = None
-        self.debug = 0
         self.timeout = 1000
+        self.last_dump = None
 
-    def open(self, vid=0x6666, pid=0x5555):
-        device = self._find_device(vid, pid)
+    def open(self, vid, pid, did, serial):
+        device = self._find_device(vid, pid, did, serial)
         if device is None:
-            logcrt('Cannot find USB device with Vendor=0x%04x ProdID=0x%04x' %
-                   (vid, pid))
-            raise weewx.WeeWxIOError('Unable to find USB device')
+            logcrt('Cannot find USB device with Vendor=0x%04x ProdID=0x%04x Device=%s Serial=%s' % (vid, pid, did, serial))
+            raise weewx.WeeWxIOError('Unable to find transceiver on USB')
         self._open_device(device)
 
     def close(self):
         self._close_device()
 
-    def _find_device(self, vid, pid):
+    def _find_device(self, vid, pid, did, serial):
         for bus in usb.busses():
-            for device in bus.devices:
-                if device.idVendor == vid and device.idProduct == pid:
-                    return device
+            for dev in bus.devices:
+                if dev.idVendor == vid and dev.idProduct == pid:
+                    if did is None or dev.filename == did:
+                        if serial is None:
+                            loginf('found transceiver at bus=%s device=%s' %
+                                   (bus.dirname, dev.filename))
+                            return dev
+                        else:
+                            handle = dev.open()
+                            try:
+                                buf = shid.readCfg(handle, 0x1F9, 7)
+                                sn  = str("%02d"%(buf[0]))
+                                sn += str("%02d"%(buf[1]))
+                                sn += str("%02d"%(buf[2]))
+                                sn += str("%02d"%(buf[3]))
+                                sn += str("%02d"%(buf[4]))
+                                sn += str("%02d"%(buf[5]))
+                                sn += str("%02d"%(buf[6]))
+                                if str(serial) == sn:
+                                    loginf('found transceiver at bus=%s device=%s serial=%s' % (bus.dirname, dev.filename, sn))
+                                    return dev
+                                else:
+                                    loginf('skipping transceiver with serial %s (looking for %s)' % (sn, serial))
+                            finally:
+                                del handle
         return None
 
-    def _open_device(self, device, interface=0, configuration=1):
-        self._device = device
-        self._configuration = device.configurations[0]
-        self._interface = self._configuration.interfaces[0][0]
-        self._endpoint = self._interface.endpoints[0]
-        self.devh = device.open()
-        loginf('manufacturer: %s' % self.devh.getString(device.iManufacturer,30))
-        loginf('product: %s' % self.devh.getString(device.iProduct,30))
-        loginf('interface: %d' % self._interface.interfaceNumber)
+    def _open_device(self, dev, interface=0):
+        self.devh = dev.open()
+        if not self.devh:
+            raise weewx.WeeWxIOError('Open USB device failed')
 
-        # detach any old claimed interfaces
+        loginf('manufacturer: %s' % self.devh.getString(dev.iManufacturer,30))
+        loginf('product: %s' % self.devh.getString(dev.iProduct,30))
+        loginf('interface: %d' % interface)
+
+        # be sure kernel does not claim the interface
         try:
-            self.devh.detachKernelDriver(self._interface.interfaceNumber)
-        except:
-            pass
+            self.devh.detachKernelDriver(interface)
+        except Exception, e:
+            loginf('Detach kernel driver failed: %s' % e)
+
+        # attempt to claim the interface
+        try:
+            logdbg('claiming USB interface %d' % interface)
+            self.devh.claimInterface(interface)
+            self.devh.setAltInterface(interface)
+        except usb.USBError, e:
+            self._close_device()
+            logcrt('Unable to claim USB interface %s: %s' % (interface, e))
+            raise weewx.WeeWxIOError(e)
 
         # FIXME: this seems to be specific to ws28xx?
+        # FIXME: check return values
         usbWait = 0.05
         self.devh.getDescriptor(0x1, 0, 0x12)
         time.sleep(usbWait)
@@ -2500,306 +2871,258 @@ class sHID(object):
         time.sleep(usbWait)
         self.devh.getDescriptor(0x2, 0, 0x22)
         time.sleep(usbWait)
-
-        # attempt to claim the interface
-        try:
-            if platform.system() is 'Windows':
-                loginf('set USB device configuration to %d' % configuration)
-                self.devh.setConfiguration(configuration)
-            logdbg('claiming USB interface %d' % interface)
-            self.devh.claimInterface(interface)
-            self.devh.setAltInterface(interface)
-        except usb.USBError, e:
-            self._close_device()
-            raise weewx.WeeWxIOError(e)
-
-        # FIXME: this seems to be specific to ws28xx?
-        # FIXME: check return value
-        self.devh.controlMsg(
-            usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-            0x000000a, [], 0x0000000, 0x0000000, 1000);
-        time.sleep(0.05)
+        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                             0xa, [], 0x0, 0x0, 1000)
+        time.sleep(usbWait)
         self.devh.getDescriptor(0x22, 0, 0x2a9)
         time.sleep(usbWait)
 
     def _close_device(self):
         try:
-            logdbg('release USB interface')
+            logdbg('releasing USB interface')
             self.devh.releaseInterface()
-        except:
+        except Exception:
             pass
-        try:
-            logdbg('detach kernel driver')
-            self.devh.detachKernelDriver(self._interface.interfaceNumber)
-        except:
-            pass
+        self.devh = None
 
-    def SetTX(self):
+    def setTX(self):
         buf = [0]*0x15
-        buf[0] = 0xd1;
+        buf[0] = 0xD1
         if DEBUG_COMM > 0:
-            self.dump('SetTX', buf)
-        try:
-            self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 request=0x0000009,
-                                 buffer=buf,
-                                 value=0x00003d1,
-                                 index=0x0000000,
-                                 timeout=self.timeout)
-            result = 1
-        except:
-            result = 0
-        return result
+            self.dump('setTX', buf, fmt=DEBUG_DUMP_FORMAT)
+        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                             request=0x0000009,
+                             buffer=buf,
+                             value=0x00003d1,
+                             index=0x0000000,
+                             timeout=self.timeout)
 
-    def SetRX(self):
+    def setRX(self):
         buf = [0]*0x15
-        buf[0] = 0xD0;
+        buf[0] = 0xD0
         if DEBUG_COMM > 0:
-            self.dump('SetRX', buf)
-        try:
+            self.dump('setRX', buf, fmt=DEBUG_DUMP_FORMAT)
+        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                             request=0x0000009,
+                             buffer=buf,
+                             value=0x00003d0,
+                             index=0x0000000,
+                             timeout=self.timeout)
+
+    def getState(self,StateBuffer):
+        buf = self.devh.controlMsg(requestType=usb.TYPE_CLASS |
+                                   usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
+                                   request=usb.REQ_CLEAR_FEATURE,
+                                   buffer=0x0a,
+                                   value=0x00003de,
+                                   index=0x0000000,
+                                   timeout=self.timeout)
+        if DEBUG_COMM > 0:
+            self.dump('getState', buf, fmt=DEBUG_DUMP_FORMAT)
+        StateBuffer[0]=[0]*0x2
+        StateBuffer[0][0]=buf[1]
+        StateBuffer[0][1]=buf[2]
+
+    def readConfigFlash(self,addr,numBytes,data):
+        if numBytes > 512:
+            raise Exception('bad number of bytes')
+
+        while numBytes:
+            buf=[0xcc]*0x0f #0x15
+            buf[0] = 0xdd
+            buf[1] = 0x0a
+            buf[2] = (addr >>8)  & 0xFF
+            buf[3] = (addr >>0)  & 0xFF
+            if DEBUG_COMM > 0:
+                self.dump('readCfgFlash>', buf, fmt=DEBUG_DUMP_FORMAT)
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
                                  request=0x0000009,
                                  buffer=buf,
-                                 value=0x00003d0,
+                                 value=0x00003dd,
                                  index=0x0000000,
                                  timeout=self.timeout)
-            result = 1
-        except:
-            result = 0
-        return result
-
-    def GetState(self,StateBuffer):
-        try:
-            buf = self.devh.controlMsg(requestType=usb.TYPE_CLASS |
-                                       usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
-                                       request=usb.REQ_CLEAR_FEATURE,
-                                       buffer=0x0a,
-                                       value=0x00003de,
-                                       index=0x0000000,
-                                       timeout=self.timeout)
-            StateBuffer[0]=[0]*0x2
-            StateBuffer[0][0]=buf[1]
-            StateBuffer[0][1]=buf[2]
-            result = 1
-        except:
-            result = 0
-            if self.debug == 1:
-                buf[1]=0x14
-                StateBuffer[0]=[0]*0x2
-                StateBuffer[0][0]=buf[1]
-                StateBuffer[0][1]=buf[2]
-                result =1
-        if DEBUG_COMM > 0:
-            self.dump('GetState', buf)
-        return result
-
-    def ReadConfigFlash(self,addr,numBytes,data):
-        if numBytes <= 512:
-            while ( numBytes ):
-                buf=[0xcc]*0x0f #0x15
-                buf[0] = 0xdd
-                buf[1] = 0x0a
-                buf[2] = (addr >>8)  & 0xFF;
-                buf[3] = (addr >>0)  & 0xFF;
-                if DEBUG_COMM > 0:
-                    self.dump('ReadConfigFlash>', buf)
-                try:
-                    # FIXME: check return value
-                    self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                         request=0x0000009,
-                                         buffer=buf,
-                                         value=0x00003dd,
-                                         index=0x0000000,
-                                         timeout=self.timeout)
-                    result = 1
-                except:
-                    result = 0
-
-                try:
-                    buf = self.devh.controlMsg(requestType=usb.TYPE_CLASS |
-                                               usb.RECIP_INTERFACE |
-                                               usb.ENDPOINT_IN,
-                                               request=usb.REQ_CLEAR_FEATURE,
-                                               buffer=0x15,
-                                               value=0x00003dc,
-                                               index=0x0000000,
-                                               timeout=self.timeout)
-                    result = 1
-                except:
-                    result = 0
-                    if addr == 0x1F5 and self.debug == 1: #//fixme #debugging... without device
-                        logdbg("sHID::ReadConfigFlash -emulated 0x1F5")
-                        buf=[0xdc,0x0a,0x01,0xf5,0x00,0x01,0x78,0xa0,0x01,0x01,0x0c,0x0a,0x0a,0x00,0x41,0xff,0xff,0xff,0xff,0xff,0x00]
-
-                    if addr == 0x1F9 and self.debug == 1: #//fixme #debugging... without device
-                        logdbg("sHID::ReadConfigFlash -emulated 0x1F9")
-                        buf=[0xdc,0x0a,0x01,0xf9,0x01,0x01,0x0c,0x0a,0x0a,0x00,0x41,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0x00]
-                    if self.debug != 1:
-                        return 0;
-
-                new_data=[0]*0x15
-                if ( numBytes < 16 ):
-                    for i in xrange(0, numBytes):
-                        new_data[i] = buf[i+4];
-                    numBytes = 0;
-                else:
-                    for i in xrange(0, 16):
-                        new_data[i] = buf[i+4];
-                    numBytes -= 16;
-                    addr += 16;
-                if DEBUG_COMM > 0:
-                    self.dump('ReadConfigFlash<', buf)
-
-            result = 1;
-        else:
-            result = 0;
-
-        data[0] = new_data
-        return result
-
-    def SetState(self,state):
-        buf = [0]*0x15
-        buf[0] = 0xd7;
-        buf[1] = state;
-        if DEBUG_COMM > 0:
-            self.dump('SetState', buf)
-        try:
-            self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 request=0x0000009,
-                                 buffer=buf,
-                                 value=0x00003d7,
-                                 index=0x0000000,
-                                 timeout=self.timeout)
-            result = 1
-        except:
-            result = 0
-        return result
-
-    def SetFrame(self,data,numBytes):
-
-#    00000000: d5 00 09 f0 f0 03 00 32 00 3f ff ff 00 00 00 00
-#    00000000: d5 00 0c 00 32 c0 00 8f 45 25 15 91 31 20 01 00
-#    00000000: d5 00 09 00 32 00 06 c1 00 3f ff ff 00 00 00 00
-#    00000000: d5 00 09 00 32 01 06 c1 00 3f ff ff 00 00 00 00
-#    00000000: d5 00 0c 00 32 c0 06 c1 47 25 15 91 31 20 01 00
-#    00000000: d5 00 09 00 32 00 06 c1 00 30 01 a0 00 00 00 00
-#    00000000: d5 00 09 00 32 02 06 c1 00 30 01 a0 00 00 00 00
-#    00000000: d5 00 30 00 32 40 64 33 53 04 00 00 00 00 00 00
-#    00000000: d5 00 09 00 32 00 06 ab 00 30 01 a0 00 00 00 00
-#    00000000: d5 00 09 00 32 00 04 d0 00 30 01 a0 00 00 00 00
-#    00000000: d5 00 09 00 32 02 04 d0 00 30 01 a0 00 00 00 00
-#    00000000: d5 00 30 00 32 40 64 32 53 04 00 00 00 00 00 00
-#    00000000: d5 00 09 00 32 00 04 cf 00 30 01 a0 00 00 00 00
-
-        buf = [0]*0x111
-        buf[0] = 0xd5;
-        buf[1] = numBytes >> 8;
-        buf[2] = numBytes;
-        for i in xrange(0, numBytes):
-            buf[i+3] = data[i]
-        if DEBUG_COMM > 0:
-            self.dump('SetFrame', buf)
-        try:
-            self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 request=0x0000009,
-                                 buffer=buf,
-                                 value=0x00003d5,
-                                 index=0x0000000,
-                                 timeout=self.timeout)
-            result = 1
-        except:
-            result = 0
-        return result
-
-    def GetFrame(self,data,numBytes):
-        try:
             buf = self.devh.controlMsg(requestType=usb.TYPE_CLASS |
                                        usb.RECIP_INTERFACE |
                                        usb.ENDPOINT_IN,
                                        request=usb.REQ_CLEAR_FEATURE,
-                                       buffer=0x111,
-                                       value=0x00003d6,
+                                       buffer=0x15,
+                                       value=0x00003dc,
                                        index=0x0000000,
                                        timeout=self.timeout)
-            new_data=[0]*0x131
-            new_numBytes=(buf[1] << 8 | buf[2])& 0x1ff;
-            for i in xrange(0, new_numBytes):
-                new_data[i] = buf[i+3];
+            new_data=[0]*0x15
+            if ( numBytes < 16 ):
+                for i in xrange(0, numBytes):
+                    new_data[i] = buf[i+4]
+                numBytes = 0
+            else:
+                for i in xrange(0, 16):
+                    new_data[i] = buf[i+4]
+                numBytes -= 16
+                addr += 16
             if DEBUG_COMM > 0:
-                self.dump('GetFrame', buf)
-            data[0] = new_data
-            numBytes[0] = new_numBytes
-            result = 1
-        except:
-            result = 0
-        return result
+                self.dump('readCfgFlash<', buf, fmt=DEBUG_DUMP_FORMAT)
+        data[0] = new_data
 
-    def WriteReg(self,regAddr,data):
-        buf = [0]*0x05
-        buf[0] = 0xf0;
-        buf[1] = regAddr & 0x7F;
-        buf[2] = 0x01;
-        buf[3] = data;
-        buf[4] = 0x00;
-        try:
-            self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 request=0x0000009,
-                                 buffer=buf,
-                                 value=0x00003f0,
-                                 index=0x0000000,
-                                 timeout=self.timeout)
-            result = 1
-        except:
-            result = 0
-        return result
-
-    def Execute(self,command):
-        buf = [0]*0x0f #*0x15
-        buf[0] = 0xd9;
-        buf[1] = command;
-        if DEBUG_COMM > 0:
-            self.dump('Execute', buf)
-        try:
-            self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 request=0x0000009,
-                                 buffer=buf,
-                                 value=0x00003d9,
-                                 index=0x0000000,
-                                 timeout=self.timeout)
-            result = 1
-        except:
-            result = 0
-        return result
-
-    def SetPreamblePattern(self,pattern):
+    def setState(self,state):
         buf = [0]*0x15
-        buf[0] = 0xd8;
+        buf[0] = 0xd7
+        buf[1] = state
+        if DEBUG_COMM > 0:
+            self.dump('setState', buf, fmt=DEBUG_DUMP_FORMAT)
+        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                             request=0x0000009,
+                             buffer=buf,
+                             value=0x00003d7,
+                             index=0x0000000,
+                             timeout=self.timeout)
+
+    def setFrame(self,data,numBytes):
+        buf = [0]*0x111
+        buf[0] = 0xd5
+        buf[1] = numBytes >> 8
+        buf[2] = numBytes
+        for i in xrange(0, numBytes):
+            buf[i+3] = data[i]
+        if DEBUG_COMM > 0:
+            self.dump('setFrame', buf, fmt=DEBUG_DUMP_FORMAT)
+        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                             request=0x0000009,
+                             buffer=buf,
+                             value=0x00003d5,
+                             index=0x0000000,
+                             timeout=self.timeout)
+
+    def getFrame(self,data,numBytes):
+        buf = self.devh.controlMsg(requestType=usb.TYPE_CLASS |
+                                   usb.RECIP_INTERFACE |
+                                   usb.ENDPOINT_IN,
+                                   request=usb.REQ_CLEAR_FEATURE,
+                                   buffer=0x111,
+                                   value=0x00003d6,
+                                   index=0x0000000,
+                                   timeout=self.timeout)
+        new_data=[0]*0x131
+        new_numBytes=(buf[1] << 8 | buf[2])& 0x1ff
+        for i in xrange(0, new_numBytes):
+            new_data[i] = buf[i+3]
+        if DEBUG_COMM > 0:
+            self.dump('getFrame', buf, fmt=DEBUG_DUMP_FORMAT)
+        data[0] = new_data
+        numBytes[0] = new_numBytes
+
+    def writeReg(self,regAddr,data):
+        buf = [0]*0x05
+        buf[0] = 0xf0
+        buf[1] = regAddr & 0x7F
+        buf[2] = 0x01
+        buf[3] = data
+        buf[4] = 0x00
+        if DEBUG_COMM > 0:
+            self.dump('writeReg', buf, fmt=DEBUG_DUMP_FORMAT)
+        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                             request=0x0000009,
+                             buffer=buf,
+                             value=0x00003f0,
+                             index=0x0000000,
+                             timeout=self.timeout)
+
+    def execute(self,command):
+        buf = [0]*0x0f #*0x15
+        buf[0] = 0xd9
+        buf[1] = command
+        if DEBUG_COMM > 0:
+            self.dump('execute', buf, fmt=DEBUG_DUMP_FORMAT)
+        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                             request=0x0000009,
+                             buffer=buf,
+                             value=0x00003d9,
+                             index=0x0000000,
+                             timeout=self.timeout)
+
+    def setPreamblePattern(self,pattern):
+        buf = [0]*0x15
+        buf[0] = 0xd8
         buf[1] = pattern
         if DEBUG_COMM > 0:
-            self.dump('SetPreamblePattern', buf)
-        try:
-            self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 request=0x0000009,
-                                 buffer=buf,
-                                 value=0x00003d8,
-                                 index=0x0000000,
-                                 timeout=self.timeout)
-            result = 1
-        except:
-            result = 0
-        return result
+            self.dump('setPreamble', buf, fmt=DEBUG_DUMP_FORMAT)
+        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                             request=0x0000009,
+                             buffer=buf,
+                             value=0x00003d8,
+                             index=0x0000000,
+                             timeout=self.timeout)
 
-    def dump(self, cmd, buf):
-        strbuf = ""
-        for i in buf:
-            strbuf += str("%.2x" % i)
-        if strbuf != 'de1500000000' or DEBUG_COMM > 1:
-            logdbg("%s: %s" % (cmd, strbuf))
+    # three formats, long, short, auto.  short shows only the first 16 bytes.
+    # long shows the full length of the buffer.  auto shows the message length
+    # as indicated by the length in the message itself for setFrame and
+    # getFrame, or the first 16 bytes for any other message.
+    def dump(self, cmd, buf, fmt='auto'):
+        strbuf = ''
+        msglen = None
+        if fmt == 'auto':
+            if buf[0] in [0xd5, 0x00]:
+                msglen = buf[2] + 3        # use msg length for set/get frame
+            else:
+                msglen = 16                # otherwise do same as short format
+        elif fmt == 'short':
+            msglen = 16
+        for i,x in enumerate(buf):
+            strbuf += str('%02x ' % x)
+            if (i+1) % 16 == 0:
+                self.dumpstr(cmd, strbuf)
+                strbuf = ''
+            if msglen is not None and i+1 >= msglen:
+                break
+        if strbuf:
+            self.dumpstr(cmd, strbuf)
 
+    # filter output that we do not care about, pad the command string.
+    def dumpstr(self, cmd, strbuf):
+        pad = ' ' * (15-len(cmd))
+        # de15 is idle, de14 is intermediate
+        if strbuf in ['de 15 00 00 00 00 ','de 14 00 00 00 00 ']:
+            if strbuf != self.last_dump or DEBUG_COMM > 1:
+                logdbg('%s: %s%s' % (cmd, pad, strbuf))
+            self.last_dump = strbuf
+        else:
+            logdbg('%s: %s%s' % (cmd, pad, strbuf))
+            self.last_dump = None
+
+    def readCfg(self, handle, addr, numBytes):
+        while numBytes:
+            buf=[0xcc]*0x0f #0x15
+            buf[0] = 0xdd
+            buf[1] = 0x0a
+            buf[2] = (addr >>8) & 0xFF
+            buf[3] = (addr >>0) & 0xFF
+            handle.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                              request=0x0000009,
+                              buffer=buf,
+                              value=0x00003dd,
+                              index=0x0000000,
+                              timeout=1000)
+            buf = handle.controlMsg(requestType=usb.TYPE_CLASS |
+                                    usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
+                                    request=usb.REQ_CLEAR_FEATURE,
+                                    buffer=0x15,
+                                    value=0x00003dc,
+                                    index=0x0000000,
+                                    timeout=1000)
+            new_data=[0]*0x15
+            if numBytes < 16:
+                for i in xrange(0, numBytes):
+                    new_data[i] = buf[i+4]
+                numBytes = 0
+            else:
+                for i in xrange(0, 16):
+                    new_data[i] = buf[i+4]
+                numBytes -= 16
+                addr += 16
+        return new_data
 
 class CCommunicationService(object):
 
-    AX5051RegisterNames_map = dict()
+    reg_names = dict()
 
     class AX5051RegisterNames:
         REVISION         = 0x0
@@ -2868,535 +3191,257 @@ class CCommunicationService(object):
         REF              = 0x7C
         RXMISC           = 0x7D
 
-    def __init__(self, cfgfn, interval=3):
+    def __init__(self, cache_file):
         logdbg('CCommunicationService.init')
-        now = datetime.now()
 
-        self.filename = cfgfn
-        self.RepeatCount = 0
-        self.RepeatSize = 0
-        self.RepeatInterval = None
-        self.RepeatTime = now #ptime
-
-        self.Regenerate = 0
-        self.GetConfig = 0
-
-        self.TimeSent = 0
-        self.TimeUpdate = 0
-        self.TimeUpdateComplete = 0
-
-        self.DataStore = CDataStore(cfgfn)
-        self.DataStore.setCommModeInterval(interval)
-        self.running = False
         self.shid = sHID()
+        self.DataStore = CDataStore(cache_file)
+        self.TimeDifSec = 0
+        self.DifHis = 0
 
-    def buildTimeFrame(self,Buffer,checkMinuteOverflow):
-        logdbg("buildTimeFrame: checkMinuteOverflow=%x" % checkMinuteOverflow)
+        self.firstSleep = 1
+        self.nextSleep = 1
+        self.pollCount = 0
 
-        chksum = self.DataStore.GetDeviceConfigCS()
+        self.running = False
+        self.child = None
+        self.thread_wait = 60.0 # seconds
+
+    def buildFirstConfigFrame(self, Buffer, cs):
+        logdbg('buildFirstConfigFrame: cs=%04x' % cs)
+        newBuffer = [0]
+        newBuffer[0] = [0]*9
+        comInt = self.DataStore.getCommModeInterval()
+        historyAddress = 0xFFFFFF
+        newBuffer[0][0] = 0xf0
+        newBuffer[0][1] = 0xf0
+        newBuffer[0][2] = EAction.aGetConfig
+        newBuffer[0][3] = (cs >> 8) & 0xff
+        newBuffer[0][4] = (cs >> 0) & 0xff
+        newBuffer[0][5] = (comInt >> 4) & 0xff
+        newBuffer[0][6] = (historyAddress >> 16) & 0x0f | 16 * (comInt & 0xf)
+        newBuffer[0][7] = (historyAddress >> 8 ) & 0xff
+        newBuffer[0][8] = (historyAddress >> 0 ) & 0xff
+        Buffer[0] = newBuffer[0]
+        Length = 0x09
+        return Length
+
+    def buildConfigFrame(self, Buffer):
+        logdbg("buildConfigFrame")
+        newBuffer = [0]
+        newBuffer[0] = [0]*48
+        cfgBuffer = [0]
+        cfgBuffer[0] = [0]*44
+        changed = self.DataStore.StationConfig.testConfigChanged(cfgBuffer)
+        if changed:
+            self.shid.dump('OutBuf', cfgBuffer[0], fmt='long')
+            newBuffer[0][0] = Buffer[0][0]
+            newBuffer[0][1] = Buffer[0][1]
+            newBuffer[0][2] = EAction.aSendConfig # 0x40 # change this value if we won't store config
+            newBuffer[0][3] = Buffer[0][3]
+            for i in xrange(0,44):
+                newBuffer[0][i+4] = cfgBuffer[0][i]
+            Buffer[0] = newBuffer[0]
+            Length = 48 # 0x30
+        else: # current config not up to date; do not write yet
+            Length = 0
+        return Length
+
+    def buildTimeFrame(self, Buffer, cs):
+        logdbg("buildTimeFrame: cs=%04x" % cs)
+
         now = time.time()
         tm = time.localtime(now)
 
-        new_Buffer=[0]
-        new_Buffer[0]=Buffer[0]
-        Second = tm[5]
-        if Second > 59:
-            Second = 0 # I don't know if La Crosse support leap seconds...
-        if ( checkMinuteOverflow and (Second <= 5 or Second >= 55) ):
-            if ( Second < 55 ):
-                Second = 6 - Second
-            else:
-                Second = 60 - Second + 6;
-            logdbg('buildTimeFrame: second=%s' % Second)
-            HistoryIndex = self.DataStore.getLastHistoryIndex();
-            Length = self.buildACKFrame(new_Buffer, 0, chksum, HistoryIndex, Second);
-            Buffer[0]=new_Buffer[0]
-        else:
-            #00000000: d5 00 0c 00 32 c0 00 8f 45 25 15 91 31 20 01 00
-            #00000000: d5 00 0c 00 32 c0 06 c1 47 25 15 91 31 20 01 00
-            #                             3  4  5  6  7  8  9 10 11
-            new_Buffer[0][2] = 0xc0
-            new_Buffer[0][3] = (chksum >>8)  & 0xFF #BYTE1(chksum);
-            new_Buffer[0][4] = (chksum >>0)  & 0xFF #chksum;
-            new_Buffer[0][5] = (tm[5] % 10) + 0x10 * (tm[5] // 10); #sec
-            new_Buffer[0][6] = (tm[4] % 10) + 0x10 * (tm[4] // 10); #min
-            new_Buffer[0][7] = (tm[3] % 10) + 0x10 * (tm[3] // 10); #hour
-            #DayOfWeek = tm[6] - 1; #ole from 1 - 7 - 1=Sun... 0-6 0=Sun
-            DayOfWeek = tm[6];      #py  prom 0 - 6 - 0=Mon
-            #if ( DayOfWeek == 1 ): # this was for OLE::Time
-            #	DayOfWeek = 7;  # this was for OLE::Time
-            new_Buffer[0][8] = DayOfWeek % 10 + 0x10 *  (tm[2] % 10)          #DoW + Day
-            new_Buffer[0][9] =  (tm[2] // 10) + 0x10 *  (tm[1] % 10)          #day + month
-            new_Buffer[0][10] = (tm[1] // 10) + 0x10 * ((tm[0] - 2000) % 10)  #month + year
-            new_Buffer[0][11] = (tm[0] - 2000) // 10                          #year
-            self.Regenerate = 1
-            self.TimeSent = 1
-            Buffer[0]=new_Buffer[0]
-            Length = 0x0c
+        newBuffer=[0]
+        newBuffer[0]=Buffer[0]
+        #00000000: d5 00 0c 00 32 c0 00 8f 45 25 15 91 31 20 01 00
+        #00000000: d5 00 0c 00 32 c0 06 c1 47 25 15 91 31 20 01 00
+        #                             3  4  5  6  7  8  9 10 11
+        newBuffer[0][2] = EAction.aSendTime # 0xc0
+        newBuffer[0][3] = (cs >> 8) & 0xFF
+        newBuffer[0][4] = (cs >> 0) & 0xFF
+        newBuffer[0][5] = (tm[5] % 10) + 0x10 * (tm[5] // 10) #sec
+        newBuffer[0][6] = (tm[4] % 10) + 0x10 * (tm[4] // 10) #min
+        newBuffer[0][7] = (tm[3] % 10) + 0x10 * (tm[3] // 10) #hour
+        #DayOfWeek = tm[6] - 1; #ole from 1 - 7 - 1=Sun... 0-6 0=Sun
+        DayOfWeek = tm[6]       #py  from 0 - 6 - 0=Mon
+        newBuffer[0][8] = DayOfWeek % 10 + 0x10 *  (tm[2] % 10)          #DoW + Day
+        newBuffer[0][9] =  (tm[2] // 10) + 0x10 *  (tm[1] % 10)          #day + month
+        newBuffer[0][10] = (tm[1] // 10) + 0x10 * ((tm[0] - 2000) % 10)  #month + year
+        newBuffer[0][11] = (tm[0] - 2000) // 10                          #year
+        Buffer[0]=newBuffer[0]
+        Length = 0x0c
         return Length
 
-    def buildConfigFrame(self,Buffer,Data):
-        logdbg("buildConfigFrame (not yet implemented)")
-        Buffer[2] = 0x40;
-        Buffer[3] = 0x64;
-        #CWeatherStationConfig::write(Data, &(*Buffer)[4]);
-        raise Exception("buildConfigFrameCheckSumm: error... unimplemented")
-        #self.Regenerate = 0;
-        #self.TimeSent = 0;
-
-#(newBuffer,3,TransceiverID,HistoryIndex,0xFFFFFFFF)
-    def buildACKFrame(self,Buffer, Action, CheckSum, HistoryIndex, ComInt):
-        logdbg("Action=%x CheckSum=%x HistoryIndex=%x ComInt=%x" % (Action, CheckSum, HistoryIndex, ComInt))
+    def buildACKFrame(self,Buffer, action, cs, historyIndex):
+        logdbg("buildACKFrame: action=%x cs=%04x historyIndex=%i" %
+               (action, cs, historyIndex))
         newBuffer = [0]
         newBuffer[0] = [0]*9
         for i in xrange(0,2):
             newBuffer[0][i] = Buffer[0][i]
-        #CDataStore::TLastStat::TLastStat(&Stat);
-#	if ( !Action && ComInt == 0xFFFFFFFF ):
-#	    v28 = 0;
-#	    if ( !Stat.LastCurrentWeatherTime.m_status ):
-#	        ATL::COleDateTime::operator_(&now, &ts, &Stat.LastCurrentWeatherTime);
-#	    if ( ATL::COleDateTimeSpan::GetTotalSeconds(&ts) >= 8.0 )
-#	        Action = 5;
-            if datetime.now() - self.DataStore.LastStat.LastCurrentWeatherTime >= timedelta(seconds=8):
-                Action = 5
-#	    v28 = -1;
-        newBuffer[0][2] = Action & 0xF;
-#		v21 = CDataStore::GetDeviceConfigCS();
-        if ( HistoryIndex >= 0x705 ):
-            HistoryAddress = 0xffffff;
+
+        # when last weather is stale, change action to get current weather
+        now = int(time.time())
+        age = now - self.DataStore.LastStat.last_weather_ts
+        if action != EAction.aGetCurrent and age >= 30 and newBuffer[0][1] != 0xF0:
+            logdbg('morphing action from %d to 5 (age=%s)' % (action, age))
+            action = EAction.aGetCurrent
+        # FIXME: for now, never ask for historical records
+        if action == EAction.aGetHistory:
+            logdbg('morphing action from %d to 5' % action)
+            action = EAction.aGetCurrent
+
+        comInt = self.DataStore.getCommModeInterval()
+
+        if historyIndex >= 1797:
+            historyAddress = 0xffffff
         else:
-#			if ( !self.DataStore.getBufferCheck() ):
-#				if ( !ATL::COleDateTime::GetStatus(&Stat.LastHistoryDataTime) ):
-#				{
-#					v9 = ATL::COleDateTime::operator_(&now, &result, &Stat.LastHistoryDataTime);
-#					if ( ATL::COleDateTimeSpan::operator>(v9, &BUFFER_OVERFLOW_SPAN) )
-#					{
-#						val = 1;
-#						self.DataStore.setBufferCheck( &val);
-#					}
-#				}
-#			}
-            if   ( self.DataStore.getBufferCheck() != 1
-                   and self.DataStore.getBufferCheck() != 2 ):
-                HistoryAddress = 18 * HistoryIndex + 0x1a0;
-            else:
-                if ( HistoryIndex != 0xffff ):
-                    HistoryAddress = 18 * (HistoryIndex - 1) + 0x1a0;
-                else:
-                    HistoryAddress = 0x7fe8;
-                self.DataStore.setBufferCheck( 2);
-        newBuffer[0][3] = (CheckSum >> 8) &0xFF;
-        newBuffer[0][4] = (CheckSum >> 0) &0xFF;
-        if ( ComInt == 0xFFFFFFFF ):
-            ComInt = self.DataStore.getCommModeInterval();
-        newBuffer[0][5] = (ComInt >> 4) & 0xFF ;
-        newBuffer[0][6] = (HistoryAddress >> 16) & 0x0F | 16 * (ComInt & 0xF);
-        newBuffer[0][7] = (HistoryAddress >> 8 ) & 0xFF # BYTE1(HistoryAddress);
-        newBuffer[0][8] = (HistoryAddress >> 0 ) & 0xFF
+            historyAddress = 18 * historyIndex + 416
+
+        newBuffer[0][2] = action & 0xF
+        newBuffer[0][3] = (cs >> 8) & 0xFF
+        newBuffer[0][4] = (cs >> 0) & 0xFF
+        newBuffer[0][5] = (comInt >> 4) & 0xFF
+        newBuffer[0][6] = (historyAddress >> 16) & 0x0F | 16 * (comInt & 0xF)
+        newBuffer[0][7] = (historyAddress >> 8 ) & 0xFF
+        newBuffer[0][8] = (historyAddress >> 0 ) & 0xFF
 
         #d5 00 09 f0 f0 03 00 32 00 3f ff ff
         Buffer[0]=newBuffer[0]
-        self.Regenerate = 0;
-        self.TimeSent = 0;
         return 9
 
     def handleWsAck(self,Buffer,Length):
         logdbg('handleWsAck')
-        #3 = ATL::COleDateTime::GetTickCount(&result);
-        self.DataStore.setLastSeen( datetime.now());
-        BatteryStat = (Buffer[0][2] & 0xF);
-        self.DataStore.setLastBatteryStatus( BatteryStat);
-        Quality = Buffer[0][3] & 0x7F;
-        self.DataStore.setLastLinkQuality( Quality);
-        #ReceivedCS = (Buffer[0][4] << 8) + Buffer[0][5];
-        #rt = self.DataStore.getRequestType()
-        #if ( rt == ERequestType.rtSetConfig ) #rtSetConfig
-        #{
-        #	v11 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-        #	v12 = CDataStore::GetFrontEndConfigCS(v11);
-        #	if ( ReceivedCS == v12 )
-        #	{
-        #		v13 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-        #		CDataStore::getFrontEndConfig(v13, &c);
-        #		v33 = 5;
-        #		std::bitset<23>::bitset<23>((std::bitset<23> *)&v26, 0);
-        #		v14 = CWeatherStationConfig::GetResetMinMaxFlags(&c);
-        #		v14->_Array[0] = v26;
-        #		v15 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-        #		CDataStore::setDeviceConfig(v15, &c);
-        #		v16 = ATL::COleDateTime::GetTickCount((ATL::COleDateTime *)&v27);
-        #		v17 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-        #		CDataStore::setLastConfigTime(v17, v16);
-        #		v18 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-        #		CDataStore::setRequestState(v18, rsFinished);
-        #		v19 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-        #		CDataStore::RequestNotify(v19);
-        #	        	thisa->RepeatCount = 0;
-        #		v33 = -1;
-        #		CWeatherStationConfig::_CWeatherStationConfig(&c);
-        #	}
-        #}
-        #else
-        #{
-        #	if ( rt == ERequestType.rtSetTime ) #rtSetTime (unused)
-        #	{
-        #		if ( thisa->TimeSent )
-        #		{
-        #			v8 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-        #			CDataStore::setRequestState(v8, rsFinished);
-        #			v9 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-        #			CDataStore::RequestNotify(v9);
-        #			thisa->RepeatCount = 0;
-        #			if ( thisa->TimeUpdate )
-        #			{
-        #				thisa->TimeUpdateComplete = 1;
-        #				thisa->TimeUpdate = 0;
-        #				ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(
-        #				    &FuncName,
-        #				    "void __thiscall CCommunicationService::handleWsAck(unsigned char (*const )[300],unsigned int &)");
-        #				v33 = 0;
-        #				ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(
-        #				    &Name,
-        #				    "DataStore->Request->Lock");
-        #				LOBYTE(v33) = 1;
-        #				v10 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-        #				CScopedLock::CScopedLock(&lock, &v10->Request->Lock, &Name, &FuncName);
-        #				LOBYTE(v33) = 3;
-        #				ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::_CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(&Name);
-        #				LOBYTE(v33) = 4;
-        #				ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::_CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(&FuncName);
-        #				boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore)->Request->Type = 6;
-        #				boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore)->Request->State = 8;
-        #				v33 = -1;
-        #				CScopedLock::_CScopedLock(&lock);
-        #			}
-        #			}
-        #		}
-        #	}
-        #v73 = -1;
-        #CWeatherStationConfig::_CWeatherStationConfig(&RecConfig);
-        Length[0] = 0
+        self.DataStore.setLastStatCache(seen_ts=int(time.time()),
+                                        quality=(Buffer[0][3] & 0x7f), 
+                                        battery=(Buffer[0][2] & 0xf))
 
     def handleConfig(self,Buffer,Length):
-        logdbg('handleConfig')
+        logdbg('handleConfig: %s' % self.timing())
+        self.shid.dump('InBuf', Buffer[0], fmt='long')
         newBuffer=[0]
         newBuffer[0] = Buffer[0]
         newLength = [0]
-        #RecConfig = None
-        #diff = 0;
-        t=[0]
-        t[0]=[0]*300
-        #j__memcpy(t, (char *)Buffer, *Length);
-        for i in xrange(0,Length[0]):
-            t[0][i]=newBuffer[0][i]
-        #c=CWeatherStationConfig()
-        #CWeatherStationConfig.CWeatherStationConfig_buf(c, t,4);
-        CWeatherStationConfig.CWeatherStationConfig_buf(self.DataStore.DeviceConfig, t,4); #for the moment I need the cs here
-        #v73 = 0;
-        #j__memset(t, -52, *Length);
-        #t[0]=[0xcc]*Length[0]
-        #CWeatherStationConfig::write(&c, &t[4]);
-        USBHardware.ReverseByteOrder(t, 7, 4);
-        USBHardware.ReverseByteOrder(t, 11, 5);
-        USBHardware.ReverseByteOrder(t, 16, 5);
-        USBHardware.ReverseByteOrder(t, 21, 2);
-        USBHardware.ReverseByteOrder(t, 23, 2);
-        USBHardware.ReverseByteOrder(t, 25, 4);
-        USBHardware.ReverseByteOrder(t, 30, 3);
-        USBHardware.ReverseByteOrder(t, 33, 5);
-        USBHardware.ReverseByteOrder(t, 38, 5);
-        #for ( i = 4; i < 0x30; ++i )
-        #{
-        #	if ( t[i] != (*Buffer)[i] )
-        #	{
-        #		c1 = (char *)(unsigned __int8)t[i];
-        #		c2 = (*Buffer)[i];
-        #		v43 = c2;
-        #		v42 = c1;
-        #		v41.baseclass_0.m_pszData = (char *)i;
-        #		v3 = CTracer::Instance();
-        #		CTracer::WriteTrace(
-        #				#v3,
-        #				#30,
-        #				#"Generated config differs from received in byte#: %02i generated = %04x rececived = %04x");
-        #		diff = 1;
-        #	}
-        #}
-        #if ( diff ):
-        #v43 = *Length;
-        #v42 = t;
-        #v41.baseclass_0.m_pszData = (char *)v43;
-        #v47 = &v41;
-        #ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(
-        #		#&v41,
-        #		#"Config_Gen");
-        #v46 = v4;
-        #rhs = v4;
-        #LOBYTE(v73) = 1;
-        #v5 = CTracer::Instance();
-        #LOBYTE(v73) = 0;
-        #CTracer::WriteDump(v5, 30, v41, v42, v43);
-        #v43 = *Length;
-        #v42 = (char *)Buffer;
-        #v41.baseclass_0.m_pszData = (char *)v43;
-        #v48 = &v41;
-        #ATL::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>::CStringT<char_ATL::StrTraitATL<char_ATL::ChTraitsCRT<char>>>(
-        #		#&v41,
-        #		#"Config_Rec");
-        #v46 = v6;
-        #rhs = v6;
-        #LOBYTE(v73) = 2;
-        #v7 = CTracer::Instance();
-        #LOBYTE(v73) = 0;
-        #CTracer::WriteDump(v7, 30, v41, v42, v43);
-        #v73 = -1;
-        #CWeatherStationConfig::_CWeatherStationConfig(&c);
-        RecConfig = CWeatherStationConfig(self.filename)
-        confBuffer=[0]
-        confBuffer[0]=[0]*0x111
-        #CWeatherStationConfig.CWeatherStationConfig_buf(RecConfig, confBuffer, 4);
-        #v73 = 3;
-        if 1==1: #hack ident
-        #if ( CWeatherStationConfig::operator bool(&RecConfig) ):
-            rt = self.DataStore.getRequestType();
-            #ATL::COleDateTime::GetTickCount(&now);
-            #v43 = (CDataStore::ERequestState)&now;
-            #v9 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-            #CDataStore::setLastSeen( (ATL::COleDateTime *)v43);
-            BatteryStat = (newBuffer[0][2] & 0xF);
-            self.DataStore.setLastBatteryStatus( BatteryStat);
-            Quality = newBuffer[0][3] & 0x7F
-            self.DataStore.setLastLinkQuality( Quality)
-            #FrontCS = CDataStore::GetFrontEndConfigCS();
-            HistoryIndex = self.DataStore.getLastHistoryIndex();
-            #v46 = (CWeatherStationConfig *)rt;
-            if 1==1: #hack ident
-                if   rt == ERequestType.rtSetConfig:
-                    logdbg("handleConfig rt==3 rtSetConfig")
-                    #v43 = (CDataStore::ERequestState)&result;
-                    #rhs = v46;
-                    #LOBYTE(v73) = 4;
-                    #v51 = CWeatherStationConfig::operator__(&RecConfig, CDataStore::getFrontEndConfig( (CWeatherStationConfig *)v43))
-                    #LOBYTE(v73) = 3;
-                    #CWeatherStationConfig::_CWeatherStationConfig(&result);
-                    #if ( v51 ):
-                        #*Length = CCommunicationService::buildACKFrame(thisa, Buffer, 0, &FrontCS, &HistoryIndex, 0xFFFFFFFFu);
-                        #self.DataStore.setLastConfigTime( datetime.now())
-                        #v43 = (CDataStore::ERequestState)&RecConfig;
-                        #v16 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-                        #CDataStore::setDeviceConfig(v16, (CWeatherStationConfig *)v43);
-                        #self.DataStore.setRequestState( ERequestState.rsFinished); #2
-                        #v18 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-                        #CDataStore::RequestNotify(v18);
-                    #else:
-                    #    CheckSum = CWeatherStationConfig::GetCheckSum(&RecConfig);
-                    #    *Length = CCommunicationService::buildACKFrame(thisa, Buffer, 2, &CheckSum, &HistoryIndex, 0xFFFFFFFFu);
-                    #    self.DataStore.setRequestState( ERequestState.rsRunning); #1
-                elif rt == ERequestType.rtGetConfig:
-                    logdbg("handleConfig rt==2 rtGetConfig")
-                    self.DataStore.setLastConfigTime( datetime.now())
-                    #v43 = (CDataStore::ERequestState)&RecConfig;
-                    #v21 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-                    #CDataStore::setDeviceConfig(v21, (CWeatherStationConfig *)v43);
-                    #v54 = CWeatherStationConfig::GetCheckSum(&RecConfig);
-                    #*Length = CCommunicationService::buildACKFrame(thisa, Buffer, 0, &v54, &HistoryIndex, 0xFFFFFFFF);
-                    self.DataStore.setRequestState( ERequestState.rsFinished); #2
-                    self.DataStore.RequestNotify();
-                elif rt == ERequestType.rtGetCurrent:
-                    logdbg("handleConfig rt==0 rtGetCurrent")
-                    self.DataStore.setLastConfigTime( datetime.now())
-                    #v43 = (CDataStore::ERequestState)&RecConfig;
-                    #v25 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-                    #CDataStore::setDeviceConfig(v25, (CWeatherStationConfig *)v43);
-                    v55 = CWeatherStationConfig.GetCheckSum(RecConfig);
-                    newLength[0] = self.buildACKFrame(newBuffer, 5, v55, HistoryIndex, 0xFFFFFFFF);
-                    self.DataStore.setRequestState( ERequestState.rsRunning); #1
-                elif rt == ERequestType.rtGetHistory:
-                    logdbg("handleConfig rt==1 rtGetHistory")
-                    self.DataStore.setLastConfigTime( datetime.now())
-                    #v43 = (CDataStore::ERequestState)&RecConfig;
-                    #v28 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-                    #CDataStore::setDeviceConfig(v28, (CWeatherStationConfig *)v43);
-                    #v56 = CWeatherStationConfig::GetCheckSum(&RecConfig);
-                    #*Length = CCommunicationService::buildACKFrame(thisa, Buffer, 4, &v56, &HistoryIndex, 0xFFFFFFFFu);
-                    self.DataStore.setRequestState( ERequestState.rsRunning); #1
-                elif rt == ERequestType.rtSetTime:
-                    logdbg("handleConfig rt==4 rtSetTime")
-                    self.DataStore.setLastConfigTime( datetime.now())
-                    #v43 = (CDataStore::ERequestState)&RecConfig;
-                    #v31 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-                    #CDataStore::setDeviceConfig(v31, (CWeatherStationConfig *)v43);
-                    #v57 = CWeatherStationConfig::GetCheckSum(&RecConfig);
-                    #*Length = CCommunicationService::buildACKFrame(thisa, Buffer, 1, &v57, &HistoryIndex, 0xFFFFFFFFu);
-                    self.DataStore.setRequestState( ERequestState.rsRunning); #1
-                elif rt == ERequestType.rtFirstConfig:
-                    logdbg("handleConfig rt==5 rtFirstConfig")
-                    self.DataStore.setLastConfigTime( datetime.now())
-                    #v43 = (CDataStore::ERequestState)&RecConfig;
-                    #self.DataStore.setDeviceConfig( (CWeatherStationConfig *)v43);
-                    v58 = CWeatherStationConfig.GetCheckSum(RecConfig);
-                    newLength[0] = self.buildACKFrame(newBuffer, 0, v58, HistoryIndex, 0xFFFFFFFF);
-                    self.DataStore.setRequestState( ERequestState.rsFinished); #2
-                    self.DataStore.RequestNotify();
-                elif rt == ERequestType.rtINVALID:
-                    logdbg("handleConfig rt==6 rtINVALID")
-                    self.DataStore.setLastConfigTime( datetime.now())
-                    #v43 = (CDataStore::ERequestState)&RecConfig;
-                    #self.DataStore.setDeviceConfig( (CWeatherStationConfig *)v43);
-                    v59 = CWeatherStationConfig.GetCheckSum(RecConfig);
-                    newLength[0] = self.buildACKFrame(newBuffer, 0, v59, HistoryIndex, 0xFFFFFFFF);
-        else:
-            newLength[0] = 0
-        #v73 = -1;
-        #CWeatherStationConfig::_CWeatherStationConfig(&RecConfig);
+        now = int(time.time())
+        self.DataStore.StationConfig.read(newBuffer)
+        self.DataStore.setLastStatCache(seen_ts=now,
+                                        quality=(Buffer[0][3] & 0x7f), 
+                                        battery=(Buffer[0][2] & 0xf),
+                                        config_ts=now)
+        idx = self.DataStore.getLastHistoryIndex()
+        cs = newBuffer[0][47] | (newBuffer[0][46] << 8)
+        self.DataStore.setRequestType(ERequestType.rtGetCurrent)
+        self.setSleep(0.380,0.200)
+        newLength[0] = self.buildACKFrame(newBuffer, EAction.aGetCurrent, cs, idx)
+
         Buffer[0] = newBuffer[0]
         Length[0] = newLength[0]
 
     def handleCurrentData(self,Buffer,Length):
-        logdbg('handleCurrentData')
+        if DEBUG_COMM > 0:
+            logdbg('handleCurrentData: %s' % self.timing())
 
-        now = datetime.now()
-        self.DataStore.setLastSeen(now);
-        self.DataStore.setLastCurrentWeatherTime(now)
-        batteryStat = (Buffer[0][2] & 0xF);
-        self.DataStore.setLastBatteryStatus(batteryStat);
-        quality = Buffer[0][3] & 0x7F;
-        self.DataStore.setLastLinkQuality(quality);
+        now = int(time.time())
+
+        # update the weather data cache if changed or stale
+        chksum = CCurrentWeatherData.calcChecksum(Buffer)
+        age = now - self.DataStore.LastStat.last_weather_ts
+        if age >= 10 or chksum != self.DataStore.CurrentWeather.checksum():
+            data = CCurrentWeatherData()
+            data.read(Buffer)
+#            self.shid.dump('CurWea', Buffer[0], fmt='long')
+            self.DataStore.setCurrentWeather(data)
+
+        # update the connection cache
+        self.DataStore.setLastStatCache(seen_ts=now,
+                                        quality=(Buffer[0][3] & 0x7f), 
+                                        battery=(Buffer[0][2] & 0xf),
+                                        weather_ts=now)
+
         newBuffer = [0]
         newBuffer[0] = Buffer[0]
-        data = CCurrentWeatherData()
-        data.read(newBuffer, 6);
-        self.DataStore.setCurrentWeather(data);
-
-        rt = self.DataStore.getRequestType();
-        chksum = self.DataStore.GetDeviceConfigCS()
-        idx = self.DataStore.getLastHistoryIndex();
-
         newLength = [0]
-        if rt == ERequestType.rtGetCurrent: #0
-            self.DataStore.setRequestState(ERequestState.rsFinished); #2
-            self.DataStore.RequestNotify();
-            newLength[0] = self.buildACKFrame(newBuffer, 0, chksum, idx, 0xFFFFFFFF);
-        elif rt == ERequestType.rtGetConfig: #2
-            newLength[0] = self.buildACKFrame(newBuffer, 3, chksum, idx, 0xFFFFFFFF);
-            self.DataStore.setRequestState(ERequestState.rsRunning); #1
-        elif rt == ERequestType.rtSetConfig: #3
-            newLength[0] = self.buildACKFrame(newBuffer, 2, chksum, idx, 0xFFFFFFFF);
-            self.DataStore.setRequestState(ERequestState.rsRunning); #1
-        elif rt == ERequestType.rtGetHistory: #1
-            newLength[0] = self.buildACKFrame(newBuffer, 4, chksum, idx, 0xFFFFFFFF);
-            self.DataStore.setRequestState(ERequestState.rsRunning); #1
-        elif rt == ERequestType.rtSetTime: #4
-            newLength[0] = self.buildACKFrame(newBuffer, 1, chksum, idx, 0xFFFFFFFF);
-            self.DataStore.setRequestState(ERequestState.rsRunning); #1
-        elif rt == ERequestType.rtFirstConfig or rt == ERequestType.rtINVALID:
-            newLength[0] = self.buildACKFrame(newBuffer, 0, chksum, idx, 0xFFFFFFFF);
+
+        cs = newBuffer[0][5] | (newBuffer[0][4] << 8)
+
+        cfgBuffer = [0]
+        cfgBuffer[0] = [0]*44
+        idx = self.DataStore.getLastHistoryIndex()
+        changed = self.DataStore.StationConfig.testConfigChanged(cfgBuffer)
+        inBufCS = self.DataStore.StationConfig.getInBufCS()
+        if inBufCS == 0 or inBufCS != cs:
+            logdbg('handleCurrentData: inBufCS of station does not match')
+            self.DataStore.setRequestType(ERequestType.rtGetConfig)
+            self.setSleep(0.400,0.400)
+            newLength[0] = self.buildACKFrame(newBuffer, EAction.aGetConfig, cs, idx)
+        elif changed:
+            logdbg('handleCurrentData: outBufCS of station changed')
+            self.DataStore.setRequestType(ERequestType.rtSetConfig)
+            self.setSleep(0.420,0.005)
+            newLength[0] = self.buildACKFrame(newBuffer, EAction.aReqSetConfig, cs, idx)
+        else:
+            self.DataStore.setRequestType(ERequestType.rtGetCurrent)
+            self.setSleep(0.380,0.200)
+            newLength[0] = self.buildACKFrame(newBuffer, EAction.aGetCurrent, cs, idx)
 
         Length[0] = newLength[0]
         Buffer[0] = newBuffer[0]
 
     def handleHistoryData(self,Buffer,Length):
-        logdbg('handleHistoryData')
-        now = datetime.now()
+        logdbg('handleHistoryData: %s' % self.timing())
+        now = int(time.time())
         newBuffer = [0]
         newBuffer[0] = Buffer[0]
         newLength = [0]
-        Data = CHistoryDataSet()
-        Data.read(newBuffer, 12)
-        #ATL::COleDateTime::GetTickCount(&now);
-        self.DataStore.setLastSeen( now );
-        BatteryStat = (Buffer[0][2] & 0xF);
-        self.DataStore.setLastBatteryStatus( BatteryStat);
-        Quality = Buffer[0][3] & 0x7F;
-        self.DataStore.setLastLinkQuality( Quality);
-        LatestHistoryAddres = ((((Buffer[0][6] & 0xF) << 8) | Buffer[0][7]) << 8) | Buffer[0][8];
-        ThisHistoryAddres = ((((Buffer[0][9] & 0xF) << 8) | Buffer[0][10]) << 8) | Buffer[0][11];
-        ThisHistoryIndex = (ThisHistoryAddres - 415) / 0x12;
-        LatestHistoryIndex = (LatestHistoryAddres - 415) / 0x12
-        #v6 = CTracer::Instance();
-        #CTracer::WriteTrace(v6, 40, "ThisAddress: %X\tLatestAddress: %X");
-        #v7 = CTracer::Instance();
-        #CTracer::WriteTrace(v7, 40, "ThisIndex: %X\tLatestIndex: %X");
-        #v38 = CDataStore::getBufferCheck();
-        #    if ( self.DataStore.getBufferCheck() != 2 ):
-        #      j___wassert(
-        #        L"false",
-        #        L"c:\\svn\\heavyweather\\trunk\\applications\\backend\\communicationservice.cpp",
-        #        __LINE__Var + 85);
-        #    v9 = boost::shared_ptr<CDataStore>::operator_>(&thisa->DataStore);
-        #v10 = CTracer::Instance();
-        #CTracer::WriteTrace(v10, 40, "getLastHistoryIndex(): %X",self.DataStore.getLastHistoryIndex());
-        if ( ThisHistoryIndex == self.DataStore.getLastHistoryIndex()):
-            self.DataStore.setLastHistoryDataTime( now )
-        #   CDataStore::getLastHistTimeStamp( &LastHistTs);
-            if 1 == 1:
-        #   if ( !ATL::COleDateTime::GetStatus(&LastHistTs) )
-                if 1 == 1:
-        #	if ( !ATL::COleDateTime::GetStatus(CHistoryDataSet::GetTime(&Data)) ):
-                    if 1 == 1:
-        #	    if ( ATL::COleDateTime::operator__(CHistoryDataSet::GetTime(&Data), &LastHistTs) ):
-        #		CDataStore::setOutstandingHistorySets( 0xFFFFFFFFu);
-        #		self.DataStore.setLastHistoryIndex( 0xFFFFFFFF);
-        #               ThisHistoryIndex = -1;
-        #		ATL::COleDateTime::COleDateTime(&InvalidDateTime);
-        #		ATL::COleDateTime::SetStatus(&InvalidDateTime, partial);
-        #		CDataStore::setLastHistTimeStamp( &InvalidDateTime);
-        #	    else:
-                        self.DataStore.setLastHistoryDataTime( now )
-            self.DataStore.setBufferCheck( 0)
-            self.DataStore.setRequestType(ERequestType.rtINVALID)
-        else:
-            #CDataStore::setLastHistTimeStamp( CHistoryDataSet::GetTime(&Data));
-            #CDataStore::addHistoryData( &Data);
-            self.DataStore.setHistoryData(Data);
-            self.DataStore.setLastHistoryIndex( ThisHistoryIndex)
+        data = CHistoryDataSet()
+        data.read(newBuffer)
+        cs = newBuffer[0][5] | (newBuffer[0][4] << 8)
+        latestAddr = ((((Buffer[0][6] & 0xF) << 8) | Buffer[0][7]) << 8) | Buffer[0][8]
+        thisAddr = ((((Buffer[0][9] & 0xF) << 8) | Buffer[0][10]) << 8) | Buffer[0][11]
+        thisIndex = (thisAddr - 415) / 18
+        latestIndex = (latestAddr - 415) / 18
 
-        if ( LatestHistoryIndex >= ThisHistoryIndex ): #unused
-            self.DifHis = LatestHistoryIndex - ThisHistoryIndex
-            #self.DataStore.setOutstandingHistorySets(self.DisHis) #unused
+        if ( latestIndex >= thisIndex ):
+            self.DifHis = latestIndex - thisIndex
         else:
-            self.DifHis = LatestHistoryIndex + 1797 - ThisHistoryIndex
-            #self.DataStore.setOutstandingHistorySets( LatestHistoryIndex + 18 - ThisHistoryIndex) #unused
+            self.DifHis = latestIndex + 1797 - thisIndex
+
         if self.DifHis > 0:
-            logdbg('m_Time=%s OutstandingHistorySets=%4i' %
-                   (Data.m_Time, self.DifHis))
+            logdbg('handleHistoryData: Time=%s OutstandingHistorySets=%4i' %
+                   (data.Time, self.DifHis))
 
-        rt = ERequestType.rtINVALID
-        if ThisHistoryIndex == LatestHistoryIndex:
-            maxTimeDifference = 70 # seconds
-            self.TimeDifSec = (Data.m_Time - now).seconds
+        if self.DifHis > 0:
+            # FIXME: for now skip the history records
+            thisIndex = latestIndex
+            self.DifHis = 0
+            self.setSleep(0.300,0.020)
+            self.DataStore.setLastHistoryIndex(thisIndex)
+        else:
+            self.setSleep(0.380,0.200)
+            if thisIndex != self.DataStore.getLastHistoryIndex():
+                self.DataStore.setHistoryData(data)
+                self.DataStore.setLastHistoryIndex(thisIndex)
+
+        self.DataStore.setLastStatCache(seen_ts=now,
+                                        quality=(Buffer[0][3] & 0x7f),
+                                        battery=(Buffer[0][2] & 0xf),
+                                        history_ts=now)
+
+        if thisIndex == latestIndex:
+            self.TimeDifSec = (data.Time - datetime.fromtimestamp(now)).seconds
             if self.TimeDifSec > 43200:
                 self.TimeDifSec = self.TimeDifSec - 86400 + 1
-            if abs(self.TimeDifSec) >= maxTimeDifference:
-                rt = ERequestType.rtSetTime
-            logdbg('handleHistoryData: timeDifSec=%4s m_Time=%s max=%s' %
-                   (self.TimeDifSec, Data.m_Time, maxTimeDifference))
+            logdbg('handleHistoryData: timeDifSec=%4s Time=%s' %
+                   (self.TimeDifSec, data.Time))
         else:
-            logdbg('handleHistoryData: no recent history data: m_Time=%s' %
-                   Data.m_Time)
-        self.DataStore.setRequestType(rt)
+            logdbg('handleHistoryData: no recent history data: Time=%s' %
+                   data.Time)
 
-        rt = self.DataStore.getRequestType()
-        chksum = self.DataStore.GetDeviceConfigCS()
-        if   rt == ERequestType.rtGetCurrent: #rtGetCurrent
-            newLength[0] = self.buildACKFrame(newBuffer, 5, chksum, ThisHistoryIndex, 0xFFFFFFFF);
-            self.DataStore.setRequestState( ERequestState.rsRunning);
-        elif rt == ERequestType.rtGetConfig: #rtGetConfig
-            newLength[0] = self.buildACKFrame(newBuffer, 3, chksum, ThisHistoryIndex, 0xFFFFFFFF);
-            self.DataStore.setRequestState( ERequestState.rsRunning);
-        elif rt == ERequestType.rtSetConfig: #rtSetConfig
-            newLength[0] = self.buildACKFrame(newBuffer, 2, chksum, ThisHistoryIndex, 0xFFFFFFFF);
-            self.DataStore.setRequestState( ERequestState.rsRunning);
-        elif rt == ERequestType.rtGetHistory: #rtGetHistory
-            self.DataStore.setRequestState( ERequestState.rsFinished);
-            self.DataStore.RequestNotify()
-            newLength[0] = self.buildACKFrame(newBuffer, 0, chksum, ThisHistoryIndex, 0xFFFFFFFF);
-        elif rt == ERequestType.rtSetTime: #rtSetTime
-            newLength[0] = self.buildACKFrame(newBuffer, 1, chksum, ThisHistoryIndex, 0xFFFFFFFF);
-            self.DataStore.setRequestState( ERequestState.rsRunning);
-        elif rt == ERequestType.rtFirstConfig or rt == ERequestType.rtINVALID: #rtFirstConfig || #rtINVALID
-            newLength[0] = self.buildACKFrame(newBuffer, 0, chksum, ThisHistoryIndex, 0xFFFFFFFF);
+        self.DataStore.setRequestType(ERequestType.rtGetCurrent)
+        idx = thisIndex
+        newLength[0] = self.buildACKFrame(newBuffer, EAction.aGetCurrent, cs, idx)
 
         Length[0] = newLength[0]
         Buffer[0] = newBuffer[0]
@@ -3407,384 +3452,333 @@ class CCommunicationService(object):
         newBuffer[0] = Buffer[0]
         newLength = [0]
         newLength[0] = Length[0]
-        #print "handleNextAction:: Buffer[0] %x" % Buffer[0][0]
-        #print "handleNextAction:: Buffer[1] %x" % Buffer[0][1]
-        #print "handleNextAction:: Buffer[2] %x (CWeatherStationConfig *)" % (Buffer[0][2] & 0xF)
-        rt = self.DataStore.getRequestType()
-        idx = self.DataStore.getLastHistoryIndex();
-        chksum = self.DataStore.GetDeviceConfigCS();
-        self.DataStore.setLastSeen(datetime.now());
-        quality = Buffer[0][3] & 0x7F;
-        self.DataStore.setLastLinkQuality(quality);
-        if (Buffer[0][2] & 0xF) == 2:
-            logdbg("handleNextAction Buffer[2] == 2")
-            #	v16 = CDataStore::getFrontEndConfig( &result);
-            #	Data = v16;
-#            newLength[0] = self.buildConfigFrame(newBuffer, v16);
-            pass
-        elif (Buffer[0][2] & 0xF) == 3:
-            logdbg("handleNextAction Buffer[2] == 3 request time")
-            newLength[0] = self.buildTimeFrame(newBuffer, 1);
+        self.DataStore.setLastStatCache(seen_ts=int(time.time()),
+                                        quality=(Buffer[0][3] & 0x7f))
+        cs = newBuffer[0][5] | (newBuffer[0][4] << 8)
+        if (Buffer[0][2] & 0xEF) == EResponseType.rtReqFirstConfig:
+            logdbg('handleNextAction: a1 (first-time config)')
+            newLength[0] = self.buildFirstConfigFrame(newBuffer, cs)
+            self.setSleep(0.085,0.005)
+        elif (Buffer[0][2] & 0xEF) == EResponseType.rtReqSetConfig:
+            logdbg('handleNextAction: a2 (set config data)')
+            newLength[0] = self.buildConfigFrame(newBuffer)
+            self.setSleep(0.085,0.005)
+        elif (Buffer[0][2] & 0xEF) == EResponseType.rtReqSetTime:
+            logdbg('handleNextAction: a3 (set time data)')
+            newLength[0] = self.buildTimeFrame(newBuffer, cs)
+            self.setSleep(0.085,0.005)
         else:
-            logdbg("handleNextAction Buffer[2] == %x" % (Buffer[0][2] & 0xF))
-            if rt == ERequestType.rtGetCurrent: #rtGetCurrent
-                newLength[0] = self.buildACKFrame(newBuffer, 5, chksum, idx, 0xFFFFFFFF);
-                self.DataStore.setRequestState( ERequestState.rsRunning);
-            elif rt == ERequestType.rtGetHistory: #rtGetHistory
-                newLength[0] = self.buildACKFrame(newBuffer, 4, chksum, idx, 0xFFFFFFFF);
-                self.DataStore.setRequestState( ERequestState.rsRunning);
-            elif rt == ERequestType.rtGetConfig: #rtGetConfig
-                newLength[0] = self.buildACKFrame(newBuffer, 3, chksum, idx, 0xFFFFFFFF);
-                self.DataStore.setRequestState( ERequestState.rsRunning);
-            elif rt == ERequestType.rtSetConfig: #rtSetConfig
-                newLength[0] = self.buildACKFrame(newBuffer, 2, chksum, idx, 0xFFFFFFFF);
-                self.DataStore.setRequestState( ERequestState.rsRunning);
-            elif rt == ERequestType.rtSetTime: #rtSetTime
-                newLength[0] = self.buildACKFrame(newBuffer, 1, chksum, idx, 0xFFFFFFFF);
-                self.DataStore.setRequestState( ERequestState.rsRunning);
-            else:
-                if ( self.DataStore.getFlag_FLAG_FAST_CURRENT_WEATHER() ):
-                    newLength[0] = self.buildACKFrame(newBuffer, 5, chksum, idx, 0xFFFFFFFF);
-                else:
-                    newLength[0] = self.buildACKFrame(newBuffer, 0, chksum, idx, 0xFFFFFFFF);
+            logdbg('handleNextAction: %02x' % (Buffer[0][2] & 0xEF))
+            idx = self.DataStore.getLastHistoryIndex()
+            self.DataStore.setRequestType(ERequestType.rtGetCurrent)
+            self.setSleep(0.380,0.200)
+            newLength[0] = self.buildACKFrame(newBuffer, EAction.aGetCurrent, cs, idx)
+
         Length[0] = newLength[0]
         Buffer[0] = newBuffer[0]
 
-    def configureRegisterNames(self):
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.IFMODE]    =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.MODULATION]=0x41 #fsk
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.ENCODING]  =0x07
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FRAMING]   =0x84 #1000:0100 ##?hdlc? |1000 010 0
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.CRCINIT3]  =0xff
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.CRCINIT2]  =0xff
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.CRCINIT1]  =0xff
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.CRCINIT0]  =0xff
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ3]     =0x38
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ2]     =0x90
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ1]     =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ0]     =0x01
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.PLLLOOP]   =0x1d
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.PLLRANGING]=0x08
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.PLLRNGCLK] =0x03
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.MODMISC]   =0x03
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.SPAREOUT]  =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TESTOBS]   =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.APEOVER]   =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TMMUX]     =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.PLLVCOI]   =0x01
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.PLLCPEN]   =0x01
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.RFMISC]    =0xb0
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.REF]       =0x23
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.IFFREQHI]  =0x20
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.IFFREQLO]  =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.ADCMISC]   =0x01
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.AGCTARGET] =0x0e
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.AGCATTACK] =0x11
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.AGCDECAY]  =0x0e
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.CICDEC]    =0x3f
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.DATARATEHI]=0x19
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.DATARATELO]=0x66
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TMGGAINHI] =0x01
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TMGGAINLO] =0x96
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.PHASEGAIN] =0x03
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQGAIN]  =0x04
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQGAIN2] =0x0a
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.AMPLGAIN]  =0x06
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.AGCMANUAL] =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.ADCDCLEVEL]=0x10
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.RXMISC]    =0x35
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FSKDEV2]   =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FSKDEV1]   =0x31
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FSKDEV0]   =0x27
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TXPWR]     =0x03
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TXRATEHI]  =0x00
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TXRATEMID] =0x51
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TXRATELO]  =0xec
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.TXDRIVER]  =0x88
-
-    def calculateFrequency(self, freq):
-        logdbg('calculateFrequency')
-        loginf('base frequency: %d' % freq)
-        freqVal =  long(freq / 16000000.0 * 16777216.0)
-        corVec = [None]
-        if self.shid.ReadConfigFlash(0x1F5, 4, corVec):
-            corVal = corVec[0][0] << 8
-            corVal |= corVec[0][1]
-            corVal <<= 8
-            corVal |= corVec[0][2]
-            corVal <<= 8
-            corVal |= corVec[0][3]
-            loginf('frequency correction: %d (%x)' % (corVal,corVal)) #0x184e8
-            freqVal += corVal
-        if not (freqVal % 2):
-            freqVal += 1
-        loginf('adjusted frequency: %d (%x)' % (freqVal,freqVal))
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ3] = (freqVal >>24) & 0xFF
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ2] = (freqVal >>16) & 0xFF
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ1] = (freqVal >>8)  & 0xFF
-        self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ0] = (freqVal >>0)  & 0xFF
-        logdbg('frequency registers: %x %x %x %x' % (
-                self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ3],
-                self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ2],
-                self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ1],
-                self.AX5051RegisterNames_map[self.AX5051RegisterNames.FREQ0]))
-
-    def GenerateResponse(self, Buffer, Length):
+    def generateResponse(self, Buffer, Length):
+        if DEBUG_COMM > 0:
+            logdbg('generateResponse: %s' % self.timing())
         newBuffer = [0]
         newBuffer[0] = Buffer[0]
         newLength = [0]
         newLength[0] = Length[0]
-        if Length[0] != 0:
-            requestType = self.DataStore.getRequestType()
-            deviceID = self.DataStore.getDeviceID()
-            bufferID = (Buffer[0][0] <<8) | Buffer[0][1]
-            responseType = (Buffer[0][2] & 0xE0) - 0x20
-            logdbg("GenerateResponse: length=%x request=%x response=%x id=%x" %
-                   (Length[0], requestType, responseType, bufferID))
-            self.DataStore.setRegisteredDeviceID(deviceID)
-            if deviceID == bufferID:
-                if responseType == 0x00:
-                    #    00000000: 00 00 06 00 32 20
-                    if Length[0] == 0x06:
-                        loginf('weather station set time - clock set')
-                        self.DataStore.setRequestType(ERequestType.rtINVALID)
-                        self.handleWsAck(newBuffer, newLength);
-                    else:
-                        newLength[0] = 0
-                elif responseType == 0x20:
-                    #    00000000: 00 00 30 00 32 40
-                    if Length[0] == 0x30:
-                        self.handleConfig(newBuffer, newLength);
-                    else:
-                        newLength[0] = 0
-                elif responseType == 0x40:
-                    #    00000000: 00 00 d7 00 32 60
-                    if Length[0] == 0xd7: #215
-                        self.handleCurrentData(newBuffer, newLength);
-                    else:
-                        newLength[0] = 0
-                elif responseType == 0x60:
-                    #    00000000: 00 00 1e 00 32 80
-                    if Length[0] == 0x1e:
-                        self.handleHistoryData(newBuffer, newLength);
-                    else:
-                        newLength[0] = 0
-                elif responseType == 0x80:
-                    #    00000000: 00 00 06 f0 f0 a1
-                    #    00000000: 00 00 06 00 32 a3
-                    #    00000000: 00 00 06 00 32 a2
-                    if Length[0] == 0x06:
-                        self.handleNextAction(newBuffer, newLength);
-                    else:
-                        newLength[0] = 0
+        reqType = self.DataStore.getRequestType()
+        if Length[0] == 0:
+            raise BadResponse('zero length for requestType=%x' % reqType)
+
+        bufferID = (Buffer[0][0] <<8) | Buffer[0][1]
+        respType = (Buffer[0][2] & 0xE0)
+        if DEBUG_COMM > 0:
+            logdbg("generateResponse: id=%04x resp=%x req=%x length=%x" %
+                   (bufferID, respType, reqType, Length[0]))
+        deviceID = self.DataStore.getDeviceID()
+        if bufferID != 0xF0F0:
+            self.DataStore.setRegisteredDeviceID(bufferID)
+
+        if bufferID == 0xF0F0:
+            loginf('generateResponse: console not paired, attempting to pair to 0x%04x' % deviceID)
+            newLength[0] = self.buildACKFrame(newBuffer, EAction.aGetConfig, deviceID, 0xFFFF)
+        elif bufferID == deviceID:
+            if respType == EResponseType.rtDataWritten:
+                #    00000000: 00 00 06 00 32 20
+                if Length[0] == 0x06:
+                    self.DataStore.StationConfig.setResetMinMaxFlags(0)
+                    self.shid.setRX()
+                    raise DataWritten()
                 else:
-                    logcrt('unrecognized response type %x', responseType)
-                    newLength[0] = 0
-            elif requestType == ERequestType.rtFirstConfig:
-                logdbg('GenerateResponse: ID mismatch (device=%x buffer=%x), attempting to pair' % (deviceID, bufferID))
-                newLength[0] = self.buildACKFrame(newBuffer,3,deviceID,0xFFFF,0xFFFFFFFF)
-                self.RepeatCount = 0
-                self.DataStore.setRequestState(ERequestState.rsWaitConfig)
+                    raise BadResponse('len=%x resp=%x' % (Length[0], respType))
+            elif respType == EResponseType.rtGetConfig:
+                #    00000000: 00 00 30 00 32 40
+                if Length[0] == 0x30:
+                    self.handleConfig(newBuffer, newLength)
+                else:
+                    raise BadResponse('len=%x resp=%x' % (Length[0], respType))
+            elif respType == EResponseType.rtGetCurrentWeather:
+                #    00000000: 00 00 d7 00 32 60
+                if Length[0] == 0xd7: #215
+                    self.handleCurrentData(newBuffer, newLength)
+                else:
+                    raise BadResponse('len=%x resp=%x' % (Length[0], respType))
+            elif respType == EResponseType.rtGetHistory:
+                #    00000000: 00 00 1e 00 32 80
+                if Length[0] == 0x1e:
+                    self.handleHistoryData(newBuffer, newLength)
+                else:
+                    raise BadResponse('len=%x resp=%x' % (Length[0], respType))
+            elif respType == EResponseType.rtRequest:
+                #    00000000: 00 00 06 f0 f0 a1
+                #    00000000: 00 00 06 00 32 a3
+                #    00000000: 00 00 06 00 32 a2
+                if Length[0] == 0x06:
+                    self.handleNextAction(newBuffer, newLength)
+                else:
+                    raise BadResponse('len=%x resp=%x' % (Length[0], respType))
             else:
-                logcrt('GenerateResponse: message from console contains unknown device ID (id=%x response=%x request=%x frame=%s)' % (bufferID, responseType, requestType, frame2str(Length[0], Buffer[0])))
-                newLength[0] = 0
-        else: #Length[0] == 0
-            newBuffer[0]=[0]*0x0c
-            if self.RepeatCount:
-                logdbg("GenerateResponse: repeatcount=%d" %  self.RepeatCount)
-                if (datetime.now() - self.RepeatTime).seconds >1:
-                    if self.Regenerate:
-                        logdbg('GenerateResponse: time message=0x0c')
-                        newLength[0] = self.buildTimeFrame(newBuffer,1);
-                    #else:
-                    #	logdbg("implementami - copia data su buf")
-                    #	newBuffer[0] = self.RepeatData, self.RepeatSize
-                    #newLength[0] = self.RepeatSize;
+                raise BadResponse('unexpected response type %x' % respType)
+        elif respType not in [0x20,0x40,0x60,0x80,0xa1,0xa2,0xa3]:
+            # message is probably corrupt
+            raise BadResponse('unknown response type %x' % respType)
+        else:
+            msg = 'message from console contains unknown device ID (id=%04x resp=%x req=%x)' % (bufferID, respType, reqType)
+            logdbg(msg)
+            log_frame(Length[0],Buffer[0])
+            raise BadResponse(msg)
 
         Buffer[0] = newBuffer[0]
         Length[0] = newLength[0]
-        if newLength[0] == 0:
-            return 0
-        return 1
 
-    def initTransceiver(self):
-        logdbg('initTransceiver')
+    def configureRegisterNames(self):
+        self.reg_names[self.AX5051RegisterNames.IFMODE]    =0x00
+        self.reg_names[self.AX5051RegisterNames.MODULATION]=0x41 #fsk
+        self.reg_names[self.AX5051RegisterNames.ENCODING]  =0x07
+        self.reg_names[self.AX5051RegisterNames.FRAMING]   =0x84 #1000:0100 ##?hdlc? |1000 010 0
+        self.reg_names[self.AX5051RegisterNames.CRCINIT3]  =0xff
+        self.reg_names[self.AX5051RegisterNames.CRCINIT2]  =0xff
+        self.reg_names[self.AX5051RegisterNames.CRCINIT1]  =0xff
+        self.reg_names[self.AX5051RegisterNames.CRCINIT0]  =0xff
+        self.reg_names[self.AX5051RegisterNames.FREQ3]     =0x38
+        self.reg_names[self.AX5051RegisterNames.FREQ2]     =0x90
+        self.reg_names[self.AX5051RegisterNames.FREQ1]     =0x00
+        self.reg_names[self.AX5051RegisterNames.FREQ0]     =0x01
+        self.reg_names[self.AX5051RegisterNames.PLLLOOP]   =0x1d
+        self.reg_names[self.AX5051RegisterNames.PLLRANGING]=0x08
+        self.reg_names[self.AX5051RegisterNames.PLLRNGCLK] =0x03
+        self.reg_names[self.AX5051RegisterNames.MODMISC]   =0x03
+        self.reg_names[self.AX5051RegisterNames.SPAREOUT]  =0x00
+        self.reg_names[self.AX5051RegisterNames.TESTOBS]   =0x00
+        self.reg_names[self.AX5051RegisterNames.APEOVER]   =0x00
+        self.reg_names[self.AX5051RegisterNames.TMMUX]     =0x00
+        self.reg_names[self.AX5051RegisterNames.PLLVCOI]   =0x01
+        self.reg_names[self.AX5051RegisterNames.PLLCPEN]   =0x01
+        self.reg_names[self.AX5051RegisterNames.RFMISC]    =0xb0
+        self.reg_names[self.AX5051RegisterNames.REF]       =0x23
+        self.reg_names[self.AX5051RegisterNames.IFFREQHI]  =0x20
+        self.reg_names[self.AX5051RegisterNames.IFFREQLO]  =0x00
+        self.reg_names[self.AX5051RegisterNames.ADCMISC]   =0x01
+        self.reg_names[self.AX5051RegisterNames.AGCTARGET] =0x0e
+        self.reg_names[self.AX5051RegisterNames.AGCATTACK] =0x11
+        self.reg_names[self.AX5051RegisterNames.AGCDECAY]  =0x0e
+        self.reg_names[self.AX5051RegisterNames.CICDEC]    =0x3f
+        self.reg_names[self.AX5051RegisterNames.DATARATEHI]=0x19
+        self.reg_names[self.AX5051RegisterNames.DATARATELO]=0x66
+        self.reg_names[self.AX5051RegisterNames.TMGGAINHI] =0x01
+        self.reg_names[self.AX5051RegisterNames.TMGGAINLO] =0x96
+        self.reg_names[self.AX5051RegisterNames.PHASEGAIN] =0x03
+        self.reg_names[self.AX5051RegisterNames.FREQGAIN]  =0x04
+        self.reg_names[self.AX5051RegisterNames.FREQGAIN2] =0x0a
+        self.reg_names[self.AX5051RegisterNames.AMPLGAIN]  =0x06
+        self.reg_names[self.AX5051RegisterNames.AGCMANUAL] =0x00
+        self.reg_names[self.AX5051RegisterNames.ADCDCLEVEL]=0x10
+        self.reg_names[self.AX5051RegisterNames.RXMISC]    =0x35
+        self.reg_names[self.AX5051RegisterNames.FSKDEV2]   =0x00
+        self.reg_names[self.AX5051RegisterNames.FSKDEV1]   =0x31
+        self.reg_names[self.AX5051RegisterNames.FSKDEV0]   =0x27
+        self.reg_names[self.AX5051RegisterNames.TXPWR]     =0x03
+        self.reg_names[self.AX5051RegisterNames.TXRATEHI]  =0x00
+        self.reg_names[self.AX5051RegisterNames.TXRATEMID] =0x51
+        self.reg_names[self.AX5051RegisterNames.TXRATELO]  =0xec
+        self.reg_names[self.AX5051RegisterNames.TXDRIVER]  =0x88
 
+    def initTransceiver(self, frequency_standard):
+        logdbg('initTransceiver: frequency_standard=%s' % frequency_standard)
+
+        self.DataStore.setFrequencyStandard(frequency_standard)
         self.configureRegisterNames()
-        self.calculateFrequency(self.DataStore.TransceiverSettings.Frequency)
 
-        errmsg = ''
+        # calculate the frequency then set frequency registers
+        freq = self.DataStore.TransceiverSettings.Frequency
+        loginf('base frequency: %d' % freq)
+        freqVal =  long(freq / 16000000.0 * 16777216.0)
+        corVec = [None]
+        self.shid.readConfigFlash(0x1F5, 4, corVec)
+        corVal = corVec[0][0] << 8
+        corVal |= corVec[0][1]
+        corVal <<= 8
+        corVal |= corVec[0][2]
+        corVal <<= 8
+        corVal |= corVec[0][3]
+        loginf('frequency correction: %d (0x%x)' % (corVal,corVal))
+        freqVal += corVal
+        if not (freqVal % 2):
+            freqVal += 1
+        loginf('adjusted frequency: %d (0x%x)' % (freqVal,freqVal))
+        self.reg_names[self.AX5051RegisterNames.FREQ3] = (freqVal >>24) & 0xFF
+        self.reg_names[self.AX5051RegisterNames.FREQ2] = (freqVal >>16) & 0xFF
+        self.reg_names[self.AX5051RegisterNames.FREQ1] = (freqVal >>8)  & 0xFF
+        self.reg_names[self.AX5051RegisterNames.FREQ0] = (freqVal >>0)  & 0xFF
+        logdbg('frequency registers: %x %x %x %x' % (
+                self.reg_names[self.AX5051RegisterNames.FREQ3],
+                self.reg_names[self.AX5051RegisterNames.FREQ2],
+                self.reg_names[self.AX5051RegisterNames.FREQ1],
+                self.reg_names[self.AX5051RegisterNames.FREQ0]))
+
+        # figure out the transceiver id
         buf = [None]
-        if self.shid.ReadConfigFlash(0x1F9, 7, buf):
-            ID  = buf[0][5] << 8
-            ID += buf[0][6]
-            loginf('transceiver ID: %d (%x)' % (ID,ID))
-            self.DataStore.setDeviceID(ID)
+        self.shid.readConfigFlash(0x1F9, 7, buf)
+        tid  = buf[0][5] << 8
+        tid += buf[0][6]
+        loginf('transceiver identifier: %d (0x%04x)' % (tid,tid))
+        self.DataStore.setDeviceID(tid)
 
-            SN  = str("%02d"%(buf[0][0]))
-            SN += str("%02d"%(buf[0][1]))
-            SN += str("%02d"%(buf[0][2]))
-            SN += str("%02d"%(buf[0][3]))
-            SN += str("%02d"%(buf[0][4]))
-            SN += str("%02d"%(buf[0][5]))
-            SN += str("%02d"%(buf[0][6]))
-            loginf('transceiver serial: %s' % SN)
-            self.DataStore.setTransceiverSerNo(SN)
+        # figure out the transceiver serial number
+        sn  = str("%02d"%(buf[0][0]))
+        sn += str("%02d"%(buf[0][1]))
+        sn += str("%02d"%(buf[0][2]))
+        sn += str("%02d"%(buf[0][3]))
+        sn += str("%02d"%(buf[0][4]))
+        sn += str("%02d"%(buf[0][5]))
+        sn += str("%02d"%(buf[0][6]))
+        loginf('transceiver serial: %s' % sn)
+        self.DataStore.setTransceiverSerNo(sn)
             
-            for r in self.AX5051RegisterNames_map:
-                self.shid.WriteReg(r, self.AX5051RegisterNames_map[r])
+        for r in self.reg_names:
+            self.shid.writeReg(r, self.reg_names[r])
 
-            if self.shid.Execute(5):
-                self.shid.SetPreamblePattern(0xaa)
-                if self.shid.SetState(0):
-                    time.sleep(1)
-                    if self.shid.SetRX():
-                        pass
-                    else:
-                        errmsg = 'SetRX failed'
-                else:
-                    errmsg = 'SetState failed'
-            else:
-                errmsg = 'Execute failed'
-        else:
-            errmsg = 'ReadConfigFlash failed'
-
-        if errmsg != '':
-            raise Exception('transceiver initialization failed: %s' % errmsg)
-
-    def setup(self, frequency):
-        self.DataStore.setFrequencyStandard(frequency)
-        self.DataStore.setFlag_FLAG_TRANSCEIVER_SETTING_CHANGE(1)
-        self.shid.open()
-        self.initTransceiver()
-        self.DataStore.setFlag_FLAG_TRANSCEIVER_PRESENT(1)
-        self.shid.SetRX()
+    def setup(self, frequency_standard,
+              vendor_id, product_id, device_id, serial,
+              comm_interval=3):
+        self.DataStore.setCommModeInterval(comm_interval)
+        self.shid.open(vendor_id, product_id, device_id, serial)
+        self.initTransceiver(frequency_standard)
+        self.DataStore.setTransceiverPresent(True)
 
     def teardown(self):
         self.shid.close()
 
+    # FIXME: make this thread-safe
+    def getWeatherData(self):
+        return self.DataStore.CurrentWeather
+
+    # FIXME: make this thread-safe
+    def getLastStat(self):
+        return self.DataStore.LastStat
+
+    # FIXME: make this thread-safe
+    def getConfigData(self):
+        return self.DataStore.StationConfig
+
+    # FIXME: make this thread-safe
+    def getHistoryData(self):
+        return self.DataStore.HistoryData
+
+    def transceiverIsPresent(self):
+        return self.DataStore.getTransceiverPresent()
+
+    def transceiverIsRegistered(self):
+        return self.DataStore.getDeviceRegistered()
+
     def startRFThread(self):
-        logdbg('startRFThread')
+        if self.child is not None:
+            return
+        logdbg('startRFThread: spawning RF thread')
         self.running = True
-        child = threading.Thread(target=self.doRF)
-        child.setName('RFComm')
-        child.start()
+        self.child = threading.Thread(target=self.doRF)
+        self.child.setName('RFComm')
+        self.child.setDaemon(True)
+        self.child.start()
 
     def stopRFThread(self):
-        logdbg('stopRFThread')
         self.running = False
+        logdbg('stopRFThread: waiting for RF thread to terminate')
+        self.child.join(self.thread_wait)
+        if self.child.isAlive():
+            logerr('unable to terminate RF thread after %d seconds' %
+                   self.thread_wait)
+        else:
+            self.child = None
 
     def isRunning(self):
         return self.running
 
     def doRF(self):
         try:
+            logdbg('setting up rf communication')
+            self.doRFSetup()
             logdbg('starting rf communication')
             while self.running:
                 self.doRFCommunication()
-            logdbg('stopping rf communication')
         except Exception, e:
             logerr('exception in doRF: %s' % e)
-            self.running = False
             if weewx.debug:
-                traceback.print_exc()
+                log_traceback(dst=syslog.LOG_DEBUG)
+            self.running = False
             raise
+        finally:
+            logdbg('stopping rf communication')
+
+    # it is probably not necessary to have two setPreamblePattern invocations.
+    # however, HeavyWeatherPro seems to do it this way on a first time config.
+    # doing it this way makes configuration easier during a factory reset and
+    # when re-establishing communication with the station sensors.
+    def doRFSetup(self):
+        self.shid.execute(5)
+        self.shid.setPreamblePattern(0xaa)
+        self.shid.setState(0)
+        time.sleep(1)
+        self.shid.setRX()
+
+        self.shid.setPreamblePattern(0xaa)
+        self.shid.setState(0x1e)
+        time.sleep(1)
+        self.shid.setRX()
+        self.setSleep(0.085,0.005)
 
     def doRFCommunication(self):
-        DeviceWaitEndTime = datetime.now()
-        RequestType = self.DataStore.getRequestType()
-        if RequestType != ERequestType.rtINVALID or DEBUG_COMM > 0:
-            logdbg('RequestType=%s' % RequestType)
-
-        if RequestType == ERequestType.rtFirstConfig:
-            rs = self.DataStore.getRequestState()
-            if rs == ERequestState.rsQueued:
-                logdbg('RequestState=rsQueued (%s)' % rs)
-                self.shid.SetPreamblePattern(0xaa)
-                self.shid.SetState(0x1e)
-                self.DataStore.setRequestState(ERequestState.rsPreamble)
-                dur = self.DataStore.getPreambleDuration() 
-                now = datetime.now()
-                PreambleEndTime = now + timedelta(milliseconds=dur)
-                logdbg("now=%s PreambleEndTime=%s DeviceWaitEndTime=%s" % (now, PreambleEndTime, DeviceWaitEndTime))
-                while True:
-                    now = datetime.now()
-                    if PreambleEndTime < now:
-                        logdbg("PreambleEndTime < now (%s < %s)" %
-                               (PreambleEndTime, now))
-                        break
-                    rt = self.DataStore.getRequestType()
-                    if RequestType != rt:
-                        logdbg("RequestType (%s) != self.DataStore.getRequestType() (%s)" % (RequestType, rt))
-                        break
-                    self.DataStore.RequestTick()
-                    time.sleep(0.001)
-#                    self.DataStore.setFlag_FLAG_SERVICE_RUNNING(True)
-                    #time.sleep(6)
-                    rt = self.DataStore.getRequestType()
-                    if RequestType == rt:
-                        self.DataStore.setRequestState(ERequestState.rsWaitDevice)
-                        RegisterWaitTime = self.DataStore.getRegisterWaitTime() 
-                        DeviceWaitEndTime = datetime.now() + timedelta(milliseconds=RegisterWaitTime)
-                    self.shid.SetRX() #make state from 14 to 15
-            elif rs == ERequestState.rsWaitDevice: # 4
-                logdbg('RequestState=rsWaitDevice (%s)' % rs)
-                now = datetime.now()
-                if now >= DeviceWaitEndTime :
-                    logdbg("now >= DeviceWaitEndTime (%s >= %s)" %
-                           (now, DeviceWaitEndTime))
-                    self.DataStore.setRequestState(ERequestState.rsError)
-                    self.DataStore.RequestNotify()
+        time.sleep(self.firstSleep)
+        self.pollCount = 0
+        while self.running:
+            StateBuffer = [None]
+            self.shid.getState(StateBuffer)
+            self.pollCount += 1
+            if StateBuffer[0][0] == 0x16:
+                break
             else:
-                logdbg('RequestState=%s' % rs)
+                time.sleep(self.nextSleep)
+        else:
+            return
 
         DataLength = [0]
         DataLength[0] = 0
-        StateBuffer = [None]
-        ret = self.shid.GetState(StateBuffer)
-        if ret == 1:
-            FrameBuffer=[0]
-            FrameBuffer[0]=[0]*0x03
-            ReceiverState = StateBuffer[0][0]
-            if ReceiverState == 0x16:
-                ret = self.shid.GetFrame(FrameBuffer, DataLength)
-                if ret == 1:
-                    logdbg('frame: %s' % frame2str(DataLength[0],FrameBuffer[0]))
-                else:
-                    logerr('GetFrame failed')
+        FrameBuffer=[0]
+        FrameBuffer[0]=[0]*0x03
+        self.shid.getFrame(FrameBuffer, DataLength)
+        try:
+            self.generateResponse(FrameBuffer, DataLength)
+            self.shid.setFrame(FrameBuffer[0], DataLength[0])
+        except BadResponse, e:
+            logerr('generateResponse failed: %s' % e)
+        except DataWritten, e:
+            logdbg('SetTime/SetConfig data written')
+        self.shid.setTX()
 
-            ret = self.GenerateResponse(FrameBuffer, DataLength)
-            if ret == 1:
-                self.shid.SetState(0)
-                # send the ackframe prepared by GenerateResponse
-                ret = self.shid.SetFrame(FrameBuffer[0], DataLength[0])
-                if ret == 1:
-                    ret = self.shid.SetTX()
-                    if ret == 1:
-                        ReceiverState = 0xc8
-                        while ret == 1:
-                            Action = FrameBuffer[0][2]
-#                            logdbg('Action=%2x' % Action)
-                            ret = self.shid.GetState(StateBuffer)
-                            if ret == 1:
-                                #self.DataStore.RequestTick()
-                                #ReceiverState = StateBuffer[0]
-                                #if not ReceiverState or ReceiverState == 0x15:
-                                #    self.RepeatTime = datetime.now()
-                                #    time.sleep(0.2)
-                                break
-                            else:
-                                logerr('GetState failed')
-                    else:
-                        logerr("SetTX failed")
-                else:
-                    logerr('SetFrame failed')
+    # these are for diagnostics and debugging
+    def setSleep(self, firstsleep, nextsleep):
+        self.firstSleep = firstsleep
+        self.nextSleep = nextsleep
 
-            if ReceiverState != 0x15:
-                ret = self.shid.SetRX() #make state from 14 to 15
-
-        # FIXME: handle bogus return value at each invocation
-#        if not ret:
-#            self.DataStore.setFlag_FLAG_TRANSCEIVER_PRESENT( 0)
-
-        time.sleep(0.001)
+    def timing(self):
+        s = self.firstSleep + self.nextSleep * (self.pollCount - 1)
+        return 'sleep=%s first=%s next=%s count=%s' % (
+            s, self.firstSleep, self.nextSleep, self.pollCount)

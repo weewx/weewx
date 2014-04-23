@@ -70,13 +70,13 @@
       <td>Outside Temperature (normal formatting)</td>
       <td>$current.outTemp</td>
     </tr>
-	<tr>
-	  <td>Outside Temperature (explicit unit conversion to Celsius)</td>
-	  <td>$current.outTemp.degree_C</td>
-	</tr>
-	<tr>
-	  <td>Outside Temperature (explicit unit conversion to Fahrenheit)</td>
-	  <td>$current.outTemp.degree_F</td>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Celsius)</td>
+      <td>$current.outTemp.degree_C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Fahrenheit)</td>
+      <td>$current.outTemp.degree_F</td>
     </tr>
     <tr>
       <td>Outside Temperature (explicit unit conversion to Celsius, plus formatting)</td>
@@ -86,17 +86,18 @@
       <td>Outside Temperature (explicit unit conversion to Fahrenheit, plus formatting)</td>
       <td>$current.outTemp.degree_F.format("%.3f")</td>
     </tr>
-	<tr>
-	  <td>Outside Temperature trend ($trend.time_delta.hour.format("%.0f"))</td>
-	  <td>$trend.outTemp</td>
+    <tr>
+      <td>Outside Temperature trend ($trend.time_delta.hour.format("%.0f"))</td>
+      <td>$trend.outTemp</td>
+    </tr>
     <tr>
       <td>Barometer (normal)</td>
       <td>$current.barometer</td>
     </tr>
-	<tr>
-	  <td>Barometer trend ($trend.time_delta.hour.format("%.0f"))</td>
-	  <td>$trend.barometer</td>
     <tr>
+      <td>Barometer trend ($trend.time_delta.hour.format("%.0f"))</td>
+      <td>$trend.barometer</td>
+    </tr>
     <tr>
       <td>Wind Chill (normal)</td>
       <td>$current.windchill</td>
@@ -134,7 +135,7 @@
       <td>$current.inTemp</td>
     </tr>
     <tr>
-      <td>Test tag "exists" for an existent type:</td>
+      <td>Test tag "exists" for an existent type: \$current.outTemp.exists</td>
     #if $current.outTemp.exists
       <td>PASS</td>
     #else
@@ -142,7 +143,7 @@
     #end if
     </tr> 
     <tr>
-      <td>Test tag "exists" for a nonsense type:</td>
+      <td>Test tag "exists" for a nonsense type: \$current.nonsense.exists</td>
     #if $current.nonsense.exists
       <td>FAIL</td>
     #else
@@ -150,20 +151,33 @@
     #end if
     </tr> 
     <tr>
-      <td>Test tag "has_data" for existent type with no data:</td>
-    #if $current.foo.has_data
+      <td>Test tag "has_data" for an existing type with data: \$current.outTemp.has_data</td>
+    #if $current.outTemp.has_data
+      <td>PASS</td>
+    #else
+      <td>FAIL</td>
+    #end if
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for an existing type without data: \$current.hail.has_data</td>
+    #if $current.hail.has_data
+      <td>FAIL</td>
+    #else
+      <td>PASS</td>
+    #end if
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for a nonsense type: \$current.nonsense.has_data</td>
+    #if $current.nonsense.has_data
       <td>FAIL</td>
     #else
       <td>PASS</td>
     #end if
     </tr> 
     <tr>
-      <td>Test tag "has_data" for an existing type</td>
-    #if $current.outTemp.has_data
-      <td>PASS</td>
-    #else
-      <td>FAIL</td>
-    #end if
+      <td>Test for a bad attribute on a tag: \$current.foobar</td>
+      <td>$current.foobar</td>
+    </tr>
   </table>
 
   <hr/>
@@ -197,6 +211,10 @@
     <tr>
       <td>Min temp with explicit conversion to nonsense type</td>
       <td>$day.outTemp.min.badtype</td>
+    </tr>
+    <tr>
+      <td>Min temperature with inappropriate conversion: \$day.outTemp.min.mbar</td>
+      <td>$day.outTemp.min.mbar</td>
     </tr>
     <tr>
       <td>Nonexistent type:</td>
@@ -267,7 +285,7 @@
     <tr>
       <td>Rainyear total</td>
       <td>$rainyear.rain.sum</td>
-    <tr>
+    </tr>
   </table>
     
   <hr/>

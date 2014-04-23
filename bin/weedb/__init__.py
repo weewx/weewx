@@ -76,6 +76,15 @@ class Connection(object):
         Returns an empty list if the database has no tables in it."""
         raise NotImplementedError
     
+    def genSchemaOf(self, table):
+        """Generator function that returns a summary of the table's schema.
+        It returns a 6-way tuple:
+        (number, column_name, column_type, can_be_null, default_value, is_primary)
+        
+        Example:
+        (2, 'mintime', 'INTEGER', True, None, False)"""
+        raise NotImplementedError
+
     def columnsOf(self, table):
         """Returns a list of the column names in the specified table.
         Raises exception of type weedb.OperationalError if the table does not exist."""

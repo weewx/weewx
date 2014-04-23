@@ -18,12 +18,14 @@ import sys
 import syslog
 import threading
 import time
+import traceback
 
 import configobj
 
 import weeutil.weeutil
 import weewx.archive
 import weewx.stats
+from weeutil.weeutil import to_bool
 
 class StdReportEngine(threading.Thread):
     """Reporting engine for weewx.
@@ -112,6 +114,7 @@ class StdReportEngine(threading.Thread):
             skin_dict['REPORT_NAME'] = report
             
             for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
+
                 try:
                     # Instantiate an instance of the class.
                     obj = weeutil.weeutil._get_object(generator)(self.config_dict, 
@@ -135,6 +138,7 @@ class StdReportEngine(threading.Thread):
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated...")
+                    traceback.print_exc()
                     
                 finally:
                     obj.finalize()
@@ -180,8 +184,9 @@ class FtpGenerator(ReportGenerator):
                                                   password    = self.skin_dict['password'],
                                                   local_root  = local_root,
                                                   remote_root = self.skin_dict['path'],
+                                                  port        = int(self.skin_dict.get('port', 21)),
                                                   name        = self.skin_dict['REPORT_NAME'],
-                                                  passive     = bool(self.skin_dict.get('passive', True)),
+                                                  passive     = to_bool(self.skin_dict.get('passive', True)),
                                                   max_tries   = int(self.skin_dict.get('max_tries', 3)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: FTP upload not requested. Skipped.")
@@ -216,7 +221,7 @@ class RsyncGenerator(ReportGenerator):
                 server      = self.skin_dict['server'],
                 user        = self.skin_dict.get('user', None),
                 port        = self.skin_dict.get('port', None),
-                delete      = bool(self.skin_dict.get('delete', False)))
+                delete      = to_bool(self.skin_dict.get('delete', False)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: rsync upload not requested. Skipped.")
             return
@@ -300,16 +305,12 @@ class CachedReportGenerator(ReportGenerator):
         self.archive_cache = {}
         
     def _closeArchiveCache(self):
-        try:
-            for archive in self.archive_cache.values():
-                try:
-                    archive.close()
-                    del archive
-                except:
-                    pass
-        except:
-            pass
-        self.archive_cache = {}
+        for archive_name in self.archive_cache.keys():
+            try:
+                self.archive_cache[archive_name].close()
+                del self.archive_cache[archive_name]
+            except Exception:
+                pass
             
     def _getArchive(self, archive_name):
         if archive_name not in self.archive_cache:
@@ -321,16 +322,12 @@ class CachedReportGenerator(ReportGenerator):
         self.stats_cache = {}
         
     def _closeStatsCache(self):
-        try:
-            for stats in self.stats_cache.values():
-                try:
-                    stats.close()
-                    del stats
-                except:
-                    pass
-        except:
-            pass
-        self.stats_cache = {}
+        for stats_name in self.stats_cache.keys():
+            try:
+                self.stats_cache[stats_name].close()
+                del self.stats_cache[stats_name]
+            except Exception:
+                pass
             
     def _getStats(self, stats_name):
         if stats_name not in self.stats_cache:

@@ -11,6 +11,8 @@
 """Unit test module weewx.stats"""
 
 from __future__ import with_statement
+import os
+import sys
 import syslog
 import time
 import unittest
@@ -23,15 +25,25 @@ import weewx.stats
 import gen_fake_data
 import user.schemas
 
+config_path = "testgen.conf"
+cwd = None
+
 class Common(unittest.TestCase):
     
     def setUp(self):
         global config_path
+        global cwd
         
         weewx.debug = 1
 
         syslog.openlog('test_stats', syslog.LOG_CONS)
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+
+        # Save and set the current working directory in case some service changes it.
+        if not cwd:
+            cwd = os.getcwd()
+        else:
+            os.chdir(cwd)
 
         try :
             config_dict = configobj.ConfigObj(config_path, file_error=True)
@@ -265,14 +277,4 @@ def suite():
     return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
 
 if __name__ == '__main__':
-    import sys
-    global config_path
-    
-    if len(sys.argv) < 2 :
-        print "Usage: python test_stats.py path-to-configuration-file"
-        exit()
-
-    # Get the path to the configuration file, then delete it from the argument list:
-    config_path = sys.argv[1]
-    del sys.argv[1:]
     unittest.TextTestRunner(verbosity=2).run(suite())

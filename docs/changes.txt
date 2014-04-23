@@ -1,23 +1,192 @@
 weewx change history
 --------------------
 
-2.5.0 09/ZZ/13
+The WMR100 driver now calculates SLP in software. This fixes a problem
+with the WMRS200 station, which does not allow the user to set altitude.
 
-Added station registry service.
+
+2.6.3 04/10/14
+
+Hardened the WMR100 driver against malformed packets.
+
+The plot images can now use UTF-8 characters.
+
+Fixed a problem where the Ambient threads could crash if there were
+no rain database entries.
+
+Battery status values txBatteryStatus and consBatteryVoltage now appear in
+the archive record. The last LOOP value seen is used.  
+
+CWOP posts are now slightly more robust.
+
+Fixed pressure calculation in wee_config_fousb.
+
+Prevent failures in imagegenerator when no unicode-capable fonts are installed.
+
+Provide explicit pairing feedback using wee_config_ws28xx
+
+Count wxengine restarts in logwatch.
+
+Cleaned up USB initialization for fousb, ws28xx, and te923 drivers.
+
+
+2.6.2 02/16/14
+
+Fixed bug that crashes WMR200 driver if outTemp is missing.
+
+Fixed bug that can crash RESTful threads if there is missing rain data.
+
+Sqlite connections can now explicitly specify a timeout and 
+isolation_level.
+
+Server uptime now reported for MacOS
+
+Fixed bug that prevented Rapidfire posts from being identified as such.
+
+
+2.6.1 02/08/14
+
+Fixed bug that crashed main thread if a StdQC value fell out of range.
+
+
+2.6.0 02/08/14
+
+Changed the RESTful architecture so RESTful services are now first-class
+weewx services. This should simplify the installation of 3rd party
+extensions that use these services.
+
+Broke up service_list, the very long list of services to be run, into
+five separate lists. This will allow services to be grouped together,
+according to when they should be run.
+
+Defined a structure for packaging customizations into extensions, and added
+an installer for those extensions to setup.py.
+
+Changed the default time and date labels to use locale dependent formatting.
+The defaults should now work in most locales, provided you set the
+environment variable LANG before running weewx.
+
+Changed default QC barometric low from 28 to 26. Added inTemp,
+inHumidity, and rain.
+
+Ranges in MinMax QC can now include units.
+
+When QC rejects values it now logs the rejection.
+
+Introduced a new unit system, METRICWX. Similar to METRIC, it uses
+mm for rain, mm/hr for rain rate, and m/s for speed.
+
+Added an option --string-check and --fix to the utility wee_config_database
+to fix embedded strings found in the sqlite archive database.
+
+Font handles are now cached in order to work around a memory leak in PIL.
+
+Now does garbage collection every 3 hours through the main loop.
+
+Image margins now scale with image and font sizes.
+
+Now works with the pure Python version of Cheetah's NameMapper, albeit very
+slowly.
+
+Fixed bug that prevented weewx from working with Python v2.5.
+
+Fixed bug in SummaryByMonth and SummaryByYear that would result in duplicate
+month/year entries when generating from multiple ByMonth or ByYear templates.
+
+Consolidated pressure calculation code in ws23xx, ws28xx, te923, and fousb.
+
+Catch USB failures when reading Fine Offset archive interval.
+
+Added Vantage types stormRain and windSpeed10 to the list of observation
+types.
+
+Simulator now generates types dewpoint, pressure, radiation, and UV.
+
+The forecast extension is once again distributed separately from weewx.
+
+Minor cleanup to Standard skin for better out-of-the-box behavior:
+ - default to no radar image instead of pointing every station to Oregon
+ - not every WMR100 is a WMR100N
+ 
+Failure to set an archive interval when using bar plots no longer results
+in an exception.
+
+Change to skin directory before invoking Cheetah on any templates.
+
+
+2.5.1 12/30/13
+
+Added UV plots to the templates. They will be shown automatically if you
+have any UV data.
+
+Fixed bug when reading cooling_base option.
+
+Default to sane behavior if skin does not define Labels.
+
+Fixed bug in setting of CheetahGenerator options.
+
+Fixed qsf and qpf summary values in forecast module.
+
+Fixed handling of empty sky cover fields in WU forecasts.
+
+Forecast module now considers the fctcode, condition, and wx fields for
+precipitation and obstructions to visibility.
+
+Added options to forecast module to help diagnose parsing failures and new
+forecast formats.
+
+Added retries when saving forecast to database and when reading from database.
+
+Fixes to the Fine Offset driver to eliminate spikes caused by reading from
+memory before the pointer had been updated (not the same thing as an unstable
+read).
+
+Added driver for LaCrosse 2300 series of weather stations.
+
+Added driver for Hideki TE923 series of weather stations.
+
+
+2.5.0 10/29/13
+
+Introduced a new architecture that makes it easier to define search
+list extensions. The old architecture should be 100% backwards compatible.
+
+Added station registry service. This allows weewx to optionally
+"phone home" and put your station location on a map.
+
+Added a forecast service and reporting options.  The forecast service
+can generate Zambretti weather or XTide tide forecasts, or it can download
+Weather Underground or US National Weather Service weather forecasts.  These
+data can then be displayed in reports using the Cheetah template engine.  The
+forecast service is disabled by default.
 
 Weewx now allows easier localization to non-English speaking locales.
 In particular, set the environment variable LANG to your locale, and
 then weewx date and number formatting will follow local conventions.
-Details in a new section in the Customization Guide.
+There are also more labeling options in skin.conf. Details in a new section
+in the Customization Guide.
 
 Added aggregate type "minmax" and "maxmin". Thank you user Gary Roderick!
+
+New option in [StdArchive] called "loop_hilo". Setting to True will
+cause both LOOP and archive data to be used for high/low statistics.
+This is the default. Setting to False causes only archive data to be used.
 
 When a template fails, skip only that template, not everything that the
 generator is processing.
 
+Trend calculations no longer need a record at precisely (for example)
+3 hours in the past. It can be within a "grace" period.
+
 FineOffset driver now uses the 'delay' field instead of the fixed_block
 'read_period' for the archive record interval when reading records from
 console memory.
+
+FineOffset driver now support for multiple stations on the same USB.
+
+FineOffset driver now reduces logging verbosity when bad magic numbers
+appear. Log only when the numbers are unrecognized or change.
+The purpose of the magic numbers is still unknown.
 
 WMR100, Vantage, FineOffset, and WS28xx drivers now emit a null wind
 direction when the wind speed is zero.  Same for wind gust.
@@ -28,6 +197,21 @@ rather than calculated in software. Thank you user Peter Ferencz!
 For WMR9x8 stations, the first extra temperature sensor (packet code 4)
 now shows up as extraTemp1 (instead of outTemp). Thanks again to 
 Peter Ferencz.
+
+For WMR9x8 stations, packet types 2 and 3 have been separated. Only the
+latter is used for outside temperature, humidity, dewpoint. The former
+is used for "extra" sensors. Corrected the calculation for channel
+numbers >=3. Also, extended the number of battery codes. Thanks to Per
+Edström for his patience in figuring this out!
+
+For WMR200 stations, altitude-corrected pressure is now emitted correctly.
+
+ws28xx driver improvements, including: better thread control; better logging
+for debugging/diagnostics; better timing to reduce dropouts; eliminate writes
+to disk to reduce wear when used on flash devices. Plus, support for
+multiple stations on the same USB.
+
+Fixed rain units in ws28xx driver.
 
 The LOOP value for daily ET on Vantages was too high by a factor of 10. 
 This has been corrected.
@@ -40,11 +224,15 @@ Ported to Korora 19 (Fedora 19). Thanks to user zmodemguru!
 Plots under 16 hours in length, now use 1 hour increments (instead of 
 3 hours).
 
-Fixed rain units in ws28xx driver.
-
 No longer emits "deprecation" warning when working with some versions
 of the MySQLdb python driver.
 
+Added ability to build platform-specific RPMs, e.g., one for RedHat-based
+distributions and one for SuSE-based distributions.
+
+Fixed the 'stop' and 'restart' options in the SuSE rc script.
+
+The weewx logwatch script now recognizes more log entries and errors.
 
 
 2.4.0 08/03/13

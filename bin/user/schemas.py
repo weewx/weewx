@@ -16,10 +16,10 @@
 # type may be listed here, it may not necessarily be supported by your weather
 # station hardware.
 #
-# You may trim this list of any unused types if you wish, but it will not result
-# in saving as much space as you may think --- most of the space is taken up by
-# the primary key indexes (type "dateTime").
-# ===============================================================================
+# You may trim this list of any unused types if you wish, but it will not
+# result in saving as much space as you may think --- most of the space is
+# taken up by the primary key indexes (type "dateTime").
+# =============================================================================
 defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
                         ('usUnits',              'INTEGER NOT NULL'),
                         ('interval',             'INTEGER NOT NULL'),

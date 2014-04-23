@@ -1,5 +1,6 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
+# $Id$
 # debian makefile for weewx
 # Copyright 2013 Matthew Wall
 
@@ -43,11 +44,11 @@ install: build
 	cp -r $(SRC)/util/logrotate.d $(DST_CFGDIR)
 	cp -r $(SRC)/util/logwatch $(DST_CFGDIR)
 	cp -r $(SRC)/util/rsyslog.d $(DST_CFGDIR)
+	cp -r $(SRC)/extensions $(DST_BINDIR)
 
 # copy the setup script so we can do config file merges if necessary
 	cp $(SRC)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
 	cp $(SRC)/setup.py $(DST_BINDIR)
-	cp $(SRC)/merge_config.py $(DST_BINDIR)
 
 # remove stuff that should not go out
 	rm $(DST_CFGDIR)/skins/Standard/backgrounds/butterfly.jpg
@@ -72,11 +73,15 @@ install: build
 	chmod 755 $(DST_INITDIR)/weewx
 
 # create symlinks to the code entry points
+	ln -s ../share/weewx/setup.py $(DST)/usr/bin/wee_setup
 	ln -s ../share/weewx/weewxd $(DST)/usr/bin/weewxd
 	ln -s ../share/weewx/wee_reports $(DST)/usr/bin/wee_reports
 	ln -s ../share/weewx/wee_config_database $(DST)/usr/bin/wee_config_database
 	ln -s ../share/weewx/wee_config_fousb $(DST)/usr/bin/wee_config_fousb
+	ln -s ../share/weewx/wee_config_te923 $(DST)/usr/bin/wee_config_te923
 	ln -s ../share/weewx/wee_config_vantage $(DST)/usr/bin/wee_config_vantage
+	ln -s ../share/weewx/wee_config_ws23xx $(DST)/usr/bin/wee_config_ws23xx
+	ln -s ../share/weewx/wee_config_ws28xx $(DST)/usr/bin/wee_config_ws28xx
 
 # keep lintian happy
 	cp $(SRC)/debian/copyright $(DST_DOCDIR)

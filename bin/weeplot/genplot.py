@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009, 2012, 2013, 2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -37,13 +37,6 @@ class GeneralPlot(object):
         self.xscale = None
         self.yscale = None
         
-        self.lmargin = 35
-        self.rmargin = 20
-        self.bmargin = 30
-        self.tmargin = 20
-        self.tbandht = 12
-        self.padding =  3
-
         self.image_width            = int(config_dict.get('image_width',  300))
         self.image_height           = int(config_dict.get('image_height', 180))
         self.image_background_color = weeplot.utilities.tobgr(config_dict.get('image_background_color', '0xf5f5f5'))
@@ -78,10 +71,18 @@ class GeneralPlot(object):
         self.x_label_format         = config_dict.get('x_label_format', None)
         self.y_label_format         = config_dict.get('y_label_format', None)
         
+        # Calculate sensible margins for the given image and font sizes.
+        self.lmargin = int(4.0 * self.axis_label_font_size)
+        self.rmargin = 20
+        self.bmargin = int(1.5 * (self.bottom_label_font_size + self.axis_label_font_size) + 0.5)
+        self.tmargin = int(1.5 * self.top_label_font_size + 0.5)
+        self.tbandht = int(1.2 * self.top_label_font_size + 0.5)
+        self.padding =  3
+
         self.render_rose            = False
-        # Rose width and height are hardwired to 21x21:
-        self.rose_width             = 21
-        self.rose_height            = 21
+        self.rose_width             = int(config_dict.get('rose_width', 21))
+        self.rose_height            = int(config_dict.get('rose_height', 21))
+        self.rose_diameter          = int(config_dict.get('rose_diameter', 10))
         self.rose_position          = (self.lmargin + self.padding + 5, self.image_height - self.bmargin - self.padding - self.rose_height)
         self.rose_rotation          = None
         self.rose_label             = config_dict.get('rose_label', 'N')
@@ -103,13 +104,13 @@ class GeneralPlot(object):
         """Set the label to be put at the bottom of the plot.
         
         """
-        self.bottom_label = bottom_label
+        self.bottom_label = unicode(bottom_label, 'utf8')
         
     def setUnitLabel(self, unit_label):
         """Set the label to be used to show the units of the plot.
         
         """
-        self.unit_label = unit_label
+        self.unit_label = unicode(unit_label, 'utf8')
         
     def setXScaling(self, xscale):
         """Set the X scaling.
@@ -333,7 +334,7 @@ class GeneralPlot(object):
                     if ibox > 0:
                         xleft = this_line.x[ibox-1]
                     else:
-                        xleft = x - this_line.interval
+                        xleft = x - this_line.bar_width
                     if maxdx is not None and x - xleft > maxdx:
                         continue
                     sdraw.rectangle(((xleft, self.yscale[0]), (x, y)), fill=fill_color, outline=color)
@@ -372,9 +373,16 @@ class GeneralPlot(object):
         # Put the units in the upper left corner
         unit_label_font = weeplot.utilities.get_font_handle(self.unit_label_font_path, self.unit_label_font_size)
         if self.unit_label:
-            draw.text(self.unit_label_position,
-                      self.unit_label,
-                      fill=self.unit_label_font_color, font=unit_label_font)
+            try:
+                draw.text(self.unit_label_position,
+                          self.unit_label,
+                          fill=self.unit_label_font_color,
+                          font=unit_label_font)
+            except UnicodeEncodeError:
+                draw.text(self.unit_label_position,
+                          self.unit_label.encode("utf-8"),
+                          fill=self.unit_label_font_color,
+                          font=unit_label_font)
 
         top_label_font = weeplot.utilities.get_font_handle(self.top_label_font_path, self.top_label_font_size)
         
@@ -423,7 +431,11 @@ class GeneralPlot(object):
         # And the right barb:
         rose_draw.line( ((rose_center_x, 0), (rose_center_x + barb_width, barb_height)), width = 1, fill = fill_color)
         
-        rose_draw.ellipse(((rose_center_x - 4, rose_center_y - 4), (rose_center_x + 4, rose_center_y + 4)), outline = fill_color)
+        rose_draw.ellipse(((rose_center_x - self.rose_diameter/2,
+                            rose_center_y - self.rose_diameter/2),
+                           (rose_center_x + self.rose_diameter/2,
+                            rose_center_y + self.rose_diameter/2)),
+                          outline = fill_color)
 
         # Rotate if necessary:
         if self.rose_rotation:
@@ -435,8 +447,8 @@ class GeneralPlot(object):
         rose_label_size = draw.textsize(self.rose_label, font=rose_label_font)
         
         # Draw the label in the middle of the (possibly) rotated arrow
-        rose_draw.text((rose_center_x - rose_label_size[0]/2, 
-                        rose_center_y - rose_label_size[1]/2),
+        rose_draw.text((rose_center_x - rose_label_size[0]/2 - 1,
+                        rose_center_y - rose_label_size[1]/2 - 1),
                         self.rose_label,
                         fill = add_alpha(self.rose_label_font_color),
                         font = rose_label_font)
@@ -516,11 +528,11 @@ class GeneralPlot(object):
             xlinemin = min(line.x)
             xlinemax = max(line.x)
             assert(xlinemin is not None and xlinemax is not None)
-            # If the line represents a bar chart (interval not None),
+            # If the line represents a bar chart,
             # then the actual minimum has to be adjusted for the
-            # interval length
-            if line.interval is not None:
-                xlinemin = xlinemin - line.interval
+            # bar width
+            if line.plot_type == 'bar':
+                xlinemin = xlinemin - line.bar_width
             xmin = min(xlinemin, xmin) if xmin is not None else xlinemin
             xmax = max(xlinemax, xmax) if xmax is not None else xlinemax
         return (xmin, xmax)
@@ -531,13 +543,22 @@ class TimePlot(GeneralPlot) :
     """
     
     def _calcXScaling(self):
-        """Specialized version for time plots.
-        
-        """
+        """Specialized version for time plots."""
         if self.xscale is None :
             (xmin, xmax) = self._calcXMinMax()
-                
             self.xscale = weeplot.utilities.scaletime(xmin, xmax)
+
+    def _calcXLabelFormat(self):
+        """Specialized version for time plots."""
+        if self.x_label_format is None:
+            (xmin, xmax) = self._calcXMinMax()
+            delta = xmax - xmin
+            if delta > 30*24*3600:
+                self.x_label_format = "%x"
+            elif delta > 24*3600:
+                self.x_label_format = '%x %X'
+            else:
+                self.x_label_format = '%X'
         
     def _genXLabel(self, x):
         time_tuple = time.localtime(x)
@@ -550,10 +571,10 @@ class PlotLine(object):
     """
     def __init__(self, x, y, label='', color=None, width=None, plot_type='line',
                  line_type='solid', marker_type=None, marker_size=10, 
-                 interval=None, vector_rotate = None, gap_fraction=None):
+                 bar_width=None, vector_rotate = None, gap_fraction=None):
         self.x           = x
         self.y           = y
-        self.label       = label
+        self.label       = unicode(label, 'utf8')
         self.plot_type   = plot_type
         self.line_type   = line_type
         self.marker_type = marker_type
@@ -561,7 +582,7 @@ class PlotLine(object):
         self.color       = color
         self.fill_color  = color
         self.width       = width
-        self.interval    = interval
+        self.bar_width   = bar_width
         self.vector_rotate = vector_rotate
         self.gap_fraction = gap_fraction
 

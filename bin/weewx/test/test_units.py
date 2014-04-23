@@ -64,24 +64,31 @@ class ConverterTest(unittest.TestCase):
         # Do a formatted comparison to compensate for small rounding errors: 
         self.assertEqual(("%.2f" % converted[0],)+converted[1:3], ("1013.25", "mbar", "group_pressure"))
         
-#    def testConvertDict(self):
-#        d_m =  {'outTemp'   : (20.01, 'degree_C', 'group_temperature'),
-#                'barometer' : (1002.3, 'mbar', 'group_pressure')}
-#        d_us = {'outTemp'   : (68.018, "degree_F", "group_temperature"),
-#                'barometer' : (1002.3 / 33.86, "inHg", "group_pressure")}
-#        c = weewx.units.Converter()
-#        d_test = c.convertDict(d_m)
-#        self.assertEqual(d_us, d_test)
-#        # Go the other way:
-#        cm = weewx.units.Converter(weewx.units.MetricUnits)
-#        d_test = cm.convertDict(d_us)
-#        self.assertEqual(d_m, d_test)
-#        
-#        # Test impossible conversions:
-#        d_m['outTemp'] = (20.01, 'foo', 'group_temperature')
-#        self.assertRaises(KeyError, c.convert, d_m)
-#        d_m['outTemp'] = (20.01, 'degree_C', 'group_foo')
-#        self.assertRaises(KeyError, c.convert, d_m)
+    def testConvertDict(self):
+        d_m =  {'outTemp'   : 20.01,
+                'barometer' : 1002.3,
+                'usUnits'   : weewx.METRIC}
+        d_us = {'outTemp'   : 68.018,
+                'barometer' : 1002.3 / 33.86,
+                'usUnits'   : weewx.US}
+        c = weewx.units.Converter()
+        d_test = c.convertDict(d_m)
+        self.assertEqual(d_test['outTemp'],   d_us['outTemp'])
+        self.assertEqual(d_test['barometer'], d_us['barometer'])
+        self.assertFalse(d_test.has_key('usUnits'))
+
+        # Go the other way:
+        cm = weewx.units.Converter(weewx.units.MetricUnits)
+        d_test = cm.convertDict(d_us)
+        self.assertEqual(d_test['outTemp'],   d_m['outTemp'])
+        self.assertEqual(d_test['barometer'], d_m['barometer'])
+        self.assertFalse(d_test.has_key('usUnits'))
+        
+        # Test impossible conversions:
+        d_m['outTemp'] = (20.01, 'foo', 'group_temperature')
+        self.assertRaises(KeyError, c.convert, d_m)
+        d_m['outTemp'] = (20.01, 'degree_C', 'group_foo')
+        self.assertRaises(KeyError, c.convert, d_m)
         
     def testTargetUnits(self):
         c = weewx.units.Converter()

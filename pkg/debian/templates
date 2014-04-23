@@ -18,7 +18,7 @@ Description: altitude of the weather station:
 
 Template: weewx/station_type
 Type: select
-Choices: Vantage, WMR100, WMR200, WMR9x8, FineOffsetUSB, WS28xx, Simulator
+Choices: Vantage, WMR100, WMR200, WMR9x8, FineOffsetUSB, WS28xx, WS23xx, TE923, Simulator
 Default: Simulator
 Description: weather station type:
  The weather station hardware type.  Specify simulator to run weewx without a weather station.
@@ -34,7 +34,7 @@ Template: weewx/vantage_port
 Type: string
 Default: /dev/ttyS0
 Description: serial port:
- Specify a port for stations with a serial interface, for example /dev/ttyUSB0 or COM1.  For ethernet stations leave this blank.
+ Specify a port for stations with a serial interface, for example /dev/ttyUSB0 or /dev/ttyS0.  For ethernet stations leave this blank.
 
 Template: weewx/vantage_host
 Type: string
@@ -42,14 +42,63 @@ Default: 192.168.0.10
 Description: weather station hostname or IP address:
  Specify the IP address (e.g. 192.168.0.10) or hostname (e.g. console or console.example.com) for stations with an ethernet interface.  For serial stations leave this blank.
 
+Template: weewx/wmr100_model
+Type: string
+Default: WMR100
+Description: weather station model:
+ Specify the station model, for example WMR100, WMR100A, WMRS200.
+
+Template: weewx/wmr200_model
+Type: string
+Default: WMR200
+Description: weather station model:
+ Specify the station model, for example WMR200, WMR200A.
+
+Template: weewx/wmr9x8_model
+Type: string
+Default: WMR968
+Description: weather station model:
+ Specify the station model, for example WMR918, WMR968, Radio Shack 63-1016.
+
 Template: weewx/wmr9x8_port
 Type: string
 Default: /dev/ttyS0
 Description: serial port:
- Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or COM1.
+ Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
 
 Template: weewx/fousb_model
 Type: string
 Default: WS2080
 Description: weather station model:
  Specify the station model, for example WH1080, WS2080, WH3080.
+
+Template: weewx/ws28xx_model
+Type: string
+Default: LaCrosse WS-2810
+Description: weather station model:
+ Specify the station model, for example TFA Primus, La Crosse C86234.
+
+Template: weewx/ws28xx_frequency
+Type: select
+Choices: US, EU
+Default: US
+Description: weather station frequency:
+ Specify the frequency used between the station and the transceiver, either US (915 MHz) or EU (868.3 MHz).
+
+Template: weewx/ws23xx_model
+Type: string
+Default: LaCrosse WS-2300
+Description: weather station model:
+ Specify the station model, for example La Crosse WS2317.
+
+Template: weewx/ws23xx_port
+Type: string
+Default: /dev/ttyS0
+Description: serial port:
+ Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
+
+Template: weewx/te923_model
+Type: string
+Default: TE923
+Description: weather station model:
+ Specify the station model, for example TFA Nexus, IROX Pro X, or Meade TE923W.
