@@ -847,7 +847,10 @@ class ValueDict(object):
         Returns: A ValueHelper, or an object of type UnknownType if the key does
         not appear in the dictionary.
         """
-        vt = self.dictionary.get(obs_type, UnknownType(obs_type))
+        if self.dictionary is None or not self.dictionary.has_key(obs_type):
+            vt = UnknownType(obs_type)
+        else:
+            vt = self.dictionary[obs_type]
         return ValueHelper(vt, context=self.context, formatter=self.formatter,
                            converter=self.converter)
 
@@ -863,9 +866,7 @@ class ValueDict(object):
         # think I'm a functor or real dictionary.
         if obs_type in ['__call__', 'has_key']:
             raise AttributeError(obs_type)
-        vt = self.dictionary.get(obs_type, UnknownType(obs_type))
-        return ValueHelper(vt, context=self.context, formatter=self.formatter,
-                           converter=self.converter)
+        return self.__getitem__(obs_type)
     
 #==============================================================================
 #                             class ValueTupleDict
@@ -1114,7 +1115,15 @@ def to_std_system(datadict, unit_system):
         _datadict_target['usUnits'] = unit_system
         return _datadict_target
 
-    
+def as_value_tuple(record_dict, obs_type):
+    std_unit_system = record_dict['usUnits']
+    val = record_dict.get(obs_type)
+    # Given this standard unit system, what is the unit type of this
+    # particular observation type?
+    (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
+    # Form the value-tuple and return it 
+    return ValueTuple(val, unit_type, unit_group)
+        
 if __name__ == "__main__":
     
     import doctest

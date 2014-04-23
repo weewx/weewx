@@ -101,6 +101,8 @@ class Station(object):
                 pass
         if os_uptime_secs:
             self.os_uptime = weeutil.weeutil.secs_to_string(int(os_uptime_secs + 0.5))
+        else:
+            self.os_uptime = weewx.units.ValueHelper((None, None, None))
 
     def __getattr__(self, name):
         # For anything that is not an explicit attribute of me, try

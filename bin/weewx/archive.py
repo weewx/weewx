@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -32,75 +32,105 @@ class Archive(object):
     
     sqlkeys: A list of the SQL keys that the database supports.
     
+    obskeys: A list of the observation types that the database supports.
+    
     std_unit_system: The unit system used by the database."""
     
-    def __init__(self, connection, table='archive'):
-        """Initialize an object of type weewx.Archive. 
-        
-        If the database is uninitialized, an exception of type
-        weewx.UninitializedDatabase will be raised. 
-        
-        connection: A weedb connection to the archive database.
-        
-        table: The name of the table to be used within the database
-        """
-        self.connection = connection
-        self.table = table
-        try:
-            self.sqlkeys = self._getTypes()
-        except weedb.OperationalError, e:
-            self.close()
-            raise weewx.UninitializedDatabase(e)
-        
-        # Fetch the first row in the database to determine the unit system in
-        # use. If the database has never been used, then the unit system is
-        # still indeterminate --- set it to 'None'.
-        _row = self.getSql("SELECT usUnits FROM %s LIMIT 1;" % self.table)
-        self.std_unit_system = _row[0] if _row is not None else None
-
-    @staticmethod
-    def open(archive_db_dict, table='archive'):
-        """Open an Archive database.
-        
-        An exception of type weedb.OperationalError will be raised if the
-        database does not exist.
-        
-        An exception of type StandardError will be raised if the database
-        exists, but has not been initialized.
-        
-        Returns:
-        An instance of Archive."""
-        
-        _connect = weedb.connect(archive_db_dict)
-        return Archive(_connect, table)
-    
-    @staticmethod
-    def open_with_create(archive_db_dict, archiveSchema, table='archive'):
-        """Open an Archive database, initializing it if necessary.
+    def __init__(self, archive_db_dict, archiveSchema=None):
+        """Initialize an object of type weewx.Archive.
         
         archive_db_dict: A database dictionary holding the information necessary
         to open the database.
         
-        archiveSchema: The schema to be used
+        archiveSchema: The schema to be used. Optional. If not supplied, then an
+        exception of type weedb.OperationalError will be raised if the database
+        does not exist, and of type weedb.UnitializedDatabase if it exists, but
+        has not been initialized.
+        """
+
+        try:
+            self.connection = weedb.connect(archive_db_dict)
+        except weedb.OperationalError:
+            # Database does not exist. Did the caller supply a schema?
+            if archiveSchema is None:
+                # No. Nothing to be done.
+                raise
+            # Create the database:
+            weedb.create(archive_db_dict)
+            # Now I can get a connection
+            self.connection = weedb.connect(archive_db_dict)
+
+        # Now get the SQL types. 
+        try:
+            self.sqlkeys = self.connection.columnsOf('archive')
+        except weedb.OperationalError:
+            # Database exists, but is uninitialized. Did the caller supply a schema?
+            if archiveSchema is None:
+                # No. Nothing to be done.
+                raise
+            # Database exists, but has not been initialized. Initialize it.
+            self._initialize_archive(archiveSchema)
+            # Try again:
+            self.sqlkeys = self.connection.columnsOf('archive')
         
-        table: The name of the table to be used within the database.
+        # Fetch the first row in the database to determine the unit system in
+        # use. If the database has never been used, then the unit system is
+        # still indeterminate --- set it to 'None'.
+        _row = self.getSql("SELECT usUnits FROM archive LIMIT 1;")
+        self.std_unit_system = _row[0] if _row is not None else None
+
+    def _initialize_archive(self, archiveSchema):
+        """Initialize the tables needed for the archive.
+        
+        archiveSchema: The schema to be used
+        """
+    
+        # List comprehension of the types, joined together with commas. Put
+        # the SQL type in backquotes, because at least one of them ('interval')
+        # is a MySQL reserved word
+        _sqltypestr = ', '.join(["`%s` %s" % _type for _type in archiveSchema])
+
+        try:
+            with weedb.Transaction(self.connection) as _cursor:
+                _cursor.execute("CREATE TABLE archive (%s);" % (_sqltypestr, ))
+        except Exception, e:
+            self.close()
+            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create table 'archive' in database '%s': %s" % 
+                          (self.database, e))
+            raise
+    
+        syslog.syslog(syslog.LOG_NOTICE, "archive: Created and initialized table 'archive' in database '%s'" % 
+                      (self.database,))
+
+    @classmethod
+    def open(cls, archive_db_dict):
+        """Open an Archive database.
+        
+        OBSOLETE. For backwards compatibility.
+        Returns:
+        An instance of Archive."""
+        
+        return cls(archive_db_dict)
+    
+    @classmethod
+    def open_with_create(cls, archive_db_dict, archiveSchema):
+        """Open an Archive database, initializing it if necessary.
+        
+        OBSOLETE. For backwards compatibility
         
         Returns: 
         An instance of Archive""" 
     
-        try:
-            archive = Archive.open(archive_db_dict, table)
-            # The database exists and has been initialized. Return it.
-            return archive
-        except (weedb.OperationalError, weewx.UninitializedDatabase):
-            pass
-
-        _connect = Archive._create_table(archive_db_dict, archiveSchema, table)        
-        return Archive(_connect, table)
+        return cls(archive_db_dict, archiveSchema)
     
     @property
     def database(self):
         return self.connection.database
+    
+    @property
+    def obskeys(self):
+        """The list of observation types"""
+        return [obs_type for obs_type in self.sqlkeys if obs_type not in ['dateTime', 'usUnits', 'interval']]
     
     def close(self):
         self.connection.close()
@@ -116,7 +146,7 @@ class Archive(object):
         
         returns: Time of the last good archive record as an epoch time, or
         None if there are no records."""
-        _row = self.getSql("SELECT MAX(dateTime) FROM %s" % self.table)
+        _row = self.getSql("SELECT MAX(dateTime) FROM archive")
         return _row[0] if _row else None
     
     def firstGoodStamp(self):
@@ -124,7 +154,7 @@ class Archive(object):
         
         returns: Time of the first good archive record as an epoch time, or
         None if there are no records."""
-        _row = self.getSql("SELECT MIN(dateTime) FROM %s" % self.table)
+        _row = self.getSql("SELECT MIN(dateTime) FROM archive")
         return _row[0] if _row else None
 
     def addRecord(self, record_obj, log_level=syslog.LOG_NOTICE):
@@ -143,53 +173,55 @@ class Archive(object):
         with weedb.Transaction(self.connection) as cursor:
 
             for record in record_list:
-    
-                if record['dateTime'] is None:
-                    syslog.syslog(syslog.LOG_ERR, "archive: archive record with null time encountered")
-                    raise weewx.ViolatedPrecondition("Archive record with null time encountered.")
+                self._addSingleRecord(record, cursor, log_level)
 
-                # Check to make sure the incoming record is in the same unit
-                # system as the records already in the database:
-                if self.std_unit_system:
-                    if record['usUnits'] != self.std_unit_system:
-                        raise ValueError("Unit system of incoming record (0x%x) "\
-                                         "differs from the archive database (0x%x)" % 
-                                         (record['usUnits'], self.std_unit_system))
-                else:
-                    # This is the first record. Remember the unit system to
-                    # check against subsequent records:
-                    self.std_unit_system = record['usUnits']
+    def _addSingleRecord(self, record, cursor, log_level):
+        
+        if record['dateTime'] is None:
+            syslog.syslog(syslog.LOG_ERR, "archive: archive record with null time encountered")
+            raise weewx.ViolatedPrecondition("Archive record with null time encountered.")
 
-                # Only data types that appear in the database schema can be
-                # inserted. To find them, form the intersection between the
-                # set of all record keys and the set of all sql keys
-                record_key_set = set(record.keys())
-                insert_key_set = record_key_set.intersection(self.sqlkeys)
-                # Convert to an ordered list:
-                key_list = list(insert_key_set)
-                # Get the values in the same order:
-                value_list = [record[k] for k in key_list]
-                
-                # This will a string of sql types, separated by commas. Because
-                # some of the weewx sql keys (notably 'interval') are reserved
-                # words in MySQL, put them in backquotes.
-                k_str = ','.join(["`%s`" % k for k in key_list])
-                # This will be a string with the correct number of placeholder
-                # question marks:
-                q_str = ','.join('?' * len(key_list))
-                # Form the SQL insert statement:
-                sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table, k_str, q_str) 
-                try:
-                    cursor.execute(sql_insert_stmt, value_list)
-                    syslog.syslog(log_level, "archive: added record %s to database '%s'; table '%s'" % 
-                                  (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
-                                   os.path.basename(self.connection.database),
-                                   self.table))
-                except Exception, e:
-                    syslog.syslog(syslog.LOG_ERR, "archive: unable to add record %s to database '%s': %s" %
-                                  (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
-                                   os.path.basename(self.connection.database),
-                                   e))
+        # Check to make sure the incoming record is in the same unit
+        # system as the records already in the database:
+        if self.std_unit_system:
+            if record['usUnits'] != self.std_unit_system:
+                raise ValueError("Unit system of incoming record (0x%x) "\
+                                 "differs from the archive database (0x%x)" % 
+                                 (record['usUnits'], self.std_unit_system))
+        else:
+            # This is the first record. Remember the unit system to
+            # check against subsequent records:
+            self.std_unit_system = record['usUnits']
+
+        # Only data types that appear in the database schema can be
+        # inserted. To find them, form the intersection between the
+        # set of all record keys and the set of all sql keys
+        record_key_set = set(record.keys())
+        insert_key_set = record_key_set.intersection(self.sqlkeys)
+        # Convert to an ordered list:
+        key_list = list(insert_key_set)
+        # Get the values in the same order:
+        value_list = [record[k] for k in key_list]
+        
+        # This will a string of sql types, separated by commas. Because
+        # some of the weewx sql keys (notably 'interval') are reserved
+        # words in MySQL, put them in backquotes.
+        k_str = ','.join(["`%s`" % k for k in key_list])
+        # This will be a string with the correct number of placeholder
+        # question marks:
+        q_str = ','.join('?' * len(key_list))
+        # Form the SQL insert statement:
+        sql_insert_stmt = "INSERT INTO archive (%s) VALUES (%s)" % (k_str, q_str) 
+        try:
+            cursor.execute(sql_insert_stmt, value_list)
+            syslog.syslog(log_level, "archive: added record %s to database '%s'" % 
+                          (weeutil.weeutil.timestamp_to_string(record['dateTime']),
+                           os.path.basename(self.connection.database)))
+        except Exception, e:
+            syslog.syslog(syslog.LOG_ERR, "archive: unable to add record %s to database '%s': %s" %
+                          (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
+                           os.path.basename(self.connection.database),
+                           e))
 
     def genBatchRows(self, startstamp=None, stopstamp=None):
         """Generator function that yields raw rows from the archive database
@@ -202,28 +234,32 @@ class Archive(object):
         end at last archive record.
         
         yields: A list with the data records"""
+
         _cursor = self.connection.cursor()
         try:
             if startstamp is None:
                 if stopstamp is None:
-                    _gen = _cursor.execute("SELECT * FROM %s" % 
-                                           (self.table,))
+                    _gen = _cursor.execute("SELECT * FROM archive ORDER BY dateTime ASC")
                 else:
-                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime <= ?" % 
-                                           (self.table,), (stopstamp,))
+                    _gen = _cursor.execute("SELECT * FROM archive WHERE dateTime <= ? ORDER BY dateTime ASC", (stopstamp,))
             else:
                 if stopstamp is None:
-                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime > ?" % 
-                                           (self.table,), (startstamp,))
+                    _gen = _cursor.execute("SELECT * FROM archive WHERE dateTime > ? ORDER BY dateTime ASC", (startstamp,))
                 else:
-                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime > ? AND dateTime <= ?" %
-                                           (self.table,), (startstamp, stopstamp))
-            
-            for _row in _gen :
+                    _gen = _cursor.execute("SELECT * FROM archive WHERE dateTime > ? AND dateTime <= ? ORDER BY dateTime ASC",
+                                            (startstamp, stopstamp))
+               
+            _last_time = 0
+            for _row in _gen:
+                # The following is to get around a bug in sqlite when all the
+                # tables are in one file:
+                if _row[0] <= _last_time:
+                    continue
+                _last_time = _row[0]
                 yield _row
         finally:
             _cursor.close()
-        
+
     def genBatchRecords(self, startstamp=None, stopstamp=None):
         """Generator function that yields records with timestamps within an
         interval.
@@ -237,7 +273,7 @@ class Archive(object):
         yields: A dictionary where key is the observation type (eg, 'outTemp')
         and the value is the observation value"""
         
-        for _row in self.genBatchRows(startstamp, stopstamp):            
+        for _row in self.genBatchRows(startstamp, stopstamp):
             yield dict(zip(self.sqlkeys, _row)) if _row else None
         
     def getRecord(self, timestamp, max_delta=None):
@@ -255,12 +291,11 @@ class Archive(object):
             if max_delta:
                 time_start_ts = timestamp - max_delta
                 time_stop_ts  = timestamp + max_delta
-                _cursor.execute("SELECT * FROM %s WHERE dateTime>=? AND dateTime<=? "\
-                                "ORDER BY ABS(dateTime-?) ASC LIMIT 1" % (self.table,),
+                _cursor.execute("SELECT * FROM archive WHERE dateTime>=? AND dateTime<=? "\
+                                "ORDER BY ABS(dateTime-?) ASC LIMIT 1",
                                 (time_start_ts, time_stop_ts, timestamp))
             else:
-                _cursor.execute("SELECT * FROM %s WHERE dateTime=?" %
-                                (self.table,), (timestamp,))
+                _cursor.execute("SELECT * FROM archive WHERE dateTime=?", (timestamp,))
             _row = _cursor.fetchone()
             return dict(zip(self.sqlkeys, _row)) if _row else None
         finally:
@@ -269,8 +304,8 @@ class Archive(object):
     def updateValue(self, timestamp, obs_type, new_value):
         """Update (replace) a single value in the database."""
         
-        self.connection.execute("UPDATE %s SET %s=? WHERE dateTime=?" % 
-                                (self.table, obs_type), (new_value, timestamp))
+        self.connection.execute("UPDATE archive SET %s=? WHERE dateTime=?" % 
+                                (obs_type, ), (new_value, timestamp))
 
     def getSql(self, sql, sqlargs=()):
         """Executes an arbitrary SQL statement on the database.
@@ -299,7 +334,195 @@ class Archive(object):
         finally:
             _cursor.close()
             
-    def getSqlVectors(self, sql_type, startstamp, stopstamp,
+    def getSqlVectors(self, ext_type, startstamp, stopstamp, 
+                              aggregate_interval = None, 
+                              aggregate_type = None):
+        """Get time and (possibly aggregated) data vectors within a time
+        interval.
+        
+        This function is very similar to getSqlVectors, except that for
+        special types 'windvec' and 'windgustvec', it returns wind data
+        broken down into its x- and y-components.
+        
+        sql_type: The SQL type to be retrieved (e.g., 'outTemp', or 'windvec').
+        If this type is the special types 'windvec', or 'windgustvec', then
+        what will be returned is a vector of complex numbers. 
+        
+        startstamp: If aggregation_interval is None, then data with timestamps
+        greater than or equal to this value will be returned. If
+        aggregation_interval is not None, then the start of the first interval
+        will be greater than (exclusive of) this value. 
+        
+        stopstamp: Records with time stamp less than or equal to this will be
+        retrieved. If interval is not None, then the last interval will
+        include this value.
+        
+        aggregate_interval: None if no aggregation is desired, otherwise
+        this is the time interval over which a result will be aggregated.
+        Required if aggregate_type is non-None. 
+        Default: None (no aggregation)
+        
+        aggregate_type: None if no aggregation is desired, otherwise the type
+        of aggregation (e.g., 'sum', 'avg', etc.)  Default: None (no aggregation)
+        
+        returns: a 3-way tuple of value tuples:
+          (start_vec, stop_vec, data_vec)
+        The first element holds a ValueTuple with the start times of the aggregation interval.
+        The second element holds a ValueTuple with the stop times of the aggregation interval.
+        The third element holds a ValueTuple with the data aggregation over the interval.
+
+        If sql_type is 'windvec' or 'windgustvec', the data vector will
+        be a vector of types complex. The real part is the x-component of the
+        wind, the imaginary part the y-component. 
+
+        See the file weewx.units for the definition of a ValueTuple.
+        """
+
+        windvec_types = {'windvec'     : ('windSpeed, windDir'),
+                         'windgustvec' : ('windGust,  windGustDir')}
+        
+        # Check to see if the requested type is not 'windvec' or 'windgustvec'
+        if ext_type not in windvec_types:
+            # The type is not one of the extended wind types. Use the regular
+            # version:
+            return self._getSqlVectors(ext_type, startstamp, stopstamp, 
+                                      aggregate_interval, aggregate_type)
+
+        # It is an extended wind type. Prepare the lists that will hold the
+        # final results.
+        start_vec = list()
+        stop_vec  = list()
+        data_vec  = list()
+        std_unit_system = None
+        
+        _cursor=self.connection.cursor()
+        try:
+    
+            # Is aggregation requested?
+            if aggregate_type:
+                
+                # Check to make sure we have everything:
+                if not aggregate_interval:
+                    raise weewx.ViolatedPrecondition("Aggregation interval missing")
+
+                # Aggregation is requested.
+                # The aggregation should happen over the x- and y-components.
+                # Because they do not appear in the database (only the
+                # magnitude and direction do) we cannot do the aggregation
+                # in the SQL statement. We'll have to do it in Python.
+                # Do we know how to do it?
+                if aggregate_type not in ('sum', 'count', 'avg', 'max', 'min'):
+                    raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
+                
+                # This SQL select string will select the proper wind types
+                sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime > ? AND dateTime <= ?' % \
+                    (windvec_types[ext_type],)
+
+                # Go through each aggregation interval, calculating the aggregation.
+                for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
+    
+                    _mag_extreme = _dir_at_extreme = None
+                    _xsum = _ysum = 0.0
+                    _count = 0
+                    _last_time = None
+    
+                    for _rec in _cursor.execute(sql_str, stamp):
+                        (_mag, _dir) = _rec[1:3]
+    
+                        if _mag is None:
+                            continue
+    
+                        # A good direction is necessary unless the mag is zero:
+                        if _mag == 0.0  or _dir is not None:
+                            _count += 1
+                            _last_time  = _rec[0]
+                            if std_unit_system:
+                                if std_unit_system != _rec[3]:
+                                    raise weewx.UnsupportedFeature("Unit type cannot change "\
+                                                                   "within a time interval.")
+                            else:
+                                std_unit_system = _rec[3]
+                            
+                            # Pick the kind of aggregation:
+                            if aggregate_type == 'min':
+                                if _mag_extreme is None or _mag < _mag_extreme:
+                                    _mag_extreme = _mag
+                                    _dir_at_extreme = _dir
+                            elif aggregate_type == 'max':
+                                if _mag_extreme is None or _mag > _mag_extreme:
+                                    _mag_extreme = _mag
+                                    _dir_at_extreme = _dir
+                            else:
+                                # No need to do the arithmetic if mag is zero.
+                                # We also need a good direction
+                                if _mag > 0.0 and _dir is not None:
+                                    _xsum += _mag * math.cos(math.radians(90.0 - _dir))
+                                    _ysum += _mag * math.sin(math.radians(90.0 - _dir))
+                    # We've gone through the whole interval. Were there any
+                    # good data?
+                    if _count:
+                        # Record the time of the last good data point:
+                        start_vec.append(stamp.start)
+                        stop_vec.append(stamp.stop)
+                        # Form the requested aggregation:
+                        if aggregate_type in ('min', 'max'):
+                            if _dir_at_extreme is None:
+                                # The only way direction can be zero with a
+                                # non-zero count is if all wind velocities
+                                # were zero
+                                if weewx.debug:
+                                    assert(_mag_extreme <= 1.0e-6)
+                                x_extreme = y_extreme = 0.0
+                            else:
+                                x_extreme = _mag_extreme * math.cos(math.radians(90.0 - _dir_at_extreme))
+                                y_extreme = _mag_extreme * math.sin(math.radians(90.0 - _dir_at_extreme))
+                            data_vec.append(complex(x_extreme, y_extreme))
+                        elif aggregate_type == 'sum':
+                            data_vec.append(complex(_xsum, _ysum))
+                        elif aggregate_type == 'count':
+                            data_vec.append(_count)
+                        else:
+                            # Must be 'avg'
+                            data_vec.append(complex(_xsum/_count, _ysum/_count))
+            else:
+                # No aggregation desired. It's a lot simpler. Go get the
+                # data in the requested time period
+                # This SQL select string will select the proper wind types
+                sql_str = 'SELECT dateTime, %s, usUnits, `interval` FROM archive WHERE dateTime >= ? AND dateTime <= ?' % \
+                        (windvec_types[ext_type],)
+                
+                for _rec in _cursor.execute(sql_str, (startstamp, stopstamp)):
+                    start_vec.append(_rec[0] - _rec[4])
+                    stop_vec.append(_rec[0])
+                    if std_unit_system:
+                        if std_unit_system != _rec[3]:
+                            raise weewx.UnsupportedFeature("Unit type cannot change "\
+                                                           "within a time interval.")
+                    else:
+                        std_unit_system = _rec[3]
+                    # Break the mag and dir down into x- and y-components.
+                    (_mag, _dir) = _rec[1:3]
+                    if _mag is None or _dir is None:
+                        data_vec.append(None)
+                    else:
+                        x = _mag * math.cos(math.radians(90.0 - _dir))
+                        y = _mag * math.sin(math.radians(90.0 - _dir))
+                        if weewx.debug:
+                            # There seem to be some little rounding errors that
+                            # are driving my debugging crazy. Zero them out
+                            if abs(x) < 1.0e-6 : x = 0.0
+                            if abs(y) < 1.0e-6 : y = 0.0
+                        data_vec.append(complex(x,y))
+        finally:
+            _cursor.close()
+
+        (time_type, time_group) = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
+        (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, ext_type, aggregate_type)
+        return (weewx.units.ValueTuple(start_vec, time_type, time_group),
+                weewx.units.ValueTuple(stop_vec, time_type, time_group),
+                weewx.units.ValueTuple(data_vec, data_type, data_group))
+
+    def _getSqlVectors(self, sql_type, startstamp, stopstamp,
                       aggregate_interval=None, 
                       aggregate_type=None):
         """Get time and (possibly aggregated) data vectors within a time
@@ -356,291 +579,73 @@ class Archive(object):
         aggregate_type: None if no aggregation is desired, otherwise the
         type of aggregation (e.g., 'sum', 'avg', etc.)  
 
-        returns: a 2-way tuple of value tuples: 
-          (time_vec_value_tuple, data_vec_value_tuple)
-        The first element holds the time value tuple, the second the data
-        value tuple. See the file weewx.units for the definition of a value
-        tuple.
-        """
-        # There is an assumption here that the unit type does not change in the
-        # middle of the time interval.
+        returns: a 3-way tuple of value tuples:
+          (start_vec, stop_vec, data_vec)
+        The first element holds a ValueTuple with the start times of the aggregation interval.
+        The second element holds a ValueTuple with the stop times of the aggregation interval.
+        The third element holds a ValueTuple with the data aggregation over the interval.
 
-        time_vec = list()
-        data_vec = list()
+        See the file weewx.units for the definition of a ValueTuple.
+        """
+
+        start_vec = list()
+        stop_vec  = list()
+        data_vec  = list()
         std_unit_system = None
 
         _cursor=self.connection.cursor()
         try:
     
             if aggregate_type :
+                
+                # Check to make sure we have everything:
                 if not aggregate_interval:
                     raise weewx.ViolatedPrecondition("Aggregation interval missing")
-                sql_str = "SELECT MAX(dateTime), %s(%s), usUnits FROM %s "\
-                    "WHERE dateTime > ? AND dateTime <= ?" % (aggregate_type, sql_type, self.table)
+
+                sql_str = "SELECT %s(%s), MIN(usUnits), MAX(usUnits) FROM archive "\
+                    "WHERE dateTime > ? AND dateTime <= ?" % (aggregate_type, sql_type,)
+
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                     _cursor.execute(sql_str, stamp)
                     _rec = _cursor.fetchone()
                     # Don't accumulate any results where there wasn't a record
                     # (signified by a null result)
-                    if _rec:
-                        # Also, there may be records, but there may not be any
-                        # non-Null results.
-                        if _rec[0] is not None:
-                            if std_unit_system:
-                                if std_unit_system != _rec[2]:
-                                    raise weewx.UnsupportedFeature("Unit type cannot change "\
-                                                                   "within a time interval.")
-                            else:
-                                std_unit_system = _rec[2]
-                            time_vec.append(_rec[0])
-                            data_vec.append(_rec[1])
+                    if _rec and _rec[0] is not None:
+                        if std_unit_system:
+                            if not (std_unit_system == _rec[1] == _rec[2]):
+                                raise weewx.UnsupportedFeature("Unit type cannot change "\
+                                                               "within a time interval (%s vs %s vs %s)." %
+                                                               (std_unit_system, _rec[1], _rec[2]))
+                        else:
+                            std_unit_system = _rec[1]
+                        start_vec.append(stamp.start)
+                        stop_vec.append(stamp.stop)
+                        data_vec.append(_rec[0])
             else:
-                sql_str = "SELECT dateTime, %s, usUnits FROM %s "\
-                            "WHERE dateTime >= ? AND dateTime <= ?" % (sql_type, self.table)
+                # No aggregation
+                sql_str = "SELECT dateTime, %s, usUnits, `interval` FROM archive "\
+                            "WHERE dateTime >= ? AND dateTime <= ?" % (sql_type,)
                 for _rec in _cursor.execute(sql_str, (startstamp, stopstamp)):
-                    time_vec.append(_rec[0])
-                    data_vec.append(_rec[1])
+                    start_vec.append(_rec[0] - _rec[3])
+                    stop_vec.append(_rec[0])
                     if std_unit_system:
                         if std_unit_system != _rec[2]:
                             raise weewx.UnsupportedFeature("Unit type cannot change "\
                                                            "within a time interval.")
                     else:
                         std_unit_system = _rec[2]
+                    data_vec.append(_rec[1])
         finally:
             _cursor.close()
 
         (time_type, time_group) = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
         (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, sql_type, aggregate_type)
-        return (ValueTuple(time_vec, time_type, time_group), ValueTuple(data_vec, data_type, data_group))
+        return (ValueTuple(start_vec, time_type, time_group),
+                ValueTuple(stop_vec, time_type, time_group), 
+                ValueTuple(data_vec, data_type, data_group))
 
-    def getSqlVectorsExtended(self, ext_type, startstamp, stopstamp, 
-                              aggregate_interval = None, 
-                              aggregate_type = None):
-        """Get time and (possibly aggregated) data vectors within a time
-        interval.
-        
-        This function is very similar to getSqlVectors, except that for
-        special types 'windvec' and 'windgustvec', it returns wind data
-        broken down into its x- and y-components.
-        
-        sql_type: The SQL type to be retrieved (e.g., 'outTemp', or 'windvec').
-        If this type is the special types 'windvec', or 'windgustvec', then
-        what will be returned is a vector of complex numbers. 
-        
-        startstamp: If aggregation_interval is None, then data with timestamps
-        greater than or equal to this value will be returned. If
-        aggregation_interval is not None, then the start of the first interval
-        will be greater than (exclusive of) this value. 
-        
-        stopstamp: Records with time stamp less than or equal to this will be
-        retrieved. If interval is not None, then the last interval will
-        include this value.
-        
-        aggregate_interval: None if no aggregation is desired, otherwise
-        this is the time interval over which a result will be aggregated.
-        Required if aggregate_type is non-None. 
-        Default: None (no aggregation)
-        
-        aggregate_type: None if no aggregation is desired, otherwise the type
-        of aggregation (e.g., 'sum', 'avg', etc.)  Default: None (no aggregation)
-        
-        returns: a 2-way tuple of value tuples: 
-          (time_vec_value_tuple, data_vec_value_tuple)
-        The first element holds the time value tuple, the second the data
-        value tuple. See the file weewx.units for the definition of a value
-        tuple. If sql_type is 'windvec' or 'windgustvec', the data vector will
-        be a vector of types complex. The real part is the x-component of the
-        wind, the imaginary part the y-component. 
-        """
 
-        windvec_types = {'windvec'     : ('windSpeed, windDir'),
-                         'windgustvec' : ('windGust,  windGustDir')}
-        
-        # Check to see if the requested type is not 'windvec' or 'windgustvec'
-        if ext_type not in windvec_types:
-            # The type is not one of the extended wind types. Use the regular
-            # version:
-            return self.getSqlVectors(ext_type, startstamp, stopstamp, 
-                                      aggregate_interval, aggregate_type)
-
-        # It is an extended wind type. Prepare the lists that will hold the
-        # final results.
-        time_vec = list()
-        data_vec = list()
-        std_unit_system = None
-        
-        _cursor=self.connection.cursor()
-        try:
-    
-            # Is aggregation requested?
-            if aggregate_type:
-                if not aggregate_interval:
-                    raise weewx.ViolatedPrecondition, "Aggregation interval missing"
-                # Aggregation is requested.
-                # The aggregation should happen over the x- and y-components.
-                # Because they do not appear in the database (only the
-                # magnitude and direction do) we cannot do the aggregation
-                # in the SQL statement. We'll have to do it in Python.
-                # Do we know how to do it?
-                if aggregate_type not in ('sum', 'count', 'avg', 'max', 'min'):
-                    raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
-                
-                # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % \
-                    (windvec_types[ext_type], self.table)
-                # Go through each aggregation interval, calculating the
-                # aggregation.
-                for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
-    
-                    _mag_extreme = _dir_at_extreme = None
-                    _xsum = _ysum = 0.0
-                    _count = 0
-                    _last_time = None
-    
-                    for _rec in _cursor.execute(sql_str, stamp):
-                        (_mag, _dir) = _rec[1:3]
-    
-                        if _mag is None:
-                            continue
-    
-                        # A good direction is necessary unless the mag is zero:
-                        if _mag == 0.0  or _dir is not None:
-                            _count += 1
-                            _last_time  = _rec[0]
-                            if std_unit_system:
-                                if std_unit_system != _rec[3]:
-                                    raise weewx.UnsupportedFeature("Unit type cannot change "\
-                                                                   "within a time interval.")
-                            else:
-                                std_unit_system = _rec[3]
-                            
-                            # Pick the kind of aggregation:
-                            if aggregate_type == 'min':
-                                if _mag_extreme is None or _mag < _mag_extreme:
-                                    _mag_extreme = _mag
-                                    _dir_at_extreme = _dir
-                            elif aggregate_type == 'max':
-                                if _mag_extreme is None or _mag > _mag_extreme:
-                                    _mag_extreme = _mag
-                                    _dir_at_extreme = _dir
-                            else:
-                                # No need to do the arithmetic if mag is zero.
-                                # We also need a good direction
-                                if _mag > 0.0 and _dir is not None:
-                                    _xsum += _mag * math.cos(math.radians(90.0 - _dir))
-                                    _ysum += _mag * math.sin(math.radians(90.0 - _dir))
-                    # We've gone through the whole interval. Were there any
-                    # good data?
-                    if _count:
-                        # Record the time of the last good data point:
-                        time_vec.append(_last_time)
-                        # Form the requested aggregation:
-                        if aggregate_type in ('min', 'max'):
-                            if _dir_at_extreme is None:
-                                # The only way direction can be zero with a
-                                # non-zero count is if all wind velocities
-                                # were zero
-                                if weewx.debug:
-                                    assert(_mag_extreme <= 1.0e-6)
-                                x_extreme = y_extreme = 0.0
-                            else:
-                                x_extreme = _mag_extreme * math.cos(math.radians(90.0 - _dir_at_extreme))
-                                y_extreme = _mag_extreme * math.sin(math.radians(90.0 - _dir_at_extreme))
-                            data_vec.append(complex(x_extreme, y_extreme))
-                        elif aggregate_type == 'sum':
-                            data_vec.append(complex(_xsum, _ysum))
-                        elif aggregate_type == 'count':
-                            data_vec.append(_count)
-                        else:
-                            # Must be 'avg'
-                            data_vec.append(complex(_xsum/_count, _ysum/_count))
-            else:
-                # No aggregation desired. It's a lot simpler. Go get the
-                # data in the requested time period
-                # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime >= ? AND dateTime <= ?' % \
-                        (windvec_types[ext_type], self.table)
-                
-                for _rec in _cursor.execute(sql_str, (startstamp, stopstamp)):
-                    # Record the time:
-                    time_vec.append(_rec[0])
-                    if std_unit_system:
-                        if std_unit_system != _rec[3]:
-                            raise weewx.UnsupportedFeature("Unit type cannot change "\
-                                                           "within a time interval.")
-                    else:
-                        std_unit_system = _rec[3]
-                    # Break the mag and dir down into x- and y-components.
-                    (_mag, _dir) = _rec[1:3]
-                    if _mag is None or _dir is None:
-                        data_vec.append(None)
-                    else:
-                        x = _mag * math.cos(math.radians(90.0 - _dir))
-                        y = _mag * math.sin(math.radians(90.0 - _dir))
-                        if weewx.debug:
-                            # There seem to be some little rounding errors that
-                            # are driving my debugging crazy. Zero them out
-                            if abs(x) < 1.0e-6 : x = 0.0
-                            if abs(y) < 1.0e-6 : y = 0.0
-                        data_vec.append(complex(x,y))
-        finally:
-            _cursor.close()
-
-        (time_type, time_group) = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
-        (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, ext_type, aggregate_type)
-        return (weewx.units.ValueTuple(time_vec, time_type, time_group),
-                weewx.units.ValueTuple(data_vec, data_type, data_group))
-
-    @staticmethod
-    def _create_table(archive_db_dict, archiveSchema, table):
-        """Create a SQL table using a given archive schema.
-        
-        archive_db_dict: A database dictionary holding the information
-        necessary to open the database.
-        
-        archiveSchema: The schema to be used
-        
-        table: The name of the table to be used within the database.
-        
-        Returns: 
-        A connection""" 
-    
-        # First try to create the database. If it already exists, an exception
-        # will be thrown.
-        try:
-            weedb.create(archive_db_dict)
-        except weedb.DatabaseExists:
-            pass
-    
-        # List comprehension of the types, joined together with commas. Put
-        # the SQL type in backquotes, because at least one of them ('interval')
-        # is a MySQL reserved word
-        _sqltypestr = ', '.join(["`%s` %s" % _type for _type in archiveSchema])
-
-        _connect = weedb.connect(archive_db_dict)
-        try:
-            with weedb.Transaction(_connect) as _cursor:
-                _cursor.execute("CREATE TABLE %s (%s);" % (table, _sqltypestr))
-        except Exception, e:
-            _connect.close()
-            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create table '%s' in database '%s': %s" % 
-                          (table, os.path.basename(archive_db_dict['database']), e))
-            raise
-    
-        syslog.syslog(syslog.LOG_NOTICE, "archive: Created and initialized table '%s' in database '%s'" % 
-                      (table, os.path.basename(archive_db_dict['database'])))
-
-        return _connect
-    
-    def _getTypes(self):
-        """Returns the types appearing in an archive database.
-        
-        Raises exception of type weedb.OperationalError if the 
-        database has not been initialized."""
-        
-        # Get the columns in the table
-        column_list = self.connection.columnsOf(self.table)
-        return column_list
+WXArchive = Archive
 
 def reconfig(old_db_dict, new_db_dict, new_unit_system=None,
              new_schema=user.schemas.defaultArchiveSchema):
@@ -655,3 +660,46 @@ def reconfig(old_db_dict, new_db_dict, new_unit_system=None,
             # This is very fast because it is done in a single transaction
             # context:
             new_archive.addRecord(record_generator)
+
+#===============================================================================
+#                    Class DBCache
+#===============================================================================
+
+class DBCache(object):
+    """Factory object that can cache archive database objects.
+    
+    db_dict: A database dictionary for opening up a database. A typical one 
+    looks something like this:
+        {'archive_sqlite' : {'root': '/home/weewx',
+                             'database': 'archive/archive.sdb',
+                             'driver': 'weedb.sqlite'}}
+
+    binding_dict: A dictionary that binds a datbase to a database manager class.
+    A typical one looks something like this:
+        {'archive_database': {'database': 'archive_sqlite',
+                              'db_manager': 'weewx.stats.DaySummaryArchive'}}   
+
+    """
+    default_binding_dict = {'archive_database': {'database': 'archive_sqlite',
+                                                 'db_manager': 'weewx.stats.WXDaySummaryArchive'}}
+    
+    def __init__(self, db_dict, binding_dict=default_binding_dict):
+        self.db_dict = db_dict
+        self.binding_dict = binding_dict
+        self.archive_cache = {}
+    
+    def close(self):
+        for archive_name in self.archive_cache.keys():
+            try:
+                self.archive_cache[archive_name].close()
+                del self.archive_cache[archive_name]
+            except Exception:
+                pass
+            
+    def get_database(self, archive_name='archive_database'):
+        if archive_name not in self.archive_cache:
+            archive_db = self.binding_dict[archive_name]['database']
+            archive_dict = self.db_dict[archive_db]
+            cls = weeutil.weeutil._get_object(self.binding_dict[archive_name]['db_manager'])
+            self.archive_cache[archive_name] = cls.open(archive_dict)
+        return self.archive_cache[archive_name]

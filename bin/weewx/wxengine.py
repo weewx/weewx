@@ -359,8 +359,12 @@ class StdCalibrate(StdService):
     def new_loop_packet(self, event):
         """Apply a calibration correction to a LOOP packet"""
         for obs_type in self.corrections:
-            if event.packet.has_key(obs_type) and event.packet[obs_type] is not None:
+            try:
                 event.packet[obs_type] = eval(self.corrections[obs_type], None, event.packet)
+            except (TypeError, NameError):
+                pass
+            except ValueError, e:
+                syslog.syslog(syslog.LOG_ERR, "wxengine: StdCalibration loop error %s" % e)
 
     def new_archive_record(self, event):
         """Apply a calibration correction to an archive packet"""
@@ -368,8 +372,12 @@ class StdCalibrate(StdService):
         # in the LOOP packet.
         if event.origin != 'software':
             for obs_type in self.corrections:
-                if event.record.has_key(obs_type) and event.record[obs_type] is not None:
+                try:
                     event.record[obs_type] = eval(self.corrections[obs_type], None, event.record)
+                except (TypeError, NameError):
+                    pass
+                except ValueError, e:
+                    syslog.syslog(syslog.LOG_ERR, "wxengine: StdCalibration archive error %s" % e)
 
 #===============================================================================
 #                    Class StdQC

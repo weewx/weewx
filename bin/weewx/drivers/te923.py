@@ -720,7 +720,7 @@ class Station(object):
         try:
             self.devh.detachKernelDriver(interface)
         except Exception, e:
-            pass
+            loginf('Detach kernel driver failed: %s' % e)
 
         # attempt to claim the interface
         try:

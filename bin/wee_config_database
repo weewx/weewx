@@ -29,8 +29,8 @@ cases. In particular, the 'reconfigure' option can be useful if you decide to
 add or drop data types from the database schema or change unit systems."""
  
 usage="""%prog: [config_path] [--help]
-                              [--create-database] [--create-stats]
-                              [--reconfigure] [--backfill-stats] 
+                              [--create-database] [--drop-daily]
+                              [--reconfigure] [--backfill-daily] 
                               [--string-check] [--fix]"""
 
 epilog="""If you are using the MySQL database it is assumed that you have the
@@ -49,16 +49,16 @@ def main():
                       help="use configuration file FILE")
     parser.add_option("--create-archive", dest="create_archive", action='store_true',
                       help="Create the archive database.")
-    parser.add_option("--create-stats", dest="create_stats", action='store_true',
-                      help="Create the statistical database.")
+    parser.add_option("--drop-daily", dest="drop_daily", action='store_true',
+                      help="Drop the daily summary tables.")
     parser.add_option("--reconfigure", action='store_true',
                       help="""Create a new archive database using configuration information found """\
                           """in the configuration file. In particular, the new database will use the """\
                           """unit system found in option [StdConvert][target_unit]. It will use """\
                           """the schema found in './bin/user/schemas.py'. """\
                           """The new database will have the same name as the old database, with a '_new' on the end.""")
-    parser.add_option("--backfill-stats", dest="backfill_stats", action='store_true',
-                      help="Backfill the statistical database using the archive database")
+    parser.add_option("--backfill-daily", dest="backfill_daily", action='store_true',
+                      help="Backfill the daily summaries")
     parser.add_option("--string-check", dest="string_check", action="store_true",
                       help="Check a sqlite version of the archive database for embedded strings in it.")
     parser.add_option("--fix", dest="fix", action="store_true",
@@ -72,14 +72,14 @@ def main():
     if options.create_archive:
         createMainDatabase(config_dict)
     
-    if options.create_stats:
-        createStatsDatabase(config_dict)
+    if options.drop_daily:
+        dropDaily(config_dict)
         
     if options.reconfigure:
         reconfigMainDatabase(config_dict)
 
-    if options.backfill_stats:
-        backfillStatsDatabase(config_dict)
+    if options.backfill_daily:
+        backfillDaily(config_dict)
         
     if options.string_check:
         string_check(config_dict, options.fix)
@@ -102,21 +102,32 @@ def createMainDatabase(config_dict):
     else:
         print "Database '%s' already exists. Nothing done." % (archive_db,)
 
-def createStatsDatabase(config_dict):
+def dropDaily(config_dict):
     """Create the weewx statistical database"""
-    stats_db = config_dict['StdArchive']['stats_database']
-    stats_db_dict = config_dict['Databases'][stats_db]
-    try:
-        stats = weewx.stats.StatsDb.open(stats_db_dict)
-        stats.close()
-    except weedb.OperationalError:
-        stats_schema_str = config_dict['StdArchive'].get('stats_schema', 'user.schemas.defaultStatsSchema')
-        stats_schema = weeutil.weeutil._get_object(stats_schema_str)
-        stats = weewx.stats.StatsDb.open_with_create(stats_db_dict, stats_schema)
-        stats.close()
-        print "Created database '%s'" % (stats_db,)
-    else:
-        print "Database '%s' already exists. Nothing done." % (stats_db,)
+    ans = None
+    while ans not in ['y', 'n']:
+        print "Proceeding will delete all your daily summaries."
+        ans = raw_input("Are you sure you want to proceed (y/n)? ")
+        if ans == 'y' :
+            archive_db = config_dict['StdArchive']['archive_database']
+            archive_db_dict = config_dict['Databases'][archive_db]
+            
+            print "Dropping daily summary tables ... "
+            try:
+                archive = weewx.stats.DaySummaryArchive.open(archive_db_dict)
+            except weedb.OperationalError:
+                # No daily summaries. Nothing to be done.
+                print "No daily summaries in database '%s'. Nothing done." % (archive_db,)
+                return
+        
+            try:
+                archive.drop_daily()
+            except weedb.OperationalError, e:
+                print "Got error '%s'\nPerhaps there was no daily summary?" % e
+            else:
+                archive.close()
+                print "Dropped daily summary tables from database '%s'" % (archive_db,)
+            
 
 def reconfigMainDatabase(config_dict):
     """Create a new database, then populate it with the contents of an old database"""
@@ -170,25 +181,19 @@ def reconfigMainDatabase(config_dict):
         elif ans == 'n':
             print "Nothing done."
     
-def backfillStatsDatabase(config_dict):
-    """Use the main archive database to backfill the stats database."""
+def backfillDaily(config_dict):
+    """Backfill the daily summaries"""
 
+    print "Backfilling daily summaries"
     archive_db = config_dict['StdArchive']['archive_database']
     archive_db_dict = config_dict['Databases'][archive_db]
-    stats_db = config_dict['StdArchive']['stats_database']
-    stats_db_dict = config_dict['Databases'][stats_db]
-    stats_schema_str = config_dict['StdArchive'].get('stats_schema', 'user.schemas.defaultStatsSchema')
-    stats_schema = weeutil.weeutil._get_object(stats_schema_str)
 
-    # Open up the main database archive
-    with weewx.archive.Archive.open(archive_db_dict) as archive:
+    # Open up the archive. This will create the tables necessary for the daily summaries if they
+    # don't already exist:
+    with weewx.stats.DaySummaryArchive.open_with_create(archive_db_dict, user.schemas.defaultArchiveSchema) as archive:
+        nrecs = archive.backfill_day_summary()
 
-        # Open up the Stats database. This will create it if it doesn't already exist.
-        with weewx.stats.StatsDb.open_with_create(stats_db_dict, stats_schema) as statsDb:
-            # Now backfill
-            nrecs = statsDb.backfillFrom(archive)
-
-    print "Backfilled %d records from the archive database '%s' into the statistical database '%s'" % (nrecs, archive.database, statsDb.database)
+    print "Backfilled daily summaries in database '%s', using %d records" % (archive.database, nrecs)
     
 def string_check(config_dict, fix=False):
     print "Checking archive database for strings..."

@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2011, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -7,10 +7,7 @@
 #    $Author$
 #    $Date$
 #
-"""Compute statistics, manage the statistical database
-
-    Keeps a running tally in a database of the min, max, avg of weather data
-    for each day. Also, keeps some specialized data for wind.
+"""Adds daily summaries to the archive database.
 
     As new archive data becomes available, it can be added to the
     database with method addRecord().
@@ -41,289 +38,144 @@ import weeutil.weeutil
 import weewx.accum
 import weewx.units
 import weewx.wxformulas
+import weewx.archive
 
 #===============================================================================
 # The SQL statements used in the stats database
-#
-# In what follows, a "schema-tuple" is a 2-way tuple (obs_name, obs_type), where
-# obs_name is something like 'barometer', or 'wind'. The obs_type is either
-# 'REAL' or 'VECTOR'.
-#
 #===============================================================================
 
-sql_create_strs = {'REAL'  : """CREATE TABLE %s ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
-                             """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER);""", 
-                   'VECTOR': """CREATE TABLE %s ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, """\
-                             """min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, """\
-                             """gustdir REAL, xsum REAL, ysum REAL, squaresum REAL, squarecount INTEGER);"""}
+sql_create_str = "CREATE TABLE day_%s (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "\
+  "min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, "\
+  "wsum REAL, sumtime INTEGER);"
+                             
+meta_create_str   = """CREATE TABLE day__metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
+meta_replace_str  = """REPLACE INTO day__metadata VALUES(?, ?)"""  
 
-sql_replace_strs = {'REAL'   : """REPLACE INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)""",
-                    'VECTOR' : """REPLACE INTO %s VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""}
-
-def _sql_create_string_factory(schema_tuple):
-    """Returns whatever SQL string is required to create the desired observation type"""
-    sql_str = sql_create_strs[schema_tuple[1].upper()]
-    return sql_str % schema_tuple[0]
-
-def _sql_replace_string_factory(schema_dict, obs_type):
-    """Returns whatever SQL string is required to update the desired observation type"""
-    sql_str = sql_replace_strs[schema_dict[obs_type]]
-    return sql_str % obs_type
-        
-meta_create_str   = """CREATE TABLE metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
-schema_create_str = """CREATE TABLE _stats_schema (obs_name CHAR(20) NOT NULL UNIQUE, obs_type CHAR(12), reserve1 CHAR(20), reserve2 CHAR(20))""" 
-                 
-meta_replace_str = """REPLACE into metadata VALUES(?, ?)"""  
-
-select_update_str = """SELECT value FROM metadata WHERE name = 'lastUpdate';"""
-select_unit_str   = """SELECT value FROM metadata WHERE name = 'unit_system';"""
+select_update_str = """SELECT value FROM day__metadata WHERE name = 'lastUpdate';"""
 
 # Set of SQL statements to be used for calculating aggregate statistics. Key is the aggregation type.
-sqlDict = {'min'        : "SELECT MIN(min) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'minmax'     : "SELECT MIN(max) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'max'        : "SELECT MAX(max) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'maxmin'     : "SELECT MAX(min) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'meanmin'    : "SELECT AVG(min) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'meanmax'    : "SELECT AVG(max) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'maxsum'     : "SELECT MAX(sum) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'mintime'    : "SELECT mintime FROM %(stats_type)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "min = (SELECT MIN(min) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'maxmintime' : "SELECT mintime FROM %(stats_type)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "min = (SELECT MAX(min) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'maxtime'    : "SELECT maxtime FROM %(stats_type)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "max = (SELECT MAX(max) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'minmaxtime' : "SELECT maxtime FROM %(stats_type)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "max = (SELECT MIN(max) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'maxsumtime' : "SELECT maxtime FROM %(stats_type)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "sum = (SELECT MAX(sum) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'gustdir'    : "SELECT gustdir FROM %(stats_type)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "max = (SELECT MAX(max) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
-           'sum'        : "SELECT SUM(sum) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'count'      : "SELECT SUM(count) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'avg'        : "SELECT SUM(sum),SUM(count) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'rms'        : "SELECT SUM(squaresum),SUM(count) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(squarecount)  FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'vecdir'     : "SELECT SUM(xsum),SUM(ysum) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'max_ge'     : "SELECT SUM(max >= %(val)s) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'max_le'     : "SELECT SUM(max <= %(val)s) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'min_le'     : "SELECT SUM(min <= %(val)s) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'sum_ge'     : "SELECT SUM(sum >= %(val)s) FROM %(stats_type)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
+sqlDict = {'min'        : "SELECT MIN(min) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'minmax'     : "SELECT MIN(max) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'max'        : "SELECT MAX(max) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'maxmin'     : "SELECT MAX(min) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'meanmin'    : "SELECT AVG(min) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'meanmax'    : "SELECT AVG(max) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'maxsum'     : "SELECT MAX(sum) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'mintime'    : "SELECT mintime FROM day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "min = (SELECT MIN(min) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+           'maxmintime' : "SELECT mintime FROM day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "min = (SELECT MAX(min) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+           'maxtime'    : "SELECT maxtime FROM day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "max = (SELECT MAX(max) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+           'minmaxtime' : "SELECT maxtime FROM day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "max = (SELECT MIN(max) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+           'maxsumtime' : "SELECT maxtime FROM day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "sum = (SELECT MAX(sum) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+           'gustdir'    : "SELECT max_dir FROM day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "max = (SELECT MAX(max) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
+           'sum'        : "SELECT SUM(sum) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'count'      : "SELECT SUM(count) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'avg'        : "SELECT SUM(wsum),SUM(sumtime) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'rms'        : "SELECT SUM(wsquaresum),SUM(dirsumtime) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(sumtime)  FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'vecdir'     : "SELECT SUM(xsum),SUM(ysum) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'max_ge'     : "SELECT SUM(max >= %(val)s) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'max_le'     : "SELECT SUM(max <= %(val)s) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'min_le'     : "SELECT SUM(min <= %(val)s) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'sum_ge'     : "SELECT SUM(sum >= %(val)s) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
 
 #===============================================================================
-#                        Class StatsDb
+#                        Class DaySummaryArchive
 #===============================================================================
 
-class StatsDb(object):
+class DaySummaryArchive(weewx.archive.Archive):
     """Manage reading from the sqlite3 statistical database. 
     
-    This class acts as a wrapper around the stats database, with a set
-    of methods for retrieving records from the statistical compilation. 
-
-    An attempt to open an uninitialized or nonexistent database will result
-    in an exception of type weedb.OperationalError being thrown.
-    
-    After initialization, the attribute self.statsTypes will contain a list
-    of the observation types in the statistical database.
-    
-    The SQL database consists of a separate table for each type. The columns 
-    of a table are things like min, max, the timestamps for min and max, 
-    count and sum. A count and sum are kept to make it easy to
-    calculate averages for different time periods.  The wind data table also
-    includes sum of squares (for calculating rms speeds) and wind gust
-    direction.
+    The daily summary consists of a separate table for each type. The columns 
+    of each table are things like min, max, the timestamps for min and max, 
+    sum and sumtime. The values sum and sumtime are kept to make it easy to
+    calculate averages for different time periods.
     
     For example, for type 'outTemp' (outside temperature), there is 
-    a table of name 'outTemp' with the following column names:
+    a table of name 'day_outTemp' with the following column names:
     
-        dateTime, min, mintime, max, maxtime, sum, count
+        dateTime, min, mintime, max, maxtime, sum, count, wsum, sumtime
+    
+    wsum is the "Weighted sum," that is, the sum weighted by the archive interval.
+    sumtime is the sum of the archive intervals.
         
-    Vector data (example, 'wind') is similar, except it adds a few extra columns:
-    
-        dateTime, min, mintime, max, maxtime, sum, count, 
-          gustdir, xsum, ysum, squaresum, squarecount
-    
-    'xsum' and 'ysum' are the sums of the x- and y-components of the wind vector.
-    'squaresum' is the sum of squares of the windspeed (useful for calculating rms speed).
-    'squarecount' (perhaps not the best name, but it's there for historical reasons)
-    is the number of items added to 'xsum' and 'ysum'.
-    
-    In addition to all the tables for each type, there are two other tables:
-    
-     o The first is called 'metadata'. It currently holds the time of the last update, and the
-       unit system in use in the database. If the unit system is missing, then it is assumed
-       to be 'US'.
-    
-     o The second is called _stats_schema. Each row in the table is a 2-way 
-       schema-tuple (obs_type, obs_type). See comments above about schema-tuples.
-    
-    ATTRIBUTES
-    
-    schema: A dictionary with key obs_name, and value of 'REAL' or 'VECTOR'.
-    
-    statsTypes: A list of all the obs_name supported by this database.
-    
-    std_unit_system: The unit system in use (weewx.US or weewx.METRIC), or
-    None if the system has been specified yet.
-    
-    accumClass: The class to be used as an accumulator. Default is weewx.accum.WXAccum.
-    This can be changed for specialized, non-weather, applications.
-    """
-    
-    def __init__(self, connection):
-        """Create an instance of StatsDb to manage a database.
-        
-        If the database is uninitialized, an exception of type weewx.UninitializedDatabase
-        will be raised. 
-        
-        connection: A weedb connection to the stats database. """
-        
-        self.connection = connection
-        try:
-            self.std_unit_system = self._getStdUnitSystem()
-        except weedb.OperationalError, e:
-            self.close()
-            raise weewx.UninitializedDatabase(e)
-        self.schema = self._getSchema()
-        self.statsTypes = self.schema.keys()
-        # The class to be used as an accumulator. This can be changed by the
-        # calling program.
-        self.AccumClass = weewx.accum.WXAccum
-        
-    #--------------------------- STATIC METHODS -----------------------------------
-    
-    @staticmethod
-    def open(stats_db_dict):
-        """Helper function to return an opened StatsDb object.
-        
-        stats_db_dict: A dictionary passed on to weedb. It should hold
-        the keywords necessary to open the database."""
-        connection = weedb.connect(stats_db_dict)
-        return StatsDb(connection)
+    In addition to all the tables for each type, there is one additional table called
+    'day__metadata', which currently holds the time of the last update. """
 
-    @staticmethod
-    def open_with_create(stats_db_dict, stats_schema):
-        """Open a StatsDb database, creating and initializing it if necessary.
-        
-        stats_db_dict: A dictionary passed on to weedb. It should hold
-        the keywords necessary to open the database.
-
-        stats_schema: an iterable collection of schema-tuples. The first member of the
-        tuple is the observation type, the second is either the string 'REAL' (scalar value), 
-        or 'VECTOR' (vector value). The database will be initialized to collect stats
-        for only the given types.
-        
-        Returns:
-        An instance of StatsDb"""
-
-        # If the database exists and has been initialized, then
-        # this will be successful. If not, an exception will be thrown.
-        try:
-            stats = StatsDb.open(stats_db_dict)
-            # The database exists and has been initialized. Return it.
-            return stats
-        except (weedb.OperationalError, weewx.UninitializedDatabase):
-            pass
-        
-        # The database does not exist. Initialize and return it.
-        _connect = StatsDb._init_db(stats_db_dict, stats_schema)
-        
-        return StatsDb(_connect)
-
-    @staticmethod
-    def _init_db(stats_db_dict, stats_schema):
-        """Create and initialize a database."""
-        
-        # First, create the database if necessary. If it already exists, an
-        # exception will be thrown.
-        try:
-            weedb.create(stats_db_dict)
-        except weedb.DatabaseExists:
-            pass
-
-        # Get a connection
-        _connect = weedb.connect(stats_db_dict)
-        
-        try:
-            # Now create all the necessary tables as one transaction:
-            with weedb.Transaction(_connect) as _cursor:
-                for _stats_tuple in stats_schema:
-                    # Get the SQL string necessary to create the type:
-                    _sql_create_str = _sql_create_string_factory(_stats_tuple)
-                    _cursor.execute(_sql_create_str)
-                # Now create the meta table:
-                _cursor.execute(meta_create_str)
-                # Set the unit system to 'None' (Unknown) for now
-                _cursor.execute(meta_replace_str, ('unit_system', 'None'))
-                # Finally, save the stats schema:
-                StatsDb._save_schema(_cursor, stats_schema)
-        except Exception, e:
-            _connect.close()
-            syslog.syslog(syslog.LOG_ERR, "stats: Unable to create stats database.")
-            syslog.syslog(syslog.LOG_ERR, "****   %s" % (e,))
-            raise
+    # Accumulator to be used with this class:    
+    AccumClass = weewx.accum.BaseAccum
     
-        syslog.syslog(syslog.LOG_NOTICE, "stats: Created schema for statistical database")
+    def __init__(self, archive_db_dict, archiveSchema=None):
+        """Initialize an instance of DaySummarArchive
+        
+        archive_db_dict: A database dictionary containing items necessary to open up the
+        database.
+        
+        archiveSchema: The schema to be used. Optional. If not supplied, then an
+        exception of type weedb.OperationalError will be raised if the database
+        does not exist, and of type weedb.UnitializedDatabase if it exists, but
+        has not been initialized.
+        """
+        # Initialize my superclass:
+        super(DaySummaryArchive, self).__init__(archive_db_dict, archiveSchema)
+        
+        # If the database has not been initialized with the daily summaries, then create the
+        # necessary tables, but only if a schema has been given.
+        if 'day__metadata' not in self.connection.tables():
+            # Daily summary tables have not been created yet.
+            if archiveSchema is None:
+                # The user has not indicated he wants initialization. Raise an exception
+                raise weedb.OperationalError("Uninitialized day summaries")
+            # Create all the daily summary tables as one transaction:
+            with weedb.Transaction(self.connection) as _cursor:
+                self._initialize_day_tables(archiveSchema, _cursor)
+            syslog.syslog(syslog.LOG_NOTICE, "stats: Created daily summary tables")
+        
+        # Get a list of all the observation types which have daily summaries
+        all_tables = self.connection.tables()
+        self.daykeys = [x[4:] for x in all_tables if (x.startswith('day_') and x!='day__metadata')]
 
-        return _connect
-    
-    @staticmethod
-    def _save_schema(cursor, stats_schema):
-        cursor.execute(schema_create_str)
-        for stats_tuple in stats_schema:
-            cursor.execute("INSERT INTO _stats_schema (obs_name, obs_type) VALUES(?, ?)", stats_tuple)
+    def _initialize_day_tables(self, archiveSchema, cursor):
+        """Initialize the tables needed for the daily summary."""
+        # Create the tables needed for the daily summaries.
+        for _obs_type in self.obskeys:
+            cursor.execute(sql_create_str % _obs_type)
+        # Then create the meta table:
+        cursor.execute(meta_create_str)
 
-    #--------------------------- REGULAR METHODS -----------------------------------
+    def _addSingleRecord(self, record, cursor, log_level):
+        """Specialized version that updates the daily summaries, as well as the 
+        main archive table."""
+        
+        # First let my superclass handle adding the record to the main archive table:
+        super(DaySummaryArchive, self)._addSingleRecord(record, cursor, log_level)
 
-    @property
-    def database(self):
-        return self.connection.database
-    
-    def close(self):
-        self.connection.close()
-        
-    def __enter__(self):
-        return self
-    
-    def __exit__(self, etyp, einst, etb):
-        self.close()    
-    
-    def updateHiLo(self, accumulator):
-        """Use the contents of an accumulator to update the highs/lows of a stats database."""
-        
-        # Get the start-of-day for the timespan in the accumulator
-        _sod_ts = weeutil.weeutil.startOfArchiveDay(accumulator.timespan.stop)
-        # Retrieve the stats seen so far:
-        _stats_dict = self._getDayStats(_sod_ts)
-        # Update them with the contents of the accumulator:
-        _stats_dict.updateHiLo(accumulator)
-        # Then save the results:
-        self._setDayStats(_stats_dict, accumulator.timespan.stop)
-        
-    def addRecord(self, record):
-        """Using an archive record, update the high/lows and count of a stats database."""
-        
-        # Get the start-of-day for the record:
+        # Get the start of day for the record:        
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
-        # Get the stats seen so far:
-        _stats_dict = self._getDayStats(_sod_ts)
-        # Update them with the contents of the record:
-        _stats_dict.addRecord(record)
-        # Then save the results:
-        self._setDayStats(_stats_dict, record['dateTime'])
+
+        # Now add to the daily summary for the appropriate day:
+        _day_summary = self._get_day_summary(_sod_ts, cursor)
+        _day_summary.addRecord(record)
+        self._set_day_summary(_day_summary, _sod_ts, cursor)
         
-    def getAggregate(self, timespan, stats_type, aggregateType, val=None):
+    def getAggregate(self, timespan, obs_type, aggregateType, **option_dict):
         """Returns an aggregation of a statistical type for a given time period.
         
         timespan: An instance of weeutil.Timespan with the time period over which
         aggregation is to be done.
         
-        stats_type: The type over which aggregation is to be done (e.g., 'barometer',
+        obs_type: The type over which aggregation is to be done (e.g., 'barometer',
         'outTemp', 'rain', ...)
         
         aggregateType: The type of aggregation to be done. The keys in the dictionary
         sqlDict above are the possible aggregation types. 
         
-        val: Some aggregations require a value. Specify it here as a value tuple.
+        option_dict: Some aggregations require optional values
         
         returns: A value tuple. First element is the aggregation value,
         or None if not enough data was available to calculate it, or if the aggregation
@@ -333,14 +185,17 @@ class StatsDb(object):
         
         # This entry point won't work for heating or cooling degree days:
         if weewx.debug:
-            assert(stats_type not in ['heatdeg', 'cooldeg'])
+            assert(obs_type not in ['heatdeg', 'cooldeg'])
             assert(timespan is not None)
 
         # Check to see if this is a valid stats type:
-        if stats_type not in self.statsTypes:
-            raise AttributeError, "Unknown stats type %s" % (stats_type,)
+        if obs_type not in self.daykeys:
+            raise AttributeError, "Unknown stats type %s" % (obs_type,)
 
-        if val is not None:
+        val = option_dict.get('val')
+        if val is None:
+            target_val = None
+        else:
             # The following is for backwards compatibility when ValueTuples had
             # just two members. This hack avoids breaking old skins.
             if len(val) == 2:
@@ -349,13 +204,11 @@ class StatsDb(object):
                 elif val[1] in ['inch', 'mm', 'cm']:
                     val += ("group_rain",)
             target_val = weewx.units.convertStd(val, self.std_unit_system)[0]
-        else:
-            target_val = None
-            
+
         # This dictionary is used for interpolating the SQL statement.
         interDict = {'start'         : weeutil.weeutil.startOfDay(timespan.start),
                      'stop'          : timespan.stop,
-                     'stats_type'    : stats_type,
+                     'day_key'       : obs_type,
                      'aggregateType' : aggregateType,
                      'val'           : target_val}
         
@@ -401,20 +254,29 @@ class StatsDb(object):
             _result = None
 
         # Look up the unit type and group of this combination of stats type and aggregation:
-        (t, g) = weewx.units.getStandardUnitType(self.std_unit_system, stats_type, aggregateType)
+        (t, g) = weewx.units.getStandardUnitType(self.std_unit_system, obs_type, aggregateType)
         # Form the value tuple and return it:
         return weewx.units.ValueTuple(_result, t, g)
         
-    def backfillFrom(self, archiveDb, start_ts = None, stop_ts = None):
+    def exists(self, obs_type):
+        """Checks whether the observation type exists in the database."""
+
+        # Check to see if this is a valid stats type:
+        return obs_type in self.daykeys
+
+    def has_data(self, obs_type, timespan):
+        """Checks whether the observation type exists in the database and whether it has any data."""
+
+        return self.exists(obs_type) and self.getAggregate(timespan, obs_type, 'count')[0] != 0
+
+    def backfill_day_summary(self, start_ts=None, stop_ts=None):
         """Fill the statistical database from an archive database.
         
-        Normally, the stats database if filled by LOOP packets (to get maximum time
+        Normally, the daily summaries get filled by LOOP packets (to get maximum time
         resolution), but if the database gets corrupted, or if a new user is
         starting up with imported wview data, it's necessary to recreate it from
         straight archive data. The Hi/Lows will all be there, but the times won't be
         any more accurate than the archive period.
-        
-        archiveDb: An instance of weewx.archive.Archive
         
         start_ts: Archive data with a timestamp greater than this will be
         used. [Optional. Default is to start with the first datum in the archive.]
@@ -424,12 +286,12 @@ class StatsDb(object):
         
         returns: The number of records backfilled."""
         
-        syslog.syslog(syslog.LOG_DEBUG, "stats: Backfilling stats database.")
+        syslog.syslog(syslog.LOG_DEBUG, "stats: Backfilling daily summaries.")
         t1 = time.time()
         nrecs = 0
         ndays = 0
         
-        _statsDict = None
+        _day_accum = None
         _lastTime  = None
         
         # If a start time for the backfill wasn't given, then start with the time of
@@ -439,26 +301,25 @@ class StatsDb(object):
         
         # Go through all the archiveDb records in the time span, adding them to the
         # database
-        for _rec in archiveDb.genBatchRecords(start_ts, stop_ts):
-    
+        for _rec in self.genBatchRecords(start_ts, stop_ts):
             # Get the start-of-day for the record:
             _sod_ts = weeutil.weeutil.startOfArchiveDay(_rec['dateTime'])
             # If this is the very first record, fetch a new accumulator
-            if not _statsDict:
-                _statsDict = self._getDayStats(_sod_ts)
+            if not _day_accum:
+                _day_accum = self._get_day_summary(_sod_ts)
             # Try updating. If the time is out of the accumulator's time span, an
-            # exception will get thrown.
+            # exception will get raised.
             try:
-                _statsDict.addRecord(_rec)
+                _day_accum.addRecord(_rec)
             except weewx.accum.OutOfSpan:
                 # The record is out of the time span.
                 # Save the old accumulator:
-                self._setDayStats(_statsDict, _rec['dateTime'])
+                self._set_day_summary(_day_accum, _rec['dateTime'])
                 ndays += 1
                 # Get a new accumulator:
-                _statsDict = self._getDayStats(_sod_ts)
+                _day_accum = self._get_day_summary(_sod_ts)
                 # try again
-                _statsDict.addRecord(_rec)
+                _day_accum.addRecord(_rec)
              
             # Remember the timestamp for this record.
             _lastTime = _rec['dateTime']
@@ -468,18 +329,18 @@ class StatsDb(object):
                 sys.stdout.flush()
     
         # We're done. Record the stats for the last day.
-        if _statsDict:
-            self._setDayStats(_statsDict, _lastTime)
+        if _day_accum:
+            self._set_day_summary(_day_accum, _lastTime)
             ndays += 1
         
         t2 = time.time()
         tdiff = t2 - t1
         if nrecs:
             syslog.syslog(syslog.LOG_NOTICE, 
-                          "stats: backfilled %d days of statistics with %d records in %.2f seconds" % (ndays, nrecs, tdiff))
+                          "stats: Processed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
         else:
             syslog.syslog(syslog.LOG_INFO,
-                          "stats: stats database up to date.")
+                          "stats: Daily summary up to date.")
     
         return nrecs
 
@@ -506,68 +367,66 @@ class StatsDb(object):
         
     #--------------------------- UTILITY FUNCTIONS -----------------------------------
 
-    def _getDayStats(self, sod_ts):
-        """Return an instance an appropriate accumulator, initialized to a given day's statistics.
+    def _get_day_summary(self, sod_ts, cursor=None):
+        """Return an instance of an appropriate accumulator, initialized to a given day's statistics.
 
         sod_ts: The timestamp of the start-of-day of the desired day."""
                 
         # Get the TimeSpan for the day starting with sod_ts:
-        timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
+        _timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
 
-        # Get an empty accumulator
-        _stats_dict = self.AccumClass(timespan)
-
-        # For each kind of stats, execute the SQL query and hand the results on
-        # to the accumulator.
-        for stats_type in self.statsTypes:
-            _row = self.xeqSql("SELECT * FROM %s WHERE dateTime = %d" % (stats_type, sod_ts), {})
-
-            # If the date does not exist in the database yet then _row will be None.
-            _stats_tuple = _row[1:] if _row is not None else None
-            # Pick the right kind of Stats object
-            if self.schema[stats_type] == 'REAL':
-                _stats_dict[stats_type] = weewx.accum.ScalarStats(_stats_tuple)
-            elif self.schema[stats_type] == 'VECTOR':
-                _stats_dict[stats_type] = weewx.accum.VecStats(_stats_tuple)
+        # Get an empty day accumulator:
+        _day_accum = self.__class__.AccumClass(_timespan)
         
-        return _stats_dict
+        _cursor = cursor if cursor else self.connection.cursor()
 
-    def _setDayStats(self, dayStatsDict, lastUpdate):
+        try:
+            # For each observation type, execute the SQL query and hand the results on
+            # to the accumulator.
+            for _day_key in self.daykeys:
+                _cursor.execute("SELECT * FROM day_%s WHERE dateTime = ?" % _day_key, (_day_accum.timespan.start,))
+                _row = _cursor.fetchone()
+                # If the date does not exist in the database yet then _row will be None.
+                _stats_tuple = _row[1:] if _row is not None else None
+                _day_accum.set_stats(_day_key, _stats_tuple)
+            
+            return _day_accum
+        finally:
+            if not cursor:
+                _cursor.close()
+
+    def _set_day_summary(self, day_accum, lastUpdate):
         """Write all statistics for a day to the database in a single transaction.
         
-        dayStatsDict: an accumulator. See weewx.accum
+        day_accum: an accumulator with the daily summary. See weewx.accum
         
         lastUpdate: the time of the last update will be set to this. Normally, this
         is the timestamp of the last archive record added to the instance
-        dayStatsDict."""
+        day_accum."""
 
-        _sod = dayStatsDict.timespan.start
+        # Make sure the new data uses the same unit system as the database.
+        if self.std_unit_system != day_accum.unit_system:
+            raise ValueError("stats: Data uses different unit system (0x%x) than archive file (0x%x)" % 
+                             (day_accum.unit_system, self.std_unit_system))
 
-        # Using the _connection as a context manager means that
-        # in case of an error, all tables will get rolled back.
+        _sod = day_accum.timespan.start
+
         with weedb.Transaction(self.connection) as _cursor:
-
             # For each stats type...
-            for _stats_type in self.statsTypes:
+            for _summary_type in day_accum:
                 # ... get the stats tuple to be written to the database...
-                _write_tuple = (_sod,) + dayStatsDict[_stats_type].getStatsTuple()
-                # ... and an appropriate SQL command ...
-                _sql_replace_str = _sql_replace_string_factory(self.schema, _stats_type)
-                # ... and write to the database.
-                _cursor.execute(_sql_replace_str,_write_tuple)
-                
-            # Set the unit system if it has not been set before. 
-            # To do this, first see if this file has ever been used:
-            last_update = self._getLastUpdate(_cursor)
-            if last_update is None:
-                # File has never been used. Set the unit system:
-                _cursor.execute(meta_replace_str, ('unit_system', str(int(dayStatsDict.unit_system))))
-            else:
-                # The file has been used. Make sure the new data uses
-                # the same unit system as the database.
-                unit_system = self._getStdUnitSystem(_cursor)
-                if unit_system != dayStatsDict.unit_system:
-                    raise ValueError("stats: Data uses different unit system (0x%x) than stats file (0x%x)" % (dayStatsDict.unit_system, unit_system))
+                _write_tuple = (_sod,) + day_accum[_summary_type].getStatsTuple()
+                # ... and an appropriate SQL command with the correct number of question marks ...
+                _qmarks = ','.join(len(_write_tuple)*'?')
+                _sql_replace_str = "REPLACE INTO day_%s VALUES(%s)" % (_summary_type, _qmarks)
+                # ... and write to the database. In case the type doesn't appear in the database,
+                # be prepared to catch an exception:
+                try:
+                    _cursor.execute(_sql_replace_str, _write_tuple)
+                except weedb.OperationalError:
+                    if weewx.debug:
+                        print "Unknown type", _summary_type
+                  
             # Update the time of the last stats update:
             _cursor.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
             
@@ -580,79 +439,107 @@ class StatsDb(object):
         else:
             _row = self.xeqSql(select_update_str, {})
         return int(_row[0]) if _row else None
+    
+    def drop_daily(self):
+        """Drop the daily summaries."""
+        _all_tables = self.connection.tables()
+        with weedb.Transaction(self.connection) as _cursor:
+            for _table_name in _all_tables:
+                if _table_name.startswith('day_'):
+                    _cursor.execute("DROP TABLE %s" % _table_name)
 
-    def _getStdUnitSystem(self, cursor=None):
-        """Returns the unit system in use in the stats database."""
+#===============================================================================
+#                        Class WXDaySummaryArchive
+#===============================================================================
+
+class WXDaySummaryArchive(DaySummaryArchive):
+    """Daily summaries, suitable for WX applications.
+
+    Like a regular stats database, except it understands wind, and heating- and cooling-degree days."""
+
+    # Accumulator to be used with this class:    
+    AccumClass = weewx.accum.WXAccum
+    
+    wx_sql_create_str = "CREATE TABLE day_wind (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "\
+      "min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, "\
+      "wsum REAL, sumtime REAL, "\
+      "max_dir REAL, xsum REAL, ysum REAL, dirsumtime INTEGER, squaresum REAL, wsquaresum REAL);"
+                             
+    def _initialize_day_tables(self, archiveSchema, cursor):
+        """Specializing version that adds schema for wind data."""
+        # First initialize my superclass:
+        DaySummaryArchive._initialize_day_tables(self, archiveSchema, cursor)
         
-        # If the metadata "unit_system" is missing, then it is an older style
-        # stats database, which are always in the US Customary standard unit
-        # system. If it exists, but is 'None', then the units have not been
-        # specified yet. Otherwise, it equals the unit system used by the
-        # database.
+        # Now initialize the WX specific tables
+        cursor.execute(WXDaySummaryArchive.wx_sql_create_str)
+        
+    def getAggregate(self, timespan, obs_type, aggregateType, **option_dict):
+        """Specialized version of getAggregate that can calculate heating or cooling degree days.
 
-        if cursor:
-            cursor.execute(select_unit_str)
-            _row = cursor.fetchone()
+        timespan: An instance of weeutil.Timespan with the time period over which
+        aggregation is to be done.
+
+        obs_type: One of 'heatdeg' or 'cooldeg'.
+
+        aggregateType: The type of aggregation to be done. Must be 'sum' or 'avg'.
+
+        heatbase_t, coolbase_t: Value tuples with the heating and cooling degree
+        day base, respectively.
+
+        returns: A value tuple. First element is the aggregation value,
+        or None if not enough data was available to calculate it, or if the aggregation
+        type is unknown. The second element is the unit type (eg, 'degree_F').
+        Third element is the unit group (always "group_temperature")."""
+
+        # Check to see whether heating or cooling degree days are being asked for:
+        if obs_type not in ['heatdeg', 'cooldeg']:
+            # Use my superclass's version:
+            return DaySummaryArchive.getAggregate(self, timespan, obs_type, aggregateType, **option_dict)
+
+        # Only summation (total) or average heating or cooling degree days is supported:
+        if aggregateType not in ['sum', 'avg']:
+            raise weewx.ViolatedPrecondition, "Aggregate type %s for %s not supported." % (aggregateType, obs_type)
+
+        _sum = 0.0
+        _count = 0
+        for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
+            # Get the average temperature for the day as a value tuple:
+            Tavg_t = DaySummaryArchive.getAggregate(self, daySpan, 'outTemp', 'avg')
+            # Make sure it's valid before including it in the aggregation:
+            if Tavg_t is not None and Tavg_t[0] is not None:
+                if obs_type == 'heatdeg':
+                    heatbase_t = option_dict['heatbase']
+                    # Convert average temperature to the same units as heatbase:
+                    Tavg_target_t = weewx.units.convert(Tavg_t, heatbase_t[1])
+                    _sum += weewx.wxformulas.heating_degrees(Tavg_target_t[0], heatbase_t[0])
+                else:
+                    coolbase_t = option_dict['coolbase']
+                    # Convert average temperature to the same units as coolbase:
+                    Tavg_target_t = weewx.units.convert(Tavg_t, coolbase_t[1])
+                    _sum += weewx.wxformulas.cooling_degrees(Tavg_target_t[0], coolbase_t[0])
+                _count += 1
+
+        if aggregateType == 'sum':
+            _result = _sum
         else:
-            _row = self.xeqSql(select_unit_str, {})
-        
-        # Check for an older database:
-        if not _row:
-            return weewx.US
-        
-        # It's a newer style database. Check for 'None' and return.
-        unit_system = int(_row[0]) if str(_row[0])!='None' else None
-        return unit_system
+            _result = _sum / _count if _count else None
 
-    def _getSchema(self):
-        """Get the weewx stats schema used to initialize the stats database."""
-        
-        # Early versions of the stats database did not have an explicit
-        # schema. In this case, an exception will be raised. Be prepared to
-        # catch it, then back calculate the schema.
-        _cursor = self.connection.cursor()
-        try:
-            _cursor.execute("SELECT obs_name, obs_type FROM _stats_schema")
-            _stats_schema_dict = dict((str(_row[0]), str(_row[1])) for _row in _cursor)
-            syslog.syslog(syslog.LOG_DEBUG, "stats: Schema exists with %d elements" % (len(_stats_schema_dict),))
-        except weedb.OperationalError:
-            # The stats schema does not exist. Back calculate it.
-            _stats_schema = self._backcompute_schema(_cursor)
-            _stats_schema_dict = dict(_stats_schema)
-            syslog.syslog(syslog.LOG_DEBUG, "stats: Back calculated schema with %d elements." % (len(_stats_schema_dict),))
-        finally:
-            _cursor.close()
-
-        return _stats_schema_dict
-        
-    def _backcompute_schema(self, cursor):
-        """Used to extract the schema out of older databases that do
-        not have the schema metadata table _stats_schema."""
-        raw_stats_types = self.connection.tables()
-        if not raw_stats_types:
-            raise weewx.UninitializedDatabase("Uninitialized stats database")
-        # Some stats database have schemas for heatdeg and cooldeg (even though
-        # they are not used) due to an earlier bug. Filter them out. Also,
-        # filter out the metadata table. In case the same database is being used
-        # for the archive data, filter out the 'archive' database.
-        stats_types = [s for s in raw_stats_types if s not in ['heatdeg','cooldeg','metadata', 'archive']]
-        stats_schema = []
-        for stat_type in stats_types:
-            ncol = len(self.connection.columnsOf(stat_type))
-            stats_schema.append((stat_type, 'REAL' if ncol==7 else 'VECTOR'))
-        return stats_schema
+        # Look up the unit type and group of the result:
+        (t, g) = weewx.units.getStandardUnitType(self.std_unit_system, obs_type, aggregateType)
+        # Return as a value tuple
+        return weewx.units.ValueTuple(_result, t, g)
 
 #===============================================================================
 #                        function get_heat_cool
 #===============================================================================
 
-def get_heat_cool(statsdb, timespan, stats_type, aggregateType, heatbase_t, coolbase_t):
+def get_heat_cool(statsdb, timespan, obs_type, aggregateType, heatbase_t, coolbase_t):
     """Calculate heating or cooling degree days for a given timespan.
     
     timespan: An instance of weeutil.Timespan with the time period over which
     aggregation is to be done.
     
-    stats_type: One of 'heatdeg' or 'cooldeg'.
+    obs_type: One of 'heatdeg' or 'cooldeg'.
     
     aggregateType: The type of aggregation to be done. Must be 'sum' or 'avg'.
     
@@ -666,11 +553,11 @@ def get_heat_cool(statsdb, timespan, stats_type, aggregateType, heatbase_t, cool
     
     # The requested type must be heatdeg or cooldeg
     if weewx.debug:
-        assert(stats_type in ['heatdeg', 'cooldeg'])
+        assert(obs_type in ['heatdeg', 'cooldeg'])
 
     # Only summation (total) or average heating or cooling degree days is supported:
     if aggregateType not in ['sum', 'avg']:
-        raise weewx.ViolatedPrecondition, "Aggregate type %s for %s not supported." % (aggregateType, stats_type)
+        raise weewx.ViolatedPrecondition, "Aggregate type %s for %s not supported." % (aggregateType, obs_type)
 
     _sum = 0.0
     _count = 0
@@ -679,7 +566,7 @@ def get_heat_cool(statsdb, timespan, stats_type, aggregateType, heatbase_t, cool
         Tavg_t = statsdb.getAggregate(daySpan, 'outTemp', 'avg')
         # Make sure it's valid before including it in the aggregation:
         if Tavg_t is not None and Tavg_t[0] is not None:
-            if stats_type == 'heatdeg':
+            if obs_type == 'heatdeg':
                 # Convert average temperature to the same units as heatbase:
                 Tavg_target_t = weewx.units.convert(Tavg_t, heatbase_t[1])
                 _sum += weewx.wxformulas.heating_degrees(Tavg_target_t[0], heatbase_t[0])
@@ -695,258 +582,24 @@ def get_heat_cool(statsdb, timespan, stats_type, aggregateType, heatbase_t, cool
         _result = _sum / _count if _count else None 
 
     # Look up the unit type and group of the result:
-    (t, g) = weewx.units.getStandardUnitType(statsdb.std_unit_system, stats_type, aggregateType)
+    (t, g) = weewx.units.getStandardUnitType(statsdb.std_unit_system, obs_type, aggregateType)
     # Return as a value tuple
     return weewx.units.ValueTuple(_result, t, g)
     
-#===============================================================================
-#                    Class TaggedStats
-#===============================================================================
 
-class TaggedStats(object):
-    """Allows stats references like obj.month.outTemp.max.
-    
-    This class sits on the top of chain of helper classes that enable
-    syntax such as $month.rain.sum in the templates. 
-    
-    When a time period is given as an attribute to it, such as obj.month,
-    the next item in the chain is returned, in this case an instance of
-    TimeSpanStats, which binds the stats database with the
-    time period. 
-    """
-    
-    def __init__(self, db, endtime_ts, formatter=weewx.units.Formatter(), converter=weewx.units.Converter(), **option_dict):
-        """Initialize an instance of TaggedStats.
-        db: The database the stats are to be extracted from.
-        
-        endtime_ts: The time the stats are to be current to.
+if __name__ == '__main__':
+    archive_db_dict = {'root': '/home/weewx',
+                       'database': 'archive/weewx.sdb',
+                       'driver': 'weedb.sqlite'}
+# archive_db_dict = {'host':'localhost',
+#                    'user':'weewx',
+#                    'password' : 'weewx',
+#                    'database':'weewx',
+#                    'driver':'weedb.mysql'}
 
-        formatter: An instance of weewx.units.Formatter() holding the formatting
-        information to be used. [Optional. If not given, the default
-        Formatter will be used.]
-        
-        converter: An instance of weewx.units.Converter() holding the target unit
-        information to be used. [Optional. If not given, the default
-        Converter will be used.]
-        
-        option_dict: Other options which can be used to customize calculations.
-        [Optional.]
-        """
-        self.db          = db
-        self.endtime_ts  = endtime_ts
-        self.formatter   = formatter
-        self.converter   = converter
-        self.option_dict = option_dict
-        
-    # What follows is the list of time period attributes:
-
-    @property
-    def day(self):
-        return TimeSpanStats(weeutil.weeutil.archiveDaySpan(self.endtime_ts), self.db, 'day', 
-                             self.formatter, self.converter, **self.option_dict)
-    @property
-    def week(self):
-        week_start = self.option_dict.get('week_start', 6)
-        return TimeSpanStats(weeutil.weeutil.archiveWeekSpan(self.endtime_ts, week_start), self.db, 'week', 
-                             self.formatter, self.converter, **self.option_dict)
-    @property
-    def month(self):
-        return TimeSpanStats(weeutil.weeutil.archiveMonthSpan(self.endtime_ts), self.db, 'month', 
-                             self.formatter, self.converter, **self.option_dict)
-    @property
-    def year(self):
-        return TimeSpanStats(weeutil.weeutil.archiveYearSpan(self.endtime_ts), self.db, 'year', 
-                             self.formatter, self.converter, **self.option_dict)
-    @property
-    def rainyear(self):
-        return TimeSpanStats(weeutil.weeutil.archiveRainYearSpan(self.endtime_ts, self.option_dict['rain_year_start']), self.db, 'rainyear', 
-                             self.formatter, self.converter, **self.option_dict)
-        
-   
-#===============================================================================
-#                    Class TimeSpanStats
-#===============================================================================
-
-class TimeSpanStats(object):
-    """Nearly stateless class that holds a binding to a stats database and a timespan.
-    
-    This class is the next class in the chain of helper classes. 
-
-    When a statistical type is given as an attribute to it (such as 'obj.outTemp'),
-    the next item in the chain is returned, in this case an instance of
-    StatsTypeHelper, which binds the stats database, the time period, and
-    the statistical type all together.
-
-    It also includes a few "special attributes" that allow iteration over certain
-    time periods. Example:
-       
-       # Iterate by month:
-       for monthStats in yearStats.months:
-           # Print maximum temperature for each month in the year:
-           print monthStats.outTemp.max
-    """
-    def __init__(self, timespan, db, context='current', formatter=weewx.units.Formatter(), 
-                 converter=weewx.units.Converter(), **option_dict):
-        """Initialize an instance of TimeSpanStats.
-        
-        timespan: An instance of weeutil.Timespan with the time span
-        over which the statistics are to be calculated.
-        
-        db: The database the stats are to be extracted from.
-        
-        context: A tag name for the timespan. This is something like 'current', 'day',
-        'week', etc. This is used to find an appropriate label, if necessary.
-
-        formatter: An instance of weewx.units.Formatter() holding the formatting
-        information to be used. [Optional. If not given, the default
-        Formatter will be used.]
-        
-        converter: An instance of weewx.units.Converter() holding the target unit
-        information to be used. [Optional. If not given, the default
-        Converter will be used.]
-        
-        option_dict: Other options which can be used to customize calculations.
-        [Optional.]
-        """
-        
-        self.timespan    = timespan
-        self.db          = db
-        self.context     = context
-        self.formatter   = formatter
-        self.converter   = converter
-        self.option_dict = option_dict
-        
-    # Iterate over days in the time period:
-    @property
-    def days(self):
-        return TimeSpanStats._seqGenerator(weeutil.weeutil.genDaySpans, self.timespan, self.db, 'day', 
-                                           self.formatter, self.converter, **self.option_dict)
-        
-    # Iterate over months in the time period:
-    @property
-    def months(self):
-        return TimeSpanStats._seqGenerator(weeutil.weeutil.genMonthSpans, self.timespan, self.db, 'month', 
-                                           self.formatter, self.converter, **self.option_dict)
-
-    # Iterate over years in the time period:
-    @property
-    def years(self):
-        return TimeSpanStats._seqGenerator(weeutil.weeutil.genYearSpans, self.timespan, self.db, 'year', 
-                                           self.formatter, self.converter, **self.option_dict)
-
-    # Static method used to implement the iteration:
-    @staticmethod
-    def _seqGenerator(genSpanFunc, timespan, *args, **option_dict):
-        """Generator function that returns TimeSpanStats for the appropriate timespans"""
-        for span in genSpanFunc(timespan.start, timespan.stop):
-            yield TimeSpanStats(span, *args, **option_dict)
-        
-    # Return the start time of the time period as a ValueHelper
-    @property
-    def dateTime(self):
-        val = weewx.units.ValueTuple(self.timespan.start, 'unix_epoch', 'group_time')
-        return weewx.units.ValueHelper(val, self.context, self.formatter, self.converter)
-
-    def __getattr__(self, stats_type):
-        """Return a helper object that binds the stats database, a time period,
-        and the given statistical type.
-        
-        stats_type: A statistical type, such as 'outTemp', or 'heatDeg'
-        
-        returns: An instance of class StatsTypeHelper."""
-        
-        # The following is so the Python version of Cheetah's NameMapper doesn't think
-        # I'm a dictionary:
-        if stats_type == 'has_key':
-            raise AttributeError
-
-        # Return the helper class, bound to the type:
-        return StatsTypeHelper(stats_type, self.timespan, self.db, self.context, self.formatter, self.converter, **self.option_dict)
-        
-#===============================================================================
-#                    Class StatsTypeHelper
-#===============================================================================
-
-class StatsTypeHelper(object):
-    """This is the final class in the chain of helper classes. It binds the statistical
-    database, a time period, and a statistical type all together.
-    
-    When an aggregation type (eg, 'max') is given as an attribute to it, it runs the
-    query against the database, assembles the result, and returns it as a ValueHelper. 
-    """
-
-    def __init__(self, stats_type, timespan, db, context, formatter=weewx.units.Formatter(), converter=weewx.units.Converter(), **option_dict):
-        """ Initialize an instance of StatsTypeHelper
-        
-        stats_type: A string with the stats type (e.g., 'outTemp') for which the query is
-        to be done.
-
-        timespan: An instance of TimeSpan holding the time period over which the query is
-        to be run
-        
-        db: The database the stats are to be extracted from.
-
-        context: A tag name for the timespan. This is something like 'current', 'day',
-        'week', etc. This is used to find an appropriate label, if necessary.
-
-        formatter: An instance of weewx.units.Formatter() holding the formatting
-        information to be used. [Optional. If not given, the default
-        Formatter will be used.]
-        
-        converter: An instance of weewx.units.Converter() holding the target unit
-        information to be used. [Optional. If not given, the default
-        Converter will be used.]
-        
-        option_dict: Other options which can be used to customize calculations.
-        [Optional.]
-        """
-        
-        self.stats_type  = stats_type
-        self.timespan    = timespan
-        self.db          = db
-        self.context     = context
-        self.formatter   = formatter
-        self.converter   = converter
-        self.option_dict = option_dict
-    
-    def max_ge(self, val):
-        result = self.db.getAggregate(self.timespan, self.stats_type, 'max_ge', val)
-        return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
-
-    def max_le(self, val):
-        result = self.db.getAggregate(self.timespan, self.stats_type, 'max_le', val)
-        return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
-    
-    def min_le(self, val):
-        result = self.db.getAggregate(self.timespan, self.stats_type, 'min_le', val)
-        return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
-    
-    def sum_ge(self, val):
-        result = self.db.getAggregate(self.timespan, self.stats_type, 'sum_ge', val)
-        return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
-    
-    def __getattr__(self, aggregateType):
-        """Return statistical summary using a given aggregateType.
-        
-        aggregateType: The type of aggregation over which the summary is to be done.
-        This is normally something like 'sum', 'min', 'mintime', 'count', etc.
-        However, there are two special aggregation types that can be used to 
-        determine the existence of data:
-          'exists':   Return True if the observation type exists in the database.
-          'has_data': Return True if the type exists and there is a non-zero
-                      number of entries over the aggregation period.
-                      
-        returns: For special types 'exists' and 'has_data', returns a Boolean
-        value. Otherwise, a ValueHelper containing the aggregation data."""
-
-        if aggregateType == 'exists':
-            return self.stats_type in self.db.statsTypes
-        elif aggregateType == 'has_data':
-            return self.stats_type in self.db.statsTypes and self.db.getAggregate(self.timespan, self.stats_type, 'count')[0] != 0
-        elif self.stats_type in ['heatdeg', 'cooldeg']:
-            # Heating and cooling degree days use a different entry point into Stats:
-            result = get_heat_cool(self.db, self.timespan, self.stats_type, aggregateType, self.option_dict['heatbase'], self.option_dict['coolbase'])
-        else:
-            result = self.db.getAggregate(self.timespan, self.stats_type, aggregateType)
-        # Wrap the result in a ValueHelper:
-        return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
+    import user.schemas
+    db = WXDaySummaryArchive.open_with_create(archive_db_dict, user.schemas.defaultArchiveSchema)
+    print "Database name is", db.database
+    print db.obskeys
+    print db.daykeys
+    print db.backfill_day_summary()

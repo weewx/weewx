@@ -686,7 +686,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         try:
             self.devh.detachKernelDriver(self.usb_interface)
         except Exception, e:
-            pass
+            loginf('Detach kernel driver failed: %s' % e)
 
         # attempt to claim the interface
         try:

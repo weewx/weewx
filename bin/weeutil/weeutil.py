@@ -30,6 +30,42 @@ def convertToFloat(seq):
     res = [None if s in ('None', 'none') else float(s) for s in seq]
     return res
 
+def search_up(d, k, *default):
+    """Search a ConfigObj dictionary for a key. If it's not found, try my parent, and so on
+    to the root.
+    
+    d: An instance of configobj.Section
+    
+    k: A key to be searched for. If not found in d, it's parent will be searched
+    
+    default: If the key is not found, then the default is returned. If no default is given,
+    then an AttributeError exception is raised.
+    
+    Example: 
+    
+    >>> c = configobj.ConfigObj({"color":"blue", "size":10, "dayimage":{"color":"red"}});
+    >>> print search_up(c['dayimage'], 'size')
+    10
+    >>> print search_up(c, 'color')
+    blue
+    >>> print search_up(c['dayimage'], 'color')
+    red
+    >>> print search_up(c['dayimage'], 'flavor', 'salty')
+    salty
+    >>> print search_up(c['dayimage'], 'flavor')
+    Traceback (most recent call last):
+    AttributeError: flavor
+    """
+    if d.has_key(k):
+        return d[k]
+    if d.parent is d:
+        if len(default):
+            return default[0]
+        else:
+            raise AttributeError(k)
+    else:
+        return search_up(d.parent, k, *default)
+    
 def accumulateLeaves(d):
     """Merges leaf options above a ConfigObj section with itself, accumulating the results.
     
@@ -295,6 +331,24 @@ def intervalgen(start_ts, stop_ts, interval):
 
     (Note how in this example the local time boundaries are constant, despite
     DST kicking in. The interval length is not constant.)
+    
+    Another example, this one over the Fall DST boundary, and using 1 hour intervals:
+
+    >>> startstamp = 1257051600
+    >>> print timestamp_to_string(startstamp)
+    2009-10-31 22:00:00 PDT (1257051600)
+    >>> stopstamp = 1257080400
+    >>> print timestamp_to_string(stopstamp)
+    2009-11-01 05:00:00 PST (1257080400)
+    >>> for span in intervalgen(startstamp, stopstamp, 3600):
+    ...    print span
+    [2009-10-31 22:00:00 PDT (1257051600) -> 2009-10-31 23:00:00 PDT (1257055200)]
+    [2009-10-31 23:00:00 PDT (1257055200) -> 2009-11-01 00:00:00 PDT (1257058800)]
+    [2009-11-01 00:00:00 PDT (1257058800) -> 2009-11-01 01:00:00 PDT (1257062400)]
+    [2009-11-01 01:00:00 PDT (1257062400) -> 2009-11-01 02:00:00 PST (1257069600)]
+    [2009-11-01 02:00:00 PST (1257069600) -> 2009-11-01 03:00:00 PST (1257073200)]
+    [2009-11-01 03:00:00 PST (1257073200) -> 2009-11-01 04:00:00 PST (1257076800)]
+    [2009-11-01 04:00:00 PST (1257076800) -> 2009-11-01 05:00:00 PST (1257080400)]
     
     start_ts: The start of the first interval in unix epoch time. In unix epoch time.
     
@@ -766,7 +820,7 @@ def log_traceback(prefix=''):
     del sfd
     
 def _get_object(module_class):
-    """Given a path to a class, instantiates an instance of the class with the given args and returns it."""
+    """Given a string with a module class name, it imports and returns the class."""
     # Split the path into its parts
     parts = module_class.split('.')
     # Strip off the classname:

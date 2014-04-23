@@ -326,18 +326,10 @@ class GeneralPlot(object):
                            width = width,
                            maxdx = maxdx)
             elif this_line.plot_type == 'bar' :
-                for ibox in xrange(len(this_line.x)):
-                    x = this_line.x[ibox]
-                    y = this_line.y[ibox]
-                    if y is None :
+                for x, y, bar_width in zip(this_line.x, this_line.y, this_line.bar_width):
+                    if y is None:
                         continue
-                    if ibox > 0:
-                        xleft = this_line.x[ibox-1]
-                    else:
-                        xleft = x - this_line.bar_width
-                    if maxdx is not None and x - xleft > maxdx:
-                        continue
-                    sdraw.rectangle(((xleft, self.yscale[0]), (x, y)), fill=fill_color, outline=color)
+                    sdraw.rectangle(((x - bar_width, self.yscale[0]), (x, y)), fill=fill_color, outline=color)
             elif this_line.plot_type == 'vector' :
                 for (x, vec) in zip(this_line.x, this_line.y):
                     sdraw.vector(x, vec,
@@ -530,9 +522,9 @@ class GeneralPlot(object):
             assert(xlinemin is not None and xlinemax is not None)
             # If the line represents a bar chart,
             # then the actual minimum has to be adjusted for the
-            # bar width
+            # bar width of the first point
             if line.plot_type == 'bar':
-                xlinemin = xlinemin - line.bar_width
+                xlinemin = xlinemin - line.bar_width[0]
             xmin = min(xlinemin, xmin) if xmin is not None else xlinemin
             xmax = max(xlinemax, xmax) if xmax is not None else xlinemax
         return (xmin, xmax)

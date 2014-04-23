@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2010, 2012, 2013 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -16,7 +16,7 @@ class OutOfSpan(ValueError):
     """Raised when attempting to add a record outside of the timespan held by an accumulator"""
 
 #===============================================================================
-#      Classes for in/max/count stats for a single observation type
+#                             ScalarStats
 #===============================================================================
 
 class ScalarStats(object):
@@ -25,19 +25,24 @@ class ScalarStats(object):
     Property 'last' is the last non-None value seen. Property 'lasttime' is
     the time it was seen. """
     
-    default_init = (None, None, None, None, 0.0, 0)
+    default_init = (None, None, None, None, 0.0, 0, 0.0, 0)
     
     def __init__(self, stats_tuple=None):
-        (self.min, self.mintime,
-         self.max, self.maxtime,
-         self.sum, self.count) = stats_tuple if stats_tuple else ScalarStats.default_init
+        self.setStats(stats_tuple)
         self.last     = None
         self.lasttime = None
+         
+    def setStats(self, stats_tuple=None):
+        (self.min, self.mintime,
+         self.max, self.maxtime,
+         self.sum, self.count,
+         self.wsum,self.sumtime) = stats_tuple if stats_tuple else ScalarStats.default_init
          
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the gathered statistics.
         This tuple can be used to update the stats database"""
-        return (self.min, self.mintime, self.max, self.maxtime, self.sum, self.count)
+        return (self.min, self.mintime, self.max, self.maxtime, 
+                self.sum, self.count, self.wsum, self.sumtime)
     
     def mergeHiLo(self, x_stats):
         """Merge the highs and lows of another accumulator into myself."""
@@ -56,8 +61,10 @@ class ScalarStats(object):
 
     def mergeSum(self, x_stats):
         """Merge the sum and count of another accumulator into myself."""
-        self.sum   += x_stats.sum
-        self.count += x_stats.count
+        self.sum     += x_stats.sum
+        self.count   += x_stats.count
+        self.wsum    += x_stats.wsum
+        self.sumtime += x_stats.sumtime
 
     def addHiLo(self, val, ts):
         """Include a scalar value in my highs and lows.
@@ -75,38 +82,49 @@ class ScalarStats(object):
                 self.last    = val
                 self.lasttime= ts
 
-    def addSum(self, val):
+    def addSum(self, val, weight=1):
         """Add a scalar value to my running sum and count."""
         if val is not None:
-            self.sum   += val
-            self.count += 1
+            self.sum     += val
+            self.count   += 1
+            self.wsum    += val * weight
+            self.sumtime += weight
         
     @property
     def avg(self):
-        return self.sum / self.count if self.count else None
+        return self.wsum / self.sumtime if self.count else None
 
 class VecStats(object):
     """Accumulates statistics for a vector value.
-    
+     
     Property 'last' is the last non-None value seen. It is a two-way tuple (mag, dir).
     Property 'lasttime' is the time it was seen. """
 
-    default_init = (None, None, None, None, 0.0, 0, None, 0.0, 0.0, 0.0, 0)
-    
+    default_init = (None, None, None, None, 
+                    0.0, 0, 0.0, 0, None, 0.0, 0.0, 0, 0.0, 0.0)
+     
     def __init__(self, stats_tuple=None):
+        self.setStats(stats_tuple)
+        self.last     = (None, None)
+        self.lasttime = None
+ 
+    def setStats(self, stats_tuple=None):
         (self.min, self.mintime,
          self.max, self.maxtime,
          self.sum, self.count,
+         self.wsum,self.sumtime,
          self.max_dir, self.xsum, self.ysum, 
-         self.squaresum, self.squarecount) = stats_tuple if stats_tuple else VecStats.default_init
-        self.last     = (None, None)
-        self.lasttime = None
-
+         self.dirsumtime, self.squaresum, self.wsquaresum) = stats_tuple if stats_tuple else VecStats.default_init
+        
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the gathered statistics."""
-        return (self.min, self.mintime, self.max, self.maxtime, self.sum, self.count,
-                self.max_dir, self.xsum, self.ysum, self.squaresum, self.squarecount)
-
+        return (self.min, self.mintime,
+                self.max, self.maxtime,
+                self.sum, self.count,
+                self.wsum,self.sumtime,
+                self.max_dir, self.xsum, self.ysum, 
+                self.dirsumtime,  self.squaresum, self.wsquaresum)
+ 
     def mergeHiLo(self, x_stats):
         """Merge the highs and lows of another accumulator into myself."""
         if x_stats.min is not None:
@@ -122,16 +140,19 @@ class VecStats(object):
             if self.lasttime is None or x_stats.lasttime >= self.lasttime:
                 self.lasttime = x_stats.lasttime
                 self.last     = x_stats.last
-
+ 
     def mergeSum(self, x_stats):
         """Merge the sum and count of another accumulator into myself."""
-        self.sum         += x_stats.sum
-        self.count       += x_stats.count
-        self.xsum        += x_stats.xsum
-        self.ysum        += x_stats.ysum
-        self.squaresum   += x_stats.squaresum
-        self.squarecount += x_stats.squarecount
-        
+        self.sum        += x_stats.sum
+        self.count      += x_stats.count
+        self.wsum       += x_stats.wsum
+        self.sumtime    += x_stats.sumtime
+        self.xsum       += x_stats.xsum
+        self.ysum       += x_stats.ysum
+        self.dirsumtime += x_stats.dirsumtime
+        self.squaresum  += x_stats.squaresum
+        self.wsquaresum += x_stats.wsquaresum
+         
     def addHiLo(self, val, ts):
         """Include a vector value in my highs and lows.
         val: A vector value. It is a 2-way tuple (mag, dir).
@@ -149,8 +170,8 @@ class VecStats(object):
             if self.lasttime is None or ts >= self.lasttime:
                 self.last    = (speed, dirN)
                 self.lasttime= ts
-        
-    def addSum(self, val):
+         
+    def addSum(self, val, weight=1):
         """Add a vector value to my sum and squaresum.
         val: A vector value. It is a 2-way tuple (mag, dir)
         """
@@ -158,28 +179,31 @@ class VecStats(object):
         if speed is not None:
             self.sum         += speed
             self.count       += 1
+            self.wsum        += weight * speed
+            self.sumtime     += weight
             self.squaresum   += speed**2
+            self.wsquaresum  += weight * speed**2
             if dirN is not None :
-                self.xsum += speed * math.cos(math.radians(90.0 - dirN))
-                self.ysum += speed * math.sin(math.radians(90.0 - dirN))
-                self.squarecount += 1
-            
+                self.xsum += weight * speed * math.cos(math.radians(90.0 - dirN))
+                self.ysum += weight * speed * math.sin(math.radians(90.0 - dirN))
+                self.dirsumtime += weight
+             
     @property
     def avg(self):
-        return self.sum / self.count if self.count else None
-
+        return self.wsum / self.sumtime if self.count else None
+ 
     @property
     def rms(self):
-        return math.sqrt(self.squaresum / self.count) if self.count else None
-
+        return math.sqrt(self.wsquaresum / self.sumtime) if self.count else None
+ 
     @property
     def vec_avg(self):
         if self.count:
-            return math.sqrt((self.xsum**2 + self.ysum**2) / self.count**2)
-
+            return math.sqrt((self.xsum**2 + self.ysum**2) / self.sumtime**2)
+ 
     @property
     def vec_dir(self):
-        if self.squarecount:
+        if self.dirsumtime:
             _result = 90.0 - math.degrees(math.atan2(self.ysum, self.xsum))
             if _result < 0.0:
                 _result += 360.0
@@ -239,6 +263,11 @@ class BaseAccum(dict):
             record[obs_type] = self[obs_type].avg
         return record
 
+    def set_stats(self, obs_type, stats_tuple):
+        
+        self._init_type(obs_type)
+        self[obs_type].setStats(stats_tuple)
+        
     def _init_type(self, obs_type):
         """Add a given observation type to my dictionary."""
         # Do nothing if this type has already been initialized:
@@ -280,7 +309,7 @@ class BaseAccum(dict):
 
 class WXAccum(BaseAccum):
     """Subclass of BaseAccum, which adds weather-specific logic."""
-    
+
     def addRecord(self, record, add_hilo=True):
         """Add a record to my running statistics. 
         

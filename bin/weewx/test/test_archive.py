@@ -143,10 +143,20 @@ class Common(unittest.TestCase):
 
         # Now fetch them:
         with weewx.archive.Archive.open(self.archive_db_dict) as archive:
-            # Test getSql:
+            # Test getSql on existing type:
             bar0 = archive.getSql("SELECT barometer FROM archive WHERE dateTime=?", (start_ts,))
             self.assertEqual(bar0[0], barfunc(0))
-            
+
+            # Test getSql on existing type, no record:
+            bar0 = archive.getSql("SELECT barometer FROM archive WHERE dateTime=?", (start_ts + 1,))
+            self.assertEqual(bar0, None)
+
+            # Try getSql on non-existing types
+            self.assertRaises(weedb.OperationalError, archive.getSql, "SELECT foo FROM archive WHERE dateTime=?",
+                              (start_ts,))
+            self.assertRaises(weedb.OperationalError, archive.getSql, "SELECT barometer FROM foo WHERE dateTime=?",
+                              (start_ts,))
+
             # Test genSql:
             for (irec,_row) in enumerate(archive.genSql("SELECT barometer FROM archive;")):
                 self.assertEqual(_row[0], barfunc(irec))
@@ -175,6 +185,11 @@ class Common(unittest.TestCase):
             # Try finding a neighbor too far away:
             target_ts = timevec[nrecs/2] - interval/2
             _rec = archive.getRecord(target_ts, max_delta=interval/50)
+            self.assertEqual(_rec, None)
+
+            # Try finding a non-existent record:
+            target_ts = timevec[nrecs/2] + 1
+            _rec = archive.getRecord(target_ts)
             self.assertEqual(_rec, None)
             
         # Now try fetching them as vectors:
