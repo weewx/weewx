@@ -291,6 +291,8 @@ class WMR100(weewx.abstractstation.AbstractStation):
             except AttributeError:
                 pass
             _record['outTempBatteryStatus'] = (packet[0] & 0x40) >> 6
+            # Save the record containing outside temperature to be used for calculating SLP barometer
+            self.last_temperature_record = _record
         elif channel >= 2:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
@@ -325,6 +327,9 @@ class WMR100(weewx.abstractstation.AbstractStation):
             except AttributeError:
                 pass
             _record['outTempBatteryStatus'] = (packet[0] & 0x40) >> 6
+            # Save the record containing outside temperature to be used for calculating SLP barometer
+            self.last_temperature_record = _record
+
         elif channel >= 2:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
@@ -334,8 +339,14 @@ class WMR100(weewx.abstractstation.AbstractStation):
 
     def _barometer_packet(self, packet):
         SP  = float(((packet[3] & 0x0f) << 8) + packet[2])
-        SLP = float(((packet[5] & 0x0f) << 8) + packet[4])
         SA = weewx.wxformulas.altimeter_pressure_Metric(SP, self.altitude)
+        # Although the WMR100 emits SLP, not all consoles in the series (notably, the WMRS200) allow
+        # the user to set altitude. So, we must calculate in software. 
+        # SLP = float(((packet[5] & 0x0f) << 8) + packet[4])
+        try:
+            SLP = weewx.wxformulas.sealevel_pressure_Metric(SP, self.altitude, self.last_temperature_record['outTemp'])
+        except (AttributeError, KeyError):
+            SLP = None
         _record = {'barometer'   : SLP,
                    'pressure'    : SP,
                    'altimeter'   : SA,
