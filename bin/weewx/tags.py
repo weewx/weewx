@@ -15,6 +15,7 @@ import weewx.units
 #===============================================================================
 
 class DBFactory(object):
+    """Binds a database cache, with a default binding."""
     
     def __init__(self, db_cache, default_binding='archive_database'):
         self.cache = db_cache
@@ -432,50 +433,3 @@ class TrendObj(object):
         return weewx.units.ValueHelper(trend, 'current',
                                        self.formatter,
                                        self.converter)
-
-
-if __name__ == "__main__":
-    
-    import configobj
-    import weewx.archive
-
-    config_file = '/home/weewx/weewx.conf'
-    config_dict = configobj.ConfigObj(config_file, file_error=True)
-
-    cache = weewx.archive.DBCache(config_dict['Databases'])
-    factory = DBFactory(cache)
-    try:
-        factory.get_database('foo')
-        print "FAIL"
-    except KeyError:
-        print "OK"
-    open_db = factory.get_database('archive_database')
-    endtime_ts = open_db.lastGoodStamp()
-    print "timestamp=", weeutil.weeutil.timestamp_to_string(endtime_ts)
-
-    print open_db.getRecord(endtime_ts)
-
-    fb = FactoryBinder(factory, endtime_ts)
-    max_t = fb.db().month.outTemp.max
-    print "Month max temperature=", max_t
-    print "outTemp exists", fb.month.outTemp.exists
-    print "outTemp has_data", fb.month.outTemp.has_data
-    print "soilMoist1 exists", fb.month.soilMoist1.exists
-    print "soilMoist1 has_data", fb.month.soilMoist1.has_data
-    
-    print "extraTemp1 has_data", fb.year.extraTemp1.has_data
-
-    print "Current outTemp", fb.current.outTemp
-    print "Current time", fb.current.dateTime
-    print "Current nonsense", fb.current.nonsense
-    print "Current windspeed", fb.current.windSpeed
-    print "Today's max temperature", fb.day.outTemp.max
-    print "Today's max windspeed", fb.day.wind.max
-    
-    current = fb.current
-    print "humidity", current.outHumidity
-    
-    print "Temperature trend temperature:", fb.trend.outTemp
-    print "temperature trend barometer:", fb.db(db_source='archive_database').trend.barometer
-
-    cache.close()

@@ -3,9 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Generate files from templates using the Cheetah template engine.
 
@@ -158,18 +156,23 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         """Load the search list"""
         self.search_list_objs = []
 
+        # The option search_list contains the basic search list
         search_list = weeutil.weeutil.option_as_list(gen_dict.get('search_list'))
         if search_list is None:
             search_list = list(default_search_list)
 
+        # The option search_list_extensiosn contains the extensions
         search_list_ext = weeutil.weeutil.option_as_list(gen_dict.get('search_list_extensions'))
         if search_list_ext is not None:
             search_list.extend(search_list_ext)
 
+        # Now go through search_list (which is a list of strings holding the names of the extensions):
         for c in search_list:
             x = c.strip()
             if len(x) > 0:
+                # Get the class
                 class_ = weeutil.weeutil._get_object(c)
+                # Then instantiate the class, passing self as the sole argument
                 self.search_list_objs.append(class_(self))
 
     def teardown(self):
@@ -182,7 +185,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         """Generate one or more reports for the indicated section.  Each section
         in a period is a report.  A report has one or more templates.
 
-        section: One of 'SummaryByMonth', 'SummaryByYear' or 'ToDate'.
+        section: A ConfigObj dictionary, holding the templates to be generated. Any
+        subsections in the dictionary will be recursively processed as well.
         
         gen_ts: The report will be current to this time.
         """
@@ -199,7 +203,9 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             # Call myself recursively, to generate any templates in this subsection
             ngen += self.generate(section[subsection], gen_ts)
 
-        # If there is no option 'template', then there isn't anything to do. Return.             
+        # We have finished recursively processing any subsections in this
+        # section. Time to do the section itself. If there is no option
+        # 'template', then there isn't anything to do. Return.
         if not section.has_key('template'):
             return ngen
         
@@ -229,7 +235,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         if summarize_by in CheetahGenerator.generator_dict:
             _spangen = CheetahGenerator.generator_dict[summarize_by]
         else:
-            _spangen = self.genSingleSpan;
+            # Just a single timespan to generate. Use a lambda expression.
+            _spangen = lambda start_ts, stop_ts : [weeutil.weeutil.TimeSpan(start_ts, stop_ts)]
 
         # Use the generator function
         for timespan in _spangen(start_ts, stop_ts):
@@ -337,10 +344,6 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             _filename = _filename.replace('MM', _mo_str)
 
         return _filename
-
-    def genSingleSpan(self, start_ts, stop_ts):
-        """Generator function used when doing "to date" generation."""
-        return [weeutil.weeutil.TimeSpan(start_ts, stop_ts)]
 
     def _prepGen(self, report_dict):
         """Gather the options together for a specific report, then

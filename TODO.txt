@@ -1,6 +1,18 @@
 TODO before the next release:
 
-Figure out why the heartbeat doesn't work on the WMR200.
+Capture LOOP data for highs and lows
 
-add documentation for the extension installer and extension packaging.
+Optimize tags $current. Right now, they all require a database hit.
 
+Allow different database bindings (besides 'archive_database'). These
+should bind a database and a management class.
+
+Add documentation for the extension installer and extension packaging.
+
+Return value of Archive.getSqlVectors() and getSqlVectorsExtended() has changed.
+
+Support ConfigObj v5.0.0
+
+Is max gap fraction meaningful for bar charts now?
+
+Is Archive.getSql and Archive.genSql needed now?
