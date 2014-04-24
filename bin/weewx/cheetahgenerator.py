@@ -220,10 +220,10 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         report_dict = weeutil.weeutil.accumulateLeaves(section)
         
-        (template, dest_dir, encoding, default_binding) = self._prepGen(report_dict)
+        (template, dest_dir, encoding, default_database) = self._prepGen(report_dict)
 
         # Get start and stop times        
-        default_archive = self.db_cache.get_database(default_binding)
+        default_archive = self.db_cache.get_database(default_database)
         start_ts = default_archive.firstGoodStamp()
         if not start_ts:
             loginf('skipping report %s: cannot find start time' % section)
@@ -276,7 +276,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     pass
 
             searchList = self._getSearchList(encoding, timespan,
-                                             default_binding)
+                                             default_database)
             
             text = Cheetah.Template.Template(file=template,
                                              searchList=searchList,
@@ -302,11 +302,11 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         return ngen
 
-    def _getSearchList(self, encoding, timespan, default_binding):
+    def _getSearchList(self, encoding, timespan, default_database):
         """Get the complete search list to be used by Cheetah."""
 
         timespan_start_tt = time.localtime(timespan.start)
-        db_factory = weewx.tags.DBFactory(self.db_cache, default_binding)
+        db_factory = weewx.tags.DBFactory(self.db_cache, default_database)
         
         # For backwards compatibility, extract the default archive and stats databases
         statsdb = archivedb = db_factory.get_database()
@@ -361,7 +361,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         if encoding == 'utf-8':
             encoding = 'utf8'
 
-        default_binding = report_dict['db_source']
+        default_database = report_dict['database']
 
         try:
             # Create the directory that is to receive the generated files.  If
@@ -371,7 +371,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         except OSError:
             pass
 
-        return (template, destination_dir, encoding, default_binding)
+        return (template, destination_dir, encoding, default_database)
 
 # =============================================================================
 # Classes used to implement the Search list

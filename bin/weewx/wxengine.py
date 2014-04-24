@@ -28,7 +28,6 @@ import daemon
 import weedb
 import weewx.accum
 import weewx.archive
-import weewx.stats
 import weewx.station
 import weewx.restful
 import weewx.reportengine
@@ -487,8 +486,7 @@ class StdArchive(StdService):
         syslog.syslog(syslog.LOG_DEBUG, "wxengine: Use LOOP data in hi/low calculations: %d" % 
                       (self.loop_hilo,))
         
-        self.setupArchiveDatabase(config_dict)
-        self.setupStatsDatabase(config_dict)
+        self.setup_database(config_dict)
         
         self.bind(weewx.STARTUP,            self.startup)
         self.bind(weewx.PRE_LOOP,           self.pre_loop)
@@ -580,40 +578,23 @@ class StdArchive(StdService):
         """Called when a new archive record has arrived. 
         Put it in the archive database."""
         self.archive.addRecord(event.record)
-        self.statsDb.addRecord(event.record)
 
-    def setupArchiveDatabase(self, config_dict):
+    def setup_database(self, config_dict):
         """Setup the main database archive"""
 
         archive_schema_str = config_dict['StdArchive'].get('archive_schema', 'user.schemas.defaultArchiveSchema')
         archive_schema = weeutil.weeutil._get_object(archive_schema_str)
-        archive_db = config_dict['StdArchive']['archive_database']
+        archive_database = config_dict['StdArchive'].get('database', 'archive_database')
+        db_dict, db_cls = weewx.archive.prep_database(config_dict['Databases'], archive_database)
         # This will create the database if it doesn't exist, then return an
         # opened instance of Archive. It also attaches a reference to the engine, so other
         # services can use it.
         self.archive = self.engine.archive = \
-            weewx.archive.Archive.open_with_create(config_dict['Databases'][archive_db], archive_schema)
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive database: %s" % (archive_db,))
+            db_cls(db_dict, archive_schema)
+        syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive database: %s" % (self.archive.database,))
 
-    def setupStatsDatabase(self, config_dict):
-        """Setup the stats database"""
-        
-        stats_schema_str = config_dict['StdArchive'].get('stats_schema', 'user.schemas.defaultStatsSchema')
-        stats_schema = weeutil.weeutil._get_object(stats_schema_str)
-        stats_db = config_dict['StdArchive']['stats_database']
-        # This will create the database if it doesn't exist, then return an
-        # opened stats database object:
-        self.statsDb = weewx.stats.StatsDb.open_with_create(config_dict['Databases'][stats_db], stats_schema)
-        # Backfill it with data from the archive. This will do nothing if the
-        # stats database is already up-to-date.
-        self.statsDb.backfillFrom(self.archive)
-
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Using stats database: %s" % 
-                      (config_dict['StdArchive']['stats_database'],))
-        
     def shutDown(self):
         self.archive.close()
-        self.statsDb.close()
 
     def _catchup(self, generator):
         """Pull any unarchived records off the console and archive them.
@@ -759,100 +740,7 @@ class TestAccum(StdService):
         except NotImplementedError:
             pass
         
-#===============================================================================
-#                    Class StdRESTful
-#===============================================================================
 
-class StdRESTful(StdService):
-    """Launches a thread that will monitor a queue of new data, which is to be
-    posted to RESTful websites. Then, put new data in the queue. 
-    
-    OBSOLETE! USE THE SERVICES IN MODULE weewx.restx INSTEAD! """
-
-    def __init__(self, engine, config_dict):
-        super(StdRESTful, self).__init__(engine, config_dict)
-
-        obj_list = []
-
-        # Each subsection in section [StdRESTful] represents a different upload
-        # site:
-        for site in config_dict['StdRESTful'].sections:
-
-            # Get the site dictionary:
-            site_dict = self.getSiteDict(config_dict, site)
-
-            try:
-                # Instantiate an instance of the class that implements the
-                # protocol used by this site. It will throw an exception if not
-                # enough information is available to instantiate.
-                obj = weeutil.weeutil._get_object(site_dict['driver'])(site, **site_dict)
-            except KeyError, e:
-                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will not be posted to %s" % (site,))
-                syslog.syslog(syslog.LOG_DEBUG, "    ****  required parameter '%s' is not specified" % e)
-            else:
-                obj_list.append(obj)
-                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Data will be posted to %s" % (site,))
-        
-        # Were there any valid upload sites?
-        if obj_list:
-            # Yes. Proceed by setting up the queue and thread.
-            
-            # Get the archive database dictionary
-            archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
-            # Create the queue into which we'll put the timestamps of new data
-            self.queue = Queue.Queue()
-            # Start up the thread:
-            self.thread = weewx.restful.RESTThread(archive_db_dict, self.queue, obj_list)
-            self.thread.start()
-            syslog.syslog(syslog.LOG_DEBUG, "wxengine: Started thread for RESTful upload sites.")
-        
-        else:
-            self.queue  = None
-            self.thread = None
-            syslog.syslog(syslog.LOG_DEBUG, "wxengine: No RESTful upload sites. No need to start thread.")
-            
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        
-    def new_archive_record(self, event):
-        """Post the new archive data to the WU queue"""
-        if self.queue:
-            self.queue.put(event.record['dateTime'])
-
-    def shutDown(self):
-        """Shut down the RESTful thread"""
-        # Make sure we have initialized:
-        if self.queue:
-            # Put a None in the queue. This will signal to the thread to shutdown
-            self.queue.put(None)
-            # Wait up to 20 seconds for the thread to exit:
-            self.thread.join(20.0)
-            if self.thread.isAlive():
-                syslog.syslog(syslog.LOG_ERR, "wxengine: Unable to shut down StdRESTful thread")
-            else:
-                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Shut down StdRESTful thread.")
-            
-    def getSiteDict(self, config_dict, site):
-        """Return the site dictionary for the given site."""
-        
-        # This function can be overridden by subclassing if you need something
-        # extra in the site dictionary.
-
-        # Get the dictionary for this site out of the config dictionary:
-        site_dict = config_dict['StdRESTful'][site]
-        # Add some extra entries if they are missing from the site's dictionary
-        site_dict.setdefault('latitude',
-                             config_dict['Station'].get('latitude'))
-        site_dict.setdefault('longitude',
-                             config_dict['Station'].get('longitude'))
-        site_dict.setdefault('hardware',
-                             config_dict['Station'].get('station_type'))
-        site_dict.setdefault('location',
-                             config_dict['Station'].get('location'))
-        site_dict.setdefault('station_url',
-                             config_dict['Station'].get('station_url', None))
-        return site_dict
-    
-    
 #===============================================================================
 #                    Class StdReport
 #===============================================================================

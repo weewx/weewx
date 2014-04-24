@@ -68,20 +68,16 @@ class StdReportEngine(threading.Thread):
         self.gen_ts      = gen_ts
         self.first_run   = first_run
         
-    def setup(self):
-        if self.gen_ts:
-            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for time %s" % 
-                          weeutil.weeutil.timestamp_to_string(self.gen_ts))
-        else:
-            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for latest time in the database.")
-        
-    
     def run(self):
         """This is where the actual work gets done.
         
         Runs through the list of reports. """
         
-        self.setup()
+        if self.gen_ts:
+            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for time %s" % 
+                          weeutil.weeutil.timestamp_to_string(self.gen_ts))
+        else:
+            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for latest time in the database.")
 
         # Iterate over each requested report
         for report in self.config_dict['StdReport'].sections:
@@ -105,15 +101,8 @@ class StdReportEngine(threading.Thread):
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
                 continue
                 
-            try:
-                # Add the default archive and stats databases (this is for backwards compatibility):
-                skin_dict['archive_database'] = self.config_dict['StdArchive']['archive_database']
-                skin_dict['stats_database']   = self.config_dict['StdArchive']['stats_database']
-            except KeyError:
-                pass
-
             # Add the default database source.
-            skin_dict['db_source'] = 'archive_database'
+            skin_dict['database'] = 'archive_database'
 
             # Inject any overrides the user may have specified in the weewx.conf
             # configuration file for all reports:
@@ -147,7 +136,7 @@ class StdReportEngine(threading.Thread):
                     obj.start()
                     
                 except Exception, e:
-                    # Caught unrecoverable error. Log it, exit
+                    # Caught unrecoverable error. Log it, continue on to the next generator.
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % (generator,))
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     weeutil.weeutil.log_traceback("        ****  ")
@@ -180,7 +169,7 @@ class ReportGenerator(object):
         pass
     
     def finalize(self):
-        pass
+        self.db_cache.close()
 
 #===============================================================================
 #                    Class FtpGenerator

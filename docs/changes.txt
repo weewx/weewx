@@ -1,6 +1,13 @@
 weewx change history
 --------------------
 
+3.0.0
+
+Removed the no longer needed serviced StdRESTful, obsolete since V2.6
+
+
+2.x.x
+
 The WMR100 driver now calculates SLP in software. This fixes a problem
 with the WMRS200 station, which does not allow the user to set altitude.
 

@@ -69,8 +69,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
 
                 plotgen_ts = gen_ts
                 if not plotgen_ts:
-                    db_source = plot_options['db_source']
-                    archive = self.db_cache.get_database(db_source)
+                    database = plot_options['database']
+                    archive = self.db_cache.get_database(database)
                     plotgen_ts = archive.lastGoodStamp()
                     if not plotgen_ts:
                         plotgen_ts = time.time()
@@ -138,8 +138,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                             continue
 
                     # Now we have everything we need to find and hit the database:
-                    db_source = plot_options['db_source']
-                    archive = self.db_cache.get_database(db_source)
+                    database = plot_options['database']
+                    archive = self.db_cache.get_database(database)
                     (start_vec_t, stop_vec_t, data_vec_t) = \
                             archive.getSqlVectors(var_type, minstamp, maxstamp, 
                                                   aggregate_interval, aggregate_type)
