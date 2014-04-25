@@ -298,40 +298,41 @@ class DaySummaryArchive(weewx.archive.Archive):
         # the last statistics recorded:
         if start_ts is None:
             start_ts = self._getLastUpdate()
-        
-        # Go through all the archiveDb records in the time span, adding them to the
-        # database
-        for _rec in self.genBatchRecords(start_ts, stop_ts):
-            # Get the start-of-day for the record:
-            _sod_ts = weeutil.weeutil.startOfArchiveDay(_rec['dateTime'])
-            # If this is the very first record, fetch a new accumulator
-            if not _day_accum:
-                _day_accum = self._get_day_summary(_sod_ts)
-            # Try updating. If the time is out of the accumulator's time span, an
-            # exception will get raised.
-            try:
-                _day_accum.addRecord(_rec)
-            except weewx.accum.OutOfSpan:
-                # The record is out of the time span.
-                # Save the old accumulator:
-                self._set_day_summary(_day_accum, _rec['dateTime'])
-                ndays += 1
-                # Get a new accumulator:
-                _day_accum = self._get_day_summary(_sod_ts)
-                # try again
-                _day_accum.addRecord(_rec)
-             
-            # Remember the timestamp for this record.
-            _lastTime = _rec['dateTime']
-            nrecs += 1
-            if nrecs%1000 == 0:
-                print >>sys.stdout, "Records processed: %d; Last date: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(_lastTime)),
-                sys.stdout.flush()
+
+        with weedb.Transaction(self.connection) as _cursor:
+            # Go through all the archiveDb records in the time span, adding them to the
+            # database
+            for _rec in self.genBatchRecords(start_ts, stop_ts):
+                # Get the start-of-day for the record:
+                _sod_ts = weeutil.weeutil.startOfArchiveDay(_rec['dateTime'])
+                # If this is the very first record, fetch a new accumulator
+                if not _day_accum:
+                    _day_accum = self._get_day_summary(_sod_ts)
+                # Try updating. If the time is out of the accumulator's time span, an
+                # exception will get raised.
+                try:
+                    _day_accum.addRecord(_rec)
+                except weewx.accum.OutOfSpan:
+                    # The record is out of the time span.
+                    # Save the old accumulator:
+                    self._set_day_summary(_day_accum, _rec['dateTime'], _cursor)
+                    ndays += 1
+                    # Get a new accumulator:
+                    _day_accum = self._get_day_summary(_sod_ts)
+                    # try again
+                    _day_accum.addRecord(_rec)
+                 
+                # Remember the timestamp for this record.
+                _lastTime = _rec['dateTime']
+                nrecs += 1
+                if nrecs%1000 == 0:
+                    print >>sys.stdout, "Records processed: %d; Last date: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(_lastTime)),
+                    sys.stdout.flush()
     
-        # We're done. Record the stats for the last day.
-        if _day_accum:
-            self._set_day_summary(_day_accum, _lastTime)
-            ndays += 1
+            # We're done. Record the stats for the last day.
+            if _day_accum:
+                self._set_day_summary(_day_accum, _lastTime, _cursor)
+                ndays += 1
         
         t2 = time.time()
         tdiff = t2 - t1
@@ -395,7 +396,7 @@ class DaySummaryArchive(weewx.archive.Archive):
             if not cursor:
                 _cursor.close()
 
-    def _set_day_summary(self, day_accum, lastUpdate):
+    def _set_day_summary(self, day_accum, lastUpdate, cursor):
         """Write all statistics for a day to the database in a single transaction.
         
         day_accum: an accumulator with the daily summary. See weewx.accum
@@ -411,24 +412,23 @@ class DaySummaryArchive(weewx.archive.Archive):
 
         _sod = day_accum.timespan.start
 
-        with weedb.Transaction(self.connection) as _cursor:
-            # For each stats type...
-            for _summary_type in day_accum:
-                # ... get the stats tuple to be written to the database...
-                _write_tuple = (_sod,) + day_accum[_summary_type].getStatsTuple()
-                # ... and an appropriate SQL command with the correct number of question marks ...
-                _qmarks = ','.join(len(_write_tuple)*'?')
-                _sql_replace_str = "REPLACE INTO day_%s VALUES(%s)" % (_summary_type, _qmarks)
-                # ... and write to the database. In case the type doesn't appear in the database,
-                # be prepared to catch an exception:
-                try:
-                    _cursor.execute(_sql_replace_str, _write_tuple)
-                except weedb.OperationalError:
-                    if weewx.debug:
-                        print "Unknown type", _summary_type
-                  
-            # Update the time of the last stats update:
-            _cursor.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
+        # For each stats type...
+        for _summary_type in day_accum:
+            # ... get the stats tuple to be written to the database...
+            _write_tuple = (_sod,) + day_accum[_summary_type].getStatsTuple()
+            # ... and an appropriate SQL command with the correct number of question marks ...
+            _qmarks = ','.join(len(_write_tuple)*'?')
+            _sql_replace_str = "REPLACE INTO day_%s VALUES(%s)" % (_summary_type, _qmarks)
+            # ... and write to the database. In case the type doesn't appear in the database,
+            # be prepared to catch an exception:
+            try:
+                cursor.execute(_sql_replace_str, _write_tuple)
+            except weedb.OperationalError:
+                if weewx.debug:
+                    print "Unknown type", _summary_type
+              
+        # Update the time of the last stats update:
+        cursor.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
             
     def _getLastUpdate(self, cursor=None):
         """Returns the time of the last update to the statistical database."""
