@@ -11,7 +11,6 @@
 """Main engine for the weewx weather system."""
 
 # Python imports
-import Queue
 import gc
 import os.path
 import signal
@@ -29,7 +28,6 @@ import weedb
 import weewx.accum
 import weewx.archive
 import weewx.station
-import weewx.restful
 import weewx.reportengine
 import weeutil.weeutil
 

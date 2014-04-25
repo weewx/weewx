@@ -414,6 +414,9 @@ class DaySummaryArchive(weewx.archive.Archive):
 
         # For each stats type...
         for _summary_type in day_accum:
+            # Don't try an update for types not in the database:
+            if _summary_type not in self.daykeys:
+                continue
             # ... get the stats tuple to be written to the database...
             _write_tuple = (_sod,) + day_accum[_summary_type].getStatsTuple()
             # ... and an appropriate SQL command with the correct number of question marks ...
@@ -423,10 +426,9 @@ class DaySummaryArchive(weewx.archive.Archive):
             # be prepared to catch an exception:
             try:
                 cursor.execute(_sql_replace_str, _write_tuple)
-            except weedb.OperationalError:
-                if weewx.debug:
-                    print "Unknown type", _summary_type
-              
+            except weedb.OperationalError, e:
+                syslog.syslog(syslog.LOG_ERR, "stats: Operational error database %s; %s" % (self.database, e))
+                
         # Update the time of the last stats update:
         cursor.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
             
