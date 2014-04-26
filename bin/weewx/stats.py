@@ -450,6 +450,8 @@ class DaySummaryArchive(weewx.archive.Archive):
                 if _table_name.startswith('day_'):
                     _cursor.execute("DROP TABLE %s" % _table_name)
 
+        del self.daykeys
+
 #===============================================================================
 #                        Class WXDaySummaryArchive
 #===============================================================================
