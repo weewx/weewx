@@ -138,7 +138,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                             continue
 
                     # Now we have everything we need to find and hit the database:
-                    database = plot_options['database']
+                    database = line_options['database']
                     archive = self.db_cache.get_database(database)
                     (start_vec_t, stop_vec_t, data_vec_t) = \
                             archive.getSqlVectors(var_type, minstamp, maxstamp, 

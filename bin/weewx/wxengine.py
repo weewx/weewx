@@ -551,7 +551,7 @@ class StdArchive(StdService):
         # there will be no old accumulator and an exception will be thrown. Be
         # prepared to catch it.
         try:
-            self.statsDb.updateHiLo(self.old_accumulator)
+            self.archive.updateHiLo(self.old_accumulator)
         except AttributeError:
             pass
         else:
@@ -590,6 +590,9 @@ class StdArchive(StdService):
         self.archive = self.engine.archive = \
             db_cls(db_dict, archive_schema)
         syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive database: %s" % (self.archive.database,))
+        
+        # In case this is a recent update or the user has dropped the daily summary tables, backfill them:
+        self.archive.backfill_day_summary()
 
     def shutDown(self):
         self.archive.close()
