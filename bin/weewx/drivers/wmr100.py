@@ -248,7 +248,7 @@ class WMR100(weewx.abstractstation.AbstractStation):
         # dividing by 100.
         _record = {'rainRate'          : ((packet[3] << 8) + packet[2]) / 100.0,
                    'hourRain'          : ((packet[5] << 8) + packet[4]) / 100.0,
-                   'dayRain'           : ((packet[7] << 8) + packet[6]) / 100.0,
+                   'rain24'            : ((packet[7] << 8) + packet[6]) / 100.0,
                    'totalRain'         : ((packet[9] << 8) + packet[8]) / 100.0,
                    'rainBatteryStatus' : packet[0] >> 4,
                    'dateTime'          : int(time.time() + 0.5),

@@ -322,7 +322,7 @@ class WXAccum(BaseAccum):
             elif obs_type in ['rain', 'ET']:
                 # We need totals during the timespan, not the average:
                 record[obs_type]      = self[obs_type].sum
-            elif obs_type in ['hourRain', 'dayRain', 'monthRain', 'yearRain', 'totalRain']:
+            elif obs_type in ['hourRain', 'dayRain', 'rain24', 'monthRain', 'yearRain', 'totalRain']:
                 # For these types, we want the last observation:
                 record[obs_type]      = self[obs_type].last
             else:

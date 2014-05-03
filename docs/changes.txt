@@ -4,6 +4,9 @@ weewx change history
 The WMR100 driver now calculates SLP in software. This fixes a problem
 with the WMRS200 station, which does not allow the user to set altitude.
 
+The WMR100 driver was incorrectly tagging rain over the last 24 hours as
+rain since midnight. This caused a problem with WU and CWOP posts.
+
 
 2.6.3 04/10/14
 
