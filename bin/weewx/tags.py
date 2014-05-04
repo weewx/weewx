@@ -17,14 +17,14 @@ import weewx.units
 class DBFactory(object):
     """Binds a database cache, with a default binding."""
     
-    def __init__(self, db_cache, default_database='archive_database'):
+    def __init__(self, db_cache, default_binding='wx_binding'):
         self.cache = db_cache
-        self.default_database  = default_database
+        self.default_binding  = default_binding
         
-    def get_database(self, database=None):
-        if database is None:
-            database = self.default_database
-        return self.cache.get_database(database)
+    def get_database(self, binding=None):
+        if binding is None:
+            binding = self.default_binding
+        return self.cache.get_database(binding)
 
 #===============================================================================
 #                    Class FactoryBinder
@@ -34,20 +34,19 @@ class FactoryBinder(object):
     """Binds a DBFactory, a timespan, and a default archive database together.
     
     This class sits on the top of chain of helper classes that enable
-    syntax such as $db($database='archive_database').month.rain.sum in the Cheetah templates.""" 
+    syntax such as $db($binding='wx_binding').month.rain.sum in the Cheetah templates.""" 
 
-    def __init__(self, dbfactory, endtime_ts, db_default='archive_database',
+    def __init__(self, dbfactory, endtime_ts,
                  formatter=weewx.units.Formatter(), converter=weewx.units.Converter(), **option_dict):
         
         self.dbfactory   = dbfactory
         self.endtime_ts  = endtime_ts
-        self.db_default  = db_default
         self.formatter   = formatter
         self.converter   = converter
         self.option_dict = option_dict
         
-    def db(self, database=None):
-        opendb = self.dbfactory.get_database(database)
+    def db(self, binding=None):
+        opendb = self.dbfactory.get_database(binding)
         return DatabaseBinder(opendb, self.endtime_ts, self.formatter, self.converter, **self.option_dict)
     
     def __getattr__(self, attr):

@@ -666,19 +666,19 @@ def reconfig(old_db_dict, new_db_dict, new_unit_system=None,
 #===============================================================================
 
 class DBCache(object):
-    """Factory object that can cache archive database objects.
-    
-    db_dict: A dictionary containing information for opening up each database.
-    This is generally section [Databases] in weewx.conf. A typical one 
-    looks something like:
-        {'archive_sqlite' : {'root': '/home/weewx',
-                             'database': 'archive/archive.sdb',
-                             'driver': 'weedb.sqlite',
-                             'manager' : 'weewx.stats.WXDaySummaryArchive'}}
-    """
+    """Factory object that can cache archive database objects."""
 
-    def __init__(self, db_dict):
-        self.db_dict = db_dict
+    def __init__(self, db_dicts):
+        """ Initialize a DBCache object.
+        
+        db_dicts: A dictionary containing information for opening up each database.
+        This is generally section [Databases] in weewx.conf. A typical one 
+        looks something like:
+            {'archive_sqlite' : {'root': '/home/weewx',
+                                 'database': 'archive/archive.sdb',
+                                 'driver': 'weedb.sqlite',
+                                 'manager' : 'weewx.stats.WXDaySummaryArchive'}}"""
+        self.db_dicts = db_dicts
         self.archive_cache = {}
     
     def close(self):
@@ -689,9 +689,9 @@ class DBCache(object):
             except Exception:
                 pass
             
-    def get_database(self, database='archive_database'):
+    def get_database(self, database='wx_binding'):
         if database not in self.archive_cache:
-            db_dict, db_cls = prep_database(self.db_dict, database)
+            db_dict, db_cls = prep_database(self.db_dicts, database)
             self.archive_cache[database] = db_cls.open(db_dict)
         return self.archive_cache[database]
 
@@ -699,7 +699,7 @@ class DBCache(object):
 #                                 Utilities
 #===============================================================================
 
-def prep_database(databases_dict, archive_binding_name='archive_database'):
+def prep_database(databases_dict, archive_binding_name='wx_binding'):
     database_name = databases_dict[archive_binding_name]
     database_dict = databases_dict[database_name]
     database_manager = databases_dict[database_name].get('manager', 'weewx.stats.WXDaySummaryArchive')

@@ -65,8 +65,8 @@ def main():
     parser.add_option("--fix", dest="fix", action="store_true",
                       help="If a string is found, fix it.")
     parser.add_option("--binding", dest="binding", metavar="BINDING_NAME",
-                      default='archive_database',
-                      help="The symbolic name of the database the action is to be applied to. Default is 'archive_database'")
+                      default='wx_binding',
+                      help="The symbolic name of the database the action is to be applied to. Default is 'wx_binding'")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()

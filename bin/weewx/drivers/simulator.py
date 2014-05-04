@@ -36,10 +36,9 @@ def loader(config_dict, engine):
             # Resume with the last time in the database. If there is no such
             # time, then fall back to the time specified in the configuration
             # dictionary.
-            archive_db = config_dict['StdArchive']['archive_database']        
-            archive_db_dict = config_dict['Databases'][archive_db]
+            database_dict, database_cls = weewx.archive.prep_database(config_dict['Databases'])
             try:
-                with weewx.archive.Archive.open(archive_db_dict) as archive:
+                with database_cls(database_dict) as archive:
                     resume_ts = archive.lastGoodStamp()
             except weedb.OperationalError:
                 pass
