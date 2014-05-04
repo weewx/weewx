@@ -1,13 +1,13 @@
-TODO before the next release:
+              TODO before the next release:
+
+Come up with more consistent names for database symbolic names such
+as 'archive_database' vs the database name. Maybe 'binding'?
+
+Allow any archive database to have its daily summary rebuilt.
 
 Capture LOOP data for highs and lows
 
 Optimize tags $current. Right now, they all require a database hit.
-
-Allow different database bindings (besides 'archive_database'). These
-should bind a database and a management class.
-
-Add documentation for the extension installer and extension packaging.
 
 Return value of Archive.getSqlVectors() and getSqlVectorsExtended() has changed.
 
@@ -16,3 +16,6 @@ Support ConfigObj v5.0.0
 Is max gap fraction meaningful for bar charts now?
 
 Is Archive.getSql and Archive.genSql needed now?
+
+Add documentation for the extension installer and extension packaging.
+
