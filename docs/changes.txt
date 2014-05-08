@@ -7,6 +7,8 @@ with the WMRS200 station, which does not allow the user to set altitude.
 The WMR100 driver was incorrectly tagging rain over the last 24 hours as
 rain since midnight. This caused a problem with WU and CWOP posts.
 
+Fix cosmetic problem in wee_config_fousb pressure calibration.
+
 
 2.6.3 04/10/14
 

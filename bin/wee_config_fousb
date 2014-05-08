@@ -192,7 +192,7 @@ def calcoffset(station, slp, config_dict, config_fn, prompt):
     slp = float(slp)
     pt = weewx.wxformulas._etterm(station.altitude, st)
     newoffset = slp * pt - sp
-    oldoffset = int(config_dict['FineOffsetUSB'].get('pressure_offset', 0))
+    oldoffset = float(config_dict['FineOffsetUSB'].get('pressure_offset', 0))
 
     ans = None
     while ans not in ['y', 'n']:
