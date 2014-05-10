@@ -291,6 +291,19 @@ table#stattypes td {
         upgrades, so you won't have to redo any changes you might have
         made.</p>
 
+      <h2 id="wee_reports">The tool wee_reports</h2>
+      <p>If you make changes, how do you know what the results will look like? You
+      could just run weewx and wait until the next reporting cycle kicks off but,
+      depending on your archive interval, that could be a 30 minute wait or more.</p>
+      <p>The tool <span class="code">wee_reports</span> allows you to run a report
+      whenever you want to. To use it, just run it from a command line, with the
+      location of your configuration file <span class="code">weewx.conf</span> as
+      its only argument (this example assumes you used the <span class="code">
+      setup.py</span> install method. Adjust paths as necessary if you used
+      another method):</p>
+      <pre class="tty">cd /home/weewx
+./bin/wee_reports weewx.conf</pre>
+
       <h1 id="reports">Customizing reports</h1>
       <p>This section discusses the two general strategies for customizing
         reports: by changing options in one or more configuration file, or by
@@ -1744,8 +1757,8 @@ outTemp = Outside Temperature</pre>
         show up in the log file.  Many errors are obvious &mdash; Cheetah will
         display a line number and list the template file in which the error
         occurred.  In some cases the error reporting is rather obscure.  So
-        make small changes and tests often.  Use
-        <span class="code">wee_report</span>
+        make small changes and tests often.  Use the tool
+        <span class="code"><a href="#wee_reports">wee_reports</a></span>
         to test modifications to the generator configuration and/or the
         template contents.</p>
 
