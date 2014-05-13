@@ -298,11 +298,15 @@ table#stattypes td {
       <p>The tool <span class="code">wee_reports</span> allows you to run a report
       whenever you want to. To use it, just run it from a command line, with the
       location of your configuration file <span class="code">weewx.conf</span> as
-      its only argument (this example assumes you used the <span class="code">
+      the first argument. Optionally, if you include a unix epoch timestamp as
+      a second argument, then the report will use that as the "Current" time; 
+      otherwise, the time of the last record in the archive database will
+      be used. Here is an example, using 1 May 2014 00:00 PDT as the "Current"
+      time. NB: this example assumes you used the <span class="code">
       setup.py</span> install method. Adjust paths as necessary if you used
-      another method):</p>
+      another method.</p>
       <pre class="tty">cd /home/weewx
-./bin/wee_reports weewx.conf</pre>
+./bin/wee_reports weewx.conf 1398927600</pre>
 
       <h1 id="reports">Customizing reports</h1>
       <p>This section discusses the two general strategies for customizing
