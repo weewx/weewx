@@ -1426,13 +1426,17 @@ longitude = -77.0366</pre>
       is fine, but they prefer every 10 minutes (600 s) or even longer. Setting
       this value to zero will cause every archive record to be posted. 
       Optional. Default is zero.</p>
-    <p class="config_option">stale </p>
+    <p class="config_option">stale</p>
     <p>How old a record can be before it will not be used for a catch up. CWOP
       does not use the timestamp on a posted record. Instead, they use the wall
       clock time that it came in. This means that if your station is off the
       air for a long period of time, then <span class="code">weewx</span>
       attempts a catch up, old data could be interpreted as the current
       conditions. Optional. Default is 1800 seconds.</p>
+    <p class="config_option">server_list</p>
+    <p>A comma-delimited list of the servers that should be tried for
+      uploading data.
+      Optional.  Default is: cwop.aprs.net:14580, cwop.aprs.net:23</p>
     <p class='config_option'>log_success</p>
     <p>In case of success, make a note in the system log. This is the default.</p>
     <p class='config_option'>log_failure</p>
