@@ -9,6 +9,9 @@
 import math
 import weewx.uwxutils
 
+INHG_PER_MBAR = 0.0295333727
+METER_PER_FOOT = 0.3048
+
 def dewpointF(T, R) :
     """Calculate dew point. 
     
@@ -198,6 +201,14 @@ def sealevel_pressure_Metric(sp_mbar, elev_meter, t_C):
         return None
     bp_mbar = sp_mbar / pt if pt != 0 else 0
     return bp_mbar
+
+def sealevel_pressure_US(sp_inHg, elev_foot, t_F):
+    sp_mbar = sp_inHg / INHG_PER_MBAR
+    elev_meter = elev_foot * METER_PER_FOOT
+    t_C = (t_F - 32) * 5 / 9
+    slp_mbar = sealevel_pressure_Metric(sp_mbar, elev_meter, t_C)
+    slp_inHg = slp_mbar * INHG_PER_MBAR
+    return slp_inHg
 
 def calculate_rain(newtotal, oldtotal):
     """Calculate the rain differential given two cumulative measurements."""

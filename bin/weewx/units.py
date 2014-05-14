@@ -1082,13 +1082,19 @@ class GenWithConvert(object):
         return _record_c
 
 
-def getAltitudeM(config_dict):
-    """Get the altitude, in meters, from the Station section of the dict."""
+def getAltitude(config_dict, units):
+    """Get altitude, in specified units, from the Station section of dict."""
     altitude_t = weeutil.weeutil.option_as_list(
         config_dict['Station'].get('altitude', (None, None)))
     altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    altitude_m = convert(altitude_vt, 'meter')[0]
-    return altitude_m
+    altitude = convert(altitude_vt, units)[0]
+    return altitude
+
+def getAltitudeM(config_dict):
+    return getAltitude(config_dict, 'meter')
+
+def getAltitudeFt(config_dict):
+    return getAltitude(config_dict, 'foot')
 
 def to_US(datadict):
     """Convert the units used in a dictionary to US Customary."""
