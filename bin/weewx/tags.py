@@ -15,16 +15,16 @@ import weewx.units
 #===============================================================================
 
 class DBFactory(object):
-    """Binds a database cache, with a default binding."""
+    """Binds a database cache, with a default database symname."""
     
-    def __init__(self, db_cache, default_binding='wx_binding'):
+    def __init__(self, db_cache, default_symname='wx_database'):
         self.cache = db_cache
-        self.default_binding  = default_binding
+        self.default_symname  = default_symname
         
-    def get_database(self, binding=None):
-        if binding is None:
-            binding = self.default_binding
-        return self.cache.get_database(binding)
+    def get_database(self, database=None):
+        if database is None:
+            database = self.default_symname
+        return self.cache.get_database(database)
 
 #===============================================================================
 #                    Class FactoryBinder
@@ -34,7 +34,7 @@ class FactoryBinder(object):
     """Binds a DBFactory, a timespan, and a default archive database together.
     
     This class sits on the top of chain of helper classes that enable
-    syntax such as $db($binding='wx_binding').month.rain.sum in the Cheetah templates.""" 
+    syntax such as $db($database='wx_database').month.rain.sum in the Cheetah templates.""" 
 
     def __init__(self, dbfactory, endtime_ts,
                  formatter=weewx.units.Formatter(), converter=weewx.units.Converter(), **option_dict):
@@ -45,8 +45,8 @@ class FactoryBinder(object):
         self.converter   = converter
         self.option_dict = option_dict
         
-    def db(self, binding=None):
-        opendb = self.dbfactory.get_database(binding)
+    def db(self, database=None):
+        opendb = self.dbfactory.get_database(database)
         return DatabaseBinder(opendb, self.endtime_ts, self.formatter, self.converter, **self.option_dict)
     
     def __getattr__(self, attr):

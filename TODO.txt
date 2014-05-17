@@ -1,8 +1,5 @@
               TODO before the next release:
 
-Come up with more consistent names for database symbolic names such
-as 'archive_database' vs the database name. Maybe 'binding'?
-
 Allow any archive database to have its daily summary rebuilt.
 
 Capture LOOP data for highs and lows

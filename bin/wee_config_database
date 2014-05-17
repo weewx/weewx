@@ -32,7 +32,7 @@ usage="""%prog: [config_path] [--help]
                               [--create-archive] [--drop-daily] [--backfill-daily] 
                               [--reconfigure] 
                               [--string-check] [--fix]
-                              [--binding=BINDING_NAME]"""
+                              [--database=DATABASE_NAME]"""
 
 epilog="""If you are using the MySQL database it is assumed that you have the
 appropriate permissions for the requested operation."""
@@ -64,19 +64,19 @@ def main():
                       help="Check a sqlite version of the archive database for embedded strings in it.")
     parser.add_option("--fix", dest="fix", action="store_true",
                       help="If a string is found, fix it.")
-    parser.add_option("--binding", dest="binding", metavar="BINDING_NAME",
-                      default='wx_binding',
-                      help="The symbolic name of the database the action is to be applied to. Default is 'wx_binding'")
+    parser.add_option("--database", dest="symname", metavar="DATABASE_NAME",
+                      default='wx_database',
+                      help="The symbolic name of the database the action is to be applied to. Default is 'wx_database'")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
     config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
     print "Using configuration file %s." % config_fn
     
-    db_binding = options.binding
-    database_name = config_dict['Databases'][db_binding]
-    database_dict, database_cls = weewx.archive.prep_database(config_dict['Databases'], db_binding)
-    print "Using database binding '%s', which is bound to database '%s'" % (db_binding, database_name)
+    db_symname = options.symname
+    database_name = config_dict['Databases'][db_symname]
+    database_dict, database_cls = weewx.archive.prep_database(config_dict['Databases'], db_symname)
+    print "Using database symname '%s', which is bound to database '%s'" % (db_symname, database_name)
     
     if options.create_archive:
         createMainDatabase(database_dict, database_cls, database_name)
@@ -88,10 +88,10 @@ def main():
         backfillDaily(database_dict, database_cls, database_name)
         
     if options.reconfigure:
-        reconfigMainDatabase(config_dict, db_binding)
+        reconfigMainDatabase(config_dict, db_symname)
 
     if options.string_check:
-        string_check(config_dict, options.fix, db_binding)
+        string_check(config_dict, options.fix, db_symname)
 
 def createMainDatabase(database_dict, database_cls, database_name):
     """Create a weewx archive database"""

@@ -102,7 +102,7 @@ class StdReportEngine(threading.Thread):
                 continue
                 
             # Add the default database source.
-            skin_dict['database'] = 'wx_binding'
+            skin_dict['database'] = 'wx_database'
 
             # Inject any overrides the user may have specified in the weewx.conf
             # configuration file for all reports:

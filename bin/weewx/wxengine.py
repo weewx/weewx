@@ -582,8 +582,8 @@ class StdArchive(StdService):
 
         archive_schema_str = config_dict['StdArchive'].get('archive_schema', 'user.schemas.defaultArchiveSchema')
         archive_schema = weeutil.weeutil._get_object(archive_schema_str)
-        archive_binding = config_dict['StdArchive'].get('binding', 'wx_binding')
-        db_dict, db_cls = weewx.archive.prep_database(config_dict['Databases'], archive_binding)
+        archive_symname = config_dict['StdArchive'].get('database', 'wx_database')
+        db_dict, db_cls = weewx.archive.prep_database(config_dict['Databases'], archive_symname)
         # This will create the database if it doesn't exist, then return an
         # opened instance of Archive. It also attaches a reference to the engine, so other
         # services can use it.

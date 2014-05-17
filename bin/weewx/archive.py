@@ -689,18 +689,18 @@ class DBCache(object):
             except Exception:
                 pass
             
-    def get_database(self, database='wx_binding'):
-        if database not in self.archive_cache:
-            db_dict, db_cls = prep_database(self.db_dicts, database)
-            self.archive_cache[database] = db_cls.open(db_dict)
-        return self.archive_cache[database]
+    def get_database(self, symname='wx_database'):
+        if symname not in self.archive_cache:
+            db_dict, db_cls = prep_database(self.db_dicts, symname)
+            self.archive_cache[symname] = db_cls.open(db_dict)
+        return self.archive_cache[symname]
 
 #===============================================================================
 #                                 Utilities
 #===============================================================================
 
-def prep_database(databases_dict, archive_binding_name='wx_binding'):
-    database_name = databases_dict[archive_binding_name]
+def prep_database(databases_dict, archive_database_symname='wx_database'):
+    database_name = databases_dict[archive_database_symname]
     database_dict = databases_dict[database_name]
     database_manager = databases_dict[database_name].get('manager', 'weewx.stats.WXDaySummaryArchive')
     database_cls = weeutil.weeutil._get_object(database_manager)
