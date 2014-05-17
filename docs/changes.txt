@@ -11,6 +11,10 @@ Fix cosmetic problem in wee_config_fousb pressure calibration.
 
 Detect both NP (not present) and OFL (outside factory limits) on ws28xx.
 
+Added driver for PeetBros Ultimeter stations.
+
+Added driver for ADS WS1 stations.
+
 
 2.6.3 04/10/14
 

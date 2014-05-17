@@ -74,6 +74,16 @@ while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
             if [ "$RET" = "TE923" ]; then
                 db_input high weewx/te923_model || true
             fi
+
+            if [ "$RET" = "Ultimeter" ]; then
+                db_input high weewx/ultimeter_model || true
+                db_go
+                db_input high weewx/ultimeter_port || true
+            fi
+
+            if [ "$RET" = "WS1" ]; then
+                db_input high weewx/ws1_port || true
+            fi
             ;;
     esac
 

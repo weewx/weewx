@@ -87,6 +87,16 @@ configure_weewxconf() {
             db_get weewx/te923_model
             sed -i "/\[TE923\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
         fi
+        if [ "$RET" = "Ultimeter" ]; then
+            db_get weewx/ultimeter_model
+            sed -i "/\[Ultimeter\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            db_get weewx/ultimeter_port
+            sed -i "/\[Ultimeter\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
+        fi
+        if [ "$RET" = "WS1" ]; then
+            db_get weewx/ws1_port
+            sed -i "/\[WS1\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
+        fi
     fi
 }
 
