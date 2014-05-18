@@ -676,6 +676,9 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         # FIXME: get last_rain_arc and last_rain_ts_arc from database
 
         loginf('driver version is %s' % DRIVER_VERSION)
+        if self.pc_hub is not None:
+            loginf('power cycling enabled for port %s on hub %s' %
+                   (self.pc_port, self.pc_hub))
         loginf('polling mode is %s' % self.polling_mode)
         if self.polling_mode.lower() == PERIODIC_POLLING.lower():
             loginf('polling interval is %s' % self.polling_interval)
