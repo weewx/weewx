@@ -63,7 +63,7 @@ INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DRIVER_VERSION = '0.10'
+DRIVER_VERSION = '0.10.2'
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 
@@ -190,6 +190,28 @@ class PeetBros(weewx.abstractstation.AbstractStation):
         if not packet['windSpeed']:
             packet['windDir'] = None
 
+def _is_valid_char(c):
+    '''See whether a character is a valid hexadecimal digit or hyphen.'''
+    if c == '-':
+        return True
+    try:
+        int(c, 16)
+        return True
+    except ValueError:
+        return False
+
+def _hex2int(s, multiplier=None):
+    '''Ultimeter puts hyphens in the string when a sensor is not installed.
+    When we get a hyphen or any other non-hex character, return None.'''
+    v = None
+    try:
+        v = int(s, 16)
+        if multiplier is not None:
+            v *= multiplier
+    except ValueError:
+        pass
+    return v
+
 class Ultimeter(object):
     def __init__(self, port):
         self.port = port
@@ -235,6 +257,10 @@ class Ultimeter(object):
             raise weewx.WeeWxIOError("Write expected %d chars, sent %d" %
                                      (len(data), n))
 
+    def flush(self):
+        logdbg("flush serial buffer")
+        self.serial_port.flushInput()
+
     def get_time(self):
         self.set_logger_mode()
         bytes = self.get_readings()
@@ -244,7 +270,7 @@ class Ultimeter(object):
         tstr = time.localtime()
         y = tstr.tm_year
         s = tstr.tm_sec
-        ts = time.mktime(y,0,0,0,0,s,0,0,0) + d * 86400 + m * 60
+        ts = time.mktime((y,0,0,0,0,s,0,0,0)) + d * 86400 + m * 60
         return ts
 
     def set_time(self, ts):
@@ -272,10 +298,10 @@ class Ultimeter(object):
                 break
             elif c == '!':
                 bytes = []
-            elif c == '-':
-                bytes.append('0')
-            else:
+            elif _is_valid_char(d):
                 bytes.append(c)
+            else:
+                raise weewx.WeeWxIOError("Invalid character %0.2X" % ord(c))
         if DEBUG_READ:
             logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in bytes]))
         if len(bytes) != 48:
@@ -310,18 +336,18 @@ class Ultimeter(object):
         the pressure and altimeter values are calculated from it.
         '''
         data = {}
-        data['windSpeed'] = int(bytes[0:4], 16) * 0.1  * MILE_PER_KM # mph
-        data['windDir'] = int(bytes[6:8], 16) * 1.411764 # compass degrees
-        data['outTemp'] = int(bytes[8:12], 16) * 0.1 # degree_F
-        data['long_term_rain'] = int(bytes[12:16], 16) * 0.01 # inch
-        data['barometer'] = int(bytes[16:20], 16) * 0.1  * INHG_PER_MBAR # inHg
-        data['inTemp'] = int(bytes[20:24], 16) * 0.1 # degree_F
-        data['outHumidity'] = int(bytes[24:28], 16) * 0.1 # percent
-        data['inHumidity'] = int(bytes[28:32], 16) * 0.1 # percent
-        data['day_of_year'] = int(bytes[32:36], 16)
-        data['minute_of_day'] = int(bytes[36:40], 16)
-        data['daily_rain'] = int(bytes[40:44], 16) * 0.01 # inch
-        data['wind_average'] = int(bytes[44:48], 16) * 0.1 * MILE_PER_KM # mph
+        data['windSpeed'] = _hex2int(bytes[0:4], 0.1 * MILE_PER_KM) # mph
+        data['windDir'] = _hex2int(bytes[6:8], 1.411764) # compass degrees
+        data['outTemp'] = _hex2int(bytes[8:12], 0.1) # degree_F
+        data['long_term_rain'] = _hex2int(bytes[12:16], 0.01) # inch
+        data['barometer'] = _hex2int(bytes[16:20], 0.1 * INHG_PER_MBAR) # inHg
+        data['inTemp'] = _hex2int(bytes[20:24], 0.1) # degree_F
+        data['outHumidity'] = _hex2int(bytes[24:28], 0.1) # percent
+        data['inHumidity'] = _hex2int(bytes[28:32], 0.1) # percent
+        data['day_of_year'] = _hex2int(bytes[32:36])
+        data['minute_of_day'] = _hex2int(bytes[36:40])
+        data['daily_rain'] = _hex2int(bytes[40:44], 0.01) # inch
+        data['wind_average'] = _hex2int(bytes[44:48], 0.1 * MILE_PER_KM) # mph
         return data
 
 # define a main entry point for basic testing of the station without weewx
@@ -343,6 +369,10 @@ if __name__ == '__main__':
         parser.add_option('--port', dest='port', metavar='PORT',
                           help='serial port to which the station is connected',
                           default=DEFAULT_PORT)
+        parser.add_option('--get-current', dest='getcur', action='store_true',
+                          help='display current readings')
+        parser.add_option('--get-time', dest='gettime', action='store_true',
+                          help='display station time')
         (options, args) = parser.parse_args()
 
         if options.version:
@@ -350,11 +380,15 @@ if __name__ == '__main__':
             exit(0)
 
         with Ultimeter(options.port) as s:
-            s.set_logger_mode()
-            bytes = s.get_readings()
-            print bytes
-            data = Ultimeter.parse_readings(bytes)
-            print data
+            if options.getcur:
+                s.set_logger_mode()
+                bytes = s.get_readings()
+                print bytes
+                data = Ultimeter.parse_readings(bytes)
+                print data
+            if options.gettime:
+                ts = s.get_time()
+                print ts
 
 if __name__ == '__main__':
     main()
