@@ -407,6 +407,37 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
 
     return packet
 
+def power_cycle_station(self, hub, port):
+    '''Power cycle the port on the specified hub.  This works only with USB
+    hubs that support per-port power switching such as the linksys USB2HUB4.'''
+    busses = usb.busses()
+    if not busses:
+        raise weewx.WeeWxIOError("Power cycle failed: cannot find USB busses")
+    device = None
+    for bus in busses:
+        for dev in bus.devices:
+            if dev.deviceClass == usb.CLASS_HUB:
+                devid = "%s:%03d" % (bus.dirname, dev.devnum)
+                if devid == hub:
+                    device = dev
+    if device is None:
+        raise weewx.WeeWxIOError("Power cycle failed: cannot find hub %s" % hub)
+    handle = device.open()
+    try:
+        loginf("Power off port %d on hub %s" % (port, hub))
+        handle.controlMsg(requestType=USB_RT_PORT,
+                          request=usb.REQ_CLEAR_FEATURE,
+                          value=USB_PORT_FEAT_POWER,
+                          index=port, buffer=None, timeout=1000)
+        time.sleep(10)
+        loginf("Power on port %d on hub %s" % (port, hub))
+        handle.controlMsg(requestType=USB_RT_PORT,
+                          request=usb.REQ_SET_FEATURE,
+                          value=USB_PORT_FEAT_POWER,
+                          index=port, buffer=None, timeout=1000)
+    finally:
+        del handle
+
 # decode weather station raw data formats
 def _signed_byte(raw, offset):
     res = raw[offset]
@@ -605,6 +636,12 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         if self.pressure_offset is not None:
             self.pressure_offset = float(self.pressure_offset)
 
+        # FIXME: prefer 'power_cycle_on_fail = (True|False)'
+        self.pc_hub            = stn_dict.get('power_cycle_hub', None)
+        self.pc_port           = stn_dict.get('power_cycle_port', None)
+        if self.pc_port is not None:
+            self.pc_port = int(self.pc_port)
+
         self.data_format   ='1080'
         self.vendor_id     = 0x1941
         self.product_id    = 0x8021
@@ -669,7 +706,14 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     logcrt("get archive interval failed attempt %d of %d: %s"
                            % (i+1, self.max_tries, e))
             else:
-                raise weewx.WeeWxIOError("Unable to read archive interval after %d tries" % self.max_tries)
+                msg = "Unable to read archive interval after %d tries" % self.max_tries
+                if self.pc_hub is not None:
+                    logerr(msg)
+                    logerr("Attempting to power cycle")
+                    power_cycle_station(self.pc_hub, self.pc_port)
+                    raise weewx.WeeWxIOError("Power cycle complete")
+                else:
+                    raise weewx.WeeWxIOError(msg)
         return self._arcint
 
     def openPort(self):
@@ -685,7 +729,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         # be sure kernel does not claim the interface
         try:
             self.devh.detachKernelDriver(self.usb_interface)
-        except Exception, e:
+        except:
             pass
 
         # attempt to claim the interface
@@ -703,7 +747,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         except:
             pass
         self.devh = None
-                               
+
     def _find_device(self):
         """Find the vendor and product ID on the USB."""
         for bus in usb.busses():
