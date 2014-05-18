@@ -222,7 +222,7 @@ class Ultimeter(object):
             raise weewx.WeeWxIOError(e)
         n = len(buf)
         if n != nchar:
-            if DEBUG_READ:
+            if DEBUG_READ and n:
                 logdbg("partial buffer: '%s'" %
                        ' '.join(["%0.2X" % ord(c) for c in buf]))
             raise weewx.WeeWxIOError("Read expected %d chars, got %d" %
