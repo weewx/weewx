@@ -25,10 +25,14 @@ while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
             ;;
 
         4)
+            db_input high weewx/units || true
+            ;;
+
+        5)
             db_input high weewx/station_type || true
             ;;
 
-        5) # prompt for station-specific parameters
+        6) # prompt for station-specific parameters
             db_get weewx/station_type
             if [ "$RET" = "Vantage" ]; then
                 db_input high weewx/vantage_type || true

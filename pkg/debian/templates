@@ -1,3 +1,10 @@
+Template: weewx/units
+Type: select
+Default: US
+Choices: US, Metric
+Description: display units:
+ Data can be displayed in any combination of units.  The default display is either US (F, inHg, in, mph) or Metric (C, mbar, mm, km/h).  The units can be changed later without affecting any existing data.
+
 Template: weewx/location
 Type: string
 Default: Hood River, Oregon

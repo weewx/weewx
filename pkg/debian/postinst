@@ -20,6 +20,18 @@ set -e
 
 cfgfile=/etc/weewx/weewx.conf
 mergeapp=/usr/share/weewx/setup.py
+metric_units="\n\
+        [[[Units]]]\n\
+            [[[[Groups]]]]\n\
+                group_altitude     = meter\n\
+                group_degree_day   = degree_C_day\n\
+                group_pressure     = mbar\n\
+                group_radiation    = watt_per_meter_squared\n\
+                group_rain         = mm\n\
+                group_rainrate     = mm_per_hour\n\
+                group_speed        = meter_per_second\n\
+                group_speed2       = meter_per_second2\n\
+                group_temperature  = degree_C\n"
 
 # insert any configuration variables into the configuration file
 configure_weewxconf() {
@@ -36,6 +48,11 @@ configure_weewxconf() {
     a=$(echo $RET | cut -d, -f1)
     u=$(echo $RET | cut -d, -f2)
     sed -i "s% altitude[ ]*=.*% altitude = $a, $u%" $cfgfile
+
+    db_get weewx/units
+    if [ "$RET" = "Metric" ]; then
+        sed -i "/\[\[StandardReport\]\]/,/\[\[.*\]\]/ s%skin = Standard%skin = Standard\n${metric_units}%" $cfgfile
+    fi
 
     # FIXME: generalize this so it does not have to be modified every time a
     #        new station type is added or new station options are added.
