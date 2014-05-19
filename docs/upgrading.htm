@@ -151,6 +151,14 @@ Version: 2.6.3
       configuration section has become option 
       <span class='code'>post_interval</span>. This change
       should be done automatically by the install routine. </li>
+      <li>The mechanism for specifying RESTful services has changed.
+      To activate a RESTful service, put the driver in the
+      <span class="code">restful_services</span> list in
+      <span class="code">[Engines][[WxEngine]]</span>.  The
+      <span class="code">driver</span> parameter is no longer
+      necessary in the RESTful service's configuration stanza.
+      These changes should be done automatically by the
+      install routine.</li>
     </ul>
     <h2>V2.3 or earlier</h2>
     <p>The option <span class="code">time_length</span> will now be the exact length 
