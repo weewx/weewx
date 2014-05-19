@@ -19,6 +19,8 @@ Added automatic power cycling to the FineOffsetUSB driver.  Power cycle the
 station when a USB lockup is detected.  Only works with USB hubs that provide
 per-port power switching.
 
+Fix imagegenerator aggregation to permit data tables with no 'interval' column.
+
 
 2.6.3 04/10/14
 

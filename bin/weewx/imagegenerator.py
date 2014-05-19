@@ -17,6 +17,7 @@ import datetime
 import syslog
 import os.path
 
+import weedb
 import weeplot.genplot
 import weeplot.utilities
 import weeutil.weeutil
@@ -225,8 +226,12 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
 
     def _getArchiveInterval(self, archive):
         if not hasattr(self, 'archive_interval'):
-            _row = archive.getSql("SELECT MIN(`interval`) FROM %s" % archive.table)
-            self.archive_interval = _row[0] if _row else None
+            try:
+                _row = archive.getSql("SELECT MIN(`interval`) FROM %s" % archive.table)
+                self.archive_interval = _row[0] if _row else None
+            except weedb.OperationalError, e:
+                syslog.syslog(syslog.LOG_INFO, "genimages: cannot determine interval from %s: %s" % (archive.table, e))
+                self.archive_interval = None
         return self.archive_interval
 
 def skipThisPlot(time_ts, aggregate_interval, img_file):
