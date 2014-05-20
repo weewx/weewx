@@ -48,6 +48,8 @@ Modem Mode commands used by the driver
 
 """
 
+# FIXME: eliminate the weewx.XXX classes from the station level
+
 from __future__ import with_statement
 import serial
 import syslog
@@ -63,9 +65,9 @@ INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DRIVER_VERSION = '0.10.2'
+DRIVER_VERSION = '0.10.3'
 DEFAULT_PORT = '/dev/ttyS0'
-DEBUG_READ = 0
+DEBUG_READ = 1
 
 def logmsg(level, msg):
     syslog.syslog(level, 'peetbros: %s' % msg)
@@ -126,10 +128,47 @@ class PeetBros(weewx.abstractstation.AbstractStation):
 
     def setTime(self, ts):
         with Ultimeter(self.port) as station:
-            station.set_modem_mode()
             station.set_time(ts)
 
     def genLoopPackets(self):
+        return self.glp1()
+
+    def glp1(self):
+        # this version of genLoopPackets does the maxtries at station level
+        # and keeps the serial port open for an extended time.
+        with Ultimeter(self.port) as station:
+            station.set_logger_mode()
+            while True:
+                buf = station.get_readings_with_retry()
+                data = Ultimeter.parse_readings(buf)
+                packet = {'dateTime': int(time.time()+0.5),
+                          'usUnits' : weewx.US }
+                packet.update(data)
+                self._augment_packet(packet)
+                yield packet
+                if self.polling_interval:
+                    time.sleep(self.polling_interval)
+
+    def glp2(self):
+        # this version of genLoopPackets does the maxtries at station level
+        # and opens the serial port for each data read.
+        with Ultimeter(self.port) as station:
+            station.set_logger_mode()
+        while True:
+            with Ultimeter(self.port) as station:
+                buf = station.get_readings_with_retry()
+            data = Ultimeter.parse_readings(buf)
+            packet = {'dateTime': int(time.time()+0.5),
+                      'usUnits' : weewx.US }
+            packet.update(data)
+            self._augment_packet(packet)
+            yield packet
+            if self.polling_interval:
+                time.sleep(self.polling_interval)
+
+    def glp3(self):
+        # this version of genLoopPackets does the maxtries at driver level
+        # and opens the serial port for each data read.
         ntries = 0
         with Ultimeter(self.port) as station:
             station.set_logger_mode()
@@ -140,8 +179,8 @@ class PeetBros(weewx.abstractstation.AbstractStation):
                           'usUnits' : weewx.US }
                 # open a new connection to the station for each reading
                 with Ultimeter(self.port) as station:
-                    bytes = station.get_readings()
-                data = Ultimeter.parse_readings(bytes)
+                    buf = station.get_readings()
+                data = Ultimeter.parse_readings(buf)
                 packet.update(data)
                 self._augment_packet(packet)
                 ntries = 0
@@ -218,6 +257,7 @@ class Ultimeter(object):
         self.baudrate = 2400
         self.timeout = 30
         self.serial_port = None
+        self.max_tries = 5
 
     def __enter__(self):
         self.open()
@@ -230,6 +270,7 @@ class Ultimeter(object):
         logdbg("open serial port %s" % self.port)
         self.serial_port = serial.Serial(self.port, self.baudrate,
                                          timeout=self.timeout)
+#        self.set_logger_mode()
 
     def close(self):
         if self.serial_port is not None:
@@ -263,8 +304,8 @@ class Ultimeter(object):
 
     def get_time(self):
         self.set_logger_mode()
-        bytes = self.get_readings()
-        data = Ultimeter.parse_readings(bytes)
+        buf = self.get_readings_with_retry()
+        data = Ultimeter.parse_readings(buf)
         d = data['day_of_year']
         m = data['minute_of_day']
         tstr = time.localtime()
@@ -274,42 +315,67 @@ class Ultimeter(object):
         return ts
 
     def set_time(self, ts):
+        self.set_modem_mode()
         tstr = time.localtime(ts)
         tcmd = ">A%04d%04d\r" % (
             tstr.tm_yday - 1, tstr.tm_min + tstr.tm_hour * 60)
         logdbg("set station time to %d (%s)" % (ts, tcmd))
         self.write(tcmd)
 
+        # year works only for models 2004 and later
+        y = tstr.tm_year
+        ycmd = ">U%s" % y
+        logdbg("set station year to %s (%s)" % (y, ycmd))
+        self.write(ycmd)
+
     def set_logger_mode(self):
+        # in logger mode, station sends logger mode records continuously
         logdbg("set station to logger mode")
         self.write(">I\r")
 
     def set_modem_mode(self):
+        # modem mode is available only on models 2004 and later
+        # not available on pre-2004 models 50/100/500/700/800
         logdbg("set station to modem mode")
         self.write(">\r")
 
+    def get_readings_with_retry(self):
+        ntries = 0
+        while ntries < self.max_tries:
+            ntries += 1
+            try:
+                return self.get_readings()
+            except weewx.WeeWxIOError, e:
+                logerr("Failed attempt %d of %d to get readings: %s" %
+                       (ntries, self.max_tries, e))
+        else:
+            msg = "Max retries (%d) exceeded for readings" % self.max_tries
+            logerr(msg)
+            raise weewx.RetriesExceeded(msg)
+        return []
+
     def get_readings(self):
-        bytes = []
+        buf = []
         while True:
             c = self.read(1)
             if c == "\r" or c == "\n":
                 break
-            elif c == '!' and len(bytes) > 0:
+            elif c == '!' and len(buf) > 0:
                 break
             elif c == '!':
-                bytes = []
-            elif _is_valid_char(d):
-                bytes.append(c)
+                buf = []
+            elif _is_valid_char(c):
+                buf.append(c)
             else:
                 raise weewx.WeeWxIOError("Invalid character %0.2X" % ord(c))
         if DEBUG_READ:
-            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in bytes]))
-        if len(bytes) != 48:
-            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(bytes))
-        return ''.join(bytes)
+            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
+        if len(buf) != 48:
+            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(buf))
+        return ''.join(buf)
 
     @staticmethod
-    def parse_readings(bytes):
+    def parse_readings(buf):
         '''Parse the bytes in data logger format.  Each line has 2 header
         bytes, 48 data bytes, and a carriage return and newline:
 
@@ -336,18 +402,18 @@ class Ultimeter(object):
         the pressure and altimeter values are calculated from it.
         '''
         data = {}
-        data['windSpeed'] = _hex2int(bytes[0:4], 0.1 * MILE_PER_KM) # mph
-        data['windDir'] = _hex2int(bytes[6:8], 1.411764) # compass degrees
-        data['outTemp'] = _hex2int(bytes[8:12], 0.1) # degree_F
-        data['long_term_rain'] = _hex2int(bytes[12:16], 0.01) # inch
-        data['barometer'] = _hex2int(bytes[16:20], 0.1 * INHG_PER_MBAR) # inHg
-        data['inTemp'] = _hex2int(bytes[20:24], 0.1) # degree_F
-        data['outHumidity'] = _hex2int(bytes[24:28], 0.1) # percent
-        data['inHumidity'] = _hex2int(bytes[28:32], 0.1) # percent
-        data['day_of_year'] = _hex2int(bytes[32:36])
-        data['minute_of_day'] = _hex2int(bytes[36:40])
-        data['daily_rain'] = _hex2int(bytes[40:44], 0.01) # inch
-        data['wind_average'] = _hex2int(bytes[44:48], 0.1 * MILE_PER_KM) # mph
+        data['windSpeed'] = _hex2int(buf[0:4], 0.1 * MILE_PER_KM) # mph
+        data['windDir'] = _hex2int(buf[6:8], 1.411764) # compass degrees
+        data['outTemp'] = _hex2int(buf[8:12], 0.1) # degree_F
+        data['long_term_rain'] = _hex2int(buf[12:16], 0.01) # inch
+        data['barometer'] = _hex2int(buf[16:20], 0.1 * INHG_PER_MBAR) # inHg
+        data['inTemp'] = _hex2int(buf[20:24], 0.1) # degree_F
+        data['outHumidity'] = _hex2int(buf[24:28], 0.1) # percent
+        data['inHumidity'] = _hex2int(buf[28:32], 0.1) # percent
+        data['day_of_year'] = _hex2int(buf[32:36])
+        data['minute_of_day'] = _hex2int(buf[36:40])
+        data['daily_rain'] = _hex2int(buf[40:44], 0.01) # inch
+        data['wind_average'] = _hex2int(buf[44:48], 0.1 * MILE_PER_KM) # mph
         return data
 
 # define a main entry point for basic testing of the station without weewx
@@ -382,9 +448,9 @@ if __name__ == '__main__':
         with Ultimeter(options.port) as s:
             if options.getcur:
                 s.set_logger_mode()
-                bytes = s.get_readings()
-                print bytes
-                data = Ultimeter.parse_readings(bytes)
+                buf = s.get_readings_with_retry()
+                print buf
+                data = Ultimeter.parse_readings(buf)
                 print data
             if options.gettime:
                 ts = s.get_time()
