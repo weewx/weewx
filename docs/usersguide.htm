@@ -1091,6 +1091,14 @@ longitude = -77.0366</pre>
 	<td class="code text_highlight">TE923</td>
 	<td>Hideki TE923 stations</td>
       </tr>
+      <tr>
+	<td class="code text_highlight">Ultimeter</td>
+	<td>PeetBros Ultimeter stations</td>
+      </tr>
+      <tr>
+	<td class="code text_highlight">WS1</td>
+	<td>Argent Data Systems WS1 stations</td>
+      </tr>
     </table>
     
     <p id="station_url" class="config_option"><span class="config_important">station_url</span></p>
@@ -1298,6 +1306,40 @@ longitude = -77.0366</pre>
     extraBatteryStatus2 =  battery3
     extraBatteryStatus3 =  battery4
     extraBatteryStatus4 =  battery5</pre>
+
+    <h3 class="config_section">[Ultimeter]</h3>
+    <p>This section is for options relating to the PeetBros Ultimeter weather
+      stations.</p>
+    <p class="config_important">port</p>
+    <p>The serial port, e.g., <span class='code'>/dev/ttyS0</span>.  When using
+      a USB-Serial converter, the port will be something like
+      <span class='code'>/dev/ttyUSB0</span>.  Default is
+      <span class='code'>/dev/ttyUSB0</span></p>
+    <p class="config_important">model</p>
+    <p>Set to the station model. For example, Ultimeter 2000 or Ultimeter 800.
+      Default is "Ultimeter".</p>
+
+    <h3 class="config_section">[WS1]</h3>
+    <p>This section is for options relating to the Argent Data Systems WS1
+      weather stations.</p>
+    <p class="config_important">port</p>
+    <p>The serial port, e.g., <span class='code'>/dev/ttyS0</span>.  When using
+      a USB-Serial converter, the port will be something like
+      <span class='code'>/dev/ttyUSB0</span>.  Default is
+      <span class='code'>/dev/ttyUSB0</span></p>
+    <p class='config_option'>pressure_offset</p>
+    <p>
+      The offset, in millibars, that is applied to values from the
+      station sensor. This offset is applied to the station pressure
+      <i>before</i> calculating barometer and altimeter sea level pressures.
+      Only the raw station pressure is recorded to the database, not the
+      station pressure with offset applied.  Default is None.
+    </p>
+    <p class='config_option'>polling_interval</p>
+    <p>The <span class="code">polling_interval</span> determines how often
+      <span class="code">weewx</span> will query the station for data.  The
+      default is 1 second.
+    </p>
 
     <h3 class="config_section">[Simulator]</h3>
     <p>This section is for options relating to the software weather station simulator 
@@ -2349,8 +2391,8 @@ Mutating actions will request confirmation before proceeding.</pre>
     <ol>
       <li><strong>The Weewx way.</strong>  With <span class="code">weewx</span>
         running, press and hold the [v] button on the console until you see
-        'PC' in the display.  If the console pairs with the transceiver, 'PC'
-        will go away within a second or two.</li>
+        'PC' in the display, then release the button.  If the console pairs
+        with the transceiver, 'PC' will go away within a second or two.</li>
       <li><strong>The HeavyWeather way.</strong>  Follow the pairing
         instructions that came with the station.  You will have to run
         HeavyWeather on a windows computer with the USB transceiver.  After
@@ -2442,29 +2484,28 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       as log messages.  Once everything is working properly, run it as a
       daemon.</p>
     <h2>Running from the command line</h2>
-    <p><span class="code">Weewx</span> can easily be run from the command line. 
-      Start by making sure you have appropriate permissions to the serial port your 
-      weather station uses. For example, if you are using a plain old serial port:
-    </p>
-    <pre class="tty">sudo chmod 666 /dev/ttyS0 </pre>
-    <p>Then run the main program, <span class="code">weewxd</span>, giving 
+    <p>To run <span class="code">weewx</span> directly, invoke
+      the main program, <span class="code">weewxd</span>, giving 
       the configuration file as its only parameter: </p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
-    <p>It should start by downloading any data stored in your weather station into 
-      the archive database. As the Davis VantagePro can store a couple thousand archive 
-      records internally, this could take a minute or two. I have found this process 
-      particularly slow on SuSE for some reason. </p>
-    <p><span class="code">Weewx</span> will then start monitoring LOOP data, printing 
-      a short version of the received data on standard output, about once every two 
-      seconds. </p>
-    <p>You can tell a running instance of <span class="code">weewx</span> to reread 
-      its configuration file by sending it the <span class="code">HUP</span> signal. 
-      First run <span class="code">ps</span> to find out the Process ID (PID) number 
-      of the instance, then send it the <span class="code">HUP</span> signal: </p>
+    <pre class="tty">sudo <span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
+    <p>It should start by downloading any data stored in your weather station
+      (if the station has a data logger) into the archive database. For some
+      stations, such as the Davis Vantage with a couple thousand records, this
+      could take a minute or two. I have found this process particularly slow
+      on SuSE for some reason. </p>
+    <p><span class="code">Weewx</span> will then start monitoring live sensor
+      data (also referrred to as 'LOOP' data),
+      printing a short version of the received data on standard output, about
+      once every two seconds. </p>
+    <p>You can tell a running instance of <span class="code">weewx</span> to
+      reread its configuration file by sending it the
+      <span class="code">HUP</span> signal. 
+      First run <span class="code">ps</span> to find out the Process ID (PID)
+      number of the instance, then send it the <span class="code">HUP</span> signal: </p>
     <pre class="tty">ps -a          # Note the PID of the weewxd process
 kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
-    <p>Note that this <em>only</em> rereads the configuration file. It will not 
-      reload any code.</p>
+    <p>Note that this <em>only</em> rereads the configuration file. It will
+      not reload any code.</p>
 
     <h2>Running as a daemon</h2>
     <p>For unattended operations it is best to have <span class="code">weewx</span> 
@@ -2655,6 +2696,88 @@ sudo /etc/init.d/apache2 restart</p>
       these will copy everything from the <span class='code'>HTML_ROOT</span>
       directory to a location on the remote server on which the web server
       is running.</p>
+
+
+    <h1 id="backup">Making a backup of a <span class='code'>weewx</span> installation</h1>
+    <p>
+      To backup a <span class='code'>weewx</span> installation, make a copy of
+      the weewx configuration, weather data, skins/templates, and custom code.
+      In most cases these can be copied while weewx is running.  The location
+      of these files depends on which method was used to install
+      <span class='code'>weewx</span>.
+    </p>
+    <p>
+      <strong>Configuration.</strong>
+      Save the <span class='code'>weewx.conf</span> file.
+    </p>
+    <table class="locations" style="width:70%">
+      <tr>
+	<td style="width: 30%">setup.py</td>
+	<td class='tty'>/home/weewx/weewx.conf</td>
+      </tr>
+      <tr>
+	<td >DEB/RPM</td>
+	<td class='tty'>/etc/weewx/weewx.conf</td>
+      </tr>
+    </table>
+    <p>
+      <strong>Weather data.</strong> Meteorological ata are saved in the
+      archive database.  For a Sqlite
+      configuration, simply save the <span class='code'>weewx.sdb</span>
+      file.  For a MySQL configuration, save a dump of the archive database.
+      The stats database does not have to be backed up - if no stats database
+      is found, it will be generated automatically from archive data.
+    </p>
+    <table class="locations" style="width:70%">
+      <tr>
+	<td style="width: 30%">setup.py</td>
+	<td class='tty'>/home/weewx/archive/weewx.sdb</td>
+      </tr>
+      <tr>
+	<td >DEB/RPM</td>
+	<td class='tty'>/var/lib/weewx/weewx.sdb</td>
+      </tr>
+    </table>
+    <p>
+      <strong>Skins and templates.</strong>
+      Save the contents of the skins directory.
+    </p>
+    <table class="locations" style="width:70%">
+      <tr>
+	<td style="width: 30%">setup.py</td>
+	<td class='tty'>/home/weewx/skins</td>
+      </tr>
+      <tr>
+	<td >DEB/RPM</td>
+	<td class='tty'>/etc/weewx/skins</td>
+      </tr>
+    </table>
+    <p>
+      <strong>Other customizations.</strong>  Save the contents of the
+      <span class='code'>user</span> directory if you have modified the
+      database schema or added any extensions.  If the extensions save data
+      to a database you should backup those databases as well.
+    </p>
+    <table class="locations" style="width:70%">
+      <tr>
+	<td style="width: 30%">setup.py</td>
+	<td class='tty'>/home/weewx/bin/user</td>
+      </tr>
+      <tr>
+	<td >DEB/RPM</td>
+	<td class='tty'>/usr/share/weewx/user</td>
+      </tr>
+    </table>
+    <p>
+      It is not necessary to backup the images and HTML files generated from
+      templates, since weewx will easily create those again.  This includes
+      the NOAA reports in some skins.
+    </p>
+    <p>
+      To restore from backup, do a fresh install of
+      <span class='code'>weewx</span> then replace the default files with
+      those from a backup.  Then start <span class='code'>weewx</span>.
+    </p>
 
 
     <h1 id="troubleshooting">Troubleshooting</h1>

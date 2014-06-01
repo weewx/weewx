@@ -21,6 +21,8 @@ per-port power switching.
 
 Fix imagegenerator aggregation to permit data tables with no 'interval' column.
 
+Prompt for metric/US units for debian installations.
+
 
 2.6.3 04/10/14
 
