@@ -65,12 +65,12 @@ INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DRIVER_VERSION = '0.10.3'
+DRIVER_VERSION = '0.11.0'
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 1
 
 def logmsg(level, msg):
-    syslog.syslog(level, 'peetbros: %s' % msg)
+    syslog.syslog(level, 'ultimeter: %s' % msg)
 
 def logdbg(msg):
     logmsg(syslog.LOG_DEBUG, msg)
@@ -85,10 +85,10 @@ def loader(config_dict, engine):
     """Get the altitude, in feet, from the Station section of the dict."""
     altitude_m = weewx.units.getAltitudeM(config_dict)
     altitude_ft = altitude_m / METER_PER_FOOT
-    station = PeetBros(altitude=altitude_ft, **config_dict['Ultimeter'])
+    station = Ultimeter(altitude=altitude_ft, **config_dict['Ultimeter'])
     return station
 
-class PeetBros(weewx.abstractstation.AbstractStation):
+class Ultimeter(weewx.abstractstation.AbstractStation):
     '''weewx driver that communicates with a Peet Bros Ultimeter station
 
     port - serial port
@@ -123,11 +123,11 @@ class PeetBros(weewx.abstractstation.AbstractStation):
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
 
     def getTime(self):
-        with Ultimeter(self.port) as station:
+        with Station(self.port) as station:
             return station.get_time()
 
     def setTime(self, ts):
-        with Ultimeter(self.port) as station:
+        with Station(self.port) as station:
             station.set_time(ts)
 
     def genLoopPackets(self):
@@ -136,11 +136,11 @@ class PeetBros(weewx.abstractstation.AbstractStation):
     def glp1(self):
         # this version of genLoopPackets does the maxtries at station level
         # and keeps the serial port open for an extended time.
-        with Ultimeter(self.port) as station:
+        with Station(self.port) as station:
             station.set_logger_mode()
             while True:
                 buf = station.get_readings_with_retry()
-                data = Ultimeter.parse_readings(buf)
+                data = Station.parse_readings(buf)
                 packet = {'dateTime': int(time.time()+0.5),
                           'usUnits' : weewx.US }
                 packet.update(data)
@@ -152,12 +152,12 @@ class PeetBros(weewx.abstractstation.AbstractStation):
     def glp2(self):
         # this version of genLoopPackets does the maxtries at station level
         # and opens the serial port for each data read.
-        with Ultimeter(self.port) as station:
+        with Station(self.port) as station:
             station.set_logger_mode()
         while True:
-            with Ultimeter(self.port) as station:
+            with Station(self.port) as station:
                 buf = station.get_readings_with_retry()
-            data = Ultimeter.parse_readings(buf)
+            data = Station.parse_readings(buf)
             packet = {'dateTime': int(time.time()+0.5),
                       'usUnits' : weewx.US }
             packet.update(data)
@@ -170,7 +170,7 @@ class PeetBros(weewx.abstractstation.AbstractStation):
         # this version of genLoopPackets does the maxtries at driver level
         # and opens the serial port for each data read.
         ntries = 0
-        with Ultimeter(self.port) as station:
+        with Station(self.port) as station:
             station.set_logger_mode()
         while ntries < self.max_tries:
             ntries += 1
@@ -178,9 +178,9 @@ class PeetBros(weewx.abstractstation.AbstractStation):
                 packet = {'dateTime': int(time.time()+0.5),
                           'usUnits' : weewx.US }
                 # open a new connection to the station for each reading
-                with Ultimeter(self.port) as station:
+                with Station(self.port) as station:
                     buf = station.get_readings()
-                data = Ultimeter.parse_readings(buf)
+                data = Station.parse_readings(buf)
                 packet.update(data)
                 self._augment_packet(packet)
                 ntries = 0
@@ -251,7 +251,7 @@ def _hex2int(s, multiplier=None):
         pass
     return v
 
-class Ultimeter(object):
+class Station(object):
     def __init__(self, port):
         self.port = port
         self.baudrate = 2400
@@ -305,7 +305,7 @@ class Ultimeter(object):
     def get_time(self):
         self.set_logger_mode()
         buf = self.get_readings_with_retry()
-        data = Ultimeter.parse_readings(buf)
+        data = Station.parse_readings(buf)
         d = data['day_of_year']
         m = data['minute_of_day']
         tstr = time.localtime()
@@ -419,7 +419,7 @@ class Ultimeter(object):
 # define a main entry point for basic testing of the station without weewx
 # engine and service overhead.  invoke this as follows from the weewx root dir:
 #
-# PYTHONPATH=bin python bin/user/peetbros.py
+# PYTHONPATH=bin python bin/weewx/drivers/ultimeter.py
 
 if __name__ == '__main__':
     import optparse
@@ -427,7 +427,7 @@ if __name__ == '__main__':
     usage = """%prog [options] [--help]"""
 
     def main():
-        syslog.openlog('peetbros', syslog.LOG_PID | syslog.LOG_CONS)
+        syslog.openlog('ultimeter', syslog.LOG_PID | syslog.LOG_CONS)
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
         parser = optparse.OptionParser(usage=usage)
         parser.add_option('--version', dest='version', action='store_true',
@@ -442,15 +442,15 @@ if __name__ == '__main__':
         (options, args) = parser.parse_args()
 
         if options.version:
-            print "peetbros driver version %s" % DRIVER_VERSION
+            print "PeetBros Ultimeter driver version %s" % DRIVER_VERSION
             exit(0)
 
-        with Ultimeter(options.port) as s:
+        with Station(options.port) as s:
             if options.getcur:
                 s.set_logger_mode()
                 buf = s.get_readings_with_retry()
                 print buf
-                data = Ultimeter.parse_readings(buf)
+                data = Station.parse_readings(buf)
                 print data
             if options.gettime:
                 ts = s.get_time()

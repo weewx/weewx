@@ -15,7 +15,7 @@
 
 """Driver for ADS WS1 weather stations.
 
-Thanks to Steve (sesykes71)  for the testing that made this driver possible.
+Thanks to Steve (sesykes71) for the testing that made this driver possible.
 
 Thanks to Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
   http://server1.nuge.com/~weather/
@@ -36,12 +36,12 @@ INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DRIVER_VERSION = '0.10'
+DRIVER_VERSION = '0.11'
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 
 def logmsg(level, msg):
-    syslog.syslog(level, 'ads: %s' % msg)
+    syslog.syslog(level, 'ws1: %s' % msg)
 
 def logdbg(msg):
     logmsg(syslog.LOG_DEBUG, msg)
@@ -56,10 +56,10 @@ def loader(config_dict, engine):
     """Get the altitude, in feet, from the Station section of the dict."""
     altitude_m = weewx.units.getAltitudeM(config_dict)
     altitude_ft = altitude_m / METER_PER_FOOT
-    station = ADS(altitude=altitude_ft, **config_dict['WS1'])
+    station = WS1(altitude=altitude_ft, **config_dict['WS1'])
     return station
 
-class ADS(weewx.abstractstation.AbstractStation):
+class WS1(weewx.abstractstation.AbstractStation):
     '''weewx driver that communicates with an ADS-WS1 station
     
     port - serial port
@@ -96,9 +96,9 @@ class ADS(weewx.abstractstation.AbstractStation):
                 packet = {'dateTime': int(time.time()+0.5),
                           'usUnits' : weewx.US }
                 # open a new connection to the station for each reading
-                with WS1(self.port) as station:
+                with Station(self.port) as station:
                     bytes = station.get_readings()
-                data = WS1.parse_readings(bytes)
+                data = Station.parse_readings(bytes)
                 packet.update(data)
                 self._augment_packet(packet)
                 ntries = 0
@@ -146,7 +146,7 @@ class ADS(weewx.abstractstation.AbstractStation):
         if not packet['windSpeed']:
             packet['windDir'] = None
 
-class WS1(object):
+class Station(object):
     def __init__(self, port):
         self.port = port
         self.baudrate = 2400
@@ -253,7 +253,7 @@ class WS1(object):
 # define a main entry point for basic testing of the station without weewx
 # engine and service overhead.  invoke this as follows from the weewx root dir:
 #
-# PYTHONPATH=bin python bin/user/ads.py
+# PYTHONPATH=bin python bin/weewx/drivers/ws1.py
 
 if __name__ == '__main__':
     import optparse
@@ -261,7 +261,7 @@ if __name__ == '__main__':
     usage = """%prog [options] [--help]"""
 
     def main():
-        syslog.openlog('ads', syslog.LOG_PID | syslog.LOG_CONS)
+        syslog.openlog('ws1', syslog.LOG_PID | syslog.LOG_CONS)
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
         parser = optparse.OptionParser(usage=usage)
         parser.add_option('--version', dest='version', action='store_true',
@@ -272,10 +272,10 @@ if __name__ == '__main__':
         (options, args) = parser.parse_args()
 
         if options.version:
-            print "ADS driver version %s" % DRIVER_VERSION
+            print "ADS WS1 driver version %s" % DRIVER_VERSION
             exit(0)
 
-        with WS1(options.port) as s:
+        with Station(options.port) as s:
             print s.get_readings()
 
 if __name__ == '__main__':
