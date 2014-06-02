@@ -15,6 +15,8 @@ Added driver for PeetBros Ultimeter stations.
 
 Added driver for ADS WS1 stations.
 
+Added driver for RainWise Mark III stations and CC3000 data logger.
+
 Added automatic power cycling to the FineOffsetUSB driver.  Power cycle the
 station when a USB lockup is detected.  Only works with USB hubs that provide
 per-port power switching.
