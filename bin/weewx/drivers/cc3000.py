@@ -19,6 +19,10 @@ This driver does not support hardware record_generation.  It does support
 catchup on startup.
 """
 
+# FIXME: handle units properly - confirm units with some raw data
+# FIXME: do a partial read of memory based on interval size
+# FIXME: support non-fixed interval size
+
 from __future__ import with_statement
 import serial
 import syslog
