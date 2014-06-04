@@ -3412,6 +3412,27 @@ port = /dev/cuaU0</pre>
 	very nice guide</a> on how to install <span class='code'>
 	weewx</span> on Apple's Mavericks operating sytem.</p>
 
+    <h3>Funky symbols in plots</h3>
+    <p>If your plots have strange looking symbols for units such as
+      degrees Fahrenheit (&deg;F) that look something like this:</p>
+      <img src='funky_degree.png'/>
+    <p>Then the problem may be that you are missing the fonts
+    specified for the option
+      <span class="code">unit_label_font_path</span> in your
+      <span class="code">skin.conf</span> file. Look in
+      section <span class="code">[ImageGenerator]</span> for a line
+      that looks like:</p>
+    <pre class="tty">unit_label_font_path = /usr/share/fonts/truetype/freefont/FreeMonoBold.ttf</pre>
+    <p>Make sure that the specified path
+      (<span class='code'>/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf</span>
+      in this case) actually exists. If it does not, on Debian
+      operating systems (such as Ubuntu), you may be able to install
+      the necessary fonts using the command</p>
+    <pre class="tty">sudo apt-get install ttf-freefont</pre>
+    <p>If that doesn't work, or if you are on a different operating
+      system, then you will have to choose a different font, one that 
+      supports UTF-8 characters.</p>
+
     <h1 id="architecture">Architectural Notes</h1>
     <p>This section is not required to get started, but it should help you
       understand a bit more about how <span class="code">weewx</span> works. </p>
