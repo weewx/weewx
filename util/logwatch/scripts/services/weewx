@@ -215,6 +215,7 @@ while(defined($_ = <STDIN>)) {
              /\*\*\*\*  \'station\'/ ||
              /\*\*\*\* required parameter \'\'station\'\'/ ||
              /\*\*\*\*  Waiting 60 seconds then retrying/ ||
+             /wxengine: The archive interval in the configuration file/ ||
              /wxengine: Station does not support reading the time/ ||
              /wxengine: Starting main packet loop/ ||
              /wxengine: Shut down StdReport thread/ ||
@@ -375,6 +376,24 @@ while(defined($_ = <STDIN>)) {
              /te923: STT / ||
              /te923: Bad read \(attempt \d of/ ||   # normal when debugging
              /te923: usb error.* No data available/ || # normal when debug=1
+             /cc3000: found checksum at/ ||
+             /cc3000: calculated checksum/ ||
+             /cc3000: record/ ||
+             /cc3000: got bytes/ ||
+             /cc3000: open serial port/ ||
+             /cc3000: close serial port/ ||
+             /cc3000: station replied to command with/ ||
+             /cc3000: driver version is/ ||
+             /cc3000: polling interval is/ ||
+             /cc3000: pressure offset is/ ||
+             /cc3000: header is/ ||
+             /cc3000: units are/ ||
+             /cc3000: using station time/ ||
+             /cc3000: using computer time/ ||
+             /cc3000: using serial port/ ||
+             /cc3000: set echo to/ ||
+             /cc3000: get header/ ||
+             /cc3000: get units/ ||
              /owfs: driver version is / ||
              /owfs: interface is / ||
              /owfs: polling interval is / ||
@@ -396,6 +415,7 @@ while(defined($_ = <STDIN>)) {
              /forecast: NWSThread: NWS: forecast matrix/ ||
              /forecast: XTideThread: XTide: tide matrix/ ||
              /forecast: XTideThread: XTide: generating tides/ ||
+             /restx: \S+: Data will not be posted/ ||
              /restx: AWEKAS: url/ ||
              /restx: EmonCMS: url/ ||
              /restx: OWM: data/ ||

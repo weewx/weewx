@@ -19,7 +19,6 @@ This driver does not support hardware record_generation.  It does support
 catchup on startup.
 """
 
-# FIXME: handle units properly - confirm units with some raw data
 # FIXME: do a partial read of memory based on interval size
 # FIXME: support non-fixed interval size
 
@@ -38,7 +37,7 @@ INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DRIVER_VERSION = '0.4'
+DRIVER_VERSION = '0.5'
 DEFAULT_PORT = '/dev/ttyS0'
 
 def logmsg(level, msg):
@@ -90,6 +89,8 @@ class CC3000(weewx.abstractstation.AbstractStation):
         if self.pressure_offset is not None:
             self.pressure_offset = float(self.pressure_offset)
         self.use_station_time = stn_dict.get('use_station_time', True)
+        self.max_tries = int(stn_dict.get('max_tries', 5))
+        self.retry_wait = int(stn_dict.get('retry_wait', 60))
 
         self.last_rain = None
 
@@ -98,15 +99,9 @@ class CC3000(weewx.abstractstation.AbstractStation):
         loginf('polling interval is %s seconds' % self.polling_interval)
         loginf('pressure offset is %s mbar' % self.pressure_offset)
         loginf('using %s time' %
-               ('station' if self.use_station_time else 'compuer'))
+               ('station' if self.use_station_time else 'computer'))
 
-        with Station(self.port) as station:
-            station.set_echo()
-            self._archive_interval = 60 * station.get_interval()
-            logdbg('get header')
-            self.header = self._parse_header(station.get_header())
-            logdbg('get units')
-            self.units = station.get_units()
+        self._init_station_with_retries()
 
         loginf('header is %s' % self.header)
         loginf('units are %s' % self.units)
@@ -216,8 +211,67 @@ class CC3000(weewx.abstractstation.AbstractStation):
         with Station(self.port) as station:
             return station.get_memory_status()
 
+    def _init_station_with_retries(self):
+        for cnt in xrange(self.max_tries):
+            try:
+                self._init_station()
+                return
+            except weewx.WeeWxIOError, e:
+                logerr("Failed attempt %d of %d to initialize station: %s" %
+                       (cnt+1, self.max_tries, e))
+                logdbg("Waiting %d seconds before retry" % self.retry_wait)
+                time.sleep(self.retry_wait)
+        else:
+            raise weewx.RetriesExceeded("Max retries (%d) exceeded while initializing station" % self.max_tries)
+
+    def _init_station(self):
+        with Station(self.port) as station:
+            station.flush_input()
+            station.set_echo()
+            self._archive_interval = 60 * station.get_interval()
+            logdbg('get header')
+            self.header = self._parse_header(station.get_header())
+            logdbg('get units')
+            self.units = station.get_units()
+
     def _augment_packet(self, packet):
         """add derived metrics to a packet"""
+        if packet['usUnits'] == weewx.METRIC:
+            self._augment_packet_metric(packet)
+        else:
+            self._augment_packet_us(packet)
+
+        # calculate the rain
+        if self.last_rain is not None:
+            if packet['day_rain_total'] > self.last_rain:
+                packet['rain'] = packet['day_rain_total'] - self.last_rain
+            else:
+                packet['rain'] = None # counter reset
+        else:
+            packet['rain'] = None
+        self.last_rain = packet['day_rain_total']
+
+        # no wind direction when wind speed is zero
+        if not packet['windSpeed']:
+            packet['windDir'] = None
+
+    def _augment_packet_metric(self, packet):
+        adjp = packet['pressure']
+        if self.pressure_offset is not None and adjp is not None:
+            adjp += self.pressure_offset
+        slp_mbar = weewx.wxformulas.sealevel_pressure_Metric(
+            adjp, self.altitude * METER_PER_FOOT, packet['outTemp'])
+        packet['barometer'] = slp_mbar
+        packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
+            adjp, self.altitude * METER_PER_FOOT, algorithm='aaNOAA')
+        packet['windchill'] = weewx.wxformulas.windchillC(
+            packet['outTemp'], packet['windSpeed'])
+        packet['heatindex'] = weewx.wxformulas.heatindexC(
+            packet['outTemp'], packet['outHumidity'])
+        packet['dewpoint'] = weewx.wxformulas.dewpointC(
+            packet['outTemp'], packet['outHumidity'])
+
+    def _augment_packet_us(self, packet):
         adjp = packet['pressure']
         if self.pressure_offset is not None and adjp is not None:
             adjp += self.pressure_offset * INHG_PER_MBAR
@@ -233,20 +287,6 @@ class CC3000(weewx.abstractstation.AbstractStation):
             packet['outTemp'], packet['outHumidity'])
         packet['dewpoint'] = weewx.wxformulas.dewpointF(
             packet['outTemp'], packet['outHumidity'])
-
-        # calculate the rain
-        if self.last_rain is not None:
-            if packet['day_rain_total'] > self.last_rain:
-                packet['rain'] = packet['day_rain_total'] - self.last_rain
-            else:
-                packet['day_rain_total'] # counter reset
-        else:
-            packet['rain'] = None
-        self.last_rain = packet['day_rain_total']
-
-        # no wind direction when wind speed is zero
-        if not packet['windSpeed']:
-            packet['windDir'] = None
 
     def _parse_current(self, values):
         return self._parse_values(values, "%Y/%m/%d %H:%M:%S")
@@ -366,6 +406,7 @@ class Station(object):
     def command(self, cmd):
         self.write("%s\r" % cmd)
         data = self.get_data()
+        logdbg("station replied to command with '%s'" % data)
         data = data.strip()
         if data != cmd:
             raise weewx.WeeWxIOError("Command failed: cmd='%s' data='%s'" % 
@@ -402,7 +443,7 @@ class Station(object):
         logdbg("set echo to %s" % cmd)
         data = self.command('ECHO=%s' % cmd)
         if data != 'OK':
-            raise weewx.WeeWxIOError("Set ECHO failed")
+            raise weewx.WeeWxIOError("Set ECHO failed: %s" % data)
 
     def get_header(self):
         data = self.command("HEADER")
@@ -414,7 +455,8 @@ class Station(object):
     def get_current_data(self):
         data = self.command("NOW")
         if data == 'NO DATA':
-            raise weewx.WeeWxIOError("No data from sensors")
+            loginf("No data from sensors")
+            return []
         values = data.split(',')
         return values
 
@@ -426,7 +468,7 @@ class Station(object):
     def clear_memory(self):
         data = self.command("MEM=CLEAR")
         if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to clear memory")
+            raise weewx.WeeWxIOError("Failed to clear memory: %s" % data)
 
     def gen_records(self, nrec):
         """generator function for getting records from the device"""
@@ -463,7 +505,7 @@ class Station(object):
         s = "TIME=%s" % tstr
         data = self.command(s)
         if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to set time to %s" % s)
+            raise weewx.WeeWxIOError("Failed to set time to %s: %s" % (s,data))
 
     def get_units(self):
         data = self.command("UNITS=?")
@@ -473,7 +515,8 @@ class Station(object):
         logdbg("set units to %s" % units)
         data = self.command("UNITS=%s" % units)
         if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to set units to %s" % units)
+            raise weewx.WeeWxIOError("Failed to set units to %s: %s" %
+                                     (units, data))
 
     def get_interval(self):
         data = self.command("LOGINT=?")
@@ -483,7 +526,8 @@ class Station(object):
         logdbg("set logging interval to %d minutes" % interval)
         data = self.command("LOGINT=%d" % interval)
         if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to set logging interval")
+            raise weewx.WeeWxIOError("Failed to set logging interval: %s" %
+                                     data)
 
     def get_version(self):
         data = self.command("VERSION")
