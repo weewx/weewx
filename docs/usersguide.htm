@@ -98,6 +98,14 @@ Version: 3.0.0a1
 	<td>Maturity</td>
       </tr>
       <tr>
+	<td class="text_highlight">Argent Data Systems</td>
+	<td>WS1</td>
+	<td>Serial</td>
+	<td class="code">pyusb</td>
+        <td>WS1<sup><a href='#ads'>9</a></sup></td>
+	<td></td>
+      </tr>
+      <tr>
 	<td class="text_highlight" rowspan="2">Aercus</td>
 	<td>WS2083</td>
 	<td>USB</td>
@@ -463,6 +471,50 @@ Version: 3.0.0a1
 	<td>Tested</td>
       </tr>
       <tr>
+	<td class="text_highlight" rowspan="4">PeetBros</td>
+	<td>Ultimeter 100</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+        <td>Ultimeter<sup><a href='#peetbros'>10</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>Ultimeter 800</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+        <td>Ultimeter<sup><a href='#peetbros'>10</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>Ultimeter 2000</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+        <td>Ultimeter<sup><a href='#peetbros'>10</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>Ultimeter 2100</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+        <td>Ultimeter<sup><a href='#peetbros'>10</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td class="text_highlight" rowspan="2">RainWise</td>
+	<td>Mark III</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+        <td>CC3000<sup><a href='#cc3000'>11</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>CC3000</td>
+	<td>Serial</td>
+	<td class="code">pyserial</td>
+        <td>CC3000<sup><a href="#cc3000">11</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
 	<td class="text_highlight" rowspan="3">Radio Shack</td>
 	<td>63-256</td>
 	<td>USB</td>
@@ -628,6 +680,15 @@ Version: 3.0.0a1
       </li>
       <li><a id="te923">Hideki Professional Weather Stations.</a> Tested on the
        <a href="http://www.ambientweather.com/hotewiwest.html">Meade TE923</a>.
+      </li>
+      <li><a id="ads">ADS WS1 Stations.</a>  Tested on the
+        <a href="http://www.argentdata.com/catalog/product_info.php?products_id=135">WS1</a>.
+      </li>
+      <li><a id="peetbros">PeetBros Ultimeter Stations.</a> Tested on the
+       <a href="http://www.peetbros.com/">Ultimeter 2000</a>.
+      </li>
+      <li><a id="rainwise">RainWise Mark III Stations.</a> Tested on the
+       <a href="http://www.rainwise.com/">CC3000 Data Logger</a>.
       </li>
     </ol>
 
@@ -1048,6 +1109,18 @@ longitude = -77.0366</pre>
 	<td class="code text_highlight">TE923</td>
 	<td>Hideki TE923 stations</td>
       </tr>
+      <tr>
+	<td class="code text_highlight">Ultimeter</td>
+	<td>PeetBros Ultimeter stations</td>
+      </tr>
+      <tr>
+	<td class="code text_highlight">WS1</td>
+	<td>Argent Data Systems WS1 stations</td>
+      </tr>
+      <tr>
+	<td class="code text_highlight">CC3000</td>
+	<td>RainWise CC3000 data logger</td>
+      </tr>
     </table>
     
     <p id="station_url" class="config_option"><span class="config_important">station_url</span></p>
@@ -1256,6 +1329,62 @@ longitude = -77.0366</pre>
     extraBatteryStatus3 =  battery4
     extraBatteryStatus4 =  battery5</pre>
 
+    <h3 class="config_section">[Ultimeter]</h3>
+    <p>This section is for options relating to the PeetBros Ultimeter weather
+      stations.</p>
+    <p class="config_important">port</p>
+    <p>The serial port, e.g., <span class='code'>/dev/ttyS0</span>.  When using
+      a USB-Serial converter, the port will be something like
+      <span class='code'>/dev/ttyUSB0</span>.  Default is
+      <span class='code'>/dev/ttyUSB0</span></p>
+    <p class="config_important">model</p>
+    <p>Set to the station model. For example, Ultimeter 2000 or Ultimeter 800.
+      Default is "Ultimeter".</p>
+
+    <h3 class="config_section">[WS1]</h3>
+    <p>This section is for options relating to the Argent Data Systems WS1
+      weather stations.</p>
+    <p class="config_important">port</p>
+    <p>The serial port, e.g., <span class='code'>/dev/ttyS0</span>.  When using
+      a USB-Serial converter, the port will be something like
+      <span class='code'>/dev/ttyUSB0</span>.  Default is
+      <span class='code'>/dev/ttyUSB0</span></p>
+    <p class='config_option'>pressure_offset</p>
+    <p>
+      The offset, in millibars, that is applied to values from the
+      station sensor. This offset is applied to the station pressure
+      <i>before</i> calculating barometer and altimeter sea level pressures.
+      Only the raw station pressure is recorded to the database, not the
+      station pressure with offset applied.  Default is None.
+    </p>
+    <p class='config_option'>polling_interval</p>
+    <p>The <span class="code">polling_interval</span> determines how often
+      <span class="code">weewx</span> will query the station for data.  The
+      default is 1 second.
+    </p>
+
+    <h3 class="config_section">[CC3000]</h3>
+    <p>This section is for options relating to the RainWise Mark III weather
+      stations and CC3000 data logger.</p>
+    <p class="config_important">port</p>
+    <p>The serial port, e.g., <span class='code'>/dev/ttyS0</span>.  When using
+      a USB-Serial converter, the port will be something like
+      <span class='code'>/dev/ttyUSB0</span>.  Default is
+      <span class='code'>/dev/ttyUSB0</span></p>
+    <p class='config_option'>pressure_offset</p>
+    <p>
+      The offset, in millibars, that is applied to values from the
+      station sensor. This offset is applied to the station pressure
+      <i>before</i> calculating barometer and altimeter sea level pressures.
+      Only the raw station pressure is recorded to the database, not the
+      station pressure with offset applied.  Default is None.
+    </p>
+    <p class='config_option'>polling_interval</p>
+    <p>The <span class="code">polling_interval</span> determines how often
+      <span class="code">weewx</span> will query the station for data.  The
+      default is 1 second.
+    </p>
+
     <h3 class="config_section">[Simulator]</h3>
     <p>This section is for options relating to the software weather station simulator 
       that comes with <span class="code">weewx</span>.</p>
@@ -1426,13 +1555,17 @@ longitude = -77.0366</pre>
       is fine, but they prefer every 10 minutes (600 s) or even longer. Setting
       this value to zero will cause every archive record to be posted. 
       Optional. Default is zero.</p>
-    <p class="config_option">stale </p>
+    <p class="config_option">stale</p>
     <p>How old a record can be before it will not be used for a catch up. CWOP
       does not use the timestamp on a posted record. Instead, they use the wall
       clock time that it came in. This means that if your station is off the
       air for a long period of time, then <span class="code">weewx</span>
       attempts a catch up, old data could be interpreted as the current
       conditions. Optional. Default is 1800 seconds.</p>
+    <p class="config_option">server_list</p>
+    <p>A comma-delimited list of the servers that should be tried for
+      uploading data.
+      Optional.  Default is: cwop.aprs.net:14580, cwop.aprs.net:23</p>
     <p class='config_option'>log_success</p>
     <p>In case of success, make a note in the system log. This is the default.</p>
     <p class='config_option'>log_failure</p>
@@ -1873,6 +2006,7 @@ report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
       <li><a href="#wee_config_fousb">Fine Offset stations</a></li>
       <li><a href="#wee_config_ws23xx">La Crosse WS23xx stations</a></li>
       <li><a href="#wee_config_ws28xx">La Crosse WS28xx stations</a></li>
+      <li><a href="#wee_config_cc3000">RainWise CC3000 data logger</a></li>
     </ul>
     <h2 id="wee_config_vantage">Davis Vantage</h2>
     <p>Weewx comes with a configuration utlity, <span class="code">wee_config_vantage</span>, 
@@ -2326,8 +2460,8 @@ Mutating actions will request confirmation before proceeding.</pre>
     <ol>
       <li><strong>The Weewx way.</strong>  With <span class="code">weewx</span>
         running, press and hold the [v] button on the console until you see
-        'PC' in the display.  If the console pairs with the transceiver, 'PC'
-        will go away within a second or two.</li>
+        'PC' in the display, then release the button.  If the console pairs
+        with the transceiver, 'PC' will go away within a second or two.</li>
       <li><strong>The HeavyWeather way.</strong>  Follow the pairing
         instructions that came with the station.  You will have to run
         HeavyWeather on a windows computer with the USB transceiver.  After
@@ -2371,6 +2505,51 @@ Mutating actions will request confirmation before proceeding.</pre>
       communication with the transceiver stops.  It is better to create alarms
       in weewx, and the <span class="code">weewx</span> alarms can do much more than the console alarms
       anyway.</p>
+
+
+    <h2 id="wee_config_cc3000">RainWise CC3000</h2>
+    <p>The configuration utility <span class='code'>wee_config_cc3000</span> is
+      designed to diagnose and configure RainWise CC3000 data loggers.</p>
+    <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_cc3000 --help </pre>
+    <p>This will print out something like:</p>
+    <p class='tty'>Usage: wee_config_cc3000 [config_file] [options] [--help]
+
+Configuration utility for RainWise CC3000 data logger.
+
+Options:
+  -h, --help         show this help message and exit
+  --config=FILE      use configuration file FILE
+  --info             display weather station configuration
+  --current          display current weather readings
+  --history=N        display N records (specify 0 for all records)
+  --set-clock        set station clock to computer time
+  --set-units=UNITS  set units to METRIC or ENGLISH
+  --set-interval=N   set logging interval to N minutes
+  --clear-memory     clear station memory
+  -y                 answer yes to every prompt
+  --debug            display diagnostic information while running
+
+Mutating actions will request confirmation before proceeding.
+</p>
+    <p>Display the station settings with the <span class='code'>--info</span>
+      option.</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_cc3000 --info </pre>
+    <p>This will result in something like this:</p>
+    <pre class='tty'>firmware:  Rainwise CC-3000 Version: 1.3 Build 002 Jun 05 2013
+time:  2014/06/02 08:22:17
+units:  ENGLISH
+memory:  251372 bytes, 4334 records, 12%
+interval:  1</pre>
+
+    <h3 id="cc3000_changing_the_archive_interval">Changing the archive interval</h3>
+    <p>CC3000 loggers ship from the factory with an archive interval
+      of 1 minutes (60 seconds).  To change the station's
+      interval to 5 minutes, do the following:</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_cc3000 --set-interval=5</p>
+    <p class="warning"><b>Choose the archive interval carefully! </b>Once
+      chosen, it cannot be changed without messing up the statistics (highs
+      and lows will be OK, but averages and RMS wind speed will be wrong). </p>
 
 
     <h1 id="configuring_mysql">Configuring MySQL</h1>
@@ -2419,29 +2598,28 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
       as log messages.  Once everything is working properly, run it as a
       daemon.</p>
     <h2>Running from the command line</h2>
-    <p><span class="code">Weewx</span> can easily be run from the command line. 
-      Start by making sure you have appropriate permissions to the serial port your 
-      weather station uses. For example, if you are using a plain old serial port:
-    </p>
-    <pre class="tty">sudo chmod 666 /dev/ttyS0 </pre>
-    <p>Then run the main program, <span class="code">weewxd</span>, giving 
+    <p>To run <span class="code">weewx</span> directly, invoke
+      the main program, <span class="code">weewxd</span>, giving 
       the configuration file as its only parameter: </p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
-    <p>It should start by downloading any data stored in your weather station into 
-      the archive database. As the Davis VantagePro can store a couple thousand archive 
-      records internally, this could take a minute or two. I have found this process 
-      particularly slow on SuSE for some reason. </p>
-    <p><span class="code">Weewx</span> will then start monitoring LOOP data, printing 
-      a short version of the received data on standard output, about once every two 
-      seconds. </p>
-    <p>You can tell a running instance of <span class="code">weewx</span> to reread 
-      its configuration file by sending it the <span class="code">HUP</span> signal. 
-      First run <span class="code">ps</span> to find out the Process ID (PID) number 
-      of the instance, then send it the <span class="code">HUP</span> signal: </p>
+    <pre class="tty">sudo <span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
+    <p>It should start by downloading any data stored in your weather station
+      (if the station has a data logger) into the archive database. For some
+      stations, such as the Davis Vantage with a couple thousand records, this
+      could take a minute or two. I have found this process particularly slow
+      on SuSE for some reason. </p>
+    <p><span class="code">Weewx</span> will then start monitoring live sensor
+      data (also referrred to as 'LOOP' data),
+      printing a short version of the received data on standard output, about
+      once every two seconds. </p>
+    <p>You can tell a running instance of <span class="code">weewx</span> to
+      reread its configuration file by sending it the
+      <span class="code">HUP</span> signal. 
+      First run <span class="code">ps</span> to find out the Process ID (PID)
+      number of the instance, then send it the <span class="code">HUP</span> signal: </p>
     <pre class="tty">ps -a          # Note the PID of the weewxd process
 kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
-    <p>Note that this <em>only</em> rereads the configuration file. It will not 
-      reload any code.</p>
+    <p>Note that this <em>only</em> rereads the configuration file. It will
+      not reload any code.</p>
 
     <h2>Running as a daemon</h2>
     <p>For unattended operations it is best to have <span class="code">weewx</span> 
@@ -2632,6 +2810,88 @@ sudo /etc/init.d/apache2 restart</p>
       these will copy everything from the <span class='code'>HTML_ROOT</span>
       directory to a location on the remote server on which the web server
       is running.</p>
+
+
+    <h1 id="backup">Making a backup of a <span class='code'>weewx</span> installation</h1>
+    <p>
+      To backup a <span class='code'>weewx</span> installation, make a copy of
+      the weewx configuration, weather data, skins/templates, and custom code.
+      In most cases these can be copied while weewx is running.  The location
+      of these files depends on which method was used to install
+      <span class='code'>weewx</span>.
+    </p>
+    <p>
+      <strong>Configuration.</strong>
+      Save the <span class='code'>weewx.conf</span> file.
+    </p>
+    <table class="locations" style="width:70%">
+      <tr>
+	<td style="width: 30%">setup.py</td>
+	<td class='tty'>/home/weewx/weewx.conf</td>
+      </tr>
+      <tr>
+	<td >DEB/RPM</td>
+	<td class='tty'>/etc/weewx/weewx.conf</td>
+      </tr>
+    </table>
+    <p>
+      <strong>Weather data.</strong> Meteorological ata are saved in the
+      archive database.  For a Sqlite
+      configuration, simply save the <span class='code'>weewx.sdb</span>
+      file.  For a MySQL configuration, save a dump of the archive database.
+      The stats database does not have to be backed up - if no stats database
+      is found, it will be generated automatically from archive data.
+    </p>
+    <table class="locations" style="width:70%">
+      <tr>
+	<td style="width: 30%">setup.py</td>
+	<td class='tty'>/home/weewx/archive/weewx.sdb</td>
+      </tr>
+      <tr>
+	<td >DEB/RPM</td>
+	<td class='tty'>/var/lib/weewx/weewx.sdb</td>
+      </tr>
+    </table>
+    <p>
+      <strong>Skins and templates.</strong>
+      Save the contents of the skins directory.
+    </p>
+    <table class="locations" style="width:70%">
+      <tr>
+	<td style="width: 30%">setup.py</td>
+	<td class='tty'>/home/weewx/skins</td>
+      </tr>
+      <tr>
+	<td >DEB/RPM</td>
+	<td class='tty'>/etc/weewx/skins</td>
+      </tr>
+    </table>
+    <p>
+      <strong>Other customizations.</strong>  Save the contents of the
+      <span class='code'>user</span> directory if you have modified the
+      database schema or added any extensions.  If the extensions save data
+      to a database you should backup those databases as well.
+    </p>
+    <table class="locations" style="width:70%">
+      <tr>
+	<td style="width: 30%">setup.py</td>
+	<td class='tty'>/home/weewx/bin/user</td>
+      </tr>
+      <tr>
+	<td >DEB/RPM</td>
+	<td class='tty'>/usr/share/weewx/user</td>
+      </tr>
+    </table>
+    <p>
+      It is not necessary to backup the images and HTML files generated from
+      templates, since weewx will easily create those again.  This includes
+      the NOAA reports in some skins.
+    </p>
+    <p>
+      To restore from backup, do a fresh install of
+      <span class='code'>weewx</span> then replace the default files with
+      those from a backup.  Then start <span class='code'>weewx</span>.
+    </p>
 
 
     <h1 id="troubleshooting">Troubleshooting</h1>
@@ -3178,6 +3438,27 @@ port = /dev/cuaU0</pre>
       <a href='http://www.cougar.eu.com/useful-guides/weewx-installation-on-osx.html'>
 	very nice guide</a> on how to install <span class='code'>
 	weewx</span> on Apple's Mavericks operating sytem.</p>
+
+    <h3>Funky symbols in plots</h3>
+    <p>If your plots have strange looking symbols for units such as
+      degrees Fahrenheit (&deg;F) that look something like this:</p>
+      <img src='funky_degree.png'/>
+    <p>Then the problem may be that you are missing the fonts
+    specified for the option
+      <span class="code">unit_label_font_path</span> in your
+      <span class="code">skin.conf</span> file. Look in
+      section <span class="code">[ImageGenerator]</span> for a line
+      that looks like:</p>
+    <pre class="tty">unit_label_font_path = /usr/share/fonts/truetype/freefont/FreeMonoBold.ttf</pre>
+    <p>Make sure that the specified path
+      (<span class='code'>/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf</span>
+      in this case) actually exists. If it does not, on Debian
+      operating systems (such as Ubuntu), you may be able to install
+      the necessary fonts using the command</p>
+    <pre class="tty">sudo apt-get install ttf-freefont</pre>
+    <p>If that doesn't work, or if you are on a different operating
+      system, then you will have to choose a different font, one that 
+      supports UTF-8 characters.</p>
 
     <h1 id="architecture">Architectural Notes</h1>
     <p>This section is not required to get started, but it should help you

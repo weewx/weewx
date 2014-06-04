@@ -11,6 +11,27 @@ Removed the no longer needed serviced StdRESTful, obsolete since V2.6
 The WMR100 driver now calculates SLP in software. This fixes a problem
 with the WMRS200 station, which does not allow the user to set altitude.
 
+The WMR100 driver was incorrectly tagging rain over the last 24 hours as
+rain since midnight. This caused a problem with WU and CWOP posts.
+
+Fix cosmetic problem in wee_config_fousb pressure calibration.
+
+Detect both NP (not present) and OFL (outside factory limits) on ws28xx.
+
+Added driver for PeetBros Ultimeter stations.
+
+Added driver for ADS WS1 stations.
+
+Added driver for RainWise Mark III stations and CC3000 data logger.
+
+Added automatic power cycling to the FineOffsetUSB driver.  Power cycle the
+station when a USB lockup is detected.  Only works with USB hubs that provide
+per-port power switching.
+
+Fix imagegenerator aggregation to permit data tables with no 'interval' column.
+
+Prompt for metric/US units for debian installations.
+
 
 2.6.3 04/10/14
 

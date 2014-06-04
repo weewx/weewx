@@ -1306,6 +1306,7 @@ if __name__ == "__main__":
               'docs/daytemp_with_avg.png',
               'docs/debian.htm',
               'docs/ferrites.jpg',
+              'docs/funky_degree.png',
               'docs/logo-apple.png',
               'docs/logo-centos.png',
               'docs/logo-debian.png',

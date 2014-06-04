@@ -69,6 +69,8 @@ tick mark.
 
 Make units extensible.
 
+Add log_success/log_failure parameters for subsystems other than just restx.
+
 Graphing system feature requests:
 
   - user suggestions are here:

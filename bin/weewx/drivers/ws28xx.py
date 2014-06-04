@@ -918,15 +918,15 @@ def log_frame(n, buf):
     if strbuf:
         logdbg(strbuf)
 
-def get_datum_diff(v, np):
-    if abs(np - v) > 0.001:
-        return v
-    return None
+def get_datum_diff(v, np, ofl):
+    if abs(np - v) < 0.001 or abs(ofl - v) < 0.001:
+        return None
+    return v
 
-def get_datum_match(v, np):
-    if np != v:
-        return v
-    return None
+def get_datum_match(v, np, ofl):
+    if np == v or ofl == v:
+        return None
+    return v
 
 def calc_checksum(buf, start, end=None):
     if end is None:
@@ -1120,19 +1120,26 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
         # data from the station sensors
         packet['inTemp']      = get_datum_diff(data._TempIndoor,
-                                               CWeatherTraits.TemperatureNP())
+                                               CWeatherTraits.TemperatureNP(),
+                                               CWeatherTraits.TemperatureOFL())
         packet['inHumidity']  = get_datum_diff(data._HumidityIndoor,
-                                               CWeatherTraits.HumidityNP())
+                                               CWeatherTraits.HumidityNP(),
+                                               CWeatherTraits.HumidityOFL())
         packet['outTemp']     = get_datum_diff(data._TempOutdoor,
-                                               CWeatherTraits.TemperatureNP())
+                                               CWeatherTraits.TemperatureNP(),
+                                               CWeatherTraits.TemperatureOFL())
         packet['outHumidity'] = get_datum_diff(data._HumidityOutdoor,
-                                               CWeatherTraits.HumidityNP())
+                                               CWeatherTraits.HumidityNP(),
+                                               CWeatherTraits.HumidityOFL())
         packet['pressure']    = get_datum_diff(data._PressureRelative_hPa,
-                                               CWeatherTraits.PressureNP())
+                                               CWeatherTraits.PressureNP(),
+                                               CWeatherTraits.PressureOFL())
         packet['windSpeed']   = get_datum_diff(data._WindSpeed,
-                                               CWeatherTraits.WindNP())
+                                               CWeatherTraits.WindNP(),
+                                               CWeatherTraits.WindOFL())
         packet['windGust']    = get_datum_diff(data._Gust,
-                                               CWeatherTraits.WindNP())
+                                               CWeatherTraits.WindNP(),
+                                               CWeatherTraits.WindOFL())
 
         if packet['windSpeed'] is not None and packet['windSpeed'] > 0:
             packet['windDir'] = data._WindDirection * 360 / 16
@@ -1146,10 +1153,13 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
         # calculated elements not directly reported by station
         packet['rainRate'] = get_datum_match(data._Rain1H,
-                                             CWeatherTraits.RainNP())
+                                             CWeatherTraits.RainNP(),
+                                             CWeatherTraits.RainOFL())
         if packet['rainRate'] is not None:
             packet['rainRate'] /= 10 # weewx wants cm/hr
-        rain_total = get_datum_match(data._RainTotal, CWeatherTraits.RainNP())
+        rain_total = get_datum_match(data._RainTotal,
+                                     CWeatherTraits.RainNP(),
+                                     CWeatherTraits.RainOFL())
         delta = weewx.wxformulas.calculate_rain(rain_total, self._last_rain)
         self._last_rain = rain_total
         packet['rain'] = delta

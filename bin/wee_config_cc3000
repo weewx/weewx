@@ -1,0 +1,178 @@
+#!/usr/bin/env python
+# $Id$
+#
+# Copyright 2014 Matthew Wall
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+# See http://www.gnu.org/licenses/
+
+"""Command line utility for configuring RainWise CC3000 data logger.
+"""
+
+import datetime
+import optparse
+import shutil
+import sys
+import syslog
+import tempfile
+import time
+
+import weewx.drivers.cc3000
+import weewx.units
+import weeutil.weeutil
+
+description = """Configuration utility for RainWise CC3000 data logger."""
+
+usage = """%prog [config_file] [options] [--help]"""
+
+epilog = """Mutating actions will request confirmation before proceeding."""
+
+def main():
+    syslog.openlog('wee_config_cc3000', syslog.LOG_PID|syslog.LOG_CONS)
+
+    # Create a command line parser:
+    parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
+    
+    # Add the various options:
+    parser.add_option("--config", dest="cfgfn", type=str, metavar="FILE",
+                      help="use configuration file FILE")
+    parser.add_option("--info", dest="info", action="store_true",
+                      help="display weather station configuration")
+    parser.add_option("--current", dest="current", action="store_true",
+                      help="display current weather readings")
+    parser.add_option("--history", dest="nrecords", type=int, metavar="N",
+                      help="display N records (specify 0 for all records)")
+    parser.add_option("--set-clock", dest="clock", action="store_true",
+                      help="set station clock to computer time")
+    parser.add_option("--set-units", dest="units", metavar="UNITS",
+                      help="set units to METRIC or ENGLISH")
+    parser.add_option("--set-interval", dest="interval", type=int, metavar="N",
+                      help="set logging interval to N minutes")
+    parser.add_option("--clear-memory", dest="clear", action="store_true",
+                      help="clear station memory")
+    parser.add_option("-y", dest="noprompt", action="store_true",
+                      help="answer yes to every prompt")
+    parser.add_option("--debug", dest="debug", action="store_true",
+                      help="display diagnostic information while running")
+
+    # Now we are ready to parse the command line:
+    (options, args) = parser.parse_args()
+    if options.debug is not None:
+        weewx.debug = options.debug
+
+    config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
+    print 'Using configuration file %s' % config_fn
+
+    print 'Driver version %s' % weewx.drivers.cc3000.DRIVER_VERSION
+    altitude_m = weewx.units.getAltitudeM(config_dict)
+    altitude_ft = altitude_m / weewx.drivers.cc3000.METER_PER_FOOT
+    station = weewx.drivers.cc3000.CC3000(altitude=altitude_ft,
+                                          **config_dict['CC3000'])
+
+    if options.noprompt:
+        prompt = False
+    else:
+        prompt = True
+
+    if options.nrecords is not None:
+        showrecords(station, options.nrecords)
+    elif options.current:
+        showreadings(station)
+    elif options.clock:
+        setclock(station, prompt)
+    elif options.interval is not None:
+        setinterval(station, options.interval, prompt)
+    elif options.units is not None:
+        setunits(station, options.units, prompt)
+    elif options.clear:
+        clearmemory(station, prompt)
+    else:
+        info(station)
+
+    station.closePort()
+
+def info(station):
+    """Query the station then display the settings."""
+    print "firmware: ", station.get_version()
+    print "time: ", station.get_time()
+    print "units: ", station.get_units()
+    print "memory: ", station.get_status()
+    print "interval: ", station.get_interval()
+
+def showrecords(station, nrecords=0):
+    for r in station.get_records(nrecords):
+        print r
+
+def showreadings(station):
+    print station.get_current()
+
+def clearmemory(station, prompt):
+    ans = None
+    while ans not in ['y', 'n']:
+        print station.get_status()
+        if prompt:
+            ans = raw_input("Clear console memory (y/n)? ")
+        else:
+            print 'Clearing console memory'
+            ans = 'y'
+        if ans == 'y' :
+            station.clear_memory()
+            print station.get_status()
+        elif ans == 'n':
+            print "Clear memory cancelled."
+
+def setinterval(station, interval, prompt):
+    ans = None
+    while ans not in ['y', 'n']:
+        print "Interval is", station.get_interval()
+        if prompt:
+            ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
+        else:
+            print "Setting interval to %d minutes" % interval
+            ans = 'y'
+        if ans == 'y' :
+            station.set_interval(interval)
+            print "Interval is now", station.get_interval()
+        elif ans == 'n':
+            print "Set interval cancelled."
+
+def setclock(station, prompt):
+    ans = None
+    while ans not in ['y', 'n']:
+        print "Station clock is", station.get_time()
+        now = datetime.datetime.now()
+        if prompt:
+            ans = raw_input("Set station clock to %s (y/n)? " % now)
+        else:
+            print "Setting station clock to %s" % now
+            ans = 'y'
+        if ans == 'y' :
+            station.set_clock()
+            print "Station clock is now", station.get_time()
+        elif ans == 'n':
+            print "Set clock cancelled."
+
+def setunits(station, units, prompt):
+    ans = None
+    while ans not in ['y', 'n']:
+        print "Station units is", station.get_units()
+        if prompt:
+            ans = raw_input("Set station units to %s (y/n)? " % units)
+        else:
+            print "Setting station units to %s" % units
+            ans = 'y'
+        if ans == 'y' :
+            station.set_units(units)
+            print "Station units is now", station.get_units()
+        elif ans == 'n':
+            print "Set units cancelled."
+
+if __name__=="__main__" :
+    main()
