@@ -14,5 +14,7 @@ Is max gap fraction meaningful for bar charts now?
 
 Is Archive.getSql and Archive.genSql needed now?
 
+Include version number in archive database metadata.
+
 Add documentation for the extension installer and extension packaging.
 
