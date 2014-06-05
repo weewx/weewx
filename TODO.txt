@@ -4,6 +4,8 @@ Allow any archive database to have its daily summary rebuilt.
 
 Capture LOOP data for highs and lows
 
+Allow alternative accumulators to be specified.
+
 Optimize tags $current. Right now, they all require a database hit.
 
 Return value of Archive.getSqlVectors() and getSqlVectorsExtended() has changed.

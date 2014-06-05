@@ -223,20 +223,6 @@ class Archive(object):
                            os.path.basename(self.connection.database),
                            e))
 
-    def updateHiLo(self, accumulator):
-        """Use the contents of an accumulator to update the highs/lows of a stats database."""
-        
-        # for now, do nothing.
-        
-#         # Get the start-of-day for the timespan in the accumulator
-#         _sod_ts = weeutil.weeutil.startOfArchiveDay(accumulator.timespan.stop)
-#         # Retrieve the stats seen so far:
-#         _stats_dict = self._getDayStats(_sod_ts)
-#         # Update them with the contents of the accumulator:
-#         _stats_dict.updateHiLo(accumulator)
-#         # Then save the results:
-#         self._setDayStats(_stats_dict, accumulator.timespan.stop)
-        
     def genBatchRows(self, startstamp=None, stopstamp=None):
         """Generator function that yields raw rows from the archive database
         with timestamps within an interval.

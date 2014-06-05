@@ -548,13 +548,9 @@ class StdArchive(StdService):
         """The main packet loop has ended. Time to process the old accumulator."""
         # If we happen to startup in the small time interval between the end of
         # the archive interval and the end of the archive delay period, then
-        # there will be no old accumulator and an exception will be thrown. Be
-        # prepared to catch it.
-        try:
+        # there will be no old accumulator.
+        if hasattr(self, 'old_accumulator'):
             self.archive.updateHiLo(self.old_accumulator)
-        except AttributeError:
-            pass
-        else:
             # If the user has requested software generation, then do that:
             if self.record_generation == 'software':
                 self._software_catchup()

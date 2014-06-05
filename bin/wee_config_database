@@ -47,7 +47,7 @@ def main():
     
     # Add the various options:
     parser.add_option("--config", dest="cfgfn", type=str, metavar="FILE",
-                      help="use configuration file FILE")
+                      help="use configuration file FILE. Default is /etc/weewx/weewx.conf or /home/weewx/weewx.conf")
     parser.add_option("--create-archive", dest="create_archive", action='store_true',
                       help="Create the archive database.")
     parser.add_option("--drop-daily", dest="drop_daily", action='store_true',
