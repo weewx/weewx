@@ -12,7 +12,7 @@ For more information about Cheetah, see http://www.cheetahtemplate.org
 Configuration Options
 
   search_list = a, b, c              # list of classes derived from SearchList
-  search_list_extensions = d, e, f   # will be appended to search_list
+  search_list_additions = d, e, f    # will be appended to search_list. Each should be a list.
   encoding = (html_entities|utf8|strict_ascii)
   template = filename.tmpl           # must end with .tmpl
   stale_age = s                      # age in seconds
@@ -21,14 +21,18 @@ The strings YYYY and MM will be replaced if they appear in the filename.
 
 search_list will override the default search_list
 
-search_list_extension will be appended to search_list
+search_list_additions will be appended to search_list
 
-Generally it is better to extend by using search_list_extension rather than
+Generally it is better to extend by using search_list_additions rather than
 search_list, just in case the default search list changes.
 
 Example:
 
 [CheetahGenerator]
+    # This is the new way to specify a search list additions:
+    search_list_additions = user.special.MyExtension
+    # This is the old way and is included for backwards compatibility, 
+    # but will eventually be deprecated:
     search_list_extensions = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables
     encoding = html_entities      # html_entities, utf8, strict_ascii
     [[SummaryByMonth]]                              # period
@@ -111,7 +115,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         formatter:        An instance of weewx.units.Formatter
         converter:        An instance of weewx.units.Converter
         unitInfoHelper:   An instance of weewx.units.UnitInfoHelper
-        search_list_objs: A list holding the search list objects
+        search_list_exts: A list holding search list extensions, new style
+        search_list_objs: A list holding search list extensions, old style
         db_cache:         An instance of weewx.archive.DBCache from which the data should be extracted
     """
 
@@ -154,26 +159,38 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
     def initExtensions(self, gen_dict):
         """Load the search list"""
+        # New style search list additions:
         self.search_list_objs = []
+        # Old style search list extensions:
+        self.search_list_exts = []
 
         # The option search_list contains the basic search list
         search_list = weeutil.weeutil.option_as_list(gen_dict.get('search_list'))
         if search_list is None:
             search_list = list(default_search_list)
 
-        # The option search_list_extensiosn contains the extensions
-        search_list_ext = weeutil.weeutil.option_as_list(gen_dict.get('search_list_extensions'))
-        if search_list_ext is not None:
-            search_list.extend(search_list_ext)
+        # The option search_list_additions contains the extensions
+        search_list_addns = weeutil.weeutil.option_as_list(gen_dict.get('search_list_additions'))
+        if search_list_addns is not None:
+            search_list.extend(search_list_addns)
 
         # Now go through search_list (which is a list of strings holding the names of the extensions):
         for c in search_list:
             x = c.strip()
-            if len(x) > 0:
+            if x:
                 # Get the class
-                class_ = weeutil.weeutil._get_object(c)
+                class_ = weeutil.weeutil._get_object(x)
                 # Then instantiate the class, passing self as the sole argument
                 self.search_list_objs.append(class_(self))
+                
+        # For backwards compatibility, get the search list extensions
+        search_list_extensions = weeutil.weeutil.option_as_list(gen_dict.get('search_list_extensions'))
+        if search_list_extensions is not None:
+            for c in search_list_extensions:
+                x = c.strip()
+                if x:
+                    class_ = weeutil.weeutil._get_object(x)
+                    self.search_list_exts.append(class_(self))
 
     def teardown(self):
         """Delete any extension objects we created to prevent back references
@@ -311,16 +328,24 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         # For backwards compatibility, extract the default archive and stats databases
         statsdb = archivedb = db_factory.get_database()
         
+        # Get the basic search list
         searchList = [{'month_name' : time.strftime("%b", timespan_start_tt),
                        'year_name'  : timespan_start_tt[0],
                        'encoding' : encoding},
-                      self.outputted_dict] +\
-                      [obj.get_extension_x(timespan, db_factory) for obj in self.search_list_objs] +\
-                      [obj.get_extension(timespan, archivedb, statsdb)]
+                      self.outputted_dict]
+        
+        # Then add the new-style search list additions:
+        for obj in self.search_list_objs:
+            searchList += obj.add_searchlist(timespan, db_factory)
+
+        # Now add the old-style extensions:
+        searchList += [obj.get_extension(timespan, archivedb, statsdb) for obj in self.search_list_exts]
+        
+        # Finally, add the REALLY old style extensions
+        searchList += self.getToDateSearchList(archivedb, statsdb, timespan)
 
         return searchList
 
-#TODO: Need to include this for backwards compatibility:
     def getToDateSearchList(self, archivedb, statsdb, timespan):
         """Backwards compatible entry."""
         return []
@@ -387,22 +412,22 @@ class SearchList(object):
         """
         self.generator = generator
 
-    def get_extension_x(self, timespan, db_factory):
-        """Derived classes must define this method.  Should return an object
-        whose attributes or keys define the extension.
+    def add_searchlist(self, timespan, db_factory):
+        """Derived classes must define this method.  Should return a list
+        of objects whose attributes or keys define the extension.
         
         timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
                    start and stop times of the domain of valid times.
                    
         db_factory: An instance of class weewx.unidata.UniFactory
         """
-        return self
+        return [self]
 
     def get_extension(self, timespan, archivedb, statsdb):
         """Derived classes must define this method.  Should return an object
         whose attributes or keys define the extension.
         
-        OBSOLETE INTERFACE. Use get_extension_x() instead.
+        OBSOLETE INTERFACE. Use add_searchlist() instead.
         
         timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
                    start and stop times of the domain of valid times.
@@ -486,7 +511,7 @@ class Stats(SearchList):
     default_heatbase = (65.0, "degree_F", "group_temperature")
     default_coolbase = (65.0, "degree_F", "group_temperature")
 
-    def get_extension_x(self, timespan, db_factory):
+    def add_searchlist(self, timespan, db_factory):
         units_dict = self.generator.skin_dict.get('Units', {})
         dd_dict = units_dict.get('DegreeDays', {})
         heatbase = dd_dict.get('heating_base', None)
@@ -512,7 +537,7 @@ class Stats(SearchList):
                                          time_delta=time_delta,
                                          time_grace=time_grace)
 
-        return stats
+        return [stats]
 
 class UnitInfo(SearchList):
     """Class that implements the $unit tag."""
