@@ -2894,23 +2894,6 @@ sudo /etc/init.d/apache2 restart</p>
     </ul>
 
     <h2>Hardware problems</h2>
-    <h3>Establishing connectivity</h3>
-    <p>If you are unable to get anything out of <span class="code">weewx</span>
-      first check that you have connectivity to your weather station. For the
-      Davis stations, you can use a terminal emulator to run a simple test.
-      Set it up to communicate using the appropriate port and baudrate.  I
-      like <span class="code">minicom</span> because it can be run from
-      through a simple TTY connection. The utility
-      <span class="code">screen</span> also works well. For example:</p>
-    <pre class="tty">minicom -b 19200 -D /dev/ttyUSB0</pre>
-    <p>or, using <span class='code'>screen</span>:</p>
-    <pre class="tty">screen /dev/ttyUSB0 19200</pre>
-    <p>Then type in <span class="code">TEST</span>, all in capital letters. It
-      will not echo the characters. Then hit the
-      <span class="code">&lt;enter&gt;</span> 
-      key. It should echo back <span class="code">TEST</span>.</p>
-    <p>If this works, then you have established connectivity with the Davis
-      and the problem must lie elsewhere.</p>
 
     <h3>Tips on making a system reliable</h3>
     <p>If you are having problems keeping your weather station up for long
@@ -2937,15 +2920,36 @@ sudo /etc/init.d/apache2 restart</p>
         glitches are very short lived &mdash; just a second or two &mdash; so
         you do not need a big one. The 425VA unit I use to protect my fit-PC
         cost $55 at Best Buy.</li>
-      <li>Use a VantagePro console with a serial connection, not a USB
-        connection. See the next section for details. </li>
+      <li>If you buying a Davis VantagePro and your computer has an old-fashioned
+	serial port, get the VantagePro with a serial connection, not a USB
+        connection. See the section on <a href="#davis_cp2101_converter">Davis 
+	cp2101 converter problems</a> for details. </li>
       <li>If you do use a USB connection, put a ferrite coil on each end of
         the cable to your console. If you have enough length and the ferrite
         coil is big enough, make a loop so it goes through the coil twice.
+	See the figure at right.
       </li>
     </ul>
 
-    <h3>cp2101 converter problems</h3>
+    <h3>Establishing connectivity</h3>
+    <p>If you are unable to get anything out of <span class="code">weewx</span>
+      first check that you have connectivity to your weather station. For the
+      Davis stations, you can use a terminal emulator to run a simple test.
+      Set it up to communicate using the appropriate port and baudrate.  I
+      like <span class="code">minicom</span> because it can be run from
+      through a simple TTY connection. The utility
+      <span class="code">screen</span> also works well. For example:</p>
+    <pre class="tty">minicom -b 19200 -D /dev/ttyUSB0</pre>
+    <p>or, using <span class='code'>screen</span>:</p>
+    <pre class="tty">screen /dev/ttyUSB0 19200</pre>
+    <p>Then type in <span class="code">TEST</span>, all in capital letters. It
+      will not echo the characters. Then hit the
+      <span class="code">&lt;enter&gt;</span> 
+      key. It should echo back <span class="code">TEST</span>.</p>
+    <p>If this works, then you have established connectivity with the Davis
+      and the problem must lie elsewhere.</p>
+
+    <h3 id="davis_cp2101_converter">Davis cp2101 converter problems</h3>
     <p>The USB converter used in the Davis VantagePro is known to have some &quot;noise&quot; 
       problems. The symptom is that the Linux kernel will disconnect from your old 
       USB port claiming &quot;EMI noise&quot;, and reconnect to a new and different 
@@ -3121,6 +3125,16 @@ sudo apt-get install ftp
           current than the minimal amount the RPi can supply through its USB ports. Use a powered
           hub to get around this problem.</p>
         
+	<h3>Fine Offset USB lockups</h3>
+	The Fine Offset series weather stations and their derivatives are a fine value and can
+	be made to work reasonably reliably, but they have one problem that is difficult to
+	work around: their USB bus can unexpectantly lock up, rending it impossible to communicate
+	with the console. The symptom in the log will look something like this:</p>
+      <pre class="tty">Jun  7 21:50:33 localhost weewx[2460]: fousb: get archive interval failed attempt 1 of 3: could not detach kernel driver from interface 0: No data available</pre>
+      <p>The exact error may vary, but the thing to look for is the "<span class='code'>could not detach kernel driver</span>"
+	message. Unfortunately, we have not found a software cure for this. Instead, you must power cycle the unit.
+	Remove the batteries and unplug the USB, then put it back together. No need to restart weewx.</p>
+
     <h2>Software problems</h2>
     
     <p>This section covers some common software configuration problems.</p>
