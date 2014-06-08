@@ -1035,7 +1035,7 @@ Version: 2.6.3
       is 20. </p>
     <p class='config_option'>gc_interval</p>
     <p>Set to how often garbage collection should be performed by the Python
-      runtime engine. Default is every 10,800 seconds (3 hours).<p>
+      runtime engine. Default is every 10,800 seconds (3 hours).</p>
 
     <h2 class="config_section">[Station]</h2>
     <p>This section covers options relating to your weather station setup. </p>
@@ -1976,7 +1976,7 @@ report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
 
     <h1 id="configuring_hardware">Configuring station hardware</h1>
     <p>This section describes how to configure some of the more popular station hardware, using 
-      configuration utilities supplied with weewx. Directions follow for<p>
+      configuration utilities supplied with weewx. Directions follow for</p>
     <ul>
       <li><a href="#wee_config_vantage">Davis Vantage stations</a></li>
       <li><a href="#wee_config_fousb">Fine Offset stations</a></li>
@@ -2920,7 +2920,7 @@ sudo /etc/init.d/apache2 restart</p>
         glitches are very short lived &mdash; just a second or two &mdash; so
         you do not need a big one. The 425VA unit I use to protect my fit-PC
         cost $55 at Best Buy.</li>
-      <li>If you buy a Davis VantagePro and your computer has an old-fashioned
+      <li>If you buying a Davis VantagePro and your computer has an old-fashioned
 	serial port, get the VantagePro with a serial connection, not a USB
         connection. See the section on <a href="#davis_cp2101_converter">Davis 
 	cp2101 converter problems</a> for details. </li>
@@ -3128,14 +3128,23 @@ sudo apt-get install ftp
           hub to get around this problem.</p>
         
 	<h3>Fine Offset USB lockups</h3>
-	The Fine Offset series weather stations and their derivatives are a fine value and can
-	be made to work reasonably reliably, but they have one problem that is difficult to
-	work around: their USB bus can unexpectantly lock up, rending it impossible to communicate
-	with the console. The symptom in the log will look something like this:</p>
-      <pre class="tty">Jun  7 21:50:33 localhost weewx[2460]: fousb: get archive interval failed attempt 1 of 3: could not detach kernel driver from interface 0: No data available</pre>
-      <p>The exact error may vary, but the thing to look for is the "<span class='code'>could not detach kernel driver ... No data available</span>"
-	message. Unfortunately, we have not found a software cure for this. Instead, you must power cycle the unit.
-	Remove the batteries and unplug the USB, then put it back together. No need to restart weewx.</p>
+    <p>The Fine Offset series
+	weather stations and their derivatives are a fine value and
+	can be made to work reasonably reliably, but they have one
+	problem that is difficult to work around: their USB bus can
+	unexpectantly lock up, making it impossible to communicate
+	with the console. The symptom in the log will look something
+	like this:</p>
+      <pre class="tty">Jun 7 21:50:33 localhost weewx[2460]: fousb: get archive interval failed attempt 1 of 3: could not detach kernel driver from interface 0: No data available</pre>
+      <p>The exact error may vary, but the thing to look for is the
+	"<span class='code'>could not detach kernel driver</span>"
+	message. Unfortunately, we have not found a software cure for
+	this. Instead, you must power cycle the unit.  Remove the
+	batteries and unplug the USB, then put it back together. No
+	need to restart weewx.</p>
+      <p>More details
+	about <a href="http://sourceforge.net/p/weewx/wiki/folockup/">Fine
+	Offset lockups</a> can be found in the Wiki.</p>
 
     <h2>Software problems</h2>
     
@@ -3235,7 +3244,7 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
 
     <h3 id="many_loop_read_errors">Many LOOP read errors with Davis Vantage</h3>
     <p>The symptom is many LOOP errors and unreliable downloading of archive records. 
-      Your log may look like this:
+      Your log may look like this:</p>
     <pre class="tty">
 Jan 18 20:38:52 raspberrypi weewx[6024]: VantagePro: Opened up serial port /dev/ttyUSB0, baudrate 19200
 Jan 18 20:38:53 raspberrypi weewx[5977]: VantagePro: LOOP #12; read error. Try #1
@@ -3262,7 +3271,7 @@ Jan 18 20:39:14 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; 
 
     <h3 id='dots_in_plots'>Dots in the plots</h3>
     <p>If you see dots instead of lines in the daily plots, you might want to
-      change the graphing options or adjust the station's archive interval.
+      change the graphing options or adjust the station's archive interval.</p>
     <p>In a default configuration, a time period greater than 1% of the
       displayed timespan is considered to be a gap in data.  So when the
       interval between data points is greater than about 10 minutes, the
@@ -3301,16 +3310,16 @@ Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</p>
       how to remove them:</p>
     <ol>
       <li>stop <span class='code'>weewx</span></li>
-      <li>Make a copy of the archive database</li>
-      <p class='tty'>cp $SQLITE_ROOT/weewx.sdb $SQLITE_ROOT/weewx-YYMMDD.sdb</p>
-      <li>Verify the bad data exist where you think they exist</li>
-      <p class='tty'>sqlite3 $SQLITE_ROOT/weewx.sdb
-sqlite> select dateTime,outTemp from archive where outTemp > 1000;</p>
-      <li>See whether the bad temperature and wind data happened at the same time</li>
-      <p class='tty'>sqlite> select dateTime,outTemp,windSpeed from archive where outTemp > 1000;</p>
-      <li>Remove the bad data by setting to NULL</li>
-      <p class='tty'>sqlite> update archive set windSpeed=NULL where outTemp > 1000;
-sqlite> update archive set outTemp=NULL where outTemp > 1000;</p>
+      <li>Make a copy of the archive database
+      <pre class='tty'>cp $SQLITE_ROOT/weewx.sdb $SQLITE_ROOT/weewx-YYMMDD.sdb</pre></li>
+      <li>Verify the bad data exist where you think they exist
+      <pre class='tty'>sqlite3 $SQLITE_ROOT/weewx.sdb
+sqlite&gt; select dateTime,outTemp from archive where outTemp &gt; 1000;</pre></li>
+      <li>See whether the bad temperature and wind data happened at the same time
+      <pre class='tty'>sqlite&gt; select dateTime,outTemp,windSpeed from archive where outTemp &gt; 1000;</pre></li>
+      <li>Remove the bad data by setting to NULL
+      <pre class='tty'>sqlite&gt; update archive set windSpeed=NULL where outTemp &gt; 1000;
+sqlite&gt; update archive set outTemp=NULL where outTemp &gt; 1000;</pre></li>
       <li>Delete the statistics database so that <span class='code'>weewx</span> can regenerate it without the anomalies</li>
       <li>start <span class='code'>weewx</span></li>
     </ol>
