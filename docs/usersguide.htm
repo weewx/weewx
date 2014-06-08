@@ -2920,7 +2920,7 @@ sudo /etc/init.d/apache2 restart</p>
         glitches are very short lived &mdash; just a second or two &mdash; so
         you do not need a big one. The 425VA unit I use to protect my fit-PC
         cost $55 at Best Buy.</li>
-      <li>If you buying a Davis VantagePro and your computer has an old-fashioned
+      <li>If you buy a Davis VantagePro and your computer has an old-fashioned
 	serial port, get the VantagePro with a serial connection, not a USB
         connection. See the section on <a href="#davis_cp2101_converter">Davis 
 	cp2101 converter problems</a> for details. </li>
@@ -3133,7 +3133,7 @@ sudo apt-get install ftp
 	work around: their USB bus can unexpectantly lock up, rending it impossible to communicate
 	with the console. The symptom in the log will look something like this:</p>
       <pre class="tty">Jun  7 21:50:33 localhost weewx[2460]: fousb: get archive interval failed attempt 1 of 3: could not detach kernel driver from interface 0: No data available</pre>
-      <p>The exact error may vary, but the thing to look for is the "<span class='code'>could not detach kernel driver</span>"
+      <p>The exact error may vary, but the thing to look for is the "<span class='code'>could not detach kernel driver ... No data available</span>"
 	message. Unfortunately, we have not found a software cure for this. Instead, you must power cycle the unit.
 	Remove the batteries and unplug the USB, then put it back together. No need to restart weewx.</p>
 
