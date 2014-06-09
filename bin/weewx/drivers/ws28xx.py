@@ -867,7 +867,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.26'
+DRIVER_VERSION = '0.27'
 
 # flags for enabling/disabling debug verbosity
 DEBUG_WRITES = 0
@@ -1420,9 +1420,10 @@ def getFrequencyStandard(frequency):
 batterybits = { 'wind':0, 'rain':1, 'th':2, 'console':3 }
 
 def getBatteryStatus(status, flag):
+    '''Return 1 if bit is set, 0 otherwise'''
     bit = batterybits.get(flag)
     if bit is not None:
-        return BitHandling.testBit(status, bit)
+        return 1 if BitHandling.testBit(status, bit) else 0
     return None
 
 class CWeatherTraits(object):
