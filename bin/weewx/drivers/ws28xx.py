@@ -1422,9 +1422,11 @@ batterybits = { 'wind':0, 'rain':1, 'th':2, 'console':3 }
 def getBatteryStatus(status, flag):
     '''Return 1 if bit is set, 0 otherwise'''
     bit = batterybits.get(flag)
-    if bit is not None:
-        return 1 if BitHandling.testBit(status, bit) else 0
-    return None
+    if bit is None:
+        return None
+    if BitHandling.testBit(status, bit):
+        return 1
+    return 0
 
 class CWeatherTraits(object):
     windDirMap = {
