@@ -407,6 +407,9 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
 
     return packet
 
+USB_RT_PORT = (usb.TYPE_CLASS | usb.RECIP_OTHER)
+USB_PORT_FEAT_POWER = 8
+
 def power_cycle_station(self, hub, port):
     '''Power cycle the port on the specified hub.  This works only with USB
     hubs that support per-port power switching such as the linksys USB2HUB4.'''

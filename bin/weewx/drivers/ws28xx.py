@@ -2824,7 +2824,7 @@ class sHID(object):
                         else:
                             handle = dev.open()
                             try:
-                                buf = shid.readCfg(handle, 0x1F9, 7)
+                                buf = self.readCfg(handle, 0x1F9, 7)
                                 sn  = str("%02d"%(buf[0]))
                                 sn += str("%02d"%(buf[1]))
                                 sn += str("%02d"%(buf[2]))
