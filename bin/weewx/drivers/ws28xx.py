@@ -854,23 +854,17 @@ transceiver serial: 01021012120146
 # TODO: get rid of Length/Buffer construct, replace with a Buffer class or obj
 
 from datetime import datetime
-from datetime import timedelta
 from configobj import ConfigObj
 
 import StringIO
-import copy
-import math
-import platform
 import syslog
 import threading
 import time
 import traceback
 import usb
 
-import weeutil.weeutil
 import weewx.abstractstation
 import weewx.units
-import weewx.wxengine
 import weewx.wxformulas
 
 DRIVER_VERSION = '0.26'
