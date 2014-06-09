@@ -7,7 +7,8 @@
 #    $Author$
 #    $Date$
 #
-"""Classes and functions for interfacing with an Oregon Scientific WMR100 station
+"""Classes and functions for interfacing with an Oregon Scientific WMR100 station.
+   The WMRS200 reportedly works with this driver (NOT the WMR200, which is a different beast).
 
     The following references were useful for figuring out the WMR protocol:
     
@@ -18,7 +19,7 @@
         http://www.bashewa.com/wmr200-protocol.php
         
     The WMR driver for the wfrog weather system:
-        http://code.google.com/p/wfrog/source/browse/trunk/wfdriver/station/wmr200.py
+        http://code.google.com/p/wfrog/source/browse/trunk/wfdriver/station/wmrs200.py
         
     Unfortunately, there is no documentation for PyUSB v0.4, so you have to back it out of the
     source code, available at:
