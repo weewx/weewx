@@ -15,15 +15,15 @@ import weewx.units
 #===============================================================================
 
 class DBFactory(object):
-    """Binds a database cache, with a default database symname."""
+    """Binds a database cache, with a default database."""
     
-    def __init__(self, db_cache, default_symname='wx_database'):
+    def __init__(self, db_cache, default_database='wx_database'):
         self.cache = db_cache
-        self.default_symname  = default_symname
+        self.default_database  = default_database
         
     def get_database(self, database=None):
         if database is None:
-            database = self.default_symname
+            database = self.default_database
         return self.cache.get_database(database)
 
 #===============================================================================
@@ -31,7 +31,7 @@ class DBFactory(object):
 #===============================================================================
 
 class FactoryBinder(object):
-    """Binds a DBFactory, a timespan, and a default archive database together.
+    """Binds a DBFactory and an end time together.
     
     This class sits on the top of chain of helper classes that enable
     syntax such as $db($database='wx_database').month.rain.sum in the Cheetah templates.""" 
@@ -74,9 +74,10 @@ class DatabaseBinder(object):
     def __init__(self, opendb, endtime_ts,
                  formatter=weewx.units.Formatter(), converter=weewx.units.Converter(), **option_dict):
         """Initialize an instance of DatabaseBinder.
-        opendb: A Database from which the stats are to be extracted.
+        
+        opendb: A Database from which the aggregates are to be extracted.
 
-        endtime_ts: The time the stats are to be current to.
+        endtime_ts: The time the aggregates are to be current to.
 
         formatter: An instance of weewx.units.Formatter() holding the formatting
         information to be used. [Optional. If not given, the default

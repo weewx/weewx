@@ -29,11 +29,8 @@ search_list, just in case the default search list changes.
 Example:
 
 [CheetahGenerator]
-    # This is the new way to specify a search list additions:
-    search_list_additions = user.special.MyExtension
-    # This is the old way and is included for backwards compatibility, 
-    # but will eventually be deprecated:
-    search_list_extensions = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables
+    # How to specify search list additions:
+    search_list_additions = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables
     encoding = html_entities      # html_entities, utf8, strict_ascii
     [[SummaryByMonth]]                              # period
         [[[NOAA_month]]]                            # report
@@ -183,15 +180,6 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 # Then instantiate the class, passing self as the sole argument
                 self.search_list_objs.append(class_(self))
                 
-        # For backwards compatibility, get the search list extensions
-        search_list_extensions = weeutil.weeutil.option_as_list(gen_dict.get('search_list_extensions'))
-        if search_list_extensions is not None:
-            for c in search_list_extensions:
-                x = c.strip()
-                if x:
-                    class_ = weeutil.weeutil._get_object(x)
-                    self.search_list_exts.append(class_(self))
-
     def teardown(self):
         """Delete any extension objects we created to prevent back references
         from slowing garbage collection"""

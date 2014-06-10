@@ -29,8 +29,8 @@ cases. In particular, the 'reconfigure' option can be useful if you decide to
 add or drop data types from the database schema or change unit systems."""
  
 usage="""%prog: [config_path] [--help]
-                              [--create-archive] [--drop-daily] [--backfill-daily] 
-                              [--reconfigure] 
+                              [--create-archive] [--drop-daily] 
+                              [--reconfigure] [--backfill-daily]
                               [--string-check] [--fix]
                               [--database=DATABASE_NAME]"""
 
@@ -52,14 +52,14 @@ def main():
                       help="Create the archive database.")
     parser.add_option("--drop-daily", dest="drop_daily", action='store_true',
                       help="Drop the daily summary tables from a database.")
-    parser.add_option("--backfill-daily", dest="backfill_daily", action='store_true',
-                      help="Backfill a database with daily summaries")
     parser.add_option("--reconfigure", action='store_true',
                       help="""Create a new archive database using configuration information found """\
                           """in the configuration file. In particular, the new database will use the """\
                           """unit system found in option [StdConvert][target_unit]. It will use """\
                           """the schema found in './bin/user/schemas.py'. """\
                           """The new database will have the same name as the old database, with a '_new' on the end.""")
+    parser.add_option("--backfill-daily", dest="backfill_daily", action='store_true',
+                      help="Backfill a database with daily summaries")
     parser.add_option("--string-check", dest="string_check", action="store_true",
                       help="Check a sqlite version of the archive database for embedded strings in it.")
     parser.add_option("--fix", dest="fix", action="store_true",
@@ -84,12 +84,12 @@ def main():
     if options.drop_daily:
         dropDaily(database_dict, database_cls, database_name)
         
+    if options.reconfigure:
+        reconfigMainDatabase(database_dict, database_cls, database_name, config_dict)
+
     if options.backfill_daily:
         backfillDaily(database_dict, database_cls, database_name)
         
-    if options.reconfigure:
-        reconfigMainDatabase(config_dict, db_symname)
-
     if options.string_check:
         string_check(config_dict, options.fix, db_symname)
 
@@ -134,45 +134,30 @@ def dropDaily(database_dict, database_cls, database_name):
                 archive.close()
                 print "Dropped daily summary tables from database '%s'" % (database_name,)
     
-def backfillDaily(database_dict, database_cls, database_name):
-    """Backfill the daily summaries"""
-
-    print "Backfilling daily summaries in database '%s'" % database_name
-
-    # Open up the archive. This will create the tables necessary for the daily summaries if they
-    # don't already exist:
-    with weewx.stats.DaySummaryArchive.open_with_create(database_dict, user.schemas.defaultArchiveSchema) as archive:
-        nrecs = archive.backfill_day_summary()
-
-    print "Backfilled daily summaries in database '%s', using %d records" % (database_name, nrecs)
-    
-def reconfigMainDatabase(config_dict):
+def reconfigMainDatabase(old_database_dict, database_cls, database_name, config_dict):
     """Create a new database, then populate it with the contents of an old database"""
 
-    archive_db = config_dict['StdArchive']['archive_database']
-    old_archive_db_dict = config_dict['Databases'][archive_db]
-    
     # For the new database, make a copy of the old database dictionary
-    new_archive_db_dict = old_archive_db_dict.dict()
+    new_database_dict = old_database_dict.dict()
     # Now modify the database name
-    new_archive_db_dict['database'] = new_archive_db_dict['database']+'_new'
+    new_database_dict['database'] = old_database_dict['database']+'_new'
 
     # First check and see if the new database already exists. If it does, check
     # with the user whether it's ok to delete it.
     try:
-        weedb.create(new_archive_db_dict)
+        weedb.create(new_database_dict)
     except weedb.DatabaseExists:
         ans = None
         while ans not in ['y', 'n']:
-            ans = raw_input("New database '%s' already exists. Delete it first (y/n)? " % (new_archive_db_dict['database'],))
+            ans = raw_input("New database '%s' already exists. Delete it first (y/n)? " % (new_database_dict['database'],))
             if ans == 'y':
-                weedb.drop(new_archive_db_dict)
+                weedb.drop(new_database_dict)
             elif ans == 'n':
                 print "Nothing done."
                 return
 
     # Get the unit system of the old archive:
-    with weewx.archive.Archive.open(old_archive_db_dict) as old_archive:
+    with weewx.archive.Archive.open(old_database_dict) as old_archive:
         old_unit_system = old_archive.std_unit_system
     
     # Get the unit system of the new archive:
@@ -186,7 +171,7 @@ def reconfigMainDatabase(config_dict):
         
     ans = None
     while ans not in ['y', 'n']:
-        print "Copying archive database '%s' to '%s'" % (old_archive_db_dict['database'], new_archive_db_dict['database'])
+        print "Copying archive database '%s' to '%s'" % (old_database_dict['database'], new_database_dict['database'])
         if target_unit_system is None or old_unit_system==target_unit_system:
             print "The new archive will use the same unit system as the old ('%s')." % (weewx.units.unit_nicknames[old_unit_system],)
         else:
@@ -194,10 +179,23 @@ def reconfigMainDatabase(config_dict):
                                                                                         weewx.units.unit_nicknames[target_unit_system])
         ans = raw_input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
-            weewx.archive.reconfig(old_archive_db_dict, new_archive_db_dict, target_unit_system)
+            weewx.archive.reconfig(old_database_dict, new_database_dict, target_unit_system)
+            print "Done."
         elif ans == 'n':
             print "Nothing done."
 
+def backfillDaily(database_dict, database_cls, database_name):
+    """Backfill the daily summaries"""
+
+    print "Backfilling daily summaries in database '%s'" % database_name
+
+    # Open up the archive. This will create the tables necessary for the daily summaries if they
+    # don't already exist:
+    with weewx.stats.DaySummaryArchive.open_with_create(database_dict, user.schemas.defaultArchiveSchema) as archive:
+        nrecs = archive.backfill_day_summary()
+
+    print "Backfilled daily summaries in database '%s', using %d records" % (database_name, nrecs)
+    
 def string_check(config_dict, fix=False):
     print "Checking archive database for strings..."
     archive_db = config_dict['StdArchive']['archive_database']
