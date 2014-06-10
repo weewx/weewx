@@ -72,10 +72,3 @@ defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMAR
                         ('rainBatteryStatus',    'REAL'),
                         ('outTempBatteryStatus', 'REAL'),
                         ('inTempBatteryStatus',  'REAL')]
-
-# The default types for which statistics will be kept.
-stats_types = ['barometer', 'inTemp', 'outTemp', 'inHumidity', 'outHumidity', 
-               'rainRate', 'rain', 'dewpoint', 'windchill', 'heatindex', 'ET', 
-               'radiation', 'UV', 'extraTemp1', 'rxCheckPercent', 'wind']
-# Add special type 'wind' to the schema
-defaultStatsSchema= [_tuple for _tuple in defaultArchiveSchema if _tuple[0] in stats_types] + [('wind', 'VECTOR')]
