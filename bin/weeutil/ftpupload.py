@@ -105,7 +105,7 @@ class FtpUpload(object):
                             # Hence, the open is in the inner loop:
                             fd = open(full_local_path, "r")
                             ftp_server.storbinary(STOR_cmd, fd)
-                        except (ftplib.all_errors, IOError), e:
+                        except ftplib.all_errors, e:
                             # Unsuccessful. Log it and go around again.
                             syslog.syslog(syslog.LOG_ERR, "ftpupload: attempt #%d. Failed uploading %s to %s. Reason: %s" %
                                                           (count+1, full_remote_path, self.server, e))
