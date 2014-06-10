@@ -161,7 +161,7 @@ class DaySummaryArchive(weewx.archive.Archive):
         # Now add to the daily summary for the appropriate day:
         _day_summary = self._get_day_summary(_sod_ts, cursor)
         _day_summary.addRecord(record)
-        self._set_day_summary(_day_summary, _sod_ts, cursor)
+        self._set_day_summary(_day_summary, record['dateTime'], cursor)
         
     def updateHiLo(self, accumulator):
         """Use the contents of an accumulator to update the daily hi/lows."""
@@ -316,7 +316,7 @@ class DaySummaryArchive(weewx.archive.Archive):
         with weedb.Transaction(self.connection) as _cursor:
             # Go through all the archiveDb records in the time span, adding them to the
             # database
-            for _rec in self.genBatchRecords(start_ts, stop_ts):
+            for _rec in self.genBatchRecords(start_ts + 1, stop_ts):
                 # Get the start-of-day for the record:
                 _sod_ts = weeutil.weeutil.startOfArchiveDay(_rec['dateTime'])
                 # If this is the very first record, fetch a new accumulator
