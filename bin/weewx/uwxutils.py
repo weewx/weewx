@@ -349,6 +349,11 @@ class TWxUtilsUS(object):
     @staticmethod
     def StationToAltimeter(pressureIn, elevationFt, 
                            algorithm='aaMADIS'):
+        """Example:
+        >>> p = TWxUtilsUS.StationToAltimeter(24.692, 5431, 'aaASOS')
+        >>> print "Station pressure to altimeter = %.3f" % p
+        Station pressure to altimeter = 30.153
+        """
         Result = HPaToIn(TWxUtils.StationToAltimeter(InToHPa(pressureIn),
                                                      FtToM(elevationFt),
                                                      algorithm))
@@ -358,6 +363,11 @@ class TWxUtilsUS(object):
     def StationToSeaLevelPressure(pressureIn, elevationFt,
                                   currentTempF, meanTempF, humidity,
                                   algorithm='paManBar'):
+        """Example:
+        >>> p = TWxUtilsUS.StationToSeaLevelPressure(24.692, 5431, 59.0, 50.5, 40.5)
+        >>> print "Station to SLP = %.3f" % p
+        Station to SLP = 30.153
+        """
         Result = pressureIn * TWxUtilsUS.PressureReductionRatio(pressureIn,
                                                                 elevationFt,
                                                                 currentTempF,
@@ -385,6 +395,11 @@ class TWxUtilsUS(object):
     def SeaLevelToStationPressure(pressureIn, elevationFt,
                                   currentTempF, meanTempF, humidity,
                                   algorithm='paManBar'):
+        """Example:
+        >>> p = TWxUtilsUS.SeaLevelToStationPressure(30.153, 5431, 59.0, 50.5, 40.5)
+        >>> print "Station to SLP = %.3f" % p
+        Station to SLP = 24.692
+        """
         Result = pressureIn / TWxUtilsUS.PressureReductionRatio(pressureIn,
                                                                 elevationFt,
                                                                 currentTempF,
@@ -485,12 +500,6 @@ class uWxUtilsVP(object):
     @staticmethod
     def SeaLevelToSensorPressure_meanT(pressureIn, elevationFt, meanTempF,
                                        humidityCorr):
-        """Example:
-        
-        >>> p = uWxUtilsVP.SeaLevelToSensorPressure_12(30.327,700,31.3,41.5,90)
-        >>> print "Sensor pressure using mean temperature = %.2f" % p
-        Sensor pressure using mean temperature = 29.53
-        """
         Result = TWxUtilsUS.SeaLevelToStationPressure(
             pressureIn, elevationFt, meanTempF,
             meanTempF + humidityCorr, 0, 'paDavisVp')
@@ -505,12 +514,6 @@ class uWxUtilsVP(object):
     @staticmethod
     def SeaLevelToSensorPressure_12(pressureIn, elevationFt, currentTempF,
                                     temp12HrsAgoF, humidity):
-        """Example:
-        
-        >>> p = uWxUtilsVP.SeaLevelToSensorPressure_meanT(30.327, 700, 34, 1.1)
-        >>> print "Sensor pressure using temperature 12 hours ago = %.2f" % p
-        Sensor pressure using temperature 12 hours ago = 29.53
-        """
         Result = TWxUtilsUS.SeaLevelToStationPressure(
             pressureIn, elevationFt, currentTempF,
             Round(((Round(currentTempF - 0.01) + Round(temp12HrsAgoF - 0.01)) / 2) - 0.01),

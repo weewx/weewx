@@ -854,26 +854,20 @@ transceiver serial: 01021012120146
 # TODO: get rid of Length/Buffer construct, replace with a Buffer class or obj
 
 from datetime import datetime
-from datetime import timedelta
 from configobj import ConfigObj
 
 import StringIO
-import copy
-import math
-import platform
 import syslog
 import threading
 import time
 import traceback
 import usb
 
-import weeutil.weeutil
 import weewx.abstractstation
 import weewx.units
-import weewx.wxengine
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.26'
+DRIVER_VERSION = '0.27'
 
 # flags for enabling/disabling debug verbosity
 DEBUG_WRITES = 0
@@ -1426,10 +1420,13 @@ def getFrequencyStandard(frequency):
 batterybits = { 'wind':0, 'rain':1, 'th':2, 'console':3 }
 
 def getBatteryStatus(status, flag):
+    '''Return 1 if bit is set, 0 otherwise'''
     bit = batterybits.get(flag)
-    if bit is not None:
-        return BitHandling.testBit(status, bit)
-    return None
+    if bit is None:
+        return None
+    if BitHandling.testBit(status, bit):
+        return 1
+    return 0
 
 class CWeatherTraits(object):
     windDirMap = {
@@ -2830,7 +2827,7 @@ class sHID(object):
                         else:
                             handle = dev.open()
                             try:
-                                buf = shid.readCfg(handle, 0x1F9, 7)
+                                buf = self.readCfg(handle, 0x1F9, 7)
                                 sn  = str("%02d"%(buf[0]))
                                 sn += str("%02d"%(buf[1]))
                                 sn += str("%02d"%(buf[2]))

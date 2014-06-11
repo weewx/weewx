@@ -238,12 +238,13 @@ bcd2num([a,b,c]) -> c*100+b*10+a
 # wsh 21
 # w0 135
 
+from __future__ import with_statement
 import optparse
 import syslog
 import time
+import string
 
 import fcntl
-import math
 import os
 import select
 import struct
@@ -1056,7 +1057,7 @@ class Ws2300(object):
         self.log_enter("rd")
         try:
             if nybble_count < 1 or nybble_count > self.MAXBLOCK:
-                StatdardError("Too many nybbles requested")
+                StandardError("Too many nybbles requested")
             bytes = (nybble_count + 1) // 2
             if not self.write_address(nybble_address):
                 return None
