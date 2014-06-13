@@ -37,7 +37,7 @@ INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DRIVER_VERSION = '0.5'
+DRIVER_VERSION = '0.6'
 DEFAULT_PORT = '/dev/ttyS0'
 
 def logmsg(level, msg):
@@ -454,7 +454,7 @@ class Station(object):
 
     def get_current_data(self):
         data = self.command("NOW")
-        if data == 'NO DATA':
+        if data == 'NO DATA' or data == 'NO DATA RECEIVED':
             loginf("No data from sensors")
             return []
         values = data.split(',')
