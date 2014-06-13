@@ -54,7 +54,7 @@ class FactoryBinder(object):
         if attr == 'has_key':
             raise AttributeError(attr)
         # For syntax such as $month.outTemp.max, the funcion db() above will not
-        # get called and instead, we will be queried for an attribute 'month'.
+        # get called and instead, we will be queried for an attribute such as 'month'.
         # So, make the call to db() with default values, then ask it for the
         # attribute.
         return getattr(self.db(), attr)
@@ -109,10 +109,12 @@ class DatabaseBinder(object):
             
     @property
     def trend(self):
-        """Return a ValueDict for the 'trend'. This is an inefficient entry point
-        because it would hit the database for every observation type."""
-        rb = self.get_record_binder()
-        return rb.trend
+        """Return a ValueDict for the 'trend'. """
+        time_delta = int(self.option_dict.get('time_delta', 10800))
+        time_grace = int(self.option_dict.get('time_grace', 300))
+        now_vtd  = self._get_valuetupledict(self.endtime_ts, time_grace)
+        then_vtd = self._get_valuetupledict(self.endtime_ts - time_delta, time_grace)
+        return TrendObj(then_vtd, now_vtd, time_delta, self.formatter, self.converter)
         
     @property
     def day(self):
@@ -136,14 +138,10 @@ class DatabaseBinder(object):
         return TimeBinder(weeutil.weeutil.archiveRainYearSpan(self.endtime_ts, self.option_dict['rain_year_start']), self.opendb,
                           'rainyear',  self.formatter, self.converter, **self.option_dict)
 
-    def get_record_binder(self):
-        time_delta = int(self.option_dict.get('time_delta', 10800))
-        time_grace = int(self.option_dict.get('time_grace', 300))
-        now_vtd  = self._get_valuetupledict(self.endtime_ts, time_grace)
-        then_vtd = self._get_valuetupledict(self.endtime_ts - time_delta, time_grace)
-        return RecordBinder(now_vtd, self.formatter, self.converter, then_vtd, time_delta)
-        
     def _get_valuetupledict(self, time_ts, time_grace=None):
+        """Return a ValueTupleDict for the given time.
+        
+        A ValueTupleDict is like a regular dictionary, except the values are ValueTuples"""
         # Get the record...
         record_dict = self.opendb.getRecord(time_ts, max_delta=time_grace)
         # ... convert to a dictionary with ValueTuples as values:
@@ -352,30 +350,7 @@ class ObservationBinder(object):
         """Run a query against the databases, using the given aggregation type."""
         result = self.opendb.getAggregate(self.timespan, self.obs_type, aggregateType, val=val, **self.option_dict)
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
-
         
-#===============================================================================
-#                             Class RecordBinder
-#===============================================================================
-
-class RecordBinder(object):
-    
-    def __init__(self, now_vtd, formatter, converter, last_vtd=None, time_delta=None):
-        
-        self.now_vtd = now_vtd
-        self.formatter = formatter
-        self.converter = converter
-        self.last_vtd = last_vtd
-        self.time_delta = time_delta
-        
-    @property
-    def current(self):
-        return self.now_vtd
-    
-    @property
-    def trend(self):
-        return TrendObj(self.last_vtd, self.now_vtd, self.time_delta, self.formatter, self.converter)
-
 #===============================================================================
 #                             Class TrendObj
 #===============================================================================
