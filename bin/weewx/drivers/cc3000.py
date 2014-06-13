@@ -112,14 +112,14 @@ class CC3000(weewx.abstractstation.AbstractStation):
             with Station(self.port) as station:
                 values = station.get_current_data()
             data = self._parse_current(values)
-            ts = data['TIMESTAMP']
-            if not self.use_station_time:
-                ts = int(time.time()+0.5)
-            packet = {'dateTime': ts,
-                      'usUnits' : units }
-            packet.update(data)
-            self._augment_packet(packet)
-            yield packet
+            ts = data.get('TIMESTAMP')
+            if ts is not None:
+                if not self.use_station_time:
+                    ts = int(time.time()+0.5)
+                packet = {'dateTime': ts, 'usUnits' : units }
+                packet.update(data)
+                self._augment_packet(packet)
+                yield packet
             if self.polling_interval:
                 time.sleep(self.polling_interval)
 
