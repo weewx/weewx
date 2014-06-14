@@ -27,6 +27,10 @@ Prompt for metric/US units for debian installations.
 
 For WS28xx stations, return 0 for battery ok and 1 for battery failure.
 
+If the console has successfully been opened up but then on subsequent opens
+suffers an I/O error, weewx will now attempt a retry (before it would just 
+exit).
+
 
 2.6.3 04/10/14
 

@@ -930,6 +930,11 @@ def main(options, args, EngineClass=StdEngine) :
         syslog.syslog(syslog.LOG_INFO, "wxengine: pid file is %s" % options.pidfile)
         daemon.daemonize(pidfile=options.pidfile)
 
+    # If an exception occurs the first time through, then the problem is most likely
+    # a configuration problem.  But, if it happens later, it could be I/O error and
+    # it's worth retrying
+    successful_init = False
+    
     while True:
 
         os.chdir(cwd)
@@ -944,20 +949,23 @@ def main(options, args, EngineClass=StdEngine) :
         else:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
-        # Create and initialize the engine
-        engine = EngineClass(config_dict)
-
-        # Start the engine
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s" % weewx.__version__)
-
         try:
+            syslog.syslog(syslog.LOG_DEBUG, "wxengine: Initializing engine")
+
+            # Create and initialize the engine
+            engine = EngineClass(config_dict)
+            successful_init = True
+    
+            syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s" % weewx.__version__)
+
+            # Start the engine
             engine.run()
     
         # Catch any recoverable weewx I/O errors:
         except weewx.WeeWxIOError, e:
             # Caught an I/O error. Log it, wait 60 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught WeeWxIOError: %s" % e)
-            if options.exit :
+            if options.exit or not successful_init:
                 syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
                 sys.exit(weewx.IO_ERROR)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 60 seconds then retrying...")
