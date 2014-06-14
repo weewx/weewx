@@ -410,9 +410,10 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
 USB_RT_PORT = (usb.TYPE_CLASS | usb.RECIP_OTHER)
 USB_PORT_FEAT_POWER = 8
 
-def power_cycle_station(self, hub, port):
+def power_cycle_station(hub, port):
     '''Power cycle the port on the specified hub.  This works only with USB
     hubs that support per-port power switching such as the linksys USB2HUB4.'''
+    loginf("Attempting to power cycle")
     busses = usb.busses()
     if not busses:
         raise weewx.WeeWxIOError("Power cycle failed: cannot find USB busses")
@@ -432,14 +433,18 @@ def power_cycle_station(self, hub, port):
                           request=usb.REQ_CLEAR_FEATURE,
                           value=USB_PORT_FEAT_POWER,
                           index=port, buffer=None, timeout=1000)
-        time.sleep(10)
+        loginf("Waiting 30 seconds for station to power down")
+        time.sleep(30)
         loginf("Power on port %d on hub %s" % (port, hub))
         handle.controlMsg(requestType=USB_RT_PORT,
                           request=usb.REQ_SET_FEATURE,
                           value=USB_PORT_FEAT_POWER,
                           index=port, buffer=None, timeout=1000)
+        loginf("Waiting 60 seconds for station to power up")
+        time.sleep(60)
     finally:
         del handle
+    loginf("Power cycle complete")
 
 # decode weather station raw data formats
 def _signed_byte(raw, offset):
@@ -658,6 +663,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         # minimum interval between polling for data change
         self.min_pause = 0.5
 
+        self.devh = None
         self._arcint = None
         self._last_rain_loop = None
         self._last_rain_ts_loop = None
@@ -702,27 +708,39 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
     def archive_interval(self):
         return self._archive_interval_minutes() * 60
 
+    # if power cycling is enabled, loop forever until we get a response from
+    # the weather station.
     def _archive_interval_minutes(self):
-        if self._arcint is None:
-            for i in range(self.max_tries):
+        if self._arcint is not None:
+            return self._arcint
+        if self.pc_hub is not None:
+            while True:
                 try:
-                    self._arcint = self.get_fixed_block(['read_period'])
+                    self.openPort()
+                    self._get_arcint()
                     break
-                except usb.USBError, e:
-                    logcrt("get archive interval failed attempt %d of %d: %s"
-                           % (i+1, self.max_tries, e))
-            else:
-                msg = "Unable to read archive interval after %d tries" % self.max_tries
-                if self.pc_hub is not None:
-                    logerr(msg)
-                    logerr("Attempting to power cycle")
+                except weewx.WeeWxIOError, e:
+                    self.closePort()
                     power_cycle_station(self.pc_hub, self.pc_port)
-                    raise weewx.WeeWxIOError("Power cycle complete")
-                else:
-                    raise weewx.WeeWxIOError(msg)
+        else:
+            self._get_arcint()
         return self._arcint
 
+    def _get_arcint(self):
+        for i in range(self.max_tries):
+            try:
+                self._arcint = self.get_fixed_block(['read_period'])
+                return
+            except usb.USBError, e:
+                logcrt("get archive interval failed attempt %d of %d: %s"
+                       % (i+1, self.max_tries, e))
+        else:
+            raise weewx.WeeWxIOError("Unable to read archive interval after %d tries" % self.max_tries)
+
     def openPort(self):
+        if self.devh is not None:
+            return
+
         dev = self._find_device()
         if not dev:
             logcrt("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x Device=%s" % (self.vendor_id, self.product_id, self.device_id))
