@@ -464,6 +464,8 @@ class StatsDb(object):
             _lastTime = _rec['dateTime']
             nrecs += 1
             if nrecs%1000 == 0:
+                syslog.syslog(syslog.LOG_DEBUG, "stats: Records processed: %d; Last date: %s", 
+                              (nrecs, weeutil.weeutil.timestamp_to_string(_lastTime)))
                 print >>sys.stdout, "Records processed: %d; Last date: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(_lastTime)),
                 sys.stdout.flush()
     
