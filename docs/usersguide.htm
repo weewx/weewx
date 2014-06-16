@@ -1979,7 +1979,7 @@ report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
       configuration utilities supplied with weewx. Directions follow for</p>
     <ul>
       <li><a href="#wee_config_vantage">Davis Vantage stations</a></li>
-      <li><a href="#wee_config_fousb">Fine Offset stations</a></li>
+      <li><a href="#wee_config_fousb">Fine Offset 10xx, 20xx, and 30xx stations</a></li>
       <li><a href="#wee_config_ws23xx">La Crosse WS23xx stations</a></li>
       <li><a href="#wee_config_ws28xx">La Crosse WS28xx stations</a></li>
       <li><a href="#wee_config_cc3000">RainWise CC3000 data logger</a></li>
@@ -2137,7 +2137,7 @@ Davis Vantage EEPROM settings:
 	  Because the command dumps <em>all</em> data, it may result in many 
 	  duplicate primary key errors. These can be ignored.</p>
 
-    <h2 id="wee_config_fousb">Fine Offset</h2>
+    <h2 id="wee_config_fousb">Fine Offset 10xx, 20xx, 30xx</h2>
     <p>The configuration utility <span class='code'>wee_config_fousb</span> is
       designed to diagnose and configure Fine Offset stations.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
@@ -2797,21 +2797,27 @@ sudo /etc/init.d/apache2 restart</p>
       <span class='code'>weewx</span>.
     </p>
     <p>
-      <strong>Configuration.</strong>
+      It is not necessary to backup the images and HTML files generated from
+      templates, since weewx will easily create those again.  This includes
+      the NOAA reports in some skins.
+    </p>
+    <h2>Configuration</h2>
+    <p>
       Save the <span class='code'>weewx.conf</span> file.
     </p>
     <table class="locations" style="width:70%">
       <tr>
-	<td style="width: 30%">setup.py</td>
+	<td style="width: 30%">setup.py:</td>
 	<td class='tty'>/home/weewx/weewx.conf</td>
       </tr>
       <tr>
-	<td >DEB/RPM</td>
+	<td >DEB/RPM:</td>
 	<td class='tty'>/etc/weewx/weewx.conf</td>
       </tr>
     </table>
+    <h2>Weather data</h2> 
     <p>
-      <strong>Weather data.</strong> Meteorological ata are saved in the
+      Meteorological ata are saved in the
       archive database.  For a Sqlite
       configuration, simply save the <span class='code'>weewx.sdb</span>
       file.  For a MySQL configuration, save a dump of the archive database.
@@ -2820,49 +2826,48 @@ sudo /etc/init.d/apache2 restart</p>
     </p>
     <table class="locations" style="width:70%">
       <tr>
-	<td style="width: 30%">setup.py</td>
+	<td style="width: 30%">setup.py:</td>
 	<td class='tty'>/home/weewx/archive/weewx.sdb</td>
       </tr>
       <tr>
-	<td >DEB/RPM</td>
+	<td >DEB/RPM:</td>
 	<td class='tty'>/var/lib/weewx/weewx.sdb</td>
       </tr>
     </table>
+    <h2>Skins and templates</h2>
     <p>
-      <strong>Skins and templates.</strong>
-      Save the contents of the skins directory.
+      Save the contents of the skins directory if you have modified the default
+      skin or if you have added any new skins or template files.
     </p>
     <table class="locations" style="width:70%">
       <tr>
-	<td style="width: 30%">setup.py</td>
+	<td style="width: 30%">setup.py:</td>
 	<td class='tty'>/home/weewx/skins</td>
       </tr>
       <tr>
-	<td >DEB/RPM</td>
+	<td >DEB/RPM:</td>
 	<td class='tty'>/etc/weewx/skins</td>
       </tr>
     </table>
+    <h2>Other customizations</h2>  
     <p>
-      <strong>Other customizations.</strong>  Save the contents of the
+      Save the contents of the
       <span class='code'>user</span> directory if you have modified the
       database schema or added any extensions.  If the extensions save data
       to a database you should backup those databases as well.
     </p>
     <table class="locations" style="width:70%">
       <tr>
-	<td style="width: 30%">setup.py</td>
+	<td style="width: 30%">setup.py:</td>
 	<td class='tty'>/home/weewx/bin/user</td>
       </tr>
       <tr>
-	<td >DEB/RPM</td>
+	<td >DEB/RPM:</td>
 	<td class='tty'>/usr/share/weewx/user</td>
       </tr>
     </table>
-    <p>
-      It is not necessary to backup the images and HTML files generated from
-      templates, since weewx will easily create those again.  This includes
-      the NOAA reports in some skins.
-    </p>
+
+    <h2>Restoring from backup</h2>
     <p>
       To restore from backup, do a fresh install of
       <span class='code'>weewx</span> then replace the default files with
