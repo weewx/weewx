@@ -1,3 +1,8 @@
+weewx (2.6.4-1) unstable; urgency=low
+  * new upstream release
+  * added cc3000, ultimeter, ws1 drivers
+  * added option to specify display units during installation
+-- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Mon, 16 Jun 2014 07:22:26 -0400
 weewx (2.6.3-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 10 Apr 2014 20:25:10 -0400
