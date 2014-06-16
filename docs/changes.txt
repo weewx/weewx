@@ -1,6 +1,8 @@
 weewx change history
 --------------------
 
+2.6.4 06/16/14
+
 The WMR100 driver now calculates SLP in software. This fixes a problem
 with the WMRS200 station, which does not allow the user to set altitude.
 
@@ -27,9 +29,9 @@ Prompt for metric/US units for debian installations.
 
 For WS28xx stations, return 0 for battery ok and 1 for battery failure.
 
-If the console has successfully been opened up but then on subsequent opens
-suffers an I/O error, weewx will now attempt a retry (before it would just 
-exit).
+If a connection to the console has been successfully opened, but then on
+subsequent connection attempts suffers an I/O error, weewx will now attempt
+a retry (before it would just exit).
 
 
 2.6.3 04/10/14
