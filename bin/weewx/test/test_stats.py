@@ -76,15 +76,15 @@ class Common(unittest.TestCase):
                               'max_dir', 'xsum', 'ysum', 'dirsumtime', 'squaresum', 'wsquaresum'])
         
     def testScalarTally(self):
-        with weewx.stats.WXDaySummaryArchive.open(self.stats_db_dict) as stats:
-            with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+        with weewx.stats.WXDaySummaryArchive.open(self.database_dict) as stats:
+            with weewx.archive.Archive.open(self.database_dict) as archive:
                 # Pick a random day, say 15 March:
                 start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
                 stop_ts  = int(time.mktime((2010,3,16,0,0,0,0,0,-1)))
                 # Sanity check that this is truly the start of day:
                 self.assertEqual(start_ts, weeutil.weeutil.startOfDay(start_ts))
         
-                allStats = stats._getDayStats(start_ts)
+                allStats = stats._get_day_summary(start_ts)
         
                 # Test it against some types
                 # Should also test monthly, yearly summaries
@@ -275,9 +275,8 @@ class TestMySQL(Common):
         
     
 def suite():
-#     tests = ['test_create_stats', 'testScalarTally', 'testWindTally', 
-#              'testTags', 'test_rainYear', 'test_heatcool']
-    tests = ['test_create_stats']
+    tests = ['test_create_stats', 'testScalarTally', 'testWindTally', 
+             'testTags', 'test_rainYear', 'test_heatcool']
     return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
 
 if __name__ == '__main__':
