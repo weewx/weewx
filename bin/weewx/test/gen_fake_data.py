@@ -19,9 +19,8 @@ import syslog
 import time
 
 import user.schemas
+import weewx
 import weedb
-import weewx.archive
-import weewx.stats
 
 # One year of data:
 start_tt = (2010,1,1,0,0,0,0,0,-1)
@@ -43,12 +42,16 @@ avg_baro = 30.0
 # Archive interval in seconds:
 interval = 600
 
-def configDatabases(archive_db_dict, stats_db_dict):
-    """Configures the main and stats databases."""
+schema = user.schemas.defaultArchiveSchema
+
+def configDatabases(database_dict, database_cls):
+    """Configures the archive databases."""
+
+    global schema
 
     # Check to see if it already exists and is configured correctly.
     try:
-        with weewx.archive.Archive.open(archive_db_dict) as archive:
+        with database_cls.open(database_dict) as archive:
             if archive.firstGoodStamp() == start_ts and archive.lastGoodStamp() == stop_ts:
                 # Database already exists. We're done.
                 return
@@ -57,13 +60,16 @@ def configDatabases(archive_db_dict, stats_db_dict):
         
     # Delete anything that might already be there.
     try:
-        weedb.drop(archive_db_dict)
+        weedb.drop(database_dict)
     except:
         pass
     
-    # Now build a new one:
-    with weewx.archive.Archive.open_with_create(archive_db_dict, user.schemas.defaultArchiveSchema) as archive:
-    
+    # Need to build a new synthetic database. General strategy is to create the
+    # archive data, THEN backfill with the daily summaries. This is faster than
+    # creating the daily summaries on the fly.
+
+    with weewx.archive.Archive(database_dict, schema) as archive:
+        
         # Because this can generate voluminous log information,
         # suppress all but the essentials:
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
@@ -73,21 +79,17 @@ def configDatabases(archive_db_dict, stats_db_dict):
         archive.addRecord(genFakeRecords())
         t2 = time.time()
         print "Time to create synthetic archive database = %6.2fs" % (t2-t1,)
+        
+    with database_cls(database_dict, schema) as archive:
+
         # Now go back to regular logging:
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-    
-        # Delete any old stats database:
-        try:
-            weedb.drop(stats_db_dict)
-        except weedb.NoDatabase:
-            pass
-        # Now create and configure a new one:
-        with weewx.stats.StatsDb.open_with_create(stats_db_dict, user.schemas.defaultStatsSchema) as stats:
-            t1 = time.time()
-            # Now backfill the stats database from the main archive database.
-            nrecs = stats.backfillFrom(archive)
-            t2 = time.time()
-            print "Time to backfill stats database with %d records: %6.2fs" % (nrecs, t2-t1)
+
+        # Backfill with daily summaries:
+        t1 = time.time()
+        nrecs = archive.backfill_day_summary()    
+        t2 = time.time()
+        print "Time to backfill stats database with %d records: %6.2fs" % (nrecs, t2-t1)
     
 def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval):
     count = 0

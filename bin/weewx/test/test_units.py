@@ -121,8 +121,7 @@ class ValueHelperTest(unittest.TestCase):
         self.assertEqual(str(vh.degree_F), "68.0°F")
         self.assertEqual(str(vh.degree_C), "20.0°C")
         # Try an impossible conversion:
-        binder=vh.meter
-        self.assertRaises(KeyError, str, binder)
+        self.assertRaises(AttributeError, getattr, vh, 'meter')
 
     def testExplicitConversion(self):
         value_t = (10.0, "meter_per_second", "group_speed")

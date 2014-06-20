@@ -25,6 +25,8 @@ import weewx.stats
 import gen_fake_data
 import user.schemas
 
+day_keys = [x[0] for x in gen_fake_data.schema if x[0] not in ['dateTime', 'interval', 'usUnits']] + ['wind']
+
 config_path = "testgen.conf"
 cwd = None
 
@@ -55,23 +57,26 @@ class Common(unittest.TestCase):
             sys.stderr.write("Error while parsing configuration file %s" % config_path)
             raise
 
-        self.archive_db_dict = config_dict['Databases'][self.archive_db]        
-        self.stats_db_dict   = config_dict['Databases'][self.stats_db]
-
+        self.database_dict, self.database_cls = weewx.archive.prep_database(config_dict['Databases'], self.database)
+    
         # This will generate the test databases if necessary:
-        gen_fake_data.configDatabases(self.archive_db_dict, self.stats_db_dict)
+        gen_fake_data.configDatabases(self.database_dict, self.database_cls)
         
     def tearDown(self):
         pass
     
     def test_create_stats(self):
-        with weewx.stats.StatsDb.open(self.stats_db_dict) as stats:
-            self.assertItemsEqual(sorted(stats.statsTypes), sorted([stat_tuple[0] for stat_tuple in user.schemas.defaultStatsSchema]))
-            self.assertEqual(stats.connection.columnsOf('barometer'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count'])
-            self.assertEqual(stats.connection.columnsOf('wind'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'gustdir', 'xsum', 'ysum', 'squaresum', 'squarecount'])
+        global day_keys
+        with self.database_cls.open(self.database_dict) as archive:
+            self.assertItemsEqual(sorted(archive.daykeys), sorted(day_keys))
+            self.assertEqual(archive.connection.columnsOf('day_barometer'),
+                             ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'wsum', 'sumtime'])
+            self.assertEqual(archive.connection.columnsOf('day_wind'), 
+                             ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'wsum', 'sumtime', 
+                              'max_dir', 'xsum', 'ysum', 'dirsumtime', 'squaresum', 'wsquaresum'])
         
     def testScalarTally(self):
-        with weewx.stats.StatsDb.open(self.stats_db_dict) as stats:
+        with weewx.stats.WXDaySummaryArchive.open(self.stats_db_dict) as stats:
             with weewx.archive.Archive.open(self.archive_db_dict) as archive:
                 # Pick a random day, say 15 March:
                 start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
@@ -259,21 +264,20 @@ class Common(unittest.TestCase):
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
-        self.archive_db = "archive_sqlite"
-        self.stats_db   = "stats_sqlite"
+        self.database = "wx_sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
         
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
-        self.archive_db = "archive_mysql"
-        self.stats_db   = "stats_mysql"
+        self.database = "wx_mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
         
     
 def suite():
-    tests = ['test_create_stats', 'testScalarTally', 'testWindTally', 
-             'testTags', 'test_rainYear', 'test_heatcool']
+#     tests = ['test_create_stats', 'testScalarTally', 'testWindTally', 
+#              'testTags', 'test_rainYear', 'test_heatcool']
+    tests = ['test_create_stats']
     return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
 
 if __name__ == '__main__':

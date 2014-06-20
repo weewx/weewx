@@ -195,10 +195,10 @@ class Common(unittest.TestCase):
         # Now try fetching them as vectors:
         with weewx.archive.Archive.open(self.archive_db_dict) as archive:
             barvec = archive.getSqlVectors('barometer', start_ts, stop_ts)
-            # Recall that barvec will be a 2-way tuple. The first element is the value tuple of
-            # the time vector, the second of the data vector.
-            self.assertEqual(barvec[0], ([timefunc(irec) for irec in range(nrecs)], "unix_epoch", "group_time"))
-            self.assertEqual(barvec[1], ([barfunc(irec)  for irec in range(nrecs)], "inHg",       "group_pressure"))
+            # Recall that barvec will be a 3-way tuple. The first element is the vector of starting
+            # times, the second the vector of ending times, and the third the data vector.
+            self.assertEqual(barvec[1], ([timefunc(irec) for irec in range(nrecs)], "unix_epoch", "group_time"))
+            self.assertEqual(barvec[2], ([barfunc(irec)  for irec in range(nrecs)], "inHg",       "group_pressure"))
 
         # Now try fetching the vectora gain, but using aggregation.
         # Start by setting up a generator function that will return the records to be
@@ -213,11 +213,11 @@ class Common(unittest.TestCase):
                 recs = gen.next()
                 # Make sure the timestamp of the aggregation interval is the same as the last
                 # record to be included in the aggregation:
-                self.assertEqual(timevec[max(recs)], barvec[0][0][irec])
+                self.assertEqual(timevec[max(recs)], barvec[1][0][irec])
                 # Calculate the expected average of the records included in the aggregation.
                 expected_avg = sum((barfunc(i) for i in recs)) / len(recs)
                 # Compare them.
-                self.assertAlmostEqual(expected_avg, barvec[1][0][irec])
+                self.assertAlmostEqual(expected_avg, barvec[2][0][irec])
 
 class TestSqlite(Common):
 

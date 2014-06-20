@@ -29,6 +29,7 @@
 
 from __future__ import with_statement
 import math
+import os
 import sys
 import syslog
 import time
@@ -162,6 +163,9 @@ class DaySummaryArchive(weewx.archive.Archive):
         _day_summary = self._get_day_summary(_sod_ts, cursor)
         _day_summary.addRecord(record)
         self._set_day_summary(_day_summary, record['dateTime'], cursor)
+        syslog.syslog(log_level, "stats: added record %s to database '%s'" % 
+                      (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
+                       os.path.basename(self.connection.database)))
         
     def updateHiLo(self, accumulator):
         """Use the contents of an accumulator to update the daily hi/lows."""
