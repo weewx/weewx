@@ -22,8 +22,8 @@ import configobj
 
 import weeutil.weeutil
 import weewx.stats
+import weewx.tags
 import gen_fake_data
-import user.schemas
 
 day_keys = [x[0] for x in gen_fake_data.schema if x[0] not in ['dateTime', 'interval', 'usUnits']] + ['wind']
 
@@ -105,15 +105,15 @@ class Common(unittest.TestCase):
                             self.assertEqual(stats_time, res2[0], "Time check. Failing type %s, aggregate: %s" % (stats_type, aggregate))
     
     def testWindTally(self):
-        with weewx.stats.StatsDb.open(self.stats_db_dict) as stats:
-            with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+        with weewx.stats.WXDaySummaryArchive.open(self.database_dict) as stats:
+            with weewx.archive.Archive.open(self.database_dict) as archive:
                 # Pick a random day, say 15 March:
                 start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
                 stop_ts  = int(time.mktime((2010,3,16,0,0,0,0,0,-1)))
                 # Sanity check that this is truly the start of day:
                 self.assertEqual(start_ts, weeutil.weeutil.startOfDay(start_ts))
         
-                allStats = stats._getDayStats(start_ts)
+                allStats = stats._get_day_summary(start_ts)
         
                 # Test all the aggregates:
                 for aggregate in ['min', 'max', 'sum', 'count', 'avg']:
@@ -140,8 +140,8 @@ class Common(unittest.TestCase):
                 self.assertAlmostEqual(allStats['wind'].rms, rms)
 
     def testTags(self):
-        with weewx.stats.StatsDb.open(self.stats_db_dict) as stats:
-            with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+        with weewx.stats.WXDaySummaryArchive.open(self.database_dict) as stats:
+            with weewx.archive.Archive.open(self.database_dict) as archive:
 
                 spans = {'day'  : weeutil.weeutil.TimeSpan(time.mktime((2010,3,15,0,0,0,0,0,-1)),
                                                            time.mktime((2010,3,16,0,0,0,0,0,-1))),
@@ -157,7 +157,7 @@ class Common(unittest.TestCase):
                     
                     start_ts = spans[span].start
                     stop_ts  = spans[span].stop
-                    tagStats = weewx.stats.TaggedStats(stats, stop_ts,
+                    tagStats = weewx.tags.DatabaseBinder(stats, stop_ts,
                                                        rain_year_start=1, 
                                                        heatbase=(65.0, 'degree_F', 'group_temperature'),
                                                        coolbase=(65.0, 'degree_F', 'group_temperature'))
@@ -231,26 +231,26 @@ class Common(unittest.TestCase):
                 self.assertFalse(tagStats.year.inHumidity.has_data)
 
     def test_rainYear(self):
-        with weewx.stats.StatsDb.open(self.stats_db_dict) as stats:
+        with weewx.stats.WXDaySummaryArchive.open(self.database_dict) as stats:
             stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
             # Check for a rain year starting 1-Jan
-            tagStats = weewx.stats.TaggedStats(stats, stop_ts,
+            tagStats = weewx.tags.DatabaseBinder(stats, stop_ts,
                                                rain_year_start=1)
                 
             self.assertEqual(str(tagStats.rainyear.rain.sum), "86.59 in")
     
             # Do it again, for starting 1-Oct:
-            tagStats = weewx.stats.TaggedStats(stats, stop_ts,
+            tagStats = weewx.tags.DatabaseBinder(stats, stop_ts,
                                                rain_year_start=10)
             self.assertEqual(str(tagStats.rainyear.rain.sum), "21.89 in")
 
 
     def test_heatcool(self):
-        with weewx.stats.StatsDb.open(self.stats_db_dict) as stats:
+        with weewx.stats.WXDaySummaryArchive.open(self.database_dict) as stats:
             #Test heating and cooling degree days:
             stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
     
-            tagStats = weewx.stats.TaggedStats(stats, stop_ts,
+            tagStats = weewx.tags.DatabaseBinder(stats, stop_ts,
                                                heatbase=(65.0, 'degree_F', 'group_temperature'),
                                                coolbase=(65.0, 'degree_F', 'group_temperature'))
                 
