@@ -1,6 +1,8 @@
 weewx change history
 --------------------
 
+Added catchup to the WS28xx driver, but still no hardware record generation.
+
 2.6.4 06/16/14
 
 The WMR100 driver now calculates SLP in software. This fixes a problem
