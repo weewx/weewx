@@ -1180,13 +1180,13 @@ class WS28xx(weewx.abstractstation.AbstractStation):
     # that timestamps on historical records are correct
     def genStartupRecords(self, ts):
         loginf('Scanning historical records')
-        maxtries = 10
+        maxtries = 3
         ntries = 0
-        last_n = n = None
+        last_n = n = nrem = None
         last_ts = now = int(time.time())
         self.start_caching_history(since_ts=ts)
         t = WS28xx.max_records
-        while n is None or n > 0:
+        while nrem is None or nrem > 0:
             if ntries >= maxtries:
                 logerr('No historical data after %d tries' % ntries)
                 return
@@ -1201,23 +1201,46 @@ class WS28xx(weewx.abstractstation.AbstractStation):
                 ntries = 0
                 last_ts = now
             last_n = n
+            nrem = self.get_uncached_history_count()
             ni = self.get_next_history_index()
             li = self.get_latest_history_index()
-            loginf("Scanned %s of %s records: current=%s latest=%s" %
-                   (n, t, ni, li))
+            loginf("Scanned %s of %s records: current=%s latest=%s rem=%s" %
+                   (n, t, ni, li, nrem))
         self.stop_caching_history()
         records = self.get_history_cache_records()
         self.clear_history_cache()
         loginf('Found %d historical records' % len(records))
         last_ts = None
+        last_rain = None
         for r in records:
+            r['dateTime'] = tstr_to_ts(r['time'])
             if last_ts is not None:
                 r['usUnits'] = weewx.METRIC
-                r['dateTime'] = tstr_to_ts(r['time'])
                 r['interval'] = (r['dateTime'] - last_ts) / 60
-                last_ts = r['dateTime']
-                # FIXME: add barometer, altimeter, windchill, heatindex
+                # FIXME: put these into a separate function
+                rain_total = r['rainTotal']
+                delta = weewx.wxformulas.calculate_rain(rain_total, last_rain)
+                last_rain = rain_total
+                r['rain'] = delta
+                if r['rain'] is not None:
+                    r['rain'] /= 10 # weewx wants cm
+                r['heatindex'] = weewx.wxformulas.heatindexC(
+                    r['outTemp'], r['outHumidity'])
+                r['dewpoint'] = weewx.wxformulas.dewpointC(
+                    r['outTemp'], r['outHumidity'])
+                r['windchill'] = weewx.wxformulas.windchillC(
+                    r['outTemp'], r['windSpeed'])
+                adjp = r['pressure']
+                if self.pressure_offset is not None and adjp is not None:
+                    adjp += self.pressure_offset
+                r['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
+                    adjp, self.altitude, r['outTemp'])
+                r['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
+                    adjp, self.altitude, algorithm='aaNOAA')
+                del r['time']
                 yield r
+            last_ts = r['dateTime']
+            last_rain = r['rainTotal']
 
 # FIXME: do not implement hardware record generation until we figure
 # out how to query the historical records faster.
@@ -3637,6 +3660,7 @@ class CCommunicationService(object):
                 # this is non-trivial since the station retains records after
                 # it has been power cycled.
                 idx = get_next_index(latestIndex+1)
+#                idx = get_next_index(latestIndex-70) # for testing
                 self.history_cache.start_index = idx
                 self.history_cache.next_index = idx
                 logdbg('handleHistoryData: set start_index=%d' % idx)
