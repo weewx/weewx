@@ -311,6 +311,9 @@ while(defined($_ = <STDIN>)) {
              /ws28xx: MainThread: release USB interface/ ||
              /ws28xx: MainThread: claiming USB interface/ ||
              /ws28xx: MainThread: CCommunicationService.init/ ||
+             /ws28xx: MainThread: Scanning historical records/ ||
+             /ws28xx: MainThread: Scanned/ ||
+             /ws28xx: MainThread: Found/ ||
              /ws28xx: RFComm: console is paired to device/ ||
              /ws28xx: RFComm: starting rf communication/ ||
              /ws28xx: RFComm: stopping rf communication/ ||
