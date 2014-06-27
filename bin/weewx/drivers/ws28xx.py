@@ -1021,7 +1021,7 @@ def tstr_to_ts(tstr):
         return None
     return time.mktime(time.strptime(tstr, "%Y-%m-%d %H:%M:%S"))
 
-def buf_to_addr(a,b,c):
+def bytes_to_addr(a,b,c):
     return ((((a & 0xF) << 8) | b) << 8) | c
 
 def addr_to_index(addr):
@@ -1917,7 +1917,7 @@ class USBHardware(object):
             result = CWeatherTraits.RainOFL()
         else:
             val = USBHardware.toFloat_3_1(buf, start, StartOnHiNibble)
-            result = val
+            result = val / 10.0 # mm
         return result
 
     @staticmethod  
@@ -1931,7 +1931,6 @@ class USBHardware(object):
             result = (buf[0][start+0] & 0xF)*16**2 \
                 + (buf[0][start+1] >>  4)*   16**1 \
                 + (buf[0][start+1] & 0xF)*   16**0
-        result = result / 10.0
         return result
 
     @staticmethod
@@ -3631,11 +3630,8 @@ class CCommunicationService(object):
             data.toLog()
 
         cs = newbuf[0][5] | (newbuf[0][4] << 8)
-# according to doc it should be 9-11 and 12-14, but 6-8 and 9-11 works better
-        latestAddr = buf_to_addr(buf[0][6], buf[0][7], buf[0][8])
-        thisAddr = buf_to_addr(buf[0][9], buf[0][10], buf[0][11])
-#        latestAddr = buf_to_addr(buf[0][9], buf[0][10], buf[0][11])
-#        thisAddr = buf_to_addr(buf[0][12], buf[0][13], buf[0][14])
+        latestAddr = bytes_to_addr(buf[0][6], buf[0][7], buf[0][8])
+        thisAddr = bytes_to_addr(buf[0][9], buf[0][10], buf[0][11])
         latestIndex = addr_to_index(latestAddr)
         thisIndex = addr_to_index(thisAddr)
 
