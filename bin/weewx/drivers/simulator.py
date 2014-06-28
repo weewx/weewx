@@ -187,7 +187,7 @@ class Rain(object):
         n_rain_packets = total_rain / Rain.bucket_tip
         self.period = int(npackets/n_rain_packets)
         self.rain_start = 3600* rain_start
-        self.rain_end = rain_start + 3600 * rain_length
+        self.rain_end = self.rain_start + 3600 * rain_length
         self.packet_number = 0
         
     def value_at(self, time_ts):
