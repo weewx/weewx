@@ -24,6 +24,7 @@ catchup on startup.
 
 from __future__ import with_statement
 import serial
+import string
 import syslog
 import time
 
@@ -37,7 +38,7 @@ INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DRIVER_VERSION = '0.6'
+DRIVER_VERSION = '0.7'
 DEFAULT_PORT = '/dev/ttyS0'
 
 def logmsg(level, msg):
@@ -67,18 +68,20 @@ class CC3000(weewx.abstractstation.AbstractStation):
     '''weewx driver that communicates with a RainWise CC3000 data logger.'''
 
     # map rainwise names to weewx names
-    LABEL_MAP = { 'TIMESTAMP': 'TIMESTAMP',
-                  'TEMP OUT': 'outTemp',
-                  'HUMIDITY': 'outHumidity',
-                  'WIND DIRECTION': 'windDir',
-                  'WIND SPEED': 'windSpeed',
-                  'WIND GUST': 'windGust',
-                  'PRESSURE': 'pressure',
-                  'TEMP IN': 'inTemp',
-                  'RAIN': 'day_rain_total',
-                  'STATION BATTERY': 'consBatteryVoltage',
-                  'BATTERY BACKUP': 'bkupBatteryVoltage',
-              }
+    DEFAULT_LABEL_MAP = { 'TIMESTAMP': 'TIMESTAMP',
+                          'TEMP OUT': 'outTemp',
+                          'HUMIDITY': 'outHumidity',
+                          'WIND DIRECTION': 'windDir',
+                          'WIND SPEED': 'windSpeed',
+                          'WIND GUST': 'windGust',
+                          'PRESSURE': 'pressure',
+                          'TEMP IN': 'inTemp',
+                          'RAIN': 'day_rain_total',
+                          'STATION BATTERY': 'consBatteryVoltage',
+                          'BATTERY BACKUP': 'bkupBatteryVoltage',
+                          'SOLAR RADIATION': 'radiation',
+                          'UV INDEX': 'UV',
+                          }
 
     def __init__(self, **stn_dict):
         self.altitude = stn_dict['altitude']
@@ -91,6 +94,7 @@ class CC3000(weewx.abstractstation.AbstractStation):
         self.use_station_time = stn_dict.get('use_station_time', True)
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 60))
+        self.label_map = stn_dict.get('label_map', self.DEFAULT_LABEL_MAP)
 
         self.last_rain = None
 
@@ -299,7 +303,7 @@ class CC3000(weewx.abstractstation.AbstractStation):
         for i,v in enumerate(values):
             if i >= len(self.header):
                 continue
-            label = self.LABEL_MAP.get(self.header[i])
+            label = self.label_map.get(self.header[i])
             if label is None:
                 continue
             if label == 'TIMESTAMP':
@@ -322,6 +326,9 @@ def _to_ts(tstr, fmt="%Y/%m/%d %H:%M:%S"):
 
 def _format_bytes(buf):
     return ' '.join(["%0.2X" % ord(c) for c in buf])
+
+def _fmt(buf):
+    return filter(lambda x: x in string.printable, buf)
 
 # calculate the crc for a string using CRC-16-CCITT
 # http://bytes.com/topic/python/insights/887357-python-check-crc-frame-crc-16-ccitt
@@ -406,11 +413,10 @@ class Station(object):
     def command(self, cmd):
         self.write("%s\r" % cmd)
         data = self.get_data()
-        logdbg("station replied to command with '%s'" % data)
         data = data.strip()
         if data != cmd:
-            raise weewx.WeeWxIOError("Command failed: cmd='%s' data='%s'" % 
-                                     (cmd, data))
+            raise weewx.WeeWxIOError("Command failed: cmd='%s' reply='%s' (%s)"
+                                     % (cmd, _fmt(data), _format_bytes(data)))
         return self.get_data()
 
     def send_cmd(self, cmd):
@@ -433,7 +439,10 @@ class Station(object):
                     break
                 else:
                     raise weewx.WeeWxIOError("Unexpected byte 0x%0.2X" % ord(c))
-            buf.append(c)
+            if c in string.printable:
+                buf.append(c)
+            else:
+                loginf("skipping unprintable character 0x%0.2X" % ord(c))
         data = ''.join(buf)
         logdbg("got bytes: '%s'" % _format_bytes(data))
         _check_crc(data)
@@ -443,7 +452,7 @@ class Station(object):
         logdbg("set echo to %s" % cmd)
         data = self.command('ECHO=%s' % cmd)
         if data != 'OK':
-            raise weewx.WeeWxIOError("Set ECHO failed: %s" % data)
+            raise weewx.WeeWxIOError("Set ECHO failed: %s" % _fmt(data))
 
     def get_header(self):
         data = self.command("HEADER")
@@ -462,13 +471,13 @@ class Station(object):
 
     def get_memory_status(self):
         data = self.command("MEM=?")
-        logdbg("memory status: %s" % data)
+        logdbg("memory status: %s" % _fmt(data))
         return data
 
     def clear_memory(self):
         data = self.command("MEM=CLEAR")
         if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to clear memory: %s" % data)
+            raise weewx.WeeWxIOError("Failed to clear memory: %s" % _fmt(data))
 
     def gen_records(self, nrec):
         """generator function for getting records from the device"""
@@ -505,7 +514,8 @@ class Station(object):
         s = "TIME=%s" % tstr
         data = self.command(s)
         if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to set time to %s: %s" % (s,data))
+            raise weewx.WeeWxIOError("Failed to set time to %s: %s" %
+                                     (s, _fmt(data)))
 
     def get_units(self):
         data = self.command("UNITS=?")
@@ -516,7 +526,7 @@ class Station(object):
         data = self.command("UNITS=%s" % units)
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to set units to %s: %s" %
-                                     (units, data))
+                                     (units, _fmt(data)))
 
     def get_interval(self):
         data = self.command("LOGINT=?")
@@ -527,7 +537,7 @@ class Station(object):
         data = self.command("LOGINT=%d" % interval)
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to set logging interval: %s" %
-                                     data)
+                                     _fmt(data))
 
     def get_version(self):
         data = self.command("VERSION")
