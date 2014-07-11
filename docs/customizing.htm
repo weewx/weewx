@@ -607,7 +607,7 @@ or in foobar units: $day.barometer.min.foobar
             <td>Comment</td>
           </tr>
           <tr>
-            <td class='text_highlight'> <em>(no tag)</em> </td>
+            <td class='text_highlight'>(no tag)</td>
             <td>Value is returned as a string, formatted using an appropriate
               string format from <span class="code">skin.conf</span>. A unit
               label (e.g., <span class='code'>&deg;F</span>) from <span class="code">skin.conf</span> is also attached
@@ -644,7 +644,7 @@ or in foobar units: $day.barometer.min.foobar
 	    </td>
           </tr>
           <tr>
-            <td class="code text_highlight">.nolabel(string_format, NONE_string)</td>
+            <td class="code text_highlight">.nolabel(<em>string_format, NONE_string</em>)</td>
             <td>Value is returned as a string, using the string format specified
               with <em>string_format</em>. If the value is <span class="code">None</span>,
               the string <span class="code">NONE_string</span> will be
@@ -677,7 +677,7 @@ or in foobar units: $day.barometer.min.foobar
             <td>Returned Value</td>
           </tr>
           <tr>
-            <td class="first_col"><em>(no tag)</em></td>
+            <td class="first_col">(no tag)</td>
             <td>From <span class="code">skin.conf</span></td>
             <td>From <span class="code">skin.conf</span></td>
             <td>From <span class="code">skin.conf</span></td>
@@ -843,8 +843,8 @@ or in foobar units: $day.barometer.min.foobar
       </table>
       <p>Note: </p>
       <ul>
-        <li>Tags that take an argument (such as <span class="code">.string(NONE_string)</span>)
-          do not require parenthesis if the argument is omitted.Thus, you can
+        <li>Tags that take an argument, such as <span class="code">.string(NONE_string)</span>,
+          do not require parenthesis if the argument is omitted. Thus, you can
           specify either <span class="code">$month.outTemp.string()</span> or <span
             class="code">$month.outTemp.string</span>, if you want the default
           value of <span class="code">NONE_string</span>. They produce the same
