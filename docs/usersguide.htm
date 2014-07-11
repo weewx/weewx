@@ -2566,14 +2566,13 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	  [StdArchive]</a></span> for details.</p>
 
     <h1 id="running">Running <span class="code">weewx</span></h1>
-    <p><span class="code">Weewx</span> can be run either from the command line
-      (useful for diagnostic purposes because it will print out a summary of
-      every LOOP data), or as a daemon. When first trying
-      <span class="code">weewx</span>, it is best to run it from the command
-      line because you will be able to see command line diagnostics, as well
+    <p><span class="code">Weewx</span> can be run either directly,
+      or as a daemon. When first trying
+      <span class="code">weewx</span>, it is best to run it directly
+      because you will be able to see sensor output and diagnostics, as well
       as log messages.  Once everything is working properly, run it as a
       daemon.</p>
-    <h2>Running from the command line</h2>
+    <h2>Running directly</h2>
     <p>To run <span class="code">weewx</span> directly, invoke
       the main program, <span class="code">weewxd</span>, giving 
       the configuration file as its only parameter: </p>
@@ -2586,7 +2585,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p><span class="code">Weewx</span> will then start monitoring live sensor
       data (also referrred to as 'LOOP' data),
       printing a short version of the received data on standard output, about
-      once every two seconds. </p>
+      once every two seconds for a Vantage station, or considerably longer
+      for some other stations. </p>
     <p>You can tell a running instance of <span class="code">weewx</span> to
       reread its configuration file by sending it the
       <span class="code">HUP</span> signal. 
@@ -2888,13 +2888,13 @@ sudo /etc/init.d/apache2 restart</p>
       <li style="margin-bottom:1em"><a href="#monitoring">Look at the log file</a>. I am always
         happy to take questions, but the first thing I will ask you is,
         &quot;Did you look at the log file?&quot;
-        <p class='tty' style="margin-top:1em">tail -f /var/log/messages</p>
+        <p class='tty' style="margin-top:1em">sudo tail -f /var/log/syslog</p>
       </li>
-      <li style="margin-bottom:1em">Run from the command line. Generally, <span class="code">weewx</span>
-	will catch and log any unrecoverable exceptions. But if you are getting
-	strange results, it is worth running from the command line and looking
-        for any clues.
-        <p class='tty' style="margin-top:1em"><span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
+      <li style="margin-bottom:1em">Run directly rather than as a daemon.
+        Generally, <span class="code">weewx</span> will catch and log any
+        unrecoverable exceptions. But if you are getting strange results,
+        it is worth running directly and looking for any clues.
+        <p class='tty' style="margin-top:1em">sudo <span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
       </li>
     </ul>
 
@@ -3180,7 +3180,8 @@ Jan  1 09:46:32 saga weewx[15292]: wxengine: pid file is /var/run/weewx.pid</pre
     <h3><span class="code">configobj</span> errors</h3>
     <p>These are errors in the configuration file. Two are very common.
       Incidentally, these errors are far easier to diagnose when
-      <span class="code">weewx</span> is run from the command line. </p>
+      <span class="code">weewx</span> is run directly than when it is run
+      as a daemon. </p>
     <h4><span class="code">configobj.DuplicateError</span> exception</h4>
     <p>This error is caused by using an identifier more than once in the
       configuration file. For example, you may have inadvertently listed
@@ -3536,8 +3537,8 @@ port = /dev/cuaU0</pre>
       rate of V3.X this is unlikely to happen anytime soon. In any case, I doubt the 
       transition will affect the average <span class="code">weewx</span> user. </p>
     <p>All writes to the databases are protected by transactions. You can kill the 
-      program at any time (either Control-C if run from the command line or &quot;<span class="code">/etc/init.d/weewx 
-	stop</span>&quot; if a daemon) without fear of corrupting the databases. </p>
+      program at any time (either Control-C if run directly or &quot;<span class="code">/etc/init.d/weewx 
+	stop</span>&quot; if run as a daemon) without fear of corrupting the databases. </p>
     <p>The code makes ample use of exceptions to insure graceful recovery from problems 
       such as network outages. It also monitors socket and console timeouts, restarting 
       whatever it was working on several times before giving up. In the case of an 
