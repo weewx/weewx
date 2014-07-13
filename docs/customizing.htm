@@ -157,8 +157,9 @@ table#stattypes td {
         that it they do not actually generate anything. Instead, they use the
         reporting service engine to arrange for things to be transferred to a
         remote server. </p>
+
       <h3>Skins</h3>
-      <p>Each report has a <em>Skin</em> associated with it. For most reports,
+      <p>Each report has a <em>skin</em> associated with it. For most reports,
         the relationship with the skin is an obvious one: it contains the
         templates, any auxiliary files such as background GIFs or CSS style
         sheets, and a <em>skin configuration file</em>, <span class="code">skin.conf</span>.
@@ -190,12 +191,22 @@ table#stattypes td {
         });
       </script>
 
+      <h3>Templates</h3>
+      <p>A template is a text file that is processed by
+        <span class="code">weewx</span> to create a new file.  A template may
+        be used to generate HTML, XML, CSV, javascript, or any other type of
+        text file.  A template typically contains variables that are replaced
+        by when creating the new file.  Templates may also contain programming
+        logic.</p>
+      <p>Each template file lives in the skin directory of the skin that uses
+        it. By convention, a template file ends with the .tmpl extension.</p>
+
       <h3>Generators</h3>
-      <p>To create their output, skins rely on one or more <em>Generators, </em>code
+      <p>To create their output, skins rely on one or more <em>Generators</em>
         that actually create useful things such as HTML files or plot images.
         Generators can also copy files around or FTP/rsync them to remote
-        locations. The default install of <span class="code">weewx</span> includes
-        the following generators: </p>
+        locations. The default install of <span class="code">weewx</span>
+        includes the following generators: </p>
       <table class="indent" summary="Generators included in weewx">
         <tbody>
           <tr class="first_row">
@@ -314,15 +325,22 @@ table#stattypes td {
         changing the template files. The former is generally easier, but
         occasionally the latter is necessary. </p>
       <h2>Changing options</h2>
-      <p>Changing an option means either modifying the main configuration file <span
-          class="code">weewx.conf</span>, or the skin configuration file for the
-        standard skin that comes with the distribution (nominally, file <span class="symcode">$SKIN_ROOT</span><span
-          class="code">/Standard/skin.conf</span>). </p>
+      <p>Changing an option means either modifying the main configuration file
+        <span class="code">weewx.conf</span>, or the skin configuration file
+        <span class="code">skin.conf</span>.</p>
+      <p>Each skin will have a <span class="code">skin.conf</span> that defines
+        its default configuration.  The examples in this guide refer to the
+        standard skin that comes with the distribution.</p>
       <h3>Changing options in <span class="code">skin.conf</span></h3>
-      <p>With this approach, the user edits the skin configuration file for the
-        standard skin that comes with <span class="code">weewx</span>, located
-        in <span class="symcode">$SKIN_ROOT</span><span class="code">/Standard/skin.conf</span>,
-        using a text editor. For example, suppose you wish to use metric units
+      <p>With this approach, edit the skin configuration file with a text
+        editor.  Changes made in this way will be used by
+        <span class="code">weewx</span> the next time it generates reports,
+        which is typically the next archive interval; there is no need to
+        restart <span class="code">weewx</span> to see the results of the
+        changes.</p>
+      <p>For the standard skin that comes with <span class="code">weewx</span>,
+        the file is <span class="symcode">$SKIN_ROOT</span><span class="code">/Standard/skin.conf</span>.</p>
+      <p>For example, suppose you wish to use metric units
         in the presentation layer, instead of the default US Customary Units.
         The section that controls units is <span class="code">[Units][[Groups]]</span>.
         It looks like this: </p>
@@ -382,15 +400,17 @@ table#stattypes td {
         ...</pre>
       <h3>Overriding options in <span class="code">skin.conf</span> from <span
           class="code">weewx.conf</span></h3>
-      <p>This approach is very similar, except that instead of changing the skin
-        configuration file directly, you override its options by editing the
-        main configuration file, <span class="code">weewx.conf</span>. The
+      <p>This approach is very similar, except that instead of changing the
+        skin configuration file directly, you override its options by editing
+        the main configuration file, <span class="code">weewx.conf</span>. The
         advantage of this approach is that you can use the same skin to produce
-        several different output, each with separate options. </p>
+        several different output, each with separate options.</p>
+      <p>With this approach, you must restart <span class="code">weewx</span>
+        to see the effects of any changes.</p>
       <p>Revisiting our example, suppose you want two reports, one in US
-        Customary, the other in Metric. The former will go in the directory <span
-          class="symcode"> $HTML_ROOT</span>, the latter in a directory, <span
-          class="symcode"> $HTML_ROOT</span><span class="code">/metric</span>.
+        Customary, the other in Metric. The former will go in the directory
+        <span class="symcode"> $HTML_ROOT</span>, the latter in a directory,
+        <span class="symcode"> $HTML_ROOT</span><span class="code">/metric</span>.
         If you just simply modify <span class="code">skin.conf</span>, you can
         get one, but not both at the same time. Alternatively, you could create
         a whole new skin by copying all the files to a new skin directory
@@ -434,13 +454,10 @@ table#stattypes td {
                 group_speed       = meter_per_second
                 group_speed2      = meter_per_second2
                 group_temperature = degree_C
-
-    [[FTP]]
-    ...
-    ... (as before) </pre>
-      <p>We have done two things different from the stock reports. First (1), we
-        have renamed the first report from <span class="code">StandardReport</span> to
-        <span class="code">USReport</span> for clarity; and (2) we have
+</pre>
+      <p>We have done two things different from the stock reports. First (1),
+        we have renamed the first report from <span class="code">StandardReport</span> to
+        <span class="code">USReport</span> for clarity; and second (2), we have
         introduced a new report <span class="code">MetricReport</span>, just
         like the first, except it puts its results in a different spot and uses
         different units. Both use the same skin, the <span class="code">Standard</span> 

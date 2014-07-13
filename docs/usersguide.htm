@@ -1640,7 +1640,7 @@ longitude = -77.0366</pre>
       It uses the skin &quot;<span class="code">Standard</span>&quot;, which generates 
       four HTML pages (&quot;day&quot;, &quot;week&quot;, &quot;month&quot;, and &quot;year&quot; 
       observations), plot graphs for same, an RSS feed, and NOAA monthly and yearly 
-      reports. Unless changed otherwise, it uses US Customary Units and puts the results 
+      reports. The default configuration uses US Customary Units and puts the results 
       in <span class="code">public_html</span> and subdirectory <span class="code">
 	public_html/NOAA</span>. </p>
     <h3 class="config_section">[[FTP]]</h3>
@@ -1701,27 +1701,38 @@ longitude = -77.0366</pre>
       on the remote server. Valid values are 1 to enable and 0 to disable. Required. 
       Default is 0.</p>
     <h2 class="config_section" id="StdConvert">[StdConvert]</h2>
-    <p>This section is for configuring the <span class="code">StdConvert</span> 
-      service. This service acts as a filter, converting the unit system coming off 
-      your hardware to a target output unit system. Everything that follows, including 
-      the archiving service, will use the target unit system. Hence, your data 
-      will be stored using your chosen unit system. </p>
-    <p><em>Once chosen, it cannot be changed!</em> Weewx does not allow you to mix 
-      unit systems within the databases. You must chose one or the other and then 
-      stick with it. This means that users coming from wview (which uses US Customary) 
-      should not change the default setting. Having said this, there is a way of reconfiguring 
-      the database to use another unit system. See the section
+    <p>This section is for configuring the <span class="code">StdConvert</span>
+      service.</p>
+    <p class='note'><strong>Note!</strong><br/>
+      If you would like to change the units that are displayed
+      in plots or files, you should make changes to the skin as described in
+      the <a href="customizing.htm">Customizing Guide</a>, under section
+      <em><a href="customizing.htm#Changing_options">Changing options</a></em>.
+    </p>
+    <p>The <span class="code">StdConvert</span> service acts as a filter,
+      converting the unit system coming off your hardware to a target output
+      unit system. Everything that follows, including the archiving service,
+      will use the target unit system. Hence, your data will be stored using
+      your chosen unit system. </p>
+    <p><em>Once chosen, it cannot be changed!</em> Weewx does not allow you to
+      mix unit systems within the databases. You must chose one or the other
+      and then stick with it. This means that users coming from wview (which
+      uses US Customary) should not change the default setting. Having said
+      this, there is a way of reconfiguring the database to use another unit
+      system. See the section
       <a href="customizing.htm#Changing_the_unit_system">Changing the unit system</a> 
       in the Customizing Guide.</p>
-    <p>Note that whatever you choose here, it does not affect your options for the 
-      unit system to be used for <i>reporting</i>. Because of this, unless you 
-      have a special purpose application, there is really no good reason to change 
-      from the default, which is <span class="code">US</span>. </p>
-	  <p class="warning"><strong>Warning!</strong><br />
-	  If, despite these precautions, you do 
-      decide to change to Metric, be sure to read the sections <span class="code">
-	<a href="#StdCalibrate">[StdCalibrate]</a></span> and <span class="code">
-	<a href="#StdQC">[StdQC]</a></span> below, and change the units there as well!</p>
+    <p>Note that whatever you choose here, it does not affect your options for
+      the unit system to be used for <i>reporting</i>. Because of this, unless
+      you have a special purpose application, there is really no good reason to
+      change from the default, which is <span class="code">US</span>. </p>
+    <p class="warning"><strong>Warning!</strong><br />
+      If, despite these precautions, you do decide to change the units of data
+      stored in the database, be sure to read the sections
+      <span class="code"><a href="#StdCalibrate">[StdCalibrate]</a></span> and
+      <span class="code"><a href="#StdQC">[StdQC]</a></span>, and change the
+      units there as well!</p>
+
     <p class="config_option">target_unit</p>
     <p>Set to either <span class="code">US</span>, <span class="code">METRICWX</span>,
       or <span class="code">METRIC</span>. The difference between 
@@ -3669,7 +3680,9 @@ port = /dev/cuaU0</pre>
         stations use an odd mix of US and metric. The Fine Offset
         stations are metric.  The LaCrosse stations are metric.  The
         Hideki stations are a mix of US and metric.  One-wire devices
-        can be either US or metric.</li>
+        can be either US or metric.  RainWise data loggers can be configured
+        to use either US or metric.  PeetBros devices use a mix of US and
+        metric.</li>
       <li>In the database. Either US or Metric can be used.</li>
       <li>In the presentation (i.e., html and image files). </li>
     </ol>
