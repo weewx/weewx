@@ -213,10 +213,12 @@ class RsyncGenerator(ReportGenerator):
         # We don't try to collect performance statistics about rsync, because rsync
         # will report them for us.  Check the debug log messages.
         try:
+            if self.skin_dict.has_key('HTML_ROOT'):
+                html_root = self.skin_dict['HTML_ROOT']
+            else:
+                html_root = self.config_dict['StdReport']['HTML_ROOT']
             rsyncData = weeutil.rsyncupload.RsyncUpload(
-                local_root  = os.path.join(
-                    self.config_dict['WEEWX_ROOT'],
-                    self.config_dict['StdReport']['HTML_ROOT']),
+                local_root  = os.path.join(self.config_dict['WEEWX_ROOT'], html_root),
                 remote_root = self.skin_dict['path'],
                 server      = self.skin_dict['server'],
                 user        = self.skin_dict.get('user', None),

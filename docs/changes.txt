@@ -1,6 +1,10 @@
 weewx change history
 --------------------
 
+X.X.X XX/XX/XX
+
+Enabled multiple rsync instances for a single weewx instance.
+
 Added catchup to the WS28xx driver, but still no hardware record generation.
 
 2.6.4 06/16/14
