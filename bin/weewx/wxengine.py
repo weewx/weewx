@@ -655,8 +655,8 @@ class StdTimeSynch(StdService):
         
         # Zero out the time of last synch, and get the time between synchs.
         self.last_synch_ts = 0
-        self.clock_check = int(config_dict['Station'].get('clock_check', 14400))
-        self.max_drift   = int(config_dict['Station'].get('max_drift', 5))
+        self.clock_check = int(config_dict['StdTimeSynch'].get('clock_check', 14400))
+        self.max_drift   = int(config_dict['StdTimeSynch'].get('max_drift', 5))
         
         self.bind(weewx.STARTUP,  self.startup)
         self.bind(weewx.PRE_LOOP, self.pre_loop)
