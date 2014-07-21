@@ -132,6 +132,9 @@ console clock.  The console can record up to 1797 history records.
 Reading 1795 history records took about 110 minutes on a raspberry pi, for
 an average of 3.6 seconds per history record.
 
+Reading 1750 history records took 19 minutes using HeavyWeatherPro on a
+Windows 7 64-bit laptop.
+
 Message Types
 
 The first byte of a message determines the message type.
