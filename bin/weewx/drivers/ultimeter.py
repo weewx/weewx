@@ -91,7 +91,7 @@ import weewx.units
 import weewx.uwxutils
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.9.3'
+DRIVER_VERSION = '0.9.4'
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 
@@ -149,6 +149,7 @@ class Ultimeter(weewx.abstractstation.AbstractStation):
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.pressure_offset = float(stn_dict.get('pressure_offset', 0))
         self.last_rain = None
+        self.last_rain_ts = None
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
         loginf('polling interval is %s' % str(self.polling_interval))
@@ -206,6 +207,11 @@ class Ultimeter(weewx.abstractstation.AbstractStation):
         else:
             packet['rain'] = None
         self.last_rain = packet['long_term_rain']
+
+        # calculate the rain rate
+        packet['rainRate'] = weewx.wxformulas.calculate_rain_rate(
+            packet['rain'], packet['dateTime'], self.last_rain_ts)
+        self.last_rain_ts = packet['dateTime']
 
 class Station(object):
     def __init__(self, port):

@@ -10,6 +10,10 @@ Added catchup to the WS28xx driver, but still no hardware record generation.
 Moved clock synchronization options clock_check and max_drift back to
 section [StdTimeSynch].
 
+Changed lux-to-W/m^2 conversion factor in the fine offset driver.
+
+Added rain rate calculation to Ultimeter driver.
+
 
 2.6.4 06/16/14
 
