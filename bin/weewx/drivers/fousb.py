@@ -151,6 +151,20 @@ specified in weewx.conf, and 'temperature' is read from the sensors.
 
 The 'barometer' value is reported to wunderground, cwop, etc.
 
+Illuminance and Radiation
+
+The 30xx stations include a sensor that reports illuminance (lux).  The
+conversion from lux to radiation is a function of the angle of the sun and
+altitude, but this driver uses a single multiplier as an approximation.
+
+Apparently the display on fine offset stations is incorrect.  The display
+reports radiation with a lux-to-W/m^2 multiplier of 0.001464.  Apparently
+Cumulus and WeatherDisplay use a multiplier of 0.0079.  The multiplier for
+sea level with sun directly overhead is 0.01075.
+
+This driver uses the sea level multiplier of 0.01075.  Use an entry in
+StdCalibrate to adjust this for your location and altitude.
+
 From Jim Easterbrook:
 
 The weather station memory has two parts: a "fixed block" of 256 bytes
@@ -260,7 +274,7 @@ keymap = {
     'windDir'     : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
     'windGustDir' : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
     'rain'        : ('rain',         0.1), # station is mm, weewx wants cm
-    'radiation'   : ('illuminance',  0.001464), # lux, weewx wants W/m^2
+    'radiation'   : ('illuminance',  0.01075), # lux, weewx wants W/m^2
     'UV'          : ('uv',           1.0),
     'dewpoint'    : ('dewpoint',     1.0),
     'heatindex'   : ('heatindex',    1.0),
