@@ -802,8 +802,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 #    def getTime(self):
 #        return self.get_clock()
 
-#    def setTime(self, ts):
-#        self.set_clock(ts)
+#    def setTime(self):
+#        self.set_clock()
 
     def genLoopPackets(self):
         """Generator function that continuously returns decoded packets."""

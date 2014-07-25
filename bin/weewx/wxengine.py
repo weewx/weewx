@@ -679,12 +679,13 @@ class StdTimeSynch(StdService):
             try:
                 console_time = self.engine.console.getTime()
                 if console_time is None: return
-                diff = console_time - now_ts
+		# getTime can take a long time to run, so we use the curent system time
+                diff = console_time - time.time()
                 syslog.syslog(syslog.LOG_INFO, 
                               "wxengine: Clock error is %.2f seconds (positive is fast)" % diff)
-                if abs(now_ts - console_time) > self.max_drift:
+                if abs(diff) > self.max_drift:
                     try:
-                        self.engine.console.setTime(now_ts)
+                        self.engine.console.setTime()
                     except NotImplementedError:
                         syslog.syslog(syslog.LOG_DEBUG, "wxengine: Station does not support setting the time")
             except NotImplementedError:

@@ -169,9 +169,9 @@ class CC3000(weewx.abstractstation.AbstractStation):
             v = station.get_time()
         return _to_ts(v)
 
-    def setTime(self, ts):
+    def setTime(self):
         with Station(self.port) as station:
-            station.set_time(ts)
+            station.set_time()
 
     def get_current(self):
         with Station(self.port) as station:
@@ -508,8 +508,8 @@ class Station(object):
         data = self.command("TIME=?")
         return data
 
-    def set_time(self, ts):
-        tstr = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(ts))
+    def set_time(self):
+        tstr = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(time.time()))
         logdbg("set time to %s (%s)" % (tstr, ts))
         s = "TIME=%s" % tstr
         data = self.command(s)
@@ -617,7 +617,7 @@ if __name__ == '__main__':
             if options.gettime:
                 print s.get_time()
             if options.settime:
-                s.set_time(time.time())
+                s.set_time()
             if options.getint:
                 print s.get_interval()
             if options.setint:

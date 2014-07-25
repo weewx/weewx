@@ -637,24 +637,26 @@ class Vantage(weewx.abstractstation.AbstractStation):
         syslog.syslog(syslog.LOG_ERR, "vantage: Max retries exceeded while getting time")
         raise weewx.RetriesExceeded("While getting console time")
             
-    def setTime(self, newtime_ts):
-        """Set the clock on the Davis Vantage console
+    def setTime(self):
+        """Set the clock on the Davis Vantage console"""
 
-        newtime_ts: The time the internal clock should be set to in unix epoch time."""
-        
-        # Unfortunately, this algorithm takes a little while to execute, so the clock
-        # usually ends up a few hundred milliseconds slow
-        newtime_tt = time.localtime(int(newtime_ts + 0.5))
-            
-        # The Davis expects the time in reversed order, and the year is since 1900
-        _buffer = struct.pack("<bbbbbb", newtime_tt[5], newtime_tt[4], newtime_tt[3], newtime_tt[2],
-                                         newtime_tt[1], newtime_tt[0] - 1900)
-            
         for unused_count in xrange(self.max_tries) :
             try :
+		# Wake the console and begin the settime command
                 self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
                 self.port.send_data('SETTIME\n')
-                self.port.send_data_with_crc16(_buffer, max_tries=self.max_tries)
+
+                # Unfortunately, clock resolution is only 1 second, and transmission takes a
+                # little while to complete, so round up the clock up. 0.5 for clock resolution
+                # and 0.25 for transmission delay
+                newtime_tt = time.localtime(int(time.time() + 0.75))
+ 
+                # The Davis expects the time in reversed order, and the year is since 1900
+                _buffer = struct.pack("<bbbbbb", newtime_tt[5], newtime_tt[4], newtime_tt[3], newtime_tt[2],
+                                                 newtime_tt[1], newtime_tt[0] - 1900)
+
+		# Complete the settime command
+                self.port.send_data_with_crc16(_buffer, max_tries=1)
                 syslog.syslog(syslog.LOG_NOTICE,
                               "vantage: Clock set to %s" % weeutil.weeutil.timestamp_to_string(time.mktime(newtime_tt)))
                 return

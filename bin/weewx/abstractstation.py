@@ -32,7 +32,7 @@ class AbstractStation(object):
     def getTime(self):
         raise NotImplementedError("Method 'getTime' not implemented")
     
-    def setTime(self, newtime_ts):
+    def setTime(self):
         raise NotImplementedError("Method 'setTime' not implemented")
     
     def closePort(self):

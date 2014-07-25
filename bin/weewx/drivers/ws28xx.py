@@ -1258,7 +1258,7 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 #        return getHistoryInterval(cfg['history_interval']) * 60
 
 # FIXME: implement set/get time
-#    def setTime(self, ts):
+#    def setTime(self):
 #        pass
 #    def getTime(self):
 #        pass

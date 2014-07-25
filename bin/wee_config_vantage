@@ -330,7 +330,7 @@ def set_rain_year_start(station, rain_year_start):
 
 def set_time(station):
     print "Setting time on console..."
-    station.setTime(time.time())
+    station.setTime()
     newtime_ts = station.getTime()
     print "Current console time is %s" % weeutil.weeutil.timestamp_to_string(newtime_ts)
 
