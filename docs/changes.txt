@@ -18,6 +18,9 @@ Changed setTime to retrieve system time directly rather than using a value
 passed by the engine. This greatly improves the accuracy of StdTimeSync,
 particularly in network based implementations.
 
+Fixed ENDPOINT_IN in the te923 driver.  This should provide better
+compatibility with a wider range of pyusb versions.
+
 
 2.6.4 06/16/14
 

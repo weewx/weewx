@@ -161,7 +161,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.9'
+DRIVER_VERSION = '0.10'
 DEBUG_READ = 0
 DEBUG_DECODE = 0
 DEBUG_PRESSURE = 0
@@ -674,7 +674,7 @@ class BadRead(weewx.WeeWxIOError):
     """Bogus data length, CRC, header block, or other read failure"""
 
 class Station(object):
-    ENDPOINT_IN = 0x01
+    ENDPOINT_IN = 0x81
     READ_LENGTH = 0x8
 
     def __init__(self, vendor_id=0x1130, product_id=0x6801,
