@@ -4,3 +4,30 @@ Figure out why the heartbeat doesn't work on the WMR200.
 
 add documentation for the extension installer and extension packaging.
 
+Guard against database locks:
+
+Jul 30 08:55:22 hummingbird weewx[959]: wxengine: Caught unrecoverable exception in wxengine:
+Jul 30 08:55:22 hummingbird weewx[959]:     ****  database is locked
+Jul 30 08:55:22 hummingbird weewx[959]:     ****  Traceback (most recent call last):
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 962, in main
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      engine.run()
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 189, in run
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.dispatchEvent(weewx.Event(weewx.POST_LOOP))
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 210, in dispatchEvent
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      callback(event)
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 562, in post_loop
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      self._catchup(self.engine.console.genArchiveRecords)
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 625, in _catchup
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      origin='hardware'))
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 210, in dispatchEvent
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      callback(event)
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 574, in new_archive_record
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.archive.addRecord(event.record)
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/archive.py", line 192, in addRecord
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      e))
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weedb/__init__.py", line 130, in __exit__
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.connection.commit()
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weedb/__init__.py", line 97, in commit
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.connection.commit()
+Jul 30 08:55:22 hummingbird weewx[959]:     ****  OperationalError: database is locked
+Jul 30 08:55:22 hummingbird weewx[959]:     ****  Exiting.

@@ -642,7 +642,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
 
         for unused_count in xrange(self.max_tries) :
             try :
-		# Wake the console and begin the settime command
+                # Wake the console and begin the setTime command
                 self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
                 self.port.send_data('SETTIME\n')
 
@@ -655,7 +655,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
                 _buffer = struct.pack("<bbbbbb", newtime_tt[5], newtime_tt[4], newtime_tt[3], newtime_tt[2],
                                                  newtime_tt[1], newtime_tt[0] - 1900)
 
-		# Complete the settime command
+                # Complete the setTime command
                 self.port.send_data_with_crc16(_buffer, max_tries=1)
                 syslog.syslog(syslog.LOG_NOTICE,
                               "vantage: Clock set to %s" % weeutil.weeutil.timestamp_to_string(time.mktime(newtime_tt)))

@@ -679,7 +679,7 @@ class StdTimeSynch(StdService):
             try:
                 console_time = self.engine.console.getTime()
                 if console_time is None: return
-		# getTime can take a long time to run, so we use the curent system time
+                # getTime can take a long time to run, so we use the current system time
                 diff = console_time - time.time()
                 syslog.syslog(syslog.LOG_INFO, 
                               "wxengine: Clock error is %.2f seconds (positive is fast)" % diff)
