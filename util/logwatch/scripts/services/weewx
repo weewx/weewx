@@ -285,7 +285,7 @@ while(defined($_ = <STDIN>)) {
              /ws28xx: MainThread: frequency is/ ||
              /ws28xx: MainThread: altitude is/ ||
              /ws28xx: MainThread: pressure offset is/ ||
-             /ws28xx: MainThread: found transceiver on USB/ ||
+             /ws28xx: MainThread: found transceiver/ ||
              /ws28xx: MainThread: manufacturer: LA CROSSE TECHNOLOGY/ ||
              /ws28xx: MainThread: product: Weather Direct Light Wireless/ ||
              /ws28xx: MainThread: interface/ ||
@@ -311,6 +311,9 @@ while(defined($_ = <STDIN>)) {
              /ws28xx: MainThread: release USB interface/ ||
              /ws28xx: MainThread: claiming USB interface/ ||
              /ws28xx: MainThread: CCommunicationService.init/ ||
+             /ws28xx: MainThread: Scanning historical records/ ||
+             /ws28xx: MainThread: Scanned/ ||
+             /ws28xx: MainThread: Found/ ||
              /ws28xx: RFComm: console is paired to device/ ||
              /ws28xx: RFComm: starting rf communication/ ||
              /ws28xx: RFComm: stopping rf communication/ ||
@@ -399,6 +402,7 @@ while(defined($_ = <STDIN>)) {
              /owfs: polling interval is / ||
              /owfs: sensor map is / ||
              /cmon: cpuinfo: / ||
+             /cmon: sysinfo: / ||
              /cmon: Skipping record/ ||
              /forecast: .* starting thread/ ||
              /forecast: .* terminating thread/ ||

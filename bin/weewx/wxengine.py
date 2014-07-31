@@ -651,8 +651,8 @@ class StdTimeSynch(StdService):
         
         # Zero out the time of last synch, and get the time between synchs.
         self.last_synch_ts = 0
-        self.clock_check = int(config_dict['Station'].get('clock_check', 14400))
-        self.max_drift   = int(config_dict['Station'].get('max_drift', 5))
+        self.clock_check = int(config_dict['StdTimeSynch'].get('clock_check', 14400))
+        self.max_drift   = int(config_dict['StdTimeSynch'].get('max_drift', 5))
         
         self.bind(weewx.STARTUP,  self.startup)
         self.bind(weewx.PRE_LOOP, self.pre_loop)
@@ -675,12 +675,13 @@ class StdTimeSynch(StdService):
             try:
                 console_time = self.engine.console.getTime()
                 if console_time is None: return
-                diff = console_time - now_ts
+                # getTime can take a long time to run, so we use the current system time
+                diff = console_time - time.time()
                 syslog.syslog(syslog.LOG_INFO, 
                               "wxengine: Clock error is %.2f seconds (positive is fast)" % diff)
-                if abs(now_ts - console_time) > self.max_drift:
+                if abs(diff) > self.max_drift:
                     try:
-                        self.engine.console.setTime(now_ts)
+                        self.engine.console.setTime()
                     except NotImplementedError:
                         syslog.syslog(syslog.LOG_DEBUG, "wxengine: Station does not support setting the time")
             except NotImplementedError:

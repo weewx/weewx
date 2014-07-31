@@ -132,15 +132,13 @@ def setclock(station, prompt):
         v = station.getTime()
         vstr = weeutil.weeutil.timestamp_to_string(v)
         print "Station clock is", vstr
-        now = int(time.time() + 0.5)
-        nstr = weeutil.weeutil.timestamp_to_string(now)
         if prompt:
-            ans = raw_input("Set station clock to %s (y/n)? " % nstr)
+            ans = raw_input("Set station clock (y/n)? ")
         else:
-            print "Setting station clock to %s" % nstr
+            print "Setting station clock"
             ans = 'y'
         if ans == 'y' :
-            station.setTime(now)
+            station.setTime()
             v = station.getTime()
             vstr = weeutil.weeutil.timestamp_to_string(v)
             print "Station clock is now", vstr

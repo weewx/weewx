@@ -6,7 +6,28 @@ weewx change history
 Removed the no longer needed serviced StdRESTful, obsolete since V2.6
 
 
-2.x.x
+X.X.X XX/XX/XX
+
+Enabled multiple rsync instances for a single weewx instance.
+ 
+Added catchup to the WS28xx driver, but still no hardware record generation.
+
+Moved clock synchronization options clock_check and max_drift back to
+section [StdTimeSynch].
+
+Changed lux-to-W/m^2 conversion factor in the fine offset driver.
+
+Added rain rate calculation to Ultimeter driver.
+
+Changed setTime to retrieve system time directly rather than using a value
+passed by the engine. This greatly improves the accuracy of StdTimeSync,
+particularly in network based implementations.
+
+Fixed ENDPOINT_IN in the te923 driver.  This should provide better
+compatibility with a wider range of pyusb versions.
+
+
+2.6.4 06/16/14
 
 The WMR100 driver now calculates SLP in software. This fixes a problem
 with the WMRS200 station, which does not allow the user to set altitude.
@@ -34,9 +55,9 @@ Prompt for metric/US units for debian installations.
 
 For WS28xx stations, return 0 for battery ok and 1 for battery failure.
 
-If the console has successfully been opened up but then on subsequent opens
-suffers an I/O error, weewx will now attempt a retry (before it would just 
-exit).
+If a connection to the console has been successfully opened, but then on
+subsequent connection attempts suffers an I/O error, weewx will now attempt
+a retry (before it would just exit).
 
 
 2.6.3 04/10/14

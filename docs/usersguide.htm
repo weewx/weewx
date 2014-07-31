@@ -33,7 +33,7 @@ function showtab(tab,id) {
   </a>
   <h1 class="title">User's Guide to the weewx Weather System<br />
     <span class='version'>
-Version: 3.0.0a1
+Version: 2.6.4
     </span>
   </h1>
 
@@ -342,7 +342,7 @@ Version: 3.0.0a1
       <tr>
 	<td>WS-23XX</td>
 	<td>Serial</td>
-	<td class="code">pyserial</td>
+	<td class="code">fcntl/select</td>
         <td>WS23xx<sup><a href='#ws23xx'>6</a></sup></td>
 	<td>Experimental</td>
       </tr>
@@ -554,23 +554,23 @@ Version: 3.0.0a1
       <tr>
 	<td class="text_highlight" rowspan='2'>TechnoLine</td>
 	<td>WS-2300</td>
-	<td>USB</td>
-	<td class="code">pyserial</td>
+	<td>Serial</td>
+	<td class="code">fcntl/select</td>
         <td>WS23xx<sup><a href='#ws23xx'>6</a></sup></td>
 	<td>Experimental</td>
       </tr>
       <tr>
 	<td>WS-2350</td>
-	<td>USB</td>
-	<td class="code">pyserial</td>
+	<td>Serial</td>
+	<td class="code">fcntl/select</td>
         <td>WS23xx<sup><a href='#ws23xx'>6</a></sup></td>
 	<td>Experimental</td>
       </tr>
       <tr>
 	<td class="text_highlight" rowspan='5'>TFA</td>
 	<td>Matrix</td>
-	<td>USB</td>
-	<td class="code">pyserial</td>
+	<td>Serial</td>
+	<td class="code">fcntl/select</td>
         <td>WS23xx<sup><a href='#ws23xx'>6</a></sup></td>
 	<td>Experimental</td>
       </tr>
@@ -1640,7 +1640,7 @@ longitude = -77.0366</pre>
       It uses the skin &quot;<span class="code">Standard</span>&quot;, which generates 
       four HTML pages (&quot;day&quot;, &quot;week&quot;, &quot;month&quot;, and &quot;year&quot; 
       observations), plot graphs for same, an RSS feed, and NOAA monthly and yearly 
-      reports. Unless changed otherwise, it uses US Customary Units and puts the results 
+      reports. The default configuration uses US Customary Units and puts the results 
       in <span class="code">public_html</span> and subdirectory <span class="code">
 	public_html/NOAA</span>. </p>
     <h3 class="config_section">[[FTP]]</h3>
@@ -1701,27 +1701,38 @@ longitude = -77.0366</pre>
       on the remote server. Valid values are 1 to enable and 0 to disable. Required. 
       Default is 0.</p>
     <h2 class="config_section" id="StdConvert">[StdConvert]</h2>
-    <p>This section is for configuring the <span class="code">StdConvert</span> 
-      service. This service acts as a filter, converting the unit system coming off 
-      your hardware to a target output unit system. Everything that follows, including 
-      the archiving service, will use the target unit system. Hence, your data 
-      will be stored using your chosen unit system. </p>
-    <p><em>Once chosen, it cannot be changed!</em> Weewx does not allow you to mix 
-      unit systems within the databases. You must chose one or the other and then 
-      stick with it. This means that users coming from wview (which uses US Customary) 
-      should not change the default setting. Having said this, there is a way of reconfiguring 
-      the database to use another unit system. See the section
+    <p>This section is for configuring the <span class="code">StdConvert</span>
+      service.</p>
+    <p class='note'><strong>Note!</strong><br/>
+      If you would like to change the units that are displayed
+      in plots or files, you should make changes to the skin as described in
+      the <a href="customizing.htm">Customizing Guide</a>, under section
+      <em><a href="customizing.htm#Changing_options">Changing options</a></em>.
+    </p>
+    <p>The <span class="code">StdConvert</span> service acts as a filter,
+      converting the unit system coming off your hardware to a target output
+      unit system. Everything that follows, including the archiving service,
+      will use the target unit system. Hence, your data will be stored using
+      your chosen unit system. </p>
+    <p><em>Once chosen, it cannot be changed!</em> Weewx does not allow you to
+      mix unit systems within the databases. You must chose one or the other
+      and then stick with it. This means that users coming from wview (which
+      uses US Customary) should not change the default setting. Having said
+      this, there is a way of reconfiguring the database to use another unit
+      system. See the section
       <a href="customizing.htm#Changing_the_unit_system">Changing the unit system</a> 
       in the Customizing Guide.</p>
-    <p>Note that whatever you choose here, it does not affect your options for the 
-      unit system to be used for <i>reporting</i>. Because of this, unless you 
-      have a special purpose application, there is really no good reason to change 
-      from the default, which is <span class="code">US</span>. </p>
-	  <p class="warning"><strong>Warning!</strong><br />
-	  If, despite these precautions, you do 
-      decide to change to Metric, be sure to read the sections <span class="code">
-	<a href="#StdCalibrate">[StdCalibrate]</a></span> and <span class="code">
-	<a href="#StdQC">[StdQC]</a></span> below, and change the units there as well!</p>
+    <p>Note that whatever you choose here, it does not affect your options for
+      the unit system to be used for <i>reporting</i>. Because of this, unless
+      you have a special purpose application, there is really no good reason to
+      change from the default, which is <span class="code">US</span>. </p>
+    <p class="warning"><strong>Warning!</strong><br />
+      If, despite these precautions, you do decide to change the units of data
+      stored in the database, be sure to read the sections
+      <span class="code"><a href="#StdCalibrate">[StdCalibrate]</a></span> and
+      <span class="code"><a href="#StdQC">[StdQC]</a></span>, and change the
+      units there as well!</p>
+
     <p class="config_option">target_unit</p>
     <p>Set to either <span class="code">US</span>, <span class="code">METRICWX</span>,
       or <span class="code">METRIC</span>. The difference between 
@@ -2003,7 +2014,7 @@ report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
       configuration utilities supplied with weewx. Directions follow for</p>
     <ul>
       <li><a href="#wee_config_vantage">Davis Vantage stations</a></li>
-      <li><a href="#wee_config_fousb">Fine Offset stations</a></li>
+      <li><a href="#wee_config_fousb">Fine Offset 10xx, 20xx, and 30xx stations</a></li>
       <li><a href="#wee_config_ws23xx">La Crosse WS23xx stations</a></li>
       <li><a href="#wee_config_ws28xx">La Crosse WS28xx stations</a></li>
       <li><a href="#wee_config_cc3000">RainWise CC3000 data logger</a></li>
@@ -2161,7 +2172,7 @@ Davis Vantage EEPROM settings:
 	  Because the command dumps <em>all</em> data, it may result in many 
 	  duplicate primary key errors. These can be ignored.</p>
 
-    <h2 id="wee_config_fousb">Fine Offset</h2>
+    <h2 id="wee_config_fousb">Fine Offset 10xx, 20xx, 30xx</h2>
     <p>The configuration utility <span class='code'>wee_config_fousb</span> is
       designed to diagnose and configure Fine Offset stations.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
@@ -2536,7 +2547,7 @@ Mutating actions will request confirmation before proceeding.
       option.</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_cc3000 --info </pre>
     <p>This will result in something like this:</p>
-    <pre class='tty'>firmware:  Rainwise CC-3000 Version: 1.3 Build 002 Jun 05 2013
+    <pre class='tty'>firmware:  Rainwise CC-3000 Version: 2.6.4
 time:  2014/06/02 08:22:17
 units:  ENGLISH
 memory:  251372 bytes, 4334 records, 12%
@@ -2590,14 +2601,13 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
 	  [StdArchive]</a></span> for details.</p>
 
     <h1 id="running">Running <span class="code">weewx</span></h1>
-    <p><span class="code">Weewx</span> can be run either from the command line
-      (useful for diagnostic purposes because it will print out a summary of
-      every LOOP data), or as a daemon. When first trying
-      <span class="code">weewx</span>, it is best to run it from the command
-      line because you will be able to see command line diagnostics, as well
+    <p><span class="code">Weewx</span> can be run either directly,
+      or as a daemon. When first trying
+      <span class="code">weewx</span>, it is best to run it directly
+      because you will be able to see sensor output and diagnostics, as well
       as log messages.  Once everything is working properly, run it as a
       daemon.</p>
-    <h2>Running from the command line</h2>
+    <h2>Running directly</h2>
     <p>To run <span class="code">weewx</span> directly, invoke
       the main program, <span class="code">weewxd</span>, giving 
       the configuration file as its only parameter: </p>
@@ -2610,7 +2620,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@local
     <p><span class="code">Weewx</span> will then start monitoring live sensor
       data (also referrred to as 'LOOP' data),
       printing a short version of the received data on standard output, about
-      once every two seconds. </p>
+      once every two seconds for a Vantage station, or considerably longer
+      for some other stations. </p>
     <p>You can tell a running instance of <span class="code">weewx</span> to
       reread its configuration file by sending it the
       <span class="code">HUP</span> signal. 
@@ -2821,21 +2832,27 @@ sudo /etc/init.d/apache2 restart</p>
       <span class='code'>weewx</span>.
     </p>
     <p>
-      <strong>Configuration.</strong>
+      It is not necessary to backup the images and HTML files generated from
+      templates, since weewx will easily create those again.  This includes
+      the NOAA reports in some skins.
+    </p>
+    <h2>Configuration</h2>
+    <p>
       Save the <span class='code'>weewx.conf</span> file.
     </p>
     <table class="locations" style="width:70%">
       <tr>
-	<td style="width: 30%">setup.py</td>
+	<td style="width: 30%">setup.py:</td>
 	<td class='tty'>/home/weewx/weewx.conf</td>
       </tr>
       <tr>
-	<td >DEB/RPM</td>
+	<td >DEB/RPM:</td>
 	<td class='tty'>/etc/weewx/weewx.conf</td>
       </tr>
     </table>
+    <h2>Weather data</h2> 
     <p>
-      <strong>Weather data.</strong> Meteorological ata are saved in the
+      Meteorological data are saved in the
       archive database.  For a Sqlite
       configuration, simply save the <span class='code'>weewx.sdb</span>
       file.  For a MySQL configuration, save a dump of the archive database.
@@ -2844,49 +2861,48 @@ sudo /etc/init.d/apache2 restart</p>
     </p>
     <table class="locations" style="width:70%">
       <tr>
-	<td style="width: 30%">setup.py</td>
+	<td style="width: 30%">setup.py:</td>
 	<td class='tty'>/home/weewx/archive/weewx.sdb</td>
       </tr>
       <tr>
-	<td >DEB/RPM</td>
+	<td >DEB/RPM:</td>
 	<td class='tty'>/var/lib/weewx/weewx.sdb</td>
       </tr>
     </table>
+    <h2>Skins and templates</h2>
     <p>
-      <strong>Skins and templates.</strong>
-      Save the contents of the skins directory.
+      Save the contents of the skins directory if you have modified the default
+      skin or if you have added any new skins or template files.
     </p>
     <table class="locations" style="width:70%">
       <tr>
-	<td style="width: 30%">setup.py</td>
+	<td style="width: 30%">setup.py:</td>
 	<td class='tty'>/home/weewx/skins</td>
       </tr>
       <tr>
-	<td >DEB/RPM</td>
+	<td >DEB/RPM:</td>
 	<td class='tty'>/etc/weewx/skins</td>
       </tr>
     </table>
+    <h2>Other customizations</h2>  
     <p>
-      <strong>Other customizations.</strong>  Save the contents of the
+      Save the contents of the
       <span class='code'>user</span> directory if you have modified the
       database schema or added any extensions.  If the extensions save data
       to a database you should backup those databases as well.
     </p>
     <table class="locations" style="width:70%">
       <tr>
-	<td style="width: 30%">setup.py</td>
+	<td style="width: 30%">setup.py:</td>
 	<td class='tty'>/home/weewx/bin/user</td>
       </tr>
       <tr>
-	<td >DEB/RPM</td>
+	<td >DEB/RPM:</td>
 	<td class='tty'>/usr/share/weewx/user</td>
       </tr>
     </table>
-    <p>
-      It is not necessary to backup the images and HTML files generated from
-      templates, since weewx will easily create those again.  This includes
-      the NOAA reports in some skins.
-    </p>
+
+    <h2>Restoring from backup</h2>
     <p>
       To restore from backup, do a fresh install of
       <span class='code'>weewx</span> then replace the default files with
@@ -2907,13 +2923,13 @@ sudo /etc/init.d/apache2 restart</p>
       <li style="margin-bottom:1em"><a href="#monitoring">Look at the log file</a>. I am always
         happy to take questions, but the first thing I will ask you is,
         &quot;Did you look at the log file?&quot;
-        <p class='tty' style="margin-top:1em">tail -f /var/log/messages</p>
+        <p class='tty' style="margin-top:1em">sudo tail -f /var/log/syslog</p>
       </li>
-      <li style="margin-bottom:1em">Run from the command line. Generally, <span class="code">weewx</span>
-	will catch and log any unrecoverable exceptions. But if you are getting
-	strange results, it is worth running from the command line and looking
-        for any clues.
-        <p class='tty' style="margin-top:1em"><span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
+      <li style="margin-bottom:1em">Run directly rather than as a daemon.
+        Generally, <span class="code">weewx</span> will catch and log any
+        unrecoverable exceptions. But if you are getting strange results,
+        it is worth running directly and looking for any clues.
+        <p class='tty' style="margin-top:1em">sudo <span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
       </li>
     </ul>
 
@@ -3183,7 +3199,8 @@ Jan  1 09:46:32 saga weewx[15292]: wxengine: pid file is /var/run/weewx.pid</pre
     <h3><span class="code">configobj</span> errors</h3>
     <p>These are errors in the configuration file. Two are very common.
       Incidentally, these errors are far easier to diagnose when
-      <span class="code">weewx</span> is run from the command line. </p>
+      <span class="code">weewx</span> is run directly than when it is run
+      as a daemon. </p>
     <h4><span class="code">configobj.DuplicateError</span> exception</h4>
     <p>This error is caused by using an identifier more than once in the
       configuration file. For example, you may have inadvertently listed
@@ -3558,8 +3575,8 @@ port = /dev/cuaU0</pre>
       rate of V3.X this is unlikely to happen anytime soon. In any case, I doubt the 
       transition will affect the average <span class="code">weewx</span> user. </p>
     <p>All writes to the databases are protected by transactions. You can kill the 
-      program at any time (either Control-C if run from the command line or &quot;<span class="code">/etc/init.d/weewx 
-	stop</span>&quot; if a daemon) without fear of corrupting the databases. </p>
+      program at any time (either Control-C if run directly or &quot;<span class="code">/etc/init.d/weewx 
+	stop</span>&quot; if run as a daemon) without fear of corrupting the databases. </p>
     <p>The code makes ample use of exceptions to insure graceful recovery from problems 
       such as network outages. It also monitors socket and console timeouts, restarting 
       whatever it was working on several times before giving up. In the case of an 
@@ -3690,7 +3707,9 @@ port = /dev/cuaU0</pre>
         stations use an odd mix of US and metric. The Fine Offset
         stations are metric.  The LaCrosse stations are metric.  The
         Hideki stations are a mix of US and metric.  One-wire devices
-        can be either US or metric.</li>
+        can be either US or metric.  RainWise data loggers can be configured
+        to use either US or metric.  PeetBros devices use a mix of US and
+        metric.</li>
       <li>In the database. Either US or Metric can be used.</li>
       <li>In the presentation (i.e., html and image files). </li>
     </ol>

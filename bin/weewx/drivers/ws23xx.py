@@ -422,9 +422,9 @@ class WS23xx(weewx.abstractstation.AbstractStation):
 #        with Station(self.port) as s:
 #            return s.get_time()
 
-#    def setTime(self, ts):
+#    def setTime(self):
 #        with Station(self.port) as s:
-#            s.set_time(ts)
+#            s.set_time()
 
     def getArchiveInterval(self):
         with Station(self.port) as s:
