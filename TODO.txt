@@ -1,10 +1,10 @@
               TODO before the next release:
 
+Get the test test_templates working.
+
 Allow any archive database to have its daily summary rebuilt.
 
 Capture LOOP data for highs and lows
-
-Return value of Archive.getSqlVectors() and getSqlVectorsExtended() has changed.
 
 Support ConfigObj v5.0.0
 
