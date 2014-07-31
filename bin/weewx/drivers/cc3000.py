@@ -509,8 +509,9 @@ class Station(object):
         return data
 
     def set_time(self):
-        tstr = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(time.time()))
-        logdbg("set time to %s (%s)" % (tstr, tstr))
+        ts = time.time()
+        tstr = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(ts))
+        logdbg("set time to %s (%s)" % (tstr, ts))
         s = "TIME=%s" % tstr
         data = self.command(s)
         if data != 'OK':
