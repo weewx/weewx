@@ -702,7 +702,10 @@ class DBCache(object):
 def prep_database(databases_dict, archive_database_symname='wx_database'):
     database_name = databases_dict[archive_database_symname]
     database_dict = databases_dict[database_name]
-    database_manager = databases_dict[database_name].get('manager', 'weewx.stats.WXDaySummaryArchive')
+    # Get the manager that will manage the database connection. Note that we use 'pop',
+    # because the same dictionary will be used to open up the connection. 'manager' is
+    # not going to mean anything to it.
+    database_manager = databases_dict[database_name].pop('manager', 'weewx.stats.WXDaySummaryArchive')
     database_cls = weeutil.weeutil._get_object(database_manager)
     
     return (database_dict, database_cls)

@@ -407,7 +407,7 @@ class SearchList(object):
         timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
                    start and stop times of the domain of valid times.
                    
-        db_factory: An instance of class weewx.unidata.UniFactory
+        db_factory: An instance of class weewx.tags.DBFactory
         """
         return [self]
 
