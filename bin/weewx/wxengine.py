@@ -583,7 +583,7 @@ class StdArchive(StdService):
         archive_symname = config_dict['StdArchive'].get('database', 'wx_database')
         db_dict, db_cls = weewx.archive.prep_database(config_dict['Databases'], archive_symname)
         # This will create the database if it doesn't exist, then return an
-        # opened instance of Archive. It also attaches a reference to the engine, so other
+        # opened instance of the archive manager. It also attaches a reference to the engine, so other
         # services can use it.
         self.archive = self.engine.archive = \
             db_cls(db_dict, archive_schema)
