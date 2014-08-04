@@ -86,7 +86,7 @@ class Connection(weedb.Connection):
         
         # Allowing threads other than the main thread to see any transactions
         # seems to require an isolation level of READ UNCOMMITTED.
-        self.connection.query("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED") 
+        self.query("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED") 
         
     def cursor(self):
         """Return a cursor object."""
@@ -156,8 +156,26 @@ class Connection(weedb.Connection):
     
     def begin(self):
         """Begin a transaction."""
-        self.connection.query("START TRANSACTION")
+        self.query("START TRANSACTION")
     
+    def commit(self):
+        try:
+            weedb.Connection.commit(self)
+        except _mysql_exceptions.OperationalError, e:
+            raise weedb.OperationalError(e)
+        
+    def rollback(self):
+        try:
+            weedb.Connection.rollback(self)
+        except _mysql_exceptions.OperationalError, e:
+            raise weedb.OperationalError(e)
+        
+    def query(self, *args, **kwargs):
+        try:
+            self.connection.query(*args, **kwargs)
+        except _mysql_exceptions.OperationalError, e:
+            raise weedb.OperationalError(e)
+        
 class Cursor(object):
     """A wrapper around the MySQLdb cursor object"""
     
