@@ -21,6 +21,9 @@ particularly in network based implementations.
 Fixed ENDPOINT_IN in the te923 driver.  This should provide better
 compatibility with a wider range of pyusb versions.
 
+Now catches MySQL exceptions during commits and rollbacks (as well
+as queries) and converts them to weedb exceptions.
+
 
 2.6.4 06/16/14
 
