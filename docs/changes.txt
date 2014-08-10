@@ -24,6 +24,9 @@ compatibility with a wider range of pyusb versions.
 Now catches MySQL exceptions during commits and rollbacks (as well
 as queries) and converts them to weedb exceptions.
 
+Catch and report configobj errors when reading skin.conf during the
+generation of reports.
+
 
 2.6.4 06/16/14
 

@@ -82,28 +82,32 @@ class StdReportEngine(threading.Thread):
             
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running report %s" % report)
             
-            # Figure out where the configuration file is for the skin used for this report:
+            # Figure out where the configuration file is for the skin used for
+            # this report:
             skin_config_path = os.path.join(self.config_dict['WEEWX_ROOT'],
                                             self.config_dict['StdReport']['SKIN_ROOT'],
                                             self.config_dict['StdReport'][report].get('skin', 'Standard'),
                                             'skin.conf')
-            # Retrieve the configuration dictionary for the skin. Wrap it in a try
-            # block in case we fail
+            # Retrieve the configuration dictionary for the skin. Wrap it in
+            # a try block in case we fail
             try :
                 skin_dict = configobj.ConfigObj(skin_config_path, file_error=True)
                 syslog.syslog(syslog.LOG_DEBUG, "reportengine: Found configuration file %s for report %s" % (skin_config_path, report))
-            except IOError:
-                syslog.syslog(syslog.LOG_ERR, "reportengine: No skin configuration file for report %s" % report)
-                syslog.syslog(syslog.LOG_ERR, "        ****  Tried path %s" % skin_config_path)
+            except IOError, e:
+                syslog.syslog(syslog.LOG_ERR, "reportengine: Cannot read skin configuration file %s for report %s: %s" % (skin_config_path, report, e))
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
                 continue
-                
+            except SyntaxError, e:
+                syslog.syslog(syslog.LOG_ERR, "reportengine: Failed to read skin configuration file %s for report %s: %s" % (skin_config_path, report, e))
+                syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
+                continue
+
             # Add the default archive and stats databases:
             skin_dict['archive_database'] = self.config_dict['StdArchive']['archive_database']
             skin_dict['stats_database']   = self.config_dict['StdArchive']['stats_database']
 
-            # Inject any overrides the user may have specified in the weewx.conf
-            # configuration file for all reports:
+            # Inject any overrides the user may have specified in the
+            # weewx.conf configuration file for all reports:
             for scalar in self.config_dict['StdReport'].scalars:
                 skin_dict[scalar] = self.config_dict['StdReport'][scalar]
             
