@@ -3461,7 +3461,9 @@ port = /dev/cuaU0</pre>
     <p>Then the problem may be that you are missing the fonts
     specified for the option
       <span class="code">unit_label_font_path</span> in your
-      <span class="code">skin.conf</span> file. Look in
+      <span class="code">skin.conf</span> file and, instead, 
+      <span class="code">weewx</span> is substituting a default font, which does not
+      support the UTF-8 character necessary to make a degree sign. Look in
       section <span class="code">[ImageGenerator]</span> for a line
       that looks like:</p>
     <pre class="tty">unit_label_font_path = /usr/share/fonts/truetype/freefont/FreeMonoBold.ttf</pre>
@@ -3469,11 +3471,16 @@ port = /dev/cuaU0</pre>
       (<span class='code'>/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf</span>
       in this case) actually exists. If it does not, on Debian
       operating systems (such as Ubuntu), you may be able to install
-      the necessary fonts using the command</p>
-    <pre class="tty">sudo apt-get install ttf-freefont</pre>
-    <p>If that doesn't work, or if you are on a different operating
-      system, then you will have to choose a different font, one that 
-      supports UTF-8 characters.</p>
+      the necessary fonts:</p>
+    <pre class="tty">sudo apt-get install ttf-freefont
+sudo fc-cache -f -v</pre>
+    <p>The first command installs the "Truetype" fonts, the second rebuilds
+    the font cache. If your system does not have <span class="code">fc-cache</span>
+    command, then install it from the <span class="code">fontconfig</span> package:
+    <pre class="tty">sudo apt-get install fontconfig</pre>
+    <p>If none of this works, or if you are on a different operating
+      system, then you will have to change the option <span class="code">unit_label_font_path</span>
+      to point to something on your system which does support UTF-8 characters.</p>
 
     <h1 id="architecture">Architectural Notes</h1>
     <p>This section is not required to get started, but it should help you
