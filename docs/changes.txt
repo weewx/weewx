@@ -27,6 +27,9 @@ as queries) and converts them to weedb exceptions.
 Catch and report configobj errors when reading skin.conf during the
 generation of reports.
 
+Ensure correct location, lat, lon, and altitude modifications in the
+debian postinst installer script.
+
 
 2.6.4 06/16/14
 
