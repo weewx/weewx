@@ -114,7 +114,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         unitInfoHelper:   An instance of weewx.units.UnitInfoHelper
         search_list_exts: A list holding search list extensions, new style
         search_list_objs: A list holding search list extensions, old style
-        db_cache:         An instance of weewx.archive.DBCache from which the data should be extracted
+        db_binder:        An instance of weewx.archive.DBBinder from which the data should be extracted
     """
 
     generator_dict = {'SummaryByMonth': weeutil.weeutil.genMonthSpans,
@@ -225,10 +225,10 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         report_dict = weeutil.weeutil.accumulateLeaves(section)
         
-        (template, dest_dir, encoding, default_database) = self._prepGen(report_dict)
+        (template, dest_dir, encoding, default_binding) = self._prepGen(report_dict)
 
         # Get start and stop times        
-        default_archive = self.db_cache.get_database(default_database)
+        default_archive = self.db_binder.get_binding(default_binding)
         start_ts = default_archive.firstGoodStamp()
         if not start_ts:
             loginf('skipping report %s: cannot find start time' % section)
@@ -281,7 +281,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     pass
 
             searchList = self._getSearchList(encoding, timespan,
-                                             default_database)
+                                             default_binding)
             
             text = Cheetah.Template.Template(file=template,
                                              searchList=searchList,
@@ -307,14 +307,14 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         return ngen
 
-    def _getSearchList(self, encoding, timespan, default_database):
+    def _getSearchList(self, encoding, timespan, default_binding):
         """Get the complete search list to be used by Cheetah."""
 
         timespan_start_tt = time.localtime(timespan.start)
-        db_factory = weewx.tags.DBFactory(self.db_cache, default_database)
+        db_factory = weewx.tags.DBFactory(self.db_binder, default_binding)
         
         # For backwards compatibility, extract the default archive and stats databases
-        statsdb = archivedb = db_factory.get_database()
+        statsdb = archivedb = db_factory.get_binding()
         
         # Get the basic search list
         searchList = [{'month_name' : time.strftime("%b", timespan_start_tt),
@@ -374,7 +374,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         if encoding == 'utf-8':
             encoding = 'utf8'
 
-        default_database = report_dict['database']
+        default_binding = report_dict['binding']
 
         try:
             # Create the directory that is to receive the generated files.  If
@@ -384,7 +384,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         except OSError:
             pass
 
-        return (template, destination_dir, encoding, default_database)
+        return (template, destination_dir, encoding, default_binding)
 
 # =============================================================================
 # Classes used to implement the Search list
@@ -445,7 +445,7 @@ class Almanac(SearchList):
         # See if we can get more accurate values by looking them up in the weather
         # database. The database might not exist, so be prepared for a KeyError exception.
         try:
-            archive = self.generator.db_cache.get_database()
+            archive = self.generator.db_binder.get_binding()
         except KeyError:
             pass
         else:

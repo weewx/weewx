@@ -57,7 +57,9 @@ class Common(unittest.TestCase):
             sys.stderr.write("Error while parsing configuration file %s" % config_path)
             raise
 
-        self.database_dict, self.database_cls = weewx.archive.prep_database(config_dict['Databases'], self.database)
+        self.database_dict, self.database_cls = weewx.archive.prep_database(config_dict['MyBindings'],
+                                                                            config_dict['MyDatabases'], 
+                                                                            self.database)
     
         # This will generate the test databases if necessary:
         gen_fake_data.configDatabases(self.database_dict, self.database_cls)

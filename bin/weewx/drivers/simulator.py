@@ -36,12 +36,12 @@ def loader(config_dict, engine):
             # Resume with the last time in the database. If there is no such
             # time, then fall back to the time specified in the configuration
             # dictionary.
-            database_dict, database_cls = weewx.archive.prep_database(config_dict['Databases'])
-            try:
-                with database_cls(database_dict) as archive:
+            with weewx.archive.DBBinder(config_dict) as binder:
+                archive = binder.get_binding()
+                try:
                     resume_ts = archive.lastGoodStamp()
-            except weedb.OperationalError:
-                pass
+                except weedb.OperationalError:
+                    pass
         else:
             # The resume keyword is not present. Start with the seed time:
             resume_ts = start_ts

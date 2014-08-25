@@ -32,7 +32,7 @@ usage="""%prog: [config_path] [--help]
                               [--create-archive] [--drop-daily] 
                               [--reconfigure] [--backfill-daily]
                               [--string-check] [--fix]
-                              [--database=DATABASE_NAME]"""
+                              [--binding=BINDING_NAME]"""
 
 epilog="""If you are using the MySQL database it is assumed that you have the
 appropriate permissions for the requested operation."""
@@ -64,9 +64,9 @@ def main():
                       help="Check a sqlite version of the archive database for embedded strings in it.")
     parser.add_option("--fix", dest="fix", action="store_true",
                       help="If a string is found, fix it.")
-    parser.add_option("--database", dest="symname", metavar="DATABASE_NAME",
-                      default='wx_database',
-                      help="The symbolic name of the database the action is to be applied to. Default is 'wx_database'")
+    parser.add_option("--binding", dest="symname", metavar="BINDING_NAME",
+                      default='wx_binding',
+                      help="The database binding the action is to be applied to. Default is 'wx_binding'")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
@@ -74,9 +74,11 @@ def main():
     print "Using configuration file %s." % config_fn
     
     db_symname = options.symname
-    database_name = config_dict['Databases'][db_symname]
-    database_dict, database_cls = weewx.archive.prep_database(config_dict['Databases'], db_symname)
-    print "Using database symname '%s', which is bound to database '%s'" % (db_symname, database_name)
+    database_name = config_dict['MyDatabases'][db_symname]
+    database_dict, database_cls = weewx.archive.prep_database(config_dict['MyBindings'], 
+                                                              config_dict['MyDatabases'],
+                                                              db_symname)
+    print "Using database binding '%s', which is bound to database '%s'" % (db_symname, database_name)
     
     if options.create_archive:
         createMainDatabase(database_dict, database_cls, database_name)

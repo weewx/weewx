@@ -662,52 +662,76 @@ def reconfig(old_db_dict, new_db_dict, new_unit_system=None,
             new_archive.addRecord(record_generator)
 
 #===============================================================================
-#                    Class DBCache
+#                    Class DBBinder
 #===============================================================================
 
-class DBCache(object):
-    """Factory object that can cache archive database objects."""
+class DBBinder(object):
+    """Given a binding name, it returns the matching database as a managed object. Caches
+    results."""
 
-    def __init__(self, db_dicts):
-        """ Initialize a DBCache object.
+    def __init__(self, config_dict):
+        """ Initialize a DBBinder object.
         
-        db_dicts: A dictionary containing information for opening up each database.
-        This is generally section [Databases] in weewx.conf. A typical one 
-        looks something like:
+        config_dict: Typically, this is the weewx configuration dictionary.
+        It should contain two keys, MyBindings and MyDatabases, each with
+        a dictionary as a value, holding the bindings and databases, respectively.
+
+        It should look something like:
+          {
+          'MyBindings' :     
+            'wx_bindings' : {'bind_to': 'archive_sqlite',
+                             'manager': 'weewx.stats.WXDaySummaryArchive'},
+
+          'MyDatabases' :
             {'archive_sqlite' : {'root': '/home/weewx',
                                  'database': 'archive/archive.sdb',
-                                 'driver': 'weedb.sqlite',
-                                 'manager' : 'weewx.stats.WXDaySummaryArchive'}}"""
-        self.db_dicts = db_dicts
+                                 'driver': 'weedb.sqlite'}
+           }"""
+           
+        self.binding_dicts = config_dict['MyBindings']
+        self.db_dicts = config_dict['MyDatabases']
         self.archive_cache = {}
     
     def close(self):
-        for archive_name in self.archive_cache.keys():
+        for binding in self.archive_cache.keys():
             try:
-                self.archive_cache[archive_name].close()
-                del self.archive_cache[archive_name]
+                self.archive_cache[binding].close()
+                del self.archive_cache[binding]
             except Exception:
                 pass
             
-    def get_database(self, symname='wx_database'):
-        if symname not in self.archive_cache:
-            db_dict, db_cls = prep_database(self.db_dicts, symname)
-            self.archive_cache[symname] = db_cls.open(db_dict)
-        return self.archive_cache[symname]
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, etyp, einst, etb):
+        self.close()
+    
+    def get_binding(self, binding='wx_binding'):
+        """Given a binding name, returns the managed object"""
+        if binding not in self.archive_cache:
+            db_dict, db_cls = prep_database(self.binding_dicts, self.db_dicts, binding)
+            self.archive_cache[binding] = db_cls.open(db_dict)
+        return self.archive_cache[binding]
 
 #===============================================================================
 #                                 Utilities
 #===============================================================================
 
-def prep_database(databases_dict, archive_database_symname='wx_database'):
-    database_name = databases_dict[archive_database_symname]
-    # Get the dictionary we will need to open up a connection. Make a copy because
-    # we will modify it.
-    database_dict = dict(databases_dict[database_name])
-    # Now get the manager that will manage the database connection. Note that we use 'pop'
-    # to remove the key. This will allow the rest of the dictionary to be passed to the
-    # connection w/o causing an error.
-    database_manager = database_dict.pop('manager', 'weewx.stats.WXDaySummaryArchive')
+def prep_database(binding_dicts, db_dicts, binding='wx_binding'):
+    # Get the database name
+    database_name = binding_dicts[binding]['bind_to']
+    # Get the manager to be used
+    database_manager = binding_dicts[binding].get('manager', 'weewx.stats.WXDaySummaryArchive')
+    # Get the class of the manager to be used:
     database_cls = weeutil.weeutil._get_object(database_manager)
-    
+    # Get the dictionary we will need to open up a connection.
+    database_dict = db_dicts[database_name]
+
     return (database_dict, database_cls)
+
+def open_database(config_dict, binding, archive_schema=None):
+    database_dict, database_cls = prep_database(config_dict['MyBindings'],
+                                                config_dict['MyDatabases'],
+                                                binding)
+    
+    return database_cls(database_dict, archive_schema)

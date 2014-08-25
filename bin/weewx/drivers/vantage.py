@@ -1422,10 +1422,6 @@ class VantageService(Vantage, weewx.wxengine.StdService):
         Vantage.__init__(self, **config_dict['Vantage'])
         weewx.wxengine.StdService.__init__(self, engine, config_dict)
 
-        # Get the information necessary to open up the database, but don't
-        # do it right now, because it may not exist yet.
-        self.archive_dict, self.archive_cls = weewx.archive.prep_database(config_dict['Databases'])
-        
         self.bind(weewx.STARTUP, self.startup)        
         self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)
         self.bind(weewx.END_ARCHIVE_PERIOD, self.end_archive_period)
@@ -1433,8 +1429,9 @@ class VantageService(Vantage, weewx.wxengine.StdService):
 
     def startup(self, event):
         
-        # Now it's OK to open up the database
-        self.archive = self.archive_cls(self.archive_dict)
+        # Open up the archive database:
+        binder = weewx.archive.DBBinder(self.config_dict)
+        self.archive = binder.get_binding('wx_binding')
         self.old_time_12_ts = None
         self.temperature_12 = None
         

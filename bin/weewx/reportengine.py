@@ -101,8 +101,8 @@ class StdReportEngine(threading.Thread):
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
                 continue
                 
-            # Add the default database source.
-            skin_dict['database'] = 'wx_database'
+            # Add the default database binding:
+            skin_dict['binding'] = 'wx_binding'
 
             # Inject any overrides the user may have specified in the weewx.conf
             # configuration file for all reports:
@@ -160,7 +160,7 @@ class ReportGenerator(object):
         self.gen_ts      = gen_ts
         self.first_run   = first_run
         self.stn_info    = stn_info
-        self.db_cache    = weewx.archive.DBCache(self.config_dict['Databases'])
+        self.db_binder   = weewx.archive.DBBinder(self.config_dict)
         
     def start(self):
         self.run()
@@ -169,7 +169,7 @@ class ReportGenerator(object):
         pass
     
     def finalize(self):
-        self.db_cache.close()
+        self.db_binder.close()
 
 #===============================================================================
 #                    Class FtpGenerator
