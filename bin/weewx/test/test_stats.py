@@ -59,7 +59,7 @@ class Common(unittest.TestCase):
 
         self.database_dict, self.database_cls = weewx.archive.prep_database(config_dict['MyBindings'],
                                                                             config_dict['MyDatabases'], 
-                                                                            self.database)
+                                                                            self.binding)
     
         # This will generate the test databases if necessary:
         gen_fake_data.configDatabases(self.database_dict, self.database_cls)
@@ -266,13 +266,13 @@ class Common(unittest.TestCase):
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
-        self.database = "wx_sqlite"
+        self.binding = "wx_sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
         
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
-        self.database = "wx_mysql"
+        self.binding = "wx_mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
         
     

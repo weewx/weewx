@@ -54,17 +54,19 @@ class Common(unittest.TestCase):
             sys.stderr.write("Error while parsing configuration file %s" % config_path)
             raise
 
-        self.archive_db_dict = self.config_dict['Databases'][self.archive_db]        
-        self.stats_db_dict   = self.config_dict['Databases'][self.stats_db]
-
         # Remove the old directory:
         try:
             os.rmdir(self.config_dict['StdReport']['HTML_ROOT'])
         except OSError:
             pass
 
+        self.database_dict, self.database_cls = weewx.archive.prep_database(self.config_dict['MyBindings'],
+                                                                            self.config_dict['MyDatabases'], 
+                                                                            self.binding)
+    
         # This will generate the test databases if necessary:
-        gen_fake_data.configDatabases(self.archive_db_dict, self.stats_db_dict)
+        gen_fake_data.configDatabases(self.database_dict, self.database_cls)
+        
 
     def tearDown(self):
         pass
@@ -82,6 +84,9 @@ class Common(unittest.TestCase):
         # Find the test skins and then have SKIN_ROOT point to it:
         test_dir = sys.path[0]
         t.config_dict['StdReport']['SKIN_ROOT'] = os.path.join(test_dir, 'test_skins')
+        
+        # Have the binding point to whatever database is in use:
+        t.config_dict['StdReport']['binding'] = self.binding
 
         # Although the report engine inherits from Thread, we can just run it in the main thread:
         print "Starting report engine test"
@@ -114,16 +119,13 @@ class Common(unittest.TestCase):
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
-        self.archive_db = "archive_sqlite"
-        self.stats_db   = "stats_sqlite"
-        self.HTML_ROOT  = 'test_skins_sqlite'
+        self.binding = "wx_sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
         
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
-        self.archive_db = "archive_mysql"
-        self.stats_db   = "stats_mysql"
+        self.binding = "wx_mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
         
     
