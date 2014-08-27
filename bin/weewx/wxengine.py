@@ -486,8 +486,6 @@ class StdArchive(StdService):
         
         self.setup_database(config_dict)
         
-        self.set_accumulator(config_dict)
-        
         self.bind(weewx.STARTUP,            self.startup)
         self.bind(weewx.PRE_LOOP,           self.pre_loop)
         self.bind(weewx.POST_LOOP,          self.post_loop)
@@ -589,13 +587,6 @@ class StdArchive(StdService):
         # In case this is a recent update or the user has dropped the daily summary tables, backfill them:
         self.archive.backfill_day_summary()
 
-    def set_accumulator(self, config_dict):
-        """Get the class to be used for the accumulator."""
-        
-        # An alternative class can be specified in the configuration file
-        accumulator_class_name = config_dict['StdArchive'].get('accumulator', 'weewx.accum.WXAccum')
-        self.accumulator_cls = weeutil.weeutil._get_object(accumulator_class_name)
-        
     def shutDown(self):
         self.archive.close()
 
@@ -632,8 +623,8 @@ class StdArchive(StdService):
                                                            self.archive_interval)
         end_archive_ts = start_archive_ts + self.archive_interval
         
-        # Instantiate a new instance of the accumulator, using the specified class
-        new_accumulator =  self.accumulator_cls(weeutil.weeutil.TimeSpan(start_archive_ts, end_archive_ts))
+        # Instantiate a new accumulator
+        new_accumulator =  weewx.accum.Accum(weeutil.weeutil.TimeSpan(start_archive_ts, end_archive_ts))
         return new_accumulator
     
 #===============================================================================

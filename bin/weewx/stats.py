@@ -108,9 +108,6 @@ class DaySummaryArchive(weewx.archive.Archive):
     In addition to all the tables for each type, there is one additional table called
     'day__metadata', which currently holds the time of the last update. """
 
-    # Accumulator to be used with this class:    
-    AccumClass = weewx.accum.BaseAccum
-    
     def __init__(self, archive_db_dict, archiveSchema=None):
         """Initialize an instance of DaySummarArchive
         
@@ -396,7 +393,7 @@ class DaySummaryArchive(weewx.archive.Archive):
         _timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
 
         # Get an empty day accumulator:
-        _day_accum = self.__class__.AccumClass(_timespan)
+        _day_accum = weewx.accum.Accum(_timespan)
         
         _cursor = cursor if cursor else self.connection.cursor()
 
@@ -480,9 +477,6 @@ class WXDaySummaryArchive(DaySummaryArchive):
 
     Like a regular stats database, except it understands wind, and heating- and cooling-degree days."""
 
-    # Accumulator to be used with this class:    
-    AccumClass = weewx.accum.WXAccum
-    
     wx_sql_create_str = "CREATE TABLE day_wind (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "\
       "min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, "\
       "wsum REAL, sumtime REAL, "\

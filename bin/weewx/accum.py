@@ -11,6 +11,7 @@
 etc., of a sequence of records."""
 
 import math
+import weewx
 
 class OutOfSpan(ValueError):
     """Raised when attempting to add a record outside of the timespan held by an accumulator"""
@@ -210,14 +211,14 @@ class VecStats(object):
             return _result
 
 #===============================================================================
-#                             Class BaseAccum
+#                             Class Accum
 #===============================================================================
 
-class BaseAccum(dict):
+class Accum(dict):
     """Accumulates statistics for a set of observation types."""
     
     def __init__(self, timespan):
-        """Initialize a BaseAccum.
+        """Initialize a Accum.
         
         timespan: The time period over which stats will be accumulated."""
         
@@ -234,11 +235,12 @@ class BaseAccum(dict):
         if not self.timespan.includesArchiveTime(record['dateTime']):
             raise OutOfSpan, "Attempt to add out-of-interval record"
 
-        # For each type...
         for obs_type in record:
-            # ... add to myself
-            self._add_value(record[obs_type], obs_type, record['dateTime'], add_hilo)
-                
+            # Find the proper function to use for this type ...
+            func = add_record_dict[obs_type] if obs_type in add_record_dict else Accum.add_value
+            # ... then call it.
+            func(self, record, obs_type, add_hilo)
+                            
     def updateHiLo(self, accumulator):
         """Merge the high/low stats of another accumulator into me."""
         if accumulator.timespan.start < self.timespan.start or accumulator.timespan.stop > self.timespan.stop:
@@ -247,7 +249,7 @@ class BaseAccum(dict):
         self._check_units(accumulator.unit_system)
         
         for obs_type in accumulator:
-            self._init_type(obs_type)
+            self.init_type(obs_type)
             self[obs_type].mergeHiLo(accumulator[obs_type])
                     
     def getRecord(self):
@@ -256,117 +258,114 @@ class BaseAccum(dict):
         # All records have a timestamp and unit type
         record = {'dateTime': self.timespan.stop,
                   'usUnits' : self.unit_system}
+        
         # Go through all observation types.
         for obs_type in self:
-            # For most observations, we want the average seen during the
-            # timespan:
-            record[obs_type] = self[obs_type].avg
+            # Is this type in the custom extraction dictionary?
+            if obs_type in extract_dict:
+                # Yes it is. Use the supplied function
+                extract_dict[obs_type](self, record, obs_type)
+            else:
+                # No. Use the default, which is the average value during the period:
+                record[obs_type] = self[obs_type].avg
+
         return record
 
     def set_stats(self, obs_type, stats_tuple):
         
-        self._init_type(obs_type)
+        self.init_type(obs_type)
         self[obs_type].setStats(stats_tuple)
         
-    def _init_type(self, obs_type):
+    def wind_extract(self, record, obs_type):
+        """Extract wind values from myself, and put in a record."""
+        # Wind records must be flattened into the separate categories:
+        record['windSpeed']   = self[obs_type].avg
+        record['windDir']     = self[obs_type].vec_dir
+        record['windGust']    = self[obs_type].max
+        record['windGustDir'] = self[obs_type].max_dir
+        
+    def sum_extract(self, record, obs_type):
+        record[obs_type] = self[obs_type].sum
+        
+    def last_extract(self, record, obs_type):
+        record[obs_type] = self[obs_type].last
+        
+    def init_type(self, obs_type):
         """Add a given observation type to my dictionary."""
         # Do nothing if this type has already been initialized:
         if obs_type in self:
             return
-        # Assume this is a scalar type. The function can be overridden if it is
-        # something else.
-        self[obs_type] = ScalarStats()
+
+        # Check to see if this type requires a special accumulator:        
+        if obs_type in init_dict:
+            # Yes. Instantiate one and assign it.
+            self[obs_type] = init_dict[obs_type]()
+        else:
+            # No. Use the default ScalarStats
+            self[obs_type] = ScalarStats()
             
-    def _add_value(self, val, obs_type, ts, add_hilo):
+    def add_value(self, record, obs_type, add_hilo):
         """Add a single observation to myself."""
 
-        if obs_type == 'usUnits':
-            self._check_units(val)
-        elif obs_type == 'dateTime':
-            return
-        else:
-            # If the type has not been seen before, initialize it
-            self._init_type(obs_type)
-            # Then add to highs/lows, and to the running sum:
-            if add_hilo: 
-                self[obs_type].addHiLo(val, ts)
-            self[obs_type].addSum(val)
+        val = record[obs_type]
 
-    def _check_units(self, other_system):
+        # If the type has not been seen before, initialize it
+        self.init_type(obs_type)
+        # Then add to highs/lows, and to the running sum:
+        if add_hilo: 
+            self[obs_type].addHiLo(val, record['dateTime'])
+        self[obs_type].addSum(val)
+
+    def add_wind_value(self, record, obs_type, add_hilo):
+        """Add a single observation of type wind to myself."""
+
+        if obs_type in ['windDir', 'windGust', 'windGustDir']:
+            return
+        if weewx.debug:
+            assert(obs_type == 'windSpeed')
+        
+        # If the type has not been seen before, initialize it
+        self.init_type('wind')
+        # Then add to highs/lows, and to the running sum:
+        if add_hilo:
+            self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir')), record['dateTime'])
+        self['wind'].addSum((record['windSpeed'], record.get('windDir')))
+        
+    def _check_units(self, record, obs_type, add_hilo):
+        if weewx.debug:
+            assert(obs_type == 'usUnits')
 
         # If no unit system has been specified for me yet, adopt the incoming
         # system
         if self.unit_system is None:
-            self.unit_system = other_system
+            self.unit_system = record['usUnits']
         else:
             # Otherwise, make sure they match
-            if self.unit_system != other_system:
-                raise ValueError("Unit system mismatch %d v. %d" % (self.unit_system, other_system))
-
-#===============================================================================
-#                                class WXAccum
-#===============================================================================
-
-class WXAccum(BaseAccum):
-    """Subclass of BaseAccum, which adds weather-specific logic."""
-
-    def addRecord(self, record, add_hilo=True):
-        """Add a record to my running statistics. 
-        
-        The record must have keys 'dateTime' and 'usUnits'.
-        
-        This is a weather-specific version."""
-        
-        # Check to see if the record is within my observation timespan 
-        if not self.timespan.includesArchiveTime(record['dateTime']):
-            raise OutOfSpan, "Attempt to add out-of-interval record"
-
-        # This is pretty much like the loop in my superclass's version, except
-        # that wind is treated as a vector.
-        for obs_type in record:
-            if obs_type in ['windDir', 'windGust', 'windGustDir']:
-                continue
-            elif obs_type == 'windSpeed':
-                self._add_value((record['windSpeed'], record.get('windDir')), 'wind', record['dateTime'], add_hilo)
-                if add_hilo:
-                    self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir')), record['dateTime'])
-            else:
-                self._add_value(record[obs_type], obs_type, record['dateTime'], add_hilo)
+            if self.unit_system != record['usUnits']:
+                raise ValueError("Unit system mismatch %d v. %d" % (self.unit_system, record['usUnits']))
             
-    def getRecord(self):
-        """Extract a record out of the results in the accumulator.
-        
-        This is a weather-specific version. """
-        # All records have a timestamp and unit type
-        record = {'dateTime': self.timespan.stop,
-                  'usUnits' : self.unit_system}
-        # Go through all observation types.
-        for obs_type in self:
-            if obs_type == 'wind':
-                # Wind records must be flattened into the separate categories:
-                record['windSpeed']   = self[obs_type].avg
-                record['windDir']     = self[obs_type].vec_dir
-                record['windGust']    = self[obs_type].max
-                record['windGustDir'] = self[obs_type].max_dir
-            elif obs_type in ['rain', 'ET']:
-                # We need totals during the timespan, not the average:
-                record[obs_type]      = self[obs_type].sum
-            elif obs_type in ['hourRain', 'dayRain', 'rain24', 'monthRain', 'yearRain', 'totalRain']:
-                # For these types, we want the last observation:
-                record[obs_type]      = self[obs_type].last
-            else:
-                # For everything else, we want the average:
-                record[obs_type]      = self[obs_type].avg
-        return record
+    def noop(self, record, obs_type, add_hilo):
+        pass
 
-    def _init_type(self, obs_type):
+#===============================================================================
+#                            Configuration dictionaries
+#===============================================================================
 
-        # Do nothing if this type has already been initialized:
-        if obs_type in self:
-            return
-        elif obs_type == 'wind':
-            # Observation 'wind' requires a special vector accumulator
-            self['wind'] = VecStats()
-        else:
-            # Otherwise, pass on to my base class
-            return BaseAccum._init_type(self, obs_type)
+init_dict = {'wind' : VecStats}
+
+add_record_dict = {'windSpeed' : Accum.add_wind_value,
+                   'usUnits'   : Accum._check_units,
+                   'dateTime'  : Accum.noop}
+
+extract_dict = {'wind'      : Accum.wind_extract,
+                'rain'      : Accum.sum_extract,
+                'ET'        : Accum.sum_extract,
+                'dayET'     : Accum.last_extract,
+                'monthET'   : Accum.last_extract,
+                'yearET'    : Accum.last_extract,
+                'hourRain'  : Accum.last_extract,
+                'dayRain'   : Accum.last_extract,
+                'rain24'    : Accum.last_extract,
+                'monthRain' : Accum.last_extract,
+                'yearRain'  : Accum.last_extract,
+                'totalRain' : Accum.last_extract}

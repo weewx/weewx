@@ -1,4 +1,6 @@
               TODO before the next release:
+              
+Check the vector average windspeeds (vecavg).
 
 Get the test test_templates working.
 
