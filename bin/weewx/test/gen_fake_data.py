@@ -21,6 +21,7 @@ import time
 import user.schemas
 import weewx
 import weedb
+import weeutil.weeutil
 
 # One year of data:
 start_tt = (2010,1,1,0,0,0,0,0,-1)
@@ -122,3 +123,14 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval):
                     
         yield record
     
+def prep_database(binding_dicts, db_dicts, binding='wx_binding'):
+    # Get the database name
+    database_name = binding_dicts[binding]['bind_to']
+    # Get the manager to be used
+    database_manager = binding_dicts[binding].get('manager', 'weewx.stats.WXDaySummaryArchive')
+    # Get the class of the manager to be used:
+    database_cls = weeutil.weeutil._get_object(database_manager)
+    # Get the dictionary we will need to open up a connection.
+    database_dict = db_dicts[database_name]
+ 
+    return (database_dict, database_cls)

@@ -688,8 +688,7 @@ class DBBinder(object):
                                  'driver': 'weedb.sqlite'}
            }"""
            
-        self.binding_dicts = config_dict['Bindings']
-        self.db_dicts = config_dict['Databases']
+        self.config_dict = config_dict
         self.archive_cache = {}
     
     def close(self):
@@ -709,29 +708,26 @@ class DBBinder(object):
     def get_binding(self, binding='wx_binding'):
         """Given a binding name, returns the managed object"""
         if binding not in self.archive_cache:
-            db_dict, db_cls = prep_database(self.binding_dicts, self.db_dicts, binding)
-            self.archive_cache[binding] = db_cls.open(db_dict)
+            self.archive_cache[binding] = open_database(self.config_dict, binding)
         return self.archive_cache[binding]
 
 #===============================================================================
 #                                 Utilities
 #===============================================================================
 
-def prep_database(binding_dicts, db_dicts, binding='wx_binding'):
+def open_database(config_dict, binding, initialize=False):
     # Get the database name
-    database_name = binding_dicts[binding]['bind_to']
+    database_name = config_dict['Bindings'][binding]['bind_to']
     # Get the manager to be used
-    database_manager = binding_dicts[binding].get('manager', 'weewx.stats.WXDaySummaryArchive')
+    database_manager = config_dict['Bindings'][binding].get('manager', 'weewx.stats.WXDaySummaryArchive')
     # Get the class of the manager to be used:
     database_cls = weeutil.weeutil._get_object(database_manager)
     # Get the dictionary we will need to open up a connection.
-    database_dict = db_dicts[database_name]
-
-    return (database_dict, database_cls)
-
-def open_database(config_dict, binding, archive_schema=None):
-    database_dict, database_cls = prep_database(config_dict['Bindings'],
-                                                config_dict['Databases'],
-                                                binding)
+    database_dict = config_dict['Databases'][database_name]
+    if initialize:
+        schema_name = config_dict['Bindings'][binding].get('schema', 'user.schemas.defaultArchiveSchema')
+        schema = weeutil.weeutil._get_object(schema_name)
+    else:
+        schema = None
     
-    return database_cls(database_dict, archive_schema)
+    return database_cls(database_dict, schema)

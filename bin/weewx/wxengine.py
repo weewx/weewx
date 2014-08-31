@@ -576,12 +576,9 @@ class StdArchive(StdService):
     def setup_database(self, config_dict):
         """Setup the main database archive"""
 
-        archive_binding = config_dict['StdArchive'].get('binding', 'wx_binding')
-        archive_schema_str = config_dict['StdArchive'].get('archive_schema', 'user.schemas.defaultArchiveSchema')
-        archive_schema = weeutil.weeutil._get_object(archive_schema_str)
         # This will create the database if it doesn't exist, then return an
         # opened instance of the archive manager. 
-        self.archive = weewx.archive.open_database(config_dict, archive_binding, archive_schema)
+        self.archive = weewx.archive.open_database(config_dict, 'wx_binding', initialize=True)
         syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive database: %s" % (self.archive.database,))
         
         # In case this is a recent update or the user has dropped the daily summary tables, backfill them:
