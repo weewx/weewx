@@ -75,8 +75,8 @@ def main():
     
     db_symname = options.symname
     database_name = config_dict['MyDatabases'][db_symname]
-    database_dict, database_cls = weewx.archive.prep_database(config_dict['MyBindings'], 
-                                                              config_dict['MyDatabases'],
+    database_dict, database_cls = weewx.archive.prep_database(config_dict['Bindings'], 
+                                                              config_dict['Databases'],
                                                               db_symname)
     print "Using database binding '%s', which is bound to database '%s'" % (db_symname, database_name)
     

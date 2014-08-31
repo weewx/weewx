@@ -60,8 +60,8 @@ class Common(unittest.TestCase):
         except OSError:
             pass
 
-        self.database_dict, self.database_cls = weewx.archive.prep_database(self.config_dict['MyBindings'],
-                                                                            self.config_dict['MyDatabases'], 
+        self.database_dict, self.database_cls = weewx.archive.prep_database(self.config_dict['Bindings'],
+                                                                            self.config_dict['Databases'], 
                                                                             self.binding)
     
         # This will generate the test databases if necessary:

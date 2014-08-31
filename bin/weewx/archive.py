@@ -673,23 +673,23 @@ class DBBinder(object):
         """ Initialize a DBBinder object.
         
         config_dict: Typically, this is the weewx configuration dictionary.
-        It should contain two keys, MyBindings and MyDatabases, each with
+        It should contain two keys, Bindings and Databases, each with
         a dictionary as a value, holding the bindings and databases, respectively.
 
         It should look something like:
           {
-          'MyBindings' :     
+          'Bindings' :     
             'wx_bindings' : {'bind_to': 'archive_sqlite',
                              'manager': 'weewx.stats.WXDaySummaryArchive'},
 
-          'MyDatabases' :
+          'Databases' :
             {'archive_sqlite' : {'root': '/home/weewx',
                                  'database': 'archive/archive.sdb',
                                  'driver': 'weedb.sqlite'}
            }"""
            
-        self.binding_dicts = config_dict['MyBindings']
-        self.db_dicts = config_dict['MyDatabases']
+        self.binding_dicts = config_dict['Bindings']
+        self.db_dicts = config_dict['Databases']
         self.archive_cache = {}
     
     def close(self):
@@ -730,8 +730,8 @@ def prep_database(binding_dicts, db_dicts, binding='wx_binding'):
     return (database_dict, database_cls)
 
 def open_database(config_dict, binding, archive_schema=None):
-    database_dict, database_cls = prep_database(config_dict['MyBindings'],
-                                                config_dict['MyDatabases'],
+    database_dict, database_cls = prep_database(config_dict['Bindings'],
+                                                config_dict['Databases'],
                                                 binding)
     
     return database_cls(database_dict, archive_schema)
