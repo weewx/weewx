@@ -236,8 +236,13 @@ class Accum(dict):
             raise OutOfSpan, "Attempt to add out-of-interval record"
 
         for obs_type in record:
-            # Find the proper function to use for this type ...
-            func = add_record_dict[obs_type] if obs_type in add_record_dict else Accum.add_value
+            # Is this type in the custom add record dictionary:
+            if obs_type in add_record_dict:
+                # Yes.
+                func = add_record_dict[obs_type] 
+            else:
+                # No. use the default.
+                func = Accum.add_value
             # ... then call it.
             func(self, record, obs_type, add_hilo)
                             
@@ -264,10 +269,11 @@ class Accum(dict):
             # Is this type in the custom extraction dictionary?
             if obs_type in extract_dict:
                 # Yes it is. Use the supplied function
-                extract_dict[obs_type](self, record, obs_type)
+                func = extract_dict[obs_type]
             else:
                 # No. Use the default, which is the average value during the period:
-                record[obs_type] = self[obs_type].avg
+                func = Accum.avg_extract
+            func(self, record, obs_type)
 
         return record
 
@@ -289,6 +295,9 @@ class Accum(dict):
         
     def last_extract(self, record, obs_type):
         record[obs_type] = self[obs_type].last
+        
+    def avg_extract(self, record, obs_type):
+        record[obs_type] = self[obs_type].avg
         
     def init_type(self, obs_type):
         """Add a given observation type to my dictionary."""
