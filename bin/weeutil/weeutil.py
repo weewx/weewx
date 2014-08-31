@@ -827,9 +827,14 @@ def _get_object(module_class):
     module = '.'.join(parts[:-1])
     # Import the top level module
     mod = __import__(module)
-    # Then recursively work down from the top level module to the class name:
-    for part in parts[1:]:
-        mod = getattr(mod, part)
+    # Recursively work down from the top level module to the class name.
+    # Be prepared to catch an exception if something cannot be found.
+    try:
+        for part in parts[1:]:
+            mod = getattr(mod, part)
+    except AttributeError:
+        # Can't find something. Give a more informative error message:
+        raise AttributeError("Module '%s' has no attribute '%s' when searching for '%s'" % (mod.__name__, part, module_class))
     return mod
 
 class GenWithPeek(object):

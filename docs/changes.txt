@@ -26,6 +26,15 @@ particularly in network based implementations.
 Fixed ENDPOINT_IN in the te923 driver.  This should provide better
 compatibility with a wider range of pyusb versions.
 
+Now catches MySQL exceptions during commits and rollbacks (as well
+as queries) and converts them to weedb exceptions.
+
+Catch and report configobj errors when reading skin.conf during the
+generation of reports.
+
+Ensure correct location, lat, lon, and altitude modifications in the
+debian postinst installer script.
+
 
 2.6.4 06/16/14
 

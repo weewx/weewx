@@ -36,18 +36,18 @@ metric_units="\n\
 # insert any configuration variables into the configuration file
 configure_weewxconf() {
     db_get weewx/location
-    sed -i "s%location =.*%location = \"$RET\"%" $cfgfile
+    sed -i "/\[Station\]/,/\[.*\]/ s%location =.*%location = \"$RET\"%" $cfgfile
 
     db_get weewx/latlon
     lat=$(echo $RET | cut -d, -f1)
     lon=$(echo $RET | cut -d, -f2)
-    sed -i "s% latitude[ ]*=.*% latitude = $lat%" $cfgfile
-    sed -i "s% longitude[ ]*=.*% longitude = $lon%" $cfgfile
+    sed -i "/\[Station\]/,/\[.*\]/ s%latitude[ ]*=.*%latitude = $lat%" $cfgfile
+    sed -i "/\[Station\]/,/\[.*\]/ s%longitude[ ]*=.*%longitude = $lon%" $cfgfile
 
     db_get weewx/altitude
     a=$(echo $RET | cut -d, -f1)
     u=$(echo $RET | cut -d, -f2)
-    sed -i "s% altitude[ ]*=.*% altitude = $a, $u%" $cfgfile
+    sed -i "/\[Station\]/,/\[.*\]/ s%altitude[ ]*=.*%altitude = $a, $u%" $cfgfile
 
     db_get weewx/units
     if [ "$RET" = "Metric" ]; then
