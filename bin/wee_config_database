@@ -18,10 +18,8 @@ import sys
 import user.extensions      #@UnusedImport
 import weedb
 import weewx.archive
-import weewx.stats
 import weewx.units
 import weeutil.weeutil
-import user.schemas
 
 description="""Configure the weewx databases. Most of these functions are
 handled automatically by weewx, but they may be useful as a utility in special
@@ -30,7 +28,7 @@ add or drop data types from the database schema or change unit systems."""
  
 usage="""%prog: [config_path] [--help]
                               [--create-archive] [--drop-daily] 
-                              [--reconfigure] [--backfill-daily]
+                              [--backfill-daily] [--reconfigure]
                               [--string-check] [--fix]
                               [--binding=BINDING_NAME]"""
 
@@ -52,19 +50,19 @@ def main():
                       help="Create the archive database.")
     parser.add_option("--drop-daily", dest="drop_daily", action='store_true',
                       help="Drop the daily summary tables from a database.")
+    parser.add_option("--backfill-daily", dest="backfill_daily", action='store_true',
+                      help="Backfill a database with daily summaries")
     parser.add_option("--reconfigure", action='store_true',
                       help="""Create a new archive database using configuration information found """\
                           """in the configuration file. In particular, the new database will use the """\
                           """unit system found in option [StdConvert][target_unit]. It will use """\
                           """the schema found in './bin/user/schemas.py'. """\
                           """The new database will have the same name as the old database, with a '_new' on the end.""")
-    parser.add_option("--backfill-daily", dest="backfill_daily", action='store_true',
-                      help="Backfill a database with daily summaries")
     parser.add_option("--string-check", dest="string_check", action="store_true",
                       help="Check a sqlite version of the archive database for embedded strings in it.")
     parser.add_option("--fix", dest="fix", action="store_true",
                       help="If a string is found, fix it.")
-    parser.add_option("--binding", dest="symname", metavar="BINDING_NAME",
+    parser.add_option("--binding", dest="binding", metavar="BINDING_NAME",
                       default='wx_binding',
                       help="The database binding the action is to be applied to. Default is 'wx_binding'")
 
@@ -73,45 +71,39 @@ def main():
     config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
     print "Using configuration file %s." % config_fn
     
-    db_symname = options.symname
-    database_name = config_dict['MyDatabases'][db_symname]
-    database_dict, database_cls = weewx.archive.prep_database(config_dict['Bindings'], 
-                                                              config_dict['Databases'],
-                                                              db_symname)
-    print "Using database binding '%s', which is bound to database '%s'" % (db_symname, database_name)
+    db_binding = options.binding
+    database_name = config_dict['Bindings'][db_binding]['bind_to']
+    print "Using database binding '%s', which is bound to database '%s'" % (db_binding, database_name)
     
     if options.create_archive:
-        createMainDatabase(database_dict, database_cls, database_name)
+        createMainDatabase(config_dict, db_binding, database_name)
     
     if options.drop_daily:
-        dropDaily(database_dict, database_cls, database_name)
+        dropDaily(config_dict, db_binding, database_name)
+        
+    if options.backfill_daily:
+        backfillDaily(config_dict, db_binding, database_name)
         
     if options.reconfigure:
-        reconfigMainDatabase(database_dict, database_cls, database_name, config_dict)
+        reconfigMainDatabase(config_dict, db_binding, database_name)
 
-    if options.backfill_daily:
-        backfillDaily(database_dict, database_cls, database_name)
-        
     if options.string_check:
-        string_check(config_dict, options.fix, db_symname)
+        string_check(config_dict, db_binding, database_name, options.fix)
 
-def createMainDatabase(database_dict, database_cls, database_name):
+def createMainDatabase(config_dict, db_binding, database_name):
     """Create a weewx archive database"""
 
     # Try a simple open. If it succeeds, that means the database
     # exists and is initialized. Otherwise, an exception will be thrown.
     try:
-        archive = database_cls.open(database_dict)
-        archive.close()
+        with weewx.archive.open_database(config_dict, db_binding):
+            print "Database '%s' already exists. Nothing done." % (database_name,)
     except weedb.OperationalError:
-        # Database does not exist. Do an open_with_create:
-        archive = database_cls.open_with_create(database_dict, user.schemas.defaultArchiveSchema)
-        archive.close()
-        print "Created database '%s'" % (database_name,)
-    else:
-        print "Database '%s' already exists. Nothing done." % (database_name,)
+        # Database does not exist. Try again, but allow initialization:
+        with weewx.archive.open_database(config_dict, db_binding, initialize=True):
+            print "Created database '%s'" % (database_name,)
 
-def dropDaily(database_dict, database_cls, database_name):
+def dropDaily(config_dict, db_binding, database_name):
     """Drop the daily summaries from a weewx database"""
 
     ans = None
@@ -122,25 +114,37 @@ def dropDaily(database_dict, database_cls, database_name):
             
             print "Dropping daily summary tables from '%s' ... " % database_name
             try:
-                archive = database_cls.open(database_dict)
+                with weewx.archive.open_database(config_dict, db_binding) as archive:
+                    try:
+                        archive.drop_daily()
+                    except weedb.OperationalError, e:
+                        print "Got error '%s'\nPerhaps there was no daily summary?" % e
+                    else:
+                        print "Dropped daily summary tables from database '%s'" % (database_name,)
             except weedb.OperationalError:
                 # No daily summaries. Nothing to be done.
                 print "No daily summaries in database '%s'. Nothing done." % (database_name,)
-                return
-        
-            try:
-                archive.drop_daily()
-            except weedb.OperationalError, e:
-                print "Got error '%s'\nPerhaps there was no daily summary?" % e
-            else:
-                archive.close()
-                print "Dropped daily summary tables from database '%s'" % (database_name,)
     
-def reconfigMainDatabase(old_database_dict, database_cls, database_name, config_dict):
+def backfillDaily(config_dict, db_binding, database_name):
+    """Backfill the daily summaries"""
+
+    print "Backfilling daily summaries in database '%s'" % database_name
+
+    # Open up the archive. This will create the tables necessary for the daily summaries if they
+    # don't already exist:
+    with weewx.archive.open_database(config_dict, db_binding, initialize=True)as archive:
+        nrecs = archive.backfill_day_summary()
+
+    print "Backfilled daily summaries in database '%s', using %d records" % (database_name, nrecs)
+    
+def reconfigMainDatabase(config_dict, db_binding, database_name):
     """Create a new database, then populate it with the contents of an old database"""
 
-    # For the new database, make a copy of the old database dictionary
+    old_database_dict = config_dict['Databases'][database_name]
+    
+    # Make a copy for the new database (we will be modifying it)
     new_database_dict = old_database_dict.dict()
+    
     # Now modify the database name
     new_database_dict['database'] = old_database_dict['database']+'_new'
 
@@ -186,25 +190,12 @@ def reconfigMainDatabase(old_database_dict, database_cls, database_name, config_
         elif ans == 'n':
             print "Nothing done."
 
-def backfillDaily(database_dict, database_cls, database_name):
-    """Backfill the daily summaries"""
-
-    print "Backfilling daily summaries in database '%s'" % database_name
-
-    # Open up the archive. This will create the tables necessary for the daily summaries if they
-    # don't already exist:
-    with weewx.stats.DaySummaryArchive.open_with_create(database_dict, user.schemas.defaultArchiveSchema) as archive:
-        nrecs = archive.backfill_day_summary()
-
-    print "Backfilled daily summaries in database '%s', using %d records" % (database_name, nrecs)
+def string_check(config_dict, db_binding, database_name, fix=False):
     
-def string_check(config_dict, fix=False):
     print "Checking archive database for strings..."
-    archive_db = config_dict['StdArchive']['archive_database']
-    archive_db_dict = config_dict['Databases'][archive_db]
 
     # Open up the main database archive
-    with weewx.archive.Archive.open(archive_db_dict) as archive:
+    with weewx.archive.open_database(config_dict, db_binding) as archive:
         
         obs_pytype_list = []
         obs_list = []
