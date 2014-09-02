@@ -645,8 +645,6 @@ class Archive(object):
                 ValueTuple(data_vec, data_type, data_group))
 
 
-WXArchive = Archive
-
 def reconfig(old_db_dict, new_db_dict, new_unit_system=None,
              new_schema=user.schemas.defaultArchiveSchema):
     """Copy over an old archive to a new one, using a provided schema."""
