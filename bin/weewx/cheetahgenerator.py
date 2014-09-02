@@ -156,20 +156,15 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
     def initExtensions(self, gen_dict):
         """Load the search list"""
-        # New style search list additions:
         self.search_list_objs = []
-        # Old style search list extensions:
-        self.search_list_exts = []
 
-        # The option search_list contains the basic search list
         search_list = weeutil.weeutil.option_as_list(gen_dict.get('search_list'))
         if search_list is None:
             search_list = list(default_search_list)
 
-        # The option search_list_additions contains the extensions
-        search_list_addns = weeutil.weeutil.option_as_list(gen_dict.get('search_list_additions'))
-        if search_list_addns is not None:
-            search_list.extend(search_list_addns)
+        search_list_ext = weeutil.weeutil.option_as_list(gen_dict.get('search_list_extensions'))
+        if search_list_ext is not None:
+            search_list.extend(search_list_ext)
 
         # Now go through search_list (which is a list of strings holding the names of the extensions):
         for c in search_list:
@@ -197,7 +192,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         """
         
         ngen = 0
-        # Go through each subsection, generating from any templates they may contain
+        # Go through each subsection (if any) of this section,
+        # generating from any templates they may contain
         for subsection in section.sections:
             # Sections 'SummaryByMonth' and 'SummaryByYear' imply summarize_by certain time spans
             if not section[subsection].has_key('summarize_by'):
@@ -267,7 +263,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     and not timespan.includesArchiveTime(stop_ts):
                 continue
 
-            # skip files that are fresh, only if staleness is defined
+            # skip files that are fresh, but only if staleness is defined
             stale = to_int(report_dict.get('stale_age'))
             if stale is not None:
                 t_now = time.time()
@@ -310,33 +306,19 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
     def _getSearchList(self, encoding, timespan, default_binding):
         """Get the complete search list to be used by Cheetah."""
 
-        timespan_start_tt = time.localtime(timespan.start)
-        db_factory = weewx.tags.DBFactory(self.db_binder, default_binding)
-        
-        # For backwards compatibility, extract the default archive and stats databases
-        statsdb = archivedb = db_factory.get_binding()
-        
         # Get the basic search list
+        timespan_start_tt = time.localtime(timespan.start)
         searchList = [{'month_name' : time.strftime("%b", timespan_start_tt),
                        'year_name'  : timespan_start_tt[0],
-                       'encoding' : encoding},
+                       'encoding'   : encoding},
                       self.outputted_dict]
         
-        # Then add the new-style search list additions:
+        # Then add the V3.X style search list extensions
+        db_factory = weewx.tags.DBFactory(self.db_binder, default_binding)
         for obj in self.search_list_objs:
-            searchList += obj.add_searchlist(timespan, db_factory)
-
-        # Now add the old-style extensions:
-        searchList += [obj.get_extension(timespan, archivedb, statsdb) for obj in self.search_list_exts]
-        
-        # Finally, add the REALLY old style extensions
-        searchList += self.getToDateSearchList(archivedb, statsdb, timespan)
+            searchList += obj.get_extension_list(timespan, db_factory)
 
         return searchList
-
-    def getToDateSearchList(self, archivedb, statsdb, timespan):
-        """Backwards compatible entry."""
-        return []
 
     def _getFileName(self, template, timespan):
         """Calculate a destination filename given a template filename.
@@ -359,23 +341,18 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         return _filename
 
     def _prepGen(self, report_dict):
-        """Gather the options together for a specific report, then
-        retrieve the template file, stats database, archive database,
-        the destination directory, and the encoding from those options."""
+        """Get the template, destination directory, encoding, and default binding."""
 
+        # -------- Template ---------
         template = os.path.join(self.config_dict['WEEWX_ROOT'],
                                 self.config_dict['StdReport']['SKIN_ROOT'],
                                 report_dict['skin'],
                                 report_dict['template'])
+        
+        # ------ Destination directory --------
         destination_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
                                        report_dict['HTML_ROOT'],
                                        os.path.dirname(report_dict['template']))
-        encoding = report_dict.get('encoding', 'html_entities').strip().lower()
-        if encoding == 'utf-8':
-            encoding = 'utf8'
-
-        default_binding = report_dict['binding']
-
         try:
             # Create the directory that is to receive the generated files.  If
             # it already exists an exception will be thrown, so be prepared to
@@ -384,6 +361,14 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         except OSError:
             pass
 
+        # ------ Encoding ------
+        encoding = report_dict.get('encoding', 'html_entities').strip().lower()
+        if encoding == 'utf-8':
+            encoding = 'utf8'
+
+        # ------ Default binding ---------
+        default_binding = report_dict['binding']
+
         return (template, destination_dir, encoding, default_binding)
 
 # =============================================================================
@@ -391,17 +376,17 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 # =============================================================================
 
 class SearchList(object):
-    """Provide binding between variable name and data"""
+    """Abstract base class used for search list extensions."""
 
     def __init__(self, generator):
-        """Create an instance of the search list.
+        """Create an instance of SearchList.
 
         generator: The generator that is using this search list
         """
         self.generator = generator
 
-    def add_searchlist(self, timespan, db_factory):
-        """Derived classes must define this method.  Should return a list
+    def get_extension_list(self, timespan, db_factory):
+        """For weewx V3.x extensions. Should return a list
         of objects whose attributes or keys define the extension.
         
         timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
@@ -411,21 +396,6 @@ class SearchList(object):
         """
         return [self]
 
-    def get_extension(self, timespan, archivedb, statsdb):
-        """Derived classes must define this method.  Should return an object
-        whose attributes or keys define the extension.
-        
-        OBSOLETE INTERFACE. Use add_searchlist() instead.
-        
-        timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
-                   start and stop times of the domain of valid times.
-                   
-        archivedb: An instance of class weewx.archive.Archive.
-        
-        statsdb:   An instance of class weewx.stats.StatsDb
-        """
-        return self
-    
 class Almanac(SearchList):
     """Class that implements the '$almanac' tag."""
 
@@ -449,9 +419,13 @@ class Almanac(SearchList):
         except KeyError:
             pass
         else:
+            # If a specific time has not been specified, then use the timestamp
+            # of the last record in the database.
             if not celestial_ts:
                 celestial_ts = archive.lastGoodStamp()
-    
+
+            # Check to see whether we have a good time. If so, retrieve the record
+            # from the database    
             if celestial_ts:
                 # Look for the record closest in time. Up to one hour off is fine:    
                 rec = archive.getRecord(celestial_ts, max_delta=3600)
@@ -499,7 +473,7 @@ class Stats(SearchList):
     default_heatbase = (65.0, "degree_F", "group_temperature")
     default_coolbase = (65.0, "degree_F", "group_temperature")
 
-    def add_searchlist(self, timespan, db_factory):
+    def get_extension_list(self, timespan, db_factory):
         units_dict = self.generator.skin_dict.get('Units', {})
         dd_dict = units_dict.get('DegreeDays', {})
         heatbase = dd_dict.get('heating_base', None)
