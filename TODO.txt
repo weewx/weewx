@@ -1,6 +1,6 @@
               TODO before the next release:
               
-Capture LOOP data for highs and lows
+Check the capture of highs and lows from LOOP data
 
 Support ConfigObj v5.0.0
 

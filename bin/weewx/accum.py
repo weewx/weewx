@@ -340,22 +340,24 @@ class Accum(dict):
             self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir')), record['dateTime'])
         self['wind'].addSum((record['windSpeed'], record.get('windDir')))
         
-    def _check_units(self, record, obs_type, add_hilo):
+    def check_units(self, record, obs_type, add_hilo):
         if weewx.debug:
             assert(obs_type == 'usUnits')
+        self._check_units(record['usUnits'])
 
-        # If no unit system has been specified for me yet, adopt the incoming
-        # system
-        if self.unit_system is None:
-            self.unit_system = record['usUnits']
-        else:
-            # Otherwise, make sure they match
-            if self.unit_system != record['usUnits']:
-                raise ValueError("Unit system mismatch %d v. %d" % (self.unit_system, record['usUnits']))
-            
     def noop(self, record, obs_type, add_hilo):
         pass
 
+    def _check_units(self, new_unit_system):
+        # If no unit system has been specified for me yet, adopt the incoming
+        # system
+        if self.unit_system is None:
+            self.unit_system = new_unit_system
+        else:
+            # Otherwise, make sure they match
+            if self.unit_system != new_unit_system:
+                raise ValueError("Unit system mismatch %d v. %d" % (self.unit_system, new_unit_system))
+            
 #===============================================================================
 #                            Configuration dictionaries
 #===============================================================================
@@ -363,7 +365,7 @@ class Accum(dict):
 init_dict = {'wind' : VecStats}
 
 add_record_dict = {'windSpeed' : Accum.add_wind_value,
-                   'usUnits'   : Accum._check_units,
+                   'usUnits'   : Accum.check_units,
                    'dateTime'  : Accum.noop}
 
 extract_dict = {'wind'      : Accum.wind_extract,
