@@ -30,6 +30,8 @@ generation of reports.
 Ensure correct location, lat, lon, and altitude modifications in the
 debian postinst installer script.
 
+More extensive debug information for rscync users.
+
 
 2.6.4 06/16/14
 

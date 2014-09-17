@@ -15,6 +15,7 @@ import errno
 import sys
 import subprocess
 import syslog
+import time
 
 class RsyncUpload(object):
     """Uploads a directory and all its descendants to a remote server.
@@ -44,6 +45,8 @@ class RsyncUpload(object):
     def run(self):
         """Perform the actual upload."""
 
+        t1 = time.time()
+        
         # If the source path ends with a slash, rsync interprets
         # that as a request to copy all the directory's *contents*,
         # whereas if it doesn't, it copies the entire directory.
@@ -70,8 +73,9 @@ class RsyncUpload(object):
         #    preserve device files and special files, but not ACLs,
         #    no hardlinks, and no extended attributes
         cmd.extend(["--archive"])
+        # provide some stats on the transfer
+        cmd.extend(["--stats"])
         # Remove files remotely when they're removed locally
-        # cmd.extend(["--stats"])
         if self.delete:
             cmd.extend(["--delete"])
         cmd.extend(["-e %s" % rsyncsshstring])
@@ -82,12 +86,41 @@ class RsyncUpload(object):
             rsynccmd = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         
             stdout = rsynccmd.communicate()[0]
-            stroutput = stdout.encode("utf-8")
-            syslog.syslog(syslog.LOG_DEBUG, "rsyncupload: rsync reported: %s" % stroutput)
+            stroutput = stdout.encode("utf-8").strip()
         except OSError, e:
             if e.errno == errno.ENOENT:
                 syslog.syslog(syslog.LOG_ERR, "rsyncupload: rsync does not appear to be installed on this system. (errno %d, \"%s\")" % (e.errno, e.strerror))
             raise
+        
+        # we have some output from rsync so generate an appropriate message
+        if stroutput.find('rsync error:') < 0:
+            # no rsync error message so parse rsync --stats results
+            rsyncinfo = {}
+            for line in iter(stroutput.splitlines()):
+                if line.find(':') >= 0:
+                    (n,v) = line.split(':', 1)
+                    rsyncinfo[n.strip()] = v.strip()
+            # get number of files and bytes transferred and produce an
+            # appropriate message
+            try:
+                N = rsyncinfo['Number of files transferred']
+                bytes = rsyncinfo['Total transferred file size']
+                if N is not None and bytes is not None:
+                    rsync_message = "rsync'd %d files (%s) in %%0.2f seconds" % (int(N), bytes)
+                else:
+                    rsync_message = "rsync executed in %0.2f seconds"
+            except:
+                rsync_message = "rsync executed in %0.2f seconds"
+        else:
+            # suspect we have an rsync error so tidy stroutput
+            # and display a message
+            stroutput = stroutput.replace("\n", ". ")
+            stroutput = stroutput.replace("\r", "")
+            syslog.syslog(syslog.LOG_INFO, "rsyncupload: rsync reported errors: %s" % stroutput)
+            rsync_message = "rsync executed in %0.2f seconds"
+        
+        t2= time.time()
+        syslog.syslog(syslog.LOG_INFO, "rsyncupload: "  + rsync_message % (t2-t1))
         
         
 if __name__ == '__main__':
