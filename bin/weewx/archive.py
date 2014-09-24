@@ -183,15 +183,7 @@ class Archive(object):
 
         # Check to make sure the incoming record is in the same unit
         # system as the records already in the database:
-        if self.std_unit_system:
-            if record['usUnits'] != self.std_unit_system:
-                raise ValueError("Unit system of incoming record (0x%x) "\
-                                 "differs from the archive database (0x%x)" % 
-                                 (record['usUnits'], self.std_unit_system))
-        else:
-            # This is the first record. Remember the unit system to
-            # check against subsequent records:
-            self.std_unit_system = record['usUnits']
+        self._check_unit_system(record['usUnits'])
 
         # Only data types that appear in the database schema can be
         # inserted. To find them, form the intersection between the
@@ -521,6 +513,19 @@ class Archive(object):
         return (weewx.units.ValueTuple(start_vec, time_type, time_group),
                 weewx.units.ValueTuple(stop_vec, time_type, time_group),
                 weewx.units.ValueTuple(data_vec, data_type, data_group))
+
+    def _check_unit_system(self, unit_system):
+        """ Check to make sure a unit system is the same as what's already in use in the database."""
+
+        if self.std_unit_system is not None:
+            if unit_system != self.std_unit_system:
+                raise ValueError("Unit system of incoming record (0x%x) "\
+                                 "differs from the archive database (0x%x)" % 
+                                 (unit_system, self.std_unit_system))
+        else:
+            # This is the first record. Remember the unit system to
+            # check against subsequent records:
+            self.std_unit_system = unit_system
 
     def _getSqlVectors(self, sql_type, startstamp, stopstamp,
                       aggregate_interval=None, 

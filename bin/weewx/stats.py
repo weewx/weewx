@@ -422,9 +422,7 @@ class DaySummaryArchive(weewx.archive.Archive):
         day_accum."""
 
         # Make sure the new data uses the same unit system as the database.
-        if self.std_unit_system != day_accum.unit_system:
-            raise ValueError("stats: Data uses different unit system (0x%x) than archive file (0x%x)" % 
-                             (day_accum.unit_system, self.std_unit_system))
+        self._check_unit_system(day_accum.unit_system)
 
         _sod = day_accum.timespan.start
 
