@@ -72,47 +72,53 @@ configure_weewxconf() {
         fi
         if [ "$RET" = "WMR100" ]; then
             db_get weewx/wmr100_model
-            sed -i "/\[WMR100\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            sed -i "/\[WMR100\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
         fi
         if [ "$RET" = "WMR200" ]; then
             db_get weewx/wmr200_model
-            sed -i "/\[WMR200\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            sed -i "/\[WMR200\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
         fi
         if [ "$RET" = "WMR9x8" ]; then
             db_get weewx/wmr9x8_model
-            sed -i "/\[WMR9x8\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            sed -i "/\[WMR9x8\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
             db_get weewx/wmr9x8_port
             sed -i "/\[WMR9x8\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
         fi
         if [ "$RET" = "FineOffsetUSB" ]; then
             db_get weewx/fousb_model
-            sed -i "/\[FineOffsetUSB\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            sed -i "/\[FineOffsetUSB\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
         fi
         if [ "$RET" = "WS23xx" ]; then
             db_get weewx/ws23xx_model
-            sed -i "/\[WS23xx\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            sed -i "/\[WS23xx\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
             db_get weewx/ws23xx_port
-            sed -i "/\[WS23xx\]/,/\[.*\]/ s%[# ]*port[ ]*=.*%    port = $RET%" $cfgfile
+            sed -i "/\[WS23xx\]/,/\[.*\]/ s%[# ]*port[ ]*=.*% port = $RET%" $cfgfile
         fi
         if [ "$RET" = "WS28xx" ]; then
             db_get weewx/ws28xx_model
-            sed -i "/\[WS28xx\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            sed -i "/\[WS28xx\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
             db_get weewx/ws28xx_frequency
             sed -i "/\[WS28xx\]/,/\[.*\]/ s%[# ]*transceiver_frequency[ ]*=.*%    transceiver_frequency = $RET%" $cfgfile
         fi
         if [ "$RET" = "TE923" ]; then
             db_get weewx/te923_model
-            sed -i "/\[TE923\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            sed -i "/\[TE923\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
         fi
         if [ "$RET" = "Ultimeter" ]; then
             db_get weewx/ultimeter_model
-            sed -i "/\[Ultimeter\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+            sed -i "/\[Ultimeter\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
             db_get weewx/ultimeter_port
             sed -i "/\[Ultimeter\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
         fi
         if [ "$RET" = "WS1" ]; then
             db_get weewx/ws1_port
             sed -i "/\[WS1\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
+        fi
+        if [ "$RET" = "CC3000" ]; then
+            db_get weewx/cc3000_model
+            sed -i "/\[CC3000\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
+            db_get weewx/cc3000_port
+            sed -i "/\[CC3000\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
         fi
     fi
 }

@@ -32,6 +32,11 @@ debian postinst installer script.
 
 More extensive debug information for rscync users.
 
+In the debian installer, default to ttyUSB0 instead of ttyS0 for stations
+with a serial interface.
+
+Added CC3000 to debian installer scripts.
+
 
 2.6.4 06/16/14
 

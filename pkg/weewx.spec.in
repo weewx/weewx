@@ -109,6 +109,7 @@ ln -s ../share/weewx/setup.py %{buildroot}%{_bindir}/wee_setup
 ln -s ../share/weewx/weewxd %{buildroot}%{_bindir}/weewxd
 ln -s ../share/weewx/wee_reports %{buildroot}%{_bindir}/wee_reports
 ln -s ../share/weewx/wee_config_database %{buildroot}%{_bindir}/wee_config_database
+ln -s ../share/weewx/wee_config_cc3000 %{buildroot}%{_bindir}/wee_config_cc3000
 ln -s ../share/weewx/wee_config_fousb %{buildroot}%{_bindir}/wee_config_fousb
 ln -s ../share/weewx/wee_config_te923 %{buildroot}%{_bindir}/wee_config_te923
 ln -s ../share/weewx/wee_config_vantage %{buildroot}%{_bindir}/wee_config_vantage
@@ -161,6 +162,7 @@ rm -rf %{buildroot}
 %{_bindir}/wee_setup
 %{_bindir}/wee_reports
 %{_bindir}/wee_config_database
+%{_bindir}/wee_config_cc3000
 %{_bindir}/wee_config_fousb
 %{_bindir}/wee_config_te923
 %{_bindir}/wee_config_vantage
