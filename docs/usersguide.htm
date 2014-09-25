@@ -694,15 +694,18 @@ Version: 2.6.4
 
     <h1 id="prerequisites">System requirements</h1>
 
-    <p>I run <span class="code">weewx</span> on a 500MHz system with an AMD
+    <h2>Hardware</h2>
+    <p>Weewx is written in Python, so it has the overhead associated with that
+      language. Nevertheless, it is "fast enough" on just about any hardware. It
+      has been run on everything from an early MacBook to a router!</p>
+    <p>I run <span class="code">weewx</span> on a Fit-PC with a 500 MHz AMD
       Geode processor and 512 MB of memory. Configured this way, it
-      consumes about 5% of the CPU and about 65MB of virtual memory
-      and about 20MB of real memory. </p>
-    <p>On a Marvel 500MHz ARM CPU with 512MB RAM, <span class="code">weewx</span> uses 63MB virtual and
-      40MB real memory when configured to generate 3 different standard
-      reports.  The CPU use is typically less than 0.5%, maxxing out at
-      90% for less than a minute every 5 minutes when <span class="code">weewx</span> generates
-      reports.</p>
+      consumes about 5% of the CPU, 80 MB of virtual memory,
+      and 20 MB of real memory. </p>
+    <p>Weewx also runs great on a Raspberry Pi, although report generation will take longer.
+      For example, the 12 "To Date" templates take about 5.1 seconds on the RPi,
+      compared to 3.0 seconds on my Fit-PC, and a mere 0.9 seconds on my vintage
+      Dell Optiplex 745.</p>
 
     <h2>Time</h2>
     <p> You should run a <a href="http://www.ntp.org/">NTP</a> daemon on your
@@ -2005,6 +2008,8 @@ report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
     <pre class="tty">Usage: wee_config_vantage: [config_file] [--help] [--info] [--clear]
                            [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
                            [--set-bucket=CODE] [--set-rain-year-start=MM] 
+                           [--set-offset=VARIABLE,OFFSET]
+                           [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
                            [--set-time] [--set-dst=[AUTO|ON|OFF]]
                            [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
                            [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE] [--start | --stop]
@@ -2030,6 +2035,17 @@ Options:
                         inches; '1' for 0.2 mm; '2' for 0.1 mm
   --set-rain-year-start=MM
                         Set the rain year start (1=Jan, 2=Feb, etc.).
+  --set-offset=VARIABLE,OFFSET
+                        Set the onboard offset for VARIABLE (inTemp, outTemp,
+                        extraTemp<1-7>, inHumid, outHumid, extraHumid<1-7>,
+                        soilTemp<1-4>, leafTemp<1-4>, windDir) to OFFSET
+                        (Fahrenheit, %, degrees)
+  --set-transmitter-type=CHANNEL,TYPE,TEMP,HUM
+                        Set the transmitter type for CHANNEL (1-8), TYPE
+                        (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain,
+                        6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none),
+                        as extra TEMP station and extra HUM station (both 1-7,
+                        if applicable)
   --set-time            Set the onboard clock to the current time.
   --set-dst=AUTO|ON|OFF
                         Set DST to 'ON', 'OFF', or 'AUTO'
@@ -2059,22 +2075,22 @@ Davis Vantage EEPROM settings:
     CONSOLE TYPE:                   VantagePro2
     
     CONSOLE FIRMWARE:
-      Date:                         Nov 28 2005
-      Version:                      &lt;Unavailable&gt;
-
+      Date:                         Dec 11 2012
+      Version:                      3.12
+    
     CONSOLE SETTINGS:
 <span class="highlight">      Archive interval:             300 (seconds)
       Altitude:                     700 (foot)</span>
       Wind cup type:                large
 <span class="highlight">      Rain bucket type:             0.01 inches
       Rain year start:              10
-      Onboard time:                 2013-07-10 10:08:41</span>
+      Onboard time:                 2014-09-25 07:41:14</span>
       
     CONSOLE DISPLAY UNITS:
-      Barometer:                    mbar
+      Barometer:                    inHg
       Temperature:                  degree_F
       Rain:                         inch
-      Wind:                         knot
+      Wind:                         mile_per_hour
       
     CONSOLE STATION INFO:
       Latitude (onboard):           45.7
@@ -2085,26 +2101,44 @@ Davis Vantage EEPROM settings:
       Time zone code:               4
       GMT offset:                   N/A</span>
         
+    TRANSMITTERS: 
+<span class="highlight">      Channel 1:                    iss 
+      Channel 2:                    (N/A)
+      Channel 3:                    temp (as extra temperature 1)
+      Channel 4:                    (N/A)
+      Channel 5:                    (N/A)
+      Channel 6:                    (N/A)
+      Channel 7:                    (N/A)
+      Channel 8:                    (N/A)</span>
+
     RECEPTION STATS:
-      Total packets received:       11105
-      Total packets missed:         3092
-      Number of resynchronizations: 2
-      Longest good stretch:         50
-      Number of CRC errors:         1836
+      Total packets received:       10670
+      Total packets missed:         128
+      Number of resynchronizations: 0
+      Longest good stretch:         934
+      Number of CRC errors:         651
       
     BAROMETER CALIBRATION DATA:
-<span class="highlight">      Current barometer reading:    29.932 inHg
+<span class="highlight">      Current barometer reading:    29.834 inHg
       Altitude:                     700 feet</span>
-      Dew point:                    56 F
-      Virtual temperature:          73 F
-      Humidity correction factor:   30
+      Dew point:                    55 F
+      Virtual temperature:          59 F
+      Humidity correction factor:   27
       Correction ratio:             1.025
-      Correction constant:          +0.027 inHg
-      Gain:                         -1.000
-      Offset:                       -1.000</pre>
-    <p>Note that the console version number is available only on consoles with firmware 
+      Correction constant:          +0.000 inHg
+      Gain:                         0.000
+      Offset:                       -47.000
+      
+    OFFSETS:
+<span class="highlight">      Wind direction:               +0 deg
+      Inside Temperature:           +0.0 F
+      Inside Humidity:              +0%
+      Outside Temperature:          +0.0 F
+      Outside Humidity:             +0%
+      Extra Temperature 1:          +0.0 F</span></pre>
+    <p>The console version number is available only on consoles with firmware 
       dates after about 2006.</p>
-    <p><span class="highlight">Highlighted</span> values can be changed.</p>
+    <p><span class="highlight">Highlighted</span> values can be changed using this utility.</p>
     <p>For example, to change the archive interval to 10 minutes (600 seconds):</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-interval=600</pre>
     <p>To set the time zone code to Central European Time (code 20):</p>
@@ -2131,6 +2165,34 @@ Davis Vantage EEPROM settings:
       a different kind, you might want to reconfigure. For example, to change to a 
       0.1 mm bucket (bucket code &quot;2&quot;), use the following:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-bucket=2</pre>
+
+    <h3 id="vantage_configuring_additional_sensors">Configuring additional sensors</h3>
+    <p>If you have additional sensors for your Vantage station, you
+      can configure them using your console. However, if you have
+      a <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis
+      Weather Envoy receiver</a>, it will not have a console! As an alternative,
+      the <span class='code'>weewx</span>
+      utility <span class="code">wee_config_vantage</span> lets
+      you do this from the command line.</p>
+    <p>For example, to add an extra temperature sensor to channel 3, do the following:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-transmitter-type=3,1,2</pre>
+    <p>This says to turn on channel 3, set its type to 1 ("Temperature only"), and have it show up in the
+      database as <span class="code">extraTemp2</span>. Here's another example, this time for a combined
+      temperature / humidity sensor:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-transmitter-type=5,3,2,4</pre>
+    <p>This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"), 
+      and it will show up in the database
+      as <span class="code">extraTemp2</span> and <span class="code">extraHumid4</span>.</p>
+    <p>The <span class="code">--help</span> option will give you the codes for each type of sensor.</p>
+
+    <h3 id="vantage_setting_offsets">Setting offsets</h3>
+    <p>The Davis instruments can correct sensor errors by adding an <em>offset</em> to
+      their emitted values. This is rarely needed with one exception: Southern Hemisphere users.
+      Generally, you align a wireless Davis Integrated Sensor Suite to the south, so it gets
+      maximal insolation for its solar panel. However, in the Southern Hemisphere you want it to
+      point north, but this will cause the wind sensor to be off by 180&deg;. The solution is
+      to add a 180&deg; offset correction. You can do this with the following command:</p>
+    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-offset=windDir,180</pre>
 
     <h3 id="vantage_dumping_the_logger_memory">Dumping the logger memory</h3>
 	  <p>Generally, <span class="code">weewx</span> downloads only new archive 

@@ -22,7 +22,7 @@ description = """Configures the Davis Vantage weather station."""
 usage="""%prog: [config_file] [--help] [--info] [--clear]
                            [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
                            [--set-bucket=CODE] [--set-rain-year-start=MM] 
-                           [--set-calibration=VARIABLE,OFFSET]
+                           [--set-offset=VARIABLE,OFFSET]
                            [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
                            [--set-time] [--set-dst=[AUTO|ON|OFF]]
                            [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
@@ -58,8 +58,8 @@ def main():
                           "Specify '0' for 0.01 inches; '1' for 0.2 MM; '2' for 0.1 MM")
     parser.add_option("--set-rain-year-start", type=int, dest="set_rain_year_start", metavar="MM", 
                       help="Set the rain year start (1=Jan, 2=Feb, etc.).")
-    parser.add_option("--set-calibration", type=str, dest="set_calibration", metavar="VARIABLE,OFFSET",
-                      help="Set the onboard calibration for VARIABLE "\
+    parser.add_option("--set-offset", type=str, dest="set_offset", metavar="VARIABLE,OFFSET",
+                      help="Set the onboard offset for VARIABLE "\
                           "(inTemp, outTemp, extraTemp<1-7>, inHumid, outHumid, extraHumid<1-7>, "\
                           "soilTemp<1-4>, leafTemp<1-4>, windDir) to OFFSET (Fahrenheit, %, degrees)")
     parser.add_option("--set-transmitter-type", type=str, dest="set_transmitter_type", metavar="CHANNEL,TYPE,TEMP,HUM",
@@ -108,8 +108,8 @@ def main():
         set_bucket(station, options.set_bucket)
     if options.set_rain_year_start is not None:
         set_rain_year_start(station, options.set_rain_year_start)
-    if options.set_calibration is not None:
-        set_calibration(station, options.set_calibration)
+    if options.set_offset is not None:
+        set_offset(station, options.set_offset)
     if options.set_transmitter_type is not None:
         set_transmitter_type(station, options.set_transmitter_type)
     if options.set_time:
@@ -184,8 +184,8 @@ def info(station, dest=sys.stdout):
             gmt_offset_str = "%+.1f hours" % gmt_offset
             zone_code = 'N/A'
         print >>dest, """    CONSOLE STATION INFO:
-      Latitude (onboard):           %0.1f
-      Longitude (onboard):          %0.1f
+      Latitude (onboard):           %+0.1f
+      Longitude (onboard):          %+0.1f
       Use manual or auto DST?       %s
       DST setting:                  %s
       Use GMT offset or zone code?  %s
@@ -248,7 +248,7 @@ def info(station, dest=sys.stdout):
     # Add temperature/humidity/wind calibration if we can.
     try:
         calibration_dict = station.getStnCalibration()
-        print >> dest, """    OTHER CALIBRATION DATA:
+        print >> dest, """    OFFSETS:
       Wind direction:               %(wind)+.0f deg
       Inside Temperature:           %(inTemp)+.1f F
       Inside Humidity:              %(inHumid)+.0f%%
@@ -401,9 +401,9 @@ def set_rain_year_start(station, rain_year_start):
             elif ans == 'n':
                 print "Nothing done."
 
-def set_calibration(station, calibration_list):
-    """Set the on-board calibration for a temperature, humidity or wind direction variable."""
-    (variable, offset_str) = calibration_list.split(',')
+def set_offset(station, offset_list):
+    """Set the on-board offset for a temperature, humidity or wind direction variable."""
+    (variable, offset_str) = offset_list.split(',')
     # These variables may be calibrated.
     temp_variables = ['inTemp', 'outTemp' ] + \
                      ['extraTemp%d' % i for i in range(1, 8)] + \
@@ -417,51 +417,51 @@ def set_calibration(station, calibration_list):
     if variable == "windDir":
         offset = int(offset_str)
         if not -359 < offset < 359:
-            print >>sys.stderr, "Wind direction calibration %d is out of range." % (offset)
+            print >>sys.stderr, "Wind direction offset %d is out of range." % (offset)
         else:
             ans = None
             while ans not in ['y', 'n']:
-                print "Proceeding will set calibration for wind direction to %+d." % (offset)
+                print "Proceeding will set offset for wind direction to %+d." % (offset)
                 ans = raw_input("Are you sure you want to proceed (y/n)? ")
                 if ans == 'y' :
                     try:
                         station.setCalibrationWindDir(offset)
                     except StandardError, e:
-                        print >>sys.stderr, "Unable to set new wind calibration. Reason:\n\t****", e
+                        print >>sys.stderr, "Unable to set new wind offset. Reason:\n\t****", e
                     else:
-                        print "Wind direction calibration now set to %+d." % (offset)
+                        print "Wind direction offset now set to %+d." % (offset)
     elif variable in temp_variables:
         offset = float(offset_str)
         if not -12.8 < offset < 12.7:
-            print >>sys.stderr, "Temperature calibration %+.1f is out of range." % (offset)
+            print >>sys.stderr, "Temperature offset %+.1f is out of range." % (offset)
         else:
             ans = None
             while ans not in ['y', 'n']:
-                print "Proceeding will set calibration for temperature %s to %.1f." % (variable, offset)
+                print "Proceeding will set offset for temperature %s to %.1f." % (variable, offset)
                 ans = raw_input("Are you sure you want to proceed (y/n)? ")
                 if ans == 'y' :
                     try:
                         station.setCalibrationTemp(variable, offset)
                     except StandardError, e:
-                        print >>sys.stderr, "Unable to set new temperature calibration. Reason:\n\t****", e
+                        print >>sys.stderr, "Unable to set new temperature offset. Reason:\n\t****", e
                     else:
-                        print "Temperature calibration %s now set to %+.1f." % (variable, offset)
+                        print "Temperature offset %s now set to %+.1f." % (variable, offset)
     elif variable in humid_variables:
         offset = int(offset_str)
         if not -100 < offset < 100:
-            print >>sys.stderr, "Humidity calibration %+d is out of range." % (offset)
+            print >>sys.stderr, "Humidity offset %+d is out of range." % (offset)
         else:
             ans = None
             while ans not in ['y', 'n']:
-                print "Proceeding will set calibration for humidity %s to %+d." % (variable, offset)
+                print "Proceeding will set offset for humidity %s to %+d." % (variable, offset)
                 ans = raw_input("Are you sure you want to proceed (y/n)? ")
                 if ans == 'y' :
                     try:
                         station.setCalibrationHumid(variable, offset)
                     except StandardError, e:
-                        print >>sys.stderr, "Unable to set new humidity calibration. Reason:\n\t****", e
+                        print >>sys.stderr, "Unable to set new humidity offset. Reason:\n\t****", e
                     else:
-                        print "Humidity calibration %s now set to %+d." % (variable, offset)
+                        print "Humidity offset %s now set to %+d." % (variable, offset)
     else:
         print >>sys.stderr, "Unknown variable %s" % (variable)
 
