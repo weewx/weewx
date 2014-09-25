@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 #    Copyright (c) 2012 Tom Keffer <tkeffer@gmail.com>
 #
@@ -13,7 +13,6 @@
 import optparse
 import sys
 import syslog
-import time
 
 import weewx.drivers.vantage
 import weeutil.weeutil
@@ -23,6 +22,8 @@ description = """Configures the Davis Vantage weather station."""
 usage="""%prog: [config_file] [--help] [--info] [--clear]
                            [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
                            [--set-bucket=CODE] [--set-rain-year-start=MM] 
+                           [--set-calibration=VARIABLE,OFFSET]
+                           [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
                            [--set-time] [--set-dst=[AUTO|ON|OFF]]
                            [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
                            [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE] [--start | --stop]"""
@@ -57,6 +58,15 @@ def main():
                           "Specify '0' for 0.01 inches; '1' for 0.2 MM; '2' for 0.1 MM")
     parser.add_option("--set-rain-year-start", type=int, dest="set_rain_year_start", metavar="MM", 
                       help="Set the rain year start (1=Jan, 2=Feb, etc.).")
+    parser.add_option("--set-calibration", type=str, dest="set_calibration", metavar="VARIABLE,OFFSET",
+                      help="Set the onboard calibration for VARIABLE "\
+                          "(inTemp, outTemp, extraTemp<1-7>, inHumid, outHumid, extraHumid<1-7>, "\
+                          "soilTemp<1-4>, leafTemp<1-4>, windDir) to OFFSET (Fahrenheit, %, degrees)")
+    parser.add_option("--set-transmitter-type", type=str, dest="set_transmitter_type", metavar="CHANNEL,TYPE,TEMP,HUM",
+                      help="Set the transmitter type for CHANNEL (1-8), "\
+                          "TYPE (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, "\
+                          "5=rain, 6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none), "\
+                          "as extra TEMP station and extra HUM station (both 1-7, if applicable)")
     parser.add_option("--set-time", action="store_true", dest="set_time", help="Set the onboard clock to the current time.")
     parser.add_option("--set-dst",  dest="set_dst",  help="Set DST to 'ON', 'OFF', or 'AUTO'", metavar="AUTO|ON|OFF")
     parser.add_option("--set-tz-code", type=int, dest="set_tz_code", 
@@ -98,6 +108,10 @@ def main():
         set_bucket(station, options.set_bucket)
     if options.set_rain_year_start is not None:
         set_rain_year_start(station, options.set_rain_year_start)
+    if options.set_calibration is not None:
+        set_calibration(station, options.set_calibration)
+    if options.set_transmitter_type is not None:
+        set_transmitter_type(station, options.set_transmitter_type)
     if options.set_time:
         set_time(station)
     if options.set_dst:
@@ -181,6 +195,23 @@ def info(station, dest=sys.stdout):
     except:
         pass
     
+    # Add transmitter types for each channel, if we can:
+    transmitter_list = None
+    try:
+        transmitter_list = station.getStnTransmitters()
+        print >>dest, "    TRANSMITTERS: "
+        for transmitter_id in range(0, 8):
+            transmitter_type = transmitter_list[transmitter_id]["transmitter_type"]
+            print >>dest, "      Channel %d:                    %s %s" % (
+                transmitter_id + 1, transmitter_type,
+                 "(active)" if transmitter_list[transmitter_id]["listen"] == 1 else "(ignored)")
+            if transmitter_type in ['temp', 'temp_hum']:
+                print >>dest, "                                       As extra temperature %d" % transmitter_list[transmitter_id]["temp"]
+            if transmitter_type in ['hum', 'temp_hum']:
+                print >>dest, "                                       As extra humidity %d" % transmitter_list[transmitter_id]["hum"]
+        print >>dest, ""
+    except:
+        pass
     
     # Add reception statistics if we can:
     try:
@@ -211,6 +242,46 @@ def info(station, dest=sys.stdout):
       """   % _bar_list
     except:
         pass
+
+    # Add temperature/humidity/wind calibration if we can.
+    try:
+        calibration_dict = station.getStnCalibration()
+        print >> dest, """    OTHER CALIBRATION DATA:
+      Wind direction:               %(wind)+.0f deg
+      Inside Temperature:           %(inTemp)+.1f F
+      Inside Humidity:              %(inHumid)+.0f%%
+      Outside Temperature:          %(outTemp)+.1f F
+      Outside Humidity:             %(outHumid)+.0f%%""" % calibration_dict
+        if transmitter_list is not None:
+            # Only print the calibrations for channels that we are listening to.
+            for extraTemp in range(1, 8):
+                for transmitter_id in range(0, 8):
+                    transmitter_type = transmitter_list[transmitter_id]["transmitter_type"]
+                    if transmitter_type in ['temp', 'temp_hum'] and \
+                            extraTemp == transmitter_list[transmitter_id]["temp"]:
+                        print >> dest, "      Extra Temperature %d:          %+.1f F" \
+                           % (extraTemp, calibration_dict["extraTemp%d" % extraTemp])
+            for extraHumid in range(1, 8):
+                for transmitter_id in range(0, 8):
+                    transmitter_type = transmitter_list[transmitter_id]["transmitter_type"]
+                    if transmitter_type in ['hum', 'temp_hum'] and \
+                            extraHumid == transmitter_list[transmitter_id]["hum"]:
+                        print >> dest, "      Extra Humidity %d:             %+.1f F" \
+                           % (extraHumid, calibration_dict["extraHumid%d" % extraHumid])
+            for transmitter_id in range(0, 8):
+                transmitter_type = transmitter_list[transmitter_id]["transmitter_type"]
+                if transmitter_type in ['soil', 'leaf_soil']:
+                    for soil in range(1, 5):
+                        print >> dest, "      Soil Temperature %d:           %+.1f F" \
+                            % (soil, calibration_dict["soilTemp%d" % soil])
+            for transmitter_id in range(0, 8):
+                transmitter_type = transmitter_list[transmitter_id]["transmitter_type"]
+                if transmitter_type in ['leaf', 'leaf_soil']:
+                    for leaf in range(1, 5):
+                        print >> dest, "      Leaf Temperature %d:           %+.1f F" % (leaf, calibration_dict["leafTemp%d" % leaf])
+        print >> dest, ""
+    except:
+        raise
 
 def set_interval(station, new_interval_seconds):
     """Set the console archive interval."""
@@ -327,6 +398,100 @@ def set_rain_year_start(station, rain_year_start):
                     print "Rain year start now set to %d." % (station.rain_year_start,)
             elif ans == 'n':
                 print "Nothing done."
+
+def set_calibration(station, calibration_list):
+    """Set the on-board calibration for a temperature, humidity or wind direction variable."""
+    (variable, offset_str) = calibration_list.split(',')
+    # These variables may be calibrated.
+    temp_variables = ['inTemp', 'outTemp' ] + \
+                     ['extraTemp%d' % i for i in range(1, 8)] + \
+                     ['soilTemp%d' % i for i in range(1, 5)] + \
+                     ['leafTemp%d' % i for i in range(1, 5)]
+
+    humid_variables = ['inHumid', 'outHumid'] + \
+        ['extraHumid%d' % i for i in range(1, 8)]
+
+    # Wind direction can also be calibrated.
+    if variable == "windDir":
+        offset = int(offset_str)
+        if not -359 < offset < 359:
+            print >>sys.stderr, "Wind direction calibration %d is out of range." % (offset)
+        else:
+            ans = None
+            while ans not in ['y', 'n']:
+                print "Proceeding will set calibration for wind direction to %+d." % (offset)
+                ans = raw_input("Are you sure you want to proceed (y/n)? ")
+                if ans == 'y' :
+                    try:
+                        station.setCalibrationWindDir(offset)
+                    except StandardError, e:
+                        print >>sys.stderr, "Unable to set new wind calibration. Reason:\n\t****", e
+                    else:
+                        print "Wind direction calibration now set to %+d." % (offset)
+    elif variable in temp_variables:
+        offset = float(offset_str)
+        if not -12.8 < offset < 12.7:
+            print >>sys.stderr, "Temperature calibration %+.1f is out of range." % (offset)
+        else:
+            ans = None
+            while ans not in ['y', 'n']:
+                print "Proceeding will set calibration for temperature %s to %.1f." % (variable, offset)
+                ans = raw_input("Are you sure you want to proceed (y/n)? ")
+                if ans == 'y' :
+                    try:
+                        station.setCalibrationTemp(variable, offset)
+                    except StandardError, e:
+                        print >>sys.stderr, "Unable to set new temperature calibration. Reason:\n\t****", e
+                    else:
+                        print "Temperature calibration %s now set to %+.1f." % (variable, offset)
+    elif variable in humid_variables:
+        offset = int(offset_str)
+        if not -100 < offset < 100:
+            print >>sys.stderr, "Humidity calibration %+d is out of range." % (offset)
+        else:
+            ans = None
+            while ans not in ['y', 'n']:
+                print "Proceeding will set calibration for humidity %s to %+d." % (variable, offset)
+                ans = raw_input("Are you sure you want to proceed (y/n)? ")
+                if ans == 'y' :
+                    try:
+                        station.setCalibrationHumid(variable, offset)
+                    except StandardError, e:
+                        print >>sys.stderr, "Unable to set new humidity calibration. Reason:\n\t****", e
+                    else:
+                        print "Humidity calibration %s now set to %+d." % (variable, offset)
+    else:
+        print >>sys.stderr, "Unknown variable %s" % (variable)
+
+def set_transmitter_type(station, transmitter_list):
+    """Set the transmitter type for one of the eight channels."""
+
+    transmitter_list = map((lambda x: int(x) if x != "" else None), transmitter_list.split(','))
+    channel = transmitter_list[0]
+    transmitter_type = transmitter_list[1]
+    extra_temp = transmitter_list[2] if len(transmitter_list) > 2 else None
+    extra_hum = transmitter_list[3] if len(transmitter_list) > 3 else None 
+
+    transmitter_type_name = weewx.drivers.vantage.Vantage.transmitter_type_dict[transmitter_type]
+    if transmitter_type_name in ['temp', 'temp_hum'] and extra_temp not in range(1,8):
+        print "Transmitter type %s requires extra_temp in range 1-7'" % transmitter_type_name
+        return
+    if transmitter_type_name in ['hum', 'temp_hum'] and extra_hum not in range(1,8):
+        print "Transmitter type %s requires extra_hum in range 1-7'" % transmitter_type_name
+        return
+    ans = None
+    while ans not in ['y', 'n']:
+        print "Proceeding will set channel %d to type %d (%s)." % (channel, transmitter_type, transmitter_type_name)
+        ans = raw_input("Are you sure you want to proceed (y/n)? ")
+        if ans == 'y' :
+            try:
+                station.setTransmitterType(channel, transmitter_type, extra_temp, extra_hum)
+            except StandardError, e:
+                print >>sys.stderr, "Unable to set transmitter type. Reason:\n\t****", e
+            else:
+                print "Transmitter %d now set to type %d." % (channel, transmitter_type)
+        else:
+            print "Nothing done."
 
 def set_time(station):
     print "Setting time on console..."

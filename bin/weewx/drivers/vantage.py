@@ -338,6 +338,9 @@ class Vantage(weewx.abstractstation.AbstractStation):
     wind_unit_dict        = {0:'mile_per_hour', 1:'meter_per_second', 2:'km_per_hour', 3:'knot'}
     wind_cup_dict         = {0:'small', 1:'large'}
     rain_bucket_dict      = {0: "0.01 inches", 1: "0.2 MM", 2: "0.1 MM"}
+    transmitter_type_dict = {0: 'iss', 1: 'temp', 2: 'hum', 3: 'temp_hum', 4: 'wind',
+                             5: 'rain', 6: 'leaf', 7: 'soil', 8: 'leaf_soil',
+                             9: 'sensorlink', 10: 'none'}
     
     def __init__(self, **vp_dict) :
         """Initialize an object of type Vantage.
@@ -371,12 +374,13 @@ class Vantage(weewx.abstractstation.AbstractStation):
         """
 
         # TODO: These values should really be retrieved dynamically from the VP:
-        self.iss_id           = int(vp_dict.get('iss_id', 1))
         self.model_type       = 2 # = 1 for original VantagePro, = 2 for VP2
 
         # These come from the configuration dictionary:
         self.wait_before_retry= float(vp_dict.get('wait_before_retry', 1.2))
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
+        self.iss_id           = vp_dict.get('iss_id', None)
+        if self.iss_id is not None: self.iss_id           = int(self.iss_id) 
         
         self.save_monthRain = None
         self.max_dst_jump = 7200
@@ -789,6 +793,100 @@ class Vantage(weewx.abstractstation.AbstractStation):
 
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Lamp set to '%s'" % onoff)
         
+    def setTransmitterType(self, new_channel, new_transmitter_type, new_extra_temp, new_extra_hum):
+        """Set the transmitter type for one of the eight channels."""
+        
+        # Default value just for tidiness.
+        new_temp_hum_bits = 0xFF
+
+        # Check arguments are consistent.
+        if new_channel not in range(0, 8):
+            raise weewx.ViolatedPrecondition("Invalid channel %d" % new_channel)
+        if new_transmitter_type not in range(0, 11):
+            raise weewx.ViolatedPrecondition("Invalid transmitter type %d" % new_transmitter_type)
+        if Vantage.transmitter_type_dict[new_transmitter_type] in ['temp', 'temp_hum']:
+            if new_extra_temp not in range(1, 9):
+                raise weewx.ViolatedPrecondition("Invalid extra temperature number %d" % new_extra_temp)
+            # Extra temp is origin 0.
+            new_temp_hum_bits = new_temp_hum_bits & 0xF0 | (new_extra_temp - 1)
+        if Vantage.transmitter_type_dict[new_transmitter_type] in ['hum', 'temp_hum']:
+            if new_extra_hum not in range(1, 9):
+                raise weewx.ViolatedPrecondition("Invalid extra humidity number %d" % new_extra_hum)
+            # Extra humidity is origin 1.
+            new_temp_hum_bits = new_temp_hum_bits & 0x0F | (new_extra_hum << 4)
+
+        # Preserve top nibble, is related to repeaters.
+        old_type_bits = self._getEEPROM_value(0x19 + (new_channel-1)*2)[0]
+        new_type_bits = old_type_bits & 0xF0 | new_transmitter_type
+        # Transmitter type 10 is "none"; turn off listening too.
+        usetx = 1 if new_transmitter_type != 10 else 0
+        old_usetx_bits = self._getEEPROM_value(0x17)[0]
+        new_usetx_bits = old_usetx_bits & ~(1 << (new_channel - 1)) | usetx * (1 << new_channel - 1)
+        
+        # Tell the console to put two bytes in hex location 0x19 or 0x1B or ... depending on channel.
+        self.port.send_data("EEBWR %X 02\n" % (0x19 + (new_channel-1)*2))
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(new_type_bits) + chr(new_temp_hum_bits), max_tries=1)
+        # Tell the console to put one byte in hex location 0x17
+        self.port.send_data("EEBWR 17 01\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(new_usetx_bits), max_tries=1)
+        # Then call NEWSETUP to get it to stick:
+        self.port.send_data("NEWSETUP\n")
+        
+        self._setup()
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Transmitter type for channel %d set to %d (%s)" %(
+            new_channel, new_transmitter_type, Vantage.transmitter_type_dict[new_transmitter_type]))
+
+    def setCalibrationWindDir(self, offset):
+        """Set the on-board wind direction calibration."""
+        if offset < -359 or offset > 359:
+            raise weewx.ViolatedPrecondition("Offset %d out of range [-359, 359]." % offset)
+        bytes = struct.pack("<h", offset)
+        # Tell the console to put two bytes in hex location 0x4D
+        self.port.send_data("EEBWR 4D 02\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(bytes, max_tries=1)
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Wind calibration set to %d" % (offset))
+
+    def setCalibrationTemp(self, variable, offset):
+        """Set an on-board temperature calibration."""
+        # Offset is in tenths of degree Fahrenheit.
+        if offset < -12.8 or offset > 12.7:
+            raise weewx.ViolatedPrecondition("Offset %.1f out of range [-12.8, 12.7]." % offset)
+        byte = struct.pack("b", int(round(offset*10)))
+        variable_dict = { 'outTemp': 0x34 }
+        for i in range(1, 8): variable_dict['extraTemp%d' % i] = 0x34 + i 
+        for i in range(1, 5): variable_dict['soilTemp%d' % i] = 0x3B + i 
+        for i in range(1, 5): variable_dict['leafTemp%d' % i] = 0x3F + i 
+        if variable == "inTemp":
+            # Inside temp is special, needs ones' complement in next byte.
+            complement_byte = struct.pack("B", ~int(round(offset*10)) & 0xFF)
+            self.port.send_data("EEBWR 32 02\n")
+            self.port.send_data_with_crc16(byte + complement_byte, max_tries=1)
+        elif variable in variable_dict:
+            # Other variables are just sent as-is.
+            self.port.send_data("EEBWR %X 01\n" % variable_dict[variable])
+            self.port.send_data_with_crc16(byte, max_tries=1)
+        else:
+            raise weewx.ViolatedPrecondition("Variable name %s not known" % variable)
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Temperature calibration %s set to %.1f" % (variable, offset))
+
+    def setCalibrationHumid(self, variable, offset):
+        """Set an on-board humidity calibration."""
+        # Offset is in percentage points.
+        if offset < -100 or offset > 100:
+            raise weewx.ViolatedPrecondition("Offset %d out of range [-100, 100]." % offset)
+        byte = struct.pack("b", offset)
+        variable_dict = { 'inHumid': 0x44, 'outHumid': 0x45 }
+        for i in range(1, 8): variable_dict['extraHumid%d' % i] = 0x45 + i 
+        if variable in variable_dict:
+            self.port.send_data("EEBWR %X 01\n" % variable_dict[variable])
+            self.port.send_data_with_crc16(byte, max_tries=1)
+        else:
+            raise weewx.ViolatedPrecondition("Variable name %s not known" % variable)
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Humidity calibration %s set to %d" % (variable, offset))
+
     def clearLog(self):
         """Clear the internal archive memory in the Vantage."""
         for unused_count in xrange(self.max_tries):
@@ -858,6 +956,75 @@ class Vantage(weewx.abstractstation.AbstractStation):
         
         return (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset)
 
+    def getStnTransmitters(self):
+        """ Get the types of transmitters on the eight channels."""
+
+        transmitters = [ ]
+        use_tx = self._getEEPROM_value(0x17)[0]
+        transmitter_data_2 = self._getEEPROM_value(0x19, "8H")
+        
+        transmitter_type_list = [Vantage.transmitter_type_dict[ushort & 0x0F] for ushort in transmitter_data_2]
+        listen_list = [(use_tx >> transmitter_id) & 1 for transmitter_id in range(8)]
+
+        
+        transmitter_data = self._getEEPROM_value(0x19, "16B")
+        
+        for transmitter_id in range(8):
+            transmitter_type = Vantage.transmitter_type_dict[transmitter_data[transmitter_id * 2] & 0x0F]
+            transmitter = {"transmitter_type" : transmitter_type,
+                           "listen"           : (use_tx >> transmitter_id) & 1 }
+            if transmitter_type in ['temp', 'temp_hum']:
+                # Extra temperature is origin 0.
+                transmitter['temp'] = (transmitter_data[transmitter_id * 2 + 1] & 0xF) + 1
+            if transmitter_type in ['hum', 'temp_hum']:
+                # Extra humidity is origin 1.
+                transmitter['hum'] = transmitter_data[transmitter_id * 2 + 1] >> 4
+            transmitters.append(transmitter)
+        return transmitters
+
+    def getStnCalibration(self):
+        """ Get the temperature/humidity/wind calibrations built into the console. """
+        (inTemp, inTempComp, outTemp,
+            extraTemp1, extraTemp2, extraTemp3, extraTemp4, extraTemp5, extraTemp6, extraTemp7,
+            soilTemp1, soilTemp2, soilTemp3, soilTemp4, leafTemp1, leafTemp2, leafTemp3, leafTemp4,
+            inHumid, 
+            outHumid, extraHumid1, extraHumid2, extraHumid3, extraHumid4, extraHumid5, extraHumid6, extraHumid7,
+            wind) = self._getEEPROM_value(0x32, "<27bh")
+        # inTempComp is 1's complement of inTemp.
+        if inTemp + inTempComp != -1:
+            syslog.syslog(syslog.LOG_ERR, "vantage: Inconsistent EEPROM calibration values")
+            return None;
+        # Temperatures are in tenths of a degree F; Humidity in 1 percent.
+        return {
+            "inTemp": inTemp / 10,
+            "outTemp": outTemp / 10,
+            "extraTemp1": extraTemp1 / 10,
+            "extraTemp2": extraTemp2 / 10,
+            "extraTemp3": extraTemp3 / 10,
+            "extraTemp4": extraTemp4 / 10,
+            "extraTemp5": extraTemp5 / 10,
+            "extraTemp6": extraTemp6 / 10,
+            "extraTemp7": extraTemp7 / 10,
+            "soilTemp1": soilTemp1 / 10,
+            "soilTemp2": soilTemp2 / 10,
+            "soilTemp3": soilTemp3 / 10,
+            "soilTemp4": soilTemp4 / 10,
+            "leafTemp1": leafTemp1 / 10,
+            "leafTemp2": leafTemp2 / 10,
+            "leafTemp3": leafTemp3 / 10,
+            "leafTemp4": leafTemp4 / 10,
+            "inHumid": inHumid,
+            "outHumid": outHumid,
+            "extraHumid1": extraHumid1,
+            "extraHumid2": extraHumid2,
+            "extraHumid3": extraHumid3,
+            "extraHumid4": extraHumid4,
+            "extraHumid5": extraHumid5,
+            "extraHumid6": extraHumid6,
+            "extraHumid7": extraHumid7,
+            "wind": wind
+            }
+      
     def startLogger(self):
         self.port.send_command("START\n")
         
@@ -927,6 +1094,29 @@ class Vantage(weewx.abstractstation.AbstractStation):
             _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
                 _loop_map['monthRain'] = _loop_map['yearRain'] = _val100
             _loop_map['rainRate']    = _big_val100
+
+        # Try to guess the ISS ID for gauging reception strength.
+        if self.iss_id is None:
+            stations = self.getStnTransmitters()
+            # Wind retransmitter is best candidate.
+            for station_id in range(0, 8):
+                if stations[station_id]['transmitter_type'] == 'wind':
+                    self.iss_id = station_id + 1  # Origin 1.
+                    break
+            else:
+                # ISS is next best candidate.
+                for station_id in range(0, 8):
+                    if stations[station_id]['transmitter_type'] == 'iss':
+                        self.iss_id = station_id + 1  # Origin 1.
+                        break
+                else:
+                    # On Vue, can use VP2 ISS, which reports as "rain"
+                    for station_id in range(0, 8):
+                        if stations[station_id]['transmitter_type'] == 'rain':
+                            self.iss_id = station_id + 1  # Origin 1.
+                            break
+                    else:
+                        self.iss_id = 1   # Pick a reasonable default.
 
     def _getEEPROM_value(self, offset, v_format="B"):
         """Return a list of values from the EEPROM starting at a specified offset, using a specified format"""
