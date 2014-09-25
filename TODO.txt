@@ -1,5 +1,7 @@
 TODO before the next release:
 
+Document the new capabilities of the wee_config_vantage utility.
+
 Figure out why the heartbeat doesn't work on the WMR200.
 
 add documentation for the extension installer and extension packaging.

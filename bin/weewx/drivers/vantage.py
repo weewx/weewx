@@ -842,11 +842,11 @@ class Vantage(weewx.abstractstation.AbstractStation):
         """Set the on-board wind direction calibration."""
         if offset < -359 or offset > 359:
             raise weewx.ViolatedPrecondition("Offset %d out of range [-359, 359]." % offset)
-        bytes = struct.pack("<h", offset)
+        nbytes = struct.pack("<h", offset)
         # Tell the console to put two bytes in hex location 0x4D
         self.port.send_data("EEBWR 4D 02\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(bytes, max_tries=1)
+        self.port.send_data_with_crc16(nbytes, max_tries=1)
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Wind calibration set to %d" % (offset))
 
     def setCalibrationTemp(self, variable, offset):
@@ -960,13 +960,7 @@ class Vantage(weewx.abstractstation.AbstractStation):
         """ Get the types of transmitters on the eight channels."""
 
         transmitters = [ ]
-        use_tx = self._getEEPROM_value(0x17)[0]
-        transmitter_data_2 = self._getEEPROM_value(0x19, "8H")
-        
-        transmitter_type_list = [Vantage.transmitter_type_dict[ushort & 0x0F] for ushort in transmitter_data_2]
-        listen_list = [(use_tx >> transmitter_id) & 1 for transmitter_id in range(8)]
-
-        
+        use_tx =           self._getEEPROM_value(0x17)[0]
         transmitter_data = self._getEEPROM_value(0x19, "16B")
         
         for transmitter_id in range(8):

@@ -202,13 +202,15 @@ def info(station, dest=sys.stdout):
         print >>dest, "    TRANSMITTERS: "
         for transmitter_id in range(0, 8):
             transmitter_type = transmitter_list[transmitter_id]["transmitter_type"]
-            print >>dest, "      Channel %d:                    %s %s" % (
-                transmitter_id + 1, transmitter_type,
-                 "(active)" if transmitter_list[transmitter_id]["listen"] == 1 else "(ignored)")
             if transmitter_type in ['temp', 'temp_hum']:
-                print >>dest, "                                       As extra temperature %d" % transmitter_list[transmitter_id]["temp"]
-            if transmitter_type in ['hum', 'temp_hum']:
-                print >>dest, "                                       As extra humidity %d" % transmitter_list[transmitter_id]["hum"]
+                comment = "(as extra temperature %d)" % transmitter_list[transmitter_id]["temp"]
+            elif transmitter_type in ['hum', 'temp_hum']:
+                comment = "(as extra humidity %d)" % transmitter_list[transmitter_id]["hum"]
+            else:
+                comment = ""
+            if transmitter_type == "none":
+                transmitter_type = "(N/A)"
+            print >>dest, "      Channel %d:                    %s %s" % (transmitter_id + 1, transmitter_type, comment)
         print >>dest, ""
     except:
         pass

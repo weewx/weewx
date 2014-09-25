@@ -3,8 +3,19 @@ weewx change history
 
 X.X.X XX/XX/XX
 
+Added the ability to configure new Vantage sensor types without using
+the console. This will be useful to Envoy users.  Thanks to user Deborah 
+Pickett for this contribution! 
+
+Allow calibration constants to be set in the Vantage EEPROM. This will
+particularly be useful to southern hemisphere users who may want to
+align their ISS to true north (instead of south), then apply a 180
+correction. Thanks again to Deborah Pickett!
+ 
 Enabled multiple rsync instances for a single weewx instance.
  
+More extensive debug information for rscync users.
+
 Added catchup to the WS28xx driver, but still no hardware record generation.
 
 Moved clock synchronization options clock_check and max_drift back to
@@ -29,8 +40,6 @@ generation of reports.
 
 Ensure correct location, lat, lon, and altitude modifications in the
 debian postinst installer script.
-
-More extensive debug information for rscync users.
 
 In the debian installer, default to ttyUSB0 instead of ttyS0 for stations
 with a serial interface.
