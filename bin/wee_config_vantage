@@ -204,7 +204,7 @@ def info(station, dest=sys.stdout):
             transmitter_type = transmitter_list[transmitter_id]["transmitter_type"]
             if transmitter_type in ['temp', 'temp_hum']:
                 comment = "(as extra temperature %d)" % transmitter_list[transmitter_id]["temp"]
-            elif transmitter_type in ['hum', 'temp_hum']:
+            if transmitter_type in ['hum', 'temp_hum']:
                 comment = "(as extra humidity %d)" % transmitter_list[transmitter_id]["hum"]
             else:
                 comment = ""
