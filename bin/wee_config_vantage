@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#    Copyright (c) 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2012-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -60,8 +60,8 @@ def main():
                       help="Set the rain year start (1=Jan, 2=Feb, etc.).")
     parser.add_option("--set-offset", type=str, dest="set_offset", metavar="VARIABLE,OFFSET",
                       help="Set the onboard offset for VARIABLE "\
-                          "(inTemp, outTemp, extraTemp<1-7>, inHumid, outHumid, extraHumid<1-7>, "\
-                          "soilTemp<1-4>, leafTemp<1-4>, windDir) to OFFSET (Fahrenheit, %, degrees)")
+                          "(inTemp, outTemp, extraTemp[1-7], inHumid, outHumid, extraHumid[1-7], "\
+                          "soilTemp[1-4], leafTemp[1-4], windDir) to OFFSET (Fahrenheit, %, degrees)")
     parser.add_option("--set-transmitter-type", type=str, dest="set_transmitter_type", metavar="CHANNEL,TYPE,TEMP,HUM",
                       help="Set the transmitter type for CHANNEL (1-8), "\
                           "TYPE (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, "\
