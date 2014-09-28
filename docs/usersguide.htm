@@ -2192,12 +2192,17 @@ Davis Vantage EEPROM settings:
     <p>The <span class="code">--help</span> option will give you the codes for each type of sensor.</p>
 
     <h3 id="vantage_setting_offsets">Setting offsets</h3>
-    <p>The Davis instruments can correct sensor errors by adding an <em>offset</em> to
-      their emitted values. This is rarely needed with one exception: Southern Hemisphere users.
-      Generally, you align a wireless Davis Integrated Sensor Suite to the south, so it gets
-      maximal insolation for its solar panel. However, in the Southern Hemisphere you want it to
-      point north, but this will cause the wind sensor to be off by 180&deg;. The solution is
-      to add a 180&deg; offset correction. You can do this with the following command:</p>
+    <p>The Davis instruments can correct sensor errors by adding
+      an <em>offset</em> to their emitted values. This is particularly
+      useful for Southern Hemisphere users.  Davis fits the wind vane
+      to the Integrated Sensor Suite (ISS) in a position optimized for
+      Northern Hemisphere users, who face the solar panel to the
+      south. Users south of the equator must orient the ISS's solar
+      panel to the north to get maximal insolation, resulting in a
+      180&deg; error in the wind direction.  The solution is to add a
+      180&deg; offset correction. You can do this with the following
+      command:</p>
+
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_vantage --set-offset=windDir,180</pre>
 
     <h3 id="vantage_dumping_the_logger_memory">Dumping the logger memory</h3>

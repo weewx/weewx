@@ -201,14 +201,16 @@ def info(station, dest=sys.stdout):
         transmitter_list = station.getStnTransmitters()
         print >>dest, "    TRANSMITTERS: "
         for transmitter_id in range(0, 8):
+            comment = ""
             transmitter_type = transmitter_list[transmitter_id]["transmitter_type"]
-            if transmitter_type in ['temp', 'temp_hum']:
+            if transmitter_type == 'temp_hum':
+                comment = "(as extra temperature %d and extra humidity %d)" % \
+                    ( transmitter_list[transmitter_id]["temp"], transmitter_list[transmitter_id]["hum"])
+            elif transmitter_type == 'temp':
                 comment = "(as extra temperature %d)" % transmitter_list[transmitter_id]["temp"]
-            if transmitter_type in ['hum', 'temp_hum']:
+            elif transmitter_type == 'hum':
                 comment = "(as extra humidity %d)" % transmitter_list[transmitter_id]["hum"]
-            else:
-                comment = ""
-            if transmitter_type == "none":
+            elif transmitter_type == 'none':
                 transmitter_type = "(N/A)"
             print >>dest, "      Channel %d:                    %s %s" % (transmitter_id + 1, transmitter_type, comment)
         print >>dest, ""
@@ -470,11 +472,18 @@ def set_transmitter_type(station, transmitter_list):
 
     transmitter_list = map((lambda x: int(x) if x != "" else None), transmitter_list.split(','))
     channel = transmitter_list[0]
+    if not 1 <=  channel <= 8:
+        print "Channel number must be between 1 and 8"
+        return 
     transmitter_type = transmitter_list[1]
     extra_temp = transmitter_list[2] if len(transmitter_list) > 2 else None
     extra_hum = transmitter_list[3] if len(transmitter_list) > 3 else None 
 
-    transmitter_type_name = weewx.drivers.vantage.Vantage.transmitter_type_dict[transmitter_type]
+    try:
+        transmitter_type_name = weewx.drivers.vantage.Vantage.transmitter_type_dict[transmitter_type]
+    except KeyError:
+        print "Unknown transmitter type (%s)" % transmitter_type
+        return
     if transmitter_type_name in ['temp', 'temp_hum'] and extra_temp not in range(1,8):
         print "Transmitter type %s requires extra_temp in range 1-7'" % transmitter_type_name
         return
