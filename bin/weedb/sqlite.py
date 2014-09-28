@@ -80,6 +80,10 @@ class Connection(weedb.Connection):
             # The Pysqlite driver does not include the database file path.
             # Include it in case it might be useful.
             raise weedb.OperationalError("Unable to open database '%s'" % (self.file_path,))
+        
+        if pragmas is not None:
+            for pragma in pragmas:
+                connection.execute("PRAGMA %s=%s;" % (pragma, pragmas[pragma]))
         weedb.Connection.__init__(self, connection, database, 'sqlite')
 
     def cursor(self):
