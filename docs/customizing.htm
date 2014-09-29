@@ -2771,7 +2771,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         will use the new unit system.</p>
 
       <h1 id="porting">Porting to new weather station hardware</h1>
-      <p>Naturally, this is an advanced topic but, nevertheless, I'd really
+      <p>Naturally, this is an advanced topic but, nevertheless, I'd
         like to encourage any Python wizards out there to give it a try. Of
         course, I have selfish reasons for encouraging you: I don't want to
         have to go out and buy every type of hardware there is! It's expensive
@@ -2780,16 +2780,19 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
       <h2>Implement the driver</h2>
       <p>Inherit from the abstract base class
         <span class="code">weewx.abstractstation.AbstractStation</span>.
-        Try to implement as many of its methods as you can. At the very
-        minimum, you must implement <span class="code">hardware_name</span>
+        Try to implement as many of its methods as you can. At the
+        very minimum, you must implement the first two
+        methods, <span class="code">hardware_name</span>
         and <span class="code">genLoopPackets</span>. </p>
-      <p><span class="code">hardware_name</span>: Return a string with a short
-        nickname for the hardware, such as "<span class="code">ACME X90</span>"</p>
-      <p><span class="code">genLoopPackets</span>: This should be a generator
-        function that yields loop packets, one after another. Don't worry about
-        stopping it: the engine will do this when an archive record is due. A
-        loop packet is a dictionary. At the very minimum it must contain keys
-        for the observation time and units.</p>
+      <h3><span class="code">hardware_name</span></h3>
+      <p>Return a string with a short nickname for the hardware, such
+        as "<span class="code">ACME X90</span>"</p>
+      <h3><span class="code">genLoopPackets</span></h3>
+      <p>This should be a generator function that yields loop packets,
+        one after another. Don't worry about stopping it: the engine
+        will do this when an archive record is due. A loop packet is a
+        dictionary. At the very minimum it must contain keys for the
+        observation time and units.</p>
       <table class="indent" style="width: 60%">
 	<caption>Required keys</caption>
         <tbody>
@@ -2865,23 +2868,39 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         </tbody>
       </table>
       <p></p>
-      <p><span class="code">genArchiveRecords:</span> If your hardware does not
-        have an archive record logger, then <span class="code">weewx</span> can
-        do the record generation for you. It will automatically collect all the
-        types it sees in your loop packets then emit a record with the averages
-        (in some cases the sum or max value) of all those types. If it doesn't
-        see a type, then it won't appear in the emitted record. If your
-        hardware does have a logger, then you should implement method
-        <span class="code">genArchiveRecords</span>
-        as well. It should be a generator function that returns all the records
-        since a given time. </p>
-      <p><span class="code">closePort:</span> If the driver needs to close a
-        serial port, terminate a thread, close a database, or perform any
-        other activity before the application terminates, do it in this
-        method.</p>
-      <p><span class="code">loader:</span> This is a factory function that
-        returns an instance of your driver. It has two arguments: the
-        configuration dictionary, and a reference to the weewx engine.</p>
+      <h3><span class="code">genArchiveRecords</span></h3>
+      <p>If your hardware does not have an archive record logger,
+        then <span class="code">weewx</span> can do the record
+        generation for you. It will automatically collect all the
+        types it sees in your loop packets then emit a record with the
+        averages (in some cases the sum or max value) of all those
+        types. If it doesn't see a type, then it won't appear in the
+        emitted record. If your hardware does have a logger, then you
+        should implement method
+        <span class="code">genArchiveRecords</span> as well. It should
+        be a generator function that returns all the records since a
+        given time. </p>
+      <h3><span class="code">getTime</span></h3>
+      <p>If your hardware has an onboard clock and it supports reading
+	the time from it, then you may want to implement this
+	method. It takes no argument. It should return the time in
+	Unix Epoch Time. </p>
+      <h3><span class="code">setTime</span></h3>
+      <p>If your hardware has an onboard clock and it supports setting
+	it, then you may want to implement this method.  It takes no
+	argument and does not need to return anything.</p>
+      <h3><span class="code">closePort</span></h3>
+      <p>If the driver needs to close a serial port, terminate a
+        thread, close a database, or perform any other activity before
+        the application terminates, then you must supply this
+        function. <span class='code'>Weewx</span> will call it if it
+        needs to shut down your console (usually in the case of an
+        error).</p>
+      <h3><span class="code">loader</span></h3>
+      <p>This is a factory function that returns an instance of your
+        driver. It has two arguments: the configuration dictionary,
+        and a reference to the weewx engine.</p>
+
       <h2>Define the configuration</h2>
       <p>You then include a new section in the configuration file <span class="code">weewx.conf</span>
         that includes any options your driver needs. It should also include an
@@ -2889,10 +2908,16 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         driver can be found. Set option <span class="code">station_type</span>
         to your new section type and your driver will be loaded.</p>
       <h2>Examples</h2>
-      <p>Take a look at the simulator code in <span class="code">simulator.py</span>
-        for a dirt simple example of a driver. The next most complicated is the
+      <p>Before starting, take a look at the simulator code
+	in <span class='code'>bin/weewx/drivers/simulator.py</span>. It's
+	dirt simple and you can easily play with it. Many people have
+	successfully used it as a starting point for writing their own
+	custom driver.</p>
+      <p>The next most complicated is the
         driver for the WMR100 series, located in <span class="code">wmr100.py</span>.
-        The driver for the Vantage series is by far the most complicated. It
+	It reads from a USB port and has to do some tricky buffer decoding. Nevertheless,
+	it's general architecture is fairly straightforward.</p>
+      <p>The driver for the Vantage series is by far the most complicated. It
         actually multi-inherits from not only <span class="code">AbstractStation</span>,
         but also <span class="code">StdService</span>. That is, it also
         participates in the engine as a service.</p>
