@@ -191,6 +191,8 @@ def startOfInterval(time_ts, interval, grace=1):
     >>> start_ts = time.mktime(time.strptime("2013-07-04 01:04:59", "%Y-%m-%d %H:%M:%S"))
     >>> time.ctime(startOfInterval(start_ts,  300))
     'Thu Jul  4 01:00:00 2013'
+    >>> startOfInterval(1412088660, 60)
+    1412088600
     """
 
     interval_m = interval/60
