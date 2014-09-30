@@ -76,6 +76,18 @@ caption {
   margin-left: 40px;
   margin-right: 80px;
 }
+.station_data {
+  margin-left: 40px;
+  margin-right: 80px;
+  width: 700px;
+}
+.station_data_key {
+  font-size: 80%;
+  font-style: italic;
+  margin-left: 40px;
+  margin-right: 80px;
+  width: 700px;
+}
 .tty {
   font-family: "Courier New", Courier, monospace;
   font-size: 90%;
