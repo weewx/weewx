@@ -29,6 +29,8 @@ class WeeutilTest(unittest.TestCase):
         
     def test_stampgen(self):
         
+        os.environ['TZ'] = 'America/Los_Angeles'
+
         # Test the start of DST using a 30 minute increment:
         start = time.mktime((2013,3,10,0,0,0,0,0,-1))
         stop  = time.mktime((2013,3,10,6,0,0,0,0,-1))
@@ -63,6 +65,8 @@ class WeeutilTest(unittest.TestCase):
     
     def test_intervalgen(self):
         
+        os.environ['TZ'] = 'America/Los_Angeles'
+
         # Test the start of DST using a 30 minute increment:
         start = time.mktime((2013,3,10, 0,0,0,0,0,-1))
         stop  = time.mktime((2013,3,10, 5,0,0,0,0,-1))
@@ -104,6 +108,8 @@ class WeeutilTest(unittest.TestCase):
 
     def test_startOfInterval(self):
     
+        os.environ['TZ'] = 'America/Los_Angeles'
+
         t_length = 1 * 60
         t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
         t_ans  = time.mktime((2009, 3, 4, 1, 57,  0, 0, 0, 0))
@@ -235,6 +241,8 @@ class WeeutilTest(unittest.TestCase):
     
     def test_genYearSpans(self):
 
+        os.environ['TZ'] = 'America/Los_Angeles'
+
         # Should generate years 2007 through 2008:"
         start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
         stop_ts = time.mktime((2008, 3, 1, 0, 0, 0, 0, 0, -1))
@@ -248,6 +256,9 @@ class WeeutilTest(unittest.TestCase):
             self.assertEqual(str(got), expect)
 
     def test_genMonthSpans(self):
+
+        os.environ['TZ'] = 'America/Los_Angeles'
+
         # Should generate months 2007-12 through 2008-02:
         start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
         stop_ts  = time.mktime((2008,  3, 1,  0,  0, 0, 0, 0, -1))
@@ -276,6 +287,8 @@ class WeeutilTest(unittest.TestCase):
             self.assertEqual(str(got), expect)
 
     def test_genDaySpans(self):
+
+        os.environ['TZ'] = 'America/Los_Angeles'
 
         # Should generate 2007-12-23 through 2008-1-5:"
         start_ts = time.mktime((2007, 12, 23, 10, 15, 0, 0, 0, -1))
@@ -310,6 +323,9 @@ class WeeutilTest(unittest.TestCase):
             self.assertEqual(str(got), expect)
 
     def test_daySpan(self):
+
+        os.environ['TZ'] = 'America/Los_Angeles'
+
         self.assertEqual(archiveDaySpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))), 
                TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
                         time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
@@ -326,6 +342,8 @@ class WeeutilTest(unittest.TestCase):
 
     def test_weekSpan(self):
     
+        os.environ['TZ'] = 'America/Los_Angeles'
+
         self.assertEqual(archiveWeekSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))), 
                TimeSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1)),
                         time.mktime((2007, 12, 16, 0, 0, 0, 0, 0, -1))))
@@ -337,6 +355,8 @@ class WeeutilTest(unittest.TestCase):
                         time.mktime((2007, 12, 16, 0, 0, 0, 0, 0, -1))))
     
     def test_monthSpan(self):
+
+        os.environ['TZ'] = 'America/Los_Angeles'
 
         self.assertEqual(archiveMonthSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))), 
                TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
@@ -353,6 +373,8 @@ class WeeutilTest(unittest.TestCase):
 
     def test_yearSpan(self):        
 
+        os.environ['TZ'] = 'America/Los_Angeles'
+
         self.assertEqual(archiveYearSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))), 
                TimeSpan(time.mktime((2007, 1, 1, 0, 0, 0, 0, 0, -1)),
                         time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
@@ -365,6 +387,8 @@ class WeeutilTest(unittest.TestCase):
 
     def test_rainYearSpan(self):    
 
+        os.environ['TZ'] = 'America/Los_Angeles'
+
         self.assertEqual(archiveRainYearSpan(time.mktime((2007, 2, 13, 10, 15, 0, 0, 0, -1)), 10), 
                TimeSpan(time.mktime((2006, 10, 1, 0, 0, 0, 0, 0, -1)),
                         time.mktime((2007, 10, 1, 0, 0, 0, 0, 0, -1))))
@@ -373,6 +397,8 @@ class WeeutilTest(unittest.TestCase):
                         time.mktime((2008, 10, 1, 0, 0, 0, 0, 0, -1))))
 
     def test_DST(self):
+
+        os.environ['TZ'] = 'America/Los_Angeles'
 
         # Test start-of-day routines around a DST boundary:
         start_ts = time.mktime((2007, 3, 11, 1, 0, 0, 0, 0, -1))
@@ -388,7 +414,7 @@ class WeeutilTest(unittest.TestCase):
         from weeutil.weeutil import timestamp_to_gmtime
         from weeutil.weeutil import timestamp_to_string
         from weeutil.weeutil import getDayNightTransitions
-        tz = os.environ['TZ']
+
         times = [(calendar.timegm((2012, 1, 2, 0, 0, 0, 0, 0, -1)),
                   calendar.timegm((2012, 1, 3, 0, 0, 0, 0, 0, -1))),
                  (calendar.timegm((2012, 1, 2, 22, 0, 0, 0, 0, -1)),
@@ -495,8 +521,6 @@ class WeeutilTest(unittest.TestCase):
                 self.assertEqual("%s %s" % (timestamp_to_gmtime(t[1]),
                                             timestamp_to_string(t[1])),
                                  expected[i][j][4])
-        os.environ['TZ'] = tz
 
 if __name__ == '__main__':
-    os.environ['TZ'] = 'America/Los_Angeles'
     unittest.main()
