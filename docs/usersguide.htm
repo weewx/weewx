@@ -2231,232 +2231,45 @@ Davis Vantage EEPROM settings:
 	  Because the command dumps <em>all</em> data, it may result in many 
 	  duplicate primary key errors. These can be ignored.</p>
 
-    <h3 id="vantage_station_data">Station data</h3>
-    <p>The following table shows which data are provided by the station
-      hardware and which are calculated by <span class='code'>weewx</span>.
-    </p>
-    <table class='station_data'>
-      <caption>Vantage station data</caption>
-      <tr class="first_row">
-        <td>Observation</td>
-        <td>Loop</td>
-        <td>Archive</td>
-      </tr>
-      <tr><td>barometer</td>   <td>H</td><td>H</td></tr>
-      <tr><td>pressure</td>    <td>D</td><td>D</td></tr>
-      <tr><td>altimeter</td>   <td>D</td><td>D</td></tr>
-      <tr><td>inTemp</td>      <td>H</td><td>H</td></tr>
-      <tr><td>outTemp</td>     <td>H</td><td>H</td></tr>
-      <tr><td>inHumidity</td>  <td>H</td><td>H</td></tr>
-      <tr><td>outHumidity</td> <td>H</td><td>H</td></tr>
-      <tr><td>windSpeed</td>   <td>H</td><td>H</td></tr>
-      <tr><td>windDir</td>     <td>H</td><td>H</td></tr>
-      <tr><td>windGust</td>    <td>H</td><td>H</td></tr>
-      <tr><td>windGustDir</td> <td>H</td><td>H</td></tr>
-      <tr><td>rainRate</td>    <td>H</td><td>H</td></tr>
-      <tr><td>rain</td>        <td>H</td><td>H</td></tr>
-      <tr><td>dewpoint</td>    <td>D</td><td>D</td></tr>
-      <tr><td>windchill</td>   <td>D</td><td>D</td></tr>
-      <tr><td>heatindex</td>   <td>D</td><td>D</td></tr>
-      <tr><td>radiation</td>   <td>H</td><td>H</td></tr>
-      <tr><td>UV</td>          <td>H</td><td>H</td></tr>
-      <tr><td>extraTemp1</td>  <td>H</td><td>H</td></tr>
-      <tr><td>extraTemp2</td>  <td>H</td><td>H</td></tr>
-      <tr><td>extraTemp3</td>  <td>H</td><td>H</td></tr>
-      <tr><td>extraTemp4</td>  <td>H</td><td> </td></tr>
-      <tr><td>extraTemp5</td>  <td>H</td><td> </td></tr>
-      <tr><td>extraTemp6</td>  <td>H</td><td> </td></tr>
-      <tr><td>extraTemp7</td>  <td>H</td><td> </td></tr>
-      <tr><td>soilTemp1</td>   <td>H</td><td>H</td></tr>
-      <tr><td>soilTemp2</td>   <td>H</td><td>H</td></tr>
-      <tr><td>soilTemp3</td>   <td>H</td><td>H</td></tr>
-      <tr><td>soilTemp4</td>   <td>H</td><td>H</td></tr>
-      <tr><td>leafTemp1</td>   <td>H</td><td>H</td></tr>
-      <tr><td>leafTemp2</td>   <td>H</td><td>H</td></tr>
-      <tr><td>leafTemp3</td>   <td>H</td><td>H</td></tr>
-      <tr><td>leafTemp4</td>   <td>H</td><td>H</td></tr>
-      <tr><td>extraHumid1</td> <td>H</td><td>H</td></tr>
-      <tr><td>extraHumid2</td> <td>H</td><td>H</td></tr>
-      <tr><td>extraHumid3</td> <td>H</td><td> </td></tr>
-      <tr><td>extraHumid4</td> <td>H</td><td> </td></tr>
-      <tr><td>extraHumid5</td> <td>H</td><td> </td></tr>
-      <tr><td>extraHumid6</td> <td>H</td><td> </td></tr>
-      <tr><td>extraHumid7</td> <td>H</td><td> </td></tr>
-      <tr><td>soilMoist1</td>  <td>H</td><td>H</td></tr>
-      <tr><td>soilMoist2</td>  <td>H</td><td>H</td></tr>
-      <tr><td>soilMoist3</td>  <td>H</td><td>H</td></tr>
-      <tr><td>soilMoist4</td>  <td>H</td><td>H</td></tr>
-      <tr><td>leafWet1</td>    <td>H</td><td>H</td></tr>
-      <tr><td>leafWet2</td>    <td>H</td><td>H</td></tr>
-      <tr><td>leafWet3</td>    <td>H</td><td>H</td></tr>
-      <tr><td>leafWet4</td>    <td>H</td><td>H</td></tr>
-      <tr><td>txBatteryStatus</td>    <td>H</td><td>H</td></tr>
-      <tr><td>consBatteryVoltage</td> <td>H</td><td>H</td></tr>
-    </table>
-    <p class='station_data_key'>
-      H - Data provided by <b>H</b>ardware<br/>
-      D - Data calculated in <b>D</b>river<br/>
-    </p>
-
 
     <h2 id="wee_config_wmr100">WMR100</h2>
-    <p>There is no configuration utility for the WMR100 stations.</p>
-    <h3 id="wmr100_station_characteristics">Station characteristics</h3>
-    <ul>
-      <li>The station sends partial packets.</li>
-    </ul>
-    <h3 id="wmr100_station_data">Station data</h3>
-    <p>The following table shows which data are provided by the station
-      hardware and which are calculated by <span class='code'>weewx</span>.
-    </p>
-    <table class='station_data'>
-      <caption>WMR100 station data</caption>
-      <tr class="first_row">
-        <td>Observation</td>
-        <td>Loop</td>
-        <td>Archive</td>
-      </tr>
-      <tr><td>barometer</td>   <td>D</td><td> </td></tr>
-      <tr><td>pressure</td>    <td>H</td><td> </td></tr>
-      <tr><td>altimeter</td>   <td>D</td><td> </td></tr>
-      <tr><td>inTemp</td>      <td>H</td><td> </td></tr>
-      <tr><td>outTemp</td>     <td>H</td><td> </td></tr>
-      <tr><td>inHumidity</td>  <td>H</td><td> </td></tr>
-      <tr><td>outHumidity</td> <td>H</td><td> </td></tr>
-      <tr><td>windSpeed</td>   <td>H</td><td> </td></tr>
-      <tr><td>windDir</td>     <td>H</td><td> </td></tr>
-      <tr><td>windGust</td>    <td>H</td><td> </td></tr>
-      <tr><td>rainRate</td>    <td>H</td><td> </td></tr>
-      <tr><td>rain</td>        <td>H</td><td> </td></tr>
-      <tr><td>dewpoint</td>    <td>D</td><td> </td></tr>
-      <tr><td>windchill</td>   <td>D</td><td> </td></tr>
-      <tr><td>heatindex</td>   <td>D</td><td> </td></tr>
-      <tr><td>extraTemp1</td>  <td>H</td><td> </td></tr>
-      <tr><td>extraTemp2</td>  <td>H</td><td> </td></tr>
-      <tr><td>extraTemp3</td>  <td>H</td><td> </td></tr>
-      <tr><td>UV</td>          <td>H</td><td> </td></tr>
-      <tr><td>inTempBatteryStatus</td> <td>H</td><td> </td></tr>
-      <tr><td>outTempBatteryStatus</td><td>H</td><td> </td></tr>
-      <tr><td>rainBatteryStatus</td>   <td>H</td><td> </td></tr>
-      <tr><td>windBatteryStatus</td>   <td>H</td><td> </td></tr>
-      <tr><td>UVBatteryStatus</td>     <td>H</td><td> </td></tr>
-    </table>
-    <p class='station_data_key'>
-      H - Data provided by <b>H</b>ardware<br/>
-      D - Data calculated in <b>D</b>river<br/>
-    </p>
+    <p>There is no configuration utility in <span class='code'>weewx</span>
+      for the WMR100 stations.</p>
+    <p>The station emits partial packets, which may confuse some online services.</p>
 
 
     <h2 id="wee_config_wmr200">WMR200</h2>
-    <p>There is no configuration utility for the WMR200 stations.</p>
-    <h3 id="wmr200_station_characteristics">Station characteristics</h3>
-    <ul>
-      <li>Stations include a data logger.</li>
-      <li>The station sends partial packets.</li>
-    </ul>
-    <h3 id="wmr200_station_data">Station data</h3>
-    <p>The following table shows which data are provided by the station
-      hardware and which are calculated by <span class='code'>weewx</span>.
+    <p>There is no configuration utility in <span class='code'>weewx</span>
+      for the WMR200 stations.</p>
+    <p>When <span class='code'>weewx</span> starts up it will attempt to
+      download all records from the console since the last record in the
+      archive database.
     </p>
-    <table class='station_data'>
-      <caption>WMR200 station data</caption>
-      <tr class="first_row">
-        <td>Observation</td>
-        <td>Loop</td>
-        <td>Archive</td>
-      </tr>
-      <tr><td>barometer</td>   <td>H</td><td>H</td></tr>
-      <tr><td>pressure</td>    <td>D</td><td>D</td></tr>
-      <tr><td>altimeter</td>   <td>H</td><td>H</td></tr>
-      <tr><td>inTemp</td>      <td>H</td><td>H</td></tr>
-      <tr><td>outTemp</td>     <td>H</td><td>H</td></tr>
-      <tr><td>inHumidity</td>  <td>H</td><td>H</td></tr>
-      <tr><td>outHumidity</td> <td>H</td><td>H</td></tr>
-      <tr><td>windSpeed</td>   <td>H</td><td>H</td></tr>
-      <tr><td>windDir</td>     <td>H</td><td>H</td></tr>
-      <tr><td>windGust</td>    <td>H</td><td>H</td></tr>
-      <tr><td>rainRate</td>    <td>H</td><td>H</td></tr>
-      <tr><td>rain</td>        <td>H</td><td>H</td></tr>
-      <tr><td>dewpoint</td>    <td>D</td><td>D</td></tr>
-      <tr><td>windchill</td>   <td>H/D</td><td>H/D</td></tr>
-      <tr><td>heatindex</td>   <td>H/D</td><td>H/D</td></tr>
-      <tr><td>extraTemp1</td>  <td>H</td><td>H</td></tr>
-      <tr><td>extraTemp2</td>  <td>H</td><td>H</td></tr>
-      <tr><td>extraTemp3</td>  <td>H</td><td>H</td></tr>
-      <tr><td>extraHumid1</td> <td>H</td><td>H</td></tr>
-      <tr><td>extraHumid2</td> <td>H</td><td>H</td></tr>
-      <tr><td>extraHumid3</td> <td>H</td><td>H</td></tr>
-      <tr><td>UV</td>          <td>H</td><td>H</td></tr>
-      <tr><td>outTempBatteryStatus</td><td>H</td><td> </td></tr>
-      <tr><td>rainBatteryStatus</td>   <td>H</td><td> </td></tr>
-      <tr><td>windBatteryStatus</td>   <td>H</td><td> </td></tr>
-      <tr><td>uvBatteryStatus</td>     <td>H</td><td> </td></tr>
-    </table>
-    <p class='station_data_key'>
-      H - Data provided by <b>H</b>ardware<br/>
-      D - Data calculated in <b>D</b>river<br/>
-    </p>
+    <p>The station emits partial packets, which may confuse some online services.</p>
 
 
     <h2 id="wee_config_wmr9x8">WMR9x8</h2>
-    <p>There is no configuration utility for the WMR9x8 stations.</p>
-    <h3 id="wmr9x8_station_characteristics">Station characteristics</h3>
-    <ul>
-      <li>The station sends partial packets.</li>
-      <li>The WMR9x8 driver does not read history records.</li>
-    </ul>
-    <h3 id="wmr9x8_station_data">Station data</h3>
-    <p>The following table shows which data are provided by the station
-      hardware and which are calculated by <span class='code'>weewx</span>.
-    </p>
-    <table class='station_data'>
-      <caption>WMR9x8 station data</caption>
-      <tr class="first_row">
-        <td>Observation</td>
-        <td>Loop</td>
-        <td>Archive</td>
-      </tr>
-      <tr><td>barometer</td>   <td>H</td><td> </td></tr>
-      <tr><td>pressure</td>    <td>H</td><td> </td></tr>
-      <tr><td>altimeter</td>   <td>D</td><td> </td></tr>
-      <tr><td>inTemp</td>      <td>H</td><td> </td></tr>
-      <tr><td>outTemp</td>     <td>H</td><td> </td></tr>
-      <tr><td>inHumidity</td>  <td>H</td><td> </td></tr>
-      <tr><td>outHumidity</td> <td>H</td><td> </td></tr>
-      <tr><td>windSpeed</td>   <td>H</td><td> </td></tr>
-      <tr><td>windDir</td>     <td>H</td><td> </td></tr>
-      <tr><td>windGust</td>    <td>H</td><td> </td></tr>
-      <tr><td>windGustDir</td> <td>H</td><td> </td></tr>
-      <tr><td>rainRate</td>    <td>H</td><td> </td></tr>
-      <tr><td>rain</td>        <td>H</td><td> </td></tr>
-      <tr><td>dewpoint</td>    <td>D</td><td> </td></tr>
-      <tr><td>windchill</td>   <td>H</td><td> </td></tr>
-      <tr><td>heatindex</td>   <td>D</td><td> </td></tr>
-      <tr><td>extraTemp1</td>  <td>H</td><td> </td></tr>
-      <tr><td>extraTemp2</td>  <td>H</td><td> </td></tr>
-      <tr><td>extraTemp3</td>  <td>H</td><td> </td></tr>
-      <tr><td>extraHumid1</td> <td>H</td><td> </td></tr>
-      <tr><td>extraHumid2</td> <td>H</td><td> </td></tr>
-      <tr><td>extraHumid3</td> <td>H</td><td> </td></tr>
-      <tr><td>UV</td>          <td>H</td><td> </td></tr>
-      <tr><td>inTempBatteryStatus</td> <td>H</td><td> </td></tr>
-      <tr><td>outTempBatteryStatus</td><td>H</td><td> </td></tr>
-      <tr><td>rainBatteryStatus</td>   <td>H</td><td> </td></tr>
-      <tr><td>windBatteryStatus</td>   <td>H</td><td> </td></tr>
-      <tr><td>batteryStatusTH1</td>    <td>H</td><td> </td></tr>
-      <tr><td>batteryStatusTH2</td>    <td>H</td><td> </td></tr>
-      <tr><td>batteryStatusTH3</td>    <td>H</td><td> </td></tr>
-      <tr><td>batteryStatusT1</td>     <td>H</td><td> </td></tr>
-      <tr><td>batteryStatusT2</td>     <td>H</td><td> </td></tr>
-      <tr><td>batteryStatusT3</td>     <td>H</td><td> </td></tr>
-    </table>
-    <p class='station_data_key'>
-      H - Data provided by <b>H</b>ardware<br/>
-      D - Data calculated in <b>D</b>river<br/>
-    </p>
+    <p>There is no configuration utility in <span class='code'>weewx</span>
+      for the WMR9x8 stations.</p>
+    <p>The station includes a data logger, but the driver does not read records from the station.</p>
+    <p>The station emits partial packets, which may confuse some online services.</p>
 
 
     <h2 id="wee_config_fousb">Fine Offset 10xx, 20xx, 30xx</h2>
+
+    <p>The 10xx and 20xx stations can save up to 4080 historical readings.
+      That is about 85 days of data with the default recording interval of
+      30 minutes, or about 14 days with a recording interval of 5 minutes.
+      The 30xx stations can save up to 3264 historical readings.</p>
+    <p>When <span class='code'>weewx</span> starts up it will attempt
+      to download all records from the console since the last record in
+      the archive database.</p>
+    <p>The station reads data from the sensors every 48 seconds.
+      The 30xx stations read UV data every 60 seconds.</p>
+    <p>The station clock can only be set manually via buttons on the
+      console, or (if the station supports it) by WWVB radio.  The fousb
+      driver ignores the station clock since it cannot be trusted.</p>
+    
     <p>The configuration utility <span class='code'>wee_config_fousb</span> is
       designed to diagnose and configure Fine Offset stations.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
@@ -2602,59 +2415,23 @@ Pressure offset is now 1.247000</p>
       </tr>
     </table>
 
-    <h3 id="fo_catchup">Catchup</h3>
-    <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since the last record in the archive database.
-    </p>
-
-    <h3 id="fo_station_characteristics">Station characteristics</h3>
-    <ul>
-      <li>The 10xx and 20xx stations can save up to 4080 historical readings.
-        That is about 85 days of data with the default recording interval of
-        30 minutes, or about 14 days with a recording interval of 5 minutes.
-      </li>
-      <li>The 30xx stations can save up to 3264 historical readings.</li>
-      <li>The station reads data from the sensors every 48 seconds.</li>
-      <li>The 30xx stations read UV data every 60 seconds.</li>
-    </ul>
-
-    <h3 id="fo_station_data">Station data</h3>
-    <p>The following table shows which data are provided by the station
-      hardware and which are calculated by <span class='code'>weewx</span>.
-    </p>
-    <table class='station_data'>
-      <caption>Fine Offset station data</caption>
-      <tr class="first_row">
-        <td>Observation</td>
-        <td>Loop</td>
-        <td>Archive</td>
-        <td></td>
-      </tr>
-      <tr><td>barometer</td>   <td>D</td><td>D</td></tr>
-      <tr><td>pressure</td>    <td>H</td><td>H</td></tr>
-      <tr><td>altimeter</td>   <td>D</td><td>D</td></tr>
-      <tr><td>inTemp</td>      <td>H</td><td>H</td></tr>
-      <tr><td>outTemp</td>     <td>H</td><td>H</td></tr>
-      <tr><td>inHumidity</td>  <td>H</td><td>H</td></tr>
-      <tr><td>outHumidity</td> <td>H</td><td>H</td></tr>
-      <tr><td>windSpeed</td>   <td>H</td><td>H</td></tr>
-      <tr><td>windDir</td>     <td>H</td><td>H</td></tr>
-      <tr><td>windGust</td>    <td>H</td><td>H</td></tr>
-      <tr><td>windGustDir</td> <td>D</td><td>D</td></tr>
-      <tr><td>rainRate</td>    <td>D</td><td>D</td></tr>
-      <tr><td>rain</td>        <td>H</td><td>H</td></tr>
-      <tr><td>dewpoint</td>    <td>H/D</td><td>D</td></tr>
-      <tr><td>windchill</td>   <td>H/D</td><td>D</td></tr>
-      <tr><td>heatindex</td>   <td>H/D</td><td>D</td></tr>
-      <tr><td>radiation</td>   <td>H</td><td>H</td><td>30xx only</td></tr>
-      <tr><td>UV</td>          <td>H</td><td>H</td><td>30xx only</td></tr>
-    </table>
-    <p class='station_data_key'>
-      H - Data provided by <b>H</b>ardware<br/>
-      D - Data calculated in <b>D</b>river<br/>
-    </p>
-
 
     <h2 id="wee_config_ws23xx">La Crosse WS23xx</h2>
+    <p>The station has 175 history records.  That is just over 7 days
+      of data with the factory default history recording interval of 60
+      minutes, or about 14 hours with a recording interval of 5 minutes.</p>
+    <p>When <span class='code'>weewx</span> starts up it will attempt
+      to download all records from the console since the last record in
+      the archive database.</p>
+    <p>The station does not record wind gust or wind gust direction.</p>
+    <p>The station calculates windchill and dewpoint.  The WS23xx driver
+      includes options to calculate windchill and dewpoint in
+      <span class="code">weewx</span>, since
+      the hardware algorithms may be antiquated.</p>
+    <p>The hardware interface is a serial port, but USB-serial converters
+      can be used with computers that have no serial port.  Beware that
+      not every type of USB-serial converter will work.  Converters based
+      on ATEN UC-232A chipset are known to work.</p>
     <p>The configuration utility <span class='code'>wee_config_ws23xx</span> is
       designed to diagnose and configure WS23xx stations.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
@@ -2716,6 +2493,8 @@ in humidity: 48.0
     <p class="warning"><b>Choose the archive interval carefully! </b>Once
       chosen, it cannot be changed without messing up the statistics (highs
       and lows will be OK, but averages and RMS wind speed will be wrong). </p>
+    <p class="warning">Changing the recording interval will clear the station
+      memory.</p>
 
     <h3 id="ws23xx_dumping_the_console_memory">Dumping the console memory</h3>
     <p>WS23xx stations store records in a circular buffer - once the
@@ -2730,63 +2509,19 @@ in humidity: 48.0
     <p>To clear the console memory:</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_ws23xx --clear-memory</pre>
 
-    <h3 id="ws23xx_catchup">Catchup</h3>
+
+
+    <h2 id="wee_config_ws28xx">La Crosse WS28xx</h2>
+    <p>The station has 1797 history records.  That is just over 6 days
+      of data with an archive interval of 5 minutes.</p>
+    <p>The WS28xx driver sets the station archive interval to
+      5 minutes.</p>
     <p>When <span class='code'>weewx</span> starts up it will attempt to
       download all records from the console since the last record in the
       archive database.
     </p>
-
-    <h3 id="ws23xx_station_characteristics">Station characteristics</h3>
-    <ul>
-      <li>The station does not record wind gust or wind gust direction.</li>
-      <li>The station has 175 history records.  That is just over 7 days
-        of data with the default history recording interval of 60 minutes, 
-        or about 14 hours with a recording interval of 5 minutes.</li>
-      <li>Changing the recording interval will clear the station memory.</li>
-      <li>The station calculates windchill and dewpoint.  The WS23xx driver
-        includes options to calculate windchill and dewpoint in <span class="code">weewx</span>, since
-        the hardware algorithms may be antiquated.</li>
-      <li>The hardware interface is a serial port, but USB-serial converters
-        can be used with computers that have no serial port.  Beware that
-        not every type of USB-serial converter will work.  Converters based
-        on ATEN UC-232A chipset are known to work.</li>
-    </ul>
-
-    <h3 id="ws23xx_station_data">Station data</h3>
-    <p>The following table shows which data are provided by the station
-      hardware and which are calculated by <span class='code'>weewx</span>.
-    </p>
-    <table class='station_data'>
-      <caption>WS23xx station data</caption>
-      <tr class="first_row">
-        <td>Observation</td>
-        <td>Loop</td>
-        <td>Archive</td>
-      </tr>
-      <tr><td>barometer</td>   <td>D</td><td>D</td></tr>
-      <tr><td>pressure</td>    <td>H</td><td>H</td></tr>
-      <tr><td>altimeter</td>   <td>D</td><td>D</td></tr>
-      <tr><td>inTemp</td>      <td>H</td><td>H</td></tr>
-      <tr><td>outTemp</td>     <td>H</td><td>H</td></tr>
-      <tr><td>inHumidity</td>  <td>H</td><td>H</td></tr>
-      <tr><td>outHumidity</td> <td>H</td><td>H</td></tr>
-      <tr><td>windSpeed</td>   <td>H</td><td>H</td></tr>
-      <tr><td>windDir</td>     <td>H</td><td>H</td></tr>
-      <tr><td>windGust</td>    <td>D</td><td>D</td></tr>
-      <tr><td>windGustDir</td> <td>D</td><td>D</td></tr>
-      <tr><td>rainRate</td>    <td>H</td><td>H</td></tr>
-      <tr><td>rain</td>        <td>H</td><td>H</td></tr>
-      <tr><td>dewpoint</td>    <td>D</td><td>D</td></tr>
-      <tr><td>windchill</td>   <td>H/D</td><td>H/D</td></tr>
-      <tr><td>heatindex</td>   <td>H/D</td><td>H/D</td></tr>
-    </table>
-    <p class='station_data_key'>
-      H - Data provided by <b>H</b>ardware<br/>
-      D - Data calculated in <b>D</b>river<br/>
-    </p>
-
-
-    <h2 id="wee_config_ws28xx">La Crosse WS28xx</h2>
+    <p>The WS28xx driver does not support hardware archive record
+      generation.</p>
     <p>The configuration utility <span class='code'>wee_config_ws28xx</span> is
       designed to diagnose and configure WS28xx stations.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
@@ -2803,16 +2538,13 @@ Options:
   --pair               pair the USB transceiver with a station console
   --info               display weather station configuration
   --current            get the current weather conditions
-<span class='highlight'>  --history-since=N    display history records since N minutes ago</span>
-<span class='highlight'>  --history=N          display N history records</span>
+  --history-since=N    display history records since N minutes ago
+  --history=N          display N history records
   --format=FORMAT      format for history, one of raw, table, or dict
   --maxtries=MAXTRIES  maximum number of retries, 0 indicates no max
   --debug              display diagnostic information while running
 
 Mutating actions will request confirmation before proceeding.</pre>
-    <p>The WS28xx driver is still in active development; the
-      <span class='highlight'>&nbsp;highlighted&nbsp;</span> options
-      are not yet working.</p>
 
     <h3>Pairing</h3>
     <p>The console and transceiver must be paired.  Pairing ensures that your
@@ -2870,196 +2602,48 @@ Mutating actions will request confirmation before proceeding.</pre>
       in weewx, and the <span class="code">weewx</span> alarms can do much more than the console alarms
       anyway.</p>
 
-    <h3 id="ws28xx_station_characteristics">Station characteristics</h3>
-    <ul>
-      <li>The station has 1797 history records.  That is just over 6 days
-        of data with a recording interval of 5 minutes.</li>
-    </ul>
-
-    <h3 id="ws28xx_station_data">Station data</h3>
-    <p>The following table shows which data are provided by the station
-      hardware and which are calculated by <span class='code'>weewx</span>.
-    </p>
-    <table class='station_data'>
-      <caption>WS28xx station data</caption>
-      <tr class="first_row">
-        <td>Observation</td>
-        <td>Loop</td>
-        <td>Archive</td>
-      </tr>
-      <tr><td>barometer</td>   <td>D</td><td>D</td></tr>
-      <tr><td>pressure</td>    <td>H</td><td>H</td></tr>
-      <tr><td>altimeter</td>   <td>D</td><td>D</td></tr>
-      <tr><td>inTemp</td>      <td>H</td><td>H</td></tr>
-      <tr><td>outTemp</td>     <td>H</td><td>H</td></tr>
-      <tr><td>inHumidity</td>  <td>H</td><td>H</td></tr>
-      <tr><td>outHumidity</td> <td>H</td><td>H</td></tr>
-      <tr><td>windSpeed</td>   <td>H</td><td>H</td></tr>
-      <tr><td>windDir</td>     <td>H</td><td>H</td></tr>
-      <tr><td>windGust</td>    <td>H</td><td>H</td></tr>
-      <tr><td>windGustDir</td> <td>D</td><td>D</td></tr>
-      <tr><td>rainRate</td>    <td>H</td><td> </td></tr>
-      <tr><td>rain</td>        <td>H</td><td>H</td></tr>
-      <tr><td>dewpoint</td>    <td>D</td><td>D</td></tr>
-      <tr><td>windchill</td>   <td>H/D</td><td>H/D</td></tr>
-      <tr><td>heatindex</td>   <td>H/D</td><td>H/D</td></tr>
-      <tr><td>rxCheckPercent</td>       <td>H</td><td></td></tr>
-      <tr><td>windBatteryStatus</td>    <td>H</td><td></td></tr>
-      <tr><td>rainBatteryStatus</td>    <td>H</td><td></td></tr>
-      <tr><td>outTempBatteryStatus</td> <td>H</td><td></td></tr>
-      <tr><td>inTempBatteryStatus</td>  <td>H</td><td></td></tr>
-    </table>
-    <p class='station_data_key'>
-      H - Data provided by <b>H</b>ardware<br/>
-      D - Data calculated in <b>D</b>river<br/>
-    </p>
-
 
     <h2 id="wee_config_te923">TE923</h2>
-    <p>There is no configuration utility for the TE923 stations.</p>
-
-    <h3 id="te923_station_characteristics">Station characteristics</h3>
-    <ul>
-      <li>The station has either 200 or 3300 history records, depending on
-        the model.</li>
-      <li>The TE923 driver is not capable of reading archive records from
-        the station.</li>
-      <li>Some station models will recognize up to 5 remote
-        temperature/humidity sensor units.</li>
-    </ul>
-
-    <h3 id="te923_station_data">Station data</h3>
-    <p>The following table shows which data are provided by the station
-      hardware and which are calculated by <span class='code'>weewx</span>.
-    </p>
-    <table class='station_data'>
-      <caption>TE923 station data</caption>
-      <tr class="first_row">
-        <td>Observation</td>
-        <td>Loop</td>
-        <td>Archive</td>
-      </tr>
-      <tr><td>barometer</td>   <td>H</td><td> </td></tr>
-      <tr><td>pressure</td>    <td>D</td><td> </td></tr>
-      <tr><td>altimeter</td>   <td>D</td><td> </td></tr>
-      <tr><td>inTemp</td>      <td>H</td><td> </td></tr>
-      <tr><td>outTemp</td>     <td>H</td><td> </td></tr>
-      <tr><td>inHumidity</td>  <td>H</td><td> </td></tr>
-      <tr><td>outHumidity</td> <td>H</td><td> </td></tr>
-      <tr><td>windSpeed</td>   <td>H</td><td> </td></tr>
-      <tr><td>windDir</td>     <td>H</td><td> </td></tr>
-      <tr><td>windGust</td>    <td>H</td><td> </td></tr>
-      <tr><td>windGustDir</td> <td>D</td><td> </td></tr>
-      <tr><td>rainRate</td>    <td>D</td><td> </td></tr>
-      <tr><td>rain</td>        <td>H</td><td> </td></tr>
-      <tr><td>dewpoint</td>    <td>D</td><td> </td></tr>
-      <tr><td>windchill</td>   <td>H/D</td><td> </td></tr>
-      <tr><td>heatindex</td>   <td>D</td><td> </td></tr>
-      <tr><td>extraTemp1</td>  <td>H</td><td> </td></tr>
-      <tr><td>extraTemp2</td>  <td>H</td><td> </td></tr>
-      <tr><td>extraTemp3</td>  <td>H</td><td> </td></tr>
-      <tr><td>extraTemp4</td>  <td>H</td><td> </td></tr>
-      <tr><td>extraHumid1</td> <td>H</td><td> </td></tr>
-      <tr><td>extraHumid2</td> <td>H</td><td> </td></tr>
-      <tr><td>extraHumid3</td> <td>H</td><td> </td></tr>
-      <tr><td>extraHumid4</td> <td>H</td><td> </td></tr>
-      <tr><td>txBatteryStatus</td>      <td>H</td><td></td></tr>
-      <tr><td>windBatteryStatus</td>    <td>H</td><td></td></tr>
-      <tr><td>rainBatteryStatus</td>    <td>H</td><td></td></tr>
-      <tr><td>outTempBatteryStatus</td> <td>H</td><td></td></tr>
-      <tr><td>extraBatteryStatus1</td>  <td>H</td><td></td></tr>
-      <tr><td>extraBatteryStatus2</td>  <td>H</td><td></td></tr>
-      <tr><td>extraBatteryStatus3</td>  <td>H</td><td></td></tr>
-      <tr><td>extraBatteryStatus4</td>  <td>H</td><td></td></tr>
-    </table>
-    <p class='station_data_key'>
-      H - Data provided by <b>H</b>ardware<br/>
-      D - Data calculated in <b>D</b>river<br/>
+    <p>There is no configuration utility in <span class='code'>weewx</span>
+      for the TE923 stations.</p>
+    <p>The station has either 200 or 3300 history records, depending on
+      the model.  That is just over a day (200 records) or about 23 days
+      (3300 records) with an archive interval of 5 minutes.</p>
+    <p>The TE923 driver is not capable of reading archive records from
+      the station.</p>
+    <p>Some station models will recognize up to 5 remote
+      temperature/humidity sensor units. Use the hardware switch in each
+      sensor unit to identify sensors. Use the
+      <span class='code'>sensor_map</span> in
+      <span class='code'>weewx.conf</span> to map each sensor to a database
+      field.
     </p>
 
 
     <h2 id="wee_config_ultimeter">Ultimeter</h2>
-    <p>There is no configuration utility for the Ultimeter stations.</p>
-
-    <h3 id="ultimeter_station_characteristics">Station characteristics</h3>
-    <ul>
-      <li>The Ultimeter driver operates the Ultimeter in Data Logger Mode,
-        which results in sensor readings every 1/2 second or so.</li>
-    </ul>
-
-    <h3 id="ultimeter_station_data">Station data</h3>
-    <p>The following table shows which data are provided by the station
-      hardware and which are calculated by <span class='code'>weewx</span>.
-    </p>
-    <table class='station_data'>
-      <caption>Ultimeter station data</caption>
-      <tr class="first_row">
-        <td>Observation</td>
-        <td>Loop</td>
-        <td>Archive</td>
-      </tr>
-      <tr><td>barometer</td>   <td>H</td><td> </td></tr>
-      <tr><td>pressure</td>    <td>D</td><td> </td></tr>
-      <tr><td>altimeter</td>   <td>D</td><td> </td></tr>
-      <tr><td>inTemp</td>      <td>H</td><td> </td></tr>
-      <tr><td>outTemp</td>     <td>H</td><td> </td></tr>
-      <tr><td>inHumidity</td>  <td>H</td><td> </td></tr>
-      <tr><td>outHumidity</td> <td>H</td><td> </td></tr>
-      <tr><td>windSpeed</td>   <td>H</td><td> </td></tr>
-      <tr><td>windDir</td>     <td>H</td><td> </td></tr>
-      <tr><td>rainRate</td>    <td>D</td><td> </td></tr>
-      <tr><td>rain</td>        <td>H</td><td> </td></tr>
-      <tr><td>dewpoint</td>    <td>D</td><td> </td></tr>
-      <tr><td>windchill</td>   <td>D</td><td> </td></tr>
-      <tr><td>heatindex</td>   <td>D</td><td> </td></tr>
-    </table>
-    <p class='station_data_key'>
-      H - Data provided by <b>H</b>ardware<br/>
-      D - Data calculated in <b>D</b>river<br/>
-    </p>
+    <p>There is no configuration utility in <span class='code'>weewx</span>
+      for the Ultimeter stations.</p>
+    <p>The Ultimeter driver operates the Ultimeter in Data Logger Mode,
+      which results in sensor readings every 1/2 second or so.</p>
+    <p>The Ultimeter driver ignores the maximum, minimum, and average
+      values recorded by the station.</p>
 
 
     <h2 id="wee_config_ws1">WS1</h2>
-    <p>There is no configuration utility for the WS1 stations.</p>
-
-    <h3 id="ws1_station_characteristics">Station characteristics</h3>
-    <ul>
-      <li>The WS1 stations behave much like a PeetBros Ultimeter in
-        Data Logger Mode.</li>
-    </ul>
-
-    <h3 id="ws1_station_data">Station data</h3>
-    <p>The following table shows which data are provided by the station
-      hardware and which are calculated by <span class='code'>weewx</span>.
-    </p>
-    <table class='station_data'>
-      <caption>WS1 station data</caption>
-      <tr class="first_row">
-        <td>Observation</td>
-        <td>Loop</td>
-        <td>Archive</td>
-      </tr>
-      <tr><td>barometer</td>   <td>D</td><td> </td></tr>
-      <tr><td>pressure</td>    <td>H</td><td> </td></tr>
-      <tr><td>altimeter</td>   <td>D</td><td> </td></tr>
-      <tr><td>inTemp</td>      <td>H</td><td> </td></tr>
-      <tr><td>outTemp</td>     <td>H</td><td> </td></tr>
-      <tr><td>inHumidity</td>  <td>H</td><td> </td></tr>
-      <tr><td>outHumidity</td> <td>H</td><td> </td></tr>
-      <tr><td>windSpeed</td>   <td>H</td><td> </td></tr>
-      <tr><td>windDir</td>     <td>H</td><td> </td></tr>
-      <tr><td>rain</td>        <td>H</td><td> </td></tr>
-      <tr><td>dewpoint</td>    <td>D</td><td> </td></tr>
-      <tr><td>windchill</td>   <td>D</td><td> </td></tr>
-      <tr><td>heatindex</td>   <td>D</td><td> </td></tr>
-    </table>
-    <p class='station_data_key'>
-      H - Data provided by <b>H</b>ardware<br/>
-      D - Data calculated in <b>D</b>river<br/>
-    </p>
+    <p>There is no configuration utility in <span class='code'>weewx</span>
+      for the WS1 stations.</p>
+    <p>The WS1 stations produce data every 1/2 second or so.</p>
 
 
     <h2 id="wee_config_cc3000">RainWise CC3000</h2>
+    <p>The CC3000 data logger stores 2MB of records.</p>
+    <p>The CC3000 driver supports catchup on startup, but it does not
+      support hardware record generation.</p>
+    <p>The CC3000 data logger may be configured to return data in
+      METRIC or US units.  These are not the same groups of METRIC and US
+      units as defined within <span class='code'>weewx</span>.  However, the
+      CC3000 driver will convert to the appropriate units for the
+      <span class='code'>weewx</span> configuration.</p>
     <p>The configuration utility <span class='code'>wee_config_cc3000</span> is
       designed to diagnose and configure RainWise CC3000 data loggers.</p>
     <p>Run it with <span class='code'>--help</span> as an option to see its usage:</p>
@@ -3102,49 +2686,6 @@ interval:  1</pre>
     <p class="warning"><b>Choose the archive interval carefully! </b>Once
       chosen, it cannot be changed without messing up the statistics (highs
       and lows will be OK, but averages and RMS wind speed will be wrong). </p>
-
-    <h3 id="cc3000_station_characteristics">Station characteristics</h3>
-    <ul>
-      <li>The CC3000 data logger stores 2MB of records.</li>
-      <li>The CC3000 data logger may be configured to return data in
-        METRIC or US units.  The CC3000 driver will convert to the
-        appropriate units for the <span class='code'>weewx</span>
-        configuration.</li>
-      <li>The CC3000 driver supports catchup on startup, but it does not
-        support hardware record generation.</li>
-    </ul>
-
-    <h3 id="cc3000_station_data">Station data</h3>
-    <p>The following table shows which data are provided by the station
-      hardware and which are calculated by <span class='code'>weewx</span>.
-    </p>
-    <table class='station_data'>
-      <caption>CC3000 station data</caption>
-      <tr class="first_row">
-        <td>Observation</td>
-        <td>Loop</td>
-        <td>Archive</td>
-      </tr>
-      <tr><td>barometer</td>   <td>D</td><td> </td></tr>
-      <tr><td>pressure</td>    <td>H</td><td> </td></tr>
-      <tr><td>altimeter</td>   <td>D</td><td> </td></tr>
-      <tr><td>inTemp</td>      <td>H</td><td> </td></tr>
-      <tr><td>outTemp</td>     <td>H</td><td> </td></tr>
-      <tr><td>inHumidity</td>  <td>H</td><td> </td></tr>
-      <tr><td>outHumidity</td> <td>H</td><td> </td></tr>
-      <tr><td>windSpeed</td>   <td>H</td><td> </td></tr>
-      <tr><td>windDir</td>     <td>H</td><td> </td></tr>
-      <tr><td>rain</td>        <td>H</td><td> </td></tr>
-      <tr><td>dewpoint</td>    <td>D</td><td> </td></tr>
-      <tr><td>windchill</td>   <td>D</td><td> </td></tr>
-      <tr><td>heatindex</td>   <td>D</td><td> </td></tr>
-      <tr><td>radiation</td>   <td>H</td><td> </td></tr>
-      <tr><td>UV</td>          <td>H</td><td> </td></tr>
-    </table>
-    <p class='station_data_key'>
-      H - Data provided by <b>H</b>ardware<br/>
-      D - Data calculated in <b>D</b>river<br/>
-    </p>
 
 
     <h1 id="configuring_mysql">Configuring MySQL</h1>

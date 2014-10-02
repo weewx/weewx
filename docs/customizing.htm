@@ -3910,6 +3910,411 @@ Options:
           </tr>
         </tbody>
       </table>
+
+      <h1 id="station_data">Appendix: Station Data</h1>
+      <p>The following tables show which data are provided by the station
+        hardware and which are calculated by <span class='code'>weewx</span>.
+      </p>
+      <p class='station_data_key'>
+        <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+        <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+      </p>
+
+<h2 id="vantage_station_data">Vantage</h2>
+<table class='station_data'>
+  <caption>Vantage station data</caption>
+  <tbody class='code'>
+  <tr class="first_row">
+    <td>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+  </tr>
+  <tr><td class='first_col'>barometer</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>pressure</td>    <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>altimeter</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>inTemp</td>      <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outTemp</td>     <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>inHumidity</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outHumidity</td> <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windSpeed</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windDir</td>     <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windGust</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windGustDir</td> <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rain</td>        <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>dewpoint</td>    <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>windchill</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>heatindex</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>radiation</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>UV</td>          <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>extraTemp1</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>extraTemp2</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>extraTemp3</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>extraTemp4</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp5</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp6</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp7</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>soilTemp1</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>soilTemp2</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>soilTemp3</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>soilTemp4</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>leafTemp1</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>leafTemp2</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>leafTemp3</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>leafTemp4</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>extraHumid1</td> <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>extraHumid2</td> <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>extraHumid3</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraHumid4</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraHumid5</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraHumid6</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraHumid7</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>soilMoist1</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>soilMoist2</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>soilMoist3</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>soilMoist4</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>leafWet1</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>leafWet2</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>leafWet3</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>leafWet4</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>txBatteryStatus</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>consBatteryVoltage</td> <td>H</td><td>H</td></tr>
+  </tbody>
+</table>
+
+<h2 id="wmr100_station_data">WMR100</h2>
+<table class='station_data'>
+  <caption>WMR100 station data</caption>
+  <tbody class='code'>
+  <tr class="first_row">
+    <td>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+  </tr>
+  <tr><td class='first_col'>barometer</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>pressure</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>altimeter</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>inTemp</td>      <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outTemp</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>inHumidity</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outHumidity</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windSpeed</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windDir</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windGust</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rain</td>        <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>dewpoint</td>    <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>windchill</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>heatindex</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp1</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp2</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp3</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>UV</td>          <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>inTempBatteryStatus</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outTempBatteryStatus</td><td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rainBatteryStatus</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windBatteryStatus</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>UVBatteryStatus</td>     <td>H</td><td> </td></tr>
+  </tbody>
+</table>
+
+<h2 id="wmr200_station_data">WMR200</h2>
+<table class='station_data'>
+  <caption>WMR200 station data</caption>
+  <tbody class='code'>
+  <tr class="first_row">
+    <td>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+  </tr>
+  <tr><td class='first_col'>barometer</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>pressure</td>    <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>altimeter</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>inTemp</td>      <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outTemp</td>     <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>inHumidity</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outHumidity</td> <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windSpeed</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windDir</td>     <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windGust</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rain</td>        <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>dewpoint</td>    <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>windchill</td>   <td>H/D</td><td>H/D</td></tr>
+  <tr><td class='first_col'>heatindex</td>   <td>H/D</td><td>H/D</td></tr>
+  <tr><td class='first_col'>extraTemp1</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>extraTemp2</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>extraTemp3</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>extraHumid1</td> <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>extraHumid2</td> <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>extraHumid3</td> <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>UV</td>          <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outTempBatteryStatus</td><td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rainBatteryStatus</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windBatteryStatus</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>uvBatteryStatus</td>     <td>H</td><td> </td></tr>
+  </tbody>
+</table>
+
+<h2 id="wmr9x8_station_data">WMR9x8</h2>
+<table class='station_data'>
+  <caption>WMR9x8 station data</caption>
+  <tbody class='code'>
+  <tr class="first_row">
+    <td>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+  </tr>
+  <tr><td class='first_col'>barometer</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>pressure</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>altimeter</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>inTemp</td>      <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outTemp</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>inHumidity</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outHumidity</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windSpeed</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windDir</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windGust</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windGustDir</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rain</td>        <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>dewpoint</td>    <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>windchill</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>heatindex</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp1</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp2</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp3</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraHumid1</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraHumid2</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraHumid3</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>UV</td>          <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>inTempBatteryStatus</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outTempBatteryStatus</td><td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rainBatteryStatus</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windBatteryStatus</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>batteryStatusTH1</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>batteryStatusTH2</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>batteryStatusTH3</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>batteryStatusT1</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>batteryStatusT2</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>batteryStatusT3</td>     <td>H</td><td> </td></tr>
+  </tbody>
+</table>
+
+<h2 id="fo_station_data">Fine Offset</h2>
+<table class='station_data'>
+  <caption>Fine Offset station data</caption>
+  <tbody class='code'>
+  <tr class="first_row">
+    <td>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+    <td></td>
+  </tr>
+  <tr><td class='first_col'>barometer</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>pressure</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>altimeter</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>inTemp</td>      <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outTemp</td>     <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>inHumidity</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outHumidity</td> <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windSpeed</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windDir</td>     <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windGust</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windGustDir</td> <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>rain</td>        <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>dewpoint</td>    <td>H/D</td><td>D</td></tr>
+  <tr><td class='first_col'>windchill</td>   <td>H/D</td><td>D</td></tr>
+  <tr><td class='first_col'>heatindex</td>   <td>H/D</td><td>D</td></tr>
+  <tr><td class='first_col'>radiation</td>   <td>H</td><td>H</td><td>30xx only</td></tr>
+  <tr><td class='first_col'>UV</td>          <td>H</td><td>H</td><td>30xx only</td></tr>
+  </tbody>
+</table>
+
+<h2 id="ws23xx_station_data">WS23xx</h2>
+<table class='station_data'>
+  <caption>WS23xx station data</caption>
+  <tbody class='code'>
+  <tr class="first_row">
+    <td>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+  </tr>
+  <tr><td class='first_col'>barometer</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>pressure</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>altimeter</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>inTemp</td>      <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outTemp</td>     <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>inHumidity</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outHumidity</td> <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windSpeed</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windDir</td>     <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windGust</td>    <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>windGustDir</td> <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rain</td>        <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>dewpoint</td>    <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>windchill</td>   <td>H/D</td><td>H/D</td></tr>
+  <tr><td class='first_col'>heatindex</td>   <td>H/D</td><td>H/D</td></tr>
+  </tbody>
+</table>
+
+<h2 id="ws28xx_station_data">WS28xx</h2>
+<table class='station_data'>
+  <caption>WS28xx station data</caption>
+  <tbody class='code'>
+  <tr class="first_row">
+    <td>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+  </tr>
+  <tr><td class='first_col'>barometer</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>pressure</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>altimeter</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>inTemp</td>      <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outTemp</td>     <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>inHumidity</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outHumidity</td> <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windSpeed</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windDir</td>     <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windGust</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windGustDir</td> <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rain</td>        <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>dewpoint</td>    <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>windchill</td>   <td>H/D</td><td>H/D</td></tr>
+  <tr><td class='first_col'>heatindex</td>   <td>H/D</td><td>H/D</td></tr>
+  <tr><td class='first_col'>rxCheckPercent</td>       <td>H</td><td></td></tr>
+  <tr><td class='first_col'>windBatteryStatus</td>    <td>H</td><td></td></tr>
+  <tr><td class='first_col'>rainBatteryStatus</td>    <td>H</td><td></td></tr>
+  <tr><td class='first_col'>outTempBatteryStatus</td> <td>H</td><td></td></tr>
+  <tr><td class='first_col'>inTempBatteryStatus</td>  <td>H</td><td></td></tr>
+  </tbody>
+</table>
+
+<h2 id="te923_station_data">TE923</h2>
+<table class='station_data'>
+  <caption>TE923 station data</caption>
+  <tbody class='code'>
+  <tr class="first_row">
+    <td>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+  </tr>
+  <tr><td class='first_col'>barometer</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>pressure</td>    <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>altimeter</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>inTemp</td>      <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outTemp</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>inHumidity</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outHumidity</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windSpeed</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windDir</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windGust</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windGustDir</td> <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>rain</td>        <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>dewpoint</td>    <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>windchill</td>   <td>H/D</td><td> </td></tr>
+  <tr><td class='first_col'>heatindex</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp1</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp2</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp3</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraTemp4</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraHumid1</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraHumid2</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraHumid3</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>extraHumid4</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>txBatteryStatus</td>      <td>H</td><td></td></tr>
+  <tr><td class='first_col'>windBatteryStatus</td>    <td>H</td><td></td></tr>
+  <tr><td class='first_col'>rainBatteryStatus</td>    <td>H</td><td></td></tr>
+  <tr><td class='first_col'>outTempBatteryStatus</td> <td>H</td><td></td></tr>
+  <tr><td class='first_col'>extraBatteryStatus1</td>  <td>H</td><td></td></tr>
+  <tr><td class='first_col'>extraBatteryStatus2</td>  <td>H</td><td></td></tr>
+  <tr><td class='first_col'>extraBatteryStatus3</td>  <td>H</td><td></td></tr>
+  <tr><td class='first_col'>extraBatteryStatus4</td>  <td>H</td><td></td></tr>
+  </tbody>
+</table>
+
+<h2 id="ultimeter_station_data">Ultimeter</h2>
+<table class='station_data'>
+  <caption>Ultimeter station data</caption>
+  <tbody class='code'>
+  <tr class="first_row">
+    <td>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+  </tr>
+  <tr><td class='first_col'>barometer</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>pressure</td>    <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>altimeter</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>inTemp</td>      <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outTemp</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>inHumidity</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outHumidity</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windSpeed</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windDir</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>rain</td>        <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>dewpoint</td>    <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>windchill</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>heatindex</td>   <td>D</td><td> </td></tr>
+  </tbody>
+</table>
+
+<h2 id="ws1_station_data">WS1</h2>
+<table class='station_data'>
+  <caption>WS1 station data</caption>
+  <tbody class='code'>
+  <tr class="first_row">
+    <td>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+  </tr>
+  <tr><td class='first_col'>barometer</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>pressure</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>altimeter</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>inTemp</td>      <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outTemp</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>inHumidity</td>  <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outHumidity</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windSpeed</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windDir</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rain</td>        <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>dewpoint</td>    <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>windchill</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>heatindex</td>   <td>D</td><td> </td></tr>
+  </tbody>
+</table>
+
+<h2 id="cc3000_station_data">CC3000</h2>
+<table class='station_data'>
+  <caption>CC3000 station data</caption>
+  <tbody class='code'>
+  <tr class="first_row">
+    <td>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+  </tr>
+  <tr><td class='first_col'>barometer</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>pressure</td>    <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>altimeter</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>inTemp</td>      <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outTemp</td>     <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>inHumidity</td>  <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>outHumidity</td> <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windSpeed</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>windDir</td>     <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rain</td>        <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>dewpoint</td>    <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>windchill</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>heatindex</td>   <td>D</td><td>D</td></tr>
+  <tr><td class='first_col'>radiation</td>   <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>UV</td>          <td>H</td><td>H</td></tr>
+  </tbody>
+</table>
+
     </div>
     <p class="copyright"> © <a href="copyright.htm">Copyright</a> Tom Keffer </p>
 
