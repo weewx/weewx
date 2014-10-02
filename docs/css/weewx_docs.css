@@ -79,14 +79,14 @@ caption {
 .station_data {
   margin-left: 40px;
   margin-right: 80px;
-  width: 700px;
+  width: 500px;
 }
 .station_data_key {
   font-size: 80%;
   font-style: italic;
   margin-left: 40px;
   margin-right: 80px;
-  width: 700px;
+  width: 500px;
 }
 .tty {
   font-family: "Courier New", Courier, monospace;
