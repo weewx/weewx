@@ -4018,7 +4018,7 @@ Options:
   </tbody>
 </table>
 <p class='station_data_key'>
-Each packet contains a subset of all possible readings.  For example, a temperature packet contains <span class='code'>extraTempN</span> and <span class='batteryStatusN</span>, a rain packet contains <span class='code'>totalRain</span> and <span class='code'>rainRate</span>.
+Each packet contains a subset of all possible readings.  For example, a temperature packet contains <span class='code'>extraTempN</span> and <span class='code'>batteryStatusN</span>, a rain packet contains <span class='code'>totalRain</span> and <span class='code'>rainRate</span>.
 </p>
 
 <h2 id="wmr200_station_data">WMR200</h2>
@@ -4059,7 +4059,7 @@ Each packet contains a subset of all possible readings.  For example, a temperat
   </tbody>
 </table>
 <p class='station_data_key'>
-Each packet contains a subset of all possible readings.  For example, a temperature packet contains <span class='code'>extraTempN</span> and <span class='batteryStatusN</span>, a rain packet contains <span class='code'>totalRain</span> and <span class='code'>rainRate</span>.
+Each packet contains a subset of all possible readings.  For example, a temperature packet contains <span class='code'>extraTempN</span> and <span class='code'>batteryStatusN</span>, a rain packet contains <span class='code'>totalRain</span> and <span class='code'>rainRate</span>.
 </p>
 
 <h2 id="wmr9x8_station_data">WMR9x8</h2>
@@ -4107,7 +4107,7 @@ Each packet contains a subset of all possible readings.  For example, a temperat
   </tbody>
 </table>
 <p class='station_data_key'>
-Each packet contains a subset of all possible readings.  For example, a temperature packet contains <span class='code'>extraTempN</span> and <span class='batteryStatusN</span>, a rain packet contains <span class='code'>totalRain</span> and <span class='code'>rainRate</span>.
+Each packet contains a subset of all possible readings.  For example, a temperature packet contains <span class='code'>extraTempN</span> and <span class='code'>batteryStatusN</span>, a rain packet contains <span class='code'>totalRain</span> and <span class='code'>rainRate</span>.
 </p>
 
 <h2 id="fo_station_data">Fine Offset</h2>
@@ -4230,6 +4230,7 @@ data are available only from 30xx stations.
   <tr><td class='first_col'>dewpoint</td>    <td>D</td><td> </td></tr>
   <tr><td class='first_col'>windchill</td>   <td>H/D</td><td> </td></tr>
   <tr><td class='first_col'>heatindex</td>   <td>D</td><td> </td></tr>
+  <tr><td class='first_col'>UV</td>          <td>H</td><td> </td></tr>
   <tr><td class='first_col'>extraTemp1</td>  <td>H</td><td> </td></tr>
   <tr><td class='first_col'>extraTemp2</td>  <td>H</td><td> </td></tr>
   <tr><td class='first_col'>extraTemp3</td>  <td>H</td><td> </td></tr>
@@ -4248,6 +4249,11 @@ data are available only from 30xx stations.
   <tr><td class='first_col'>extraBatteryStatus4</td>  <td>H</td><td></td></tr>
   </tbody>
 </table>
+<p class='station_data_key'>
+Some stations support up to 5 remote temperature/humidity sensors.  The
+<span class='code'>UV</span> data are available only with the optional
+solar radiation sensor.
+</p>
 
 <h2 id="ultimeter_station_data">Ultimeter</h2>
 <table class='station_data'>
@@ -4274,6 +4280,14 @@ data are available only from 30xx stations.
   <tr><td class='first_col'>heatindex</td>   <td>D</td><td> </td></tr>
   </tbody>
 </table>
+<p class='station_data_key'>
+The <span class='code'>rain</span> and <span class='code'>rainRate</span> are
+available only on stations with the optional rain bucket.
+</p>
+<p class='station_data_key'>
+Pressure, inside temperature, and inside humidity data are not available on
+all types of Ultimeter stations.
+</p>
 
 <h2 id="ws1_station_data">WS1</h2>
 <table class='station_data'>
@@ -4326,6 +4340,11 @@ data are available only from 30xx stations.
   <tr><td class='first_col'>UV</td>          <td>H</td><td>H</td></tr>
   </tbody>
 </table>
+<p class='station_data_key'>
+The <span class='code'>radiation</span> and <span class='code'>UV</span>
+data are available only with the optional solar radiation sensor.
+</p>
+
 
     </div>
     <p class="copyright"> © <a href="copyright.htm">Copyright</a> Tom Keffer </p>
