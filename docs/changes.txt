@@ -49,6 +49,9 @@ Added CC3000 to debian installer scripts.
 Fixed bug that can affect hardware that emits floating point timestamps,
 where the timestamp is within 1 second of the end of an archive interval.
 
+Changed UVBatteryStatus to uvBatteryStatus in the WMR100 driver in order
+to match the convention used by other drivers.
+
 
 2.6.4 06/16/14
 
