@@ -150,7 +150,7 @@ def stampgen(startstamp, stopstamp, interval):
                 ts_last = ts
             dt += delta
 
-def startOfInterval(time_ts, interval, grace=1):
+def startOfInterval(time_ts, interval):
     """Find the start time of an interval.
     
     This algorithm assumes the day is divided up into
@@ -162,10 +162,6 @@ def startOfInterval(time_ts, interval, grace=1):
     timestamp will be returned.
     
     interval: An interval length in seconds.
-    
-    grace: A time this many seconds into an interval is still
-    included in the last interval. Set to zero to have an
-    inclusive start of an interval. [Optional. Default is 1 second.]
     
     Returns: A timestamp with the start of the interval.
 
@@ -191,13 +187,20 @@ def startOfInterval(time_ts, interval, grace=1):
     >>> start_ts = time.mktime(time.strptime("2013-07-04 01:04:59", "%Y-%m-%d %H:%M:%S"))
     >>> time.ctime(startOfInterval(start_ts,  300))
     'Thu Jul  4 01:00:00 2013'
-    >>> startOfInterval(1412088660, 60)
-    1412088600
+    >>> start_ts = time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))
+    >>> time.ctime(startOfInterval(start_ts,  300))
+    'Wed Jul  3 23:55:00 2013'
+    >>> start_ts = time.mktime(time.strptime("2013-07-04 07:51:00", "%Y-%m-%d %H:%M:%S"))
+    >>> time.ctime(startOfInterval(start_ts,  60))
+    'Thu Jul  4 07:50:00 2013'
+    >>> start_ts += 0.1
+    >>> time.ctime(startOfInterval(start_ts,  60))
+    'Thu Jul  4 07:51:00 2013'
     """
 
     interval_m = interval/60
     interval_h = interval/3600
-    time_tt = time.localtime(time_ts - grace)
+    time_tt = time.localtime(time_ts)
     m = time_tt.tm_min  // interval_m * interval_m
     h = time_tt.tm_hour // interval_h * interval_h if interval_h > 1 else time_tt.tm_hour
 
@@ -208,7 +211,12 @@ def startOfInterval(time_ts, interval, grace=1):
                                      time_tt.tm_mday,
                                      h, m, 0,
                                      0, 0, time_tt.tm_isdst))
-    return int(start_interval_ts)
+    # Weewx uses the convention that the interval is exclusive on left, inclusive
+    # on the right. So, if the timestamp is at the beginning of the interval,
+    # it actually belongs to the previous interval.
+    if time_ts == start_interval_ts:
+        start_interval_ts -= interval
+    return start_interval_ts
 
 def _ord_to_ts(_ord):
     d = datetime.date.fromordinal(_ord)
@@ -982,6 +990,9 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
 
 if __name__ == '__main__':
     import doctest
+
+    start_ts = time.mktime(time.strptime("2013-07-04 01:00:00", "%Y-%m-%d %H:%M:%S"))
+    print time.ctime(startOfInterval(start_ts,  300))
 
     if not doctest.testmod().failed:
         print "PASSED"

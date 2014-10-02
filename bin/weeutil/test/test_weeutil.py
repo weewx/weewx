@@ -16,7 +16,7 @@ import time
 
 from weeutil.weeutil import startOfInterval, option_as_list, TimeSpan, genYearSpans, genMonthSpans, genDaySpans
 from weeutil.weeutil import archiveDaySpan, archiveWeekSpan, archiveMonthSpan, archiveYearSpan, archiveRainYearSpan
-from weeutil.weeutil import startOfDay, startOfArchiveDay, intervalgen, stampgen
+from weeutil.weeutil import startOfDay, startOfArchiveDay, intervalgen, stampgen, timestamp_to_string
 
 class WeeutilTest(unittest.TestCase):
     
@@ -179,6 +179,16 @@ class WeeutilTest(unittest.TestCase):
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
         
+        # Do a test over the spring DST boundary, but this time
+        # on an archive interval boundary, 01:00:00 ST, the
+        # instant of the change over.
+        # Correct answer is 00:59:00 ST.
+        t_length = 60
+        t_test = time.mktime((2009, 3, 8, 1, 00, 00, 0, 0, 0))
+        t_ans  = time.mktime((2009, 3, 8, 0, 59, 00, 0, 0, 0))
+        t_start = startOfInterval(t_test, t_length)
+        self.assertEqual(t_start, t_ans)
+        
         # Do a test over the fall DST boundary.
         # This is 01:22:05 DST, just before the change over.
         # The correct answer is 00:00:00 DST.
@@ -215,6 +225,15 @@ class WeeutilTest(unittest.TestCase):
         t_length = 60 * 60
         t_test = time.mktime((2009, 11, 1, 1, 22, 05, 0, 0, 0))
         t_ans  = time.mktime((2009, 11, 1, 1, 00, 00, 0, 0, 0))
+        t_start = startOfInterval(t_test, t_length)
+        self.assertEqual(t_start, t_ans)
+    
+        # Once again, but an an archive interval boundary
+        # This is 01:00:00 DST, the instant of the changeover
+        # The correct answer is 00:59:00 DST.
+        t_length = 1 * 60
+        t_test = time.mktime((2009, 11, 1, 1,  0,  0, 0, 0, 1))
+        t_ans  = time.mktime((2009, 11, 1, 0, 59,  0, 0, 0, 1))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
     

@@ -18,16 +18,16 @@ More extensive debug information for rscync users.
 
 Added catchup to the WS28xx driver, but still no hardware record generation.
 
-Moved clock synchronization options clock_check and max_drift back to
-section [StdTimeSynch].
-
 Changed lux-to-W/m^2 conversion factor in the fine offset driver.
 
 Added rain rate calculation to Ultimeter driver.
 
 Changed setTime to retrieve system time directly rather than using a value
 passed by the engine. This greatly improves the accuracy of StdTimeSync,
-particularly in network based implementations.
+particularly in network based implementations. Thanks to user Denny Page!
+
+Moved clock synchronization options clock_check and max_drift back to
+section [StdTimeSynch].
 
 Fixed ENDPOINT_IN in the te923 driver.  This should provide better
 compatibility with a wider range of pyusb versions.
@@ -45,6 +45,9 @@ In the debian installer, default to ttyUSB0 instead of ttyS0 for stations
 with a serial interface.
 
 Added CC3000 to debian installer scripts.
+
+Fixed bug that can affect hardware that emits floating point timestamps,
+where the timestamp is within 1 second of the end of an archive interval.
 
 
 2.6.4 06/16/14
