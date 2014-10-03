@@ -3256,7 +3256,7 @@ Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 
         <h3>Raspberry Pi</h3>
           <p>Running <span class="code">weewx</span> on a Raspberry Pi has become 
           very popular. You'll have to look elsewhere for instructions on setting up 
-          your RPi (I don't own one), but there are a few very common problems with 
+          your RPi, but there are a few very common problems with 
           setting them up.</p>
           <h4>NTP</h4>
           <p class="warning">You must run NTP on your RPi, and you must make sure it 
@@ -3293,6 +3293,28 @@ sudo apt-get install ftp
           current than the minimal amount the RPi can supply through its USB ports. Use a powered
           hub to get around this problem.</p>
         
+	  <h4>Run a lightweight web server</h4>
+	  <p>The RPi is astonishingly powerful for its size, but it does have its limitations.
+	    If you plan on running a webserver on it, perhaps to serve your home, then use a
+	    lightweight one, such as <a href="http://www.lighttpd.net/">lighttpd</a>
+	    or <a href="http://nginx.org/">nginx</a>. Apache works, but it uses far more 
+	    memory. In my tests:</p>
+	  <table style="width: 30%" class='indent'>
+	    <caption>Memory requirements of 3 common webservers on a Raspberry Pi</caption>
+	    <tr class="first_row">
+	      <td>Webserver</td><td>VIRT</td><td>RES</td>
+	    </tr>
+	    <tr>
+	      <td class="first_col">Apache</td><td>222 Mb</td><td>3 Mb</td>
+	    </tr>
+	    <tr>
+	      <td class="first_col">lighttpd</td><td>7 Mb</td><td>2 Mb</td>
+	    </tr>
+	    <tr>
+	      <td class="first_col">nginx</td><td>11 Mb</td><td>1.7 Mb</td>
+	    </tr>
+	  </table>
+	    
 	<h3>Fine Offset USB lockups</h3>
     <p>The Fine Offset series
 	weather stations and their derivatives are a fine value and
