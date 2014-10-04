@@ -71,10 +71,10 @@ Version: 2.6.4
     <p>The following table enumerates many of the weather stations that
       are known to work with <span class='code'>weewx</span>.  If your
       station is not in the table, check the pictures at the
-      <a href="http://weewx.com/hardware.html">supported hardware page</a> -
+      <a href="http://weewx.com/hardware.html">supported hardware page</a> &mdash;
       it could be a variation of one of the supported models.  You can also
       check the <a href="http://weewx.com/hwcmp.html">station comparison</a>
-      table - sometimes new models use the same communication protocols
+      table &mdash; sometimes new models use the same communication protocols
       as older hardware.
     </p>
     <p>The maturity column indicates the degree of confidence in the
@@ -779,7 +779,7 @@ Version: 2.6.4
       install, run, or modify <span class='code'>weewx</span>.</p>
     <p>
       By contrast, the package approach is somewhat simpler, but it requires 
-      root privileges and will install the bits and pieces of 
+      root privileges, and will install the bits and pieces of 
       <span class="code">weewx</span> in standard operating system
       locations across the file system instead of in a single directory.
       The net effect is that configuration files, templates, and code will
@@ -1250,7 +1250,9 @@ longitude = -77.0366</pre>
       In <span class='code'>ADAPTIVE</span> mode,
       <span class='code'>weewx</span> attempts to query the 
       console at times when it is not reading data from the sensors or writing
-      data to memory.  The default is <span class='code'>PERIODIC</span>.</p>
+      data to memory. See the section <a href="#polling_mode_and_the_polling_interval">
+	Polling Mode and the Polling Interval</a> 
+      for details. The default is <span class='code'>PERIODIC</span>.</p>
     <p class='config_option'>polling_interval</p>
     <p>The frequency, in seconds, at which <span class='code'>weewx</span> will
       poll the console for data.  Default is 60.  This setting applies only
@@ -1509,8 +1511,8 @@ longitude = -77.0366</pre>
       post using the <a href="http://www.wunderground.com/weatherstation/rapidfirehelp.asp">Weather Underground's "Rapidfire" protocol</a>.
       This will send a post to the
       WU site with every LOOP packet, which can be as often as every 2.5
-      seconds in the case of the Vantage instruments. Optional. Default
-      is <span class="code">False</span>.
+      seconds in the case of the Vantage instruments. Not all instruments
+      support this. Optional. Default is <span class="code">False</span>.
     </p>
     <p class="config_option">archive_post</p>
     <p>
@@ -1577,7 +1579,7 @@ longitude = -77.0366</pre>
     <p>How old a record can be before it will not be used for a catch up. CWOP
       does not use the timestamp on a posted record. Instead, they use the wall
       clock time that it came in. This means that if your station is off the
-      air for a long period of time, then <span class="code">weewx</span>
+      air for a long period of time, then when <span class="code">weewx</span>
       attempts a catch up, old data could be interpreted as the current
       conditions. Optional. Default is 1800 seconds.</p>
     <p class="config_option">server_list</p>
@@ -1642,8 +1644,7 @@ longitude = -77.0366</pre>
       <span class="code">[[StandardReport]]</span> will be run first, then report
       <span class="code">[[FTP]]</span> (which actually optionally uploads the results 
       to a remote web server). Details for how to customize reports are in the section
-      <em><a href="customizing.htm#reports">Opportunities 
-	  for customizing reports</a></em>, in the 
+      <em><a href="customizing.htm#reports">Customizing reports</a></em>, in the 
       <a href="customizing.htm">Customizing Guide</a>.
     </p>
     <p class="config_option">SKIN_ROOT </p>
@@ -1719,31 +1720,32 @@ longitude = -77.0366</pre>
       on the remote server. Valid values are 1 to enable and 0 to disable. Required. 
       Default is 0.</p>
     <h2 class="config_section" id="StdConvert">[StdConvert]</h2>
-    <p>This section is for configuring the <span class="code">StdConvert</span>
-      service.</p>
-    <p class='note'><strong>Note!</strong><br/>
-      If you would like to change the units that are displayed
-      in plots or files, you should make changes to the skin as described in
-      the <a href="customizing.htm">Customizing Guide</a>, under section
-      <em><a href="customizing.htm#Changing_options">Changing options</a></em>.
-    </p>
-    <p>The <span class="code">StdConvert</span> service acts as a filter,
-      converting the unit system coming off your hardware to a target output
-      unit system. Everything that follows, including the archiving service,
-      will use the target unit system. Hence, your data will be stored using
-      your chosen unit system. </p>
+    <p>This section is for configuring
+      the <span class="code">StdConvert</span> service. This service
+      acts as a filter, converting the unit system coming off your
+      hardware to a target output unit system. All downstream
+      services, including the archiving service, will then see this
+      unit system.  Hence, your data will be stored in the database
+      using whatever unit system you specify here. </p>
     <p><em>Once chosen, it cannot be changed!</em> Weewx does not allow you to
-      mix unit systems within the databases. You must chose one or the other
+      mix unit systems within the databases. You must chose a unit system
       and then stick with it. This means that users coming from wview (which
       uses US Customary) should not change the default setting. Having said
       this, there is a way of reconfiguring the database to use another unit
       system. See the section
       <a href="customizing.htm#Changing_the_unit_system">Changing the unit system</a> 
       in the Customizing Guide.</p>
-    <p>Note that whatever you choose here, it does not affect your options for
-      the unit system to be used for <i>reporting</i>. Because of this, unless
-      you have a special purpose application, there is really no good reason to
-      change from the default, which is <span class="code">US</span>. </p>
+    <p class='note'><strong>Note!</strong><br/>  This service only
+      affects the units used in the <i>databases</i>. In particular,
+      it has nothing to do with what units are displayed in plots or
+      files. Those units are specified in the skin configuration
+      file, <span class="code">skin.conf</span>, as described in
+      the <a href="customizing.htm">Customizing Guide</a>, under
+      section
+      <em><a href="customizing.htm#Changing_options">Changing
+      options</a></em>.  Because of this, unless you have a special
+      purpose application, there is really no good reason to change
+      from the default, which is <span class="code">US</span>.</p>
     <p class="warning"><strong>Warning!</strong><br />
       If, despite these precautions, you do decide to change the units of data
       stored in the database, be sure to read the sections
@@ -1761,6 +1763,7 @@ longitude = -77.0366</pre>
       Units</a> in the Customizing Guide for the exact differences beween 
       these three choices.
       Default is <span class="code">US</span>.</p>
+
     <h2 class="config_section" id="StdCalibrate">[StdCalibrate]</h2>
     <p>This section is for configuring the <span class="code">StdCalibrate</span> 
       service. This service offers an opportunity to correct for any calibration errors 
@@ -2381,7 +2384,7 @@ Pressure offset is now 1.247000</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-usb</pre>
     <p>Let the utility run for at least a few minutes, or possibly an hour or two.  It is not unusual to see a few bad reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable, USB hub, or removing other devices from the bus.</p>
 
-    <h3>Polling mode and the polling interval</h3>
+    <h3 id="polling_mode_and_the_polling_interval">Polling mode and the polling interval</h3>
     <p>When reading 'live' data, <span class='code'>weewx</span> can read as fast as possible, or at a user-defined period.  This is controlled by the <span class='code'>polling_mode</span> parameter.
     </p>
     <table class='indent'>
@@ -2392,7 +2395,7 @@ Pressure offset is now 1.247000</p>
         <td>Notes</td>
       </tr>
       <tr>
-        <td>ADAPTIVE</td>
+        <td class="first_col">ADAPTIVE</td>
         <td>
           <p class='tty' style='margin:0'>[FineOffsetUSB]
     polling_mode = ADAPTIVE</p>
@@ -2402,7 +2405,7 @@ Pressure offset is now 1.247000</p>
         </td>
       </tr>
       <tr>
-        <td>PERIODIC</td>
+        <td class="first_col">PERIODIC</td>
         <td>
           <p class='tty' style='margin:0'>[FineOffsetUSB]
     polling_mode = PERIODIC
@@ -3627,8 +3630,8 @@ port = /dev/cuaU0</pre>
 	weewx</span> on Apple's Mavericks operating sytem.</p>
 
     <h3>Funky symbols in plots</h3>
-    <p>If your plots have strange looking symbols for units such as
-      degrees Fahrenheit (&deg;F) that look something like this:</p>
+    <p>If your plots have strange looking symbols for units, such as
+      degrees Fahrenheit (&deg;F), that look something like this:</p>
       <img src='funky_degree.png'/>
     <p>Then the problem may be that you are missing the fonts
     specified for the option
