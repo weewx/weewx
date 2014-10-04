@@ -2001,10 +2001,10 @@ archive_services = weewx.wxengine.StdArchive
 restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW
 report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
 </pre>
-    <p>If you're the type who cleans out your car's trunk after every use, 
-    you can leave some of these services out if you do not need
-      them. However, this will only make a slight difference in execution
-      speed and memory use.</p>
+    <p>If you're the type who cleans out your car trunk after every
+      use, then you may also be the type who wants to pare this down
+      to the bare minimum.  However, this will only make a slight
+      difference in execution speed and memory use.</p>
 
     <h1 id="configuring_hardware">Configuring station hardware</h1>
     <p>This section describes how to configure some of the more popular station hardware, using 
@@ -3291,10 +3291,15 @@ Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 
 <pre class="tty">
 sudo apt-get install ftp
 </pre>
-          <h4>Use a powered hub</h4>
-          <p>Many weather stations draw more
-          current than the minimal amount the RPi can supply through its USB ports. Use a powered
-          hub to get around this problem.</p>
+          <h4>Use a good power supply</h4>
+          <p>A lot of problems with the RPi seem to center around
+	    inadequate power supplies.  Many weather stations can
+	    demand a lot of current through their USB connection.
+	    Make sure your RPi can supply it, either by getting a good
+	    power supply (I use
+	    a <a href="http://www.amazon.com/gp/product/B00J3IB7A2/">Innogear
+	    1.5 A supply</a>, which costs all of $5.50 from
+	    Amazon), or, alternatively, by using a powered USB hub.</p>
         
 	  <h4>Run a lightweight web server</h4>
 	  <p>The RPi is astonishingly powerful for its size, but it does have its limitations.
@@ -3560,8 +3565,8 @@ Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
 
     <h3>Python 2.5</h3>
     <p>Weewx should work with Python version 2.5, but it may take some fiddling
-      with your environment. Later versions of Python come with pysqlite and
-      with PIL already installed. You may have to do this yourself. Here is
+      to get it to work. Later versions of Python come with pysqlite and
+      PIL already installed. You may have to do this yourself. Here is
       how to do it with <a href="https://pypi.python.org/pypi/setuptools#python-2-4-and-python-2-5-support">
       <span class='code'>easy_install</span></a>, but you may be
       able to use <span class='code'>apt-get</span> or other tools, depending on 
