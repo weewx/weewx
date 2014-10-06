@@ -57,7 +57,7 @@ table#stattypes td {
         key events occur, such as the arrival of LOOP data. The default install
         of <span class="code">weewx</span> includes the following services: </p>
       <table id='default_services' class="indent" summary="Overview of the weewx architecture">
-	<caption>The standard weewx services</caption>
+        <caption>The standard weewx services</caption>
         <tbody>
           <tr class="first_row">
             <td>Service</td>
@@ -87,19 +87,19 @@ table#stattypes td {
             <td class="code text_highlight">weewx.wxengine.StdArchive</td>
             <td>Archive any new data to the SQL databases.</td>
           </tr>
-	  <tr>
-	    <td class="code text_highlight">weewx.restx.StdStationRegistry<br/>
-	      weewx.restx.StdWunderground<br/>
-	      weewx.restx.StdPWSweather<br/>
-	      weewx.restx.StdCWOP<br/>
-	      weewx.restx.StdWOW<br/>weewx.restx.StdAWEKAS
-	    </td>
-	    <td>Various <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">
-		RESTful services</a> (simple stateless client-server protocols), 
-	      such as the Weather Underground, CWOP, etc. Each launches its own, independent
-	      thread, which manages the post.
-	    </td>
-	  </tr>
+          <tr>
+            <td class="code text_highlight">weewx.restx.StdStationRegistry<br/>
+              weewx.restx.StdWunderground<br/>
+              weewx.restx.StdPWSweather<br/>
+              weewx.restx.StdCWOP<br/>
+              weewx.restx.StdWOW<br/>weewx.restx.StdAWEKAS
+            </td>
+            <td>Various <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">
+                RESTful services</a> (simple stateless client-server protocols), 
+              such as the Weather Underground, CWOP, etc. Each launches its own, independent
+              thread, which manages the post.
+            </td>
+          </tr>
           <tr>
             <td class="code text_highlight">weewx.wxengine.StdPrint</td>
             <td>Print out new LOOP and archive packets on the console.</td>
@@ -174,15 +174,15 @@ table#stattypes td {
       <p>Like all reports, the FTP and RSYNC "Reports" also use a skin, and
         include a skin configuration file, although they are quite minimal. </p>
       <p>Skins live in their own directory located in <a href="#" id="skin-root-description-target">
-	  <span class="symcode">$SKIN_ROOT</span></a>.
+          <span class="symcode">$SKIN_ROOT</span></a>.
       </p>
 
       <div id="skin-root-description" title="$SKIN_ROOT" style="display:none"><p>The symbol <span class='code'>
           $SKIN_ROOT</span> is a symbolic name to the location of the directory where
-	  your skins are located. It is not to be taken literally. Consult the
-	  <a href="usersguide.htm#dir-layout-table">directory layout table</a> in 
-	  the User's Guide for its exact location, dependent
-	  on how you installed weewx and what operating system you are using</p></div>
+          your skins are located. It is not to be taken literally. Consult the
+          <a href="usersguide.htm#dir-layout-table">directory layout table</a> in 
+          the User's Guide for its exact location, dependent
+          on how you installed weewx and what operating system you are using</p></div>
       <script type="text/javascript">
         $("#skin-root-description-target").click(
           function () {
@@ -292,15 +292,16 @@ table#stattypes td {
         next time you do an upgrade.</p>
       <p>A better idea is to put the code in the
         <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>,
-        directory. For example, copy example code from the 
+        directory. For example, copy example code from the
         <span class="code">examples</span> directory to the
-        <span class="code">user</span> directory, then modify it there.
-        If your modification does not contain much code, consider putting
-        it in the extensions.py file in the <span class="code">user</span>
-        directory.
-        The <span class="code">user</span> directory is preserved through
-        upgrades, so you won't have to redo any changes you might have
-        made.</p>
+        <span class="code">user</span> directory, then modify it
+        there.  If your modification does not contain much code,
+        consider putting it in the
+        file <span class="code">extensions.py</span> in the
+        <span class="code">user</span> directory.  Because
+        the <span class="code">user</span> directory is preserved
+        through upgrades, you won't have to redo any changes you might
+        have made.</p>
 
       <h2 id="wee_reports">The tool wee_reports</h2>
       <p>If you make changes, how do you know what the results will look like? You
@@ -522,7 +523,7 @@ $month.outTemp.max</pre>
           observation</em>. An example would be the current barometric pressure:
       </p>
       <pre class="tty">$current.barometer</pre>
-      <p>The dot code for a current observation looks like: </p>
+      <p>The most general dot code for a "current" observation looks like: </p>
       <pre class="tty"><em>$current.obstype[.optional_unit_conversion][.optional_formatting]</em></pre>
       <p>Where: </p>
       <p class="indent"><span class="code"><em>obstype</em></span> is an
@@ -551,7 +552,7 @@ $month.outTemp.max</pre>
         week's total precipitation (where the aggregation type is <span class="code"><em>sum</em></span>):
         </p>
       <pre class="tty">$week.rain.sum</pre>
-      <p>The dot code for an aggregation over time looks like: </p>
+      <p>The most general dot code for an aggregation over time looks like: </p>
       <pre class="tty"><em>$period.statstype.aggregation[.optional_unit_conversion][.optional_formatting]</em></pre>
       <p>Where: </p>
       <p class="indent"><span class="code"><em>period</em></span> is the time
@@ -617,7 +618,7 @@ or in foobar units: $day.barometer.min.foobar
         used with either current observations or aggregations. It can be one of:
       </p>
       <table class="indent" summary="Formatting Options">
-	<caption>Optional formatting tags</caption>
+        <caption>Optional formatting tags</caption>
         <tbody>
           <tr class="first_row">
             <td>Optional formatting tag</td>
@@ -629,7 +630,7 @@ or in foobar units: $day.barometer.min.foobar
               string format from <span class="code">skin.conf</span>. A unit
               label (e.g., <span class='code'>&deg;F</span>) from <span class="code">skin.conf</span> is also attached
               at the end.
-	    </td>
+            </td>
           </tr>
           <tr>
             <td class="code text_highlight">.string(<em>NONE_string</em>)</td>
@@ -639,15 +640,15 @@ or in foobar units: $day.barometer.min.foobar
               will be substituted if given, otherwise the value for <span class="code">NONE</span>
               in <span class="code"> <a href="#Units_StringFormats">[Units][[StringFormats]]</a>
               </span> will be used. A unit label (e.g., <span class='code'>&deg;F</span>) 
-	      from <span class="code">skin.conf</span> will be attached at the end.
-	    </td>
+              from <span class="code">skin.conf</span> will be attached at the end.
+            </td>
           </tr>
           <tr>
             <td class="code text_highlight"><span class="code">.formatted</span></td>
             <td>Value is returned as a string, formatted using an appropriate
               string format and <span class="code">None</span> value from <span
                 class="code">skin.conf</span>. No unit label will be attached.
-	    </td>
+            </td>
           </tr>
           <tr>
             <td class="code text_highlight">.format(<em>string_format</em>, <em>NONE_string</em>)</td>
@@ -657,8 +658,8 @@ or in foobar units: $day.barometer.min.foobar
               substituted if given, otherwise the value for <span class="code">NONE</span>
               in <span class="code"> <a href="#Units_StringFormats">[Units][[StringFormats]]</a>
               </span> will be used. A unit label (e.g., <span class='code'>&deg;F</span>) 
-	      from <span class="code">skin.conf</span> will be attached at the end.
-	    </td>
+              from <span class="code">skin.conf</span> will be attached at the end.
+            </td>
           </tr>
           <tr>
             <td class="code text_highlight">.nolabel(<em>string_format, NONE_string</em>)</td>
@@ -668,23 +669,23 @@ or in foobar units: $day.barometer.min.foobar
               substituted if given, otherwise the value for <span class="code">NONE</span>
               in <span class="code"> <a href="#Units_StringFormats">[Units][[StringFormats]]</a>
               </span> will be used. No unit label will be attached at the end.
-	    </td>
+            </td>
           </tr>
           <tr>
             <td class="code text_highlight"> <span class="code">.raw</span> </td>
             <td>Value is returned "as is" without being converted to a string
               and without any formatting applied. This can be useful for doing 
-	      arithmetic directly within the templates. You must be prepared to deal
+              arithmetic directly within the templates. You must be prepared to deal
               with a <span class="code">None</span> value unless the value is
               converted directly to a string. In this case, it will be converted
               to the empty string (<span class="code">''</span>)
-	    </td>
+            </td>
           </tr>
         </tbody>
       </table>
       <p>&nbsp;</p>
       <table class="indent" summary="Summary of formatting options">
-	<caption>Summary of formatting options</caption>
+        <caption>Summary of formatting options</caption>
         <tbody>
           <tr class="first_row">
             <td>Formatting Tag</td>
@@ -739,7 +740,7 @@ or in foobar units: $day.barometer.min.foobar
       </table>
       <p>Here are some examples with the expected results: </p>
       <table class="indent" summary="Formatting options with expected results">
-	<caption>Formatting options with expected results</caption>
+        <caption>Formatting options with expected results</caption>
         <tbody>
           <tr class="first_row">
             <td>Tag</td>
@@ -1042,7 +1043,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       <pre class="tty">$almanac.next_first_quarter_moon</pre>
       <p>Here is a table of the information that falls into this category:</p>
       <table class="indent" style="width:60%">
-	<caption>Calendar events</caption>
+        <caption>Calendar events</caption>
         <tbody class="code">
           <tr>
             <td>previous_equinox</td>
@@ -1112,7 +1113,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       <p>The possible values for the <span class="code">attribute</span> tag
         are listed in the following table:</p>
       <table class="indent" style="width: 60%">
-	<caption>Attributes that can be used with heavenly bodies</caption>
+        <caption>Attributes that can be used with heavenly bodies</caption>
         <tbody class="code">
           <tr>
             <td>az</td>
@@ -1159,7 +1160,13 @@ Sunrise, sunset: 06:51 19:30</pre>
         </tbody>
       </table>
       <h2 id="defining_new_tags">Defining new tags</h2>
-      In the section on <em><a href="#templates">Customizing templates</a></em>,
+
+      <p class="warning"><strong>Warning!</strong><br />
+        The programming interface for search list extensions is still in
+        a state of flux, and likely to change in Version 3. Be prepared
+        to modify any extensions you write.</p>
+
+      <p>In the section on <em><a href="#templates">Customizing templates</a></em>,
       we have seen how you can change a template and make use of the various
       tags available such as <span class="code">$day.outTemp.max</span> for the
       maximum outside temperature for the day. But, what if you want to
@@ -1176,23 +1183,23 @@ Sunrise, sunset: 06:51 19:30</pre>
       <p>The answer is to write a <em>search list extension</em>.</p>
       <h3>Search list</h3>
       <p> The Cheetah template engine (which <span class="code">weewx</span> uses) finds tags by 
-		scanning a <em>search
+                scanning a <em>search
           list</em>,
           a Python list of objects. For example, for a tag <span class="code">$foo</span>, the
           engine will scan down the list, trying each object <span class="code">obj</span> in turn. First
           it tries using <span class="code">foo</span> as an attribute, that is, 
-		<span class="code">obj.foo</span>. If that raises an
+                <span class="code">obj.foo</span>. If that raises an
           exception <span class="code">AttributeError</span>, then it will try 
-		<span class="code">foo</span> as a key, that is
+                <span class="code">foo</span> as a key, that is
           <span class="code">obj[key]</span>. If that raises a 
-		<span class="code">KeyError</span>, then it moves on to the next item
+                <span class="code">KeyError</span>, then it moves on to the next item
           in the list. The first match that does not raise an exception is
           returned. If no match is found, it raises a <span class="code">NameMapper.NotFound</span>
           exception.</p>
-		<h3>
+                <h3>
         Extending the list</h3>
       <p>Weewx comes with a number of objects already in the search list, but you can 
-	  extend it. To do so, you should have some familiarity with Python, in
+          extend it. To do so, you should have some familiarity with Python, in
       particular, how to write new classes and member functions for them. </p>
       <p>Let's look at an example. The regular version of <span class="code">weewx</span>
         offers statistical summaries by day, week, month, and year. Suppose we
@@ -1251,14 +1258,14 @@ class MyXSearch(SearchList):                                #1
         <li>Create a new class called <span class="code">MyXSearch</span>,
           which will inherit from class <span class="code">SearchList</span>.
           All search list extensions inherit from this class.</li>
-	<li>Create an initializer for our new class. In this case, the 
-	  initializer does nothing except pass its only parameter,
-	  <span class="code">generator</span>, a reference to the calling 
-	  generator, to its superclass, <span class="code">SearchList</span>. 
-	  The superclass will store it in <span class="code">self</span>.</li>
+        <li>Create an initializer for our new class. In this case, the 
+          initializer does nothing except pass its only parameter,
+          <span class="code">generator</span>, a reference to the calling 
+          generator, to its superclass, <span class="code">SearchList</span>. 
+          The superclass will store it in <span class="code">self</span>.</li>
         <li>Override member function <span class="code">get_extension()</span>.
           This function will be called when the generator is ready to accept 
-	  your new search list extension. The parameters that will be passed
+          your new search list extension. The parameters that will be passed
           in are:
           <ul>
             <li><span class="code">self</span> Python's way of indicating the
@@ -1266,13 +1273,13 @@ class MyXSearch(SearchList):                                #1
             <li><span class="code">valid_timespan</span> An instance of the
               utility class <span class="code">TimeSpan</span>. This will
               contain the valid start and ending times used by the template. 
-			Normally, this is all valid times; </li>
+                        Normally, this is all valid times; </li>
             <li><span class="code">archivedb</span> An instance of
               <span class="code">weewx.archive.Archive</span>,
               holding the archive database;</li>
             <li><span class="code">statsdb</span> An instance of
               <span class="code">weewx.stats.StatsDb</span>, 
-	      holding the statistical database.</li>
+              holding the statistical database.</li>
           </ul>
         </li>
         <li>The class <span class="code">TimeSpanStats</span> represents a
@@ -1291,14 +1298,14 @@ class MyXSearch(SearchList):                                #1
               <span class="code">statsdb</span>.</li>
             <li>The third should be an instance of class
               <span class="code">weewx.units.Formatter</span>, 
-	      which contains information about how the results should be 
-	      formatted. We just pass in the formatter set up by the generator,
+              which contains information about how the results should be 
+              formatted. We just pass in the formatter set up by the generator,
               <span class="code">self.generator.formatter</span>.</li>
             <li>The fourth should be an instance of
               <span class="code">weewx.units.Converter</span>,
               which contains information about the target units (<em>e.g.</em>,
               "<span class="code">degree_C</span>") that are to be used. Again,
-	      we just pass in the instance set up by the generator,
+              we just pass in the instance set up by the generator,
               <span class="code">self.generator.converter</span>.</li>
           </ul>
         </li>
@@ -1312,7 +1319,7 @@ class MyXSearch(SearchList):                                #1
       <ol start="5">
         <li>The object <span class="code">valid_timespan</span> holds the
           domain of all valid times, but in order to calculate statistics for 
-	  the last seven days, we need not the earliest valid time, but the
+          the last seven days, we need not the earliest valid time, but the
           time at midnight seven days ago. So, we do a little Python date
           arithmetic to calculate this. The object
           <span class="code">week_dt</span> will be an instance of
@@ -1326,9 +1333,9 @@ class MyXSearch(SearchList):                                #1
           '<span class="code">seven_day</span>' and return it. </li>
       </ol>
       <p>The last step is to tell the template engine where to find our 
-	extension. You do that by going into the skin configuration file,
-	<span class="code">skin.conf</span>, and adding the option
-	<span class="code">search_list_extensions</span> with our new
+        extension. You do that by going into the skin configuration file,
+        <span class="code">skin.conf</span>, and adding the option
+        <span class="code">search_list_extensions</span> with our new
         extension. When you're done, it will look something like this:</p>
       <pre class="tty">[CheetahGenerator]
     # This section is used by the generator CheetahGenerator, and specifies
@@ -1348,7 +1355,7 @@ class MyXSearch(SearchList):                                #1
         earlier versions of <span class="code">weewx</span>, a name which will 
         still work.)</p>
       <p>Now, if the Cheetah engine encounters the tag <span class="code">
-	  $alltime</span>, it will scan the search list, looking for an
+          $alltime</span>, it will scan the search list, looking for an
         attribute or key that matches <span class="code">alltime</span>. When
         it gets to the little dictionary we provided, it will find a matching
         key, allowing it to retrieve the appropriate
@@ -1578,13 +1585,13 @@ inch     = ' in'</pre>
         ephem_year = %x %X</pre>
 
       <p>The specifiers <span class='code'>%x</span>, <span class='code'>%X</span>,
-	and <span class='code'>%A</span>
-	code locale dependent date, time, and weekday names, respectively.
-	Hence, if you set an appropriate environment variable <span class='code'>LANG</span>,
-	then the date and times should follow local conventions (see section
-	<a href="#environment_variable_LANG">Environment variable LANG</a> 
-	below for details on how to do this). However, they will not look particularly pretty
-	and you may want to change them. For example, I use this in the U.S.:
+        and <span class='code'>%A</span>
+        code locale dependent date, time, and weekday names, respectively.
+        Hence, if you set an appropriate environment variable <span class='code'>LANG</span>,
+        then the date and times should follow local conventions (see section
+        <a href="#environment_variable_LANG">Environment variable LANG</a> 
+        below for details on how to do this). However, they will not look particularly pretty
+        and you may want to change them. For example, I use this in the U.S.:
       </p>
       <pre class="tty">
     [[TimeFormats]]
@@ -1602,10 +1609,10 @@ inch     = ' in'</pre>
         ephem_year = %d-%b-%Y %H:%M</pre>
 
       <p>The last two formats, <span class='code'>ephem_day</span> and
-	<span class='code'>ephem_year</span> allow the formatting to be set for almanac times
-	The first, <span class="code">ephem_day</span>, is used for
+        <span class='code'>ephem_year</span> allow the formatting to be set for almanac times
+        The first, <span class="code">ephem_day</span>, is used for
         almanac times within the day, such as sunrise or sunset. The second, 
-	<span class="code">ephem_year</span>, is used for almanac times within the
+        <span class="code">ephem_year</span>, is used for almanac times within the
         year, such as the next equinox or full moon. </p>
 
       <h3 class="config_section">[[Ordinates]]</h3>
@@ -1633,16 +1640,16 @@ cooling_base = 20.0, degree_C</pre>
       <p class="config_option">hemispheres </p>
       <p>Comma separated list for the labels to be used for the four
         hemispheres. The default is "<span class="code">N, S, E, W</span>".</p>
-		<p class="config_option">latlon_formats</p>
-		<p>Comma separated list for the formatting to be used when converting 
-		latitude and longitude to strings. There should be three elements:</p>
-		<ol>
-			<li>The format to be used for whole degrees of latitude</li>
-			<li>The format to be used for whole degrees of longitude</li>
-			<li>The format to be used for minutes.</li>
-		</ol>
-		<p>This allows you to decide whether or not you want leading zeroes. The 
-		default includes leading zeroes and is &quot;%02d&quot;, &quot;%03d&quot;, &quot;%05.2f&quot;</p>
+                <p class="config_option">latlon_formats</p>
+                <p>Comma separated list for the formatting to be used when converting 
+                latitude and longitude to strings. There should be three elements:</p>
+                <ol>
+                        <li>The format to be used for whole degrees of latitude</li>
+                        <li>The format to be used for whole degrees of longitude</li>
+                        <li>The format to be used for minutes.</li>
+                </ol>
+                <p>This allows you to decide whether or not you want leading zeroes. The 
+                default includes leading zeroes and is &quot;%02d&quot;, &quot;%03d&quot;, &quot;%05.2f&quot;</p>
       <h3 class="config_section">[[Generic]]</h3>
       <p>This sub-section specifies default labels to be used for each observation
         type. For example, options </p>
@@ -1666,7 +1673,7 @@ outTemp = Outside Temperature</pre>
         are to be produced from which template. </p>
       <p>Before V2.5, this section was called
         <span class="code">[FileGenerator]</span>. 
-	Older versions and names are 100% backwards compatible.</p>
+        Older versions and names are 100% backwards compatible.</p>
       <h3>Overview of file generation</h3>
       <p>Files are generated from templates, and each template is identified
         by the <span class="config_option">template</span> parameter.</p>
@@ -1689,7 +1696,7 @@ outTemp = Outside Temperature</pre>
         each block.  In most cases, the block name does not matter - it is
         used only to isolate each template.  However, there are two block names
         that have special meaning:  <span class='code'>SummaryByMonth</span> and 
-	<span class='code'>SummaryByYear</span>.  These are described below.</p>
+        <span class='code'>SummaryByYear</span>.  These are described below.</p>
       <p>The file generator runs on each new archive record.  In a default
         weewx installation, that would be every 5 minutes.</p>
       <p>Cheetah processes each template to generate a file.  Cheetah follows
@@ -1705,7 +1712,7 @@ outTemp = Outside Temperature</pre>
       <p class="config_option">search_list</p>
       <p>This is the list of search list objects that will be scanned by 
         the template engine, looking for tags. See the section <em>
-	  <a href="#defining_new_tags">Defining new tags</a></em> and the 
+          <a href="#defining_new_tags">Defining new tags</a></em> and the 
         <a href="http://cheetahtemplate.org/docs/users_guide_html/users_guide.html">Cheetah documentation</a> for details on 
         search lists. If no <span class="config_option">search_list</span>
         is specified, a default list will be
@@ -2216,12 +2223,12 @@ outTemp = Outside Temperature</pre>
       <pre class="tty">
 moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</pre>
       <p>Most of the unit labels either follow ISO conventions, or are unlikely 
-	  to be used outside English speaking countries (an example would be 
-	  &quot;foot&quot;). But, there are two exceptions:</p>
-		<pre class="tty">hour           = &quot; hrs&quot;
+          to be used outside English speaking countries (an example would be 
+          &quot;foot&quot;). But, there are two exceptions:</p>
+                <pre class="tty">hour           = &quot; hrs&quot;
 second         = &quot; secs&quot;</pre>
       <p>You will probably want to change the generic labels used for the
-	observation types:</p>
+        observation types:</p>
       <pre class="tty">
 barometer      = Barometer
 dewpoint       = Dew Point
@@ -2268,7 +2275,7 @@ extraTemp1     = Pond Temperature</pre>
         <li>Add a service </li>
       </ul>
       <p>See the table <a href="#default_services">Default services</a> above for a list
-	of the services that are normally run.</p>
+        of the services that are normally run.</p>
 
       <h2>Customizing a Service</h2>
       <p>The service <span class="code">weewx.wxengine.StdPrint</span> prints
@@ -2478,7 +2485,7 @@ class MyAlarm(StdService):
         located in <span class="code">[Engines][[WxEngine]]</span>: </p>
       <pre class="tty">[Engines]
    [[WxEngine]]
-	service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport<span class="highlight">, examples.alarm.MyAlarm</span></pre>
+        service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport<span class="highlight">, examples.alarm.MyAlarm</span></pre>
       <p>Note that the <span class="code">service_list</span> must be all on
         one line. Unfortunately, the parser <span class="code">ConfigObj</span>
         does not allow options to be continued on to following lines.</p>
@@ -2495,7 +2502,7 @@ class MyAlarm(StdService):
         how to do this, using the utility <span class="symcode">$BIN_ROOT</span><span
           class="code">/wee_config_database</span>.</p>
       <p>This utility also has the ability to check a sqlite version of the archive
-	database for embedded strings (where a float is expected).<p>
+        database for embedded strings (where a float is expected).<p>
       <p>Before starting, it's worth running the utility with the <span class="code">--help</span>
         flag to see how it is used:</p>
       <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --help</pre>
@@ -2546,7 +2553,7 @@ appropriate permissions for the requested operation.</pre>
         details on how to write a custom service. However, when you are done it
         will look something like this:</p>
       <pre class="tty">from weewx.wxengine import StdService
-	
+        
 class AddElectricity(StdService):
 
     def __init__(self, engine, config_dict):
@@ -2731,9 +2738,9 @@ mv weewx.sdb_new weewx.sdb</pre>
       <ol>
         <li>Modify <span class="code">weewx.conf</span> to reflect your choice
           of the new unit system to use. Your choices are <span class='code'>US</span>,
-	  <span class="code">METRIC</span>, or <span class="code">METRICWX</span>.
-	  See the Appendix <a href="#units">Units</a> for the exact differences
-	  between these three choices.</li>
+          <span class="code">METRIC</span>, or <span class="code">METRICWX</span>.
+          See the Appendix <a href="#units">Units</a> for the exact differences
+          between these three choices.</li>
         <li>Make sure you have the necessary permissions to create the new
           database.</li>
         <li>Populate it with data from the old database.</li>
@@ -2773,8 +2780,8 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
       <h1 id="porting">Porting to new weather station hardware</h1>
       <p>Naturally, this is an advanced topic but, nevertheless, I'd
         like to encourage any Python wizards out there to give it a try. Of
-        course, I have selfish reasons for encouraging you: I don't want to
-        have to go out and buy every type of hardware there is! It's expensive
+        course, I have selfish reasons for this: I don't want to
+        have to buy every weather station ever invented! It's expensive,
         and my roof would look like a weather station farm.</p>
       <p>Here's the general strategy for doing a port.</p>
       <h2>Implement the driver</h2>
@@ -2788,13 +2795,15 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
       <p>Return a string with a short nickname for the hardware, such
         as "<span class="code">ACME X90</span>"</p>
       <h3><span class="code">genLoopPackets</span></h3>
-      <p>This should be a generator function that yields loop packets,
-        one after another. Don't worry about stopping it: the engine
-        will do this when an archive record is due. A loop packet is a
+      <p>This should be
+        a <a href="https://wiki.python.org/moin/Generators">generator
+        function</a> that yields loop packets, one after
+        another. Don't worry about stopping it: the engine will do
+        this when an archive record is due. A "loop packet" is a
         dictionary. At the very minimum it must contain keys for the
-        observation time and units.</p>
+        observation time and for the units used within the packet.</p>
       <table class="indent" style="width: 60%">
-	<caption>Required keys</caption>
+        <caption>Required keys</caption>
         <tbody>
           <tr>
             <td class="code">dateTime</td>
@@ -2804,10 +2813,10 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
             <td class="code">usUnits</td>
             <td>The unit system used. <span class="code">weewx.US</span> for US
               customary, <span class="code">weewx.METRICWX</span>, or 
-	      <span class="code">weewx.METRIC</span> for metric. See
+              <span class="code">weewx.METRIC</span> for metric. See
               the file <span class="code">units.py</span>, dictionaries <span
                 class="code">USUnits</span>, <span class="code">MetricWXUnits</span>,
-	      and <span class="code">MetricUnits</span>
+              and <span class="code">MetricUnits</span>
               for the exact definition of each.</td>
           </tr>
         </tbody>
@@ -2838,7 +2847,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         related to pressure. Some stations report only the station pressure,
         others calculate and report sea level pressures. </p>
       <table class="indent" style="width: 60%">
-	<caption>Pressure types</caption>
+        <caption>Pressure types</caption>
         <tbody>
           <tr>
             <td class="code">pressure</td>
@@ -2881,14 +2890,14 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         be a generator function that returns all the records since a
         given time. </p>
       <h3><span class="code">getTime</span></h3>
-      <p>If your hardware has an onboard clock and it supports reading
-	the time from it, then you may want to implement this
-	method. It takes no argument. It should return the time in
-	Unix Epoch Time. </p>
+      <p>If your hardware has an onboard clock and supports reading
+        the time from it, then you may want to implement this
+        method. It takes no argument. It should return the time in
+        Unix Epoch Time. </p>
       <h3><span class="code">setTime</span></h3>
-      <p>If your hardware has an onboard clock and it supports setting
-	it, then you may want to implement this method.  It takes no
-	argument and does not need to return anything.</p>
+      <p>If your hardware has an onboard clock supports <i>setting</i>
+        it, then you may want to implement this method.  It takes no
+        argument and does not need to return anything.</p>
       <h3><span class="code">closePort</span></h3>
       <p>If the driver needs to close a serial port, terminate a
         thread, close a database, or perform any other activity before
@@ -2909,14 +2918,14 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         to your new section type and your driver will be loaded.</p>
       <h2>Examples</h2>
       <p>Before starting, take a look at the simulator code
-	in <span class='code'>bin/weewx/drivers/simulator.py</span>. It's
-	dirt simple and you can easily play with it. Many people have
-	successfully used it as a starting point for writing their own
-	custom driver.</p>
+        in <span class='code'>bin/weewx/drivers/simulator.py</span>. It's
+        dirt simple and you can easily play with it. Many people have
+        successfully used it as a starting point for writing their own
+        custom driver.</p>
       <p>The next most complicated is the
         driver for the WMR100 series, located in <span class="code">wmr100.py</span>.
-	It reads from a USB port and has to do some tricky buffer decoding. Nevertheless,
-	it's general architecture is fairly straightforward.</p>
+        It reads from a USB port and has to do some tricky buffer decoding. Nevertheless,
+        it's general architecture is fairly straightforward.</p>
       <p>The driver for the Vantage series is by far the most complicated. It
         actually multi-inherits from not only <span class="code">AbstractStation</span>,
         but also <span class="code">StdService</span>. That is, it also
@@ -2926,7 +2935,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         help you out!</p>
 
       <h1 id="extensions">Extensions</h1>
-      <p>Now that you have made some customizations, you migh want to share
+      <p>Now that you have made some customizations, you might want to share
         those changes with other <span class='code'>weewx</span> users.  Put
         your customizations into an extension to make installation, removal,
         and distribution easier.</p>
@@ -3077,7 +3086,7 @@ Options:
         necessarily mean that it is available for <em>your</em> station setup.
         That would depend on whether your instrument supports the type. </p>
       <table class="indent">
-	<caption>Archive types</caption>
+        <caption>Archive types</caption>
         <tbody>
           <tr class="first_row">
             <td>Archive Type</td>
@@ -3400,26 +3409,26 @@ Options:
       <h1 id="units">Appendix: Units</h1>
       <p>The table below lists all the unit groups, their members, which
         units are options for the group, and what the defaults are
-	for each standard unit system. </p>
+        for each standard unit system. </p>
       <table class="indent" style="width: 80%">
-	<caption>Unit groups, members and options</caption>
+        <caption>Unit groups, members and options</caption>
         <tbody class="code">
           <tr class="first_row">
             <td>Group</td>
             <td>Members</td>
             <td>Unit options</td>
-	    <td>US</td>
-	    <td>METRICWX</td>
-	    <td>METRIC</td>
+            <td>US</td>
+            <td>METRICWX</td>
+            <td>METRIC</td>
           </tr>
           <tr>
             <td class="first_col">group_altitude</td>
             <td>altitude</td>
             <td>foot <br />
               meter</td>
-	    <td>foot</td>
-	    <td>meter</td>
-	    <td>meter</td>
+            <td>foot</td>
+            <td>meter</td>
+            <td>meter</td>
           </tr>
           <tr>
             <td class="first_col">group_degree_day</td>
@@ -3427,9 +3436,9 @@ Options:
               heatdeg</td>
             <td>degree_F_day<br />
               degree_C_day</td>
-	    <td>degree_F_day</td>
-	    <td>degree_C_day</td>
-	    <td>degree_C_day</td>
+            <td>degree_F_day</td>
+            <td>degree_C_day</td>
+            <td>degree_C_day</td>
           </tr>
           <tr>
             <td class="first_col">group_direction</td>
@@ -3438,9 +3447,9 @@ Options:
               windDir <br />
               windGustDir</td>
             <td>degree_compass</td>
-	    <td>degree_compass</td>
-	    <td>degree_compass</td>
-	    <td>degree_compass</td>
+            <td>degree_compass</td>
+            <td>degree_compass</td>
+            <td>degree_compass</td>
           </tr>
           <tr>
             <td class="first_col">group_interval</td>
@@ -3481,9 +3490,9 @@ Options:
             <td>inHg <br />
               mbar <br />
               hPa</td>
-	    <td>inHg</td>
-	    <td>mbar</td>
-	    <td>mbar</td>
+            <td>inHg</td>
+            <td>mbar</td>
+            <td>mbar</td>
           </tr>
           <tr>
             <td class="first_col">group_radiation</td>
@@ -3502,9 +3511,9 @@ Options:
             <td>inch <br />
               cm <br />
               mm</td>
-	    <td>inch</td>
-	    <td>mm</td>
-	    <td>cm</td>
+            <td>inch</td>
+            <td>mm</td>
+            <td>cm</td>
           </tr>
           <tr>
             <td class="first_col">group_rainrate</td>
@@ -3513,9 +3522,9 @@ Options:
             <td>inch_per_hour <br />
               cm_per_hour <br />
               mm_per_hour</td>
-	    <td>inch_per_hour</td>
-	    <td>mm_per_hour</td>
-	    <td>cm_per_hour</td>
+            <td>inch_per_hour</td>
+            <td>mm_per_hour</td>
+            <td>cm_per_hour</td>
           </tr>
           <tr>
             <td class="first_col">group_speed</td>
@@ -3528,9 +3537,9 @@ Options:
               km_per_hour <br />
               knot <br />
               meter_per_second</td>
-	    <td>mile_per_hour</td>
-	    <td>meter_per_second</td>
-	    <td>km_per_hour</td>
+            <td>mile_per_hour</td>
+            <td>meter_per_second</td>
+            <td>km_per_hour</td>
           </tr>
           <tr>
             <td class="first_col">group_speed2</td>
@@ -3540,9 +3549,9 @@ Options:
               km_per_hour2 <br />
               knot2 <br />
               meter_per_second2</td>
-	    <td>mile_per_hour2</td>
-	    <td>meter_per_second2</td>
-	    <td>km_per_hour2</td>
+            <td>mile_per_hour2</td>
+            <td>meter_per_second2</td>
+            <td>km_per_hour2</td>
           </tr>
           <tr>
             <td class="first_col">group_temperature</td>
@@ -3563,18 +3572,18 @@ Options:
               windchill</td>
             <td>degree_F <br />
               degree_C</td>
-	    <td>degree_F</td>
-	    <td>degree_C</td>
-	    <td>degree_C</td>
+            <td>degree_F</td>
+            <td>degree_C</td>
+            <td>degree_C</td>
           </tr>
           <tr>
             <td class="first_col">group_time</td>
             <td>dateTime</td>
             <td>unix_epoch <br />
               dublin_jd</td>
-	    <td>unix_epoch</td>
-	    <td>unix_epoch</td>
-	    <td>unix_epoch</td>
+            <td>unix_epoch</td>
+            <td>unix_epoch</td>
+            <td>unix_epoch</td>
           </tr>
           <tr>
             <td class="first_col">group_uv</td>
@@ -3620,7 +3629,7 @@ Options:
         database. See section <span class="code"><a href="usersguide.htm#Stats">[Stats]</a></span>
         in the <span class="code">weewx.conf</span> configuration file). </p>
       <table class='indent' id='stattypes'>
-	<caption>Statistical types</caption>
+        <caption>Statistical types</caption>
         <tbody class="code">
           <tr class="first_row">
             <td style="font-family:inherit">Type</td>
