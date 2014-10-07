@@ -2519,6 +2519,9 @@ in humidity: 48.0
       of data with an archive interval of 5 minutes.</p>
     <p>The WS28xx driver sets the station archive interval to
       5 minutes.</p>
+    <p>The WS28xx driver clears all alarms in the station.  When alarms are
+      set, they interfere with the communication between the console and
+      the transceiver.</p>
     <p>When <span class='code'>weewx</span> starts up it will attempt to
       download all records from the console since the last record in the
       archive database.

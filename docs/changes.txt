@@ -52,6 +52,8 @@ where the timestamp is within 1 second of the end of an archive interval.
 Changed UVBatteryStatus to uvBatteryStatus in the WMR100 driver in order
 to match the convention used by other drivers.
 
+Fixed the shebang for te923, ws23xx, ultimeter, ws1, and cc3000 drivers.
+
 
 2.6.4 06/16/14
 

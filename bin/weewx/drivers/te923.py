@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # $Id$
 #
 # Copyright 2013 Matthew Wall
@@ -151,7 +151,6 @@ claimInterface.
 
 from __future__ import with_statement
 import math
-import optparse
 import syslog
 import time
 import usb
@@ -161,7 +160,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.10'
+DRIVER_VERSION = '0.11'
 DEBUG_READ = 0
 DEBUG_DECODE = 0
 DEBUG_PRESSURE = 0
@@ -914,6 +913,7 @@ class Station(object):
 #    te923con -s              display station status
 
 if __name__ == '__main__':
+    import optparse
 
     usage = """%prog [options] [--debug] [--help]"""
 
