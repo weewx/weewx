@@ -169,27 +169,7 @@ def get_config(station, maxtries):
 
 def set_interval(station, maxtries, interval, prompt):
     """Set the station archive interval"""
-    print 'Querying the station...'
-    v = get_interval(station, maxtries)
-    if v is None:
-        return
-    ans = None
-    while ans not in ['y', 'n']:
-        print "Interval is", v
-        if prompt:
-            ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
-        else:
-            print "Setting interval to %d minutes" % interval
-            ans = 'y'
-        if ans == 'y' :
-            station.set_interval(interval)
-            v = get_interval(station, maxtries)
-            if v is None:
-                print "Cannot confirm change of interval"
-                return
-            print "Interval is now", v
-        elif ans == 'n':
-            print "Set interval cancelled."
+    print "This feature is not yet implemented"
 
 def info(station, maxtries):
     """Query the station then display the settings."""

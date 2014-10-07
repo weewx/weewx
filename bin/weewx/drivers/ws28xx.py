@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# LaCrosse WS28xx driver for weewx
 # $Id$
 #
 # Copyright 2013 Matthew Wall
@@ -947,10 +947,9 @@ import weewx.units
 import weewx.wxformulas
 import weeutil.weeutil
 
-DRIVER_VERSION = '0.31'
+DRIVER_VERSION = '0.32'
 
 # flags for enabling/disabling debug verbosity
-DEBUG_WRITES = 0
 DEBUG_COMM = 0
 DEBUG_CONFIG_DATA = 0
 DEBUG_WEATHER_DATA = 0
@@ -1105,8 +1104,6 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         self._nocontact_interval = 300 # how often to check for no contact
         self._log_interval = 600 # how often to log
 
-        global DEBUG_WRITES
-        DEBUG_WRITES = int(stn_dict.get('debug_writes', 0))
         global DEBUG_COMM
         DEBUG_COMM = int(stn_dict.get('debug_comm', 0))
         global DEBUG_CONFIG_DATA
@@ -2754,7 +2751,7 @@ class CHistoryData(object):
     def asDict(self):
         """emit historical data as a dict with weewx conventions"""
         return {
-            'dateTime': tstr_to_ts(str(self.Time)),
+            'dateTime': int(tstr_to_ts(str(self.Time))),
             'inTemp': self.TempIndoor,
             'inHumidity': self.HumidityIndoor,
             'outTemp': self.TempOutdoor,
@@ -3607,11 +3604,13 @@ class CCommunicationService(object):
                                ' %s: %s' % (thisIndex, data.asDict()))
                         self.history_cache.records.append(data.asDict())
                         self.history_cache.num_outstanding_records = nrec
+                    elif ts is None:
+                        logerr('handleHistoryData: skip record: this_ts=None')
                     else:
                         logdbg('handleHistoryData: skip record: since_ts=%s this_ts=%s' % (weeutil.weeutil.timestamp_to_string(self.history_cache.since_ts), weeutil.weeutil.timestamp_to_string(ts)))
                     self.history_cache.next_index = thisIndex
                 else:
-                    logdbg('handleHistoryData: index mismatch: %s != %s' %
+                    loginf('handleHistoryData: index mismatch: %s != %s' %
                            (thisIndexTst, thisIndex))
                 nextIndex = self.history_cache.next_index
 
