@@ -221,35 +221,35 @@ def history(station, maxtries, ts=0, count=0):
     specified timestamp (local time, in seconds)"""
     print "Querying the station for historical records..."
     ntries = 0
-    last_n = n = None
+    last_n = n = nrem = None
     last_ts = now = int(time.time())
-    station.start_caching_history(since_ts=ts)
-    t = weewx.drivers.ws28xx.WS28xx.max_records
-    while n is None or n > 0:
+    station.start_caching_history(since_ts=ts, num_rec=count)
+    while nrem is None or nrem > 0:
         if ntries >= maxtries:
             print 'Giving up after %d tries' % ntries
             break
         time.sleep(30)
+        ntries += 1
         now = int(time.time())
         n = station.get_num_history_scanned()
         if n == last_n:
-            ntries += 1
             dur = now - last_ts
             print 'No data after %d seconds (press SET to sync)' % dur
         else:
             ntries = 0
             last_ts = now
         last_n = n
+        nrem = station.get_uncached_history_count()
         ni = station.get_next_history_index()
         li = station.get_latest_history_index()
-        msg = "  scanned %s of %s: current=%s latest=%s\r" % (n, t, ni, li)
+        msg = "  scanned %s records: current=%s latest=%s remaining=%s\r" % (n, ni, li, nrem)
         sys.stdout.write(msg)
         sys.stdout.flush()
     station.stop_caching_history()
     records = station.get_history_cache_records()
     station.clear_history_cache()
     print
-    print 'Found a total of %d records' % len(records)
+    print 'Found %d records' % len(records)
     for r in records:
         print r
 
