@@ -1022,7 +1022,7 @@ def get_index(idx):
 def tstr_to_ts(tstr):
     if tstr is None:
         return None
-    return time.mktime(time.strptime(tstr, "%Y-%m-%d %H:%M:%S"))
+    return int(time.mktime(time.strptime(tstr, "%Y-%m-%d %H:%M:%S")))
 
 def bytes_to_addr(a,b,c):
     return ((((a & 0xF) << 8) | b) << 8) | c
@@ -2751,7 +2751,7 @@ class CHistoryData(object):
     def asDict(self):
         """emit historical data as a dict with weewx conventions"""
         return {
-            'dateTime': int(tstr_to_ts(str(self.Time))),
+            'dateTime': tstr_to_ts(str(self.Time)),
             'inTemp': self.TempIndoor,
             'inHumidity': self.HumidityIndoor,
             'outTemp': self.TempOutdoor,
