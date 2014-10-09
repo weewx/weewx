@@ -463,8 +463,8 @@ class StdWunderground(StdRESTful):
                           "restx: Wunderground: Data will not be posted: Missing option %s" % e)
             return
 
-        # Get the dictionary we will need to open up a connection.
-        _database_manager, _database_dict = weewx.archive.prep_database(config_dict, 'wx_binding')
+        # Get the database dictionary. Throw away the manager. We don't need it.
+        _, _database_dict = weewx.archive.prep_database(config_dict, 'wx_binding')
         
         # The default is to not do an archive post if a rapidfire post
         # has been specified, but this can be overridden
@@ -532,7 +532,8 @@ class StdPWSWeather(StdRESTful):
                           "Missing option %s" % e)
             return
 
-        _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
+        # Get the database dictionary. Throw away the manager. We don't need it.
+        _, _database_dict = weewx.archive.prep_database(config_dict, 'wx_binding')
         
         _ambient_dict.setdefault('server_url', StdPWSWeather.archive_url)
         self.archive_queue = Queue.Queue()
@@ -578,7 +579,8 @@ class StdWOW(StdRESTful):
                           "Missing option %s" % e)
             return
 
-        _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
+        # Get the database dictionary. Throw away the manager. We don't need it.
+        _, _database_dict = weewx.archive.prep_database(config_dict, 'wx_binding')
         
         _ambient_dict.setdefault('server_url', StdWOW.archive_url)
         self.archive_queue = Queue.Queue()
@@ -828,7 +830,8 @@ class StdCWOP(StdRESTful):
                           "Missing option: %s" % e)
             return
 
-        _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
+        # Get the database dictionary. Throw away the manager. We don't need it.
+        _, _database_dict = weewx.archive.prep_database(config_dict, 'wx_binding')
 
         _cwop_dict.setdefault('latitude',  self.engine.stn_info.latitude_f)
         _cwop_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
@@ -1371,7 +1374,9 @@ class StdAWEKAS(StdRESTful):
         site_dict.setdefault('latitude', engine.stn_info.latitude_f)
         site_dict.setdefault('longitude', engine.stn_info.longitude_f)
         site_dict.setdefault('language', 'de')
-        site_dict.setdefault('database_dict', config_dict['Databases'][config_dict['StdArchive']['archive_database']])
+
+        # Get the database dictionary. Throw away the manager. We don't need it.
+        _, site_dict['database_dict'] = weewx.archive.prep_database(config_dict, 'wx_binding')
 
         self.archive_queue = Queue.Queue()
         self.archive_thread = AWEKASThread(self.archive_queue, **site_dict)
