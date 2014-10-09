@@ -718,19 +718,28 @@ class DBBinder(object):
 #                                 Utilities
 #===============================================================================
 
-def open_database(config_dict, binding, initialize=False):
+def prep_database(config_dict, binding):
+    """Return the database dictionary associated with a binding name."""
     # Get the database name
     database_name = config_dict['Bindings'][binding]['bind_to']
+    # Get the dictionary
+    database_dict = config_dict['Databases'][database_name]
     # Get the manager to be used
     database_manager = config_dict['Bindings'][binding].get('manager', 'weewx.stats.WXDaySummaryArchive')
-    # Get the class of the manager to be used:
+
+    return (database_manager, database_dict)
+
+def open_database(config_dict, binding, initialize=False):
+    # Get the database dictionary & manager:
+    database_manager, database_dict = prep_database(config_dict, binding)
+    # Get the class object of the manager to be used:
     database_cls = weeutil.weeutil._get_object(database_manager)
-    # Get the dictionary we will need to open up a connection.
-    database_dict = config_dict['Databases'][database_name]
+    
     if initialize:
         schema_name = config_dict['Bindings'][binding].get('schema', 'user.schemas.defaultArchiveSchema')
         schema = weeutil.weeutil._get_object(schema_name)
     else:
         schema = None
     
+    # Instantiate the class of the database manager:
     return database_cls(database_dict, schema)

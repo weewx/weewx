@@ -86,7 +86,7 @@ import urllib2
 import weedb
 import weeutil.weeutil
 import weewx.wxengine
-from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string
+from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, accumulateLeaves
 import weewx.units
 
 class FailedPost(IOError):
@@ -101,25 +101,6 @@ class ConnectError(IOError):
 class SendError(IOError):
     """Raised when unable to send through a socket."""
     
-def get_dict(config_dict, svc):
-    """Create a site_dict using values from the StdRESTful section of the
-    configuration, but only if they are specified.  Do not supply default
-    values - that is left to the derived classes since their defaults vary."""
-
-    site_dict = dict(config_dict['StdRESTful'][svc])
-    set_default(site_dict, config_dict, svc, 'log_success')
-    set_default(site_dict, config_dict, svc, 'log_failure')
-    set_default(site_dict, config_dict, svc, 'timeout')
-    set_default(site_dict, config_dict, svc, 'max_tries')
-    set_default(site_dict, config_dict, svc, 'retry_wait')
-    return site_dict
-
-def set_default(site_dict, config_dict, svc, option):
-    if config_dict['StdRESTful'].has_key(option):
-        site_dict.setdefault(option, config_dict['StdRESTful'][option])
-    if config_dict['StdRESTful'][svc].has_key(option):
-        site_dict.setdefault(option, config_dict['StdRESTful'][svc][option])
-        
 #==============================================================================
 #                    Abstract base classes
 #==============================================================================
@@ -294,7 +275,8 @@ class RESTThread(threading.Thread):
         # Open up the archive. Use a 'with' statement. This will automatically
         # close the archive in the case of an exception:
         if self.database_dict is not None:
-            with weewx.archive.Archive.open(self.database_dict) as _archive:
+            manager_cls = weeutil.weeutil._get_object(self.manager) if hasattr(self, 'manager') else weewx.archive.Archive 
+            with manager_cls.open(self.database_dict) as _archive:
                 self.run_loop(_archive)
         else:
             self.run_loop()
@@ -472,7 +454,7 @@ class StdWunderground(StdRESTful):
         # a KeyError exception will occur. Be prepared to catch it.
         try:
             # Extract a copy of the dictionary with the WU options:
-            _ambient_dict = get_dict(config_dict, 'Wunderground')
+            _ambient_dict = accumulateLeaves(config_dict['StdRESTful']['Wunderground'], max_level=1)
             # A convenient way to check for missing required key words.
             _ambient_dict['station']
             _ambient_dict['password']
@@ -481,7 +463,8 @@ class StdWunderground(StdRESTful):
                           "restx: Wunderground: Data will not be posted: Missing option %s" % e)
             return
 
-        _database_dict= config_dict['Databases'][config_dict['StdArchive']['archive_database']]
+        # Get the dictionary we will need to open up a connection.
+        _database_manager, _database_dict = weewx.archive.prep_database(config_dict, 'wx_binding')
         
         # The default is to not do an archive post if a rapidfire post
         # has been specified, but this can be overridden
@@ -538,8 +521,8 @@ class StdPWSWeather(StdRESTful):
         # Extract the required parameters. If one of them is missing,
         # a KeyError exception will occur. Be prepared to catch it.
         try:
-            # Extract a copy of the dictionary with the WU options:
-            _ambient_dict = get_dict(config_dict, 'PWSweather')
+            # Extract a copy of the dictionary with the PWS options:
+            _ambient_dict = accumulateLeaves(config_dict['StdRESTful']['PWSweather'], max_level=1)
             # A convenient way to check for missing required key words.
             _ambient_dict['station']
             _ambient_dict['password']
@@ -586,7 +569,7 @@ class StdWOW(StdRESTful):
         # a KeyError exception will occur. Be prepared to catch it.
         try:
             # Extract a copy of the dictionary with the WOW options:
-            _ambient_dict = get_dict(config_dict, 'WOW')
+            _ambient_dict = accumulateLeaves(config_dict['StdRESTful']['WOW'], max_level=1)
             # A convenient way to check for missing required key words.
             _ambient_dict['station']
             _ambient_dict['password']
@@ -832,7 +815,7 @@ class StdCWOP(StdRESTful):
         # a KeyError exception will occur. Be prepared to catch it.
         try:
             # Extract a copy of the dictionary with the CWOP options:
-            _cwop_dict = get_dict(config_dict, 'CWOP')
+            _cwop_dict = accumulateLeaves(config_dict['StdRESTful']['CWOP'], max_level=1)
             _cwop_dict['station'] = _cwop_dict['station'].upper()
             
             # See if this station requires a passcode:
@@ -1135,7 +1118,7 @@ class StdStationRegistry(StdRESTful):
         # a KeyError exception will occur. Be prepared to catch it.
         try:
             # Extract a copy of the dictionary with the registry options:
-            _registry_dict = get_dict(config_dict, 'StationRegistry')
+            _registry_dict = accumulateLeaves(config_dict['StdRESTful']['StationRegistry'], max_level=1)
             _registry_dict.setdefault('station_url',
                                       self.engine.stn_info.station_url)
             if _registry_dict['station_url'] is None:
@@ -1378,7 +1361,7 @@ class StdAWEKAS(StdRESTful):
     def __init__(self, engine, config_dict):
         super(StdAWEKAS, self).__init__(engine, config_dict)
         try:
-            site_dict = get_dict(config_dict, 'AWEKAS')
+            site_dict = accumulateLeaves(config_dict['StdRESTful']['AWEKAS'], max_level=1)
             site_dict['username']
             site_dict['password']
         except KeyError, e:
