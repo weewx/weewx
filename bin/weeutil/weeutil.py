@@ -66,7 +66,7 @@ def search_up(d, k, *default):
     else:
         return search_up(d.parent, k, *default)
     
-def accumulateLeaves(d):
+def accumulateLeaves(d, max_level=99):
     """Merges leaf options above a ConfigObj section with itself, accumulating the results.
     
     This routine is useful for specifying defaults near the root node, 
@@ -76,18 +76,27 @@ def accumulateLeaves(d):
     
     Example: Supply a default color=blue, size=10. The section "dayimage" overrides the former:
     
-    >>> c = configobj.ConfigObj({"color":"blue", "size":10, "dayimage":{"color":"red"}});
+    >>> c = configobj.ConfigObj({"color":"blue", "size":10, "dayimage":{"color":"red", "position":{"x":20, "y":30}}});
     >>> print accumulateLeaves(c["dayimage"])
     {'color': 'red', 'size': 10}
+    >>> print accumulateLeaves(c["dayimage"], max_level=0)
+    {'color': 'red'}
+    >>> print accumulateLeaves(c["dayimage"]["position"])
+    {'color': 'red', 'size': 10, 'y': 30, 'x': 20}
+    >>> print accumulateLeaves(c["dayimage"]["position"], max_level=1)
+    {'color': 'red', 'y': 30, 'x': 20}
     """
     
     # Use recursion. If I am the root object, then there is nothing above 
     # me to accumulate. Start with a virgin ConfigObj
     if d.parent is d :
         cum_dict = configobj.ConfigObj()
-    else :
-        # Otherwise, recursively accumulate scalars above me
-        cum_dict = accumulateLeaves(d.parent)
+    else:
+        if max_level:
+            # Otherwise, recursively accumulate scalars above me
+            cum_dict = accumulateLeaves(d.parent, max_level-1)
+        else:
+            cum_dict = configobj.ConfigObj()
         
     # Now merge my scalars into the results:
     merge_dict = {}
