@@ -1554,6 +1554,7 @@ inch     = %.2f</pre>
       <p>You can also specify what string to use for an invalid or unavailable
         measurement (value '<span class="code">None</span>'). For example, </p>
       <pre class="tty">NONE = " N/A "</pre>
+
       <h3 class="config_section" id="Units_Labels">[[Labels]]</h3>
       <p>This sub-section specifies what label is to be used for each
         measurement unit type. For example, the options </p>
@@ -1563,9 +1564,18 @@ inch     = ' in'</pre>
         and all precipitation to have labels <span class="code">in</span>. If
         any special symbols are to be used (such as the degree sign above) they
         should be encoded in UTF-8. This is generally what most text editors use
-        if you cut-and-paste from a character map. Labels used in plot images
-        will be converted to Latin-1 first (this is all the Python Imaging
-        Library can handle). </p>
+        if you cut-and-paste from a character map.</p>
+
+      <p> If the label includes two values, then the first is assumed to be the
+        singular form, the second the plural form. For example,</p>
+      <pre class="tty">foot   = " foot",   " feet"
+...
+day    = " day",    " days"
+hour   = " hour",   " hours"
+minute = " minute", " minutes"
+second = " second", " seconds"</pre>
+
+      <p>This is particularly useful when <a href="#l11n_unit_labels">localizing the weewx and server "uptimes</a>."</p>
 
       <h3 class="config_section" id="Units_TimeFormats">[[TimeFormats]]</h3>
       <p>This sub-section is used for time labels. It uses <a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a>
@@ -2216,17 +2226,23 @@ outTemp = Outside Temperature</pre>
       <pre class="tty">hemisphere = N, S, E, W</pre>
       <p>The wind ordinal directions may have to be changed: </p>
       <pre class='tty'>
-    [[Ordinates]]    
-        # The ordinal directions. The last one should be for no wind direction
-        directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A </pre>
+[[Ordinates]]    
+    # The ordinal directions. The last one should be for no wind direction
+    directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A </pre>
       <p>Don't forget the moon phases:</p>
       <pre class="tty">
 moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</pre>
-      <p>Most of the unit labels either follow ISO conventions, or are unlikely 
-          to be used outside English speaking countries (an example would be 
-          &quot;foot&quot;). But, there are two exceptions:</p>
-                <pre class="tty">hour           = &quot; hrs&quot;
-second         = &quot; secs&quot;</pre>
+      <p id="l11n_unit_labels">Most of the unit labels either follow
+          ISO conventions, or are unlikely to be used outside English
+          speaking countries (an example would be
+          &quot;foot&quot;). But, there are a few exceptions, used to
+          label the weewx and server &quot;uptimes&quot;:</p>
+                <pre class="tty">
+day     = " day",    " days"
+hour    = " hour",   " hours"
+minute  = " minute", " minutes"
+second  = " second", " seconds"</pre>
+
       <p>You will probably want to change the generic labels used for the
         observation types:</p>
       <pre class="tty">

@@ -125,6 +125,7 @@ USUnits     = {"group_altitude"    : "foot",
                "group_speed2"      : "mile_per_hour2",
                "group_temperature" : "degree_F",
                "group_time"        : "unix_epoch",
+               "group_deltatime"   : "second",
                "group_uv"          : "uv_index",
                "group_volt"        : "volt"}
 
@@ -146,6 +147,7 @@ MetricUnits = {"group_altitude"    : "meter",
                "group_speed2"      : "km_per_hour2",
                "group_temperature" : "degree_C",
                "group_time"        : "unix_epoch",
+               "group_deltatime"   : "second",
                "group_uv"          : "uv_index",
                "group_volt"        : "volt"}
 
@@ -264,7 +266,7 @@ default_unit_format_dict = {"centibar"           : "%.0f",
 default_unit_label_dict = { "centibar"          : " cb",
                             "cm"                : " cm",
                             "cm_per_hour"       : " cm/hr",
-                            "day"               : " days",
+                            "day"               : (" day", " days"),
                             "degree_C"          : "\xc2\xb0C",
                             "degree_C_day"      : "\xc2\xb0C-day",
                             "degree_F"          : "\xc2\xb0F",
@@ -273,7 +275,7 @@ default_unit_label_dict = { "centibar"          : " cb",
                             "foot"              : " feet",
                             "hPa"               : " hPa",
                             "inHg"              : " inHg",
-                            "hour"              : " hrs",
+                            "hour"              : (" hour", " hours"),
                             "inch"              : " in",
                             "inch_per_hour"     : " in/hr",
                             "km_per_hour"       : " kph",
@@ -286,18 +288,20 @@ default_unit_label_dict = { "centibar"          : " cb",
                             "meter_per_second2" : " m/s",
                             "mile_per_hour"     : " mph",
                             "mile_per_hour2"    : " mph",
+                            "minute"            : (" minute", " minutes"),
                             "mm"                : " mm",
                             "mmHg"              : " mmHg",
                             "mm_per_hour"       : " mm/hr",
                             "percent"           : "%",
-                            "second"            : " secs",
+                            "second"            : (" second", " seconds"),
                             "uv_index"          : "",
                             "volt"              : " V",
                             "watt_per_meter_squared" : " W/m\xc2\xb2",
                             "NONE"              : "" }
 
 # Default strftime formatting to be used in the absence of a skin
-# configuration file:
+# configuration file. The entry for delta_time uses a special
+# encoding.
 default_time_format_dict = {"day"        : "%H:%M",
                             "week"       : "%H:%M on %A",
                             "month"      : "%d-%b-%Y %H:%M",
@@ -305,7 +309,9 @@ default_time_format_dict = {"day"        : "%H:%M",
                             "rainyear"   : "%d-%b-%Y %H:%M",
                             "current"    : "%d-%b-%Y %H:%M",
                             "ephem_day"  : "%H:%M",
-                            "ephem_year" : "%d-%b-%Y %H:%M"}
+                            "ephem_year" : "%d-%b-%Y %H:%M",
+                            "delta_time" : "%(day)d%(day_label)s, %(hour)d%(hour_label)s, "\
+                                           "%(minute)d%(minute_label)s"}
 
 # Default mapping from compass degrees to ordinals
 default_ordinate_names = ['N', 'NNE','NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
@@ -379,6 +385,11 @@ class Formatter(object):
     N
     >>> print f.to_ordinal_compass((None, "degree_compass", "group_direction"))
     N/A
+    >>> print f.toString((1*86400 + 1*3600 + 16*60 + 42, "second", "group_deltatime"))
+    1 day, 1 hour, 16 minutes
+    >>> delta_format = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s" 
+    >>> print f.toString((2*86400 + 3*3600 +  5*60 +  2, "second", "group_deltatime"), useThisFormat=delta_format)
+    2 days, 3 hours, 5 minutes, 2 seconds
     """
 
     def __init__(self, unit_format_dict = default_unit_format_dict,
@@ -397,7 +408,9 @@ class Formatter(object):
 
         self.unit_format_dict = unit_format_dict
         self.unit_label_dict  = unit_label_dict
-        self.time_format_dict = time_format_dict
+        # Make a copy of the time format dictionary. This will stop the
+        # unwanted interpolation of key delta_time.
+        self.time_format_dict = dict(time_format_dict)
         self.ordinate_names    = ordinate_names
         # Add new keys for backwards compatibility on old skin dictionaries:
         self.time_format_dict.setdefault('ephem_day', "%H:%M")
@@ -444,18 +457,34 @@ class Formatter(object):
             # Can't find one. Return a generic formatter:
             return '%f'
 
-    def get_label_string(self, unit):
-        """Return a suitable label."""
+    def get_label_string(self, unit, plural=True):
+        """Return a suitable label.
+        
+        This function looks up a suitable label in the unit_label_dict. If the
+        associated value is a string, it returns it. If it is a tuple or a list,
+        then it is assumed the first value is a singular version of the label
+        (e.g., "foot"), the second a plural version ("feet"). If the parameter
+        plural=False, then the singular version is returned. Otherwise, the
+        plural version.
+        """
 
         # First, try my internal label dictionary:
         if self.unit_label_dict.has_key(unit):
-            return self.unit_label_dict[unit]
+            label = self.unit_label_dict[unit]
         # If that didn't work, try the default label dictionary:
         elif default_unit_label_dict.has_key(unit):
-            return default_unit_label_dict[unit]
+            label = default_unit_label_dict[unit]
         else:
             # Can't find a label. Just return an empty string:
             return ''
+
+        # Is the label a simple string? If so, return it
+        if isinstance(label, str):
+            return label
+        else:
+            # It is not a simple string. Assume it is a tuple or list
+            # Return the singular, or plural, version as requested.
+            return label[plural]
 
     def toString(self, val_t, context='current', addLabel=True, useThisFormat=None, NONE_string=None):
         """Format the value as a string.
@@ -484,14 +513,20 @@ class Formatter(object):
             
         if val_t[1] == "unix_epoch":
             # Different formatting routines are used if the value is a time.
-            try:
-                if useThisFormat is not None:
-                    val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
-                else:
-                    val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"), time.localtime(val_t[0]))
-            except (KeyError, TypeError):
-                # If all else fails, use this weeutil utility:
-                val_str = weeutil.weeutil.timestamp_to_string(val_t[0])
+            if useThisFormat is not None:
+                val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
+            else:
+                val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"), time.localtime(val_t[0]))
+        elif val_t[1] == "second":
+            # Get a delta-time format string. Use a default if the user did not supply one:
+            if useThisFormat is not None:
+                format_string = useThisFormat
+            else:
+                format_string = self.time_format_dict.get("delta_time", default_time_format_dict["delta_time"])
+            # Now format the delta time, using the function delta_secs_to_string:
+            val_str = self.delta_secs_to_string(val_t[0], format_string)
+            # Return it right away, because it does not take a label
+            return val_str
         else:
             # It's not a time. It's a regular value. Get a suitable
             # format string:
@@ -506,7 +541,7 @@ class Formatter(object):
 
         # Add a label, if requested:
         if addLabel:
-            val_str += self.get_label_string(val_t[1])
+            val_str += self.get_label_string(val_t[1], plural=(not val_t[0]==1))
 
         return val_str
 
@@ -518,6 +553,18 @@ class Formatter(object):
         _sector = int(_degree / _sector_size)
         return self.ordinate_names[_sector]
     
+    def delta_secs_to_string(self, secs, label_format):
+        """Convert elapsed seconds to a string"""
+    
+        etime_dict={}
+        for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60), ('second', 1)):
+            amt = int(secs / interval)
+            etime_dict[label] = amt
+            etime_dict[label+'_label'] = self.get_label_string(label, not amt==1)
+            secs %= interval
+        ans = label_format % etime_dict
+        return ans
+
 #==============================================================================
 #                        class Converter
 #==============================================================================
@@ -1120,7 +1167,6 @@ def to_std_system(datadict, unit_system):
         _datadict_target['usUnits'] = unit_system
         return _datadict_target
 
-    
 if __name__ == "__main__":
     
     import doctest
