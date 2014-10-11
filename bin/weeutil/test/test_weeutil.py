@@ -431,7 +431,6 @@ class WeeutilTest(unittest.TestCase):
     def test_dnt(self):
         """test day/night transitions"""
         from weeutil.weeutil import timestamp_to_gmtime
-        from weeutil.weeutil import timestamp_to_string
         from weeutil.weeutil import getDayNightTransitions
 
         times = [(calendar.timegm((2012, 1, 2, 0, 0, 0, 0, 0, -1)),
