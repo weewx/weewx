@@ -15,7 +15,7 @@
     </a>
     <h1 class="title">Upgrading <span class="code">weewx</span><br/>
       <span class='version'>
-Version: 2.6.4
+Version: 2.7.0
       </span>
     </h1>
 
@@ -130,7 +130,46 @@ Version: 2.6.4
     <p class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</p>
 
     <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
-    <h2>V2.5 or earlier</h2>
+
+  <h2>V2.6 or earlier</h2>
+  <p>Version 2.7 is backwards compatible with earlier versions with
+    one minor exception.</p>
+  <p>
+    It now includes the ability to localize the weewx and server
+    uptimes. Previously, the labels <span class="code">days</span>, <span
+      class="code">hours</span>, and <span class="code">minutes</span>
+    were hardcoded in a Python utility. There was no way of changing
+    them. Now, like any other labels, they are taken from the skin
+    configuration file, <span class="code">skin.conf</span>, section <span
+      class="code">[[Labels]]</span>. Older configuration files had
+    definitions for <span class="code">hour</span>, but none for <span
+      class="code">day</span>, and <span class="code">minute</span>.
+    Also, the old definition for <span class="code">hour</span> used an
+    abbreviation <span class="code">hrs</span> instead of <span
+      class="code">hours</span>.
+  </p>
+  <p>If you do nothing, your weewx and station uptimes will look
+    like:</p>
+  <pre class="tty">Weewx uptime:  1 days, 9 hrs, 41 minutes
+Server uptime: 2 days, 10 hrs, 22 minutes</pre>
+  <p>
+    Note how <span class="code">hrs</span> is abbreviated, and the weewx
+    uptime uses the plural spelling <span class="code">days</span>,
+    despite only a single day of uptime. If you want the
+    previous behavior, or if you want to localize the labels, you should
+    update your skin configuration file. Remove the old entries for <span
+      class="code">hour</span>, and <span class="code">second</span> and
+    replace them with:
+  </p>
+  <pre class="tty">
+day               = " day",    " days"
+hour              = " hour",   " hours"
+minute            = " minute", " minutes"
+second            = " second", " seconds"</pre>
+        
+  <p>The first item is the singular spelling, the second the plural.</p>
+
+  <h2>V2.5 or earlier</h2>
     <p>Version 2.6 is backwards compatible with earlier versions, with a couple
     of small exceptions.</p>
     <ul>

@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-X.X.X XX/XX/XX
+2.7.0 XX/XX/XX
 
 Added the ability to configure new Vantage sensor types without using
 the console. This will be useful to Envoy users.  Thanks to user Deborah 
@@ -17,7 +17,8 @@ Enabled multiple rsync instances for a single weewx instance.
 More extensive debug information for rscync users.
 
 Added the ability to localize the weewx and server uptime. See the
-Customizing Guide for details.
+Customizing Guide for details. This will also cause a minor backwards 
+incompatibility. See the Upgrading Guide for details.
 
 Added catchup to the WS28xx driver, but still no hardware record generation.
 
