@@ -69,6 +69,8 @@ class Station(object):
         
         # Store away my instance of StationInfo
         self.stn_info = stn_info
+        self.formatter = formatter
+        self.converter = converter
         
         # Add a bunch of formatted attributes:
         label_dict = skin_dict.get('Labels', {})
@@ -84,17 +86,21 @@ class Station(object):
                                                 formatter=formatter,
                                                 converter=converter)
         self.rain_year_str = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))
-        
-        if weewx.launchtime_ts:
-            self.uptime = weewx.units.ValueHelper(value_t=(time.time() - weewx.launchtime_ts, 
-                                                           "second", 
-                                                           "group_deltatime"),
-                                                  formatter=formatter,
-                                                  converter=converter)
-        else:
-            self.uptime = ''
+
         self.version = weewx.__version__
 
+    @property
+    def uptime(self):        
+        """Lazy evaluation of weewx uptime."""
+        delta_time = time.time() - weewx.launchtime_ts if weewx.launchtime_ts else None
+            
+        return weewx.units.ValueHelper(value_t=(delta_time, "second", "group_deltatime"),
+                                       formatter=self.formatter,
+                                       converter=self.converter)
+    
+    @property
+    def os_uptime(self):
+        """Lazy evaluation of the server uptime."""
         # Get the OS uptime. Because this is highly operating system dependent, several
         # different strategies may have to be tried:
         os_uptime_secs = None
@@ -107,12 +113,10 @@ class Station(object):
                 os_uptime_secs = CACurrentMediaTime()
             except NameError:
                 pass
-        if os_uptime_secs:
-            self.os_uptime = weewx.units.ValueHelper(value_t=(os_uptime_secs,
-                                                              "second",
-                                                              "group_deltatime"),
-                                                     formatter=formatter,
-                                                     converter=converter)
+
+        return weewx.units.ValueHelper(value_t=(os_uptime_secs, "second", "group_deltatime"),
+                                       formatter=self.formatter,
+                                       converter=self.converter)
 
     def __getattr__(self, name):
         # For anything that is not an explicit attribute of me, try
