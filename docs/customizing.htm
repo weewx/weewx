@@ -1159,28 +1159,116 @@ Sunrise, sunset: 06:51 19:30</pre>
           </tr>
         </tbody>
       </table>
+
       <h2 id="defining_new_tags">Defining new tags</h2>
 
-      <p class="warning"><strong>Warning!</strong><br />
-        The programming interface for search list extensions is still in
-        a state of flux, and likely to change in Version 3. Be prepared
-        to modify any extensions you write.</p>
+      <p class="warning">
+        <strong>Warning!</strong><br /> The programming interface for
+        search list extensions is still in a state of flux, and likely
+        to change in Version 3. Be prepared to modify any extensions you
+        write.
+      </p>
 
-      <p>In the section on <em><a href="#templates">Customizing templates</a></em>,
-      we have seen how you can change a template and make use of the various
-      tags available such as <span class="code">$day.outTemp.max</span> for the
-      maximum outside temperature for the day. But, what if you want to
-      introduce some new data for which no tag is available?
-      <p>If you wish to introduce a static tag, that is, one that will not
-        change with time (such as a Google analytics Tracker ID, or your name),
-        then this is very easy: simply put it in section <span class="code"><a
-            href="#Extras">[Extras]</a></span> in the skin configuration file.
-        More information on how to do this can be found there. </p>
-      <p>But, what if you wish to introduce a more dynamic tag, one that
-        requires some calculation, or perhaps uses the database? Simply putting it
-        in the <span class="code">[Extras]</span> section won't do, because
-        then it cannot change. </p>
-      <p>The answer is to write a <em>search list extension</em>.</p>
+      <p>
+        In the section on <em><a href="#templates">Customizing
+        templates</a></em>, we have seen how you can change a template and
+        make use of the various tags available such as <span
+          class="code">$day.outTemp.max</span> for the maximum outside
+        temperature for the day. But, what if you want to introduce some
+        new data for which no tag is available?
+      </p>
+      <p>
+        If you wish to introduce a static tag, that is, one that will
+        not change with time (such as a Google analytics Tracker ID, or
+        your name), then this is very easy: simply put it in section <span
+          class="code"><a href="#Extras">[Extras]</a></span> in the skin
+        configuration file. More information on how to do this can be
+        found there.
+      </p>
+      <p>
+        But, what if you wish to introduce a more dynamic tag, one that
+        requires some calculation, or perhaps uses the database? Simply
+        putting it in the <span class="code">[Extras]</span> section
+        won't do, because then it cannot change.
+      </p>
+      <p>
+        The answer is to write a <em>search list extension</em>.
+      </p>
+
+      <h3>How tags work</h3>
+      <p>
+        But, before getting too deeply into extensions, it's worth
+        taking a look at how <span class="code">weewx</span> tags work.
+        Let's start by looking at a simple example: station altitude,
+        available as the tag
+      </p>
+      <pre class="tty">
+$station.altitude</pre>
+
+      <p>
+        What this returns is not a raw value, say <span class="code">700</span>,
+        nor even a string. Instead, it returns an instance of the class
+        <span class="code"><i>ValueHelper</i></span>, a special class
+        defined in module <span class="code">weewx.units</span>. When
+        the Cheetah template generator encounters this tag, it
+        eventually needs to convert it into a string. How it does this
+        is like any other Python object: it calls the special method <span
+          class="code"><a style="text-decoration: none"
+          href="https://docs.python.org/2/reference/datamodel.html#object.__str__">__str__</a></span>.
+        Class <span class="code">ValueHelper</span> has a definition for
+        this method, which applies any necessary unit conversions, then
+        consults any formatting and labeling you may have specified, and
+        then, finally, builds the string. The result is something like
+      </p>
+      <p class="example_output">700 feet</p>
+
+      <p>Now let's look at a more complicated example, say the
+        maximum temperature since midnight:</p>
+      <pre class="tty">$day.outTemp.max</pre>
+      <p>
+        When this is evaluated by Cheetah, it actually produces a chain
+        of objects. At the top of this chain is class <span class="code">weewx.stats.TaggedStats</span>,
+        an instance of which is supplied by the <em>search list</em>
+        (more on this later). Internally, this instance stores the
+        database to be hit, as well as a few other bookkeeping objects
+        (mostly having to do with formatting and labeling).
+      </p>
+      <p>
+        This instance is examined by Cheetah to see if it has an
+        attribute <span class="code">day</span>. It does, and it returns
+        the next class in the chain, an instance of class <span
+          class="code">weewx.stats.TimeSpanStats</span>. This instance
+        stores not only the database, but also the requested time span,
+        namely the time since midnight, internally.
+      </p>
+      <p>
+        Cheetah then tries to find an attribute <span class="code">outTemp</span>
+        of <span class="code">TimeSpanStats</span>. There is no such
+        hard coded attribute (hard coding all the different observation
+        types would be impractical!). Instead, class <span class="code">TimeSpanStats</span>
+        returns an instance of the next class in the chain, <span
+          class="code">weewx.stats.StatsTypeHelper</span>, which not
+        only remembers the observation type, but also the database and
+        the previously evaluated time span.
+      </p>
+      <p>
+        Cheetah then tries to find an attribute <span class="code">max</span>
+        of this class. Now, finally, the chain ends. The attribute <span
+          class="code">max</span> triggers the actual calculation of the
+        value, using all the known parameters: the time span, the
+        observation type, and the type of aggregation, querying the
+        database as necessary. This is an example of <em>lazy
+          evaluation</em>. That is, the database is not actually hit until
+        the last possible moment, after everything needed to do the
+        evalation is known.
+      </p>
+      <p>
+        The results of the evaluation is then packaged up in, you
+        guessed it, an instance of <span class="code"><i>ValueHelper</i></span>,
+        which is what actually converts the value into the desired
+        string.
+      </p>
+
       <h3>Search list</h3>
       <p> The Cheetah template engine (which <span class="code">weewx</span> uses) finds tags by 
                 scanning a <em>search
