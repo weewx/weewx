@@ -104,9 +104,9 @@ class RsyncUpload(object):
             # appropriate message
             try:
                 N = rsyncinfo['Number of files transferred']
-                bytes = rsyncinfo['Total transferred file size']
-                if N is not None and bytes is not None:
-                    rsync_message = "rsync'd %d files (%s) in %%0.2f seconds" % (int(N), bytes)
+                Nbytes = rsyncinfo['Total transferred file size']
+                if N is not None and Nbytes is not None:
+                    rsync_message = "rsync'd %d files (%s) in %%0.2f seconds" % (int(N), Nbytes)
                 else:
                     rsync_message = "rsync executed in %0.2f seconds"
             except:
