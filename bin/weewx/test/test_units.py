@@ -142,6 +142,9 @@ class ValueHelperTest(unittest.TestCase):
         self.assertEqual(vh.string(), "2 days, 1 hour, 5 minutes")
         format_label = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"
         self.assertEqual(vh.format(format_label), "2 days, 1 hour, 5 minutes, 12 seconds")
+        # Now try a 'None' value:
+        vh = weewx.units.ValueHelper((None, "second", "group_deltatime"))
+        self.assertEqual(vh.string(), "   N/A")
         
 class ValueDictTest(unittest.TestCase):
     
