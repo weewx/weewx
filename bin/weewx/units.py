@@ -562,7 +562,8 @@ class Formatter(object):
             etime_dict[label] = amt
             etime_dict[label+'_label'] = self.get_label_string(label, not amt==1)
             secs %= interval
-        ans = locale.format_string(label_format, etime_dict)
+        # Use format, instead of format_string, because of a bug in Python 2.5 and 2.6:
+        ans = locale.format(label_format, etime_dict)
         return ans
 
 #==============================================================================

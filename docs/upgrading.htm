@@ -141,8 +141,8 @@ Version: 2.7.0
     were hardcoded in a Python utility. There was no way of changing
     them. Now, like any other labels, they are taken from the skin
     configuration file, <span class="code">skin.conf</span>, section <span
-      class="code">[[Labels]]</span>. Older configuration files had
-    definitions for <span class="code">hour</span>, but none for <span
+      class="code">[[Labels]]</span>. Older configuration files had a
+    definition for <span class="code">hour</span>, but none for <span
       class="code">day</span>, and <span class="code">minute</span>.
     Also, the old definition for <span class="code">hour</span> used an
     abbreviation <span class="code">hrs</span> instead of <span
@@ -150,15 +150,14 @@ Version: 2.7.0
   </p>
   <p>If you do nothing, your weewx and station uptimes will look
     like:</p>
-  <pre class="tty">Weewx uptime:  1 days, 9 hrs, 41 minutes
+  <pre class="tty">Weewx uptime:  1 day, 1 hrs, 41 minutes
 Server uptime: 2 days, 10 hrs, 22 minutes</pre>
   <p>
-    Note how <span class="code">hrs</span> is abbreviated, and the weewx
-    uptime uses the plural spelling <span class="code">days</span>,
-    despite only a single day of uptime. If you want the
+    Note how <span class="code">hrs</span> is abbreviated, and the
+    plural spelling is always used. If you want the
     previous behavior, or if you want to localize the labels, you should
     update your skin configuration file. Remove the old entries for <span
-      class="code">hour</span>, and <span class="code">second</span> and
+      class="code">hour</span> and <span class="code">second</span> and
     replace them with:
   </p>
   <pre class="tty">
@@ -167,7 +166,10 @@ hour              = " hour",   " hours"
 minute            = " minute", " minutes"
 second            = " second", " seconds"</pre>
         
-  <p>The first item is the singular spelling, the second the plural.</p>
+  <p>The first item is the singular spelling, the second the plural. This
+  will result in the desired</p>
+  <pre class="tty">Weewx uptime:  1 day, 1 hour, 41 minutes
+Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
   <h2>V2.5 or earlier</h2>
     <p>Version 2.6 is backwards compatible with earlier versions, with a couple
