@@ -120,7 +120,7 @@ upload-readme: readme
 VDOCS=customizing.htm usersguide.htm upgrading.htm
 version:
 	for f in $(VDOCS); do \
-  sed -e 's/Version: [0-9].*/Version: $(VERSION)/' docs/$$f > docs/$$f.tmp; \
+  sed -e 's/^Version: [0-9].*/Version: $(VERSION)/' docs/$$f > docs/$$f.tmp; \
   mv docs/$$f.tmp docs/$$f; \
 done
 	sed -e 's/version =.*/version = $(VERSION)/' weewx.conf > weewx.conf.tmp; mv weewx.conf.tmp weewx.conf
