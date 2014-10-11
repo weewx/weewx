@@ -562,8 +562,12 @@ class Formatter(object):
             etime_dict[label] = amt
             etime_dict[label+'_label'] = self.get_label_string(label, not amt==1)
             secs %= interval
-        # Use format, instead of format_string, because of a bug in Python 2.5 and 2.6:
-        ans = locale.format(label_format, etime_dict)
+        # The version of locale in Python version 2.5 and 2.6 cannot handle interpolation and raises an
+        # exception. Be prepared to catch it and use a regular % formatter
+        try:
+            ans = locale.format_string(label_format, etime_dict)
+        except TypeError:
+            ans = label_format % etime_dict
         return ans
 
 #==============================================================================
