@@ -517,7 +517,7 @@ class Formatter(object):
                 val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
             else:
                 val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"), time.localtime(val_t[0]))
-        elif val_t[1] == "second":
+        elif val_t[2] == "group_deltatime":
             # Get a delta-time format string. Use a default if the user did not supply one:
             if useThisFormat is not None:
                 format_string = useThisFormat
@@ -562,7 +562,7 @@ class Formatter(object):
             etime_dict[label] = amt
             etime_dict[label+'_label'] = self.get_label_string(label, not amt==1)
             secs %= interval
-        ans = label_format % etime_dict
+        ans = locale.format_string(label_format, etime_dict)
         return ans
 
 #==============================================================================
