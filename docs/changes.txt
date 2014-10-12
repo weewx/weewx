@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+X.X.X XX/XX/XX
+
+Made the ftpupload algorithm a little more robust to corruption of the
+file that records the last upload time.
+
+
 2.7.0 10/11/14
 
 Added the ability to configure new Vantage sensor types without using
