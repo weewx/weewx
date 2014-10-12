@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!usr/bin/env python
 # $Id$
 #
 # Copyright 2013 Matthew Wall
@@ -239,7 +239,6 @@ bcd2num([a,b,c]) -> c*100+b*10+a
 # w0 135
 
 from __future__ import with_statement
-import optparse
 import syslog
 import time
 import string
@@ -1960,6 +1959,7 @@ def read_measurements(ws2300, read_requests):
 # PYTHONPATH=bin python bin/weewx/drivers/ws23xx.py
 
 if __name__ == '__main__':
+    import optparse
 
     usage = """%prog [options] [--debug] [--help]"""
 

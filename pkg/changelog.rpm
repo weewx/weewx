@@ -1,3 +1,5 @@
+* Sat Oct 11 2014 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 2.7.0-1
+- new upstream release
 * Mon Jun 16 2014 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 2.6.4-1
 - new upstream release
 - added cc3000, ultimeter, ws1 drivers

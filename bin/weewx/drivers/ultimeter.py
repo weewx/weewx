@@ -1,4 +1,4 @@
-# Peet Bros-Ultimeter driver for weewx
+#!/usr/bin/env python
 # $Id$
 #
 # Copyright 2014 Matthew Wall
@@ -14,24 +14,13 @@
 #
 # See http://www.gnu.org/licenses/
 
-"""Driver for Peet Bros Ultimeter weather stations (based on the
-ADS WS1 driver) except the Ultimeter II (now quite old from early 1990s).
+"""Driver for Peet Bros Ultimeter weather stations except the Ultimeter II
 
 Thanks to Steve (sesykes71)  for the testing that made this driver possible.
 
 Thanks to Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
 
   http://server1.nuge.com/~weather/
-
-To use this driver, put this file in bin/user, then put this in weewx.conf:
-
-[Station]
-    ...
-    station_type = PeetBros
-
-[PeetBros]
-    port = /dev/ttyS0
-    driver = user.peetbros
 
 The driver assumes the Ultimeter is emitting data in Peet Bros Data Logger
 mode format:
@@ -80,7 +69,6 @@ Modem Mode commands used by the driver
 """
 
 from __future__ import with_statement
-import optparse
 import serial
 import syslog
 import time
@@ -91,7 +79,7 @@ import weewx.units
 import weewx.uwxutils
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.9.4'
+DRIVER_VERSION = '0.9.5'
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 
@@ -104,7 +92,7 @@ def _is_hex(c):
         return False
 
 def logmsg(level, msg):
-    syslog.syslog(level, 'peetbros: %s' % msg)
+    syslog.syslog(level, 'ultimeter: %s' % msg)
 
 def logdbg(msg):
     logmsg(syslog.LOG_DEBUG, msg)
@@ -355,6 +343,7 @@ class Station(object):
 # PYTHONPATH=bin python bin/weewx/drivers/ultimeter.py
 
 if __name__ == '__main__':
+    import optparse
 
     usage = """%prog [options] [--help]"""
 

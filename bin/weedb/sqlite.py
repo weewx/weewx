@@ -53,15 +53,18 @@ def drop(database='', root='', driver='', **argv):
 class Connection(weedb.Connection):
     """A wrapper around a sqlite3 connection object."""
     
-    def __init__(self, database='', root='', **argv):
+    def __init__(self, database='', root='', pragmas=None, **argv):
         """Initialize an instance of Connection.
 
         Parameters:
         
-            file: Path to the sqlite file (required)
-
-            fileroot: An optional path to be prefixed to parameter 'file'. If not given,
-            nothing will be prefixed.
+            database: The name of the Sqlite database. This is generally the file name
+            root: The path to the directory holding the database. Joining "root" with
+              "database" results in the full path to the sqlite file.
+            timeout: The amount of time, in seconds, to wait for a lock to be released. 
+              Optional. Default is 5.
+            isolation_level: The type of isolation level to use. One of None, 
+              DEFERRED, IMMEDIATE, or EXCLUSIVE. Default is None (autocommit mode).
             
         If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
@@ -77,6 +80,10 @@ class Connection(weedb.Connection):
             # The Pysqlite driver does not include the database file path.
             # Include it in case it might be useful.
             raise weedb.OperationalError("Unable to open database '%s'" % (self.file_path,))
+        
+        if pragmas is not None:
+            for pragma in pragmas:
+                connection.execute("PRAGMA %s=%s;" % (pragma, pragmas[pragma]))
         weedb.Connection.__init__(self, connection, database, 'sqlite')
 
     def cursor(self):

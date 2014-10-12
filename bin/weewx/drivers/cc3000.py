@@ -1,4 +1,4 @@
-# RainWise CC3000 driver for weewx
+#!/usr/bin/env python
 # $Id$
 #
 # Copyright 2014 Matthew Wall
@@ -547,7 +547,7 @@ class Station(object):
 # define a main entry point for basic testing of the station without weewx
 # engine and service overhead.  invoke this as follows from the weewx root dir:
 #
-# PYTHONPATH=bin python bin/user/cc3000.py
+# PYTHONPATH=bin python bin/weewx/drivers/cc3000.py
 
 if __name__ == '__main__':
     import optparse

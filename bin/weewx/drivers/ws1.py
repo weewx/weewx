@@ -1,4 +1,4 @@
-# ADS-WS1 driver for weewx
+#!/usr/bin/env python
 # $Id$
 #
 # Copyright 2014 Matthew Wall
@@ -36,7 +36,7 @@ INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DRIVER_VERSION = '0.11'
+DRIVER_VERSION = '0.12'
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 

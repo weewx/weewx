@@ -88,6 +88,12 @@ while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
             if [ "$RET" = "WS1" ]; then
                 db_input high weewx/ws1_port || true
             fi
+
+            if [ "$RET" = "CC3000" ]; then
+                db_input high weewx/cc3000_model || true
+                db_go
+                db_input high weewx/cc3000_port || true
+            fi
             ;;
     esac
 

@@ -1,19 +1,31 @@
 weewx change history
 --------------------
 
-3.0.0
+3.0.0 XX/XX/XX
 
 Removed the no longer needed serviced StdRESTful, obsolete since V2.6
 
 
-X.X.X XX/XX/XX
+2.7.0 10/11/14
 
+Added the ability to configure new Vantage sensor types without using
+the console. This will be useful to Envoy users.  Thanks to user Deborah 
+Pickett for this contribution! 
+
+Allow calibration constants to be set in the Vantage EEPROM. This will
+particularly be useful to southern hemisphere users who may want to
+align their ISS to true north (instead of south), then apply a 180
+correction. Thanks again to Deborah Pickett!
+ 
 Enabled multiple rsync instances for a single weewx instance.
  
-Added catchup to the WS28xx driver, but still no hardware record generation.
+More extensive debug information for rscync users.
 
-Moved clock synchronization options clock_check and max_drift back to
-section [StdTimeSynch].
+Added the ability to localize the weewx and server uptime. See the
+Customizing Guide for details. This will also cause a minor backwards 
+incompatibility. See the Upgrading Guide for details.
+
+Added catchup to the WS28xx driver, but still no hardware record generation.
 
 Changed lux-to-W/m^2 conversion factor in the fine offset driver.
 
@@ -21,7 +33,10 @@ Added rain rate calculation to Ultimeter driver.
 
 Changed setTime to retrieve system time directly rather than using a value
 passed by the engine. This greatly improves the accuracy of StdTimeSync,
-particularly in network based implementations.
+particularly in network based implementations. Thanks to user Denny Page!
+
+Moved clock synchronization options clock_check and max_drift back to
+section [StdTimeSynch].
 
 Fixed ENDPOINT_IN in the te923 driver.  This should provide better
 compatibility with a wider range of pyusb versions.
@@ -34,6 +49,19 @@ generation of reports.
 
 Ensure correct location, lat, lon, and altitude modifications in the
 debian postinst installer script.
+
+In the debian installer, default to ttyUSB0 instead of ttyS0 for stations
+with a serial interface.
+
+Added CC3000 to debian installer scripts.
+
+Fixed bug that can affect hardware that emits floating point timestamps,
+where the timestamp is within 1 second of the end of an archive interval.
+
+Changed UVBatteryStatus to uvBatteryStatus in the WMR100 driver in order
+to match the convention used by other drivers.
+
+Fixed the shebang for te923, ws23xx, ultimeter, ws1, and cc3000 drivers.
 
 
 2.6.4 06/16/14

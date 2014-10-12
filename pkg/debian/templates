@@ -39,7 +39,7 @@ Description: hardware interface:
 
 Template: weewx/vantage_port
 Type: string
-Default: /dev/ttyS0
+Default: /dev/ttyUSB0
 Description: serial port:
  Specify a port for stations with a serial interface, for example /dev/ttyUSB0 or /dev/ttyS0.  For ethernet stations leave this blank.
 
@@ -69,7 +69,7 @@ Description: weather station model:
 
 Template: weewx/wmr9x8_port
 Type: string
-Default: /dev/ttyS0
+Default: /dev/ttyUSB0
 Description: serial port:
  Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
 
@@ -100,7 +100,7 @@ Description: weather station model:
 
 Template: weewx/ws23xx_port
 Type: string
-Default: /dev/ttyS0
+Default: /dev/ttyUSB0
 Description: serial port:
  Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
 
@@ -118,12 +118,24 @@ Description: weather station model:
 
 Template: weewx/ultimeter_port
 Type: string
-Default: /dev/ttyS0
+Default: /dev/ttyUSB0
 Description: serial port:
  Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
 
 Template: weewx/ws1_port
 Type: string
-Default: /dev/ttyS0
+Default: /dev/ttyUSB0
 Description: serial port:
  Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
+
+Template: weewx/cc3000_port
+Type: string
+Default: /dev/ttyUSB0
+Description: serial port:
+ Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
+
+Template: weewx/cc3000_model
+Type: string
+Default: RainWise
+Description: weather station model:
+ Specify the station model, for example RainWise CC3000.
