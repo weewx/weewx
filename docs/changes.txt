@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-2.7.0 XX/XX/XX
+2.7.0 10/11/14
 
 Added the ability to configure new Vantage sensor types without using
 the console. This will be useful to Envoy users.  Thanks to user Deborah 
