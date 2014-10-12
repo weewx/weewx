@@ -1174,7 +1174,7 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
     def genStartupRecords(self, ts):
         loginf('Scanning historical records')
-        maxtries = 3
+        maxtries = 65
         ntries = 0
         last_n = n = nrem = None
         last_ts = now = int(time.time())
