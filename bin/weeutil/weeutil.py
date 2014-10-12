@@ -948,6 +948,8 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
     if config_fn is None:
         if args is not None and len(args) > 0 and not args[0].startswith('-'):
             config_fn = args[0]
+            # Shift args to the left:
+            del args[0]
     if config_fn is None:
         for f in locations:
             fn = f + '/weewx.conf'
