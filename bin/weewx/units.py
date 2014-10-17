@@ -1172,6 +1172,15 @@ def to_std_system(datadict, unit_system):
         _datadict_target['usUnits'] = unit_system
         return _datadict_target
 
+def as_value_tuple(record_dict, obs_type):
+    std_unit_system = record_dict['usUnits']
+    val = record_dict.get(obs_type)
+    # Given this standard unit system, what is the unit type of this
+    # particular observation type?
+    (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
+    # Form the value-tuple and return it:
+    return ValueTuple(val, unit_type, unit_group)
+
 if __name__ == "__main__":
     
     import doctest
