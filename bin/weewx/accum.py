@@ -319,7 +319,7 @@ class WXAccum(BaseAccum):
                 record['windDir']     = self[obs_type].vec_dir
                 record['windGust']    = self[obs_type].max
                 record['windGustDir'] = self[obs_type].max_dir
-            elif obs_type in ['rain', 'ET']:
+            elif obs_type in ['rain', 'ET', 'snow']:
                 # We need totals during the timespan, not the average:
                 record[obs_type]      = self[obs_type].sum
             elif obs_type in ['hourRain', 'dayRain', 'rain24', 'monthRain', 'yearRain', 'totalRain']:

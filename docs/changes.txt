@@ -6,6 +6,9 @@ X.X.X XX/XX/XX
 Made the ftpupload algorithm a little more robust to corruption of the
 file that records the last upload time.
 
+Added observation type 'snow'. It generally follows the semantics
+of 'rain'.
+
 
 2.7.0 10/11/14
 
