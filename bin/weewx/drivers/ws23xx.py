@@ -254,7 +254,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.19'
+DRIVER_VERSION = '0.20'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -364,8 +364,8 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         while ntries < self.max_tries:
             ntries += 1
             try:
-                s = Station(self.port)
-                data = s.get_raw_data(SENSOR_IDS)
+                with Station(self.port) as s:
+                    data = s.get_raw_data(SENSOR_IDS)
                 packet = data_to_packet(data, int(time.time() + 0.5),
                                         altitude=self.altitude,
                                         pressure_offset=self.pressure_offset,
@@ -394,8 +394,6 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                        (ntries, self.max_tries, e))
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)
                 time.sleep(self.retry_wait)
-            finally:
-                s.close()
         else:
             msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
             logerr(msg)
@@ -1135,10 +1133,10 @@ class Ws2300(object):
     #
     # Debug logging of serial IO.
     #
-    def log(self, str):
+    def log(self, s):
         if not DEBUG_SERIAL:
             return
-        self.log_buffer[-1] = self.log_buffer[-1] + str
+        self.log_buffer[-1] = self.log_buffer[-1] + s
     def log_enter(self, action):
         if not DEBUG_SERIAL:
             return
@@ -1214,7 +1212,7 @@ class Conversion(object):
     #
     # Convert the string produced by "str()" back to the value.
     #
-    def parse(self, str): raise NotImplementedError()
+    def parse(self, s): raise NotImplementedError()
     #
     # Transform data into something that can be written.  Returns:
     #  (new_bytes, ws2300.write_safe_args, ...)
@@ -1250,8 +1248,8 @@ class BinConversion(Conversion):
         return num2bin(int(value * 10**self.scale) // self.mult, self.nybble_count)
     def str(self, value):
         return "%.*f" % (self.scale, value)
-    def parse(self, str):
-        return float(str)
+    def parse(self, s):
+        return float(s)
 
 #
 # For values stored as BCD numbers.
@@ -1272,8 +1270,8 @@ class BcdConversion(Conversion):
         return num2bcd(int(value * 10**self.scale) - self.offset, self.nybble_count)
     def str(self, value):
         return "%.*f" % (self.scale, value)
-    def parse(self, str):
-        return float(str)
+    def parse(self, s):
+        return float(s)
 
 #
 # For pressures.  Add a garbage check.
@@ -1298,8 +1296,8 @@ class ConversionDate(Conversion):
         self.format = format
     def str(self, value):
         return time.strftime(self.format, time.localtime(value))
-    def parse(self, str):
-        return time.mktime(time.strptime(str, self.format))
+    def parse(self, s):
+        return time.mktime(time.strptime(s, self.format))
 
 class DateConversion(ConversionDate):
     def __init__(self):
@@ -1401,8 +1399,8 @@ class TimeConversion(ConversionDate):
         tm = time.localtime(value)
         dt = tm[5] + tm[4]*100 + tm[3]*10000
         return num2bcd(dt, self.nybble_count)
-    def parse(self, str):
-        return time.mktime((0,0,0) + time.strptime(str, self.format)[3:]) + time.timezone
+    def parse(self, s):
+        return time.mktime((0,0,0) + time.strptime(s, self.format)[3:]) + time.timezone
 
 class WindDirectionConversion(Conversion):
     def __init__(self):
@@ -1413,8 +1411,8 @@ class WindDirectionConversion(Conversion):
         return (int((value + 11.25) / 22.5),)
     def str(self, value):
         return "%g" % value
-    def parse(self, str):
-        return float(str)
+    def parse(self, s):
+        return float(s)
 
 class WindVelocityConversion(Conversion):
     def __init__(self):
@@ -1425,8 +1423,8 @@ class WindVelocityConversion(Conversion):
         return num2bin(value[0]*10, 3) + num2bin((value[1] + 11.5) / 22.5, 1)
     def str(self, value):
         return "%.1f,%g" % value
-    def parse(self, str):
-        return tuple([float(x) for x in str.split(",")])
+    def parse(self, s):
+        return tuple([float(x) for x in s.split(",")])
 
 # The ws2300 1.8 implementation does not calculate wind speed correctly -
 # it uses bcd2num instead of bin2num.  This conversion object uses bin2num
@@ -1443,8 +1441,8 @@ class WindConversion(Conversion):
         return (speed, direction, overflow, validity)
     def str(self, value):
         return "%.1f,%g,%s,%s" % value
-    def parse(self, str):
-        return tuple([float(x) for x in str.split(",")])
+    def parse(self, s):
+        return tuple([float(x) for x in s.split(",")])
 
 #
 # For non-numerical values.
@@ -1466,11 +1464,11 @@ class TextConversion(Conversion):
         if result != None:
             return result
         return "unknown-%d" % value
-    def parse(self, str):
-        result = [c[0] for c in self.constants.items() if c[1] == str]
+    def parse(self, s):
+        result = [c[0] for c in self.constants.items() if c[1] == s]
         if result:
             return result[0]
-        return int(value[8:],16)
+        return None
 
 #
 # For values that are represented by one bit.
@@ -1488,8 +1486,8 @@ class ConversionBit(Conversion):
         return (value << self.bit,)
     def str(self, value):
         return self.desc[value]
-    def parse(self, str):
-        return [c[0] for c in self.desc.items() if c[1] == str][0]
+    def parse(self, s):
+        return [c[0] for c in self.desc.items() if c[1] == s][0]
 
 class BitConversion(ConversionBit):
     def __init__(self, bit, desc):
@@ -1547,25 +1545,25 @@ class HistoryConversion(Conversion):
         rain = None
         wind_speed = None
         wind_direction = None
-    def __str__(self):
-        return "%4.1fc %2d%% %4.1fc %2d%% %6.1fhPa %6.1fmm %2dm/s %5g" % (
-            self.temp_indoor, self.humidity_indoor,
-            self.temp_outdoor, self.humidity_outdoor, 
-            self.pressure_absolute, self.rain,
-            self.wind_speed, self.wind_direction)
-    def parse(cls, str):
-        rec = cls()
-        toks = [tok.rstrip(string.ascii_letters + "%/") for tok in str.split()]
-        rec.temp_indoor = float(toks[0])
-        rec.humidity_indoor = int(toks[1])
-        rec.temp_outdoor = float(toks[2])
-        rec.humidity_outdoor = int(toks[3])
-        rec.pressure_absolute = float(toks[4])
-        rec.rain = float(toks[5])
-        rec.wind_speed = int(toks[6])
-        rec.wind_direction = int((float(toks[7]) + 11.25) / 22.5) % 16
-        return rec
-    parse = classmethod(parse)
+        def __str__(self):
+            return "%4.1fc %2d%% %4.1fc %2d%% %6.1fhPa %6.1fmm %2dm/s %5g" % (
+                self.temp_indoor, self.humidity_indoor,
+                self.temp_outdoor, self.humidity_outdoor, 
+                self.pressure_absolute, self.rain,
+                self.wind_speed, self.wind_direction)
+        def parse(cls, s):
+            rec = cls()
+            toks = [tok.rstrip(string.ascii_letters + "%/") for tok in s.split()]
+            rec.temp_indoor = float(toks[0])
+            rec.humidity_indoor = int(toks[1])
+            rec.temp_outdoor = float(toks[2])
+            rec.humidity_outdoor = int(toks[3])
+            rec.pressure_absolute = float(toks[4])
+            rec.rain = float(toks[5])
+            rec.wind_speed = int(toks[6])
+            rec.wind_direction = int((float(toks[7]) + 11.25) / 22.5) % 16
+            return rec
+        parse = classmethod(parse)
     def __init__(self):
         Conversion.__init__(self, "", 19, "history")
     def binary2value(self, data):
@@ -1603,8 +1601,8 @@ class HistoryConversion(Conversion):
     #
     # Convert the string produced by "str()" back to the value.
     #
-    def parse(self, str):
-        return self.__class__.HistoryRecord.parse(str)
+    def parse(self, s):
+        return self.__class__.HistoryRecord.parse(s)
 
 #
 # Various conversions we know about.
@@ -1690,8 +1688,8 @@ class HexConversion(Conversion):
         return value
     def str(self, value):
         return ",".join(["%x" % nybble for nybble in value])
-    def parse(self, str):
-        toks = str.replace(","," ").split()
+    def parse(self, s):
+        toks = s.replace(","," ").split()
         for i in range(len(toks)):
             s = list(toks[i])
             s.reverse()

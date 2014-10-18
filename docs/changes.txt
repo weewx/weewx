@@ -9,6 +9,9 @@ file that records the last upload time.
 Added observation type 'snow'. It generally follows the semantics
 of 'rain'.
 
+Fixed possible fatal exception in WS23xx driver.  Fixed use of str as variable
+name in WS23xx driver.
+
 
 2.7.0 10/11/14
 
