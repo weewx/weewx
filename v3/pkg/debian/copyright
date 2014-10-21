@@ -1,0 +1,24 @@
+Format: http://dep.debian.net/deps/dep5
+Upstream-Name: weewx
+Source: http://www.weewx.com
+
+Files: *
+Copyright: Copyright (C) 2009-2013 Tom Keffer <tkeffer@gmail.com>
+
+Files: debian/*
+Copyright: Copyright (C) 2009-2013 Tom Keffer <tkeffer@gmail.com>
+
+License: GPL-3.0+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ On Debian systems, the GPL is located at /usr/share/common-licenses/GPL-3.
+ .
+ See <http://www.gnu.org/licenses/>.

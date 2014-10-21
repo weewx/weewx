@@ -1,0 +1,105 @@
+#!/bin/sh -e
+# $Id$
+# prompt for configuration settings that are required and have no default
+
+# load the debconf functions
+. /usr/share/debconf/confmodule
+db_version 2.0
+
+# this conf script is capable of backing up
+db_capb backup
+
+STATE=1 
+while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
+    case "$STATE" in
+        1)
+            db_input high weewx/location || true
+            ;;
+
+        2)
+            db_input high weewx/latlon || true
+            ;;
+
+        3)
+            db_input high weewx/altitude || true
+            ;;
+
+        4)
+            db_input high weewx/units || true
+            ;;
+
+        5)
+            db_input high weewx/station_type || true
+            ;;
+
+        6) # prompt for station-specific parameters
+            db_get weewx/station_type
+            if [ "$RET" = "Vantage" ]; then
+                db_input high weewx/vantage_type || true
+                db_go
+                db_get weewx/vantage_type
+                if [ "$RET" = "serial" ]; then
+                    db_input high weewx/vantage_port || true
+                else
+                    db_input high weewx/vantage_host || true
+                fi
+            fi
+
+            if [ "$RET" = "WMR100" ]; then
+                db_input high weewx/wmr100_model || true
+            fi
+
+            if [ "$RET" = "WMR200" ]; then
+                db_input high weewx/wmr200_model || true
+            fi
+
+            if [ "$RET" = "WMR9x8" ]; then
+                db_input high weewx/wmr9x8_model || true
+                db_go
+                db_input high weewx/wmr9x8_port || true
+            fi
+
+            if [ "$RET" = "FineOffsetUSB" ]; then
+                db_input high weewx/fousb_model || true
+            fi
+
+            if [ "$RET" = "WS23xx" ]; then
+                db_input high weewx/ws23xx_model || true
+                db_go
+                db_input high weewx/ws23xx_port || true
+            fi
+
+            if [ "$RET" = "WS28xx" ]; then
+                db_input high weewx/ws28xx_model || true
+                db_go
+                db_input high weewx/ws28xx_frequency || true
+            fi
+
+            if [ "$RET" = "TE923" ]; then
+                db_input high weewx/te923_model || true
+            fi
+
+            if [ "$RET" = "Ultimeter" ]; then
+                db_input high weewx/ultimeter_model || true
+                db_go
+                db_input high weewx/ultimeter_port || true
+            fi
+
+            if [ "$RET" = "WS1" ]; then
+                db_input high weewx/ws1_port || true
+            fi
+
+            if [ "$RET" = "CC3000" ]; then
+                db_input high weewx/cc3000_model || true
+                db_go
+                db_input high weewx/cc3000_port || true
+            fi
+            ;;
+    esac
+
+    if db_go; then
+        STATE=$(($STATE + 1))
+    else
+        STATE=$(($STATE - 1))
+    fi
+done

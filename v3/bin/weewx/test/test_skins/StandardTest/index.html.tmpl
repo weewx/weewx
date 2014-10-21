@@ -1,0 +1,370 @@
+#errorCatcher Echo
+##    $Revision$
+##    $Author$
+##    $Date$
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head profile="http://www.w3.org/2005/10/profile">
+  #if $encoding == 'utf8' 
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+  #end if
+  <title>TEST: Current Weather Conditions</title>
+  <style type="text/css">
+  table {
+    border: thin solid #000000;
+  }
+  td {
+    border: thin solid #000000;
+    padding: 2px;
+  }
+</style>
+</head>
+<body>
+
+  <h1>Tests for tag \$station</h1>
+  <table>
+    <tr>
+      <td>Station location:</td>
+      <td>$station.location</td>
+    </tr>
+    <tr>
+      <td align="right">Latitude:</td>
+      <td align="left">$station.latitude[0]&deg; $station.latitude[1]' $station.latitude[2]</td>
+    </tr>
+    <tr>
+      <td align="right">Longitude:</td>
+      <td align="left">$station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</td>
+    </tr>
+    <tr>
+      <td align="right">Altitude (default unit):</td>
+      <td align="left">$station.altitude</td>
+    </tr>
+    <tr>
+      <td align="right">Altitude (feet):</td>
+      <td align="left">$station.altitude.foot</td>
+    </tr>
+    <tr>
+      <td align="right">Altitude (meters):</td>
+      <td align="left">$station.altitude.meter</td>
+    </tr>
+  </table>
+  
+  <hr/>
+
+  <h1>Tests for tag \$current</h1>
+  <table>
+    <tr>
+      <td>Current dateTime:</td>
+      <td>$current.dateTime</td>
+    </tr>
+    <tr>
+      <td>Current dateTime with formatting:</td>
+      <td>$current.dateTime.format("%H:%M")</td>
+    </tr>
+    <tr>
+      <td>Raw dateTime:</td>
+      <td>$current.dateTime.raw</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (normal formatting)</td>
+      <td>$current.outTemp</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Celsius)</td>
+      <td>$current.outTemp.degree_C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Fahrenheit)</td>
+      <td>$current.outTemp.degree_F</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Celsius, plus formatting)</td>
+      <td>$current.outTemp.degree_C.format("%.3f")</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Fahrenheit, plus formatting)</td>
+      <td>$current.outTemp.degree_F.format("%.3f")</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature trend ($trend.time_delta.hour.format("%.0f"))</td>
+      <td>$trend.outTemp</td>
+    </tr>
+    <tr>
+      <td>Barometer (normal)</td>
+      <td>$current.barometer</td>
+    </tr>
+    <tr>
+      <td>Barometer trend ($trend.time_delta.hour.format("%.0f"))</td>
+      <td>$trend.barometer</td>
+    </tr>
+    <tr>
+      <td>Wind Chill (normal)</td>
+      <td>$current.windchill</td>
+    </tr>
+    <tr>
+      <td>Heat Index (normal)</td>
+      <td>$current.heatindex</td>
+    </tr>
+    <tr>
+      <td>Heat Index (in Celsius)</td>
+      <td>$current.heatindex.degree_C</td>
+    </tr>
+    <tr>
+      <td>Heat Index (in Fahrenheit)</td>
+      <td>$current.heatindex.degree_F</td>
+    </tr>
+    <tr>
+      <td>Dewpoint</td>
+      <td>$current.dewpoint</td>
+    </tr>
+    <tr>
+      <td>Humidity</td>
+      <td>$current.outHumidity</td>
+    </tr>
+    <tr>
+      <td>Wind</td>
+      <td>$current.windSpeed from $current.windDir</td>
+    </tr>
+    <tr>
+      <td>Rain Rate</td>
+      <td>$current.rainRate</td>
+    </tr>
+    <tr>
+      <td>Inside Temperature</td>
+      <td>$current.inTemp</td>
+    </tr>
+    <tr>
+      <td>Test tag "exists" for an existent type: \$current.outTemp.exists</td>
+    #if $current.outTemp.exists
+      <td>PASS</td>
+    #else
+      <td>FAIL</td>
+    #end if
+    </tr> 
+    <tr>
+      <td>Test tag "exists" for a nonsense type: \$current.nonsense.exists</td>
+    #if $current.nonsense.exists
+      <td>FAIL</td>
+    #else
+      <td>PASS</td>
+    #end if
+    </tr> 
+    <tr>
+      <td>Test tag "has_data" for an existing type with data: \$current.outTemp.has_data</td>
+    #if $current.outTemp.has_data
+      <td>PASS</td>
+    #else
+      <td>FAIL</td>
+    #end if
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for an existing type without data: \$current.hail.has_data</td>
+    #if $current.hail.has_data
+      <td>FAIL</td>
+    #else
+      <td>PASS</td>
+    #end if
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for a nonsense type: \$current.nonsense.has_data</td>
+    #if $current.nonsense.has_data
+      <td>FAIL</td>
+    #else
+      <td>PASS</td>
+    #end if
+    </tr> 
+    <tr>
+      <td>Test for a bad attribute on a tag: \$current.foobar</td>
+      <td>$current.foobar</td>
+    </tr>
+  </table>
+
+  <hr/>
+
+  <h1>Tests for tag \$day</h1>
+  <table>
+    <tr>
+      <td>Max Temperature</td>
+      <td>$day.outTemp.max</td>
+    </tr>
+    <tr>
+      <td>Min Temperature</td>
+      <td>$day.outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Time of max temperature:</td>
+      <td>$day.outTemp.maxtime</td>
+    </tr>
+    <tr>
+      <td>Time of min temperature:</td>
+      <td>$day.outTemp.mintime</td>
+    </tr>
+    <tr>
+      <td>Min temp with explicit conversion to Celsius</td>
+      <td>$day.outTemp.min.degree_C</td>
+    </tr>
+    <tr>
+      <td>Min temp with explicit conversion to Fahrenheit</td>
+      <td>$day.outTemp.min.degree_F</td>
+    </tr>
+    <tr>
+      <td>Min temp with explicit conversion to nonsense type</td>
+      <td>$day.outTemp.min.badtype</td>
+    </tr>
+    <tr>
+      <td>Min temperature with inappropriate conversion: \$day.outTemp.min.mbar</td>
+      <td>$day.outTemp.min.mbar</td>
+    </tr>
+    <tr>
+      <td>Nonexistent type:</td>
+      <td>$day.heatindex.max</td>
+    </tr>
+    <tr>
+      <td>Sum aggregation (rain)</td>
+      <td>$day.rain.sum</td>
+    </tr>
+    <tr>
+      <td>High Wind</td>
+      <td>$day.wind.max from $day.wind.gustdir at $day.wind.maxtime</td>
+    </tr>
+    <tr>
+      <td>Average aggregation (wind)</td>
+      <td>$day.wind.avg</td>
+    </tr>
+    <tr>
+      <td>RMS aggregation(wind)</td>
+      <td>$day.wind.rms</td>
+    </tr>
+    <tr>
+      <td>Aggregation Vector Average (wind)</td>
+      <td>$day.wind.vecavg</td>
+    </tr>
+    <tr>
+      <td>Aggregation Vector Direction (wind)</td>
+      <td>$day.wind.vecdir</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" with nonsense type</td>
+      #if $day.nonsense.has_data
+      <td>FAILS</td>
+      #else
+      <td>PASS</td>
+      #end if
+    </tr>
+    <tr>
+      <td>Test tag "exists" with an existing type that has no data</td>
+      #if $day.heatindex.exists
+      <td>PASS</td>
+      #else
+      <td>FAIL</td>
+      #end if
+    </tr>
+    <tr>
+      <td>Test tag "has_data" with existent type that has no data</td>
+      #if $day.heatindex.has_data
+      <td>FAILS</td>
+      #else
+      <td>PASS</td>
+      #end if
+    </tr>
+    <tr>
+      <td>Test tag "has_data" with existent type that has data</td>
+      #if $day.outTemp.has_data
+      <td>PASS</td>
+      #else
+      <td>FAIL</td>
+      #end if
+    </tr>
+  </table>
+
+  <hr/>
+  
+  <h1>Tests for tag \$rainyear</h1>
+  <table>
+    <tr>
+      <td>Rainyear total</td>
+      <td>$rainyear.rain.sum</td>
+    </tr>
+  </table>
+    
+  <hr/>
+
+  <h1>Tests for tag \$Extras</h1>
+  <table>
+    <tr>
+      #if $Extras.has_key('radar_url') 
+      <td>Radar URL</td>
+      <td>&quot;$Extras.radar_url&quot;</td>
+      #else
+      <td>FAIL<td> 
+      #end if
+    </tr>
+  </table>
+
+  <hr/>
+
+  <h1>Tests for tag \$almanac</h1>
+  <table>
+    <tr>
+      <td align="right">Sunrise:</td>
+      <td align="left">$almanac.sunrise</td>
+    </tr>
+    <tr>
+      <td align="right">Sunset:</td>
+      <td align="left">$almanac.sunset</td>
+    </tr>
+    <tr>
+       <td align="right">Moon:</td>
+       <td align="left">$almanac.moon_phase ($almanac.moon_fullness%full)</td>
+    </tr>
+  </table>
+  
+  <hr/>
+
+  <h1>Test for tag \$unit</h1>
+  <table>
+    <tr>
+      <td align="right">Tag &quot;\$unit.unit_type.outTemp&quot;</td>
+      <td align="left">$unit.unit_type.outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Tag &quot;\$unit.label.outTemp&quot;</td>
+      <td align="left">$unit.label.outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Tag &quot;\$unit.format.outTemp&quot;</td>
+      <td align="left">$unit.format.outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Example from customizing guide<br/>
+      (&quot;\$day.outTemp.max.formatted\$unit.label.outTemp&quot;)</td>
+      <td align="left">$day.outTemp.max.formatted$unit.label.outTemp</td>
+    </tr>
+    
+
+  </table>
+  
+  <hr/>
+  
+  <h1>Day images</h1>
+  <img src="daytempdew.png" alt="temperatures" />
+  <img src="daytempchill.png" alt="heatchill" /> 
+  <img src="dayrain.png" alt="rain" />
+  <img src="daywind.png" alt="wind" />
+  <img src="daybarometer.png" alt="barometer"/>
+  <img src="daywinddir.png" alt="Hi Wind" />
+  <img src="dayinside.png"  alt="Inside" /> 
+  <img src="daywindvec.png" alt="Wind Vector" />
+  <img src="dayrx.png" alt="day rx percent"/>
+  #if $day.extraTemp1.has_data
+    <img src="daypond.png" alt="Pond Temperatures" />
+  #else
+    (No image for extraTemp1)
+  #end if
+
+  <hr/>
+
+</body>
+
+</html>

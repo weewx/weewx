@@ -1,0 +1,171 @@
+checklist for doing a release:
+
+1. Check to make sure weewx.conf doesn't have any local changes.
+    In particular, check to make sure:
+     1. WEEWX_ROOT points to /home/weewx
+     2. Debug set to zero.
+2. Make sure the correct version has been entered in weewx.__init__.py
+3. Make sure the correct version has been entered in weewx.conf
+4. Make sure all changes have been logged in docs/changes.txt
+5. Make sure the upgrading guide has been updated if necessary.
+6. Make sure the customizing.htm and usersguide.htm have the correct
+    version number at the top.
+7. If working off a branch, commit all changes.
+8. Switch to main trunk
+9. Right click on the top level weewx, select Team | Merge. Select
+    "Reintegrate" and enter the branch as the URL. 
+10. After looking things over, commit changes back to the trunk.
+11. Right click top level weewx, select Team | Tag and create a new tag
+     with a name similar to tags/v1.3.1.  Comment should read something
+     like "Version 1.3.1 release"
+12. Using a terminal, run "./setup.py sdist" to create a tarball.
+13. As a final sanity check, go to the production machine, unpack the
+     tarball, install, run.
+14. Uploading to SourceForge:
+     1. Upload tarball
+     2. Select the new tarball as the Mac, Linux, and BSD distribution
+     3. Copy docs/changes.txt to a directory, change name to README.txt, 
+        then change to DOS CRLF convention. Upload to the files area.
+15. Run a backup on condor
+16. Run Microsoft Expression Web on the PC.
+     1. Copy all the new docs to the weewx web folder, subdirectory docs.
+     2. Add to the news page.
+     3. Upload everything to the web server.
+17. Announce the release to the weewx user's group.
+
+
+
+release process by command: ---------------------------------------------------
+
+# on any host, do a fresh checkout, set the version and update changelogs
+svn checkout https://.../trunk weewx
+vi bin/weewx/__init__.py
+make version
+make deb-changelog
+make rpm-changelog
+vi docs/changes.txt        # as needed
+vi docs/upgrading.htm      # as needed
+svn commit -m "release x.y.z"
+
+# generate the readme then upload it to development_versions
+make readme upload-readme
+
+# on debian host, build src and deb, upload to development_versions
+rm -rf build dist
+make src-package deb-package upload-src deb-package
+
+# on redhat host, build the redhat rpm package, upload to development_versions
+rm -rf build dist
+make rpm-package upload-rpm
+
+# on suse host, build the suse rpm package, upload to development_versions
+rm -rf build dist
+make rpm-package upload-rpm
+
+# do final install test with each package on a virgin system
+# do final upgrade test with each package
+
+# tag the release
+svn copy https://.../trunk https://.../tags/vX.Y.Z
+
+# upload the docs
+svn checkout https://.../website website
+make upload-docs
+
+# at sourceforge, move the new files into position
+mv development_versions/weewx-x.y.z* .
+mv development_versions/README.txt .
+
+
+
+
+notes -------------------------------------------------------------------------
+
+create README.txt for sourceforge:
+  make readme
+
+how to update the version number:
+  modify __version__ in bin/weewx/__init__.py     # canonical version location
+  make version                  # this propagates the version number everywhere
+  svn commit -m "..."           # commit the change to the repository
+
+how to build source package:
+  make src-package
+
+how to build debian package:
+  make deb-changelog
+  emacs pkg/debian/changelog    # add any package-specific changes, if any
+  svn commit -m "update deb changelog"
+  make deb-package
+
+how to build redhat package:
+  make rpm-changelog
+  emacs pkg/changelog.rpm       # add any package-specific changes, if any
+  svn commit -m "update rpm changelog"
+  make rpm-package
+
+to display debconf variables:
+  sudo debconf-show weewx
+
+to manually purge debconf variables:
+  sudo echo PURGE | debconf-communicate weewx
+
+to sign rpm packages you need .rpmmacros in your home directory:
+~/.rpmmacros
+  %_signature gpg
+  %_gpg_name  Matthew Wall
+
+to generate gpg key used for signing packages:
+  gpg --gen-key
+  gpg --list-keys
+
+to export the text version of a public key:
+  gpg --export -a "Matthew Wall" > mwall.gpg.key
+
+
+notes:
+
+there are multiple changelogs:
+  docs/changes.txt - definitive changelog for the application
+  pkg/debian/changelog - changes to the debian packaging
+  pkg/changelog.rpm - changes to the redhat packaging
+  README.txt - copy of changes.txt uploaded to sourceforge files directory
+
+when signing, gpg info must match the name and email in the latest package
+changelog entry.
+
+the debian changelog *must* have a version number that matches the app version.
+the redhat package will build if the version numbers do not match.  use the
+rpm-changelog and deb-changelog targets to ensure that changelog versions match
+the application version for a release.
+
+there are many ways to build a debian package.  first tried dpkg (uses DEBIAN
+dir and is fairly low-level) but that does not create changes and source diffs.
+then dried dpkg-buildpackage (uses debian dir and is higher level) but misses
+the config and templates.  ended up using dpkg-buildpackage with some manual
+(scripted) file manipulation.
+
+what to test when creating debian and redhat packages:
+  install, upgrade, remove, purge
+  install, modify files, remove
+  install, modify files, upgrade
+
+
+
+how to install/remove using various approaches:
+
+source install:
+  setup.py install
+  setup.py install home=/opt/weewx-x.y.z
+
+debian install/remove:
+  dpkg -i weewx_x.y.z-r.deb           # install
+  (apt-get install weewx)             # finish install if dependencies failed
+  dpkg -r weewx                       # remove
+  dpkg -P weewx                       # purge
+
+redhat install/remove:
+  yum install weewx-x.y.z-r.rpm [--nogpgcheck]    # install with yum
+  yum remove weewx                                # remove with yum
+  rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
+  rpm -e weewx                                    # remove with rpm

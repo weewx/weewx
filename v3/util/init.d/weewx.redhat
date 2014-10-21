@@ -1,0 +1,69 @@
+#!/bin/sh
+# $Id$
+# Author: Mark Jenks <mjenks@netnet.net>
+# Startup script for Redhat derivatives
+#
+# chkconfig: 2345 99 01
+# description: start and stop the weewx weather system
+#
+# Do NOT "set -e"
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+WEEWX_BIN=/home/weewx/bin/weewxd
+WEEWX_CFG=/home/weewx/weewx.conf
+NAME=weewx
+PIDFILE=/var/run/$NAME.pid
+LOCKFILE=/var/lock/subsys/$NAME
+DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_CFG"
+
+# Source function library.
+. /etc/init.d/functions
+
+# Exit if the package is not installed
+[ -x "$WEEWX_BIN" ] || exit 0
+
+# See how we were called.
+case "$1" in
+  start)
+        # Start daemon.
+        echo -n $"Starting $NAME: "
+        daemon --pidfile $PIDFILE $WEEWX_BIN $DAEMON_ARGS
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && touch $LOCKFILE
+        ;;
+  stop)
+        # Stop daemon.
+        echo -n $"Shutting down $NAME: "
+        killproc $NAME
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && rm -f $LOCKFILE
+        ;;
+  status)
+        echo -n $"Checking for $NAME: "
+        status $NAME
+        RETVAL=$?
+        ;;
+  restart)
+        echo -n $"Restarting $NAME: "
+        $0 stop
+        $0 start
+        ;;
+  reload)
+        echo -n $"Reloading $NAME: "
+        killproc $NAME -HUP
+        RETVAL=$?
+        echo
+        ;;
+  condrestart)
+        [ -f $LOCKFILE ] && restart || :
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart|reload}"
+        RETVAL=1
+        ;;
+esac
+
+exit $RETVAL

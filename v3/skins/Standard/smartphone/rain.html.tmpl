@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <title>Rain in $station.location</title>
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+  <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+  <script type="text/javascript" src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <div data-role="page" data-add-back-btn="true" data-theme="a">
+    <div data-role="header">
+      <h1>Rain</h1>
+   </div>
+   <div data-role="content">
+     <h4>24h rain</h4>
+     <img src="../dayrain.png"/>
+     <ul data-role="listview" data-inset="true" data-divider-theme="b">
+       <li data-role="list-divider">Today's data</li>
+       <li>Total: $day.rain.sum</li>
+       <li>Min rate: $day.rainRate.min at $day.rainRate.mintime</li>
+       <li>Max rate: $day.rainRate.max at $day.rainRate.maxtime</li>
+     </ul>
+
+     <h4>Rain last 30 days</h4>
+     <img src="../monthrain.png" />
+    </div>
+    <div data-role="footer">
+      <h4>weewx v $station.version</h4>
+    </div>
+  </div>
+</body>

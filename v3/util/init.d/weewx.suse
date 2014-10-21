@@ -1,0 +1,147 @@
+#!/bin/bash
+# Author: Tom Keffer <keffer@gmail.com>
+# Startup script for SuSE derivatives
+
+### BEGIN INIT INFO
+# Provides:          weewx
+# Required-Start:    $local_fs $syslog $time
+# Required-Stop:     $local_fs $syslog $time
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: weewx weather system
+# Description:       Manages the weewx weather system
+### END INIT INFO
+# chkconfig: 345 99 00
+# description: weewx weather daemon
+
+# runlevels:
+# 0 - halt/poweroff 			6 - reboot
+# 1 - single user			2 - multiuser without network exported
+# 3 - multiuser w/ network (text mode)  5 - multiuser w/ network and X11 (xdm)
+
+# LSB compatible service control script; see http://www.linuxbase.org/spec/
+# Please send feedback to http://www.suse.de/feedback/
+# See also http://www.tldp.org/HOWTO/HighQuality-Apps-HOWTO/
+# 
+# This scriopt uses functions rc_XXX defined in /etc/rc.status on
+# UnitedLinux/SUSE/Novell based Linux distributions.
+
+WEEWX_BIN=/home/weewx/bin/weewxd
+WEEWX_CFG=/home/weewx/weewx.conf
+WEEWX_ARGS="--daemon $WEEWX_CFG"
+WEEWX_PID_FILE=/var/run/weewx.pid
+test -x $WEEWX_BIN || { echo "$WEEWX_BIN not installed"; 
+	if [ "$1" = "stop" ]; then exit 0;
+	else exit 5; fi; }
+
+# Shell functions sourced from /etc/rc.status:
+#      rc_check         check and set local and overall rc status
+#      rc_status        check and set local and overall rc status
+#      rc_status -v     be verbose in local rc status and clear it afterwards
+#      rc_status -v -r  ditto and clear both the local and overall rc status
+#      rc_status -s     display "skipped" and exit with status 3
+#      rc_status -u     display "unused" and exit with status 3
+#      rc_failed        set local and overall rc status to failed
+#      rc_failed <num>  set local and overall rc status to <num>
+#      rc_reset         clear both the local and overall rc status
+#      rc_exit          exit appropriate to overall rc status
+#      rc_active        checks whether a service is activated by symlinks
+
+# Assume sysvinit binaries exist
+start_daemon() { /sbin/start_daemon ${1+"$@"}; }
+killproc()     { /sbin/killproc     ${1+"$@"}; }
+pidofproc()    { /sbin/pidofproc    ${1+"$@"}; }
+checkproc()    { /sbin/checkproc    ${1+"$@"}; }
+# SUSE rc script library
+. /etc/rc.status
+
+# Reset status of this service
+rc_reset
+
+# Return values according to LSB for all commands but status:
+# 0	  - success
+# 1       - generic or unspecified error
+# 2       - invalid or excess argument(s)
+# 3       - unimplemented feature (e.g. "reload")
+# 4       - user had insufficient privileges
+# 5       - program is not installed
+# 6       - program is not configured
+# 7       - program is not running
+# 8--199  - reserved (8--99 LSB, 100--149 distrib, 150--199 appl)
+# 
+# Note that starting an already running service, stopping
+# or restarting a not-running service as well as the restart
+# with force-reload (in case signaling is not supported) are
+# considered a success.
+
+case "$1" in
+    start)
+	echo -n "Starting weewx "
+	## Start daemon with startproc(8). If this fails
+	## the return value is set appropriately by startproc.
+	start_daemon $WEEWX_BIN $WEEWX_ARGS
+	rc_status -v
+	;;
+    stop)
+	echo -n "Shutting down weewx "
+	## Stop daemon with killproc(8) and if this fails
+	## killproc sets the return value according to LSB.
+	killproc -TERM -p $WEEWX_PID_FILE python
+	rc_status -v
+	;;
+    try-restart|condrestart)
+	## Do a restart only if the service was active before.
+	## RH has a similar command named condrestart.
+	if test "$1" = "condrestart"; then
+		echo "Use try-restart rather than condrestart"
+	fi
+	$0 status
+	if test $? = 0; then
+		$0 restart
+	else
+		rc_reset	# Not running is not a failure.
+	fi
+	rc_status
+	;;
+    restart)
+	## Stop the service and regardless of whether it was
+	## running or not, start it again.
+	$0 stop
+	$0 start
+	rc_status
+	;;
+    force-reload)
+	echo -n "Reload service weewx "
+	killproc -HUP -p $WEEWX_PID_FILE python
+	rc_status -v
+	;;
+    reload)
+	echo -n "Reload service weewx "
+	killproc -HUP -p $WEEWX_PID_FILE python
+	rc_status -v
+	;;
+    status)
+	echo -n "Checking for service weewx "
+	## Check status with checkproc(8), if process is running
+	## checkproc will return with exit status 0.
+
+	# Return value is slightly different for the status command:
+	# 0 - service up and running
+	# 1 - service dead, but /var/run/  pid  file exists
+	# 2 - service dead, but /var/lock/ lock file exists
+	# 3 - service not running (unused)
+	# 4 - service status unknown :-(
+	# 5--199 reserved (5--99 LSB, 100--149 distro, 150--199 appl.)
+	
+	checkproc $WEEWX_BIN
+	rc_status -v
+	;;
+    probe)
+	echo "Probe not supported"
+	;;
+    *)
+	echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload|probe}"
+	exit 1
+	;;
+esac
+rc_exit
