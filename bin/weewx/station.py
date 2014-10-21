@@ -113,8 +113,6 @@ class Station(object):
                 os_uptime_secs = CACurrentMediaTime()
             except NameError:
                 pass
-        else:
-            self.os_uptime = weewx.units.ValueHelper((None, None, None))
 
         return weewx.units.ValueHelper(value_t=(os_uptime_secs, "second", "group_deltatime"),
                                        formatter=self.formatter,
