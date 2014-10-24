@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2012-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -135,6 +135,62 @@ class Common(unittest.TestCase):
         _cursor.close()
         _connect.close()
         
+    def test_rollback(self):
+        # Create the database and schema
+        weedb.create(self.db_dict)
+        _connect = weedb.connect(self.db_dict)
+        _cursor = _connect.cursor()
+        _cursor.execute("""CREATE TABLE test1 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, x REAL );""")
+
+        # Now start the transaction
+        _connect.begin()
+        for i in range(10):
+            _cursor.execute("""INSERT INTO test1 (dateTime, x) VALUES (?, ?)""", (i, i+1))
+        # Roll it back
+        _connect.rollback()
+        _cursor.close()
+        _connect.close()
+
+        # Make sure nothing is in the database
+        _connect = weedb.connect(self.db_dict)
+        _cursor = _connect.cursor()
+        _cursor.execute("SELECT dateTime, x from test1")
+        _row = _cursor.fetchone()
+        _cursor.close()
+        _connect.close()
+        self.assertIsNone(_row, msg="Rollback")
+
+    def test_transaction(self):
+        # Create the database and schema
+        weedb.create(self.db_dict)
+        _connect = weedb.connect(self.db_dict)
+
+        # With sqlite, a rollback can roll back a table creation. With MySQL, it does not. So,
+        # create the table outside of the transaction. We're not as concerned about a transaction failing
+        # when creating a table, because it only happens the first time weewx starts up.
+        _connect.execute("""CREATE TABLE test1 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, x REAL );""")
+
+        # We're going to trigger the rollback by raising a bogus exception. Be prepared to catch it.
+        try:
+            with weedb.Transaction(_connect) as _cursor:
+                for i in range(10):
+                    _cursor.execute("""INSERT INTO test1 (dateTime, x) VALUES (?, ?)""", (i, i+1))
+                # Raise an exception:
+                raise Exception("Bogus exception")
+        except Exception:
+            pass
+
+        # Now make sure nothing is in the database
+        _connect = weedb.connect(self.db_dict)
+        _cursor = _connect.cursor()
+        _cursor.execute("SELECT dateTime, x from test1")
+        _row = _cursor.fetchone()
+        _cursor.close()
+        _connect.close()
+        self.assertIsNone(_row, msg="Transaction")
+
+
+
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
@@ -150,8 +206,9 @@ class TestMySQL(Common):
     
 def suite():
     tests = ['test_drop', 'test_double_create', 'test_no_db', 'test_no_tables', 
-             'test_create', 'test_bad_table', 'test_select', 'test_bad_select']
+             'test_create', 'test_bad_table', 'test_select', 'test_bad_select',
+             'test_rollback', 'test_transaction']
     return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
-    
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())
