@@ -9,6 +9,7 @@
 #
 """For uploading files to a remove server via FTP"""
 
+from __future__ import with_statement
 import os
 import sys
 import ftplib
@@ -140,26 +141,31 @@ class FtpUpload(object):
         """Reads the time and members of the last upload from the local root"""
         
         timeStampFile = os.path.join(self.local_root, "#%s.last" % self.name )
+
+        # If the file does not exist, an IOError exception will be raised. Be
+        # prepared to catch it.
         try:
-            f = open(timeStampFile, "r")
-            timestamp = cPickle.load(f)
-            fileset   = cPickle.load(f) 
-            f.close()
+            with open(timeStampFile, "r") as f:
+                timestamp = cPickle.load(f)
+                fileset   = cPickle.load(f) 
         except IOError:
             timestamp = 0
             fileset = set()
+            # Either the file does not exist, or it is garbled.
+            # Either way, it's safe to remove it.
+            try:
+                os.remove(timeStampFile)
+            except OSError:
+                pass
+
         return (timestamp, fileset)
 
     def saveLastUpload(self, timestamp, fileset):
         """Saves the time and members of the last upload in the local root."""
         timeStampFile = os.path.join(self.local_root, "#%s.last" % self.name )
-        try:
-            f = open(timeStampFile, "w")
+        with open(timeStampFile, "w") as f:
             cPickle.dump(timestamp, f)
             cPickle.dump(fileset,   f)
-            f.close()
-        except IOError:
-            pass
                 
     def _make_remote_dir(self, ftp_server, remote_dir_path):
         """Make a remote directory if necessary."""

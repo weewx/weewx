@@ -6,6 +6,22 @@ weewx change history
 Removed the no longer needed serviced StdRESTful, obsolete since V2.6
 
 
+X.X.X XX/XX/XX
+
+Made the ftpupload algorithm a little more robust to corruption of the
+file that records the last upload time.
+
+Added observation type 'snow'. It generally follows the semantics
+of 'rain'.
+
+Fixed possible fatal exception in WS23xx driver.  Fixed use of str as variable
+name in WS23xx driver.
+
+Now catches database exceptions raised during commits, converting them to
+weedb exceptions. Weewx catches these, allowing the program to keep going, even
+in the face of most database errors.
+
+
 2.7.0 10/11/14
 
 Added the ability to configure new Vantage sensor types without using
