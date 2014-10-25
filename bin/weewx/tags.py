@@ -110,8 +110,13 @@ class DatabaseBinder(object):
     @property
     def trend(self):
         """Return a ValueDict for the 'trend'. """
-        time_delta = int(self.option_dict.get('time_delta', 10800))
-        time_grace = int(self.option_dict.get('time_grace', 300))
+        try:
+            time_delta = int(self.option_dict['skin_dict']['Units']['Trend']['time_delta'])
+            time_grace = int(self.option_dict['skin_dict']['Units']['Trend'].get('time_grace', 300))
+        except KeyError:
+            time_delta = 10800  # 3 hours
+            time_grace = 300    # 5 minutes
+
         now_vtd  = self._get_valuetupledict(self.endtime_ts, time_grace)
         then_vtd = self._get_valuetupledict(self.endtime_ts - time_delta, time_grace)
         return TrendObj(then_vtd, now_vtd, time_delta, self.formatter, self.converter)
@@ -122,7 +127,7 @@ class DatabaseBinder(object):
                           'day', self.formatter, self.converter, **self.option_dict)
     @property
     def week(self):
-        week_start = self.option_dict.get('week_start', 6)
+        week_start = self.option_dict['stn_info'].week_start
         return TimeBinder(weeutil.weeutil.archiveWeekSpan(self.endtime_ts, week_start), self.opendb,
                           'week', self.formatter, self.converter, **self.option_dict)
     @property
@@ -135,7 +140,8 @@ class DatabaseBinder(object):
                           'year', self.formatter, self.converter, **self.option_dict)
     @property
     def rainyear(self):
-        return TimeBinder(weeutil.weeutil.archiveRainYearSpan(self.endtime_ts, self.option_dict['rain_year_start']), self.opendb,
+        rain_year_start = self.option_dict['stn_info'].rain_year_start
+        return TimeBinder(weeutil.weeutil.archiveRainYearSpan(self.endtime_ts, rain_year_start), self.opendb,
                           'rainyear',  self.formatter, self.converter, **self.option_dict)
 
     def _get_valuetupledict(self, time_ts, time_grace=None):

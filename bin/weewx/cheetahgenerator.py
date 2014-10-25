@@ -468,36 +468,15 @@ class Stats(SearchList):
     """Class that implements the time-based statistical tags, such
     as $day.outTemp.max"""
 
-    # Default base temperature and unit type for heating and cooling degree days
-    # as a value tuple
-    default_heatbase = (65.0, "degree_F", "group_temperature")
-    default_coolbase = (65.0, "degree_F", "group_temperature")
 
     def get_extension_list(self, timespan, db_factory):
-        units_dict = self.generator.skin_dict.get('Units', {})
-        dd_dict = units_dict.get('DegreeDays', {})
-        heatbase = dd_dict.get('heating_base', None)
-        coolbase = dd_dict.get('cooling_base', None)
-        heatbase_t = (float(heatbase[0]), heatbase[1], "group_temperature") if heatbase else Stats.default_heatbase
-        coolbase_t = (float(coolbase[0]), coolbase[1], "group_temperature") if coolbase else Stats.default_coolbase
-
-        try:
-            time_delta = int(self.generator.skin_dict['Units']['Trend']['time_delta'])
-            time_grace = int(self.generator.skin_dict['Units']['Trend'].get('time_grace', 300))
-        except KeyError:
-            time_delta = 10800  # 3 hours
-            time_grace = 300    # 5 minutes
 
         stats = weewx.tags.FactoryBinder(db_factory,
                                          timespan.stop,
                                          formatter=self.generator.formatter,
                                          converter=self.generator.converter,
-                                         rain_year_start=self.generator.stn_info.rain_year_start,
-                                         heatbase=heatbase_t,
-                                         coolbase=coolbase_t,
-                                         week_start=self.generator.stn_info.week_start,
-                                         time_delta=time_delta,
-                                         time_grace=time_grace)
+                                         stn_info= self.generator.stn_info,
+                                         skin_dict=self.generator.skin_dict)
 
         return [stats]
 

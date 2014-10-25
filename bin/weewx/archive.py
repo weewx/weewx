@@ -683,7 +683,7 @@ class DBBinder(object):
           {
           'Bindings' :     
             'wx_bindings' : {'bind_to': 'archive_sqlite',
-                             'manager': 'weewx.stats.WXDaySummaryArchive'},
+                             'manager': 'weewx.wxstats.WXDaySummaryArchive'},
 
           'Databases' :
             {'archive_sqlite' : {'root': '/home/weewx',
@@ -725,7 +725,7 @@ def prep_database(config_dict, binding):
     # Get the dictionary
     database_dict = config_dict['Databases'][database_name]
     # Get the manager to be used
-    database_manager = config_dict['Bindings'][binding].get('manager', 'weewx.stats.WXDaySummaryArchive')
+    database_manager = config_dict['Bindings'][binding].get('manager', 'weewx.wxstats.WXDaySummaryArchive')
 
     return (database_manager, database_dict)
 
