@@ -1,16 +1,33 @@
-              TODO before the next release:
+--------------------  TODO for V3  --------------------------- 
               
-Check the capture of highs and lows from LOOP data
+Each driver should be responsible for installing its own stanza in the configuration file.
 
-Support ConfigObj v5.0.0
+Each driver should be responsible for its configuration, invoked by wee_config.
 
-Is max gap fraction meaningful for bar charts now?
-
-Is Archive.getSql and Archive.genSql needed now?
+Support ConfigObj v5.0.0 (introduced 2/8/2014). 
 
 Include version number in archive database metadata.
 
-Add documentation for the extension installer and extension packaging.
+Move the derived variables to StdWXCalculate. This would be located in wxservices.py
+
+Rename wxengine.py -> engine.py
+
+Allow table name to be specified in Archive.
+
+Encode table name into daily summary table names. Eg: archive_day_outTemp
+
+Look at Gary's (?) changes to allow cron-like report generation.
+
+Move heating and cooling degree-day logic (from refactor) into V3.
+
+
+
+
+
+
+--------------------  Nice to do someday  --------------------------- 
+
+Is max gap fraction meaningful for bar charts now?
 
 Guard against database locks:
 
