@@ -24,7 +24,7 @@ table#stattypes td {
     <h1 class="title">Customizing weewx<br />
       <span class="version">
 Version: 2.7.0
-      </span>
+      </span></h1>
 
     <h1>Table of Contents</h1>
     <div id="toc"></div>
@@ -1576,12 +1576,12 @@ class MyXSearch(SearchList):                                #1
       <pre class="tty">
 [Extras]
     radar_img = http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif
-    radar_url = http://radar.weather.gov/ridge/radar.php?product=NCR&rid=RTX&loop=yes</pre>
+    radar_url = http://radar.weather.gov/ridge/radar.php?product=NCR&amp;rid=RTX&amp;loop=yes</pre>
       <p>results in a nice image of a radar centered on Portland,
         Oregon. When you click on it, it gives you a detailed, animated view.
-        Take a look at
+        If you live in the USA, take a look at
         the <a href="http://radar.weather.gov/">NOAA radar website</a>
-        to find a nice one for you in the USA. In other countries, you
+        to find a nice one that will work for you. In other countries, you
         will have to consult your local weather service.
       </p>
       <p class="config_option">googleAnalyticsId </p>
@@ -2656,7 +2656,7 @@ class MyAlarm(StdService):
         how to do this, using the utility <span class="symcode">$BIN_ROOT</span><span
           class="code">/wee_config_database</span>.</p>
       <p>This utility also has the ability to check a sqlite version of the archive
-        database for embedded strings (where a float is expected).<p>
+        database for embedded strings (where a float is expected).</p>
       <p>Before starting, it's worth running the utility with the <span class="code">--help</span>
         flag to see how it is used:</p>
       <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --help</pre>
@@ -2932,23 +2932,31 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         will use the new unit system.</p>
 
       <h1 id="porting">Porting to new weather station hardware</h1>
-      <p>Naturally, this is an advanced topic but, nevertheless, I'd
+      <p>Naturally, this is an advanced topic, but nevertheless I'd
         like to encourage any Python wizards out there to give it a try. Of
-        course, I have selfish reasons for this: I don't want to
-        have to buy every weather station ever invented! It's expensive,
-        and my roof would look like a weather station farm.</p>
+        course, I have selfish reasons for doing this: I don't want to
+        buy every weather station ever invented, and I don't want my roof
+        to look like a weather station farm!</p>
       <p>Here's the general strategy for doing a port.</p>
       <h2>Implement the driver</h2>
       <p>Inherit from the abstract base class
         <span class="code">weewx.abstractstation.AbstractStation</span>.
         Try to implement as many of its methods as you can. At the
-        very minimum, you must implement the first two
-        methods, <span class="code">hardware_name</span>
-        and <span class="code">genLoopPackets</span>. </p>
-      <h3><span class="code">hardware_name</span></h3>
-      <p>Return a string with a short nickname for the hardware, such
-        as "<span class="code">ACME X90</span>"</p>
-      <h3><span class="code">genLoopPackets</span></h3>
+        very minimum, you must implement the first two, the attribute 
+        <span class="code">hardware_name</span>,
+        and the function <span class="code">genLoopPackets()</span>. </p>
+
+    <h3>
+      <span class="code">hardware_name</span>
+    </h3>
+    <p>
+      This can be either an attribute, or a <a
+        href="https://docs.python.org/2/library/functions.html#property">property
+        function</a>. It should return a string with a short nickname for
+      the hardware, such as "<span class="code">ACME X90</span>."
+    </p>
+
+    <h3><span class="code">genLoopPackets()</span></h3>
       <p>This should be
         a <a href="https://wiki.python.org/moin/Generators">generator
         function</a> that yields loop packets, one after
@@ -2975,13 +2983,13 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
           </tr>
         </tbody>
       </table>
-      <p>Then include any observation types you have in the dictionary. Every
+      <p>Then include any observation types you have into the dictionary. Every
         packet need not contain the same set of observation types. Different
         packets can use different unit systems, but all observations within a
         packet must use the same unit system. If your hardware has an error and
         you don't have a value, you can either leave it out of the dictionary or
         (preferred) set its value to <span class="code">None</span>.</p>
-      <p>A couple of observation types are tricky. In particular, rain.
+      <p>A couple of observation types are tricky. In particular, <span class="code">rain</span>.
         Generally, <span class="code">weewx</span> expects to see a packet with
         the amount of rain that fell in that packet period included as
         observation '<span class="code">rain</span>'. It then sums up all the
@@ -3030,36 +3038,49 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
           </tr>
         </tbody>
       </table>
-      <p></p>
-      <h3><span class="code">genArchiveRecords</span></h3>
+
+      <h3><span class="code">genArchiveRecords()</span></h3>
       <p>If your hardware does not have an archive record logger,
         then <span class="code">weewx</span> can do the record
         generation for you. It will automatically collect all the
         types it sees in your loop packets then emit a record with the
         averages (in some cases the sum or max value) of all those
         types. If it doesn't see a type, then it won't appear in the
-        emitted record. If your hardware does have a logger, then you
+        emitted record.</p>
+        <p>However, if your hardware does have a logger, then you
         should implement method
-        <span class="code">genArchiveRecords</span> as well. It should
+        <span class="code">genArchiveRecords()</span> as well. It should
         be a generator function that returns all the records since a
         given time. </p>
-      <h3><span class="code">getTime</span></h3>
+        
+      <h3><span class="code">archive_interval</span></h3>
+      <p>If you implement function <span class="code">genArchiveRecords()</span>
+      above, then you should also implement <span class='code'>archive_interval</span>
+      as either an attribute, or as a <a
+        href="https://docs.python.org/2/library/functions.html#property">property
+        function</a>. It should return the archive
+      interval in seconds.</p>
+      
+      <h3><span class="code">getTime()</span></h3>
       <p>If your hardware has an onboard clock and supports reading
         the time from it, then you may want to implement this
         method. It takes no argument. It should return the time in
         Unix Epoch Time. </p>
-      <h3><span class="code">setTime</span></h3>
+
+      <h3><span class="code">setTime()</span></h3>
       <p>If your hardware has an onboard clock supports <i>setting</i>
         it, then you may want to implement this method.  It takes no
         argument and does not need to return anything.</p>
-      <h3><span class="code">closePort</span></h3>
+
+      <h3><span class="code">closePort()</span></h3>
       <p>If the driver needs to close a serial port, terminate a
         thread, close a database, or perform any other activity before
         the application terminates, then you must supply this
         function. <span class='code'>Weewx</span> will call it if it
         needs to shut down your console (usually in the case of an
         error).</p>
-      <h3><span class="code">loader</span></h3>
+        
+      <h3><span class="code">loader()</span></h3>
       <p>This is a factory function that returns an instance of your
         driver. It has two arguments: the configuration dictionary,
         and a reference to the weewx engine.</p>
