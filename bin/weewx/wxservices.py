@@ -54,7 +54,7 @@ class StdWXCalculate(weewx.engine.StdService):
         self.altitude_ft = weewx.units.getAltitudeFt(config_dict)
         self.t12 = None
         self.last_ts12 = None
-        self.arcint = engine.archive_interval
+        self.arcint = None
         self.last_rain_ts = None
         self.rain_period = 1800 # 15 minute period for rain calculation
         self.database = weewx.archive.open_database(config_dict, 'wx_binding')
