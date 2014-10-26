@@ -45,14 +45,14 @@ interval = 600
 
 schema = user.schemas.defaultArchiveSchema
 
-def configDatabases(database_dict, database_cls):
+def configDatabases(database_cls, database_dict):
     """Configures the archive databases."""
 
     global schema
 
     # Check to see if it already exists and is configured correctly.
     try:
-        with database_cls.open(database_dict) as archive:
+        with database_cls(database_dict) as archive:
             if archive.firstGoodStamp() == start_ts and archive.lastGoodStamp() == stop_ts:
                 # Database already exists. We're done.
                 return
@@ -122,15 +122,3 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval):
                 record[obs_type] = None
                     
         yield record
-    
-def prep_database(binding_dicts, db_dicts, binding='wx_binding'):
-    # Get the database name
-    database_name = binding_dicts[binding]['bind_to']
-    # Get the manager to be used
-    database_manager = binding_dicts[binding].get('manager', 'weewx.stats.WXDaySummaryArchive')
-    # Get the class of the manager to be used:
-    database_cls = weeutil.weeutil._get_object(database_manager)
-    # Get the dictionary we will need to open up a connection.
-    database_dict = db_dicts[database_name]
- 
-    return (database_dict, database_cls)

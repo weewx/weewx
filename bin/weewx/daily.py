@@ -107,30 +107,33 @@ class DaySummaryArchive(weewx.archive.Archive):
     In addition to all the tables for each type, there is one additional table called
     'day__metadata', which currently holds the time of the last update. """
 
-    def __init__(self, archive_db_dict, archiveSchema=None):
+    def __init__(self, archive_db_dict, table_name='archive', schema=None):
         """Initialize an instance of DaySummarArchive
         
         archive_db_dict: A database dictionary containing items necessary to open up the
         database.
         
-        archiveSchema: The schema to be used. Optional. If not supplied, then an
+        table_name: The name of the table to be used in the database. Default
+        is 'archive'.
+        
+        schema: The schema to be used. Optional. If not supplied, then an
         exception of type weedb.OperationalError will be raised if the database
         does not exist, and of type weedb.UnitializedDatabase if it exists, but
         has not been initialized.
         """
         # Initialize my superclass:
-        super(DaySummaryArchive, self).__init__(archive_db_dict, archiveSchema)
+        super(DaySummaryArchive, self).__init__(archive_db_dict, table_name, schema)
         
         # If the database has not been initialized with the daily summaries, then create the
         # necessary tables, but only if a schema has been given.
         if 'day__metadata' not in self.connection.tables():
             # Daily summary tables have not been created yet.
-            if archiveSchema is None:
+            if schema is None:
                 # The user has not indicated he wants initialization. Raise an exception
                 raise weedb.OperationalError("Uninitialized day summaries")
             # Create all the daily summary tables as one transaction:
             with weedb.Transaction(self.connection) as _cursor:
-                self._initialize_day_tables(archiveSchema, _cursor)
+                self._initialize_day_tables(schema, _cursor)
             syslog.syslog(syslog.LOG_NOTICE, "stats: Created daily summary tables")
         
         # Get a list of all the observation types which have daily summaries

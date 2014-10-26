@@ -18,6 +18,7 @@ import unittest
 
 import configobj
 
+import weewx.archive
 import weewx.reportengine
 import weewx.station
 import weeutil.weeutil
@@ -60,9 +61,7 @@ class Common(unittest.TestCase):
         except OSError:
             pass
 
-        self.database_dict, self.database_cls = gen_fake_data.prep_database(self.config_dict['Bindings'],
-                                                                            self.config_dict['Databases'], 
-                                                                            self.binding)
+        self.database_cls, self.database_dict = weewx.archive.prep_database(self.config_dict, self.binding)
     
         # This will generate the test databases if necessary:
         gen_fake_data.configDatabases(self.database_dict, self.database_cls)

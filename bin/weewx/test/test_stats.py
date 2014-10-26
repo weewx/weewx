@@ -8,7 +8,7 @@
 #    $Author$
 #    $Date$
 #
-"""Unit test module weewx.stats"""
+"""Unit test module weewx.wxstats"""
 
 from __future__ import with_statement
 import os
@@ -21,7 +21,8 @@ import math
 import configobj
 
 import weeutil.weeutil
-import weewx.stats
+import weewx.archive
+import weewx.wxdaily
 import weewx.tags
 import gen_fake_data
 
@@ -57,12 +58,12 @@ class Common(unittest.TestCase):
             sys.stderr.write("Error while parsing configuration file %s" % config_path)
             raise
 
-        self.database_dict, self.database_cls = gen_fake_data.prep_database(config_dict['Bindings'],
-                                                                            config_dict['Databases'], 
-                                                                            self.binding)
+        database_manager, self.database_dict = weewx.archive.prep_database(config_dict, self.binding)
+        # Get the class object of the manager to be used:
+        self.database_cls = weeutil.weeutil._get_object(database_manager)
     
         # This will generate the test databases if necessary:
-        gen_fake_data.configDatabases(self.database_dict, self.database_cls)
+        gen_fake_data.configDatabases(self.database_cls, self.database_dict)
         
     def tearDown(self):
         pass
@@ -78,7 +79,7 @@ class Common(unittest.TestCase):
                               'max_dir', 'xsum', 'ysum', 'dirsumtime', 'squaresum', 'wsquaresum'])
         
     def testScalarTally(self):
-        with weewx.stats.WXDaySummaryArchive.open(self.database_dict) as stats:
+        with weewx.wxdaily.WXDaySummaryArchive.open(self.database_dict) as stats:
             with weewx.archive.Archive.open(self.database_dict) as archive:
                 # Pick a random day, say 15 March:
                 start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
@@ -107,7 +108,7 @@ class Common(unittest.TestCase):
                             self.assertEqual(stats_time, res2[0], "Time check. Failing type %s, aggregate: %s" % (stats_type, aggregate))
     
     def testWindTally(self):
-        with weewx.stats.WXDaySummaryArchive.open(self.database_dict) as stats:
+        with weewx.wxdaily.WXDaySummaryArchive.open(self.database_dict) as stats:
             with weewx.archive.Archive.open(self.database_dict) as archive:
                 # Pick a random day, say 15 March:
                 start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
@@ -142,7 +143,7 @@ class Common(unittest.TestCase):
                 self.assertAlmostEqual(allStats['wind'].rms, rms)
 
     def testTags(self):
-        with weewx.stats.WXDaySummaryArchive.open(self.database_dict) as stats:
+        with weewx.wxdaily.WXDaySummaryArchive.open(self.database_dict) as stats:
             with weewx.archive.Archive.open(self.database_dict) as archive:
 
                 spans = {'day'  : weeutil.weeutil.TimeSpan(time.mktime((2010,3,15,0,0,0,0,0,-1)),
@@ -233,7 +234,7 @@ class Common(unittest.TestCase):
                 self.assertFalse(tagStats.year.inHumidity.has_data)
 
     def test_rainYear(self):
-        with weewx.stats.WXDaySummaryArchive.open(self.database_dict) as stats:
+        with weewx.wxdaily.WXDaySummaryArchive.open(self.database_dict) as stats:
             stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
             # Check for a rain year starting 1-Jan
             tagStats = weewx.tags.DatabaseBinder(stats, stop_ts,
@@ -248,7 +249,7 @@ class Common(unittest.TestCase):
 
 
     def test_heatcool(self):
-        with weewx.stats.WXDaySummaryArchive.open(self.database_dict) as stats:
+        with weewx.wxdaily.WXDaySummaryArchive.open(self.database_dict) as stats:
             #Test heating and cooling degree days:
             stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
     
@@ -279,7 +280,9 @@ class TestMySQL(Common):
 def suite():
     tests = ['test_create_stats', 'testScalarTally', 'testWindTally', 
              'testTags', 'test_rainYear', 'test_heatcool']
-    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
+#     return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
+    return unittest.TestSuite(map(TestSqlite, tests) )
 
 if __name__ == '__main__':
+    
     unittest.TextTestRunner(verbosity=2).run(suite())

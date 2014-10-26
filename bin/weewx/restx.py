@@ -463,8 +463,8 @@ class StdWunderground(StdRESTful):
                           "restx: Wunderground: Data will not be posted: Missing option %s" % e)
             return
 
-        # Get the database dictionary. Throw away the manager. We don't need it.
-        _, _database_dict = weewx.archive.prep_database(config_dict, 'wx_binding')
+        # Get the database dictionary. Throw away the manager and table name. We don't need them.
+        _, _database_dict, _ = weewx.archive.prep_database(config_dict, 'wx_binding')
         
         # The default is to not do an archive post if a rapidfire post
         # has been specified, but this can be overridden
@@ -532,9 +532,9 @@ class StdPWSWeather(StdRESTful):
                           "Missing option %s" % e)
             return
 
-        # Get the database dictionary. Throw away the manager. We don't need it.
-        _, _database_dict = weewx.archive.prep_database(config_dict, 'wx_binding')
-        
+        # Get the database dictionary. Throw away the manager and table name. We don't need them.
+        _, _database_dict, _ = weewx.archive.prep_database(config_dict, 'wx_binding')
+                
         _ambient_dict.setdefault('server_url', StdPWSWeather.archive_url)
         self.archive_queue = Queue.Queue()
         self.archive_thread = AmbientThread(self.archive_queue, _database_dict,
@@ -579,9 +579,9 @@ class StdWOW(StdRESTful):
                           "Missing option %s" % e)
             return
 
-        # Get the database dictionary. Throw away the manager. We don't need it.
-        _, _database_dict = weewx.archive.prep_database(config_dict, 'wx_binding')
-        
+        # Get the database dictionary. Throw away the manager and table name. We don't need them.
+        _, _database_dict, _ = weewx.archive.prep_database(config_dict, 'wx_binding')
+                
         _ambient_dict.setdefault('server_url', StdWOW.archive_url)
         self.archive_queue = Queue.Queue()
         self.archive_thread = WOWThread(self.archive_queue, _database_dict, 
@@ -830,9 +830,9 @@ class StdCWOP(StdRESTful):
                           "Missing option: %s" % e)
             return
 
-        # Get the database dictionary. Throw away the manager. We don't need it.
-        _, _database_dict = weewx.archive.prep_database(config_dict, 'wx_binding')
-
+        # Get the database dictionary. Throw away the manager and table name. We don't need them.
+        _, _database_dict, _ = weewx.archive.prep_database(config_dict, 'wx_binding')
+        
         _cwop_dict.setdefault('latitude',  self.engine.stn_info.latitude_f)
         _cwop_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
         _cwop_dict.setdefault('station_type', config_dict['Station'].get('station_type', 'Unknown'))
@@ -1375,9 +1375,9 @@ class StdAWEKAS(StdRESTful):
         site_dict.setdefault('longitude', engine.stn_info.longitude_f)
         site_dict.setdefault('language', 'de')
 
-        # Get the database dictionary. Throw away the manager. We don't need it.
-        _, site_dict['database_dict'] = weewx.archive.prep_database(config_dict, 'wx_binding')
-
+        # Get the database dictionary. Throw away the manager and table name. We don't need them.
+        _, _database_dict, _ = weewx.archive.prep_database(config_dict, 'wx_binding')
+        
         self.archive_queue = Queue.Queue()
         self.archive_thread = AWEKASThread(self.archive_queue, **site_dict)
         self.archive_thread.start()

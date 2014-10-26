@@ -36,23 +36,28 @@ class Archive(object):
     
     std_unit_system: The unit system used by the database."""
     
-    def __init__(self, archive_db_dict, archiveSchema=None):
+    def __init__(self, archive_db_dict, table_name='archive', schema=None):
         """Initialize an object of type weewx.Archive.
         
         archive_db_dict: A database dictionary holding the information necessary
         to open the database.
         
-        archiveSchema: The schema to be used. Optional. If not supplied, then an
+        table_name: The name of the table to be used in the database. Default
+        is 'archive'.
+        
+        schema: The schema to be used. Optional. If not supplied, then an
         exception of type weedb.OperationalError will be raised if the database
         does not exist, and of type weedb.UnitializedDatabase if it exists, but
         has not been initialized.
         """
 
+        self.table_name = table_name
+        
         try:
             self.connection = weedb.connect(archive_db_dict)
         except weedb.OperationalError:
             # Database does not exist. Did the caller supply a schema?
-            if archiveSchema is None:
+            if schema is None:
                 # No. Nothing to be done.
                 raise
             # Create the database:
@@ -62,21 +67,21 @@ class Archive(object):
 
         # Now get the SQL types. 
         try:
-            self.sqlkeys = self.connection.columnsOf('archive')
+            self.sqlkeys = self.connection.columnsOf(self.table_name)
         except weedb.OperationalError:
             # Database exists, but is uninitialized. Did the caller supply a schema?
-            if archiveSchema is None:
+            if schema is None:
                 # No. Nothing to be done.
                 raise
             # Database exists, but has not been initialized. Initialize it.
-            self._initialize_archive(archiveSchema)
+            self._initialize_archive(schema)
             # Try again:
-            self.sqlkeys = self.connection.columnsOf('archive')
+            self.sqlkeys = self.connection.columnsOf(self.table_name)
         
         # Fetch the first row in the database to determine the unit system in
         # use. If the database has never been used, then the unit system is
         # still indeterminate --- set it to 'None'.
-        _row = self.getSql("SELECT usUnits FROM archive LIMIT 1;")
+        _row = self.getSql("SELECT usUnits FROM %s LIMIT 1;" % self.table_name)
         self.std_unit_system = _row[0] if _row is not None else None
 
     def _initialize_archive(self, archiveSchema):
@@ -92,15 +97,15 @@ class Archive(object):
 
         try:
             with weedb.Transaction(self.connection) as _cursor:
-                _cursor.execute("CREATE TABLE archive (%s);" % (_sqltypestr, ))
+                _cursor.execute("CREATE TABLE %s (%s);" % (self.table_name, _sqltypestr, ))
         except Exception, e:
             self.close()
-            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create table 'archive' in database '%s': %s" % 
-                          (self.database, e))
+            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create table '%s' in database '%s': %s" % 
+                          (self.table_name, self.database, e))
             raise
     
-        syslog.syslog(syslog.LOG_NOTICE, "archive: Created and initialized table 'archive' in database '%s'" % 
-                      (self.database,))
+        syslog.syslog(syslog.LOG_NOTICE, "archive: Created and initialized table '%s' in database '%s'" % 
+                      (self.table_name, self.database))
 
     @classmethod
     def open(cls, archive_db_dict):
@@ -146,7 +151,7 @@ class Archive(object):
         
         returns: Time of the last good archive record as an epoch time, or
         None if there are no records."""
-        _row = self.getSql("SELECT MAX(dateTime) FROM archive")
+        _row = self.getSql("SELECT MAX(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
     
     def firstGoodStamp(self):
@@ -154,7 +159,7 @@ class Archive(object):
         
         returns: Time of the first good archive record as an epoch time, or
         None if there are no records."""
-        _row = self.getSql("SELECT MIN(dateTime) FROM archive")
+        _row = self.getSql("SELECT MIN(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
 
     def addRecord(self, record_obj, log_level=syslog.LOG_NOTICE):
@@ -203,7 +208,7 @@ class Archive(object):
         # question marks:
         q_str = ','.join('?' * len(key_list))
         # Form the SQL insert statement:
-        sql_insert_stmt = "INSERT INTO archive (%s) VALUES (%s)" % (k_str, q_str) 
+        sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str) 
         try:
             cursor.execute(sql_insert_stmt, value_list)
             syslog.syslog(log_level, "archive: added record %s to database '%s'" % 
@@ -231,14 +236,14 @@ class Archive(object):
         try:
             if startstamp is None:
                 if stopstamp is None:
-                    _gen = _cursor.execute("SELECT * FROM archive ORDER BY dateTime ASC")
+                    _gen = _cursor.execute("SELECT * FROM %s ORDER BY dateTime ASC" % self.table_name)
                 else:
-                    _gen = _cursor.execute("SELECT * FROM archive WHERE dateTime <= ? ORDER BY dateTime ASC", (stopstamp,))
+                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime <= ? ORDER BY dateTime ASC" % self.table_name, (stopstamp,))
             else:
                 if stopstamp is None:
-                    _gen = _cursor.execute("SELECT * FROM archive WHERE dateTime > ? ORDER BY dateTime ASC", (startstamp,))
+                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime > ? ORDER BY dateTime ASC" % self.table_name, (startstamp,))
                 else:
-                    _gen = _cursor.execute("SELECT * FROM archive WHERE dateTime > ? AND dateTime <= ? ORDER BY dateTime ASC",
+                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime > ? AND dateTime <= ? ORDER BY dateTime ASC" % self.table_name,
                                             (startstamp, stopstamp))
                
             _last_time = 0
@@ -283,11 +288,11 @@ class Archive(object):
             if max_delta:
                 time_start_ts = timestamp - max_delta
                 time_stop_ts  = timestamp + max_delta
-                _cursor.execute("SELECT * FROM archive WHERE dateTime>=? AND dateTime<=? "\
-                                "ORDER BY ABS(dateTime-?) ASC LIMIT 1",
+                _cursor.execute("SELECT * FROM %s WHERE dateTime>=? AND dateTime<=? "\
+                                "ORDER BY ABS(dateTime-?) ASC LIMIT 1" % self.table_name,
                                 (time_start_ts, time_stop_ts, timestamp))
             else:
-                _cursor.execute("SELECT * FROM archive WHERE dateTime=?", (timestamp,))
+                _cursor.execute("SELECT * FROM %s WHERE dateTime=?" % self.table_name, (timestamp,))
             _row = _cursor.fetchone()
             return dict(zip(self.sqlkeys, _row)) if _row else None
         finally:
@@ -296,8 +301,8 @@ class Archive(object):
     def updateValue(self, timestamp, obs_type, new_value):
         """Update (replace) a single value in the database."""
         
-        self.connection.execute("UPDATE archive SET %s=? WHERE dateTime=?" % 
-                                (obs_type, ), (new_value, timestamp))
+        self.connection.execute("UPDATE %s SET %s=? WHERE dateTime=?" % 
+                                (self.table_name, obs_type), (new_value, timestamp))
 
     def getSql(self, sql, sqlargs=()):
         """Executes an arbitrary SQL statement on the database.
@@ -407,8 +412,8 @@ class Archive(object):
                     raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
                 
                 # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s, usUnits FROM archive WHERE dateTime > ? AND dateTime <= ?' % \
-                    (windvec_types[ext_type],)
+                sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % \
+                    (self.table_name, windvec_types[ext_type])
 
                 # Go through each aggregation interval, calculating the aggregation.
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
@@ -480,8 +485,8 @@ class Archive(object):
                 # No aggregation desired. It's a lot simpler. Go get the
                 # data in the requested time period
                 # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s, usUnits, `interval` FROM archive WHERE dateTime >= ? AND dateTime <= ?' % \
-                        (windvec_types[ext_type],)
+                sql_str = 'SELECT dateTime, %s, usUnits, `interval` FROM %s WHERE dateTime >= ? AND dateTime <= ?' % \
+                        (self.table_name, windvec_types[ext_type])
                 
                 for _rec in _cursor.execute(sql_str, (startstamp, stopstamp)):
                     start_vec.append(_rec[0] - _rec[4])
@@ -607,8 +612,8 @@ class Archive(object):
                 if not aggregate_interval:
                     raise weewx.ViolatedPrecondition("Aggregation interval missing")
 
-                sql_str = "SELECT %s(%s), MIN(usUnits), MAX(usUnits) FROM archive "\
-                    "WHERE dateTime > ? AND dateTime <= ?" % (aggregate_type, sql_type,)
+                sql_str = "SELECT %s(%s), MIN(usUnits), MAX(usUnits) FROM %s "\
+                    "WHERE dateTime > ? AND dateTime <= ?" % (aggregate_type, sql_type, self.table_name)
 
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                     _cursor.execute(sql_str, stamp)
@@ -628,8 +633,8 @@ class Archive(object):
                         data_vec.append(_rec[0])
             else:
                 # No aggregation
-                sql_str = "SELECT dateTime, %s, usUnits, `interval` FROM archive "\
-                            "WHERE dateTime >= ? AND dateTime <= ?" % (sql_type,)
+                sql_str = "SELECT dateTime, %s, usUnits, `interval` FROM %s "\
+                            "WHERE dateTime >= ? AND dateTime <= ?" % (sql_type, self.table_name)
                 for _rec in _cursor.execute(sql_str, (startstamp, stopstamp)):
                     start_vec.append(_rec[0] - _rec[3])
                     stop_vec.append(_rec[0])
@@ -726,12 +731,13 @@ def prep_database(config_dict, binding):
     database_dict = config_dict['Databases'][database_name]
     # Get the manager to be used
     database_manager = config_dict['Bindings'][binding].get('manager', 'weewx.wxstats.WXDaySummaryArchive')
+    table_name = config_dict['Bindings'][binding].get('table_name', 'archive')
 
-    return (database_manager, database_dict)
+    return (database_manager, database_dict, table_name)
 
 def open_database(config_dict, binding, initialize=False):
     # Get the database dictionary & manager:
-    database_manager, database_dict = prep_database(config_dict, binding)
+    database_manager, database_dict, table_name = prep_database(config_dict, binding)
     # Get the class object of the manager to be used:
     database_cls = weeutil.weeutil._get_object(database_manager)
     
@@ -740,6 +746,6 @@ def open_database(config_dict, binding, initialize=False):
         schema = weeutil.weeutil._get_object(schema_name)
     else:
         schema = None
-    
+
     # Instantiate the class of the database manager:
-    return database_cls(database_dict, schema)
+    return database_cls(database_dict, table_name=table_name, schema=schema)

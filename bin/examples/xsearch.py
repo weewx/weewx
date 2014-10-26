@@ -37,7 +37,7 @@ import datetime
 import time
 
 from weewx.cheetahgenerator import SearchList
-from weewx.stats import TimeSpanStats
+from weewx.daily import TimeSpanStats
 from weeutil.weeutil import TimeSpan
 
 class MyXSearch(SearchList):                                           # 1

@@ -11,13 +11,13 @@
 """Weather-specific database manager."""
 
 import weeutil.weeutil
-import weewx.stats
+import weewx.daily
 
 #===============================================================================
 #                        Class WXweewx.stats.DaySummaryArchive
 #===============================================================================
 
-class WXDaySummaryArchive(weewx.stats.DaySummaryArchive):
+class WXDaySummaryArchive(weewx.daily.DaySummaryArchive):
     """Daily summaries, suitable for WX applications.
 
     Like a regular stats database, except it understands wind, and heating- and cooling-degree days."""
@@ -36,7 +36,7 @@ class WXDaySummaryArchive(weewx.stats.DaySummaryArchive):
     def _initialize_day_tables(self, archiveSchema, cursor):
         """Specializing version that adds schema for wind data."""
         # First initialize my superclass:
-        weewx.stats.DaySummaryArchive._initialize_day_tables(self, archiveSchema, cursor)
+        weewx.daily.DaySummaryArchive._initialize_day_tables(self, archiveSchema, cursor)
         
         # Now initialize the WX specific tables
         cursor.execute(WXDaySummaryArchive.wx_sql_create_str)
@@ -61,7 +61,7 @@ class WXDaySummaryArchive(weewx.stats.DaySummaryArchive):
         # Check to see whether heating or cooling degree days are being asked for:
         if obs_type not in ['heatdeg', 'cooldeg']:
             # No. Use my superclass's version:
-            return weewx.stats.DaySummaryArchive.getAggregate(self, timespan, obs_type, aggregateType, **option_dict)
+            return weewx.daily.DaySummaryArchive.getAggregate(self, timespan, obs_type, aggregateType, **option_dict)
 
         # Only summation (total) or average heating or cooling degree days is supported:
         if aggregateType not in ['sum', 'avg']:
@@ -79,7 +79,7 @@ class WXDaySummaryArchive(weewx.stats.DaySummaryArchive):
         _count = 0
         for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
             # Get the average temperature for the day as a value tuple:
-            Tavg_t = weewx.stats.DaySummaryArchive.getAggregate(self, daySpan, 'outTemp', 'avg')
+            Tavg_t = weewx.daily.DaySummaryArchive.getAggregate(self, daySpan, 'outTemp', 'avg')
             # Make sure it's valid before including it in the aggregation:
             if Tavg_t is not None and Tavg_t[0] is not None:
                 if obs_type == 'heatdeg':
