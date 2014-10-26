@@ -85,7 +85,7 @@ import urllib2
 
 import weedb
 import weeutil.weeutil
-import weewx.wxengine
+import weewx.engine
 from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, accumulateLeaves
 import weewx.units
 
@@ -105,7 +105,7 @@ class SendError(IOError):
 #                    Abstract base classes
 #==============================================================================
 
-class StdRESTful(weewx.wxengine.StdService):
+class StdRESTful(weewx.engine.StdService):
     """Abstract base class for RESTful weewx services.
     
     Offers a few common bits of functionality."""

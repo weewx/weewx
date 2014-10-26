@@ -17,7 +17,7 @@ import weeutil.weeutil
 import weewx.units
 import weewx.wxformulas
 import weewx.abstractstation
-import weewx.wxengine
+import weewx.engine
 import weewx.uwxutils
 
 # A few handy constants:
@@ -1599,12 +1599,12 @@ _archive_map={'barometer'      : _val1000Zero,
 
 # This class uses multiple inheritance:
 
-class VantageService(Vantage, weewx.wxengine.StdService):
+class VantageService(Vantage, weewx.engine.StdService):
     """Weewx service for the Vantage weather stations."""
     
     def __init__(self, engine, config_dict):
         Vantage.__init__(self, **config_dict['Vantage'])
-        weewx.wxengine.StdService.__init__(self, engine, config_dict)
+        weewx.engine.StdService.__init__(self, engine, config_dict)
 
         self.bind(weewx.STARTUP, self.startup)        
         self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)

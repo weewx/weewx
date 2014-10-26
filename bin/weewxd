@@ -15,7 +15,7 @@ from optparse import OptionParser
 # First import any user extensions:
 import user.extensions       #@UnusedImport
 # Now the engine
-import weewx.wxengine
+import weewx.engine
 
 usagestr = """
   %prog config_path [--help] [--daemon] [--pidfile=PIDFILE] [--version] [--exit]
@@ -59,10 +59,5 @@ def parseArgs():
 # Get the command line options and arguments:
 (options, args) = parseArgs()
 
-# Fire up the engine. This call uses the default
-# engine, StdEngine, but it can be overridden with
-# keyword EngineClass. E.g.,
-#
-# weewx.wxengine.main(options, args, EngineClass = MyEngine)
-#
-weewx.wxengine.main(options, args)
+# Fire up the engine.
+weewx.engine.main(options, args)

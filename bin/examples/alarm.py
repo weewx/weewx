@@ -47,7 +47,7 @@ configuration option "report_services", located in sub-section [Engines][[WxEngi
 [Engines]
   [[WxEngine]]
     ...
-    report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport, examples.alarm.MyAlarm
+    report_services = weewx.engine.StdPrint, weewx.engine.StdReport, examples.alarm.MyAlarm
 
 ********************************************************************************
 
@@ -65,7 +65,7 @@ import threading
 import syslog
 
 import weewx
-from weewx.wxengine import StdService
+from weewx.engine import StdService
 from weeutil.weeutil import timestamp_to_string, option_as_list
 
 # Inherit from the base class StdService:

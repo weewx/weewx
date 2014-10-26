@@ -10,16 +10,13 @@ Include version number in archive database metadata.
 
 Move the derived variables to StdWXCalculate. This would be located in wxservices.py
 
-Rename wxengine.py -> engine.py
-
-Allow table name to be specified in Archive.
-
-Encode table name into daily summary table names. Eg: archive_day_outTemp
-
 Look at Gary's (?) changes to allow cron-like report generation.
 
-Move heating and cooling degree-day logic (from refactor) into V3.
+Allow different trend time deltas within a single skin. Perhaps a
+syntax like: $trend(time_delta=3600).outTemp ?
 
+Right now, the entire skin_dict is passed into the tags. Perhaps it could be flattened,
+using accumulateLeaves, so you can use overrides?
 
 
 

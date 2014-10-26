@@ -82,13 +82,13 @@ start_scripts = ['util/init.d/weewx.bsd',
                  'util/init.d/weewx.redhat',
                  'util/init.d/weewx.suse']
 
-service_map = {'weewx.wxengine.StdTimeSynch' : 'prep_services', 
-               'weewx.wxengine.StdConvert'   : 'process_services', 
-               'weewx.wxengine.StdCalibrate' : 'process_services', 
-               'weewx.wxengine.StdQC'        : 'process_services', 
-               'weewx.wxengine.StdArchive'   : 'archive_services',
-               'weewx.wxengine.StdPrint'     : 'report_services', 
-               'weewx.wxengine.StdReport'    : 'report_services'}
+service_map = {'weewx.engine.StdTimeSynch' : 'prep_services', 
+               'weewx.engine.StdConvert'   : 'process_services', 
+               'weewx.engine.StdCalibrate' : 'process_services', 
+               'weewx.engine.StdQC'        : 'process_services', 
+               'weewx.engine.StdArchive'   : 'archive_services',
+               'weewx.engine.StdPrint'     : 'report_services', 
+               'weewx.engine.StdReport'    : 'report_services'}
 
 all_service_groups = ['prep_services', 'process_services', 'archive_services', 
                       'restful_services', 'report_services']
@@ -522,7 +522,7 @@ def update_config_file(config_dict):
         for _svc_name in config_dict['Engines']['WxEngine']['service_list']:
             svc_name = _svc_name.strip()
             # Skip the no longer needed StdRESTful service:
-            if svc_name == 'weewx.wxengine.StdRESTful':
+            if svc_name == 'weewx.engine.StdRESTful':
                 continue
             # Do we know about this service?
             if service_map.has_key(svc_name):

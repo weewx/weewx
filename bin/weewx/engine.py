@@ -82,7 +82,7 @@ class StdEngine(object):
         # Find the driver name for this type of hardware
         driver = config_dict[stationType]['driver']
         
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Loading station type %s (%s)" % (stationType, driver))
+        syslog.syslog(syslog.LOG_INFO, "engine: Loading station type %s (%s)" % (stationType, driver))
 
         # Import the driver:
         __import__(driver)
@@ -97,7 +97,7 @@ class StdEngine(object):
             self.console = loader_function(config_dict, self)
         except Exception, ex:
             # Caught unrecoverable error. Log it:
-            syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open WX station hardware: %s" % ex)
+            syslog.syslog(syslog.LOG_CRIT, "engine: Unable to open WX station hardware: %s" % ex)
             # Reraise the exception:
             raise
         
@@ -122,14 +122,14 @@ class StdEngine(object):
                 # missing completely:
                 for svc in weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get(service_group, [])):
                     if svc == '':
-                        syslog.syslog(syslog.LOG_DEBUG, "wxengine: No services in service group %s" % service_group)
+                        syslog.syslog(syslog.LOG_DEBUG, "engine: No services in service group %s" % service_group)
                         continue
                     # For each service, instantiates an instance of the class,
                     # passing self and the configuration dictionary as the
                     # arguments:
-                    syslog.syslog(syslog.LOG_DEBUG, "wxengine: Loading service %s" % svc)
+                    syslog.syslog(syslog.LOG_DEBUG, "engine: Loading service %s" % svc)
                     self.service_obj.append(weeutil.weeutil._get_object(svc)(self, config_dict))
-                    syslog.syslog(syslog.LOG_DEBUG, "wxengine: Finished loading service %s" % svc)
+                    syslog.syslog(syslog.LOG_DEBUG, "engine: Finished loading service %s" % svc)
         except Exception:
             # An exception occurred. Shut down any running services, then
             # reraise the exception.
@@ -148,7 +148,7 @@ class StdEngine(object):
             # Send out a STARTUP event:
             self.dispatchEvent(weewx.Event(weewx.STARTUP))
             
-            syslog.syslog(syslog.LOG_INFO, "wxengine: Starting main packet loop.")
+            syslog.syslog(syslog.LOG_INFO, "engine: Starting main packet loop.")
 
             last_gc = int(time.time())
 
@@ -158,7 +158,7 @@ class StdEngine(object):
                 # See if garbage collection is scheduled:
                 if int(time.time()) - last_gc > self.gc_interval:
                     ngc = gc.collect()
-                    syslog.syslog(syslog.LOG_INFO, "wxengine: garbage collected %d objects" % ngc)
+                    syslog.syslog(syslog.LOG_INFO, "engine: garbage collected %d objects" % ngc)
                     last_gc = int(time.time())
 
                 # First, let any interested services know the packet LOOP is about to start
@@ -296,7 +296,7 @@ class StdConvert(StdService):
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         
-        syslog.syslog(syslog.LOG_INFO, "wxengine: StdConvert target unit is 0x%x" % self.target_unit)
+        syslog.syslog(syslog.LOG_INFO, "engine: StdConvert target unit is 0x%x" % self.target_unit)
         
     def new_loop_packet(self, event):
         """Do unit conversions for a LOOP packet"""
@@ -351,7 +351,7 @@ class StdCalibrate(StdService):
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         except KeyError:
-            syslog.syslog(syslog.LOG_NOTICE, "wxengine: No calibration information in config file. Ignored.")
+            syslog.syslog(syslog.LOG_NOTICE, "engine: No calibration information in config file. Ignored.")
             
     def new_loop_packet(self, event):
         """Apply a calibration correction to a LOOP packet"""
@@ -361,7 +361,7 @@ class StdCalibrate(StdService):
             except (TypeError, NameError):
                 pass
             except ValueError, e:
-                syslog.syslog(syslog.LOG_ERR, "wxengine: StdCalibration loop error %s" % e)
+                syslog.syslog(syslog.LOG_ERR, "engine: StdCalibration loop error %s" % e)
 
     def new_archive_record(self, event):
         """Apply a calibration correction to an archive packet"""
@@ -374,7 +374,7 @@ class StdCalibrate(StdService):
                 except (TypeError, NameError):
                     pass
                 except ValueError, e:
-                    syslog.syslog(syslog.LOG_ERR, "wxengine: StdCalibration archive error %s" % e)
+                    syslog.syslog(syslog.LOG_ERR, "engine: StdCalibration archive error %s" % e)
 
 #===============================================================================
 #                    Class StdQC
@@ -392,7 +392,7 @@ class StdQC(StdService):
         try:
             mm_dict = config_dict['StdQC']['MinMax']
         except KeyError:
-            syslog.syslog(syslog.LOG_NOTICE, "wxengine: No QC information in config file.")
+            syslog.syslog(syslog.LOG_NOTICE, "engine: No QC information in config file.")
             return
 
         self.min_max_dict = {}
@@ -420,7 +420,7 @@ class StdQC(StdService):
         for obs_type in self.min_max_dict:
             if event.packet.has_key(obs_type) and event.packet[obs_type] is not None:
                 if not self.min_max_dict[obs_type][0] <= event.packet[obs_type] <= self.min_max_dict[obs_type][1]:
-                    syslog.syslog(syslog.LOG_NOTICE, "wxengine: ignoring %s value of %s, limits are (%s, %s)" % 
+                    syslog.syslog(syslog.LOG_NOTICE, "engine: ignoring %s value of %s, limits are (%s, %s)" % 
                                   (obs_type, event.packet[obs_type], 
                                    self.min_max_dict[obs_type][0], self.min_max_dict[obs_type][1]))
                     event.packet[obs_type] = None
@@ -430,7 +430,7 @@ class StdQC(StdService):
         for obs_type in self.min_max_dict:
             if event.record.has_key(obs_type) and event.record[obs_type] is not None:
                 if not self.min_max_dict[obs_type][0] <= event.record[obs_type] <= self.min_max_dict[obs_type][1]:
-                    syslog.syslog(syslog.LOG_NOTICE, "wxengine: ignoring %s value of %s, limits are (%s, %s)" % 
+                    syslog.syslog(syslog.LOG_NOTICE, "engine: ignoring %s value of %s, limits are (%s, %s)" % 
                                   (obs_type, event.record[obs_type], 
                                    self.min_max_dict[obs_type][0], self.min_max_dict[obs_type][1]))
                     event.record[obs_type] = None
@@ -451,7 +451,7 @@ class StdArchive(StdService):
 
         # See how we are supposed to generate archive records
         self.record_generation = config_dict['StdArchive'].get('record_generation', 'hardware').lower()
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Record generation will be attempted in '%s'" % 
+        syslog.syslog(syslog.LOG_INFO, "engine: Record generation will be attempted in '%s'" % 
                       (self.record_generation,))
 
         # Get the archive interval from the configuration file
@@ -462,7 +462,7 @@ class StdArchive(StdService):
         try:
             if software_interval != self.engine.console.archive_interval:
                 syslog.syslog(syslog.LOG_ERR,
-                              "wxengine: The archive interval in the"
+                              "engine: The archive interval in the"
                               " configuration file (%d) does not match the"
                               " station hardware interval (%d)." %
                               (software_interval,
@@ -470,7 +470,7 @@ class StdArchive(StdService):
             self.archive_interval = self.engine.console.archive_interval
         except NotImplementedError:
             self.archive_interval = software_interval
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive interval of %d seconds" % 
+        syslog.syslog(syslog.LOG_INFO, "engine: Using archive interval of %d seconds" % 
                       self.archive_interval)
 
         self.archive_delay = config_dict['StdArchive'].as_int('archive_delay')
@@ -481,7 +481,7 @@ class StdArchive(StdService):
         # Get whether to use LOOP data in the high/low statistics (or just
         # archive data):
         self.loop_hilo = weeutil.weeutil.tobool(config_dict['StdArchive'].get('loop_hilo', True))
-        syslog.syslog(syslog.LOG_DEBUG, "wxengine: Use LOOP data in hi/low calculations: %d" % 
+        syslog.syslog(syslog.LOG_DEBUG, "engine: Use LOOP data in hi/low calculations: %d" % 
                       (self.loop_hilo,))
         
         self.setup_database(config_dict)
@@ -579,7 +579,7 @@ class StdArchive(StdService):
         # This will create the database if it doesn't exist, then return an
         # opened instance of the archive manager. 
         self.archive = weewx.archive.open_database(config_dict, 'wx_binding', initialize=True)
-        syslog.syslog(syslog.LOG_INFO, "wxengine: Using archive database: %s" % (self.archive.database,))
+        syslog.syslog(syslog.LOG_INFO, "engine: Using archive database: %s" % (self.archive.database,))
         
         # In case this is a recent update or the user has dropped the daily summary tables, backfill them:
         self.archive.backfill_day_summary()
@@ -604,7 +604,7 @@ class StdArchive(StdService):
                                                       record=record,
                                                       origin='hardware'))
         except weewx.HardwareError, e:
-            syslog.syslog(syslog.LOG_ERR, "wxengine: Internal error detected. Catchup abandoned")
+            syslog.syslog(syslog.LOG_ERR, "engine: Internal error detected. Catchup abandoned")
             syslog.syslog(syslog.LOG_ERR, "**** %s" % e)
         
     def _software_catchup(self):
@@ -663,14 +663,14 @@ class StdTimeSynch(StdService):
                 # getTime can take a long time to run, so we use the current system time
                 diff = console_time - time.time()
                 syslog.syslog(syslog.LOG_INFO, 
-                              "wxengine: Clock error is %.2f seconds (positive is fast)" % diff)
+                              "engine: Clock error is %.2f seconds (positive is fast)" % diff)
                 if abs(diff) > self.max_drift:
                     try:
                         self.engine.console.setTime()
                     except NotImplementedError:
-                        syslog.syslog(syslog.LOG_DEBUG, "wxengine: Station does not support setting the time")
+                        syslog.syslog(syslog.LOG_DEBUG, "engine: Station does not support setting the time")
             except NotImplementedError:
-                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Station does not support reading the time")
+                syslog.syslog(syslog.LOG_DEBUG, "engine: Station does not support reading the time")
 
 #===============================================================================
 #                    Class StdPrint
@@ -767,9 +767,9 @@ class StdReport(StdService):
         if self.thread:
             self.thread.join(20.0)
             if self.thread.isAlive():
-                syslog.syslog(syslog.LOG_ERR, "wxengine: Unable to shut down StdReport thread")
+                syslog.syslog(syslog.LOG_ERR, "engine: Unable to shut down StdReport thread")
             else:
-                syslog.syslog(syslog.LOG_DEBUG, "wxengine: Shut down StdReport thread.")
+                syslog.syslog(syslog.LOG_DEBUG, "engine: Shut down StdReport thread.")
         self.thread = None
         self.launch_time = None
 
@@ -781,14 +781,14 @@ class Restart(Exception):
     """Exception thrown when restarting the engine is desired."""
     
 def sigHUPhandler(dummy_signum, dummy_frame):
-    syslog.syslog(syslog.LOG_DEBUG, "wxengine: Received signal HUP. Throwing Restart exception.")
+    syslog.syslog(syslog.LOG_DEBUG, "engine: Received signal HUP. Throwing Restart exception.")
     raise Restart
 
 class Terminate(Exception):
     """Exception thrown when terminating the engine."""
 
 def sigTERMhandler(dummy_signum, dummy_frame):
-    syslog.syslog(syslog.LOG_DEBUG, "wxengine: Received signal TERM.")
+    syslog.syslog(syslog.LOG_DEBUG, "engine: Received signal TERM.")
     raise Terminate
 
 #===============================================================================
@@ -808,15 +808,15 @@ def main(options, args, EngineClass=StdEngine) :
     signal.signal(signal.SIGHUP, sigHUPhandler)
     signal.signal(signal.SIGTERM, sigTERMhandler)
 
-    syslog.syslog(syslog.LOG_INFO, "wxengine: Initializing weewx version %s" % weewx.__version__)
-    syslog.syslog(syslog.LOG_INFO, "wxengine: Using Python %s" % sys.version)
+    syslog.syslog(syslog.LOG_INFO, "engine: Initializing weewx version %s" % weewx.__version__)
+    syslog.syslog(syslog.LOG_INFO, "engine: Using Python %s" % sys.version)
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
     cwd = os.getcwd()
 
     if options.daemon:
-        syslog.syslog(syslog.LOG_INFO, "wxengine: pid file is %s" % options.pidfile)
+        syslog.syslog(syslog.LOG_INFO, "engine: pid file is %s" % options.pidfile)
         daemon.daemonize(pidfile=options.pidfile)
 
     # If an exception occurs the first time through, then the problem is most likely
@@ -839,13 +839,13 @@ def main(options, args, EngineClass=StdEngine) :
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
         try:
-            syslog.syslog(syslog.LOG_DEBUG, "wxengine: Initializing engine")
+            syslog.syslog(syslog.LOG_DEBUG, "engine: Initializing engine")
 
             # Create and initialize the engine
             engine = EngineClass(config_dict)
             successful_init = True
     
-            syslog.syslog(syslog.LOG_INFO, "wxengine: Starting up weewx version %s" % weewx.__version__)
+            syslog.syslog(syslog.LOG_INFO, "engine: Starting up weewx version %s" % weewx.__version__)
 
             # Start the engine
             engine.run()
@@ -853,48 +853,48 @@ def main(options, args, EngineClass=StdEngine) :
         # Catch any recoverable weewx I/O errors:
         except weewx.WeeWxIOError, e:
             # Caught an I/O error. Log it, wait 60 seconds, then try again
-            syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught WeeWxIOError: %s" % e)
+            syslog.syslog(syslog.LOG_CRIT, "engine: Caught WeeWxIOError: %s" % e)
             if options.exit or not successful_init:
                 syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
                 sys.exit(weewx.IO_ERROR)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 60 seconds then retrying...")
             time.sleep(60)
-            syslog.syslog(syslog.LOG_NOTICE, "wxengine: retrying...")
+            syslog.syslog(syslog.LOG_NOTICE, "engine: retrying...")
             
         except weedb.OperationalError, e:
             # Caught a database error. Log it, wait 120 seconds, then try again
-            syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught database OperationalError: %s" % e)
+            syslog.syslog(syslog.LOG_CRIT, "engine: Caught database OperationalError: %s" % e)
             if options.exit :
                 syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
                 sys.exit(weewx.DB_ERROR)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 2 minutes then retrying...")
             time.sleep(120)
-            syslog.syslog(syslog.LOG_NOTICE, "wxengine: retrying...")
+            syslog.syslog(syslog.LOG_NOTICE, "engine: retrying...")
             
         except OSError, e:
             # Caught an OS error. Log it, wait 10 seconds, then try again
-            syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught OSError: %s" % e)
+            syslog.syslog(syslog.LOG_CRIT, "engine: Caught OSError: %s" % e)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 10 seconds then retrying...")
             time.sleep(10)
-            syslog.syslog(syslog.LOG_NOTICE,"wxengine: retrying...")
+            syslog.syslog(syslog.LOG_NOTICE,"engine: retrying...")
     
         except Restart:
-            syslog.syslog(syslog.LOG_NOTICE, "wxengine: Received signal HUP. Restarting.")
+            syslog.syslog(syslog.LOG_NOTICE, "engine: Received signal HUP. Restarting.")
 
         except Terminate:
-            syslog.syslog(syslog.LOG_INFO, "wxengine: Terminating weewx version %s" % weewx.__version__)
+            syslog.syslog(syslog.LOG_INFO, "engine: Terminating weewx version %s" % weewx.__version__)
             sys.exit()
 
         # If run from the command line, catch any keyboard interrupts and log them:
         except KeyboardInterrupt:
-            syslog.syslog(syslog.LOG_CRIT,"wxengine: Keyboard interrupt.")
+            syslog.syslog(syslog.LOG_CRIT,"engine: Keyboard interrupt.")
             # Reraise the exception (this will eventually cause the program to exit)
             raise
     
         # Catch any non-recoverable errors. Log them, exit
         except Exception, ex:
             # Caught unrecoverable error. Log it, exit
-            syslog.syslog(syslog.LOG_CRIT, "wxengine: Caught unrecoverable exception in wxengine:")
+            syslog.syslog(syslog.LOG_CRIT, "engine: Caught unrecoverable exception in engine:")
             syslog.syslog(syslog.LOG_CRIT, "    ****  %s" % ex)
             # Include a stack traceback in the log:
             weeutil.weeutil.log_traceback("    ****  ")
@@ -910,14 +910,14 @@ def getConfiguration(config_path):
         config_dict = configobj.ConfigObj(config_path, file_error=True)
     except IOError:
         sys.stderr.write("Unable to open configuration file %s" % config_path)
-        syslog.syslog(syslog.LOG_CRIT, "wxengine: Unable to open configuration file %s" % config_path)
+        syslog.syslog(syslog.LOG_CRIT, "engine: Unable to open configuration file %s" % config_path)
         # Reraise the exception (this will eventually cause the program to exit)
         raise
     except configobj.ConfigObjError:
-        syslog.syslog(syslog.LOG_CRIT, "wxengine: Error while parsing configuration file %s" % config_path)
+        syslog.syslog(syslog.LOG_CRIT, "engine: Error while parsing configuration file %s" % config_path)
         raise
 
-    syslog.syslog(syslog.LOG_INFO, "wxengine: Using configuration file %s" % config_path)
+    syslog.syslog(syslog.LOG_INFO, "engine: Using configuration file %s" % config_path)
 
     return config_dict
     
