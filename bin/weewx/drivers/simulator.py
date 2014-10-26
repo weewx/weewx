@@ -16,7 +16,6 @@ import time
 import weedb
 import weeutil.weeutil
 import weewx.abstractstation
-import weewx.wxformulas
 
 def loader(config_dict, engine):
 
@@ -134,10 +133,6 @@ class Simulator(weewx.abstractstation.AbstractStation):
                        'usUnits' : weewx.US }
             for obs_type in self.observations:
                 _packet[obs_type] = self.observations[obs_type].value_at(avg_time)
-
-            _packet['windchill'] = weewx.wxformulas.windchillF(_packet['outTemp'], _packet['windSpeed'])
-            _packet['dewpoint']  = weewx.wxformulas.dewpointF(_packet['outTemp'], _packet['outHumidity'])
-            _packet['heatindex'] = weewx.wxformulas.heatindexF(_packet['outTemp'], _packet['outHumidity']) 
             yield _packet
 
     def getTime(self):
