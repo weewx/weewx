@@ -104,7 +104,7 @@ class DaySummaryArchive(weewx.archive.Archive):
     sumtime is the sum of the archive intervals.
         
     In addition to all the tables for each type, there is one additional table called
-    'day__metadata', which currently holds the time of the last update. """
+    'archive_day__metadata', which currently holds the time of the last update. """
 
     def __init__(self, archive_db_dict, table_name='archive', schema=None):
         """Initialize an instance of DaySummarArchive
@@ -137,7 +137,10 @@ class DaySummaryArchive(weewx.archive.Archive):
         
         # Get a list of all the observation types which have daily summaries
         all_tables = self.connection.tables()
-        self.daykeys = [x[4:] for x in all_tables if (x.startswith('day_') and x!='day__metadata')]
+        prefix = "%s_day_" % self.table_name
+        Nprefix = len(prefix)
+        meta_name = '%s_day__metadata' % self.table_name
+        self.daykeys = [x[Nprefix:] for x in all_tables if (x.startswith(prefix) and x != meta_name)]
 
     def _initialize_day_tables(self, archiveSchema, cursor):
         """Initialize the tables needed for the daily summary."""
