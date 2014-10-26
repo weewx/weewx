@@ -6,7 +6,7 @@ import syslog
 import weewx
 import weewx.archive
 import weewx.units
-import weewx.wxengine
+import weewx.engine
 import weewx.wxformulas
 import weeutil.weeutil
 
@@ -14,7 +14,7 @@ INHG_PER_MBAR = 33.863886666
 KPH_PER_MPS = 3.6
 FOOT_TO_METER = 0.3048
 
-class StdWXCalculate(weewx.wxengine.StdService):
+class StdWXCalculate(weewx.engine.StdService):
     """Add derived quantities to a record.
 
     Derived quantities should depend only on independent observations.
