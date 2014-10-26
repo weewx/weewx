@@ -54,7 +54,7 @@ class StdWXCalculate(weewx.engine.StdService):
         self.altitude_ft = weewx.units.getAltitudeFt(config_dict)
         self.t12 = None
         self.last_ts12 = None
-        self.arcint = None
+        self.arcint = engine.archive_interval
         self.last_rain_ts = None
         self.rain_period = 1800 # 15 minute period for rain calculation
         self.database = weewx.archive.open_database(config_dict, 'wx_binding')
@@ -186,8 +186,8 @@ class StdWXCalculate(weewx.engine.StdService):
                     self.last_rain_ts = data['dateTime']
 
     def get_arcint(self, data):
-        if 'interval' in data and self.arcint != data['interval']:
-            self.arcint = data['interval']
+        if 'interval' in data and self.arcint != data['interval']*60:
+            self.arcint = data['interval'] * 60
             # warn if rain period is not multiple of archive interval
             if self.arcint is not None and self.rain_period % self.arcint != 0:
                 syslog.syslog(syslog.LOG_INFO, "StdWXCalculate: rain_period (%s) is not a multiple of archive_interval (%s)" % (self.rain_period, self.arcint))
