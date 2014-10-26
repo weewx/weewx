@@ -413,7 +413,7 @@ class Archive(object):
                 
                 # This SQL select string will select the proper wind types
                 sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % \
-                    (self.table_name, windvec_types[ext_type])
+                    (windvec_types[ext_type], self.table_name)
 
                 # Go through each aggregation interval, calculating the aggregation.
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
@@ -486,7 +486,7 @@ class Archive(object):
                 # data in the requested time period
                 # This SQL select string will select the proper wind types
                 sql_str = 'SELECT dateTime, %s, usUnits, `interval` FROM %s WHERE dateTime >= ? AND dateTime <= ?' % \
-                        (self.table_name, windvec_types[ext_type])
+                        (windvec_types[ext_type], self.table_name)
                 
                 for _rec in _cursor.execute(sql_str, (startstamp, stopstamp)):
                     start_vec.append(_rec[0] - _rec[4])

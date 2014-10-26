@@ -1,4 +1,3 @@
-#
 #    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
@@ -41,48 +40,48 @@ import weewx.units
 import weewx.archive
 
 #===============================================================================
-# The SQL statements used in the stats database
+# The SQL statements used in the daily summary parts of the database
 #===============================================================================
 
-sql_create_str = "CREATE TABLE day_%s (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "\
+sql_create_str = "CREATE TABLE %s_day_%s (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "\
   "min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, "\
   "wsum REAL, sumtime INTEGER);"
                              
-meta_create_str   = """CREATE TABLE day__metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
-meta_replace_str  = """REPLACE INTO day__metadata VALUES(?, ?)"""  
+meta_create_str   = """CREATE TABLE %s_day__metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
+meta_replace_str  = """REPLACE INTO %s_day__metadata VALUES(?, ?)"""  
 
-select_update_str = """SELECT value FROM day__metadata WHERE name = 'lastUpdate';"""
+select_update_str = """SELECT value FROM %s_day__metadata WHERE name = 'lastUpdate';"""
 
 # Set of SQL statements to be used for calculating aggregate statistics. Key is the aggregation type.
-sqlDict = {'min'        : "SELECT MIN(min) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'minmax'     : "SELECT MIN(max) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'max'        : "SELECT MAX(max) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'maxmin'     : "SELECT MAX(min) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'meanmin'    : "SELECT AVG(min) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'meanmax'    : "SELECT AVG(max) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'maxsum'     : "SELECT MAX(sum) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'mintime'    : "SELECT mintime FROM day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "min = (SELECT MIN(min) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'maxmintime' : "SELECT mintime FROM day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "min = (SELECT MAX(min) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'maxtime'    : "SELECT maxtime FROM day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "max = (SELECT MAX(max) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'minmaxtime' : "SELECT maxtime FROM day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "max = (SELECT MIN(max) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'maxsumtime' : "SELECT maxtime FROM day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "sum = (SELECT MAX(sum) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'gustdir'    : "SELECT max_dir FROM day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "max = (SELECT MAX(max) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
-           'sum'        : "SELECT SUM(sum) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'count'      : "SELECT SUM(count) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'avg'        : "SELECT SUM(wsum),SUM(sumtime) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'rms'        : "SELECT SUM(wsquaresum),SUM(sumtime) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(dirsumtime)  FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'vecdir'     : "SELECT SUM(xsum),SUM(ysum) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'max_ge'     : "SELECT SUM(max >= %(val)s) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'max_le'     : "SELECT SUM(max <= %(val)s) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'min_le'     : "SELECT SUM(min <= %(val)s) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'sum_ge'     : "SELECT SUM(sum >= %(val)s) FROM day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
+sqlDict = {'min'        : "SELECT MIN(min) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'minmax'     : "SELECT MIN(max) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'max'        : "SELECT MAX(max) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'maxmin'     : "SELECT MAX(min) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'meanmin'    : "SELECT AVG(min) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'meanmax'    : "SELECT AVG(max) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'maxsum'     : "SELECT MAX(sum) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'mintime'    : "SELECT mintime FROM %(table_name)s_day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "min = (SELECT MIN(min) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+           'maxmintime' : "SELECT mintime FROM %(table_name)s_day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "min = (SELECT MAX(min) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+           'maxtime'    : "SELECT maxtime FROM %(table_name)s_day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "max = (SELECT MAX(max) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+           'minmaxtime' : "SELECT maxtime FROM %(table_name)s_day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "max = (SELECT MIN(max) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+           'maxsumtime' : "SELECT maxtime FROM %(table_name)s_day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "sum = (SELECT MAX(sum) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+           'gustdir'    : "SELECT max_dir FROM %(table_name)s_day_%(day_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                          "max = (SELECT MAX(max) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
+           'sum'        : "SELECT SUM(sum) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'count'      : "SELECT SUM(count) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'avg'        : "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'rms'        : "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(dirsumtime)  FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'vecdir'     : "SELECT SUM(xsum),SUM(ysum) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'max_ge'     : "SELECT SUM(max >= %(val)s) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'max_le'     : "SELECT SUM(max <= %(val)s) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'min_le'     : "SELECT SUM(min <= %(val)s) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+           'sum_ge'     : "SELECT SUM(sum >= %(val)s) FROM %(table_name)s_day_%(day_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
 
 #===============================================================================
 #                        Class DaySummaryArchive
@@ -126,7 +125,7 @@ class DaySummaryArchive(weewx.archive.Archive):
         
         # If the database has not been initialized with the daily summaries, then create the
         # necessary tables, but only if a schema has been given.
-        if 'day__metadata' not in self.connection.tables():
+        if '%s_day__metadata' % self.table_name not in self.connection.tables():
             # Daily summary tables have not been created yet.
             if schema is None:
                 # The user has not indicated he wants initialization. Raise an exception
@@ -134,7 +133,7 @@ class DaySummaryArchive(weewx.archive.Archive):
             # Create all the daily summary tables as one transaction:
             with weedb.Transaction(self.connection) as _cursor:
                 self._initialize_day_tables(schema, _cursor)
-            syslog.syslog(syslog.LOG_NOTICE, "stats: Created daily summary tables")
+            syslog.syslog(syslog.LOG_NOTICE, "daily: Created daily summary tables")
         
         # Get a list of all the observation types which have daily summaries
         all_tables = self.connection.tables()
@@ -144,9 +143,9 @@ class DaySummaryArchive(weewx.archive.Archive):
         """Initialize the tables needed for the daily summary."""
         # Create the tables needed for the daily summaries.
         for _obs_type in self.obskeys:
-            cursor.execute(sql_create_str % _obs_type)
+            cursor.execute(sql_create_str % (self.table_name, _obs_type))
         # Then create the meta table:
-        cursor.execute(meta_create_str)
+        cursor.execute(meta_create_str % self.table_name)
 
     def _addSingleRecord(self, record, cursor, log_level):
         """Specialized version that updates the daily summaries, as well as the 
@@ -162,7 +161,7 @@ class DaySummaryArchive(weewx.archive.Archive):
         _day_summary = self._get_day_summary(_sod_ts, cursor)
         _day_summary.addRecord(record)
         self._set_day_summary(_day_summary, record['dateTime'], cursor)
-        syslog.syslog(log_level, "stats:   added %s to daily summary in '%s'" % 
+        syslog.syslog(log_level, "daily:   added %s to daily summary in '%s'" % 
                       (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
                        os.path.basename(self.connection.database)))
         
@@ -173,7 +172,7 @@ class DaySummaryArchive(weewx.archive.Archive):
         _sod_ts = weeutil.weeutil.startOfArchiveDay(accumulator.timespan.stop)
 
         with weedb.Transaction(self.connection) as _cursor:
-            # Retrieve the stats seen so far:
+            # Retrieve the daily summaries seen so far:
             _stats_dict = self._get_day_summary(_sod_ts, _cursor)
             # Update them with the contents of the accumulator:
             _stats_dict.updateHiLo(accumulator)
@@ -205,9 +204,9 @@ class DaySummaryArchive(weewx.archive.Archive):
             assert(obs_type not in ['heatdeg', 'cooldeg'])
             assert(timespan is not None)
 
-        # Check to see if this is a valid stats type:
+        # Check to see if this is a valid daily summary type:
         if obs_type not in self.daykeys:
-            raise AttributeError, "Unknown stats type %s" % (obs_type,)
+            raise AttributeError, "Unknown daily summary type %s" % (obs_type,)
 
         val = option_dict.get('val')
         if val is None:
@@ -227,7 +226,8 @@ class DaySummaryArchive(weewx.archive.Archive):
                      'stop'          : timespan.stop,
                      'day_key'       : obs_type,
                      'aggregateType' : aggregateType,
-                     'val'           : target_val}
+                     'val'           : target_val,
+                     'table_name'    : self.table_name}
         
         # Run the query against the database:
         _row = self.xeqSql(sqlDict[aggregateType], interDict)
@@ -278,7 +278,7 @@ class DaySummaryArchive(weewx.archive.Archive):
     def exists(self, obs_type):
         """Checks whether the observation type exists in the database."""
 
-        # Check to see if this is a valid stats type:
+        # Check to see if this is a valid daily summary type:
         return obs_type in self.daykeys
 
     def has_data(self, obs_type, timespan):
@@ -303,7 +303,7 @@ class DaySummaryArchive(weewx.archive.Archive):
         
         returns: The number of records backfilled."""
         
-        syslog.syslog(syslog.LOG_DEBUG, "stats: Backfilling daily summaries.")
+        syslog.syslog(syslog.LOG_DEBUG, "daily: Backfilling daily summaries.")
         t1 = time.time()
         nrecs = 0
         ndays = 0
@@ -347,7 +347,7 @@ class DaySummaryArchive(weewx.archive.Archive):
                     print >>sys.stdout, "Records processed: %d; Last date: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(_lastTime)),
                     sys.stdout.flush()
     
-            # We're done. Record the stats for the last day.
+            # We're done. Record the daily summary for the last day.
             if _day_accum:
                 self._set_day_summary(_day_accum, _lastTime, _cursor)
                 ndays += 1
@@ -356,10 +356,10 @@ class DaySummaryArchive(weewx.archive.Archive):
         tdiff = t2 - t1
         if nrecs:
             syslog.syslog(syslog.LOG_NOTICE, 
-                          "stats: Processed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
+                          "daily: Processed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
         else:
             syslog.syslog(syslog.LOG_INFO,
-                          "stats: Daily summary up to date.")
+                          "daily: Daily summary up to date.")
     
         return nrecs
 
@@ -403,7 +403,7 @@ class DaySummaryArchive(weewx.archive.Archive):
             # For each observation type, execute the SQL query and hand the results on
             # to the accumulator.
             for _day_key in self.daykeys:
-                _cursor.execute("SELECT * FROM day_%s WHERE dateTime = ?" % _day_key, (_day_accum.timespan.start,))
+                _cursor.execute("SELECT * FROM %s_day_%s WHERE dateTime = ?" % (self.table_name, _day_key), (_day_accum.timespan.start,))
                 _row = _cursor.fetchone()
                 # If the date does not exist in the database yet then _row will be None.
                 _stats_tuple = _row[1:] if _row is not None else None
@@ -428,7 +428,7 @@ class DaySummaryArchive(weewx.archive.Archive):
 
         _sod = day_accum.timespan.start
 
-        # For each stats type...
+        # For each daily summary type...
         for _summary_type in day_accum:
             # Don't try an update for types not in the database:
             if _summary_type not in self.daykeys:
@@ -437,25 +437,25 @@ class DaySummaryArchive(weewx.archive.Archive):
             _write_tuple = (_sod,) + day_accum[_summary_type].getStatsTuple()
             # ... and an appropriate SQL command with the correct number of question marks ...
             _qmarks = ','.join(len(_write_tuple)*'?')
-            _sql_replace_str = "REPLACE INTO day_%s VALUES(%s)" % (_summary_type, _qmarks)
+            _sql_replace_str = "REPLACE INTO %s_day_%s VALUES(%s)" % (self.table_name, _summary_type, _qmarks)
             # ... and write to the database. In case the type doesn't appear in the database,
             # be prepared to catch an exception:
             try:
                 cursor.execute(_sql_replace_str, _write_tuple)
             except weedb.OperationalError, e:
-                syslog.syslog(syslog.LOG_ERR, "stats: Operational error database %s; %s" % (self.database, e))
+                syslog.syslog(syslog.LOG_ERR, "daily: Operational error database %s; %s" % (self.database, e))
                 
-        # Update the time of the last stats update:
-        cursor.execute(meta_replace_str, ('lastUpdate', str(int(lastUpdate))))
+        # Update the time of the last daily summary update:
+        cursor.execute(meta_replace_str % self.table_name, ('lastUpdate', str(int(lastUpdate))))
             
     def _getLastUpdate(self, cursor=None):
         """Returns the time of the last update to the statistical database."""
 
         if cursor:
-            cursor.execute(select_update_str)
+            cursor.execute(select_update_str % self.table_name)
             _row = cursor.fetchone()
         else:
-            _row = self.xeqSql(select_update_str, {})
+            _row = self.xeqSql(select_update_str % self.table_name, {})
         return int(_row[0]) if _row else None
     
     def drop_daily(self):

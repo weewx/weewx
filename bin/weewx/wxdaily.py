@@ -14,13 +14,13 @@ import weeutil.weeutil
 import weewx.daily
 
 #===============================================================================
-#                        Class WXweewx.stats.DaySummaryArchive
+#                        Class weewx.wxdaily.DaySummaryArchive
 #===============================================================================
 
 class WXDaySummaryArchive(weewx.daily.DaySummaryArchive):
     """Daily summaries, suitable for WX applications.
 
-    Like a regular stats database, except it understands wind, and heating- and cooling-degree days."""
+    Like a regular daily summary database, except it understands wind, and heating- and cooling-degree days."""
 
     # Default base temperature and unit type for heating and cooling degree days,
     # as a value tuple
@@ -28,7 +28,7 @@ class WXDaySummaryArchive(weewx.daily.DaySummaryArchive):
     default_coolbase = (65.0, "degree_F", "group_temperature")
 
     # Sql statement to be used to create the wind daily summaries:
-    wx_sql_create_str = "CREATE TABLE day_wind (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "\
+    wx_sql_create_str = "CREATE TABLE %s_day_wind (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "\
       "min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, "\
       "wsum REAL, sumtime REAL, "\
       "max_dir REAL, xsum REAL, ysum REAL, dirsumtime INTEGER, squaresum REAL, wsquaresum REAL);"
@@ -39,7 +39,7 @@ class WXDaySummaryArchive(weewx.daily.DaySummaryArchive):
         weewx.daily.DaySummaryArchive._initialize_day_tables(self, archiveSchema, cursor)
         
         # Now initialize the WX specific tables
-        cursor.execute(WXDaySummaryArchive.wx_sql_create_str)
+        cursor.execute(WXDaySummaryArchive.wx_sql_create_str % self.table_name)
         
     def getAggregate(self, timespan, obs_type, aggregateType, **option_dict):
         """Specialized version of getAggregate that can calculate heating or cooling degree days.
@@ -102,62 +102,62 @@ class WXDaySummaryArchive(weewx.daily.DaySummaryArchive):
         # Return as a value tuple
         return weewx.units.ValueTuple(_result, t, g)
 
-#===============================================================================
-#                        function get_heat_cool
-#===============================================================================
-
-def get_heat_cool(statsdb, timespan, obs_type, aggregateType, heatbase_t, coolbase_t):
-    """Calculate heating or cooling degree days for a given timespan.
-    
-    timespan: An instance of weeutil.Timespan with the time period over which
-    aggregation is to be done.
-    
-    obs_type: One of 'heatdeg' or 'cooldeg'.
-    
-    aggregateType: The type of aggregation to be done. Must be 'sum' or 'avg'.
-    
-    heatbase_t, coolbase_t: Value tuples with the heating and cooling degree
-    day base, respectively.
-    
-    returns: A value tuple. First element is the aggregation value,
-    or None if not enough data was available to calculate it, or if the aggregation
-    type is unknown. The second element is the unit type (eg, 'degree_F').
-    Third element is the unit group (always "group_temperature")."""
-    
-    # The requested type must be heatdeg or cooldeg
-    if weewx.debug:
-        assert(obs_type in ['heatdeg', 'cooldeg'])
-
-    # Only summation (total) or average heating or cooling degree days is supported:
-    if aggregateType not in ['sum', 'avg']:
-        raise weewx.ViolatedPrecondition, "Aggregate type %s for %s not supported." % (aggregateType, obs_type)
-
-    _sum = 0.0
-    _count = 0
-    for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
-        # Get the average temperature for the day as a value tuple:
-        Tavg_t = statsdb.getAggregate(daySpan, 'outTemp', 'avg')
-        # Make sure it's valid before including it in the aggregation:
-        if Tavg_t is not None and Tavg_t[0] is not None:
-            if obs_type == 'heatdeg':
-                # Convert average temperature to the same units as heatbase:
-                Tavg_target_t = weewx.units.convert(Tavg_t, heatbase_t[1])
-                _sum += weewx.wxformulas.heating_degrees(Tavg_target_t[0], heatbase_t[0])
-            else:
-                # Convert average temperature to the same units as coolbase:
-                Tavg_target_t = weewx.units.convert(Tavg_t, coolbase_t[1])
-                _sum += weewx.wxformulas.cooling_degrees(Tavg_target_t[0], coolbase_t[0])
-            _count += 1
-
-    if aggregateType == 'sum':
-        _result = _sum
-    else:
-        _result = _sum / _count if _count else None 
-
-    # Look up the unit type and group of the result:
-    (t, g) = weewx.units.getStandardUnitType(statsdb.std_unit_system, obs_type, aggregateType)
-    # Return as a value tuple
-    return weewx.units.ValueTuple(_result, t, g)
+# #===============================================================================
+# #                        function get_heat_cool
+# #===============================================================================
+# 
+# def get_heat_cool(statsdb, timespan, obs_type, aggregateType, heatbase_t, coolbase_t):
+#     """Calculate heating or cooling degree days for a given timespan.
+#     
+#     timespan: An instance of weeutil.Timespan with the time period over which
+#     aggregation is to be done.
+#     
+#     obs_type: One of 'heatdeg' or 'cooldeg'.
+#     
+#     aggregateType: The type of aggregation to be done. Must be 'sum' or 'avg'.
+#     
+#     heatbase_t, coolbase_t: Value tuples with the heating and cooling degree
+#     day base, respectively.
+#     
+#     returns: A value tuple. First element is the aggregation value,
+#     or None if not enough data was available to calculate it, or if the aggregation
+#     type is unknown. The second element is the unit type (eg, 'degree_F').
+#     Third element is the unit group (always "group_temperature")."""
+#     
+#     # The requested type must be heatdeg or cooldeg
+#     if weewx.debug:
+#         assert(obs_type in ['heatdeg', 'cooldeg'])
+# 
+#     # Only summation (total) or average heating or cooling degree days is supported:
+#     if aggregateType not in ['sum', 'avg']:
+#         raise weewx.ViolatedPrecondition, "Aggregate type %s for %s not supported." % (aggregateType, obs_type)
+# 
+#     _sum = 0.0
+#     _count = 0
+#     for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
+#         # Get the average temperature for the day as a value tuple:
+#         Tavg_t = statsdb.getAggregate(daySpan, 'outTemp', 'avg')
+#         # Make sure it's valid before including it in the aggregation:
+#         if Tavg_t is not None and Tavg_t[0] is not None:
+#             if obs_type == 'heatdeg':
+#                 # Convert average temperature to the same units as heatbase:
+#                 Tavg_target_t = weewx.units.convert(Tavg_t, heatbase_t[1])
+#                 _sum += weewx.wxformulas.heating_degrees(Tavg_target_t[0], heatbase_t[0])
+#             else:
+#                 # Convert average temperature to the same units as coolbase:
+#                 Tavg_target_t = weewx.units.convert(Tavg_t, coolbase_t[1])
+#                 _sum += weewx.wxformulas.cooling_degrees(Tavg_target_t[0], coolbase_t[0])
+#             _count += 1
+# 
+#     if aggregateType == 'sum':
+#         _result = _sum
+#     else:
+#         _result = _sum / _count if _count else None 
+# 
+#     # Look up the unit type and group of the result:
+#     (t, g) = weewx.units.getStandardUnitType(statsdb.std_unit_system, obs_type, aggregateType)
+#     # Return as a value tuple
+#     return weewx.units.ValueTuple(_result, t, g)
     
 
 if __name__ == '__main__':
