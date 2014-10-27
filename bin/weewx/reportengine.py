@@ -27,7 +27,7 @@ import configobj
 # Weewx imports:
 import weeutil.weeutil
 from weeutil.weeutil import to_bool
-import weewx.archive
+import weewx.database
 
 #===============================================================================
 #                    Class StdReportEngine
@@ -164,7 +164,7 @@ class ReportGenerator(object):
         self.gen_ts      = gen_ts
         self.first_run   = first_run
         self.stn_info    = stn_info
-        self.db_binder   = weewx.archive.DBBinder(self.config_dict)
+        self.db_binder   = weewx.database.DBBinder(self.config_dict)
         
     def start(self):
         self.run()

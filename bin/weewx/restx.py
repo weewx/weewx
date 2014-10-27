@@ -275,7 +275,7 @@ class RESTThread(threading.Thread):
         # Open up the archive. Use a 'with' statement. This will automatically
         # close the archive in the case of an exception:
         if self.database_dict is not None:
-            manager_cls = weeutil.weeutil._get_object(self.manager) if hasattr(self, 'manager') else weewx.archive.Archive 
+            manager_cls = weeutil.weeutil._get_object(self.manager) if hasattr(self, 'manager') else weewx.database.DBManager 
             with manager_cls.open(self.database_dict) as _archive:
                 self.run_loop(_archive)
         else:
@@ -464,7 +464,7 @@ class StdWunderground(StdRESTful):
             return
 
         # Get the database dictionary. Throw away the manager and table name. We don't need them.
-        _, _database_dict, _ = weewx.archive.get_database_config(config_dict, 'wx_binding')
+        _, _database_dict, _ = weewx.database.get_database_config(config_dict, 'wx_binding')
         
         # The default is to not do an archive post if a rapidfire post
         # has been specified, but this can be overridden
@@ -533,7 +533,7 @@ class StdPWSWeather(StdRESTful):
             return
 
         # Get the database dictionary. Throw away the manager and table name. We don't need them.
-        _, _database_dict, _ = weewx.archive.get_database_config(config_dict, 'wx_binding')
+        _, _database_dict, _ = weewx.database.get_database_config(config_dict, 'wx_binding')
                 
         _ambient_dict.setdefault('server_url', StdPWSWeather.archive_url)
         self.archive_queue = Queue.Queue()
@@ -580,7 +580,7 @@ class StdWOW(StdRESTful):
             return
 
         # Get the database dictionary. Throw away the manager and table name. We don't need them.
-        _, _database_dict, _ = weewx.archive.get_database_config(config_dict, 'wx_binding')
+        _, _database_dict, _ = weewx.database.get_database_config(config_dict, 'wx_binding')
                 
         _ambient_dict.setdefault('server_url', StdWOW.archive_url)
         self.archive_queue = Queue.Queue()
@@ -831,7 +831,7 @@ class StdCWOP(StdRESTful):
             return
 
         # Get the database dictionary. Throw away the manager and table name. We don't need them.
-        _, _database_dict, _ = weewx.archive.get_database_config(config_dict, 'wx_binding')
+        _, _database_dict, _ = weewx.database.get_database_config(config_dict, 'wx_binding')
         
         _cwop_dict.setdefault('latitude',  self.engine.stn_info.latitude_f)
         _cwop_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
@@ -1376,7 +1376,7 @@ class StdAWEKAS(StdRESTful):
         site_dict.setdefault('language', 'de')
 
         # Get the database dictionary. Throw away the manager and table name. We don't need them.
-        _, _database_dict, _ = weewx.archive.get_database_config(config_dict, 'wx_binding')
+        _, _database_dict, _ = weewx.database.get_database_config(config_dict, 'wx_binding')
         
         self.archive_queue = Queue.Queue()
         self.archive_thread = AWEKASThread(self.archive_queue, **site_dict)

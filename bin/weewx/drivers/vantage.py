@@ -1614,7 +1614,7 @@ class VantageService(Vantage, weewx.engine.StdService):
     def startup(self, event):
         
         # Open up the archive database:
-        self.archive = weewx.archive.open_database(self.config_dict, 'wx_binding') 
+        self.archive = weewx.database.open_database(self.config_dict, 'wx_binding') 
         self.old_time_12_ts = None
         self.temperature_12 = None
         

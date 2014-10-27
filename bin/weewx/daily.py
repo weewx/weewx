@@ -37,7 +37,7 @@ import weedb
 import weeutil.weeutil
 import weewx.accum
 import weewx.units
-import weewx.archive
+import weewx.database
 
 #===============================================================================
 # The SQL statements used in the daily summary parts of the database
@@ -87,7 +87,7 @@ sqlDict = {'min'        : "SELECT MIN(min) FROM %(table_name)s_day_%(day_key)s W
 #                        Class DaySummaryArchive
 #===============================================================================
 
-class DaySummaryArchive(weewx.archive.Archive):
+class DaySummaryArchive(weewx.database.DBManager):
     """Manage reading from the sqlite3 statistical database. 
     
     The daily summary consists of a separate table for each type. The columns 

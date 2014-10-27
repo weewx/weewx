@@ -5,7 +5,7 @@
 from __future__ import with_statement
 import syslog
 import weewx
-import weewx.archive
+import weewx.database
 import weewx.units
 import weewx.engine
 import weewx.wxformulas
@@ -206,7 +206,7 @@ class StdWXCalculate(weewx.engine.StdService):
         interval (if it even exists).  We do not include the first timestamp
         because we do not want the interval before that timestamp."""
         sts = ts - interval
-        with weewx.archive.open_database(self.config_dict, 'wx_binding') as db:
+        with weewx.database.open_database(self.config_dict, 'wx_binding') as db:
             r = db.getSql("SELECT SUM(rain) FROM archive "
                           "WHERE dateTime>? AND dateTime<?",
                           (sts, ts))
@@ -219,7 +219,7 @@ class StdWXCalculate(weewx.engine.StdService):
         temperature is found."""
         ts12 = weeutil.weeutil.startOfInterval(ts - 12*3600, arcint)
         if ts12 != self.last_ts12:
-            with weewx.archive.open_database(self.config_dict, 'wx_binding') as db:
+            with weewx.database.open_database(self.config_dict, 'wx_binding') as db:
                 r = db.getRecord(ts12)
                 self.t12 = r.get('outTemp') if r is not None else None
                 self.last_ts12 = ts12

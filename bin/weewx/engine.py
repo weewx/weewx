@@ -26,7 +26,7 @@ import daemon
 # weewx imports:
 import weedb
 import weewx.accum
-import weewx.archive
+import weewx.database
 import weewx.station
 import weewx.reportengine
 import weeutil.weeutil
@@ -578,7 +578,7 @@ class StdArchive(StdService):
 
         # This will create the database if it doesn't exist, then return an
         # opened instance of the archive manager. 
-        self.archive = weewx.archive.open_database(config_dict, 'wx_binding', initialize=True)
+        self.archive = weewx.database.open_database(config_dict, 'wx_binding', initialize=True)
         syslog.syslog(syslog.LOG_INFO, "engine: Using archive database: %s" % (self.archive.database,))
         
         # In case this is a recent update or the user has dropped the daily summary tables, backfill them:

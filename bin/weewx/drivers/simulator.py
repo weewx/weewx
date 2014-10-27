@@ -31,11 +31,11 @@ def loader(config_dict, engine):
         # If the 'resume' keyword is present and True, then get the last archive
         # record out of the database and resume with that.
         if weeutil.weeutil.to_bool(config_dict['Simulator'].get('resume', True)):
-            import weewx.archive
+            import weewx.database
             # Resume with the last time in the database. If there is no such
             # time, then fall back to the time specified in the configuration
             # dictionary.
-            with weewx.archive.open_database(config_dict, 'wx_binding') as archive:
+            with weewx.database.open_database(config_dict, 'wx_binding') as archive:
                 try:
                     resume_ts = archive.lastGoodStamp()
                 except weedb.OperationalError:

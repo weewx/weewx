@@ -20,10 +20,10 @@ import weedb
 import user.schemas
 
 #==============================================================================
-#                         class Archive
+#                         class DBManager
 #==============================================================================
 
-class Archive(object):
+class DBManager(object):
     """Manages a weewx archive file. Offers a number of convenient member
     functions for managing the archive file. These functions encapsulate
     whatever sql statements are needed.
@@ -37,7 +37,7 @@ class Archive(object):
     std_unit_system: The unit system used by the database."""
     
     def __init__(self, archive_db_dict, table_name='archive', schema=None):
-        """Initialize an object of type weewx.Archive.
+        """Initialize an object of type weewx.DBManager.
         
         archive_db_dict: A database dictionary holding the information necessary
         to open the database.
@@ -109,22 +109,22 @@ class Archive(object):
 
     @classmethod
     def open(cls, archive_db_dict):
-        """Open an Archive database.
+        """Open an DBManager database.
         
         OBSOLETE. For backwards compatibility.
         Returns:
-        An instance of Archive."""
+        An instance of DBManager."""
         
         return cls(archive_db_dict)
     
     @classmethod
     def open_with_create(cls, archive_db_dict, archiveSchema):
-        """Open an Archive database, initializing it if necessary.
+        """Open an DBManager database, initializing it if necessary.
         
         OBSOLETE. For backwards compatibility
         
         Returns: 
-        An instance of Archive""" 
+        An instance of DBManager""" 
     
         return cls(archive_db_dict, archiveSchema)
     
@@ -184,7 +184,7 @@ class Archive(object):
         
         if record['dateTime'] is None:
             syslog.syslog(syslog.LOG_ERR, "archive: archive record with null time encountered")
-            raise weewx.ViolatedPrecondition("Archive record with null time encountered.")
+            raise weewx.ViolatedPrecondition("DBManager record with null time encountered.")
 
         # Check to make sure the incoming record is in the same unit
         # system as the records already in the database:
@@ -659,8 +659,8 @@ def reconfig(old_db_dict, new_db_dict, new_unit_system=None,
              new_schema=user.schemas.defaultArchiveSchema):
     """Copy over an old archive to a new one, using a provided schema."""
     
-    with Archive.open(old_db_dict) as old_archive:
-        with Archive.open_with_create(new_db_dict, new_schema) as new_archive:
+    with DBManager.open(old_db_dict) as old_archive:
+        with DBManager.open_with_create(new_db_dict, new_schema) as new_archive:
 
             # Wrap the input generator in a unit converter.
             record_generator = weewx.units.GenWithConvert(old_archive.genBatchRecords(), new_unit_system)

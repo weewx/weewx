@@ -114,7 +114,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         unitInfoHelper:   An instance of weewx.units.UnitInfoHelper
         search_list_exts: A list holding search list extensions, new style
         search_list_objs: A list holding search list extensions, old style
-        db_binder:        An instance of weewx.archive.DBBinder from which the data should be extracted
+        db_binder:        An instance of weewx.database.DBBinder from which the data should be extracted
     """
 
     generator_dict = {'SummaryByMonth': weeutil.weeutil.genMonthSpans,

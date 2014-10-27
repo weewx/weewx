@@ -25,7 +25,7 @@ import platform
 import re
 import sys
 
-import weewx.archive
+import weewx.database
 import weewx.units
 import weeutil.weeutil
 
@@ -61,7 +61,7 @@ class REST(object):
           - CWOP
         It can be overridden and specialized for additional protocols.
         
-        archive: An instance of weewx.archive.Archive
+        archive: An instance of weewx.database.DBManager
         
         time_ts: The record desired as a unix epoch time.
         
@@ -162,7 +162,7 @@ class Ambient(REST):
     def postData(self, archive, time_ts):
         """Post using the Ambient HTTP protocol
 
-        archive: An instance of weewx.archive.Archive
+        archive: An instance of weewx.database.DBManager
         
         time_ts: The record desired as a unix epoch time."""
         
@@ -200,7 +200,7 @@ class Ambient(REST):
 
         """Return an URL for posting using the Ambient protocol.
         
-        archive: An instance of weewx.archive.Archive
+        archive: An instance of weewx.database.DBManager
         
         time_ts: The record desired as a unix epoch time.
         """
@@ -261,7 +261,7 @@ class WOW(Ambient):
     def postData(self, archive, time_ts):
         """Post using the WOW HTTP protocol
 
-        archive: An instance of weewx.archive.Archive
+        archive: An instance of weewx.database.DBManager
         
         time_ts: The record desired as a unix epoch time."""
         
@@ -300,7 +300,7 @@ class WOW(Ambient):
 
         """Return an URL for posting using the WOW protocol.
         
-        archive: An instance of weewx.archive.Archive
+        archive: An instance of weewx.database.DBManager
         
         time_ts: The record desired as a unix epoch time.
         """
@@ -777,7 +777,7 @@ class RESTThread(threading.Thread):
         # then the connection would have been created in a different thread.
         # Also, use a 'with' statement. This will automatically close the
         # archive in the case of an exception:
-        with weewx.archive.Archive.open(self.archive_db_dict) as self.archive:
+        with weewx.database.DBManager.open(self.archive_db_dict) as self.archive:
 
             while True :
                 # This will block until something appears in the queue:
@@ -881,7 +881,7 @@ if __name__ == '__main__':
             exit()
             
         archive_db_dict = config_dict['Databases'][config_dict['StdArchive']['archive_database']]
-        with weewx.archive.Archive.open(archive_db_dict) as archive:
+        with weewx.database.DBManager.open(archive_db_dict) as archive:
             stop_ts  = archive.lastGoodStamp()
             start_ts = weeutil.weeutil.startOfDay(stop_ts) if options.do_today else stop_ts
             publish(config_dict, site, archive, start_ts, stop_ts )
