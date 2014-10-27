@@ -17,7 +17,6 @@ from weewx.units import ValueTuple
 import weewx.units
 import weeutil.weeutil
 import weedb
-import user.schemas
 
 #==============================================================================
 #                         class DBManager
@@ -656,10 +655,13 @@ class DBManager(object):
 
 
 def reconfig(old_db_dict, new_db_dict, new_unit_system=None,
-             new_schema=user.schemas.defaultArchiveSchema):
+             new_schema=None):
     """Copy over an old archive to a new one, using a provided schema."""
     
     with DBManager.open(old_db_dict) as old_archive:
+        if new_schema is None:
+            import schemas.wview
+            new_schema = schemas.wview.schema
         with DBManager.open_with_create(new_db_dict, new_schema) as new_archive:
 
             # Wrap the input generator in a unit converter.
@@ -742,7 +744,7 @@ def open_database(config_dict, binding, initialize=False):
     database_cls = weeutil.weeutil._get_object(database_manager)
     
     if initialize:
-        schema_name = config_dict['Bindings'][binding].get('schema', 'user.schemas.defaultArchiveSchema')
+        schema_name = config_dict['Bindings'][binding].get('schema', 'schemas.wview.schema')
         schema = weeutil.weeutil._get_object(schema_name)
     else:
         schema = None

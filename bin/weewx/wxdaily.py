@@ -170,8 +170,8 @@ if __name__ == '__main__':
 #                    'database':'weewx',
 #                    'driver':'weedb.mysql'}
 
-    import user.schemas
-    db = WXDaySummaryArchive.open_with_create(archive_db_dict, user.schemas.defaultArchiveSchema)
+    import schemas.wview
+    db = WXDaySummaryArchive.open_with_create(archive_db_dict, schemas.wview.schema)
     print "Database name is", db.database
     print db.obskeys
     print db.daykeys

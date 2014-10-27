@@ -18,7 +18,7 @@ import math
 import syslog
 import time
 
-import user.schemas
+import schemas.wview
 import weewx
 import weedb
 import weeutil.weeutil
@@ -43,7 +43,7 @@ avg_baro = 30.0
 # Archive interval in seconds:
 interval = 600
 
-schema = user.schemas.defaultArchiveSchema
+schema = schemas.wview.schema
 
 def configDatabases(database_cls, database_dict):
     """Configures the archive databases."""
@@ -69,7 +69,7 @@ def configDatabases(database_cls, database_dict):
     # archive data, THEN backfill with the daily summaries. This is faster than
     # creating the daily summaries on the fly.
 
-    with weewx.archive.Archive(database_dict, schema) as archive:
+    with weewx.database.DBManager(database_dict, schema) as archive:
         
         # Because this can generate voluminous log information,
         # suppress all but the essentials:

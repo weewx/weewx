@@ -548,7 +548,7 @@ def stop_logger(station):
     print "Logger stopped"
     
 def dump_logger(station, config_dict):
-    import user.schemas
+    import schemas.wview
     import weedb
     import weewx.archive
 
@@ -559,7 +559,7 @@ def dump_logger(station, config_dict):
         print "Opened existing database '%s'" % (archive_db,)
     except weedb.OperationalError:
         # Database does not exist. Do an open_with_create:
-        archive = weewx.archive.Archive.open_with_create(archive_db_dict, user.schemas.defaultArchiveSchema)
+        archive = weewx.archive.Archive.open_with_create(archive_db_dict, schemas.wview.schema)
         print "Created database '%s'" % (archive_db,)
 
     print "Starting dump ..."
