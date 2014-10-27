@@ -723,7 +723,7 @@ class DBBinder(object):
 #                                 Utilities
 #===============================================================================
 
-def prep_database(config_dict, binding):
+def get_database_config(config_dict, binding):
     """Return the database dictionary associated with a binding name."""
     # Get the database name
     database_name = config_dict['Bindings'][binding]['bind_to']
@@ -737,7 +737,7 @@ def prep_database(config_dict, binding):
 
 def open_database(config_dict, binding, initialize=False):
     # Get the database dictionary & manager:
-    database_manager, database_dict, table_name = prep_database(config_dict, binding)
+    database_manager, database_dict, table_name = get_database_config(config_dict, binding)
     # Get the class object of the manager to be used:
     database_cls = weeutil.weeutil._get_object(database_manager)
     
