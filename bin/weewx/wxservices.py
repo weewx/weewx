@@ -2,6 +2,7 @@
 # Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
 """Services specific to weather."""
 
+from __future__ import with_statement
 import syslog
 import weewx
 import weewx.archive
@@ -47,8 +48,8 @@ class StdWXCalculate(weewx.engine.StdService):
         # get any configuration settings
         self.calculations = {}
         d = config_dict.get('StdWXCalculate', {})
-        for obs_type in d:
-            self.calculations[obs_type] = d[obs_type]
+        for obs in d:
+            self.calculations[obs] = d[obs]
 
         # various bits we need for internal housekeeping
         self.altitude_ft = weewx.units.getAltitudeFt(config_dict)
@@ -57,7 +58,7 @@ class StdWXCalculate(weewx.engine.StdService):
         self.arcint = None
         self.last_rain_ts = None
         self.rain_period = 1800 # 15 minute period for rain calculation
-        self.database = weewx.archive.open_database(config_dict, 'wx_binding')
+        self.config_dict = config_dict
 
         # we will process both loop and archive events
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
@@ -71,9 +72,16 @@ class StdWXCalculate(weewx.engine.StdService):
 
     def do_calculations(self, data_dict, data_type='archive'):
         for obs in self._DERIVED:
-            if ((obs in self.calculations and
-                 self.calculations[obs] == 'software') or
-                obs not in data_dict or data_dict[obs] is None):
+            calc = False
+            if obs in self.calculations:
+                if self.calculations[obs] == 'software':
+                    calc = True
+                elif (self.calculations[obs] == 'prefer_hardware' and
+                      (obs not in data_dict or data_dict[obs] is None)):
+                    calc = True
+            elif obs not in data_dict or data_dict[obs] is None:
+                calc = True
+            if calc:
                 self.calculate(obs, data_dict, data_type)
 
     def calculate(self, obs, data, data_type):
@@ -198,9 +206,10 @@ class StdWXCalculate(weewx.engine.StdService):
         interval (if it even exists).  We do not include the first timestamp
         because we do not want the interval before that timestamp."""
         sts = ts - interval
-        r = self.database.getSql("SELECT SUM(rain) FROM archive "
-                                 "WHERE dateTime>? AND dateTime<?",
-                                 (sts, ts))
+        with weewx.archive.open_database(self.config_dict, 'wx_binding') as db:
+            r = db.getSql("SELECT SUM(rain) FROM archive "
+                          "WHERE dateTime>? AND dateTime<?",
+                          (sts, ts))
         if r is None:
             return None
         return r[0]
@@ -210,7 +219,8 @@ class StdWXCalculate(weewx.engine.StdService):
         temperature is found."""
         ts12 = weeutil.weeutil.startOfInterval(ts - 12*3600, arcint)
         if ts12 != self.last_ts12:
-            r = self.database.getRecord(ts12)
-            self.t12 = r.get('outTemp') if r is not None else None
-            self.last_ts12 = ts12
+            with weewx.archive.open_database(self.config_dict, 'wx_binding') as db:
+                r = db.getRecord(ts12)
+                self.t12 = r.get('outTemp') if r is not None else None
+                self.last_ts12 = ts12
         return self.t12
