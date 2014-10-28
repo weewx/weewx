@@ -781,7 +781,7 @@ def drop_database(config_dict, binding):
 if __name__ == "__main__":
     import schemas.wview
     import weewx.daily
-    sqlite_dict = {"root": "/home/weewx3",
+    sqlite_dict = {"root": "/home/weewx",
                    "database": "archive/junk.sdb",
                    "driver": "weedb.sqlite"}
                    

@@ -18,12 +18,11 @@ import unittest
 
 import configobj
 
-import weewx.archive
 import weewx.reportengine
 import weewx.station
 import weeutil.weeutil
 
-import gen_fake_data    # @UnresolvedImport
+import gen_fake_data
 
 config_path = "testgen.conf"
 cwd = None
@@ -61,11 +60,8 @@ class Common(unittest.TestCase):
         except OSError:
             pass
 
-        self.database_cls, self.database_dict = weewx.archive.prep_database(self.config_dict, self.binding)
-    
         # This will generate the test databases if necessary:
-        gen_fake_data.configDatabases(self.database_dict, self.database_cls)
-        
+        gen_fake_data.configDatabases(self.config_dict, self.binding)
 
     def tearDown(self):
         pass
@@ -74,7 +70,7 @@ class Common(unittest.TestCase):
         
         # Pick a random generation time (3-Sep-2010 11:20:00 local):
         testtime_ts = int(time.mktime((2010,9,3,11,20,0,0,0,-1)))
-        print "test time is ", weeutil.weeutil.timestamp_to_string(testtime_ts)
+        print "\ntest time is ", weeutil.weeutil.timestamp_to_string(testtime_ts)
 
         stn_info = weewx.station.StationInfo(**self.config_dict['Station'])
     
@@ -99,8 +95,8 @@ class Common(unittest.TestCase):
                      'metric/index.html', 'metric/bymonth.txt', 'metric/byyear.txt']:
             actual_file   = os.path.join(test_html_dir, file_name)
             expected_file = os.path.join(expected_dir, file_name)
-            print "Checking file: ", actual_file
-            print "  against file:", expected_file
+#             print "Checking file: ", actual_file
+#             print "  against file:", expected_file
             actual   = open(actual_file)
             expected = open(expected_file)
 
@@ -126,6 +122,7 @@ class TestMySQL(Common):
     def __init__(self, *args, **kwargs):
         self.binding = "wx_mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
+        
         
     
 def suite():
