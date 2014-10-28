@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# $Id$
 #
 #    weewx --- A simple, high-performance weather station server
 #
@@ -16,11 +17,7 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-#    $Revision$
-#    $Author$
-#    $Date$
-#
+
 """ Customized weewx setup script.
 
     In addition to the normal setup script duties, this script does the
@@ -1278,6 +1275,7 @@ if __name__ == "__main__":
           package_dir = {'' : 'bin'},
           packages    = ['weedb',
                          'examples',
+                         'schemas',
                          'user',
                          'weeplot',
                          'weeutil',
