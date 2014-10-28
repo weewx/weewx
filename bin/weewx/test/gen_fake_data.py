@@ -19,9 +19,8 @@ import syslog
 import time
 
 import schemas.wview
-import weewx
 import weedb
-import weeutil.weeutil
+import weewx.database
 
 # One year of data:
 start_tt = (2010,1,1,0,0,0,0,0,-1)
@@ -45,31 +44,35 @@ interval = 600
 
 schema = schemas.wview.schema
 
-def configDatabases(database_cls, database_dict):
+def configDatabases(config_dict, binding):
     """Configures the archive databases."""
 
     global schema
 
     # Check to see if it already exists and is configured correctly.
     try:
-        with database_cls(database_dict) as archive:
+        with weewx.database.open_database(config_dict, binding)  as archive:
             if archive.firstGoodStamp() == start_ts and archive.lastGoodStamp() == stop_ts:
                 # Database already exists. We're done.
                 return
-    except:
+    except weedb.DatabaseError:
         pass
         
     # Delete anything that might already be there.
     try:
-        weedb.drop(database_dict)
-    except:
+        weewx.database.drop_database(config_dict, binding)
+    except weedb.DatabaseError:
         pass
     
     # Need to build a new synthetic database. General strategy is to create the
     # archive data, THEN backfill with the daily summaries. This is faster than
-    # creating the daily summaries on the fly.
+    # creating the daily summaries on the fly. 
+    # First, we need to modify the configuration dictionary that was passed in
+    # so it uses the DBManager, instead of the daily summary manager
+    monkey_dict = config_dict.dict()
+    monkey_dict['Bindings'][binding]['manager'] = 'weewx.database.DBManager'
 
-    with weewx.database.DBManager(database_dict, schema) as archive:
+    with weewx.database.open_database(monkey_dict, binding, initialize=True) as archive:
         
         # Because this can generate voluminous log information,
         # suppress all but the essentials:
@@ -81,7 +84,7 @@ def configDatabases(database_cls, database_dict):
         t2 = time.time()
         print "Time to create synthetic archive database = %6.2fs" % (t2-t1,)
         
-    with database_cls(database_dict, schema) as archive:
+    with weewx.database.open_database(config_dict, binding, initialize=True) as archive:
 
         # Now go back to regular logging:
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))

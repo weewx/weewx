@@ -337,7 +337,8 @@ class Accum(dict):
         self.init_type('wind')
         # Then add to highs/lows, and to the running sum:
         if add_hilo:
-            self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir')), record['dateTime'])
+            self['wind'].addHiLo((record.get('windGust'),  record.get('windGustDir')), record['dateTime'])
+            self['wind'].addHiLo((record.get('windSpeed'), record.get('windDir')),     record['dateTime'])
         self['wind'].addSum((record['windSpeed'], record.get('windDir')))
         
     def check_units(self, record, obs_type, add_hilo):
