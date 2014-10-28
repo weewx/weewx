@@ -106,11 +106,10 @@ class DaySummaryArchive(weewx.database.DBManager):
     In addition to all the tables for each type, there is one additional table called
     'archive_day__metadata', which currently holds the time of the last update. """
 
-    def __init__(self, archive_db_dict, table_name='archive', schema=None):
+    def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an instance of DaySummarArchive
         
-        archive_db_dict: A database dictionary containing items necessary to open up the
-        database.
+        connection: A weedb connection to the database to be managed.
         
         table_name: The name of the table to be used in the database. Default
         is 'archive'.
@@ -121,7 +120,7 @@ class DaySummaryArchive(weewx.database.DBManager):
         has not been initialized.
         """
         # Initialize my superclass:
-        super(DaySummaryArchive, self).__init__(archive_db_dict, table_name, schema)
+        super(DaySummaryArchive, self).__init__(connection, table_name, schema)
         
         # If the database has not been initialized with the daily summaries, then create the
         # necessary tables, but only if a schema has been given.

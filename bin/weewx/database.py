@@ -24,7 +24,7 @@ import weedb
 
 class DBManager(object):
     """Manages a weewx archive file. Offers a number of convenient member
-    functions for querying and inserting data intothe archive file. 
+    functions for querying and inserting data into the archive file. 
     These functions encapsulate whatever sql statements are needed.
     
     USEFUL ATTRIBUTES
@@ -35,11 +35,10 @@ class DBManager(object):
     
     std_unit_system: The unit system used by the database."""
     
-    def __init__(self, archive_db_dict, table_name='archive', schema=None):
+    def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an object of type weewx.DBManager.
         
-        archive_db_dict: A database dictionary holding the information necessary
-        to open the database.
+        connection: A weedb connection to the database to be managed.
         
         table_name: The name of the table to be used in the database. Default
         is 'archive'.
@@ -50,19 +49,8 @@ class DBManager(object):
         has not been initialized.
         """
 
+        self.connection = connection
         self.table_name = table_name
-        
-        try:
-            self.connection = weedb.connect(archive_db_dict)
-        except weedb.OperationalError:
-            # Database does not exist. Did the caller supply a schema?
-            if schema is None:
-                # No. Nothing to be done.
-                raise
-            # Create the database:
-            weedb.create(archive_db_dict)
-            # Now I can get a connection
-            self.connection = weedb.connect(archive_db_dict)
 
         # Now get the SQL types. 
         try:
@@ -83,6 +71,77 @@ class DBManager(object):
         _row = self.getSql("SELECT usUnits FROM %s LIMIT 1;" % self.table_name)
         self.std_unit_system = _row[0] if _row is not None else None
 
+    @classmethod
+    def open(cls, archive_db_dict, table_name='archive'):
+        """Open and return a DBManager or a subclass of DBManager.  
+        
+        archive_db_dict: A database dictionary holding the information necessary
+        to open the database.
+        
+        table_name: The name of the table to be used in the database. Default
+        is 'archive'. """
+
+        # This will raise a weedb.OperationalError if the database does
+        # not exist. The 'open' method we are implementing never attempts an
+        # initialization, so let it go by.
+        connection = weedb.connect(archive_db_dict)
+
+        # Create an instance of the right class and return it:
+        dbmanager = cls(connection, table_name)
+        return dbmanager
+    
+    @classmethod
+    def open_with_create(cls, archive_db_dict, schema, table_name='archive'):
+        """Initialize 
+        
+        archive_db_dict: A database dictionary holding the information necessary
+        to open the database.
+        
+        table_name: The name of the table to be used in the database. Default
+        is 'archive'.
+        
+        schema: The schema to be used. If not supplied, then an
+        exception of type weedb.OperationalError will be raised if the database
+        does not exist, and of type weedb.UnitializedDatabase if it exists, but
+        has not been initialized.
+        """
+    
+        # This will raise a weedb.OperationalError if the database does
+        # not exist. 
+        try:
+            connection = weedb.connect(archive_db_dict)
+        except weedb.OperationalError:
+            # Database does not exist. Did the caller supply a schema?
+            if schema is None:
+                # No. Nothing to be done.
+                raise
+            # Yes. Create the database:
+            weedb.create(archive_db_dict)
+            # Now I can get a connection
+            connection = weedb.connect(archive_db_dict)
+
+        # Create an instance of the right class and return it:
+        dbmanager = cls(connection, table_name=table_name, schema=schema)
+        return dbmanager
+    
+    @property
+    def database(self):
+        return self.connection.database
+    
+    @property
+    def obskeys(self):
+        """The list of observation types"""
+        return [obs_type for obs_type in self.sqlkeys if obs_type not in ['dateTime', 'usUnits', 'interval']]
+    
+    def close(self):
+        self.connection.close()
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, etyp, einst, etb):
+        self.close()    
+    
     def _initialize_archive(self, schema):
         """Initialize the tables needed for the archive.
         
@@ -105,45 +164,6 @@ class DBManager(object):
         syslog.syslog(syslog.LOG_NOTICE, "database: Created and initialized table '%s' in database '%s'" % 
                       (self.table_name, self.database))
 
-    @classmethod
-    def open(cls, archive_db_dict):
-        """Open an DBManager database.
-        
-        OBSOLETE. For backwards compatibility.
-        Returns:
-        An instance of DBManager."""
-        
-        return cls(archive_db_dict)
-    
-    @classmethod
-    def open_with_create(cls, archive_db_dict, schema):
-        """Open an DBManager database, initializing it if necessary.
-        
-        OBSOLETE. For backwards compatibility
-        
-        Returns: 
-        An instance of DBManager""" 
-    
-        return cls(archive_db_dict, schema)
-    
-    @property
-    def database(self):
-        return self.connection.database
-    
-    @property
-    def obskeys(self):
-        """The list of observation types"""
-        return [obs_type for obs_type in self.sqlkeys if obs_type not in ['dateTime', 'usUnits', 'interval']]
-    
-    def close(self):
-        self.connection.close()
-
-    def __enter__(self):
-        return self
-    
-    def __exit__(self, etyp, einst, etb):
-        self.close()    
-    
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
         
@@ -748,8 +768,22 @@ def open_database(config_dict, binding, initialize=False):
     if initialize:
         schema_name = config_dict['Bindings'][binding].get('schema', 'schemas.wview.schema')
         schema = weeutil.weeutil._get_object(schema_name)
+        return database_cls.open_with_create(database_dict, table_name=table_name, schema=schema)
     else:
-        schema = None
+        return database_cls.open(database_dict, table_name=table_name)
 
-    # Instantiate the class of the database manager:
-    return database_cls(database_dict, table_name=table_name, schema=schema)
+def drop_database(config_dict, binding):
+    """Drop (delete) the database associated with a binding name"""
+    
+    _, database_dict, _ = get_database_config(config_dict, binding)
+    weedb.drop(database_dict)
+    
+if __name__ == "__main__":
+    import schemas.wview
+    import weewx.daily
+    sqlite_dict = {"root": "/home/weewx3",
+                   "database": "archive/junk.sdb",
+                   "driver": "weedb.sqlite"}
+                   
+    dbmanager=weewx.daily.DaySummaryArchive.open_with_create(sqlite_dict, schema=schemas.wview.schema)
+    print dbmanager.lastGoodStamp()
