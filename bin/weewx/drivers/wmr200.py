@@ -1,3 +1,4 @@
+# $Id$
 # Copyright (c) 2013 Chris Manton <cmanton@gmail.com>  www.onesockoff.org
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -12,9 +13,6 @@
 #
 # Special recognition to Lars de Bruin <l...@larsdebruin.net> for contributing
 # packet decoding code.
-#
-#    $Revision$
-#    $Date$
 #
 # pylint parameters
 # suppress global variable warnings
@@ -54,7 +52,6 @@ import usb
 import weeutil.weeutil
 import weewx.abstractstation
 import weewx.units
-import weewx.wxformulas
 
 # General decoding sensor maps.
 WIND_DIR_MAP = { 0:'N', 1:'NNE', 2:'NE', 3:'ENE',
@@ -147,9 +144,7 @@ def logcrt(msg):
 
 def loader(config_dict, engine):
     """Used to load the driver."""
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    station = WMR200(altitude=altitude_m, **config_dict['WMR200'])
-    return station
+    return WMR200(**config_dict['WMR200'])
 
 
 class WMR200ProtocolError(weewx.WeeWxIOError):
@@ -722,17 +717,6 @@ class PacketArchiveData(PacketArchive):
             logerr(msg)
             raise WMR200ProtocolError(msg)
 
-        try:
-            # Calculate windchill using most recent outdoor temp.
-            if self.wmr200.use_calc_windchill:
-                self._record['windchill'] = \
-                        weewx.wxformulas.windchillC(
-                            self._record['outTemp'],
-                            self._record['windSpeed'])
-        except KeyError:
-            # We may not have all the required records.
-            pass
-
         # Tell wmr200 console we have processed it and can handle more.
         self.wmr200.request_archive_data()
 
@@ -815,16 +799,6 @@ class PacketWind(PacketLive):
         Returns a packet that can be processed by the weewx engine."""
         super(PacketWind, self).packet_process()
         self._record.update(decode_wind(self, self._pkt_data[7:14]))
-        try:
-            # Replace windchill record calculated from recent outdoor temp.
-            if self.wmr200.use_calc_windchill:
-                self._record['windchill'] = \
-                        weewx.wxformulas.windchillC(
-                            self.wmr200.last_temp_record['outTemp'],
-                            self._record['windSpeed'])
-        except (KeyError, AttributeError, TypeError):
-            # We may not have a last temp record yet so ignore for now.
-            pass
 
 def decode_rain(pkt, pkt_data):
     """Decode the rain portion of a wmr200 packet."""
@@ -962,13 +936,8 @@ def decode_pressure(pkt, pkt_data):
                                      | pkt_data[2])
         unknown_nibble = (pkt_data[3] >> 4)
 
-        alt_pressure_weewx = \
-                weewx.wxformulas.altimeter_pressure_Metric\
-                (pressure, pkt.wmr200.altitude)
-
         record = {'barometer'   : alt_pressure_console,
                   'altimeter'   : pressure,
-                  'pressure'    : alt_pressure_weewx,
                   'forecastIcon': forecast}
 
         if DEBUG_PACKETS_PRESSURE:
@@ -978,8 +947,6 @@ def decode_pressure(pkt, pkt_data):
                 logdbg('  Pressure unknown nibble: 0x%x' % (unknown_nibble))
             logdbg('  Altitude corrected pressure: %.02f hPa console' %
                    (alt_pressure_console))
-            logdbg('  Altitude corrected pressure: %.02f hPa weewx' %
-                   (alt_pressure_weewx))
         return record
 
     except IndexError:
@@ -1056,13 +1023,7 @@ def decode_temp(pkt, pkt_data):
             # Outdoor temperature sensor.
             record['outTemp']     = temp
             record['outHumidity'] = humidity
-            record['dewpoint'] = \
-                    weewx.wxformulas.dewpointC(temp, humidity)
-            if pkt.wmr200.use_calc_heatindex:
-                record['heatindex'] = \
-                        weewx.wxformulas.heatindexC(temp, humidity)
-            else:
-                record['heatindex'] = heat_index
+            record['heatindex'] = heat_index
         elif sensor_id >= 2:
             # Extra temperature sensors.
             # If additional temperature sensors exist (channel>=2), then
@@ -1420,13 +1381,10 @@ class WMR200(weewx.abstractstation.AbstractStation):
         """Initialize the wmr200 driver.
         
         NAMED ARGUMENTS:
-        altitude: The altitude in meters for proper barometer calculation. [Required]
         model: Which station model is this? [Optional]
         sensor_status: Print sensor faults or failures to syslog. [Optional]
         use_pc_time: Use the console timestamp or the Pc. [Optional]
-        use_calc_heatindex: Use a calculated heatindex over console data.  [Optional]
-        use_calc_windchill: Use a calculated windchill over console data.  [Optional]
-        erase_archive:  Erasae archive upon startup.  [Optional]
+        erase_archive:  Erase archive upon startup.  [Optional]
         archive_interval: Time in seconds between intervals [Optional]
         archive_threshold: Max time in seconds between valid archive packets [Optional]
         ignore_checksum: Ignore checksum failures and drop packet.
@@ -1442,7 +1400,6 @@ class WMR200(weewx.abstractstation.AbstractStation):
         super(WMR200, self).__init__()
 
         ## User configurable options
-        self._altitude     = stn_dict['altitude']
         self._model        = stn_dict.get('model', 'WMR200')
         # Provide sensor faults in syslog.
         self._sensor_stat = weeutil.weeutil.tobool(stn_dict.get('sensor_status',
@@ -1450,14 +1407,6 @@ class WMR200(weewx.abstractstation.AbstractStation):
         # Use pc timestamps or weather console timestamps.
         self._use_pc_time = \
                 weeutil.weeutil.tobool(stn_dict.get('use_pc_time', True))
-
-        # Use calculated heatindex rather than console presented one.
-        self._use_calc_heatindex = \
-                weeutil.weeutil.tobool(stn_dict.get('use_calc_heatindex', True))
-
-        # Use calculated windchill rather than console presented one.
-        self._use_calc_windchill = \
-                weeutil.weeutil.tobool(stn_dict.get('use_calc_windchill', True))
 
         # Use archive data when possible.
         self._erase_archive = \
@@ -1586,13 +1535,8 @@ class WMR200(weewx.abstractstation.AbstractStation):
 
         if DEBUG_CONFIG_DATA:
             logdbg('Configuration setup')
-            logdbg('  Altitude:%d' % self._altitude)
             logdbg('  Log sensor faults: %s' % self._sensor_stat)
             logdbg('  Using PC Time: %s' % self._use_pc_time)
-            logdbg('  Using calculated heatindex: %s'
-                   % self._use_calc_heatindex)
-            logdbg('  Using calculated windchill: %s'
-                   % self._use_calc_windchill)
             logdbg('  Erase archive data: %s' % self._erase_archive)
             logdbg('  Archive interval: %d' % self._archive_interval)
             logdbg('  Archive threshold: %d' % self._archive_threshold)
@@ -1603,11 +1547,6 @@ class WMR200(weewx.abstractstation.AbstractStation):
         return self._model
 
     @property
-    def altitude(self):
-        """Return the altitude in meters for various calculations."""
-        return self._altitude
-
-    @property
     def sensor_stat(self):
         """Return if sensor status is enabled for device."""
         return self._sensor_stat
@@ -1616,16 +1555,6 @@ class WMR200(weewx.abstractstation.AbstractStation):
     def use_pc_time(self):
         """Flag to use pc time rather than weather console time."""
         return self._use_pc_time
-
-    @property
-    def use_calc_heatindex(self):
-        """Flag to use calculated heatindex rather than weather console."""
-        return self._use_calc_heatindex
-
-    @property
-    def use_calc_windchill(self):
-        """Flag to use calculated windchill rather than weather console."""
-        return self._use_calc_windchill
 
     @property
     def archive_interval(self):

@@ -31,14 +31,8 @@ import time
 import weewx
 import weewx.abstractstation
 import weewx.units
-import weewx.uwxutils
-import weewx.wxformulas
 
-INHG_PER_MBAR = 0.0295333727
-METER_PER_FOOT = 0.3048
-MILE_PER_KM = 0.621371
-
-DRIVER_VERSION = '0.7'
+DRIVER_VERSION = '0.8'
 DEFAULT_PORT = '/dev/ttyS0'
 
 def logmsg(level, msg):
@@ -54,11 +48,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 def loader(config_dict, engine):
-    """Get the altitude, in feet, from the Station section of the dict."""
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    altitude_ft = altitude_m / METER_PER_FOOT
-    station = CC3000(altitude=altitude_ft, **config_dict['CC3000'])
-    return station
+    return CC3000(**config_dict['CC3000'])
 
 class ChecksumMismatch(weewx.WeeWxIOError):
     def __init__(self, a, b):
@@ -84,13 +74,9 @@ class CC3000(weewx.abstractstation.AbstractStation):
                           }
 
     def __init__(self, **stn_dict):
-        self.altitude = stn_dict['altitude']
         self.port = stn_dict.get('port', DEFAULT_PORT)
         self.polling_interval = float(stn_dict.get('polling_interval', 1))
         self.model = stn_dict.get('model', 'CC3000')
-        self.pressure_offset = stn_dict.get('pressure_offset', None)
-        if self.pressure_offset is not None:
-            self.pressure_offset = float(self.pressure_offset)
         self.use_station_time = stn_dict.get('use_station_time', True)
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 60))
@@ -101,7 +87,6 @@ class CC3000(weewx.abstractstation.AbstractStation):
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
         loginf('polling interval is %s seconds' % self.polling_interval)
-        loginf('pressure offset is %s mbar' % self.pressure_offset)
         loginf('using %s time' %
                ('station' if self.use_station_time else 'computer'))
 
@@ -239,11 +224,6 @@ class CC3000(weewx.abstractstation.AbstractStation):
             self.units = station.get_units()
 
     def _augment_packet(self, packet):
-        """add derived metrics to a packet"""
-        if packet['usUnits'] == weewx.METRIC:
-            self._augment_packet_metric(packet)
-        else:
-            self._augment_packet_us(packet)
 
         # calculate the rain
         if self.last_rain is not None:
@@ -258,39 +238,6 @@ class CC3000(weewx.abstractstation.AbstractStation):
         # no wind direction when wind speed is zero
         if not packet['windSpeed']:
             packet['windDir'] = None
-
-    def _augment_packet_metric(self, packet):
-        adjp = packet['pressure']
-        if self.pressure_offset is not None and adjp is not None:
-            adjp += self.pressure_offset
-        slp_mbar = weewx.wxformulas.sealevel_pressure_Metric(
-            adjp, self.altitude * METER_PER_FOOT, packet['outTemp'])
-        packet['barometer'] = slp_mbar
-        packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
-            adjp, self.altitude * METER_PER_FOOT, algorithm='aaNOAA')
-        packet['windchill'] = weewx.wxformulas.windchillC(
-            packet['outTemp'], packet['windSpeed'])
-        packet['heatindex'] = weewx.wxformulas.heatindexC(
-            packet['outTemp'], packet['outHumidity'])
-        packet['dewpoint'] = weewx.wxformulas.dewpointC(
-            packet['outTemp'], packet['outHumidity'])
-
-    def _augment_packet_us(self, packet):
-        adjp = packet['pressure']
-        if self.pressure_offset is not None and adjp is not None:
-            adjp += self.pressure_offset * INHG_PER_MBAR
-        slp_mbar = weewx.wxformulas.sealevel_pressure_Metric(
-            adjp / INHG_PER_MBAR, self.altitude * METER_PER_FOOT,
-            (packet['outTemp'] - 32) * 5/9)
-        packet['barometer'] = slp_mbar * INHG_PER_MBAR
-        packet['altimeter'] = weewx.wxformulas.altimeter_pressure_US(
-            adjp, self.altitude, algorithm='aaNOAA')
-        packet['windchill'] = weewx.wxformulas.windchillF(
-            packet['outTemp'], packet['windSpeed'])
-        packet['heatindex'] = weewx.wxformulas.heatindexF(
-            packet['outTemp'], packet['outHumidity'])
-        packet['dewpoint'] = weewx.wxformulas.dewpointF(
-            packet['outTemp'], packet['outHumidity'])
 
     def _parse_current(self, values):
         return self._parse_values(values, "%Y/%m/%d %H:%M:%S")

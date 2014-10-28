@@ -30,13 +30,12 @@ import weewx
 import weewx.abstractstation
 import weewx.units
 import weewx.uwxutils
-import weewx.wxformulas
 
 INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DRIVER_VERSION = '0.12'
+DRIVER_VERSION = '0.13'
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 
@@ -53,11 +52,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 def loader(config_dict, engine):
-    """Get the altitude, in feet, from the Station section of the dict."""
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    altitude_ft = altitude_m / METER_PER_FOOT
-    station = WS1(altitude=altitude_ft, **config_dict['WS1'])
-    return station
+    return WS1(**config_dict['WS1'])
 
 class WS1(weewx.abstractstation.AbstractStation):
     '''weewx driver that communicates with an ADS-WS1 station
@@ -70,21 +65,15 @@ class WS1(weewx.abstractstation.AbstractStation):
 
     max_tries - how often to retry serial communication before giving up
     [Optional. Default is 5]
-
-    pressure_offset - pressure calibration, mbar
-    [Optional. Default is 0]
     '''
     def __init__(self, **stn_dict):
-        self.altitude = stn_dict['altitude']
         self.port = stn_dict.get('port', DEFAULT_PORT)
         self.polling_interval = float(stn_dict.get('polling_interval', 1))
         self.max_tries = int(stn_dict.get('max_tries', 5))
-        self.pressure_offset = float(stn_dict.get('pressure_offset', 0))
         self.last_rain = None
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
         loginf('polling interval is %s' % self.polling_interval)
-        loginf('pressure offset is %s' % self.pressure_offset)
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
 
@@ -118,22 +107,6 @@ class WS1(weewx.abstractstation.AbstractStation):
         return "WS1"
 
     def _augment_packet(self, packet):
-        """add derived metrics to a packet"""
-        adjp = packet['pressure']
-        if self.pressure_offset is not None and adjp is not None:
-            adjp += self.pressure_offset * INHG_PER_MBAR
-        slp_mbar = weewx.wxformulas.sealevel_pressure_Metric(
-            adjp / INHG_PER_MBAR, self.altitude * METER_PER_FOOT,
-            (packet['outTemp'] - 32) * 5/9)
-        packet['barometer'] = slp_mbar * INHG_PER_MBAR
-        packet['altimeter'] = weewx.wxformulas.altimeter_pressure_US(
-            adjp, self.altitude, algorithm='aaNOAA')
-        packet['windchill'] = weewx.wxformulas.windchillF(
-            packet['outTemp'], packet['windSpeed'])
-        packet['heatindex'] = weewx.wxformulas.heatindexF(
-            packet['outTemp'], packet['outHumidity'])
-        packet['dewpoint'] = weewx.wxformulas.dewpointF(
-            packet['outTemp'], packet['outHumidity'])
 
         # calculate the rain
         if self.last_rain is not None:

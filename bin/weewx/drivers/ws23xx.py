@@ -254,7 +254,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.20'
+DRIVER_VERSION = '0.21'
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -273,10 +273,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 def loader(config_dict, engine):
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    station = WS23xx(altitude=altitude_m, config_dict=config_dict,
-                     **config_dict['WS23xx'])
-    return station
+    return WS23xx(config_dict=config_dict, **config_dict['WS23xx'])
 
 class WS23xx(weewx.abstractstation.AbstractStation):
     """Driver for LaCrosse WS23xx stations."""
@@ -284,36 +281,19 @@ class WS23xx(weewx.abstractstation.AbstractStation):
     def __init__(self, **stn_dict) :
         """Initialize the station object.
 
-        altitude: Altitude of the station
-        [Required. No default]
-
         port: The serial port, e.g., /dev/ttyS0 or /dev/ttyUSB0
         [Required. Default is /dev/ttyS0]
 
         polling_interval: How often to poll the station, in seconds.
         [Optional. Default is 8 (wired) or 30 (wireless)]
 
-        pressure_offset: Calibration offset in millibars for the station
-        pressure sensor.  This offset is added to the station sensor output
-        before barometer and altimeter pressures are calculated.
-        [Optional. No Default]
-
         model: Which station model is this?
         [Optional. Default is 'LaCrosse WS23xx']
-
-        calculate_windchill: Calculate the windchill instead of using the
-        value from the station.
-        [Optional.  Default is False]
-
-        calculate_dewpoint: Calculate the dewpoint instead of using the
-        value from the station.
-        [Optional.  Default is False]
         """
         self._last_rain = None
         self._last_cn = None
         self._poll_wait = 60
 
-        self.altitude          = stn_dict['altitude']
         self.model             = stn_dict.get('model', 'LaCrosse WS23xx')
         self.port              = stn_dict.get('port', DEFAULT_PORT)
         self.max_tries         = int(stn_dict.get('max_tries', 5))
@@ -321,21 +301,11 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         self.polling_interval  = stn_dict.get('polling_interval', None)
         if self.polling_interval is not None:
             self.polling_interval = int(self.polling_interval)
-        self.calc_windchill    = weeutil.weeutil.tobool(stn_dict.get('calculate_windchill', False))
-        self.calc_dewpoint     = weeutil.weeutil.tobool(stn_dict.get('calculate_dewpoint', False))
-        self.pressure_offset   = stn_dict.get('pressure_offset', None)
-        if self.pressure_offset is not None:
-            self.pressure_offset = float(self.pressure_offset)
         self.disable_catchup   = weeutil.weeutil.tobool(stn_dict.get('disable_catchup', False))
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('serial port is %s' % self.port)
-        loginf('pressure offset is %s' % self.pressure_offset)
         loginf('polling interval is %s' % self.polling_interval)
-        loginf('windchill will be %s' %
-               ('calculated' if self.calc_windchill else 'read from station'))
-        loginf('dewpoint will be %s' %
-               ('calculated' if self.calc_dewpoint else 'read from station'))
 
         # FIXME: this is a hack until we modify the driver api to have an
         # explicit genCatchupRecords method
@@ -367,11 +337,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                 with Station(self.port) as s:
                     data = s.get_raw_data(SENSOR_IDS)
                 packet = data_to_packet(data, int(time.time() + 0.5),
-                                        altitude=self.altitude,
-                                        pressure_offset=self.pressure_offset,
-                                        last_rain=self._last_rain,
-                                        calc_dewpoint=self.calc_dewpoint,
-                                        calc_windchill=self.calc_windchill)
+                                        last_rain=self._last_rain)
                 self._last_rain = packet['rainTotal']
                 ntries = 0
                 yield packet
@@ -406,11 +372,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
             last_rain = None
             for ts,data in s.gen_records(since_ts=since_ts, count=count):
                 record = data_to_packet(data, ts,
-                                        altitude=self.altitude,
-                                        pressure_offset=self.pressure_offset,
-                                        last_rain=last_rain,
-                                        calc_dewpoint=True,
-                                        calc_windchill=True)
+                                        last_rain=last_rain)
                 record['interval'] = data['interval']
                 last_rain = record['rainTotal']
                 yield record
@@ -456,8 +418,7 @@ POLLING_INTERVAL = { 0:("cable",8), 3:("lost",60), 15:("wireless",30) }
 def get_conn_info(conn_type):
     return POLLING_INTERVAL.get(conn_type, ("unknown",60))
 
-def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
-                   calc_dewpoint=False, calc_windchill=False):
+def data_to_packet(data, ts, last_rain=None):
     """Convert raw data to format and units required by weewx.
 
                     station      weewx (metric)
@@ -502,39 +463,14 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
         packet['rainTotal'] /= 10 # weewx wants cm
     packet['rain'] = weewx.wxformulas.calculate_rain(
         packet['rainTotal'], last_rain)
+
+    # station provides some derived variables
     packet['rainRate'] = data['rh']
     if packet['rainRate'] is not None:
         packet['rainRate'] /= 10 # weewx wants cm/hr
+    packet['dewpoint'] = data['dp']
+    packet['windchill'] = data['wc']
 
-    packet['heatindex'] = weewx.wxformulas.heatindexC(
-        packet['outTemp'], packet['outHumidity'])
-
-    # station has dewpoint, but provide option to calculate
-    if calc_dewpoint or data['dp'] is None:
-        packet['dewpoint'] = weewx.wxformulas.dewpointC(
-            packet['outTemp'], packet['outHumidity'])
-        logdbg("dewpoint: calculated=%s station=%s" %
-               (packet['dewpoint'], data['dp']))
-    else:
-        packet['dewpoint'] = data['dp']
-
-    # station has windchill, but provide option to calculate
-    if calc_windchill or data['wc'] is None:
-        packet['windchill'] = weewx.wxformulas.windchillC(
-            packet['outTemp'], packet['windSpeed'])
-        logdbg("windchill: calculated=%s station=%s" %
-               (packet['windchill'], data['wc']))
-    else:
-        packet['windchill'] = data['wc']
-
-    # station reports gauge pressure, calculate other pressures
-    adjp = packet['pressure']
-    if pressure_offset is not None and adjp is not None:
-        adjp += pressure_offset
-    packet['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
-        adjp, altitude, packet['outTemp'])
-    packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
-        adjp, altitude, algorithm='aaNOAA')
     return packet
 
 
@@ -676,8 +612,6 @@ class Station(object):
         for measure, nybbles in zip(measures, raw_data):
             value = measure.conv.binary2value(nybbles)
             delta = weewx.wxformulas.calculate_rain(value.rain, last_rain)
-            rainrate = weewx.wxformulas.calculate_rain_rate(
-                delta, last_ts, last_ts-interval*60)
             data_dict = {
                 'interval': interval,
                 'it': value.temp_indoor,
@@ -687,7 +621,7 @@ class Station(object):
                 'pa': value.pressure_absolute,
                 'rt': value.rain,
                 'wind': (value.wind_speed, value.wind_direction, 0, 0),
-                'rh': rainrate,
+                'rh': None, # no rain rate in history
                 'dp': None, # no dewpoint in history
                 'wc': None, # no windchill in history
                 }

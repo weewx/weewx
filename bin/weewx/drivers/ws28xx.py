@@ -926,7 +926,6 @@ Step 8. Go to step 1 to wait for state 0xde16 again.
 # TODO: how often is currdat.lst modified with/without hi-speed mode?
 # TODO: thread locking around observation data
 # TODO: eliminate polling, make MainThread get data as soon as RFThread updates
-# TODO: eliminate pressure_offset and use StdCalibrate instead?
 # TODO: get rid of Length/Buffer construct, replace with a Buffer class or obj
 
 # FIXME: the history retrieval assumes a constant archive interval across all
@@ -947,7 +946,7 @@ import weewx.units
 import weewx.wxformulas
 import weeutil.weeutil
 
-DRIVER_VERSION = '0.32'
+DRIVER_VERSION = '0.33'
 
 # flags for enabling/disabling debug verbosity
 DEBUG_COMM = 0
@@ -1034,9 +1033,7 @@ def index_to_addr(idx):
     return 18 * idx + 416
 
 def loader(config_dict, engine):
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    station = WS28xx(altitude=altitude_m, **config_dict['WS28xx'])
-    return station
+    return WS28xx(**config_dict['WS28xx'])
 
 class WS28xx(weewx.abstractstation.AbstractStation):
     """Driver for LaCrosse WS28xx stations."""
@@ -1045,14 +1042,6 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
     def __init__(self, **stn_dict) :
         """Initialize the station object.
-
-        altitude: Altitude of the station
-        [Required. No default]
-
-        pressure_offset: Calibration offset in millibars for the station
-        pressure sensor.  This offset is added to the station sensor output
-        before barometer and altimeter pressures are calculated.
-        [Optional. No Default]
 
         model: Which station model is this?
         [Optional. Default is 'LaCrosse WS28xx']
@@ -1080,16 +1069,12 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         [Optional. Default is None]
         """
 
-        self.altitude          = stn_dict['altitude']
         self.model             = stn_dict.get('model', 'LaCrosse WS28xx')
         self.polling_interval  = int(stn_dict.get('polling_interval', 30))
         self.comm_interval     = int(stn_dict.get('comm_interval', 3))
         self.frequency         = stn_dict.get('transceiver_frequency', 'US')
         self.device_id         = stn_dict.get('device_id', None)
         self.serial            = stn_dict.get('serial', None)
-        self.pressure_offset   = stn_dict.get('pressure_offset', None)
-        if self.pressure_offset is not None:
-            self.pressure_offset = float(self.pressure_offset)
 
         self.vendor_id         = 0x6666
         self.product_id        = 0x5555
@@ -1117,8 +1102,6 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('frequency is %s' % self.frequency)
-        loginf('altitude is %s meters' % str(self.altitude))
-        loginf('pressure offset is %s' % str(self.pressure_offset))
 
         self.startUp()
 
@@ -1208,7 +1191,6 @@ class WS28xx(weewx.abstractstation.AbstractStation):
             if last_ts is not None:
                 r['usUnits'] = weewx.METRIC
                 r['interval'] = (r['dateTime'] - last_ts) / 60
-                self.augment_data(r)
                 yield r
             last_ts = r['dateTime']
 
@@ -1258,26 +1240,6 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
     def get_last_contact(self):
         return self._service.getLastStat().last_seen_ts
-
-    def augment_data(self, data):
-        # heat index is not provided by the station
-        data['heatindex'] = weewx.wxformulas.heatindexC(
-            data['outTemp'], data['outHumidity'])
-        # dewpoint is provided by station, but we calculate it instead
-        data['dewpoint'] = weewx.wxformulas.dewpointC(
-            data['outTemp'], data['outHumidity'])
-        # windchill is provided by station, but we calculate it instead
-        data['windchill'] = weewx.wxformulas.windchillC(
-            data['outTemp'], data['windSpeed'])
-
-        # station reports gauge pressure, must calculate other pressures
-        adjp = data['pressure']
-        if self.pressure_offset is not None and adjp is not None:
-            adjp += self.pressure_offset
-        data['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
-            adjp, self.altitude, data['outTemp'])
-        data['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
-            adjp, self.altitude, algorithm='aaNOAA')
 
     def get_observation(self):
         data = self._service.getWeatherData()
@@ -1332,8 +1294,6 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         packet['rain'] = delta
         if packet['rain'] is not None:
             packet['rain'] /= 10 # weewx wants cm
-
-        self.augment_data(packet)
 
         # track the signal strength and battery levels
         laststat = self._service.getLastStat()

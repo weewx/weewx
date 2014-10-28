@@ -235,12 +235,10 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '1.6'
+DRIVER_VERSION = '1.7'
 
 def loader(config_dict, engine):
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    station = FineOffsetUSB(altitude=altitude_m,**config_dict['FineOffsetUSB'])
-    return station
+    return FineOffsetUSB(**config_dict['FineOffsetUSB'])
 
 # these are the raw data we get from the station:
 # param     values     invalid description
@@ -276,9 +274,6 @@ keymap = {
     'rain'        : ('rain',         0.1), # station is mm, weewx wants cm
     'radiation'   : ('illuminance',  0.01075), # lux, weewx wants W/m^2
     'UV'          : ('uv',           1.0),
-    'dewpoint'    : ('dewpoint',     1.0),
-    'heatindex'   : ('heatindex',    1.0),
-    'windchill'   : ('windchill',    1.0),
     'status'      : ('status',       1.0),
 }
 
@@ -312,17 +307,12 @@ def decode_status(status):
         result[key] = status & mask
     return result
 
-def pywws2weewx(p, ts, pressure_offset, altitude,
-                last_rain, last_rain_ts, max_rain_rate):
+def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
     """Map the pywws dictionary to something weewx understands.
 
     p: dictionary of pywws readings
 
     ts: timestamp in UTC
-
-    pressure_offset: pressure calibration offset in mbar
-
-    altitude: station altitude in meters
 
     last_rain: last rain total in cm
 
@@ -358,23 +348,6 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
     if packet['windGust'] is None or packet['windGust'] == 0:
         packet['windGustDir'] = None
 
-    # calculated elements not directly reported by station
-    packet['heatindex'] = weewx.wxformulas.heatindexC(
-        packet['outTemp'], packet['outHumidity'])
-    packet['dewpoint'] = weewx.wxformulas.dewpointC(
-        packet['outTemp'], packet['outHumidity'])
-    packet['windchill'] = weewx.wxformulas.windchillC(
-        packet['outTemp'], packet['windSpeed'])
-
-    # station reports gauge pressure, must calculate other pressures
-    adjp = packet['pressure']
-    if pressure_offset is not None and adjp is not None:
-        adjp += pressure_offset
-    packet['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
-        adjp, altitude, packet['outTemp'])
-    packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
-        adjp, altitude, algorithm='aaNOAA')
-
     # calculate the rain increment from the rain total
     # watch for spurious rain counter decrement.  if decrement is significant
     # then it is a counter wraparound.  a small decrement is either a sensor
@@ -396,28 +369,11 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
                 total += rain_max * 0.3
     packet['rain'] = weewx.wxformulas.calculate_rain(total, last_rain)
 
-    # calculate the rain rate
-    packet['rainRate'] = weewx.wxformulas.calculate_rain_rate(
-        packet['rain'], packet['dateTime'], last_rain_ts)
-
     # report rainfall in log to diagnose rain counter issues
     if weewx.debug:
         if packet['rain'] is not None and packet['rain'] > 0:
             logdbg('got rainfall of %.2f cm (new: %.2f old: %.2f)' %
                    (packet['rain'], packet['rainTotal'], last_rain))
-        if packet['rainRate'] is not None and packet['rainRate'] > 0:
-            logdbg('calculated rainrate of %.2f cm/hr '
-                   '(%.2f cm in %d seconds)' % (packet['rainRate'],
-                                                packet['rain'],
-                                                int(ts - last_rain_ts)))
-
-    # if the rain rate is bogus, ignore the rain and rainRate values
-    if packet['rainRate'] is not None and packet['rainRate'] > max_rain_rate:
-        logerr('maximum rain rate exceeded: max: %.2f rate: %.2f cm/hr '
-               '(%.2f cm in %d s)' % (max_rain_rate, packet['rainRate'],
-                                      packet['rain'], int(ts - last_rain_ts)))
-        packet['rain'] = None
-        packet['rainRate'] = None
 
     return packet
 
@@ -605,14 +561,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         model: Which station model is this?
         [Optional. Default is 'WH1080 (USB)']
 
-        altitude: Altitude of the station console.
-        [Required. No Default.]
-
-        pressure_offset: Calibration offset in millibars for the station
-        pressure sensor.  This offset is added to the station sensor output
-        before barometer and altimeter pressures are calculated.
-        [Optional. No Default]
-
         polling_mode: The mechanism to use when polling the station.  PERIODIC
         polling queries the station console at regular intervals.  ADAPTIVE
         polling adjusts the query interval in an attempt to avoid times when
@@ -645,7 +593,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         [Optional. No default]
         """
 
-        self.altitude          = stn_dict['altitude']
         self.model             = stn_dict.get('model', 'WH1080 (USB)')
         self.polling_mode      = stn_dict.get('polling_mode', PERIODIC_POLLING)
         self.polling_interval  = int(stn_dict.get('polling_interval', 60))
@@ -654,9 +601,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 30.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
         self.device_id         = stn_dict.get('device_id', None)
-        self.pressure_offset   = stn_dict.get('pressure_offset', None)
-        if self.pressure_offset is not None:
-            self.pressure_offset = float(self.pressure_offset)
 
         # FIXME: prefer 'power_cycle_on_fail = (True|False)'
         self.pc_hub            = stn_dict.get('power_cycle_hub', None)
@@ -705,8 +649,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         loginf('polling mode is %s' % self.polling_mode)
         if self.polling_mode.lower() == PERIODIC_POLLING.lower():
             loginf('polling interval is %s' % self.polling_interval)
-        loginf('altitude is %s meters' % str(self.altitude))
-        loginf('pressure offset is %s' % str(self.pressure_offset))
 
         self.openPort()
 
@@ -811,7 +753,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         for p in self.get_observations():
             ts = int(time.time() + 0.5)
             packet = pywws2weewx(p, ts,
-                                 self.pressure_offset, self.altitude,
                                  self._last_rain_loop, self._last_rain_ts_loop,
                                  self.max_rain_rate)
             self._last_rain_loop = packet['rainTotal']
@@ -840,7 +781,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             # FIXME: deal with daylight saving corner case
             ts = delta.days * 86400 + delta.seconds
             data = pywws2weewx(r['data'], ts,
-                               self.pressure_offset, self.altitude,
                                self._last_rain_arc, self._last_rain_ts_arc,
                                self.max_rain_rate)
             data['interval'] = r['interval']

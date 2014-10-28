@@ -1,12 +1,5 @@
-#
-#    Copyright (c) 2012 Tom Keffer <tkeffer@gmail.com>
-#
-#    See the file LICENSE.txt for your full rights.
-#
-#    $Revision$
-#    $Author$
-#    $Date$
-#
+# $Id$
+# Copyright (c) 2012 Tom Keffer <tkeffer@gmail.com>
 """Classes and functions for interfacing with an Oregon Scientific WMR100 station.
    The WMRS200 reportedly works with this driver (NOT the WMR200, which is a different beast).
 
@@ -36,12 +29,9 @@ import usb
 import weeutil.weeutil
 import weewx.abstractstation
 import weewx.units
-import weewx.wxformulas
 
 def loader(config_dict, engine):
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    station = WMR100(altitude=altitude_m, **config_dict['WMR100'])    
-    return station
+    return WMR100(**config_dict['WMR100'])    
         
 class WMR100(weewx.abstractstation.AbstractStation):
     """Driver for the WMR100 station."""
@@ -50,8 +40,6 @@ class WMR100(weewx.abstractstation.AbstractStation):
         """Initialize an object of type WMR100.
         
         NAMED ARGUMENTS:
-        
-        altitude: The altitude in meters. Required.
         
         model: Which station model is this?
         [Optional. Default is 'WMR100']
@@ -77,9 +65,8 @@ class WMR100(weewx.abstractstation.AbstractStation):
         IN_endpoint: The IN USB endpoint used by the WMR. [Optional. Default is usb.ENDPOINT_IN + 1]
         """
         
-        self.altitude          = stn_dict['altitude']
         self.model             = stn_dict.get('model', 'WMR100')
-        # TODO: Consider changing this so these go in the driver loader instead:
+        # TODO: Consider putting these in the driver loader instead:
         self.record_generation = stn_dict.get('record_generation', 'software')
         self.stale_wind        = float(stn_dict.get('stale_wind', 30.0))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
@@ -279,16 +266,14 @@ class WMR100(weewx.abstractstation.AbstractStation):
             _record['inTempBatteryStatus'] = (packet[0] & 0x40) >> 6
         elif channel == 1:
             _record['outTemp']     = T
-            _record['dewpoint']    = weewx.wxformulas.dewpointC(T, R) # Use software
             _record['outHumidity'] = R
-            _record['heatindex']   = weewx.wxformulas.heatindexC(T, R)
-            # The WMR does not provide wind information in a temperature packet,
-            # so we have to use old wind data to calculate wind chill, provided
-            # it isn't too old and has gone stale. If no wind data has been seen
-            # yet, then this will raise an AttributeError exception.
+            # The WMR does not provide wind information in a temperature
+            # packet, so we have to use old wind data to calculate wind chill,
+            # provided it isn't too old and has gone stale. If no wind data has
+            # been seen yet, then this will raise an AttributeError exception.
             try:
                 if _record['dateTime'] - self.last_wind_record['dateTime'] <= self.stale_wind:
-                    _record['windchill'] = weewx.wxformulas.windchillC(T, self.last_wind_record['windSpeed'])
+                    _record['windSpeed'] = self.last_wind_record['windSpeed']
             except AttributeError:
                 pass
             _record['outTempBatteryStatus'] = (packet[0] & 0x40) >> 6
@@ -318,13 +303,13 @@ class WMR100(weewx.abstractstation.AbstractStation):
             _record['inTempBatteryStatus'] = (packet[0] & 0x40) >> 6
         elif channel == 1:
             _record['outTemp']     = T
-            # The WMR does not provide wind information in a temperature packet,
-            # so we have to use old wind data to calculate wind chill, provided
-            # it isn't too old and has gone stale. If no wind data has been seen
-            # yet, then this will raise an AttributeError exception.
+            # The WMR does not provide wind information in a temperature
+            # packet, so we have to use old wind data to calculate wind chill,
+            # provided it isn't too old and has gone stale. If no wind data has
+            # been seen yet, then this will raise an AttributeError exception.
             try:
                 if _record['dateTime'] - self.last_wind_record['dateTime'] <= self.stale_wind:
-                    _record['windchill'] = weewx.wxformulas.windchillC(T, self.last_wind_record['windSpeed'])
+                    _record['windSpeed'] = self.last_wind_record['windSpeed']
             except AttributeError:
                 pass
             _record['outTempBatteryStatus'] = (packet[0] & 0x40) >> 6
@@ -340,17 +325,16 @@ class WMR100(weewx.abstractstation.AbstractStation):
 
     def _barometer_packet(self, packet):
         SP  = float(((packet[3] & 0x0f) << 8) + packet[2])
-        SA = weewx.wxformulas.altimeter_pressure_Metric(SP, self.altitude)
-        # Although the WMR100 emits SLP, not all consoles in the series (notably, the WMRS200) allow
-        # the user to set altitude. So, we must calculate in software. 
+        # Although the WMR100 emits SLP, not all consoles in the series
+        # (notably, the WMRS200) allow the user to set altitude. So, we must
+        # calculate in software. 
         # SLP = float(((packet[5] & 0x0f) << 8) + packet[4])
         try:
-            SLP = weewx.wxformulas.sealevel_pressure_Metric(SP, self.altitude, self.last_temperature_record['outTemp'])
+            outTemp = self.last_temperature_record['outTemp']
         except (AttributeError, KeyError):
-            SLP = None
-        _record = {'barometer'   : SLP,
-                   'pressure'    : SP,
-                   'altimeter'   : SA,
+            outTemp = None
+        _record = {'pressure'    : SP,
+                   'outTemp'     : outTemp,
                    'dateTime'    : int(time.time() + 0.5),
                    'usUnits'     : weewx.METRIC}
         return _record

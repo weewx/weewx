@@ -1,10 +1,5 @@
-#
-#    Copyright (c) 2009-2013 Tom Keffer <tkeffer@gmail.com>
-#
-#    See the file LICENSE.txt for your full rights.
-#
-#    $Id$
-#
+# $Id$
+# Copyright (c) 2009-2013 Tom Keffer <tkeffer@gmail.com>
 """Classes and functions for interfacing with a Davis VantagePro, VantagePro2, or VantageVue weather station"""
 
 import datetime
@@ -15,19 +10,15 @@ import time
 from weewx.crc16 import crc16
 import weeutil.weeutil
 import weewx.units
-import weewx.wxformulas
 import weewx.abstractstation
 import weewx.engine
-import weewx.uwxutils
 
 # A few handy constants:
 _ack    = chr(0x06)
 _resend = chr(0x15) # NB: The Davis documentation gives this code as 0x21, but it's actually decimal 21
 
 def loader(config_dict, engine):
-
-    service = VantageService(engine, config_dict)
-    return service
+    return VantageService(engine, config_dict)
 
 class BaseWrapper(object):
     """Base class for (Serial|Ethernet)Wrapper"""
@@ -1202,15 +1193,6 @@ class Vantage(weewx.abstractstation.AbstractStation):
         start_of_day = weeutil.weeutil.startOfDay(loop_packet['dateTime'])
         loop_packet['sunrise'] += start_of_day
         loop_packet['sunset']  += start_of_day
-    
-        # Add a few derived values that are not in the packet itself.
-        T = loop_packet['outTemp']
-        R = loop_packet['outHumidity']
-        W = loop_packet['windSpeed']
-    
-        loop_packet['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
-        loop_packet['heatindex'] = weewx.wxformulas.heatindexF(T, R)
-        loop_packet['windchill'] = weewx.wxformulas.windchillF(T, W)
         
         # Because the Davis stations do not offer bucket tips in LOOP data, we
         # must calculate it by looking for changes in rain totals. This won't
@@ -1264,15 +1246,6 @@ class Vantage(weewx.abstractstation.AbstractStation):
         # Wind direction is undefined if wind speed is zero:
         if archive_packet['windSpeed'] == 0:
             archive_packet['windDir'] = None
-            
-        # Add a few derived values that are not in the packet itself.
-        T = archive_packet['outTemp']
-        R = archive_packet['outHumidity']
-        W = archive_packet['windSpeed']
-        
-        archive_packet['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
-        archive_packet['heatindex'] = weewx.wxformulas.heatindexF(T, R)
-        archive_packet['windchill'] = weewx.wxformulas.windchillF(T, W)
         
         # Divide archive interval by 60 to keep consistent with wview
         archive_packet['interval']   = int(self.archive_interval / 60) 
@@ -1611,41 +1584,21 @@ class VantageService(Vantage, weewx.engine.StdService):
         self.bind(weewx.END_ARCHIVE_PERIOD, self.end_archive_period)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
-    def startup(self, event):
-        
-        # Open up the archive database:
-        self.archive = weewx.database.open_database(self.config_dict, 'wx_binding') 
-        self.old_time_12_ts = None
-        self.temperature_12 = None
-        
+    def startup(self, event):        
         self.max_loop_gust = 0.0
         self.max_loop_gustdir = None
-        
         self.loop_data = {'txBatteryStatus': None,
                           'consBatteryVoltage' : None}
         
     def closePort(self):
-        # Close the archive database. In case it doesn't exist yet, enclose
-        # the attempt in a try block:
-        try:
-            self.archive.close()
-        except AttributeError:
-            pass
         # Now close my superclass's port:
         Vantage.closePort(self)
 
     def new_loop_packet(self, event):
-        """Calculate the missing pressures in the LOOP packet, and
-        the max gust seen since the last archive record."""
-        pressureIn, altimeterIn = self.get_pressures(event.packet['dateTime'],
-                                                     event.packet['barometer'], 
-                                                     event.packet['outTemp'], 
-                                                     event.packet['outHumidity'])
-        event.packet['pressure']  = pressureIn
-        event.packet['altimeter'] = altimeterIn
+        """Calculate the max gust seen since the last archive record."""
         
-        # Calculate the max gust seen since the start of this archive record and
-        # put it in the packet.
+        # Calculate the max gust seen since the start of this archive record
+        # and put it in the packet.
         windSpeed = event.packet.get('windSpeed')
         windDir   = event.packet.get('windDir')
         if windSpeed is not None and windSpeed > self.max_loop_gust:
@@ -1674,36 +1627,3 @@ class VantageService(Vantage, weewx.engine.StdService):
         
         # Add the last battery status:
         event.record.update(self.loop_data)
-        
-    def get_temperature_12(self, time_ts):
-        """Get the temperature 12 hours ago from the database.
-        
-        Returns None if there is no such temperature.
-        """
-        time_12_ts = weeutil.weeutil.startOfInterval(time_ts - 12*3600, self.archive_interval)
-        if time_12_ts != self.old_time_12_ts:
-            record_12 = self.archive.getRecord(time_12_ts)
-            self.temperature_12 = record_12.get('outTemp') if record_12 is not None else None
-            self.old_time_12_ts = time_12_ts
-        return self.temperature_12
-    
-    def get_pressures(self, time_ts, barometer, currentTempF, humidity):
-        """Calculate the missing pressures.
-        
-        Returns a tuple (station_pressure_inHg, altimeter_pressure_inHg)
-        """
-        # Both the current SLP and temperature are needed.
-        if barometer is not None and currentTempF is not None:
-            # Get the temperature 12 hours ago, or if it is missing, use the
-            # current temperature
-            temp12HrsAgoF = self.get_temperature_12(time_ts)
-            if temp12HrsAgoF is None:
-                temp12HrsAgoF = currentTempF
-            # If humidity is missing, use 0. 
-            if humidity is None:
-                humidity = 0
-            pressureIn = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(barometer, self.altitude, currentTempF, temp12HrsAgoF, humidity) 
-            altimeterIn = weewx.uwxutils.TWxUtilsUS.StationToAltimeter(pressureIn, self.altitude)
-            return pressureIn, altimeterIn
-        else:
-            return (None, None)

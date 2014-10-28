@@ -1,13 +1,6 @@
-#
-#    Copyright (c) 2012 Will Page <compenguy@gmail.com>
-#    Derivative of vantage.py and wmr100.py, credit to Tom Keffer <tkeffer@gmail.com>
-#
-#    See the file LICENSE.txt for your full rights.
-#
-#    $Revision$
-#    $Author$
-#    $Date$
-#
+# $Id$
+# Copyright (c) 2012 Will Page <compenguy@gmail.com>
+# Derivative of vantage.py and wmr100.py, credit to Tom Keffer
 """Classes and functions for interfacing with Oregon Scientific WM-918, WMR9x8 and WMR-968 weather stations
 
     See http://wx200.planetfall.com/wx200.txt or http://www.qsl.net/zl1vfo/wx200/wx200.txt or
@@ -28,7 +21,6 @@ import serial
 import weeutil.weeutil
 import weewx.abstractstation
 import weewx.units
-import weewx.wxformulas
 from math import exp
 
 class WMR9x8ProtocolError(weewx.WeeWxIOError):
@@ -62,8 +54,7 @@ def wm918_registerpackettype(typecode, size):
     return wrap
 
 def loader(config_dict, engine):
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    return WMR9x8(altitude=altitude_m, **config_dict['WMR9x8'])
+    return WMR9x8(**config_dict['WMR9x8'])
 
 class SerialWrapper(object):
     """Wraps a serial connection returned from package serial"""
@@ -126,7 +117,6 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         serial port. [Optional. Default is 5]
         """
 
-        self.altitude       = stn_dict['altitude']
         self.model          = stn_dict.get('model', 'WMR968')
         self.last_totalRain = None
 
@@ -309,11 +299,9 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
             _record['extraTemp%d' % chan] = None
 
         dewunder = bool(status & 0x01)
-        # If dew point is valid, save it. Otherwise, try calculating it in software
+        # If dew point is valid, save it.
         if not dewunder:
             _record['dewpoint%d' % chan] = dew1 + (dew10 * 10)
-        else:
-            _record['dewpoint%d' % chan] = weewx.wxformulas.dewpointC(_record['extraTemp%d' % chan], _record['extraHumid%d' % chan])
 
         return _record
 
@@ -335,16 +323,13 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
             if temp100etc & 0x08:
                 temp = -temp
             _record['outTemp'] = temp
-            _record['heatindex'] = weewx.wxformulas.heatindexC(temp, _record['outHumidity'])
         else:
-            _record['outTemp'] = _record['heatindex'] = None
+            _record['outTemp'] = None
             
         dewunder = bool(status & 0x01)
-        # If dew point is valid, save it. Otherwise, try calculating it in software
+        # If dew point is valid, save it.
         if not dewunder:
             _record['dewpoint'] = dew1 + (dew10 * 10)
-        else:
-            _record['dewpoint'] = weewx.wxformulas.dewpointC(_record['outTemp'], _record['outHumidity'])
 
         return _record
 
@@ -385,14 +370,11 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         dewunder = bool(status&0x01)
         if not dewunder:
             dew = dew1 + (dew10 * 10)
-        else:
-            dew = weewx.wxformulas.dewpointC(temp, hum)
             
         rawsp = ((baro10&0xF) << 4) | baro1
         sp = rawsp + 795
         pre_slpoff = (slpoff10th / 10.0) + slpoff1 + (slpoff10 * 10) + (slpoff100 * 100)
         slpoff = (1000 + pre_slpoff) if pre_slpoff < 400.0 else pre_slpoff
-        sa = weewx.wxformulas.altimeter_pressure_Metric(sp, self.altitude)
         
         _record = {
             'inTempBatteryStatus' : battery,
@@ -401,7 +383,6 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
             'dewpoint'    : dew,
             'barometer'   : rawsp+slpoff,
             'pressure'    : sp,
-            'altimeter'   : sa,
             'dateTime'    : int(time.time() + 0.5),
             'usUnits'     : weewx.METRIC
         }
@@ -426,13 +407,10 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         dewunder = bool(status&0x01)
         if not dewunder:
             dew = dew1 + (dew10 * 10)
-        else:
-            dew = weewx.wxformulas.dewpointC(temp, hum)
 
         rawsp = ((baro100&0x01) << 8) | ((baro10&0xF) << 4) | baro1
         sp = rawsp + 600
         slpoff = (slpoff10th / 10.0) + slpoff1 + (slpoff10 * 10) + (slpoff100 * 100) + (slpoff1000 * 1000)
-        sa = weewx.wxformulas.altimeter_pressure_Metric(sp, self.altitude)
         
         _record = {
             'inTempBatteryStatus' : battery,
@@ -441,7 +419,6 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
             'inDewpoint'  : dew,
             'barometer'   : rawsp+slpoff,
             'pressure'    : sp,
-            'altimeter'   : sa,
             'dateTime'    : int(time.time() + 0.5),
             'usUnits'     : weewx.METRIC
         }
@@ -559,21 +536,6 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         }
 
         try:
-            _record['heatindex'] = weewx.wxformulas.heatindexC(tempout, self.last_outHumidity)
-        except AttributeError:
-            _record['heatindex'] = None
-
-        try:
-            _record['windchill'] = weewx.wxformulas.windchillC(tempout, self.last_windSpeed)
-        except AttributeError:
-            _record['windchill'] = None
-
-        try:
-            _record['dewpoint'] = weewx.wxformulas.dewpointC(tempout, self.last_outHumidity)
-        except AttributeError:
-            _record['dewpoint'] = None
-
-        try:
             _record['apparentTemp'] = tempout + 0.33 * ((self.last_outHumidity / 100.0) * 6.105 * exp(17.27 * tempout / (237.7 + tempout))) -0.70 * (self.last_windSpeed / 3.6) - 4.00
         except AttributeError:
             _record['apparentTemp'] = None
@@ -591,11 +553,9 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         #dewout = dewout1 + (dewout10 *10)
         sp = baro1 + (baro10 *10) + (baro100 *100) + (baro1000 * 1000)
         slp = (slp10th / 10.0) + slp1 + (slp10 * 10) + (slp100 * 100) +(slp1000 * 1000)
-        sa = weewx.wxformulas.altimeter_pressure_Metric(sp, self.altitude)
         _record = {
             'barometer'   : slp,
             'pressure'    : sp,
-            'altimeter'   : sa,
             #'inDewpoint'  : dew,
             #'outDewpoint' : dewout,
             #'dewpoint'    : dewout,

@@ -160,7 +160,7 @@ import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.11'
+DRIVER_VERSION = '0.12'
 DEBUG_READ = 0
 DEBUG_DECODE = 0
 DEBUG_PRESSURE = 0
@@ -208,9 +208,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 def loader(config_dict, engine):
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    station = TE923(altitude=altitude_m, **config_dict['TE923'])
-    return station
+    return TE923(**config_dict['TE923'])
 
 # FIXME: the conversion should use mean temperature as second temp arg
 def bp2sp(bp_mbar, elev_meter, t_C, humidity):
@@ -236,18 +234,11 @@ class TE923(weewx.abstractstation.AbstractStation):
     def __init__(self, **stn_dict) :
         """Initialize the station object.
 
-        altitude: Altitude of the station
-        [Required. No default]
-
         polling_interval: How often to poll the station, in seconds.
         [Optional. Default is 10]
 
         model: Which station model is this?
         [Optional. Default is 'TE923']
-
-        calculate_windchill: Calculate the windchill instead of using the
-        value from the station.
-        [Optional.  Default is False]
         """
         self._last_rain        = None
         self._last_rain_ts     = None
@@ -259,12 +250,10 @@ class TE923(weewx.abstractstation.AbstractStation):
         global DEBUG_PRESSURE
         DEBUG_PRESSURE         = int(stn_dict.get('debug_pressure', 0))
 
-        self.altitude          = stn_dict['altitude']
         self.model             = stn_dict.get('model', 'TE923')
         self.max_tries         = int(stn_dict.get('max_tries', 5))
         self.retry_wait        = int(stn_dict.get('retry_wait', 30))
         self.polling_interval  = int(stn_dict.get('polling_interval', 10))
-        self.calc_windchill    = weeutil.weeutil.tobool(stn_dict.get('calculate_windchill', False))
         self.sensor_map    = stn_dict.get('sensor_map', DEFAULT_SENSOR_MAP)
         self.battery_map   = stn_dict.get('battery_map', DEFAULT_BATTERY_MAP)
         self.memory_size       = stn_dict.get('memory_size', 'small')
@@ -275,8 +264,6 @@ class TE923(weewx.abstractstation.AbstractStation):
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('polling interval is %s' % str(self.polling_interval))
-        loginf('windchill will be %s' %
-               ('calculated' if self.calc_windchill else 'read from station'))
         loginf('sensor map is %s' % self.sensor_map)
         loginf('battery map is %s' % self.battery_map)
 
@@ -300,10 +287,8 @@ class TE923(weewx.abstractstation.AbstractStation):
                 data = self.station.get_readings()
                 status = self.station.get_status()
                 packet = data_to_packet(data, status=status,
-                                        altitude=self.altitude,
                                         last_rain=self._last_rain,
                                         last_rain_ts=self._last_rain_ts,
-                                        calc_windchill=self.calc_windchill,
                                         sensor_map=self.sensor_map,
                                         battery_map=self.battery_map)
                 self._last_rain = packet['rainTotal']
@@ -331,8 +316,8 @@ class TE923(weewx.abstractstation.AbstractStation):
         data = self.station.get_status()
         return data
 
-def data_to_packet(data, status=None, altitude=0,
-                   last_rain=None, last_rain_ts=None, calc_windchill=False,
+def data_to_packet(data, status=None,
+                   last_rain=None, last_rain_ts=None,
                    sensor_map=DEFAULT_SENSOR_MAP,
                    battery_map=DEFAULT_BATTERY_MAP):
     """convert raw data to format and units required by weewx
@@ -386,35 +371,12 @@ def data_to_packet(data, status=None, altitude=0,
         packet['rainTotal'] *= 0.06578 # weewx wants cm
     packet['rain'] = weewx.wxformulas.calculate_rain(
         packet['rainTotal'], last_rain)
-    packet['rainRate'] = weewx.wxformulas.calculate_rain_rate(
-        packet['rain'], packet['dateTime'], last_rain_ts)
 
-    # we must calculate heat index and dewpoint
-    packet['heatindex'] = weewx.wxformulas.heatindexC(
-        packet['outTemp'], packet['outHumidity'])
-    packet['dewpoint'] = weewx.wxformulas.dewpointC(
-        packet['outTemp'], packet['outHumidity'])
+    # station calculates windchill
+    packet['windchill'] = data['windchill']
 
-    # station has windchill, but provide option to calculate
-    if calc_windchill:
-        packet['windchill'] = weewx.wxformulas.windchillC(
-            packet['outTemp'], packet['windSpeed'])
-        logdbg("windchill: calculated=%s station=%s" %
-               (packet['windchill'], data['windchill']))
-    else:
-        packet['windchill'] = data['windchill']
-
-    # station reports baromter (SLP), so we must back-calculate to get
-    # the station pressure (gauge).
+    # station reports baromter (SLP)
     packet['barometer'] = data['slp']
-    packet['pressure'] = bp2sp(packet['barometer'], altitude,
-                               packet['outTemp'], packet['outHumidity'])
-    packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
-        packet['pressure'], altitude, algorithm='aaNOAA')
-    if DEBUG_PRESSURE:
-        logdbg("pressures: p=%s b=%s a=%s" % (packet['pressure'],
-                                              packet['barometer'],
-                                              packet['altimeter']))
 
     # insert values for extra sensors if they are available
     for label in sensor_map:

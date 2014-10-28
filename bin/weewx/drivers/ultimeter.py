@@ -76,10 +76,8 @@ import time
 import weewx
 import weewx.abstractstation
 import weewx.units
-import weewx.uwxutils
-import weewx.wxformulas
 
-DRIVER_VERSION = '0.9.5'
+DRIVER_VERSION = '0.10'
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 
@@ -107,12 +105,7 @@ def logcrt(msg):
     logmsg(syslog.LOG_CRIT, msg)
 
 def loader(config_dict, engine):
-    """Get the altitude, in feet, from the Station section of the dict."""
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    altitude_vt = (altitude_m, 'meter', 'group_altitude')
-    altitude_ft = weewx.units.convert(altitude_vt, 'foot')[0]
-    station = Ultimeter(altitude=altitude_ft, **config_dict['Ultimeter'])
-    return station
+    return Ultimeter(**config_dict['Ultimeter'])
 
 class Ultimeter(weewx.abstractstation.AbstractStation):
     '''weewx driver that communicates with a Peet Bros Ultimeter station
@@ -125,17 +118,11 @@ class Ultimeter(weewx.abstractstation.AbstractStation):
 
     max_tries - how often to retry serial communication before giving up
     [Optional. Default is 5]
-
-    pressure_offset - pressure calibration, mbar
-    [Optional. Default is 0]
-
     '''
     def __init__(self, **stn_dict):
-        self.altitude = stn_dict['altitude']
         self.port = stn_dict.get('port', DEFAULT_PORT)
         self.polling_interval = float(stn_dict.get('polling_interval', 1))
         self.max_tries = int(stn_dict.get('max_tries', 5))
-        self.pressure_offset = float(stn_dict.get('pressure_offset', 0))
         self.last_rain = None
         self.last_rain_ts = None
         loginf('driver version is %s' % DRIVER_VERSION)
@@ -174,32 +161,12 @@ class Ultimeter(weewx.abstractstation.AbstractStation):
         return Station.getName()
 
     def _augment_packet(self, packet):
-        """add derived metrics to a packet"""
-        adjp = packet['barometer']
-        if self.pressure_offset is not None and adjp is not None:
-            adjp += self.pressure_offset * 0.0295333727 # convert to inHg
-        # FIXME: this is supposed to use mean temperature
-        packet['pressure'] = weewx.uwxutils.TWxUtilsUS.SeaLevelToStationPressure(adjp, self.altitude, packet['outTemp'], packet['outTemp'], packet['outHumidity'])
-        packet['altimeter'] = weewx.wxformulas.altimeter_pressure_US(
-            packet['pressure'], self.altitude, algorithm='aaNOAA')
-        packet['windchill'] = weewx.wxformulas.windchillF(
-            packet['outTemp'], packet['windSpeed'])
-        packet['heatindex'] = weewx.wxformulas.heatindexF(
-            packet['outTemp'], packet['outHumidity'])
-        packet['dewpoint'] = weewx.wxformulas.dewpointF(
-            packet['outTemp'], packet['outHumidity'])
-
         # calculate the rain
         if self.last_rain is not None:
             packet['rain'] = packet['long_term_rain'] - self.last_rain
         else:
             packet['rain'] = None
         self.last_rain = packet['long_term_rain']
-
-        # calculate the rain rate
-        packet['rainRate'] = weewx.wxformulas.calculate_rain_rate(
-            packet['rain'], packet['dateTime'], self.last_rain_ts)
-        self.last_rain_ts = packet['dateTime']
 
 class Station(object):
     def __init__(self, port):
