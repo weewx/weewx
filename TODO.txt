@@ -20,7 +20,7 @@ using accumulateLeaves, so you can use overrides?
 
 Move schemas to the extension that uses them.
 
-Move default wx schema to weewx.schemas.wview
+
 
 
 

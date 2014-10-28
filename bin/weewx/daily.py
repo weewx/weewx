@@ -155,7 +155,7 @@ class DaySummaryArchive(weewx.database.DBManager):
         main archive table."""
         
         # First let my superclass handle adding the record to the main archive table:
-        super(DaySummaryArchive, self)._addSingleRecord(record, cursor, log_level=syslog.LOG_DEBUG)
+        super(DaySummaryArchive, self)._addSingleRecord(record, cursor, log_level=log_level)
 
         # Get the start of day for the record:        
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])

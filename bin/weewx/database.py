@@ -24,10 +24,10 @@ import weedb
 
 class DBManager(object):
     """Manages a weewx archive file. Offers a number of convenient member
-    functions for managing the archive file. These functions encapsulate
-    whatever sql statements are needed.
+    functions for querying and inserting data intothe archive file. 
+    These functions encapsulate whatever sql statements are needed.
     
-    ATTRIBUTES
+    USEFUL ATTRIBUTES
     
     sqlkeys: A list of the SQL keys that the database supports.
     
@@ -83,27 +83,26 @@ class DBManager(object):
         _row = self.getSql("SELECT usUnits FROM %s LIMIT 1;" % self.table_name)
         self.std_unit_system = _row[0] if _row is not None else None
 
-    def _initialize_archive(self, archiveSchema):
+    def _initialize_archive(self, schema):
         """Initialize the tables needed for the archive.
         
-        archiveSchema: The schema to be used
+        schema: The schema to be used
         """
     
         # List comprehension of the types, joined together with commas. Put
         # the SQL type in backquotes, because at least one of them ('interval')
         # is a MySQL reserved word
-        _sqltypestr = ', '.join(["`%s` %s" % _type for _type in archiveSchema])
+        _sqltypestr = ', '.join(["`%s` %s" % _type for _type in schema])
 
         try:
             with weedb.Transaction(self.connection) as _cursor:
                 _cursor.execute("CREATE TABLE %s (%s);" % (self.table_name, _sqltypestr, ))
-        except Exception, e:
-            self.close()
-            syslog.syslog(syslog.LOG_ERR, "archive: Unable to create table '%s' in database '%s': %s" % 
+        except weedb.DatabaseError, e:
+            syslog.syslog(syslog.LOG_ERR, "database: Unable to create table '%s' in database '%s': %s" % 
                           (self.table_name, self.database, e))
             raise
     
-        syslog.syslog(syslog.LOG_NOTICE, "archive: Created and initialized table '%s' in database '%s'" % 
+        syslog.syslog(syslog.LOG_NOTICE, "database: Created and initialized table '%s' in database '%s'" % 
                       (self.table_name, self.database))
 
     @classmethod
@@ -117,7 +116,7 @@ class DBManager(object):
         return cls(archive_db_dict)
     
     @classmethod
-    def open_with_create(cls, archive_db_dict, archiveSchema):
+    def open_with_create(cls, archive_db_dict, schema):
         """Open an DBManager database, initializing it if necessary.
         
         OBSOLETE. For backwards compatibility
@@ -125,7 +124,7 @@ class DBManager(object):
         Returns: 
         An instance of DBManager""" 
     
-        return cls(archive_db_dict, archiveSchema)
+        return cls(archive_db_dict, schema)
     
     @property
     def database(self):
@@ -167,7 +166,10 @@ class DBManager(object):
         record_obj: Either a data record, or an iterable that can return data
         records. Each data record must look like a dictionary, where the keys
         are the SQL types and the values are the values to be stored in the
-        database."""
+        database.
+        
+        log_level: What syslog level to use for any logging. Default is syslog.LOG_NOTICE.
+        """
         
         # Determine if record_obj is just a single dictionary instance
         # (in which case it will have method 'keys'). If so, wrap it in
@@ -180,9 +182,10 @@ class DBManager(object):
                 self._addSingleRecord(record, cursor, log_level)
 
     def _addSingleRecord(self, record, cursor, log_level):
+        """Internal function for adding a single record to the database."""
         
         if record['dateTime'] is None:
-            syslog.syslog(syslog.LOG_ERR, "archive: archive record with null time encountered")
+            syslog.syslog(syslog.LOG_ERR, "database: archive record with null time encountered")
             raise weewx.ViolatedPrecondition("DBManager record with null time encountered.")
 
         # Check to make sure the incoming record is in the same unit
@@ -210,11 +213,11 @@ class DBManager(object):
         sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str) 
         try:
             cursor.execute(sql_insert_stmt, value_list)
-            syslog.syslog(log_level, "archive: added record %s to database '%s'" % 
+            syslog.syslog(log_level, "database: added record %s to database '%s'" % 
                           (weeutil.weeutil.timestamp_to_string(record['dateTime']),
                            os.path.basename(self.connection.database)))
         except Exception, e:
-            syslog.syslog(syslog.LOG_ERR, "archive: unable to add record %s to database '%s': %s" %
+            syslog.syslog(syslog.LOG_ERR, "database: unable to add record %s to database '%s': %s" %
                           (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
                            os.path.basename(self.connection.database),
                            e))
@@ -654,8 +657,7 @@ class DBManager(object):
                 ValueTuple(data_vec, data_type, data_group))
 
 
-def reconfig(old_db_dict, new_db_dict, new_unit_system=None,
-             new_schema=None):
+def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None):
     """Copy over an old archive to a new one, using a provided schema."""
     
     with DBManager.open(old_db_dict) as old_archive:
