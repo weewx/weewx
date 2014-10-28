@@ -57,16 +57,16 @@ class Common(unittest.TestCase):
             sys.stderr.write("Error while parsing configuration file %s" % config_path)
             raise
 
+        # Simulator assumes the weather database binding is 'wx_binding'. So copy
+        # over the binding we want to use to wx_binding
+        self.config_dict['Bindings']['wx_binding'] = self.config_dict['Bindings'][self.binding]
+        
         (first_ts, last_ts) = _get_first_last(self.config_dict)
 
-        # Set the database to be used in the configuration dictionary
-        self.config_dict['StdArchive']['archive_database'] = self.archive_db
-        self.archive_db_dict = self.config_dict['Databases'][self.archive_db]
-
         try:
-            with weewx.database.DBManager.open(self.archive_db_dict) as archive:
-                if archive.firstGoodStamp() == first_ts and archive.lastGoodStamp() == last_ts:
-                    print "Simulator need not be run"
+            with weewx.database.open_database(self.config_dict, binding=self.binding) as dbm:
+                if dbm.firstGoodStamp() == first_ts and dbm.lastGoodStamp() == last_ts:
+                    print "\nSimulator need not be run"
                     return 
         except weedb.OperationalError:
             pass
@@ -86,7 +86,7 @@ class Common(unittest.TestCase):
 
         global test_types
         archive_interval = self.config_dict['StdArchive'].as_int('archive_interval')
-        with weewx.database.open_database(self.config_dict, binding='wx_binding') as archive:
+        with weewx.database.open_database(self.config_dict, binding=self.binding) as archive:
             for record in archive.genBatchRecords():
                 start_ts = record['dateTime'] - archive_interval
                 # Calculate the average (throw away min and max):
@@ -115,13 +115,13 @@ class Stopper(weewx.engine.StdService):
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
-        self.archive_db = "archive_sqlite"
+        self.binding = "wx_sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
         
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
-        self.archive_db = "archive_mysql"
+        self.binding = "wx_mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
         
 def _get_first_last(config_dict):
