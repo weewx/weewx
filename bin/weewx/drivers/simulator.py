@@ -1,12 +1,5 @@
-#
-#    Copyright (c) 2012 Tom Keffer <tkeffer@gmail.com>
-#
-#    See the file LICENSE.txt for your full rights.
-#
-#    $Revision$
-#    $Author$
-#    $Date$
-#
+# $Id$
+# Copyright (c) 2012 Tom Keffer <tkeffer@gmail.com>
 """Console simulator for the weewx weather system"""
 
 from __future__ import with_statement
@@ -28,16 +21,16 @@ def loader(config_dict, engine):
         # A start has been specified. Extract the time stamp.
         start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%d %H:%M")
         start_ts = time.mktime(start_tt)
-        # If the 'resume' keyword is present and True, then get the last archive
-        # record out of the database and resume with that.
+        # If the 'resume' keyword is present and True, then get the last
+        # archive record out of the database and resume with that.
         if weeutil.weeutil.to_bool(config_dict['Simulator'].get('resume', True)):
             import weewx.database
             # Resume with the last time in the database. If there is no such
             # time, then fall back to the time specified in the configuration
             # dictionary.
-            with weewx.database.open_database(config_dict, 'wx_binding') as archive:
+            with weewx.database.open_database(config_dict, 'wx_binding') as dbm:
                 try:
-                    resume_ts = archive.lastGoodStamp()
+                    resume_ts = dbm.lastGoodStamp()
                 except weedb.OperationalError:
                     pass
         else:
@@ -56,17 +49,24 @@ class Simulator(weewx.abstractstation.AbstractStation):
         
         NAMED ARGUMENTS:
         
-        loop_interval: The time (in seconds) between emitting LOOP packets. [Optional. Default is 2.5]
+        loop_interval: The time (in seconds) between emitting LOOP packets.
+        [Optional. Default is 2.5]
         
-        start_time: The start (seed) time for the generator in unix epoch time [Optional. If 'None',
-                    or not present, then the present time will be used.]
+        start_time: The start (seed) time for the generator in unix epoch time
+        [Optional. If 'None', or not present, then present time will be used.]
 
-        resume_time: The start time for the loop. [Optional. If 'None', 
-                     or not present, then start_time will be used].
+        resume_time: The start time for the loop.
+        [Optional. If 'None', or not present, then start_time will be used.]
         
-        mode: Required. One of either:
-            'simulator': Real-time simulator. It will sleep between emitting LOOP packets.
-            'generator': Emit packets as fast as it can (useful for testing).
+        mode: Controls the frequency of packets.  One of either:
+            'simulator': Real-time simulator - sleep between LOOP packets
+            'generator': Emit packets as fast as possible (useful for testing)
+        [Required. Default is simulator.]
+
+        observations: Comma-separated list of observations that should be
+                      generated.  If nothing is specified, then all
+                      observations will be generated.
+        [Optional. Default is not defined.]
         """
 
         self.loop_interval = float(stn_dict.get('loop_interval', 2.5))
@@ -85,22 +85,34 @@ class Simulator(weewx.abstractstation.AbstractStation):
             # No start time specified. We are in realtime mode.
             self.real_time = True
             start_ts = self.the_time = time.time()
-            
-        self.mode = stn_dict['mode']
+
+        # default to simulator mode
+        self.mode = stn_dict.get('mode', 'simulator')
         
-        # The following doesn't make much meteorological sense, but it is easy to program!
-        self.observations = {'outTemp'    : Observation(magnitude=20.0,  average= 50.0, period=24.0, phase_lag=14.0, start=start_ts),
-                             'inTemp'     : Observation(magnitude=5.0,   average= 68.0, period=24.0, phase_lag=12.0, start=start_ts),
-                             'barometer'  : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
-                             'pressure'   : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
-                             'windSpeed'  : Observation(magnitude=5.0,   average=  5.0, period=48.0, phase_lag=24.0, start=start_ts),
-                             'windDir'    : Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
-                             'windGust'   : Observation(magnitude=6.0,   average=  6.0, period=48.0, phase_lag=24.0, start=start_ts),
-                             'windGustDir': Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
-                             'outHumidity': Observation(magnitude=30.0,  average= 50.0, period=48.0, phase_lag= 0.0, start=start_ts),
-                             'radiation'  : Solar(magnitude=1000.0, solar_start=6.0, solar_length=12.0),
-                             'UV'         : Solar(magnitude=14,     solar_start=6.0, solar_length=12.0),
-                             'rain'       : Rain(rain_start=0, rain_length=3, total_rain=0.2, loop_interval=self.loop_interval)}
+        # The following doesn't make much meteorological sense, but it is
+        # easy to program!
+        self.observations = {
+            'outTemp'    : Observation(magnitude=20.0,  average= 50.0, period=24.0, phase_lag=14.0, start=start_ts),
+            'inTemp'     : Observation(magnitude=5.0,   average= 68.0, period=24.0, phase_lag=12.0, start=start_ts),
+            'barometer'  : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
+            'pressure'   : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
+            'windSpeed'  : Observation(magnitude=5.0,   average=  5.0, period=48.0, phase_lag=24.0, start=start_ts),
+            'windDir'    : Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
+            'windGust'   : Observation(magnitude=6.0,   average=  6.0, period=48.0, phase_lag=24.0, start=start_ts),
+            'windGustDir': Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
+            'outHumidity': Observation(magnitude=30.0,  average= 50.0, period=48.0, phase_lag= 0.0, start=start_ts),
+            'inHumidity' : Observation(magnitude=10.0,  average= 20.0, period=24.0, phase_lag= 0.0, start=start_ts),
+            'radiation'  : Solar(magnitude=1000.0, solar_start=6.0, solar_length=12.0),
+            'UV'         : Solar(magnitude=14,     solar_start=6.0, solar_length=12.0),
+            'rain'       : Rain(rain_start=0, rain_length=3, total_rain=0.2, loop_interval=self.loop_interval),
+            }
+
+        # calculate only the specified observations, or all if none specified
+        if 'observations' in stn_dict and stn_dict['observations'] is not None:
+            desired = [x.strip() for x in stn_dict['observations'].split(',')]
+            for obs in self.observations:
+                if obs not in desired:
+                    del self.observations[obs]
 
     def genLoopPackets(self):
 
@@ -117,8 +129,8 @@ class Simulator(weewx.abstractstation.AbstractStation):
                     if sleep_time > 0: 
                         time.sleep(sleep_time)
                 else:
-                    # A start time was specified, so we are not in real time. Just sleep
-                    # the appropriate interval
+                    # A start time was specified, so we are not in real time.
+                    # Just sleep the appropriate interval
                     time.sleep(self.loop_interval)
 
             # Update the simulator clock:
@@ -150,7 +162,8 @@ class Observation(object):
         magnitude: The value at max. The range will be twice this value
         average: The average value, averaged over a full cycle.
         period: The cycle period in hours.
-        phase_lag: The number of hours after the start time when the observation hits its max
+        phase_lag: The number of hours after the start time when the
+                     observation hits its max
         start: Time zero for the observation in unix epoch time."""
          
         if not start:
@@ -199,12 +212,16 @@ class Solar(object):
     
     def __init__(self, magnitude=10, solar_start=6, solar_length=12):
         """Initialize a solar simulator
-            Simulated ob will follow a single wave sine function starting at 0 and ending at 0.
-            The solar day starts at time solar_start and finishes after solar_length hours.
+            Simulated ob will follow a single wave sine function starting at 0
+            and ending at 0.  The solar day starts at time solar_start and
+            finishes after solar_length hours.
                              
-            magnitude:      the value at max, the range will be twice this value
-            solar_start:    decimal hour of day that obs start (6.75=6:45am, 6:20=6:12am)
-            solar_length:   length of day in decimal hours (10.75=10hr 45min, 10:10=10hr 6min)
+            magnitude:      the value at max, the range will be twice
+                              this value
+            solar_start:    decimal hour of day that obs start
+                              (6.75=6:45am, 6:20=6:12am)
+            solar_length:   length of day in decimal hours
+                              (10.75=10hr 45min, 10:10=10hr 6min)
         """
         
         self.magnitude = magnitude
@@ -226,5 +243,3 @@ if __name__ == "__main__":
     station = Simulator(mode='simulator',loop_interval=2.0)
     for packet in station.genLoopPackets():
         print weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet
-        
-    
