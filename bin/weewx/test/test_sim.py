@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2012, 2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -18,10 +18,11 @@ import os
 
 import configobj
 
-import weeutil.weeutil
-import weewx.wxengine
 import weedb
+import weeutil.weeutil
+import weewx.database
 import weewx.drivers.simulator
+import weewx.engine
 
 run_length = 48.0      # How long to run the simulator in hours.
 # The types to actually test:
@@ -60,11 +61,10 @@ class Common(unittest.TestCase):
 
         # Set the database to be used in the configuration dictionary
         self.config_dict['StdArchive']['archive_database'] = self.archive_db
-        self.config_dict['StdArchive']['stats_database']   = self.stats_db
         self.archive_db_dict = self.config_dict['Databases'][self.archive_db]
 
         try:
-            with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+            with weewx.database.DBManager.open(self.archive_db_dict) as archive:
                 if archive.firstGoodStamp() == first_ts and archive.lastGoodStamp() == last_ts:
                     print "Simulator need not be run"
                     return 
@@ -72,7 +72,7 @@ class Common(unittest.TestCase):
             pass
         
         # This will generate the simulator data:
-        engine = weewx.wxengine.StdEngine(self.config_dict)
+        engine = weewx.engine.StdEngine(self.config_dict)
         try:
             engine.run()
         except weewx.StopNow:
@@ -86,7 +86,7 @@ class Common(unittest.TestCase):
 
         global test_types
         archive_interval = self.config_dict['StdArchive'].as_int('archive_interval')
-        with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+        with weewx.database.open_database(self.config_dict, binding='wx_binding') as archive:
             for record in archive.genBatchRecords():
                 start_ts = record['dateTime'] - archive_interval
                 # Calculate the average (throw away min and max):
@@ -95,7 +95,7 @@ class Common(unittest.TestCase):
                     self.assertAlmostEqual(obs_avg[obs_type], record[obs_type], 2)
                     
         
-class Stopper(weewx.wxengine.StdService):
+class Stopper(weewx.engine.StdService):
     """Special service which stops the engine when it gets to a certain time."""
     
     def __init__(self, engine, config_dict):
@@ -116,14 +116,12 @@ class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
         self.archive_db = "archive_sqlite"
-        self.stats_db   = "stats_sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
         
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
         self.archive_db = "archive_mysql"
-        self.stats_db   = "stats_mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
         
 def _get_first_last(config_dict):
@@ -168,8 +166,7 @@ def calc_stats(config_dict, start_ts, stop_ts):
 
 def suite():
     tests = ['test_archive_data']
-#    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
-    return unittest.TestSuite(map(TestSqlite, tests))
+    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

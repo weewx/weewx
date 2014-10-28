@@ -25,14 +25,14 @@ def loader(config_dict, engine):
         # archive record out of the database and resume with that.
         if weeutil.weeutil.to_bool(config_dict['Simulator'].get('resume', True)):
             import weewx.database
-            # Resume with the last time in the database. If there is no such
-            # time, then fall back to the time specified in the configuration
-            # dictionary.
-            with weewx.database.open_database(config_dict, 'wx_binding') as dbm:
-                try:
-                    resume_ts = dbm.lastGoodStamp()
-                except weedb.OperationalError:
-                    pass
+            try:
+                # Resume with the last time in the database. If there is no such
+                # time, then fall back to the time specified in the configuration
+                # dictionary.
+                with weewx.database.open_database(config_dict, 'wx_binding') as dbm:
+                        resume_ts = dbm.lastGoodStamp()
+            except weedb.OperationalError:
+                pass
         else:
             # The resume keyword is not present. Start with the seed time:
             resume_ts = start_ts
