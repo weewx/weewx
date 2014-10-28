@@ -11,6 +11,7 @@
 """Weather-specific database manager."""
 
 import weeutil.weeutil
+import weewx.wxformulas
 import weewx.daily
 
 #===============================================================================

@@ -8,6 +8,7 @@
 """Classes for implementing the weewx tag 'code' codes."""
 
 import weeutil.weeutil
+from weeutil.weeutil import to_int
 import weewx.units
 
 #===============================================================================
@@ -111,8 +112,8 @@ class DatabaseBinder(object):
     def trend(self):
         """Return a ValueDict for the 'trend'. """
         try:
-            time_delta = int(self.option_dict['skin_dict']['Units']['Trend']['time_delta'])
-            time_grace = int(self.option_dict['skin_dict']['Units']['Trend'].get('time_grace', 300))
+            time_delta = to_int(self.option_dict['trend']['time_delta'])
+            time_grace = to_int(self.option_dict['trend'].get('time_grace', 300))
         except KeyError:
             time_delta = 10800  # 3 hours
             time_grace = 300    # 5 minutes
@@ -127,7 +128,7 @@ class DatabaseBinder(object):
                           'day', self.formatter, self.converter, **self.option_dict)
     @property
     def week(self):
-        week_start = self.option_dict['stn_info'].week_start
+        week_start = to_int(self.option_dict.get('week_start', 6))
         return TimeBinder(weeutil.weeutil.archiveWeekSpan(self.endtime_ts, week_start), self.opendb,
                           'week', self.formatter, self.converter, **self.option_dict)
     @property
@@ -140,7 +141,7 @@ class DatabaseBinder(object):
                           'year', self.formatter, self.converter, **self.option_dict)
     @property
     def rainyear(self):
-        rain_year_start = self.option_dict['stn_info'].rain_year_start
+        rain_year_start = to_int(self.option_dict.get('rain_year_start', 1))
         return TimeBinder(weeutil.weeutil.archiveRainYearSpan(self.endtime_ts, rain_year_start), self.opendb,
                           'rainyear',  self.formatter, self.converter, **self.option_dict)
 

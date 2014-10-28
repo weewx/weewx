@@ -470,12 +470,19 @@ class Stats(SearchList):
 
 
     def get_extension_list(self, timespan, db_factory):
+        try:
+            trend_dict = self.generator.skin_dict['Units']['Trend']
+        except KeyError:
+            trend_dict = {'time_delta' : 10800,
+                          'time_grace' : 300}
 
         stats = weewx.tags.FactoryBinder(db_factory,
                                          timespan.stop,
                                          formatter=self.generator.formatter,
                                          converter=self.generator.converter,
-                                         stn_info= self.generator.stn_info,
+                                         week_start=self.generator.stn_info.week_start,
+                                         rain_year_start=self.generator.stn_info.rain_year_start,
+                                         trend=trend_dict,
                                          skin_dict=self.generator.skin_dict)
 
         return [stats]
