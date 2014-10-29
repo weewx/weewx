@@ -61,7 +61,7 @@ class DBManager(object):
                 # No. Nothing to be done.
                 raise
             # Database exists, but has not been initialized. Initialize it.
-            self._initialize_archive(schema)
+            self._initialize_database(schema)
             # Try again:
             self.sqlkeys = self.connection.columnsOf(self.table_name)
         
@@ -92,7 +92,8 @@ class DBManager(object):
     
     @classmethod
     def open_with_create(cls, archive_db_dict, schema, table_name='archive'):
-        """Initialize 
+        """Open and return a DBManager or a subclass of DBManager, initializing
+        if necessary.  
         
         archive_db_dict: A database dictionary holding the information necessary
         to open the database.
@@ -142,7 +143,7 @@ class DBManager(object):
     def __exit__(self, etyp, einst, etb):
         self.close()    
     
-    def _initialize_archive(self, schema):
+    def _initialize_database(self, schema):
         """Initialize the tables needed for the archive.
         
         schema: The schema to be used
@@ -737,7 +738,7 @@ class DBBinder(object):
     def __exit__(self, etyp, einst, etb):
         self.close()
     
-    def get_binding(self, binding='wx_binding', initialize=False):
+    def get_database(self, binding='wx_binding', initialize=False):
         """Given a binding name, returns the managed object"""
         if binding not in self.archive_cache:
             self.archive_cache[binding] = open_database(self.config_dict, binding, initialize)

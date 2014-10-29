@@ -547,7 +547,7 @@ class StdArchive(StdService):
         # If we happen to startup in the small time interval between the end of
         # the archive interval and the end of the archive delay period, then
         # there will be no old accumulator.
-        archive = self.engine.binder.get_binding('wx_binding')
+        archive = self.engine.binder.get_database('wx_binding')
         if hasattr(self, 'old_accumulator'):
             archive.updateHiLo(self.old_accumulator)
             # If the user has requested software generation, then do that:
@@ -570,7 +570,7 @@ class StdArchive(StdService):
     def new_archive_record(self, event):
         """Called when a new archive record has arrived. 
         Put it in the archive database."""
-        archive = self.engine.binder.get_binding('wx_binding')
+        archive = self.engine.binder.get_database('wx_binding')
         archive.addRecord(event.record)
 
     def setup_database(self, config_dict):
@@ -578,7 +578,7 @@ class StdArchive(StdService):
 
         # This will create the database if it doesn't exist, then return an
         # opened instance of the archive manager. 
-        archive = self.engine.binder.get_binding('wx_binding', initialize=True)
+        archive = self.engine.binder.get_database('wx_binding', initialize=True)
         syslog.syslog(syslog.LOG_INFO, "engine: Using archive database: %s" % (archive.database,))
         
         # In case this is a recent update or the user has dropped the daily summary tables, backfill them:
@@ -590,7 +590,7 @@ class StdArchive(StdService):
         If the hardware does not support hardware archives, an exception of
         type NotImplementedError will be thrown.""" 
 
-        archive = self.engine.binder.get_binding('wx_binding')
+        archive = self.engine.binder.get_database('wx_binding')
         # Find out when the archive was last updated.
         lastgood_ts = archive.lastGoodStamp()
 

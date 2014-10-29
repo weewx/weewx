@@ -70,7 +70,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 plotgen_ts = gen_ts
                 if not plotgen_ts:
                     binding = plot_options['binding']
-                    archive = self.db_binder.get_binding(binding)
+                    archive = self.db_binder.get_database(binding)
                     plotgen_ts = archive.lastGoodStamp()
                     if not plotgen_ts:
                         plotgen_ts = time.time()
@@ -139,7 +139,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
 
                     # Now we have everything we need to find and hit the database:
                     binding = line_options['binding']
-                    archive = self.db_binder.get_binding(binding)
+                    archive = self.db_binder.get_database(binding)
                     (start_vec_t, stop_vec_t, data_vec_t) = \
                             archive.getSqlVectors(var_type, minstamp, maxstamp, 
                                                   aggregate_interval, aggregate_type)

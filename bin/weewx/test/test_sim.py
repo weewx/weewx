@@ -64,8 +64,8 @@ class Common(unittest.TestCase):
         (first_ts, last_ts) = _get_first_last(self.config_dict)
 
         try:
-            with weewx.database.open_database(self.config_dict, binding=self.binding) as dbm:
-                if dbm.firstGoodStamp() == first_ts and dbm.lastGoodStamp() == last_ts:
+            with weewx.database.open_database(self.config_dict, binding=self.binding) as dbmanager:
+                if dbmanager.firstGoodStamp() == first_ts and dbmanager.lastGoodStamp() == last_ts:
                     print "\nSimulator need not be run"
                     return 
         except weedb.OperationalError:

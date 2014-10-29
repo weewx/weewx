@@ -22,10 +22,10 @@ class DBFactory(object):
         self.cache = db_cache
         self.default_binding  = default_binding
         
-    def get_binding(self, binding=None):
+    def get_database(self, binding=None):
         if binding is None:
             binding = self.default_binding
-        return self.cache.get_binding(binding)
+        return self.cache.get_database(binding)
 
 #===============================================================================
 #                    Class FactoryBinder
@@ -47,7 +47,7 @@ class FactoryBinder(object):
         self.option_dict = option_dict
         
     def db(self, binding=None):
-        opendb = self.dbfactory.get_binding(binding)
+        opendb = self.dbfactory.get_database(binding)
         return DatabaseBinder(opendb, self.endtime_ts, self.formatter, self.converter, **self.option_dict)
     
     def __getattr__(self, attr):
