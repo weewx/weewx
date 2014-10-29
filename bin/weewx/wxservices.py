@@ -2,9 +2,8 @@
 # Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
 """Services specific to weather."""
 
-from __future__ import with_statement
 import syslog
-import weewx
+
 import weewx.database
 import weewx.units
 import weewx.engine
@@ -45,7 +44,7 @@ class StdWXCalculate(weewx.engine.StdService):
         self.calculations = config_dict.get('StdWXCalculate', {})
 
         # various bits we need for internal housekeeping
-        self.altitude_ft = weewx.units.getAltitudeFt(config_dict)
+        self.altitude_ft = weewx.units.convert(engine.stn_info.altitude_vt, "foot")[0]
         self.t12 = None
         self.last_ts12 = None
         self.arcint = None
@@ -104,7 +103,7 @@ class StdWXCalculate(weewx.engine.StdService):
         self.get_arcint(data)
         if (self.arcint is not None and 'barometer' in data and
             'outTemp' in data and 'outHumidity' in data):
-            t12 = self.get_temperature_1h2(data['dateTime'], self.arcint)
+            t12 = self.get_temperature_12h(data['dateTime'], self.arcint)
             if (data['barometer'] is not None and
                 data['outTemp'] is not None and
                 data['outHumidity'] is not None and
@@ -175,7 +174,7 @@ class StdWXCalculate(weewx.engine.StdService):
         if not hasattr(self, 'dbm'):
             self.dbm = weewx.database.open_database(self.config_dict, 'wx_binding')
         sts = ts - interval
-        r = dbm.getSql("SELECT SUM(rain) FROM archive "
+        r = self.dbm.getSql("SELECT SUM(rain) FROM archive "
                        "WHERE dateTime>? AND dateTime<?",
                        (sts, ts))
         return r[0] if r is not None else None
@@ -187,7 +186,7 @@ class StdWXCalculate(weewx.engine.StdService):
         if ts12 != self.last_ts12:
             if not hasattr(self, 'dbm'):
                 self.dbm = weewx.database.open_database(self.config_dict, 'wx_binding')
-                r = dbm.getRecord(ts12)
+                r = self.dbm.getRecord(ts12)
                 self.t12 = r.get('outTemp') if r is not None else None
                 self.last_ts12 = ts12
         return self.t12

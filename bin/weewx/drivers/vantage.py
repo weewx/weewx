@@ -1617,13 +1617,6 @@ class VantageService(Vantage, weewx.engine.StdService):
         self.max_loop_gustdir = None
         
     def new_archive_record(self, event):
-        """Calculate the missing pressures in the archive record"""
-        pressureIn, altimeterIn = self.get_pressures(event.record['dateTime'],
-                                                     event.record['barometer'], 
-                                                     event.record['outTemp'], 
-                                                     event.record['outHumidity'])
-        event.record['pressure']  = pressureIn
-        event.record['altimeter'] = altimeterIn
-        
+        """Add the battery status to the archive record."""
         # Add the last battery status:
         event.record.update(self.loop_data)

@@ -4,11 +4,7 @@ Each driver should be responsible for installing its own stanza in the configura
 
 Each driver should be responsible for its configuration, invoked by wee_config.
 
-Support ConfigObj v5.0.0 (introduced 2/8/2014). 
-
 Include version number in archive database metadata.
-
-Move the derived variables to StdWXCalculate. This would be located in wxservices.py
 
 Look at Gary's (?) changes to allow cron-like report generation.
 
@@ -20,7 +16,7 @@ using accumulateLeaves, so you can use overrides?
 
 Move schemas to the extension that uses them.
 
-
+Experiment with using DBBinder in the main engine.
 
 
 
