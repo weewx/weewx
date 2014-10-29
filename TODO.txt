@@ -16,7 +16,10 @@ using accumulateLeaves, so you can use overrides?
 
 Move schemas to the extension that uses them.
 
-Experiment with using DBBinder in the main engine.
+Clean up names. dbm? db? archive? database? Why DBBinder.get_binding, 
+but weewx.database.open_database?
+
+
 
 
 

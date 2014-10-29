@@ -737,10 +737,10 @@ class DBBinder(object):
     def __exit__(self, etyp, einst, etb):
         self.close()
     
-    def get_binding(self, binding='wx_binding'):
+    def get_binding(self, binding='wx_binding', initialize=False):
         """Given a binding name, returns the managed object"""
         if binding not in self.archive_cache:
-            self.archive_cache[binding] = open_database(self.config_dict, binding)
+            self.archive_cache[binding] = open_database(self.config_dict, binding, initialize)
         return self.archive_cache[binding]
 
 #===============================================================================
