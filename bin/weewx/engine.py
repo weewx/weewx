@@ -1,12 +1,5 @@
-#
-#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
-#
-#    See the file LICENSE.txt for your full rights.
-#
-#    $Revision$
-#    $Author$
-#    $Date$
-#
+# $Id$
+# Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
 
 """Main engine for the weewx weather system."""
 
@@ -34,15 +27,16 @@ import weeutil.weeutil
 class BreakLoop(Exception):
     pass
 
-#===============================================================================
+#==============================================================================
 #                    Class StdEngine
-#===============================================================================
+#==============================================================================
 
 class StdEngine(object):
     """The main engine responsible for the creating and dispatching of events
     from the weather station.
     
-    It loads a set of services, specified by an option in the configuration file.
+    It loads a set of services, specified by an option in the configuration
+    file.
     
     When a service loads, it binds callbacks to events. When an event occurs,
     the bound callback will be called."""
@@ -87,17 +81,19 @@ class StdEngine(object):
         # Import the driver:
         __import__(driver)
     
-        # Open up the weather station, wrapping it in a try block in case of failure.
+        # Open up the weather station, wrapping it in a try block in case
+        # of failure.
         try:
-            # This is a bit of Python wizardry. First, find the driver module in sys.modules.
+            # This is a bit of Python wizardry. First, find the driver module
+            # in sys.modules.
             driver_module = sys.modules[driver]
-            # Now find the function 'loader' within the module:
+            # Find the function 'loader' within the module:
             loader_function = getattr(driver_module, 'loader')
-            # Now call it with the configuration dictionary as the only argument:
+            # Call it with the configuration dictionary as the only argument:
             self.console = loader_function(config_dict, self)
         except Exception, ex:
             # Caught unrecoverable error. Log it:
-            syslog.syslog(syslog.LOG_CRIT, "engine: Unable to open WX station hardware: %s" % ex)
+            syslog.syslog(syslog.LOG_CRIT, "engine: Unable to load driver: %s" % ex)
             # Reraise the exception:
             raise
         
@@ -109,15 +105,18 @@ class StdEngine(object):
     def loadServices(self, config_dict):
         """Set up the services to be run."""
 
-        # This will hold the list of objects, after the services has been instantiated:
+        # This will hold the list of objects, after the services has been
+        # instantiated:
         self.service_obj = []
 
-        # Wrap the instantiation of the services in a try block, so if an exception
-        # occurs, any service that may have started can be shut down in an orderly way.
+        # Wrap the instantiation of the services in a try block, so if an
+        # exception occurs, any service that may have started can be shut
+        # down in an orderly way.
         try:
             # Go through each of the service lists one by one:
-            for service_group in ['prep_services', 'process_services', 'archive_services',
-                                  'restful_services', 'report_services']:
+            for service_group in ['prep_services', 'process_services',
+                                  'archive_services', 'restful_services',
+                                  'report_services']:
                 # For each service list, retrieve all the listed services.
                 # Provide a default, empty list in case the service list is
                 # missing completely:
@@ -162,23 +161,26 @@ class StdEngine(object):
                     syslog.syslog(syslog.LOG_INFO, "engine: garbage collected %d objects" % ngc)
                     last_gc = int(time.time())
 
-                # First, let any interested services know the packet LOOP is about to start
+                # First, let any interested services know the packet LOOP is
+                # about to start
                 self.dispatchEvent(weewx.Event(weewx.PRE_LOOP))
     
                 # Get ready to enter the main packet loop. An exception of type
-                # BreakLoop will get thrown when a service wants to break the loop and
-                # interact with the console.
+                # BreakLoop will get thrown when a service wants to break the
+                # loop and interact with the console.
                 try:
                 
                     # And this is the main packet LOOP. It will continuously
-                    # generate LOOP packets until some service breaks it by throwing
-                    # an exception (usually when an archive period has passed).
+                    # generate LOOP packets until some service breaks it by
+                    # throwing an exception (usually when an archive period
+                    # has passed).
                     for packet in self.console.genLoopPackets():
                         
-                        # Package the packet as an event, then dispatch it.            
+                        # Package the packet as an event, then dispatch it.
                         self.dispatchEvent(weewx.Event(weewx.NEW_LOOP_PACKET, packet=packet))
 
-                        # Allow services to break the loop by throwing an exception:
+                        # Allow services to break the loop by throwing
+                        # an exception:
                         self.dispatchEvent(weewx.Event(weewx.CHECK_LOOP, packet=packet))
     
                 except BreakLoop:
@@ -248,9 +250,9 @@ class StdEngine(object):
         except NotImplementedError:
             return int(time.time()+0.5)
 
-#===============================================================================
+#==============================================================================
 #                    Class StdService
-#===============================================================================
+#==============================================================================
 
 class StdService(object):
     """Abstract base class for all services."""
@@ -267,9 +269,9 @@ class StdService(object):
     def shutDown(self):
         pass
 
-#===============================================================================
+#==============================================================================
 #                    Class StdConvert
-#===============================================================================
+#==============================================================================
 
 class StdConvert(StdService):
     """Service for performing unit conversions.
@@ -286,7 +288,7 @@ class StdConvert(StdService):
 
         # Get the target unit nickname (something like 'US' or 'METRIC'):
         target_unit_nickname = config_dict['StdConvert']['target_unit']
-        # Get the target unit. This will be weewx.US, weewx.METRIC, weewx.METRICWX
+        # Get the target unit: weewx.US, weewx.METRIC, weewx.METRICWX
         self.target_unit = weewx.units.unit_constants[target_unit_nickname.upper()]
         # Bind self.converter to the appropriate standard converter
         self.converter = weewx.units.StdUnitConverters[self.target_unit]
@@ -320,9 +322,9 @@ class StdConvert(StdService):
         # Replace the old record with the new, converted record
         event.record = converted_record
         
-#===============================================================================
+#==============================================================================
 #                    Class StdCalibrate
-#===============================================================================
+#==============================================================================
 
 class StdCalibrate(StdService):
     """Adjust data using calibration expressions.
@@ -363,8 +365,8 @@ class StdCalibrate(StdService):
 
     def new_archive_record(self, event):
         """Apply a calibration correction to an archive packet"""
-        # If the record was software generated, then any corrections have already been applied
-        # in the LOOP packet.
+        # If the record was software generated, then any corrections have
+        # already been applied in the LOOP packet.
         if event.origin != 'software':
             for obs_type in self.corrections:
                 try:
@@ -374,9 +376,9 @@ class StdCalibrate(StdService):
                 except ValueError, e:
                     syslog.syslog(syslog.LOG_ERR, "engine: StdCalibration archive error %s" % e)
 
-#===============================================================================
+#==============================================================================
 #                    Class StdQC
-#===============================================================================
+#==============================================================================
 
 class StdQC(StdService):
     """Performs quality check on incoming data."""
@@ -433,9 +435,9 @@ class StdQC(StdService):
                                    self.min_max_dict[obs_type][0], self.min_max_dict[obs_type][1]))
                     event.record[obs_type] = None
 
-#===============================================================================
+#==============================================================================
 #                    Class StdArchive
-#===============================================================================
+#==============================================================================
 
 class StdArchive(StdService):
     """Service that archives LOOP and archive data in the SQL databases."""
@@ -504,8 +506,8 @@ class StdArchive(StdService):
     def pre_loop(self, event):
         """Called before the main packet loop is entered."""
         
-        # If this the the initial time through the loop, then the end of the archive
-        # and delay periods need to be primed:
+        # If this the the initial time through the loop, then the end of
+        # the archive and delay periods need to be primed:
         if not hasattr(self, 'end_archive_period_ts'):
             self.end_archive_period_ts = \
                 (int(self.engine._get_console_time() / self.archive_interval) + 1) * self.archive_interval
@@ -520,8 +522,9 @@ class StdArchive(StdService):
         if not hasattr(self, "accumulator"):
             self.accumulator = self._new_accumulator(the_time)
 
-        # Try adding the LOOP packet to the existing accumulator. If the timestamp is
-        # outside the timespan of the accumulator, an exception will be thrown:
+        # Try adding the LOOP packet to the existing accumulator. If the
+        # timestamp is outside the timespan of the accumulator, an exception
+        # will be thrown:
         try:
             self.accumulator.addRecord(event.packet, self.loop_hilo)
         except weewx.accum.OutOfSpan:
@@ -533,7 +536,8 @@ class StdArchive(StdService):
     def check_loop(self, event):
         """Called after any loop packets have been processed. This is the opportunity
         to break the main loop by throwing an exception."""
-        # Is this the end of the archive period? If so, dispatch an END_ARCHIVE_PERIOD event
+        # Is this the end of the archive period? If so, dispatch an
+        # END_ARCHIVE_PERIOD event
         if event.packet['dateTime'] > self.end_archive_period_ts:
             self.engine.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_PERIOD, packet=event.packet))
             self.end_archive_period_ts += self.archive_interval
@@ -543,7 +547,7 @@ class StdArchive(StdService):
             raise BreakLoop
 
     def post_loop(self, event):
-        """The main packet loop has ended. Time to process the old accumulator."""
+        """The main packet loop has ended, so process the old accumulator."""
         # If we happen to startup in the small time interval between the end of
         # the archive interval and the end of the archive delay period, then
         # there will be no old accumulator.
@@ -554,9 +558,9 @@ class StdArchive(StdService):
             if self.record_generation == 'software':
                 self._software_catchup()
             elif self.record_generation == 'hardware':
-                # Otherwise, try to honor hardware generation. An exception will
-                # be raised if the console does not support it. In that case, fall
-                # back to software generation.
+                # Otherwise, try to honor hardware generation. An exception
+                # will be raised if the console does not support it. In that
+                # case, fall back to software generation.
                 try:
                     self._catchup(self.engine.console.genArchiveRecords)
                 except NotImplementedError:
@@ -577,11 +581,12 @@ class StdArchive(StdService):
         """Setup the main database archive"""
 
         # This will create the database if it doesn't exist, then return an
-        # opened instance of the archive manager. 
+        # opened instance of the database manager. 
         dbmanager = self.engine.dbbinder.get_database('wx_binding', initialize=True)
-        syslog.syslog(syslog.LOG_INFO, "engine: Using archive database: %s" % (dbmanager.database,))
+        syslog.syslog(syslog.LOG_INFO, "engine: Using database: %s" % (dbmanager.database,))
         
-        # In case this is a recent update or the user has dropped the daily summary tables, backfill them:
+        # In case this is a recent update or the user has dropped the daily
+        # summary tables, backfill them:
         dbmanager.backfill_day_summary()
 
     def _catchup(self, generator):
@@ -591,7 +596,7 @@ class StdArchive(StdService):
         type NotImplementedError will be thrown.""" 
 
         dbmanager = self.engine.dbbinder.get_database('wx_binding')
-        # Find out when the archive was last updated.
+        # Find out when the database was last updated.
         lastgood_ts = dbmanager.lastGoodStamp()
 
         try:
@@ -614,17 +619,17 @@ class StdArchive(StdService):
         self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record, origin='software'))
     
     def _new_accumulator(self, timestamp):
-        start_archive_ts = weeutil.weeutil.startOfInterval(timestamp,
-                                                           self.archive_interval)
-        end_archive_ts = start_archive_ts + self.archive_interval
+        start_ts = weeutil.weeutil.startOfInterval(timestamp,
+                                                   self.archive_interval)
+        end_ts = start_ts + self.archive_interval
         
         # Instantiate a new accumulator
-        new_accumulator =  weewx.accum.Accum(weeutil.weeutil.TimeSpan(start_archive_ts, end_archive_ts))
+        new_accumulator =  weewx.accum.Accum(weeutil.weeutil.TimeSpan(start_ts, end_ts))
         return new_accumulator
     
-#===============================================================================
+#==============================================================================
 #                    Class StdTimeSynch
-#===============================================================================
+#==============================================================================
 
 class StdTimeSynch(StdService):
     """Regularly asks the station to synch up its clock."""
@@ -658,7 +663,8 @@ class StdTimeSynch(StdService):
             try:
                 console_time = self.engine.console.getTime()
                 if console_time is None: return
-                # getTime can take a long time to run, so we use the current system time
+                # getTime can take a long time to run, so we use the current
+                # system time
                 diff = console_time - time.time()
                 syslog.syslog(syslog.LOG_INFO, 
                               "engine: Clock error is %.2f seconds (positive is fast)" % diff)
@@ -670,9 +676,9 @@ class StdTimeSynch(StdService):
             except NotImplementedError:
                 syslog.syslog(syslog.LOG_DEBUG, "engine: Station does not support reading the time")
 
-#===============================================================================
+#==============================================================================
 #                    Class StdPrint
-#===============================================================================
+#==============================================================================
 
 class StdPrint(StdService):
     """Service that prints diagnostic information when a LOOP
@@ -692,9 +698,9 @@ class StdPrint(StdService):
         """Print out the new archive record."""
         print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), event.record
         
-#===============================================================================
+#==============================================================================
 #                    Class TestAccum
-#===============================================================================
+#==============================================================================
 
 class TestAccum(StdService):
     """Allows comparison of archive records generated in software from
@@ -732,9 +738,9 @@ class TestAccum(StdService):
             pass
         
 
-#===============================================================================
+#==============================================================================
 #                    Class StdReport
-#===============================================================================
+#==============================================================================
 
 class StdReport(StdService):
     """Launches a separate thread to do reporting."""
@@ -749,9 +755,9 @@ class StdReport(StdService):
         
     def launch_report_thread(self, event):
         """Called after the packet LOOP. Processes any new data."""
-        # Do not launch the reporting thread if an old one is still alive. To guard
-        # against a zombie thread (alive, but doing nothing) launch anyway if
-        # enough time has passed.
+        # Do not launch the reporting thread if an old one is still alive.
+        # To guard against a zombie thread (alive, but doing nothing) launch
+        # anyway if enough time has passed.
         if self.thread and self.thread.isAlive() and time.time()-self.launch_time < self.max_wait:
             return
             
@@ -771,9 +777,9 @@ class StdReport(StdService):
         self.thread = None
         self.launch_time = None
 
-#===============================================================================
+#==============================================================================
 #                       Signal handler
-#===============================================================================
+#==============================================================================
 
 class Restart(Exception):
     """Exception thrown when restarting the engine is desired."""
@@ -789,9 +795,9 @@ def sigTERMhandler(dummy_signum, dummy_frame):
     syslog.syslog(syslog.LOG_DEBUG, "engine: Received signal TERM.")
     raise Terminate
 
-#===============================================================================
+#==============================================================================
 #                    Function main
-#===============================================================================
+#==============================================================================
 
 def main(options, args, EngineClass=StdEngine) :
     """Prepare the main loop and run it. 
@@ -817,9 +823,9 @@ def main(options, args, EngineClass=StdEngine) :
         syslog.syslog(syslog.LOG_INFO, "engine: pid file is %s" % options.pidfile)
         daemon.daemonize(pidfile=options.pidfile)
 
-    # If an exception occurs the first time through, then the problem is most likely
-    # a configuration problem.  But, if it happens later, it could be I/O error and
-    # it's worth retrying
+    # If an exception occurs the first time through, then the problem is most
+    # likely a configuration problem.  But, if it happens later, it could be
+    # I/O error and it is worth retrying
     successful_init = False
     
     while True:
@@ -883,10 +889,10 @@ def main(options, args, EngineClass=StdEngine) :
             syslog.syslog(syslog.LOG_INFO, "engine: Terminating weewx version %s" % weewx.__version__)
             sys.exit()
 
-        # If run from the command line, catch any keyboard interrupts and log them:
+        # For command-line, catch any keyboard interrupts and log them:
         except KeyboardInterrupt:
             syslog.syslog(syslog.LOG_CRIT,"engine: Keyboard interrupt.")
-            # Reraise the exception (this will eventually cause the program to exit)
+            # Reraise the exception (this should cause the program to exit)
             raise
     
         # Catch any non-recoverable errors. Log them, exit
@@ -897,7 +903,7 @@ def main(options, args, EngineClass=StdEngine) :
             # Include a stack traceback in the log:
             weeutil.weeutil.log_traceback("    ****  ")
             syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
-            # Reraise the exception (this will eventually cause the program to exit)
+            # Reraise the exception (this should cause the program to exit)
             raise
 
 def getConfiguration(config_path):
@@ -909,7 +915,7 @@ def getConfiguration(config_path):
     except IOError:
         sys.stderr.write("Unable to open configuration file %s" % config_path)
         syslog.syslog(syslog.LOG_CRIT, "engine: Unable to open configuration file %s" % config_path)
-        # Reraise the exception (this will eventually cause the program to exit)
+        # Reraise the exception (this should cause the program to exit)
         raise
     except configobj.ConfigObjError:
         syslog.syslog(syslog.LOG_CRIT, "engine: Error while parsing configuration file %s" % config_path)
@@ -918,4 +924,3 @@ def getConfiguration(config_path):
     syslog.syslog(syslog.LOG_INFO, "engine: Using configuration file %s" % config_path)
 
     return config_dict
-    
