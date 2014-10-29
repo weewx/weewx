@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # $Id$
-#
 # Copyright 2014 Matthew Wall
+# See the file LICENSE.txt for your full rights.
 
 """Driver for CC3000 data logger
 

@@ -1,5 +1,7 @@
 # $Id$
 # Copyright (c) 2012 Tom Keffer <tkeffer@gmail.com>
+# See the file LICENSE.txt for your full rights.
+
 """Console simulator for the weewx weather system"""
 
 from __future__ import with_statement

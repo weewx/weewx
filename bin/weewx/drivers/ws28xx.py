@@ -1,17 +1,6 @@
-# LaCrosse WS28xx driver for weewx
 # $Id$
-#
 # Copyright 2013 Matthew Wall
-#
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or any later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.
-#
-# See http://www.gnu.org/licenses/
+# See the file LICENSE.txt for your full rights.
 #
 # Thanks to Eddie De Pieri for the first Python implementation for WS-28xx.
 # Eddie did the difficult work of decompiling HeavyWeather then converting

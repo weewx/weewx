@@ -1,6 +1,9 @@
 # $Id$
 # Copyright (c) 2009-2013 Tom Keffer <tkeffer@gmail.com>
-"""Classes and functions for interfacing with a Davis VantagePro, VantagePro2, or VantageVue weather station"""
+# See the file LICENSE.txt for your full rights.
+
+"""Classes and functions for interfacing with a Davis VantagePro, VantagePro2,
+or VantageVue weather station"""
 
 import datetime
 import struct

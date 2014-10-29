@@ -1,6 +1,9 @@
 # $Id$
 # Copyright (c) 2012 Will Page <compenguy@gmail.com>
+# See the file LICENSE.txt for your full rights.
+#
 # Derivative of vantage.py and wmr100.py, credit to Tom Keffer
+
 """Classes and functions for interfacing with Oregon Scientific WM-918, WMR9x8 and WMR-968 weather stations
 
     See http://wx200.planetfall.com/wx200.txt or http://www.qsl.net/zl1vfo/wx200/wx200.txt or

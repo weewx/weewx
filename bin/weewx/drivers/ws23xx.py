@@ -1,17 +1,7 @@
 #!usr/bin/env python
 # $Id$
-#
 # Copyright 2013 Matthew Wall
-#
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or any later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.
-#
-# See http://www.gnu.org/licenses/
+# See the file LICENSE.txt for your full rights.
 #
 # Thanks to Kenneth Lavrsen for the Open2300 implementation:
 #   http://www.lavrsen.dk/foswiki/bin/view/Open2300/WebHome
