@@ -143,7 +143,7 @@ class StdWXCalculate(weewx.engine.StdService):
                     t_F = data['outTemp'] * (9.0/5.0) + 32.0
                     t12_F = t12 * (9.0/5.0) + 32.0
                 p = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
-                    barometer_inHg, altitude_ft,
+                    barometer_inHg, self.altitude_ft,
                     t_F, t12_F, data['outHumidity'])
                 if data['usUnits'] == weewx.US:
                     data['pressure'] = p
