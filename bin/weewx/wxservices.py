@@ -11,10 +11,6 @@ import weewx.engine
 import weewx.wxformulas
 import weeutil.weeutil
 
-INHG_PER_MBAR = 33.863886666
-KPH_PER_MPS = 3.6
-FOOT_TO_METER = 0.3048
-
 class StdWXCalculate(weewx.engine.StdService):
     """Add derived quantities to a record.
 
@@ -46,10 +42,7 @@ class StdWXCalculate(weewx.engine.StdService):
         super(StdWXCalculate, self).__init__(engine, config_dict)
 
         # get any configuration settings
-        self.calculations = {}
-        d = config_dict.get('StdWXCalculate', {})
-        for obs in d:
-            self.calculations[obs] = d[obs]
+        self.calculations = config_dict.get('StdWXCalculate', {})
 
         # various bits we need for internal housekeeping
         self.altitude_ft = weewx.units.getAltitudeFt(config_dict)
@@ -59,7 +52,6 @@ class StdWXCalculate(weewx.engine.StdService):
         self.last_rain_arc_ts = None
         self.last_rain_loop_ts = None
         self.rain_period = None # specify in seconds to use db query
-        self.config_dict = config_dict
 
         # we will process both loop and archive events
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
@@ -72,58 +64,41 @@ class StdWXCalculate(weewx.engine.StdService):
         self.do_calculations(event.record)
 
     def do_calculations(self, data_dict, data_type='archive'):
+        data_us = weewx.units.to_US(data_dict)
         for obs in self._dispatch_list:
             calc = False
             if obs in self.calculations:
                 if self.calculations[obs] == 'software':
                     calc = True
                 elif (self.calculations[obs] == 'prefer_hardware' and
-                      (obs not in data_dict or data_dict[obs] is None)):
+                      (obs not in data_us or data_us[obs] is None)):
                     calc = True
-            elif obs not in data_dict or data_dict[obs] is None:
+            elif obs not in data_us or data_us[obs] is None:
                 calc = True
             if calc:
-                getattr(self, 'calc_'+obs)(data_dict, data_type)
+                getattr(self, 'calc_'+obs)(data_us, data_type)
+        data_x = weewx.units.to_std_system(data_us, data_dict['usUnits'])
+        data_dict.update(data_x)
 
     def calc_dewpoint(self, data, data_type):
         if 'outTemp' in data and 'outHumidity' in data:
-            if data['usUnits'] == weewx.US:
-                data['dewpoint'] = weewx.wxformulas.dewpointF(
-                    data['outTemp'], data['outHumidity'])
-            else:
-                data['dewpoint'] = weewx.wxformulas.dewpointC(
-                    data['outTemp'], data['outHumidity'])
+            data['dewpoint'] = weewx.wxformulas.dewpointF(
+                data['outTemp'], data['outHumidity'])
 
     def calc_inDewpoint(self, data, data_type):
         if 'outTemp' in data and 'inHumidity' in data:
-            if data['usUnits'] == weewx.US:
-                data['inDewpoint'] = weewx.wxformulas.dewpointF(
-                    data['outTemp'], data['inHumidity'])
-            else:
-                data['inDewpoint'] = weewx.wxformulas.dewpointC(
-                    data['outTemp'], data['inHumidity'])
+            data['inDewpoint'] = weewx.wxformulas.dewpointF(
+                data['outTemp'], data['inHumidity'])
 
     def calc_windchill(self, data, data_type):
         if 'outTemp' in data and 'windSpeed' in data:
-            if data['usUnits'] == weewx.US:
-                data['windchill'] = weewx.wxformulas.windchillF(
-                    data['outTemp'], data['windSpeed'])
-            else:
-                if data['usUnits'] == weewx.METRICWX:
-                    ws = data['windSpeed'] * KPH_PER_MPS
-                else:
-                    ws = data['windSpeed']
-                data['windchill'] = weewx.wxformulas.windchillC(
-                    data['outTemp'], ws)
+            data['windchill'] = weewx.wxformulas.windchillF(
+                data['outTemp'], data['windSpeed'])
 
     def calc_heatindex(self, data, data_type):
         if 'outTemp' in data and 'outHumidity' in data:
-            if data['usUnits'] == weewx.US:
-                data['heatindex'] = weewx.wxformulas.heatindexF(
-                    data['outTemp'], data['outHumidity'])
-            else:
-                data['heatindex'] = weewx.wxformulas.heatindexC(
-                    data['outTemp'], data['outHumidity'])
+            data['heatindex'] = weewx.wxformulas.heatindexF(
+                data['outTemp'], data['outHumidity'])
 
     def calc_pressure(self, data, data_type):
         self.get_arcint(data)
@@ -134,44 +109,21 @@ class StdWXCalculate(weewx.engine.StdService):
                 data['outTemp'] is not None and
                 data['outHumidity'] is not None and
                 t12 is not None):
-                if data['usUnits'] == weewx.US:
-                    barometer_inHg = data['barometer']
-                    t_F = data['outTemp']
-                    t12_F = t12
-                else:
-                    barometer_inHg = data['barometer'] * INHG_PER_MBAR
-                    t_F = data['outTemp'] * (9.0/5.0) + 32.0
-                    t12_F = t12 * (9.0/5.0) + 32.0
-                p = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
-                    barometer_inHg, self.altitude_ft,
-                    t_F, t12_F, data['outHumidity'])
-                if data['usUnits'] == weewx.US:
-                    data['pressure'] = p
-                else:
-                    data['pressure'] = p / INHG_PER_MBAR
+                data['pressure'] = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
+                    data['barometer'], self.altitude_ft,
+                    data['outTemp'], t12, data['outHumidity'])
             else:
                 data['pressure'] = None
 
     def calc_barometer(self, data, data_type):
         if 'pressure' in data and 'outTemp' in data:
-            if data['usUnits'] == weewx.US:
-                data['barometer'] = weewx.wxformulas.sealevel_pressure_US(
-                    data['pressure'], self.altitude_ft, data['outTemp'])
-            else:
-                altitude_m = self.altitude_ft * FOOT_TO_METER
-                data['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
-                    data['pressure'], altitude_m, data['outTemp'])
+            data['barometer'] = weewx.wxformulas.sealevel_pressure_US(
+                data['pressure'], self.altitude_ft, data['outTemp'])
 
     def calc_altimeter(self, data, data_type):
         if 'pressure' in data:
-            if data['usUnits'] == weewx.US:
-                data['altimeter'] = weewx.wxformulas.altimeter_pressure_US(
-                    data['pressure'], self.altitude_ft, algorithm='aaNOAA')
-            else:
-                altitude_m = self.altitude_ft * FOOT_TO_METER
-                data['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
-                    data['pressure'], altitude_m, algorithm='aaNOAA')
-
+            data['altimeter'] = weewx.wxformulas.altimeter_pressure_US(
+                data['pressure'], self.altitude_ft, algorithm='aaNOAA')
 
     # rainRate is simply the amount of rain in a period scaled to quantity/hr.
     # if the rain_period is defined, then that period is used for archive
@@ -220,11 +172,12 @@ class StdWXCalculate(weewx.engine.StdService):
         do not include the latest timestamp so that we do not get the latest
         interval (if it even exists).  We do not include the first timestamp
         because we do not want the interval before that timestamp."""
+        if not hasattr(self, 'dbm'):
+            self.dbm = weewx.database.open_database(self.config_dict, 'wx_binding')
         sts = ts - interval
-        with weewx.database.open_database(self.config_dict, 'wx_binding') as db:
-            r = db.getSql("SELECT SUM(rain) FROM archive "
-                          "WHERE dateTime>? AND dateTime<?",
-                          (sts, ts))
+        r = dbm.getSql("SELECT SUM(rain) FROM archive "
+                       "WHERE dateTime>? AND dateTime<?",
+                       (sts, ts))
         return r[0] if r is not None else None
 
     def get_temperature_12h(self, ts, arcint):
@@ -232,8 +185,14 @@ class StdWXCalculate(weewx.engine.StdService):
         temperature is found."""
         ts12 = weeutil.weeutil.startOfInterval(ts - 12*3600, arcint)
         if ts12 != self.last_ts12:
-            with weewx.database.open_database(self.config_dict, 'wx_binding') as db:
-                r = db.getRecord(ts12)
+            if not hasattr(self, 'dbm'):
+                self.dbm = weewx.database.open_database(self.config_dict, 'wx_binding')
+                r = dbm.getRecord(ts12)
                 self.t12 = r.get('outTemp') if r is not None else None
                 self.last_ts12 = ts12
         return self.t12
+
+    def shutDown(self):
+        if hasattr(self, 'dbm'):
+            self.dbm.close()
+            del self.dbm
