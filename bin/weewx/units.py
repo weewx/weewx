@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-#
-#    Copyright (c) 2010-2014 Tom Keffer <tkeffer@gmail.com>
-#
-#    See the file LICENSE.txt for your full rights.
-#
 # $Id$
-#
+# Copyright (c) 2010-2014 Tom Keffer <tkeffer@gmail.com>
+# See the file LICENSE.txt for your full rights.
+
 """Data structures and functions for dealing with units."""
 
 import locale
@@ -1133,21 +1130,6 @@ class GenWithConvert(object):
         _record_c = StdUnitConverters[self.target_unit_system].convertDict(_record)
         _record_c['usUnits'] = self.target_unit_system
         return _record_c
-
-
-def getAltitude(config_dict, units):
-    """Get altitude, in specified units, from the Station section of dict."""
-    altitude_t = weeutil.weeutil.option_as_list(
-        config_dict['Station'].get('altitude', (None, None)))
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    altitude = convert(altitude_vt, units)[0]
-    return altitude
-
-def getAltitudeM(config_dict):
-    return getAltitude(config_dict, 'meter')
-
-def getAltitudeFt(config_dict):
-    return getAltitude(config_dict, 'foot')
 
 def to_US(datadict):
     """Convert the units used in a dictionary to US Customary."""
