@@ -175,8 +175,8 @@ class StdWXCalculate(weewx.engine.StdService):
             self.dbm = weewx.database.open_database(self.config_dict, 'wx_binding')
         sts = ts - interval
         r = self.dbm.getSql("SELECT SUM(rain) FROM archive "
-                       "WHERE dateTime>? AND dateTime<?",
-                       (sts, ts))
+                            "WHERE dateTime>? AND dateTime<?",
+                            (sts, ts))
         return r[0] if r is not None else None
 
     def get_temperature_12h(self, ts, arcint):
@@ -186,9 +186,9 @@ class StdWXCalculate(weewx.engine.StdService):
         if ts12 != self.last_ts12:
             if not hasattr(self, 'dbm'):
                 self.dbm = weewx.database.open_database(self.config_dict, 'wx_binding')
-                r = self.dbm.getRecord(ts12)
-                self.t12 = r.get('outTemp') if r is not None else None
-                self.last_ts12 = ts12
+            r = self.dbm.getRecord(ts12)
+            self.t12 = r.get('outTemp') if r is not None else None
+            self.last_ts12 = ts12
         return self.t12
 
     def shutDown(self):
