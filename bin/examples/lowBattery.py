@@ -45,10 +45,10 @@ sending out an alarm if the battery is only occasionally being signaled as bad.
 ********************************************************************************
 
 To specify that this new service be loaded and run, it must be added to the
-configuration option "report_services", located in sub-section [Engines][[WxEngine]].
+configuration option "report_services", located in sub-section [Engine][[Services]].
 
-[Engines]
-  [[WxEngine]]
+[Engine]
+  [[Services]]
     ...
     report_services = weewx.engine.StdPrint, weewx.engine.StdReport, examples.lowBattery.BatteryAlarm
 

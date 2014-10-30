@@ -31,11 +31,7 @@ Move schemas to the extension that uses them.
 Clean up names. dbm? db? archive? database? Why DBBinder.get_binding, 
 but weewx.database.open_database?
 
-Promote [[WXEngine]] options in weewx.conf to [Engine]
 
-- move TestAccum out of engine.py, put it in a test subdirectory
-
-- eliminate units.getAltitudeM and units.getAltitudeFt
 
 
 

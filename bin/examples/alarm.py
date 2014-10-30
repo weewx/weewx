@@ -42,10 +42,10 @@ To avoid a flood of emails, one will only be sent every 3600 seconds (one hour).
 ********************************************************************************
 
 To specify that this new service be loaded and run, it must be added to the
-configuration option "report_services", located in sub-section [Engines][[WxEngine]].
+configuration option "report_services", located in sub-section [Engine][[Services]].
 
-[Engines]
-  [[WxEngine]]
+[Engine]
+  [[Services]]
     ...
     report_services = weewx.engine.StdPrint, weewx.engine.StdReport, examples.alarm.MyAlarm
 

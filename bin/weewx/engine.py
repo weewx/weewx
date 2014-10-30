@@ -121,7 +121,7 @@ class StdEngine(object):
                 # For each service list, retrieve all the listed services.
                 # Provide a default, empty list in case the service list is
                 # missing completely:
-                for svc in weeutil.weeutil.option_as_list(config_dict['Engines']['WxEngine'].get(service_group, [])):
+                for svc in weeutil.weeutil.option_as_list(config_dict['Engine']['Services'].get(service_group, [])):
                     if svc == '':
                         syslog.syslog(syslog.LOG_DEBUG, "engine: No services in service group %s" % service_group)
                         continue
@@ -699,46 +699,6 @@ class StdPrint(StdService):
         """Print out the new archive record."""
         print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), event.record
         
-#==============================================================================
-#                    Class TestAccum
-#==============================================================================
-
-class TestAccum(StdService):
-    """Allows comparison of archive records generated in software from
-    LOOP data, versus archive records retrieved from the console. This only
-    works for hardware that has an internal data logger."""
-
-    def __init__(self, engine, config_dict):
-        super(TestAccum, self).__init__(engine, config_dict)
-
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        
-    def new_archive_record(self, event):
-
-        accum_record = event.record
-        
-        timestamp = accum_record['dateTime']
-        last_timestamp = timestamp - self.engine.console.archive_interval
-        
-        # This will only work if the hardware supports archive logging.
-        try:
-            for stn_record in self.engine.console.genArchiveRecords(last_timestamp):
-            
-                if timestamp==stn_record['dateTime']:
-                
-                    for obs_type in sorted(accum_record.keys()):
-                        print "%10s, %10s, %10s" % (obs_type, accum_record[obs_type], 
-                                                    stn_record.get(obs_type, 'N/A'))
-    
-                    accum_set = set(accum_record.keys())
-                    stn_set   = set(stn_record.keys())
-                    
-                    missing = stn_set - accum_set
-                    print "Missing keys:", missing
-        except NotImplementedError:
-            pass
-        
-
 #==============================================================================
 #                    Class StdReport
 #==============================================================================

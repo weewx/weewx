@@ -928,7 +928,7 @@ class DaySummaryManager(Manager):
         _day_summary = self._get_day_summary(_sod_ts, cursor)
         _day_summary.addRecord(record)
         self._set_day_summary(_day_summary, record['dateTime'], cursor)
-        syslog.syslog(log_level, "manager:   added %s to daily summary in '%s'" % 
+        syslog.syslog(log_level, "manager: added record %s to daily summary in '%s'" % 
                       (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
                        os.path.basename(self.connection.database)))
         
