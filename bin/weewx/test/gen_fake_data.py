@@ -70,7 +70,7 @@ def configDatabases(config_dict, binding):
     # First, we need to modify the configuration dictionary that was passed in
     # so it uses the DBManager, instead of the daily summary manager
     monkey_dict = config_dict.dict()
-    monkey_dict['DataBindings'][binding]['manager'] = 'weewx.manager.DBManager'
+    monkey_dict['DataBindings'][binding]['manager'] = 'weewx.manager.Manager'
 
     with weewx.manager.open_database(monkey_dict, binding, initialize=True) as archive:
         

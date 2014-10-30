@@ -57,14 +57,13 @@ class Common(unittest.TestCase):
             sys.stderr.write("Error while parsing configuration file %s" % config_path)
             raise
 
-        # Simulator assumes the weather database binding is 'wx_binding'. So copy
-        # over the binding we want to use to wx_binding
-        self.config_dict['DataBindings']['wx_binding'] = self.config_dict['DataBindings'][self.binding]
+        # Fiddle with config_dict to reflect the database in use:
+        self.config_dict['DataBindings']['wx_binding']['database'] = self.database
         
         (first_ts, last_ts) = _get_first_last(self.config_dict)
 
         try:
-            with weewx.manager.open_database(self.config_dict, data_binding=self.binding) as dbmanager:
+            with weewx.manager.open_database(self.config_dict, 'wx_binding') as dbmanager:
                 if dbmanager.firstGoodStamp() == first_ts and dbmanager.lastGoodStamp() == last_ts:
                     print "\nSimulator need not be run"
                     return 
@@ -86,7 +85,7 @@ class Common(unittest.TestCase):
 
         global test_types
         archive_interval = self.config_dict['StdArchive'].as_int('archive_interval')
-        with weewx.manager.open_database(self.config_dict, data_binding=self.binding) as archive:
+        with weewx.manager.open_database(self.config_dict, 'wx_binding') as archive:
             for record in archive.genBatchRecords():
                 start_ts = record['dateTime'] - archive_interval
                 # Calculate the average (throw away min and max):
@@ -115,13 +114,13 @@ class Stopper(weewx.engine.StdService):
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
-        self.binding = "wx_sqlite"
+        self.database = "archive_sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
         
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
-        self.binding = "wx_mysql"
+        self.database = "archive_mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
         
 def _get_first_last(config_dict):

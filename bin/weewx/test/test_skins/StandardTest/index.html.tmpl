@@ -87,6 +87,10 @@
       <td>$current.outTemp.degree_F.format("%.3f")</td>
     </tr>
     <tr>
+      <td>Outside Temperature (with explicit database binding)</td>
+      <td>$db($data_binding='wx_binding').current.outTemp</td>
+    </tr>
+    <tr>
       <td>Outside Temperature trend ($trend.time_delta.hour.format("%.0f"))</td>
       <td>$trend.outTemp</td>
     </tr>

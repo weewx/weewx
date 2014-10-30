@@ -60,15 +60,17 @@ class Common(unittest.TestCase):
             sys.stderr.write("Error while parsing configuration file %s" % config_path)
             raise
 
+        # Fiddle with config_dict to reflect the database in use:
+        self.config_dict['DataBindings']['wx_binding']['database'] = self.database
         # This will generate the test databases if necessary:
-        gen_fake_data.configDatabases(self.config_dict, self.binding)
+        gen_fake_data.configDatabases(self.config_dict, 'wx_binding')
         
     def tearDown(self):
         pass
     
     def test_create_stats(self):
         global day_keys
-        with weewx.manager.open_database(self.config_dict, self.binding) as manager:
+        with weewx.manager.open_database(self.config_dict, 'wx_binding') as manager:
             self.assertItemsEqual(sorted(manager.daykeys), sorted(day_keys))
             self.assertEqual(manager.connection.columnsOf('archive_day_barometer'),
                              ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'wsum', 'sumtime'])
@@ -77,7 +79,7 @@ class Common(unittest.TestCase):
                               'max_dir', 'xsum', 'ysum', 'dirsumtime', 'squaresum', 'wsquaresum'])
         
     def testScalarTally(self):
-        with weewx.manager.open_database(self.config_dict, self.binding) as manager:
+        with weewx.manager.open_database(self.config_dict, 'wx_binding') as manager:
             # Pick a random day, say 15 March:
             start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
             stop_ts  = int(time.mktime((2010,3,16,0,0,0,0,0,-1)))
@@ -106,7 +108,7 @@ class Common(unittest.TestCase):
                         self.assertEqual(stats_time, res2[0], "Time check. Failing type %s, aggregate: %s" % (stats_type, aggregate))
     
     def testWindTally(self):
-        with weewx.manager.open_database(self.config_dict, self.binding) as manager:
+        with weewx.manager.open_database(self.config_dict, 'wx_binding') as manager:
             # Pick a random day, say 15 March:
             start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
             stop_ts  = int(time.mktime((2010,3,16,0,0,0,0,0,-1)))
@@ -141,7 +143,7 @@ class Common(unittest.TestCase):
 
     def testTags(self):
         global skin_dict
-        with weewx.manager.open_database(self.config_dict, self.binding) as manager:
+        with weewx.manager.open_database(self.config_dict, 'wx_binding') as manager:
 
             spans = {'day'  : weeutil.weeutil.TimeSpan(time.mktime((2010,3,15,0,0,0,0,0,-1)),
                                                        time.mktime((2010,3,16,0,0,0,0,0,-1))),
@@ -230,7 +232,7 @@ class Common(unittest.TestCase):
             self.assertFalse(tagStats.year.inHumidity.has_data)
 
     def test_rainYear(self):
-        with weewx.manager.open_database(self.config_dict, self.binding) as manager:
+        with weewx.manager.open_database(self.config_dict, 'wx_binding') as manager:
             stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
             # Check for a rain year starting 1-Jan
             tagStats = weewx.tags.DatabaseBinder(manager, stop_ts,
@@ -245,7 +247,7 @@ class Common(unittest.TestCase):
 
 
     def test_heatcool(self):
-        with weewx.manager.open_database(self.config_dict, self.binding) as manager:
+        with weewx.manager.open_database(self.config_dict, 'wx_binding') as manager:
             #Test heating and cooling degree days:
             stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
     
@@ -262,13 +264,13 @@ class Common(unittest.TestCase):
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
-        self.binding = "wx_sqlite"
+        self.database = "archive_sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
         
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
-        self.binding = "wx_mysql"
+        self.database = "archive_mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
         
     

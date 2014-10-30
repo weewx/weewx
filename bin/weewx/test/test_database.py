@@ -80,20 +80,20 @@ class Common(unittest.TestCase):
         
     def test_no_archive(self):
         # Attempt to open a non-existent database results in an exception:
-        self.assertRaises(weedb.OperationalError, weewx.manager.DBManager.open, self.archive_db_dict)
+        self.assertRaises(weedb.OperationalError, weewx.manager.Manager.open, self.archive_db_dict)
 
     def test_unitialized_archive(self):
         _connect = weedb.create(self.archive_db_dict)
-        self.assertRaises(weewx.UninitializedDatabase, weewx.manager.DBManager(_connect))
+        self.assertRaises(weewx.UninitializedDatabase, weewx.manager.Manager(_connect))
         
     def test_create_archive(self):
-        archive = weewx.manager.DBManager.open_with_create(self.archive_db_dict, archive_schema)
+        archive = weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema)
         self.assertItemsEqual(archive.connection.tables(), ['archive'])
         self.assertEqual(archive.connection.columnsOf('archive'), ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
         archive.close()
         
         # Now that the database exists, these should also succeed:
-        archive = weewx.manager.DBManager.open(self.archive_db_dict)
+        archive = weewx.manager.Manager.open(self.archive_db_dict)
         self.assertItemsEqual(archive.connection.tables(), ['archive'])
         self.assertEqual(archive.connection.columnsOf('archive'), ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
         self.assertEqual(archive.sqlkeys, ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
@@ -101,7 +101,7 @@ class Common(unittest.TestCase):
         archive.close()
         
     def test_empty_archive(self):
-        archive = weewx.manager.DBManager.open_with_create(self.archive_db_dict, archive_schema)
+        archive = weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema)
         self.assertEqual(archive.firstGoodStamp(), None)
         self.assertEqual(archive.lastGoodStamp(), None)
         self.assertEqual(archive.getRecord(123456789), None)
@@ -109,11 +109,11 @@ class Common(unittest.TestCase):
         
     def test_add_archive_records(self):
         # Test adding records using a 'with' statement:
-        with weewx.manager.DBManager.open_with_create(self.archive_db_dict, archive_schema) as archive:
+        with weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema) as archive:
             archive.addRecord(genRecords())
 
         # Now test to see what's in there:            
-        with weewx.manager.DBManager.open(self.archive_db_dict) as archive:
+        with weewx.manager.Manager.open(self.archive_db_dict) as archive:
             self.assertEqual(archive.firstGoodStamp(), start_ts)
             self.assertEqual(archive.lastGoodStamp(), stop_ts)
             self.assertEqual(archive.std_unit_system, std_unit_system)
@@ -138,11 +138,11 @@ class Common(unittest.TestCase):
 
     def test_get_records(self):
         # Add a bunch of records:
-        with weewx.manager.DBManager.open_with_create(self.archive_db_dict, archive_schema) as archive:
+        with weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema) as archive:
             archive.addRecord(genRecords())
 
         # Now fetch them:
-        with weewx.manager.DBManager.open(self.archive_db_dict) as archive:
+        with weewx.manager.Manager.open(self.archive_db_dict) as archive:
             # Test getSql on existing type:
             bar0 = archive.getSql("SELECT barometer FROM archive WHERE dateTime=?", (start_ts,))
             self.assertEqual(bar0[0], barfunc(0))
@@ -193,7 +193,7 @@ class Common(unittest.TestCase):
             self.assertEqual(_rec, None)
             
         # Now try fetching them as vectors:
-        with weewx.manager.DBManager.open(self.archive_db_dict) as archive:
+        with weewx.manager.Manager.open(self.archive_db_dict) as archive:
             barvec = archive.getSqlVectors('barometer', start_ts, stop_ts)
             # Recall that barvec will be a 3-way tuple. The first element is the vector of starting
             # times, the second the vector of ending times, and the third the data vector.
@@ -204,7 +204,7 @@ class Common(unittest.TestCase):
         # Start by setting up a generator function that will return the records to be
         # included in each aggregation
         gen = gen_included_recs(timevec, start_ts, stop_ts, 6*interval)
-        with weewx.manager.DBManager.open(self.archive_db_dict) as archive:
+        with weewx.manager.Manager.open(self.archive_db_dict) as archive:
             barvec = archive.getSqlVectors('barometer', start_ts, stop_ts, aggregate_interval=6*interval, aggregate_type='avg')
             n_expected = int(nrecs / 6)
             self.assertEqual(n_expected, len(barvec[0][0]))

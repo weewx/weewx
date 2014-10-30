@@ -56,12 +56,15 @@ class Common(unittest.TestCase):
 
         # Remove the old directory:
         try:
-            os.rmdir(self.config_dict['StdReport']['HTML_ROOT'])
+            test_html_dir = os.path.join(self.config_dict['WEEWX_ROOT'], self.config_dict['StdReport']['HTML_ROOT'])
+            os.rmdir(test_html_dir)
         except OSError:
             pass
 
+        # Fiddle with config_dict to reflect the database in use:
+        self.config_dict['DataBindings']['wx_binding']['database'] = self.database
         # This will generate the test databases if necessary:
-        gen_fake_data.configDatabases(self.config_dict, self.binding)
+        gen_fake_data.configDatabases(self.config_dict, 'wx_binding')
 
     def tearDown(self):
         pass
@@ -80,9 +83,6 @@ class Common(unittest.TestCase):
         test_dir = sys.path[0]
         t.config_dict['StdReport']['SKIN_ROOT'] = os.path.join(test_dir, 'test_skins')
         
-        # Have the binding point to whatever database is in use:
-        t.config_dict['StdReport']['data_binding'] = self.binding
-
         # Although the report engine inherits from Thread, we can just run it in the main thread:
         print "Starting report engine test"
         t.run()
@@ -114,13 +114,13 @@ class Common(unittest.TestCase):
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
-        self.binding = "wx_sqlite"
+        self.database = "archive_sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
         
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
-        self.binding = "wx_mysql"
+        self.database = "archive_mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
         
         
