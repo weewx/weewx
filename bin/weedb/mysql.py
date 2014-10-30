@@ -155,7 +155,8 @@ class Connection(weedb.Connection):
                 else:
                     coltype = str(row[1]).upper()
                 is_primary = True if row[3] == 'PRI' else False
-                yield (irow, colname, coltype, to_bool(row[2]), row[4], is_primary)
+                can_be_null = False if row[2]=='' else to_bool(row[2])
+                yield (irow, colname, coltype, can_be_null, row[4], is_primary)
                 irow += 1
         finally:
             cursor.close()

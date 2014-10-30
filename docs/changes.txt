@@ -5,6 +5,9 @@ weewx change history
 
 Removed the no longer needed serviced StdRESTful, obsolete since V2.6
 
+Fixed bug in querying for schemas that prevented older versions of MySQL
+(V4.X) from working.
+
 
 X.X.X XX/XX/XX
 
