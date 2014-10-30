@@ -1283,11 +1283,7 @@ if __name__ == "__main__":
                          'weewx.drivers'],
           py_modules  = ['daemon'],
           scripts     = ['bin/wee_config_database',
-                         'bin/wee_config_fousb',
-                         'bin/wee_config_te923',
-                         'bin/wee_config_vantage',
-                         'bin/wee_config_ws23xx',
-                         'bin/wee_config_ws28xx',
+                         'bin/wee_config_device',
                          'bin/weewxd',
                          'bin/wee_reports'],
           data_files  = [

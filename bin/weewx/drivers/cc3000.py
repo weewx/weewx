@@ -50,9 +50,134 @@ def logerr(msg):
 def loader(config_dict, engine):
     return CC3000(**config_dict['CC3000'])
 
+def config_loader(config_dict):
+    return CC3000Configurator()
+
 class ChecksumMismatch(weewx.WeeWxIOError):
     def __init__(self, a, b):
         weewx.WeeWxIOError.__init__(self, "Checksum mismatch: 0x%04x != 0x%04x" % (a,b))
+
+
+class CC3000Configurator(weewx.abstractstation.DeviceConfigurator):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def add_options(self, parser):
+        parser.add_option("--set-units", dest="units", metavar="UNITS",
+                          help="set units to METRIC or ENGLISH")
+        parser.add_option("--config", dest="config", action="store_true",
+                          help="display weather station configuration")
+        parser.add_option("--current", dest="current", action="store_true",
+                          help="display current weather readings")
+        parser.add_option("--history", dest="nrecords", type=int, metavar="N",
+                          help="display N records (0 for all records)")
+        parser.add_option("--history-since", dest="nminutes",
+                          type=int, metavar="N",
+                          help="display records since N minutes ago")
+        parser.add_option("--clear-memory", dest="clear", action="store_true",
+                          help="clear station memory")
+        parser.add_option("--set-clock", dest="clock", action="store_true",
+                          help="set station clock to computer time")
+        parser.add_option("--set-interval", dest="interval",
+                          type=int, metavar="N",
+                          help="set logging interval to N minutes")
+
+    def do_config(self, options, config_dict):
+        self.station = weewx.drivers.cc3000.CC3000(**config_dict['CC3000'])
+        prompt = False if options.noprompt else True
+        if options.nrecords is not None:
+            self.show_history(options.nrecords)
+        elif options.current:
+            self.show_current()
+        elif options.clock:
+            self.set_clock(prompt)
+        elif options.interval is not None:
+            self.set_interval(options.interval, prompt)
+        elif options.units is not None:
+            self.set_units(options.units, prompt)
+        elif options.clear:
+            self.clear_memory(prompt)
+        else:
+            self.show_config()
+        self.station.closePort()
+
+    def show_config(self):
+        """Query the station then display the settings."""
+        print "firmware: ", self.station.get_version()
+        print "time: ", self.station.get_time()
+        print "units: ", self.station.get_units()
+        print "memory: ", self.station.get_status()
+        print "interval: ", self.station.get_interval()
+
+    def show_history(self, nrecords=0):
+        for r in self.station.get_records(nrecords):
+            print r
+
+    def show_current(self):
+        print self.station.get_current()
+
+    def clear_memory(self, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            print self.station.get_status()
+            if prompt:
+                ans = raw_input("Clear console memory (y/n)? ")
+            else:
+                print 'Clearing console memory'
+                ans = 'y'
+            if ans == 'y' :
+                self.station.clear_memory()
+                print self.station.get_status()
+            elif ans == 'n':
+                print "Clear memory cancelled."
+
+    def set_interval(self, interval, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Interval is", self.station.get_interval()
+            if prompt:
+                ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
+            else:
+                print "Setting interval to %d minutes" % interval
+                ans = 'y'
+            if ans == 'y' :
+                self.station.set_interval(interval)
+                print "Interval is now", self.station.get_interval()
+            elif ans == 'n':
+                print "Set interval cancelled."
+
+    def set_clock(self, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Station clock is", self.station.get_time()
+            now = datetime.datetime.now()
+            if prompt:
+                ans = raw_input("Set station clock to %s (y/n)? " % now)
+            else:
+                print "Setting station clock to %s" % now
+                ans = 'y'
+            if ans == 'y' :
+                self.station.set_clock()
+                print "Station clock is now", self.station.get_time()
+            elif ans == 'n':
+                print "Set clock cancelled."
+
+    def set_units(self, units, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Station units is", self.station.get_units()
+            if prompt:
+                ans = raw_input("Set station units to %s (y/n)? " % units)
+            else:
+                print "Setting station units to %s" % units
+                ans = 'y'
+            if ans == 'y' :
+                self.station.set_units(units)
+                print "Station units is now", self.station.get_units()
+            elif ans == 'n':
+                print "Set units cancelled."
+
 
 class CC3000(weewx.abstractstation.AbstractStation):
     '''weewx driver that communicates with a RainWise CC3000 data logger.'''
