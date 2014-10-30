@@ -35,7 +35,7 @@ class FactoryBinder(object):
     """Binds a DBFactory and an end time together.
     
     This class sits on the top of chain of helper classes that enable
-    syntax such as $db($binding='wx_binding').month.rain.sum in the Cheetah templates.""" 
+    syntax such as $db($data_binding='wx_binding').month.rain.sum in the Cheetah templates.""" 
 
     def __init__(self, dbfactory, endtime_ts,
                  formatter=weewx.units.Formatter(), converter=weewx.units.Converter(), **option_dict):
@@ -46,8 +46,8 @@ class FactoryBinder(object):
         self.converter   = converter
         self.option_dict = option_dict
         
-    def db(self, binding=None):
-        opendb = self.dbfactory.get_database(binding)
+    def db(self, data_binding=None):
+        opendb = self.dbfactory.get_database(data_binding)
         return DatabaseBinder(opendb, self.endtime_ts, self.formatter, self.converter, **self.option_dict)
     
     def __getattr__(self, attr):

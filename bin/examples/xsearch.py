@@ -53,7 +53,7 @@ class MyXSearch(SearchList):                                           # 1
                           hold the start and stop times of the domain of 
                           valid times.
 
-          archivedb: An instance of weewx.database.DBManager
+          archivedb: An instance of weewx.manager.DBManager
           
           statsdb:   An instance of weewx.stats.StatsDb
         """

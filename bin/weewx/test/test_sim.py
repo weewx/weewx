@@ -20,7 +20,7 @@ import configobj
 
 import weedb
 import weeutil.weeutil
-import weewx.database
+import weewx.manager
 import weewx.drivers.simulator
 import weewx.engine
 
@@ -59,12 +59,12 @@ class Common(unittest.TestCase):
 
         # Simulator assumes the weather database binding is 'wx_binding'. So copy
         # over the binding we want to use to wx_binding
-        self.config_dict['Bindings']['wx_binding'] = self.config_dict['Bindings'][self.binding]
+        self.config_dict['DataBindings']['wx_binding'] = self.config_dict['DataBindings'][self.binding]
         
         (first_ts, last_ts) = _get_first_last(self.config_dict)
 
         try:
-            with weewx.database.open_database(self.config_dict, binding=self.binding) as dbmanager:
+            with weewx.manager.open_database(self.config_dict, data_binding=self.binding) as dbmanager:
                 if dbmanager.firstGoodStamp() == first_ts and dbmanager.lastGoodStamp() == last_ts:
                     print "\nSimulator need not be run"
                     return 
@@ -86,7 +86,7 @@ class Common(unittest.TestCase):
 
         global test_types
         archive_interval = self.config_dict['StdArchive'].as_int('archive_interval')
-        with weewx.database.open_database(self.config_dict, binding=self.binding) as archive:
+        with weewx.manager.open_database(self.config_dict, data_binding=self.binding) as archive:
             for record in archive.genBatchRecords():
                 start_ts = record['dateTime'] - archive_interval
                 # Calculate the average (throw away min and max):

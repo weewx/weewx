@@ -14,8 +14,8 @@ import unittest
 
 import weedb
 
-sqlite_db_dict = {'database': '/tmp/test.sdb', 'driver':'weedb.sqlite', 'timeout': '2'}
-mysql_db_dict  = {'database': 'test', 'user':'weewx', 'password':'weewx', 'driver':'weedb.mysql'}
+sqlite_db_dict = {'database_name': '/tmp/test.sdb', 'driver':'weedb.sqlite', 'timeout': '2'}
+mysql_db_dict  = {'database_name': 'test', 'user':'weewx', 'password':'weewx', 'driver':'weedb.mysql'}
 
 # Schema summary:
 # (col_number, col_name, col_type, can_be_null, default_value, part_of_primary)

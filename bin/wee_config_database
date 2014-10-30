@@ -17,7 +17,7 @@ import sys
 
 import user.extensions      #@UnusedImport
 import weedb
-import weewx.archive
+import weewx.manager
 import weewx.units
 import weeutil.weeutil
 
@@ -96,11 +96,11 @@ def createMainDatabase(config_dict, db_binding, database_name):
     # Try a simple open. If it succeeds, that means the database
     # exists and is initialized. Otherwise, an exception will be thrown.
     try:
-        with weewx.archive.open_database(config_dict, db_binding):
+        with weewx.manager.open_database(config_dict, db_binding):
             print "Database '%s' already exists. Nothing done." % (database_name,)
     except weedb.OperationalError:
         # Database does not exist. Try again, but allow initialization:
-        with weewx.archive.open_database(config_dict, db_binding, initialize=True):
+        with weewx.manager.open_database(config_dict, db_binding, initialize=True):
             print "Created database '%s'" % (database_name,)
 
 def dropDaily(config_dict, db_binding, database_name):
@@ -114,7 +114,7 @@ def dropDaily(config_dict, db_binding, database_name):
             
             print "Dropping daily summary tables from '%s' ... " % database_name
             try:
-                with weewx.archive.open_database(config_dict, db_binding) as archive:
+                with weewx.manager.open_database(config_dict, db_binding) as archive:
                     try:
                         archive.drop_daily()
                     except weedb.OperationalError, e:
@@ -132,7 +132,7 @@ def backfillDaily(config_dict, db_binding, database_name):
 
     # Open up the archive. This will create the tables necessary for the daily summaries if they
     # don't already exist:
-    with weewx.archive.open_database(config_dict, db_binding, initialize=True)as archive:
+    with weewx.manager.open_database(config_dict, db_binding, initialize=True)as archive:
         nrecs = archive.backfill_day_summary()
 
     print "Backfilled daily summaries in database '%s', using %d records" % (database_name, nrecs)
@@ -163,7 +163,7 @@ def reconfigMainDatabase(config_dict, db_binding, database_name):
                 return
 
     # Get the unit system of the old archive:
-    with weewx.archive.Archive.open(old_database_dict) as old_archive:
+    with weewx.manager.DBManager.open(old_database_dict) as old_archive:
         old_unit_system = old_archive.std_unit_system
     
     # Get the unit system of the new archive:
@@ -185,7 +185,7 @@ def reconfigMainDatabase(config_dict, db_binding, database_name):
                                                                                         weewx.units.unit_nicknames[target_unit_system])
         ans = raw_input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
-            weewx.archive.reconfig(old_database_dict, new_database_dict, target_unit_system)
+            weewx.manager.reconfig(old_database_dict, new_database_dict, target_unit_system)
             print "Done."
         elif ans == 'n':
             print "Nothing done."
@@ -195,7 +195,7 @@ def string_check(config_dict, db_binding, database_name, fix=False):
     print "Checking archive database for strings..."
 
     # Open up the main database archive
-    with weewx.archive.open_database(config_dict, db_binding) as archive:
+    with weewx.manager.open_database(config_dict, db_binding) as archive:
         
         obs_pytype_list = []
         obs_list = []

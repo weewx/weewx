@@ -20,7 +20,7 @@ import daemon
 # weewx imports:
 import weedb
 import weewx.accum
-import weewx.database
+import weewx.manager
 import weewx.station
 import weewx.reportengine
 import weeutil.weeutil
@@ -101,7 +101,7 @@ class StdEngine(object):
     def preLoadServices(self, config_dict):
         
         self.stn_info = weewx.station.StationInfo(self.console, **config_dict['Station'])
-        self.dbbinder = weewx.database.DBBinder(config_dict)
+        self.dbbinder = weewx.manager.DBBinder(config_dict)
         
     def loadServices(self, config_dict):
         """Set up the services to be run."""

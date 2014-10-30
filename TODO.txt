@@ -2,7 +2,19 @@
               
 Each driver should be responsible for installing its own stanza in the configuration file.
 
-Each driver should be responsible for its configuration, invoked by wee_config.
+- push the wee_config_xxx code into each driver.  make wee_config simply
+  a stub that invokes code from the driver.  since it requires weewx.conf,
+  it will know what type of device it is using.  perhaps define a Config
+  class in the driver that implements the methods and defines the options
+  for wee_config as applied to that hardware.  if no class/methods, then
+  wee_config reports nothing defined, and fails gracefully.  (i'm tired
+  of having to maintain hardware-specific code in two different places)
+
+- make wee_config_xxx options consistent across hardware.  provide mechanism
+  for hardware to specify additional options as appropriate (e.g., --pair)
+
+- that leaves us with only these executables:
+    wee_config_database, wee_config_hardware, wee_reports, weewxd
 
 Include version number in archive database metadata.
 
@@ -19,50 +31,12 @@ Move schemas to the extension that uses them.
 Clean up names. dbm? db? archive? database? Why DBBinder.get_binding, 
 but weewx.database.open_database?
 
-should the schema (and optionally table?) be specified in the databases
-section instead of the binding section?  for example:
-
-[Bindings]
-    [[wx_binding]]
-        bind_to = wx_sqlite
-        manager = weewx.wxdaily.WXDaySummary
-
-[Databases]
-    [[wx_sqlite]]
-        root = %(WEEWX_ROOT)s
-        database = archive/weewx.sdb
-        schema = schemas.wview.schema
-        driver = weedb.sqlite
-
-is there some way we could put the table name in the schema?
-
-
-name changes and refactoring to consider:
-
-- weewx.engine.StdEngine -> remove wx-specific stuff
-- add weewx.wxengine.WXEngine
-- weewx.abstractstation.AbstractStation -> weewx.device.Device
-- weewx.station.StationInfo -> weewx.wxstation.WXStationInfo
-- weewx.station.Station -> weewx.wxstation.WXStation
-- weewx.restx -> weewx.restful
+Promote [[WXEngine]] options in weewx.conf to [Engine]
 
 - move TestAccum out of engine.py, put it in a test subdirectory
 
-- elminate units.getAltitudeM and units.getAltitudeFt
+- eliminate units.getAltitudeM and units.getAltitudeFt
 
-- push the wee_config_xxx code into each driver.  make wee_config simply
-  a stub that invokes code from the driver.  since it requires weewx.conf,
-  it will know what type of device it is using.  perhaps define a Config
-  class in the driver that implements the methods and defines the options
-  for wee_config as applied to that hardware.  if no class/methods, then
-  wee_config reports nothing defined, and fails gracefully.  (i'm tired
-  of having to maintain hardware-specific code in two different places)
-
-- make wee_config_xxx options consistent across hardware.  provide mechanism
-  for hardware to specify additional options as appropriate (e.g., --pair)
-
-- that leaves us with only these executables:
-    wee_config_database, wee_config_hardware, wee_reports, weewxd
 
 
 --------------------  Nice to do someday  --------------------------- 

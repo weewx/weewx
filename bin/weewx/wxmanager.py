@@ -12,13 +12,13 @@
 
 import weeutil.weeutil
 import weewx.wxformulas
-import weewx.daily
+import weewx.manager
 
 #===============================================================================
-#                        Class weewx.wxdaily.DaySummaryArchive
+#                        Class weewx.wxmanager.DaySummaryManager
 #===============================================================================
 
-class WXDaySummaryArchive(weewx.daily.DaySummaryArchive):
+class WXDaySummaryManager(weewx.manager.DaySummaryManager):
     """Daily summaries, suitable for WX applications.
 
     Like a regular daily summary database, except it understands wind, and heating- and cooling-degree days."""
@@ -37,10 +37,10 @@ class WXDaySummaryArchive(weewx.daily.DaySummaryArchive):
     def _initialize_day_tables(self, archiveSchema, cursor):
         """Specializing version that adds schema for wind data."""
         # First initialize my superclass:
-        weewx.daily.DaySummaryArchive._initialize_day_tables(self, archiveSchema, cursor)
+        weewx.manager.DaySummaryManager._initialize_day_tables(self, archiveSchema, cursor)
         
         # Now initialize the WX specific tables
-        cursor.execute(WXDaySummaryArchive.wx_sql_create_str % self.table_name)
+        cursor.execute(WXDaySummaryManager.wx_sql_create_str % self.table_name)
         
     def getAggregate(self, timespan, obs_type, aggregateType, **option_dict):
         """Specialized version of getAggregate that can calculate heating or cooling degree days.
@@ -62,7 +62,7 @@ class WXDaySummaryArchive(weewx.daily.DaySummaryArchive):
         # Check to see whether heating or cooling degree days are being asked for:
         if obs_type not in ['heatdeg', 'cooldeg']:
             # No. Use my superclass's version:
-            return weewx.daily.DaySummaryArchive.getAggregate(self, timespan, obs_type, aggregateType, **option_dict)
+            return weewx.manager.DaySummaryManager.getAggregate(self, timespan, obs_type, aggregateType, **option_dict)
 
         # Only summation (total) or average heating or cooling degree days is supported:
         if aggregateType not in ['sum', 'avg']:
@@ -73,14 +73,14 @@ class WXDaySummaryArchive(weewx.daily.DaySummaryArchive):
         dd_dict = units_dict.get('DegreeDays', {})
         heatbase = dd_dict.get('heating_base', None)
         coolbase = dd_dict.get('cooling_base', None)
-        heatbase_t = (float(heatbase[0]), heatbase[1], "group_temperature") if heatbase else WXDaySummaryArchive.default_heatbase
-        coolbase_t = (float(coolbase[0]), coolbase[1], "group_temperature") if coolbase else WXDaySummaryArchive.default_coolbase
+        heatbase_t = (float(heatbase[0]), heatbase[1], "group_temperature") if heatbase else WXDaySummaryManager.default_heatbase
+        coolbase_t = (float(coolbase[0]), coolbase[1], "group_temperature") if coolbase else WXDaySummaryManager.default_coolbase
 
         _sum = 0.0
         _count = 0
         for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
             # Get the average temperature for the day as a value tuple:
-            Tavg_t = weewx.daily.DaySummaryArchive.getAggregate(self, daySpan, 'outTemp', 'avg')
+            Tavg_t = weewx.manager.DaySummaryManager.getAggregate(self, daySpan, 'outTemp', 'avg')
             # Make sure it's valid before including it in the aggregation:
             if Tavg_t is not None and Tavg_t[0] is not None:
                 if obs_type == 'heatdeg':
@@ -172,7 +172,7 @@ if __name__ == '__main__':
 #                    'driver':'weedb.mysql'}
 
     import schemas.wview
-    db = WXDaySummaryArchive.open_with_create(archive_db_dict, schemas.wview.schema)
+    db = WXDaySummaryManager.open_with_create(archive_db_dict, schemas.wview.schema)
     print "Database name is", db.database
     print db.obskeys
     print db.daykeys

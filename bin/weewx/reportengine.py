@@ -27,7 +27,7 @@ import configobj
 # Weewx imports:
 import weeutil.weeutil
 from weeutil.weeutil import to_bool
-import weewx.database
+import weewx.manager
 
 #===============================================================================
 #                    Class StdReportEngine
@@ -106,7 +106,7 @@ class StdReportEngine(threading.Thread):
                 continue
 
             # Add the default database binding:
-            skin_dict['binding'] = 'wx_binding'
+            skin_dict['data_binding'] = 'wx_binding'
 
             # Inject any overrides the user may have specified in the
             # weewx.conf configuration file for all reports:
@@ -164,7 +164,7 @@ class ReportGenerator(object):
         self.gen_ts      = gen_ts
         self.first_run   = first_run
         self.stn_info    = stn_info
-        self.db_binder   = weewx.database.DBBinder(self.config_dict)
+        self.db_binder   = weewx.manager.DBBinder(self.config_dict)
         
     def start(self):
         self.run()

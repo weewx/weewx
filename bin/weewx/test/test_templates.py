@@ -81,7 +81,7 @@ class Common(unittest.TestCase):
         t.config_dict['StdReport']['SKIN_ROOT'] = os.path.join(test_dir, 'test_skins')
         
         # Have the binding point to whatever database is in use:
-        t.config_dict['StdReport']['binding'] = self.binding
+        t.config_dict['StdReport']['data_binding'] = self.binding
 
         # Although the report engine inherits from Thread, we can just run it in the main thread:
         print "Starting report engine test"

@@ -20,7 +20,7 @@ import time
 
 import schemas.wview
 import weedb
-import weewx.database
+import weewx.manager
 
 # One year of data:
 start_tt = (2010,1,1,0,0,0,0,0,-1)
@@ -51,7 +51,7 @@ def configDatabases(config_dict, binding):
 
     # Check to see if it already exists and is configured correctly.
     try:
-        with weewx.database.open_database(config_dict, binding)  as archive:
+        with weewx.manager.open_database(config_dict, binding)  as archive:
             if archive.firstGoodStamp() == start_ts and archive.lastGoodStamp() == stop_ts:
                 # Database already exists. We're done.
                 return
@@ -60,7 +60,7 @@ def configDatabases(config_dict, binding):
         
     # Delete anything that might already be there.
     try:
-        weewx.database.drop_database(config_dict, binding)
+        weewx.manager.drop_database(config_dict, binding)
     except weedb.DatabaseError:
         pass
     
@@ -70,9 +70,9 @@ def configDatabases(config_dict, binding):
     # First, we need to modify the configuration dictionary that was passed in
     # so it uses the DBManager, instead of the daily summary manager
     monkey_dict = config_dict.dict()
-    monkey_dict['Bindings'][binding]['manager'] = 'weewx.database.DBManager'
+    monkey_dict['DataBindings'][binding]['manager'] = 'weewx.manager.DBManager'
 
-    with weewx.database.open_database(monkey_dict, binding, initialize=True) as archive:
+    with weewx.manager.open_database(monkey_dict, binding, initialize=True) as archive:
         
         # Because this can generate voluminous log information,
         # suppress all but the essentials:
@@ -84,7 +84,7 @@ def configDatabases(config_dict, binding):
         t2 = time.time()
         print "Time to create synthetic archive database = %6.2fs" % (t2-t1,)
         
-    with weewx.database.open_database(config_dict, binding, initialize=True) as archive:
+    with weewx.manager.open_database(config_dict, binding, initialize=True) as archive:
 
         # Now go back to regular logging:
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
