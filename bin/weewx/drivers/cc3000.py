@@ -23,6 +23,7 @@ catchup on startup.
 # FIXME: support non-fixed interval size
 
 from __future__ import with_statement
+import datetime
 import serial
 import string
 import syslog
