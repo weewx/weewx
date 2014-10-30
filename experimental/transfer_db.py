@@ -9,8 +9,9 @@
 #    $Date$
 #
 """Transfer from sqlite to MySQL database or vv. Adjust parameters as necessary."""
-from weewx.archive import Archive
-from user.schemas import defaultArchiveSchema
+from __future__ import with_statement
+from weewx.manager import Manager
+import schemas.wview
 
 old_archive_dict = {'driver' : 'weedb.sqlite',
                     'database' : '/home/weewx/archive/weewx.sdb'}
@@ -21,8 +22,8 @@ new_archive_dict = {'driver' : 'weedb.mysql',
                     'user'     : 'weewx',
                     'password' : 'weewx'}
 
-with Archive.open(old_archive_dict) as old_archive:
-    with Archive.open_with_create(new_archive_dict, defaultArchiveSchema) as new_archive:
+with Manager.open(old_archive_dict) as old_archive:
+    with Manager.open_with_create(new_archive_dict, schema=schemas.wview.schema) as new_archive:
 
         # This is very fast because it is done in a single transaction context:
         new_archive.addRecord(old_archive.genBatchRecords())

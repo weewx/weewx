@@ -7,7 +7,6 @@
 #    $Author$
 #    $Date$
 #
-
 """Weather-specific database manager."""
 
 import weeutil.weeutil
@@ -15,7 +14,7 @@ import weewx.wxformulas
 import weewx.manager
 
 #===============================================================================
-#                        Class weewx.wxmanager.DaySummaryManager
+#                        Class WXDaySummaryManager
 #===============================================================================
 
 class WXDaySummaryManager(weewx.manager.DaySummaryManager):
@@ -102,78 +101,3 @@ class WXDaySummaryManager(weewx.manager.DaySummaryManager):
         (t, g) = weewx.units.getStandardUnitType(self.std_unit_system, obs_type, aggregateType)
         # Return as a value tuple
         return weewx.units.ValueTuple(_result, t, g)
-
-# #===============================================================================
-# #                        function get_heat_cool
-# #===============================================================================
-# 
-# def get_heat_cool(statsdb, timespan, obs_type, aggregateType, heatbase_t, coolbase_t):
-#     """Calculate heating or cooling degree days for a given timespan.
-#     
-#     timespan: An instance of weeutil.Timespan with the time period over which
-#     aggregation is to be done.
-#     
-#     obs_type: One of 'heatdeg' or 'cooldeg'.
-#     
-#     aggregateType: The type of aggregation to be done. Must be 'sum' or 'avg'.
-#     
-#     heatbase_t, coolbase_t: Value tuples with the heating and cooling degree
-#     day base, respectively.
-#     
-#     returns: A value tuple. First element is the aggregation value,
-#     or None if not enough data was available to calculate it, or if the aggregation
-#     type is unknown. The second element is the unit type (eg, 'degree_F').
-#     Third element is the unit group (always "group_temperature")."""
-#     
-#     # The requested type must be heatdeg or cooldeg
-#     if weewx.debug:
-#         assert(obs_type in ['heatdeg', 'cooldeg'])
-# 
-#     # Only summation (total) or average heating or cooling degree days is supported:
-#     if aggregateType not in ['sum', 'avg']:
-#         raise weewx.ViolatedPrecondition, "Aggregate type %s for %s not supported." % (aggregateType, obs_type)
-# 
-#     _sum = 0.0
-#     _count = 0
-#     for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
-#         # Get the average temperature for the day as a value tuple:
-#         Tavg_t = statsdb.getAggregate(daySpan, 'outTemp', 'avg')
-#         # Make sure it's valid before including it in the aggregation:
-#         if Tavg_t is not None and Tavg_t[0] is not None:
-#             if obs_type == 'heatdeg':
-#                 # Convert average temperature to the same units as heatbase:
-#                 Tavg_target_t = weewx.units.convert(Tavg_t, heatbase_t[1])
-#                 _sum += weewx.wxformulas.heating_degrees(Tavg_target_t[0], heatbase_t[0])
-#             else:
-#                 # Convert average temperature to the same units as coolbase:
-#                 Tavg_target_t = weewx.units.convert(Tavg_t, coolbase_t[1])
-#                 _sum += weewx.wxformulas.cooling_degrees(Tavg_target_t[0], coolbase_t[0])
-#             _count += 1
-# 
-#     if aggregateType == 'sum':
-#         _result = _sum
-#     else:
-#         _result = _sum / _count if _count else None 
-# 
-#     # Look up the unit type and group of the result:
-#     (t, g) = weewx.units.getStandardUnitType(statsdb.std_unit_system, obs_type, aggregateType)
-#     # Return as a value tuple
-#     return weewx.units.ValueTuple(_result, t, g)
-    
-
-if __name__ == '__main__':
-    archive_db_dict = {'root': '/home/weewx',
-                       'database': 'archive/weewx.sdb',
-                       'driver': 'weedb.sqlite'}
-# archive_db_dict = {'host':'localhost',
-#                    'user':'weewx',
-#                    'password' : 'weewx',
-#                    'database':'weewx',
-#                    'driver':'weedb.mysql'}
-
-    import schemas.wview
-    db = WXDaySummaryManager.open_with_create(archive_db_dict, schemas.wview.schema)
-    print "Database name is", db.database
-    print db.obskeys
-    print db.daykeys
-    print db.backfill_day_summary()

@@ -22,24 +22,24 @@ import weeutil.weeutil
 import weedb
 
 #==============================================================================
-#                         class DBManager
+#                         class Manager
 #==============================================================================
 
-class DBManager(object):
-    """Manages a weewx archive file. Offers a number of convenient member
-    functions for querying and inserting data into the archive file. 
+class Manager(object):
+    """Manages a database table. Offers a number of convenient member
+    functions for querying and inserting data into the table. 
     These functions encapsulate whatever sql statements are needed.
     
     USEFUL ATTRIBUTES
     
-    sqlkeys: A list of the SQL keys that the database supports.
+    sqlkeys: A list of the SQL keys that the database table supports.
     
-    obskeys: A list of the observation types that the database supports.
+    obskeys: A list of the observation types that the database table supports.
     
-    std_unit_system: The unit system used by the database."""
+    std_unit_system: The unit system used by the database table."""
     
     def __init__(self, connection, table_name='archive', schema=None):
-        """Initialize an object of type weewx.DBManager.
+        """Initialize an object of type Manager.
         
         connection: A weedb connection to the database to be managed.
         
@@ -76,7 +76,7 @@ class DBManager(object):
 
     @classmethod
     def open(cls, archive_db_dict, table_name='archive'):
-        """Open and return a DBManager or a subclass of DBManager.  
+        """Open and return a Manager or a subclass of Manager.  
         
         archive_db_dict: A database dictionary holding the information necessary
         to open the database.
@@ -94,8 +94,8 @@ class DBManager(object):
         return dbmanager
     
     @classmethod
-    def open_with_create(cls, archive_db_dict, schema, table_name='archive'):
-        """Open and return a DBManager or a subclass of DBManager, initializing
+    def open_with_create(cls, archive_db_dict, table_name='archive', schema=None):
+        """Open and return a Manager or a subclass of Manager, initializing
         if necessary.  
         
         archive_db_dict: A database dictionary holding the information necessary
@@ -161,11 +161,11 @@ class DBManager(object):
             with weedb.Transaction(self.connection) as _cursor:
                 _cursor.execute("CREATE TABLE %s (%s);" % (self.table_name, _sqltypestr, ))
         except weedb.DatabaseError, e:
-            syslog.syslog(syslog.LOG_ERR, "database: Unable to create table '%s' in database '%s': %s" % 
+            syslog.syslog(syslog.LOG_ERR, "manager: Unable to create table '%s' in database '%s': %s" % 
                           (self.table_name, self.database, e))
             raise
     
-        syslog.syslog(syslog.LOG_NOTICE, "database: Created and initialized table '%s' in database '%s'" % 
+        syslog.syslog(syslog.LOG_NOTICE, "manager: Created and initialized table '%s' in database '%s'" % 
                       (self.table_name, self.database))
 
     def lastGoodStamp(self):
@@ -209,8 +209,8 @@ class DBManager(object):
         """Internal function for adding a single record to the database."""
         
         if record['dateTime'] is None:
-            syslog.syslog(syslog.LOG_ERR, "database: archive record with null time encountered")
-            raise weewx.ViolatedPrecondition("DBManager record with null time encountered.")
+            syslog.syslog(syslog.LOG_ERR, "manager: archive record with null time encountered")
+            raise weewx.ViolatedPrecondition("Manager record with null time encountered.")
 
         # Check to make sure the incoming record is in the same unit
         # system as the records already in the database:
@@ -237,11 +237,11 @@ class DBManager(object):
         sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str) 
         try:
             cursor.execute(sql_insert_stmt, value_list)
-            syslog.syslog(log_level, "database: added record %s to database '%s'" % 
+            syslog.syslog(log_level, "manager: added record %s to database '%s'" % 
                           (weeutil.weeutil.timestamp_to_string(record['dateTime']),
                            os.path.basename(self.connection.database)))
         except Exception, e:
-            syslog.syslog(syslog.LOG_ERR, "database: unable to add record %s to database '%s': %s" %
+            syslog.syslog(syslog.LOG_ERR, "manager: unable to add record %s to database '%s': %s" %
                           (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
                            os.path.basename(self.connection.database),
                            e))
@@ -684,11 +684,11 @@ class DBManager(object):
 def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None):
     """Copy over an old archive to a new one, using a provided schema."""
     
-    with DBManager.open(old_db_dict) as old_archive:
+    with Manager.open(old_db_dict) as old_archive:
         if new_schema is None:
             import schemas.wview
             new_schema = schemas.wview.schema
-        with DBManager.open_with_create(new_db_dict, new_schema) as new_archive:
+        with Manager.open_with_create(new_db_dict, schema=new_schema) as new_archive:
 
             # Wrap the input generator in a unit converter.
             record_generator = weewx.units.GenWithConvert(old_archive.genBatchRecords(), new_unit_system)
@@ -725,13 +725,13 @@ class DBBinder(object):
            }"""
            
         self.config_dict = config_dict
-        self.archive_cache = {}
+        self.database_cache = {}
     
     def close(self):
-        for data_binding in self.archive_cache.keys():
+        for data_binding in self.database_cache.keys():
             try:
-                self.archive_cache[data_binding].close()
-                del self.archive_cache[data_binding]
+                self.database_cache[data_binding].close()
+                del self.database_cache[data_binding]
             except Exception:
                 pass
             
@@ -743,9 +743,9 @@ class DBBinder(object):
     
     def get_database(self, data_binding='wx_binding', initialize=False):
         """Given a binding name, returns the managed object"""
-        if data_binding not in self.archive_cache:
-            self.archive_cache[data_binding] = open_database(self.config_dict, data_binding, initialize)
-        return self.archive_cache[data_binding]
+        if data_binding not in self.database_cache:
+            self.database_cache[data_binding] = open_database(self.config_dict, data_binding, initialize)
+        return self.database_cache[data_binding]
 
 #===============================================================================
 #                                 Utilities
@@ -764,6 +764,7 @@ def get_database_config(config_dict, data_binding):
     return (database_manager, database_dict, table_name)
 
 def open_database(config_dict, data_binding, initialize=False):
+    """Given a binding name, returns an open manager object."""
     # Get the database dictionary & manager:
     database_manager, database_dict, table_name = get_database_config(config_dict, data_binding)
     # Get the class object of the manager to be used:
@@ -784,10 +785,10 @@ def drop_database(config_dict, data_binding):
     
 
 #===============================================================================
-#  Adds daily summaries to the database.
+#     Adds daily summaries to the database.
 # 
-#     As new archive data becomes available, it can be added to the
-#     database with method addRecord().
+#     This class specializes method _addSingleRecord so that it adds
+#     the data to a daily summary, as well as the  =regular archive table.
 #     
 #     Note that a date does not include midnight --- that belongs
 #     to the previous day. That is because a data record archives
@@ -851,8 +852,8 @@ sqlDict = {'min'        : "SELECT MIN(min) FROM %(table_name)s_day_%(day_key)s W
 #                        Class DaySummaryManager
 #===============================================================================
 
-class DaySummaryManager(DBManager):
-    """Manage reading from the sqlite3 statistical database. 
+class DaySummaryManager(Manager):
+    """Manage a daily statistical summary. 
     
     The daily summary consists of a separate table for each type. The columns 
     of each table are things like min, max, the timestamps for min and max, 
@@ -860,7 +861,7 @@ class DaySummaryManager(DBManager):
     calculate averages for different time periods.
     
     For example, for type 'outTemp' (outside temperature), there is 
-    a table of name 'day_outTemp' with the following column names:
+    a table of name 'archive_day_outTemp' with the following column names:
     
         dateTime, min, mintime, max, maxtime, sum, count, wsum, sumtime
     
@@ -871,7 +872,7 @@ class DaySummaryManager(DBManager):
     'archive_day__metadata', which currently holds the time of the last update. """
 
     def __init__(self, connection, table_name='archive', schema=None):
-        """Initialize an instance of DaySummarArchive
+        """Initialize an instance of DaySummaryManager
         
         connection: A weedb connection to the database to be managed.
         
@@ -889,14 +890,14 @@ class DaySummaryManager(DBManager):
         # If the database has not been initialized with the daily summaries, then create the
         # necessary tables, but only if a schema has been given.
         if '%s_day__metadata' % self.table_name not in self.connection.tables():
-            # Daily summary tables have not been created yet.
+            # Database has not been initialized with the summaries. Is there a schema?
             if schema is None:
-                # The user has not indicated he wants initialization. Raise an exception
+                # Uninitialized, but no schema was supplied. Raise an exception
                 raise weedb.OperationalError("Uninitialized day summaries")
-            # Create all the daily summary tables as one transaction:
+            # There is a schema. Create all the daily summary tables as one transaction:
             with weedb.Transaction(self.connection) as _cursor:
                 self._initialize_day_tables(schema, _cursor)
-            syslog.syslog(syslog.LOG_NOTICE, "daily: Created daily summary tables")
+            syslog.syslog(syslog.LOG_NOTICE, "manager: Created daily summary tables")
         
         # Get a list of all the observation types which have daily summaries
         all_tables = self.connection.tables()
@@ -927,7 +928,7 @@ class DaySummaryManager(DBManager):
         _day_summary = self._get_day_summary(_sod_ts, cursor)
         _day_summary.addRecord(record)
         self._set_day_summary(_day_summary, record['dateTime'], cursor)
-        syslog.syslog(log_level, "daily:   added %s to daily summary in '%s'" % 
+        syslog.syslog(log_level, "manager:   added %s to daily summary in '%s'" % 
                       (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
                        os.path.basename(self.connection.database)))
         
@@ -1069,7 +1070,7 @@ class DaySummaryManager(DBManager):
         
         returns: The number of records backfilled."""
         
-        syslog.syslog(syslog.LOG_DEBUG, "daily: Backfilling daily summaries.")
+        syslog.syslog(syslog.LOG_DEBUG, "manager: Backfilling daily summaries.")
         t1 = time.time()
         nrecs = 0
         ndays = 0
@@ -1122,10 +1123,10 @@ class DaySummaryManager(DBManager):
         tdiff = t2 - t1
         if nrecs:
             syslog.syslog(syslog.LOG_NOTICE, 
-                          "daily: Processed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
+                          "manager: Processed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
         else:
             syslog.syslog(syslog.LOG_INFO,
-                          "daily: Daily summary up to date.")
+                          "manager: Daily summaries up to date.")
     
         return nrecs
 
@@ -1209,7 +1210,7 @@ class DaySummaryManager(DBManager):
             try:
                 cursor.execute(_sql_replace_str, _write_tuple)
             except weedb.OperationalError, e:
-                syslog.syslog(syslog.LOG_ERR, "daily: Operational error database %s; %s" % (self.manager, e))
+                syslog.syslog(syslog.LOG_ERR, "manager: Operational error database %s; %s" % (self.manager, e))
                 
         # Update the time of the last daily summary update:
         cursor.execute(meta_replace_str % self.table_name, ('lastUpdate', str(int(lastUpdate))))
@@ -1233,13 +1234,3 @@ class DaySummaryManager(DBManager):
                     _cursor.execute("DROP TABLE %s" % _table_name)
 
         del self.daykeys
-
-
-if __name__ == "__main__":
-    import schemas.wview
-    sqlite_dict = {"root": "/home/weewx",
-                   "database": "archive/junk.sdb",
-                   "driver": "weedb.sqlite"}
-                   
-    dbmanager=DaySummaryManager.open_with_create(sqlite_dict, schema=schemas.wview.schema)
-    print dbmanager.lastGoodStamp()

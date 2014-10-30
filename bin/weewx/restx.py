@@ -275,7 +275,7 @@ class RESTThread(threading.Thread):
         # Open up the archive. Use a 'with' statement. This will automatically
         # close the archive in the case of an exception:
         if self.database_dict is not None:
-            manager_cls = weeutil.weeutil._get_object(self.manager) if hasattr(self, 'manager') else weewx.manager.DBManager 
+            manager_cls = weeutil.weeutil._get_object(self.manager) if hasattr(self, 'manager') else weewx.manager.Manager 
             with manager_cls.open(self.database_dict) as _archive:
                 self.run_loop(_archive)
         else:
