@@ -36,4 +36,4 @@ def main():
     device.configure(config_dict)
 
 if __name__=="__main__":
-   main()
+    main()

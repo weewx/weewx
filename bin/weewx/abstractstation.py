@@ -3,6 +3,7 @@
 # See the file LICENSE.txt for your full rights.
 
 """Abstract base class for hardware."""
+import weewx
 
 class AbstractStation(object):
     """Station drivers should inherit from this class."""    
@@ -54,7 +55,7 @@ class DeviceConfigurator(object):
     def configure(self, config_dict):
         parser = self.get_parser()
         self.add_options(parser)
-        (options, args) = parser.parse_args()
+        options, _ = parser.parse_args()
         if options.debug is not None:
             weewx.debug = options.debug
         self.do_config(options, config_dict)

@@ -31,7 +31,6 @@ import time
 
 import weewx
 import weewx.abstractstation
-import weewx.units
 
 DRIVER_VERSION = '0.8'
 DEFAULT_PORT = '/dev/ttyS0'
