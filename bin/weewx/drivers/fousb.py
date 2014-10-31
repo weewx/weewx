@@ -34,6 +34,13 @@
 # cases, data collection continues with no problem.  for example, a brand new
 # WS2080A console reports 44 bf as its magic number, but performs just fine.
 # --mwall 02oct2013
+#
+# fine offset documentation indicates that set_clock should work, but so far
+# it has not worked on any ambient weather WS2080 or WS1090 station i have
+# tried.  it looks like the station clock is set, but at some point the fixed
+# block reverts to the previous clock value.  also unclear is the behavior
+# when the station attempts to sync with radio clock signal from sensor.
+# -- mwall 14feb2013
 
 """Classes and functions for interfacing with FineOffset weather stations.
 
@@ -214,9 +221,10 @@ The WH1080 acknowledges the write with an 8 byte chunk: A5A5 A5A5.
 
 import datetime
 import math
-import time
+import sys
 import syslog
 import threading
+import time
 import usb
 
 import weeutil.weeutil
@@ -225,6 +233,290 @@ import weewx.units
 import weewx.wxformulas
 
 DRIVER_VERSION = '1.7'
+
+
+def stash(slist, s):
+    if s.find('settings') != -1:
+        slist['settings'].append(s)
+    elif s.find('display') != -1:
+        slist['display_settings'].append(s)
+    elif s.find('alarm') != -1:
+        slist['alarm_settings'].append(s)
+    elif s.find('min.') != -1 or s.find('max.') != -1:
+        slist['minmax_values'].append(s)
+    else:
+        slist['values'].append(s)
+    return slist
+
+def fmtparam(label, value):
+    fmt = '%s'
+    if label in datum_display_formats.keys():
+        fmt = datum_display_formats[label]
+    fmt = '%s: ' + fmt
+    return fmt % (label.rjust(30), value)
+
+def getvalues(station, name, value):
+    values = {}
+    if type(value) is tuple:
+        values[name] = station.get_fixed_block(name.split('.'))
+    elif type(value) is dict:
+        for x in value.keys():
+            n = x
+            if len(name) > 0:
+                n = name + '.' + x
+            values.update(getvalues(station, n, value[x]))
+    return values
+
+def raw_dump(date, pos, data):
+    print date,
+    print "%04x" % pos,
+    for item in data:
+        print "%02x" % item,
+    print
+
+def table_dump(date, data, showlabels=False):
+    if showlabels:
+        print '# date time',
+        for key in data.keys():
+            print key,
+        print
+    print date,
+    for key in data.keys():
+        print data[key],
+    print
+
+def config_loader(config_dict):
+    return FOUSBConfigurator()
+
+class FOUSBConfigurator(weewx.abstractstation.DeviceConfigurator):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def add_options(self, parser):
+        super(FOUSBConfigurator, self).add_options(parser)
+        parser.add_option("--info", dest="info", action="store_true",
+                          help="display weather station configuration")
+        parser.add_option("--check-usb", dest="chkusb", action="store_true",
+                          help="test the quality of the USB connection")
+        parser.add_option("--check-fixed-block", dest="chkfb",
+                          action="store_true",
+                          help="monitor the contents of the fixed block")
+        parser.add_option("--fixed-block", dest="showfb", action="store_true",
+                          help="display the contents of the fixed block")
+        parser.add_option("--live", dest="live", action="store_true",
+                          help="display live readings from the station")
+        parser.add_option("--logged", dest="logged", action="store_true",
+                          help="display logged readings from the station")
+        parser.add_option("--history", dest="nrecords", type=int, metavar="N",
+                          help="display N records")
+        parser.add_option("--history-since", dest="recmin",
+                          type=int, metavar="N",
+                          help="display records since N minutes ago")
+        parser.add_option("--clear-memory", dest="clear", action="store_true",
+                          help="clear station memory")
+        parser.add_option("--set-clock", dest="clock", action="store_true",
+                          help="set station clock to computer time")
+        parser.add_option("--set-interval", dest="interval",
+                          type=int, metavar="N",
+                          help="set logging interval to N minutes")
+        parser.add_option("--format", dest="format",
+                          type=str, metavar="FORMAT",
+                          help="format for output, one of raw, table, or dict")
+
+    def do_config(self, options, config_dict, prompt):
+        if options.format is None:
+            options.format = 'table'
+        elif (options.format.lower() != 'raw' and
+              options.format.lower() != 'table' and
+              options.format.lower() != 'dict'):
+            print "Unknown format '%s'.  Known formats include 'raw', 'table', and 'dict'." % options.format
+            exit(1)
+
+        self.station = FineOffsetUSB(**config_dict['FineOffsetUSB'])
+        if options.nrecords is not None:
+            self.show_records(0, options.nrecords, options.format)
+        elif options.recmin is not None:
+            self.show_records(time.time()-options.recmin*60, 0, options.format)
+        elif options.live:
+            self.show_readings(False)
+        elif options.logged:
+            self.show_readings(True)
+        elif options.showfb:
+            self.show_fixedblock()
+        elif options.chkfb:
+            self.check_fixedblock()
+        elif options.chkusb:
+            self.check_usb()
+        elif options.clock:
+            self.set_clock(prompt)
+        elif options.interval is not None:
+            self.set_interval(options.interval, prompt)
+        elif options.clear:
+            self.clear_history(prompt)
+        else:
+            self.show_info()
+        self.station.closePort()
+
+    def show_info(self):
+        """Query the station then display the settings."""
+
+        print "Querying the station..."
+        val = getvalues(self.station, '', fixed_format)
+
+        print 'Fine Offset station settings:'
+        print '%s: %s' % ('local time'.rjust(30),
+                          time.strftime('%Y.%m.%d %H:%M:%S %Z',
+                                        time.localtime()))
+        print '%s: %s' % ('polling mode'.rjust(30), self.station.polling_mode)
+
+        slist = {'values':[], 'minmax_values':[], 'settings':[],
+                 'display_settings':[], 'alarm_settings':[]}
+        for x in sorted(val.keys()):
+            if type(val[x]) is dict:
+                for y in val[x].keys():
+                    label = x + '.' + y
+                    s = fmtparam(label, val[x][y])
+                    slist = stash(slist, s)
+            else:
+                s = fmtparam(x, val[x])
+                slist = stash(slist, s)
+        for k in ('values', 'minmax_values', 'settings',
+                  'display_settings', 'alarm_settings'):
+            print ''
+            for s in slist[k]:
+                print s
+
+    def check_usb(self):
+        """Run diagnostics on the USB connection."""
+        print "This will read from the station console repeatedly to see if"
+        print "there are errors in the USB communications.  Leave this running"
+        print "for an hour or two to see if any bad reads are encountered."
+        print "Bad reads will be reported in the system log.  A few bad reads"
+        print "per hour is usually acceptable."
+        ptr = data_start
+        total_count = 0
+        bad_count = 0
+        while True:
+            if total_count % 1000 == 0:
+                active = self.station.current_pos()
+            while True:
+                ptr += 0x20
+                if ptr >= 0x10000:
+                    ptr = data_start
+                if active < ptr - 0x10 or active >= ptr + 0x20:
+                    break
+            result_1 = self.station._read_block(ptr, retry=False)
+            result_2 = self.station._read_block(ptr, retry=False)
+            if result_1 != result_2:
+                syslog.syslog(syslog.LOG_INFO, 'read_block change %06x' % ptr)
+                syslog.syslog(syslog.LOG_INFO, '  %s' % str(result_1))
+                syslog.syslog(syslog.LOG_INFO, '  %s' % str(result_2))
+                bad_count += 1
+            total_count += 1
+            print "\rbad/total: %d/%d " % (bad_count, total_count),
+            sys.stdout.flush()
+
+    def check_fixedblock(self):
+        """Display changes to fixed block as they occur."""
+        print 'This will read the fixed block then display changes as they'
+        print 'occur.  Typically the most common change is the incrementing'
+        print 'of the data pointer, which happens whenever readings are saved'
+        print 'to the station memory.  For example, if the logging interval'
+        print 'is set to 5 minutes, the fixed block should change at least'
+        print 'every 5 minutes.'
+        raw_fixed = self.station.get_raw_fixed_block()
+        while True:
+            new_fixed = self.station.get_raw_fixed_block(unbuffered=True)
+            for ptr in range(len(new_fixed)):
+                if new_fixed[ptr] != raw_fixed[ptr]:
+                    print datetime.datetime.now().strftime('%H:%M:%S'),
+                    print ' %04x (%d) %02x -> %02x' % (
+                        ptr, ptr, raw_fixed[ptr], new_fixed[ptr])
+                    raw_fixed = new_fixed
+                    time.sleep(0.5)
+
+    def show_fixedblock(self):
+        """Display the raw fixed block contents."""
+        fb = self.station.get_raw_fixed_block(unbuffered=True)
+        for i, ptr in enumerate(range(len(fb))):
+            print '%02x' % fb[ptr],
+            if (i+1) % 16 == 0:
+                print
+
+    def show_records(self, ts=0, count=0, fmt='raw'):
+        """Display the indicated number of records or the records since the 
+        specified timestamp (local time, in seconds)"""
+        records = self.station.get_records(since_ts=ts, num_rec=count)
+        for i,r in enumerate(records):
+            if fmt.lower() == 'raw':
+                raw_dump(r['datetime'], r['ptr'], r['raw_data'])
+            elif fmt.lower() == 'table':
+                table_dump(r['datetime'], r['data'], i==0)
+            else:
+                print r['datetime'], r['data']
+
+    def show_readings(self, logged_only):
+        """Display live readings from the station."""
+        for data,ptr,_ in self.station.live_data(logged_only):
+            print '%04x' % ptr,
+            print data['idx'].strftime('%H:%M:%S'),
+            del data['idx']
+            print data
+
+    def clear_history(self, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            v = self.station.get_fixed_block(['data_count'], True)
+            print "Records in memory:", v
+            if prompt:
+                ans = raw_input("Clear console memory (y/n)? ")
+            else:
+                print 'Clearing console memory'
+                ans = 'y'
+            if ans == 'y' :
+                self.station.clear_history()
+                v = self.station.get_fixed_block(['data_count'], True)
+                print "Records in memory:", v
+            elif ans == 'n':
+                print "Clear memory cancelled."
+
+    def set_interval(self, interval, prompt):
+        v = self.station.get_fixed_block(['read_period'], True)
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Interval is", v
+            if prompt:
+                ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
+            else:
+                print "Setting interval to %d minutes" % interval
+                ans = 'y'
+            if ans == 'y' :
+                self.station.set_read_period(interval)
+                v = self.station.get_fixed_block(['read_period'], True)
+                print "Interval is now", v
+            elif ans == 'n':
+                print "Set interval cancelled."
+
+    def set_clock(self, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            v = self.station.get_fixed_block(['date_time'], True)
+            print "Station clock is", v
+            now = datetime.datetime.now()
+            if prompt:
+                ans = raw_input("Set station clock to %s (y/n)? " % now)
+            else:
+                print "Setting station clock to %s" % now
+                ans = 'y'
+            if ans == 'y' :
+                self.station.set_clock()
+                v = self.station.get_fixed_block(['date_time'], True)
+                print "Station clock is now", v
+            elif ans == 'n':
+                print "Set clock cancelled."
+
+
 
 def loader(config_dict, engine):
     return FineOffsetUSB(**config_dict['FineOffsetUSB'])
