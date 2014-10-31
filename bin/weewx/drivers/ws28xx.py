@@ -924,6 +924,7 @@ Step 8. Go to step 1 to wait for state 0xde16 again.
 from datetime import datetime
 
 import StringIO
+import sys
 import syslog
 import threading
 import time
@@ -1002,9 +1003,9 @@ def get_next_index(idx):
 
 def get_index(idx):
     if idx < 0:
-        return idx + WS28xx.max_records
-    elif idx >= WS28xx.max_records:
-        return idx - WS28xx.max_records
+        return idx + WS28xxDriver.max_records
+    elif idx >= WS28xxDriver.max_records:
+        return idx - WS28xxDriver.max_records
     return idx
 
 def tstr_to_ts(tstr):
@@ -1021,10 +1022,200 @@ def addr_to_index(addr):
 def index_to_addr(idx):
     return 18 * idx + 416
 
-def loader(config_dict, engine):
-    return WS28xx(**config_dict['WS28xx'])
 
-class WS28xx(weewx.abstractstation.AbstractStation):
+def print_dict(data):
+    for x in sorted(data.keys()):
+        if x == 'dateTime':
+            print '%s: %s' % (x, weeutil.weeutil.timestamp_to_string(data[x]))
+        else:
+            print '%s: %s' % (x, data[x])
+
+
+def config_loader(config_dict):
+    return WS28xxConfigurator()
+
+class WS28xxConfigurator(weewx.abstractstation.DeviceConfigurator):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def add_options(self, parser):
+        super(WS28xxConfigurator, self).add_options(parser)
+        parser.add_option("--check-transceiver", dest="check",
+                          action="store_true",
+                          help="check USB transceiver")
+        parser.add_option("--pair", dest="pair", action="store_true",
+                          help="pair the USB transceiver with station console")
+        parser.add_option("--info", dest="info", action="store_true",
+                          help="display weather station configuration")
+        parser.add_option("--set-interval", dest="interval",
+                          type=int, metavar="N",
+                          help="set logging interval to N minutes")
+        parser.add_option("--current", dest="current", action="store_true",
+                          help="get the current weather conditions")
+        parser.add_option("--history", dest="nrecords", type=int, metavar="N",
+                          help="display N history records")
+        parser.add_option("--history-since", dest="recmin",
+                          type=int, metavar="N",
+                          help="display history records since N minutes ago")
+        parser.add_option("--maxtries", dest="maxtries", type=int,
+                          help="maximum number of retries, 0 indicates no max")
+
+    def do_config(self, options, config_dict, prompt):
+        maxtries = 3 if options.maxtries is None else int(options.maxtries)
+        self.station = WS28xxDriver(**config_dict['WS28xx'])
+        if options.check:
+            self.check_transceiver(maxtries)
+        elif options.pair:
+            self.pair(maxtries)
+        elif options.interval is not None:
+            self.set_interval(maxtries, options.interval, prompt)
+        elif options.current:
+            self.show_current(maxtries)
+        elif options.nrecords is not None:
+            self.show_history(maxtries, count=options.nrecords)
+        elif options.recmin is not None:
+            ts = int(time.time()) - options.recmin * 60
+            self.show_history(maxtries, ts=ts)
+        else:
+            self.show_info(maxtries)
+        self.station.closePort()
+
+    def check_transceiver(self, maxtries):
+        """See if the transceiver is installed and operational."""
+        print 'Checking for transceiver...'
+        ntries = 0
+        while ntries < maxtries:
+            ntries += 1
+            if self.station.transceiver_is_present():
+                print 'Transceiver is present'
+                sn = self.station.get_transceiver_serial()
+                print 'serial: %s' %  sn
+                tid = self.station.get_transceiver_id()
+                print 'id: %d (0x%04x)' % (tid, tid)
+                break
+            print 'Not found (attempt %d of %d) ...' % (ntries, maxtries)
+            time.sleep(5)
+        else:
+            print 'Transceiver not responding.'
+
+    def pair(self, maxtries):
+        """Pair the transceiver with the station console."""
+        print 'Pairing transceiver with console...'
+        maxwait = 90 # how long to wait between button presses, in seconds
+        ntries = 0
+        while ntries < maxtries or maxtries == 0:
+            if self.station.transceiver_is_paired():
+                print 'Transceiver is paired to console'
+                break
+            ntries += 1
+            msg = 'Press and hold the [v] key until "PC" appears'
+            if maxtries > 0:
+                msg += ' (attempt %d of %d)' % (ntries, maxtries)
+            else:
+                msg += ' (attempt %d)' % ntries
+            print msg
+            now = start_ts = int(time.time())
+            while (now - start_ts < maxwait and
+                   not self.station.transceiver_is_paired()):
+                time.sleep(5)
+                now = int(time.time())
+        else:
+            print 'Transceiver not paired to console.'
+
+    def get_interval(self, maxtries):
+        cfg = self.get_config(maxtries)
+        if cfg is None:
+            return None
+        return weewx.drivers.ws28xx.getHistoryInterval(cfg['history_interval'])
+
+    def get_config(self, maxtries):
+        start_ts = None
+        ntries = 0
+        while ntries < maxtries or maxtries == 0:
+            cfg = self.station.get_config()
+            if cfg is not None:
+                return cfg
+            ntries += 1
+            if start_ts is None:
+                start_ts = int(time.time())
+            else:
+                dur = int(time.time()) - start_ts
+                print 'No data after %d seconds (press SET to sync)' % dur
+            time.sleep(30)
+        return None
+
+    def set_interval(self, maxtries, interval, prompt):
+        """Set the station archive interval"""
+        print "This feature is not yet implemented"
+
+    def info(self, maxtries):
+        """Query the station then display the settings."""
+        print 'Querying the station for the configuration...'
+        cfg = self.get_config(maxtries)
+        if cfg is not None:
+            print_dict(cfg)
+
+    def current(self, maxtries):
+        """Get current weather observation."""
+        print 'Querying the station for current weather data...'
+        start_ts = None
+        ntries = 0
+        while ntries < maxtries or maxtries == 0:
+            packet = self.station.get_observation()
+            if packet is not None:
+                print_dict(packet)
+                break
+            ntries += 1
+            if start_ts is None:
+                start_ts = int(time.time())
+            else:
+                dur = int(time.time()) - start_ts
+                print 'No data after %d seconds (press SET to sync)' % dur
+            time.sleep(30)
+
+    def history(self, maxtries, ts=0, count=0):
+        """Display the indicated number of records or the records since the 
+        specified timestamp (local time, in seconds)"""
+        print "Querying the station for historical records..."
+        ntries = 0
+        last_n = n = nrem = None
+        last_ts = now = int(time.time())
+        self.station.start_caching_history(since_ts=ts, num_rec=count)
+        while nrem is None or nrem > 0:
+            if ntries >= maxtries:
+                print 'Giving up after %d tries' % ntries
+                break
+            time.sleep(30)
+            ntries += 1
+            now = int(time.time())
+            n = self.station.get_num_history_scanned()
+            if n == last_n:
+                dur = now - last_ts
+                print 'No data after %d seconds (press SET to sync)' % dur
+            else:
+                ntries = 0
+                last_ts = now
+            last_n = n
+            nrem = self.station.get_uncached_history_count()
+            ni = self.station.get_next_history_index()
+            li = self.station.get_latest_history_index()
+            msg = "  scanned %s records: current=%s latest=%s remaining=%s\r" % (n, ni, li, nrem)
+            sys.stdout.write(msg)
+            sys.stdout.flush()
+        self.station.stop_caching_history()
+        records = self.station.get_history_cache_records()
+        self.station.clear_history_cache()
+        print
+        print 'Found %d records' % len(records)
+        for r in records:
+            print r
+
+
+def loader(config_dict, engine):
+    return WS28xxDriver(**config_dict['WS28xx'])
+
+class WS28xxDriver(weewx.abstractstation.AbstractStation):
     """Driver for LaCrosse WS28xx stations."""
 
     max_records = 1797
@@ -3367,7 +3558,7 @@ class CCommunicationService(object):
                 hidx = self.history_cache.next_index
             elif self.DataStore.getLastHistoryIndex() is not None:
                 hidx = self.DataStore.getLastHistoryIndex()
-        if hidx is None or hidx < 0 or hidx >= WS28xx.max_records:
+        if hidx is None or hidx < 0 or hidx >= WS28xxDriver.max_records:
             haddr = 0xffffff
         else:
             haddr = index_to_addr(hidx)
@@ -3822,8 +4013,8 @@ class CCommunicationService(object):
     def startCachingHistory(self, since_ts=0, num_rec=0):
         self.history_cache.clear_records()
         self.history_cache.since_ts = since_ts
-        if num_rec > WS28xx.max_records - 2:
-            num_rec = WS28xx.max_records - 2
+        if num_rec > WS28xxDriver.max_records - 2:
+            num_rec = WS28xxDriver.max_records - 2
         self.history_cache.num_rec = num_rec
         self.command = EAction.aGetHistory
 

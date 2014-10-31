@@ -294,9 +294,7 @@ class WS23xxConfigurator(weewx.abstractstation.DeviceConfigurator):
         parser.add_option("--clear-memory", dest="clear", action="store_true",
                           help="clear station memory")
 
-    def do_config(self, options, config_dict):
-        prompt = False if options.noprompt else True
-
+    def do_config(self, options, config_dict, prompt):
         self.station = WS23xxDriver(**config_dict['WS23xx'])
         if options.current:
             self.show_current()

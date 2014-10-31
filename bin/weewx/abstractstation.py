@@ -59,9 +59,10 @@ class DeviceConfigurator(object):
         if options.debug is not None:
             weewx.debug = options.debug
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        self.do_config(options, config_dict)
+        prompt = False if options.noprompt else True
+        self.do_config(options, config_dict, prompt)
 
-    def do_config(self, options, config_dict):
+    def do_config(self, options, config_dict, prompt):
         raise NotImplementedError("Method 'do_config' not implemented")
 
     def get_parser(self):

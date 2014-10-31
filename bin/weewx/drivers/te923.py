@@ -247,7 +247,7 @@ class TE923Configurator(weewx.abstractstation.DeviceConfigurator):
                           type=str, metavar="FORMAT",
                           help="format for history: raw, table, or dict")
 
-    def do_config(self, options, config_dict):
+    def do_config(self, options, config_dict, prompt):
         if options.format is None:
             fmt = 'table'
         elif (options.format.lower() != 'raw' and
@@ -257,7 +257,6 @@ class TE923Configurator(weewx.abstractstation.DeviceConfigurator):
             exit(1)
         else:
             fmt = options.format.lower()
-        prompt = False if options.noprompt else True
 
         self.station = TE923Driver(**config_dict['TE923'])
         if options.current:
