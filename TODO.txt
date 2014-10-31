@@ -16,8 +16,6 @@ Each driver should be responsible for installing its own stanza in the configura
 - that leaves us with only these executables:
     wee_config_database, wee_config_hardware, wee_reports, weewxd
 
-Include version number in archive database metadata.
-
 Look at Gary's (?) changes to allow cron-like report generation.
 
 Allow different trend time deltas within a single skin. Perhaps a

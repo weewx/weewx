@@ -873,6 +873,8 @@ class DaySummaryManager(Manager):
         
     In addition to all the tables for each type, there is one additional table called
     'archive_day__metadata', which currently holds the time of the last update. """
+    
+    version = "1.0"
 
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an instance of DaySummaryManager
@@ -908,14 +910,18 @@ class DaySummaryManager(Manager):
         Nprefix = len(prefix)
         meta_name = '%s_day__metadata' % self.table_name
         self.daykeys = [x[Nprefix:] for x in all_tables if (x.startswith(prefix) and x != meta_name)]
+        row = self.connection.execute("""SELECT value FROM %s_day__metadata WHERE name = 'Version';""" % self.table_name)
+        self.version = row[0] if row is not None else "1.0"
 
     def _initialize_day_tables(self, archiveSchema, cursor):
         """Initialize the tables needed for the daily summary."""
         # Create the tables needed for the daily summaries.
         for _obs_type in self.obskeys:
             cursor.execute(sql_create_str % (self.table_name, _obs_type))
-        # Then create the meta table:
+        # Create the meta table:
         cursor.execute(meta_create_str % self.table_name)
+        # Put the version number in it:
+        cursor.execute(meta_replace_str % self.table_name, ("Version", DaySummaryManager.version))
 
     def _addSingleRecord(self, record, cursor, log_level):
         """Specialized version that updates the daily summaries, as well as the 
