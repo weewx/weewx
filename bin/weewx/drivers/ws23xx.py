@@ -237,6 +237,7 @@ import fcntl
 import os
 import select
 import struct
+import termios
 import tty
 
 import weeutil.weeutil
@@ -263,9 +264,137 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 def loader(config_dict, engine):
-    return WS23xx(config_dict=config_dict, **config_dict['WS23xx'])
+    return WS23xxDriver(config_dict=config_dict, **config_dict['WS23xx'])
 
-class WS23xx(weewx.abstractstation.AbstractStation):
+def config_loader(config_dict):
+    return WS23xxConfigurator()
+
+
+class WS23xxConfigurator(weewx.abstractstation.DeviceConfigurator):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def add_options(self, parser):
+        super(WS23xxConfigurator, self).add_options(parser)
+        parser.add_option("--info", dest="info", action="store_true",
+                          help="display weather station configuration")
+        parser.add_option("--current", dest="current", action="store_true",
+                          help="get the current weather conditions")
+        parser.add_option("--history", dest="nrecords", type=int, metavar="N",
+                          help="display N history records")
+        parser.add_option("--history-since", dest="recmin",
+                          type=int, metavar="N",
+                          help="display history records since N minutes ago")
+        parser.add_option("--set-time", dest="settime", action="store_true",
+                          help="set the station clock to the current time")
+        parser.add_option("--set-interval", dest="interval",
+                          type=int, metavar="N",
+                          help="set the station archive interval to N minutes")
+        parser.add_option("--clear-memory", dest="clear", action="store_true",
+                          help="clear station memory")
+
+    def do_config(self, options, config_dict):
+        prompt = False if options.noprompt else True
+
+        self.station = WS23xxDriver(**config_dict['WS23xx'])
+        if options.current:
+            self.show_current()
+        elif options.nrecords is not None:
+            self.show_history(count=options.nrecords)
+        elif options.recmin is not None:
+            ts = int(time.time()) - options.recmin * 60
+            self.show_history(ts=ts)
+        elif options.settime:
+            self.set_clock(prompt)
+        elif options.interval is not None:
+            self.set_interval(options.interval, prompt)
+        elif options.clear:
+            self.clear_history(prompt)
+        else:
+            self.show_info()
+        self.station.closePort()
+
+    def show_info(self):
+        """Query the station then display the settings."""
+        print 'Querying the station for the configuration...'
+        config = self.station.getConfig()
+        for key in sorted(config):
+            print '%s: %s' % (key, config[key])
+
+    def show_current(self):
+        """Get current weather observation."""
+        print 'Querying the station for current weather data...'
+        for packet in self.station.genLoopPackets():
+            print packet
+            break
+
+    def show_history(self, ts=None, count=0):
+        """Show the indicated number of records or records since timestamp"""
+        print "Querying the station for historical records..."
+        for i,r in enumerate(self.station.genArchiveRecords(since_ts=ts,
+                                                            count=count)):
+            print r
+            if count and i > count:
+                break
+
+    def set_clock(self, prompt):
+        """Set station clock to current time."""
+        ans = None
+        while ans not in ['y', 'n']:
+            v = self.station.getTime()
+            vstr = weeutil.weeutil.timestamp_to_string(v)
+            print "Station clock is", vstr
+            if prompt:
+                ans = raw_input("Set station clock (y/n)? ")
+            else:
+                print "Setting station clock"
+                ans = 'y'
+            if ans == 'y' :
+                self.station.setTime()
+                v = self.station.getTime()
+                vstr = weeutil.weeutil.timestamp_to_string(v)
+                print "Station clock is now", vstr
+            elif ans == 'n':
+                print "Set clock cancelled."
+
+    def set_interval(self, interval, prompt):
+        print "Changing the interval will clear the station memory."
+        v = self.station.getArchiveInterval()
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Interval is", v
+            if prompt:
+                ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
+            else:
+                print "Setting interval to %d minutes" % interval
+                ans = 'y'
+            if ans == 'y' :
+                self.station.setArchiveInterval(interval)
+                v = self.station.getArchiveInterval()
+                print "Interval is now", v
+            elif ans == 'n':
+                print "Set interval cancelled."
+
+    def clear_history(self, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            v = self.station.getRecordCount()
+            print "Records in memory:", v
+            if prompt:
+                ans = raw_input("Clear console memory (y/n)? ")
+            else:
+                print 'Clearing console memory'
+                ans = 'y'
+            if ans == 'y' :
+                self.station.clearHistory()
+                v = self.station.getRecordCount()
+                print "Records in memory:", v
+            elif ans == 'n':
+                print "Clear memory cancelled."
+
+
+class WS23xxDriver(weewx.abstractstation.AbstractStation):
     """Driver for LaCrosse WS23xx stations."""
     
     def __init__(self, **stn_dict) :
@@ -324,7 +453,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         while ntries < self.max_tries:
             ntries += 1
             try:
-                with Station(self.port) as s:
+                with WS23xx(self.port) as s:
                     data = s.get_raw_data(SENSOR_IDS)
                 packet = data_to_packet(data, int(time.time() + 0.5),
                                         last_rain=self._last_rain)
@@ -358,7 +487,7 @@ class WS23xx(weewx.abstractstation.AbstractStation):
     def genArchiveRecords(self, since_ts, count=0):
         if self.disable_catchup:
             raise NotImplementedError
-        with Station(self.port) as s:
+        with WS23xx(self.port) as s:
             last_rain = None
             for ts,data in s.gen_records(since_ts=since_ts, count=count):
                 record = data_to_packet(data, ts,
@@ -368,23 +497,23 @@ class WS23xx(weewx.abstractstation.AbstractStation):
                 yield record
 
 #    def getTime(self) :
-#        with Station(self.port) as s:
+#        with WS23xx(self.port) as s:
 #            return s.get_time()
 
 #    def setTime(self):
-#        with Station(self.port) as s:
+#        with WS23xx(self.port) as s:
 #            s.set_time()
 
     def getArchiveInterval(self):
-        with Station(self.port) as s:
+        with WS23xx(self.port) as s:
             return s.get_archive_interval()
 
     def setArchiveInterval(self, interval):
-        with Station(self.port) as s:
+        with WS23xx(self.port) as s:
             s.set_archive_interval(interval)
 
     def getConfig(self):
-        with Station(self.port) as s:
+        with WS23xx(self.port) as s:
             data = s.get_raw_data(Measure.IDS.keys())
             fdata = {}
             for key in data:
@@ -392,11 +521,11 @@ class WS23xx(weewx.abstractstation.AbstractStation):
             return fdata
 
     def getRecordCount(self):
-        with Station(self.port) as s:
+        with WS23xx(self.port) as s:
             return s.get_record_count()
 
     def clearHistory(self):
-        with Station(self.port) as s:
+        with WS23xx(self.port) as s:
             s.clear_memory()
 
 
@@ -464,7 +593,7 @@ def data_to_packet(data, ts, last_rain=None):
     return packet
 
 
-class Station(object):
+class WS23xx(object):
     """Wrap the Ws2300 object so we can easily open serial port, read/write,
     close serial port without all of the try/except/finally scaffolding."""
 
@@ -1916,7 +2045,7 @@ if __name__ == '__main__':
         if options.port:
             port = options.port
 
-        with Station(port) as s:
+        with WS23xx(port) as s:
             if options.readings:
                 data = s.get_raw_data(SENSOR_IDS)
                 print data
