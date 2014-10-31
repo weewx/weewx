@@ -108,15 +108,12 @@ class DatabaseBinder(object):
                                    converter=self.converter)
         return vd
             
-    @property
-    def trend(self):
+    def trend(self, time_delta=None, time_grace=None):
         """Return a ValueDict for the 'trend'. """
-        try:
-            time_delta = to_int(self.option_dict['trend']['time_delta'])
+        if time_delta is None:
+            time_delta = to_int(self.option_dict['trend'].get('time_delta', 10800))
+        if time_grace is None:
             time_grace = to_int(self.option_dict['trend'].get('time_grace', 300))
-        except KeyError:
-            time_delta = 10800  # 3 hours
-            time_grace = 300    # 5 minutes
 
         now_vtd  = self._get_valuetupledict(self.endtime_ts, time_grace)
         then_vtd = self._get_valuetupledict(self.endtime_ts - time_delta, time_grace)

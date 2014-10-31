@@ -18,10 +18,9 @@ Each driver should be responsible for installing its own stanza in the configura
 
 Look at Gary's (?) changes to allow cron-like report generation.
 
-Allow different trend time deltas within a single skin. Perhaps a
-syntax like: $trend(time_delta=3600).outTemp ?
-
 Move schemas to the extension that uses them.
+
+Simplify logic in TrendObj
 
 
 

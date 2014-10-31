@@ -13,6 +13,8 @@ Improved error handling and retries for ws1, ultimeter, and cc3000 drivers.
 A single utility wee_config_device replaces each of the device-specific
 configuration utilities.
 
+Allow syntax such as $trend($time_delta=3600).barometer
+
 
 X.X.X XX/XX/XX
 
