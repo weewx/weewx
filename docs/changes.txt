@@ -8,6 +8,11 @@ Removed the no longer needed serviced StdRESTful, obsolete since V2.6
 Fixed bug in querying for schemas that prevented older versions of MySQL
 (V4.X) from working.
 
+Improved error handling and retries for ws1, ultimeter, and cc3000 drivers.
+
+A single utility wee_config_device replaces each of the device-specific
+configuration utilities.
+
 
 X.X.X XX/XX/XX
 

@@ -60,6 +60,7 @@ class WS1(weewx.abstractstation.AbstractStation):
         self.port = stn_dict.get('port', DEFAULT_PORT)
         self.polling_interval = float(stn_dict.get('polling_interval', 1))
         self.max_tries = int(stn_dict.get('max_tries', 5))
+        self.retry_wait = int(stn_dict.get('retry_wait', 10))
         self.last_rain = None
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
@@ -84,9 +85,10 @@ class WS1(weewx.abstractstation.AbstractStation):
                 yield packet
                 if self.polling_interval:
                     time.sleep(self.polling_interval)
-            except weewx.WeeWxIOError, e:
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
                 logerr("Failed attempt %d of %d to get LOOP data: %s" %
                        (ntries, self.max_tries, e))
+                time.sleep(self.retry_wait)
         else:
             msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
             logerr(msg)
@@ -135,10 +137,7 @@ class Station(object):
             self.serial_port = None
 
     def read(self, nchar=1):
-        try:
-            buf = self.serial_port.read(nchar)
-        except serial.serialutil.SerialException, e:
-            raise weewx.WeeWxIOError(e)
+        buf = self.serial_port.read(nchar)
         n = len(buf)
         if n != nchar:
             if DEBUG_READ and n:
