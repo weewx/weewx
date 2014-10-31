@@ -32,6 +32,8 @@ class Manager(object):
     
     USEFUL ATTRIBUTES
     
+    database: The database the manager is bound to.
+    
     sqlkeys: A list of the SQL keys that the database table supports.
     
     obskeys: A list of the observation types that the database table supports.
@@ -1231,7 +1233,7 @@ class DaySummaryManager(Manager):
         _all_tables = self.connection.tables()
         with weedb.Transaction(self.connection) as _cursor:
             for _table_name in _all_tables:
-                if _table_name.startswith('day_'):
+                if _table_name.startswith('%s_day_' % self.table_name):
                     _cursor.execute("DROP TABLE %s" % _table_name)
 
         del self.daykeys

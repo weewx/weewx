@@ -23,9 +23,6 @@ Look at Gary's (?) changes to allow cron-like report generation.
 Allow different trend time deltas within a single skin. Perhaps a
 syntax like: $trend(time_delta=3600).outTemp ?
 
-Right now, the entire skin_dict is passed into the tags. Perhaps it could be flattened,
-using accumulateLeaves, so you can use overrides?
-
 Move schemas to the extension that uses them.
 
 
