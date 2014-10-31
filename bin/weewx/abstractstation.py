@@ -58,6 +58,7 @@ class DeviceConfigurator(object):
         options, _ = parser.parse_args()
         if options.debug is not None:
             weewx.debug = options.debug
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
         self.do_config(options, config_dict)
 
     def do_config(self, options, config_dict):

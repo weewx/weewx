@@ -64,9 +64,8 @@ class CC3000Configurator(weewx.abstractstation.DeviceConfigurator):
         return DRIVER_VERSION
 
     def add_options(self, parser):
-        parser.add_option("--set-units", dest="units", metavar="UNITS",
-                          help="set units to METRIC or ENGLISH")
-        parser.add_option("--config", dest="config", action="store_true",
+        super(CC3000Configurator, self).add_options(parser)
+        parser.add_option("--info", dest="info", action="store_true",
                           help="display weather station configuration")
         parser.add_option("--current", dest="current", action="store_true",
                           help="display current weather readings")
@@ -82,6 +81,8 @@ class CC3000Configurator(weewx.abstractstation.DeviceConfigurator):
         parser.add_option("--set-interval", dest="interval",
                           type=int, metavar="N",
                           help="set logging interval to N minutes")
+        parser.add_option("--set-units", dest="units", metavar="UNITS",
+                          help="set units to METRIC or ENGLISH")
 
     def do_config(self, options, config_dict):
         self.station = CC3000Driver(**config_dict['CC3000'])
@@ -99,10 +100,10 @@ class CC3000Configurator(weewx.abstractstation.DeviceConfigurator):
         elif options.clear:
             self.clear_memory(prompt)
         else:
-            self.show_config()
+            self.show_info()
         self.station.closePort()
 
-    def show_config(self):
+    def show_info(self):
         """Query the station then display the settings."""
         print "firmware: ", self.station.get_version()
         print "time: ", self.station.get_time()

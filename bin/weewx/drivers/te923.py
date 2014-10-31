@@ -198,27 +198,108 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 def loader(config_dict, engine):
-    return TE923(**config_dict['TE923'])
+    return TE923Driver(**config_dict['TE923'])
 
-# FIXME: the conversion should use mean temperature as second temp arg
-def bp2sp(bp_mbar, elev_meter, t_C, humidity):
-    """Convert sea level pressure to station pressure.
+def config_loader(config_dict):
+    return TE923Configurator()
 
-    bp_mbar - seal level pressure (barometer) in millibars
 
-    elev_meter - station elevation in meters
+def print_raw(date, pos, data):
+    print date,
+    print "%04x" % pos,
+    for item in data:
+        print "%02x" % item,
+    print
 
-    t_C - temperature in degrees Celsius
+def print_table(date, data, showlabels=False):
+    if showlabels:
+        print '# date time',
+        for key in data:
+            print key,
+        print
+    print date,
+    for key in data:
+        print data[key],
+    print
 
-    sp - station pressure in millibars
-    """
-    if bp_mbar is None or t_C is None or humidity is None:
-        return None
-    sp = weewx.uwxutils.TWxUtils.SeaLevelToStationPressure(bp_mbar, elev_meter,
-                                                           t_C, t_C, humidity)
-    return sp
+def print_dict(data):
+    for key in sorted(data, key=data.get):
+        print '%s: %s' % (key, data[key])
 
-class TE923(weewx.abstractstation.AbstractStation):
+
+class TE923Configurator(weewx.abstractstation.DeviceConfigurator):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def add_options(self, parser):
+        super(TE923Configurator, self).add_options(parser)
+        parser.add_option("--info", dest="info", action="store_true",
+                          help="display weather station configuration")
+        parser.add_option("--current", dest="current", action="store_true",
+                          help="get the current weather conditions")
+        parser.add_option("--history", dest="nrecords", type=int, metavar="N",
+                          help="display N history records")
+        parser.add_option("--history-since", dest="recmin",
+                          type=int, metavar="N",
+                          help="display history records since N minutes ago")
+        parser.add_option("--format", dest="format",
+                          type=str, metavar="FORMAT",
+                          help="format for history: raw, table, or dict")
+
+    def do_config(self, options, config_dict):
+        if options.format is None:
+            fmt = 'table'
+        elif (options.format.lower() != 'raw' and
+              options.format.lower() != 'table' and
+              options.format.lower() != 'dict'):
+            print "Unknown format '%s'.  Known formats include 'raw', 'table', and 'dict'." % options.format
+            exit(1)
+        else:
+            fmt = options.format.lower()
+        prompt = False if options.noprompt else True
+
+        self.station = TE923Driver(**config_dict['TE923'])
+        if options.current:
+            self.show_current()
+        elif options.nrecords is not None:
+            self.show_history(count=options.nrecords, fmt=fmt)
+        elif options.recmin is not None:
+            ts = int(time.time()) - options.recmin * 60
+            self.show_history(ts=ts, fmt=fmt)
+        else:
+            self.show_info()
+        self.station.closePort()
+
+    def show_info(self):
+        """Query the station then display the settings."""
+        print 'Querying the station for the configuration...'
+        config = self.station.getConfig()
+        for key in sorted(config):
+            print '%s: %s' % (key, config[key])
+
+    def show_current(self):
+        """Get current weather observation."""
+        print 'Querying the station for current weather data...'
+        for packet in self.station.genLoopPackets():
+            print packet
+            break
+
+    def show_history(self, ts=0, count=0, fmt='raw'):
+        """Show the indicated number of records or records since timestamp"""
+        print "Querying the station for historical records..."
+        for i,r in enumerate(self.station.genArchiveRecords(ts)):
+            if fmt.lower() == 'raw':
+                print_raw(r['datetime'], r['ptr'], r['raw_data'])
+            elif fmt.lower() == 'table':
+                print_table(r['datetime'], r['data'], i==0)
+            else:
+                print r['datetime'], r['data']
+            if count and i > count:
+                break
+
+
+class TE923Driver(weewx.abstractstation.AbstractStation):
     """Driver for Hideki TE923 stations."""
     
     def __init__(self, **stn_dict) :
@@ -257,8 +338,8 @@ class TE923(weewx.abstractstation.AbstractStation):
         loginf('sensor map is %s' % self.sensor_map)
         loginf('battery map is %s' % self.battery_map)
 
-        self.station = Station(vendor_id, product_id, device_id,
-                               memory_size=self.memory_size)
+        self.station = TE923(vendor_id, product_id, device_id,
+                             memory_size=self.memory_size)
         self.station.open()
 
     @property
@@ -624,7 +705,7 @@ def decode_status(buf):
 class BadRead(weewx.WeeWxIOError):
     """Bogus data length, CRC, header block, or other read failure"""
 
-class Station(object):
+class TE923(object):
     ENDPOINT_IN = 0x81
     READ_LENGTH = 0x8
 
@@ -913,7 +994,7 @@ if __name__ == '__main__':
 
         station = None
         try:
-            station = Station()
+            station = TE923()
             station.open()
             if options.status:
                 data = station.get_status()
