@@ -11,6 +11,7 @@
 """Test tag notation for template generation."""
 from __future__ import with_statement
 import os.path
+import shutil
 import sys
 import syslog
 import time
@@ -57,9 +58,12 @@ class Common(unittest.TestCase):
         # Remove the old directory:
         try:
             test_html_dir = os.path.join(self.config_dict['WEEWX_ROOT'], self.config_dict['StdReport']['HTML_ROOT'])
-            os.rmdir(test_html_dir)
-        except OSError:
-            pass
+            shutil.rmtree(test_html_dir)
+        except OSError, e:
+            print >>sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
+            print >>sys.stderr, "Reason:", e
+            print >>sys.stderr, "Aborting"
+            exit(1)
 
         # Fiddle with config_dict to reflect the database in use:
         self.config_dict['DataBindings']['wx_binding']['database'] = self.database
