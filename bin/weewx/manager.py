@@ -756,6 +756,8 @@ def get_database_config(config_dict, data_binding):
     # Get the database name
     database_name = config_dict['DataBindings'][data_binding]['database']
     # Get the dictionary
+    if database_name not in config_dict['Databases']:
+        raise weewx.UnknownDatabase(database_name)
     database_dict = config_dict['Databases'][database_name]
     # Get the manager to be used
     database_manager = config_dict['DataBindings'][data_binding].get('manager', 'weewx.wxmanager.WXDaySummaryManager')
@@ -779,7 +781,6 @@ def open_database(config_dict, data_binding, initialize=False):
 
 def drop_database(config_dict, data_binding):
     """Drop (delete) the database associated with a binding name"""
-    
     _, database_dict, _ = get_database_config(config_dict, data_binding)
     weedb.drop(database_dict)
     

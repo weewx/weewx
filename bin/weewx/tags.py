@@ -18,14 +18,14 @@ import weewx.units
 class DBFactory(object):
     """Binds a database cache, with a default database."""
     
-    def __init__(self, db_cache, default_binding='wx_binding'):
-        self.cache = db_cache
+    def __init__(self, db_binder, default_binding='wx_binding'):
+        self.db_binder = db_binder
         self.default_binding  = default_binding
         
     def get_database(self, binding=None):
         if binding is None:
             binding = self.default_binding
-        return self.cache.get_database(binding)
+        return self.db_binder.get_database(binding)
 
 #===============================================================================
 #                    Class FactoryBinder

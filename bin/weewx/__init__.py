@@ -60,7 +60,10 @@ class StopNow(StandardError):
     """Exception thrown to stop the engine."""
     
 class UninitializedDatabase(StandardError):
-    """Exception thrown when attempting to use an unitialized database."""
+    """Exception thrown when attempting to use an uninitialized database."""
+    
+class UnknownDatabase(StandardError):
+    """Exception thrown when attempting to use an unknown database."""
     
 #===============================================================================
 #                       Possible event types.

@@ -106,7 +106,7 @@ class StdReportEngine(threading.Thread):
                 continue
 
             # Add the default database binding:
-            skin_dict['data_binding'] = 'wx_binding'
+            skin_dict.setdefault('data_binding', 'wx_binding')
 
             # Inject any overrides the user may have specified in the
             # weewx.conf configuration file for all reports:
