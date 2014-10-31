@@ -49,7 +49,7 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 def loader(config_dict, engine):
-    return CC3000(**config_dict['CC3000'])
+    return CC3000Driver(**config_dict['CC3000'])
 
 def config_loader(config_dict):
     return CC3000Configurator()
@@ -85,7 +85,7 @@ class CC3000Configurator(weewx.abstractstation.DeviceConfigurator):
                           help="set logging interval to N minutes")
 
     def do_config(self, options, config_dict):
-        self.station = weewx.drivers.cc3000.CC3000(**config_dict['CC3000'])
+        self.station = CC3000Driver(**config_dict['CC3000'])
         prompt = False if options.noprompt else True
         if options.nrecords is not None:
             self.show_history(options.nrecords)
@@ -180,7 +180,7 @@ class CC3000Configurator(weewx.abstractstation.DeviceConfigurator):
                 print "Set units cancelled."
 
 
-class CC3000(weewx.abstractstation.AbstractStation):
+class CC3000Driver(weewx.abstractstation.AbstractStation):
     '''weewx driver that communicates with a RainWise CC3000 data logger.'''
 
     # map rainwise names to weewx names
@@ -223,20 +223,32 @@ class CC3000(weewx.abstractstation.AbstractStation):
 
     def genLoopPackets(self):
         units = weewx.US if self.units == 'ENGLISH' else weewx.METRIC
-        while True:
-            with Station(self.port) as station:
-                values = station.get_current_data()
-            data = self._parse_current(values)
-            ts = data.get('TIMESTAMP')
-            if ts is not None:
-                if not self.use_station_time:
-                    ts = int(time.time()+0.5)
-                packet = {'dateTime': ts, 'usUnits' : units }
-                packet.update(data)
-                self._augment_packet(packet)
-                yield packet
-            if self.polling_interval:
-                time.sleep(self.polling_interval)
+        ntries = 0
+        while ntries < self.max_tries:
+            ntries += 1
+            try:
+                with CC3000(self.port) as station:
+                    values = station.get_current_data()
+                data = self._parse_current(values)
+                ts = data.get('TIMESTAMP')
+                if ts is not None:
+                    if not self.use_station_time:
+                        ts = int(time.time()+0.5)
+                    packet = {'dateTime': ts, 'usUnits' : units }
+                    packet.update(data)
+                    self._augment_packet(packet)
+                    yield packet
+                if self.polling_interval:
+                    time.sleep(self.polling_interval)
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+                logerr("Failed attempt %d of %d to get data: %s" %
+                       (ntries, self.max_tries, e))
+                logdbg("Waiting %d seconds before retry" % self.retry_wait)
+                time.sleep(self.retry_wait)
+        else:
+            msg = "Max retries (%d) exceeded" % self.max_tries
+            logerr(msg)
+            raise weewx.RetriesExceeded(msg)
 
     def genStartupRecords(self, since_ts):
         """Return archive records from the data logger.  Download all records
@@ -247,7 +259,7 @@ class CC3000(weewx.abstractstation.AbstractStation):
         NB: using gen_records did not work very well - bytes were corrupted.
         so we use more memory and load everything into memory first."""
         units = weewx.US if self.units == 'ENGLISH' else weewx.METRIC
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             records = station.get_records()
             cnt = len(records)
             loginf("found %d records" % cnt)
@@ -276,54 +288,54 @@ class CC3000(weewx.abstractstation.AbstractStation):
         return self._archive_interval
 
     def getTime(self):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             v = station.get_time()
         return _to_ts(v)
 
     def setTime(self):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             station.set_time()
 
     def get_current(self):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             data = station.get_current_data()
         return self._parse_current(data)
 
     def get_records(self, nrec):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             records = station.get_records(nrec)
         return records
 
     def get_time(self):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             return station.get_time()
 
     def set_time(self):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             return station.set_time()
 
     def get_units(self):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             return station.get_units()
 
     def set_units(self, units):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             return station.set_units(units)
 
     def get_interval(self):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             return station.get_interval()
 
     def set_interval(self, interval):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             return station.set_interval(interval)
 
     def get_version(self):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             return station.get_version()
 
     def get_status(self):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             return station.get_memory_status()
 
     def _init_station_with_retries(self):
@@ -331,7 +343,7 @@ class CC3000(weewx.abstractstation.AbstractStation):
             try:
                 self._init_station()
                 return
-            except weewx.WeeWxIOError, e:
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
                 logerr("Failed attempt %d of %d to initialize station: %s" %
                        (cnt+1, self.max_tries, e))
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)
@@ -340,7 +352,7 @@ class CC3000(weewx.abstractstation.AbstractStation):
             raise weewx.RetriesExceeded("Max retries (%d) exceeded while initializing station" % self.max_tries)
 
     def _init_station(self):
-        with Station(self.port) as station:
+        with CC3000(self.port) as station:
             station.flush_input()
             station.set_echo()
             self._archive_interval = 60 * station.get_interval()
@@ -432,7 +444,7 @@ def _check_crc(buf):
     if a != b:
         raise ChecksumMismatch(a,b)
 
-class Station(object):
+class CC3000(object):
     def __init__(self, port):
         self.port = port
         self.baudrate = 115200
@@ -458,10 +470,7 @@ class Station(object):
             self.serial_port = None
 
     def read(self, nchar=1):
-        try:
-            buf = self.serial_port.read(nchar)
-        except serial.serialutil.SerialException, e:
-            raise weewx.WeeWxIOError(e)
+        buf = self.serial_port.read(nchar)
         n = len(buf)
         if n != nchar:
             if n:
@@ -617,8 +626,8 @@ class Station(object):
         data = self.command("VERSION")
         return data
 
-# define a main entry point for basic testing of the station without weewx
-# engine and service overhead.  invoke this as follows from the weewx root dir:
+# define a main entry point for basic testing without weewx engine and service
+# overhead.  invoke this as follows from the weewx root dir:
 #
 # PYTHONPATH=bin python bin/weewx/drivers/cc3000.py
 
@@ -672,7 +681,7 @@ if __name__ == '__main__':
             _check_crc('MSG,2010/01/01 20:22,CHARGER ON,!4CED')
             exit(0)
 
-        with Station(options.port) as s:
+        with CC3000(options.port) as s:
             if options.getver:
                 print s.get_version()
             if options.status:
