@@ -34,6 +34,10 @@ import weewx
 DRIVER_VERSION = '0.8'
 DEFAULT_PORT = '/dev/ttyS0'
 
+DEBUG_READ = 0
+DEBUG_CHECKSUM = 0
+DEBUG_OPENCLOSE = 0
+
 def logmsg(level, msg):
     syslog.syslog(level, 'cc3000: %s' % msg)
 
@@ -53,8 +57,11 @@ def config_loader(config_dict):
     return CC3000Configurator()
 
 class ChecksumMismatch(weewx.WeeWxIOError):
-    def __init__(self, a, b):
-        weewx.WeeWxIOError.__init__(self, "Checksum mismatch: 0x%04x != 0x%04x" % (a,b))
+    def __init__(self, a, b, buf=None):
+        msg = "Checksum mismatch: 0x%04x != 0x%04x" % (a,b)
+        if buf is not None:
+            msg = "%s (%s)" % (msg, _fmt(buf))
+        weewx.WeeWxIOError.__init__(self, msg)
 
 
 class CC3000Configurator(weewx.drivers.AbstractConfigurator):
@@ -103,11 +110,11 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
 
     def show_info(self):
         """Query the station then display the settings."""
-        print "firmware: ", self.station.get_version()
-        print "time: ", self.station.get_time()
-        print "units: ", self.station.get_units()
-        print "memory: ", self.station.get_status()
-        print "interval: ", self.station.get_interval()
+        print "firmware:", self.station.get_version()
+        print "time:", self.station.get_time()
+        print "units:", self.station.get_units()
+        print "memory:", self.station.get_status()
+        print "interval:", self.station.get_interval()
 
     def show_history(self, nrecords=0):
         for r in self.station.get_records(nrecords):
@@ -206,6 +213,9 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         self.retry_wait = int(stn_dict.get('retry_wait', 60))
         self.label_map = stn_dict.get('label_map', self.DEFAULT_LABEL_MAP)
 
+        self._archive_interval = None
+        self.header = None
+        self.units = None
         self.last_rain = None
 
         loginf('driver version is %s' % DRIVER_VERSION)
@@ -216,8 +226,16 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
 
         self._init_station_with_retries()
 
+        loginf('archive_interval is %s' % self._archive_interval)
         loginf('header is %s' % self.header)
         loginf('units are %s' % self.units)
+
+        global DEBUG_READ
+        DEBUG_READ = int(stn_dict.get('debug_read', 0))
+        global DEBUG_CHECKSUM
+        DEBUG_CHECKSUM = int(stn_dict.get('debug_checksum', 0))
+        global DEBUG_OPENCLOSE
+        DEBUG_OPENCLOSE = int(stn_dict.get('debug_openclose', 0))
 
     def genLoopPackets(self):
         units = weewx.US if self.units == 'ENGLISH' else weewx.METRIC
@@ -227,6 +245,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
             try:
                 with CC3000(self.port) as station:
                     values = station.get_current_data()
+                ntries = 0
                 data = self._parse_current(values)
                 ts = data.get('TIMESTAMP')
                 if ts is not None:
@@ -255,10 +274,21 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         This assumes that the units are consistent for the entire history.
 
         NB: using gen_records did not work very well - bytes were corrupted.
-        so we use more memory and load everything into memory first."""
+        so we use more memory and load everything into memory first.
+        """
+        logdbg("genStartupRecords: since_ts=%s" % since_ts)
+        nrec = 0
+        # figure out how many records we need to download
+        if since_ts is not None:
+            delta = int(time.time()) - since_ts
+            nrec = int(delta / self._archive_interval)
+            logdbg("genStartupRecords: nrec=%s delta=%s" % (nrec, delta))
+            if nrec == 0:
+                return
+        logdbg("genStartupRecords: nrec=%s" % nrec)
         units = weewx.US if self.units == 'ENGLISH' else weewx.METRIC
         with CC3000(self.port) as station:
-            records = station.get_records()
+            records = station.get_records(nrec)
             cnt = len(records)
             loginf("found %d records" % cnt)
             i = 0
@@ -267,6 +297,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                 if i % 100 == 0:
                     logdbg("record %d of %d" % (i, cnt))
                 if r[0] != 'REC':
+                    logdbg("non REC item: %s" % r[0])
                     continue
                 data = self._parse_historical(r[1:])
                 if data['TIMESTAMP'] > since_ts:
@@ -355,8 +386,9 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
 
     def _init_station(self):
         with CC3000(self.port) as station:
-            station.flush_input()
+            station.flush()
             station.set_echo()
+            logdbg('get archive interval')
             self._archive_interval = 60 * station.get_interval()
             logdbg('get header')
             self.header = self._parse_header(station.get_header())
@@ -439,18 +471,20 @@ def _check_crc(buf):
     if idx < 0:
         return
     cs = buf[idx+1:idx+5]
-    logdbg("found checksum at %d: %s" % (idx, cs))
+    if DEBUG_CHECKSUM:
+        logdbg("found checksum at %d: %s" % (idx, cs))
     a = _crc16(buf[0:idx]) # calculate checksum
-    logdbg("calculated checksum %x" % a)
+    if DEBUG_CHECKSUM:
+        logdbg("calculated checksum %x" % a)
     b = int(cs, 16) # checksum provided in data
     if a != b:
-        raise ChecksumMismatch(a, b)
+        raise ChecksumMismatch(a, b, buf)
 
 class CC3000(object):
     def __init__(self, port):
         self.port = port
         self.baudrate = 115200
-        self.timeout = 30
+        self.timeout = 5
         self.serial_port = None
 
     def __enter__(self):
@@ -461,13 +495,15 @@ class CC3000(object):
         self.close()
 
     def open(self):
-        logdbg("open serial port %s" % self.port)
+        if DEBUG_OPENCLOSE:
+            logdbg("open serial port %s" % self.port)
         self.serial_port = serial.Serial(self.port, self.baudrate,
                                          timeout=self.timeout)
 
     def close(self):
         if self.serial_port is not None:
-            logdbg("close serial port %s" % self.port)
+            if DEBUG_OPENCLOSE:
+                logdbg("close serial port %s" % self.port)
             self.serial_port.close()
             self.serial_port = None
 
@@ -488,8 +524,17 @@ class CC3000(object):
             raise weewx.WeeWxIOError("Write expected %d chars, sent %d" %
                                      (len(data), n))
 
+    def flush(self):
+        self.flush_input()
+        self.flush_output()
+
     def flush_input(self):
+        logdbg("flush input buffer")
         self.serial_port.flushInput()
+
+    def flush_output(self):
+        logdbg("flush output buffer")
+        self.serial_port.flushOutput()
 
     def queued_bytes(self):
         return self.serial_port.inWaiting()
@@ -528,7 +573,8 @@ class CC3000(object):
             else:
                 loginf("skipping unprintable character 0x%0.2X" % ord(c))
         data = ''.join(buf)
-        logdbg("got bytes: '%s'" % _format_bytes(data))
+        if DEBUG_READ:
+            logdbg("got bytes: '%s' (%s)" % (_fmt(data), _format_bytes(data)))
         _check_crc(data)
         return data
 
@@ -559,6 +605,7 @@ class CC3000(object):
         return data
 
     def clear_memory(self):
+        logdbg("clear memory")
         data = self.command("MEM=CLEAR")
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to clear memory: %s" % _fmt(data))
@@ -574,11 +621,15 @@ class CC3000(object):
             try:
                 data = self.get_data()
                 if data == 'OK':
+                    logdbg("end of records")
                     break
                 values = data.split(',')
-                n += 1
-                logdbg("record %d (%s)" % (n, values[0]))
-                yield values
+                if values[0] == 'REC':
+                    logdbg("record %d" % n)
+                    n += 1
+                    yield values
+                else:
+                    logdbg("skipping '%s'" % values[0])
             except ChecksumMismatch, e:
                 logerr("record failed: %s" % e)
 
