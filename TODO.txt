@@ -8,8 +8,7 @@ Move schemas to the extension that uses them.
 
 Don't think ValueDict is used any longer. If not, remove it (and tests).
 
-Allow a persistent CurrentObj.
-
+Could generalize class weewx.tags.CurrentRecord. Put it in weewx.units
 
 
 

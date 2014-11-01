@@ -350,7 +350,7 @@ class ObservationBinder(object):
 #===============================================================================
 
 class CurrentObj(object):
-    """Helper class for the "Current" record 
+    """Helper class for the "Current" record. Does the database lookup lazily.
     
     This class allows tags such as:
       $current.barometer
@@ -448,3 +448,33 @@ class TrendObj(object):
         return weewx.units.ValueHelper(trend, 'current',
                                        self.formatter,
                                        self.converter)
+
+
+#===============================================================================
+#                             Class CurrentRecord
+#===============================================================================
+
+class CurrentRecord(object):
+    """Helper class for the "Current" record.
+    
+    Unlike class CurrentObj above, this class holds the record internally. It does
+    not do a database lookup.
+    """
+        
+    def __init__(self, record, formatter, converter, **option_dict):
+        self.record = record
+        self.formatter = formatter
+        self.converter = converter
+        
+    def __getattr__(self, obs_type):
+        """Return the trend for the given observation type."""
+        # The following is so the Python version of Cheetah's NameMapper
+        # does not think I'm a dictionary:
+        if obs_type == 'has_key':
+            raise AttributeError
+        
+        vt = weewx.units.as_value_tuple(self.record, obs_type)
+        return weewx.units.ValueHelper(vt, 'current',
+                                       self.formatter,
+                                       self.converter)
+        

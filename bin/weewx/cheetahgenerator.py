@@ -476,6 +476,15 @@ class Stats(SearchList):
             trend_dict = {'time_delta' : 10800,
                           'time_grace' : 300}
 
+        # Build a "current record" from the default database binding. This
+        # will allow the database to be hit only once for the most common
+        # lookups
+        dbmanager  = db_factory.get_database()
+        record = dbmanager.getRecord(timespan.stop)
+        current = weewx.tags.CurrentRecord(record, context='current',
+                                           formatter=self.generator.formatter,
+                                           converter=self.generator.converter)
+
         stats = weewx.tags.FactoryBinder(db_factory,
                                          timespan.stop,
                                          formatter=self.generator.formatter,
@@ -485,7 +494,7 @@ class Stats(SearchList):
                                          trend=trend_dict,
                                          skin_dict=self.generator.skin_dict)
 
-        return [stats]
+        return [{'current':current}, stats]
 
 class UnitInfo(SearchList):
     """Class that implements the $unit tag."""
