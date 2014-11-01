@@ -430,16 +430,10 @@ class Almanac(SearchList):
                 # Look for the record closest in time. Up to one hour off is fine:    
                 rec = archive.getRecord(celestial_ts, max_delta=3600)
                 if rec is not None:
-        
-                    # Wrap the record in a ValueTupleDict. This makes it easy to do
-                    # unit conversions.
-                    rec_vtd = weewx.units.ValueTupleDict(rec)
-                    
-                    if rec_vtd.has_key('outTemp'):
-                        temperature_C = weewx.units.convert(rec_vtd['outTemp'], 'degree_C')[0]
-        
-                    if rec_vtd.has_key('barometer'):
-                        pressure_mbar = weewx.units.convert(rec_vtd['barometer'], 'mbar')[0]
+                    if 'outTemp' in rec:
+                        temperature_C = weewx.units.convert(weewx.units.as_value_tuple(rec, 'outTemp'), "degree_F")[0]
+                    if 'barometer' in rec:
+                        pressure_mbar = weewx.units.convert(weewx.units.as_value_tuple(rec, 'barometer'), "mbar")[0]
         
         self.moonphases = generator.skin_dict.get('Almanac', {}).get('moon_phases', weeutil.Moon.moon_phases)
 

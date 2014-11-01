@@ -665,17 +665,14 @@ class Converter(object):
         >>> print target_dict
         {'outTemp': 68.0, 'interval': 15, 'barometer': 30.0, 'dateTime': 194758100}
         """
-        # Wrap the source dictionary in a ValueTupleDict. This will cause
-        # keyed values to be returned as ValueTuples:
-        obs_vdt = ValueTupleDict(obs_dict)
-        
         target_dict = {}
-        for obs_type in obs_vdt:
+        for obs_type in obs_dict:
             if obs_type == 'usUnits': continue
             # Do the conversion, but keep only the first value in
             # the ValueTuple:
-            target_dict[obs_type] = self.convert(obs_vdt[obs_type])[0]
+            target_dict[obs_type] = self.convert(as_value_tuple(obs_dict, obs_type))[0]
         return target_dict
+            
             
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
@@ -845,42 +842,6 @@ class ValueHelper(object):
         return self.exists() and self.value_t[0] is not None
     
 
-#==============================================================================
-#                             class ValueTupleDict
-#==============================================================================
-
-class ValueTupleDict(dict):
-    """A dictionary like any other dictionary, except that when keyed, it
-    returns its results as a ValueTuple.
-    
-    Example:
-    >>> vtd = ValueTupleDict({'usUnits' : 1, 'outTemp' : 68.0})
-    >>> print vtd['outTemp']
-    (68.0, 'degree_F', 'group_temperature')
-    >>> print vtd.get('outTemp')
-    (68.0, 'degree_F', 'group_temperature')
-    >>> print vtd.get('foo', 100.0)
-    100.0
-    """
-    def __getitem__(self, key):
-
-        # Get the standard unit system from the underlying dictionary:
-        std_unit_system = dict.__getitem__(self, 'usUnits')
-        # Get the unadorned value from the underlying dictionary:
-        val = dict.__getitem__(self, key)
-        
-        # Given this standard unit system, what is the unit type of this
-        # particular observation type?
-        (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(key)
-        # Form the value-tuple and return it 
-        return ValueTuple(val, unit_type, unit_group)
-    
-    def get(self, key, default=None):
-        if self.has_key(key):
-            return self[key]
-        else:
-            return default
-    
 #==============================================================================
 #                             class UnitInfoHelper
 #==============================================================================
