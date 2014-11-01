@@ -13,14 +13,14 @@ from __future__ import with_statement
 from weewx.manager import Manager
 import schemas.wview
 
-old_archive_dict = {'driver' : 'weedb.sqlite',
-                    'database' : '/home/weewx/archive/weewx.sdb'}
+old_archive_dict = {'driver'        : 'weedb.sqlite',
+                    'database_name' : '/home/weewx/archive/weewx.sdb'}
 
-new_archive_dict = {'driver' : 'weedb.mysql',
-                    'database' : 'weewx',
-                    'host'     : 'localhost',
-                    'user'     : 'weewx',
-                    'password' : 'weewx'}
+new_archive_dict = {'driver'        : 'weedb.mysql',
+                    'database_name' : 'weewx',
+                    'host'          : 'localhost',
+                    'user'          : 'weewx',
+                    'password'      : 'weewx'}
 
 with Manager.open(old_archive_dict) as old_archive:
     with Manager.open_with_create(new_archive_dict, schema=schemas.wview.schema) as new_archive:

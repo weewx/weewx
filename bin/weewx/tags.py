@@ -38,18 +38,18 @@ class FactoryBinder(object):
     This class sits on the top of chain of helper classes that enable
     syntax such as $db($data_binding='wx_binding').month.rain.sum in the Cheetah templates.""" 
 
-    def __init__(self, dbfactory, endtime_ts,
+    def __init__(self, dbfactory, report_time,
                  formatter=weewx.units.Formatter(), converter=weewx.units.Converter(), **option_dict):
         
         self.dbfactory   = dbfactory
-        self.endtime_ts  = endtime_ts
+        self.report_time = report_time
         self.formatter   = formatter
         self.converter   = converter
         self.option_dict = option_dict
         
     def db(self, data_binding=None):
         opendb = self.dbfactory.get_database(data_binding)
-        return DatabaseBinder(opendb, self.endtime_ts, self.formatter, self.converter, **self.option_dict)
+        return DatabaseBinder(opendb, self.report_time, self.formatter, self.converter, **self.option_dict)
     
     def __getattr__(self, attr):
         # The following is so the Python version of Cheetah's NameMapper does not think I'm a dictionary.
@@ -73,13 +73,13 @@ class DatabaseBinder(object):
     TimeBinder, which binds the database with the time period.
     """
 
-    def __init__(self, opendb, endtime_ts,
+    def __init__(self, opendb, report_time,
                  formatter=weewx.units.Formatter(), converter=weewx.units.Converter(), **option_dict):
         """Initialize an instance of DatabaseBinder.
         
         opendb: A Database from which the aggregates are to be extracted.
 
-        endtime_ts: The time the aggregates are to be current to.
+        report_time: The time for which the report should be run.
 
         formatter: An instance of weewx.units.Formatter() holding the formatting
         information to be used. [Optional. If not given, the default
@@ -93,7 +93,7 @@ class DatabaseBinder(object):
         [Optional.]
         """
         self.opendb      = opendb
-        self.endtime_ts  = endtime_ts
+        self.report_time = report_time
         self.formatter   = formatter
         self.converter   = converter
         self.option_dict = option_dict
@@ -101,57 +101,47 @@ class DatabaseBinder(object):
     # What follows is the list of time period attributes:
     
     @property
-    def current(self):
-        """Return a ValueDict for the 'current" record."""
-        vtd = self._get_valuetupledict(self.endtime_ts)
-        vd = weewx.units.ValueDict(vtd, context='current',
-                                   formatter=self.formatter,
-                                   converter=self.converter)
-        return vd
+    def current(self, timestamp=None):
+        """Return a CurrentObj"""
+        if timestamp is None:
+            timestamp = self.report_time
+        return CurrentObj(self.opendb, timestamp,
+                          self.formatter, self.converter, **self.option_dict)
             
     def trend(self, time_delta=None, time_grace=None):
-        """Return a ValueDict for the 'trend'. """
+        """Returns a TrendObj that is bound to the trend parameters."""
         if time_delta is None:
             time_delta = to_int(self.option_dict['trend'].get('time_delta', 10800))
         if time_grace is None:
             time_grace = to_int(self.option_dict['trend'].get('time_grace', 300))
 
-        return TrendObj(time_delta, time_grace, self.opendb, self.endtime_ts, 
+        return TrendObj(time_delta, time_grace, self.opendb, self.report_time, 
                  self.formatter, self.converter, **self.option_dict)
 
     @property
     def day(self):
-        return TimeBinder(weeutil.weeutil.archiveDaySpan(self.endtime_ts), self.opendb, 
+        return TimeBinder(weeutil.weeutil.archiveDaySpan(self.report_time), self.opendb, 
                           'day', self.formatter, self.converter, **self.option_dict)
     @property
     def week(self):
         week_start = to_int(self.option_dict.get('week_start', 6))
-        return TimeBinder(weeutil.weeutil.archiveWeekSpan(self.endtime_ts, week_start), self.opendb,
+        return TimeBinder(weeutil.weeutil.archiveWeekSpan(self.report_time, week_start), self.opendb,
                           'week', self.formatter, self.converter, **self.option_dict)
     @property
     def month(self):
-        return TimeBinder(weeutil.weeutil.archiveMonthSpan(self.endtime_ts), self.opendb,
+        return TimeBinder(weeutil.weeutil.archiveMonthSpan(self.report_time), self.opendb,
                           'month', self.formatter, self.converter, **self.option_dict)
     @property
     def year(self):
-        return TimeBinder(weeutil.weeutil.archiveYearSpan(self.endtime_ts), self.opendb,
+        return TimeBinder(weeutil.weeutil.archiveYearSpan(self.report_time), self.opendb,
                           'year', self.formatter, self.converter, **self.option_dict)
     @property
     def rainyear(self):
         rain_year_start = to_int(self.option_dict.get('rain_year_start', 1))
-        return TimeBinder(weeutil.weeutil.archiveRainYearSpan(self.endtime_ts, rain_year_start), self.opendb,
+        return TimeBinder(weeutil.weeutil.archiveRainYearSpan(self.report_time, rain_year_start), self.opendb,
                           'rainyear',  self.formatter, self.converter, **self.option_dict)
 
-    def _get_valuetupledict(self, time_ts, time_grace=None):
-        """Return a ValueTupleDict for the given time.
-        
-        A ValueTupleDict is like a regular dictionary, except the values are ValueTuples"""
-        # Get the record...
-        record_dict = self.opendb.getRecord(time_ts, max_delta=time_grace)
-        # ... convert to a dictionary with ValueTuples as values:
-        record_dict_vtd = weewx.units.ValueTupleDict(record_dict) if record_dict is not None else None
-        return record_dict_vtd
-            
+
 #===============================================================================
 #                    Class TimeBinder
 #===============================================================================
@@ -356,6 +346,37 @@ class ObservationBinder(object):
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
         
 #===============================================================================
+#                             Class CurrentObj
+#===============================================================================
+
+class CurrentObj(object):
+    """Helper class for the "Current" record 
+    
+    This class allows tags such as:
+      $current.barometer
+    """
+        
+    def __init__(self, opendb, timestamp, formatter, converter, **option_dict):
+        self.opendb = opendb
+        self.timestamp = timestamp
+        self.formatter = formatter
+        self.converter = converter
+        
+    def __getattr__(self, obs_type):
+        """Return the given observation type."""
+        # The following is so the Python version of Cheetah's NameMapper
+        # does not think I'm a dictionary:
+        if obs_type == 'has_key':
+            raise AttributeError
+
+        # Get the current record:        
+        record  = self.opendb.getRecord(self.timestamp)
+        vt = weewx.units.as_value_tuple(record, obs_type)
+        return weewx.units.ValueHelper(vt, 'current',
+                                       self.formatter,
+                                       self.converter)
+        
+#===============================================================================
 #                             Class TrendObj
 #===============================================================================
 
@@ -365,8 +386,8 @@ class TrendObj(object):
     This class allows tags such as:
       $trend.barometer
     """
-        
-    def __init__(self, time_delta, time_grace, opendb, endtime_ts, formatter, converter, **option_dict):
+
+    def __init__(self, time_delta, time_grace, opendb, nowtime, formatter, converter, **option_dict):
         """Initialize a Trend object
         
         time_delta: The time difference over which the trend is to be calculated
@@ -376,7 +397,7 @@ class TrendObj(object):
         self.time_delta_val = time_delta
         self.time_grace_val = time_grace
         self.opendb = opendb
-        self.endtime_ts = endtime_ts
+        self.nowtime = nowtime
         self.formatter = formatter
         self.converter = converter
         self.time_delta = weewx.units.ValueHelper((time_delta, 'second', 'group_elapsed'),
@@ -396,18 +417,20 @@ class TrendObj(object):
             raise AttributeError
 
         # Get the current record, and one "time_delta" ago:        
-        now_record  = self.opendb.getRecord(self.endtime_ts, self.time_grace_val)
-        then_record = self.opendb.getRecord(self.endtime_ts - self.time_delta_val, self.time_grace_val)
+        now_record  = self.opendb.getRecord(self.nowtime, self.time_grace_val)
+        then_record = self.opendb.getRecord(self.nowtime - self.time_delta_val, self.time_grace_val)
 
         # Do both records exist?
         if now_record is None or then_record is None:
             # No. One is missing.
             trend = ValueTuple(None, None, None)
         else:
-            # If the observation type is not known, a KeyError will be raised.
-            # Be prepared to catch it.
-            try:
-                # Both records exist. Extract the observation type as a ValueTuple
+            # Both records exist. 
+            # Check to see if the observation type is known
+            if obs_type not in now_record or obs_type not in then_record:
+                # obs_type is unknown. Signal it
+                trend = weewx.units.UnknownType(obs_type)
+            else:
                 now_vt  = weewx.units.as_value_tuple(now_record, obs_type)
                 then_vt = weewx.units.as_value_tuple(then_record, obs_type)
                 # Do the unit conversion now, rather than lazily. This is because,
@@ -418,9 +441,6 @@ class TrendObj(object):
                 now_vtc  = self.converter.convert(now_vt)
                 then_vtc = self.converter.convert(then_vt)
                 trend = now_vtc - then_vtc
-            except KeyError:
-                # obs_type is unknown. Signal it
-                trend = weewx.units.UnknownType(obs_type)
             
         # Return the results as a ValueHelper. Use the formatting and labeling
         # options from the current time record. The user can always override
