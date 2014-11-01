@@ -2,20 +2,6 @@
               
 Each driver should be responsible for installing its own stanza in the configuration file.
 
-- push the wee_config_xxx code into each driver.  make wee_config simply
-  a stub that invokes code from the driver.  since it requires weewx.conf,
-  it will know what type of device it is using.  perhaps define a Config
-  class in the driver that implements the methods and defines the options
-  for wee_config as applied to that hardware.  if no class/methods, then
-  wee_config reports nothing defined, and fails gracefully.  (i'm tired
-  of having to maintain hardware-specific code in two different places)
-
-- make wee_config_xxx options consistent across hardware.  provide mechanism
-  for hardware to specify additional options as appropriate (e.g., --pair)
-
-- that leaves us with only these executables:
-    wee_config_database, wee_config_hardware, wee_reports, weewxd
-
 Look at Gary's (?) changes to allow cron-like report generation.
 
 Move schemas to the extension that uses them.

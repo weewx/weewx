@@ -220,10 +220,8 @@ The WH1080 acknowledges the write with an 8 byte chunk: A5A5 A5A5.
 """
 
 import datetime
-import math
 import sys
 import syslog
-import threading
 import time
 import usb
 
