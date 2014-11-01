@@ -99,6 +99,11 @@
       <td>$trend($time_delta=3600).outTemp</td>
     </tr>
     <tr>
+      ## This test uses a previous value known to be None:
+      <td>Outside Temperature trend where previous value is known to be None (9000 seconds)</td>
+      <td>$trend($time_delta=9000).outTemp</td>
+    </tr>
+    <tr>
       <td>Trend with nonsense type</td>
       <td>$trend.foobar</td>
     </tr>

@@ -440,7 +440,10 @@ class TrendObj(object):
                 # F_to_C(68F - 50F). We want the former, not the latter.
                 now_vtc  = self.converter.convert(now_vt)
                 then_vtc = self.converter.convert(then_vt)
-                trend = now_vtc - then_vtc
+                if now_vtc.value is None or then_vtc.value is None:
+                    trend = ValueTuple(None, now_vtc.unit, now_vtc.group)
+                else:
+                    trend = now_vtc - then_vtc
             
         # Return the results as a ValueHelper. Use the formatting and labeling
         # options from the current time record. The user can always override
