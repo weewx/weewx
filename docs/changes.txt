@@ -20,6 +20,8 @@ initialization in wmr9x8 driver.
 
 Fixed uninitialized usb interface in wmr200 driver.
 
+Fixed wakup/wakeup typo in _getEEPROM_value in vantage driver.
+
 
 X.X.X XX/XX/XX
 

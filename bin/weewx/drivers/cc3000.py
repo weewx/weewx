@@ -83,7 +83,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--set-units", dest="units", metavar="UNITS",
                           help="set units to METRIC or ENGLISH")
 
-    def do_config(self, options, config_dict, prompt):
+    def do_options(self, options, parser, config_dict, prompt):
         self.station = CC3000Driver(**config_dict['CC3000'])
         if options.nrecords is not None:
             self.show_history(options.nrecords)

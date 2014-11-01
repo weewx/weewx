@@ -66,10 +66,7 @@ class AbstractConfigurator(object):
             weewx.debug = options.debug
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
         prompt = False if options.noprompt else True
-        self.do_config(options, config_dict, prompt)
-
-    def do_config(self, options, config_dict, prompt):
-        raise NotImplementedError("Method 'do_config' not implemented")
+        self.do_options(options, parser, config_dict, prompt)
 
     def get_parser(self):
         import optparse
@@ -86,3 +83,7 @@ class AbstractConfigurator(object):
         parser.add_option("-y", dest="noprompt",
                           action="store_true",
                           help="answer yes to every prompt")
+
+    def do_options(self, options, parser, config_dict, prompt):
+        """Derived classes must implement this to actually do something."""
+        raise NotImplementedError("Method 'do_options' not implemented")

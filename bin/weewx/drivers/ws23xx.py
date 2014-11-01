@@ -294,7 +294,7 @@ class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
                           type=int, metavar="N",
                           help="set the station archive interval to N minutes")
 
-    def do_config(self, options, config_dict, prompt):
+    def do_options(self, options, parser, config_dict, prompt):
         self.station = WS23xxDriver(**config_dict['WS23xx'])
         if options.current:
             self.show_current()

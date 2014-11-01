@@ -324,14 +324,13 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
                           type=str, metavar="FORMAT",
                           help="format for output, one of raw, table, or dict")
 
-    def do_config(self, options, config_dict, prompt):
+    def do_options(self, options, parser, config_dict, prompt):
         if options.format is None:
             options.format = 'table'
         elif (options.format.lower() != 'raw' and
               options.format.lower() != 'table' and
               options.format.lower() != 'dict'):
-            print "Unknown format '%s'.  Known formats include 'raw', 'table', and 'dict'." % options.format
-            exit(1)
+            parser.error("Unknown format '%s'.  Known formats include 'raw', 'table', and 'dict'." % options.format)
 
         self.station = FineOffsetUSB(**config_dict['FineOffsetUSB'])
         if options.current:

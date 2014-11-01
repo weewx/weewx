@@ -1060,7 +1060,7 @@ class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--maxtries", dest="maxtries", type=int,
                           help="maximum number of retries, 0 indicates no max")
 
-    def do_config(self, options, config_dict, prompt):
+    def do_options(self, options, parser, config_dict, prompt):
         maxtries = 3 if options.maxtries is None else int(options.maxtries)
         self.station = WS28xxDriver(**config_dict['WS28xx'])
         if options.check:
