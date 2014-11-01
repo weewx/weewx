@@ -11,6 +11,7 @@ import weeutil.weeutil
 
 def main():
     syslog.openlog('wee_config_device', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
     # Load the configuration file
     config_fn, config_dict = weeutil.weeutil.read_config(None, sys.argv[1:])

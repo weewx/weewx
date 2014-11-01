@@ -140,14 +140,11 @@ claimInterface.
 
 
 from __future__ import with_statement
-import math
 import syslog
 import time
 import usb
 
-import weeutil
-import weewx.abstractstation
-import weewx.units
+import weewx
 import weewx.wxformulas
 
 DRIVER_VERSION = '0.12'
@@ -204,30 +201,7 @@ def config_loader(config_dict):
     return TE923Configurator()
 
 
-def print_raw(date, pos, data):
-    print date,
-    print "%04x" % pos,
-    for item in data:
-        print "%02x" % item,
-    print
-
-def print_table(date, data, showlabels=False):
-    if showlabels:
-        print '# date time',
-        for key in data:
-            print key,
-        print
-    print date,
-    for key in data:
-        print data[key],
-    print
-
-def print_dict(data):
-    for key in sorted(data, key=data.get):
-        print '%s: %s' % (key, data[key])
-
-
-class TE923Configurator(weewx.abstractstation.DeviceConfigurator):
+class TE923Configurator(weewx.drivers.AbstractConfigurator):
     @property
     def version(self):
         return DRIVER_VERSION
@@ -249,23 +223,21 @@ class TE923Configurator(weewx.abstractstation.DeviceConfigurator):
 
     def do_config(self, options, config_dict, prompt):
         if options.format is None:
-            fmt = 'table'
+            options.format = 'table'
         elif (options.format.lower() != 'raw' and
               options.format.lower() != 'table' and
               options.format.lower() != 'dict'):
             print "Unknown format '%s'.  Known formats include 'raw', 'table', and 'dict'." % options.format
             exit(1)
-        else:
-            fmt = options.format.lower()
 
         self.station = TE923Driver(**config_dict['TE923'])
         if options.current:
             self.show_current()
         elif options.nrecords is not None:
-            self.show_history(count=options.nrecords, fmt=fmt)
+            self.show_history(count=options.nrecords, fmt=options.format)
         elif options.recmin is not None:
             ts = int(time.time()) - options.recmin * 60
-            self.show_history(ts=ts, fmt=fmt)
+            self.show_history(ts=ts, fmt=options.format)
         else:
             self.show_info()
         self.station.closePort()
@@ -289,16 +261,36 @@ class TE923Configurator(weewx.abstractstation.DeviceConfigurator):
         print "Querying the station for historical records..."
         for i,r in enumerate(self.station.genArchiveRecords(ts)):
             if fmt.lower() == 'raw':
-                print_raw(r['datetime'], r['ptr'], r['raw_data'])
+                self.print_raw(r['datetime'], r['ptr'], r['raw_data'])
             elif fmt.lower() == 'table':
-                print_table(r['datetime'], r['data'], i==0)
+                self.print_table(r['datetime'], r['data'], i==0)
             else:
                 print r['datetime'], r['data']
             if count and i > count:
                 break
 
+    @staticmethod
+    def print_raw(date, pos, data):
+        print date,
+        print "%04x" % pos,
+        for item in data:
+            print "%02x" % item,
+        print
 
-class TE923Driver(weewx.abstractstation.AbstractStation):
+    @staticmethod
+    def print_table(date, data, showlabels=False):
+        if showlabels:
+            print '# date time',
+            for key in data:
+                print key,
+            print
+        print date,
+        for key in data:
+            print data[key],
+        print
+
+
+class TE923Driver(weewx.drivers.AbstractDevice):
     """Driver for Hideki TE923 stations."""
     
     def __init__(self, **stn_dict) :
@@ -682,7 +674,7 @@ def decode_windchill(buf):
         if buf[24] & 0x20 == 0x20:
             data['windchill'] += 0.05
         if buf[24] & 0x80 != 0x80:
-            data['windchill'] *= -1;
+            data['windchill'] *= -1
     if DEBUG_DECODE:
         logdbg("WCL  %s %s" % (data['windchill'], data['windchill_state']))
     return data
@@ -982,14 +974,12 @@ if __name__ == '__main__':
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
         if options.format is None:
-            fmt = FMT_TE923TOOL
+            options.format = FMT_TE923TOOL
         elif (options.format.lower() != FMT_TE923TOOL and
               options.format.lower() != FMT_TABLE and
               options.format.lower() != FMT_DICT):
             print "Unknown format '%s'.  Known formats include 'te923tool', 'table', and 'dict'." % options.format
             exit(1)
-        else:
-            fmt = options.format.lower()
 
         station = None
         try:
@@ -997,23 +987,23 @@ if __name__ == '__main__':
             station.open()
             if options.status:
                 data = station.get_status()
-                if fmt == FMT_DICT:
+                if options.format.lower() == FMT_DICT:
                     print_dict(data)
-                elif fmt == FMT_TABLE:
+                elif options.format.lower() == FMT_TABLE:
                     print_table(data)
                 else:
                     print_status(data)
             if options.readings:
                 data = station.get_readings()
-                if fmt == FMT_DICT:
+                if options.format.lower() == FMT_DICT:
                     print_dict(data)
-                elif fmt == FMT_TABLE:
+                elif options.format.lower() == FMT_TABLE:
                     print_table(data)
                 else:
                     print_readings(data)
             if options.records is not None:
                 for ptr,data in station.gen_records(count=options.records):
-                    if fmt == FMT_DICT:
+                    if options.format.lower() == FMT_DICT:
                         print_dict(data)
                     else:
                         print_readings(data)

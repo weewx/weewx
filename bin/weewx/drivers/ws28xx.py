@@ -931,7 +931,6 @@ import time
 import traceback
 import usb
 
-import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 import weeutil.weeutil
@@ -1034,7 +1033,7 @@ def print_dict(data):
 def config_loader(config_dict):
     return WS28xxConfigurator()
 
-class WS28xxConfigurator(weewx.abstractstation.DeviceConfigurator):
+class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
     @property
     def version(self):
         return DRIVER_VERSION
@@ -1127,7 +1126,7 @@ class WS28xxConfigurator(weewx.abstractstation.DeviceConfigurator):
         cfg = self.get_config(maxtries)
         if cfg is None:
             return None
-        return weewx.drivers.ws28xx.getHistoryInterval(cfg['history_interval'])
+        return getHistoryInterval(cfg['history_interval'])
 
     def get_config(self, maxtries):
         start_ts = None
@@ -1149,14 +1148,14 @@ class WS28xxConfigurator(weewx.abstractstation.DeviceConfigurator):
         """Set the station archive interval"""
         print "This feature is not yet implemented"
 
-    def info(self, maxtries):
+    def show_info(self, maxtries):
         """Query the station then display the settings."""
         print 'Querying the station for the configuration...'
         cfg = self.get_config(maxtries)
         if cfg is not None:
             print_dict(cfg)
 
-    def current(self, maxtries):
+    def show_current(self, maxtries):
         """Get current weather observation."""
         print 'Querying the station for current weather data...'
         start_ts = None
@@ -1174,13 +1173,13 @@ class WS28xxConfigurator(weewx.abstractstation.DeviceConfigurator):
                 print 'No data after %d seconds (press SET to sync)' % dur
             time.sleep(30)
 
-    def history(self, maxtries, ts=0, count=0):
+    def show_history(self, maxtries, ts=0, count=0):
         """Display the indicated number of records or the records since the 
         specified timestamp (local time, in seconds)"""
         print "Querying the station for historical records..."
         ntries = 0
-        last_n = n = nrem = None
-        last_ts = now = int(time.time())
+        last_n = nrem = None
+        last_ts = int(time.time())
         self.station.start_caching_history(since_ts=ts, num_rec=count)
         while nrem is None or nrem > 0:
             if ntries >= maxtries:
@@ -1215,7 +1214,7 @@ class WS28xxConfigurator(weewx.abstractstation.DeviceConfigurator):
 def loader(config_dict, engine):
     return WS28xxDriver(**config_dict['WS28xx'])
 
-class WS28xxDriver(weewx.abstractstation.AbstractStation):
+class WS28xxDriver(weewx.drivers.AbstractDevice):
     """Driver for LaCrosse WS28xx stations."""
 
     max_records = 1797

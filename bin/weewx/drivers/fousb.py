@@ -227,9 +227,7 @@ import threading
 import time
 import usb
 
-import weeutil.weeutil
-import weewx.abstractstation
-import weewx.units
+import weewx
 import weewx.wxformulas
 
 DRIVER_VERSION = '1.7'
@@ -288,7 +286,7 @@ def table_dump(date, data, showlabels=False):
 def config_loader(config_dict):
     return FOUSBConfigurator()
 
-class FOUSBConfigurator(weewx.abstractstation.DeviceConfigurator):
+class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
     @property
     def version(self):
         return DRIVER_VERSION
@@ -297,17 +295,8 @@ class FOUSBConfigurator(weewx.abstractstation.DeviceConfigurator):
         super(FOUSBConfigurator, self).add_options(parser)
         parser.add_option("--info", dest="info", action="store_true",
                           help="display weather station configuration")
-        parser.add_option("--check-usb", dest="chkusb", action="store_true",
-                          help="test the quality of the USB connection")
-        parser.add_option("--check-fixed-block", dest="chkfb",
-                          action="store_true",
-                          help="monitor the contents of the fixed block")
-        parser.add_option("--fixed-block", dest="showfb", action="store_true",
-                          help="display the contents of the fixed block")
-        parser.add_option("--live", dest="live", action="store_true",
-                          help="display live readings from the station")
-        parser.add_option("--logged", dest="logged", action="store_true",
-                          help="display logged readings from the station")
+        parser.add_option("--current", dest="current", action="store_true",
+                          help="get the current weather conditions")
         parser.add_option("--history", dest="nrecords", type=int, metavar="N",
                           help="display N records")
         parser.add_option("--history-since", dest="recmin",
@@ -315,11 +304,22 @@ class FOUSBConfigurator(weewx.abstractstation.DeviceConfigurator):
                           help="display records since N minutes ago")
         parser.add_option("--clear-memory", dest="clear", action="store_true",
                           help="clear station memory")
-        parser.add_option("--set-clock", dest="clock", action="store_true",
+        parser.add_option("--set-time", dest="clock", action="store_true",
                           help="set station clock to computer time")
         parser.add_option("--set-interval", dest="interval",
                           type=int, metavar="N",
                           help="set logging interval to N minutes")
+        parser.add_option("--live", dest="live", action="store_true",
+                          help="display live readings from the station")
+        parser.add_option("--logged", dest="logged", action="store_true",
+                          help="display logged readings from the station")
+        parser.add_option("--fixed-block", dest="showfb", action="store_true",
+                          help="display the contents of the fixed block")
+        parser.add_option("--check-usb", dest="chkusb", action="store_true",
+                          help="test the quality of the USB connection")
+        parser.add_option("--check-fixed-block", dest="chkfb",
+                          action="store_true",
+                          help="monitor the contents of the fixed block")
         parser.add_option("--format", dest="format",
                           type=str, metavar="FORMAT",
                           help="format for output, one of raw, table, or dict")
@@ -334,10 +334,13 @@ class FOUSBConfigurator(weewx.abstractstation.DeviceConfigurator):
             exit(1)
 
         self.station = FineOffsetUSB(**config_dict['FineOffsetUSB'])
-        if options.nrecords is not None:
-            self.show_records(0, options.nrecords, options.format)
+        if options.current:
+            self.show_current()
+        elif options.nrecords is not None:
+            self.show_history(0, options.nrecords, options.format)
         elif options.recmin is not None:
-            self.show_records(time.time()-options.recmin*60, 0, options.format)
+            ts = int(time.time()) - options.recmin * 60
+            self.show_history(ts, 0, options.format)
         elif options.live:
             self.show_readings(False)
         elif options.logged:
@@ -444,7 +447,21 @@ class FOUSBConfigurator(weewx.abstractstation.DeviceConfigurator):
             if (i+1) % 16 == 0:
                 print
 
-    def show_records(self, ts=0, count=0, fmt='raw'):
+    def show_readings(self, logged_only):
+        """Display live readings from the station."""
+        for data,ptr,_ in self.station.live_data(logged_only):
+            print '%04x' % ptr,
+            print data['idx'].strftime('%H:%M:%S'),
+            del data['idx']
+            print data
+
+    def show_current(self):
+        """Display latest readings from the station."""
+        for packet in self.station.genLoopPackets():
+            print packet
+            break
+
+    def show_history(self, ts=0, count=0, fmt='raw'):
         """Display the indicated number of records or the records since the 
         specified timestamp (local time, in seconds)"""
         records = self.station.get_records(since_ts=ts, num_rec=count)
@@ -455,14 +472,6 @@ class FOUSBConfigurator(weewx.abstractstation.DeviceConfigurator):
                 table_dump(r['datetime'], r['data'], i==0)
             else:
                 print r['datetime'], r['data']
-
-    def show_readings(self, logged_only):
-        """Display live readings from the station."""
-        for data,ptr,_ in self.station.live_data(logged_only):
-            print '%04x' % ptr,
-            print data['idx'].strftime('%H:%M:%S'),
-            del data['idx']
-            print data
 
     def clear_history(self, prompt):
         ans = None
@@ -833,7 +842,7 @@ class ObservationError(Exception):
 PERIODIC_POLLING = 'PERIODIC'
 ADAPTIVE_POLLING = 'ADAPTIVE'
 
-class FineOffsetUSB(weewx.abstractstation.AbstractStation):
+class FineOffsetUSB(weewx.drivers.AbstractDevice):
     """Driver for FineOffset USB stations."""
     
     def __init__(self, **stn_dict) :

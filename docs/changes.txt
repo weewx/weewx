@@ -15,6 +15,11 @@ configuration utilities.
 
 Allow syntax such as $trend($time_delta=3600).barometer
 
+Fixed missing dew initializations in wmr9x8 driver.  Fixed model/_model
+initialization in wmr9x8 driver.
+
+Fixed uninitialized usb interface in wmr200 driver.
+
 
 X.X.X XX/XX/XX
 

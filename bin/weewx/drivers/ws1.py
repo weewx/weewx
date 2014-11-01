@@ -17,7 +17,6 @@ import syslog
 import time
 
 import weewx
-import weewx.abstractstation
 import weewx.units
 import weewx.uwxutils
 
@@ -28,6 +27,7 @@ MILE_PER_KM = 0.621371
 DRIVER_VERSION = '0.13'
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
+
 
 def logmsg(level, msg):
     syslog.syslog(level, 'ws1: %s' % msg)
@@ -41,11 +41,13 @@ def loginf(msg):
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
-def loader(config_dict, engine):
+
+def loader(config_dict, _):
     return WS1(**config_dict['WS1'])
 
-class WS1(weewx.abstractstation.AbstractStation):
-    '''weewx driver that communicates with an ADS-WS1 station
+
+class WS1(weewx.drivers.AbstractDevice):
+    """weewx driver that communicates with an ADS-WS1 station
     
     port - serial port
     [Required. Default is /dev/ttyS0]
@@ -55,7 +57,7 @@ class WS1(weewx.abstractstation.AbstractStation):
 
     max_tries - how often to retry serial communication before giving up
     [Optional. Default is 5]
-    '''
+    """
     def __init__(self, **stn_dict):
         self.port = stn_dict.get('port', DEFAULT_PORT)
         self.polling_interval = float(stn_dict.get('polling_interval', 1))
@@ -73,12 +75,12 @@ class WS1(weewx.abstractstation.AbstractStation):
         while ntries < self.max_tries:
             ntries += 1
             try:
-                packet = {'dateTime': int(time.time()+0.5),
-                          'usUnits' : weewx.US }
+                packet = {'dateTime': int(time.time() + 0.5),
+                          'usUnits': weewx.US}
                 # open a new connection to the station for each reading
                 with Station(self.port) as station:
-                    bytes = station.get_readings()
-                data = Station.parse_readings(bytes)
+                    readings = station.get_readings()
+                data = Station.parse_readings(readings)
                 packet.update(data)
                 self._augment_packet(packet)
                 ntries = 0
@@ -111,6 +113,7 @@ class WS1(weewx.abstractstation.AbstractStation):
         if not packet['windSpeed']:
             packet['windDir'] = None
 
+
 class Station(object):
     def __init__(self, port):
         self.port = port
@@ -122,7 +125,7 @@ class Station(object):
         self.open()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self):
         self.close()
 
     def open(self):
@@ -154,26 +157,26 @@ class Station(object):
                                      (len(data), n))
 
     def get_readings(self):
-        bytes = []
+        bites = []
         while True:
             c = self.read(1)
             if c == "\r":
                 break
-            elif c == '!' and len(bytes) > 0:
+            elif c == '!' and len(bites) > 0:
                 break
             elif c == '!':
-                bytes = []
+                bites = []
             else:
-                bytes.append(c)
+                bites.append(c)
         if DEBUG_READ:
-            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in bytes]))
-        if len(bytes) != 48:
-            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(bytes))
-        return ''.join(bytes)
+            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in bites]))
+        if len(bites) != 48:
+            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(bites))
+        return ''.join(bites)
 
     @staticmethod
-    def parse_readings(bytes):
-        '''WS1 station emits data in PeetBros format:
+    def parse_readings(bites):
+        """WS1 station emits data in PeetBros format:
 
         http://www.peetbros.com/shop/custom.aspx?recid=29
 
@@ -196,20 +199,20 @@ class Station(object):
           mmmm - time (minute of day)
           RRRR - daily rain (0.01 in)
           WWWW - one minute wind average (0.1 kph)
-        '''
-        data = {}
-        data['windSpeed'] = int(bytes[0:4], 16) * 0.1 * MILE_PER_KM # mph
-        data['windDir'] = int(bytes[6:8], 16) * 1.411764 # compass degrees
-        data['outTemp'] = int(bytes[8:12], 16) * 0.1 # degree_F
-        data['long_term_rain'] = int(bytes[12:16], 16) * 0.01 # inch
-        data['pressure'] = int(bytes[16:20], 16) * 0.1 * INHG_PER_MBAR # inHg
-        data['inTemp'] = int(bytes[20:24], 16) * 0.1 # degree_F
-        data['outHumidity'] = int(bytes[24:28], 16) * 0.1 # percent
-        data['inHumidity'] = int(bytes[28:32], 16) * 0.1 # percent
-        data['day_of_year'] = int(bytes[32:36], 16)
-        data['minute_of_day'] = int(bytes[36:40], 16)
-        data['daily_rain'] = int(bytes[40:44], 16) * 0.01 # inch
-        data['wind_average'] = int(bytes[44:48], 16) * 0.1 * MILE_PER_KM # mph
+        """
+        data = dict()
+        data['windSpeed'] = int(bites[0:4], 16) * 0.1 * MILE_PER_KM  # mph
+        data['windDir'] = int(bites[6:8], 16) * 1.411764  # compass degrees
+        data['outTemp'] = int(bites[8:12], 16) * 0.1  # degree_F
+        data['long_term_rain'] = int(bites[12:16], 16) * 0.01  # inch
+        data['pressure'] = int(bites[16:20], 16) * 0.1 * INHG_PER_MBAR  # inHg
+        data['inTemp'] = int(bites[20:24], 16) * 0.1  # degree_F
+        data['outHumidity'] = int(bites[24:28], 16) * 0.1  # percent
+        data['inHumidity'] = int(bites[28:32], 16) * 0.1  # percent
+        data['day_of_year'] = int(bites[32:36], 16)
+        data['minute_of_day'] = int(bites[36:40], 16)
+        data['daily_rain'] = int(bites[40:44], 16) * 0.01  # inch
+        data['wind_average'] = int(bites[44:48], 16) * 0.1 * MILE_PER_KM  # mph
         return data
 
 # define a main entry point for basic testing of the station without weewx
@@ -222,23 +225,19 @@ if __name__ == '__main__':
 
     usage = """%prog [options] [--help]"""
 
-    def main():
-        syslog.openlog('ws1', syslog.LOG_PID | syslog.LOG_CONS)
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        parser = optparse.OptionParser(usage=usage)
-        parser.add_option('--version', dest='version', action='store_true',
-                          help='display driver version')
-        parser.add_option('--port', dest='port', metavar='PORT',
-                          help='serial port to which the station is connected',
-                          default=DEFAULT_PORT)
-        (options, args) = parser.parse_args()
+    syslog.openlog('ws1', syslog.LOG_PID | syslog.LOG_CONS)
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('--version', dest='version', action='store_true',
+                      help='display driver version')
+    parser.add_option('--port', dest='port', metavar='PORT',
+                      help='serial port to which the station is connected',
+                      default=DEFAULT_PORT)
+    (options, args) = parser.parse_args()
 
-        if options.version:
-            print "ADS WS1 driver version %s" % DRIVER_VERSION
-            exit(0)
+    if options.version:
+        print "ADS WS1 driver version %s" % DRIVER_VERSION
+        exit(0)
 
-        with Station(options.port) as s:
-            print s.get_readings()
-
-if __name__ == '__main__':
-    main()
+    with Station(options.port) as s:
+        print s.get_readings()

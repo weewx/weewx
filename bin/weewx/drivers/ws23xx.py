@@ -241,7 +241,6 @@ import termios
 import tty
 
 import weeutil.weeutil
-import weewx.abstractstation
 import weewx.units
 import weewx.wxformulas
 
@@ -263,14 +262,15 @@ def logcrt(msg):
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
-def loader(config_dict, engine):
+
+def loader(config_dict, _):
     return WS23xxDriver(config_dict=config_dict, **config_dict['WS23xx'])
 
-def config_loader(config_dict):
+def config_loader(_):
     return WS23xxConfigurator()
 
 
-class WS23xxConfigurator(weewx.abstractstation.DeviceConfigurator):
+class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
     @property
     def version(self):
         return DRIVER_VERSION
@@ -286,13 +286,13 @@ class WS23xxConfigurator(weewx.abstractstation.DeviceConfigurator):
         parser.add_option("--history-since", dest="recmin",
                           type=int, metavar="N",
                           help="display history records since N minutes ago")
+        parser.add_option("--clear-memory", dest="clear", action="store_true",
+                          help="clear station memory")
         parser.add_option("--set-time", dest="settime", action="store_true",
                           help="set the station clock to the current time")
         parser.add_option("--set-interval", dest="interval",
                           type=int, metavar="N",
                           help="set the station archive interval to N minutes")
-        parser.add_option("--clear-memory", dest="clear", action="store_true",
-                          help="clear station memory")
 
     def do_config(self, options, config_dict, prompt):
         self.station = WS23xxDriver(**config_dict['WS23xx'])
@@ -330,8 +330,8 @@ class WS23xxConfigurator(weewx.abstractstation.DeviceConfigurator):
     def show_history(self, ts=None, count=0):
         """Show the indicated number of records or records since timestamp"""
         print "Querying the station for historical records..."
-        for i,r in enumerate(self.station.genArchiveRecords(since_ts=ts,
-                                                            count=count)):
+        for i, r in enumerate(self.station.genArchiveRecords(since_ts=ts,
+                                                             count=count)):
             print r
             if count and i > count:
                 break
@@ -348,7 +348,7 @@ class WS23xxConfigurator(weewx.abstractstation.DeviceConfigurator):
             else:
                 print "Setting station clock"
                 ans = 'y'
-            if ans == 'y' :
+            if ans == 'y':
                 self.station.setTime()
                 v = self.station.getTime()
                 vstr = weeutil.weeutil.timestamp_to_string(v)
@@ -367,7 +367,7 @@ class WS23xxConfigurator(weewx.abstractstation.DeviceConfigurator):
             else:
                 print "Setting interval to %d minutes" % interval
                 ans = 'y'
-            if ans == 'y' :
+            if ans == 'y':
                 self.station.setArchiveInterval(interval)
                 v = self.station.getArchiveInterval()
                 print "Interval is now", v
@@ -384,7 +384,7 @@ class WS23xxConfigurator(weewx.abstractstation.DeviceConfigurator):
             else:
                 print 'Clearing console memory'
                 ans = 'y'
-            if ans == 'y' :
+            if ans == 'y':
                 self.station.clearHistory()
                 v = self.station.getRecordCount()
                 print "Records in memory:", v
@@ -392,10 +392,10 @@ class WS23xxConfigurator(weewx.abstractstation.DeviceConfigurator):
                 print "Clear memory cancelled."
 
 
-class WS23xxDriver(weewx.abstractstation.AbstractStation):
+class WS23xxDriver(weewx.drivers.AbstractDevice):
     """Driver for LaCrosse WS23xx stations."""
     
-    def __init__(self, **stn_dict) :
+    def __init__(self, **stn_dict):
         """Initialize the station object.
 
         port: The serial port, e.g., /dev/ttyS0 or /dev/ttyUSB0
@@ -411,14 +411,14 @@ class WS23xxDriver(weewx.abstractstation.AbstractStation):
         self._last_cn = None
         self._poll_wait = 60
 
-        self.model             = stn_dict.get('model', 'LaCrosse WS23xx')
-        self.port              = stn_dict.get('port', DEFAULT_PORT)
-        self.max_tries         = int(stn_dict.get('max_tries', 5))
-        self.retry_wait        = int(stn_dict.get('retry_wait', 30))
-        self.polling_interval  = stn_dict.get('polling_interval', None)
+        self.model = stn_dict.get('model', 'LaCrosse WS23xx')
+        self.port = stn_dict.get('port', DEFAULT_PORT)
+        self.max_tries = int(stn_dict.get('max_tries', 5))
+        self.retry_wait = int(stn_dict.get('retry_wait', 30))
+        self.polling_interval = stn_dict.get('polling_interval', None)
         if self.polling_interval is not None:
             self.polling_interval = int(self.polling_interval)
-        self.disable_catchup   = weeutil.weeutil.tobool(stn_dict.get('disable_catchup', False))
+        self.disable_catchup = weeutil.weeutil.tobool(stn_dict.get('disable_catchup', False))
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('serial port is %s' % self.port)
@@ -487,7 +487,7 @@ class WS23xxDriver(weewx.abstractstation.AbstractStation):
             raise NotImplementedError
         with WS23xx(self.port) as s:
             last_rain = None
-            for ts,data in s.gen_records(since_ts=since_ts, count=count):
+            for ts, data in s.gen_records(since_ts=since_ts, count=count):
                 record = data_to_packet(data, ts,
                                         last_rain=last_rain)
                 record['interval'] = data['interval']
@@ -528,12 +528,12 @@ class WS23xxDriver(weewx.abstractstation.AbstractStation):
 
 
 # ids for current weather conditions and connection type
-SENSOR_IDS = [ 'it','ih','ot','oh','pa','wind','rh','rt','dp','wc','cn' ]
+SENSOR_IDS = ['it','ih','ot','oh','pa','wind','rh','rt','dp','wc','cn']
 # polling interval, in seconds, for various connection types
-POLLING_INTERVAL = { 0:("cable",8), 3:("lost",60), 15:("wireless",30) }
+POLLING_INTERVAL = {0: ("cable", 8), 3: ("lost", 60), 15: ("wireless", 30)}
 
 def get_conn_info(conn_type):
-    return POLLING_INTERVAL.get(conn_type, ("unknown",60))
+    return POLLING_INTERVAL.get(conn_type, ("unknown", 60))
 
 def data_to_packet(data, ts, last_rain=None):
     """Convert raw data to format and units required by weewx.
@@ -551,7 +551,7 @@ def data_to_packet(data, ts, last_rain=None):
     rain rate                    cm/h
     """
 
-    packet = {}
+    packet = dict()
     packet['usUnits'] = weewx.METRIC
     packet['dateTime'] = ts
     packet['inTemp'] = data['it']
@@ -560,7 +560,7 @@ def data_to_packet(data, ts, last_rain=None):
     packet['outHumidity'] = data['oh']
     packet['pressure'] = data['pa']
 
-    ws,wd,wso,wsv = data['wind']
+    ws, wd, wso, wsv = data['wind']
     if wso == 0 and wsv == 0:
         packet['windSpeed'] = ws
         if packet['windSpeed'] is not None:
@@ -568,7 +568,7 @@ def data_to_packet(data, ts, last_rain=None):
         packet['windDir'] = wd if packet['windSpeed'] else None
     else:
         loginf('invalid wind reading: speed=%s dir=%s overflow=%s invalid=%s' %
-               (ws,wd,wso,wsv))
+               (ws, wd, wso, wsv))
         packet['windSpeed'] = None
         packet['windDir'] = None
 
@@ -634,7 +634,7 @@ class WS23xx(object):
     def set_archive_interval(self, interval):
         """Set the archive interval in minutes."""
         if int(interval) < 1:
-            raise ValueError, 'archive interval must be greater than zero'
+            raise ValueError('archive interval must be greater than zero')
         logdbg('setting hardware archive interval to %s minutes' % interval)
         interval -= 1
         for m,v in [(Measure.IDS['hi'],interval), # archive interval in minutes
@@ -687,10 +687,10 @@ class WS23xx(object):
 
         logdbg("gen_records: since_ts=%s count=%s clock=%s" % 
                (since_ts, count, use_computer_clock))
-        measures = [ Measure.IDS['hi'], Measure.IDS['hw'],
-                     Measure.IDS['hc'], Measure.IDS['hn'] ]
+        measures = [Measure.IDS['hi'], Measure.IDS['hw'],
+                    Measure.IDS['hc'], Measure.IDS['hn']]
         raw_data = read_measurements(self.ws, measures)
-        interval = 1+int(measures[0].conv.binary2value(raw_data[0])) # minute
+        interval = 1 + int(measures[0].conv.binary2value(raw_data[0])) # minute
         latest_ts = int(measures[1].conv.binary2value(raw_data[1])) # epoch
         time_to_next = int(measures[2].conv.binary2value(raw_data[2])) # minute
         numrec = int(measures[3].conv.binary2value(raw_data[3]))
@@ -725,10 +725,8 @@ class WS23xx(object):
         measures = [HistoryMeasure(n) for n in range(count-1, -1, -1)]
         raw_data = read_measurements(self.ws, measures)
         last_ts = latest_ts - (count-1) * interval * 60
-        last_rain = None
         for measure, nybbles in zip(measures, raw_data):
             value = measure.conv.binary2value(nybbles)
-            delta = weewx.wxformulas.calculate_rain(value.rain, last_rain)
             data_dict = {
                 'interval': interval,
                 'it': value.temp_indoor,
@@ -738,19 +736,18 @@ class WS23xx(object):
                 'pa': value.pressure_absolute,
                 'rt': value.rain,
                 'wind': (value.wind_speed, value.wind_direction, 0, 0),
-                'rh': None, # no rain rate in history
-                'dp': None, # no dewpoint in history
-                'wc': None, # no windchill in history
+                'rh': None,  # no rain rate in history
+                'dp': None,  # no dewpoint in history
+                'wc': None,  # no windchill in history
                 }
             yield last_ts, data_dict
             last_ts += interval * 60
-            last_rain = value.rain
 
     def get_raw_data(self, labels):
         """Get raw data from the station, return as dictionary."""
-        measures = [ Measure.IDS[m] for m in labels ]
+        measures = [Measure.IDS[m] for m in labels]
         raw_data = read_measurements(self.ws, measures)
-        data_dict = dict(zip(labels, [ m.conv.binary2value(d) for m, d in zip(measures, raw_data) ]))
+        data_dict = dict(zip(labels, [m.conv.binary2value(d) for m, d in zip(measures, raw_data)]))
         return data_dict
 
 
@@ -2012,50 +2009,46 @@ if __name__ == '__main__':
 
     usage = """%prog [options] [--debug] [--help]"""
 
-    def main():
-        syslog.openlog('ws23xx', syslog.LOG_PID | syslog.LOG_CONS)
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
-        port = DEFAULT_PORT
-        parser = optparse.OptionParser(usage=usage)
-        parser.add_option('--version', dest='version', action='store_true',
-                          help='display driver version')
-        parser.add_option('--debug', dest='debug', action='store_true',
-                          help='display diagnostic information while running')
-        parser.add_option('--port', dest='port', metavar='PORT',
-                          help='serial port to which the station is connected')
-        parser.add_option('--readings', dest='readings', action='store_true',
-                          help='display sensor readings')
-        parser.add_option("--records", dest="records", type=int, metavar="N",
-                          help="display N station records, oldest to newest")
-        parser.add_option('--help-measures', dest='hm', action='store_true',
-                          help='display measure names')
-        parser.add_option('--measure', dest='measure', type=str,
-                          metavar="MEASURE", help='display single measure')
+    syslog.openlog('ws23xx', syslog.LOG_PID | syslog.LOG_CONS)
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+    port = DEFAULT_PORT
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('--version', dest='version', action='store_true',
+                      help='display driver version')
+    parser.add_option('--debug', dest='debug', action='store_true',
+                      help='display diagnostic information while running')
+    parser.add_option('--port', dest='port', metavar='PORT',
+                      help='serial port to which the station is connected')
+    parser.add_option('--readings', dest='readings', action='store_true',
+                      help='display sensor readings')
+    parser.add_option("--records", dest="records", type=int, metavar="N",
+                      help="display N station records, oldest to newest")
+    parser.add_option('--help-measures', dest='hm', action='store_true',
+                      help='display measure names')
+    parser.add_option('--measure', dest='measure', type=str,
+                      metavar="MEASURE", help='display single measure')
 
-        (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args()
 
-        if options.version:
-            print "ws23xx driver version %s" % DRIVER_VERSION
-            exit(1)
+    if options.version:
+        print "ws23xx driver version %s" % DRIVER_VERSION
+        exit(1)
 
-        if options.debug is not None:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        if options.port:
-            port = options.port
+    if options.debug is not None:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    if options.port:
+        port = options.port
 
-        with WS23xx(port) as s:
-            if options.readings:
-                data = s.get_raw_data(SENSOR_IDS)
-                print data
-            if options.records is not None:
-                for ts,record in s.gen_records(count=options.records):
-                    print ts,record
-            if options.measure:
-                data = s.get_raw_data([options.measure])
-                print data
-            if options.hm:
-                for m in Measure.IDS:
-                    print "%s\t%s" % (m, Measure.IDS[m].name)
-
-if __name__ == '__main__':
-    main()
+    with WS23xx(port) as s:
+        if options.readings:
+            data = s.get_raw_data(SENSOR_IDS)
+            print data
+        if options.records is not None:
+            for ts,record in s.gen_records(count=options.records):
+                print ts,record
+        if options.measure:
+            data = s.get_raw_data([options.measure])
+            print data
+        if options.hm:
+            for m in Measure.IDS:
+                print "%s\t%s" % (m, Measure.IDS[m].name)

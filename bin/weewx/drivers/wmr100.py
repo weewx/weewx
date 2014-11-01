@@ -28,14 +28,13 @@ import syslog
 
 import usb
 
+import weewx
 import weeutil.weeutil
-import weewx.abstractstation
-import weewx.units
 
 def loader(config_dict, engine):
     return WMR100(**config_dict['WMR100'])    
-        
-class WMR100(weewx.abstractstation.AbstractStation):
+
+class WMR100(weewx.drivers.AbstractDevice):
     """Driver for the WMR100 station."""
     
     def __init__(self, **stn_dict) :

@@ -21,9 +21,8 @@ import syslog
 
 import serial
 
-import weeutil.weeutil
-import weewx.abstractstation
-import weewx.units
+import weewx
+
 from math import exp
 
 class WMR9x8ProtocolError(weewx.WeeWxIOError):
@@ -94,11 +93,11 @@ class SerialWrapper(object):
     def closePort(self):
         self.serial_port.close()
 
-#===============================================================================
+#==============================================================================
 #                           Class WMR9x8
-#===============================================================================
+#==============================================================================
 
-class WMR9x8(weewx.abstractstation.AbstractStation):
+class WMR9x8(weewx.drivers.AbstractDevice):
     """Class that represents a connection to a Oregon Scientific WMR9x8 console.
 
     The connection to the console will be open after initialization"""
@@ -131,7 +130,7 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
 
     @property
     def hardware_name(self):
-        return self._model
+        return self.model
 
     def openPort(self):
         """Open up the connection to the console"""
@@ -198,9 +197,9 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
                 syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Advancing buffer by one for the next potential packet")
                 buf.pop(0)
 
-    #===========================================================================
+    #==========================================================================
     #              Oregon Scientific WMR9x8 utility functions
-    #===========================================================================
+    #==========================================================================
 
     @staticmethod
     def _port_factory(stn_dict):
@@ -369,10 +368,12 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
                 temp = -temp
         else:
             temp = None
-            
+
         dewunder = bool(status&0x01)
         if not dewunder:
             dew = dew1 + (dew10 * 10)
+        else:
+            dew = None
             
         rawsp = ((baro10&0xF) << 4) | baro1
         sp = rawsp + 795
@@ -410,6 +411,8 @@ class WMR9x8(weewx.abstractstation.AbstractStation):
         dewunder = bool(status&0x01)
         if not dewunder:
             dew = dew1 + (dew10 * 10)
+        else:
+            dew = None
 
         rawsp = ((baro100&0x01) << 8) | ((baro10&0xF) << 4) | baro1
         sp = rawsp + 600

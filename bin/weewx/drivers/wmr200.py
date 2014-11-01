@@ -40,9 +40,8 @@ import threading
 import time
 import usb
 
+import weewx
 import weeutil.weeutil
-import weewx.abstractstation
-import weewx.units
 
 # General decoding sensor maps.
 WIND_DIR_MAP = { 0:'N', 1:'NNE', 2:'NE', 3:'ENE',
@@ -157,6 +156,10 @@ class UsbDevice(object):
         # debug byte count
         self.byte_cnt_rd = 0
         self.byte_cnt_wr = 0
+        # default to a sane endpoint
+        self.in_endpoint = usb.ENDPOINT_IN + 1
+        # only one interface
+        self.interface = 0
 
     def find_device(self, vendor_id, product_id):
         """Find the given vendor and product IDs on the USB bus
@@ -223,6 +226,7 @@ class UsbDevice(object):
             logerr(msg)
             raise weewx.WeeWxIOError(msg)
 
+        report = None
         try:
             report = self.handle.interruptRead(self.in_endpoint,
                                                _WMR200_USB_FRAME_SIZE,
@@ -244,9 +248,9 @@ class UsbDevice(object):
                 logdbg('read_device(): %s' % buf)
             return report[1:report[0] + 1]
 
-        except IndexError:
+        except IndexError, e:
             # This indicates we failed an index range above.
-            logerr('read_device() Failed the index rage %s' % report)
+            logerr('read_device() Failed the index rage %s: %s' % (report, e))
 
         except usb.USBError, ex:
             # No data presented on the bus.  This is a normal part of
@@ -474,7 +478,7 @@ class Packet(object):
             day    = pkt_data[2]
             month  = pkt_data[3]
             year   = 2000 + pkt_data[4]
-            return time.mktime((year, month, day, hour, minute, \
+            return time.mktime((year, month, day, hour, minute,
                                 0, -1, -1, -1))
         except IndexError:
             log_msg = ('Packet length too short to get timestamp len:%d'
@@ -1365,7 +1369,7 @@ class PollUsbDevice(threading.Thread):
         self._cv_poll.notify()
         self._cv_poll.release()
 
-class WMR200(weewx.abstractstation.AbstractStation):
+class WMR200(weewx.drivers.AbstractDevice):
     """Driver for the Oregon Scientific WMR200 station."""
 
     def __init__(self, **stn_dict) :
@@ -1877,7 +1881,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
                 timestamp_packet_interval = timestamp_packet_current \
                         - timestamp_packet_previous
 
-                if pkt.timestamp_record() > (timestamp_packet_previous \
+                if pkt.timestamp_record() > (timestamp_packet_previous
                                              + self._archive_threshold):
                     loginf(('genStartup() Discarding received archive'
                             ' record exceeding archive interval cnt:%d'

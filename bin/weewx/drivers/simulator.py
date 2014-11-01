@@ -9,8 +9,8 @@ import math
 import time
 
 import weedb
+import weewx
 import weeutil.weeutil
-import weewx.abstractstation
 
 def loader(config_dict, engine):
 
@@ -43,7 +43,7 @@ def loader(config_dict, engine):
     
     return station
         
-class Simulator(weewx.abstractstation.AbstractStation):
+class Simulator(weewx.drivers.AbstractDevice):
     """Station simulator"""
     
     def __init__(self, **stn_dict):
@@ -104,8 +104,8 @@ class Simulator(weewx.abstractstation.AbstractStation):
             'windGustDir': Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
             'outHumidity': Observation(magnitude=30.0,  average= 50.0, period=48.0, phase_lag= 0.0, start=start_ts),
             'inHumidity' : Observation(magnitude=10.0,  average= 20.0, period=24.0, phase_lag= 0.0, start=start_ts),
-            'radiation'  : Solar(magnitude=1000.0, solar_start=6.0, solar_length=12.0),
-            'UV'         : Solar(magnitude=14,     solar_start=6.0, solar_length=12.0),
+            'radiation'  : Solar(magnitude=1000, solar_start=6, solar_length=12),
+            'UV'         : Solar(magnitude=14,   solar_start=6, solar_length=12),
             'rain'       : Rain(rain_start=0, rain_length=3, total_rain=0.2, loop_interval=self.loop_interval),
             }
 

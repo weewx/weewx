@@ -30,7 +30,6 @@ import syslog
 import time
 
 import weewx
-import weewx.abstractstation
 
 DRIVER_VERSION = '0.8'
 DEFAULT_PORT = '/dev/ttyS0'
@@ -58,7 +57,7 @@ class ChecksumMismatch(weewx.WeeWxIOError):
         weewx.WeeWxIOError.__init__(self, "Checksum mismatch: 0x%04x != 0x%04x" % (a,b))
 
 
-class CC3000Configurator(weewx.abstractstation.DeviceConfigurator):
+class CC3000Configurator(weewx.drivers.AbstractConfigurator):
     @property
     def version(self):
         return DRIVER_VERSION
@@ -126,7 +125,7 @@ class CC3000Configurator(weewx.abstractstation.DeviceConfigurator):
             else:
                 print 'Clearing console memory'
                 ans = 'y'
-            if ans == 'y' :
+            if ans == 'y':
                 self.station.clear_memory()
                 print self.station.get_status()
             elif ans == 'n':
@@ -141,7 +140,7 @@ class CC3000Configurator(weewx.abstractstation.DeviceConfigurator):
             else:
                 print "Setting interval to %d minutes" % interval
                 ans = 'y'
-            if ans == 'y' :
+            if ans == 'y':
                 self.station.set_interval(interval)
                 print "Interval is now", self.station.get_interval()
             elif ans == 'n':
@@ -157,8 +156,8 @@ class CC3000Configurator(weewx.abstractstation.DeviceConfigurator):
             else:
                 print "Setting station clock to %s" % now
                 ans = 'y'
-            if ans == 'y' :
-                self.station.set_clock()
+            if ans == 'y':
+                self.station.set_time()
                 print "Station clock is now", self.station.get_time()
             elif ans == 'n':
                 print "Set clock cancelled."
@@ -172,15 +171,15 @@ class CC3000Configurator(weewx.abstractstation.DeviceConfigurator):
             else:
                 print "Setting station units to %s" % units
                 ans = 'y'
-            if ans == 'y' :
+            if ans == 'y':
                 self.station.set_units(units)
                 print "Station units is now", self.station.get_units()
             elif ans == 'n':
                 print "Set units cancelled."
 
 
-class CC3000Driver(weewx.abstractstation.AbstractStation):
-    '''weewx driver that communicates with a RainWise CC3000 data logger.'''
+class CC3000Driver(weewx.drivers.AbstractDevice):
+    """weewx driver that communicates with a RainWise CC3000 data logger."""
 
     # map rainwise names to weewx names
     DEFAULT_LABEL_MAP = { 'TIMESTAMP': 'TIMESTAMP',
@@ -232,8 +231,8 @@ class CC3000Driver(weewx.abstractstation.AbstractStation):
                 ts = data.get('TIMESTAMP')
                 if ts is not None:
                     if not self.use_station_time:
-                        ts = int(time.time()+0.5)
-                    packet = {'dateTime': ts, 'usUnits' : units }
+                        ts = int(time.time() + 0.5)
+                    packet = {'dateTime': ts, 'usUnits': units}
                     packet.update(data)
                     self._augment_packet(packet)
                     yield packet
@@ -272,8 +271,8 @@ class CC3000Driver(weewx.abstractstation.AbstractStation):
                 data = self._parse_historical(r[1:])
                 if data['TIMESTAMP'] > since_ts:
                     packet = {'dateTime': data['TIMESTAMP'],
-                              'usUnits' : units,
-                              'interval' : self._archive_interval }
+                              'usUnits': units,
+                              'interval': self._archive_interval}
                     packet.update(data)
                     self._augment_packet(packet)
                     yield packet
@@ -311,7 +310,7 @@ class CC3000Driver(weewx.abstractstation.AbstractStation):
 
     def set_time(self):
         with CC3000(self.port) as station:
-            return station.set_time()
+            station.set_time()
 
     def get_units(self):
         with CC3000(self.port) as station:
@@ -319,7 +318,7 @@ class CC3000Driver(weewx.abstractstation.AbstractStation):
 
     def set_units(self, units):
         with CC3000(self.port) as station:
-            return station.set_units(units)
+            station.set_units(units)
 
     def get_interval(self):
         with CC3000(self.port) as station:
@@ -327,7 +326,11 @@ class CC3000Driver(weewx.abstractstation.AbstractStation):
 
     def set_interval(self, interval):
         with CC3000(self.port) as station:
-            return station.set_interval(interval)
+            station.set_interval(interval)
+
+    def clear_memory(self):
+        with CC3000(self.port) as station:
+            station.clear_memory()
 
     def get_version(self):
         with CC3000(self.port) as station:
@@ -344,7 +347,7 @@ class CC3000Driver(weewx.abstractstation.AbstractStation):
                 return
             except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
                 logerr("Failed attempt %d of %d to initialize station: %s" %
-                       (cnt+1, self.max_tries, e))
+                       (cnt + 1, self.max_tries, e))
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)
                 time.sleep(self.retry_wait)
         else:
@@ -384,7 +387,7 @@ class CC3000Driver(weewx.abstractstation.AbstractStation):
 
     def _parse_values(self, values, fmt):
         data = {}
-        for i,v in enumerate(values):
+        for i, v in enumerate(values):
             if i >= len(self.header):
                 continue
             label = self.label_map.get(self.header[i])
@@ -401,7 +404,7 @@ class CC3000Driver(weewx.abstractstation.AbstractStation):
         for v in header:
             if v == 'HDR' or v[0:1] == '!':
                 continue
-            v = v.replace('"','')
+            v = v.replace('"', '')
             h.append(v)
         return h
 
@@ -441,7 +444,7 @@ def _check_crc(buf):
     logdbg("calculated checksum %x" % a)
     b = int(cs, 16) # checksum provided in data
     if a != b:
-        raise ChecksumMismatch(a,b)
+        raise ChecksumMismatch(a, b)
 
 class CC3000(object):
     def __init__(self, port):
@@ -501,14 +504,14 @@ class CC3000(object):
         return self.get_data()
 
     def send_cmd(self, cmd):
-        '''Any command must be terminated with a CR'''
+        """Any command must be terminated with a CR"""
         self.write("%s\r" % cmd)
 
     def get_data(self):
-        '''The station sends CR NL before and after any response.  Some
+        """The station sends CR NL before and after any response.  Some
         responses have a 4-byte CRC checksum at the end, indicated with an
         exclamation.  Not every response has a checksum.
-        '''
+        """
         buf = []
         while True:
             c = self.read()
@@ -635,75 +638,71 @@ if __name__ == '__main__':
 
     usage = """%prog [options] [--help]"""
 
-    def main():
-        syslog.openlog('cc3000', syslog.LOG_PID | syslog.LOG_CONS)
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        parser = optparse.OptionParser(usage=usage)
-        parser.add_option('--version', dest='version', action='store_true',
-                          help='display driver version')
-        parser.add_option('--test-crc', dest='testcrc', action='store_true',
-                          help='test crc')
-        parser.add_option('--port', dest='port', metavar='PORT',
-                          help='port to which the station is connected',
-                          default=DEFAULT_PORT)
-        parser.add_option('--get-version', dest='getver', action='store_true',
-                          help='display firmware version')
-        parser.add_option('--get-status', dest='status', action='store_true',
-                          help='display memory status')
-        parser.add_option('--get-current', dest='getcur', action='store_true',
-                          help='display current data')
-        parser.add_option('--get-records', dest='getrec', action='store_true',
-                          help='display records from station memory')
-        parser.add_option('--get-header', dest='gethead', action='store_true',
-                          help='display data header')
-        parser.add_option('--get-units', dest='getunits', action='store_true',
-                          help='display units')
-        parser.add_option('--set-units', dest='setunits', metavar='UNITS',
-                          help='set units to ENGLISH or METRIC')
-        parser.add_option('--get-time', dest='gettime', action='store_true',
-                          help='display station time')
-        parser.add_option('--set-time', dest='settime', action='store_true',
-                          help='set station time to computer time')
-        parser.add_option('--get-interval', dest='getint', action='store_true',
-                          help='display logging interval, in seconds')
-        parser.add_option('--set-interval', dest='setint', metavar='INTERVAL',
-                          help='set logging interval, in seconds')
-        (options, args) = parser.parse_args()
+    syslog.openlog('cc3000', syslog.LOG_PID | syslog.LOG_CONS)
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('--version', dest='version', action='store_true',
+                      help='display driver version')
+    parser.add_option('--test-crc', dest='testcrc', action='store_true',
+                      help='test crc')
+    parser.add_option('--port', dest='port', metavar='PORT',
+                      help='port to which the station is connected',
+                      default=DEFAULT_PORT)
+    parser.add_option('--get-version', dest='getver', action='store_true',
+                      help='display firmware version')
+    parser.add_option('--get-status', dest='status', action='store_true',
+                      help='display memory status')
+    parser.add_option('--get-current', dest='getcur', action='store_true',
+                      help='display current data')
+    parser.add_option('--get-records', dest='getrec', action='store_true',
+                      help='display records from station memory')
+    parser.add_option('--get-header', dest='gethead', action='store_true',
+                      help='display data header')
+    parser.add_option('--get-units', dest='getunits', action='store_true',
+                      help='display units')
+    parser.add_option('--set-units', dest='setunits', metavar='UNITS',
+                      help='set units to ENGLISH or METRIC')
+    parser.add_option('--get-time', dest='gettime', action='store_true',
+                      help='display station time')
+    parser.add_option('--set-time', dest='settime', action='store_true',
+                      help='set station time to computer time')
+    parser.add_option('--get-interval', dest='getint', action='store_true',
+                      help='display logging interval, in seconds')
+    parser.add_option('--set-interval', dest='setint', metavar='INTERVAL',
+                      help='set logging interval, in seconds')
+    (options, args) = parser.parse_args()
 
-        if options.version:
-            print "CC3000 driver version %s" % DRIVER_VERSION
-            exit(0)
+    if options.version:
+        print "CC3000 driver version %s" % DRIVER_VERSION
+        exit(0)
 
-        if options.testcrc:
-            _check_crc('OK')
-            _check_crc('REC,2010/01/01 14:12, 64.5, 85,29.04,349,  2.4,  4.2,  0.00, 6.21, 0.25, 73.2,!B82C')
-            _check_crc('MSG,2010/01/01 20:22,CHARGER ON,!4CED')
-            exit(0)
+    if options.testcrc:
+        _check_crc('OK')
+        _check_crc('REC,2010/01/01 14:12, 64.5, 85,29.04,349,  2.4,  4.2,  0.00, 6.21, 0.25, 73.2,!B82C')
+        _check_crc('MSG,2010/01/01 20:22,CHARGER ON,!4CED')
+        exit(0)
 
-        with CC3000(options.port) as s:
-            if options.getver:
-                print s.get_version()
-            if options.status:
-                print s.get_memory_status()
-            if options.getcur:
-                print s.get_current_data()
-            if options.getrec:
-                for r in s.get_records():
-                    print r
-            if options.gethead:
-                print s.get_header()
-            if options.getunits:
-                print s.get_units()
-            if options.setunits:
-                s.set_units(options.setunits)
-            if options.gettime:
-                print s.get_time()
-            if options.settime:
-                s.set_time()
-            if options.getint:
-                print s.get_interval()
-            if options.setint:
-                s.set_interval(int(options.setint))
-
-if __name__ == '__main__':
-    main()
+    with CC3000(options.port) as s:
+        if options.getver:
+            print s.get_version()
+        if options.status:
+            print s.get_memory_status()
+        if options.getcur:
+            print s.get_current_data()
+        if options.getrec:
+            for r in s.get_records():
+                print r
+        if options.gethead:
+            print s.get_header()
+        if options.getunits:
+            print s.get_units()
+        if options.setunits:
+            s.set_units(options.setunits)
+        if options.gettime:
+            print s.get_time()
+        if options.settime:
+            s.set_time()
+        if options.getint:
+            print s.get_interval()
+        if options.setint:
+            s.set_interval(int(options.setint))
