@@ -844,87 +844,14 @@ class ValueHelper(object):
     def has_data(self):
         return self.exists() and self.value_t[0] is not None
     
-#==============================================================================
-#                            class ValueDict
-#==============================================================================
 
-class ValueDict(object):
-    """A dictionary that returns values as ValueHelper.
-    
-    This dictionary holds a dictionary that returns ValueTuples.
-    Then, when it is keyed, it wraps the returned ValueTuples in a 
-    ValueHelper, which can then be used for context sensitive formatting. 
-    
-    Example:
-    >>> vd = ValueDict({'outTemp'   : (20.3, 'degree_C', 'group_temperature'),\
-                        'barometer' : (30.02 , 'inHg', 'group_pressure') })
-    >>> print vd['outTemp']
-    68.5°F
-    
-    Print barometric pressure, overriding the units to millibars:
-    >>> print vd['barometer'].mbar
-    1016.5 mbar
-    """
-    
-    def __init__(self, d, context='current', formatter=Formatter(), converter=Converter()):
-        """Initialize the ValueDict from a dictionary with keys of observation
-        types, values of value tuples.
-        
-        d: A dictionary with keys of observation types, values a ValueTuple
-        
-        context: The time context of the dictionary. This will be passed on to
-        the returned instance of ValueHelper. [Optional. If not given,
-        'current' will be used]
-
-        formatter: A unit formatter. This will be passed on to the returned
-        DictBinder. [Optional. If not given, the default Formatter() will
-        be passed on.]
-        
-        converter: A unit converter. This will be passed on to the returned
-        DictBinder. [Optional. If not given, the default Converter() will
-        be passed on.] 
-        """
-        self.dictionary= d
-        self.context   = context
-        self.formatter = formatter
-        self.converter = converter
-        
-    def __getitem__(self, obs_type):
-        """Look up an observation type (eg, 'outTemp') and return it as a ValueHelper.
-        
-        obs_type: The key.
-        
-        Returns: A ValueHelper, or an object of type UnknownType if the key does
-        not appear in the dictionary.
-        """
-        vt = self.dictionary.get(obs_type, UnknownType(obs_type))
-        return ValueHelper(vt, context=self.context, formatter=self.formatter,
-                           converter=self.converter)
-
-    def __getattr__(self, obs_type):
-        """Look up an observation type (eg, 'outTemp') and return it as a ValueHelper.
-        
-        obs_type: An attribute
-        
-        Returns: A ValueHelper, or an object of type UnknownType if the key does
-        not appear in the dictionary.
-        """
-        # The following is so the Python version of Cheetah's NameMapper does not
-        # think I'm a functor or real dictionary.
-        if obs_type in ['__call__', 'has_key']:
-            raise AttributeError(obs_type)
-        vt = self.dictionary.get(obs_type, UnknownType(obs_type))
-        return ValueHelper(vt, context=self.context, formatter=self.formatter,
-                           converter=self.converter)
-    
 #==============================================================================
 #                             class ValueTupleDict
 #==============================================================================
 
 class ValueTupleDict(dict):
     """A dictionary like any other dictionary, except that when keyed, it
-    returns its results as a ValueTuple. It is useful to be fed into
-    ValudDict above.
+    returns its results as a ValueTuple.
     
     Example:
     >>> vtd = ValueTupleDict({'usUnits' : 1, 'outTemp' : 68.0})
