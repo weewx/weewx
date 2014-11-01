@@ -314,9 +314,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                       self.outputted_dict]
         
         # Then add the V3.X style search list extensions
-        db_factory = weewx.tags.DBFactory(self.db_binder, default_binding)
         for obj in self.search_list_objs:
-            searchList += obj.get_extension_list(timespan, db_factory)
+            searchList += obj.get_extension_list(timespan, self.db_binder, default_binding)
 
         return searchList
 
@@ -385,14 +384,17 @@ class SearchList(object):
         """
         self.generator = generator
 
-    def get_extension_list(self, timespan, db_factory):
+    def get_extension_list(self, timespan, db_binder, default_binding):
         """For weewx V3.x extensions. Should return a list
         of objects whose attributes or keys define the extension.
         
         timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
                    start and stop times of the domain of valid times.
                    
-        db_factory: An instance of class weewx.tags.DBFactory
+        db_binder: An instance of class weewx.manager.DBBinder
+        
+        default_binding: In the absence of a binding, the binding name 
+        to be used.
         """
         return [self]
 
@@ -463,32 +465,24 @@ class Stats(SearchList):
     as $day.outTemp.max"""
 
 
-    def get_extension_list(self, timespan, db_factory):
+    def get_extension_list(self, timespan, db_binder, default_binding):
         try:
             trend_dict = self.generator.skin_dict['Units']['Trend']
         except KeyError:
             trend_dict = {'time_delta' : 10800,
                           'time_grace' : 300}
 
-        # Build a "current record" from the default database binding. This
-        # will allow the database to be hit only once for the most common
-        # lookups
-        dbmanager  = db_factory.get_database()
-        record = dbmanager.getRecord(timespan.stop)
-        current = weewx.tags.CurrentRecord(record, context='current',
-                                           formatter=self.generator.formatter,
-                                           converter=self.generator.converter)
+        stats = weewx.tags.TimeBinder(db_binder,
+                                      default_binding,
+                                      timespan.stop,
+                                      formatter=self.generator.formatter,
+                                      converter=self.generator.converter,
+                                      week_start=self.generator.stn_info.week_start,
+                                      rain_year_start=self.generator.stn_info.rain_year_start,
+                                      trend=trend_dict,
+                                      skin_dict=self.generator.skin_dict)
 
-        stats = weewx.tags.FactoryBinder(db_factory,
-                                         timespan.stop,
-                                         formatter=self.generator.formatter,
-                                         converter=self.generator.converter,
-                                         week_start=self.generator.stn_info.week_start,
-                                         rain_year_start=self.generator.stn_info.rain_year_start,
-                                         trend=trend_dict,
-                                         skin_dict=self.generator.skin_dict)
-
-        return [{'current':current}, stats]
+        return [stats]
 
 class UnitInfo(SearchList):
     """Class that implements the $unit tag."""
