@@ -17,6 +17,7 @@ import syslog
 import time
 
 import weewx
+import weewx.drivers
 import weewx.units
 import weewx.uwxutils
 

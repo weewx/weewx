@@ -29,6 +29,7 @@ import syslog
 import usb
 
 import weewx
+import weewx.drivers
 import weeutil.weeutil
 
 def loader(config_dict, engine):

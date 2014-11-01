@@ -241,6 +241,8 @@ import termios
 import tty
 
 import weeutil.weeutil
+import weewx
+import weewx.drivers
 import weewx.units
 import weewx.wxformulas
 

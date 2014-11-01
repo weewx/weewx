@@ -64,6 +64,7 @@ import syslog
 import time
 
 import weewx
+import weewx.drivers
 
 DRIVER_VERSION = '0.10'
 DEFAULT_PORT = '/dev/ttyS0'

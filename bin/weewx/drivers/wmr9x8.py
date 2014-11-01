@@ -22,6 +22,7 @@ import syslog
 import serial
 
 import weewx
+import weewx.drivers
 
 from math import exp
 

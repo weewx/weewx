@@ -145,6 +145,7 @@ import time
 import usb
 
 import weewx
+import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_VERSION = '0.12'
