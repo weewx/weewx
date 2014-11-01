@@ -20,7 +20,6 @@ Look at Gary's (?) changes to allow cron-like report generation.
 
 Move schemas to the extension that uses them.
 
-Simplify logic in TrendObj
 
 
 

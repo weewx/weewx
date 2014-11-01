@@ -142,7 +142,7 @@ class StdReportEngine(threading.Thread):
                 except Exception, e:
                     # Caught unrecoverable error. Log it, continue on to the next generator.
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % (generator,))
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % str(e))
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated...")
                     traceback.print_exc()

@@ -10,6 +10,7 @@
 import weeutil.weeutil
 from weeutil.weeutil import to_int
 import weewx.units
+from weewx.units import ValueTuple
 
 #===============================================================================
 #                    Class DBFactory
@@ -115,10 +116,9 @@ class DatabaseBinder(object):
         if time_grace is None:
             time_grace = to_int(self.option_dict['trend'].get('time_grace', 300))
 
-        now_vtd  = self._get_valuetupledict(self.endtime_ts, time_grace)
-        then_vtd = self._get_valuetupledict(self.endtime_ts - time_delta, time_grace)
-        return TrendObj(then_vtd, now_vtd, time_delta, self.formatter, self.converter)
-        
+        return TrendObj(time_delta, time_grace, self.opendb, self.endtime_ts, 
+                 self.formatter, self.converter, **self.option_dict)
+
     @property
     def day(self):
         return TimeBinder(weeutil.weeutil.archiveDaySpan(self.endtime_ts), self.opendb, 
@@ -360,30 +360,33 @@ class ObservationBinder(object):
 #===============================================================================
 
 class TrendObj(object):
-    """Helper class that binds together a current record and one a delta
-    time in the past. Useful for trends.
+    """Helper class that calculates trends. 
     
     This class allows tags such as:
       $trend.barometer
     """
         
-    def __init__(self, last_vtd, now_vtd, time_delta, formatter, converter):
+    def __init__(self, time_delta, time_grace, opendb, endtime_ts, formatter, converter, **option_dict):
         """Initialize a Trend object
         
-        last_vd: A ValueTupleDict containing records from the past.
+        time_delta: The time difference over which the trend is to be calculated
         
-        now_vd: A ValueTupleDict containing current records
-        
-        time_delta: The time difference in seconds between them.
+        time_grace: A time within this amount is accepted.
         """
-        self.last_vtd = last_vtd
-        self.now_vtd  = now_vtd
+        self.time_delta_val = time_delta
+        self.time_grace_val = time_grace
+        self.opendb = opendb
+        self.endtime_ts = endtime_ts
         self.formatter = formatter
         self.converter = converter
         self.time_delta = weewx.units.ValueHelper((time_delta, 'second', 'group_elapsed'),
                                                   'current',
-                                                  formatter,
-                                                  converter)
+                                                  self.formatter,
+                                                  self.converter)
+        self.time_grace = weewx.units.ValueHelper((time_grace, 'second', 'group_elapsed'),
+                                                  'current',
+                                                  self.formatter,
+                                                  self.converter)
         
     def __getattr__(self, obs_type):
         """Return the trend for the given observation type."""
@@ -391,21 +394,34 @@ class TrendObj(object):
         # does not think I'm a dictionary:
         if obs_type == 'has_key':
             raise AttributeError
-        
-        # Wrap in a try block because the 'last' record might not exist,
-        # or the 'now' or 'last' value might be None. 
-        try:
-            # Do the unit conversion now, rather than lazily. This is because,
-            # in the case of temperature, the difference between two converted
-            # values is not the same as the conversion of the difference
-            # between two values. E.g., 20C - 10C is not equal to
-            # F_to_C(68F - 50F). We want the former, not the latter.
-            now_val  = self.converter.convert(self.now_vtd[obs_type])
-            last_val = self.converter.convert(self.last_vtd[obs_type])
-            trend = now_val - last_val
-        except TypeError:
-            trend = (None, None, None)
 
+        # Get the current record, and one "time_delta" ago:        
+        now_record  = self.opendb.getRecord(self.endtime_ts, self.time_grace_val)
+        then_record = self.opendb.getRecord(self.endtime_ts - self.time_delta_val, self.time_grace_val)
+
+        # Do both records exist?
+        if now_record is None or then_record is None:
+            # No. One is missing.
+            trend = ValueTuple(None, None, None)
+        else:
+            # If the observation type is not known, a KeyError will be raised.
+            # Be prepared to catch it.
+            try:
+                # Both records exist. Extract the observation type as a ValueTuple
+                now_vt  = weewx.units.as_value_tuple(now_record, obs_type)
+                then_vt = weewx.units.as_value_tuple(then_record, obs_type)
+                # Do the unit conversion now, rather than lazily. This is because,
+                # in the case of temperature, the difference between two converted
+                # values is not the same as the conversion of the difference
+                # between two values. E.g., 20C - 10C is not equal to
+                # F_to_C(68F - 50F). We want the former, not the latter.
+                now_vtc  = self.converter.convert(now_vt)
+                then_vtc = self.converter.convert(then_vt)
+                trend = now_vtc - then_vtc
+            except KeyError:
+                # obs_type is unknown. Signal it
+                trend = weewx.units.UnknownType(obs_type)
+            
         # Return the results as a ValueHelper. Use the formatting and labeling
         # options from the current time record. The user can always override
         # these.

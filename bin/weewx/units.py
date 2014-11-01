@@ -1156,8 +1156,10 @@ def to_std_system(datadict, unit_system):
         return _datadict_target
 
 def as_value_tuple(record_dict, obs_type):
+    """Look up an observation type in a record dictionary, returning the result
+    as a ValueTuple. If not found, an exception of type KeyError will be raised."""
     std_unit_system = record_dict['usUnits']
-    val = record_dict.get(obs_type)
+    val = record_dict[obs_type]
     # Given this standard unit system, what is the unit type of this
     # particular observation type?
     (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
