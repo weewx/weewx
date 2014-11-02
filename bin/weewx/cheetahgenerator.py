@@ -394,8 +394,9 @@ class SearchList(object):
         timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
                    start and stop times of the domain of valid times.
 
-        db_lookup: An object with method get_database(). It will return an
-        instance of a database manager
+        db_lookup: A function with call signature db_lookup(data_binding), which
+        returns a database manager and where data_binding is an optional binding
+        name. If not given, then a default binding will be used.
         """
         return [self]
 

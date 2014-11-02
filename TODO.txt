@@ -10,6 +10,8 @@ For Current records, do just one database lookup.
 
 Add a second database to the template test suite.
 
+engine.py assumes that the main archive data binding will be 'wx_binding'. It shouldn't.
+
 
 
 

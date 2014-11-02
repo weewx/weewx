@@ -60,15 +60,14 @@ class Common(unittest.TestCase):
             test_html_dir = os.path.join(self.config_dict['WEEWX_ROOT'], self.config_dict['StdReport']['HTML_ROOT'])
             shutil.rmtree(test_html_dir)
         except OSError, e:
-            print >>sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
-            print >>sys.stderr, "Reason:", e
-            print >>sys.stderr, "Aborting"
-            exit(1)
+            if os.path.exists(test_html_dir):
+                print >>sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
+                print >>sys.stderr, "Reason:", e
+                print >>sys.stderr, "Aborting"
+                exit(1)
 
-        # Fiddle with config_dict to reflect the database in use:
-        self.config_dict['DataBindings']['wx_binding']['database'] = self.database
         # This will generate the test databases if necessary:
-        gen_fake_data.configDatabases(self.config_dict, 'wx_binding')
+        gen_fake_data.configDatabases(self.config_dict, database_type=self.database_type)
 
     def tearDown(self):
         pass
@@ -80,7 +79,7 @@ class Common(unittest.TestCase):
         print "\ntest time is ", weeutil.weeutil.timestamp_to_string(testtime_ts)
 
         stn_info = weewx.station.StationInfo(**self.config_dict['Station'])
-    
+        
         t = weewx.reportengine.StdReportEngine(self.config_dict, stn_info, testtime_ts)
 
         # Find the test skins and then have SKIN_ROOT point to it:
@@ -111,20 +110,20 @@ class Common(unittest.TestCase):
                 expected_line = expected.readline()
                 if actual_line == '' or expected_line == '':
                     break
-                self.assertEqual(actual_line, expected_line, "%s[%d]:\n%r vs\n%r" % (actual_file, n, actual_line, expected_line))
+                self.assertEqual(actual_line, expected_line, msg="%s[%d]:\n%r vs\n%r" % (actual_file, n, actual_line, expected_line))
             
             print "Checked %d lines" % (n,)
 
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
-        self.database = "archive_sqlite"
+        self.database_type = "sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
         
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
-        self.database = "archive_mysql"
+        self.database_type = "mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
         
         

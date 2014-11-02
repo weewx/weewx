@@ -44,7 +44,15 @@ interval = 600
 
 schema = schemas.wview.schema
 
-def configDatabases(config_dict, binding):
+def configDatabases(config_dict, database_type):
+    config_dict['DataBindings']['wx_binding']['database'] = "archive_" + database_type
+    configDatabase(config_dict, 'wx_binding')
+    config_dict['DataBindings']['alt_binding']['database'] = "alt_" + database_type
+    configDatabase(config_dict, 'alt_binding', amplitude=0.5)
+
+def configDatabase(config_dict, binding, amplitude=1.0, 
+                   day_phase_offset=0.0, annual_phase_offset=0.0,
+                   weather_phase_offset=0.0):
     """Configures the archive databases."""
 
     global schema
@@ -80,9 +88,12 @@ def configDatabases(config_dict, binding):
         
         # Now generate and add the fake records to populate the database:
         t1= time.time()
-        archive.addRecord(genFakeRecords())
+        archive.addRecord(genFakeRecords(amplitude=amplitude, 
+                                         day_phase_offset=day_phase_offset, 
+                                         annual_phase_offset=annual_phase_offset,
+                                         weather_phase_offset=weather_phase_offset))
         t2 = time.time()
-        print "Time to create synthetic archive database = %6.2fs" % (t2-t1,)
+        print "\nTime to create synthetic archive database = %6.2fs" % (t2-t1,)
         
     with weewx.manager.open_database(config_dict, binding, initialize=True) as archive:
 
@@ -93,35 +104,37 @@ def configDatabases(config_dict, binding):
         t1 = time.time()
         nrecs = archive.backfill_day_summary()    
         t2 = time.time()
-        print "Time to backfill stats database with %d records: %6.2fs" % (nrecs, t2-t1)
+        print "\nTime to backfill stats database with %d records: %6.2fs" % (nrecs, t2-t1)
     
-def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval):
+def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval, 
+                   amplitude=1.0, day_phase_offset=0.0, annual_phase_offset=0.0,
+                   weather_phase_offset=0.0):
     count = 0
     
     for ts in xrange(start_ts, stop_ts+interval, interval):
-        daily_phase  = (ts - start_ts) * 2.0 * math.pi / (3600*24.0)
-        annual_phase = (ts - start_ts) * 2.0 * math.pi / (3600*24.0*365.0)
-        weather_phase= (ts - start_ts) * 2.0 * math.pi / weather_cycle
+        daily_phase  = ((ts - start_ts) * 2.0 * math.pi + day_phase_offset)/ (3600*24.0)
+        annual_phase = ((ts - start_ts) * 2.0 * math.pi + annual_phase_offset)/ (3600*24.0*365.0)
+        weather_phase= ((ts - start_ts) * 2.0 * math.pi + weather_phase_offset)/ weather_cycle
         record = {}
         record['dateTime']  = ts
         record['usUnits']   = weewx.US
         record['interval']  = interval
-        record['outTemp']   = 0.5 * (-daily_temp_range*math.sin(daily_phase) - annual_temp_range*math.cos(annual_phase)) + avg_temp
-        record['barometer'] = 0.5 * weather_baro_range*math.sin(weather_phase) + avg_baro
-        record['windSpeed'] = abs(weather_wind_range*(1.0 + math.sin(weather_phase)))
+        record['outTemp']   = 0.5 * amplitude * (-daily_temp_range * math.sin(daily_phase) - annual_temp_range*math.cos(annual_phase)) + avg_temp
+        record['barometer'] = 0.5 * amplitude* weather_baro_range * math.sin(weather_phase) + avg_baro
+        record['windSpeed'] = abs(amplitude * weather_wind_range * (1.0 + math.sin(weather_phase)))
         record['windDir'] = math.degrees(weather_phase) % 360.0
-        record['windGust'] = 1.2*record['windSpeed']
+        record['windGust'] = 1.2 * record['windSpeed']
         record['windGustDir'] = record['windDir']
         if math.sin(weather_phase) > .95:
-            record['rain'] = 0.02 if math.sin(weather_phase) > 0.98 else 0.01
+            record['rain'] = 0.02 * amplitude if math.sin(weather_phase) > 0.98 else 0.01 * amplitude
         else:
             record['rain'] = 0.0
     
         # Make every 71st observation (a prime number) a null. This is a deterministic algorithm, so it
         # will produce the same results every time.
         for obs_type in filter(lambda x : x not in ['dateTime', 'usUnits', 'interval'], record):
-            count+=1
-            if count%71 == 0:
+            count += 1
+            if count % 71 == 0:
                 record[obs_type] = None
                     
         yield record
