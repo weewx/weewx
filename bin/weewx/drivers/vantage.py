@@ -2223,7 +2223,12 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
 
     @staticmethod
     def logger_summary(station, dest_path):
-        dest = open(dest_path, mode="w")
+        try:
+            dest = open(dest_path, mode="w")
+        except IOError, e:
+            print >>sys.stderr, "Unable to open destination '%s' for write" % dest_path
+            print >>sys.stderr, "Reason: %s" % e
+            return
 
         VantageConfigurator.show_info(station, dest)
     
