@@ -750,16 +750,14 @@ class DBBinder(object):
         return self.database_cache[data_binding]
     
     def bind_default(self, default_binding='wx_binding'):
+        """Returns a function that holds a default database binding."""
         
-        class DBLookup(object):
-            def  __init__(self, db_binder, data_binding):
-                self.db_binder = db_binder
-                self.data_binding=data_binding
-            def __call__(self, data_binding=None):
-                if data_binding is None:
-                    data_binding = self.data_binding
-                return self.db_binder.get_database(data_binding)
-        return DBLookup(self, default_binding)
+        def db_lookup(data_binding=None):
+            if data_binding is None:
+                data_binding = default_binding
+            return self.get_database(data_binding)
+
+        return db_lookup
 
 #===============================================================================
 #                                 Utilities

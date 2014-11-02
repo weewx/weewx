@@ -29,7 +29,7 @@ class TimeBinder(object):
                  formatter=weewx.units.Formatter(), converter=weewx.units.Converter(), **option_dict):
         """Initialize an instance of DatabaseBinder.
         
-        db_lookup: An object with call signature db_lookup(data_binding), which
+        db_lookup: A function with call signature db_lookup(data_binding), which
         returns a database manager and where data_binding is an optional binding
         name. If not given, then a default binding will be used.
         
@@ -124,7 +124,7 @@ class TimespanBinder(object):
         timespan: An instance of weeutil.Timespan with the time span
         over which the statistics are to be calculated.
 
-        db_lookup: An object with call signature db_lookup(data_binding), which
+        db_lookup: A function with call signature db_lookup(data_binding), which
         returns a database manager and where data_binding is an optional binding
         name. If not given, then a default binding will be used.
         
@@ -224,7 +224,7 @@ class ObservationBinder(object):
         timespan: An instance of TimeSpan holding the time period over which the query is
         to be run
 
-        db_lookup: An object with call signature db_lookup(data_binding), which
+        db_lookup: A function with call signature db_lookup(data_binding), which
         returns a database manager and where data_binding is an optional binding
         name. If not given, then a default binding will be used.
         

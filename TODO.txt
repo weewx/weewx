@@ -6,7 +6,11 @@ Look at Gary's (?) changes to allow cron-like report generation.
 
 Move schemas to the extension that uses them.
 
-Could generalize class weewx.tags.CurrentRecord. Put it in weewx.units
+For Current records, do just one database lookup.
+
+Add a second database to the template test suite.
+
+
 
 
 
