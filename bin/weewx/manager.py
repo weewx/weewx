@@ -908,7 +908,7 @@ class DaySummaryManager(Manager):
             # Database has not been initialized with the summaries. Is there a schema?
             if schema is None:
                 # Uninitialized, but no schema was supplied. Raise an exception
-                raise weedb.OperationalError("No day summary schema for table '%s'" % self.table_name)
+                raise weedb.OperationalError("No day summary schema for table '%s' in database '%s'" % (self.table_name, connection.database))
             # There is a schema. Create all the daily summary tables as one transaction:
             with weedb.Transaction(self.connection) as _cursor:
                 self._initialize_day_tables(schema, _cursor)
