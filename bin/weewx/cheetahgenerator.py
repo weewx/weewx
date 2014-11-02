@@ -313,9 +313,12 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                        'encoding'   : encoding},
                       self.outputted_dict]
         
+        # Bind to the default_binding:
+        db_lookup = self.db_binder.bind_default(default_binding)
+        
         # Then add the V3.X style search list extensions
         for obj in self.search_list_objs:
-            searchList += obj.get_extension_list(timespan, self.db_binder, default_binding)
+            searchList += obj.get_extension_list(timespan, db_lookup)
 
         return searchList
 
@@ -384,17 +387,15 @@ class SearchList(object):
         """
         self.generator = generator
 
-    def get_extension_list(self, timespan, db_binder, default_binding):
+    def get_extension_list(self, timespan, db_lookup):
         """For weewx V3.x extensions. Should return a list
         of objects whose attributes or keys define the extension.
         
         timespan:  An instance of weeutil.weeutil.TimeSpan. This will hold the
                    start and stop times of the domain of valid times.
-                   
-        db_binder: An instance of class weewx.manager.DBBinder
-        
-        default_binding: In the absence of a binding, the binding name 
-        to be used.
+
+        db_lookup: An object with method get_database(). It will return an
+        instance of a database manager
         """
         return [self]
 
@@ -465,15 +466,14 @@ class Stats(SearchList):
     as $day.outTemp.max"""
 
 
-    def get_extension_list(self, timespan, db_binder, default_binding):
+    def get_extension_list(self, timespan, db_lookup):
         try:
             trend_dict = self.generator.skin_dict['Units']['Trend']
         except KeyError:
             trend_dict = {'time_delta' : 10800,
                           'time_grace' : 300}
 
-        stats = weewx.tags.TimeBinder(db_binder,
-                                      default_binding,
+        stats = weewx.tags.TimeBinder(db_lookup,
                                       timespan.stop,
                                       formatter=self.generator.formatter,
                                       converter=self.generator.converter,

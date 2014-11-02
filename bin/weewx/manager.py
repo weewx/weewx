@@ -748,6 +748,18 @@ class DBBinder(object):
         if data_binding not in self.database_cache:
             self.database_cache[data_binding] = open_database(self.config_dict, data_binding, initialize)
         return self.database_cache[data_binding]
+    
+    def bind_default(self, default_binding='wx_binding'):
+        
+        class DBLookup(object):
+            def  __init__(self, db_binder, data_binding):
+                self.db_binder = db_binder
+                self.data_binding=data_binding
+            def __call__(self, data_binding=None):
+                if data_binding is None:
+                    data_binding = self.data_binding
+                return self.db_binder.get_database(data_binding)
+        return DBLookup(self, default_binding)
 
 #===============================================================================
 #                                 Utilities
