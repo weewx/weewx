@@ -80,8 +80,16 @@
       <td>50.284&#176;F</td>
     </tr>
     <tr>
-      <td>Outside Temperature (with explicit database binding)</td>
+      <td>Outside Temperature (with explicit binding to 'wx_binding')</td>
       <td>50.3&#176;F</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (with explicit binding to 'alt_binding')</td>
+      <td>45.1&#176;F</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature with nonsense binding 'foo_binding'</td>
+      <td>?'foo_binding'?</td>
     </tr>
     <tr>
       <td>Outside Temperature trend (3 hours)</td>
@@ -174,6 +182,14 @@
   <h1>Tests for tag $day</h1>
   <table>
     <tr>
+        <td>Start of day:</td>
+        <td>09/03/10 00:00:00</td>
+    </tr>
+    <tr>
+        <td>Start of day (unix epoch time):</td>
+        <td>1283497200</td>
+    </tr>
+    <tr>
       <td>Max Temperature</td>
       <td>78.5&#176;F</td>
     </tr>
@@ -188,6 +204,10 @@
     <tr>
       <td>Time of min temperature:</td>
       <td>07:00</td>
+    </tr>
+    <tr>
+      <td>Max Temperature in alt_binding</td>
+      <td>59.3&#176;F</td>
     </tr>
     <tr>
       <td>Min temp with explicit conversion to Celsius</td>

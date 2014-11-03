@@ -87,8 +87,16 @@
       <td>$current.outTemp.degree_F.format("%.3f")</td>
     </tr>
     <tr>
-      <td>Outside Temperature (with explicit database binding)</td>
+      <td>Outside Temperature (with explicit binding to 'wx_binding')</td>
       <td>$current($data_binding='wx_binding').outTemp</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (with explicit binding to 'alt_binding')</td>
+      <td>$current($data_binding='alt_binding').outTemp</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature with nonsense binding 'foo_binding'</td>
+      <td>$current($data_binding='foo_binding').outTemp</td>
     </tr>
     <tr>
       <td>Outside Temperature trend ($trend.time_delta.hour.format("%.0f"))</td>
@@ -202,6 +210,14 @@
   <h1>Tests for tag \$day</h1>
   <table>
     <tr>
+        <td>Start of day:</td>
+        <td>$day.dateTime.format("%x %X")</td>
+    </tr>
+    <tr>
+        <td>Start of day (unix epoch time):</td>
+        <td>$day.dateTime.raw</td>
+    </tr>
+    <tr>
       <td>Max Temperature</td>
       <td>$day.outTemp.max</td>
     </tr>
@@ -216,6 +232,10 @@
     <tr>
       <td>Time of min temperature:</td>
       <td>$day.outTemp.mintime</td>
+    </tr>
+    <tr>
+      <td>Max Temperature in alt_binding</td>
+      <td>$day($data_binding='alt_binding').outTemp.max</td>
     </tr>
     <tr>
       <td>Min temp with explicit conversion to Celsius</td>

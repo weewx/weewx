@@ -8,7 +8,7 @@ Move schemas to the extension that uses them.
 
 For Current records, do just one database lookup.
 
-Add a second database to the template test suite.
+Make sure the rest of the test suites didn't get broken by the addition of a 2nd database. 
 
 engine.py assumes that the main archive data binding will be 'wx_binding'. It shouldn't.
 
