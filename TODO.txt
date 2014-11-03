@@ -8,8 +8,6 @@ Move schemas to the extension that uses them.
 
 For Current records, do just one database lookup.
 
-engine.py assumes that the main archive data binding will be 'wx_binding'. It shouldn't.
-
 
 
 

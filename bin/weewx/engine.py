@@ -24,6 +24,7 @@ import weewx.manager
 import weewx.station
 import weewx.reportengine
 import weeutil.weeutil
+from weeutil.weeutil import to_bool, to_int
 
 class BreakLoop(Exception):
     pass
@@ -450,13 +451,24 @@ class StdArchive(StdService):
     def __init__(self, engine, config_dict):
         super(StdArchive, self).__init__(engine, config_dict)
 
-        # See how we are supposed to generate archive records
-        self.record_generation = config_dict['StdArchive'].get('record_generation', 'hardware').lower()
+        # Extract the various options from the config file. If it's missing, fill in with defaults:
+        if 'StdArchive' in config_dict:
+            self.data_binding      = config_dict['StdArchive'].get('data_binding', 'wx_binding')
+            self.record_generation = config_dict['StdArchive'].get('record_generation', 'hardware').lower()
+            self.archive_delay = to_int(config_dict['StdArchive'].get('archive_delay', 15))
+            software_interval  = to_int(config_dict['StdArchive'].get('archive_interval', 300))
+            self.loop_hilo     = to_bool(config_dict['StdArchive'].get('loop_hilo', True))
+        else:
+            self.data_binding = 'wx_binding'
+            self.record_generation = 'hardware'
+            self.archive_delay = 15
+            software_interval = 300
+            self.loop_hilo = True
+            
+        syslog.syslog(syslog.LOG_INFO, "engine: Archive will use data binding %s" % self.data_binding)
+        
         syslog.syslog(syslog.LOG_INFO, "engine: Record generation will be attempted in '%s'" % 
                       (self.record_generation,))
-
-        # Get the archive interval from the configuration file
-        software_interval = config_dict['StdArchive'].as_int('archive_interval')
 
         # If the station supports a hardware archive interval, use that.
         # Warn if it is different than what is in config.
@@ -474,14 +486,10 @@ class StdArchive(StdService):
         syslog.syslog(syslog.LOG_INFO, "engine: Using archive interval of %d seconds" % 
                       self.archive_interval)
 
-        self.archive_delay = config_dict['StdArchive'].as_int('archive_delay')
         if self.archive_delay <= 0:
             raise weewx.ViolatedPrecondition("Archive delay (%.1f) must be greater than zero." % 
                                              (self.archive_delay,))
 
-        # Get whether to use LOOP data in the high/low statistics (or just
-        # archive data):
-        self.loop_hilo = weeutil.weeutil.tobool(config_dict['StdArchive'].get('loop_hilo', True))
         syslog.syslog(syslog.LOG_DEBUG, "engine: Use LOOP data in hi/low calculations: %d" % 
                       (self.loop_hilo,))
         
@@ -552,7 +560,7 @@ class StdArchive(StdService):
         # If we happen to startup in the small time interval between the end of
         # the archive interval and the end of the archive delay period, then
         # there will be no old accumulator.
-        dbmanager = self.engine.dbbinder.get_database('wx_binding')
+        dbmanager = self.engine.dbbinder.get_database(self.data_binding)
         if hasattr(self, 'old_accumulator'):
             dbmanager.updateHiLo(self.old_accumulator)
             # If the user has requested software generation, then do that:
@@ -575,7 +583,7 @@ class StdArchive(StdService):
     def new_archive_record(self, event):
         """Called when a new archive record has arrived. 
         Put it in the archive database."""
-        dbmanager = self.engine.dbbinder.get_database('wx_binding')
+        dbmanager = self.engine.dbbinder.get_database(self.data_binding)
         dbmanager.addRecord(event.record)
 
     def setup_database(self, config_dict):
@@ -583,7 +591,7 @@ class StdArchive(StdService):
 
         # This will create the database if it doesn't exist, then return an
         # opened instance of the database manager. 
-        dbmanager = self.engine.dbbinder.get_database('wx_binding', initialize=True)
+        dbmanager = self.engine.dbbinder.get_database(self.data_binding, initialize=True)
         syslog.syslog(syslog.LOG_INFO, "engine: Using database: %s" % (dbmanager.database,))
         
         # In case this is a recent update or the user has dropped the daily
@@ -596,7 +604,7 @@ class StdArchive(StdService):
         If the hardware does not support hardware archives, an exception of
         type NotImplementedError will be thrown.""" 
 
-        dbmanager = self.engine.dbbinder.get_database('wx_binding')
+        dbmanager = self.engine.dbbinder.get_database(self.data_binding)
         # Find out when the database was last updated.
         lastgood_ts = dbmanager.lastGoodStamp()
 
