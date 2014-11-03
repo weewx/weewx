@@ -321,12 +321,16 @@ class CurrentObj(object):
         if obs_type == 'has_key':
             raise AttributeError
 
-        # Get the appropriate database manager ...
-        db_manager = self.db_lookup(self.data_binding)
-        # ... get the current record from it ...  
-        record  = db_manager.getRecord(self.timestamp)
-        # ... form a ValueTuple ...
-        vt = weewx.units.as_value_tuple(record, obs_type)
+        try:
+            # Get the appropriate database manager ...
+            db_manager = self.db_lookup(self.data_binding)
+        except weewx.UnknownBinding:
+            vt = weewx.units.UnknownType(self.data_binding)
+        else:
+            # ... get the current record from it ...  
+            record  = db_manager.getRecord(self.timestamp)
+            # ... form a ValueTuple ...
+            vt = weewx.units.as_value_tuple(record, obs_type)
         # ... and then finally, return a ValueHelper
         return weewx.units.ValueHelper(vt, 'current',
                                        self.formatter,

@@ -765,8 +765,13 @@ class DBBinder(object):
 
 def get_database_config(config_dict, data_binding):
     """Return the database dictionary associated with a binding name."""
+
     # Get the database name
-    database_name = config_dict['DataBindings'][data_binding]['database']
+    try:
+        database_name = config_dict['DataBindings'][data_binding]['database']
+    except KeyError, e:
+        raise weewx.UnknownBinding(e)
+    
     # Get the dictionary
     if database_name not in config_dict['Databases']:
         raise weewx.UnknownDatabase(database_name)
