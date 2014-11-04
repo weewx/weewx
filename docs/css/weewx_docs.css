@@ -5,6 +5,7 @@ html, body{
   font-family: Verdana,arial,sans-serif;
   font-size: 11pt;
   color: black;
+  line-height: 1.2;
 }
 li {
   margin-right: 10%;
@@ -45,7 +46,8 @@ h4 {
 table {
   border-collapse: collapse;
   border: 1px solid #cccccc;
-  width: 80%
+  width: 80%;
+  margin: 10px;
 }
 tr {
   vertical-align: top;
@@ -53,6 +55,8 @@ tr {
 td {
   border: 1px solid #cccccc;
   padding: 5px;
+}
+p {
 }
 caption {
   background-color: #aacccc;
@@ -88,9 +92,9 @@ caption {
 .tty {
   font-family: "Courier New", Courier, monospace;
   font-size: 90%;
-  margin: 0px 20px 0px 20px;
   background-color: #FFFFe0;
   border: 1px solid #ddddaa;
+  margin: 10px;
   padding: 3px;
   white-space: pre;
 }
@@ -136,7 +140,7 @@ table .first_row {
   font-family: "Times New Roman", Times, serif;
   padding: 5px;
   border: thin #000000 dotted;
-  margin: 0px 20px 0px 20px;
+  margin: 10px;
 }
 .image {
   padding: 5px;
