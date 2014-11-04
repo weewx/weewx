@@ -1,4 +1,4 @@
-/* styles for weewx documentation */
+﻿styles for weewx documentation */
 ﻿/* $Id$ */
 
 html, body{
@@ -9,9 +9,6 @@ html, body{
 li {
   margin-right: 10%;
   margin-top: 10px;
-}
-#toc li {
-  margin-top: 0px;
 }
 dt {
   margin-top: 10px;
@@ -99,6 +96,7 @@ caption {
 }
 .title {
   margin-top: 0px;
+  text-align: center;
 }
 .config_section {
 }
@@ -106,13 +104,15 @@ caption {
   font-family: "Courier New", Courier, monospace;
   font-weight: bold;
   color: black;
-  margin-bottom: -12px;
+  margin-top: 1em;
+  margin-bottom: -6px;
 }
 .config_important {
   font-family: "Courier New", Courier, monospace;
   font-weight: bold;
   color: #bb9900;
-  margin-bottom: -12px;
+  margin-top: 1em;
+  margin-bottom: -6px;
 }
 .highlight {
   background-color: #FFCC99;
@@ -137,9 +137,6 @@ table .first_row {
   padding: 5px;
   border: thin #000000 dotted;
   margin: 0px 20px 0px 20px;
-}
-div#toc ul {
-  list-style: none;
 }
 .image {
   padding: 5px;
@@ -203,6 +200,9 @@ div#toc ul {
   margin-left: 20px;
   margin-right: 20px;
 }
+.tabs img{
+	display:inline;
+}
 .tab {
   font-size: 80%;
   font-weight: bold;
@@ -233,4 +233,9 @@ div#toc ul {
 div .ui-widget-header {
   border: 1px solid black;
   background: #aacccc;
+}
+
+#technical_content{
+	float:right;
+	width:80%
 }
