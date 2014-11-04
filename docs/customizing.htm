@@ -24,7 +24,7 @@ table#stattypes td {
     <h1 class="title">Customizing weewx<br />
       <span class="version">
 Version: 2.7.0
-      </span>
+      </span></h1>
 
     <h1>Table of Contents</h1>
     <div id="toc"></div>
@@ -1576,7 +1576,7 @@ class MyXSearch(SearchList):                                #1
       <pre class="tty">
 [Extras]
     radar_img = http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif
-    radar_url = http://radar.weather.gov/ridge/radar.php?product=NCR&rid=RTX&loop=yes</pre>
+    radar_url = http://radar.weather.gov/ridge/radar.php?product=NCR&amp;rid=RTX&amp;loop=yes</pre>
       <p>results in a nice image of a radar centered on Portland,
         Oregon. When you click on it, it gives you a detailed, animated view.
         Take a look at
@@ -2656,7 +2656,7 @@ class MyAlarm(StdService):
         how to do this, using the utility <span class="symcode">$BIN_ROOT</span><span
           class="code">/wee_config_database</span>.</p>
       <p>This utility also has the ability to check a sqlite version of the archive
-        database for embedded strings (where a float is expected).<p>
+        database for embedded strings (where a float is expected).</p>
       <p>Before starting, it's worth running the utility with the <span class="code">--help</span>
         flag to see how it is used:</p>
       <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --help</pre>
