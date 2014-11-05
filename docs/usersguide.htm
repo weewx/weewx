@@ -5,10 +5,9 @@
   <meta content="en-us" http-equiv="Content-Language" />
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
   <title>weewx: User's Guide</title>
-  <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet" />
-  <link href="css/bootstrap.css" rel="stylesheet" />
-  <link href="css/jquery.tocify.css" rel="stylesheet" />
-  <link href="css/weewx_docs.css" rel="stylesheet" />
+  <link href="./css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet" />
+  <link href="./css/jquery.tocify.css" rel="stylesheet" />
+  <link href="./css/weewx_docs.css" rel="stylesheet" />
   <script>
 function showtab(tab,id) {
   document.getElementById(tab+'-deb').style.display = 'none';
@@ -1654,6 +1653,9 @@ longitude = -77.0366</pre>
     <p>The target directory for the generated files. A relative path is
       relative to <span class="symcode">$WEEWX_ROOT</span>. Generated 
 	files and images will be put here. </p>
+    <p class="config_option">data_binding</p>
+    <p>The data source to be used for the reports. This can be overridden in
+    individual reports. Optional. Default is <span class="code">wx_binding</span>.</p>
     <h3 class="config_section">[[StandardReport]]</h3>
     <p>This is the standard report that will be run on every archiving interval. 
       It uses the skin &quot;<span class="code">Standard</span>&quot;, which generates 
@@ -1836,22 +1838,14 @@ longitude = -77.0366</pre>
       possible values that could appear are 0 through 126 mph, a reasonable
       range. So, for the VP2, there is no real point in checking wind speed.
     </p>
+
     <h2 class="config_section" id="StdArchive">[StdArchive]</h2>
     <p>This section is for configuring <span class="code">StdArchive</span>, the 
-      service that stores data in the databases. Options allow choosing which database 
-      to use for archiving and statistics.</p>
-    <p class="config_option">archive_database</p>
-    <p>The database to be used to store the archive data. This should match a section 
-      given in the section <span class="code"><a href="#Databases">[Databases]</a></span> 
-      below. Normally, this is set to <span class="code">archive_sqlite</span>. If 
-      you are using MySQL, you will want to change this to <span class="code">
-	archive_mysql</span>.</p>
-    <p class="config_option">stats_database</p>
-    <p>The database to be used to store the statistical data. This should match 
-      a section given in the section <span class="code"><a href="#Databases">[Databases]</a></span> 
-      below. Normally, this is set to <span class="code">stats_sqlite</span>. If 
-      you are using MySQL, you will want to change this to <span class="code">
-	stats_mysql</span>.</p>
+      service that stores data in a database.</p>
+    <p class="config_option">archive_interval</p>
+    <p>If your station hardware supports data logging then the archive interval
+    will be downloaded from the station. Otherwise, you must specify it here in 
+    seconds.  Optional. Default is 300 seconds.</p>
     <p class="config_option">archive_delay </p>
     <p>How long to wait in seconds after the top of an archiving interval before 
       fetching new data off the station. For example, if your archive interval is 
@@ -1877,16 +1871,10 @@ longitude = -77.0366</pre>
 	  to have only archive data used. If your sensor emits lots of spiky data, 
 	  setting to <span class="code">False</span> may help. Default is
 	  <span class="code">True</span>.</p>
-    <p class="config_option">archive_schema</p>
-    <p>This is used only when the archive database is first created. Thereafter, 
-      it is downloaded from the database. It should point to a Python list 
-      containing the archive database schema. The default is <span class="code">
-	user.schemas.defaultArchiveSchema</span>.</p>
-    <p class="config_option">stats_schema</p>
-    <p>This is used only when the stats database is first created. Thereafter, 
-      it is downloaded from the database. It should point to a Python list 
-      containing the stats database schema. The default is <span class="code">
-	user.schemas.defaultStatsSchema</span>.</p>
+      <p class="config_option">data_binding</p>
+      <p>The data binding to be used to store the data. This should match one
+      of the bindings in the <span class="code">[Bindings]</span> section, below. Optional. Default
+      is <span class="code">wx_binding</span>.</p>
     
     <h2 class="config_section">[StdTimeSynch]</h2>
     <p>This section is for configuring <span class="code">StdTymeSynch</span>, a 
@@ -1898,8 +1886,65 @@ longitude = -77.0366</pre>
     <p class="config_option">max_drift</p>
     <p>The maximum amount of clock drift to tolerate, in seconds, before resetting 
       the clock. Default is 5.</p>
+
+    <h2 class="config_section" id="Bindings">[Bindings]</h2>
+    <p>
+      This class links a symbolic "data binding," such as <span
+        class="code">wx_binding</span>, to a database in the section 
+        <a href="#Databases"><span class="code">[Databases]</span></a> below.
+    </p>
+
+    <h3 class="config_section" id="wx_binding">[[wx_binding]]</h3>
+    <p>
+      This is the binding normally used for weather. A typical <span
+        class="code">[[wx_binding]]</span> section looks something like
+      this:
+    </p>
+    <pre class="tty">
+    [[wx_binding]]
+        # The database to be used - it should match one of the sections in [Databases] 
+        database = archive_sqlite
+        # The name of the table within the database
+        table_name = archive
+        # The class to manage the database
+        manager = weewx.wxmanager.WXDaySummaryManager
+        # The schema defines to structure of the database contents
+        schema = schemas.wview.schema
+    </pre>
+    <p>What follows is more detailed information about each of the
+      binding options.</p>
+    <p class="config_important">database</p>
+    <p>
+      The actual database to be used &mdash; it should match one of the
+      sections in <a href="#Databases"><span class="code">[Databases]</span></a>, below.
+      Should you decide to use a MySQL database, instead of the default
+      sqlite database, this is the place to change it. Required.
+    </p>
+    <p class="config_option">table_name</p>
+    <p>
+      Internally, the archive data is stored in one, long, flat table.
+      This is the name of that table. Normally this does not need to be
+      changed. Optional. Default is '<span class="code">archive</span>'
+    </p>
+    <p class="config_option">manager</p>
+    <p>
+      The name of the class to be used to manage the table. Optional.
+      Default is class <span class="code">weewx.wxmanager.WXDaySummaryManager</span>.
+      This class offers stores daily summaries in the database, and a
+      few types, such as heating- and cooling-degree days, appropriate
+      for weather. Normally, this does not need to be changed.
+    </p>
+    <p class="config_option">schema</p>
+    <p>
+      A Python list holding the structure of the schema to be used to
+      initialize the database. After initialization, it is not used.
+      Optional. Default is <span class="code">schemas.wview.schema</span>,
+      the schema used by the <a href="http://www.wviewweather.com">wview</a>
+      weather system.
+    </p>
+
     <h2 class="config_section" id="Databases">[Databases]</h2>
-    <p>This section lists actual database bindings. The name of each database is 
+    <p>This section lists actual databases. The name of each database is 
       given in double brackets below (for example, <span class="code">[[archive_sqlite]]</span>). 
       The details of the binding follow. You are free to add new bindings.</p>
     <p>Note that if you choose the <a href="http://www.mysql.com/">MySQL</a> database 
@@ -1910,7 +1955,7 @@ longitude = -77.0366</pre>
     <p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database 
       engine to store archive data. It is open-source, simple, lightweight, highly 
       portable, and memory efficient. For most purposes it serves nicely.</p>
-    <p class="config_option">database</p>
+    <p class="config_option">database_name</p>
     <p>The path to the archive sqlite file. A relative path is relative to
       <span class="symcode">$SQLITE_ROOT</span>. Required.</p>
     <p class="config_option" id='archive_timeout'>timeout</p>
@@ -1925,25 +1970,7 @@ longitude = -77.0366</pre>
       isolation levels</a> for more information. There is no reason 
       to change this, but it is here for completeness. Default is '<span class='code'>None</span>'
       (autocommit).</p>
-    <h3 class="config_section">[[stats_sqlite]]</h3>
-    <p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database 
-      engine to store the statistical data. It is open-source, simple, lightweight, 
-      highly portable, and memory efficient. For most purposes it serves nicely.</p>
-    <p class="config_option">database</p>
-    <p>The path to the stats sqlite file. A relative path is relative to
-      <span class="symcode">$SQLITE_ROOT</span>. Required.</p>
-    <p class="config_option" id='stats_timeout'>timeout</p>
-    <p>When the database is accessed by multiple threads and one of those threads
-      modifies the database, the Sqlite database is locked until that transaction
-      is completed. The <span class='code'>timeout</span> option specifies how long
-      other threads should wait for the lock to go away before raising an exception.
-      The default is 5 seconds.</p>
-    <p class='config_option'>isolation_level</p>
-    <p>Set the current isolation level. See the pysqlite documentation on
-      <a href="http://docs.python.org/2.7/library/sqlite3.html#sqlite3.Connection.isolation_level">
-      isolation levels</a> for more information. There is no reason 
-      to change this, but it is here for completeness. Default is '<span class='code'>None</span>'
-      (autocommit).</p>
+
     <h3 class="config_section">[[archive_mysql]]</h3>
     <p>This definition uses the MySQL database engine to store archive data.
       It is free, highly-scalable, but more complicated to administer. </p>
@@ -1953,19 +1980,9 @@ longitude = -77.0366</pre>
     <p>The user name to be used to log into the server. Required.</p>
     <p class="config_option">password</p>
     <p>The password. Required.</p>
-    <p class="config_option">database</p>
+    <p class="config_option">database_name</p>
     <p>The name of the archive database inside the server. Required.</p>
-    <h3 class="config_section">[[stats_mysql]]</h3>
-    <p>This uses the MySQL database engine to store statistical data.
-      It is free, highly-scalable, but more complicated to administer. </p>
-    <p class="config_option">host</p>
-    <p>The host the stats database is located on. Default is <span class="code">localhost</span>.</p>
-    <p class="config_option">user</p>
-    <p>The user name to be used to log into the server. Required.</p>
-    <p class="config_option">password</p>
-    <p>The password. Required.</p>
-    <p class="config_option">database</p>
-    <p>The name of the statistical database inside the server. Required.</p>
+
     <h2 class="config_section">[Engines]</h2>
     <p>This section is used to configure the internal service engine in
       <span class="code">weewx</span>. It is for advanced customization. Details on 
@@ -1974,11 +1991,7 @@ longitude = -77.0366</pre>
 	  weewx service engine</a></em> of the <a href="customizing.htm">Customizing Guide</a>. </p>
 
 
-    <h3 class="config_section">[[WxEngine]]</h3>
-    <p>
-      This section is for options used by the internal <span
-        class="code">weewx</span> service engine.
-    </p>
+    <h3 class="config_section">[[Services]]</h3>
     <p>
       Internally, <span class="code">weewx</span> consists of many <em>services</em>,
       each responsible for some aspect of the program's functionality.
@@ -2019,14 +2032,14 @@ longitude = -77.0366</pre>
     <p>For reference, here is the standard set of services that are
       run with the default distribution.</p>
     <pre class="tty">
-prep_services = weewx.wxengine.StdTimeSynch
-process_services = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC
-archive_services = weewx.wxengine.StdArchive
-restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW
-report_services = weewx.wxengine.StdPrint, weewx.wxengine.StdReport
+prep_services    = weewx.engine.StdTimeSynch
+process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.wxservices.StdWXCalculate
+archive_services = weewx.engine.StdArchive
+restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW, weewx.restx.StdAWEKAS
+report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
 </pre>
-    <p>If you're the type who cleans out your car trunk after every
-      use, then you may also be the type who wants to pare this down
+    <p>If you're the type who likes to clean out your car trunk after every
+      use it, then you may also be the type who wants to pare this down
       to the bare minimum.  However, this will only make a slight
       difference in execution speed and memory use.</p>
 
@@ -2191,17 +2204,16 @@ Davis Vantage EEPROM settings:
 	  <p>Other parameters can be set in a similar manner.</p>
 
     <h3 id="vantage_archive_interval">Archive interval</h3>
-    <p>Valid archive intervals are 60, 300, 600, 900, 1800, 3600, and 7200. However, 
-      if you are ftp&#39;ing lots of files to a server, setting it to 60 seconds may 
-      not give enough time to have them all uploaded before the next archive record 
-      is due. If this is the case, you should pick an archive interval of at least 
-      300 seconds, or trim the number of files you are using. </p>
+    <p>Valid archive intervals for the Davis Vantage stations are 60,
+      300, 600, 900, 1800, 3600, and 7200 seconds. However, if you are
+      ftp&#39;ing lots of files to a server, setting it to 60 seconds
+      may not give enough time to have them all uploaded before the next
+      archive record is due. If this is the case, you should pick an
+      archive interval of at least 300 seconds, or trim the number of
+      files you are using.</p>
     <p>I have found that a five minute (300 seconds) archive interval works well 
       for the Vantage stations. Because of the large amount of onboard memory they carry, 
       going to a larger interval does not have any real advantages. </p>
-    <p class="warning"><b>Choose the archive interval carefully! </b>Once
-      chosen, it cannot be changed without messing up the statistics (highs
-      and lows will be OK, but averages and RMS wind speed will be wrong). </p>
 
     <h3 id="vantage_rain_bucket_type">Rain bucket type</h3>
     <p>Normally, this is set by Davis, but if you have replaced your bucket with 
@@ -2226,7 +2238,7 @@ Davis Vantage EEPROM settings:
     <p>This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"), 
       and it will show up in the database
       as <span class="code">extraTemp2</span> and <span class="code">extraHumid4</span>.</p>
-    <p>The <span class="code">--help</span> option will give you the codes for each type of sensor.</p>
+    <p>The <span class="code">--help</span> option will give you the code for each sensor type.</p>
 
     <h3 id="vantage_setting_offsets">Setting offsets</h3>
     <p>The Davis instruments can correct sensor errors by adding
@@ -2367,9 +2379,6 @@ Mutating actions will request confirmation before proceeding.</p>
       (read_period) of 30 minutes (1800 seconds).  To change the station's
       interval to 5 minutes, do the following:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --set-interval=5</p>
-    <p class="warning"><b>Choose the archive interval carefully! </b>Once
-      chosen, it cannot be changed without messing up the statistics (highs
-      and lows will be OK, but averages and RMS wind speed will be wrong). </p>
 
     <h3>Calibrating the pressure sensor</h3>
     <p>The pressure sensor in the Fine Offset stations measures absolute, or
@@ -2729,31 +2738,21 @@ interval:  1</pre>
       host = localhost
       user = weewx
       password = weewx
-      database = weewx
+      database_name = weewx
       driver = weedb.mysql
-      
-  [[stats_mysql]]
-      host = localhost
-      user = weewx
-      password = weewx
-      database = stats
-      driver = weedb.mysql</pre>
+</pre>
     <p>This assumes user '<span class="code">weewx</span>' would have password '<span class="code">weewx</span>'. 
       Adjust as necessary.</p>
-    <p>If you wish, databases '<span class="code">weewx</span>' and '<span class="code">stats</span>' 
-      can be combined into one database, although this will make it harder to drop 
-      the latter should you need to rebuild the stats database at a later time.</p>
-    <p>You will need to give the necessary permissions for databases '<span class="code">weewx</span>' 
-      and '<span class="code">stats</span>' to whatever MySQL user you choose, by 
+    <p>You will need to give the necessary permissions for the database '<span class="code">weewx</span>' 
+      to whatever MySQL user you choose, by 
       default, user '<span class="code">weewx</span>'. Here are the necessary minimum 
       permissions:</p>
     <pre class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
-mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;
-mysql&gt; GRANT select, update, create, delete, insert ON stats.* TO weewx@localhost;</pre>
+mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;</pre>
     <p>In addition to configuring MySQL, you will also need to indicate to
       <span class="code">weewx</span> that you intend to use the configured 
-	  database. See section <span class="code"><a href="#StdArchive">
-	  [StdArchive]</a></span> for details.</p>
+	  database. See section <span class="code"><a href="#Bindings">
+	  [Bindings]</a></span> for details.</p>
 
     <h1 id="running">Running <span class="code">weewx</span></h1>
     <p><span class="code">Weewx</span> can be run either directly,
@@ -3985,15 +3984,14 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
   <!-- Place the javascript links at the end of the document so the pages load faster -->
   <script src="js/jquery-1.10.2.min.js" type="text/javascript"></script>
   <script src="js/jquery-ui-1.10.4.custom.min.js"></script>
-  <script src="js/bootstrap.js" type="text/javascript"></script>
-  <script src="js/jquery.tocify.js"></script>
+  <script src="js/jquery.tocify-1.9.0.min.js"></script>
   <script src="js/weewx.js"></script>
   <script>
     $(function() {
       var toc = $("#toc").tocify({
         selectors : "h1, h2, h3, h4",
         showAndHide : true,
-        theme : "bootstrap",
+        theme : "jqueryui",
         ignoreSelector : ".title",
         hashGenerator : genIds
       })

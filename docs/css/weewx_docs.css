@@ -1,5 +1,8 @@
-﻿styles for weewx documentation */
-﻿/* $Id$ */
+﻿/* 
+ * Styles for the weewx documentation
+ *
+ * $Id$ 
+ */
 
 html, body{
   font-family: Verdana,arial,sans-serif;
@@ -227,12 +230,35 @@ table .first_row {
 .popup-note {
   font-size: 80%;
 }
+
+#technical_content{
+  float:right;
+  width:80%
+}
+
+/*
+ * Overrides for the jQuery UI widgets
+ */
 div .ui-widget-header {
   border: 1px solid black;
   background: #aacccc;
 }
 
-#technical_content{
-	float:right;
-	width:80%
+/*
+ * Overrides for tocify Table-of-Contents
+ */
+.tocify {
+  width: 15%;
+  margin-left: 10px;
+  margin-top: 10px;
+  padding-left: 5px;
+}
+
+.tocify ul, .tocify li {
+  line-height: 1.2;
+}
+
+.tocify-header ul, .tocify-header li{
+  padding-left: 10px;
+  text-indent: -10px;
 }
