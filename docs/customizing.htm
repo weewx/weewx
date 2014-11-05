@@ -2,17 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <!-- $Id$ -->
   <head>
-    <meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8" />
-    <meta content="en-us" http-equiv="Content-Language" />
+  <meta content="en-us" http-equiv="Content-Language" />
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <title>weewx: Customization Guide</title>
     <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet" />
     <link href="css/jquery.tocify.css" rel="stylesheet" />
     <link href="css/weewx_docs.css" rel="stylesheet" />
-    <style>
-table#stattypes td {
-  width: 60px;
-}
-    </style>
   </head>
   <body>
 
@@ -67,31 +62,36 @@ Version: 3.0.0 alpha
             <td>Function</td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.wxengine.StdTimeSynch</td>
+            <td class="code first_col">weewx.engine.StdTimeSynch</td>
             <td>Arrange to have the clock on the station synchronized at regular
               intervals.</td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.wxengine.StdConvert</td>
+            <td class="code first_col">weewx.engine.StdConvert</td>
             <td>Converts the units of the input to a target unit system (such as
               US or Metric).</td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.wxengine.StdCalibrate</td>
+            <td class="code first_col">weewx.engine.StdCalibrate</td>
             <td>Adjust new LOOP and archive packets using calibration
               expressions.</td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.wxengine.StdQC</td>
+            <td class="code first_col">weewx.engine.StdQC</td>
             <td>Check quality of incoming data, making sure values fall within a
               specified range.</td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.wxengine.StdArchive</td>
+            <td class="code first_col">weewx.wxservices.StdWXCalculate</td>
+            <td>Calculate any missing, derived weather observation types, such a dewpoint,
+            windchill, or altimeter-corrected pressure.</td>
+          </tr>
+          <tr>
+            <td class="code first_col">weewx.engine.StdArchive</td>
             <td>Archive any new data to the SQL databases.</td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.restx.StdStationRegistry<br/>
+            <td class="code first_col">weewx.restx.StdStationRegistry<br/>
               weewx.restx.StdWunderground<br/>
               weewx.restx.StdPWSweather<br/>
               weewx.restx.StdCWOP<br/>
@@ -104,11 +104,11 @@ Version: 3.0.0 alpha
             </td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.wxengine.StdPrint</td>
+            <td class="code first_col">weewx.engine.StdPrint</td>
             <td>Print out new LOOP and archive packets on the console.</td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.wxengine.StdReport</td>
+            <td class="code first_col">weewx.engine.StdReport</td>
             <td>Launch a new thread to do report processing after a new archive
               record arrives. Reports do things such as generate HTML files,
               generate images, or FTP/rsync files to a web server. New reports
@@ -122,7 +122,7 @@ Version: 3.0.0 alpha
         These advanced topics are covered later in the section <em><a href="#service_engine">Customizing
             the weewx service engine</a></em>. </p>
       <h2>The standard reporting service, <span class="code">StdReport</span></h2>
-      <p>For the moment, let us focus on the last service, <span class="code">weewx.wxengine.StdReport</span>,
+      <p>For the moment, let us focus on the last service, <span class="code">weewx.engine.StdReport</span>,
         the standard service for creating reports. This will be what most users
         will want to customize even if it means just changing a few options. </p>
       <h3>Reports</h3>
@@ -139,18 +139,18 @@ Version: 3.0.0 alpha
             <td>Default functionality</td>
           </tr>
           <tr>
-            <td class="code text_highlight">StandardReport</td>
+            <td class="code first_col">StandardReport</td>
             <td>Generates day, week, month and year "to-date" summaries in HTML,
               as well as the plot images to go along with them. Also generates
               NOAA monthly and yearly summaries. </td>
           </tr>
           <tr>
-            <td class="code text_highlight">FTP</td>
+            <td class="code first_col">FTP</td>
             <td>Arranges to upload everything in the <span class="symcode">$HTML_ROOT</span>
               directory up to a remote webserver.</td>
           </tr>
           <tr>
-            <td class="code text_highlight">RSYNC</td>
+            <td class="code first_col">RSYNC</td>
             <td>Like FTP, but uses rsync for transferring files to a remote
               webserver.</td>
           </tr>
@@ -194,47 +194,39 @@ Version: 3.0.0 alpha
         });
       </script>
 
-      <h3>Templates</h3>
-      <p>A template is a text file that is processed by
-        <span class="code">weewx</span> to create a new file.  A template may
-        be used to generate HTML, XML, CSV, javascript, or any other type of
-        text file.  A template typically contains variables that are replaced
-        by when creating the new file.  Templates may also contain programming
-        logic.</p>
-      <p>Each template file lives in the skin directory of the skin that uses
-        it. By convention, a template file ends with the .tmpl extension.</p>
-
       <h3>Generators</h3>
-      <p>To create their output, skins rely on one or more <em>Generators</em>
-        that actually create useful things such as HTML files or plot images.
-        Generators can also copy files around or FTP/rsync them to remote
-        locations. The default install of <span class="code">weewx</span>
-        includes the following generators: </p>
-      <table class="indent" summary="Generators included in weewx">
+    <p>
+      To create their output, skins rely on one or more <em>Generators</em>,
+      which are what do the actual work, such as creating HTML
+      files or plot images. Generators can also copy files around or
+      FTP/rsync them to remote locations. The default install of <span
+        class="code">weewx</span> includes the following generators:
+    </p>
+    <table class="indent" summary="Generators included in weewx">
         <tbody>
           <tr class="first_row">
             <td>Generator</td>
             <td>Function</td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.cheetahgenerator.CheetahGenerator</td>
+            <td class="code first_col">weewx.cheetahgenerator.CheetahGenerator</td>
             <td>Generates files from templates, using the Cheetah template engine. Used to generate HTML and text
               files.</td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.imagegenerator.ImageGenerator</td>
+            <td class="code first_col">weewx.imagegenerator.ImageGenerator</td>
             <td>Generates graph plots.</td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.reportengine.FtpGenerator</td>
+            <td class="code first_col">weewx.reportengine.FtpGenerator</td>
             <td>Uploads data to a remote server using FTP.</td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.reportengine.RsyncGenerator</td>
+            <td class="code first_col">weewx.reportengine.RsyncGenerator</td>
             <td>Uploads data to a remote server using rsync.</td>
           </tr>
           <tr>
-            <td class="code text_highlight">weewx.reportengine.CopyGenerator</td>
+            <td class="code first_col">weewx.reportengine.CopyGenerator</td>
             <td>Copies files locally.</td>
           </tr>
         </tbody>
@@ -246,43 +238,151 @@ Version: 3.0.0 alpha
       <p>Which generators are to be run for a given skin is specified in the
         skin's configuration file <span class="code">skin.conf</span>, in
         section <a href="#generators"><span class="code">[Generators]</span></a>.</p>
-      <h2>Databases</h2>
-      <p>There are two databases used by <span class="code">weewx</span>, which
-        can be implemented either by using <a href="http://www.sqlite.org/">SQLITE3</a>,
-        an open-source, lightweight SQL database, or <a href="http://www.mysql.com/">
-          MySQL</a>, an open-source, full-featured database server, or some
-        combination of the two of them.</p>
-      <ul>
-        <li>The <em>archive database</em>, given symbolic name '<span class="code">archive_database</span>'.
-          It is a big flat table, one record for each archive interval, keyed by
-          <span class="code">dateTime</span>, the time at the end of the archive
-          interval. </li>
-        <li>The <em>statistical database</em>, given symbolic name '<span class="code">stats_database</span>'.
-          It consists of a separate table for each observation type (that is,
-          one for '<span class="code">outTemp</span>', one for '<span class="code">barometer</span>',
-          <em>etc.</em>), each containing one record per day, keyed by the start
-          time of the day. </li>
-      </ul>
-      <p>How these abstract databases are bound to the real database is covered
-        in the <a href="usersguide.htm">Weewx User's Guide</a>, in section '<a
-          href="usersguide.htm#StdArchive">[StdArchive]</a>'.</p>
-      <p>The important thing to remember is that the archive database contains a
-        record for every archive interval and, as such, represents the <em>current
-          conditions</em> at the time of the observation. By contrast, the
-        statistical database represents the <em>aggregation of conditions over
-          a day</em>. That is, it contains the daily minimum, maximum, and the
-        time of the minimum and maximum, for each observation type. As you can
-        imagine, the statistical database is much smaller because it represents
-        only a summary of the data. </p>
-      <p>The archive database is used for both generating plot data and in
-        template generation (where it appears as tag <span class="code">$current</span>).
-        The statistical database is used only in template generation (where it
-        appears as tags <span class="code">$day</span>, <span class="code">$week</span>,
-        <span class="code">$month</span>, <span class="code">$year</span>, and
-        <span class="code">$rainyear</span>, depending on the aggregation time
-        period). </p>
 
-      <h2>Where to put customizations</h2>
+      <h3>Templates</h3>
+    <p>
+      A template is a text file that is processed by a <i>template
+        engine</i> to create a new file. <span class="code">Weewx</span>
+      uses the <a href="http://www.cheetahtemplate.org">Cheetah</a>
+      template engine. The generator <span class="code">weewx.cheetahgenerator.CheetahGenerator</span>
+      is responsible for running Cheetah at appropriate times.
+    </p>
+    <p>A template may be used to generate HTML, XML, CSV,
+      Javascript, or any other type of text file. A template typically
+      contains variables that are replaced when creating the new file.
+      Templates may also contain simple programming logic.</p>
+    <p>
+      Each template file lives in the skin directory of the skin that
+      uses it. By convention, a template file ends with the <span
+        class="code">.tmpl</span> extension.
+    </p>
+    
+      <h2>The database</h2>
+    <p>
+      Weewx uses a single database to store and retrieve the records it needs. It can
+      be implemented by using either <a href="http://www.sqlite.org/">SQLITE3</a>,
+      an open-source, lightweight SQL database, or <a
+        href="http://www.mysql.com/"> MySQL</a>, an open-source,
+      full-featured database server.
+    </p>
+    <p>
+      Inside this database are several tables. The most important is the
+      <i>archive table</i>, a big flat table, holding one record for each
+      archive interval, keyed by <span class="code">dateTime</span>, the
+      time at the end of the archive interval. It looks something like this:
+    </p>
+    <table class="indent" style="text-align:right">
+    <caption>Structure of the <span class="code">archive</span> database table</caption>
+      <tr class="code first_row">
+        <td>dateTime</td>
+        <td>usUnits</td>
+        <td>interval</td>
+        <td>barometer</td>
+        <td>pressure</td>
+        <td>altimeter</td>
+        <td>inTemp</td>
+        <td>outTemp</td>
+        <td>inHumidity</td>
+        <td>outHumidity</td>
+        <td>windSpeed</td>
+        <td>windDir</td>
+        <td>windGust</td>
+        <td>windGustDir</td>
+        <td>rainRate</td>
+        <td>...</td>
+      </tr>
+
+      <tr class="code">
+        <td>1413937800</td>
+        <td>1</td>
+        <td>5</td>
+        <td>29.938</td>
+        <td><i>null</i></td>
+        <td><i>null</i></td>
+        <td>71.2</td>
+        <td>56.0</td>
+        <td>54.0</td>
+        <td>78.0</td>
+        <td>3.0</td>
+        <td>270.0</td>
+        <td>9.0</td>
+        <td>270.0</td>
+        <td>0.0</td>
+      </tr>
+      <tr class="code">
+        <td>1413938100</td>
+        <td>1</td>
+        <td>5</td>
+        <td>29.941</td>
+        <td><i>null</i></td>
+        <td><i>null</i></td>
+        <td>71.2</td>
+        <td>55.9</td>
+        <td>54.0</td>
+        <td>78.0</td>
+        <td>2.0</td>
+        <td>247.5</td>
+        <td>5.0</td>
+        <td>225.0</td>
+        <td>0.0</td>
+      </tr>
+      <tr class="code">
+        <td>...</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </table>
+
+    <p>Here's the meaning of the first three columns:</p>
+    <table class="indent">
+      <tr class="first_row">
+        <td>Name</td>
+        <td>Meaning</td>
+      </tr>
+      <tr>
+        <td class="first_col"><span class="code">dateTime</span></td>
+        <td>The time at the end of the archive interval in <a
+          href="http://en.wikipedia.org/wiki/Unix_time">unix epoch
+            time</a>. This is the <i>primary key</i> in the database. It
+          must be unique, and it cannot be null.
+        </td>
+      </tr>
+      <tr>
+        <td class="first_col"><span class="code">usUnits</span></td>
+        <td>The unit system the record is in. It cannot be null. See the Appendix <a
+          href="#units"><i>Units</i></a> for how these systems are
+          encoded.
+        </td>
+      </tr>
+      <tr>
+        <td class="first_col"><span class="code">interval</span></td>
+        <td>The length of the archive interval in minutes. It cannot be null.</td>
+      </tr>
+    </table>
+
+    <p>
+      In addition to the main archive table, there are a number of
+      smaller tables inside the database, one for each observation type,
+      that hold <i>daily summaries</i> of the type. For example, the
+      minimum and maximum value seen during the day, and at what time.
+      These tables have names such as <span class="code">archive_day_outTemp</span>
+      or <span class="code">archive_day_barometer</span>. Their existence
+      is generally transparent to the user.
+    </p>
+
+    <h2>Where to put customizations</h2>
       <p>For configuration changes, simply modify the
         <span class="code">weewx</span> configuration file
         <span class="code">weewx.conf</span>, and possibly modify the
@@ -2435,7 +2535,7 @@ extraTemp1     = Pond Temperature</pre>
         of the services that are normally run.</p>
 
       <h2>Customizing a Service</h2>
-      <p>The service <span class="code">weewx.wxengine.StdPrint</span> prints
+      <p>The service <span class="code">weewx.engine.StdPrint</span> prints
         out new LOOP and archive packets to the console when they arrive. By
         default, it prints out the entire record, which generally includes a lot
         of possibly distracting information and can be rather messy. Suppose you
@@ -2446,7 +2546,7 @@ extraTemp1     = Pond Temperature</pre>
       </p>
       <p>Create the file <span class="symcode">$BIN_ROOT</span><span class="code">/user/myprint.py</span>:
       </p>
-      <pre class="tty">from weewx.wxengine import StdPrint
+      <pre class="tty">from weewx.engine import StdPrint
 from weeutil.weeutil import timestamp_to_string
 
 class MyPrint(StdPrint):
@@ -2468,7 +2568,7 @@ class MyPrint(StdPrint):
       </p>
       <pre class="tty">[Engines]
     [[WxEngine]]
-        service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, <span class="highlight">user.myprint.MyPrint, </span>weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
+        service_list = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.engine.StdArchive, weewx.engine.StdTimeSynch, <span class="highlight">user.myprint.MyPrint, </span>weewx.engine.StdRESTful, weewx.engine.StdReport</pre>
       <p>Note that the <span class="code">service_list</span> must be all on
         one line. Unfortunately, the parser <span class="code">ConfigObj</span>
         does not allow options to be continued on to following lines.</p>
@@ -2489,7 +2589,7 @@ import threading
 import syslog
 
 import weewx
-from weewx.wxengine import StdService
+from weewx.engine import StdService
 from weeutil.weeutil import timestamp_to_string, option_as_list
 
 # Inherit from the base class StdService:
@@ -2642,7 +2742,7 @@ class MyAlarm(StdService):
         located in <span class="code">[Engines][[WxEngine]]</span>: </p>
       <pre class="tty">[Engines]
    [[WxEngine]]
-        service_list = weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdTimeSynch, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport<span class="highlight">, examples.alarm.MyAlarm</span></pre>
+        service_list = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.engine.StdArchive, weewx.engine.StdTimeSynch, weewx.engine.StdPrint, weewx.engine.StdRESTful, weewx.engine.StdReport<span class="highlight">, examples.alarm.MyAlarm</span></pre>
       <p>Note that the <span class="code">service_list</span> must be all on
         one line. Unfortunately, the parser <span class="code">ConfigObj</span>
         does not allow options to be continued on to following lines.</p>
@@ -2709,7 +2809,7 @@ appropriate permissions for the requested operation.</pre>
           href="#service_engine">Customizing the weewx service engine</a> for
         details on how to write a custom service. However, when you are done it
         will look something like this:</p>
-      <pre class="tty">from weewx.wxengine import StdService
+      <pre class="tty">from weewx.engine import StdService
         
 class AddElectricity(StdService):
 
@@ -3563,8 +3663,40 @@ Options:
           </tr>
         </tbody>
       </table>
+
       <h1 id="units">Appendix: Units</h1>
-      <p>The table below lists all the unit groups, their members, which
+      <p>Weewx offers three different <i>unit systems</i>:</p>
+
+    <table class="indent" style="width: 80%">
+      <caption>The standard unit systems used within weewx</caption>
+      <tr class="first_row">
+        <td>Name</td>
+        <td>Encoded value</td>
+        <td>Note</td>
+      </tr>
+      <tr>
+        <td class="first_col"><span class="code">US</span></td>
+        <td>0x01</td>
+        <td><i>U.S. Customary</i></td>
+      </tr>
+      <tr>
+        <td class="first_col"><span class="code">METRICWX</span></td>
+        <td>0x11</td>
+        <td>Rain related measurements are in <span class="code">mm</span>.
+          Speeds are in <span class="code">m/s</span>.
+        </td>
+      </tr>
+      <tr>
+        <td class="first_col"><span class="code">METRIC</span></td>
+        <td>0x10</td>
+        <td>Similar to <span class="code">METRIC</span>, except
+          that rain is in <span class="code">cm</span>, and speed is in
+          <span class="code">km/hr</span>
+        </td>
+      </tr>
+    </table>
+
+    <p>The table below lists all the unit groups, their members, which
         units are options for the group, and what the defaults are
         for each standard unit system. </p>
       <table class="indent" style="width: 80%">
@@ -3574,9 +3706,9 @@ Options:
             <td>Group</td>
             <td>Members</td>
             <td>Unit options</td>
-            <td>US</td>
-            <td>METRICWX</td>
-            <td>METRIC</td>
+            <td><span class="code">US</span></td>
+            <td><span class="code">METRICWX</span></td>
+            <td><span class="code">METRIC</span></td>
           </tr>
           <tr>
             <td class="first_col">group_altitude</td>
@@ -4525,7 +4657,7 @@ data are available only with the optional solar radiation sensor.
       var toc = $("#toc").tocify({
         selectors : "h1, h2, h3, h4",
         showAndHide : true,
-        theme : "bootstrap",
+        theme : "jqueryui",
         ignoreSelector : ".title",
         hashGenerator : genIds
       })

@@ -3870,13 +3870,13 @@ sudo fc-cache -f -v</pre>
 	  An example for sqlite would be <span class="code">
             {'driver':'db.sqlite',
             'root':'/home/weewx',
-            'database':'archive/weewx.sdb'}</span>, 
+            'database_name':'archive/weewx.sdb'}</span>, 
 	  an example for MySQL would be <span class="code">{
             'driver':'db.mysql',
             'host':'localhost',
             'user':'weewx',
             'password':'mypassword',
-            'database':'weewx'}</span>.</td>
+            'database_name':'weewx'}</span>.</td>
       </tr>
       <tr>
 	<td class="text_highlight">epoch time</td>
@@ -3940,10 +3940,18 @@ sudo fc-cache -f -v</pre>
           time usually have a suffix <span class="code">_tt</span>.</td>
       </tr>
       <tr>
-	<td class="text_highlight">value tuple</td>
-	<td>A 3-way tuple. First element is a value, second element the unit 
-	  type the value is in, the third the unit group. An example would be
-	  <span class="code">(21.2, &#39;degree_C&#39;, &#39;group_temperature&#39;)</span>.</td>
+        <td class="text_highlight">unit system</td>
+        <td>A complete set of units used together. Either <span class="code">US</span>,
+          <span class="code">METRIC</span>, or <span class="code">METRICWX</span>.
+        </td>
+      </tr>
+      <tr>
+        <td class="text_highlight">value tuple</td>
+        <td>A 3-way tuple. First element is a value, second element
+          the unit type the value is in, the third the unit group. An
+          example would be <span class="code">(21.2,
+            &#39;degree_C&#39;, &#39;group_temperature&#39;)</span>.
+        </td>
       </tr>
     </table>
 
