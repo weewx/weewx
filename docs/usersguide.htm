@@ -1074,6 +1074,73 @@ longitude = -77.0366</pre>
     <pre class="tty">altitude = 700, foot</pre>
     <p>An example in meters:</p>
     <pre class="tty">altitude = 220, meter</pre>
+    <p class="config_important">station_type </p>
+    <p>Set to the type of hardware you are using.</p>
+    <pre class="tty">station_type = Simulator</pre>
+    <p>Valid options include:</p>
+    <table class="indent" style="width: 50%">
+      <tr class="first_row">
+        <td>Option</td>
+        <td>Description</td>
+      </tr>
+      <tr>
+        <td class="code first_col">Vantage</td>
+        <td>Davis Vantage weather stations</td>
+      </tr>
+      <tr>
+        <td class="code first_col">WMR100</td>
+        <td>Oregon Scientific WMR100 series stations</td>
+      </tr>
+      <tr>
+        <td class="code first_col">WMR200</td>
+        <td>Oregon Scientific WMR200 series stations</td>
+      </tr>
+      <tr>
+        <td class="code first_col">WMR9x8</td>
+        <td>Oregon Scientific WMR-918/968 series stations</td>
+      </tr>
+      <tr>
+        <td class="code first_col">FineOffsetUSB</td>
+        <td>Fine Offset 10xx, 20xx, and 30xx stations</td>
+      </tr>
+      <tr>
+        <td class="code first_col">WS23xx</td>
+        <td>La Crosse 23xx stations</td>
+      </tr>
+      <tr>
+        <td class="code first_col">WS28xx</td>
+        <td>La Crosse 28xx stations</td>
+      </tr>
+      <tr>
+        <td class="code first_col">TE923</td>
+        <td>Hideki TE923 stations</td>
+      </tr>
+      <tr>
+        <td class="code first_col">Ultimeter</td>
+        <td>PeetBros Ultimeter stations</td>
+      </tr>
+      <tr>
+        <td class="code first_col">WS1</td>
+        <td>Argent Data Systems WS1 stations</td>
+      </tr>
+      <tr>
+        <td class="code first_col">CC3000</td>
+        <td>RainWise CC3000 data logger</td>
+      </tr>
+      <tr>
+        <td class="code first_col">Simulator</td>
+        <td>A software weather station simulator. Useful for
+          debugging.</td>
+      </tr>
+    </table>
+    <p id="station_url" class="config_option"><span class="config_important">station_url</span></p>
+    <p>If you have a website, you may optionally specify an URL for
+      its HTML server. It will be included in the RSS file generated
+      by weewx and, if you choose to opt into the <a href="#station_registry">station
+      registry</a>, it will also be included in the 
+      <a href="http://weewx.com/stations.html">map of weewx stations</a>.</p>
+    <p>Example:</p>
+    <pre class="tty">station_url = http://www.mywebsite.com</pre>
     <p class="config_option">rain_year_start
     </p>
     <p>Normally the start of the rain year is downloaded from your hardware,
@@ -1085,69 +1152,6 @@ longitude = -77.0366</pre>
     <p>Start of the week. 0=Monday, 1= Tuesday, ... , 6 = Sunday. Default is 6 (Sunday)
     </p>
     <pre class="tty">week_start = 0</pre>
-    <p class="config_important">station_type </p>
-    <p>Set to the type of hardware you are using.</p>
-    <pre class="tty">station_type = Simulator</pre>
-    <p>Valid options include:</p>
-    <table class="indent" style="width:50%">
-      <tr class="first_row">
-	<td>Option</td>
-	<td>Description</td>
-      </tr>
-      <tr>
-	<td class="code text_highlight">Vantage</td>
-	<td>Davis Vantage weather stations</td>
-      </tr>
-      <tr>
-	<td class="code text_highlight">WMR100</td>
-	<td>Oregon Scientific WMR100 series stations</td>
-      </tr>
-      <tr>
-	<td class="code text_highlight">WMR200</td>
-	<td>Oregon Scientific WMR200 series stations</td>
-      </tr>
-      <tr>
-	<td class="code text_highlight">WMR9x8</td>
-	<td>Oregon Scientific WMR-918/968 series stations</td>
-      </tr>
-      <tr>
-	<td class="code text_highlight">FineOffsetUSB</td>
-	<td>Fine Offset 10xx, 20xx, and 30xx stations</td>
-      </tr>
-      <tr>
-	<td class="code text_highlight">WS23xx</td>
-	<td>La Crosse 23xx stations</td>
-      </tr>
-      <tr>
-	<td class="code text_highlight">WS28xx</td>
-	<td>La Crosse 28xx stations</td>
-      </tr>
-      <tr>
-	<td class="code text_highlight">TE923</td>
-	<td>Hideki TE923 stations</td>
-      </tr>
-      <tr>
-	<td class="code text_highlight">Ultimeter</td>
-	<td>PeetBros Ultimeter stations</td>
-      </tr>
-      <tr>
-	<td class="code text_highlight">WS1</td>
-	<td>Argent Data Systems WS1 stations</td>
-      </tr>
-      <tr>
-	<td class="code text_highlight">CC3000</td>
-	<td>RainWise CC3000 data logger</td>
-      </tr>
-    </table>
-    
-    <p id="station_url" class="config_option"><span class="config_important">station_url</span></p>
-    <p>If you have a website, you may optionally specify an URL for
-      its HTML server. It will be included in the RSS file generated
-      by weewx and, if you choose to opt into the <a href="#station_registry">station
-      registry</a>, it will also be included in the 
-      <a href="http://weewx.com/stations.html">map of weewx stations</a>.</p>
-    <p>Example (this is mine):</p>
-    <pre class="tty">station_url = http://www.threefools.org</pre>
 
     <h3 class="config_section">[Vantage]</h3>
     <p>This section is for options relating to the Davis Vantage series of hardware 
@@ -1654,8 +1658,13 @@ longitude = -77.0366</pre>
       relative to <span class="symcode">$WEEWX_ROOT</span>. Generated 
 	files and images will be put here. </p>
     <p class="config_option">data_binding</p>
-    <p>The data source to be used for the reports. This can be overridden in
-    individual reports. Optional. Default is <span class="code">wx_binding</span>.</p>
+    <p>
+      The data source to be used for the reports. It should match a
+      binding given in section <a href="#Bindings"><span
+        class="code">[Bindings]</span></a> below. The binding can be overridden in
+      individual reports. Optional. Default is <span class="code">wx_binding</span>.
+    </p>
+
     <h3 class="config_section">[[StandardReport]]</h3>
     <p>This is the standard report that will be run on every archiving interval. 
       It uses the skin &quot;<span class="code">Standard</span>&quot;, which generates 
@@ -1909,8 +1918,7 @@ longitude = -77.0366</pre>
         # The class to manage the database
         manager = weewx.wxmanager.WXDaySummaryManager
         # The schema defines to structure of the database contents
-        schema = schemas.wview.schema
-    </pre>
+        schema = schemas.wview.schema</pre>
     <p>What follows is more detailed information about each of the
       binding options.</p>
     <p class="config_important">database</p>
@@ -2728,7 +2736,24 @@ interval:  1</pre>
 
 
     <h1 id="configuring_mysql">Configuring MySQL</h1>
-    <p>This section applies only for those using MySQL.</p>
+    <p>This section applies only to those who wish to use the MySQL
+      database, instead of the default sqlite database.</p>
+    <p>
+      First, you should change your <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a>
+      section to point to MySQL, instead of sqlite. After the change, it
+      will look something like this (change <span class="highlight">highlighted</span>):
+    </p>
+    <pre class="tty">
+    [[wx_binding]]
+        # The database to be used - it should match one of the sections in [Databases] 
+<span class="highlight">        database = archive_mysql</span>
+        # The name of the table within the database
+        table_name = archive
+        # The class to manage the database
+        manager = weewx.wxmanager.WXDaySummaryManager
+        # The schema defines to structure of the database contents
+        schema = schemas.wview.schema</pre>
+
     <p>Assuming that you want to use the default database configuration, your
       <span class="code"><a href="#Databases">[Databases]</a></span> section 
       should 
@@ -2749,10 +2774,6 @@ interval:  1</pre>
       permissions:</p>
     <pre class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
 mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;</pre>
-    <p>In addition to configuring MySQL, you will also need to indicate to
-      <span class="code">weewx</span> that you intend to use the configured 
-	  database. See section <span class="code"><a href="#Bindings">
-	  [Bindings]</a></span> for details.</p>
 
     <h1 id="running">Running <span class="code">weewx</span></h1>
     <p><span class="code">Weewx</span> can be run either directly,
@@ -2895,10 +2916,7 @@ sudo /etc/init.d/weewx restart</pre>
       compatible with the database used by
       <a href="http://www.wviewweather.com">wview</a> (usually called
       <span class="code">wview-archive.sdb</span>), at least as of wview
-      Version 5.2.X. The schema and its semantics is identical. However, the
-      statistical file <span class="code">stats.sdb</span> is different, and
-      must be rebuilt. This will be done automatically on startup by
-      <span class="code">weewx</span>.
+      Version 5.2.X. The schema, and its semantics, is identical.
     </p>
     <p>If you have data from <span class='code'>wview</span>, you can
       'import' them into <span class='code'>weewx</span> by simply copying the 
@@ -2906,17 +2924,23 @@ sudo /etc/init.d/weewx restart</pre>
       file.  Assuming that the <span class='code'>wview</span> data are in file <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
     <p class='tty'>sudo /etc/init.d/weewx stop
 cd <span class="symcode">$SQLITE_ROOT</span>
-rm stats.sdb
 mv weewx.sdb weewx.sdb.bak
 cp /var/wview/archive/wview-archive.sdb weewx.sdb
 sudo /etc/init.d/weewx start</p>
-    <p>When <span class='code'>weewx</span> starts it will generate a new
-      <span class='code'>stats.sdb</span> file.  This could take awhile if the
-      <span class='code'>wview</span> archive contains more than a month or
-      two of data.</p>
-    <p>On my modest 500 MHz <a href="http://www.fit-pc.com/">fit-PC Slim</a>
-      with 512 MB of memory it took a little over 4 minutes for a year and a
-      half (25 MB) of data.</p>
+    <p>
+      Internally, within the <span class="code">weewx.sdb</span> database,
+      <span class="code">weewx</span> also maintains a "daily summary" of all the statistics. This
+      is done for performance reasons. The daily summary will
+      automatically be built on the first startup. This could take
+      a few minutes if the <span class='code'>wview</span> archive contains
+      more than a month or two of data.
+    </p>
+    <p>
+      On my modest 500 MHz <a href="http://www.fit-pc.com/">fit-PC
+        Slim</a> with 512 MB of memory it took a little over 4 minutes for a
+      year and a half (25 MB) of data.
+    </p>
+
     <h2>MySQL</h2>
     <p>The MySQL archive database used by wview is "almost" compatible with
       <span class="code">weewx</span>. The one difference is that in wview, the column '<span class="code">interval</span>' 
@@ -2935,7 +2959,7 @@ sudo /etc/init.d/weewx start</p>
     <pre class="tty">[[archive_mysql]]
 &nbsp; host = ...
 &nbsp; user = ...
-&nbsp; database = <em>your-wview-archive-name</em>
+&nbsp; database_name = <em>your-wview-archive-name</em>
 ...</pre>
 
 
@@ -3011,8 +3035,6 @@ sudo /etc/init.d/apache2 restart</p>
       archive database.  For a Sqlite
       configuration, simply save the <span class='code'>weewx.sdb</span>
       file.  For a MySQL configuration, save a dump of the archive database.
-      The stats database does not have to be backed up - if no stats database
-      is found, it will be generated automatically from archive data.
     </p>
     <table class="locations" style="width:70%">
       <tr>
@@ -3069,22 +3091,25 @@ sudo /etc/init.d/apache2 restart</p>
     <p>This section lists some common problems installing and running
       <span class="code">weewx</span>. If you are still stuck, be sure to: </p>
     <ul>
-      <li style="margin-bottom:1em">Set the option <span class="code">debug</span> to
-        <span class="code">1</span> in <span class='code'>weewx.conf</span>.
-        This will put much more information in the log file, which can
-        be very useful for troubleshooting and debugging!
-        <p class='tty' style="margin-top:1em">debug = 1</p>
+      <li style="margin-bottom: 1em">Set the option <span
+        class="code">debug</span> to <span class="code">1</span> in <span
+        class='code'>weewx.conf</span>. This will put much more
+        information in the log file, which can be very useful for
+        troubleshooting and debugging!
+        <p class='tty' style="margin-top: 1em">debug = 1</p>
       </li>
-      <li style="margin-bottom:1em"><a href="#monitoring">Look at the log file</a>. I am always
-        happy to take questions, but the first thing I will ask you is,
-        &quot;Did you look at the log file?&quot;
-        <p class='tty' style="margin-top:1em">sudo tail -f /var/log/syslog</p>
+      <li style="margin-bottom: 1em">Look at the <a href="#monitoring">log file</a>. I am
+        always happy to take questions, but the first thing I will ask
+        is, &quot;Did you look at the log file?&quot;
+        <p class='tty' style="margin-top: 1em">sudo tail -f /var/log/syslog</p>
       </li>
-      <li style="margin-bottom:1em">Run directly rather than as a daemon.
-        Generally, <span class="code">weewx</span> will catch and log any
-        unrecoverable exceptions. But if you are getting strange results,
-        it is worth running directly and looking for any clues.
-        <p class='tty' style="margin-top:1em">sudo <span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
+      <li style="margin-bottom: 1em">Run <span class="code">weewxd</span> directly from
+        the command line, rather than as a
+        daemon. Generally, <span class="code">weewx</span> will catch
+        and log any unrecoverable exceptions. But if you are getting
+        strange results, it is worth running directly and looking for
+        any clues.
+        <p class='tty' style="margin-top: 1em">sudo <span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
       </li>
     </ul>
 

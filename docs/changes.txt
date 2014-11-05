@@ -15,6 +15,8 @@ Allow syntax such as $trend($time_delta=3600).barometer
 
 Allow other databases to be used in images.
 
+The archive interval can now change within a database without consequences.
+
 Total rewrite of how devices are configured. A single utility 
 wee_config_device replaces each of the device-specific
 configuration utilities.
