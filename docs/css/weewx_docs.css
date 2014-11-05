@@ -4,8 +4,6 @@
 html, body{
   font-family: Verdana,arial,sans-serif;
   font-size: 11pt;
-  color: black;
-  line-height: 1.2;
 }
 li {
   margin-right: 10%;
@@ -56,8 +54,6 @@ td {
   border: 1px solid #cccccc;
   padding: 5px;
 }
-p {
-}
 caption {
   background-color: #aacccc;
   margin: 0;
@@ -97,6 +93,7 @@ caption {
   margin: 10px;
   padding: 3px;
   white-space: pre;
+  line-height: normal;
 }
 .title {
   margin-top: 0px;
@@ -104,19 +101,15 @@ caption {
 }
 .config_section {
 }
-.config_option {
+.config_option, .config_important {
   font-family: "Courier New", Courier, monospace;
   font-weight: bold;
   color: black;
-  margin-top: 1em;
-  margin-bottom: -6px;
+  margin-top: 1.5em;
+  margin-bottom: 0px;
 }
 .config_important {
-  font-family: "Courier New", Courier, monospace;
-  font-weight: bold;
   color: #bb9900;
-  margin-top: 1em;
-  margin-bottom: -6px;
 }
 .highlight {
   background-color: #FFCC99;

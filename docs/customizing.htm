@@ -902,19 +902,19 @@ or in foobar units: $day.barometer.min.foobar
             <td>Results</td>
           </tr>
           <tr>
-            <td class="code">$trend.barometer</td>
+            <td class="code first_col">$trend.barometer</td>
             <td class="code">-.02 inHg</td>
           </tr>
           <tr>
-            <td class="code">$trend.outTemp</td>
+            <td class="code first_col">$trend.outTemp</td>
             <td class="code">1.1 °C</td>
           </tr>
           <tr>
-            <td class="code">$trend.time_delta</td>
+            <td class="code first_col">$trend.time_delta</td>
             <td class="code">10800 secs</td>
           </tr>
           <tr>
-            <td class="code">$trend.time_delta.hour</td>
+            <td class="code first_col">$trend.time_delta.hour</td>
             <td class="code">3 hrs</td>
           </tr>
         </tbody>
@@ -936,15 +936,15 @@ or in foobar units: $day.barometer.min.foobar
             <td>Results</td>
           </tr>
           <tr>
-            <td class="code">$unit.unit_type.outTemp</td>
+            <td class="code first_col">$unit.unit_type.outTemp</td>
             <td class="code">degree_C</td>
           </tr>
           <tr>
-            <td class="code">$unit.label.outTemp</td>
+            <td class="code first_col">$unit.label.outTemp</td>
             <td class="code">°C</td>
           </tr>
           <tr>
-            <td class="code">$unit.format.outTemp</td>
+            <td class="code first_col">$unit.format.outTemp</td>
             <td class="code">%.1f</td>
           </tr>
         </tbody>
@@ -1886,17 +1886,17 @@ outTemp = Outside Temperature</pre>
             <td>Comments</td>
           </tr>
           <tr>
-            <td class="code">html_entities</td>
+            <td class="code first_col">html_entities</td>
             <td>Non 7-bit characters will be represented
               as HTML entities (<em>e.g.</em>, the degree sign will be
               represented as <span class="code">&amp;#176;</span>)</td>
           </tr>
           <tr>
-            <td class="code">utf8</td>
+            <td class="code first_col">utf8</td>
             <td>Non 7-bit characters will be represented in UTF-8.</td>
           </tr>
           <tr>
-            <td class="code">strict_ascii</td>
+            <td class="code first_col">strict_ascii</td>
             <td>Non 7-bit characters will be ignored.</td>
           </tr>
         </tbody>
@@ -2964,11 +2964,11 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         <caption>Required keys</caption>
         <tbody>
           <tr>
-            <td class="code">dateTime</td>
+            <td class="code first_col">dateTime</td>
             <td>The time of the observation in unix epoch time.</td>
           </tr>
           <tr>
-            <td class="code">usUnits</td>
+            <td class="code first_col">usUnits</td>
             <td>The unit system used. <span class="code">weewx.US</span> for US
               customary, <span class="code">weewx.METRICWX</span>, or 
               <span class="code">weewx.METRIC</span> for metric. See
@@ -3008,13 +3008,13 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         <caption>Pressure types</caption>
         <tbody>
           <tr>
-            <td class="code">pressure</td>
+            <td class="code first_col">pressure</td>
             <td>The <em>Station Pressure</em> (SP), which is the raw, absolute
               pressure measured by the station. This is the true barometric
               pressure for the station.</td>
           </tr>
           <tr>
-            <td class="code">barometer</td>
+            <td class="code first_col">barometer</td>
             <td>The <em>Sea Level Pressure</em> (SLP) obtained by correcting
               the <em>Station Pressure</em> for altitude and local temperature.
               This is the pressure reading most commonly used by meteorologist
@@ -3024,7 +3024,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
               altitude and local temperature. </td>
           </tr>
           <tr>
-            <td class="code">altimeter</td>
+            <td class="code first_col">altimeter</td>
             <td>The <em>Altimeter Setting</em> (AS) obtained by correcting the
               <em>Station Pressure</em> for altitude. This is the pressure
               reading most commonly heard in weather reports. It is not the true
