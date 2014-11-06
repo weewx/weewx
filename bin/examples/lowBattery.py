@@ -103,7 +103,7 @@ class BatteryAlarm(StdService):
             self.bind(weewx.NEW_LOOP_PACKET,    self.newLoopPacket)
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)
 
-        except Exception, e:
+        except KeyError, e:
             syslog.syslog(syslog.LOG_INFO, "lowBattery: No alarm set. %s" % e)
 
     def newLoopPacket(self, event):

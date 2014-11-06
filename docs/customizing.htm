@@ -255,9 +255,9 @@ Version: 3.0.0 alpha
         layer. Instead, they just move files around. </p>
       <p>Which generators are to be run for a given skin is specified in the
         skin's configuration file <span class="code">skin.conf</span>, in
-        section <a href="#generators"><span class="code">[Generators]</span></a>.</p>
+        section <a href="#generators_section"><span class="code">[Generators]</span></a>.</p>
 
-      <h3>Templates</h3>
+    <h3>Templates</h3>
     <p>
       A template is a text file that is processed by a <em>template
         engine</em> to create a new file. <span class="code">Weewx</span>
@@ -275,7 +275,7 @@ Version: 3.0.0 alpha
         class="code">.tmpl</span> extension.
     </p>
     
-      <h2>The database</h2>
+    <h2>The database</h2>
     <p>
       Weewx uses a single database to store and retrieve the records it needs. It can
       be implemented by using either <a href="http://www.sqlite.org/">SQLITE3</a>,
@@ -1751,8 +1751,8 @@ class MyXSearch(SearchList):                                                 # 1
       </p>
 
       <h2 class="config_section" id="Extras">[Extras]</h2>
-      <p>This section is available to you to add any static tags that you might
-        want to be available in the templates.</p>
+      <p>This section is available to add any static tags you
+      might want to use in your templates.</p>
 
       <h3>An Example: the Standard skin</h3>
       <p>As an example, the Standard <span class="code">skin.conf</span>
@@ -1935,8 +1935,9 @@ second = " second", " seconds"</pre>
         formats. The default looks like this:</p>
       <pre class='tty'>
     [[TimeFormats]]
-        # This section sets the string format to be used for
-        # each time scale.
+        # This section sets the string format to be used for each time scale.
+        # The values below will work in every locale, but may not look
+        # particularly attractive. See the Customizing Guide for alternatives.
 
         day        = %X
         week       = %X (%A)
@@ -1959,8 +1960,7 @@ second = " second", " seconds"</pre>
       <pre class="tty">
     [[TimeFormats]]
         #
-        # This section sets the string format to be used
-        # each time scale.
+        # More attractive formats that work in most Western countries.
         #
         day        = %H:%M
         week       = %H:%M on %A
@@ -2019,7 +2019,9 @@ cooling_base = 20.0, degree_C</pre>
       <pre class="tty">inTemp = Temperature inside the house
 outTemp = Outside Temperature</pre>
       <p>would cause the given labels to be used for plots of <span
-          class="code">inTemp</span> and <span class="code">outTemp</span>. </p>
+          class="code">inTemp</span> and <span class="code">outTemp</span>. 
+          If no option is given, then the observation type itself will
+          be used (<i>e.g., </i><span class="code">outTemp</span>).</p>
       <h2 class="config_section">[Almanac]</h2>
       <p>This section controls what text to use for the almanac. It consists of
         only one entry </p>
@@ -2034,9 +2036,7 @@ outTemp = Outside Temperature</pre>
         <span class="code">weewx.cheetahgenerator.CheetahGenerator</span>
         and controls text generation from templates, specifically which files
         are to be produced from which template. </p>
-      <p>Before V2.5, this section was called
-        <span class="code">[FileGenerator]</span>. 
-        Older versions and names are 100% backwards compatible.</p>
+
       <h3>Overview of file generation</h3>
       <p>Files are generated from templates, and each template is identified
         by the <span class="config_option">template</span> parameter.</p>
@@ -2056,10 +2056,10 @@ outTemp = Outside Temperature</pre>
     [[xmlfile]]
         template = filename.xml.tmpl</pre>
       <p>There can be only one <span class="config_option">template</span> in
-        each block.  In most cases, the block name does not matter - it is
+        each block.  In most cases, the block name does not matter &mdash; it is
         used only to isolate each template.  However, there are two block names
         that have special meaning:  <span class='code'>SummaryByMonth</span> and 
-        <span class='code'>SummaryByYear</span>.  These are described below.</p>
+        <span class='code'>SummaryByYear</span>.  They are described below.</p>
       <p>The file generator runs on each new archive record.  In a default
         weewx installation, that would be every 5 minutes.</p>
       <p>Cheetah processes each template to generate a file.  Cheetah follows
@@ -2080,7 +2080,7 @@ outTemp = Outside Temperature</pre>
         search lists. If no <span class="config_option">search_list</span>
         is specified, a default list will be
         used.  The default list is:</p>
-      <pre class="tty">search_list = weewx.cheetahgenerator.Almanac, weewx.cheetahgenerator.Station, weewx.cheetahgenerator.Stats, weewx.cheetahgenerator.UnitInfo, weewx.cheetahgenerator.Extras, weewx.cheetahgenerator.Current</pre>
+      <pre class="tty">search_list = weewx.cheetahgenerator.Almanac, weewx.cheetahgenerator.Station, weewx.cheetahgenerator.Stats, weewx.cheetahgenerator.UnitInfo, weewx.cheetahgenerator.Extras</pre>
       <p class="config_option">search_list_extensions</p>
       <p>This defines one or more search list objects that will be appended to
         the <span class="config_option">search_list</span>.  For example, the
@@ -2124,9 +2124,12 @@ outTemp = Outside Temperature</pre>
         <span class="code">summary-2010-03.html</span> for the month of March,
         2010.</p>
       <p class="config_option">stale_age</p>
-      <p>File staleness age, in seconds.  If the file is older than this age
-        it will be generated from the template. If no stale_age is specified
-        the file will be generated each time the generator runs.</p>
+      <p>
+        File staleness age, in seconds. If the file is older than this age it will
+        be generated from the template. If no <span class="code">stale_age</span>
+        is specified, then the file will be generated every time the generator
+        runs.
+      </p>
       <p class="config_option">[[SummaryByMonth]]</p>
       <p>The <span class="code">SummaryByMonth</span> section defines some
         special behavior.  Each template in this section will be used
@@ -2142,13 +2145,13 @@ outTemp = Outside Temperature</pre>
         of any template in this section.</p>
 
       <h3>Customizing file generation</h3>
-      <p>The best way to customization file generation is to make a copy of
+      <p>The best way to customize file generation is to make a copy of
         a working report/skin, then make incremental changes.</p>
       <p>When there is an error during template generation, the error will
         show up in the log file.  Many errors are obvious &mdash; Cheetah will
         display a line number and list the template file in which the error
         occurred.  In some cases the error reporting is rather obscure.  So
-        make small changes and tests often.  Use the tool
+        make small changes and test often.  Use the tool
         <span class="code"><a href="#wee_reports">wee_reports</a></span>
         to test modifications to the generator configuration and/or the
         template contents.</p>
@@ -2258,7 +2261,7 @@ outTemp = Outside Temperature</pre>
     # copy_always = </pre>
       <p>The Standard skin includes some background images, CSS files, and
         icons that need to be copied once.  There are no files that need
-        to be copied each time the generator runs.</p>
+        to be copied every time the generator runs.</p>
 
       <h2 class="config_section">[ImageGenerator]</h2>
       <p>This section is used by generator <span class="code">weewx.reportengine.ImageGenerator</span>
@@ -2268,8 +2271,8 @@ outTemp = Outside Temperature</pre>
       <p>The section consists of one or more sub-sections, one for each time
         period (day, week, month, and year). These sub-sections define the
         nature of aggregation and plot types for the time period. For example,
-        here is a typical set of options for sub-section <span class="code">[[month_images]]</span>,
-        controlling how images that cover a month period are generated: </p>
+        here is a typical set of options for sub-section <span class="code">[[month_images]]</span>.
+        It controls which "monthly" images will get generated, and what they will look lile:</p>
       <pre class="tty">[[month_images]]
     x_label_format = %d
     bottom_label_format = %m/%d/%y %H:%M
@@ -2283,8 +2286,9 @@ outTemp = Outside Temperature</pre>
         example, it will show the time as <span class="code">10/25/09 15:35</span>.
         A plot will cover a nominal 30 days, and all items included in it will
         use an aggregate type of averaging over 3 hours. </p>
+
       <h3>Image files</h3>
-      <p>Within each sub-section is another nesting, one for each image to be
+      <p>Within each time period sub-section is another nesting, one for each image to be
         generated. The title of each sub-sub-section is the filename to be used
         for the image. Finally, at one additional nesting level (!) are the
         logical names of all the line types to be drawn in the image. Values
@@ -2302,7 +2306,7 @@ outTemp = Outside Temperature</pre>
         It will be a bar plot. Option <span class="code">yscale</span> controls
         the y-axis scaling — if left out, the scale will automatically be
         chosen. However, in this example we are choosing to exercise some degree
-        of control by specifying values explicitly. The option takes a 3-way
+        of control by specifying values explicitly. The option is a 3-way
         tuple (<span class="code">ylow</span>, <span class="code">yhigh</span>,
         <span class="code">min_interval</span>), where <span class="code">ylow</span>
         and <span class="code">yhigh</span> are the minimum and maximum y-axis
@@ -2361,7 +2365,7 @@ outTemp = Outside Temperature</pre>
     [[[[outTemp]]]]
         aggregate_type = avg
         aggregate_interval = 3600
-    [[[[outTemp]]]]  # OOPS! The same section name appears more than once!</pre>
+    <span style="text-decoration:line-through; color:red">[[[[outTemp]]]]</span>  # OOPS! The same section name appears more than once!</pre>
       <p>The option parser does not allow the same section name ('<span class="code">outTemp</span>'
         in this case) to appear more than once at a given level in the
         configuration file, so an error will be declared (technical reason:
@@ -2547,7 +2551,7 @@ outTemp = Outside Temperature</pre>
         report can be used for many different stations, even if the stations
         have different sensors or capabilities.</p>
 
-      <h2 class="config_section" id="generators">[Generators]</h2>
+      <h2 class="config_section" id="generators_section">[Generators]</h2>
       <p>This section defines the generators that should be run as well as
         options for specific generators.</p>
 
@@ -2567,11 +2571,13 @@ outTemp = Outside Temperature</pre>
       <p>Weewx has been designed to make localization fairly straightforward.
         What follows is a guide to localizing
         to a non-English language and/or locale.</p>
+
       <h2>Translate the templates</h2>
       <p>First, you will need to go through the templates and translate to your
         target language. Obvious text strings such as "<span class="code">Current
           Weather Conditions</span>" will need to be translated.</p>
-      <h2>Modify skin.conf to reflect local conventions</h2>
+
+      <h2>Modify <span class="code">skin.conf</span> to reflect local conventions</h2>
       <p>Next, you will need to go through <span class="code">skin.conf</span>
         and modify any labels to follow local conventions.
       </p>
@@ -2589,12 +2595,17 @@ moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning 
           ISO conventions, or are unlikely to be used outside English
           speaking countries (an example would be
           &quot;foot&quot;). But, there are a few exceptions, used to
-          label the weewx and server &quot;uptimes&quot;:</p>
+          label the weewx and server &quot;uptimes&quot;,
+          which can be found in sub-section <span class="code">[[Labels]]</span></p>
                 <pre class="tty">
-day     = " day",    " days"
-hour    = " hour",   " hours"
-minute  = " minute", " minutes"
-second  = " second", " seconds"</pre>
+[Units]
+  ...
+  [[Labels]]
+    ...
+    day     = " day",    " days"
+    hour    = " hour",   " hours"
+    minute  = " minute", " minutes"
+    second  = " second", " seconds"</pre>
 
       <p>You will probably want to change the generic labels used for the
         observation types:</p>
@@ -2631,7 +2642,7 @@ extraTemp1     = Pond Temperature</pre>
       <p>This is an advanced topic intended for those who wish to try their hand
         at extending the internal engine in weewx. You should have a passing
         familiarity with Python or, at least, be willing to learn it. </p>
-      <p><em>Please note that the service engine is likely to change in future
+      <p class="warning"><em>Please note that the API to the service engine may change in future
           versions! </em></p>
       <p>At a high level, <span class="code">weewx</span> consists of an <em>engine</em>
         that is responsible for managing a set of <em>services</em>. A service
@@ -2646,7 +2657,7 @@ extraTemp1     = Pond Temperature</pre>
       <p>See the table <a href="#default_services">Default services</a> above for a list
         of the services that are normally run.</p>
 
-      <h2>Customizing a Service</h2>
+      <h2>Customizing a service</h2>
       <p>The service <span class="code">weewx.engine.StdPrint</span> prints
         out new LOOP and archive packets to the console when they arrive. By
         default, it prints out the entire record, which generally includes a lot
@@ -2665,10 +2676,10 @@ class MyPrint(StdPrint):
 
     # Override the default new_loop_packet member function:
     def new_loop_packet(self, event):
-    packet = event.packet
-    print "LOOP: ", timestamp_to_string(packet['dateTime']),
-        "BAR=",  packet.get('barometer', 'N/A'),
-        "TEMP=", packet.get('outTemp', 'N/A')</pre>
+        packet = event.packet
+        print "LOOP: ", timestamp_to_string(packet['dateTime']),
+            "BAR=",  packet.get('barometer', 'N/A'),
+            "TEMP=", packet.get('outTemp', 'N/A')</pre>
       <p>This service substitutes a new implementation for the member function <span
           class="code">new_loop_packet</span>. This implementation prints out
         the time, then the barometer reading (or '<span class="code">N/A</span>'
@@ -2680,16 +2691,18 @@ class MyPrint(StdPrint):
       </p>
       <pre class="tty">[Engines]
     [[WxEngine]]
-        service_list = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.engine.StdArchive, weewx.engine.StdTimeSynch, <span class="highlight">user.myprint.MyPrint, </span>weewx.engine.StdRESTful, weewx.engine.StdReport</pre>
-      <p>Note that the <span class="code">service_list</span> must be all on
+        ...
+        report_services = <span class="highlight">user.myprint.MyPrint</span>, weewx.engine.StdReport</pre>
+      <p>Note that the <span class="code">report_services</span> must be all on
         one line. Unfortunately, the parser <span class="code">ConfigObj</span>
         does not allow options to be continued on to following lines.</p>
-      <h2>Adding a Service</h2>
+
+      <h2>Adding a service</h2>
       <p>Suppose there is no service that can be easily customized for your
         needs. In this case, a new one can easily be created by subclassing off
         the abstract base class <span class="code">StdService</span>, and then
         adding the functionality you need. Here is an example that implements an
-        alarm that sends off an email when an arbitrary expression evaluates <span
+        alarm, which sends off an email when an arbitrary expression evaluates <span
           class="code">True</span>. This example is included in the standard
         distribution in directory <span class="symcode">$BIN_ROOT</span><span
           class="code">/examples</span>.</p>
@@ -2707,17 +2720,17 @@ from weeutil.weeutil import timestamp_to_string, option_as_list
 # Inherit from the base class StdService:
 class MyAlarm(StdService):
     """Custom service that sounds an alarm if an arbitrary expression evaluates true"""
-        
+    
     def __init__(self, engine, config_dict):
-    # Pass the initialization information on to my superclass:
-    super(MyAlarm, self).__init__(engine, config_dict)
+        # Pass the initialization information on to my superclass:
+        super(MyAlarm, self).__init__(engine, config_dict)
         
         # This will hold the time when the last alarm message went out:
         self.last_msg_ts = 0
-
+        
         try:
             # Dig the needed options out of the configuration dictionary.
-            # If a critical option is missing, an exception will be thrown and
+            # If a critical option is missing, an exception will be raised and
             # the alarm will not be set.
             self.expression    = config_dict['Alarm']['expression']
             self.time_wait     = int(config_dict['Alarm'].get('time_wait', 3600))
@@ -2727,26 +2740,26 @@ class MyAlarm(StdService):
             self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weewx")
             self.FROM          = config_dict['Alarm'].get('from', 'alarm@weewx.com')
             self.TO            = option_as_list(config_dict['Alarm']['mailto'])
-            syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: \"%s\"" % self.expression)
-
+            syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: '%s'" % self.expression)
+            
             # If we got this far, it's ok to start intercepting events:
-            self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)  # NOTE 1
-
-        except Exception, e:
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)    # NOTE 1
+            
+        except KeyError, e:
             syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set. %s" % e)
-        
+            
     def newArchiveRecord(self, event):
         """Gets called on a new archive record event."""
         
         # To avoid a flood of nearly identical emails, this will do
         # the check only if we have never sent an email, or if we haven't
         # sent one in the last self.time_wait seconds:
-        if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) &gt;= self.time_wait :
+        if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) >= self.time_wait :
             # Get the new archive record:
             record = event.record
             # Evaluate the expression in the context of the event archive record.
             # Sound the alarm if it evaluates true:
-            if eval(self.expression, None, record):                      # NOTE 2
+            if eval(self.expression, None, record):                       # NOTE 2
                 # Sound the alarm!
                 # Launch in a separate thread so it doesn't block the main LOOP thread:
                 t  = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, record))
@@ -2791,7 +2804,7 @@ class MyAlarm(StdService):
             if self.smtp_user:
                 s.login(self.smtp_user, self.smtp_password)
                 syslog.syslog(syslog.LOG_DEBUG, "  **** logged in with user name %s" % (self.smtp_user,))
-        
+            
             # Send the email:
             s.sendmail(msg['From'], self.TO,  msg.as_string())
             # Log out of the server:
@@ -2801,7 +2814,7 @@ class MyAlarm(StdService):
             raise
         
         # Log sending the email:
-        syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO)    </pre>
+        syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO) </pre>
       <p>This service expects all the information it needs to be in the
         configuration file <span class="code">weewx.conf</span> in a new
         section called <span class="code">[Alarm]</span>. So, add the following
@@ -2817,24 +2830,31 @@ class MyAlarm(StdService):
     subject = "Alarm message from weewx!"</pre>
       <p>There are two important points to be noted in this example, each marked
         with a "<span class="code">NOTE</span>" flag in the code.</p>
-      <ol>
-        <li>Here is where the binding happens between an event,
-          weewx.NEW_ARCHIVE_RECORD in this example, and a member function,
-          self.newArchiveRecord. There are other events that can be
-          interecepted. Look in the file <span class="symcode">$BIN_ROOT</span><span
-            class="code">/weewx/__init__.py</span>.</li>
-        <li>This is where the test is done of whether or not to sound the alarm.
-          The <span class="code">[Alarm]</span> configuration options specify
-          that the alarm be sounded when "<span class="code">outTemp &lt; 40.0</span>"
-          evaluates <span class="code">True</span>, that is when the outside
-          temperature is below 40.0 degrees. Any valid Python expression can be
-          used, although the only variables available are those in the current
-          archive record.</li>
-      </ol>
-      <p>Another example expression could be: </p>
+    <ol>
+      <li>Here is where the binding happens between an event, <span
+        class="code">weewx.NEW_ARCHIVE_RECORD</span> in this example, and a
+        member function, <span class="code">self.newArchiveRecord</span>. When
+        the event <span class='code'>NEW_ARCHIVE_RECORD</span> occurs,
+        the function <span class="code">self.newArchiveRecord</span> will be called. There
+        are many other events that can be interecepted. Look in the file <span
+        class="symcode">$BIN_ROOT</span><span class="code">/weewx/__init__.py</span>.
+      </li>
+      <li>This is where the test is done for whether or not to sound the
+        alarm. The <span class="code">[Alarm]</span> configuration options
+        specify that the alarm be sounded when "<span class="code">outTemp
+          &lt; 40.0</span>" evaluates <span class="code">True</span>, that is when the
+        outside temperature is below 40.0 degrees. Any valid Python expression
+        can be used, although the only variables available are those in the
+        current archive record.
+      </li>
+    </ol>
+    <p>Another example expression could be: </p>
       <pre class="tty">expression = "outTemp &lt; 32.0 and windSpeed &gt; 10.0"</pre>
       <p>In this case, the alarm is sounded if the outside temperature drops
         below freezing and the wind speed is greater than 10.0. </p>
+      <p>Note that units must be the same as whatever is being used in your database.
+      That is, the same as what you specified in option 
+      <a href="usersguide.htm#option_target_unit"><span class="code">target_unit</span></a>.</p>
       <p>Option <span class="code">time_wait</span> is used to avoid a flood of
         nearly identical emails. The new service will wait this long before
         sending another email out. </p>
@@ -2850,13 +2870,13 @@ class MyAlarm(StdService):
         valid "from" email address and the one <span class="code">weewx</span>
         supplies may not satisfy its requirements. </p>
       <p>To make this all work, you must tell the engine to load this new
-        service. This is done by adding your service name to the list <span class="code">service_list</span>,
-        located in <span class="code">[Engines][[WxEngine]]</span>: </p>
-      <pre class="tty">[Engines]
-   [[WxEngine]]
-        service_list = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.engine.StdArchive, weewx.engine.StdTimeSynch, weewx.engine.StdPrint, weewx.engine.StdRESTful, weewx.engine.StdReport<span class="highlight">, examples.alarm.MyAlarm</span></pre>
-      <p>Note that the <span class="code">service_list</span> must be all on
-        one line. Unfortunately, the parser <span class="code">ConfigObj</span>
+        service. This is done by adding your service name to the list <span class="code">report_services</span>,
+        located in <span class="code">[Engine][[Services]]</span>: </p>
+      <pre class="tty">[Engine]
+   [[Services]]
+        report_services = weewx.engine.StdPrint, weewx.engine.StdReport<span class="highlight">, examples.alarm.MyAlarm</span></pre>
+      <p>Again, note that the option <span class="code">report_services</span> must be all on
+        one line &mdash; the parser <span class="code">ConfigObj</span>
         does not allow options to be continued on to following lines.</p>
       <p>In addition to the example above, the distribution also includes a
         low-battery alarm (<span class="code">lowBattery.py</span>), which is

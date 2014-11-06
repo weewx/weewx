@@ -81,7 +81,7 @@ class MyAlarm(StdService):
         
         try:
             # Dig the needed options out of the configuration dictionary.
-            # If a critical option is missing, an exception will be thrown and
+            # If a critical option is missing, an exception will be raised and
             # the alarm will not be set.
             self.expression    = config_dict['Alarm']['expression']
             self.time_wait     = int(config_dict['Alarm'].get('time_wait', 3600))
@@ -91,12 +91,12 @@ class MyAlarm(StdService):
             self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weewx")
             self.FROM          = config_dict['Alarm'].get('from', 'alarm@weewx.com')
             self.TO            = option_as_list(config_dict['Alarm']['mailto'])
-            syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: \"%s\"" % self.expression)
+            syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: '%s'" % self.expression)
             
             # If we got this far, it's ok to start intercepting events:
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)    # NOTE 1
             
-        except Exception, e:
+        except KeyError, e:
             syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set. %s" % e)
             
     def newArchiveRecord(self, event):
@@ -198,6 +198,10 @@ if __name__ == '__main__':
     except IOError:
         print "Unable to open configuration file ", config_path
         exit()
+        
+    if 'Alarm' not in config_dict:
+        print >>sys.stderr, "No [Alarm] section in the configuration file %s" % config_path
+        exit(1)
     
     engine = None
     alarm = MyAlarm(engine, config_dict)
@@ -207,5 +211,5 @@ if __name__ == '__main__':
            'dateTime'  : int(time.time())}
 
     event = weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=rec)
-    alarm.newArchivePacket(event)
+    alarm.newArchiveRecord(event)
     
