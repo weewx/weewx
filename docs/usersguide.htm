@@ -5,9 +5,24 @@
   <meta content="en-us" http-equiv="Content-Language" />
   <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
   <title>weewx: User's Guide</title>
-  <link href="./css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet" />
-  <link href="./css/jquery.tocify.css" rel="stylesheet" />
-  <link href="./css/weewx_docs.css" rel="stylesheet" />
+  <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet" />
+  <link href="css/jquery.tocify.css" rel="stylesheet" />
+  <link href="css/weewx_docs.css" rel="stylesheet" />
+  <script src="js/jquery-1.10.2.min.js" type="text/javascript"></script>
+  <script src="js/jquery-ui-1.10.4.custom.min.js"></script>
+  <script src="js/jquery.tocify-1.9.0.js"></script>
+  <script src="js/weewx.js"></script>
+  <script>
+    $(function() {
+      var toc = $("#toc").tocify({
+        selectors : "h1, h2, h3, h4",
+        showAndHide : true,
+        theme : "jqueryui",
+        ignoreSelector : ".title",
+        hashGenerator : wee_gen_id
+      })
+      }).data("toc-tocify");
+  </script>
   <script>
 function showtab(tab,id) {
   document.getElementById(tab+'-deb').style.display = 'none';
@@ -21,13 +36,12 @@ function showtab(tab,id) {
   document.getElementById(tab+'-tab-'+id).className = 'tab selected';
 }
   </script>
-
 </head>
 
 <body>
 
-  <div id="toc" class="tocify">
-  
+  <!-- The table of contents will get injected here: -->
+  <div id="toc">
   </div>
 
   <div id="technical_content">
@@ -1015,8 +1029,7 @@ Version: 3.0.0 alpha
     <p class='note'>There is another configuration file, <span class="code">skin.conf</span>,
       for presentation-specific options.  It is described in the
       <a href="customizing.htm">Customizing Guide</a>, under section <em>
-      <a href="customizing.htm#standard_skin">Reference: The 
-      standard skin configuration file</a></em>.</p>
+      <a href="customizing.htm#standard_skin">Customizing skins: the Standard skin</a></em>.</p>
     <p>This section is the definitive guide to the configuration options
       available in <span class='code'>weewx.conf</span>. <em>It documents
       way more options than you are likely to need!</em> &mdash; 
@@ -1647,7 +1660,7 @@ longitude = -77.0366</pre>
       <span class="code">[[StandardReport]]</span> will be run first, then report
       <span class="code">[[FTP]]</span> (which actually optionally uploads the results 
       to a remote web server). Details for how to customize reports are in the section
-      <em><a href="customizing.htm#reports">Customizing reports</a></em>, in the 
+      <em><a href="customizing.htm#customizing_reports">Customizing reports</a></em>, in the 
       <a href="customizing.htm">Customizing Guide</a>.
     </p>
     <p class="config_option">SKIN_ROOT </p>
@@ -4013,23 +4026,6 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
   <hr/>
   <p class="copyright"> &copy; <a href="copyright.htm">Copyright</a> Tom Keffer </p>
   </div> <!-- #technical_content -->
-
-  <!-- Place the javascript links at the end of the document so the pages load faster -->
-  <script src="js/jquery-1.10.2.min.js" type="text/javascript"></script>
-  <script src="js/jquery-ui-1.10.4.custom.min.js"></script>
-  <script src="js/jquery.tocify-1.9.0.min.js"></script>
-  <script src="js/weewx.js"></script>
-  <script>
-    $(function() {
-      var toc = $("#toc").tocify({
-        selectors : "h1, h2, h3, h4",
-        showAndHide : true,
-        theme : "jqueryui",
-        ignoreSelector : ".title",
-        hashGenerator : genIds
-      })
-      }).data("toc-tocify");
-  </script>
 
   </body>
 </html>

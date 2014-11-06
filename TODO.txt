@@ -8,6 +8,9 @@ Move schemas to the extension that uses them.
 
 For Current records, do just one database lookup.
 
+I removed Appendix: Statistical types because it is no longer valid. But,
+it needs to be explained somewhere the difference between vector and scalar
+stats.
 
 
 

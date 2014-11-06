@@ -6,7 +6,7 @@
  *  $Id$
  */
 
-function genIds(text, element) {
+function wee_gen_id(text, element) {
 	// Given an element, extracts a suitable ID tag, for use in
 	// links.
     hv = element[0].getAttribute('id');
