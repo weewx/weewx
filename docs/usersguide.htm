@@ -15,8 +15,9 @@
   <script>
     $(function() {
       var toc = $("#toc").tocify({
-        selectors : "h1, h2, h3, h4",
-        showAndHide : true,
+        context : "#technical_content",
+        selectors : "h1, h2, h3",
+        showAndHide : false,
         theme : "jqueryui",
         ignoreSelector : ".title",
         hashGenerator : wee_gen_id
@@ -1029,7 +1030,7 @@ Version: 3.0.0 alpha
     <p class='note'>There is another configuration file, <span class="code">skin.conf</span>,
       for presentation-specific options.  It is described in the
       <a href="customizing.htm">Customizing Guide</a>, under section <em>
-      <a href="customizing.htm#standard_skin">Customizing skins: the Standard skin</a></em>.</p>
+      <a href="customizing.htm#standard_skin">The Standard <span class="code">skin.conf</span></a></em>.</p>
     <p>This section is the definitive guide to the configuration options
       available in <span class='code'>weewx.conf</span>. <em>It documents
       way more options than you are likely to need!</em> &mdash; 

@@ -262,3 +262,6 @@ div .ui-widget-header {
   padding-left: 10px;
   text-indent: -10px;
 }
+.tocify-subheader {
+    display: inherit;
+}
