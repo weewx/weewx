@@ -2754,7 +2754,7 @@ class MyAlarm(StdService):
         # To avoid a flood of nearly identical emails, this will do
         # the check only if we have never sent an email, or if we haven't
         # sent one in the last self.time_wait seconds:
-        if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) >= self.time_wait :
+        if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) &ge; self.time_wait :
             # Get the new archive record:
             record = event.record
             # Evaluate the expression in the context of the event archive record.
@@ -2897,10 +2897,15 @@ class MyAlarm(StdService):
       <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --help</pre>
       <p>This will result in an output that looks something like this:</p>
       <pre class="tty">
-Usage: wee_config_database: [config_path] [--help]
-                              [--create-database] [--create-stats]
-                              [--reconfigure] [--backfill-stats] 
-                              [--string-check] [--fix]
+Usage: wee_config_database: [config_path] 
+                            [--config=CONFIG_PATH] [--help]
+                            [--create-archive] [--drop-daily] 
+                            [--backfill-daily] [--reconfigure]
+                            [--string-check] [--fix]
+                            [--binding=BINDING_NAME]
+
+       The path to the config file can be specified as either a
+       command-line argument, or by using option --config. 
 
 Configure the weewx databases. Most of these functions are handled
 automatically by weewx, but they may be useful as a utility in special cases.
@@ -2908,22 +2913,23 @@ In particular, the 'reconfigure' option can be useful if you decide to add or
 drop data types from the database schema or change unit systems.
 
 Options:
-  -h, --help        show this help message and exit
-  --config=FILE     use configuration file FILE
-  --create-archive  Create the archive database.
-  --create-stats    Create the statistical database.
-  --reconfigure     Create a new archive database using configuration
-                    information found in the configuration file. In
-                    particular, the new database will use the unit system
-                    found in option [StdConvert][target_unit]. It will use the
-                    schema found in './bin/user/schemas.py'. The new database
-                    will have the same name as the old database, with a '_new'
-                    on the end.
-  --backfill-stats  Backfill the statistical database using the archive
-                    database
-  --string-check    Check a sqlite version of the archive database for 
-                    embedded strings in it.
-  --fix             If a string is found, fix it.
+  -h, --help            show this help message and exit
+  --config=CONFIG_PATH  Use configuration file CONFIG_PATH. Default is
+                        /etc/weewx/weewx.conf or /home/weewx/weewx.conf.
+  --create-archive      Create the archive database.
+  --drop-daily          Drop the daily summary tables from a database.
+  --backfill-daily      Backfill a database with daily summaries.
+  --reconfigure         Create a new archive database using configuration
+                        information found in the configuration file. In
+                        particular, the new database will use the unit system
+                        found in option [StdConvert][target_unit]. The new
+                        database will have the same name as the old database,
+                        with a '_new' on the end.
+  --string-check        Check a sqlite version of the archive database for
+                        embedded strings in it.
+  --fix                 If a string is found, fix it.
+  --binding=BINDING     The database binding to be used. Default is
+                        'wx_binding'.
 
 If you are using the MySQL database it is assumed that you have the
 appropriate permissions for the requested operation.</pre>
@@ -2941,6 +2947,7 @@ appropriate permissions for the requested operation.</pre>
           href="#service_engine">Customizing the weewx service engine</a> for
         details on how to write a custom service. However, when you are done it
         will look something like this:</p>
+        <p>File <span class="code">user/electricity.py</span></p>
       <pre class="tty">from weewx.engine import StdService
         
 class AddElectricity(StdService):
@@ -2964,102 +2971,156 @@ class AddElectricity(StdService):
         more than a couple seconds you might want to put it in a separate thread
         and feed the results to <span class="code">AddElectricity</span>
         through a queue.</p>
-      <p>As usual, you would add your new service to the option <span class="code">
-          service_list</span> in <span class="code">weewx.conf</span>, making
-        sure it appears before <span class="code">StdArchive</span> so your new
-        value is inserted into the record <em>before</em> the data is archived.</p>
-      <h3 id="add_archive_type">Adding a new type to the archive database</h3>
-      <p>So, now you have created a new observation type, '<span class="code">electricity</span>'.
-        Trouble is, there is no corresponding type in the schema of the SQL
-        database and, therefore, it won't be stored there. How would you add
-        such a type?</p>
-      <p>Here's our general strategy:</p>
-      <ol>
-        <li>Add a new type to the database schema.</li>
-        <li>Make sure you have the necessary permissions to create the new
-          database.</li>
-        <li>Populate it with data from the old database.</li>
-        <li>Shuffle databases around so <span class="code">weewx</span> will
-          use the new database.</li>
-        <li>Modify the stats database so it includes the new type as well
-          (Optional).</li>
-      </ol>
-      <p>1. <strong>Add a new type to the schema.</strong> When creating a
-        database the schema is obtained from file <span class="symcode">$BIN_ROOT</span><span
-          class="code">/user/schemas.py</span>. Take a look at it now. You will
-        see a list called <span class="code">defaultArchiveSchema</span> that
-        holds all the observation names and their SQL types. It looks something
-        like:</p>
-      <pre class="tty">defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
-        ('usUnits',              'INTEGER NOT NULL'),
-        ('interval',             'INTEGER NOT NULL'),
-        ('barometer',            'REAL'),
-        ('pressure',             'REAL'),
-        ('altimeter',            'REAL'),
-        ('inTemp',               'REAL'),
-        ('outTemp',              'REAL'),
-        ...
-        ('inTempBatteryStatus',  'REAL')]</pre>
-      <p>Let's modify it to add our new type, '<span class="code">electricity</span>'.
-        Now it looks like this:</p>
-      <pre class="tty">defaultArchiveSchema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
-        ('usUnits',              'INTEGER NOT NULL'),
-        ('interval',             'INTEGER NOT NULL'),
-        ('barometer',            'REAL'),
-        ('pressure',             'REAL'),
-        ('altimeter',            'REAL'),
-        ('inTemp',               'REAL'),
-        ('outTemp',              'REAL'),
-        ...
-<span class="highlight">        ('electricity',          'REAL'),</span>
-        ('inTempBatteryStatus',  'REAL')]</pre>
-      <p>The new line has been <span class="highlight">&nbsp;highlighted&nbsp;</span>.</p>
-      <p>2. <strong>Check permissions.</strong> The reconfiguration utility
-        will create a new database with the same name as the old, except with
-        the suffix '<span class="code">_new</span>' attached to the end. Make
-        sure you have the necessary permissions to do this. In particular, if
-        you are using MySQL, you will need '<span class="code">CREATE</span>'
-        privileges.</p>
-      <p>3. <strong>Run <span class="code">wee_config_database</span>.</strong>
-        Now run the utility <span class="code">wee_config_database</span>
-        with the <span class="code">--reconfigure</span> option and the path to
-        the configuration file:</p>
-      <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span
-class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
-      <p>This will create a new database (nominally, <span class="code">weewx.sdb_new</span>
-        if you are using sqlite, <span class="code">weewx_new</span> if you are
-        using MySQL) using the new schema and populate it with data from the old
-        database. </p>
-      <p>4. <strong>Shuffle the databases.</strong> Now arrange things so <span
-          class="code">weewx</span> can find the new database. </p>
-      <p class="warning"><strong>Warning!</strong><br />
-        Make a backup of the data before doing any of the next steps! </p>
-      <p> You can either shuffle the databases around so the new database has
-        the same name as the old database, or edit <span class="code">weewx.conf</span>
-        to use the new database name. To do the former:</p>
-      <p>For sqlite:</p>
-      <pre class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
+      <p>To make sure your service gets run, you need to add it to one of the 
+      service lists in section <span class="code">[Engine]</span> in <span class="code">weewx.conf</span>. But where? You want
+      to make sure it runs before the archiving service, so it must be
+      before option <span class="code">archive_services</span>. You do not want it to run
+      before the main loop runs, so it can't be in <span class="code">prep_services</span>. Probably
+      the best place is at the end of <span class="code">process_services</span>. When you're
+      done, your section <span class="code">[Engine]</span> will look something like this:</p>
+      <pre class="tty">
+[Engine]
+    # This section configures the maine engine. It is for advanced customization.
+
+    [[Services]]
+        # These are the services the main engine should run:
+        prep_services = weewx.engine.StdTimeSynch
+        process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.wxservices.StdWXCalculate<span class="highlight">, user.electricity.AddElectricity</span>
+        archive_services = weewx.engine.StdArchive
+        restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW, weewx.restx.StdAWEKAS
+        report_services = weewx.engine.StdPrint, weewx.engine.StdReport</pre>
+
+    <h3 id="add_archive_type">Adding a new type to the archive database</h3>
+    <p>
+      So, now you have created a new observation type, '<span class="code">electricity</span>'.
+      Trouble is, there is no corresponding type in the schema of the SQL
+      database and, therefore, <span class="code">weewx</span> won't know
+      where to store it. How would you add such
+      a type?
+    </p>
+    <p>The utility <span class="code">wee_config_database</span> can be used to do this. It will
+    create a new database that is similar to the old database, except it has the new type in its
+    schema.</p>
+    <p>Here's our general strategy:</p>
+    <ol>
+      <li>Extend the existing schema with the new type <span class="code">electricity</span>.</li>
+      <li>Modify the <span class="code">wx_binding</span> to use the new schema
+      instead of the old.
+      </li>
+      <li>Make sure you have the necessary permissions to create a new
+        database.</li>
+      <li>Use the utility <span class="code">wee_config_database</span> to create the
+      new database and populate it with data from the old database.</li>
+      <li>Shuffle databases around so <span class="code">weewx</span> will
+        use the new database.
+      </li>
+    </ol>
+    <ol>
+      <li>
+        <p>
+          <strong>Add the new type to our existing schema.</strong> The weather
+          schema that comes with <span class="code">weewx</span> is the same as
+          what wview uses. It's located in the file <span class="code">schemas/wview.py</span>
+          &mdash; take a look at it now. We could just modify it <i>in situ</i>,
+          but that would run the risk of confusing the two versions.
+          Alternatively, we could copy the file over to a new location, and then
+          modify that. But, because our change is just a simple addition, we're
+          going to import the wview schema and just add on our new type. There's
+          also no reason to create a new file. Why not just do it in the file we
+          already have, <span class="code">user/electricity.py</span>? Add to
+          the bottom of the file:
+        </p> <pre class="tty">import schemas.wview
+schema_with_electricity = schemas.wview.wview + [('electricity', 'REAL')]</pre>
+        <p>
+          This creates a new schema (it will have the name <span class="code">user.electricity.schema_with_electricity</span>),
+          that is just like the old one, except it has a new type <span
+            class="code">electricity</span> tacked on to the end.
+        </p>
+      </li>
+      <li>
+        <p>
+          <strong>Modify <span class="code">wx_binding</span>.
+          </strong> When it creates the new, modified database, <span class="code">wee_config_database</span>
+          needs to know to use your new schema instead of the old, wview schema.
+          You do this by changing the option <span class="code">schema</span> in
+          section <span class="code">[Bindings]</span> in <span class="code">weewx.conf</span>.
+          It will look like this when you're done:
+        </p> <pre class="tty">[DataBindings]
+    # This section binds a data store to an actual database
+
+    [[wx_binding]]
+        # The database to be used - it should match one of the sections in [Databases] 
+        database = archive_sqlite
+        # The name of the table within the database
+        table_name = archive
+        # The class to manage the database
+        manager = weewx.wxmanager.WXDaySummaryManager
+        # The schema defines to structure of the database contents
+        <span class="highlight">schema = user.electricity.schema_with_electricity</span>
+        </pre>
+      </li>
+
+      <li>
+        <p>
+          <strong>Check permissions.</strong> <span class="code">wee_config_database</span> will
+          create a new database with the same name as the old, except with the
+          suffix '<span class="code">_new</span>' attached to the end. Make sure
+          you have the necessary permissions to create it. In particular, if you
+          are using MySQL, you will need '<span class="code">CREATE</span>'
+          privileges:
+        </p>
+    <pre class="tty">mysql&gt; GRANT select, update, create, delete, insert ON weewx_new.* TO weewx@localhost;</pre>
+      </li>
+      <li>
+        <p>
+          <strong>Run <span class="code">wee_config_database</span>.
+          </strong> Now run the utility <span class="code">wee_config_database</span>
+          with the <span class="code">--reconfigure</span> option and the path
+          to the configuration file:
+        </p> <pre class="tty">
+          <span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
+        <p>
+          This will create a new database (nominally, <span class="code">weewx.sdb_new</span>
+          if you are using sqlite, <span class="code">weewx_new</span> if you
+          are using MySQL) using the new schema and populate it with data from
+          the old database.
+        </p>
+      </li>
+      <li>
+        <p>
+          <strong>Shuffle the databases.</strong> Now arrange things so <span
+            class="code">weewx</span> can find the new database.
+        </p>
+        <p class="warning">
+          <strong>Warning!</strong><br /> Make a backup of the data before
+          doing any of the next steps!
+        </p>
+        <p>
+          You can either shuffle the databases around so the new database has
+          the same name as the old database, or edit <span class="code">weewx.conf</span>
+          to use the new database name. To do the former:
+        </p>
+        <p>For sqlite:</p> <pre class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
 mv weewx.sdb_new weewx.sdb</pre>
-      <p>For MySQL:</p>
-      <pre class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
+        <p>For MySQL:</p> <pre class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
 <span class="prompt">mysql&gt;</span> DROP DATABASE weewx;   # Drops the old database
 <span class="prompt">mysql&gt;</span> CREATE DATABASE weewx; # Create a new one with the same name
 <span class="prompt">mysql&gt;</span> RENAME TABLE weewx_new.archive TO weewx.archive;   # Rename to the nominal name</pre>
-      <p>5. <strong>Modify the stats database.</strong> At this point, you can
-        use the new observation type in the plots. However, if you wish to use
-        it in the statistical summaries, you will also have to add it to the
-        stats database. To do this, add the type to the Python list <span class="code">stats_types</span>,
-        which can be found in <span class="symcode">$BIN_ROOT</span><span class="code">/user/schemas.py</span>,
-        so it reads something like this:</p>
-      <pre class="tty">stats_types = ['barometer', 'inTemp', 'outTemp', 
-    'inHumidity', 'outHumidity', 
-    'rainRate', 'rain', 'dewpoint', 'windchill', 'heatindex', 'ET', 
-    'radiation', 'UV', 'extraTemp1', 'rxCheckPercent', 'wind',
-    <span class="highlight">'electricity'</span>]</pre>
-      <p>Now delete the stats database (nominally <span class="code">stats.sdb</span>
-        for sqlite, <span class="code">stats</span> for MySQL). Weewx will
-        automatically rebuild it, including your new type.</p>
-      <h3>Using the new type</h3>
+      </li>
+      <li>
+        <p>
+          It's worth noting that there's actually a hidden, last step:
+          recreating the daily summaries inside the new database. This will be
+          done automatically by <span class="code">weewx</span> at the next
+          startup. Alternatively, it can be done manually using the <span
+            class="code">wee_config_database</span> utility and the <span
+            class="code">--backfill-daily</span> option:
+        </p> <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --backfill-daily <span
+            class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
+      </li>
+    </ol>
+    
+    <h3>Using the new type</h3>
       <p>Now you've added a new type. How do you use it? </p>
       <p>Pretty much like any other type. For example, to do a plot of the
         month's electric consumption, totaled by day, add this section to the <span
@@ -3108,74 +3169,98 @@ mv weewx.sdb_new weewx.sdb</pre>
         </tbody>
       </table>
 
-      <h2 id="Changing_the_unit_system">Changing the unit system</h2>
-      <p>Normally, data is stored in the databases using US Customary units and,
-        normally, you don't care --- data can always be displayed using any
-        units you choose. It's an "implementation detail." Nevertheless, there
-        may be special situations where you wish to store the data in Metric
-        units. For example, you may need to allow direct programmatic access to
-        the databases from another piece of software that expects metric units.
-      </p>
-      <p>Weewx does not allow you to change the database unit system midstream.
-        You can't start with one unit system then, in the middle of the
-        database, switch to another. See the section <span class="code"> <a href="usersguide.htm#StdConvert">[StdConvert]</a></span>
-        in the Weewx User's Guide. However, you can reconfigure the database by
-        coping it to a new database, performing the unit conversion along the
-        way. You then use this new database.</p>
-      <p>The steps are pretty much the same as <a href="#add_archive_type">Adding
-          a New Type to the ArchiveDatabase</a>, described above.</p>
-      <ol>
-        <li>Modify <span class="code">weewx.conf</span> to reflect your choice
-          of the new unit system to use. Your choices are <span class='code'>US</span>,
-          <span class="code">METRIC</span>, or <span class="code">METRICWX</span>.
-          See the Appendix <a href="#units">Units</a> for the exact differences
-          between these three choices.</li>
-        <li>Make sure you have the necessary permissions to create the new
-          database.</li>
-        <li>Populate it with data from the old database.</li>
-        <li>Shuffle databases around so <span class="code">weewx</span> will
-          use the new database.</li>
-        <li>Rebuild the stats database to use the new unit system.</li>
-      </ol>
-      <p>1. <strong>Modify <span class="code">weewx.conf</span>.</strong> Edit
-        the configuration file to change option <span class="code">target_unit</span>
-        in section <span class="code"><a href="usersguide.htm#StdConvert">[StdConvert]</a></span>
-        to reflect your choice. If you are switching to metric units, the option
-        will look like</p>
-      <pre class="tty">[StdConvert]
+    <h2 id="Changing_the_unit_system">Changing the unit system</h2>
+    <p>Normally, data is stored in the databases using US Customary units
+      and, normally, you don't care &mdash; data can always be displayed using
+      any units you want. It's an "implementation detail." Nevertheless, there
+      may be special situations where you wish to store the data in Metric
+      units. For example, you may need to allow direct programmatic access to
+      the databases from another piece of software that expects metric units.</p>
+    <p>
+      Weewx does not allow you to change the database unit system midstream. You
+      can't start with one unit system then, in the middle of the database,
+      switch to another. See the section <span class="code"> <a
+        href="usersguide.htm#StdConvert">[StdConvert]</a></span> in the Weewx User's
+      Guide. However, you can reconfigure the database by coping it to a new
+      database, performing the unit conversion along the way. You then use this
+      new database.
+    </p>
+    <p>
+      The steps are pretty much the same as <a href="#add_archive_type">Adding
+        a New Type to the ArchiveDatabase</a>, described above.
+    </p>
+    <ol>
+      <li>Modify <span class="code">weewx.conf</span> to reflect your
+        choice of the new unit system to use. Your choices are <span
+        class='code'>US</span>, <span class="code">METRIC</span>, or <span
+        class="code">METRICWX</span>. See the Appendix <a href="#units">Units</a>
+        for the exact differences between these three choices.
+      </li>
+      <li>Make sure you have the necessary permissions to create the new
+        database.</li>
+      <li>Populate it with data from the old database.</li>
+      <li>Shuffle databases around so <span class="code">weewx</span> will
+        use the new database.
+      </li>
+      <li>Rebuild the stats database to use the new unit system.</li>
+    </ol>
+    <ol>
+      <li>
+        <p>
+          <strong>Modify <span class="code">weewx.conf</span>.
+          </strong> Edit the configuration file to change option <span class="code">target_unit</span>
+          in section <span class="code"><a
+            href="usersguide.htm#StdConvert">[StdConvert]</a></span> to reflect your
+          choice. If you are switching to metric units, the option will look
+          like
+        </p> <pre class="tty">[StdConvert]
     target_unit = METRICWX  # Alternative: METRIC</pre>
-      <p>2. <strong>Check permissions.</strong> The reconfiguration utility
-        will create a new database with the same name as the old, except with
-        the suffix '<span class="code">_new</span>' attached to the end. Make
-        sure you have the necessary permissions to do this. In particular, if
-        you are using MySQL, you will need '<span class="code">CREATE</span>'
-        privileges.</p>
-      <p>3. <strong>Run <span class="code">wee_config_database</span>.</strong>
-        Now run the utility <span class="code">wee_config_database</span> with
-        the <span class="code">--reconfigure</span> option:</p>
-      <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span
-class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
-      <p>This will create a new database (nominally, <span class="code">weewx.sdb_new</span>
-        if you are using sqlite, <span class="code">weewx_new</span> if you are
-        using MySQL), using the schema found in <span class="symcode">$BIN_ROOT</span><span
-          class="code">/user/schemas.py</span>, and populate it with data from
-        the old database, while performing the unit conversion.</p>
-      <p>4. <strong>Shuffle the databases.</strong> This is identical to the
-        description above.</p>
-      <p>5. <strong>Recreate the stats database.</strong> Delete the stats
-        database, then let <span class="code">weewx</span> regenerate it. It
-        will use the new unit system.</p>
+      </li>
+      <li>
+        <p>
+          <strong>Check permissions.</strong> The reconfiguration utility will
+          create a new database with the same name as the old, except with the
+          suffix '<span class="code">_new</span>' attached to the end. Make sure
+          you have the necessary permissions to do this. In particular, if you
+          are using MySQL, you will need '<span class="code">CREATE</span>'
+          privileges.
+        </p>
+      </li>
+      <li>
+        <p>
+          <strong>Run <span class="code">wee_config_database</span>.
+          </strong> Now run the utility <span class="code">wee_config_database</span>
+          with the <span class="code">--reconfigure</span> option:
+        </p> <pre class="tty">
+          <span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span
+            class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
+        <p>
+          This will create a new database (nominally, <span class="code">weewx.sdb_new</span>
+          if you are using sqlite, <span class="code">weewx_new</span> if you
+          are using MySQL), using the schema found in <span class="symcode">$BIN_ROOT</span><span
+            class="code">/user/schemas.py</span>, and populate it with data from
+          the old database, while performing the unit conversion.
+        </p>
+      </li>
+      <li>
+        <p>
+          <strong>Shuffle the databases.</strong> This is identical to the
+          description above.
+        </p>
+      </li>
+    </ol>
 
-      <h1 id="porting">Porting to new weather station hardware</h1>
+
+    <h1 id="porting">Porting to new weather station hardware</h1>
       <p>Naturally, this is an advanced topic but, nevertheless, I'd
         like to encourage any Python wizards out there to give it a try. Of
         course, I have selfish reasons for this: I don't want to
-        have to buy every weather station ever invented! It's expensive,
-        and my roof would look like a weather station farm.</p>
+        have to buy every weather station ever invented, and I don't want
+        my roof to look like a weather station farm!</p>
       <p>Here's the general strategy for doing a port.</p>
       <h2>Implement the driver</h2>
       <p>Inherit from the abstract base class
-        <span class="code">weewx.abstractstation.AbstractStation</span>.
+        <span class="code">weewx.drivers.AbstractDevice</span>.
         Try to implement as many of its methods as you can. At the
         very minimum, you must implement the first two
         methods, <span class="code">hardware_name</span>
@@ -3316,7 +3401,7 @@ class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
         It reads from a USB port and has to do some tricky buffer decoding. Nevertheless,
         it's general architecture is fairly straightforward.</p>
       <p>The driver for the Vantage series is by far the most complicated. It
-        actually multi-inherits from not only <span class="code">AbstractStation</span>,
+        actually multi-inherits from not only <span class="code">AbstractDevice</span>,
         but also <span class="code">StdService</span>. That is, it also
         participates in the engine as a service.</p>
       <p>Naturally, there are a lot of subtleties that I've glossed over in this
