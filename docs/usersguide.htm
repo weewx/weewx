@@ -22,7 +22,13 @@
         ignoreSelector : ".title",
         hashGenerator : wee_gen_id
       })
-      }).data("toc-tocify");
+    }).data("toc-tocify");
+
+    $(window).scroll(function(){
+      $('#toc').css({
+        'left': 8 - $(this).scrollLeft()
+      });
+    });
   </script>
   <script>
 function showtab(tab,id) {
@@ -1092,7 +1098,7 @@ longitude = -77.0366</pre>
     <p>Set to the type of hardware you are using.</p>
     <pre class="tty">station_type = Simulator</pre>
     <p>Valid options include:</p>
-    <table class="indent" style="width: 50%">
+    <table class="indent">
       <tr class="first_row">
         <td>Option</td>
         <td>Description</td>
@@ -4024,7 +4030,6 @@ next_dt = time_dt + delta
 next_ts = int(time.mktime(next_dt.timetuple()))</pre>
     <p>Other time conversion problems are handled in a similar manner. </p>
 
-  <hr/>
   <p class="copyright"> &copy; <a href="copyright.htm">Copyright</a> Tom Keffer </p>
   </div> <!-- #technical_content -->
 

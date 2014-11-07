@@ -16,26 +16,20 @@
     $(function() {
       var toc = $("#toc").tocify({
     	context : "#technical_content",
-        selectors : "h1, h2",
+        selectors : "h1, h2, h3",
         showAndHide : false,
         theme : "jqueryui",
         ignoreSelector : ".title",
         hashGenerator : wee_gen_id
       })
-      }).data("toc-tocify");
-  </script>
-  <script>
+    }).data("toc-tocify");
+
     $(window).scroll(function(){
       $('#toc').css({
-        'left': - $(this).scrollLeft()
+        'left': 8 - $(this).scrollLeft()
       });
     });
   </script>
-  <style>
-    .tocify {
-      margin: 0;
-    }
-  </style>
 </head>
 <body>
 
@@ -1096,7 +1090,7 @@ or in foobar units: $day.barometer.min.foobar
       <h3>Tag <span class="code">$trend</span></h3>
       <p>The tag <span class="code">$trend</span> is available for time trends,
         such as barometer trends. Here are some examples:</p>
-      <table class="indent" style="width: 40%" summary="Examples of using unit formats">
+      <table class="indent" style="width: 50%" summary="Examples of using unit formats">
         <tbody>
           <tr class="first_row">
             <td>Tag</td>
@@ -1140,7 +1134,7 @@ or in foobar units: $day.barometer.min.foobar
     <h3>Tag <span class="code">$unit</span></h3>
       <p>The unit type, label, and string formats are also available, allowing
         you to do highly customized labels: </p>
-      <table class="indent" style="width: 40%" summary="Examples of using unit formats">
+      <table class="indent" style="width: 50%" summary="Examples of using unit formats">
         <tbody>
           <tr class="first_row">
             <td>Tag</td>
@@ -1327,7 +1321,7 @@ Sunrise, sunset: 06:51 19:30</pre>
         many stars are in the list.</p>
       <p>The possible values for the <span class="code">attribute</span> tag
         are listed in the following table:</p>
-      <table class="indent" style="width: 60%">
+      <table class="indent" style="width: 80%">
         <caption>Attributes that can be used with heavenly bodies</caption>
         <tbody class="code">
           <tr>
@@ -2101,7 +2095,7 @@ outTemp = Outside Temperature</pre>
       <p>This option controls which encoding is to be used for the generated
         output. The encoding can be specified for individual files.  There are
         3 possible choices: </p>
-      <table class="indent" style="width:80%">
+      <table class="indent">
         <tbody>
           <tr class="first_row">
             <td>Encoding</td>
@@ -3927,7 +3921,7 @@ Options:
     <p>The table below lists all the unit groups, their members, which
         units are options for the group, and what the defaults are
         for each standard unit system. </p>
-      <table class="indent" style="width: 80%">
+      <table class="indent">
         <caption>Unit groups, members and options</caption>
         <tbody class="code">
           <tr class="first_row">
@@ -4566,7 +4560,6 @@ The <span class='code'>radiation</span> and <span class='code'>UV</span>
 data are available only with the optional solar radiation sensor.
 </p>
 
-  <hr/>
   <p class="copyright"> &copy; <a href="copyright.htm">Copyright</a> Tom Keffer </p>
   </div> <!-- #technical_content -->
 

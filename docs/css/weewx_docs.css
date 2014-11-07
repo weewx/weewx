@@ -47,8 +47,6 @@ h4 {
 table {
   border-collapse: collapse;
   border: 1px solid #cccccc;
-  width: 80%;
-  margin: 10px;
 }
 tr {
   vertical-align: top;
@@ -74,7 +72,7 @@ caption {
 }
 .indent {
   margin-left: 40px;
-  margin-right: 80px;
+  margin-right: 40px;
 }
 .station_data {
   margin-left: 40px;
@@ -153,18 +151,14 @@ table .first_row {
 .note {
   background-color: #cce0d0;
   border: 1px solid #aac0b0;
-  margin: 10px;
-  margin-left: 30px;
-  padding: 12px;
-  width: 80%;
+  margin: 10px 30px 10px 30px;
+  padding: 10px;
 }
 .warning {
   background-color: #ffeeee;
   border: 1px solid #ffdddd;
-  margin: 10px;
-  margin-left: 30px;
-  padding: 12px;
-  width: 80%;
+  margin: 10px 30px 10px 30px;
+  padding: 10px;
 }
 .copyright {
   font-style: italic;
@@ -233,7 +227,7 @@ table .first_row {
 
 #technical_content{
   float:right;
-  width:80%
+  width:82%
 }
 
 /*
@@ -249,8 +243,7 @@ div .ui-widget-header {
  */
 .tocify {
   width: 15%;
-  margin-left: 10px;
-  margin-top: 10px;
+  margin-left: 5px;
   padding-left: 5px;
 }
 
