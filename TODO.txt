@@ -12,6 +12,21 @@ I removed Appendix: Statistical types because it is no longer valid. But,
 it needs to be explained somewhere the difference between vector and scalar
 stats.
 
+Need to update the device configuration sections to use wee_config_device.
+
+May need to update the guide on packaging an extension.
+
+See if both jquery.ui.all.css and ui-lightness/jquery.ui-1.10.4.custom.css are needed.
+
+On startup, the log should indicate not only which binding is in use, but what
+it is bound to (sqlite or mysql).
+
+Use minified versions of javascript libraries, where available.
+
+s/[Bindings]/[DataBindings]/g in docs
+
+
+
 
 
 
