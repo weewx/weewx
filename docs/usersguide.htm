@@ -3393,25 +3393,6 @@ sudo apt-get install ftp
 	      <td class="first_col">nginx</td><td>11 Mb</td><td>1.7 Mb</td>
 	    </tr>
 	  </table>
-	    
-	<h3>Fine Offset USB lockups</h3>
-    <p>The Fine Offset series
-	weather stations and their derivatives are a fine value and
-	can be made to work reasonably reliably, but they have one
-	problem that is difficult to work around: their USB bus can
-	unexpectantly lock up, making it impossible to communicate
-	with the console. The symptom in the log will look something
-	like this:</p>
-      <pre class="tty">Jun 7 21:50:33 localhost weewx[2460]: fousb: get archive interval failed attempt 1 of 3: could not detach kernel driver from interface 0: No data available</pre>
-      <p>The exact error may vary, but the thing to look for is the
-	"<span class='code'>could not detach kernel driver</span>"
-	message. Unfortunately, we have not found a software cure for
-	this. Instead, you must power cycle the unit.  Remove the
-	batteries and unplug the USB, then put it back together. No
-	need to restart weewx.</p>
-      <p>More details
-	about <a href="http://sourceforge.net/p/weewx/wiki/folockup/">Fine
-	Offset lockups</a> can be found in the Wiki.</p>
 
 	<h3>Fine Offset USB lockups</h3>
     <p>The Fine Offset series
