@@ -7,20 +7,12 @@
  */
 
 function wee_gen_id(text, element) {
-	// Given an element, extracts a suitable ID tag, for use in
-	// links.
-    hv = element[0].getAttribute('id');
+	// If the element has an explicit id, use that.
+	// Otherwise, use the same generator function as the
+	// old Samaxes TOC library
+	hv = element[0].getAttribute('id');
     if (hv == null) {
-      // prettify the text
-      hv = text.toLowerCase().replace(/\s/g, "-");
-      // fix double hyphens
-      while (hv.indexOf("--") > -1) {
-        hv = hv.replace(/--/g, "-");
-      }
-      // fix colon-space instances
-      while (hv.indexOf(":-") > -1) {
-        hv = hv.replace(/:-/g, "-");
-      }
+	    hv = text.replace(/[ <>#\/\\?&\n]/g, '_');
     }
-    return hv;
+    return hv
 }
