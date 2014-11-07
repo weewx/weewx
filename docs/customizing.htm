@@ -417,9 +417,9 @@ Version: 3.0.0 alpha
     </p>
     <p>
       An additional complication is that <span class="code">weewx</span> can use
-      more than one database implementation, such as sqlite and MySQL. Making
-      users specify in the templates exactly which database to use, be it a
-      sqlite file or a MySQL database, would be unreasonable.
+      more than one database implementation: sqlite or MySQL. Making
+      users specify in the templates not only which database to use,
+      but also which implementation, would be unreasonable.
     </p>
     <p>
       The solution, like so many other problems in computer science, is to introduce
@@ -428,7 +428,7 @@ Version: 3.0.0 alpha
       Bindings do not change with the database implementation, so, for example,
       you know that <span class="code">wx_binding</span> will always point to
       the weather database. Bindings are listed in section <a
-        href="usersguide.htm#Bindings"><span class="code">[Bindings]</span></a>
+        href="usersguide.htm#Bindings"><span class="code">[DataBindings]</span></a>
       in <span class="code">weewx.conf</span>.
     </p>
     <p>
@@ -1759,7 +1759,7 @@ class MyXSearch(SearchList):                                                 # 1
       <p>This section is available to add any static tags you
       might want to use in your templates.</p>
 
-      <h3>An Example: the Standard skin</h3>
+      <h3>Example</h3>
       <p>As an example, the Standard <span class="code">skin.conf</span>
         file includes three options: </p>
       <table class="indent" style="width:50%" summary="Tag Extras">
@@ -2161,7 +2161,7 @@ outTemp = Outside Temperature</pre>
         to test modifications to the generator configuration and/or the
         template contents.</p>
 
-      <h3>An Example: the Standard skin</h3>
+      <h3>The Standard skin templates</h3>
       <p>Here is the <span class="code">[CheetahGenerator]</span> section from
         the Standard <span class="code">skin.conf</span></p>
 
@@ -3048,7 +3048,7 @@ schema_with_electricity = schemas.wview.wview + [('electricity', 'REAL')]</pre>
           </strong> When it creates the new, modified database, <span class="code">wee_config_database</span>
           needs to know to use your new schema instead of the old, wview schema.
           You do this by changing the option <span class="code">schema</span> in
-          section <span class="code">[Bindings]</span> in <span class="code">weewx.conf</span>.
+          section <span class="code">[DataBindings]</span> in <span class="code">weewx.conf</span>.
           It will look like this when you're done:
         </p> <pre class="tty">[DataBindings]
     # This section binds a data store to an actual database
