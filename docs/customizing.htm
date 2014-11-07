@@ -16,7 +16,7 @@
     $(function() {
       var toc = $("#toc").tocify({
     	context : "#technical_content",
-        selectors : "h1, h2, h3",
+        selectors : "h1, h2",
         showAndHide : false,
         theme : "jqueryui",
         ignoreSelector : ".title",
@@ -24,7 +24,18 @@
       })
       }).data("toc-tocify");
   </script>
-
+  <script>
+    $(window).scroll(function(){
+      $('#toc').css({
+        'left': - $(this).scrollLeft()
+      });
+    });
+  </script>
+  <style>
+    .tocify {
+      margin: 0;
+    }
+  </style>
 </head>
 <body>
 
