@@ -722,6 +722,15 @@ $month.outTemp.max</pre>
         href="#formatting_options">Formatting Options</a></em> below.
     </p>
 
+      <h3>Time period <span class="code">$last</span></h3>
+      <p>Time period <span class="code">$last</span> is very similar
+      to <span class="code">$current</span>, except that it uses
+      the last available timestamp in a database. Usually, 
+      <span class="code">$current</span> and <span class="code">$last</span> are the same,
+      but if a data binding points to a remote database, they may not be. See
+      the section <a href="#stupid_detail"><i>Using more than one binding</i></a>
+      for an example where this happened.</p> 
+
     <h3 id="general_aggregation_periods">
       Aggregation periods <span class="code">$day</span>, <span class="code">$week</span>,
       <span class="code">$month</span>, <span class="code">$year</span>, and<span
@@ -1443,7 +1452,7 @@ Sunrise, sunset: 06:51 19:30</pre>
 &lt;/tr&gt;
 &lt;tr&gt;
   &lt;td class="stats_label"&gt;Inside Temperature, WMR100&lt;/td&gt;
-  &lt;td class="stats_data"&gt;$current<span class="highlight">($data_binding='wmr100_binding')</span>.inTemp&lt;/td&gt;
+  &lt;td class="stats_data"&gt;$last<span class="highlight">($data_binding='wmr100_binding')</span>.inTemp&lt;/td&gt;
 &lt;/tr&gt;</pre>
 
     <p>
@@ -1484,23 +1493,32 @@ Sunrise, sunset: 06:51 19:30</pre>
       data_binding = wmr100_binding
       label = WMR100 inTemp</pre>
 
-    <p>This will produce an image with name <span class="code">daycompare.png</span>, with
-    two plot lines. The first will be of the temperature from the Vantage. It uses
-    the default binding, <span class="code">wx_binding</span>, and will be labeled 
-    <span class="code">"Vantage inTemp"</span>. The second explicitly uses
-    the <span class="code">wmr100_binding</span>. Because it uses the same variable
-    name (<span class="code">inTemp</span>) as the first line, we had to explicitly specify it
-    using option <span class="code">data_type</span>, in order to avoid using the same
-    sub-section name twice (see the section <a href="#including_same_sql_type_2x"><i>Including the same SQL type more
-    than once in a plot</i></a> for details). It will be labeled "<span class="code">WMR100 inTemp</span>". The results
-    look like this:</p>
-    <img src='images/daycompare.png'/>
-    <h3>Stupid detail</h3>
-    <p>At first, I could not get this example to work. The problem turned out to be that the RPi
-    was processing things just a beat behind the Dell, so the temperature for the "current" time
-    wasn't ready when the Dell needed it. To avoid this, I changed the option 
-    <span class="code">archive_delay</span> on the RPi from the default 15 seconds to 5 seconds.
-    This gave the RPi a 10 second headstart to get the data point ready before the Dell needed it.</p>
+    <p>
+      This will produce an image with name <span class="code">daycompare.png</span>,
+      with two plot lines. The first will be of the temperature from the
+      Vantage. It uses the default binding, <span class="code">wx_binding</span>,
+      and will be labeled <span class="code">"Vantage inTemp"</span>. The second
+      explicitly uses the <span class="code">wmr100_binding</span>. Because it
+      uses the same variable name (<span class="code">inTemp</span>) as the
+      first line, we had to explicitly specify it using option <span
+        class="code">data_type</span>, in order to avoid using the same
+      sub-section name twice (see the section <a
+        href="#including_same_sql_type_2x"><i>Including the same SQL
+          type more than once in a plot</i></a> for details). It will be labeled "<span
+        class="code">WMR100 inTemp</span>". The results look like this:
+    </p>
+    <img src='images/daycompare.png' />
+
+    <h3 id="stupid_detail">Stupid detail</h3>
+    <p>
+      At first, I could not get this example to work. The problem turned out to
+      be that the RPi was processing things just a beat behind the Dell, so the
+      temperature for the "current" time wasn't ready when the Dell needed it. I
+      kept getting <span class="code">N/A</span>. To avoid this, I introduced
+      the tag <span class="code">$last</span>, which uses the last available
+      timestamp in the binding, which may or may not be the same as what <span
+        class="code">$current</span> uses.
+    </p>
 
 
     <h2 id="defining_new_tags">Defining new tags</h2>

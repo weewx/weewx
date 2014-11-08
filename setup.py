@@ -404,9 +404,11 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
         if len(old_version_number[1]) < 2: 
             old_version_number[1] = '0'+old_version_number[1]
 
-        # I don't know how to merge older, V1.X configuration files, only
-        # newer V2.X ones.
-        if old_version_number[0:2] >= ['2','00']:
+        if old_version_number[0] == '2':
+            print >>sys.stderr, "Old configuration file. You will have to do a manual merge."
+        # I don't know how to merge older, V2.X configuration files, only
+        # newer V3.X ones.
+        elif old_version_number[0:2] >= ['3','00']:
             # Update the old version to reflect any changes made since it
             # was created:
             update_config_file(old_config)
@@ -426,145 +428,7 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
 def update_config_file(config_dict):
     """Updates a configuration file to reflect any recent changes."""
 
-    # webpath is now station_url
-    webpath = config_dict['Station'].get('webpath', None)
-    station_url = config_dict['Station'].get('station_url', None)
-    if webpath is not None and station_url is None:
-        config_dict['Station']['station_url'] = webpath
-    config_dict['Station'].pop('webpath', None)
-    
-    if config_dict.has_key('StdArchive'):
-        # Option stats_types is no longer used. Get rid of it.
-        config_dict['StdArchive'].pop('stats_types', None)
-    
-    # --- Davis Vantage series ---
-    if config_dict.has_key('Vantage'):
-        try:
-            if config_dict['Vantage']['driver'].strip() == 'weewx.VantagePro':
-                config_dict['Vantage']['driver'] = 'weewx.drivers.vantage'
-        except KeyError:
-            pass
-    
-    # --- Oregon Scientific WMR100 ---
-    
-    # The section name has changed from WMR-USB to WMR100
-    if config_dict.has_key('WMR-USB'):
-        if config_dict.has_key('WMR100'):
-            sys.stderr.write("\n*** Configuration file has both a 'WMR-USB' section and a 'WMR100' section. Aborting ***\n\n")
-            exit()
-        config_dict.rename('WMR-USB', 'WMR100')
-    # If necessary, reflect the section name in the station type:
-    try:
-        if config_dict['Station']['station_type'].strip() == 'WMR-USB':
-            config_dict['Station']['station_type'] = 'WMR100'
-    except KeyError:
-        pass
-    # Finally, the name of the driver has been changed
-    try:
-        if config_dict['WMR100']['driver'].strip() == 'weewx.wmrx':
-            config_dict['WMR100']['driver'] = 'weewx.drivers.wmr100'
-    except KeyError:
-        pass
-        
-    # --- Oregon Scientific WMR9x8 series ---
-    
-    # The section name has changed from WMR-918 to WMR9x8
-    if config_dict.has_key('WMR-918'):
-        if config_dict.has_key('WMR9x8'):
-            sys.stderr.write("\n*** Configuration file has both a 'WMR-918' section and a 'WMR9x8' section. Aborting ***\n\n")
-            exit()
-        config_dict.rename('WMR-918', 'WMR9x8')
-    # If necessary, reflect the section name in the station type:
-    try:
-        if config_dict['Station']['station_type'].strip() == 'WMR-918':
-            config_dict['Station']['station_type'] = 'WMR9x8'
-    except KeyError:
-        pass
-    # Finally, the name of the driver has been changed
-    try:
-        if config_dict['WMR9x8']['driver'].strip() == 'weewx.WMR918':
-            config_dict['WMR9x8']['driver'] = 'weewx.drivers.wmr9x8'
-    except KeyError:
-        pass
-    
-    # --- Fine Offset instruments ---
-
-    try:
-        if config_dict['FineOffsetUSB']['driver'].strip() == 'weewx.fousb':
-            config_dict['FineOffsetUSB']['driver'] = 'weewx.drivers.fousb'
-    except KeyError:
-        pass
-
-    #--- The weewx Simulator ---
-
-    try:
-        if config_dict['Simulator']['driver'].strip() == 'weewx.simulator':
-            config_dict['Simulator']['driver'] = 'weewx.drivers.simulator'
-    except KeyError:
-        pass
-
-    # See if the engine configuration section has the old-style "service_list":
-    if config_dict['Engines']['WxEngine'].has_key('service_list'):
-        # It does. Break it up into five, smaller lists. If a service
-        # does not appear in the dictionary "service_map", meaning we
-        # do not know what it is, then stick it in the last group we
-        # have seen. This should get its position about right.
-        last_group = 'prep_services'
-        
-        # Set up a bunch of empty groups in the right order
-        for group in all_service_groups:
-            config_dict['Engines']['WxEngine'][group] = list()
-
-        # Now map the old service names to the right group
-        for _svc_name in config_dict['Engines']['WxEngine']['service_list']:
-            svc_name = _svc_name.strip()
-            # Skip the no longer needed StdRESTful service:
-            if svc_name == 'weewx.engine.StdRESTful':
-                continue
-            # Do we know about this service?
-            if service_map.has_key(svc_name):
-                # Yes. Get which group it belongs to, and put it there
-                group = service_map[svc_name]
-                config_dict['Engines']['WxEngine'][group].append(svc_name)
-                last_group = group
-            else:
-                # No. Put it in the last group.
-                config_dict['Engines']['WxEngine'][last_group].append(svc_name)
-
-        # Now add the restful services, using the old driver name to help us
-        for section in config_dict['StdRESTful'].sections:
-            svc = config_dict['StdRESTful'][section]['driver']
-            # weewx.restful has changed to weewx.restx
-            if svc.startswith('weewx.restful'):
-                svc = 'weewx.restx.Std' + section
-            # awekas is in weewx.restx since 2.6
-            if svc.endswith('AWEKAS'):
-                svc = 'weewx.restx.AWEKAS'
-            config_dict['Engines']['WxEngine']['restful_services'].append(svc)
-
-        # Depending on how old a version the user has, the station registry
-        # may have to be included:
-        if 'weewx.restx.StdStationRegistry' not in config_dict['Engines']['WxEngine']['restful_services']:
-            config_dict['Engines']['WxEngine']['restful_services'].append('weewx.restx.StdStationRegistry')
-        
-        # Get rid of the no longer needed service_list:
-        config_dict['Engines']['WxEngine'].pop('service_list')
-
-    # Clean up the CWOP configuration
-    if config_dict.has_key('StdRESTful') and config_dict['StdRESTful'].has_key('CWOP'):
-        # Option "interval" has changed to "post_interval"
-        if config_dict['StdRESTful']['CWOP'].has_key('interval'):
-            config_dict['StdRESTful']['CWOP']['post_interval'] = config_dict['StdRESTful']['CWOP']['interval']
-            config_dict['StdRESTful']['CWOP'].pop('interval')
-        # Option "server" has become "server_list". It is also no longer
-        # included in the default weewx.conf, so just pop it.
-        if config_dict['StdRESTful']['CWOP'].has_key('server'):
-            config_dict['StdRESTful']['CWOP'].pop('server')
-
-    # Remove the no longer needed "driver" from all the RESTful services:
-    if config_dict.has_key('StdRESTful'):
-        for section in config_dict['StdRESTful'].sections:
-            config_dict['StdRESTful'][section].pop('driver', None)
+    # No V3.X updates. Yet.
 
 
 def save_path(filepath):
