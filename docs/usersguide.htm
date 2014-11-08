@@ -1435,7 +1435,7 @@ longitude = -77.0366</pre>
     <p>The time (in seconds) between emitting loop packets. Default is 2.5</p>
     <p class="config_option">mode</p>
     <p>One of either <span class='code'>simulator</span> or <span class='code'>generator</span>.  Default is <span class='code'>simulator</span>.</p>
-    <table class="indent" style="width:50%">
+    <table class="indent">
       <tr>
 	<td class="code">simulator</td>
 	<td>Real-time simulator. It will sleep between emitting packets.</td>
@@ -1680,8 +1680,8 @@ longitude = -77.0366</pre>
     <p class="config_option">data_binding</p>
     <p>
       The data source to be used for the reports. It should match a
-      binding given in section <a href="#Bindings"><span
-        class="code">[Bindings]</span></a> below. The binding can be overridden in
+      binding given in section <a href="#DataBindings"><span
+        class="code">[DataBindings]</span></a> below. The binding can be overridden in
       individual reports. Optional. Default is <span class="code">wx_binding</span>.
     </p>
 
@@ -1902,7 +1902,7 @@ longitude = -77.0366</pre>
 	  <span class="code">True</span>.</p>
       <p class="config_option">data_binding</p>
       <p>The data binding to be used to store the data. This should match one
-      of the bindings in the <span class="code">[Bindings]</span> section, below. Optional. Default
+      of the bindings in the <span class="code">[DataBindings]</span> section, below. Optional. Default
       is <span class="code">wx_binding</span>.</p>
     
     <h2 class="config_section">[StdTimeSynch]</h2>
@@ -1916,7 +1916,7 @@ longitude = -77.0366</pre>
     <p>The maximum amount of clock drift to tolerate, in seconds, before resetting 
       the clock. Default is 5.</p>
 
-    <h2 class="config_section" id="Bindings">[Bindings]</h2>
+    <h2 class="config_section" id="DataBindings">[DataBindings]</h2>
     <p>
       This class links a symbolic "data binding," such as <span
         class="code">wx_binding</span>, to a database in the section 
