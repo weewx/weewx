@@ -58,9 +58,15 @@ class TimeBinder(object):
         """Return a CurrentObj"""
         if timestamp is None:
             timestamp = self.report_time
-        return CurrentObj(self.db_lookup, data_binding, timestamp,
-                          self.formatter, self.converter, **self.option_dict)
+        return CurrentObj(self.db_lookup, data_binding, current_time=timestamp,
+                          formatter=self.formatter, converter=self.converter, **self.option_dict)
             
+    def last(self, data_binding=None):
+        """Return a CurrentObj, using the last available timestamp."""
+        timestamp = self.db_lookup(data_binding)
+        print "Using timestamp", timestamp
+        return self.current(timestamp, data_binding)
+    
     def trend(self, time_delta=None, time_grace=None, data_binding=None):
         """Returns a TrendObj that is bound to the trend parameters."""
         if time_delta is None:
@@ -116,7 +122,7 @@ class TimespanBinder(object):
            # Print maximum temperature for each month in the year:
            print monthStats.outTemp.max
     """
-    def __init__(self, timespan, db_lookup, data_binding, context='current',
+    def __init__(self, timespan, db_lookup, data_binding=None, context='current',
                  formatter=weewx.units.Formatter(),
                  converter=weewx.units.Converter(), **option_dict):
         """Initialize an instance of TimespanBinder.
@@ -307,10 +313,10 @@ class CurrentObj(object):
       $current.barometer
     """
         
-    def __init__(self, db_lookup, data_binding, timestamp, formatter, converter, **option_dict):
+    def __init__(self, db_lookup, data_binding, current_time, formatter, converter, **option_dict):
         self.db_lookup    = db_lookup
         self.data_binding = data_binding
-        self.timestamp    = timestamp
+        self.current_time = current_time
         self.formatter    = formatter
         self.converter    = converter
         
@@ -328,7 +334,7 @@ class CurrentObj(object):
             vt = weewx.units.UnknownType(self.data_binding)
         else:
             # ... get the current record from it ...  
-            record  = db_manager.getRecord(self.timestamp)
+            record  = db_manager.getRecord(self.current_time)
             # ... form a ValueTuple ...
             vt = weewx.units.as_value_tuple(record, obs_type)
         # ... and then finally, return a ValueHelper

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-# $Id$
-# Copyright (c) 2010-2014 Tom Keffer <tkeffer@gmail.com>
-# See the file LICENSE.txt for your full rights.
+#
+#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
+#    $ $
 
 """Data structures and functions for dealing with units."""
 
