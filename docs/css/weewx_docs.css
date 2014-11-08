@@ -133,8 +133,10 @@ table .first_row {
 .example_output {
   font-family: "Times New Roman", Times, serif;
   padding: 5px;
-  border: thin #000000 dotted;
+  border: thin #000000 solid;
   margin: 10px;
+  box-shadow: 5px 5px 2px #888888;
+  display:inline-block;
 }
 .image {
   padding: 5px;
