@@ -1369,7 +1369,141 @@ Sunrise, sunset: 06:51 19:30</pre>
         </tbody>
       </table>
 
-      <h2 id="defining_new_tags">Defining new tags</h2>
+    <h2>Using more than one binding</h2>
+    <p>
+      It's easy to use more than one database in your reports. Here's an
+      example. In my office I have two consoles: a VantagePro2 connected to a
+      Dell Optiplex, and a WMR100N, connected to a Raspberry Pi. Each are
+      running <span class="code">weewx</span>. The Dell is using sqlite, the
+      RPi, MySQL.
+    </p>
+    <p>Suppose I wish to compare the inside temperatures of the two
+      consoles. How would I do that?</p>
+    <p>
+      It's easier to access MySQL across a network than sqlite, so let's run the
+      reports on the Dell, but access the RPi's MySQL database remotely. Here's
+      how the bindings and database sections of <span class="code">weewx.conf</span>
+      would look on the Dell:
+    </p>
+    <pre class="tty">[DataBindings]
+    # This section binds a data store to an actual database
+    
+    [[wx_binding]]
+        # The database to be used - it should match one of the sections in [Databases] 
+        database = archive_sqlite
+        # The name of the table within the database
+        table_name = archive
+        # The class to manage the database
+        manager = weewx.wxmanager.WXDaySummaryManager
+        # The schema defines to structure of the database contents
+        schema = schemas.wview.schema
+
+<span class="highlight">    [[wmr100_binding]]
+        # Binding for my WMR100 on the RPi
+        database = rpi_mysql
+        # The name of the table within the database
+        table_name = archive
+        # The class to manage the database
+        manager = weewx.wxmanager.WXDaySummaryManager
+        # The schema defines to structure of the database contents
+        schema = schemas.wview.schema</span>
+
+[Databases]
+    # This section binds to the actual database to be used
+    
+    [[archive_sqlite]]
+        root = %(WEEWX_ROOT)s
+        database_name = archive/weewx.sdb
+        driver = weedb.sqlite
+    
+<span class="highlight">    [[rpi_mysql]]
+        host = rpi-bug
+        user = weewx
+        password = weewx
+        database_name = weewx
+        driver = weedb.mysql</span>
+    </pre>
+
+    <p>
+      The two additions have been <span class="highlight">highlighted</span>.
+      The first, in section <span class="code">[DataBindings]</span>, adds a new
+      binding called <span class="code">wmr10_binding</span>. It links ("binds")
+      to the new database, called <span class="code">rpi_mysql</span>, through
+      the option <span class="code">database</span>. The new database is a MySQL
+      database, running on the remote host <span class="code">rpi-bug</span>,
+      the name of my Raspberry Pi.
+    </p>
+
+    <h3>Explicit binding in tags</h3>    
+    <p>How do we use this new binding? First, let's do a text comparison,
+      using tags. Here's what our template looks like:</p>
+    <pre class="tty">&lt;tr&gt;
+  &lt;td class="stats_label"&gt;Inside Temperature, Vantage&lt;/td&gt;
+  &lt;td class="stats_data"&gt;$current.inTemp&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+  &lt;td class="stats_label"&gt;Inside Temperature, WMR100&lt;/td&gt;
+  &lt;td class="stats_data"&gt;$current<span class="highlight">($data_binding='wmr100_binding')</span>.inTemp&lt;/td&gt;
+&lt;/tr&gt;</pre>
+
+    <p>
+      The explicit binding to <span class="code">wmr100_binding</span> is
+      highlighted. This tells the reporting engine to override the default
+      binding specifed in <span class="code">[StdReport]</span>, generally <span
+        class="code">wx_binding</span>, and use <span class="code">wmr100_binding</span>
+      instead.
+    </p>
+    <p>This results in an HTML output that looks like:</p>
+
+
+    <div id="stats_group" class="indent" style="width:25%">
+      <div class="stats">
+        <table>
+          <tbody>
+              <tr>
+                <td class="stats_label">Inside Temperature, Vantage</td>
+                <td class="stats_data">68.7&#176;F</td>
+              </tr>
+              <tr>
+                <td class="stats_label">Inside Temperature, WMR100</td>
+                <td class="stats_data">68.9&#176;F</td>
+              </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3>Explicit binding in images</h3>
+    <p>How would we produce a graph of the two different temperatures? Here's
+    what the relevant section of the <span class="code">skin.conf</span> file would look like.</p>
+    <pre class="tty">[[[daycompare]]]
+  [[[[inTemp]]]]
+    label = Vantage inTemp
+    [[[[WMR100Temp]]]]
+      data_type = inTemp
+      data_binding = wmr100_binding
+      label = WMR100 inTemp</pre>
+
+    <p>This will produce an image with name <span class="code">daycompare.png</span>, with
+    two plot lines. The first will be of the temperature from the Vantage. It uses
+    the default binding, <span class="code">wx_binding</span>, and will be labeled 
+    <span class="code">"Vantage inTemp"</span>. The second explicitly uses
+    the <span class="code">wmr100_binding</span>. Because it uses the same variable
+    name (<span class="code">inTemp</span>) as the first line, we had to explicitly specify it
+    using option <span class="code">data_type</span>, in order to avoid using the same
+    sub-section name twice (see the section <a href="#including_same_sql_type_2x"><i>Including the same SQL type more
+    than once in a plot</i></a> for details). It will be labeled "<span class="code">WMR100 inTemp</span>". The results
+    look like this:</p>
+    <img src='images/daycompare.png'/>
+    <h3>Stupid detail</h3>
+    <p>At first, I could not get this example to work. The problem turned out to be that the RPi
+    was processing things just a beat behind the Dell, so the temperature for the "current" time
+    wasn't ready when the Dell needed it. To avoid this, I changed the option 
+    <span class="code">archive_delay</span> on the RPi from the default 15 seconds to 5 seconds.
+    This gave the RPi a 10 second headstart to get the data point ready before the Dell needed it.</p>
+
+
+    <h2 id="defining_new_tags">Defining new tags</h2>
 
       <p>
         In the section on <em><a href="#customizing_templates">Customizing
@@ -2360,7 +2494,8 @@ outTemp = Outside Temperature</pre>
     [[[[dewpoint]]]]</pre>
       <p>This would create an image in file <span class="code">monthtempdew.png</span>
         that includes a line plot of both outside temperature and dewpoint. </p>
-      <h3>Including the same SQL type more than once in a plot</h3>
+
+      <h3 id="including_same_sql_type_2x">Including the same SQL type more than once in a plot</h3>
       <p>Another example. Say you want a plot of the day's temperature, overlaid
         with hourly averages. Here, you are using the same data type ('<span class="code">outTemp</span>')
         for both plot lines, the first with averages, the second without. If you

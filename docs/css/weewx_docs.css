@@ -231,6 +231,27 @@ table .first_row {
 }
 
 /*
+ * This section mimics the style that
+ * the reporting engine produces, so the docs
+ * can reproduce it.
+ */
+.stats table {
+    border: thin solid #000000;
+    width: 100%;
+}
+.stats td {
+    border: thin solid #000000;
+    padding: 2px;
+}
+
+.stats_label {
+    color: green;
+}
+
+.stats_data {
+    color: red;
+}
+/*
  * Overrides for the jQuery UI widgets
  */
 div .ui-widget-header {
