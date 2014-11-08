@@ -253,6 +253,7 @@ table .first_row {
 .stats_data {
     color: red;
 }
+
 /*
  * Overrides for the jQuery UI widgets
  */
@@ -280,4 +281,19 @@ div .ui-widget-header {
 }
 .tocify-subheader {
     display: inherit;
+}
+/* prevent dancing toc by eliminating the default bold during mouseover */
+#toc .ui-state-hover {
+  background: #ddeeee;
+}
+#toc .ui-state-hover a{
+  font-weight: normal;
+  color: black;
+}
+#toc .ui-state-default {
+  font-weight: normal;
+  background: teal;
+}
+#toc .ui-state-default a{
+  color: white;
 }
