@@ -1256,14 +1256,6 @@ longitude = -77.0366</pre>
       weather stations with USB connectors.</p>
     <p class="config_important">model</p>
     <p>Set to the station model. For example, WH1080, WS2080, WH3081, etc. </p>
-    <p class='config_option'>pressure_offset</p>
-    <p>
-      The offset, in millibars, that is applied to values from the
-      station sensor. This offset is applied to the station pressure
-      <i>before</i> calculating barometer and altimeter sea level pressures.
-      Only the raw station pressure is recorded to the database, not the
-      station pressure with offset applied.  Default is None.
-    </p>
     <p class='config_option'>polling_mode</p>
     <p>One of <span class='code'>PERIODIC</span> or
       <span class='code'>ADAPTIVE</span>.  In
@@ -1293,14 +1285,6 @@ longitude = -77.0366</pre>
     <p class="config_important">model</p>
     <p>Set to the station model. For example, WS-2315, LaCrosse WS2317,
       etc.  Default is "LaCrosse WS23xx".</p>
-    <p class='config_option'>pressure_offset</p>
-    <p>
-      The offset, in millibars, that is applied to values from the
-      station sensor. This offset is applied to the station pressure
-      <i>before</i> calculating barometer and altimeter sea level pressures.
-      Only the raw station pressure is recorded to the database, not the
-      station pressure with offset applied.  Default is None.
-    </p>
     <p class='config_option'>polling_interval</p>
     <p>The <span class="code">polling_interval</span> determines how often
       <span class="code">weewx</span> will query the station for data.  If no
@@ -1322,14 +1306,6 @@ longitude = -77.0366</pre>
     <p class="config_important">model</p>
     <p>Set to the station model. For example, LaCrosse WS2810, TFA Primus,
       etc.  Default is "LaCrosse WS28xx".</p>
-    <p class='config_option'>pressure_offset</p>
-    <p>
-      The offset, in millibars, that is applied to values from the
-      station sensor. This offset is applied to the station pressure
-      <i>before</i> calculating barometer and altimeter sea level pressures.
-      Only the raw station pressure is recorded to the database, not the
-      station pressure with offset applied.  Default is None.
-    </p>
 
     <h3 class="config_section">[TE923]</h3>
     <p>This section is for options relating to the Hideki TE923 series of
@@ -1392,14 +1368,6 @@ longitude = -77.0366</pre>
       a USB-Serial converter, the port will be something like
       <span class='code'>/dev/ttyUSB0</span>.  Default is
       <span class='code'>/dev/ttyUSB0</span></p>
-    <p class='config_option'>pressure_offset</p>
-    <p>
-      The offset, in millibars, that is applied to values from the
-      station sensor. This offset is applied to the station pressure
-      <i>before</i> calculating barometer and altimeter sea level pressures.
-      Only the raw station pressure is recorded to the database, not the
-      station pressure with offset applied.  Default is None.
-    </p>
     <p class='config_option'>polling_interval</p>
     <p>The <span class="code">polling_interval</span> determines how often
       <span class="code">weewx</span> will query the station for data.  The
@@ -1414,14 +1382,6 @@ longitude = -77.0366</pre>
       a USB-Serial converter, the port will be something like
       <span class='code'>/dev/ttyUSB0</span>.  Default is
       <span class='code'>/dev/ttyUSB0</span></p>
-    <p class='config_option'>pressure_offset</p>
-    <p>
-      The offset, in millibars, that is applied to values from the
-      station sensor. This offset is applied to the station pressure
-      <i>before</i> calculating barometer and altimeter sea level pressures.
-      Only the raw station pressure is recorded to the database, not the
-      station pressure with offset applied.  Default is None.
-    </p>
     <p class='config_option'>polling_interval</p>
     <p>The <span class="code">polling_interval</span> determines how often
       <span class="code">weewx</span> will query the station for data.  The
@@ -2407,30 +2367,6 @@ Mutating actions will request confirmation before proceeding.</p>
       (read_period) of 30 minutes (1800 seconds).  To change the station's
       interval to 5 minutes, do the following:</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --set-interval=5</p>
-
-    <h3>Calibrating the pressure sensor</h3>
-    <p>The pressure sensor in the Fine Offset stations measures absolute, or
-      gauge pressure, but most weather services require a pressure adjusted to
-      sea level.  The absolute pressure may be off a bit (1 to 10 millibars)
-      when the station is at sea level, but it will definitely be way off
-      (as much as hundreds of millibars) when the station is above sea level.
-      <span class='code'>Weewx</span> will compensate for the effects of
-      altitude, but to do so, it needs not only the altitude, but a calibrated
-      station pressure.</p>
-    <p>To calibrate the pressure sensor, specify a <span class='code'>pressure_offset</span>, in millibars, in <span class='code'>weewx.conf</span>.  If you do not know what the offset should be, use the <span class='code'>wee_config_fousb</span> 
-	utility to calculate this offset given the station altitude and a valid 
-	sea-level pressure from a nearby known-correct station.</p>
-    <p>For example, if the sea level pressure from a verified source is 1003.048 hPa, the following example will calculate the offset then ask whether to insert it into <span class='code'>weewx.conf</span>.  It uses the altitude specified in <span class='code'>weewx.conf</span> and the station pressure and temperature.</p>
-    <p class='tty'><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --slp=1003.048</p>
-    <p>The output will look something like this:</p>
-    <p class='tty'>Querying the station...
-Pressure offset is None
-Set pressure offset to 1.247000 hPa (y/n)? y
-Pressure offset is now 1.247000</p>
-    <p>To convert inHg to hPa (mbar), multiply by 33.86389</p>
-    <p>To display sensor, relative, and calculated pressures:</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_fousb --check-pressures</pre>
-    <p>Note that <span class='code'>weewx</span> does not use the <i>relative pressure</i> displayed on the Fine Offset console.</p>
 
     <h3 id="fo_dumping_the_console_memory">Dumping the console memory</h3>
     <p>Fine Offset stations store records in a circular buffer &mdash; once the buffer fills, the oldest records are replaced by newer records.  The 1080 and 2080 consoles store up to 4080 records.  The 3080 consoles store up to 3264 records.  The <span class='code'>data_count</span> indicates how many records are in memory.  The <span class='code'>read_period</span> indicates the number of minutes between records.  <span class='code'>wee_config_fousb</span> can display these records in space-delimited, raw bytes, or dictionary format.</p>
