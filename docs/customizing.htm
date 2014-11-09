@@ -534,18 +534,18 @@ Version: 3.0.0 alpha
       <p>To use metric units, you would edit this section to read: </p>
       <pre class="tty">[Units]
     [[Groups]]
-<span class="highlight">        group_altitude    = meter</span>
-<span class="highlight">        group_degree_day  = degree_C_day</span>
+        <span class="highlight">group_altitude    = meter</span>
+        <span class="highlight">group_degree_day  = degree_C_day</span>
         group_direction   = degree_compass
         group_moisture    = centibar
         group_percent     = percent
-<span class="highlight">        group_pressure    = mbar</span>
+        <span class="highlight">group_pressure    = mbar</span>
         group_radiation   = watt_per_meter_squared
-<span class="highlight">        group_rain        = mm</span>
-<span class="highlight">        group_rainrate    = mm_per_hour</span>
-<span class="highlight">        group_speed       = meter_per_second</span>
-<span class="highlight">        group_speed2      = meter_per_second2</span>
-<span class="highlight">        group_temperature = degree_C</span>
+        <span class="highlight">group_rain        = mm</span>
+        <span class="highlight">group_rainrate    = mm_per_hour</span>
+        <span class="highlight">group_speed       = meter_per_second</span>
+        <span class="highlight">group_speed2      = meter_per_second2</span>
+        <span class="highlight">group_temperature = degree_C</span>
         group_uv          = uv_index 
         group_volt        = volt</pre>
       <p>The options that were changed have been <span class="highlight">&nbsp;highlighted&nbsp;</span>.
@@ -566,7 +566,7 @@ Version: 3.0.0 alpha
       <p>to: </p>
       <pre class="tty">[Units]
     [[Generic]]
-<span class="highlight">        inTemp  = Barn Temperature</span>
+        <span class="highlight">inTemp  = Barn Temperature</span>
         outTemp = Outside Temperature
         ...</pre>
       <h3>Overriding options in <span class="code">skin.conf</span> from <span
@@ -1494,7 +1494,9 @@ Sunrise, sunset: 06:51 19:30</pre>
       will be titled with the indicated label ('<span class="code">Rain
         (daily avg)</span>'). The result of all this is the following plot:
     </p>
+    <p>
     <img src="images/sample_monthrain.png" alt="Sample monthly rain plot" />
+    </p>
 
     <h3 id="line_gaps">Line gaps</h3>    
       <p id="line_gap_fraction">If there is a time gap in the data, the options <span class="code">line_gap_fraction</span>
@@ -1503,13 +1505,13 @@ Sunrise, sunset: 06:51 19:30</pre>
         for line graphs, the latter, <span class="code">bar_gap_fraction</span>,
         for bar graphs. Here's what the resultant plots look like without and
         with this option being specified:</p>
-      <div class="center" style="width:80%;margin:0 auto;">
-        <div style="float:left"> <img width="334" height="197" src="images/day-gap-not-shown.png"
-            alt="Gap not shown" />
-          <p class="image_caption"> No <span class="code">line_gap_fraction</span>
-            specified</p>
+      <div class="center" style="width:80%;margin:0;">
+        <div style="float:left">
+          <img src="images/day-gap-not-shown.png" alt="Gap not shown" />
+          <p class="image_caption"> No <span class="code">line_gap_fraction</span> specified</p>
         </div>
-        <div> <img width="334" height="197" src="images/day-gap-showing.png" alt="Gap showing" />
+        <div>
+          <img src="images/day-gap-showing.png" alt="Gap showing" />
           <p class="image_caption"> With <span class="code">line_gap_fraction=0.01</span></p>
         </div>
       </div>
@@ -1558,8 +1560,9 @@ Sunrise, sunset: 06:51 19:30</pre>
         use averaging. </p>
       <p>The result is a nice plot of the day's temperature, overlaid with a
         3-hour smoothed average: </p>
-      <p class="center"> <img width="300" height="180" alt="Daytime temperature with running average"
-          src="images/daytemp_with_avg.png" /> </p>
+      <p>
+      <img alt="Daytime temperature with running average" src="images/daytemp_with_avg.png" />
+      </p>
       <p>One more example. This one shows daily high and low temperatures for a
         year:</p>
       <pre class="tty">[[year_images]]
@@ -1574,8 +1577,10 @@ Sunrise, sunset: 06:51 19:30</pre>
             aggregate_type = min
            label = Low Temperature</pre>
       <p>This results in the plot <span class="code">yearhilow.png</span>:</p>
-      <p class="center"><img width="300" height="180" alt="Daily highs and lows"
-          src="images/yearhilow.png" /> </p>
+      <p>
+        <img width="300" height="180" alt="Daily highs and lows"
+             src="images/yearhilow.png" />
+      </p>
       <h3>Progressive vector plots</h3>
       <p><span class="code">Weewx</span> can produce progressive vector plots as
         well as the more conventional x-y plots. To produce these, use plot type
@@ -1603,8 +1608,10 @@ Sunrise, sunset: 06:51 19:30</pre>
         aggregation (3,600 seconds). For the first set of vectors, the hourly
         average will be used. In the second, the max of the gusts will be used:
       </p>
-      <p class="center"> <img width="300" height="180" alt="hourly average wind vector overlaid with gust vectors"
-          src="images/weekgustoverlay.png" /> </p>
+      <p>
+        <img alt="hourly average wind vector overlaid with gust vectors"
+          src="images/weekgustoverlay.png" />
+      </p>
       <p>By default, the sticks in the progressive wind plots point towards the
         wind source. That is, the stick for a wind from the west will point
         left. If you have a chronic wind direction (as I do), you may want to

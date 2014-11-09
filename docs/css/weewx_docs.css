@@ -91,8 +91,8 @@ caption {
   font-size: 90%;
   background-color: #FFFFe0;
   border: 1px solid #ddddaa;
-  margin: 10px;
-  padding: 3px;
+  padding: 3px 8px 3px 8px;
+  margin: 5px 15px 5px 15px;
   white-space: pre;
   line-height: normal;
 }
@@ -132,10 +132,10 @@ table .first_row {
 }
 .example_output {
   font-family: "Times New Roman", Times, serif;
-  padding: 5px;
-  border: thin #000000 solid;
-  margin: 10px;
-  box-shadow: 5px 5px 2px #888888;
+  padding: 3px 8px 3px 8px;
+  margin: 5px 15px 5px 15px;
+  border: 1px solid #cccccc;
+  box-shadow: 2px 2px 3px #dddddd;
   display:inline-block;
 }
 .image {
@@ -156,12 +156,18 @@ table .first_row {
   border: 1px solid #aac0b0;
   margin: 10px 30px 10px 30px;
   padding: 10px;
+  webkit-border-radius: 6px;
+  moz-border-radius: 6px;
+  border-radius: 6px;
 }
 .warning {
   background-color: #ffeeee;
   border: 1px solid #ffdddd;
   margin: 10px 30px 10px 30px;
   padding: 10px;
+  webkit-border-radius: 6px;
+  moz-border-radius: 6px;
+  border-radius: 6px;
 }
 .copyright {
   font-style: italic;
@@ -197,8 +203,8 @@ table .first_row {
   margin-left: 20px;
   margin-right: 20px;
 }
-.tabs img{
-	display:inline;
+.tabs img {
+  display:inline;
 }
 .tab {
   font-size: 80%;
@@ -208,6 +214,12 @@ table .first_row {
   padding: 4px 16px 4px 16px;
   float: left;
   cursor: pointer;
+  webkit-border-top-left-radius: 6px;
+  moz-border-top-left-radius: 6px;
+  border-top-left-radius: 6px;
+  webkit-border-top-right-radius: 6px;
+  moz-border-top-right-radius: 6px;
+  border-top-right-radius: 6px;
 }
 .selected {
   color: black;
@@ -255,33 +267,36 @@ table .first_row {
     color: red;
 }
 
-/*
- * Overrides for the jQuery UI widgets
- */
+/* Overrides for the jQuery UI widgets */
 div .ui-widget-header {
   border: 1px solid black;
   background: #aacccc;
 }
 
-/*
- * Overrides for tocify Table-of-Contents
- */
+/* no spurious background images please */
+.ui-widget-content {
+  background: white;
+}
+
+/* Overrides for tocify Table-of-Contents */
 .tocify {
   width: 15%;
   margin-left: 5px;
   padding-left: 5px;
+  border: 0;
+  webkit-border-radius: 0px;
+  moz-border-radius: 0px;
+  border-radius: 0px;
 }
-
 .tocify ul, .tocify li {
   line-height: 1.2;
 }
-
 .tocify-header ul, .tocify-header li{
   padding-left: 10px;
   text-indent: -10px;
 }
 .tocify-subheader {
-    display: inherit;
+  display: inherit;
 }
 /* prevent dancing toc by eliminating the default bold during mouseover */
 #toc .ui-state-hover {
