@@ -33,7 +33,7 @@ def main():
         print msg
         exit(0)
 
-    print 'Driver version %s' % device.version
+    print '%s driver version %s' % (device_type, device.version)
     device.configure(config_dict)
 
 if __name__=="__main__":

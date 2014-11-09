@@ -1659,7 +1659,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
 
     @property
     def usage(self):
-        return """%prog: [config_file] [--help] [--info] [--clear]
+        return """%prog [config_file] [--help] [--info] [--clear]
     [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
     [--set-bucket=CODE] [--set-rain-year-start=MM] 
     [--set-offset=VARIABLE,OFFSET]
