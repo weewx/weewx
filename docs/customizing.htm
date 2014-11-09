@@ -1496,7 +1496,7 @@ Sunrise, sunset: 06:51 19:30</pre>
     </p>
     <img src="images/sample_monthrain.png" alt="Sample monthly rain plot" />
 
-    <h3>Line gaps</h3>    
+    <h3 id="line_gaps">Line gaps</h3>    
       <p id="line_gap_fraction">If there is a time gap in the data, the options <span class="code">line_gap_fraction</span>
         and <span class="code">bar_gap_fraction</span> control how it will be
         drawn. The former, <span class="code">line_gap_fraction</span>, is used
@@ -2762,9 +2762,13 @@ outTemp = Outside Temperature</pre>
     </p>
     
     
-    <h3>Plot scaling options</h3>    
+    <h3>Plot scaling options</h3>
     <p class="config_option">time_length</p>
-    <p>Description</p>
+    <p>
+      The nominal length of the time period to be covered in seconds. The exact
+      length of the x-axis is chosen by the plotting engine to cover this
+      period. Optional. Default is <span class="code">86400</span> (one day).
+    </p>
     <p class="config_option">yscale</p>
     <p>
       A 3-way tuple (<span class="code">ylow</span>, <span class="code">yhigh</span>,
@@ -2798,15 +2802,23 @@ outTemp = Outside Temperature</pre>
     </p>
     <p class="config_option">rose_label_font_size</p>
     <p>The size of the compass rose label in pixels. Optional. The default
-      is 10.</p>
+      is <span class="code">10</span>.</p>
     <p class="config_option">rose_label_font_color</p>
     <p>The color of the compass rose label. Optional. Default is the same
       color as the rose itself.</p>
     <p class="config_option">vector_rotate</p>
-    <p>Description</p>
-      
-    
+    <p>
+      Causes the vectors to be rotated by this many degrees. Positive is clockwise.
+      If westerly winds dominate at your location (as they do at mine),
+      then you may want to specify <span
+        class="code">+90</span> for this option. This will cause the average vector
+        to point straight up, rather than lie flat against the x-axis. Optional.
+        The default is 0.
+    </p>
+
+
     <h3>Shared plot line options</h3>
+    <p>These are options shared by all the plot lines.</p>
     <p class="config_option">chart_line_colors</p>
     <p>
       Each chart line is drawn in a different color. This option is a list of
@@ -2821,14 +2833,44 @@ outTemp = Outside Temperature</pre>
     <p>
       A list of the color to be used as the fill of the bar charts. Optional.
       The default is to use the same color as the outline color (option
-      <span class="code">chart_line_colors</span> above.
+      <span class="code">chart_line_colors</span>) above.
+    </p>
+    <p class="config_option">chart_line_width</p>
+    <p>
+      Each chart line can be drawn using a different line width. This option is a list of
+      these widths. If the number of lines exceeds the length of the list, then
+      the widths wrap around to the beginning of the list. NB: individual line
+      widths can be overridden by using option <span class="code">width</span>.
+      Optional.  Default is <span class="code">'1', '1', '1'</span>.
     </p>
 
 
-    <h3>Plot line options</h3>
+    <h3>Options for individual lines</h3>
+    <p>These are options that are set for individual lines.</p>
+    <p class="config_option">aggregate_type</p>
+    <p>
+      The default is to plot every data point, but this is
+      probably not a good idea for any plot longer than a day. By setting this
+      option, you can <em>aggregate</em> data by a set time interval. Available
+      aggregation types include <span class="code">avg</span>, <span
+        class="code">sum</span>, <span class="code">max</span>, <span
+        class="code">min</span>, and <span class="code">count</span>.
+    </p>
+    <p class="config_option">aggregate_interval</p>
+    <p>The time period over which the data should be aggregated. Required if
+    <span class="code">aggregate_type</span> has been set. </p>
+    <p class="config_option">plot_type</p>
+    <p>
+      The type of plot for this line. Choices are <span class="code">line</span>,
+      <span class="code">bar</span>, or <span class="code">vector</span>.
+      Optional. Default is <span class="code">line</span>.
+    </p>
     <p class="config_option">color</p>
-    <p>This option is to override the color for an individual line. Optional. Default
-    is to use the color in <span class="code">chart_line_colors</span> above.</p>
+    <p>
+      This option is to override the color for an individual line. Optional.
+      Default is to use the color in <span class="code">chart_line_colors</span>
+      above.
+    </p>
     <p class="config_option">line_type</p>
     <p>
       The type of line to be used. Choices are <span class="code">solid</span>
@@ -2842,26 +2884,41 @@ outTemp = Outside Temperature</pre>
         class="code">'none'</span>. Optional. Default is <span class="code">'none'</span>.
     </p>
     <p class="config_option">marker_size</p>
-    <p>The size of the marker. Optional. Default is <span class="code">'8'</span>.</p>
+    <p>
+      The size of the marker. Optional. Default is <span class="code">'8'</span>.
+    </p>
     <p class="config_option">line_gap_fraction</p>
-    <p>Description</p>
+    <p>
+      If there is a gap between data points bigger than this fractional amount
+      of the x-axis, then a gap will be drawn, rather than a connecting line.
+      See Section <a href="#line_gaps"><i>Line gaps</i></a>. Optional. The
+      default is to always draw the line.
+    </p>
     <p class="config_option">bar_gap_fraction</p>
-    <p>Description</p>
-    <p class="config_option">plot_type</p>
-    <p>Description</p>
-    
+    <p>
+      If there is a gap between bar graphs bigger than this fractional amount of
+      the x-axis, then a gap will be drawn, rather than a fat bar. See Section <a
+        href="#line_gaps"><i>Line gaps</i></a>. Optional. The default is to
+      always draw the bar.
+    </p>
+
     <p class="config_option">width</p>
-    <p>Description</p>
+    <p>
+      This option is to override the line widthfor an individual line. Optional.
+      Default is to use the width in <span class="code">chart_line_width</span>
+      above.
+    </p>
     
-    <p class="config_option">aggregate_type</p>
-    <p>Description</p>
-    <p class="config_option">aggregate_interval</p>
-    <p>Description</p>
     <p class="config_option">label</p>
-    <p>Description</p>
-
-
-
+    <p>The label to be used for this plot line in the top label. Optional.
+    The default is to use the SQL variable name.</p>
+    <p class="config_option">data_type</p>
+    <p>
+      The SQL data type to be used for this plot line. For more information, see the section <a
+        href="#including_same_sql_type_2x"><i>Including the same SQL
+          type more than once in a plot</i></a>. Optional. The default is to use the
+      section name.
+    </p>
 
 
 
