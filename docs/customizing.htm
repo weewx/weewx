@@ -1088,10 +1088,11 @@ or in foobar units: $day.barometer.min.foobar
         represents the start time of the month. Like true observation types,
         explicit formats can be specified, except that they require a <a href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior">
           strftime() <em>time format</em></a>, rather than a <em>string
-          format:</em> </p>
+          format</em>.</p>
+      <p>  For example, </p>
       <pre class="tty">$month.dateTime.format("%B %Y")</pre>
       <p>produces </p>
-      <pre class="tty">January 2010</pre>
+      <p class="example_output">January 2010</p>
       <p>The returned string value will always be in <em>local time</em>. </p>
       <p>The raw value of <span class="code">dateTime</span> is Unix Epoch Time
         (number of seconds since 00:00:00 UTC 1 Jan 1970, <em>i.e.</em>, a
@@ -1139,7 +1140,7 @@ or in foobar units: $day.barometer.min.foobar
       by using the syntax <span class="code">$trend.time_delta</span> (3rd
       example above).
     </p>
-    <p>As a summary, the template expression</p>
+    <p>For example, the template expression</p>
       <pre class="tty">&lt;p&gt;The barometer trend over $trend.time_delta.hour is $trend.barometer.format("%+.2f").&lt;/p&gt;</pre>
     <p>would result in</p>
     <p class="example_output">The barometer trend over 3 hrs is +.03 inHg.</p>
@@ -1167,22 +1168,24 @@ or in foobar units: $day.barometer.min.foobar
           </tr>
         </tbody>
       </table>
-      <p>As a summary, the tag </p>
+      <p>For example, the tag </p>
       <pre class="tty">$day.outTemp.max.formatted$unit.label.outTemp</pre>
       <p>would result in </p>
-      <pre class="tty">21.2°C</pre>
+      <p class="example_output">21.2°C</p>
       <p>(assuming metric values have been specified for <span class="code">group_temperature</span>),
         essentially reproducing the results of the simpler tag <span class="code">$day.outTemp.max</span>.
       </p>
       <h3>Iteration</h3>
-      <p>For dot codes using an aggregation (<em>e.g.</em>, <span class="code">$day</span>,
-        <span class="code">$week</span>, <span class="code">$month</span>, <span
-          class="code">$year</span>, <span class="code">$rainyear</span>, then
-        the aggregation period can be iterated over by day or month. These are
-        the only two iteration periods available as of this version. </p>
-      <p>This example uses a Cheetah <span class="code">for</span> loop to
-        iterate over all months in a year, printing out each month's min and max
-        temperature (the iteration loop is <span class="highlight">&nbsp;highlighted&nbsp;</span>): </p>
+      <p>For dot codes using an aggregation <em>e.g.</em>,
+        <span class="code">$day</span>, <span class="code">$week</span>,
+        <span class="code">$month</span>, <span class="code">$year</span>,
+        <span class="code">$rainyear</span>, then
+        the aggregation period can be iterated over. </p>
+      <p>For example, the following template uses a Cheetah
+        <span class="code">for</span> loop to iterate over all months in
+        a year, printing out each month's min and max temperature.  The
+        iteration loop is
+        <span class="highlight">&nbsp;highlighted&nbsp;</span>.</p>
       <pre class="tty">&lt;html&gt;
     &lt;head&gt;
         &lt;title&gt;Year stats by month&lt;/title&gt;
@@ -1194,20 +1197,20 @@ or in foobar units: $day.barometer.min.foobar
 <span class="highlight">        #end for</span>
     &lt;/body&gt;
 &lt;/html&gt;</pre>
-      <p>Produces results: </p>
-      <pre class="tty">Min, max temperatures by month:
-January: Min, max temperatures: 30.1°F 51.5°F
-February: Min, max temperatures: 24.4°F 58.6°F
-March: Min, max temperatures: 27.3°F 64.1°F
-April: Min, max temperatures: 33.2°F 52.5°F
-May: Min, max temperatures: N/A N/A
-June: Min, max temperatures: N/A N/A
-July: Min, max temperatures: N/A N/A
-August: Min, max temperatures: N/A N/A
-September: Min, max temperatures: N/A N/A
-October: Min, max temperatures: N/A N/A
-November: Min, max temperatures: N/A N/A
-December: Min, max temperatures: N/A N/A</pre>
+      <p>The result is:</p>
+      <p class="example_output">Min, max temperatures by month:<br/>
+January: Min, max temperatures: 30.1°F 51.5°F<br/>
+February: Min, max temperatures: 24.4°F 58.6°F<br/>
+March: Min, max temperatures: 27.3°F 64.1°F<br/>
+April: Min, max temperatures: 33.2°F 52.5°F<br/>
+May: Min, max temperatures: N/A N/A<br/>
+June: Min, max temperatures: N/A N/A<br/>
+July: Min, max temperatures: N/A N/A<br/>
+August: Min, max temperatures: N/A N/A<br/>
+September: Min, max temperatures: N/A N/A<br/>
+October: Min, max temperatures: N/A N/A<br/>
+November: Min, max temperatures: N/A N/A<br/>
+December: Min, max temperatures: N/A N/A</p>
       <p>See the NOAA template files <span class="code">NOAA/NOAA-YYYY.txt.tmpl</span>
         and <span class="code">NOAA/NOAA-YYYY-MM.txt.tmpl</span> for examples
         using iteration, as well as explicit formatting. </p>
@@ -1236,17 +1239,17 @@ December: Min, max temperatures: N/A N/A</pre>
         #end if
     &lt;/body&gt;
 &lt;/html&gt;</pre>
-      <p>If your installation has pyephem installed this would result in: </p>
-      <pre class="tty">Current time is 29-Mar-2011 09:20
-Sunrise, transit, sunset: 06:51 13:11 19:30
-Moonrise, transit, moonset: 04:33 09:44 15:04
-Mars rise, transit, set: 06:35 12:30 18:26
-Azimuth, altitude of mars: 124.354959275 26.4808431952
-Next new, full moon: 03-Apr-2011 07:32 17-Apr-2011 19:43
-Next summer, winter solstice: 21-Jun-2011 10:16 21-Dec-2011 21:29</pre>
-      <p>Otherwise, a fallback position is used, resulting in </p>
-      <pre class="tty">Current time is 29-Mar-2011 09:20
-Sunrise, sunset: 06:51 19:30</pre>
+      <p>If pyephem is installed this would result in: </p>
+      <p class="example_output">Current time is 29-Mar-2011 09:20<br/>
+Sunrise, transit, sunset: 06:51 13:11 19:30<br/>
+Moonrise, transit, moonset: 04:33 09:44 15:04<br/>
+Mars rise, transit, set: 06:35 12:30 18:26<br/>
+Azimuth, altitude of mars: 124.354959275 26.4808431952<br/>
+Next new, full moon: 03-Apr-2011 07:32 17-Apr-2011 19:43<br/>
+Next summer, winter solstice: 21-Jun-2011 10:16 21-Dec-2011 21:29</p>
+      <p>Otherwise, a fallback of basic calculations is used, resulting in:</p>
+      <p class="example_output">Current time is 29-Mar-2011 09:20
+Sunrise, sunset: 06:51 19:30</p>
       <p>As shown in the example, you can test whether this extended almanac
         information is available with the value <span class="code">$almanac.hasExtras</span>.
       </p>
@@ -4290,9 +4293,7 @@ Options:
     <h1 id="aggregation_types">Appendix: Aggregation types</h1>
 
     <table class="indent">
-      <caption>
-        <em>Aggregation types</em>
-      </caption>
+      <caption>Aggregation types</caption>
       <tbody>
         <tr class="first_row">
           <td>Aggregation type</td>
