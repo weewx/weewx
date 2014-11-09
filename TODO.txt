@@ -12,7 +12,12 @@ I removed Appendix: Statistical types because it is no longer valid. But,
 it needs to be explained somewhere the difference between vector and scalar
 stats.
 
-Need to update the device configuration sections to use wee_config_device.
+Need to update the section in the User's Guide that talks about
+device configuration. They now all use wee_config_device.
+
+Update setup.py.
+
+Update Upgrading Guide.
 
 May need to update the guide on packaging an extension.
 
