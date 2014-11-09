@@ -2105,6 +2105,71 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device /path/to/weewx.conf --help </p>
       
     <h2 id="wee_config_vantage">Davis Vantage</h2>
+    <p>The <span class='code'>--help</span> option will produce output
+      something like this:</p>
+    <p class="tty">Vantage driver version 3.0
+Usage: wee_config_device [config_file] [--help] [--info] [--clear]
+    [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
+    [--set-bucket=CODE] [--set-rain-year-start=MM] 
+    [--set-offset=VARIABLE,OFFSET]
+    [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
+    [--set-time] [--set-dst=[AUTO|ON|OFF]]
+    [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
+    [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE]
+    [--start | --stop]
+
+Configures the Davis Vantage weather station.
+
+Options:
+  -h, --help            show this help message and exit
+  --debug               display diagnostic information while running
+  -y                    answer yes to every prompt
+  --info                To print configuration, reception, and barometer
+                        calibration information about your weather station.
+  --clear               To clear the memory of your weather station.
+  --set-interval=SECONDS
+                        Sets the archive interval to the specified number of
+                        seconds. Valid values are 60, 300, 600, 900, 1800,
+                        3600, or 7200.
+  --set-altitude=FEET   Sets the altitude of the station to the specified
+                        number of feet.
+  --set-barometer=inHg  Sets the barometer reading of the station to a known
+                        correct value in inches of mercury. Specify 0 (zero)
+                        to have the console pick a sensible value.
+  --set-bucket=CODE     Set the type of rain bucket. Specify '0' for 0.01
+                        inches; '1' for 0.2 MM; '2' for 0.1 MM
+  --set-rain-year-start=MM
+                        Set the rain year start (1=Jan, 2=Feb, etc.).
+  --set-offset=VARIABLE,OFFSET
+                        Set the onboard offset for VARIABLE inTemp, outTemp,
+                        extraTemp[1-7], inHumid, outHumid, extraHumid[1-7],
+                        soilTemp[1-4], leafTemp[1-4], windDir) to OFFSET
+                        (Fahrenheit, %, degrees)
+  --set-transmitter-type=CHANNEL,TYPE,TEMP,HUM
+                        Set the transmitter type for CHANNEL (1-8), TYPE
+                        (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain,
+                        6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none),
+                        as extra TEMP station and extra HUM station (both 1-7,
+                        if applicable)
+  --set-time            Set the onboard clock to the current time.
+  --set-dst=AUTO|ON|OFF
+                        Set DST to 'ON', 'OFF', or 'AUTO'
+  --set-tz-code=TZCODE  Set timezone code to TZCODE. See your Vantage manual
+                        for valid codes.
+  --set-tz-offset=HHMM  Set timezone offset to HHMM. E.g. '-0800' for U.S.
+                        Pacific Time.
+  --set-lamp=ON|OFF     Turn the console lamp 'ON' or 'OFF'.
+  --start               Start the logger.
+  --stop                Stop the logger.
+  --dump                Dump all data to the archive. NB: This may result in
+                        many duplicate primary key errors.
+  --logger-summary=FILE
+                        Save diagnostic summary to FILE (for debugging the
+                        logger).
+
+Mutating actions will request confirmation before proceeding.</p>
+
+    <h3>Station information</h3>
     <p>Use the <span class="code">--info</span> option to display the
       current EEPROM settings: </p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </pre>
@@ -2300,7 +2365,35 @@ Davis Vantage EEPROM settings:
     <p>The station clock can only be set manually via buttons on the
       console, or (if the station supports it) by WWVB radio.  The fousb
       driver ignores the station clock since it cannot be trusted.</p>
-    
+
+    <p>The <span class='code'>--help</span> option will produce output
+      something like this:</p>
+    <p class="tty">FineOffsetUSB driver version 1.7
+Usage: wee_config_device [config_file] [options] [--debug] [--help]
+
+Configuration utility for weewx devices.
+
+Options:
+  -h, --help           show this help message and exit
+  --debug              display diagnostic information while running
+  -y                   answer yes to every prompt
+  --info               display weather station configuration
+  --current            get the current weather conditions
+  --history=N          display N records
+  --history-since=N    display records since N minutes ago
+  --clear-memory       clear station memory
+  --set-time           set station clock to computer time
+  --set-interval=N     set logging interval to N minutes
+  --live               display live readings from the station
+  --logged             display logged readings from the station
+  --fixed-block        display the contents of the fixed block
+  --check-usb          test the quality of the USB connection
+  --check-fixed-block  monitor the contents of the fixed block
+  --format=FORMAT      format for output, one of raw, table, or dict
+
+Mutating actions will request confirmation before proceeding.</p>
+
+    <h3>Station information</h3>
     <p>Display the station settings with the <span class='code'>--info</span>
       option.</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </pre>
@@ -2312,7 +2405,7 @@ Davis Vantage EEPROM settings:
                   abs_pressure: 933.3
                    current_pos: 592
                   data_changed: 0
-<span class="highlight">                    data_count: 22</span>
+                    <span class="highlight">data_count: 22</span>
                      date_time: 2007-01-01 22:49
                  hum_in_offset: 18722
                 hum_out_offset: 257
@@ -2322,8 +2415,8 @@ Davis Vantage EEPROM settings:
                        magic_2: 0xaa
                          model: None
                      rain_coef: None
-<span class="highlight">                   read_period: 30</span>
-<span class="highlight">                  rel_pressure: 1014.8</span>
+                   <span class="highlight">read_period: 30</span>
+                  <span class="highlight">rel_pressure: 1014.8</span>
                 temp_in_offset: 1792
                temp_out_offset: 0
                       timezone: 0
@@ -2396,15 +2489,34 @@ Davis Vantage EEPROM settings:
       to download all records from the console since the last record in
       the archive database.</p>
     <p>The station does not record wind gust or wind gust direction.</p>
-    <p>The station calculates windchill and dewpoint.  The WS23xx driver
-      includes options to calculate windchill and dewpoint in
-      <span class="code">weewx</span>, since
-      the hardware algorithms may be antiquated.</p>
+    <p>The hardware calculates windchill and dewpoint.</p>
     <p>The hardware interface is a serial port, but USB-serial converters
       can be used with computers that have no serial port.  Beware that
       not every type of USB-serial converter will work.  Converters based
       on ATEN UC-232A chipset are known to work.</p>
 
+    <p>The <span class='code'>--help</span> option will produce output
+      something like this:</p>
+    <p class="tty">WS23xx driver version 0.21
+Usage: wee_config_device [config_file] [options] [--debug] [--help]
+
+Configuration utility for weewx devices.
+
+Options:
+  -h, --help         show this help message and exit
+  --debug            display diagnostic information while running
+  -y                 answer yes to every prompt
+  --info             display weather station configuration
+  --current          get the current weather conditions
+  --history=N        display N history records
+  --history-since=N  display history records since N minutes ago
+  --clear-memory     clear station memory
+  --set-time         set the station clock to the current time
+  --set-interval=N   set the station archive interval to N minutes
+
+Mutating actions will request confirmation before proceeding.</p>
+
+    <h3>Station information</h3>
     <p>Display the station settings with the <span class='code'>--info</span>
       option.</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </pre>
@@ -2457,7 +2569,6 @@ in humidity: 48.0
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --clear-memory</pre>
 
 
-
     <h2 id="wee_config_ws28xx">La Crosse WS28xx</h2>
     <p>The station has 1797 history records.  That is just over 6 days
       of data with an archive interval of 5 minutes.</p>
@@ -2472,6 +2583,31 @@ in humidity: 48.0
     </p>
     <p>The WS28xx driver does not support hardware archive record
       generation.</p>
+
+    <p>The <span class='code'>--help</span> option will produce output
+      something like this:</p>
+    <p class="tty">WS28xx driver version 0.33
+Usage: wee_config_device [config_file] [options] [--debug] [--help]
+
+Configuration utility for weewx devices.
+
+Options:
+  -h, --help           show this help message and exit
+  --debug              display diagnostic information while running
+  -y                   answer yes to every prompt
+  --check-transceiver  check USB transceiver
+  --pair               pair the USB transceiver with station console
+  --info               display weather station configuration
+  --set-interval=N     set logging interval to N minutes
+  --current            get the current weather conditions
+  --history=N          display N history records
+  --history-since=N    display history records since N minutes ago
+  --maxtries=MAXTRIES  maximum number of retries, 0 indicates no max
+
+Mutating actions will request confirmation before proceeding.</p>
+
+    <h3>Station information</h3>
+    <p>FIXME: paste ws28xx output here</p>
 
     <h3>Pairing</h3>
     <p>The console and transceiver must be paired.  Pairing ensures that your
@@ -2572,6 +2708,29 @@ in humidity: 48.0
       CC3000 driver will convert to the appropriate units for the
       <span class='code'>weewx</span> configuration.</p>
 
+    <p>The <span class='code'>--help</span> option will produce output
+      something like this:</p>
+    <p class="tty">CC3000 driver version 0.8
+Usage: wee_config_device [config_file] [options] [--debug] [--help]
+
+Configuration utility for weewx devices.
+
+Options:
+  -h, --help         show this help message and exit
+  --debug            display diagnostic information while running
+  -y                 answer yes to every prompt
+  --info             display weather station configuration
+  --current          display current weather readings
+  --history=N        display N records (0 for all records)
+  --history-since=N  display records since N minutes ago
+  --clear-memory     clear station memory
+  --set-clock        set station clock to computer time
+  --set-interval=N   set logging interval to N minutes
+  --set-units=UNITS  set units to METRIC or ENGLISH
+
+Mutating actions will request confirmation before proceeding.</p>
+
+    <h3>Station information</h3>
     <p>Display the station settings with the <span class='code'>--info</span>
       option.</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </pre>
