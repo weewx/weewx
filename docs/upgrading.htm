@@ -159,6 +159,184 @@ Version: 3.0.0a1
 
     <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
+    <h2>V2.7 or earlier</h2>
+
+    <h3>Database contents</h3>
+    <p>The default schema for archive data did not change - it is still the
+      same schema as that used by <span class='code'>wview</span>.  However,
+      the schema and structure of the statistics has changed completely.
+      Archive and statistical data are now saved in a single database.</p>
+    <p>FIXME: how to migrate a 2.x weewx.sdb to a 3.x weewx.sdb?</p>
+    <p>FIXME: how to migrate a 2.x mysql db to a 3.x mysql db?</p>
+
+    <h3>weewx.conf</h3>
+    <p>There is no automatic upgrade of <span class='code'>weewx.conf</span>
+      from version 2.x to version 3.x; you must make changes yourself.  The
+      following table illustrates the changes that must be made.</p>
+    <table style='width:100%'>
+      <tr><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <p class='tty'>[Databases]
+    [[archive_sqlite]]
+        root = %(WEEWX_ROOT)s
+        database = archive/weewx.sdb
+        driver = weedb.sqlite
+    [[stats_sqlite]]
+        root = %(WEEWX_ROOT)s
+        database = archive/stats.sdb
+        driver = weedb.sqlite
+    [[archive_mysql]]
+        host = localhost
+        user = weewx
+        password = weewx
+        database = weewx
+        driver = weedb.mysql
+    [[stats_mysql]]
+        host = localhost
+        user = weewx
+        password = weewx
+        database = stats
+        driver = weedb.mysql</p>
+        </td>
+        <td>
+          <p class='tty'>[Databases]
+    [[archive_sqlite]]
+        root = %(WEEWX_ROOT)s
+        <span class='highlight'>database_name</span> = archive/weewx.sdb
+        driver = weedb.sqlite
+    [[archive_mysql]]
+        host = localhost
+        user = weewx
+        password = weewx
+        <span class='highlight'>database_name</span> = weewx
+        driver = weedb.mysql</p>
+        </td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>
+          <p class='tty'>[DataBindings]
+    [[wx_binding]]
+        database = archive_sqlite
+        manager = weewx.wxmanager.WXDaySummaryManager
+        schema = schemas.wview.schema</p>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <p class='tty'>[StdReport]
+    ...
+    archive_database = archive_sqlite
+    stats_database = stats_sqlite
+        </td>
+        <td>
+          <p class='tty'>[StdReport]
+    ...
+    <span class='highlight'>data_binding = wx_binding</span></p>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <p class='tty'>[Engines]
+    [[WxEngine]]
+        prep_services = weewx.wxengine.StdTimeSynch
+        process_services = weewx.wxengine.StdConvert, \
+weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC
+        archive_services = weewx.wxengine.StdArchive
+        restful_services = weewx.restx.StdStationRegistry, \
+weewx.restx.StdWunderground, weewx.restx.StdPWSweather, \
+weewx.restx.StdCWOP, weewx.restx.StdWOW, \
+weewx.restx.StdAWEKAS
+        report_services = weewx.wxengine.StdPrint, \
+weewx.wxengine.StdReport</p>
+        </td>
+        <td>
+          <p class='tty'>[Engine]
+    [[Services]]
+        prep_services = weewx.<span class='highlight'>engine</span>.StdTimeSynch
+        process_services = weewx.<span class='highlight'>engine</span>.StdConvert, \
+weewx.<span class='highlight'>engine</span>.StdCalibrate, weewx.<span class='highlight'>engine</span>.StdQC, \
+<span class='highlight'>weewx.wxservices.StdWXCalculate</span>
+        archive_services = weewx.<span class='highlight'>engine</span>.StdArchive
+        restful_services = weewx.restx.StdStationRegistry, \
+weewx.restx.StdWunderground, weewx.restx.StdPWSweather, \
+weewx.restx.StdCWOP, weewx.restx.StdWOW, \
+weewx.restx.StdAWEKAS
+        report_services = weewx.<span class='highlight'>engine</span>.StdPrint, \
+weewx.<span class='highlight'>engine</span>.StdReport</p>
+        </td>
+      </tr>
+    </table>
+
+    <h3>Customized schemas</h3>
+    <p>The mechanism for specifying changes to the default schema has changed.
+      If you modified the default schema, you must re-apply the changes
+      using the new pattern.</p>
+    <p>For example, if you created a custom schema in
+      <span class='code'>user/schemas.py</span> by extending the default
+      archive schema, you must specify that schema in the
+      <span class='code'>[DataBindings]</span> section:</p>
+    <table style='width:100%'>
+      <tr><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td></td>
+        <td>
+          <p class='tty'>[DataBindings]
+    [[wx_binding]]
+        database = archive_sqlite
+        table_name = archive
+        manager = weewx.wxmanager.WXDaySummaryManager
+        <span class='highlight'>schema = user.schemas.defaultArchiveSchema</span></p>
+        </td>
+      </tr>
+    </table>
+
+    <h3>Custom data sources in skins</h3>
+    <p>The mechanism for specifying non-default data sources in skins has
+      changed.  If you modified the Standard skin, or created or used other
+      skins that draw data from a database other than the weather database,
+      you must change how the other sources are specified.</p>
+      <p>For example, in the <span class='code'>cmon</span> extension:</p>
+    <table style='width:100%'>
+      <tr><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <p class='tty'>[ImageGenerator]
+    ...
+    [[day_images]]
+        ...
+        [[[daycpu]]]
+            archive_database = cmon_sqlite
+            [[[cpu_user]]]
+            [[[cpu_idle]]]
+            [[[cpu_system]]]</p>
+        </td>
+        <td>
+          <p class='tty'>[ImageGenerator]
+    ...
+    [[day_images]]
+        ...
+        [[[daycpu]]]
+<span class='highlight'>            data_binding = cmon_binding</span>
+            [[[cpu_user]]]
+            [[[cpu_idle]]]
+            [[[cpu_system]]]</p>
+        </td>
+      </tr>
+    </table>
+
+    <h3>Derived quantities</h3>
+    <p>Some calculations that were done in drivers or in hardware are now
+      done consistently by the StdWXCalculate service.  Drivers should no
+      longer calculate derived quantities such as windchill, heatindex,
+      dewpoint, or rain rate.</p>
+      <p>Since the StdWXCalculate service is applied
+      after the StdCalibrate services, the
+      <span class='code'>pressure_offset</span> parameter is no longer
+      necessary for the CC3000, FineOffsetUSB, Ultimeter, WS1, WS23xx, and 
+      WS28xx drivers.</p>
+
   <h2>V2.6 or earlier</h2>
   <p>Version 2.7 is backwards compatible with earlier versions with
     one minor exception.</p>

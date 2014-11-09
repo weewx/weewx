@@ -13,16 +13,16 @@
   <script src="js/jquery.tocify-1.9.0.min.js"></script>
   <script src="js/weewx.js"></script>
   <script>
+    var toc;
     $(function() {
-      var toc = $("#toc").tocify({
-    	context : "#technical_content",
-        selectors : "h1, h2, h3",
+      toc = $("#toc").tocify({
+        context : "#technical_content",
         showAndHide : false,
         theme : "jqueryui",
         ignoreSelector : ".title",
         hashGenerator : wee_gen_id
-      })
-    }).data("toc-tocify");
+      }).data("toc-tocify");
+    })
 
     $(window).scroll(function(){
       $('#toc').css({
@@ -3445,19 +3445,13 @@ schema_with_electricity = schemas.wview.wview + [('electricity', 'REAL')]</pre>
           You do this by changing the option <span class="code">schema</span> in
           section <span class="code">[DataBindings]</span> in <span class="code">weewx.conf</span>.
           It will look like this when you're done:
-        </p> <pre class="tty">[DataBindings]
-    # This section binds a data store to an actual database
-
+        </p>
+        <p class="tty">[DataBindings]
     [[wx_binding]]
-        # The database to be used - it should match one of the sections in [Databases] 
         database = archive_sqlite
-        # The name of the table within the database
         table_name = archive
-        # The class to manage the database
         manager = weewx.wxmanager.WXDaySummaryManager
-        # The schema defines to structure of the database contents
-        <span class="highlight">schema = user.electricity.schema_with_electricity</span>
-        </pre>
+        <span class="highlight">schema = user.electricity.schema_with_electricity</span></p>
       </li>
 
       <li>
@@ -3477,8 +3471,8 @@ schema_with_electricity = schemas.wview.wview + [('electricity', 'REAL')]</pre>
           </strong> Now run the utility <span class="code">wee_config_database</span>
           with the <span class="code">--reconfigure</span> option and the path
           to the configuration file:
-        </p> <pre class="tty">
-          <span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
+        </p>
+        <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
         <p>
           This will create a new database (nominally, <span class="code">weewx.sdb_new</span>
           if you are using sqlite, <span class="code">weewx_new</span> if you
@@ -3570,9 +3564,11 @@ mv weewx.sdb_new weewx.sdb</pre>
       </table>
 
     <h2 id="Changing_the_unit_system">Changing the unit system</h2>
-    <p>Normally, data is stored in the databases using US Customary units
-      and, normally, you don't care &mdash; data can always be displayed using
-      any units you want. It's an "implementation detail." Nevertheless, there
+    <p>Normally, data are stored in the databases using US Customary units
+      and, normally, you don't care; it is an "implementation detail".
+      Data can always be displayed using any units you want. The
+      <a href="#customizing_reports">Customizing reports</a> section explains
+      how to do this. Nevertheless, there
       may be special situations where you wish to store the data in Metric
       units. For example, you may need to allow direct programmatic access to
       the databases from another piece of software that expects metric units.</p>
@@ -3581,7 +3577,7 @@ mv weewx.sdb_new weewx.sdb</pre>
       can't start with one unit system then, in the middle of the database,
       switch to another. See the section <span class="code"> <a
         href="usersguide.htm#StdConvert">[StdConvert]</a></span> in the Weewx User's
-      Guide. However, you can reconfigure the database by coping it to a new
+      Guide. However, you can reconfigure the database by copying it to a new
       database, performing the unit conversion along the way. You then use this
       new database.
     </p>
@@ -3662,9 +3658,14 @@ mv weewx.sdb_new weewx.sdb</pre>
       <p>Inherit from the abstract base class
         <span class="code">weewx.drivers.AbstractDevice</span>.
         Try to implement as many of its methods as you can. At the
-        very minimum, you must implement the first two
-        methods, <span class="code">hardware_name</span>
+        very minimum, you must implement the first three
+        methods, <span class="code">loader</span>,
+        <span class="code">hardware_name</span>,
         and <span class="code">genLoopPackets</span>. </p>
+      <h3><span class="code">loader</span></h3>
+      <p>This is a factory function that returns an instance of your
+        driver. It has two arguments: the configuration dictionary,
+        and a reference to the weewx engine.</p>
       <h3><span class="code">hardware_name</span></h3>
       <p>Return a string with a short nickname for the hardware, such
         as "<span class="code">ACME X90</span>"</p>
@@ -3779,10 +3780,6 @@ mv weewx.sdb_new weewx.sdb</pre>
         function. <span class='code'>Weewx</span> will call it if it
         needs to shut down your console (usually in the case of an
         error).</p>
-      <h3><span class="code">loader</span></h3>
-      <p>This is a factory function that returns an instance of your
-        driver. It has two arguments: the configuration dictionary,
-        and a reference to the weewx engine.</p>
 
       <h2>Define the configuration</h2>
       <p>You then include a new section in the configuration file <span class="code">weewx.conf</span>
@@ -3828,12 +3825,12 @@ mv weewx.sdb_new weewx.sdb</pre>
       <h2>Extension guidelines</h2>
       <p>Here are a few guidelines for creating extensions:</p>
       <ul>
-        <li>An extension should include its own, standalone skin to illustrate
+        <li>Extensions should not modify or depend upon existing skins.
+          An extension should include its own, standalone skin to illustrate
           any templates, search list extension, or generator features.</li>
-        <li>Extensions should not modify or depend upon existing skins.</li>
-        <li>Extensions should not modify the
-          <span class='code'>archive_database</span> or
-          <span class='code'>stats_database</span> schemas.</li>
+        <li>Extensions should not modify the database schemas.
+          If it requires data not found in the default databases, an
+          extension should provide its own database and schema.</li>
       </ul>
 
       <h2>How to package an extension</h2>
