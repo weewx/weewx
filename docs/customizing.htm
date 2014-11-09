@@ -722,11 +722,11 @@ $month.outTemp.max</pre>
         href="#formatting_options">Formatting Options</a></em> below.
     </p>
 
-      <h3>Time period <span class="code">$last</span></h3>
-      <p>Time period <span class="code">$last</span> is very similar
+      <h3>Time period <span class="code">$latest</span></h3>
+      <p>Time period <span class="code">$latest</span> is very similar
       to <span class="code">$current</span>, except that it uses
       the last available timestamp in a database. Usually, 
-      <span class="code">$current</span> and <span class="code">$last</span> are the same,
+      <span class="code">$current</span> and <span class="code">$latest</span> are the same,
       but if a data binding points to a remote database, they may not be. See
       the section <a href="#stupid_detail"><i>Using more than one binding</i></a>
       for an example where this happened.</p> 
@@ -1716,7 +1716,7 @@ Sunrise, sunset: 06:51 19:30</pre>
 &lt;/tr&gt;
 &lt;tr&gt;
   &lt;td class="stats_label"&gt;Inside Temperature, WMR100&lt;/td&gt;
-  &lt;td class="stats_data"&gt;$last<span class="highlight">($data_binding='wmr100_binding')</span>.inTemp&lt;/td&gt;
+  &lt;td class="stats_data"&gt;$latest<span class="highlight">($data_binding='wmr100_binding')</span>.inTemp&lt;/td&gt;
 &lt;/tr&gt;</pre>
 
     <p>
@@ -1779,7 +1779,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       be that the RPi was processing things just a beat behind the Dell, so the
       temperature for the "current" time wasn't ready when the Dell needed it. I
       kept getting <span class="code">N/A</span>. To avoid this, I introduced
-      the tag <span class="code">$last</span>, which uses the last available
+      the tag <span class="code">$latest</span>, which uses the last available
       timestamp in the binding, which may or may not be the same as what <span
         class="code">$current</span> uses.
     </p>

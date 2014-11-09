@@ -61,7 +61,7 @@ class TimeBinder(object):
         return CurrentObj(self.db_lookup, data_binding, current_time=timestamp,
                           formatter=self.formatter, converter=self.converter, **self.option_dict)
             
-    def last(self, data_binding=None):
+    def latest(self, data_binding=None):
         """Return a CurrentObj, using the last available timestamp."""
         manager = self.db_lookup(data_binding)
         timestamp = manager.lastGoodStamp()
