@@ -149,6 +149,7 @@ table .first_row {
 .image_caption {
   font-size: 80%;
   text-align: center;	
+  padding: 5px;
 }
 .note {
   background-color: #cce0d0;
