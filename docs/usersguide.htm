@@ -1828,6 +1828,62 @@ longitude = -77.0366</pre>
       range. So, for the VP2, there is no real point in checking wind speed.
     </p>
 
+    <h2 class="config_section" id="StdWXCalculate">[StdWXCalculate]</h2>
+    <p>The calculation service calculates derived quantities such as
+      <span class='code'>dewpoint</span>, <span class'code'>windchill</span>,
+      and <span class='code'>heatindex</span>.</p>
+    <p>Some hardware provides derived quantities, others provide only raw
+      observations.  The calculation service provides derived quantities for
+      hardware that does not provide them, and known algorithms for hardware
+      that provides unreliable or antiquated calculations.</p>
+    <p>The calculation service can calculate the following values:
+      <ul>
+        <li>pressure</li>
+        <li>barometer</li>
+        <li>altimeter</li>
+        <li>windchill</li>
+        <li>heatindex</li>
+        <li>dewpoint</li>
+        <li>inDewpoint</li>
+        <li>rainRate</li>
+      </ul>
+    <p>In its default configuration, the service calculates values only if
+      they have not already been provided by the hardware or driver.  This is
+      the default configuration:</p>
+    <p class="tty">[StdWXCalculate]
+    pressure = prefer_hardware
+    barometer = prefer_hardware
+    altimeter = prefer_hardware
+    windchill = prefer_hardware
+    heatindex = prefer_hardware
+    dewpoint = prefer_hardware
+    inDewpoint = prefer_hardware
+    rainRate = prefer_hardware</p>
+    <p>The options for each quantity are <span class='code'>hardware</span>,
+      <span class='code'>software</span>, or
+      <span class='code'>prefer_hardware</span></p>
+    <table class="indent">
+      <tr>
+	<td class="code">hardware</td>
+	<td>Never calculate the value.</td>
+      </tr>
+      <tr>
+	<td class="code">software</td>
+	<td>Always calculate the value.</td>
+      </tr>
+      <tr>
+	<td class="code">prefer_hardware</td>
+	<td>Calculate the value only if it is not provided by hardware.</td>
+      </tr>
+    </table>
+    <p>For example, if your weather station calculates windchill using the
+      pre-2001 algorithm, and you prefer to have
+      <span class='code'>weewx</span> calculate it using a current algorithm,
+      specify the following:</p>
+    <p class="tty">[StdWXCalculate]
+    ...
+    windchill = software</p>
+
     <h2 class="config_section" id="StdArchive">[StdArchive]</h2>
     <p>This section is for configuring <span class="code">StdArchive</span>, the 
       service that stores data in a database.</p>
