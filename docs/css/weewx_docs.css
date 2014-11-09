@@ -113,9 +113,9 @@ caption {
   color: #bb9900;
 }
 .highlight {
-  background-color: #FFCC99;
+  background-color: #ffe0b0;
 }
-.text_highlight, .first_col{
+.text_highlight, .first_col {
   font-weight: bold;
   background-color: #eef0f0;
   padding-left: 10px;
