@@ -766,12 +766,10 @@ $month.outTemp.max</pre>
     </p>
     <p class="indent">
       <span class="code"><em>aggregation</em></span> is an aggregation type.
-      This is something like '<span class="code">min</span>', '<span
-        class="code">sum</span>', '<span class="code">mintime</span>'. If you
+      If you
       ask for <span class="code">$month.outTemp.avg</span> you are asking for
-      the <em>average</em> outside temperature for the month. The table <em>
-        <a href="#statistical_types">Statistical Types</a>
-      </em> shows what aggregation types are available for which types.
+      the <em>average</em> outside temperature for the month. Possible
+      aggregation types are given in <a href="#aggregation_types"><i>Appendix: Aggregation types</i></a>. 
     </p>
     <p class="indent">
       <span class="code">optional_unit_conversion</span> is an optional unit
@@ -786,6 +784,8 @@ $month.outTemp.max</pre>
       formatting tag that controls how the value will appear. See the section <em><a
         href="#formatting_options">Formatting Options</a></em> below.
     </p>
+
+
 
     <h3 id="unit_conversion_options">Unit conversion options</h3>
       <p>The tag <span class="code"><em>optional_unit_conversion</em></span>
@@ -4285,7 +4285,134 @@ Options:
         </tbody>
       </table>
 
-      <h1 id="units">Appendix: Units</h1>
+    <h1 id="aggregation_types">Appendix: Aggregation types</h1>
+
+    <table class="indent">
+      <caption>
+        <em>Aggregation types</em>
+      </caption>
+      <tbody>
+        <tr class="first_row">
+          <td><em>Aggregation type</em></td>
+          <td>Meaning</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'avg'</td>
+          <td>The average value in the aggregation period.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'sum'</td>
+          <td>The sum of values in the aggregation period.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'count'</td>
+          <td>The number of non-null values in the aggregation period.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'min'</td>
+          <td>The minimum value in the aggregation period.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'mintime'</td>
+          <td>The time of the minimum value.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'max'</td>
+          <td>The maximum value in the aggregation period.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'maxtime'</td>
+          <td>The time of the maximum value.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'maxmin'</td>
+          <td>The maximum daily minimum in the aggregation period. Aggregation period
+          must be one day or longer.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'maxmintime'</td>
+          <td>The time of the maximum daily minimum.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'minmax'</td>
+          <td>The minimum daily maximum in the aggregation period. Aggregation period
+          must be one day or longer.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'minmaxtime'</td>
+          <td>The time of the minimum daily maximum.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'maxsum'</td>
+          <td>The maximum daily sum in the aggregation period. Aggregation
+          period must be one day or longer.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'maxsumtime'</td>
+          <td>The time of the maximum daily sum.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'meanmin'</td>
+          <td>The average daily minimum in the aggregation period. Aggregation
+          period must be one day or longer.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'meanmax'</td>
+          <td>The average daily maximum in the aggregation period. Aggregation
+          period must be one day or longer.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'gustdir'</td>
+          <td>The direction of the max gust in the aggregation period.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'last'</td>
+          <td>The last value in the aggregation period.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'lasttime'</td>
+          <td>The time of the last value in the aggregation period.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'max_ge(val)'</td>
+          <td>The number of days where the maximum value is greater than or
+            equal to <em>val</em>. Aggregation period must be one day or longer.
+          </td>
+        </tr>
+        <tr>
+          <td class="first_col code">'max_le(val)'</td>
+          <td>The number of days where the maximum value is less than or
+            equal to <em>val</em>. Aggregation period must be one day or longer.
+          </td>
+        </tr>
+        <tr>
+          <td class="first_col code">'min_le(val)'</td>
+          <td>The number of days where the minimum value is less than or
+            equal to <em>val</em>. Aggregation period must be one day or longer.
+          </td>
+        </tr>
+        <tr>
+          <td class="first_col code">'sum_ge(val)'</td>
+          <td>The number of days where the sum of value is greater than or
+            equal to <em>val</em>. Aggregation period must be one day or longer.
+          </td>
+        </tr>
+        <tr>
+          <td class="first_col code">'rms'</td>
+          <td>The root mean square value in the aggregation period.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'vecavg'</td>
+          <td>The vector average magnitude in the aggregation period.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">'vecdir'</td>
+          <td>The direction of the average vector.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h1 id="units">Appendix: Units</h1>
       <p>Weewx offers three different <i>unit systems</i>:</p>
 
     <table class="indent" style="width: 80%">

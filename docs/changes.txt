@@ -17,8 +17,15 @@ Allow other databases to be used in images.
 
 The archive interval can now change within a database without consequences.
 
-Introduced a new tag $last, which uses the last available timestamp
+Introduced a new tag $latest, which uses the last available timestamp
 in a data binding (which may not be the same as the "current" timestamp).
+
+Introduced a new aggregation type ".last", which returns the last
+value in an aggregation interval. E.g., $week.outTemp.last would
+return the last temperature seen in the week.
+
+Introduced a new aggregation type ".lasttime" which returns
+the time of the above.
 
 Total rewrite of how devices are configured. A single utility 
 wee_config_device replaces each of the device-specific
