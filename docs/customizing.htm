@@ -140,7 +140,7 @@ Version: 3.0.0 alpha
         </tbody>
       </table>
       <p>It is easy to extend old services or to add new ones. The source
-        distribution includes an example new service called "<span class="code">MyAlarm</span>,"
+        distribution includes an example new service called <span class="code">MyAlarm</span>,
         which sends an email when an arbitrary expression evaluates <span class="code">True</span>.
         These advanced topics are covered later in the section <em><a href="#service_engine">Customizing
             the weewx service engine</a></em>. </p>
@@ -559,8 +559,8 @@ Version: 3.0.0 alpha
         various observation types. For example, suppose your weather console is
         actually located in a barn, not indoors, and you want the plot for the
         temperature at the console to be labeled "Barn Temperature," rather than
-        the default "Inside Temperature." This can be done by changing the "<span
-          class="code">inTemp</span>" option located in section <span class="code">[Labels][[Generic]]</span>
+        the default "Inside Temperature." This can be done by changing the <span
+          class="code">inTemp</span> option located in section <span class="code">[Labels][[Generic]]</span>
         from the default </p>
       <pre class="tty">[Units]
     [[Generic]]
@@ -800,7 +800,7 @@ $month.outTemp.max</pre>
       <pre class="tty">Today's average pressure=$day.barometer.avg </pre>
       <p>would normally give a result such as </p>
       <p class="example_output">Today's average pressure=30.05 inHg </p>
-      <p>However, if you add "<span class="code">mbar</span>" to the end, </p>
+      <p>However, if you add <span class="code">mbar</span> to the end, </p>
       <pre class="tty">$day.barometer.avg.mbar </pre>
       <p>then the results will be in millibars: </p>
       <p class="example_output">Today's average pressure=1017.5 mbar </p>
@@ -1180,7 +1180,7 @@ or in foobar units: $day.barometer.min.foobar
           class="code">$year</span>, <span class="code">$rainyear</span>, then
         the aggregation period can be iterated over by day or month. These are
         the only two iteration periods available as of this version. </p>
-      <p>This example uses a Cheetah '<span class="code">for</span>' loop to
+      <p>This example uses a Cheetah <span class="code">for</span> loop to
         iterate over all months in a year, printing out each month's min and max
         temperature (the iteration loop is <span class="highlight">&nbsp;highlighted&nbsp;</span>): </p>
       <pre class="tty">&lt;html&gt;
@@ -1258,7 +1258,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       <p>We will cover each of these separately.</p>
       <h4>Calendar events</h4>
       <p>"Calendar events" do not require a heavenly body. They cover things
-        such as "<span class="code">next_solstice</span>", or "<span class="code">next_first_quarter_moon</span>".
+        such as <span class="code">next_solstice</span>, or <span class="code">next_first_quarter_moon</span>.
         The syntax here is </p>
       <pre class="tty">$almanac.next_solstice</pre>
       <p>or </p>
@@ -1435,7 +1435,7 @@ Sunrise, sunset: 06:51 19:30</pre>
       The option <span class="code">x_label_format</span> gives a <a
         href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a>
       type format for the x-axis. In this example, it will only show days
-      (format option "<span class="code">%d</span>"). The <span class="code">bottom_label_format</span>
+      (format option <span class="code">%d</span>). The <span class="code">bottom_label_format</span>
       is the format used to time stamp the image at the bottom. In this example,
       it will show the time as something like<span class="code">10/25/09
         15:35</span>. A plot will cover a nominal 30 days, and all items included in it
@@ -1471,7 +1471,7 @@ Sunrise, sunset: 06:51 19:30</pre>
         class="code">min_interval</span>), where <span class="code">ylow</span>
       and <span class="code">yhigh</span> are the minimum and maximum y-axis
       values, respectively, and <span class="code">min_interval</span> is the
-      minimum tick interval. If set to '<span class="code">None</span>', the
+      minimum tick interval. If set to <span class="code">None</span>, the
       corresponding value will be automatically chosen. So, in this example, the
       setting
     </p>
@@ -1483,16 +1483,16 @@ Sunrise, sunset: 06:51 19:30</pre>
     </p>
     <p>
       Continuing on with the example above, there will be only one plot "line"
-      (it will actually be a series of bars) and it will have logical name "<span
-        class="code">rain</span>". Because we have not said otherwise, the SQL
+      (it will actually be a series of bars) and it will have logical name <span
+        class="code">rain</span>. Because we have not said otherwise, the SQL
       data type to be used for this line will be the same as its logical name,
       that is, <span class="code">rain</span>, but this can be overridden (see
       below). The aggregation type will be summing (overriding the averaging
       specified in sub-section <span class="code">[[month_images]]</span>), so
       you get the total rain over the aggregate period (rather than the average)
       over an aggregation interval of 86,400 seconds (one day). The plot line
-      will be titled with the indicated label ('<span class="code">Rain
-        (daily avg)</span>'). The result of all this is the following plot:
+      will be titled with the indicated label of 'Rain (daily total)'.
+      The result of all this is the following plot:
     </p>
     <p>
     <img src="images/sample_monthrain.png" alt="Sample monthly rain plot" />
@@ -1528,7 +1528,7 @@ Sunrise, sunset: 06:51 19:30</pre>
 
       <h3 id="including_same_sql_type_2x">Including the same SQL type more than once in a plot</h3>
       <p>Another example. Say you want a plot of the day's temperature, overlaid
-        with hourly averages. Here, you are using the same data type ('<span class="code">outTemp</span>')
+        with hourly averages. Here, you are using the same data type (<span class="code">outTemp</span>)
         for both plot lines, the first with averages, the second without. If you
         do the obvious it won't work: </p>
       <pre class="tty">## WRONG ##
@@ -1537,7 +1537,7 @@ Sunrise, sunset: 06:51 19:30</pre>
         aggregate_type = avg
         aggregate_interval = 3600
     <span style="text-decoration:line-through; color:red">[[[[outTemp]]]]</span>  # OOPS! The same section name appears more than once!</pre>
-      <p>The option parser does not allow the same section name ('<span class="code">outTemp</span>'
+      <p>The option parser does not allow the same section name (<span class="code">outTemp</span>
         in this case) to appear more than once at a given level in the
         configuration file, so an error will be declared (technical reason:
         formally, the sections are an unordered dictionary). If you wish for the
@@ -1552,8 +1552,8 @@ Sunrise, sunset: 06:51 19:30</pre>
         aggregate_interval = 3600
         label = Avg. Temp.
     [[[[outTemp]]]]</pre>
-      <p>Here, the first logical line has been given the name "<span class="code">a_logical_name</span>"
-        to distinguish it from the second line "<span class="code">outTemp</span>".
+      <p>Here, the first logical line has been given the name <span class="code">a_logical_name</span>
+        to distinguish it from the second line <span class="code">outTemp</span>.
         We have specified that the first line will use data type <span class="code">
           outTemp</span> and that it will use averaging over a one hour period.
         The second also uses <span class="code">outTemp</span>, but will not
@@ -1584,12 +1584,12 @@ Sunrise, sunset: 06:51 19:30</pre>
       <h3>Progressive vector plots</h3>
       <p><span class="code">Weewx</span> can produce progressive vector plots as
         well as the more conventional x-y plots. To produce these, use plot type
-        '<span class="code">vector</span>'. You need a vector type to produce
-        this kind of plot. There are two: '<span class="code">windvec</span>',
-        and '<span class="code">windgustvec</span>'. While they do not actually
+        <span class="code">vector</span>. You need a vector type to produce
+        this kind of plot. There are two: <span class="code">windvec</span>,
+        and <span class="code">windgustvec</span>. While they do not actually
         appear in the SQL database, <span class="code">weewx</span> understands
-        that they represent special vector-types. The first, '<span class="code">windvec</span>',
-        represents the average wind in an archive period, the second, '<span class="code">windgustvec</span>'
+        that they represent special vector-types. The first, <span class="code">windvec</span>,
+        represents the average wind in an archive period, the second, <span class="code">windgustvec</span>
         the max wind in an archive period. Here's how to produce a progressive
         vector for one week that shows the hourly biggest wind gusts, along with
         hourly averages: </p>
@@ -1768,15 +1768,15 @@ Sunrise, sunset: 06:51 19:30</pre>
       This will produce an image with name <span class="code">daycompare.png</span>,
       with two plot lines. The first will be of the temperature from the
       Vantage. It uses the default binding, <span class="code">wx_binding</span>,
-      and will be labeled <span class="code">"Vantage inTemp"</span>. The second
+      and will be labeled <span class="code">Vantage inTemp</span>. The second
       explicitly uses the <span class="code">wmr100_binding</span>. Because it
       uses the same variable name (<span class="code">inTemp</span>) as the
       first line, we had to explicitly specify it using option <span
         class="code">data_type</span>, in order to avoid using the same
       sub-section name twice (see the section <a
         href="#including_same_sql_type_2x"><i>Including the same SQL
-          type more than once in a plot</i></a> for details). It will be labeled "<span
-        class="code">WMR100 inTemp</span>". The results look like this:
+          type more than once in a plot</i></a> for details). It will be labeled <span
+        class="code">WMR100 inTemp</span>. The results look like this:
     </p>
     <img src='images/daycompare.png' />
 
@@ -2086,8 +2086,8 @@ class MyXSearch(SearchList):                                                 # 1
             class="code">self.generator.formatter</span>.
           </li>
           <li>The fourth should be an instance of <span class="code">weewx.units.Converter</span>,
-            which contains information about the target units (<em>e.g.</em>, "<span
-            class="code">degree_C</span>") that are to be used. Again, we just
+            which contains information about the target units (<em>e.g.</em>, <span
+            class="code">degree_C</span>) that are to be used. Again, we just
             pass in the instance set up by the generator, <span class="code">self.generator.converter</span>.
           </li>
         </ul>
@@ -2112,8 +2112,8 @@ class MyXSearch(SearchList):                                                 # 1
           <span class="code">TimespanBinder</span> object. It's the same as in
           step #4, except we use our new timespan object.</li>
         <li>Create a small dictionary with two keys,
-          '<span class="code">alltime</span>', and
-          '<span class="code">seven_day</span>'.</li>
+          <span class="code">alltime</span>, and
+          <span class="code">seven_day</span>.</li>
         <li>Return the dictionary in a list</li>
       </ol>
       <p>The final step that we need to do is to tell the template engine where to find our 
@@ -2251,75 +2251,77 @@ class MyXSearch(SearchList):                                                 # 1
       <h3 class="config_section">[[Groups]]</h3>
       <p>This sub-section lists all the <em>Unit Groups</em> and specifies
         which unit system is to be used for each one of them. </p>
-      <p>As there are many different observational measurement types (such as '<span
-          class="code">outTemp</span>', '<span class="code">barometer</span>',
+      <p>As there are many different observational measurement types (such as
+        <span class="code">outTemp</span>, <span class="code">barometer</span>,
         etc.) used in <span class="code">weewx</span> (more than 50 at last
         count), it would be tedious, not to say possibly inconsistent, to
         specify a different measurement system for each one of them. At the
         other extreme, requiring all of them to be "U.S. Customary" or "Metric"
         seems overly restrictive. <span class="code">Weewx</span> has taken a
         middle route and divided all the different observation types into 12
-        different <em>unit groups</em>. A unit group is something like "<span
-          class="code">group_temperature</span>." It represents the measurement
+        different <em>unit groups</em>. A unit group is something like <span
+          class="code">group_temperature</span>. It represents the measurement
         system to be used by all observation types that are measured in
-        temperature, such as inside temperature (type '<span class="code">inTemp</span>'),
-        outside temperature ('<span class="code">outTemp</span>'), dewpoint ('<span
-          class="code">dewpoint</span>'), wind chill ('<span class="code">windchill</span>'),
+        temperature, such as inside temperature
+        (type <span class="code">inTemp</span>),
+        outside temperature (<span class="code">outTemp</span>),
+        dewpoint (<span class="code">dewpoint</span>),
+        wind chill (<span class="code">windchill</span>),
         and so on. If you decide that you want unit group <span class="code">group_temperature</span>
-        to be measured in "<span class="code">degree_C</span>" then you are
+        to be measured in <span class="code">degree_C</span> then you are
         saying <em>all</em> members of its group will be reported in degrees
         Celsius. </p>
       <p>Note that the unit system is always specified in the singular. That is,
-        specify "<span class="code">degree_C</span>" or "<span class="code">foot</span>",
-        not "<span class="code">degrees_C</span>" or "<span class="code">feet</span>".
+        specify <span class="code">degree_C</span> or <span class="code">foot</span>,
+        not <span class="code">degrees_C</span> or <span class="code">feet</span>.
         See the Appendix <em> <a href="#units">Units</a></em> for more
         information, including a concise summary of the groups, their members,
         and which options can be used for each group. </p>
       <p class="config_important"><a class="config_option" id="group_altitude">group_altitude</a>
       </p>
-      <p>Which measurement unit to be used for altitude. Possible options are '<span
-          class="code">foot</span>' or '<span class="code">meter</span>'. </p>
+      <p>Which measurement unit to be used for altitude. Possible options are
+        <span class="code">foot</span> or <span class="code">meter</span>.</p>
       <p class="config_option">group_direction </p>
-      <p>Which measurement unit to be used for direction. The only option is "<span
-          class="code">degree_compass</span>". </p>
+      <p>Which measurement unit to be used for direction. The only option is <span
+          class="code">degree_compass</span>. </p>
       <p class="config_option">group_moisture </p>
-      <p>The measurement unit to be used for soil moisture. The only option is "<span
-          class="code">centibar</span>." </p>
+      <p>The measurement unit to be used for soil moisture. The only option is <span
+          class="code">centibar</span>. </p>
       <p class="config_option">group_percent </p>
-      <p>The measurement unit to be used for percentages. The only option is "<span
-          class="code">percent</span>". </p>
+      <p>The measurement unit to be used for percentages. The only option is <span
+          class="code">percent</span>. </p>
       <p class="config_important">group_pressure </p>
       <p>The measurement unit to be used for pressure. Possible options are one
-        of "<span class="code">inHg</span>" (inches of mercury), "<span class="code">mbar</span>",
-        or "<span class="code">hPa</span>." </p>
+        of <span class="code">inHg</span> (inches of mercury), <span class="code">mbar</span>,
+        or <span class="code">hPa</span>. </p>
       <p class="config_option">group_radiation </p>
-      <p>The measurement unit to be used for radiation. The only option is "<span
-          class="code">watt_per_meter_squared</span>." </p>
+      <p>The measurement unit to be used for radiation. The only option is <span
+          class="code">watt_per_meter_squared</span>. </p>
       <p class="config_important">group_rain </p>
-      <p>The measurement unit to be used for precipitation. Options are "<span class="code">inch</span>",
-        "<span class="code">cm</span>," or "<span class="code">mm</span>." </p>
+      <p>The measurement unit to be used for precipitation. Options are <span class="code">inch</span>,
+        <span class="code">cm</span>, or <span class="code">mm</span>. </p>
       <p class="config_important">group_rainrate </p>
       <p>The measurement unit to be used for rate of precipitation. Possible
-        options are one of "<span class="code">inch_per_hour</span>", "<span class="code">cm_per_hour</span>",
-        or "<span class="code">mm_per_hour</span>". </p>
+        options are one of <span class="code">inch_per_hour</span>, <span class="code">cm_per_hour</span>,
+        or <span class="code">mm_per_hour</span>. </p>
       <p class="config_important">group_speed </p>
       <p>The measurement unit to be used for wind speeds. Possible options are
-        one of "<span class="code">mile_per_hour</span>", "<span class="code">km_per_hour</span>",
-        "<span class="code">knot</span>", or "<span class="code">meter_per_second</span>."
+        one of <span class="code">mile_per_hour</span>, <span class="code">km_per_hour</span>,
+        <span class="code">knot</span>, or <span class="code">meter_per_second</span>.
         </p>
       <p class="config_important">group_speed2 </p>
       <p>This group is similar to <span class="code">group_speed</span>, but is
         used for calculated wind speeds which typically have a slightly higher
-        resolution. Possible options are one "<span class="code">mile_per_hour2</span>",
-        "<span class="code">km_per_hour2</span>", "<span class="code">knot2</span>",
-        or "<span class="code">meter_per_second2</span>". </p>
+        resolution. Possible options are one <span class="code">mile_per_hour2</span>,
+        <span class="code">km_per_hour2</span>, <span class="code">knot2</span>,
+        or <span class="code">meter_per_second2</span>. </p>
       <p><a class="config_important" id="group_temperature">group_temperature</a>
       </p>
-      <p>The measurement unit to be used for temperatures. Options are "<span class="code">degree_F</span>"
-        or "<span class="code">degree_C</span>." </p>
+      <p>The measurement unit to be used for temperatures. Options are <span class="code">degree_F</span>
+        or <span class="code">degree_C</span>. </p>
       <p class="config_option">group_volt </p>
-      <p>The measurement unit to be used for voltages. The only option is "<span
-          class="code">volt</span>." </p>
+      <p>The measurement unit to be used for voltages. The only option is <span
+          class="code">volt</span>. </p>
       <h3 class="config_section" id="Units_StringFormats">[[StringFormats]]</h3>
       <p>This sub-section is used to specify what string format is to be used
         for each unit when a quantity needs to be converted to a string.
@@ -2333,7 +2335,7 @@ inch     = %.2f</pre>
           formatting codes are those used by Python</a>, and are very similar
         to C's <span class="code">sprintf()</span> codes. </p>
       <p>You can also specify what string to use for an invalid or unavailable
-        measurement (value '<span class="code">None</span>'). For example, </p>
+        measurement (value <span class="code">None</span>). For example, </p>
       <pre class="tty">NONE = " N/A "</pre>
 
       <h3 class="config_section" id="Units_Labels">[[Labels]]</h3>
@@ -2356,7 +2358,7 @@ hour   = " hour",   " hours"
 minute = " minute", " minutes"
 second = " second", " seconds"</pre>
 
-      <p>This is particularly useful when <a href="#l11n_unit_labels">localizing the weewx and server "uptimes</a>."</p>
+      <p>This is particularly useful when <a href="#l11n_unit_labels">localizing the weewx and server uptimes</a>.</p>
 
       <h3 class="config_section" id="Units_TimeFormats">[[TimeFormats]]</h3>
       <p>This sub-section is used for time labels. It uses <a href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a>
@@ -2430,7 +2432,7 @@ cooling_base = 20.0, degree_C</pre>
       <p>This section sets the various labels to use. </p>
       <p class="config_option">hemispheres </p>
       <p>Comma separated list for the labels to be used for the four
-        hemispheres. The default is "<span class="code">N, S, E, W</span>".</p>
+        hemispheres. The default is <span class="code">N, S, E, W</span>.</p>
                 <p class="config_option">latlon_formats</p>
                 <p>Comma separated list for the formatting to be used when converting 
                 latitude and longitude to strings. There should be three elements:</p>
@@ -2455,9 +2457,9 @@ outTemp = Outside Temperature</pre>
         only one entry </p>
       <p class="config_option">moon_phases </p>
       <p>This option is a comma separated list of labels to be used for the
-        eight phases of the moon. Default is "<span class="code">New, Waxing
+        eight phases of the moon. Default is <span class="code">New, Waxing
           crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last
-          quarter, Waning crescent</span>". </p>
+          quarter, Waning crescent</span>. </p>
 
       <h2 class="config_section">[CheetahGenerator]</h2>
       <p>This section is used by generator
@@ -2700,17 +2702,17 @@ outTemp = Outside Temperature</pre>
     <p class="config_option">daynight_day_color</p>
     <p>
       The color to be used for the daylight band. Optional. Default is <span
-        class="code">'0xffffff'</span>.
+        class="code">0xffffff</span>.
     </p>
     <p class="config_option">daynight_night_color</p>
     <p>
       The color to be used for the nighttime band. Optional. Default is <span
-        class="code">'0xf0f0f0'</span>, a dark gray.
+        class="code">0xf0f0f0</span>, a dark gray.
     </p>
     <p class="config_option">daynight_edge_color</p>
     <p>
       The color to be used in the transition zone between night and day.
-      Optional. Default is <span class="code">'0xefefef'</span>, a mid-gray.
+      Optional. Default is <span class="code">0xefefef</span>, a mid-gray.
     </p>
 
 
@@ -2782,7 +2784,7 @@ outTemp = Outside Temperature</pre>
       <span class="code">min_interval</span>), where <span class="code">ylow</span>
       and <span class="code">yhigh</span> are the minimum and maximum y-axis
       values, respectively, and <span class="code">min_interval</span> is the
-      minimum tick interval. If set to '<span class="code">None</span>', the
+      minimum tick interval. If set to <span class="code">None</span>, the
       corresponding value will be automatically chosen. Optional. Default is <span
         class="code">None, None, None</span>. (Choose the y-axis minimum,
       maximum, and minimum increment automatically.)
@@ -2833,8 +2835,8 @@ outTemp = Outside Temperature</pre>
       the colors wrap around to the beginning of the list. NB: individual line
       color can be overridden by using option <span class="code">color</span>.
       Optional. In the case of bar charts, this is the color
-      of the outline of the bar. Default is <span class="code">'0xff0000', '0x00ff00',
-        '0x0000ff'</span>.
+      of the outline of the bar. Default is
+      <span class="code">0xff0000, 0x00ff00, 0x0000ff</span>.
     </p>
     <p class="config_option">chart_fill_colors</p>
     <p>
@@ -2848,7 +2850,7 @@ outTemp = Outside Temperature</pre>
       these widths. If the number of lines exceeds the length of the list, then
       the widths wrap around to the beginning of the list. NB: individual line
       widths can be overridden by using option <span class="code">width</span>.
-      Optional.  Default is <span class="code">'1', '1', '1'</span>.
+      Optional.  Default is <span class="code">1, 1, 1</span>.
     </p>
 
 
@@ -2886,13 +2888,13 @@ outTemp = Outside Temperature</pre>
     <p class="config_option">marker_type</p>
     <p>
       The type of marker to be used to marke each data point. Choices are <span
-        class="code">'cross'</span>, <span class="code">'x'</span>, <span
-        class="code">'circle'</span>, <span class="code">'box'</span>, or <span
-        class="code">'none'</span>. Optional. Default is <span class="code">'none'</span>.
+        class="code">cross</span>, <span class="code">x</span>, <span
+        class="code">circle</span>, <span class="code">box</span>, or <span
+        class="code">none</span>. Optional. Default is <span class="code">none</span>.
     </p>
     <p class="config_option">marker_size</p>
     <p>
-      The size of the marker. Optional. Default is <span class="code">'8'</span>.
+      The size of the marker. Optional. Default is <span class="code">8</span>.
     </p>
     <p class="config_option">line_gap_fraction</p>
     <p>
@@ -2981,8 +2983,8 @@ outTemp = Outside Temperature</pre>
 
       <h2>Translate the templates</h2>
       <p>First, you will need to go through the templates and translate to your
-        target language. Obvious text strings such as "<span class="code">Current
-          Weather Conditions</span>" will need to be translated.</p>
+        target language. Obvious text strings such as <span class="code">"Current
+          Weather Conditions"</span> will need to be translated.</p>
 
       <h2>Modify <span class="code">skin.conf</span> to reflect local conventions</h2>
       <p>Next, you will need to go through <span class="code">skin.conf</span>
@@ -3089,8 +3091,8 @@ class MyPrint(StdPrint):
             "TEMP=", packet.get('outTemp', 'N/A')</pre>
       <p>This service substitutes a new implementation for the member function <span
           class="code">new_loop_packet</span>. This implementation prints out
-        the time, then the barometer reading (or '<span class="code">N/A</span>'
-        if it is not available) and the outside temperature (or '<span class="code">N/A</span>').</p>
+        the time, then the barometer reading (or <span class="code">N/A</span>
+        if it is not available) and the outside temperature (or <span class="code">N/A</span>).</p>
       <p>You then need to specify that your print service class should be loaded
         instead of the default <span class="code">StdPrint</span> service. This
         is done by substituting your service name for <span class="code">StdPrint</span>
@@ -3236,7 +3238,7 @@ class MyAlarm(StdService):
     from   = me@mydomain.com
     subject = "Alarm message from weewx!"</pre>
       <p>There are two important points to be noted in this example, each marked
-        with a "<span class="code">NOTE</span>" flag in the code.</p>
+        with a <span class="code">NOTE</span> flag in the code.</p>
     <ol>
       <li>Here is where the binding happens between an event, <span
         class="code">weewx.NEW_ARCHIVE_RECORD</span> in this example, and a
@@ -3248,8 +3250,8 @@ class MyAlarm(StdService):
       </li>
       <li>This is where the test is done for whether or not to sound the
         alarm. The <span class="code">[Alarm]</span> configuration options
-        specify that the alarm be sounded when "<span class="code">outTemp
-          &lt; 40.0</span>" evaluates <span class="code">True</span>, that is when the
+        specify that the alarm be sounded when <span class="code">outTemp
+          &lt; 40.0</span> evaluates <span class="code">True</span>, that is when the
         outside temperature is below 40.0 degrees. Any valid Python expression
         can be used, although the only variables available are those in the
         current archive record.
@@ -3271,7 +3273,7 @@ class MyAlarm(StdService):
       <p>Many SMTP hosts require user login. If this is the case, the user and
         password are specified with options <span class="code">smtp_user</span>
         and <span class="code">smtp_password</span>, respectively. </p>
-      <p>The last two options, "<span class="code">from</span>" and "<span class="code">subject</span>"
+      <p>The last two options, <span class="code">from</span> and <span class="code">subject</span>
         are optional. If not supplied, <span class="code">weewx</span> will
         supply something sensible. Note, however, that some mailers require a
         valid "from" email address and the one <span class="code">weewx</span>
@@ -3370,7 +3372,7 @@ class AddElectricity(StdService):
         (code that downloads the consumption data from the connection to the meter)
 
         event.record['electricity'] = retrieved_value</pre>
-      <p>This adds a new key '<span class="code">electricity</span>' to the
+      <p>This adds a new key <span class="code">electricity</span> to the
         record dictionary and sets it equal to some value. As an aside, if you
         do something like this, you would want to make sure that the code to
         retrieve the current electrical consumption does not delay very long so
@@ -3399,7 +3401,7 @@ class AddElectricity(StdService):
 
     <h3 id="add_archive_type">Adding a new type to the archive database</h3>
     <p>
-      So, now you have created a new observation type, '<span class="code">electricity</span>'.
+      So, now you have created a new observation type, <span class="code">electricity</span>.
       Trouble is, there is no corresponding type in the schema of the SQL
       database and, therefore, <span class="code">weewx</span> won't know
       where to store it. How would you add such
@@ -3465,9 +3467,9 @@ schema_with_electricity = schemas.wview.wview + [('electricity', 'REAL')]</pre>
         <p>
           <strong>Check permissions.</strong> <span class="code">wee_config_database</span> will
           create a new database with the same name as the old, except with the
-          suffix '<span class="code">_new</span>' attached to the end. Make sure
+          suffix <span class="code">_new</span> attached to the end. Make sure
           you have the necessary permissions to create it. In particular, if you
-          are using MySQL, you will need '<span class="code">CREATE</span>'
+          are using MySQL, you will need <span class="code">CREATE</span>
           privileges:
         </p>
     <pre class="tty">mysql&gt; GRANT select, update, create, delete, insert ON weewx_new.* TO weewx@localhost;</pre>
@@ -3623,9 +3625,9 @@ mv weewx.sdb_new weewx.sdb</pre>
         <p>
           <strong>Check permissions.</strong> The reconfiguration utility will
           create a new database with the same name as the old, except with the
-          suffix '<span class="code">_new</span>' attached to the end. Make sure
+          suffix <span class="code">_new</span> attached to the end. Make sure
           you have the necessary permissions to do this. In particular, if you
-          are using MySQL, you will need '<span class="code">CREATE</span>'
+          are using MySQL, you will need <span class="code">CREATE</span>
           privileges.
         </p>
       </li>
@@ -3675,7 +3677,7 @@ mv weewx.sdb_new weewx.sdb</pre>
         and a reference to the weewx engine.</p>
       <h3><span class="code">hardware_name</span></h3>
       <p>Return a string with a short nickname for the hardware, such
-        as "<span class="code">ACME X90</span>"</p>
+        as <span class="code">"ACME X90"</span></p>
       <h3><span class="code">genLoopPackets</span></h3>
       <p>This should be
         a <a href="https://wiki.python.org/moin/Generators">generator
@@ -3712,17 +3714,17 @@ mv weewx.sdb_new weewx.sdb</pre>
       <p>A couple of observation types are tricky. In particular, rain.
         Generally, <span class="code">weewx</span> expects to see a packet with
         the amount of rain that fell in that packet period included as
-        observation '<span class="code">rain</span>'. It then sums up all the
+        observation <span class="code">rain</span>. It then sums up all the
         values to get the total rainfall and emits that in the archive record.
         If your hardware does not provide this value, you might have to infer
         it from changes in whatever value it provides, for example changes in
         the daily or monthly rainfall. I know this is not the best solution,
         but it is the most general solution. Any alternatives are welcome!</p>
       <p>Wind is another tricky one. It is actually broken up into four
-        different observations: '<span class="code">windSpeed</span>',
-        '<span class="code">windDir</span>',
-        '<span class="code">windGust</span>', and
-        '<span class="code">windGustDir</span>'.
+        different observations: <span class="code">windSpeed</span>,
+        <span class="code">windDir</span>,
+        <span class="code">windGust</span>, and
+        <span class="code">windGustDir</span>.
         Supply as many as you can. The directions should be compass directions
         in degrees (0=North, 90=East, etc.).</p>
       <p>Be careful when reporting pressure. There are three observations
@@ -3791,7 +3793,7 @@ mv weewx.sdb_new weewx.sdb</pre>
       <h2>Define the configuration</h2>
       <p>You then include a new section in the configuration file <span class="code">weewx.conf</span>
         that includes any options your driver needs. It should also include an
-        entry '<span class="code">driver</span>' that points to where your
+        entry <span class="code">driver</span> that points to where your
         driver can be found. Set option <span class="code">station_type</span>
         to your new section type and your driver will be loaded.</p>
       <h2>Examples</h2>
@@ -4293,120 +4295,120 @@ Options:
       </caption>
       <tbody>
         <tr class="first_row">
-          <td><em>Aggregation type</em></td>
+          <td>Aggregation type</td>
           <td>Meaning</td>
         </tr>
         <tr>
-          <td class="first_col code">'avg'</td>
+          <td class="first_col code">avg</td>
           <td>The average value in the aggregation period.</td>
         </tr>
         <tr>
-          <td class="first_col code">'sum'</td>
+          <td class="first_col code">sum</td>
           <td>The sum of values in the aggregation period.</td>
         </tr>
         <tr>
-          <td class="first_col code">'count'</td>
+          <td class="first_col code">count</td>
           <td>The number of non-null values in the aggregation period.</td>
         </tr>
         <tr>
-          <td class="first_col code">'min'</td>
+          <td class="first_col code">min</td>
           <td>The minimum value in the aggregation period.</td>
         </tr>
         <tr>
-          <td class="first_col code">'mintime'</td>
+          <td class="first_col code">mintime</td>
           <td>The time of the minimum value.</td>
         </tr>
         <tr>
-          <td class="first_col code">'max'</td>
+          <td class="first_col code">max</td>
           <td>The maximum value in the aggregation period.</td>
         </tr>
         <tr>
-          <td class="first_col code">'maxtime'</td>
+          <td class="first_col code">maxtime</td>
           <td>The time of the maximum value.</td>
         </tr>
         <tr>
-          <td class="first_col code">'maxmin'</td>
+          <td class="first_col code">maxmin</td>
           <td>The maximum daily minimum in the aggregation period. Aggregation period
           must be one day or longer.</td>
         </tr>
         <tr>
-          <td class="first_col code">'maxmintime'</td>
+          <td class="first_col code">maxmintime</td>
           <td>The time of the maximum daily minimum.</td>
         </tr>
         <tr>
-          <td class="first_col code">'minmax'</td>
+          <td class="first_col code">minmax</td>
           <td>The minimum daily maximum in the aggregation period. Aggregation period
           must be one day or longer.</td>
         </tr>
         <tr>
-          <td class="first_col code">'minmaxtime'</td>
+          <td class="first_col code">minmaxtime</td>
           <td>The time of the minimum daily maximum.</td>
         </tr>
         <tr>
-          <td class="first_col code">'maxsum'</td>
+          <td class="first_col code">maxsum</td>
           <td>The maximum daily sum in the aggregation period. Aggregation
           period must be one day or longer.</td>
         </tr>
         <tr>
-          <td class="first_col code">'maxsumtime'</td>
+          <td class="first_col code">maxsumtime</td>
           <td>The time of the maximum daily sum.</td>
         </tr>
         <tr>
-          <td class="first_col code">'meanmin'</td>
+          <td class="first_col code">meanmin</td>
           <td>The average daily minimum in the aggregation period. Aggregation
           period must be one day or longer.</td>
         </tr>
         <tr>
-          <td class="first_col code">'meanmax'</td>
+          <td class="first_col code">meanmax</td>
           <td>The average daily maximum in the aggregation period. Aggregation
           period must be one day or longer.</td>
         </tr>
         <tr>
-          <td class="first_col code">'gustdir'</td>
+          <td class="first_col code">gustdir</td>
           <td>The direction of the max gust in the aggregation period.</td>
         </tr>
         <tr>
-          <td class="first_col code">'last'</td>
+          <td class="first_col code">last</td>
           <td>The last value in the aggregation period.</td>
         </tr>
         <tr>
-          <td class="first_col code">'lasttime'</td>
+          <td class="first_col code">lasttime</td>
           <td>The time of the last value in the aggregation period.</td>
         </tr>
         <tr>
-          <td class="first_col code">'max_ge(val)'</td>
+          <td class="first_col code">max_ge(val)</td>
           <td>The number of days where the maximum value is greater than or
             equal to <em>val</em>. Aggregation period must be one day or longer.
           </td>
         </tr>
         <tr>
-          <td class="first_col code">'max_le(val)'</td>
+          <td class="first_col code">max_le(val)</td>
           <td>The number of days where the maximum value is less than or
             equal to <em>val</em>. Aggregation period must be one day or longer.
           </td>
         </tr>
         <tr>
-          <td class="first_col code">'min_le(val)'</td>
+          <td class="first_col code">min_le(val)</td>
           <td>The number of days where the minimum value is less than or
             equal to <em>val</em>. Aggregation period must be one day or longer.
           </td>
         </tr>
         <tr>
-          <td class="first_col code">'sum_ge(val)'</td>
+          <td class="first_col code">sum_ge(val)</td>
           <td>The number of days where the sum of value is greater than or
             equal to <em>val</em>. Aggregation period must be one day or longer.
           </td>
         </tr>
         <tr>
-          <td class="first_col code">'rms'</td>
+          <td class="first_col code">rms</td>
           <td>The root mean square value in the aggregation period.</td>
         </tr>
         <tr>
-          <td class="first_col code">'vecavg'</td>
+          <td class="first_col code">vecavg</td>
           <td>The vector average magnitude in the aggregation period.</td>
         </tr>
         <tr>
-          <td class="first_col code">'vecdir'</td>
+          <td class="first_col code">vecdir</td>
           <td>The direction of the average vector.</td>
         </tr>
       </tbody>
