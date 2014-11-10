@@ -12,6 +12,9 @@ from weeutil.weeutil import to_int
 import weewx.units
 from weewx.units import ValueTuple
 
+# The contexts that are multiples of a day, and can use the daily summaries
+# to answer aggregation queries:
+day_multiples = ['day', 'week', 'month', 'year', 'rainyear']
 
 #===============================================================================
 #                    Class TimeBinder
@@ -78,26 +81,31 @@ class TimeBinder(object):
 
     def day(self, data_binding=None):
         return TimespanBinder(weeutil.weeutil.archiveDaySpan(self.report_time), 
-                              self.db_lookup, data_binding, 
-                              'day', self.formatter, self.converter, **self.option_dict)
+                              self.db_lookup, data_binding=data_binding, 
+                              context='day', formatter=self.formatter, converter=self.converter,
+                              **self.option_dict)
     def week(self, data_binding=None):
         week_start = to_int(self.option_dict.get('week_start', 6))
         return TimespanBinder(weeutil.weeutil.archiveWeekSpan(self.report_time, week_start),
-                              self.db_lookup, data_binding,
-                              'week', self.formatter, self.converter, **self.option_dict)
+                              self.db_lookup, data_binding=data_binding,
+                              context='week', formatter=self.formatter, converter=self.converter,
+                              **self.option_dict)
     def month(self, data_binding=None):
         return TimespanBinder(weeutil.weeutil.archiveMonthSpan(self.report_time),
-                              self.db_lookup, data_binding,
-                              'month', self.formatter, self.converter, **self.option_dict)
+                              self.db_lookup, data_binding=data_binding,
+                              context='month', formatter=self.formatter, converter=self.converter, 
+                              **self.option_dict)
     def year(self, data_binding=None):
         return TimespanBinder(weeutil.weeutil.archiveYearSpan(self.report_time),
-                              self.db_lookup, data_binding,
-                              'year', self.formatter, self.converter, **self.option_dict)
+                              self.db_lookup, data_binding=data_binding,
+                              context='year', formatter=self.formatter, converter=self.converter,
+                              **self.option_dict)
     def rainyear(self, data_binding=None):
         rain_year_start = to_int(self.option_dict.get('rain_year_start', 1))
         return TimespanBinder(weeutil.weeutil.archiveRainYearSpan(self.report_time, rain_year_start),
-                              self.db_lookup, data_binding,
-                              'rainyear',  self.formatter, self.converter, **self.option_dict)
+                              self.db_lookup, data_binding=data_binding,
+                              context='rainyear',  formatter=self.formatter, converter=self.converter, 
+                              **self.option_dict)
 
 
 #===============================================================================
@@ -137,7 +145,8 @@ class TimespanBinder(object):
         data_binding: If non-None, then use this data binding.
 
         context: A tag name for the timespan. This is something like 'current', 'day',
-        'week', etc. This is used to find an appropriate label, if necessary.
+        'week', etc. This is used to figure out how to do aggregations, and for
+        picking an appropriate label.
 
         formatter: An instance of weewx.units.Formatter() holding the formatting
         information to be used. [Optional. If not given, the default
@@ -298,8 +307,12 @@ class ObservationBinder(object):
     def _do_query(self, aggregateType, val=None):
         """Run a query against the databases, using the given aggregation type."""
         db_manager = self.db_lookup(self.data_binding)
-        result = db_manager.getAggregate(self.timespan, self.obs_type, aggregateType, 
-                                         val=val, **self.option_dict)
+        if aggregateType in ['last', 'lasttime'] or self.context not in day_multiples:
+            result = db_manager.getAggregate(self.timespan, self.obs_type, aggregateType, 
+                                             val=val, **self.option_dict)
+        else:
+            result = db_manager.getDayAggregate(self.timespan, self.obs_type, aggregateType, 
+                                                val=val, **self.option_dict)
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
         
 #===============================================================================

@@ -359,6 +359,55 @@ class Manager(object):
         finally:
             _cursor.close()
             
+    gen_agg_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s "\
+                        "WHERE dateTime > ? AND dateTime <= ?"
+    lasttime_agg_sql = "SELECT MAX(dateTime) FROM %(table_name)s "\
+                        "WHERE dateTime > ? AND dateTime <= ?  AND %(obs_type)s IS NOT NULL"
+    last_agg_sql = "SELECT %(obs_type)s FROM %(table_name)s "\
+                        "WHERE dateTime = (" + lasttime_agg_sql + ")"
+
+    def getAggregate(self, timespan, obs_type, aggregate_type, **option_dict):
+        """Returns an aggregation of a statistical type for a given time period.
+        
+        timespan: An instance of weeutil.Timespan with the time period over which
+        aggregation is to be done.
+        
+        obs_type: The type over which aggregation is to be done (e.g., 'barometer',
+        'outTemp', 'rain', ...)
+        
+        aggregate_type: The type of aggregation to be done. 
+        
+        option_dict: Not used in this version.
+        
+        returns: A value tuple. First element is the aggregation value,
+        or None if not enough data was available to calculate it, or if the aggregation
+        type is unknown. The second element is the unit type (eg, 'degree_F').
+        The third element is the unit group (eg, "group_temperature") """
+        
+        if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min', 'last', 'lasttime']:
+            raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
+        
+        interpolate_dict = {'aggregate_type' : aggregate_type,
+                            'obs_type'       : obs_type,
+                            'table_name'     : self.table_name}
+        
+        if aggregate_type == 'last':
+            select_stmt = Manager.last_agg_sql
+        elif aggregate_type == 'lasttime':
+            select_stmt = Manager.lasttime_agg_sql
+        else:
+            select_stmt = Manager.gen_agg_sql
+            
+        _row = self.getSql(select_stmt % interpolate_dict, timespan)
+
+        _result = _row[0] if _row else None
+        
+        # Look up the unit type and group of this combination of observation type and aggregation:
+        (t, g) = weewx.units.getStandardUnitType(self.std_unit_system, obs_type, aggregate_type)
+        # Form the value tuple and return it:
+        return weewx.units.ValueTuple(_result, t, g)
+    
+    
     def getSqlVectors(self, ext_type, startstamp, stopstamp, 
                               aggregate_interval = None, 
                               aggregate_type = None):
@@ -436,7 +485,7 @@ class Manager(object):
                 # magnitude and direction do) we cannot do the aggregation
                 # in the SQL statement. We'll have to do it in Python.
                 # Do we know how to do it?
-                if aggregate_type not in ('sum', 'count', 'avg', 'max', 'min'):
+                if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min']:
                     raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
                 
                 # This SQL select string will select the proper wind types
@@ -830,50 +879,7 @@ def drop_database(config_dict, data_binding):
 #
 #===============================================================================
 
-# The SQL statements used in the daily summary parts of the database
 
-sql_create_str = "CREATE TABLE %s_day_%s (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "\
-  "min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, "\
-  "wsum REAL, sumtime INTEGER);"
-                             
-meta_create_str   = """CREATE TABLE %s_day__metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
-meta_replace_str  = """REPLACE INTO %s_day__metadata VALUES(?, ?)"""  
-
-select_update_str = """SELECT value FROM %s_day__metadata WHERE name = 'lastUpdate';"""
-
-# Set of SQL statements to be used for calculating aggregate statistics. Key is the aggregation type.
-sqlDict = {'min'        : "SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'minmax'     : "SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'max'        : "SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'maxmin'     : "SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'meanmin'    : "SELECT AVG(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'meanmax'    : "SELECT AVG(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'maxsum'     : "SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'mintime'    : "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "min = (SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'maxmintime' : "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "min = (SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'maxtime'    : "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'minmaxtime' : "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "max = (SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'maxsumtime' : "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "sum = (SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-           'gustdir'    : "SELECT max_dir FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                          "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
-           'sum'        : "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'count'      : "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'last'       : "SELECT %(obs_key)s FROM %(table_name)s WHERE dateTime = "\
-                          "(SELECT MAX(dateTime) FROM %(table_name)s WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_key)s IS NOT NULL)",
-           'lasttime'   : "SELECT  MAX(dateTime) FROM %(table_name)s WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_key)s IS NOT NULL",
-           'avg'        : "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'rms'        : "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(dirsumtime)  FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'vecdir'     : "SELECT SUM(xsum),SUM(ysum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'max_ge'     : "SELECT SUM(max >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'max_le'     : "SELECT SUM(max <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'min_le'     : "SELECT SUM(min <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'sum_ge'     : "SELECT SUM(sum >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
 
 #===============================================================================
 #                        Class DaySummaryManager
@@ -900,6 +906,48 @@ class DaySummaryManager(Manager):
     
     version = "1.0"
 
+    # The SQL statements used in the daily summary parts of the database
+    
+    sql_create_str = "CREATE TABLE %s_day_%s (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "\
+      "min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, "\
+      "wsum REAL, sumtime INTEGER);"
+                                 
+    meta_create_str   = """CREATE TABLE %s_day__metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
+    meta_replace_str  = """REPLACE INTO %s_day__metadata VALUES(?, ?)"""  
+    
+    select_update_str = """SELECT value FROM %s_day__metadata WHERE name = 'lastUpdate';"""
+    
+    # Set of SQL statements to be used for calculating aggregate statistics. Key is the aggregation type.
+    sqlDict = {'min'        : "SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'minmax'     : "SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'max'        : "SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'maxmin'     : "SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'meanmin'    : "SELECT AVG(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'meanmax'    : "SELECT AVG(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'maxsum'     : "SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'mintime'    : "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                              "min = (SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+               'maxmintime' : "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                              "min = (SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+               'maxtime'    : "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                              "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+               'minmaxtime' : "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                              "max = (SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+               'maxsumtime' : "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                              "sum = (SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+               'gustdir'    : "SELECT max_dir FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                              "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
+               'sum'        : "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'count'      : "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'avg'        : "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'rms'        : "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(dirsumtime)  FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'vecdir'     : "SELECT SUM(xsum),SUM(ysum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'max_ge'     : "SELECT SUM(max >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'max_le'     : "SELECT SUM(max <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'min_le'     : "SELECT SUM(min <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'sum_ge'     : "SELECT SUM(sum >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
+    
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an instance of DaySummaryManager
         
@@ -941,11 +989,11 @@ class DaySummaryManager(Manager):
         """Initialize the tables needed for the daily summary."""
         # Create the tables needed for the daily summaries.
         for _obs_type in self.obskeys:
-            cursor.execute(sql_create_str % (self.table_name, _obs_type))
+            cursor.execute(DaySummaryManager.sql_create_str % (self.table_name, _obs_type))
         # Create the meta table:
-        cursor.execute(meta_create_str % self.table_name)
+        cursor.execute(DaySummaryManager.meta_create_str % self.table_name)
         # Put the version number in it:
-        cursor.execute(meta_replace_str % self.table_name, ("Version", DaySummaryManager.version))
+        cursor.execute(DaySummaryManager.meta_replace_str % self.table_name, ("Version", DaySummaryManager.version))
 
     def _addSingleRecord(self, record, cursor, log_level):
         """Specialized version that updates the daily summaries, as well as the 
@@ -979,7 +1027,7 @@ class DaySummaryManager(Manager):
             # Then save the results:
             self._set_day_summary(_stats_dict, accumulator.timespan.stop, _cursor)
         
-    def getAggregate(self, timespan, obs_type, aggregateType, **option_dict):
+    def getDayAggregate(self, timespan, obs_type, aggregate_type, **option_dict):
         """Returns an aggregation of a statistical type for a given time period.
         
         timespan: An instance of weeutil.Timespan with the time period over which
@@ -988,7 +1036,7 @@ class DaySummaryManager(Manager):
         obs_type: The type over which aggregation is to be done (e.g., 'barometer',
         'outTemp', 'rain', ...)
         
-        aggregateType: The type of aggregation to be done. The keys in the dictionary
+        aggregate_type: The type of aggregation to be done. The keys in the dictionary
         sqlDict above are the possible aggregation types. 
         
         option_dict: Some aggregations require optional values
@@ -997,7 +1045,6 @@ class DaySummaryManager(Manager):
         or None if not enough data was available to calculate it, or if the aggregation
         type is unknown. The second element is the unit type (eg, 'degree_F').
         The third element is the unit group (eg, "group_temperature") """
-        global sqlDict
         
         # This entry point won't work for heating or cooling degree days:
         if weewx.debug:
@@ -1022,24 +1069,18 @@ class DaySummaryManager(Manager):
             target_val = weewx.units.convertStd(val, self.std_unit_system)[0]
 
         # convert to lower-case:
-        aggregateType = aggregateType.lower()
-        
-        # Get the dictionary to be used for interpolating the SQL statement.
-        if aggregateType == 'last' or aggregateType == 'lasttime':
-            interDict = {'start'         : timespan.start,
-                         'stop'          : timespan.stop,
-                         'obs_key'       : obs_type,
-                         'table_name'    : self.table_name}
-        else:
-            interDict = {'start'         : weeutil.weeutil.startOfDay(timespan.start),
-                         'stop'          : timespan.stop,
-                         'obs_key'       : obs_type,
-                         'aggregateType' : aggregateType,
-                         'val'           : target_val,
-                         'table_name'    : self.table_name}
+        aggregate_type = aggregate_type.lower()
+
+        # Form the interpolation dictionary        
+        interDict = {'start'         : weeutil.weeutil.startOfDay(timespan.start),
+                     'stop'          : timespan.stop,
+                     'obs_key'       : obs_type,
+                     'aggregate_type': aggregate_type,
+                     'val'           : target_val,
+                     'table_name'    : self.table_name}
             
         # Run the query against the database:
-        _row = self.xeqSql(sqlDict[aggregateType], interDict)
+        _row = self.getSql(DaySummaryManager.sqlDict[aggregate_type] % interDict)
 
         #=======================================================================
         # Each aggregation type requires a slightly different calculation.
@@ -1052,26 +1093,26 @@ class DaySummaryManager(Manager):
             _result = None
         
         # Do the required calculation for this aggregat type
-        elif aggregateType in ['min', 'maxmin', 'max', 'minmax', 'meanmin', 'meanmax', 
-                               'maxsum', 'sum', 'gustdir', 'last']:
+        elif aggregate_type in ['min', 'maxmin', 'max', 'minmax', 'meanmin', 'meanmax', 
+                               'maxsum', 'sum', 'gustdir']:
             # These aggregates are passed through 'as is'.
             _result = _row[0]
         
-        elif aggregateType in ['mintime', 'maxmintime', 'maxtime', 'minmaxtime', 'maxsumtime', 'lasttime',
+        elif aggregate_type in ['mintime', 'maxmintime', 'maxtime', 'minmaxtime', 'maxsumtime',
                                'count', 'max_ge', 'max_le', 'min_le', 'sum_ge']:
             # These aggregates are always integers:
             _result = int(_row[0])
 
-        elif aggregateType == 'avg':
+        elif aggregate_type == 'avg':
             _result = _row[0]/_row[1] if _row[1] else None
 
-        elif aggregateType == 'rms':
+        elif aggregate_type == 'rms':
             _result = math.sqrt(_row[0]/_row[1]) if _row[1] else None
         
-        elif aggregateType == 'vecavg':
+        elif aggregate_type == 'vecavg':
             _result = math.sqrt((_row[0]**2 + _row[1]**2) / _row[2]**2) if _row[2] else None
         
-        elif aggregateType == 'vecdir':
+        elif aggregate_type == 'vecdir':
             if _row == (0.0, 0.0):
                 _result = None
             deg = 90.0 - math.degrees(math.atan2(_row[1], _row[0]))
@@ -1081,7 +1122,7 @@ class DaySummaryManager(Manager):
             _result = None
 
         # Look up the unit type and group of this combination of stats type and aggregation:
-        (t, g) = weewx.units.getStandardUnitType(self.std_unit_system, obs_type, aggregateType)
+        (t, g) = weewx.units.getStandardUnitType(self.std_unit_system, obs_type, aggregate_type)
         # Form the value tuple and return it:
         return weewx.units.ValueTuple(_result, t, g)
         
@@ -1094,7 +1135,7 @@ class DaySummaryManager(Manager):
     def has_data(self, obs_type, timespan):
         """Checks whether the observation type exists in the database and whether it has any data."""
 
-        return self.exists(obs_type) and self.getAggregate(timespan, obs_type, 'count')[0] != 0
+        return self.exists(obs_type) and self.getDayAggregate(timespan, obs_type, 'count')[0] != 0
 
     def backfill_day_summary(self, start_ts=None, stop_ts=None):
         """Fill the statistical database from an archive database.
@@ -1173,27 +1214,7 @@ class DaySummaryManager(Manager):
     
         return nrecs
 
-    def xeqSql(self, rawsqlStmt, interDict):
-        """Execute an arbitrary SQL statement, using an interpolation dictionary.
-        
-        Returns only the first row of a result set.
-        
-        rawsqlStmt: A SQL statement with (possible) mapping keys.
-        
-        interDict: The interpolation dictionary to be used on the mapping keys.
-        
-        returns: The first row from the result set.
-        """
-        
-        # Do the string interpolation:
-        sqlStmt = rawsqlStmt % interDict
-        _cursor = self.connection.cursor()
-        try:
-            _cursor.execute(sqlStmt)
-            return _cursor.fetchone()
-        finally:
-            _cursor.close()
-        
+
     #--------------------------- UTILITY FUNCTIONS -----------------------------------
 
     def _get_day_summary(self, sod_ts, cursor=None):
@@ -1256,16 +1277,16 @@ class DaySummaryManager(Manager):
                 syslog.syslog(syslog.LOG_ERR, "manager: Operational error database %s; %s" % (self.manager, e))
                 
         # Update the time of the last daily summary update:
-        cursor.execute(meta_replace_str % self.table_name, ('lastUpdate', str(int(lastUpdate))))
+        cursor.execute(DaySummaryManager.meta_replace_str % self.table_name, ('lastUpdate', str(int(lastUpdate))))
             
     def _getLastUpdate(self, cursor=None):
         """Returns the time of the last update to the statistical database."""
 
         if cursor:
-            cursor.execute(select_update_str % self.table_name)
+            cursor.execute(DaySummaryManager.select_update_str % self.table_name)
             _row = cursor.fetchone()
         else:
-            _row = self.xeqSql(select_update_str % self.table_name, {})
+            _row = self.getSql(DaySummaryManager.select_update_str % self.table_name)
         return int(_row[0]) if _row else None
     
     def drop_daily(self):

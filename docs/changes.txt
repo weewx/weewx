@@ -3,43 +3,63 @@ weewx change history
 
 3.0.0 XX/XX/XX
 
-Total rewrite of how data gets bound to a database. This makes it possible
-to easily work with multiple databases. 
+Big update with lots of changes and lots of new features. The overall
+goal was to make it easier for extension writers to use their own
+database, instead of hijacking the weather database.
+
+Skins and skin.conf continue to be 100% backwards compatible (since
+V1.5!).  However, search-list extensions will have to get
+rewritten. Details in the Upgrading Guide.
+
+Unfortunately, weewx.conf is not upwardly compatible. You will have to
+reconfigure from a fresh copy. See the Upgrading Guide.
+
+Total rewrite of how data gets bound to a database. You now specify a
+"data binding" to indicate where data should be going, and where it is
+coming from. The default binding is "wx_binding," the weather binding,
+so most users will not have to change a thing.
  
 Other database bindings can be used in tags. Example:
   $db($data_binding=$alt_binding).current.outTemp
-If an alternate binding is specified, then an alternate time can be as well:
+If an alternate binding is specified, then an alternate time can be
+specified as well:
   $db($data_binding=$alt_binding).current($timestamp=$othertime).outTemp
 
 Allow syntax such as $trend($time_delta=3600).barometer
 
-Allow other databases to be used in images.
-
-The archive interval can now change within a database without consequences.
-
 Introduced a new tag $latest, which uses the last available timestamp
-in a data binding (which may not be the same as the "current" timestamp).
+in a data binding (which may not be the same as the "current"
+timestamp).
 
 Introduced a new aggregation type ".last", which returns the last
 value in an aggregation interval. E.g., $week.outTemp.last would
 return the last temperature seen in the week.
 
-Introduced a new aggregation type ".lasttime" which returns
-the time of the above.
+Introduced a new aggregation type ".lasttime" which returns the time
+of the above.
 
-Total rewrite of how devices are configured. A single utility 
-wee_config_device replaces each of the device-specific
-configuration utilities.
+Allow other data bindings to be used in images.
+
+The archive interval can now change within a database without
+consequences.
+
+Total rewrite of how devices are configured. A single utility
+wee_config_device replaces each of the device-specific configuration
+utilities.
+
+The Customizing Guide was extended with additional examples and option
+documentation.
 
 Removed the no longer needed serviced StdRESTful, obsolete since V2.6
 
-Fixed bug in querying for schemas that prevented older versions of MySQL
-(V4.X) from working.
+Fixed bug in querying for schemas that prevented older versions of
+MySQL (V4.X) from working.
 
-Improved error handling and retries for ws1, ultimeter, and cc3000 drivers.
+Improved error handling and retries for ws1, ultimeter, and cc3000
+drivers.
 
-Fixed missing dew initializations in wmr9x8 driver.  Fixed model/_model
-initialization in wmr9x8 driver.
+Fixed missing dew initializations in wmr9x8 driver.  Fixed
+model/_model initialization in wmr9x8 driver.
 
 Fixed uninitialized usb interface in wmr200 driver.
 

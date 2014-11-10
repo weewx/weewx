@@ -41,8 +41,8 @@ class WXDaySummaryManager(weewx.manager.DaySummaryManager):
         # Now initialize the WX specific tables
         cursor.execute(WXDaySummaryManager.wx_sql_create_str % self.table_name)
         
-    def getAggregate(self, timespan, obs_type, aggregateType, **option_dict):
-        """Specialized version of getAggregate that can calculate heating or cooling degree days.
+    def getDayAggregate(self, timespan, obs_type, aggregateType, **option_dict):
+        """Specialized version of getDayAggregate that can calculate heating or cooling degree days.
 
         timespan: An instance of weeutil.Timespan with the time period over which
         aggregation is to be done.
@@ -61,7 +61,7 @@ class WXDaySummaryManager(weewx.manager.DaySummaryManager):
         # Check to see whether heating or cooling degree days are being asked for:
         if obs_type not in ['heatdeg', 'cooldeg']:
             # No. Use my superclass's version:
-            return weewx.manager.DaySummaryManager.getAggregate(self, timespan, obs_type, aggregateType, **option_dict)
+            return weewx.manager.DaySummaryManager.getDayAggregate(self, timespan, obs_type, aggregateType, **option_dict)
 
         # Only summation (total) or average heating or cooling degree days is supported:
         if aggregateType not in ['sum', 'avg']:
@@ -79,7 +79,7 @@ class WXDaySummaryManager(weewx.manager.DaySummaryManager):
         _count = 0
         for daySpan in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
             # Get the average temperature for the day as a value tuple:
-            Tavg_t = weewx.manager.DaySummaryManager.getAggregate(self, daySpan, 'outTemp', 'avg')
+            Tavg_t = weewx.manager.DaySummaryManager.getDayAggregate(self, daySpan, 'outTemp', 'avg')
             # Make sure it's valid before including it in the aggregation:
             if Tavg_t is not None and Tavg_t[0] is not None:
                 if obs_type == 'heatdeg':
