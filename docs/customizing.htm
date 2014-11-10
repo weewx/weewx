@@ -751,7 +751,7 @@ $month.outTemp.max</pre>
     </p>
     <pre class="tty">$week.rain.sum</pre>
     <p>The most general dot code for an aggregation over time looks like:</p>
-    <pre class="tty">$period($data_binding=<em>binding_name</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
+    <pre class="tty">$<em>period</em>($data_binding=<em>binding_name</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
     <p>Where:</p>
     <p class="indent">
       <span class="code">period</span> is the time period over which
@@ -2151,7 +2151,7 @@ class MyXSearch(SearchList):                                                 # 1
         &lt;td&gt;Rain over the last seven days: &lt;/td&gt;
         &lt;td&gt;$seven_day.rain.sum
     &lt;/tr&gt;
-    ...</pre>
+&lt;/table&gt;</pre>
       <p>If you place a custom generator somewhere other than the
         <span class="symcode">$BIN_ROOT</span> hierarchy where
         <span class="code">weewxd</span> resides, you may have to specify its
@@ -2162,14 +2162,15 @@ class MyXSearch(SearchList):                                                 # 1
         <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
 
       <h1 id="standard_skin">The Standard <span class="code">skin.conf</span></h1>
-      <p>This section is a reference to the options appearing in the Standard
-        skin configuration file, found in
+      <p>This section is a reference to the options appearing in the skin
+        configuration file.  The default skin is the Standard skin, with a
+        skin configuration file located at
         <span class="symcode">$SKIN_ROOT</span><span class="code">/Standard/skin.conf</span>. </p>
+      <p>The most important options, the ones you are likely to have to
+        customize, are
+        <span class="config_important"><strong>highlighted</strong></span>.</p>
       <p>It is worth noting that, like the main configuration file
-        <span class="code">weewx.conf</span>, UTF-8 is used throughout. The
-        most important options are up near the top of the file. The truly
-        important ones, the ones you are likely to have to customize for your
-        station, are <span class="config_important"><strong>highlighted</strong></span>.
+        <span class="code">weewx.conf</span>, UTF-8 is used throughout.
       </p>
 
       <h2 class="config_section" id="Extras">[Extras]</h2>
@@ -2675,12 +2676,13 @@ outTemp = Outside Temperature</pre>
       x 180 pixels.</p>
     <p class="config_option">image_background_color</p>
     <p>The background color of the whole image. Optional. Default is
-      0xf5f5f5 ("SmokeGray")</p>
+      <span class='code'>0xf5f5f5</span> ("SmokeGray")</p>
     <p class="config_option">chart_background_color</p>
     <p>The background color of the chart itself. Optional. Default is
-      0xd8d8d8.</p>
+      <span class='code'>0xd8d8d8</span>.</p>
     <p class="config_option">chart_gridline_color</p>
-    <p>The color of the chart grid lines. Optional. Default is 0xa0a0a0</p>
+    <p>The color of the chart grid lines. Optional. Default is
+      <span class='code'>0xa0a0a0</span></p>
 
     <div class="image image-right" style="clear:right">
       <img src="images/weektempdew.png" alt="Example of day/night bands" />
@@ -2719,7 +2721,8 @@ outTemp = Outside Temperature</pre>
       default PIL font will be used.
     </p>
     <p class="config_option">top_label_font_size</p>
-    <p>The size of the top label in pixels. Optional. The default is 10.</p>
+    <p>The size of the top label in pixels. Optional. The default is
+      <span class='code'>10</span>.</p>
     <p class="config_option">unit_label_font_path</p>
     <p>
       The path to the font to be use for the unit label. Optional. If not given,
@@ -2727,9 +2730,11 @@ outTemp = Outside Temperature</pre>
       default PIL font will be used.
     </p>
     <p class="config_option">unit_label_font_size</p>
-    <p>The size of the unit label in pixels. Optional. The default is 10.</p>
+    <p>The size of the unit label in pixels. Optional. The default is
+      <span class='code'>10</span>.</p>
     <p class="config_option">unit_label_font_color</p>
-    <p>The color of the unit label font. Optional. Default is black.</p>
+    <p>The color of the unit label font. Optional. Default is
+      <span class='code'>black</span>.</p>
     <p class="config_option">bottom_label_font_path</p>
     <p>
       The path to the font to be use for the bottom label. Optional. If not
@@ -2737,15 +2742,17 @@ outTemp = Outside Temperature</pre>
       the default PIL font will be used.
     </p>
     <p class="config_option">bottom_label_font_size</p>
-    <p>The size of the bottom label in pixels. Optional. The default is 10.</p>
+    <p>The size of the bottom label in pixels. Optional. The default is
+      <span class='code'>10</span>.</p>
     <p class="config_option">bottom_label_font_color</p>
-    <p>The color of the bottom label font. Optional. Default is black.</p>
+    <p>The color of the bottom label font. Optional. Default is
+      <span class='code'>black</span>.</p>
     <p class="config_option">bottom_label_format</p>
     <p>
       The format to be used for the bottom label. It should be a <a
         href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior">
-        strftime format</a>. Optional. Default is <span class="code">'%m/%d/%y
-        %H:%M'</span>.
+        strftime format</a>. Optional. Default is
+      <span class="code">'%m/%d/%y %H:%M'</span>.
     </p>
     <p class="config_option">axis_label_font_path</p>
     <p>
@@ -2754,9 +2761,11 @@ outTemp = Outside Temperature</pre>
       default PIL font will be used.
     </p>
     <p class="config_option">axis_label_font_size</p>
-    <p>The size of the x- and y-axis labels in pixels. Optional. The default is 10.</p>
+    <p>The size of the x- and y-axis labels in pixels. Optional. The default is
+      <span class='code'>10</span>.</p>
     <p class="config_option">axis_label_font_color</p>
-    <p>The color of the x- and y-axis label font. Optional. Default is black.</p>
+    <p>The color of the x- and y-axis label font. Optional. Default is
+      <span class='code'>black</span>.</p>
     <p class="config_option">x_label_format</p>
     <p>The format to be used for the time labels on the x-axis. It should be a <a
         href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior">
@@ -2779,8 +2788,8 @@ outTemp = Outside Temperature</pre>
       and <span class="code">yhigh</span> are the minimum and maximum y-axis
       values, respectively, and <span class="code">min_interval</span> is the
       minimum tick interval. If set to <span class="code">None</span>, the
-      corresponding value will be automatically chosen. Optional. Default is <span
-        class="code">None, None, None</span>. (Choose the y-axis minimum,
+      corresponding value will be automatically chosen. Optional. Default is
+      <span class="code">None, None, None</span>. (Choose the y-axis minimum,
       maximum, and minimum increment automatically.)
     </p>
     
@@ -2816,7 +2825,7 @@ outTemp = Outside Temperature</pre>
       then you may want to specify <span
         class="code">+90</span> for this option. This will cause the average vector
         to point straight up, rather than lie flat against the x-axis. Optional.
-        The default is 0.
+        The default is <span class='code'>0</span>.
     </p>
 
 
@@ -2876,14 +2885,16 @@ outTemp = Outside Temperature</pre>
     <p class="config_option">line_type</p>
     <p>
       The type of line to be used. Choices are <span class="code">solid</span>
-      or <span class="code">none</span>. Optional. Default is <span class="code">solid</span>.
+      or <span class="code">none</span>. Optional. Default is
+      <span class="code">solid</span>.
     </p>
     <p class="config_option">marker_type</p>
     <p>
       The type of marker to be used to marke each data point. Choices are <span
         class="code">cross</span>, <span class="code">x</span>, <span
         class="code">circle</span>, <span class="code">box</span>, or <span
-        class="code">none</span>. Optional. Default is <span class="code">none</span>.
+        class="code">none</span>. Optional. Default is
+      <span class="code">none</span>.
     </p>
     <p class="config_option">marker_size</p>
     <p>
@@ -2969,9 +2980,9 @@ outTemp = Outside Temperature</pre>
       <p>The Standard skin uses three generators: CheetahGenerator, ImageGenerator, and CopyGenerator.</p>
 
       <h1 id="localization">Localization</h1>
-      <p>Weewx has been designed to make localization fairly straightforward.
-        What follows is a guide to localizing
-        to a non-English language and/or locale.</p>
+      <p>What follows is a guide to localizing to a non-English language
+        and/or locale.  There are two parts: translating to different languages
+        and modifying to reflect local conventions for displaying data.</p>
 
       <h2>Translate the templates</h2>
       <p>First, you will need to go through the templates and translate to your
