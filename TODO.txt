@@ -1,6 +1,7 @@
 --------------------  TODO for V3  --------------------------- 
               
-Each driver should be responsible for installing its own stanza in the configuration file.
+Each driver should be responsible for installing its own stanza in the configuration file.  Easy enough, but during the install process how do we get user to
+indicate which driver they want?
 
 Look at Gary's (?) changes to allow cron-like report generation.
 
@@ -12,19 +13,24 @@ I removed Appendix: Statistical types because it is no longer valid. But,
 it needs to be explained somewhere the difference between vector and scalar
 stats.
 
-Need to update the section in the User's Guide that talks about
-device configuration. They now all use wee_config_device.
-
 Update setup.py.
 
 Update Upgrading Guide.
+ - explain how to migrate data from a v2 database to a v3 database
 
 May need to update the guide on packaging an extension.
+
+Verify that examples still work:
+  alarm.py
+  lowBattery.py
+  xsearch.py
 
 On startup, the log should indicate not only which binding is in use, but what
 it is bound to (sqlite or mysql).
 
 Make .last and .lasttime work for aggregation vectors.
+
+In usersguide.htm, add ws28xx output for wee_config_device --info
 
 
 
