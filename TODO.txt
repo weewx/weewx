@@ -30,8 +30,6 @@ it is bound to (sqlite or mysql).
 
 Aggregation type "last" should work for wind vectors as well
 
-In usersguide.htm, add ws28xx output for wee_config_device --info
-
 
 
 

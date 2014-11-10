@@ -2105,7 +2105,9 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device /path/to/weewx.conf --help </p>
       
     <h2 id="wee_config_vantage">Davis Vantage</h2>
-    <p>The <span class='code'>--help</span> option will produce output
+    <p>When the <span class='code'>station_type</span> is
+      <span class='code'>Vantage</span>,
+      the <span class='code'>--help</span> option will produce output
       something like this:</p>
     <p class="tty">Vantage driver version 3.0
 Usage: wee_config_device [config_file] [--help] [--info] [--clear]
@@ -2174,9 +2176,7 @@ Mutating actions will request confirmation before proceeding.</p>
       current EEPROM settings: </p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </pre>
     <p>This will print out something like: </p>
-    <pre class="tty">Using configuration file /home/weewx/weewx.conf.
-Querying...
-Davis Vantage EEPROM settings:
+    <pre class="tty">Davis Vantage EEPROM settings:
     
     CONSOLE TYPE:                   VantagePro2
     
@@ -2367,7 +2367,9 @@ Davis Vantage EEPROM settings:
       FineOffsetUSB driver ignores the station clock since it cannot be
       trusted.</p>
 
-    <p>The <span class='code'>--help</span> option will produce output
+    <p>When the <span class='code'>station_type</span> is
+      <span class='code'>FineOffsetUSB</span>,
+      the <span class='code'>--help</span> option will produce output
       something like this:</p>
     <p class="tty">FineOffsetUSB driver version 1.7
 Usage: wee_config_device [config_file] [options] [--debug] [--help]
@@ -2496,7 +2498,9 @@ Mutating actions will request confirmation before proceeding.</p>
       not every type of USB-serial converter will work.  Converters based
       on ATEN UC-232A chipset are known to work.</p>
 
-    <p>The <span class='code'>--help</span> option will produce output
+    <p>When the <span class='code'>station_type</span> is
+      <span class='code'>WS23xx</span>,
+      the <span class='code'>--help</span> option will produce output
       something like this:</p>
     <p class="tty">WS23xx driver version 0.21
 Usage: wee_config_device [config_file] [options] [--debug] [--help]
@@ -2522,9 +2526,7 @@ Mutating actions will request confirmation before proceeding.</p>
       option.</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </pre>
     <p>This will result in something like this:</p>
-    <pre class='tty'>Driver version 0.6
-Querying the station for the configuration...
-buzzer: 0
+    <pre class='tty'>buzzer: 0
 connection time till connect: 1.5
 connection type: 15
 dew point: 8.88
@@ -2575,9 +2577,6 @@ in humidity: 48.0
       of data with an archive interval of 5 minutes.</p>
     <p>The WS28xx driver sets the station archive interval to
       5 minutes.</p>
-    <p>The WS28xx driver clears all alarms in the station.  When alarms are
-      set, they interfere with the communication between the console and
-      the transceiver.</p>
     <p>When <span class='code'>weewx</span> starts up it will attempt to
       download all records from the console since the last record in the
       archive database.
@@ -2585,7 +2584,9 @@ in humidity: 48.0
     <p>The WS28xx driver does not support hardware archive record
       generation.</p>
 
-    <p>The <span class='code'>--help</span> option will produce output
+    <p>When the <span class='code'>station_type</span> is
+      <span class='code'>WS28xx</span>,
+      the <span class='code'>--help</span> option will produce output
       something like this:</p>
     <p class="tty">WS28xx driver version 0.33
 Usage: wee_config_device [config_file] [options] [--debug] [--help]
@@ -2606,9 +2607,6 @@ Options:
   --maxtries=MAXTRIES  maximum number of retries, 0 indicates no max
 
 Mutating actions will request confirmation before proceeding.</p>
-
-    <h3>Station information</h3>
-    <p>FIXME: paste ws28xx output here</p>
 
     <h3>Pairing</h3>
     <p>The console and transceiver must be paired.  Pairing ensures that your
@@ -2637,10 +2635,10 @@ Mutating actions will request confirmation before proceeding.</p>
     <p>Either approach to pairing may require multiple attempts.</p>
 
     <h3>Synchronizing</h3>
-    <p>The transceiver and console must be synchronized in order to
-      communicate.  Synchronization will happen automatically at the top of
-      each hour, or you can force synchronization by pressing the [SET] button
-      momentarily.  Do not press and hold the [SET] button - that
+    <p>After pairing, the transceiver and console must be synchronized in
+      order to communicate.  Synchronization will happen automatically at the
+      top of each hour, or you can force synchronization by pressing the [SET]
+      button momentarily.  Do not press and hold the [SET] button - that
       modifies the console alarms.</p>
     <p>When the transceiver and console are synchronized, you will see lots of
       '<span class="code">ws28xx: RFComm</span>' messages in the log when <span class="code">debug=1</span>.  When the devices are
@@ -2660,11 +2658,55 @@ Mutating actions will request confirmation before proceeding.</p>
       then the sensors are not communicating with the console, or the console
       may be defective.</p>
 
+    <h3>Station information</h3>
+    <p>Display the station settings with the <span class='code'>--info</span>
+      option.</p>
+    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </p>
+    <p>This will result in something like this:</p>
+    <p class='tty'>alarm_flags_other: 0
+alarm_flags_wind_dir: 0
+checksum_in: 1327
+checksum_out: 1327
+format_clock: 1
+format_pressure: 0
+format_rain: 1
+format_temperature: 0
+format_windspeed: 4
+history_interval: 1
+indoor_humidity_max: 70
+indoor_humidity_max_time: None
+indoor_humidity_min: 45
+indoor_humidity_min_time: None
+indoor_temp_max: 40.0
+indoor_temp_max_time: None
+indoor_temp_min: 0.0
+indoor_temp_min_time: None
+lcd_contrast: 4
+low_battery_flags: 0
+outdoor_humidity_max: 70
+outdoor_humidity_max_time: None
+outdoor_humidity_min: 45
+outdoor_humidity_min_time: None
+outdoor_temp_max: 40.0
+outdoor_temp_max_time: None
+outdoor_temp_min: 0.0
+outdoor_temp_min_time: None
+pressure_max: 1040.0
+pressure_max_time: None
+pressure_min: 960.0
+pressure_min_time: None
+rain_24h_max: 50.0
+rain_24h_max_time: None
+threshold_storm: 5
+threshold_weather: 3
+wind_gust_max: 12.874765625
+wind_gust_max_time: None</p>
+
     <h3>Alarms</h3>
-    <p>Be sure to turn off all alarms in the console.  When an alarm goes off,
-      communication with the transceiver stops.  It is better to create alarms
-      in weewx, and the <span class="code">weewx</span> alarms can do much more than the console alarms
-      anyway.</p>
+    <p>When an alarm goes off, communication with the transceiver stops.
+      The WS28xx driver clears all alarms in the station.  It is better to
+      create alarms in weewx, and the <span class="code">weewx</span> alarms
+      can do much more than the console alarms anyway.</p>
 
 
     <h2 id="wee_config_te923">TE923</h2>
@@ -2709,7 +2751,9 @@ Mutating actions will request confirmation before proceeding.</p>
       CC3000 driver will convert to the appropriate units for the
       <span class='code'>weewx</span> configuration.</p>
 
-    <p>The <span class='code'>--help</span> option will produce output
+    <p>When the <span class='code'>station_type</span> is
+      <span class='code'>CC3000</span>,
+      the <span class='code'>--help</span> option will produce output
       something like this:</p>
     <p class="tty">CC3000 driver version 0.8
 Usage: wee_config_device [config_file] [options] [--debug] [--help]
@@ -2736,11 +2780,11 @@ Mutating actions will request confirmation before proceeding.</p>
       option.</p>
     <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </pre>
     <p>This will result in something like this:</p>
-    <pre class='tty'>firmware:  Rainwise CC-3000 Version: 1.3 Build 006 Sep 04 2013
-time:  2014/06/02 08:22:17
-units:  ENGLISH
-memory:  251372 bytes, 4334 records, 12%
-interval:  1</pre>
+    <pre class='tty'>firmware: Rainwise CC-3000 Version: 1.3 Build 006 Sep 04 2013
+time: 2014/06/02 08:22:17
+units: ENGLISH
+memory: 251372 bytes, 4334 records, 12%
+interval: 1</pre>
 
     <h3 id="cc3000_changing_the_archive_interval">Changing the archive interval</h3>
     <p>CC3000 loggers ship from the factory with an archive interval
@@ -2759,8 +2803,8 @@ interval:  1</pre>
     </p>
     <pre class="tty">
     [[wx_binding]]
-        # The database to be used - it should match one of the sections in [Databases] 
-<span class="highlight">        database = archive_mysql</span>
+        # The database should match one of the sections in [Databases] 
+        <span class="highlight">database = archive_mysql</span>
         # The name of the table within the database
         table_name = archive
         # The class to manage the database
@@ -2829,7 +2873,7 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
       done automatically. You can ignore this section.</p>
     <p>Start by selecting the appropriate run script. They can be found under
       <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/</span>. </p>
-    <table class="locations" style='width:70%'>
+    <table class="locations" style="width:90%">
       <tr>
 	<td style='width:30%'>Debian/Ubuntu/Mint:</td>
 	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian</span></td>
@@ -2848,7 +2892,7 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
 	<span class="code">weewx</span> installation (it should have been set to the correct value automatically 
       by the install process, but it is worth checking). </p>
     <p>Copy it to the proper location for your system: </p>
-    <table class="locations" style="width:70%">
+    <table class="locations" style="width:90%">
       <tr>
 	<td style="width: 30%">Debian/Ubuntu/Mint:</td>
 	<td class='tty'>cp <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian /etc/init.d/weewx</span></td>
@@ -2863,7 +2907,7 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
       </tr>
     </table>
     <p>Make sure the script is executable: </p>
-    <table class="locations" style="width:70%">
+    <table class="locations" style="width:90%">
       <tr>
 	<td style="width: 30%">Debian/Ubuntu/Mint:</td>
 	<td class='tty'>chmod +x /etc/init.d/weewx</td>
@@ -2878,7 +2922,7 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
       </tr>
     </table>
     <p>Create symbolic links in the run level directories: </p>
-    <table class="locations" style="width:70%">
+    <table class="locations" style="width:90%">
       <tr>
 	<td style="width: 30%">Debian/Ubuntu/Mint:</td>
 	<td class='tty'>update-rc.d weewx defaults 98</td>
@@ -2973,8 +3017,7 @@ sudo /etc/init.d/weewx start</p>
     <pre class="tty">[[archive_mysql]]
 &nbsp; host = ...
 &nbsp; user = ...
-&nbsp; database_name = <em>your-wview-archive-name</em>
-...</pre>
+&nbsp; database_name = <em>your-wview-archive-name</em></pre>
 
 
     <h1 id="integrating_with_webserver">Integrating <span class='code'>weewx</span> with a web server</h1>
@@ -3299,26 +3342,26 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
       Without this information, <span class="code">weewx</span> is unable to detect 
       the absence of onboard memory. If you do not do this, you will get errors that 
       look like the following in your syslog:</p>
-    <pre class="tty">Nov 27 20:30:21 raspberrypi weewx[5607]: reportengine: Caught unrecoverable exception in generator weewx.filegenerator.FileGenerator
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  'NoneType' object has no attribute '__getitem__'
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Traceback (most recent call last):
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/reportengine.py", line 132, in run
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      obj.start()
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/reportengine.py", line 259, in start
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      self.run()
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 41, in run
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      self.setup()
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 52, in setup
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      self.initAlmanac(self.gen_ts)
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 87, in initAlmanac
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      rec = self.getRecord(archivedb, celestial_ts)
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 115, in getRecord
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      record_dict_vt = weewx.units.dictFromStd(record_dict)
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****    File "/home/weewx/bin/weewx/units.py", line 892, in dictFromStd
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****      std_unit_system = d['usUnits']
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  TypeError: 'NoneType' object has no attribute '__getitem__'
-Nov 27 20:30:21 raspberrypi weewx[5607]:         ****  Generator terminated...
-Nov 27 20:30:23 raspberrypi weewx[5607]: genimages: Generated 11 images in 2.53 seconds</pre>
+    <pre class="tty">Nov 27 20:30:21 rpi weewx[5607]: reportengine: Caught unrecoverable exception in generator weewx.filegenerator.FileGenerator
+Nov 27 20:30:21 rpi weewx[5607]:         ****  'NoneType' object has no attribute '__getitem__'
+Nov 27 20:30:21 rpi weewx[5607]:         ****  Traceback (most recent call last):
+Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/reportengine.py", line 132, in run
+Nov 27 20:30:21 rpi weewx[5607]:         ****      obj.start()
+Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/reportengine.py", line 259, in start
+Nov 27 20:30:21 rpi weewx[5607]:         ****      self.run()
+Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 41, in run
+Nov 27 20:30:21 rpi weewx[5607]:         ****      self.setup()
+Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 52, in setup
+Nov 27 20:30:21 rpi weewx[5607]:         ****      self.initAlmanac(self.gen_ts)
+Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 87, in initAlmanac
+Nov 27 20:30:21 rpi weewx[5607]:         ****      rec = self.getRecord(archivedb, celestial_ts)
+Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 115, in getRecord
+Nov 27 20:30:21 rpi weewx[5607]:         ****      record_dict_vt = weewx.units.dictFromStd(record_dict)
+Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/units.py", line 892, in dictFromStd
+Nov 27 20:30:21 rpi weewx[5607]:         ****      std_unit_system = d['usUnits']
+Nov 27 20:30:21 rpi weewx[5607]:         ****  TypeError: 'NoneType' object has no attribute '__getitem__'
+Nov 27 20:30:21 rpi weewx[5607]:         ****  Generator terminated...
+Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds</pre>
     <p>See the section on option <span class="code">
 	<a href="#record_generation">record_generation</a></span>.</p>
         <h3>Raspberry Pi</h3>
@@ -3508,21 +3551,21 @@ Apr 12 05:12:32 raven reportengine[3074]:   ****  Ignoring template and continui
     <p>The symptom is many LOOP errors and unreliable downloading of archive records. 
       Your log may look like this:</p>
     <pre class="tty">
-Jan 18 20:38:52 raspberrypi weewx[6024]: VantagePro: Opened up serial port /dev/ttyUSB0, baudrate 19200
-Jan 18 20:38:53 raspberrypi weewx[5977]: VantagePro: LOOP #12; read error. Try #1
-Jan 18 20:38:53 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; got 0 instead
-Jan 18 20:38:58 raspberrypi weewx[7543]: VantagePro: LOOP #13; read error. Try #1
-Jan 18 20:38:58 raspberrypi weewx[7543]:       ****  Expected to read 99 chars; got 4 instead
-Jan 18 20:39:03 raspberrypi weewx[7543]: VantagePro: LOOP #14; read error. Try #2
-Jan 18 20:39:03 raspberrypi weewx[7543]:       ****  Expected to read 99 chars; got 0 instead
-Jan 18 20:39:03 raspberrypi weewx[5977]: VantagePro: LOOP #13; read error. Try #2
-Jan 18 20:39:03 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; got 4 instead
-Jan 18 20:39:08 raspberrypi weewx[7543]: VantagePro: LOOP #15; read error. Try #3
-Jan 18 20:39:08 raspberrypi weewx[7543]:       ****  Expected to read 99 chars; got 4 instead
-Jan 18 20:39:09 raspberrypi weewx[5977]: VantagePro: LOOP #14; read error. Try #3
-Jan 18 20:39:09 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; got 2 instead
-Jan 18 20:39:14 raspberrypi weewx[5977]: VantagePro: LOOP #15; read error. Try #4
-Jan 18 20:39:14 raspberrypi weewx[5977]:       ****  Expected to read 99 chars; got 2 instead</pre>
+Jan 18 20:38:52 rpi weewx[6024]: VantagePro: Opened up serial port /dev/ttyUSB0, baudrate 19200
+Jan 18 20:38:53 rpi weewx[5977]: VantagePro: LOOP #12; read error. Try #1
+Jan 18 20:38:53 rpi weewx[5977]:       ****  Expected to read 99 chars; got 0 instead
+Jan 18 20:38:58 rpi weewx[7543]: VantagePro: LOOP #13; read error. Try #1
+Jan 18 20:38:58 rpi weewx[7543]:       ****  Expected to read 99 chars; got 4 instead
+Jan 18 20:39:03 rpi weewx[7543]: VantagePro: LOOP #14; read error. Try #2
+Jan 18 20:39:03 rpi weewx[7543]:       ****  Expected to read 99 chars; got 0 instead
+Jan 18 20:39:03 rpi weewx[5977]: VantagePro: LOOP #13; read error. Try #2
+Jan 18 20:39:03 rpi weewx[5977]:       ****  Expected to read 99 chars; got 4 instead
+Jan 18 20:39:08 rpi weewx[7543]: VantagePro: LOOP #15; read error. Try #3
+Jan 18 20:39:08 rpi weewx[7543]:       ****  Expected to read 99 chars; got 4 instead
+Jan 18 20:39:09 rpi weewx[5977]: VantagePro: LOOP #14; read error. Try #3
+Jan 18 20:39:09 rpi weewx[5977]:       ****  Expected to read 99 chars; got 2 instead
+Jan 18 20:39:14 rpi weewx[5977]: VantagePro: LOOP #15; read error. Try #4
+Jan 18 20:39:14 rpi weewx[5977]:       ****  Expected to read 99 chars; got 2 instead</pre>
     <p>If you look closely at the log above, you'll see that there are
       multiple instances of <span class="code">weewx</span> running
       simultaneously (process IDs 5977, 6024, and 7543). They are
@@ -3592,16 +3635,16 @@ sqlite&gt; update archive set outTemp=NULL where outTemp &gt; 1000;</pre></li>
       There is no analogous problem with MySQL databases. You will see errors in the system log that
       looks like this:</p>
     <pre class='tty'>
-Feb 12 07:11:06 raspberrypi weewx[20930]:         ****    File "/usr/share/weewx/weewx/archive.py", line 118, in lastGoodStamp
-Feb 12 07:11:06 raspberrypi weewx[20930]:         ****      _row = self.getSql("SELECT MAX(dateTime) FROM %s" % self.table)
-Feb 12 07:11:06 raspberrypi weewx[20930]:         ****    File "/usr/share/weewx/weewx/archive.py", line 250, in getSql
-Feb 12 07:11:06 raspberrypi weewx[20930]:         ****    File "/usr/share/weewx/weedb/sqlite.py", line 120, in execute
-Feb 12 07:11:06 raspberrypi weewx[20930]:         ****      raise weedb.OperationalError(e)
-Feb 12 07:11:06 raspberrypi weewx[20930]:         ****  OperationalError: database is locked
-Feb 12 07:11:06 raspberrypi weewx[20930]:         ****      _cursor.execute(sql, sqlargs)
-Feb 12 07:11:06 raspberrypi weewx[20930]:         ****    File "/usr/share/weewx/weedb/sqlite.py", line 120, in execute
-Feb 12 07:11:06 raspberrypi weewx[20930]:         ****      raise weedb.OperationalError(e)
-<span class='highlight'>Feb 12 07:11:06 raspberrypi weewx[20930]:         ****  OperationalError: database is locked</span></pre>
+Feb 12 07:11:06 rpi weewx[20930]:         ****    File "/usr/share/weewx/weewx/archive.py", line 118, in lastGoodStamp
+Feb 12 07:11:06 rpi weewx[20930]:         ****      _row = self.getSql("SELECT MAX(dateTime) FROM %s" % self.table)
+Feb 12 07:11:06 rpi weewx[20930]:         ****    File "/usr/share/weewx/weewx/archive.py", line 250, in getSql
+Feb 12 07:11:06 rpi weewx[20930]:         ****    File "/usr/share/weewx/weedb/sqlite.py", line 120, in execute
+Feb 12 07:11:06 rpi weewx[20930]:         ****      raise weedb.OperationalError(e)
+Feb 12 07:11:06 rpi weewx[20930]:         ****  OperationalError: database is locked
+Feb 12 07:11:06 rpi weewx[20930]:         ****      _cursor.execute(sql, sqlargs)
+Feb 12 07:11:06 rpi weewx[20930]:         ****    File "/usr/share/weewx/weedb/sqlite.py", line 120, in execute
+Feb 12 07:11:06 rpi weewx[20930]:         ****      raise weedb.OperationalError(e)
+<span class='highlight'>Feb 12 07:11:06 rpi weewx[20930]:         ****  OperationalError: database is locked</span></pre>
     <p>We are still trying to decipher exactly what the problem is, but it seems that 
       (many? most? all?) implementations of the sqlite 'C' access libraries on the RPi
       sleep for a full second if they find the database locked. This gives them only
