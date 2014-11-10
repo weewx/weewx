@@ -1560,7 +1560,6 @@ Sunrise, sunset: 06:51 19:30</p>
       <p>One more example. This one shows daily high and low temperatures for a
         year:</p>
       <pre class="tty">[[year_images]]
-    ...
     [[[yearhilow]]]
         [[[[hi]]]]
             data_type = outTemp
@@ -1569,7 +1568,7 @@ Sunrise, sunset: 06:51 19:30</p>
         [[[[low]]]]
             data_type = outTemp
             aggregate_type = min
-           label = Low Temperature</pre>
+            label = Low Temperature</pre>
       <p>This results in the plot <span class="code">yearhilow.png</span>:</p>
       <p>
         <img width="300" height="180" alt="Daily highs and lows"
@@ -1751,12 +1750,12 @@ Sunrise, sunset: 06:51 19:30</p>
     <p>How would we produce a graph of the two different temperatures? Here's
     what the relevant section of the <span class="code">skin.conf</span> file would look like.</p>
     <pre class="tty">[[[daycompare]]]
-  [[[[inTemp]]]]
-    label = Vantage inTemp
-    [[[[WMR100Temp]]]]
-      data_type = inTemp
-      data_binding = wmr100_binding
-      label = WMR100 inTemp</pre>
+   [[[[inTemp]]]]
+       label = Vantage inTemp
+       [[[[WMR100Temp]]]]
+           data_type = inTemp
+           data_binding = wmr100_binding
+           label = WMR100 inTemp</pre>
 
     <p>
       This will produce an image with name <span class="code">daycompare.png</span>,
@@ -3427,6 +3426,7 @@ class AddElectricity(StdService):
         use the new database.
       </li>
     </ol>
+    <p>Here is the recipe that follows that strategy:</p>
     <ol>
       <li>
         <p>
@@ -3479,8 +3479,8 @@ schema_with_electricity = schemas.wview.wview + [('electricity', 'REAL')]</pre>
       </li>
       <li>
         <p>
-          <strong>Run <span class="code">wee_config_database</span>.
-          </strong> Now run the utility <span class="code">wee_config_database</span>
+          <strong>Create and populate the new database.</strong>
+          Now run the utility <span class="code">wee_config_database</span>
           with the <span class="code">--reconfigure</span> option and the path
           to the configuration file:
         </p>
@@ -3593,11 +3593,8 @@ mv weewx.sdb_new weewx.sdb</pre>
       database, performing the unit conversion along the way. You then use this
       new database.
     </p>
-    <p>
-      The steps are pretty much the same as <a href="#add_archive_type">Adding
-        a New Type to the ArchiveDatabase</a>, described above.
-    </p>
-    <ol>
+    <p>Here is the general strategy:</p>
+     <ol>
       <li>Modify <span class="code">weewx.conf</span> to reflect your
         choice of the new unit system to use. Your choices are <span
         class='code'>US</span>, <span class="code">METRIC</span>, or <span
@@ -3607,23 +3604,25 @@ mv weewx.sdb_new weewx.sdb</pre>
       </li>
       <li>Make sure you have the necessary permissions to create the new
         database.</li>
-      <li>Populate it with data from the old database.</li>
+      <li>Use the utility <span class='code'>wee_config_database</span> to
+        create the new database and populate it with data from the old
+        database.</li>
       <li>Shuffle databases around so <span class="code">weewx</span> will
         use the new database.
       </li>
-      <li>Rebuild the stats database to use the new unit system.</li>
     </ol>
+    <p>Here is the recipe that follows that strategy:</p>
     <ol>
       <li>
         <p>
-          <strong>Modify <span class="code">weewx.conf</span>.
-          </strong> Edit the configuration file to change option <span class="code">target_unit</span>
-          in section <span class="code"><a
-            href="usersguide.htm#StdConvert">[StdConvert]</a></span> to reflect your
-          choice. If you are switching to metric units, the option will look
-          like
-        </p> <pre class="tty">[StdConvert]
-    target_unit = METRICWX  # Alternative: METRIC</pre>
+          <strong>Modify <span class="code">weewx.conf</span>.</strong>
+          Edit the configuration file to change option
+          <span class="code">target_unit</span> in section
+          <span class="code"><a href="usersguide.htm#StdConvert">[StdConvert]</a></span>
+          to reflect your choice.  If you are switching to metric units,
+          the option will look like:</p>
+        <pre class="tty">[StdConvert]
+    target_unit = METRICWX</pre>
       </li>
       <li>
         <p>
@@ -3637,25 +3636,51 @@ mv weewx.sdb_new weewx.sdb</pre>
       </li>
       <li>
         <p>
-          <strong>Run <span class="code">wee_config_database</span>.
-          </strong> Now run the utility <span class="code">wee_config_database</span>
+          <strong>Create and populate the new database.</strong>
+          Now run the utility <span class="code">wee_config_database</span>
           with the <span class="code">--reconfigure</span> option:
-        </p> <pre class="tty">
-          <span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span
-            class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
+        </p>
+        <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
         <p>
-          This will create a new database (nominally, <span class="code">weewx.sdb_new</span>
+          This will create a new database (nominally,
+          <span class="code">weewx.sdb_new</span>
           if you are using sqlite, <span class="code">weewx_new</span> if you
-          are using MySQL), using the schema found in <span class="symcode">$BIN_ROOT</span><span
-            class="code">/user/schemas.py</span>, and populate it with data from
+          are using MySQL), using the schema found in
+          <span class="symcode">$BIN_ROOT</span><span class="code">/user/schemas.py</span>, and populate it with data from
           the old database, while performing the unit conversion.
         </p>
       </li>
       <li>
         <p>
-          <strong>Shuffle the databases.</strong> This is identical to the
-          description above.
+          <strong>Shuffle the databases.</strong> Now arrange things so <span
+            class="code">weewx</span> can find the new database.
         </p>
+        <p class="warning">
+          <strong>Warning!</strong><br /> Make a backup of the data before
+          doing any of the next steps!
+        </p>
+        <p>
+          You can either shuffle the databases around so the new database has
+          the same name as the old database, or edit <span class="code">weewx.conf</span>
+          to use the new database name. To do the former:
+        </p>
+        <p>For sqlite:</p> <pre class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
+mv weewx.sdb_new weewx.sdb</pre>
+        <p>For MySQL:</p> <pre class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
+<span class="prompt">mysql&gt;</span> DROP DATABASE weewx;   # Drops the old database
+<span class="prompt">mysql&gt;</span> CREATE DATABASE weewx; # Create a new one with the same name
+<span class="prompt">mysql&gt;</span> RENAME TABLE weewx_new.archive TO weewx.archive;   # Rename to the nominal name</pre>
+      </li>
+      <li>
+        <p>
+          It's worth noting that there's actually a hidden, last step:
+          recreating the daily summaries inside the new database. This will be
+          done automatically by <span class="code">weewx</span> at the next
+          startup. Alternatively, it can be done manually using the <span
+            class="code">wee_config_database</span> utility and the <span
+            class="code">--backfill-daily</span> option:
+        </p> <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --backfill-daily <span
+            class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
       </li>
     </ol>
 
@@ -4434,15 +4459,16 @@ Options:
       <tr>
         <td class="first_col"><span class="code">METRICWX</span></td>
         <td>0x11</td>
-        <td>Rain related measurements are in <span class="code">mm</span>.
-          Speeds are in <span class="code">m/s</span>.
+        <td>Metric, with rain related measurements in
+          <span class="code">mm</span> and speeds in
+          <span class="code">m/s</span>
         </td>
       </tr>
       <tr>
         <td class="first_col"><span class="code">METRIC</span></td>
         <td>0x10</td>
-        <td>Similar to <span class="code">METRIC</span>, except
-          that rain is in <span class="code">cm</span>, and speed is in
+        <td>Metric, with rain related measurements in
+          <span class="code">cm</span> and speeds in
           <span class="code">km/hr</span>
         </td>
       </tr>
