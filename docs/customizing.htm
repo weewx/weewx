@@ -56,8 +56,8 @@ Version: 3.0.0 alpha
     </p>
     <p>It starts with an overview of the architecture of weewx. If you are
         only interested in customizing the generated reports you can probably
-        skip the overview and proceed directly to the section <em> <a href="#standard_skin">The
-            Standard <span class="code">skin.conf</span></a></em>. With this approach you
+        skip the overview and proceed directly to the section
+      <em><a href="#standard_skin">The Standard <span class="code">skin.conf</span></a></em>. With this approach you
         can easily add new plot images, change the titles of images, change the
         units used in the reports, and so on. </p>
       <p>However, if your goal is a specialized application, such as adding
@@ -149,7 +149,7 @@ Version: 3.0.0 alpha
         the standard service for creating reports. This will be what most users
         will want to customize even if it means just changing a few options. </p>
       <h3>Reports</h3>
-      <p>The Standard Report Service runs zero or more <em>Reports.</em> The
+      <p>The Standard Report Service runs zero or more <em>Reports</em>. The
         specific reports which get run are set in the configuration file <span
           class="code">weewx.conf</span>, in section <span class="code">[StdReport]</span>.
       </p>
@@ -264,8 +264,8 @@ Version: 3.0.0 alpha
 
     <h3>Templates</h3>
     <p>
-      A template is a text file that is processed by a <em>template
-        engine</em> to create a new file. <span class="code">Weewx</span>
+      A template is a text file that is processed by a <em>template engine</em>
+      to create a new file. <span class="code">Weewx</span>
       uses the <a href="http://www.cheetahtemplate.org">Cheetah</a>
       template engine. The generator <span class="code">weewx.cheetahgenerator.CheetahGenerator</span>
       is responsible for running Cheetah at appropriate times.
@@ -405,14 +405,15 @@ Version: 3.0.0 alpha
       </tr>
       <tr>
         <td class="first_col"><span class="code">usUnits</span></td>
-        <td>The unit system the record is in. It cannot be null. See the Appendix <a
-          href="#units"><em>Units</em></a> for how these systems are
-          encoded.
+        <td>The unit system the record is in. It cannot be null. See the
+          <em><a href="#units">Appendix: Units</a></em> for how these
+            systems are encoded.
         </td>
       </tr>
       <tr>
         <td class="first_col"><span class="code">interval</span></td>
-        <td>The length of the archive interval in <em>minutes</em>. It cannot be null.</td>
+        <td>The length of the archive interval in <em>minutes</em>.
+          It cannot be null.</td>
       </tr>
     </table>
 
@@ -511,7 +512,7 @@ Version: 3.0.0 alpha
       the file is <span class="symcode">$SKIN_ROOT</span><span
         class="code">/Standard/skin.conf</span>. It includes many, many
       options that can be changed. For a complete list, see the section
-      <em><a href="#standard_skin">The Standard <span class="code">skin.conf</span></a></em> below
+      <em><a href="#standard_skin">The Standard <span class="code">skin.conf</span></a></em>.
     </p>
     <p>
       For example, suppose you wish to use metric units in the
@@ -553,8 +554,8 @@ Version: 3.0.0 alpha
         group_uv          = uv_index 
         group_volt        = volt</pre>
       <p>The options that were changed have been <span class="highlight">&nbsp;highlighted&nbsp;</span>.
-        Details of the various unit options are given in the Appendix <em><a href="#units">
-            Units</a></em>. </p>
+        Details of the various unit options are given in the
+        <em><a href="#units">Appendix: Units</a></em>.</p>
       <p>Other options are available, such as changing the text label for
         various observation types. For example, suppose your weather console is
         actually located in a barn, not indoors, and you want the plot for the
@@ -658,8 +659,8 @@ Version: 3.0.0 alpha
 $month.outTemp.maxtime
 $current.outTemp</pre>
       <p>would code the max outside temperature for the month, the time it
-        occurred, and the current outside temperature, respectively. So, an HTML
-        file that looks like </p>
+        occurred, and the current outside temperature, respectively. So a
+        template file that contains:</p>
       <pre class="tty">&lt;html&gt;
     &lt;head&gt;
         &lt;title&gt;Current conditions&lt;/title&gt;
@@ -693,23 +694,25 @@ $month.outTemp.max</pre>
         versions are similar.</p>
 
       <h3>Time period <span class="code">$current</span></h3>
-      <p>Time period <span class="code">$current</span> represents a <em>current
-          observation</em>. An example would be the current barometric pressure:
+      <p>Time period <span class="code">$current</span> represents a
+        <em>current observation</em>. An example would be the current
+        barometric pressure:
       </p>
       <pre class="tty">$current.barometer</pre>
       <p>The most general dot code for a "current" observation looks like: </p>
-      <pre class="tty"><em>$current($data_binding=binding_name).obstype[.optional_unit_conversion][.optional_formatting]</em></pre>
+      <pre class="tty">$current($data_binding=<em>binding_name</em>).<em>obstype</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
     <p>Where:</p>
     <p class="indent">
-      <span class="code"><em>binding_name</em></span> is a <em>binding name</em>
+      <span class="code">binding_name</span> is a <em>binding name</em>
       to a database. An example would be <span class="code">wx_binding</span>.
-      See the section <a href="#binding_names"><i>Binding names</i></a> above
+      See the section <em><a href="#binding_names">Binding names</a></em>
       for more details.
     </p>
     <p class="indent">
-      <span class="code"><em>obstype</em></span> is an observation type, such as
-      <span class="code">barometer</span>. See <em> Appendix <a
-        href="#archive_types">Archive Types</a></em> for a table of observation types
+      <span class="code">obstype</span> is an observation type, such as
+      <span class="code">barometer</span>. See
+      <em><a href="#archive_types">Appendix: Archive Types</a></em>
+      for a table of observation types
       valid for time period <span class="code">current.</span>
     </p>
     <p class="indent">
@@ -717,13 +720,13 @@ $month.outTemp.max</pre>
       conversion tag. If provided, the results will be converted into the
       specified units, otherwise the default units specified in the skin
       configuration file (in section <span class="code">[Units][[Groups]]</span>)
-      will be used. See the section <em><a href="#unit_conversion_options">Unit
-          Conversion Options</a></em> below.
+      will be used. See the section
+      <em><a href="#unit_conversion_options">Unit Conversion Options</a></em>.
     </p>
     <p class="indent">
-      <span class="code"><em>optional_formatting</em></span> is an optional
-      formatting tag that controls how the value will appear. See the section <em><a
-        href="#formatting_options">Formatting Options</a></em> below.
+      <span class="code">optional_formatting</span> is an optional
+      formatting tag that controls how the value will appear. See the section
+      <em><a href="#formatting_options">Formatting Options</a></em>.
     </p>
 
       <h3>Time period <span class="code">$latest</span></h3>
@@ -732,7 +735,7 @@ $month.outTemp.max</pre>
       the last available timestamp in a database. Usually, 
       <span class="code">$current</span> and <span class="code">$latest</span> are the same,
       but if a data binding points to a remote database, they may not be. See
-      the section <a href="#stupid_detail"><i>Using more than one binding</i></a>
+      the section <em><a href="#stupid_detail">Using more than one binding</a></em>
       for an example where this happened.</p> 
 
     <h3 id="general_aggregation_periods">
@@ -744,55 +747,56 @@ $month.outTemp.max</pre>
       The other time periods represent an <em>aggregation over time</em>. In
       addition to the time period over which the aggregation will occur, they
       also require an <em>aggregation type</em>. An example would be the week's
-      total precipitation (where the aggregation type is <span class="code"><em>sum</em></span>):
+      total precipitation (where the aggregation type is <span class="code">sum</span>):
     </p>
     <pre class="tty">$week.rain.sum</pre>
     <p>The most general dot code for an aggregation over time looks like:</p>
-    <pre class="tty"><em>$period($data_binding=binding_name).statstype.aggregation[.optional_unit_conversion][.optional_formatting]</em></pre>
+    <pre class="tty">$period($data_binding=<em>binding_name</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
     <p>Where:</p>
     <p class="indent">
-      <span class="code"><em>period</em></span> is the time period over which
+      <span class="code">period</span> is the time period over which
       the aggregation is to be done. Possible choices are <span class="code">day</span>,
       <span class="code">week</span>, <span class="code">month</span>, <span
         class="code">year</span>, and <span class="code">rainyear</span>.
     </p>
     <p class="indent">
-      <span class="code"><em>binding_name</em></span> is a <em>binding name</em>
+      <span class="code">binding_name</span> is a <em>binding name</em>
       to a database. An example would be <span class="code">wx_binding</span>.
-      See the section <a href="#binding_names"><i>Binding names</i></a> above
+      See the section <em><a href="#binding_names">Binding names</a></em>
       for more details.
     </p>
     <p class="indent">
-      <span class="code"><em>statstype</em></span> is a statistical type. This is
-      generally any observation type that appears in the database, as well 
+      <span class="code">statstype</span> is a <em>statistical type</em>. This
+      is generally any observation type that appears in the database, as well 
       as a few synthetic types (such as heating and cooling degree-days). Not
       all aggregations are supported for all types.
     </p>
     <p class="indent">
-      <span class="code"><em>aggregation</em></span> is an aggregation type.
+      <span class="code">aggregation</span> is an <em>aggregation type</em>.
       If you
       ask for <span class="code">$month.outTemp.avg</span> you are asking for
       the <em>average</em> outside temperature for the month. Possible
-      aggregation types are given in <a href="#aggregation_types"><i>Appendix: Aggregation types</i></a>. 
+      aggregation types are given in
+      <em><a href="#aggregation_types">Appendix: Aggregation types</a></em>. 
     </p>
     <p class="indent">
       <span class="code">optional_unit_conversion</span> is an optional unit
       conversion tag. If provided, the results will be converted into the
       specified units, otherwise the default units specified in the skin
       configuration file (in section <span class="code">[Units][[Groups]]</span>)
-      will be used. See the section <em><a href="#unit_conversion_options">Unit
-          Conversion Options</a></em> below.
+      will be used. See the section
+      <em><a href="#unit_conversion_options">Unit Conversion Options</a></em>.
     </p>
     <p class="indent">
-      <span class="code"><em>optional_formatting</em></span> is an optional
-      formatting tag that controls how the value will appear. See the section <em><a
-        href="#formatting_options">Formatting Options</a></em> below.
+      <span class="code">optional_formatting</span> is an optional
+      formatting tag that controls how the value will appear. See the section
+      <em><a href="#formatting_options">Formatting Options</a></em>.
     </p>
 
 
 
     <h3 id="unit_conversion_options">Unit conversion options</h3>
-      <p>The tag <span class="code"><em>optional_unit_conversion</em></span>
+      <p>The tag <span class="code">optional_unit_conversion</span>
         can be used with either current observations or aggregations. If
         supplied, the results will be converted to the specified units. For
         example, if you have set <span class="code">group_pressure</span> to
@@ -825,7 +829,7 @@ or in foobar units: $day.barometer.min.foobar
       </p>
 
       <h3 id="formatting_options">Formatting options</h3>
-      <p>The tag <span class="code"><em>optional_formatting</em></span> can be
+      <p>The tag <span class="code">optional_formatting</span> can be
         used with either current observations or aggregations. It can be one of:
       </p>
       <table class="indent" summary="Formatting Options">
@@ -863,10 +867,12 @@ or in foobar units: $day.barometer.min.foobar
           </tr>
           <tr>
             <td class="code text_highlight">.format(<em>string_format</em>, <em>NONE_string</em>)</td>
-            <td>Value is returned as a string, using the string format specified
-              with <em>string_format</em>. If the value is <span class="code">None</span>,
+            <td>Value is returned as a string, using the string format
+              specified with <em>string_format</em>. If the value is
+              <span class="code">None</span>,
               the string <span class="code">NONE_string</span> will be
-              substituted if given, otherwise the value for <span class="code">NONE</span>
+              substituted if given, otherwise the value for
+              <span class="code">NONE</span>
               in <span class="code"> <a href="#Units_StringFormats">[Units][[StringFormats]]</a>
               </span> will be used. A unit label (e.g., <span class='code'>&deg;F</span>) 
               from <span class="code">skin.conf</span> will be attached at the end.
@@ -1140,7 +1146,7 @@ or in foobar units: $day.barometer.min.foobar
       example above).
     </p>
     <p>For example, the template expression</p>
-      <pre class="tty">&lt;p&gt;The barometer trend over $trend.time_delta.hour is $trend.barometer.format("%+.2f").&lt;/p&gt;</pre>
+      <pre class="tty">The barometer trend over $trend.time_delta.hour is $trend.barometer.format("%+.2f")</pre>
     <p>would result in</p>
     <p class="example_output">The barometer trend over 3 hrs is +.03 inHg.</p>
 
@@ -1185,17 +1191,10 @@ or in foobar units: $day.barometer.min.foobar
         a year, printing out each month's min and max temperature.  The
         iteration loop is
         <span class="highlight">&nbsp;highlighted&nbsp;</span>.</p>
-      <pre class="tty">&lt;html&gt;
-    &lt;head&gt;
-        &lt;title&gt;Year stats by month&lt;/title&gt;
-    &lt;/head&gt;
-    &lt;body&gt;
-        &lt;p&gt;Min, max temperatures by month:&lt;/p&gt;
-<span class="highlight">        #for $month in $year.months</span>
-        &lt;p&gt;$month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.outTemp.max&lt;/p&gt;
-<span class="highlight">        #end for</span>
-    &lt;/body&gt;
-&lt;/html&gt;</pre>
+      <pre class="tty">Min, max temperatures by month
+<span class="highlight">#for $month in $year.months</span>
+$month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.outTemp.max
+<span class="highlight">#end for</span></pre>
       <p>The result is:</p>
       <p class="example_output">Min, max temperatures by month:<br/>
 January: Min, max temperatures: 30.1°F 51.5°F<br/>
@@ -1219,17 +1218,17 @@ December: Min, max temperatures: N/A N/A</p>
         almanac information for the Sun, Moon, Venus, Mars, Jupiter, and other
         heavenly bodies, including their rise, transit and set times, as well as
         their azimuth and altitude. Other information is also available. </p>
-      <p>Here is an example template in HTML:</p>
-      <p class="tty">&lt;p&gt;Current time is $current.dateTime&lt;p&gt;
+      <p>Here is an example template:</p>
+      <p class="tty">Current time is $current.dateTime
 #if $almanac.hasExtras
-&lt;p&gt;Sunrise, transit, sunset: $almanac.sun.rise $almanac.sun.transit $almanac.sun.set&lt;/p&gt;
-&lt;p&gt;Moonrise, transit, moonset: $almanac.moon.rise $almanac.moon.transit $almanac.moon.set&lt;/p&gt;
-&lt;p&gt;Mars rise, transit, set: $almanac.mars.rise $almanac.mars.transit $almanac.mars.set&lt;/p&gt;
-&lt;p&gt;Azimuth, altitude of mars: $almanac.mars.az $almanac.mars.alt&lt;/p&gt;
-&lt;p&gt;Next new, full moon: $almanac.next_new_moon $almanac.next_full_moon&lt;/p&gt;
-&lt;p&gt;Next summer, winter solstice: $almanac.next_summer_solstice $almanac.next_winter_solstice&lt;/p&gt;
+Sunrise, transit, sunset: $almanac.sun.rise $almanac.sun.transit $almanac.sun.set
+Moonrise, transit, moonset: $almanac.moon.rise $almanac.moon.transit $almanac.moon.set
+Mars rise, transit, set: $almanac.mars.rise $almanac.mars.transit $almanac.mars.set
+Azimuth, altitude of mars: $almanac.mars.az $almanac.mars.alt
+Next new, full moon: $almanac.next_new_moon $almanac.next_full_moon
+Next summer, winter solstice: $almanac.next_summer_solstice $almanac.next_winter_solstice
 #else
-&lt;p&gt;Sunrise, sunset: $almanac.sunrise $almanac.sunset&lt;/p&gt;
+Sunrise, sunset: $almanac.sunrise $almanac.sunset
 #end if</p>
       <p>If pyephem is installed this would result in: </p>
       <p class="example_output">Current time is 29-Mar-2011 09:20<br/>
@@ -1481,8 +1480,8 @@ Sunrise, sunset: 06:51 19:30</p>
       (it will actually be a series of bars) and it will have logical name <span
         class="code">rain</span>. Because we have not said otherwise, the SQL
       data type to be used for this line will be the same as its logical name,
-      that is, <span class="code">rain</span>, but this can be overridden (see
-      below). The aggregation type will be summing (overriding the averaging
+      that is, <span class="code">rain</span>, but this can be overridden.
+      The aggregation type will be summing (overriding the averaging
       specified in sub-section <span class="code">[[month_images]]</span>), so
       you get the total rain over the aggregate period (rather than the average)
       over an aggregation interval of 86,400 seconds (one day). The plot line
@@ -1768,9 +1767,9 @@ Sunrise, sunset: 06:51 19:30</p>
       uses the same variable name (<span class="code">inTemp</span>) as the
       first line, we had to explicitly specify it using option <span
         class="code">data_type</span>, in order to avoid using the same
-      sub-section name twice (see the section <a
-        href="#including_same_sql_type_2x"><i>Including the same SQL
-          type more than once in a plot</i></a> for details). It will be labeled <span
+      sub-section name twice (see the section <em><a
+        href="#including_same_sql_type_2x">Including the same SQL
+          type more than once in a plot</a></em> for details). It will be labeled <span
         class="code">WMR100 inTemp</span>. The results look like this:
     </p>
     <img src='images/daycompare.png' />
@@ -1864,7 +1863,7 @@ $station.altitude</pre>
       <p>
         What this attribute returns is not a raw value, say <span
           class="code">700</span>, nor even a string. Instead, it
-        returns an instance of the class <span class="code"><i>ValueHelper</i></span>,
+        returns an instance of the class <span class="code">ValueHelper</span>,
         a special class defined in module <span class="code">weewx.units</span>.
         Internally, it holds not only the raw value, but also references
         to the formats, labels, and conversion targets
@@ -1872,7 +1871,7 @@ $station.altitude</pre>
         that the final output reflects these preferences. Cheetah doesn't know
         anything about this class. What it needs, when it has finished
         evaluating the expression <span class="code">$day.outTemp.max</span>
-        is a <i>string</i>. In order to convert the <span class="code">ValueHelper</span>
+        is a <em>string</em>. In order to convert the <span class="code">ValueHelper</span>
         it has into a string, it does what every other Python object does when
         faced with this problem: it calls the special method <span
           class="code"><a style="text-decoration: none"
@@ -1937,7 +1936,7 @@ $station.altitude</pre>
       </p>
       <p>
         Like our previous example, the results of the evaluation are then
-        packaged up in an instance of <span class="code"><i>ValueHelper</i></span>,
+        packaged up in an instance of <span class="code">ValueHelper</span>,
         which does the final conversion to the desired units, formats
         the string, then adds a label. The results, something like
       </p>
@@ -2062,8 +2061,8 @@ class MyXSearch(SearchList):                                                 # 1
       </li>
       <li>The class <span class="code">TimespanBinding</span> represents a
         statistical calculation over a time period. We have already met it in
-        the introduction <i><a href="#how_tags_work">How tags work</a></i>
-        above. In our case, we will set it up to represent the statistics over
+        the introduction <em><a href="#how_tags_work">How tags work</a></em>.
+        In our case, we will set it up to represent the statistics over
         all possible times. The class takes 4 parameters.
         <ul>
           <li>The first is the timespan over which the calculation is to be
@@ -2269,7 +2268,7 @@ class MyXSearch(SearchList):                                                 # 1
       <p>Note that the unit system is always specified in the singular. That is,
         specify <span class="code">degree_C</span> or <span class="code">foot</span>,
         not <span class="code">degrees_C</span> or <span class="code">feet</span>.
-        See the Appendix <em> <a href="#units">Units</a></em> for more
+        See the <em><a href="#units">Appendix: Units</a></em> for more
         information, including a concise summary of the groups, their members,
         and which options can be used for each group. </p>
       <p class="config_important"><a class="config_option" id="group_altitude">group_altitude</a>
@@ -2379,7 +2378,7 @@ second = " second", " seconds"</pre>
         Hence, if you set an appropriate environment variable <span class='code'>LANG</span>,
         then the date and times should follow local conventions (see section
         <a href="#environment_variable_LANG">Environment variable LANG</a> 
-        below for details on how to do this). However, they will not look particularly pretty
+        for details on how to do this). However, they will not look particularly pretty
         and you may want to change them. For example, I use this in the U.S.:
       </p>
       <pre class="tty">
@@ -2446,7 +2445,7 @@ outTemp = Outside Temperature</pre>
       <p>would cause the given labels to be used for plots of <span
           class="code">inTemp</span> and <span class="code">outTemp</span>. 
           If no option is given, then the observation type itself will
-          be used (<i>e.g., </i><span class="code">outTemp</span>).</p>
+          be used (<em>e.g., </em><span class="code">outTemp</span>).</p>
       <h2 class="config_section">[Almanac]</h2>
       <p>This section controls what text to use for the almanac. It consists of
         only one entry </p>
@@ -2499,8 +2498,8 @@ outTemp = Outside Temperature</pre>
       <h3>File generation options</h3>
       <p class="config_option">search_list</p>
       <p>This is the list of search list objects that will be scanned by 
-        the template engine, looking for tags. See the section <em>
-          <a href="#defining_new_tags">Defining new tags</a></em> and the 
+        the template engine, looking for tags. See the section
+        <em><a href="#defining_new_tags">Defining new tags</a></em> and the 
         <a href="http://cheetahtemplate.org/docs/users_guide_html/users_guide.html">Cheetah documentation</a> for details on 
         search lists. If no <span class="config_option">search_list</span>
         is specified, a default list will be
@@ -2872,8 +2871,7 @@ outTemp = Outside Temperature</pre>
     <p class="config_option">color</p>
     <p>
       This option is to override the color for an individual line. Optional.
-      Default is to use the color in <span class="code">chart_line_colors</span>
-      above.
+      Default is to use the color in <span class="code">chart_line_colors</span>.
     </p>
     <p class="config_option">line_type</p>
     <p>
@@ -2895,22 +2893,21 @@ outTemp = Outside Temperature</pre>
     <p>
       If there is a gap between data points bigger than this fractional amount
       of the x-axis, then a gap will be drawn, rather than a connecting line.
-      See Section <a href="#line_gaps"><i>Line gaps</i></a>. Optional. The
+      See Section <em><a href="#line_gaps">Line gaps</a></em>. Optional. The
       default is to always draw the line.
     </p>
     <p class="config_option">bar_gap_fraction</p>
     <p>
       If there is a gap between bar graphs bigger than this fractional amount of
-      the x-axis, then a gap will be drawn, rather than a fat bar. See Section <a
-        href="#line_gaps"><i>Line gaps</i></a>. Optional. The default is to
+      the x-axis, then a gap will be drawn, rather than a fat bar. See Section
+      <em><a href="#line_gaps">Line gaps</a></em>. Optional. The default is to
       always draw the bar.
     </p>
 
     <p class="config_option">width</p>
     <p>
       This option is to override the line widthfor an individual line. Optional.
-      Default is to use the width in <span class="code">chart_line_width</span>
-      above.
+      Default is to use the width in <span class="code">chart_line_width</span>.
     </p>
     
     <p class="config_option">label</p>
@@ -2918,9 +2915,9 @@ outTemp = Outside Temperature</pre>
     The default is to use the SQL variable name.</p>
     <p class="config_option">data_type</p>
     <p>
-      The SQL data type to be used for this plot line. For more information, see the section <a
-        href="#including_same_sql_type_2x"><i>Including the same SQL
-          type more than once in a plot</i></a>. Optional. The default is to use the
+      The SQL data type to be used for this plot line. For more information,
+      see the section
+      <em><a href="#including_same_sql_type_2x">Including the same SQL type more than once in a plot</a></em>. Optional. The default is to use the
       section name.
     </p>
 
@@ -3046,8 +3043,7 @@ extraTemp1     = Pond Temperature</pre>
       <p>This is an advanced topic intended for those who wish to try their hand
         at extending the internal engine in weewx. You should have a passing
         familiarity with Python or, at least, be willing to learn it. </p>
-      <p class="warning"><em>Please note that the API to the service engine may change in future
-          versions! </em></p>
+      <p class="warning">Please note that the API to the service engine may change in future versions!</p>
       <p>At a high level, <span class="code">weewx</span> consists of an <em>engine</em>
         that is responsible for managing a set of <em>services</em>. A service
         consists of a Python class which binds its member functions to various <em>events</em>.
@@ -3425,7 +3421,7 @@ class AddElectricity(StdService):
           <strong>Add the new type to our existing schema.</strong> The weather
           schema that comes with <span class="code">weewx</span> is the same as
           what wview uses. It's located in the file <span class="code">schemas/wview.py</span>
-          &mdash; take a look at it now. We could just modify it <i>in situ</i>,
+          &mdash; take a look at it now. We could just modify it <em>in situ</em>,
           but that would run the risk of confusing the two versions.
           Alternatively, we could copy the file over to a new location, and then
           modify that. But, because our change is just a simple addition, we're
@@ -3593,7 +3589,8 @@ mv weewx.sdb_new weewx.sdb</pre>
       <li>Modify <span class="code">weewx.conf</span> to reflect your
         choice of the new unit system to use. Your choices are <span
         class='code'>US</span>, <span class="code">METRIC</span>, or <span
-        class="code">METRICWX</span>. See the Appendix <a href="#units">Units</a>
+        class="code">METRICWX</span>. See the
+        <em><a href="#units">Appendix: Units</a></em>
         for the exact differences between these three choices.
       </li>
       <li>Make sure you have the necessary permissions to create the new
@@ -3774,7 +3771,7 @@ mv weewx.sdb_new weewx.sdb</pre>
         method. It takes no argument. It should return the time in
         Unix Epoch Time. </p>
       <h3><span class="code">setTime</span></h3>
-      <p>If your hardware has an onboard clock supports <i>setting</i>
+      <p>If your hardware has an onboard clock and supports <em>setting</em>
         it, then you may want to implement this method.  It takes no
         argument and does not need to return anything.</p>
       <h3><span class="code">closePort</span></h3>
@@ -4408,7 +4405,7 @@ Options:
     </table>
 
     <h1 id="units">Appendix: Units</h1>
-      <p>Weewx offers three different <i>unit systems</i>:</p>
+      <p>Weewx offers three different <em>unit systems</em>:</p>
 
     <table class="indent" style="width: 80%">
       <caption>The standard unit systems used within weewx</caption>
@@ -4420,7 +4417,7 @@ Options:
       <tr>
         <td class="first_col"><span class="code">US</span></td>
         <td>0x01</td>
-        <td><i>U.S. Customary</i></td>
+        <td>U.S. Customary</td>
       </tr>
       <tr>
         <td class="first_col"><span class="code">METRICWX</span></td>
