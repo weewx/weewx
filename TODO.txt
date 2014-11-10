@@ -28,7 +28,7 @@ Verify that examples still work:
 On startup, the log should indicate not only which binding is in use, but what
 it is bound to (sqlite or mysql).
 
-Make .last and .lasttime work for aggregation vectors.
+Aggregation type "last" should work for wind vectors as well
 
 In usersguide.htm, add ws28xx output for wee_config_device --info
 

@@ -640,8 +640,14 @@ class Manager(object):
                 if not aggregate_interval:
                     raise weewx.ViolatedPrecondition("Aggregation interval missing")
 
-                sql_str = "SELECT %s(%s), MIN(usUnits), MAX(usUnits) FROM %s "\
-                    "WHERE dateTime > ? AND dateTime <= ?" % (aggregate_type, sql_type, self.table_name)
+                if aggregate_type.lower() == 'last':
+                    sql_str = "SELECT %s, MIN(usUnits), MAX(usUnits) FROM %s WHERE dateTime = "\
+                        "(SELECT MAX(dateTime) FROM %s WHERE "\
+                        "dateTime > ? AND dateTime <= ? AND %s IS NOT NULL)" % (sql_type, self.table_name, 
+                                                                                self.table_name, sql_type)
+                else:
+                    sql_str = "SELECT %s(%s), MIN(usUnits), MAX(usUnits) FROM %s "\
+                        "WHERE dateTime > ? AND dateTime <= ?" % (aggregate_type, sql_type, self.table_name)
 
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                     _cursor.execute(sql_str, stamp)
@@ -857,9 +863,9 @@ sqlDict = {'min'        : "SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s W
                           "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
            'sum'        : "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'count'      : "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-           'last'       : "SELECT %(obs_key)s FROM %(table_name)s WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_key)s IS NOT NULL " \
-                          "ORDER BY dateTime DESC LIMIT 1",
-           'lasttime'   : "SELECT MAX(dateTime)  FROM %(table_name)s WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_key)s IS NOT NULL",
+           'last'       : "SELECT %(obs_key)s FROM %(table_name)s WHERE dateTime = "\
+                          "(SELECT MAX(dateTime) FROM %(table_name)s WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_key)s IS NOT NULL)",
+           'lasttime'   : "SELECT  MAX(dateTime) FROM %(table_name)s WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_key)s IS NOT NULL",
            'avg'        : "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'rms'        : "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
            'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(dirsumtime)  FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
