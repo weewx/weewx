@@ -3509,9 +3509,9 @@ schema_with_electricity = schemas.wview.wview + [('electricity', 'REAL')]</pre>
         <p>For sqlite:</p> <pre class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
 mv weewx.sdb_new weewx.sdb</pre>
         <p>For MySQL:</p> <pre class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
-<span class="prompt">mysql&gt;</span> DROP DATABASE weewx;   # Drops the old database
+<span class="prompt">mysql&gt;</span> DROP DATABASE weewx;   # Delete the old database
 <span class="prompt">mysql&gt;</span> CREATE DATABASE weewx; # Create a new one with the same name
-<span class="prompt">mysql&gt;</span> RENAME TABLE weewx_new.archive TO weewx.archive;   # Rename to the nominal name</pre>
+<span class="prompt">mysql&gt;</span> RENAME TABLE weewx_new.archive TO weewx.archive; # Rename to the nominal name</pre>
       </li>
       <li>
         <p>
@@ -3667,9 +3667,9 @@ mv weewx.sdb_new weewx.sdb</pre>
         <p>For sqlite:</p> <pre class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
 mv weewx.sdb_new weewx.sdb</pre>
         <p>For MySQL:</p> <pre class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
-<span class="prompt">mysql&gt;</span> DROP DATABASE weewx;   # Drops the old database
+<span class="prompt">mysql&gt;</span> DROP DATABASE weewx;   # Delete the old database
 <span class="prompt">mysql&gt;</span> CREATE DATABASE weewx; # Create a new one with the same name
-<span class="prompt">mysql&gt;</span> RENAME TABLE weewx_new.archive TO weewx.archive;   # Rename to the nominal name</pre>
+<span class="prompt">mysql&gt;</span> RENAME TABLE weewx_new.archive TO weewx.archive; # Rename to the nominal name</pre>
       </li>
       <li>
         <p>
