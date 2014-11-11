@@ -212,8 +212,8 @@ class RESTThread(threading.Thread):
         # Make a copy of the record, then start adding to it:
         _datadict = dict(record)
 
-        # If the type 'rain' does not appear in the archive schema, an exception will
-        # be raised. Be prepared to catch it.
+        # If the type 'rain' does not appear in the archive schema,
+        # or the database is locked, an exception will be raised. Be prepared to catch it.
         try:        
             if not _datadict.has_key('hourRain'):
                 # CWOP says rain should be "rain that fell in the past hour". WU
@@ -221,8 +221,8 @@ class RESTThread(threading.Thread):
                 # Presumably, this is exclusive of the archive record 60 minutes
                 # before, so the SQL statement is exclusive on the left, inclusive
                 # on the right.
-                _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
-                                         "WHERE dateTime>? AND dateTime<=?",
+                _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM %s "
+                                         "WHERE dateTime>? AND dateTime<=?" % archive.table_name,
                                          (_time_ts - 3600.0, _time_ts))
                 if _result is not None and _result[0] is not None:
                     if not _result[1] == _result[2] == record['usUnits']:
@@ -234,8 +234,8 @@ class RESTThread(threading.Thread):
     
             if not _datadict.has_key('rain24'):
                 # Similar issue, except for last 24 hours:
-                _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
-                                         "WHERE dateTime>? AND dateTime<=?",
+                _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM %s "
+                                         "WHERE dateTime>? AND dateTime<=?" % archive.table_name,
                                          (_time_ts - 24*3600.0, _time_ts))
                 if _result is not None and _result[0] is not None:
                     if not _result[1] == _result[2] == record['usUnits']:
@@ -251,8 +251,8 @@ class RESTThread(threading.Thread):
                 # (instead of the previous day). But, it's their site,
                 # so we'll do it their way.  That means the SELECT statement
                 # is inclusive on both time ends:
-                _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive "
-                                         "WHERE dateTime>=? AND dateTime<=?", 
+                _result = archive.getSql("SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM %s "
+                                         "WHERE dateTime>=? AND dateTime<=?" % archive.table_name, 
                                          (_sod_ts, _time_ts))
                 if _result is not None and _result[0] is not None:
                     if not _result[1] == _result[2] == record['usUnits']:
@@ -262,8 +262,8 @@ class RESTThread(threading.Thread):
                 else:
                     _datadict['dayRain'] = None
 
-        except weedb.OperationalError:
-            pass
+        except weedb.OperationalError, e:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Database OperationalError '%s'" % (self.protocol_name, e))
             
         return _datadict
 
