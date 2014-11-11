@@ -7,30 +7,31 @@ Look at Gary's (?) changes to allow cron-like report generation.
 
 Move schemas to the extension that uses them.
 
-For Current records, do just one database lookup.
-
 I removed Appendix: Statistical types because it is no longer valid. But,
 it needs to be explained somewhere the difference between vector and scalar
 stats.
 
 Update setup.py.
 
-Update Upgrading Guide.
- - explain how to migrate data from a v2 database to a v3 database
-
 May need to update the guide on packaging an extension.
-
-Verify that examples still work:
-  alarm.py
-  lowBattery.py
-  xsearch.py
 
 On startup, the log should indicate not only which binding is in use, but what
 it is bound to (sqlite or mysql).
 
-Aggregation type "last" should work for wind vectors as well
 
 
+
+ ---- DONE ----
+
+Update Upgrading Guide.
+ - explain how to migrate data from a v2 database to a v3 database
+ - Changes in search list extensions
+ 
+Verify that examples still work:
+  alarm.py 
+  lowBattery.py OK.
+  xsearch.py
+(11/10/14. All are OK. I checked/updated them when updating the docs)
 
 
 
