@@ -2334,12 +2334,12 @@ Mutating actions will request confirmation before proceeding.</p>
     <h2 id="wee_config_wmr200">WMR200</h2>
     <p>The <span class='code'>wee_config_device</span> utility cannot
       configure WMR200 stations.</p>
+    <p>The station emits partial packets, which may confuse some online
+      services.</p>
     <p>When <span class='code'>weewx</span> starts up it will attempt to
       download all records from the console since the last record in the
       archive database.
     </p>
-    <p>The station emits partial packets, which may confuse some online
-      services.</p>
 
 
     <h2 id="wee_config_wmr9x8">WMR9x8</h2>
@@ -2353,6 +2353,12 @@ Mutating actions will request confirmation before proceeding.</p>
 
     <h2 id="wee_config_fousb">Fine Offset 10xx, 20xx, 30xx</h2>
 
+    <p>The station clock can only be set manually via buttons on the
+      console, or (if the station supports it) by WWVB radio.  The
+      FineOffsetUSB driver ignores the station clock since it cannot be
+      trusted.</p>
+    <p>The station reads data from the sensors every 48 seconds.
+      The 30xx stations read UV data every 60 seconds.</p>
     <p>The 10xx and 20xx stations can save up to 4080 historical readings.
       That is about 85 days of data with the default recording interval of
       30 minutes, or about 14 days with a recording interval of 5 minutes.
@@ -2360,12 +2366,6 @@ Mutating actions will request confirmation before proceeding.</p>
     <p>When <span class='code'>weewx</span> starts up it will attempt
       to download all records from the console since the last record in
       the archive database.</p>
-    <p>The station reads data from the sensors every 48 seconds.
-      The 30xx stations read UV data every 60 seconds.</p>
-    <p>The station clock can only be set manually via buttons on the
-      console, or (if the station supports it) by WWVB radio.  The
-      FineOffsetUSB driver ignores the station clock since it cannot be
-      trusted.</p>
 
     <p>When the <span class='code'>station_type</span> is
       <span class='code'>FineOffsetUSB</span>,
@@ -2485,18 +2485,18 @@ Mutating actions will request confirmation before proceeding.</p>
 
 
     <h2 id="wee_config_ws23xx">La Crosse WS23xx</h2>
+    <p>The hardware interface is a serial port, but USB-serial converters
+      can be used with computers that have no serial port.  Beware that
+      not every type of USB-serial converter will work.  Converters based
+      on ATEN UC-232A chipset are known to work.</p>
+    <p>The station does not record wind gust or wind gust direction.</p>
+    <p>The hardware calculates windchill and dewpoint.</p>
     <p>The station has 175 history records.  That is just over 7 days
       of data with the factory default history recording interval of 60
       minutes, or about 14 hours with a recording interval of 5 minutes.</p>
     <p>When <span class='code'>weewx</span> starts up it will attempt
       to download all records from the console since the last record in
       the archive database.</p>
-    <p>The station does not record wind gust or wind gust direction.</p>
-    <p>The hardware calculates windchill and dewpoint.</p>
-    <p>The hardware interface is a serial port, but USB-serial converters
-      can be used with computers that have no serial port.  Beware that
-      not every type of USB-serial converter will work.  Converters based
-      on ATEN UC-232A chipset are known to work.</p>
 
     <p>When the <span class='code'>station_type</span> is
       <span class='code'>WS23xx</span>,
@@ -2573,14 +2573,18 @@ in humidity: 48.0
 
 
     <h2 id="wee_config_ws28xx">La Crosse WS28xx</h2>
+    <p><span class='code'>weewx</span> communicates with a USB transceiver,
+      which communicates with the station console, which in turn communicates
+      with the sensors.  The transceiver and console must be paired and
+      synchronized.</p>
     <p>The station has 1797 history records.  That is just over 6 days
       of data with an archive interval of 5 minutes.</p>
-    <p>The WS28xx driver sets the station archive interval to
-      5 minutes.</p>
     <p>When <span class='code'>weewx</span> starts up it will attempt to
       download all records from the console since the last record in the
       archive database.
     </p>
+    <p>The WS28xx driver sets the station archive interval to
+      5 minutes.</p>
     <p>The WS28xx driver does not support hardware archive record
       generation.</p>
 
@@ -2712,11 +2716,6 @@ wind_gust_max_time: None</p>
     <h2 id="wee_config_te923">TE923</h2>
     <p>The <span class='code'>wee_config_device</span> utility cannot
       configure TE923 stations.</p>
-    <p>The station has either 200 or 3300 history records, depending on
-      the model.  That is just over a day (200 records) or about 23 days
-      (3300 records) with an archive interval of 5 minutes.</p>
-    <p>The TE923 driver is not capable of reading archive records from
-      the station.</p>
     <p>Some station models will recognize up to 5 remote
       temperature/humidity sensor units. Use the hardware switch in each
       sensor unit to identify sensors. Use the
@@ -2724,6 +2723,11 @@ wind_gust_max_time: None</p>
       <span class='code'>weewx.conf</span> to map each sensor to a database
       field.
     </p>
+    <p>The station has either 200 or 3300 history records, depending on
+      the model.  That is just over a day (200 records) or about 23 days
+      (3300 records) with an archive interval of 5 minutes.</p>
+    <p>The TE923 driver is not capable of reading archive records from
+      the station.</p>
 
 
     <h2 id="wee_config_ultimeter">Ultimeter</h2>
@@ -2742,14 +2746,14 @@ wind_gust_max_time: None</p>
 
 
     <h2 id="wee_config_cc3000">RainWise CC3000</h2>
-    <p>The CC3000 data logger stores 2MB of records.</p>
-    <p>The CC3000 driver supports catchup on startup, but it does not
-      support hardware record generation.</p>
     <p>The CC3000 data logger may be configured to return data in
       METRIC or US units.  These are not the same groups of METRIC and US
       units as defined within <span class='code'>weewx</span>.  However, the
       CC3000 driver will convert to the appropriate units for the
       <span class='code'>weewx</span> configuration.</p>
+    <p>The CC3000 data logger stores 2MB of records.</p>
+    <p>The CC3000 driver supports catchup on startup, but it does not
+      support hardware record generation.</p>
 
     <p>When the <span class='code'>station_type</span> is
       <span class='code'>CC3000</span>,

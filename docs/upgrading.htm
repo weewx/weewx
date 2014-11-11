@@ -31,11 +31,43 @@ $(window).scroll(function(){
   });
 });
   </script>
+  <style>
+table .tty {
+  margin: 0;
+}
+#legend {
+  position: fixed;
+  top: 400px;
+  left: 0px;
+  width: 15%;
+  margin: 15px;
+}
+#legend p {
+  width: 100%;
+  font-size: 80%;
+  border: 1px solid #888888;
+}
+.removed {
+  background: #ffdddd;
+}
+.changed {
+  background: #ffe0b0;
+}
+.added {
+  background: #ddffdd;
+}
+  </style>
 </head>
 
 <body>
 
   <div id="toc">
+  </div>
+
+  <div id='legend'>
+    <p class='removed'>removed</p>
+    <p class='changed' style='text-align: center'>changed</p>
+    <p class='added' style='text-align: right'>added</p>
   </div>
 
   <div id="technical_content">
@@ -184,91 +216,118 @@ Version: 3.0.0a1
           <pre class='tty'>[Databases]
     [[archive_sqlite]]
         root = %(WEEWX_ROOT)s
-        database = archive/weewx.sdb
+        <span class='changed'>database</span> = archive/weewx.sdb
         driver = weedb.sqlite
-    [[stats_sqlite]]
+<span class='removed'>    [[stats_sqlite]]
         root = %(WEEWX_ROOT)s
         database = archive/stats.sdb
-        driver = weedb.sqlite
+        driver = weedb.sqlite</span>
     [[archive_mysql]]
         host = localhost
         user = weewx
         password = weewx
-        database = weewx
+        <span class='changed'>database</span> = weewx
         driver = weedb.mysql
-    [[stats_mysql]]
+<span class='removed'>    [[stats_mysql]]
         host = localhost
         user = weewx
         password = weewx
         database = stats
-        driver = weedb.mysql</pre>
+        driver = weedb.mysql</span></pre>
         </td>
         <td>
           <pre class='tty'>[Databases]
     [[archive_sqlite]]
         root = %(WEEWX_ROOT)s
-        <span class='highlight'>database_name</span> = archive/weewx.sdb
+        <span class='changed'>database_name</span> = archive/weewx.sdb
         driver = weedb.sqlite
+
+
+
+
     [[archive_mysql]]
         host = localhost
         user = weewx
         password = weewx
-        <span class='highlight'>database_name</span> = weewx
-        driver = weedb.mysql</pre>
+        <span class='changed'>database_name</span> = weewx
+        driver = weedb.mysql
+
+
+
+
+
+
+</pre>
         </td>
       </tr>
       <tr>
         <td></td>
         <td>
-          <pre class='tty'>[DataBindings]
+          <pre class='tty'><span class='added'>[DataBindings]
     [[wx_binding]]
         database = archive_sqlite
         manager = weewx.wxmanager.WXDaySummaryManager
-        schema = schemas.wview.schema</pre>
+        schema = schemas.wview.schema</span></pre>
         </td>
       </tr>
       <tr>
         <td>
           <pre class='tty'>[StdReport]
     ...
-    archive_database = archive_sqlite
-    stats_database = stats_sqlite</pre>
+<span class='removed'>    archive_database = archive_sqlite
+    stats_database = stats_sqlite</span></pre>
         </td>
         <td>
           <pre class='tty'>[StdReport]
     ...
-    <span class='highlight'>data_binding = wx_binding</span></pre>
+    <span class='added'>data_binding = wx_binding</span></pre>
         </td>
       </tr>
       <tr>
         <td>
-          <pre class='tty'>[Engines]
-    [[WxEngine]]
-        prep_services = weewx.wxengine.StdTimeSynch
-        process_services = weewx.wxengine.StdConvert, \
-weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC
-        archive_services = weewx.wxengine.StdArchive
-        restful_services = weewx.restx.StdStationRegistry, \
-weewx.restx.StdWunderground, weewx.restx.StdPWSweather, \
-weewx.restx.StdCWOP, weewx.restx.StdWOW, \
+          <pre class='tty'>[<span class='changed'>Engines</span>]
+  [[<span class='changed'>WxEngine</span>]]
+    prep_services = \
+weewx.<span class='changed'>wxengine</span>.StdTimeSynch
+    process_services = \
+weewx.<span class='changed'>wxengine</span>.StdConvert, \
+weewx.<span class='changed'>wxengine</span>.StdCalibrate, \
+weewx.<span class='changed'>wxengine</span>.StdQC
+    archive_services = \
+weewx.<span class='changed'>wxengine</span>.StdArchive
+    restful_services = \
+weewx.restx.StdStationRegistry, \
+weewx.restx.StdWunderground, \
+weewx.restx.StdPWSweather, \
+weewx.restx.StdCWOP, \
+weewx.restx.StdWOW, \
 weewx.restx.StdAWEKAS
-        report_services = weewx.wxengine.StdPrint, \
-weewx.wxengine.StdReport</pre>
+    report_services = \
+weewx.<span class='changed'>wxengine</span>.StdPrint, \
+weewx.<span class='changed'>wxengine</span>.StdReport</pre>
         </td>
         <td>
-          <pre class='tty'>[Engine]
-    [[Services]]
-        prep_services = weewx.<span class='highlight'>engine</span>.StdTimeSynch
-        process_services = weewx.<span class='highlight'>engine</span>.StdConvert, \
-weewx.<span class='highlight'>engine</span>.StdCalibrate, weewx.<span class='highlight'>engine</span>.StdQC, \
-<span class='highlight'>weewx.wxservices.StdWXCalculate</span>
-        archive_services = weewx.<span class='highlight'>engine</span>.StdArchive
-        restful_services = weewx.restx.StdStationRegistry, \
-weewx.restx.StdWunderground, weewx.restx.StdPWSweather, \
-weewx.restx.StdCWOP, weewx.restx.StdWOW, \
+          <pre class='tty'>[<span class='changed'>Engine</span>]
+  [[<span class='changed'>Services</span>]]
+    prep_services = \
+weewx.<span class='changed'>engine</span>.StdTimeSynch
+    process_services = \
+weewx.<span class='changed'>engine</span>.StdConvert, \
+weewx.<span class='changed'>engine</span>.StdCalibrate, \
+weewx.<span class='changed'>engine</span>.StdQC<span class='added'>, \
+weewx.wxservices.StdWXCalculate</span>
+    archive_services = \
+weewx.<span class='changed'>engine</span>.StdArchive
+    restful_services = \
+weewx.restx.StdStationRegistry, \
+weewx.restx.StdWunderground, \
+weewx.restx.StdPWSweather, \
+weewx.restx.StdCWOP, \
+weewx.restx.StdWOW, \
 weewx.restx.StdAWEKAS
-        report_services = weewx.<span class='highlight'>engine</span>.StdPrint, \
-weewx.<span class='highlight'>engine</span>.StdReport</pre>
+    report_services = \
+weewx.<span class='changed'>engine</span>.StdPrint, \
+weewx.<span class='changed'>engine</span>.StdReport</pre>
         </td>
       </tr>
     </table>
@@ -311,7 +370,7 @@ weewx.<span class='highlight'>engine</span>.StdReport</pre>
     [[day_images]]
         ...
         [[[daycpu]]]
-            archive_database = cmon_sqlite
+            <span class='changed'>archive_database = cmon_sqlite</span>
             [[[cpu_user]]]
             [[[cpu_idle]]]
             [[[cpu_system]]]</pre>
@@ -322,7 +381,7 @@ weewx.<span class='highlight'>engine</span>.StdReport</pre>
     [[day_images]]
         ...
         [[[daycpu]]]
-<span class='highlight'>            data_binding = cmon_binding</span>
+            <span class='changed'>data_binding = cmon_binding</span>
             [[[cpu_user]]]
             [[[cpu_idle]]]
             [[[cpu_system]]]</pre>
@@ -335,14 +394,13 @@ weewx.<span class='highlight'>engine</span>.StdReport</pre>
       done consistently by the StdWXCalculate service.  Drivers should no
       longer calculate derived quantities such as windchill, heatindex,
       dewpoint, or rain rate.</p>
-      <p>Since the StdWXCalculate service is applied
-      after the StdCalibrate services, the
-      <span class='code'>pressure_offset</span> parameter is no longer
-      necessary for the CC3000, FineOffsetUSB, Ultimeter, WS1, WS23xx, and 
-      WS28xx drivers.</p>
 
     <h3>Pressure calibration</h3>
-    <p>If your pressure was calibrated using the pressure_offset parameter,
+    <p>Since the StdWXCalculate service is applied after the StdCalibrate
+      services, the <span class='code'>pressure_offset</span> parameter is no
+      longer necessary; pressure calibration can be applied just like any
+      other calibration. If your pressure was calibrated using the
+      <span class='code'>pressure_offset</span> parameter,
       move the calibration to the [StdCalibrate] section.  This applies only
       to CC3000, FineOffsetUSB, Ultimeter, WS1, WS23xx, and WS28xx hardware.
     </p>
@@ -351,8 +409,9 @@ weewx.<span class='highlight'>engine</span>.StdReport</pre>
     <p>
       The introduction of <em>data bindings</em> has meant a change in the
       calling signature of <em>search list extensions.</em> By way of example,
-      here's the example from the section <a href="customizing.htm#extending_thelist"><i>Extending
-          the list</i></a> in the <i>Customizing Guide</i>, with the
+      here's the example from the section
+      <a href="customizing.htm#extending_thelist"><i>Extending the list</i></a>
+      in the <i>Customizing Guide</i>, with the
       differences highlighted.
     </p>
     <table style="width:100%;">
@@ -362,41 +421,41 @@ weewx.<span class='highlight'>engine</span>.StdReport</pre>
           <td>3.0</td>
         </tr>
         <tr>
-          <td><pre class="tty"><span class="highlight">def get_extension</span>(self, timespan, <span class="highlight">archivedb, statsdb</span>):
+          <td><pre class="tty"><span class="changed">def get_extension</span>(self, timespan, <span class="changed">archivedb, statsdb</span>):
 
-    all_stats = <span class="highlight">TimeSpanStats</span>(timespan,
-                              <span class="highlight">statsdb</span>,
+    all_stats = <span class="changed">TimeSpanStats</span>(timespan,
+                              <span class="changed">statsdb</span>,
                               formatter=self.generator.formatter,
                               converter=self.generator.converter)
     week_dt = datetime.date.fromtimestamp(timespan.stop) - datetime.timedelta(weeks=1)
     week_ts = time.mktime(week_dt.timetuple())
-    seven_day_stats = <span class="highlight">TimeSpanStats</span>(TimeSpan(week_ts, timespan.stop),
-                                    <span class="highlight">statsdb</span>,
+    seven_day_stats = <span class="changed">TimeSpanStats</span>(TimeSpan(week_ts, timespan.stop),
+                                    <span class="changed">statsdb</span>,
                                     formatter=self.generator.formatter,
                                     converter=self.generator.converter)
 
     search_list_extension = {'alltime'   : all_stats,
                              'seven_day' : seven_day_stats}
         
-    return <span class="highlight">search_list_extension</span>
+    return <span class="changed">search_list_extension</span>
 </pre></td>
-          <td><pre class="tty"><span class="highlight">def get_extension_list</span>(self, timespan, <span class="highlight">db_lookup</span>):
+          <td><pre class="tty"><span class="changed">def get_extension_list</span>(self, timespan, <span class="changed">db_lookup</span>):
 
-    all_stats = <span class="highlight">TimespanBinder</span>(timespan, 
-                               <span class="highlight">db_lookup</span>,
+    all_stats = <span class="changed">TimespanBinder</span>(timespan, 
+                               <span class="changed">db_lookup</span>,
                                formatter=self.generator.formatter,
                                converter=self.generator.converter)
     week_dt = datetime.date.fromtimestamp(timespan.stop) - datetime.timedelta(weeks=1)
     week_ts = time.mktime(week_dt.timetuple())
-    seven_day_stats = <span class="highlight">TimespanBinder</span>(TimeSpan(week_ts, timespan.stop),
-                                     <span class="highlight">db_lookup</span>,
+    seven_day_stats = <span class="changed">TimespanBinder</span>(TimeSpan(week_ts, timespan.stop),
+                                     <span class="changed">db_lookup</span>,
                                      formatter=self.generator.formatter,
                                      converter=self.generator.converter)
 
     search_list_extension = {'alltime'   : all_stats,
                              'seven_day' : seven_day_stats}
         
-    return <span class="highlight">[search_list_extension]</span>  </pre></td>
+    return <span class="changed">[search_list_extension]</span>  </pre></td>
         </tr>
       </tbody>
     </table>
