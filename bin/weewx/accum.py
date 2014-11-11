@@ -333,6 +333,10 @@ class Accum(dict):
         if weewx.debug:
             assert(obs_type == 'windSpeed')
         
+        # First add it to regular old 'windSpeed', then
+        # treat it like a vector.
+        self.add_value(record, obs_type, add_hilo)
+        
         # If the type has not been seen before, initialize it
         self.init_type('wind')
         # Then add to highs/lows, and to the running sum:
