@@ -72,11 +72,11 @@ def drop(db_dict):
 class Connection(object):
     """Abstract base class, representing a connection to a database."""
 
-    def __init__(self, connection, database, dbtype):
+    def __init__(self, connection, database_name, dbtype):
         """Superclass should raise exception of type weedb.OperationalError
         if the database does not exist."""
         self.connection = connection
-        self.database = database
+        self.database_name = database_name
         self.dbtype = dbtype
 
     def cursor(self):

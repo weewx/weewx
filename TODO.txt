@@ -20,8 +20,8 @@ May need to update the guide on packaging an extension.
 On startup, the log should indicate not only which binding is in use, but what
 it is bound to (sqlite or mysql).
 
-It's possible that if there is a long catchup, the uploaders may get locked out,
-causing a Database Locked error. Should do a retry.
+
+
 
 
 
@@ -35,10 +35,14 @@ Update Upgrading Guide.
  
 Verify that examples still work:
   alarm.py 
-  lowBattery.py OK.
+  lowBattery.py
   xsearch.py
 (11/10/14. All are OK. I checked/updated them when updating the docs)
 
+The table name is explicitly specified in the uploader database queries. E.g.,
+  "SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>=? AND dateTime<=?"
+Does this matter?
+(11/11/14. Now substitutes the table name into the query string)
 
 
 

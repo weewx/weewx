@@ -32,7 +32,9 @@ class Manager(object):
     
     USEFUL ATTRIBUTES
     
-    database: The database the manager is bound to.
+    database_name: The name of the database the manager is bound to.
+    
+    table_name: The name of the main, archive table.
     
     sqlkeys: A list of the SQL keys that the database table supports.
     
@@ -131,8 +133,8 @@ class Manager(object):
         return dbmanager
     
     @property
-    def database(self):
-        return self.connection.database
+    def database_name(self):
+        return self.connection.database_name
     
     @property
     def obskeys(self):
@@ -164,11 +166,11 @@ class Manager(object):
                 _cursor.execute("CREATE TABLE %s (%s);" % (self.table_name, _sqltypestr, ))
         except weedb.DatabaseError, e:
             syslog.syslog(syslog.LOG_ERR, "manager: Unable to create table '%s' in database '%s': %s" % 
-                          (self.table_name, self.database, e))
+                          (self.table_name, self.database_name, e))
             raise
     
         syslog.syslog(syslog.LOG_NOTICE, "manager: Created and initialized table '%s' in database '%s'" % 
-                      (self.table_name, self.database))
+                      (self.table_name, self.database_name))
 
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
@@ -241,11 +243,11 @@ class Manager(object):
             cursor.execute(sql_insert_stmt, value_list)
             syslog.syslog(log_level, "manager: added record %s to database '%s'" % 
                           (weeutil.weeutil.timestamp_to_string(record['dateTime']),
-                           os.path.basename(self.connection.database)))
+                           os.path.basename(self.database_name)))
         except Exception, e:
             syslog.syslog(syslog.LOG_ERR, "manager: unable to add record %s to database '%s': %s" %
                           (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
-                           os.path.basename(self.connection.database),
+                           os.path.basename(self.database_name),
                            e))
 
     def genBatchRows(self, startstamp=None, stopstamp=None):
@@ -970,7 +972,7 @@ class DaySummaryManager(Manager):
             # Database has not been initialized with the summaries. Is there a schema?
             if schema is None:
                 # Uninitialized, but no schema was supplied. Raise an exception
-                raise weedb.OperationalError("No day summary schema for table '%s' in database '%s'" % (self.table_name, connection.database))
+                raise weedb.OperationalError("No day summary schema for table '%s' in database '%s'" % (self.table_name, connection.database_name))
             # There is a schema. Create all the daily summary tables as one transaction:
             with weedb.Transaction(self.connection) as _cursor:
                 self._initialize_day_tables(schema, _cursor)
@@ -1011,7 +1013,7 @@ class DaySummaryManager(Manager):
         self._set_day_summary(_day_summary, record['dateTime'], cursor)
         syslog.syslog(log_level, "manager: added record %s to daily summary in '%s'" % 
                       (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
-                       os.path.basename(self.connection.database)))
+                       os.path.basename(self.database_name)))
         
     def updateHiLo(self, accumulator):
         """Use the contents of an accumulator to update the daily hi/lows."""
