@@ -595,7 +595,7 @@ class StdArchive(StdService):
         # This will create the database if it doesn't exist, then return an
         # opened instance of the database manager. 
         dbmanager = self.engine.dbbinder.get_database(self.data_binding, initialize=True)
-        syslog.syslog(syslog.LOG_INFO, "engine: Using database: %s" % (dbmanager.database_name,))
+        syslog.syslog(syslog.LOG_INFO, "engine: Using binding '%s' to database '%s'" % (self.data_binding, dbmanager.database_name))
         
         # In case this is a recent update or the user has dropped the daily
         # summary tables, backfill them:

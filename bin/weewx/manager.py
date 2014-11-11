@@ -243,11 +243,11 @@ class Manager(object):
             cursor.execute(sql_insert_stmt, value_list)
             syslog.syslog(log_level, "manager: added record %s to database '%s'" % 
                           (weeutil.weeutil.timestamp_to_string(record['dateTime']),
-                           os.path.basename(self.database_name)))
+                           self.database_name))
         except Exception, e:
             syslog.syslog(syslog.LOG_ERR, "manager: unable to add record %s to database '%s': %s" %
                           (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
-                           os.path.basename(self.database_name),
+                           self.database_name,
                            e))
 
     def genBatchRows(self, startstamp=None, stopstamp=None):
@@ -1013,7 +1013,7 @@ class DaySummaryManager(Manager):
         self._set_day_summary(_day_summary, record['dateTime'], cursor)
         syslog.syslog(log_level, "manager: added record %s to daily summary in '%s'" % 
                       (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
-                       os.path.basename(self.database_name)))
+                       self.database_name))
         
     def updateHiLo(self, accumulator):
         """Use the contents of an accumulator to update the daily hi/lows."""
