@@ -38,6 +38,10 @@ return the last temperature seen in the week.
 Introduced a new aggregation type ".lasttime" which returns the time
 of the above.
 
+Can now differentiate between the max speed seen in the archive records
+(e.g., $day.windSpeed.max) and the max gust seen ($day.wind.max or
+$day.windGust.max).
+
 Allow other data bindings to be used in images.
 
 The archive interval can now change within a database without

@@ -1377,6 +1377,97 @@ Sunrise, sunset: 06:51 19:30</p>
       </table>
 
 
+    <h3>Wind</h3>
+    <p>
+        <span class="code">Weewx</span> treats wind differently from the other
+        observation values because it can also be treated as a <em>vector</em>.
+        Here's a table of all the different types:</p>
+    <table class="indent" style="width:50%;">
+      <tbody>
+        <tr class="first_row">
+          <td><i>Observation type</i></td>
+          <td>Meaning</td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">windSpeed</span></td>
+          <td>The average wind speed seen during the archive period.</td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">windDir</span></td>
+          <td>The vector averaged wind direction seen during the archive period.</td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">windGust</span></td>
+          <td>The maximum (gust) wind speed seen during the archive period.</td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">windGustDir</span></td>
+          <td>The direction of the wind when the gust was observed.</td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">wind</span></td>
+          <td>A vector composite of the wind. In Version 3, this only
+          appears in the daily summaries, so it can only be used in
+          aggregate calculations.</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <p>All of these values can be used in your tags. Here's some examples:</p>
+
+    <table class="indent" style="width: 50%;">
+      <tbody>
+        <tr class="first_row">
+          <td><i>Tag</i></td>
+          <td>Meaning</td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">$day.windSpeed.avg</span></td>
+          <td>The average wind speed since midnight. If the wind blows east
+            at 5 m/s for 2 hours, then west at 5 m/s for 2 hours, the average
+            wind speed is 5 m/s.</td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">$day.wind.avg</span></td>
+          <td>The average wind speed since midnight. Same as 
+          <span class="code">$day.windSpeed.avg</span> above.
+          </td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">$day.wind.vecavg</span></td>
+          <td>The <em>vector average</em> wind speed since midnight. If the
+            wind blows east at 5 m/s for 2 hours, then west at 5 m/s for 2
+            hours, the vector average wind speed is zero.
+          </td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">$day.windSpeed.max</span></td>
+          <td>The max wind speed of all the archive records. This is the
+            max of the winds averaged over the archive intervals, which is <em>not</em>
+            the same as the maximum observed wind speed.
+          </td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">$day.windGust.max</span></td>
+          <td>The maximum observed wind speed since midnight. <i>I.e.,</i>
+            the maximum gust.
+          </td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">$day.windDir.avg</span></td>
+          <td>Not a very useful quantity. This is the strict, arithmetic
+            average of all the compass wind direction. Probably not what you
+            want.</td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">$day.wind.vecdir</span></td>
+          <td>The direction of the vector averaged wind speed. If the wind
+            blows northwest for two hours, then southwest for two hours, the
+            vector averaged direction is west.</td>
+        </tr>
+      </tbody>
+    </table>
+
     <h2 id="defining_new_tags">Defining new tags</h2>
 
       <p>
@@ -4434,11 +4525,11 @@ Options:
         </tr>
         <tr>
           <td class="first_col code">vecavg</td>
-          <td>The vector average magnitude in the aggregation period.</td>
+          <td>The vector average speed in the aggregation period.</td>
         </tr>
         <tr>
           <td class="first_col code">vecdir</td>
-          <td>The direction of the average vector.</td>
+          <td>The vector averaged direction during the aggregation period.</td>
         </tr>
       </tbody>
     </table>

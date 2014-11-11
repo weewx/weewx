@@ -5,10 +5,6 @@ indicate which driver they want?
 
 Move schemas to the extension that uses them.
 
-I removed Appendix: Statistical types because it is no longer valid. But,
-it needs to be explained somewhere the difference between vector and scalar
-stats.
-
 Update setup.py.
 
 May need to update the guide on packaging an extension.
@@ -42,6 +38,11 @@ it is bound to (sqlite or mysql).
 
 Both tables archive_day_windSpeed and archive_day_wind exist. 
 [11/11/14. Both now get updated. $day.wind.max and $day.windSpeed.max return the same thing]
+
+I removed Appendix: Statistical types because it is no longer valid. But,
+it needs to be explained somewhere the difference between vector and scalar
+stats.
+[11/11/14. Added a section "Winds" to the Customizing Guide, explaining the differences.]
 
 
 
