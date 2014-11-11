@@ -36,7 +36,7 @@ INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DRIVER_VERSION = '0.12'
+DRIVER_VERSION = '0.13'
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 
@@ -59,6 +59,9 @@ def loader(config_dict, engine):
     station = WS1(altitude=altitude_ft, **config_dict['WS1'])
     return station
 
+def _format(buf):
+    return ' '.join(["%0.2X" % ord(c) for c in buf])
+
 class WS1(weewx.abstractstation.AbstractStation):
     '''weewx driver that communicates with an ADS-WS1 station
     
@@ -79,6 +82,7 @@ class WS1(weewx.abstractstation.AbstractStation):
         self.port = stn_dict.get('port', DEFAULT_PORT)
         self.polling_interval = float(stn_dict.get('polling_interval', 1))
         self.max_tries = int(stn_dict.get('max_tries', 5))
+        self.retry_wait = int(stn_dict.get('retry_wait', 10))
         self.pressure_offset = float(stn_dict.get('pressure_offset', 0))
         self.last_rain = None
         loginf('driver version is %s' % DRIVER_VERSION)
@@ -97,17 +101,18 @@ class WS1(weewx.abstractstation.AbstractStation):
                           'usUnits' : weewx.US }
                 # open a new connection to the station for each reading
                 with Station(self.port) as station:
-                    bytes = station.get_readings()
-                data = Station.parse_readings(bytes)
+                    reading = station.get_readings()
+                data = Station.parse_readings(reading)
                 packet.update(data)
                 self._augment_packet(packet)
                 ntries = 0
                 yield packet
                 if self.polling_interval:
                     time.sleep(self.polling_interval)
-            except weewx.WeeWxIOError, e:
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
                 logerr("Failed attempt %d of %d to get LOOP data: %s" %
                        (ntries, self.max_tries, e))
+                time.sleep(self.retry_wait)
         else:
             msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
             logerr(msg)
@@ -150,7 +155,7 @@ class Station(object):
     def __init__(self, port):
         self.port = port
         self.baudrate = 2400
-        self.timeout = 30
+        self.timeout = 3
         self.serial_port = None
 
     def __enter__(self):
@@ -172,15 +177,11 @@ class Station(object):
             self.serial_port = None
 
     def read(self, nchar=1):
-        try:
-            buf = self.serial_port.read(nchar)
-        except serial.serialutil.SerialException, e:
-            raise weewx.WeeWxIOError(e)
+        buf = self.serial_port.read(nchar)
         n = len(buf)
         if n != nchar:
             if DEBUG_READ and n:
-                logdbg("partial buffer: '%s'" %
-                       ' '.join(["%0.2X" % ord(c) for c in buf]))
+                logdbg("partial buffer: '%s'" % _format(buf))
             raise weewx.WeeWxIOError("Read expected %d chars, got %d" %
                                      (nchar, n))
         return buf
@@ -192,25 +193,32 @@ class Station(object):
                                      (len(data), n))
 
     def get_readings(self):
-        bytes = []
+        b = []
+        bad_byte = False
         while True:
             c = self.read(1)
             if c == "\r":
                 break
-            elif c == '!' and len(bytes) > 0:
+            elif c == '!' and len(b) > 0:
                 break
             elif c == '!':
-                bytes = []
+                b = []
             else:
-                bytes.append(c)
+                try:
+                    int(c, 16)
+                except ValueError, e:
+                    bad_byte = True
+                b.append(c)
         if DEBUG_READ:
-            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in bytes]))
-        if len(bytes) != 48:
-            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(bytes))
-        return ''.join(bytes)
+            logdbg("bytes: '%s'" % _format(b))
+        if len(b) != 48:
+            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(b))
+        if bad_byte:
+            raise weewx.WeeWxIOError("One or more bad bytes: %s" % _format(b))
+        return ''.join(b)
 
     @staticmethod
-    def parse_readings(bytes):
+    def parse_readings(b):
         '''WS1 station emits data in PeetBros format:
 
         http://www.peetbros.com/shop/custom.aspx?recid=29
@@ -236,18 +244,18 @@ class Station(object):
           WWWW - one minute wind average (0.1 kph)
         '''
         data = {}
-        data['windSpeed'] = int(bytes[0:4], 16) * 0.1 * MILE_PER_KM # mph
-        data['windDir'] = int(bytes[6:8], 16) * 1.411764 # compass degrees
-        data['outTemp'] = int(bytes[8:12], 16) * 0.1 # degree_F
-        data['long_term_rain'] = int(bytes[12:16], 16) * 0.01 # inch
-        data['pressure'] = int(bytes[16:20], 16) * 0.1 * INHG_PER_MBAR # inHg
-        data['inTemp'] = int(bytes[20:24], 16) * 0.1 # degree_F
-        data['outHumidity'] = int(bytes[24:28], 16) * 0.1 # percent
-        data['inHumidity'] = int(bytes[28:32], 16) * 0.1 # percent
-        data['day_of_year'] = int(bytes[32:36], 16)
-        data['minute_of_day'] = int(bytes[36:40], 16)
-        data['daily_rain'] = int(bytes[40:44], 16) * 0.01 # inch
-        data['wind_average'] = int(bytes[44:48], 16) * 0.1 * MILE_PER_KM # mph
+        data['windSpeed'] = int(b[0:4], 16) * 0.1 * MILE_PER_KM # mph
+        data['windDir'] = int(b[6:8], 16) * 1.411764 # compass degrees
+        data['outTemp'] = int(b[8:12], 16) * 0.1 # degree_F
+        data['long_term_rain'] = int(b[12:16], 16) * 0.01 # inch
+        data['pressure'] = int(b[16:20], 16) * 0.1 * INHG_PER_MBAR # inHg
+        data['inTemp'] = int(b[20:24], 16) * 0.1 # degree_F
+        data['outHumidity'] = int(b[24:28], 16) * 0.1 # percent
+        data['inHumidity'] = int(b[28:32], 16) * 0.1 # percent
+        data['day_of_year'] = int(b[32:36], 16)
+        data['minute_of_day'] = int(b[36:40], 16)
+        data['daily_rain'] = int(b[40:44], 16) * 0.01 # inch
+        data['wind_average'] = int(b[44:48], 16) * 0.1 * MILE_PER_KM # mph
         return data
 
 # define a main entry point for basic testing of the station without weewx
