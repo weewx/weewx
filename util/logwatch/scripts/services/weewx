@@ -37,6 +37,10 @@ my $FORECAST_RECORDS = 'forecast: records generated';
 my $FORECAST_PRUNINGS = 'forecast: prunings';
 my $FORECAST_DOWNLOADS = 'forecast: downloads';
 my $FORECAST_SAVED = 'forecast: records saved';
+my $FTP_UPLOADS = 'ftp: files uploaded';
+my $FTP_FAILS = 'ftp: failures';
+my $RSYNC_UPLOADS = 'rsync: files uploaded';
+my $RSYNC_FAILS = 'rsync: failures';
 
 # any lines that do not match the patterns we define
 my @unmatched = ();
@@ -125,6 +129,14 @@ while(defined($_ = <STDIN>)) {
         $counts{$RECORDS_SKIPPED} += 1;
     } elsif (/restful: Published record/) {
         $counts{$RECORDS_PUBLISHED} += 1;
+    } elsif (/ftpupload: Uploaded file/) {
+        $counts{$FTP_UPLOADS} += 1;
+    } elsif (/ftpupload: Failed to upload file/) {
+        $counts{$FTP_FAILS} += 1;
+    } elsif (/rsync\'d (\d+) files/) {
+        $counts{$RSYNC_UPLOADS} += $1;
+    } elsif (/rsyncupload: rsync reported errors/) {
+        $counts{$RSYNC_FAILS} += 1;
     } elsif (/restful: Unable to publish record/) {
         if (/restful: Unable to publish record \d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d \S\S\S \(\d+\) to (\S+)/) {
             $publish_fails{$1} += 1;
@@ -427,6 +439,9 @@ while(defined($_ = <STDIN>)) {
              /restx: WeatherBug: url/ ||
              /restx: Xively: data/ ||
              /restx: Xively: url/ ||
+             /ftpupload: attempt/ ||
+             /ftpupload: Made directory/ ||
+             /rsyncupload: rsync executed in/ ||
              /awekas: code/ ||
              /awekas: read/ ||
              /awekas: url/ ||
