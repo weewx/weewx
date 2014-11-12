@@ -1190,7 +1190,7 @@ if __name__ == "__main__":
              ['docs/css/ui-lightness/jquery-ui-1.10.4.custom.min.css']),
             ('docs/js',
              ['docs/js/jquery.tocify-1.9.0.min.js',
-              'docs/js/jquery-1.10.2.min.js',
+              'docs/js/jquery-1.11.1.min.js',
               'docs/js/jquery-ui-1.10.4.custom.min.js',
               'docs/js/weewx.js']),
             ('skins/Ftp',
