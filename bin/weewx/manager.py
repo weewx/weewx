@@ -10,7 +10,6 @@
 """Classes and functions for interfacing with a weewx archive."""
 from __future__ import with_statement
 import math
-import os.path
 import syslog
 import sys
 import time

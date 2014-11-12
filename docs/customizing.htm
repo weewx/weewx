@@ -1379,13 +1379,15 @@ Sunrise, sunset: 06:51 19:30</p>
 
     <h3>Wind</h3>
     <p>
-        Wind is treated differently from the other observation values because
-        it can be considered a <em>vector</em> of speed and direction.
-        Here is a table of the types related to wind:</p>
-    <table class="indent">
+      Wind deserves a few comments because it is stored in the database in two
+      different ways: as a set of scalars, and as a <em>vector</em> of speed and
+      direction. Here are the four wind-related scalars stored in the main archive
+      database:
+    </p>
+    <table class="indent" style="width:50%;">
       <tbody>
         <tr class="first_row">
-          <td><i>Observation type</i></td>
+          <td><i>Archive type</i></td>
           <td>Meaning</td>
         </tr>
         <tr>
@@ -1394,7 +1396,9 @@ Sunrise, sunset: 06:51 19:30</p>
         </tr>
         <tr>
           <td class="first_col"><span class="code">windDir</span></td>
-          <td>The vector averaged wind direction seen during the archive period.</td>
+          <td>If software record generation is used, this is the vector
+            average over the archive period. If hardware record generation is
+            used, the value is hardware dependent.</td>
         </tr>
         <tr>
           <td class="first_col"><span class="code">windGust</span></td>
@@ -1404,22 +1408,57 @@ Sunrise, sunset: 06:51 19:30</p>
           <td class="first_col"><span class="code">windGustDir</span></td>
           <td>The direction of the wind when the gust was observed.</td>
         </tr>
+      </tbody>
+    </table>
+
+    <p>In addition, a wind vector is stored in the daily summaries.</p>
+    <p class="note" style="display:inline-block">
+      <b>Note</b><br/>In <span class="code">weewx</span> V3.x, the vector is only
+      stored in the daily <em>summaries</em>, so the tag <span class="code">wind</span>
+      can only be used in aggregations such as <span class="code">$day</span>, <span
+        class="code">$month</span>, <i>etc.</i>
+    </p>
+    <table class="indent" style="width:50%;">
+      <tbody>
+        <tr class="first_row">
+          <td><i>Daily summary type</i></td>
+          <td>Meaning</td>
+        </tr>
         <tr>
           <td class="first_col"><span class="code">wind</span></td>
-          <td>A vector composite of the wind. In Version 3, this only
-          appears in the daily summaries, so it can only be used in
-          aggregate calculations.</td>
+          <td>A vector composite of the wind. It includes information such
+          as the direction of the maximum gust, and the x- and y-vector
+          wind run.</td>
         </tr>
       </tbody>
     </table>
     
     <p>Any of these can be used in your tags. Here are some examples:</p>
 
-    <table class="indent">
+    <table class="indent" style="width: 50%;">
       <tbody>
         <tr class="first_row">
           <td><i>Tag</i></td>
           <td>Meaning</td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">$current.windSpeed</span></td>
+          <td>The average wind speed over the most recent archive interval.</td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">$current.windDir</span></td>
+          <td>If software record generation is used, this is the vector
+            average over the archive interval. If hardware record generation is
+            used, the value is hardware dependent.
+          </td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">$current.windGust</span></td>
+          <td>The maximum wind speed (gust) over the most recent archive interval.</td>
+        </tr>
+        <tr>
+          <td class="first_col"><span class="code">$current.windGustDir</span></td>
+          <td>The direction of the gust.</td>
         </tr>
         <tr>
           <td class="first_col"><span class="code">$day.windSpeed.avg</span></td>
@@ -1442,9 +1481,9 @@ Sunrise, sunset: 06:51 19:30</p>
         </tr>
         <tr>
           <td class="first_col"><span class="code">$day.windSpeed.max</span></td>
-          <td>The max wind speed of all the archive records. This is the
-            max of the winds averaged over the archive intervals, which is <em>not</em>
-            the same as the maximum observed wind speed.
+          <td>The max average wind speed. The wind is averaged over each of
+            the archive intervals. Then these numbers are averaged. Note that
+            this is <em>not</em> the same as the maximum observed wind speed.
           </td>
         </tr>
         <tr>

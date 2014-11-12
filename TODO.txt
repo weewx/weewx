@@ -1,11 +1,14 @@
 --------------------  TODO for V3  --------------------------- 
               
-Each driver should be responsible for installing its own stanza in the configuration file.  Easy enough, but during the install process how do we get user to
-indicate which driver they want?
+Update setup.py.
+  -- General update strategy for weewx.conf
+  -- Add configure keyword, with option --device=
+
+Quick start guide
+
+Strategy for extending units.
 
 Move schemas to the extension that uses them.
-
-Update setup.py.
 
 May need to update the guide on packaging an extension.
 
@@ -17,6 +20,9 @@ May need to update the guide on packaging an extension.
 
 
  ---- DONE ----
+
+Update uploader extensions to use new database.
+(11/12/14 by Matthew)
 
 Update Upgrading Guide.
  - explain how to migrate data from a v2 database to a v3 database
