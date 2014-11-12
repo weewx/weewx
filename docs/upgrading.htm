@@ -487,7 +487,7 @@ weewx.<span class='changed'>engine</span>.StdReport</pre>
       <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
       <tr>
         <td>
-          <pre class='tty'>import <span class="changed">weewx.abstractstations</span>
+          <pre class='tty'>import <span class="changed">weewx.abstractstation</span>
 
 class ACME960(<span class="changed">weewx.abstractstation.AbstractStation</span>):
     ...</pre>
@@ -496,6 +496,27 @@ class ACME960(<span class="changed">weewx.abstractstation.AbstractStation</span>
           <pre class='tty'>import <span class="changed">weewx.drivers</span>
 
 class ACME960(<span class="changed">weewx.drivers.AbstractDevice</span>):
+    ...</pre>
+        </td>
+      </tr>
+    </table>
+
+    <h3>Service APIs</h3>
+    <p>The base class for services has moved.  This affects only those
+    who have written custom services.</p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <pre class='tty'>import <span class="changed">weewx.wxengine</span>
+
+class BetterMousetrapService(<span class="changed">weewx.wxengine.StdService</span>):
+    ...</pre>
+        </td>
+        <td>
+          <pre class='tty'>import <span class="changed">weewx.engine</span>
+
+class BetterMousetrapService(<span class="changed">weewx.engine.StdService</span>):
     ...</pre>
         </td>
       </tr>
