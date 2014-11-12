@@ -1636,9 +1636,9 @@ $station.altitude</pre>
       attribute, <span class="code">outTemp</span>. There is no such hard coded
       attribute (hard coding all the different observation types would be
       impossible!). Instead, class <span class="code">TimespanBinder</span>
-      defines the method <a
-        href="https://docs.python.org/2/reference/datamodel.html#object.__getattr__"><span
-        class="code">__getattr__</span></a>. Any unknown attribute is passed to this
+      defines the method <span class="code">
+        <a style="text-decoration: none"
+           href="https://docs.python.org/2/reference/datamodel.html#object.__getattr__">__getattr__</a></span>. Any unknown attribute is passed to this
       special method. It returns an instance of the next class in the chain, <span
         class="code">weewx.tags.ObservationBinder</span>, which not only
       remembers all the previous stuff, but also adds the observation type, <span
