@@ -175,8 +175,8 @@ class StdWXCalculate(weewx.engine.StdService):
         dbmanager = self.engine.dbbinder.get_database('wx_binding')
         sts = ts - interval
         r = dbmanager.getSql("SELECT SUM(rain) FROM archive "
-                       "WHERE dateTime>? AND dateTime<?",
-                       (sts, ts))
+                             "WHERE dateTime>? AND dateTime<?",
+                             (sts, ts))
         return r[0] if r is not None else None
 
     def get_temperature_12h(self, ts, arcint):

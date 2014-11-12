@@ -39,13 +39,15 @@ table .tty {
   position: fixed;
   top: 400px;
   left: 0px;
-  width: 15%;
+  width: 10%;
   margin: 15px;
 }
 #legend p {
   width: 100%;
   font-size: 80%;
   border: 1px solid #888888;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 .removed {
   background: #ffdddd;
@@ -518,6 +520,63 @@ class BetterMousetrapService(<span class="changed">weewx.wxengine.StdService</sp
 
 class BetterMousetrapService(<span class="changed">weewx.engine.StdService</span>):
     ...</pre>
+        </td>
+      </tr>
+    </table>
+
+    <h3>Database APIs</h3>
+    <p>The methods for opening and querying databases have changed.  The
+      DBBinder class replaces the Archive class as the entry point
+      for opening and querying databases.  The table name is no longer
+      hard-coded, so developers should use the table name from the database
+      binding.  This affects only those who have written code that accesses
+      databases.</p>
+    <p>Here are examples from services and uploaders.</p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <pre class='tty'>db = config_dict['StdArchive']['archive_database']
+self.database_dict = config_dict['Databases'][db]</pre>
+        </td>
+        <td>
+          <em>no longer necessary</em>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <pre class='tty'>with weewx.archive.Archive.open(self.database_dict) as archive:
+    data = self.calculate(event.packet, archive)</pre>
+        </td>
+        <td>
+          <pre class='tty'>dbm = self.engine.dbbinder.get_database('wx_binding')
+data = self.calculate(event_data, dbm)</pre>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <pre class='tty'>val = archive.getSql("SELECT AVG(windSpeed) FROM archive "
+                     "WHERE dateTime>? AND dateTime<=?",
+                     (start_ts, end_ts))</pre>
+        </td>
+        <td>
+          <pre class='tty'>val = dbm.getSql("SELECT AVG(windSpeed) FROM %s "
+                 "WHERE dateTime>? AND dateTime<=?" %
+                 dbm.table_name, (start_ts, end_ts))</pre>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <pre class='tty'>site_dict = weewx.restx.get_dict(config_dict, 'Uploader')
+db_name = config_dict['StdArchive']['archive_database']
+db_dict = config_dict['Databases'][db_name]
+site_dict.setdefault('database_dict', db_dict)</pre>
+        </td>
+        <td>
+          <pre class='tty'>site_dict = config_dict['StdRESTful']['Uploader']
+site_dict = accumulateLeaves(site_dict, max_level=1)
+_, site_dict['database_dict'], _ = \
+    weewx.manager.get_database_config(config_dict, 'wx_binding')</pre>
         </td>
       </tr>
     </table>
