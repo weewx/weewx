@@ -205,6 +205,16 @@ Version: 3.0.0a1
       summaries from the archive data. Your old "stats" database will no longer
       be used and may safely be deleted.</p>
 
+    <h3>Pressure calibration</h3>
+    <p>Since the new StdWXCalculate service is applied after the StdCalibrate
+      services, the <span class='code'>pressure_offset</span> parameter is no
+      longer necessary; pressure calibration can be applied just like any
+      other calibration. If your pressure was calibrated using the
+      <span class='code'>pressure_offset</span> parameter,
+      move the calibration to the [StdCalibrate] section.  This applies only
+      to CC3000, FineOffsetUSB, Ultimeter, WS1, WS23xx, and WS28xx hardware.
+    </p>
+
     <h3>weewx.conf</h3>
     <p>There is no automatic upgrade of <span class='code'>weewx.conf</span>
       from version 2.x to version 3.x; you must make changes yourself.  The
@@ -388,22 +398,6 @@ weewx.<span class='changed'>engine</span>.StdReport</pre>
         </td>
       </tr>
     </table>
-
-    <h3>Derived quantities</h3>
-    <p>Some calculations that were done in drivers or in hardware are now
-      done consistently by the StdWXCalculate service.  Drivers should no
-      longer calculate derived quantities such as windchill, heatindex,
-      dewpoint, or rain rate.</p>
-
-    <h3>Pressure calibration</h3>
-    <p>Since the StdWXCalculate service is applied after the StdCalibrate
-      services, the <span class='code'>pressure_offset</span> parameter is no
-      longer necessary; pressure calibration can be applied just like any
-      other calibration. If your pressure was calibrated using the
-      <span class='code'>pressure_offset</span> parameter,
-      move the calibration to the [StdCalibrate] section.  This applies only
-      to CC3000, FineOffsetUSB, Ultimeter, WS1, WS23xx, and WS28xx hardware.
-    </p>
     
     <h3>Search list extensions</h3>
     <p>
@@ -477,6 +471,35 @@ weewx.<span class='changed'>engine</span>.StdReport</pre>
         The list will be searched in order.
       </li>
     </ul>
+
+    <h3>Derived quantities</h3>
+    <p>Some calculations that were done in drivers or in hardware are now
+      done consistently by the new StdWXCalculate service.  Drivers should no
+      longer calculate derived quantities such as windchill, heatindex,
+      dewpoint, or rain rate.</p>
+
+    <h3>Driver APIs</h3>
+    <p>The base class for drivers has been renamed, and new, optional,
+      methods have been defined to provide hooks for configuring hardware
+      and producing default and upgraded configuration stanzas.  These
+      changes affect only those who have written custom drivers.</p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <pre class='tty'>import <span class="changed">weewx.abstractstations</span>
+
+class ACME960(<span class="changed">weewx.abstractstation.AbstractStation</span>):
+    ...</pre>
+        </td>
+        <td>
+          <pre class='tty'>import <span class="changed">weewx.drivers</span>
+
+class ACME960(<span class="changed">weewx.drivers.AbstractDevice</span>):
+    ...</pre>
+        </td>
+      </tr>
+    </table>
 
 
     <h2>V2.6 or earlier</h2>

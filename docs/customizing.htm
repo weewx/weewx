@@ -1379,10 +1379,10 @@ Sunrise, sunset: 06:51 19:30</p>
 
     <h3>Wind</h3>
     <p>
-        <span class="code">Weewx</span> treats wind differently from the other
-        observation values because it can also be treated as a <em>vector</em>.
-        Here's a table of all the different types:</p>
-    <table class="indent" style="width:50%;">
+        Wind is treated differently from the other observation values because
+        it can be considered a <em>vector</em> of speed and direction.
+        Here is a table of the types related to wind:</p>
+    <table class="indent">
       <tbody>
         <tr class="first_row">
           <td><i>Observation type</i></td>
@@ -1413,9 +1413,9 @@ Sunrise, sunset: 06:51 19:30</p>
       </tbody>
     </table>
     
-    <p>All of these values can be used in your tags. Here's some examples:</p>
+    <p>Any of these can be used in your tags. Here are some examples:</p>
 
-    <table class="indent" style="width: 50%;">
+    <table class="indent">
       <tbody>
         <tr class="first_row">
           <td><i>Tag</i></td>
@@ -1449,7 +1449,7 @@ Sunrise, sunset: 06:51 19:30</p>
         </tr>
         <tr>
           <td class="first_col"><span class="code">$day.windGust.max</span></td>
-          <td>The maximum observed wind speed since midnight. <i>I.e.,</i>
+          <td>The maximum observed wind speed since midnight, <i>i.e.,</i>
             the maximum gust.
           </td>
         </tr>
