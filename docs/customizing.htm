@@ -3118,61 +3118,79 @@ outTemp = Outside Temperature</pre>
 
       <h2>Translate the templates</h2>
       <p>First, you will need to go through the templates and translate to your
-        target language. Obvious text strings such as <span class="code">"Current
-          Weather Conditions"</span> will need to be translated.</p>
+        target language. Obvious text strings such as
+        <span class="code">"Current Weather Conditions"</span>
+        will need to be translated.</p>
 
-      <h2>Modify <span class="code">skin.conf</span> to reflect local conventions</h2>
+      <h2>Modify the skin configuration</h2>
       <p>Next, you will need to go through <span class="code">skin.conf</span>
-        and modify any labels to follow local conventions.
+        to translate labels and modify formats to follow local conventions.
       </p>
+
+      <p>You will probably want to change the generic labels used for the
+        observation types:</p>
+      <pre class="tty">[Labels]
+    ...
+    [[Generic]]
+        barometer      = Barometer
+        dewpoint       = Dew Point
+        heatindex      = Heat Index
+        inHumidity     = Inside Humidity
+        inTemp         = Inside Temperature
+        outHumidity    = Outside Humidity
+        outTemp        = Outside Temperature
+        radiation      = Radiation
+        rain           = Rain
+        rainRate       = Rain Rate
+        rxCheckPercent = ISS Signal Quality
+        windDir        = Wind Direction
+        windGust       = Gust Speed
+        windGustDir    = Gust Direction
+        windSpeed      = Wind Speed
+        windchill      = Wind Chill
+        windgustvec    = Gust Vector
+        windvec        = Wind Vector
+        extraTemp1     = Pond Temperature</pre>
       <p>The hemisphere abbreviations may have to be changed: </p>
-      <pre class="tty">hemisphere = N, S, E, W</pre>
+      <pre class="tty">[Labels]
+    hemispheres = N, S, E, W</pre>
       <p>The wind ordinal directions may have to be changed: </p>
-      <pre class='tty'>
-[[Ordinates]]    
-    # The ordinal directions. The last one should be for no wind direction
-    directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A </pre>
+      <pre class='tty'>[Units]
+    ...
+    [[Ordinates]]    
+        # The ordinal directions. The last one should be for no wind direction
+        directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A </pre>
       <p>Don't forget the moon phases:</p>
-      <pre class="tty">
-moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</pre>
+      <pre class="tty">[Almanac]
+    moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</pre>
       <p id="l11n_unit_labels">Most of the unit labels either follow
           ISO conventions, or are unlikely to be used outside English
           speaking countries (an example would be
           &quot;foot&quot;). But, there are a few exceptions, used to
           label the weewx and server &quot;uptimes&quot;,
-          which can be found in sub-section <span class="code">[[Labels]]</span></p>
-                <pre class="tty">
-[Units]
-  ...
-  [[Labels]]
+          which can be found in sub-section
+        <span class="code">[Units][[Labels]]</span></p>
+                <pre class="tty">[Units]
     ...
-    day     = " day",    " days"
-    hour    = " hour",   " hours"
-    minute  = " minute", " minutes"
-    second  = " second", " seconds"</pre>
-
-      <p>You will probably want to change the generic labels used for the
-        observation types:</p>
-      <pre class="tty">
-barometer      = Barometer
-dewpoint       = Dew Point
-heatindex      = Heat Index
-inHumidity     = Inside Humidity
-inTemp         = Inside Temperature
-outHumidity    = Outside Humidity
-outTemp        = Outside Temperature
-radiation      = Radiation
-rain           = Rain
-rainRate       = Rain Rate
-rxCheckPercent = ISS Signal Quality
-windDir        = Wind Direction
-windGust       = Gust Speed
-windGustDir    = Gust Direction
-windSpeed      = Wind Speed
-windchill      = Wind Chill
-windgustvec    = Gust Vector
-windvec        = Wind Vector
-extraTemp1     = Pond Temperature</pre>
+    [[Labels]]
+        ...
+        day     = " day",    " days"
+        hour    = " hour",   " hours"
+        minute  = " minute", " minutes"
+        second  = " second", " seconds"</pre>
+      <p>By default, the time formats will use the local convention specified
+        by the LANG environment variable.  These can be modified individually
+        in the <span class='code'>[Units][[TimeFormats]]</span> section.</p>
+      <pre class='tty'>[Units]
+    [[TimeFormats]]
+        day        = %X
+        week       = %X (%A)
+        month      = %x %X
+        year       = %x %X
+        rainyear   = %x %X
+        current    = %x %X
+        ephem_day  = %X
+        ephem_year = %x %X</pre>
 
       <h2 id="environment_variable_LANG">Environment variable <span class="code">LANG</span></h2>
       <p>Finally, you will need to set the environment variable <span class="code">LANG</span>
@@ -3182,7 +3200,7 @@ extraTemp1     = Pond Temperature</pre>
         names for days of the week and months of the year will be used. The
         decimal point for numbers will also be modified appropriately.</p>
 
-      <h1 id="service_engine">Customizing the <span class="code">weewx</span> service engine</h1>
+      <h1 id="service_engine">Customizing the engine</h1>
       <p>This is an advanced topic intended for those who wish to try their hand
         at extending the internal engine in weewx. You should have a passing
         familiarity with Python or, at least, be willing to learn it. </p>
@@ -3426,7 +3444,7 @@ class MyAlarm(StdService):
         similar, except that it intercepts LOOP events (instead of
         archiving events). </p>
 
-      <h1 id ="archive_database">Customizing the archive database</h1>
+      <h1 id ="archive_database">Customizing the database</h1>
       <p>For most users the default database will work just fine. It has the
         added advantage of being compatible with the wview database.
         Nevertheless, there may be occasions where you may want to add a SQL
@@ -3817,7 +3835,7 @@ mv weewx.sdb_new weewx.sdb</pre>
     </ol>
 
 
-    <h1 id="porting">Porting to new weather station hardware</h1>
+    <h1 id="porting">Porting to new hardware</h1>
       <p>Naturally, this is an advanced topic but, nevertheless, I'd
         like to encourage any Python wizards out there to give it a try. Of
         course, I have selfish reasons for this: I don't want to
@@ -4051,7 +4069,7 @@ xstats/bin/user/xstats.py</p>
         <span class='code'>basic</span> skin like this:</p>
       <p class='tty'>tar cvfz basic.tar.gz basic</p>
 
-      <h2>The extension installer/uninstaller</h2>
+      <h2>The extension (un)installer</h2>
       <p>The ExtensionInstaller is built in to
         <span class='code'>setup.py</span>.  It can install new extensions,
         uninstall installed extensions, or enumerate installed extensions.</p>

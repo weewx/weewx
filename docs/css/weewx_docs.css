@@ -300,7 +300,7 @@ div .ui-widget-header {
 }
 /* prevent dancing toc by eliminating the default bold during mouseover */
 #toc .ui-state-hover {
-  background: #ddeeee;
+  background: #ddefef;
 }
 #toc .ui-state-hover a{
   font-weight: normal;
@@ -308,8 +308,8 @@ div .ui-widget-header {
 }
 #toc .ui-state-default {
   font-weight: normal;
-  background: teal;
+  background: #aacccc;
 }
 #toc .ui-state-default a{
-  color: white;
+  color: black;
 }
