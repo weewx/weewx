@@ -486,8 +486,8 @@ weewx.<span class='changed'>engine</span>.StdReport</pre>
     <h3>Driver APIs</h3>
     <p>The base class for drivers has been renamed, and new, optional,
       methods have been defined to provide hooks for configuring hardware
-      and producing default and upgraded configuration stanzas.  These
-      changes affect only those who have written custom drivers.</p>
+      and producing default and upgraded configuration stanzas.</p>
+    <p>These changes affect only those who have written custom drivers.</p>
     <table style='width:100%'>
       <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
       <tr>
@@ -507,8 +507,8 @@ class ACME960(<span class="changed">weewx.drivers.AbstractDevice</span>):
     </table>
 
     <h3>Service APIs</h3>
-    <p>The base class for services has moved.  This affects only those
-    who have written custom services.</p>
+    <p>The base class for services has moved.</p>
+    <p>This affects only those who have written custom services.</p>
     <table style='width:100%'>
       <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
       <tr>
@@ -527,12 +527,39 @@ class BetterMousetrapService(<span class="changed">weewx.engine.StdService</span
       </tr>
     </table>
 
+    <h3>RESTful APIs</h3>
+    <p>Some of the methods internal to RESTful services have changed,
+      specifically those that relate to getting configuration options
+      from <span class='code'>weewx.conf</span> and configuring databases.
+      </p>
+    <p>This affects only those who have written custom RESTful services.</p>
+    <p>Here is an example of obtaining the database dictionary for use in
+      the RESTful service thread.</p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <pre class='tty'>site_dict = weewx.restx.get_dict(config_dict, 'Uploader')
+db_name = config_dict['StdArchive']['archive_database']
+db_dict = config_dict['Databases'][db_name]
+site_dict.setdefault('database_dict', db_dict)</pre>
+        </td>
+        <td>
+          <pre class='tty'>site_dict = config_dict['StdRESTful']['Uploader']
+site_dict = accumulateLeaves(site_dict, max_level=1)
+_, site_dict['database_dict'], _ = \
+    weewx.manager.get_database_config(config_dict, 'wx_binding')</pre>
+        </td>
+      </tr>
+    </table>
+
     <h3>Database APIs</h3>
     <p>The methods for opening and querying databases have changed.  The
       DBBinder class replaces the Archive class as the entry point
       for opening and querying databases.  The table name is no longer
       hard-coded, so developers should use the table name from the database
-      binding.  This affects only those who have written code that accesses
+      binding.</p>
+    <p>This affects only those who have written code that accesses
       databases.</p>
     <p>Here are examples from services and uploaders.</p>
     <table style='width:100%'>
@@ -540,15 +567,9 @@ class BetterMousetrapService(<span class="changed">weewx.engine.StdService</span
       <tr>
         <td>
           <pre class='tty'>db = config_dict['StdArchive']['archive_database']
-self.database_dict = config_dict['Databases'][db]</pre>
-        </td>
-        <td>
-          <em>no longer necessary</em>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <pre class='tty'>with weewx.archive.Archive.open(self.database_dict) as archive:
+self.database_dict = config_dict['Databases'][db]
+...
+with weewx.archive.Archive.open(self.database_dict) as archive:
     data = self.calculate(event.packet, archive)</pre>
         </td>
         <td>
@@ -566,20 +587,6 @@ data = self.calculate(event_data, dbm)</pre>
           <pre class='tty'>val = dbm.getSql("SELECT AVG(windSpeed) FROM %s "
                  "WHERE dateTime>? AND dateTime<=?" %
                  dbm.table_name, (start_ts, end_ts))</pre>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <pre class='tty'>site_dict = weewx.restx.get_dict(config_dict, 'Uploader')
-db_name = config_dict['StdArchive']['archive_database']
-db_dict = config_dict['Databases'][db_name]
-site_dict.setdefault('database_dict', db_dict)</pre>
-        </td>
-        <td>
-          <pre class='tty'>site_dict = config_dict['StdRESTful']['Uploader']
-site_dict = accumulateLeaves(site_dict, max_level=1)
-_, site_dict['database_dict'], _ = \
-    weewx.manager.get_database_config(config_dict, 'wx_binding')</pre>
         </td>
       </tr>
     </table>
