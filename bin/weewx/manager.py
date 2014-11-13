@@ -802,7 +802,9 @@ class DBBinder(object):
     def get_database(self, data_binding='wx_binding', initialize=False):
         """Given a binding name, returns the managed object"""
         if data_binding not in self.database_cache:
-            self.database_cache[data_binding] = open_database(self.config_dict, data_binding, initialize)
+            self.database_cache[data_binding] = open_database(self.config_dict,
+                                                              data_binding,
+                                                              initialize)
         return self.database_cache[data_binding]
     
     def bind_default(self, default_binding='wx_binding'):
@@ -819,24 +821,47 @@ class DBBinder(object):
 #                                 Utilities
 #===============================================================================
 
-def get_database_config(config_dict, data_binding):
+def get_database_config(config_dict, data_binding,
+                        default_manager='weewx.wxmanager.WXDaySummaryManager',
+                        default_table='archive'):
     """Return the database dictionary associated with a binding name."""
 
     # Get the database name
     try:
-        database_name = config_dict['DataBindings'][data_binding]['database']
+        database = config_dict['DataBindings'][data_binding]['database']
     except KeyError, e:
         raise weewx.UnknownBinding(e)
     
     # Get the dictionary
-    if database_name not in config_dict['Databases']:
-        raise weewx.UnknownDatabase(database_name)
-    database_dict = config_dict['Databases'][database_name]
-    # Get the manager to be used
-    database_manager = config_dict['DataBindings'][data_binding].get('manager', 'weewx.wxmanager.WXDaySummaryManager')
-    table_name = config_dict['DataBindings'][data_binding].get('table_name', 'archive')
+    if database not in config_dict['Databases']:
+        raise weewx.UnknownDatabase(database)
+    database_dict = config_dict['Databases'][database]
+
+    binding_dict = config_dict['DataBindings'][data_binding]
+    # Get the manager if specified, otherwise use a sane default
+    database_manager = binding_dict.get('manager', default_manager)
+    # Get the table if specified, otherwise use a sane default
+    table_name = binding_dict.get('table_name', default_table)
 
     return (database_manager, database_dict, table_name)
+
+def get_schema(binding_dict, default_schema='schemas.wview.schema'):
+    """Get a schema from a binding dict.  The schema may be specified as
+    a string, in which case we resolve the python object to which it refers.
+    Or it may be specified as a dict with field_name=sql_type pairs.  In
+    the latter case, order matters, so we depend on configobj to maintain
+    order.
+    """
+    schema_name = binding_dict.get('schema', default_schema)
+    if schema_name is None:
+        schema = None
+    elif isinstance(schema_name, str):
+        schema = weeutil.weeutil._get_object(schema_name)
+    else:
+        schema = []
+        for k in binding_dict['schema']:
+            schema.append((k, binding_dict['schema'][k]))
+    return schema
 
 def open_database(config_dict, data_binding, initialize=False):
     """Given a binding name, returns an open manager object."""
@@ -846,8 +871,7 @@ def open_database(config_dict, data_binding, initialize=False):
     database_cls = weeutil.weeutil._get_object(database_manager)
     
     if initialize:
-        schema_name = config_dict['DataBindings'][data_binding].get('schema', 'schemas.wview.schema')
-        schema = weeutil.weeutil._get_object(schema_name)
+        schema = get_schema(config_dict['DataBindings'][data_binding])
         return database_cls.open_with_create(database_dict, table_name=table_name, schema=schema)
     else:
         return database_cls.open(database_dict, table_name=table_name)
