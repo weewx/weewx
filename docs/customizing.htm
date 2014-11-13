@@ -14,13 +14,7 @@
   <script src="js/weewx.js"></script>
   <script>
     $(function() {
-      var toc = $("#toc").tocify({
-        context : "#technical_content",
-        showAndHide : false,
-        theme : "jqueryui",
-        ignoreSelector : ".title",
-        hashGenerator : wee_gen_id
-      }).data("toc-tocify");
+      generate_toc(get_default_level());
     })
 
     $(window).scroll(function(){
@@ -32,11 +26,26 @@
     $(function() {
       var c = document.getElementById('toc_controls');
       if(c) {
-        var level = get_cookie("toc_level");
-        if (level == "") { level = 3; }
+        var level = get_default_level();
         c.innerHTML = "<input type='text' name='toc_level' id='toc_level' value='" + level + "' size='2' onChange='change_toc_level()' />";
       }
     })
+
+    function get_default_level() {
+      var level = get_cookie("toc_level");
+      if (level == "") { level = 3; }
+      return level;
+    }
+
+    function change_toc_level() {
+      var field = document.getElementById('toc_level');
+      if(field) {
+        set_cookie("toc_level", field.value);
+        $("#toc").remove();
+        $("#toc_parent").append("<div id='toc'></div>");
+        generate_toc(field.value);
+      }
+    }
 
     function get_selectors(level) {
       var sstr = "h1";
@@ -46,31 +55,25 @@
       return sstr;
     }
 
-    function change_toc_level() {
-      var field = document.getElementById('toc_level');
-      if(field) {
-        var sstr = get_selectors(field.value);
-        set_cookie("toc_level", field.value);
-        $("#toc").remove();
-        $("#toc_parent").append("<div id='toc'></div>");
-        var toc = $("#toc").tocify({
-          context : "#technical_content",
-          showAndHide : false,
-          theme : "jqueryui",
-          ignoreSelector : ".title",
-          hashGenerator : wee_gen_id,
-          selectors : sstr
-        }).data("toc-tocify");
-      }
+    function generate_toc(level) {
+      var sstr = get_selectors(level);
+      $("#toc").tocify({
+        context : "#technical_content",
+        showAndHide : false,
+        theme : "jqueryui",
+        ignoreSelector : ".title",
+        hashGenerator : wee_gen_id,
+        selectors : sstr
+      }).data("toc-tocify");
     }
   </script>
 </head>
 <body>
 
-  <!-- The table of contents will get injected here: -->
   <div id="toc_parent">
-  <div id="toc">
-  </div>
+    <div id="toc">
+      <!-- The table of contents will get injected here -->
+    </div>
   </div>
 
   <div id="technical_content">
@@ -3283,10 +3286,10 @@ class MyPrint(StdPrint):
       <p>You then need to specify that your print service class should be loaded
         instead of the default <span class="code">StdPrint</span> service. This
         is done by substituting your service name for <span class="code">StdPrint</span>
-        in <span class="code">service_list</span>, located in <span class="code">[Engines][[WxEngine]]</span>:
+        in <span class="code">service_list</span>, located in <span class="code">[Engine][[Services]]</span>:
       </p>
-      <pre class="tty">[Engines]
-    [[WxEngine]]
+      <pre class="tty">[Engine]
+    [[Services]]
         ...
         report_services = <span class="highlight">user.myprint.MyPrint</span>, weewx.engine.StdReport</pre>
       <p>Note that the <span class="code">report_services</span> must be all on
