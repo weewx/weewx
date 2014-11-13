@@ -779,10 +779,12 @@ $month.outTemp.max</pre>
       the section <em><a href="#stupid_detail">Using multiple bindings</a></em>
       for an example where this happened.</p> 
 
-    <h3 id="general_aggregation_periods">
-      Aggregation periods</h3>
+    <h3 id="general_aggregation_periods">Aggregation periods</h3>
     <p>
-      The other time periods represent an <em>aggregation over time</em>. In
+      Each of the time periods <span class='code'>$day</span>,
+      <span class='code'>$week</span>, <span class='code'>$month</span>,
+      <span class='code'>$year</span>, and <span class='code'>$rainyear</span>
+      represents an <em>aggregation over time</em>. In
       addition to the time period over which the aggregation will occur, they
       also require an <em>aggregation type</em>. An example would be the week's
       total precipitation (where the aggregation type is <span class="code">sum</span>):
@@ -1422,15 +1424,25 @@ Sunrise, sunset: 06:51 19:30</p>
       direction. Here are the four wind-related scalars stored in the main archive
       database:
     </p>
-    <table class="indent" style="width:50%;">
+    <table class="indent">
       <tbody>
         <tr class="first_row">
           <td><i>Archive type</i></td>
           <td>Meaning</td>
+          <td>Valid contexts</td>
         </tr>
         <tr>
           <td class="first_col"><span class="code">windSpeed</span></td>
           <td>The average wind speed seen during the archive period.</td>
+          <td rowspan='4'>
+            <span class='code'>$current</span>,
+            <span class='code'>$latest</span>,
+            <span class='code'>$day</span>,
+            <span class='code'>$week</span>,
+            <span class='code'>$month</span>,
+            <span class='code'>$year</span>,
+            <span class='code'>$rainyear</span>
+          </td>
         </tr>
         <tr>
           <td class="first_col"><span class="code">windDir</span></td>
@@ -1450,26 +1462,37 @@ Sunrise, sunset: 06:51 19:30</p>
     </table>
 
     <p>In addition, a wind vector is stored in the daily summaries.</p>
-    <p class="note" style="display:inline-block">
-      <b>Note</b><br/>In <span class="code">weewx</span> V3.x, the vector is only
-      stored in the daily <em>summaries</em>, so the tag <span class="code">wind</span>
-      can only be used in aggregations such as <span class="code">$day</span>, <span
-        class="code">$month</span>, <i>etc.</i>
-    </p>
-    <table class="indent" style="width:50%;">
+    <table class="indent">
       <tbody>
         <tr class="first_row">
           <td><i>Daily summary type</i></td>
           <td>Meaning</td>
+          <td>Valid contexts</td>
         </tr>
         <tr>
           <td class="first_col"><span class="code">wind</span></td>
           <td>A vector composite of the wind. It includes information such
           as the direction of the maximum gust, and the x- and y-vector
           wind run.</td>
+          <td>
+            <span class='code'>$day</span>,
+            <span class='code'>$week</span>,
+            <span class='code'>$month</span>,
+            <span class='code'>$year</span>,
+            <span class='code'>$rainyear</span>
+          </td>
         </tr>
       </tbody>
     </table>
+    <p class="note" style="display:inline-block">
+      <b>Note</b><br/>The vector is only stored in the daily
+      <em>summaries</em>, so unlike the scalar tags such as
+      <span class="code">windSpeed</span> or
+      <span class="code">windGust</span>, the tag
+      <span class="code">wind</span> can only be used in aggregations such as
+      <span class="code">$day</span>, <span class="code">$month</span>,
+      <i>etc.</i>
+    </p>
     
     <p>Any of these can be used in your tags. Here are some examples:</p>
 
