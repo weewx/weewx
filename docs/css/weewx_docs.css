@@ -241,8 +241,8 @@ table .first_row {
 }
 
 #technical_content{
-  float:right;
-  width:82%
+  position: relative;
+  left: 220px;
 }
 
 /*
@@ -280,7 +280,7 @@ div .ui-widget-header {
 
 /* Overrides for tocify Table-of-Contents */
 .tocify {
-  width: 15%;
+  width: 200px;
   margin-left: 5px;
   padding-left: 5px;
   border: 0;
