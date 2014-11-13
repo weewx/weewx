@@ -13,17 +13,13 @@
   <script src="js/jquery.tocify-1.9.0.min.js"></script>
   <script src="js/weewx.js"></script>
   <script>
-    var toc;
     $(function() {
-      var level = get_cookie("toc_level");
-      var sstr = get_selectors(level);
-      toc = $("#toc").tocify({
+      var toc = $("#toc").tocify({
         context : "#technical_content",
         showAndHide : false,
         theme : "jqueryui",
         ignoreSelector : ".title",
-        hashGenerator : wee_gen_id,
-        selectors: sstr
+        hashGenerator : wee_gen_id
       }).data("toc-tocify");
     })
 
@@ -54,8 +50,17 @@
       var field = document.getElementById('toc_level');
       if(field) {
         var sstr = get_selectors(field.value);
-        toc.setOption("selectors", sstr);
         set_cookie("toc_level", field.value);
+        $("#toc").remove();
+        $("#toc_parent").append("<div id='toc'></div>");
+        var toc = $("#toc").tocify({
+          context : "#technical_content",
+          showAndHide : false,
+          theme : "jqueryui",
+          ignoreSelector : ".title",
+          hashGenerator : wee_gen_id,
+          selectors : sstr
+        }).data("toc-tocify");
       }
     }
   </script>
@@ -63,7 +68,9 @@
 <body>
 
   <!-- The table of contents will get injected here: -->
+  <div id="toc_parent">
   <div id="toc">
+  </div>
   </div>
 
   <div id="technical_content">
