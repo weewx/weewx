@@ -15,12 +15,15 @@
   <script>
     var toc;
     $(function() {
+      var level = get_cookie("toc_level");
+      var sstr = get_selectors(level);
       toc = $("#toc").tocify({
         context : "#technical_content",
         showAndHide : false,
         theme : "jqueryui",
         ignoreSelector : ".title",
-        hashGenerator : wee_gen_id
+        hashGenerator : wee_gen_id,
+        selectors: sstr
       }).data("toc-tocify");
     })
 
@@ -29,6 +32,32 @@
         'left': 8 - $(this).scrollLeft()
       });
     });
+
+    $(function() {
+      var c = document.getElementById('toc_controls');
+      if(c) {
+        var level = get_cookie("toc_level");
+        if (level == "") { level = 3; }
+        c.innerHTML = "<input type='text' name='toc_level' id='toc_level' value='" + level + "' size='2' onChange='change_toc_level()' />";
+      }
+    })
+
+    function get_selectors(level) {
+      var sstr = "h1";
+      for (var i=2; i<=level; i++) {
+        sstr += ",h"+i;
+      }
+      return sstr;
+    }
+
+    function change_toc_level() {
+      var field = document.getElementById('toc_level');
+      if(field) {
+        var sstr = get_selectors(field.value);
+        toc.setOption("selectors", sstr);
+        set_cookie("toc_level", field.value);
+      }
+    }
   </script>
 </head>
 <body>
@@ -42,6 +71,8 @@
     <a href='http://weewx.com'>
       <img src='images/logo-weewx.png' class='logo' align='right' />
     </a>
+    <div id="toc_controls" style='float:left; padding:5px'>
+    </div>
     <h1 class="title">Customizing weewx<br />
       <span class="version">
 Version: 3.0.0 alpha
