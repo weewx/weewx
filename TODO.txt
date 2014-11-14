@@ -1,7 +1,4 @@
 --------------------  TODO for V3  --------------------------- 
-              
-Update setup.py.
-  -- Add configure keyword, with option --device=
 
 Quick start guide
 
@@ -13,16 +10,26 @@ May need to update the guide on packaging an extension.
 
 Should the archive file be backed up before adding the daily summaries?
 
-Update skins: exfoliation amphibian simple
-Update drivers: owfs link fileparse
-Update services: cmon crt cwxn forecast
-Put fileparse driver into extensions directory as driver example
+Update the forecast service
 
-
-
+Update setup.py
+ -- Rework deb installer to work with device snippets
+ -- Give each driver option to modify driver stanza while updating weewx.conf
+ -- the --configure option should modify station_type if successful
 
 
  ---- DONE ----
+              
+Update setup.py.
+  -- Add configure keyword, with option --device=
+  setup.py --configure [--driver=weewx.drivers.simulator]
+(14nov14 mwall)
+
+Update skins: exfoliation amphibian simple
+Update drivers: owfs link fileparse
+Update services: cmon crt cwxn
+Put fileparse driver into extensions directory as driver example
+(14nov14 mwall)
 
 Check existing extensions: basic xstats
 (13nov14 mwall)
