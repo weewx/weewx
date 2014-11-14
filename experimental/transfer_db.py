@@ -4,9 +4,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Transfer from sqlite to MySQL database or vv. Adjust parameters as necessary."""
 from __future__ import with_statement

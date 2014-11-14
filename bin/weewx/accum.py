@@ -3,9 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision $
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Statistical accumulators. They accumulate the highs, lows, averages,
 etc., of a sequence of records."""

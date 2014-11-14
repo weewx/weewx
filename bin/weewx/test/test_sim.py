@@ -3,9 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author: tkeffer $
-#    $Date$
+#    $Id$
 #
 """Test the accumulators by using the simulator wx station"""
 

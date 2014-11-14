@@ -3,9 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision: 689 $
-#    $Author: tkeffer $
-#    $Date: 2012-10-16 15:54:56 -0700 (Tue, 16 Oct 2012) $
+#    $Id$
 #
 """Test the weedb package"""
 

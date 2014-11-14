@@ -4,9 +4,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Module can be called as a main program to generate reports, etc.,
 that are current as of the last archive record in the archive database."""

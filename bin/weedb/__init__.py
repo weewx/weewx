@@ -1,11 +1,9 @@
 #
-# Copyright (c) 2012-2014 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2012-2014 Tom Keffer <tkeffer@gmail.com>
 #
-# See the file LICENSE.txt for your full rights.
+#    See the file LICENSE.txt for your full rights.
 #
-# $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Middleware that sits above DBAPI and makes it a little more database independent."""
 

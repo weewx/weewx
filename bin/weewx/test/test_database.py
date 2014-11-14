@@ -4,9 +4,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision: 670 $
-#    $Author: tkeffer $
-#    $Date: 2012-10-11 16:55:54 -0700 (Thu, 11 Oct 2012) $
+#    $Id$
 #
 """Test archive and stats database modules"""
 from __future__ import with_statement

@@ -1,11 +1,9 @@
 #
-# Copyright (c) 2012-2014 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2012-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Driver for the MySQL database"""
 
