@@ -25,7 +25,7 @@ def main():
     try:
         __import__(driver)
         driver_module = sys.modules[driver]
-        loader_function = getattr(driver_module, 'config_loader')
+        loader_function = getattr(driver_module, 'configurator_loader')
         device = loader_function(config_dict)
     except Exception, e:
         msg = "Cannot load configurator for %s" % device_type

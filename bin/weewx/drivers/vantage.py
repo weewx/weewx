@@ -19,16 +19,19 @@ import weewx.engine
 
 DRIVER_VERSION = '3.0'
 
-# A few handy constants:
-_ack    = chr(0x06)
-_resend = chr(0x15) # NB: The Davis documentation gives this code as 0x21, but it's actually decimal 21
-
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
 
-def config_loader(config_dict):
+def configurator_loader(config_dict):
     return VantageConfigurator()
 
+def confeditor_loader():
+    return VantageConfEditor()
+
+
+# A few handy constants:
+_ack    = chr(0x06)
+_resend = chr(0x15) # NB: The Davis documentation gives this code as 0x21, but it's actually decimal 21
 
 #===============================================================================
 #                           class BaseWrapper
@@ -2245,3 +2248,62 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 print >>sys.stdout, "Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(time_ts)),
                 sys.stdout.flush()
         print "\nFinished download of logger summary to file '%s'. %d records processed." % (dest_path, nrecs)
+
+
+# =============================================================================
+#                      Class VantageConfEditor
+# =============================================================================
+
+class VantageConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self):
+        return """[Vantage]
+    # Connection type: serial or ethernet 
+    #  serial (the classic VantagePro)
+    #  ethernet (the WeatherLinkIP)
+    type = serial
+
+    # If the connection type is serial, a port must be specified:
+    #   Debian, Ubuntu, Redhat, Fedora, and SuSE:
+    #     /dev/ttyUSB0 is a common USB port name
+    #     /dev/ttyS0   is a common serial port name
+    #   BSD:
+    #     /dev/cuaU0   is a common serial port name
+    port = /dev/ttyUSB0
+
+    # If the connection type is ethernet, an IP Address/hostname is required:
+    host = 1.2.3.4
+
+    ######################################################
+    # The rest of this section rarely needs any attention. 
+    # You can safely leave it "as is."
+    ######################################################
+
+    # Serial baud rate (usually 19200)
+    baudrate = 19200
+
+    # TCP port (when using the WeatherLinkIP)
+    tcp_port = 22222
+
+    # TCP send delay (when using the WeatherLinkIP):
+    tcp_send_delay = 1
+
+    # The id of your ISS station (usually 1)
+    iss_id = 1
+
+    # How long to wait for a response from the station before giving up (in
+    # seconds; must be greater than 2)
+    timeout = 5
+
+    # How long to wait before trying again (in seconds)
+    wait_before_retry = 1.2
+
+    # How many times to try before giving up:
+    max_tries = 4
+
+    # The driver to use:
+    driver = weewx.drivers.vantage
+"""

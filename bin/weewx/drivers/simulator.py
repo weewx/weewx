@@ -12,6 +12,9 @@ import weedb
 import weewx
 import weeutil.weeutil
 
+DRIVER_VERSION = "3.0"
+
+
 def loader(config_dict, engine):
 
     # This loader uses a bit of a hack to have the simulator resume at a later
@@ -240,8 +243,36 @@ class Solar(object):
             amt = 0
         return amt
 
-if __name__ == "__main__":
 
+def confeditor_loader():
+    return SimulatorConfEditor()
+
+class SimulatorConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self):
+        return """[Simulator]
+    # This section for the weewx weather station simulator
+
+    # The time (in seconds) between LOOP packets.
+    loop_interval = 2.5
+
+    # The simulator mode can be either 'simulator' or 'generator'.
+    # Real-time simulator. Sleep between each LOOP packet.
+    mode = simulator
+    # Generator.  Emit LOOP packets as fast as possible (useful for testing).
+    #mode = generator
+
+    # The start time. If not specified, the default is to use the present time.
+    #start = 2011-01-01 00:00
+
+    # The driver to use:
+    driver = weewx.drivers.simulator
+"""
+
+if __name__ == "__main__":
     station = Simulator(mode='simulator',loop_interval=2.0)
     for packet in station.genLoopPackets():
         print weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet

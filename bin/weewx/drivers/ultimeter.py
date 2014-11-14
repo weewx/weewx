@@ -67,6 +67,14 @@ import weewx
 import weewx.drivers
 
 DRIVER_VERSION = '0.10'
+
+def loader(config_dict, engine):
+    return Ultimeter(**config_dict['Ultimeter'])
+
+def confeditor_loader():
+    return UltimeterConfEditor()
+
+
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 
@@ -93,8 +101,6 @@ def logerr(msg):
 def logcrt(msg):
     logmsg(syslog.LOG_CRIT, msg)
 
-def loader(config_dict, engine):
-    return Ultimeter(**config_dict['Ultimeter'])
 
 class Ultimeter(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with a Peet Bros Ultimeter station
@@ -291,6 +297,27 @@ class Station(object):
         data['daily_rain'] = int(bites[40:44], 16) * 0.01  # inch
         data['wind_average'] = int(bites[44:48], 16) * 0.1 * 0.621371  # mph
         return data
+
+
+class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self):
+        return """[Ultimeter]
+    # This section is for the PeetBros Ultimeter series of weather stations.
+
+    # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
+    port = /dev/ttyUSB0
+
+    # The station model, e.g., Ultimeter 2000, Ultimeter 100
+    model = Ultimeter
+
+    # The driver to use:
+    driver = weewx.drivers.ultimeter
+"""
+
 
 # define a main entry point for basic testing of the station without weewx
 # engine and service overhead.  invoke this as follows from the weewx root dir:

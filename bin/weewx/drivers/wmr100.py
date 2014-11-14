@@ -32,8 +32,14 @@ import weewx
 import weewx.drivers
 import weeutil.weeutil
 
+DRIVER_VERSION = "3.0"
+
 def loader(config_dict, engine):
     return WMR100(**config_dict['WMR100'])    
+
+def confeditor_loader():
+    return WMR100ConfEditor()
+
 
 class WMR100(weewx.drivers.AbstractDevice):
     """Driver for the WMR100 station."""
@@ -387,3 +393,23 @@ class WMR100(weewx.drivers.AbstractDevice):
                       0x48: _wind_packet,
                       0x60: _clock_packet,
                       0x44: _temperatureonly_packet}
+
+
+class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self):
+        return """[WMR100]
+    # This section is for the Oregon Scientific WMR100
+
+    # The station model, e.g., WMR100, WMR100N, WMRS200
+    model = WMR100
+
+    # How long a wind record can be used to calculate wind chill (in seconds)
+    stale_wind = 30
+
+    # The driver to use:
+    driver = weewx.drivers.wmr100
+"""

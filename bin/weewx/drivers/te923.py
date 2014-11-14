@@ -149,6 +149,17 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_VERSION = '0.12'
+
+def loader(config_dict, engine):
+    return TE923Driver(**config_dict['TE923'])
+
+def configurator_loader(config_dict):
+    return TE923Configurator()
+
+def confeditor_loader():
+    return TE923ConfEditor()
+
+
 DEBUG_READ = 0
 DEBUG_DECODE = 0
 DEBUG_PRESSURE = 0
@@ -195,11 +206,50 @@ def logcrt(msg):
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
-def loader(config_dict, engine):
-    return TE923Driver(**config_dict['TE923'])
 
-def config_loader(config_dict):
-    return TE923Configurator()
+class TE923ConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self):
+        return """[TE923]
+    # This section is for the Hideki TE923 series of weather stations.
+
+    # The station model, e.g., 'Meade TE923W' or 'TFA Nexus'
+    model = TE923
+
+    # The driver to use:
+    driver = weewx.drivers.te923
+
+    # The default configuration associates the channel 1 sensor with outTemp
+    # and outHumidity.  To change this, or to associate other channels with
+    # specific columns in the database schema, use the following maps.
+    [[sensor_map]]
+        # Map the remote sensors to columns in the database schema.
+        outTemp =     t_1
+        outHumidity = h_1
+        extraTemp1 =  t_2
+        extraHumid1 = h_2
+        extraTemp2 =  t_3
+        extraHumid2 = h_3
+        extraTemp3 =  t_4
+        # WARNING: the following are not in the default schema
+        extraHumid3 = h_4
+        extraTemp4 =  t_5
+        extraHumid4 = h_5
+
+    [[battery_map]]
+        txBatteryStatus =      batteryUV
+        windBatteryStatus =    batteryWind
+        rainBatteryStatus =    batteryRain
+        outTempBatteryStatus = battery1
+        # WARNING: the following are not in the default schema
+        extraBatteryStatus1 =  battery2
+        extraBatteryStatus2 =  battery3
+        extraBatteryStatus3 =  battery4
+        extraBatteryStatus4 =  battery5
+ """
 
 
 class TE923Configurator(weewx.drivers.AbstractConfigurator):

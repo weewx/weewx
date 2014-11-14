@@ -939,6 +939,17 @@ import weeutil.weeutil
 
 DRIVER_VERSION = '0.33'
 
+
+def loader(config_dict, engine):
+    return WS28xxDriver(**config_dict['WS28xx'])
+
+def configurator_loader(config_dict):
+    return WS28xxConfigurator()
+
+def confeditor_loader():
+    return WS28xxConfEditor()
+
+
 # flags for enabling/disabling debug verbosity
 DEBUG_COMM = 0
 DEBUG_CONFIG_DATA = 0
@@ -1023,7 +1034,6 @@ def addr_to_index(addr):
 def index_to_addr(idx):
     return 18 * idx + 416
 
-
 def print_dict(data):
     for x in sorted(data.keys()):
         if x == 'dateTime':
@@ -1032,8 +1042,26 @@ def print_dict(data):
             print '%s: %s' % (x, data[x])
 
 
-def config_loader(config_dict):
-    return WS28xxConfigurator()
+class WS28xxConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self):
+        return """[WS28xx]
+    # This section is for the La Crosse WS-2800 series of weather stations.
+
+    # Radio frequency to use between USB transceiver and console: US or EU
+    # US uses 915 MHz, EU uses 868.3 MHz.  Default is US.
+    transceiver_frequency = US
+
+    # The station model, e.g., 'LaCrosse C86234' or 'TFA Primus'
+    model = LaCrosse WS28xx
+
+    # The driver to use:
+    driver = weewx.drivers.ws28xx
+"""
+
 
 class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
     @property
@@ -1212,9 +1240,6 @@ class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
         for r in records:
             print r
 
-
-def loader(config_dict, engine):
-    return WS28xxDriver(**config_dict['WS28xx'])
 
 class WS28xxDriver(weewx.drivers.AbstractDevice):
     """Driver for LaCrosse WS28xx stations."""

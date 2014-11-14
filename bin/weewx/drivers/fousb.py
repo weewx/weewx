@@ -231,6 +231,15 @@ import weewx.wxformulas
 
 DRIVER_VERSION = '1.7'
 
+def loader(config_dict, engine):
+    return FineOffsetUSB(**config_dict['FineOffsetUSB'])
+
+def configurator_loader(config_dict):
+    return FOUSBConfigurator()
+
+def confeditor_loader():
+    return FOUSBConfEditor()
+
 
 def stash(slist, s):
     if s.find('settings') != -1:
@@ -282,8 +291,29 @@ def table_dump(date, data, showlabels=False):
         print data[key],
     print
 
-def config_loader(config_dict):
-    return FOUSBConfigurator()
+
+class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self):
+        return """[FineOffsetUSB]
+    # This section is for the Fine Offset series of weather stations.
+
+    # The station model, e.g., WH1080, WS1090, WS2080, WH3081
+    model = WS2080
+
+    # The polling mode can be PERIODIC or ADAPTIVE
+    polling_mode = PERIODIC
+
+    # How often to poll the station for data, in seconds
+    polling_interval = 60
+
+    # The driver to use:
+    driver = weewx.drivers.fousb
+"""
+
 
 class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
     @property
@@ -523,10 +553,6 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
             elif ans == 'n':
                 print "Set clock cancelled."
 
-
-
-def loader(config_dict, engine):
-    return FineOffsetUSB(**config_dict['FineOffsetUSB'])
 
 # these are the raw data we get from the station:
 # param     values     invalid description

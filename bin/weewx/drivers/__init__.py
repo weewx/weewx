@@ -87,3 +87,24 @@ class AbstractConfigurator(object):
     def do_options(self, options, parser, config_dict, prompt):
         """Derived classes must implement this to actually do something."""
         raise NotImplementedError("Method 'do_options' not implemented")
+
+
+class AbstractConfEditor(object):
+    """The conf editor class provides methods for producing and updating
+    configuration stanzas for use in configuration file.
+    """
+    
+    @property
+    def version(self):
+        raise NotImplementedError("method 'version' is not implemented")
+
+    def get_conf(self):
+        """Return the configuration stanza (text) for this device."""
+        raise NotImplementedError("method 'get_conf' is not implemented")
+
+    def update_conf(self, orig_stanza):
+        """Given a configuration stanza, return a possibly modified copy
+        that will work with the current version of the device driver.
+
+        The default behavior is to return the original stanza unmodified."""
+        return orig_stanza

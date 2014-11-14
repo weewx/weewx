@@ -624,6 +624,69 @@ def save_path(filepath):
     return newpath
 
 #==============================================================================
+# configure the configuration file
+#
+# Inject the configuration stanza for a driver into the configuration file
+# and set the station_type to the driver.
+#
+# If no driver is specified, use the Simulator.
+#==============================================================================
+
+def do_cfg():
+    import optparse
+    description = "configure the configuration file"
+    usage = "%prog --configure [--driver=DRIVER]"
+    parser = optparse.OptionParser(description=description, usage=usage)
+    parser.add_option('--configure', dest='cfg', action='store_true',
+                      help='configure the configuration file')
+    parser.add_option('--driver', dest='driver', type=str, metavar='DRIVER',
+                      help='use the driver DRIVER, e.g., weewx.driver.vantage')
+    (options, _args) = parser.parse_args()
+    configure_conf(options.driver)
+    return 0
+
+def configure_conf(driver):
+    save_syspath = list(sys.path)
+    sys.path.insert(0, bin_dir)
+    from weeutil.weeutil import read_config
+
+    if driver is None:
+        driver = 'weewx.drivers.simulator'
+
+    # Load the configuration file
+    config_fn, config_dict = read_config(None, sys.argv[1:])
+    print 'Using configuration file %s' % config_fn
+
+    # Load the configuration editor from the driver file
+    try:
+        __import__(driver)
+        driver_module = sys.modules[driver]
+        loader_function = getattr(driver_module, 'confeditor_loader')
+        editor = loader_function()
+    except Exception, e:
+        sys.stderr.write("Cannot load conf editor for %s: %s\n" % (driver, e))
+        exit(1)
+
+    print '%s driver version %s' % (driver, editor.version)
+    stanza_text = editor.get_conf()
+    sys.path = save_syspath
+
+    stanza_fn = '/var/tmp/stanza'
+    with open(stanza_fn, 'w') as f:
+        f.write(stanza_text)
+    stanza = configobj.ConfigObj(stanza_fn)
+
+    tmp_fn = "%s.tmp" % config_fn
+    distutils.file_util.copy_file(config_fn, tmp_fn)
+    new_config = configobj.ConfigObj(tmp_fn)
+    new_config.merge(stanza)
+    new_config.write()
+
+    save_path(config_fn)
+    shutil.move(tmp_fn, config_fn)
+
+
+#==============================================================================
 # extension installer
 #
 # An extension package is simply a tarball with files in a structure that
@@ -1285,9 +1348,16 @@ def do_merge():
 if __name__ == "__main__":
     if '--merge-config' in sys.argv:
         exit(do_merge())
+    if '--configure' in sys.argv:
+        exit(do_cfg())
     if '--extension' in sys.argv:
         exit(do_ext())
     if '--help' in sys.argv:
+        print "Commands for configuring weewx:"
+        print ""
+        print "  setup.py --configure [--driver=DRIVER]"
+        print "  setup.py --help --configure"
+        print ""
         print "Commands for installing/removing/listing weewx extensions:"
         print ""
         print "  setup.py --extension --list"

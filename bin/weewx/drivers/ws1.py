@@ -21,11 +21,20 @@ import weewx.drivers
 import weewx.units
 import weewx.uwxutils
 
+DRIVER_VERSION = '0.14'
+
+
+def loader(config_dict, _):
+    return WS1(**config_dict['WS1'])
+
+def confeditor_loader():
+    return WS1ConfEditor()
+
+
 INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DRIVER_VERSION = '0.14'
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 
@@ -41,10 +50,6 @@ def loginf(msg):
 
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
-
-
-def loader(config_dict, _):
-    return WS1(**config_dict['WS1'])
 
 def _format(buf):
     return ' '.join(["%0.2X" % ord(c) for c in buf])
@@ -226,6 +231,24 @@ class Station(object):
         data['daily_rain'] = int(b[40:44], 16) * 0.01  # inch
         data['wind_average'] = int(b[44:48], 16) * 0.1 * MILE_PER_KM  # mph
         return data
+
+
+class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self):
+        return """[WS1]
+    # This section is for the ADS WS1 series of weather stations.
+
+    # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
+    port = /dev/ttyUSB0
+
+    # The driver to use:
+    driver = weewx.drivers.ws1
+"""
+
 
 # define a main entry point for basic testing of the station without weewx
 # engine and service overhead.  invoke this as follows from the weewx root dir:

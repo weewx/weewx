@@ -247,6 +247,18 @@ import weewx.units
 import weewx.wxformulas
 
 DRIVER_VERSION = '0.21'
+
+
+def loader(config_dict, _):
+    return WS23xxDriver(config_dict=config_dict, **config_dict['WS23xx'])
+
+def configurator_loader(_):
+    return WS23xxConfigurator()
+
+def confeditor_loader():
+    return WS23xxConfEditor()
+
+
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -263,13 +275,6 @@ def logcrt(msg):
 
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
-
-
-def loader(config_dict, _):
-    return WS23xxDriver(config_dict=config_dict, **config_dict['WS23xx'])
-
-def config_loader(_):
-    return WS23xxConfigurator()
 
 
 class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
@@ -1999,6 +2004,24 @@ def read_measurements(ws2300, read_requests):
     return results
 
 
+class WS23xxConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self):
+        return """[WS23xx]
+    # This section is for the La Crosse WS-2300 series of weather stations.
+
+    # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
+    port = /dev/ttyUSB0
+
+    # The station model, e.g., 'LaCrosse WS2317' or 'TFA Primus'
+    model = LaCrosse WS23xx
+
+    # The driver to use:
+    driver = weewx.drivers.ws23xx
+"""
 
 
 # define a main entry point for basic testing of the station without weewx

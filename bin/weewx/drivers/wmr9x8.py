@@ -26,8 +26,27 @@ import weewx.drivers
 
 from math import exp
 
+DRIVER_VERSION = "3.0"
+
+
+def loader(config_dict, engine):
+    return WMR9x8(**config_dict['WMR9x8'])
+
+def confeditor_loader():
+    return WMR9x8ConfEditor()
+
+
 class WMR9x8ProtocolError(weewx.WeeWxIOError):
     """Used to signal a protocol error condition"""
+
+def channel_decoder(chan):
+    if 1 <= chan <=2:
+        outchan = chan
+    elif chan==4:
+        outchan = 3
+    else:
+        raise WMR9x8ProtocolError("Bad channel number %d" % chan)
+    return outchan
 
 # Dictionary that maps a measurement code, to a function that can decode it:
 # packet_type_decoder_map and packet_type_size_map are filled out using the @<type>_registerpackettype
@@ -56,8 +75,6 @@ def wm918_registerpackettype(typecode, size):
         wm918_packet_type_size_map[typecode] = size
     return wrap
 
-def loader(config_dict, engine):
-    return WMR9x8(**config_dict['WMR9x8'])
 
 class SerialWrapper(object):
     """Wraps a serial connection returned from package serial"""
@@ -572,11 +589,25 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
         return _record
 
-def channel_decoder(chan):
-    if 1 <= chan <=2:
-        outchan = chan
-    elif chan==4:
-        outchan = 3
-    else:
-        raise WMR9x8ProtocolError("Bad channel number %d" % chan)
-    return outchan
+
+class WMR200ConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self):
+        return """[WMR9x8]
+    # This section is for the Oregon Scientific WMR918/968
+
+    # Connection type. For now, 'serial' is the only option. 
+    type = serial
+
+    # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
+    port = /dev/ttyUSB0
+
+    # The station model, e.g., WMR918, Radio Shack 63-1016
+    model = WMR968
+
+    # The driver to use:
+    driver = weewx.drivers.wmr9x8
+"""

@@ -32,8 +32,18 @@ import time
 import weewx
 
 DRIVER_VERSION = '0.8'
-DEFAULT_PORT = '/dev/ttyS0'
 
+def loader(config_dict, engine):
+    return CC3000Driver(**config_dict['CC3000'])
+
+def configurator_loader(config_dict):
+    return CC3000Configurator()
+
+def confeditor_loader():
+    return CC3000ConfEditor()
+
+
+DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 DEBUG_CHECKSUM = 0
 DEBUG_OPENCLOSE = 0
@@ -49,12 +59,6 @@ def loginf(msg):
 
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
-
-def loader(config_dict, engine):
-    return CC3000Driver(**config_dict['CC3000'])
-
-def config_loader(config_dict):
-    return CC3000Configurator()
 
 class ChecksumMismatch(weewx.WeeWxIOError):
     def __init__(self, a, b, buf=None):
@@ -678,6 +682,27 @@ class CC3000(object):
     def get_version(self):
         data = self.command("VERSION")
         return data
+
+
+class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self):
+        return """[CC3000]
+    # This section is for RainWise MarkIII weather stations and CC3000 logger.
+
+    # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
+    port = /dev/ttyUSB0
+
+    # The station model, e.g., CC3000 or CC3000R
+    model = CC3000
+
+    # The driver to use:
+    driver = weewx.drivers.cc3000
+"""
+
 
 # define a main entry point for basic testing without weewx engine and service
 # overhead.  invoke this as follows from the weewx root dir:

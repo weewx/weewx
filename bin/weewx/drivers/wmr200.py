@@ -44,6 +44,16 @@ import weewx
 import weewx.drivers
 import weeutil.weeutil
 
+DRIVER_VERSION = "3.0"
+
+
+def loader(config_dict, engine):
+    return WMR200(**config_dict['WMR200'])
+
+def confeditor_loader():
+    return WMR200ConfEditor()
+
+
 # General decoding sensor maps.
 WIND_DIR_MAP = { 0:'N', 1:'NNE', 2:'NE', 3:'ENE',
                 4:'E', 5:'ESE', 6:'SE', 7:'SSE',
@@ -131,11 +141,6 @@ def logerr(msg):
 def logcrt(msg):
     """Critical syslog helper"""
     logmsg(syslog.LOG_CRIT, 'C ' + msg)
-
-
-def loader(config_dict, engine):
-    """Used to load the driver."""
-    return WMR200(**config_dict['WMR200'])
 
 
 class WMR200ProtocolError(weewx.WeeWxIOError):
@@ -1976,3 +1981,19 @@ class WMR200(weewx.drivers.AbstractDevice):
         self.usb_device.close_device()
         loginf('Driver gracefully exiting')
 
+
+class WMR200ConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self):
+        return """[WMR200]
+    # This section is for the Oregon Scientific WMR200
+
+    # The station model, e.g., WMR200, WMR200A, Radio Shack W200
+    model = WMR200
+
+    # The driver to use:
+    driver = weewx.drivers.wmr200
+"""
