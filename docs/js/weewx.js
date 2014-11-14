@@ -38,7 +38,7 @@ function get_cookie(name) {
 
 function get_default_level() {
     var level = get_cookie("toc_level");
-    if (level == "") { level = 3; }
+    if (level == "") { level = 2; }
     return level;
 }
 
