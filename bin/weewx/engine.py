@@ -597,9 +597,18 @@ class StdArchive(StdService):
         dbmanager = self.engine.dbbinder.get_database(self.data_binding, initialize=True)
         syslog.syslog(syslog.LOG_INFO, "engine: Using binding '%s' to database '%s'" % (self.data_binding, dbmanager.database_name))
         
-        # In case this is a recent update or the user has dropped the daily
-        # summary tables, backfill them:
-        dbmanager.backfill_day_summary()
+        # Back fill the daily summaries.
+        syslog.syslog(syslog.LOG_INFO, "engine: Starting backfill of daily summaries")
+        t1 = time.time()
+        nrecs, ndays = dbmanager.backfill_day_summary()
+        tdiff = time.time() - t1
+        if nrecs:
+            syslog.syslog(syslog.LOG_INFO, 
+                          "engine: Processed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
+        else:
+            syslog.syslog(syslog.LOG_INFO,
+                          "engine: Daily summaries up to date.")
+    
 
     def _catchup(self, generator):
         """Pull any unarchived records off the console and archive them.

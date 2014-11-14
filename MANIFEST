@@ -45,6 +45,7 @@ bin/weewx/station.py
 bin/weewx/tags.py
 bin/weewx/units.py
 bin/weewx/uwxutils.py
+bin/weewx/wxengine.py
 bin/weewx/wxformulas.py
 bin/weewx/wxmanager.py
 bin/weewx/wxservices.py
@@ -72,7 +73,6 @@ docs/suse.htm
 docs/upgrading.htm
 docs/usersguide.htm
 docs/css/jquery.tocify.css
-docs/css/jquery.ui.all.css
 docs/css/weewx_docs.css
 docs/css/ui-lightness/jquery-ui-1.10.4.custom.css
 docs/css/ui-lightness/jquery-ui-1.10.4.custom.min.css
@@ -94,8 +94,10 @@ docs/images/day-gap-not-shown.png
 docs/images/day-gap-showing.png
 docs/images/daycompare.png
 docs/images/daytemp_with_avg.png
+docs/images/daywindvec.png
 docs/images/ferrites.jpg
 docs/images/funky_degree.png
+docs/images/image_parts.png
 docs/images/logo-apple.png
 docs/images/logo-centos.png
 docs/images/logo-debian.png
@@ -107,9 +109,11 @@ docs/images/logo-redhat.png
 docs/images/logo-suse.png
 docs/images/logo-ubuntu.png
 docs/images/logo-weewx.png
+docs/images/sample_monthrain.png
 docs/images/weekgustoverlay.png
+docs/images/weektempdew.png
 docs/images/yearhilow.png
-docs/js/jquery-1.10.2.min.js
+docs/js/jquery-1.11.1.min.js
 docs/js/jquery-ui-1.10.4.custom.min.js
 docs/js/jquery.toc-1.1.4.min.js
 docs/js/jquery.tocify-1.9.0.js

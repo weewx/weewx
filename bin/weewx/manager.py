@@ -1177,10 +1177,11 @@ class DaySummaryManager(Manager):
         stop_ts: Archive data with a timestamp less than or equal to this will be
         used. [Optional. Default is to end with the last datum in the archive.]
         
-        returns: The number of records backfilled."""
+        returns: A 2-way tuple (nrecs, ndays) where 
+          nrecs is the number of records backfilled;
+          ndays is the number of days
+        """
         
-        syslog.syslog(syslog.LOG_DEBUG, "manager: Backfilling daily summaries.")
-        t1 = time.time()
         nrecs = 0
         ndays = 0
         
@@ -1228,16 +1229,7 @@ class DaySummaryManager(Manager):
                 self._set_day_summary(_day_accum, _lastTime, _cursor)
                 ndays += 1
         
-        t2 = time.time()
-        tdiff = t2 - t1
-        if nrecs:
-            syslog.syslog(syslog.LOG_NOTICE, 
-                          "manager: Processed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
-        else:
-            syslog.syslog(syslog.LOG_INFO,
-                          "manager: Daily summaries up to date.")
-    
-        return nrecs
+        return (nrecs, ndays)
 
 
     #--------------------------- UTILITY FUNCTIONS -----------------------------------

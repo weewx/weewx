@@ -1,7 +1,6 @@
 --------------------  TODO for V3  --------------------------- 
               
 Update setup.py.
-  -- General update strategy for weewx.conf
   -- Add configure keyword, with option --device=
 
 Quick start guide
@@ -11,6 +10,8 @@ Strategy for extending units.
 Move schemas to the extension that uses them.
 
 May need to update the guide on packaging an extension.
+
+Should the archive file be backed up before adding the daily summaries?
 
 Update skins: exfoliation amphibian simple
 Update drivers: owfs link fileparse
@@ -30,6 +31,10 @@ Update services to use new database
 cmon pmon
 (13nov14 mwall)
 
+Update setup.py.
+  -- General update strategy for weewx.conf
+     (11/13/14 by tk)
+     
 Update uploader extensions to use new database.
 emoncms mqtt owm seg thingspeak twitter wbug wcloud wetter windfinder xively
 (11/12/14 by Matthew)
