@@ -14,25 +14,23 @@
   <script src="js/jquery.tocify-1.9.0.min.js"></script>
   <script src="js/weewx.js"></script>
   <script>
-$(function() {
-  var toc = $("#toc").tocify({
-    context : "#technical_content",
-    selectors : "h1, h2",
-    showAndHide : false,
-    theme : "jqueryui",
-    ignoreSelector : ".title",
-    hashGenerator : wee_gen_id
-  })
-}).data("toc-tocify");
+    $(function() {
+      var level = get_default_level();
+      create_toc_control(level);
+      generate_toc(level);
+    })
 
-$(window).scroll(function(){
-  $('#toc').css({
-    'left': 8 - $(this).scrollLeft()
-  });
-  $('#legend').css({
-    'left': 5 - $(this).scrollLeft()
-  });
-});
+    $(window).scroll(function(){
+      $('#toc_controls').css({
+        'left': 8 - $(this).scrollLeft()
+      });
+      $('#toc').css({
+        'left': 8 - $(this).scrollLeft()
+      });
+      $('#legend').css({
+        'left': - $(this).scrollLeft()
+      });
+    });
   </script>
   <style>
 table .tty {
@@ -66,7 +64,11 @@ table .tty {
 
 <body>
 
-  <div id="toc">
+  <div id="toc_parent">
+    <div id="toc_controls">
+    </div>
+    <div id="toc">
+    </div>
   </div>
 
   <div id='legend'>
