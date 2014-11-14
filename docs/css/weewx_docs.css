@@ -209,7 +209,6 @@ table .first_row {
 .tab {
   font-size: 80%;
   font-weight: bold;
-  color: #aaaaaa;
   margin: 0px;
   padding: 4px 16px 4px 16px;
   float: left;
@@ -220,14 +219,17 @@ table .first_row {
   webkit-border-top-right-radius: 6px;
   moz-border-top-right-radius: 6px;
   border-top-right-radius: 6px;
+  color: #aaaaaa;
+  border-top: 1px solid #cccccc;
+  border-left: 1px solid #cccccc;
+  border-right: 1px solid #cccccc;
 }
 .selected {
+  background-color: #aacccc;
   color: black;
   border-top: 1px solid #447777;
   border-left: 1px solid #447777;
   border-right: 1px solid #447777;
-  background-color: #aacccc;
-  //background-color: #FFFFe0;
 }
 .version {
   font-size: 60%;
