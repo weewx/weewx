@@ -757,7 +757,7 @@ class Restart(Exception):
     """Exception thrown when restarting the engine is desired."""
     
 def sigHUPhandler(dummy_signum, dummy_frame):
-    syslog.syslog(syslog.LOG_DEBUG, "engine: Received signal HUP. Throwing Restart exception.")
+    syslog.syslog(syslog.LOG_DEBUG, "engine: Received signal HUP. Initiating restart.")
     raise Restart
 
 class Terminate(Exception):
