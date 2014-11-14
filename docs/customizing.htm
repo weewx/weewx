@@ -2238,14 +2238,16 @@ class MyXSearch(SearchList):                                                 # 1
     <h3>Explicit binding in tags</h3>    
     <p>How do we use this new binding? First, let's do a text comparison,
       using tags. Here's what our template looks like:</p>
-    <pre class="tty">&lt;tr&gt;
-  &lt;td class="stats_label"&gt;Inside Temperature, Vantage&lt;/td&gt;
-  &lt;td class="stats_data"&gt;$current.inTemp&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-  &lt;td class="stats_label"&gt;Inside Temperature, WMR100&lt;/td&gt;
-  &lt;td class="stats_data"&gt;$latest<span class="highlight">($data_binding='wmr100_binding')</span>.inTemp&lt;/td&gt;
-&lt;/tr&gt;</pre>
+    <pre class="tty">&lt;table&gt;
+  &lt;tr&gt;
+    &lt;td class="stats_label"&gt;Inside Temperature, Vantage&lt;/td&gt;
+    &lt;td class="stats_data"&gt;$current.inTemp&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td class="stats_label"&gt;Inside Temperature, WMR100&lt;/td&gt;
+    &lt;td class="stats_data"&gt;$latest<span class="highlight">($data_binding='wmr100_binding')</span>.inTemp&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</pre>
 
     <p>
       The explicit binding to <span class="code">wmr100_binding</span> is
@@ -2256,9 +2258,8 @@ class MyXSearch(SearchList):                                                 # 1
     </p>
     <p>This results in an HTML output that looks like:</p>
 
-
-    <div id="stats_group" class="indent" style="width:25%">
-      <div class="stats">
+    <div id="stats_group" class="indent">
+      <div class="stats example_output">
         <table>
           <tbody>
               <tr>

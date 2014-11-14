@@ -252,6 +252,10 @@ table .first_row {
  * the reporting engine produces, so the docs
  * can reproduce it.
  */
+.stats {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  padding: 13px 58px 13px 58px;
+}
 .stats table {
     border: thin solid #000000;
     width: 100%;
@@ -260,11 +264,9 @@ table .first_row {
     border: thin solid #000000;
     padding: 2px;
 }
-
 .stats_label {
     color: green;
 }
-
 .stats_data {
     color: red;
 }
