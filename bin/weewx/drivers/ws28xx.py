@@ -978,7 +978,7 @@ def log_traceback(dst=syslog.LOG_INFO, prefix='**** '):
     traceback.print_exc(file=sfd)
     sfd.seek(0)
     for line in sfd:
-        logmsg(dst, prefix+line)
+        logmsg(dst, prefix + line)
     del sfd
 
 def log_frame(n, buf):
@@ -986,7 +986,7 @@ def log_frame(n, buf):
     strbuf = ''
     for i in xrange(0,n):
         strbuf += str('%02x ' % buf[i])
-        if (i+1) % 16 == 0:
+        if (i + 1) % 16 == 0:
             logdbg(strbuf)
             strbuf = ''
     if strbuf:
@@ -1011,7 +1011,7 @@ def calc_checksum(buf, start, end=None):
     return cs
 
 def get_next_index(idx):
-    return get_index(idx+1)
+    return get_index(idx + 1)
 
 def get_index(idx):
     if idx < 0:
@@ -1025,7 +1025,7 @@ def tstr_to_ts(tstr):
         return None
     return int(time.mktime(time.strptime(tstr, "%Y-%m-%d %H:%M:%S")))
 
-def bytes_to_addr(a,b,c):
+def bytes_to_addr(a, b, c):
     return ((((a & 0xF) << 8) | b) << 8) | c
 
 def addr_to_index(addr):
@@ -1119,7 +1119,7 @@ class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
             if self.station.transceiver_is_present():
                 print 'Transceiver is present'
                 sn = self.station.get_transceiver_serial()
-                print 'serial: %s' %  sn
+                print 'serial: %s' % sn
                 tid = self.station.get_transceiver_id()
                 print 'id: %d (0x%04x)' % (tid, tid)
                 break
@@ -1275,15 +1275,15 @@ class WS28xxDriver(weewx.drivers.AbstractDevice):
         [Optional. Default is None]
         """
 
-        self.model             = stn_dict.get('model', 'LaCrosse WS28xx')
-        self.polling_interval  = int(stn_dict.get('polling_interval', 30))
-        self.comm_interval     = int(stn_dict.get('comm_interval', 3))
-        self.frequency         = stn_dict.get('transceiver_frequency', 'US')
-        self.device_id         = stn_dict.get('device_id', None)
-        self.serial            = stn_dict.get('serial', None)
+        self.model            = stn_dict.get('model', 'LaCrosse WS28xx')
+        self.polling_interval = int(stn_dict.get('polling_interval', 30))
+        self.comm_interval    = int(stn_dict.get('comm_interval', 3))
+        self.frequency        = stn_dict.get('transceiver_frequency', 'US')
+        self.device_id        = stn_dict.get('device_id', None)
+        self.serial           = stn_dict.get('serial', None)
 
-        self.vendor_id         = 0x6666
-        self.product_id        = 0x5555
+        self.vendor_id        = 0x6666
+        self.product_id       = 0x5555
 
         now = int(time.time())
         self._service = None
@@ -1335,7 +1335,7 @@ class WS28xxDriver(weewx.drivers.AbstractDevice):
 
             # if no new weather data, return an empty packet
             if packet is None:
-                packet = { 'usUnits': weewx.METRIC, 'dateTime': now }
+                packet = {'usUnits': weewx.METRIC, 'dateTime': now}
                 # if no new weather data for awhile, log it
                 if self._last_obs_ts is None or \
                         now - self._last_obs_ts > self._nodata_interval:
@@ -1555,11 +1555,11 @@ class WS28xxDriver(weewx.drivers.AbstractDevice):
 # eddie de pieri, which is in turn based on the HeavyWeather implementation.
 
 class BadResponse(Exception):
-    '''raised when unexpected data found in frame buffer'''
+    """raised when unexpected data found in frame buffer"""
     pass
 
 class DataWritten(Exception):
-    '''raised when message 'data written' in frame buffer'''
+    """raised when message 'data written' in frame buffer"""
     pass
 
 class BitHandling:
@@ -1567,31 +1567,31 @@ class BitHandling:
     @staticmethod
     def testBit(int_type, offset):
         mask = 1 << offset
-        return(int_type & mask)
+        return int_type & mask
 
     # return an integer with the bit at 'offset' set to 1.
     @staticmethod
     def setBit(int_type, offset):
         mask = 1 << offset
-        return(int_type | mask)
+        return int_type | mask
 
     # return an integer with the bit at 'offset' set to 1.
     @staticmethod
     def setBitVal(int_type, offset, val):
         mask = val << offset
-        return(int_type | mask)
+        return int_type | mask
 
     # return an integer with the bit at 'offset' cleared.
     @staticmethod
     def clearBit(int_type, offset):
         mask = ~(1 << offset)
-        return(int_type & mask)
+        return int_type & mask
 
     # return an integer with the bit at 'offset' inverted, 0->1 and 1->0.
     @staticmethod
     def toggleBit(int_type, offset):
         mask = 1 << offset
-        return(int_type ^ mask)
+        return int_type ^ mask
 
 class EHistoryInterval:
     hi01Min          = 0
@@ -1765,10 +1765,10 @@ def getFrequencyStandard(frequency):
 # 2 - thermo-hygro
 # 3 - console
 
-batterybits = { 'wind':0, 'rain':1, 'th':2, 'console':3 }
+batterybits = {'wind':0, 'rain':1, 'th':2, 'console':3}
 
 def getBatteryStatus(status, flag):
-    '''Return 1 if bit is set, 0 otherwise'''
+    """Return 1 if bit is set, 0 otherwise"""
     bit = batterybits.get(flag)
     if bit is None:
         return None
@@ -1798,13 +1798,13 @@ def getHistoryInterval(i):
 # OFL - outside factory limits
 class CWeatherTraits(object):
     windDirMap = {
-        0:"N", 1:"NNE", 2:"NE", 3:"ENE", 4:"E", 5:"ESE", 6:"SE", 7:"SSE",
-        8:"S", 9:"SSW", 10:"SW", 11:"WSW", 12:"W", 13:"WNW", 14:"NW",
-        15:"NWN", 16:"err", 17:"inv", 18:"None" }
+        0: "N", 1: "NNE", 2: "NE", 3: "ENE", 4: "E", 5: "ESE", 6: "SE",
+        7: "SSE", 8: "S", 9: "SSW", 10: "SW", 11: "WSW", 12: "W",
+        13: "WNW", 14: "NW", 15: "NWN", 16: "err", 17: "inv", 18: "None" }
     forecastMap = {
-        0:"Rainy(Bad)", 1:"Cloudy(Neutral)", 2:"Sunny(Good)",  3:"Error" }
+        0: "Rainy(Bad)", 1: "Cloudy(Neutral)", 2: "Sunny(Good)",  3: "Error" }
     trendMap = {
-        0:"Stable(Neutral)", 1:"Rising(Up)", 2:"Falling(Down)", 3:"Error" }
+        0: "Stable(Neutral)", 1: "Rising(Up)", 2: "Falling(Down)", 3: "Error" }
 
     @staticmethod
     def TemperatureNP():
@@ -1874,7 +1874,7 @@ _bad_labels = ['RainLastMonthMax','RainLastWeekMax','PressureRelativeMin']
 class USBHardware(object):
     @staticmethod
     def isOFL2(buf, start, StartOnHiNibble):
-        if StartOnHiNibble :
+        if StartOnHiNibble:
             result = (buf[0][start+0] >>  4) == 15 \
                 or (buf[0][start+0] & 0xF) == 15
         else:
@@ -1884,7 +1884,7 @@ class USBHardware(object):
 
     @staticmethod
     def isOFL3(buf, start, StartOnHiNibble):
-        if StartOnHiNibble :
+        if StartOnHiNibble:
             result = (buf[0][start+0] >>  4) == 15 \
                 or (buf[0][start+0] & 0xF) == 15 \
                 or (buf[0][start+1] >>  4) == 15
@@ -1896,7 +1896,7 @@ class USBHardware(object):
 
     @staticmethod
     def isOFL5(buf, start, StartOnHiNibble):
-        if StartOnHiNibble :
+        if StartOnHiNibble:
             result = (buf[0][start+0] >>  4) == 15 \
                 or (buf[0][start+0] & 0xF) == 15 \
                 or (buf[0][start+1] >>  4) == 15 \
@@ -1912,7 +1912,7 @@ class USBHardware(object):
 
     @staticmethod
     def isErr2(buf, start, StartOnHiNibble):
-        if StartOnHiNibble :
+        if StartOnHiNibble:
             result = (buf[0][start+0] >>  4) >= 10 \
                 and (buf[0][start+0] >>  4) != 15 \
                 or  (buf[0][start+0] & 0xF) >= 10 \
@@ -1926,7 +1926,7 @@ class USBHardware(object):
         
     @staticmethod
     def isErr3(buf, start, StartOnHiNibble):
-        if StartOnHiNibble :
+        if StartOnHiNibble:
             result = (buf[0][start+0] >>  4) >= 10 \
                 and (buf[0][start+0] >>  4) != 15 \
                 or  (buf[0][start+0] & 0xF) >= 10 \
@@ -1944,7 +1944,7 @@ class USBHardware(object):
         
     @staticmethod
     def isErr5(buf, start, StartOnHiNibble):
-        if StartOnHiNibble :
+        if StartOnHiNibble:
             result = (buf[0][start+0] >>  4) >= 10 \
                 and (buf[0][start+0] >>  4) != 15 \
                 or  (buf[0][start+0] & 0xF) >= 10 \
@@ -1983,7 +1983,7 @@ class USBHardware(object):
 
     @staticmethod
     def toInt_2(buf, start, StartOnHiNibble):
-        '''read 2 nibbles'''
+        """read 2 nibbles"""
         if StartOnHiNibble:
             rawpre  = (buf[0][start+0] >>  4)* 10 \
                 + (buf[0][start+0] & 0xF)* 1
@@ -1994,12 +1994,12 @@ class USBHardware(object):
 
     @staticmethod
     def toRain_7_3(buf, start, StartOnHiNibble):
-        '''read 7 nibbles, presentation with 3 decimals; units of mm'''
-        if ( USBHardware.isErr2(buf, start+0, StartOnHiNibble) or
-             USBHardware.isErr5(buf, start+1, StartOnHiNibble)):
+        """read 7 nibbles, presentation with 3 decimals; units of mm"""
+        if (USBHardware.isErr2(buf, start+0, StartOnHiNibble) or
+            USBHardware.isErr5(buf, start+1, StartOnHiNibble)):
             result = CWeatherTraits.RainNP()
-        elif ( USBHardware.isOFL2(buf, start+0, StartOnHiNibble) or
-               USBHardware.isOFL5(buf, start+1, StartOnHiNibble) ):
+        elif (USBHardware.isOFL2(buf, start+0, StartOnHiNibble) or
+              USBHardware.isOFL5(buf, start+1, StartOnHiNibble)):
             result = CWeatherTraits.RainOFL()
         elif StartOnHiNibble:
             result  = (buf[0][start+0] >>  4)*  1000 \
@@ -2022,13 +2022,13 @@ class USBHardware(object):
     @staticmethod
     def toRain_6_2(buf, start, StartOnHiNibble):
         '''read 6 nibbles, presentation with 2 decimals; units of mm'''
-        if ( USBHardware.isErr2(buf, start+0, StartOnHiNibble) or
-             USBHardware.isErr2(buf, start+1, StartOnHiNibble) or
-             USBHardware.isErr2(buf, start+2, StartOnHiNibble) ):
+        if (USBHardware.isErr2(buf, start+0, StartOnHiNibble) or
+            USBHardware.isErr2(buf, start+1, StartOnHiNibble) or
+            USBHardware.isErr2(buf, start+2, StartOnHiNibble) ):
             result = CWeatherTraits.RainNP()
-        elif ( USBHardware.isOFL2(buf, start+0, StartOnHiNibble) or
-               USBHardware.isOFL2(buf, start+1, StartOnHiNibble) or
-               USBHardware.isOFL2(buf, start+2, StartOnHiNibble) ):
+        elif (USBHardware.isOFL2(buf, start+0, StartOnHiNibble) or
+              USBHardware.isOFL2(buf, start+1, StartOnHiNibble) or
+              USBHardware.isOFL2(buf, start+2, StartOnHiNibble)):
             result = CWeatherTraits.RainOFL()
         elif StartOnHiNibble:
             result  = (buf[0][start+0] >>  4)*  1000 \
@@ -2048,8 +2048,8 @@ class USBHardware(object):
 
     @staticmethod
     def toRain_3_1(buf, start, StartOnHiNibble):
-        '''read 3 nibbles, presentation with 1 decimal; units of 0.1 inch'''
-        if StartOnHiNibble :
+        """read 3 nibbles, presentation with 1 decimal; units of 0.1 inch"""
+        if StartOnHiNibble:
             hibyte = buf[0][start+0]
             lobyte = (buf[0][start+1] >> 4) & 0xF
         else:
@@ -2066,7 +2066,7 @@ class USBHardware(object):
 
     @staticmethod  
     def toFloat_3_1(buf, start, StartOnHiNibble):
-        '''read 3 nibbles, presentation with 1 decimal'''
+        """read 3 nibbles, presentation with 1 decimal"""
         if StartOnHiNibble:
             result = (buf[0][start+0] >>  4)*16**2 \
                 + (buf[0][start+0] & 0xF)*   16**1 \
@@ -2080,13 +2080,13 @@ class USBHardware(object):
 
     @staticmethod
     def toDateTime(buf, start, StartOnHiNibble, label):
-        '''read 10 nibbles, presentation as DateTime'''
+        """read 10 nibbles, presentation as DateTime"""
         result = None
-        if ( USBHardware.isErr2(buf, start+0, StartOnHiNibble)
-             or USBHardware.isErr2(buf, start+1, StartOnHiNibble)
-             or USBHardware.isErr2(buf, start+2, StartOnHiNibble)
-             or USBHardware.isErr2(buf, start+3, StartOnHiNibble)
-             or USBHardware.isErr2(buf, start+4, StartOnHiNibble) ):
+        if (USBHardware.isErr2(buf, start+0, StartOnHiNibble)
+            or USBHardware.isErr2(buf, start+1, StartOnHiNibble)
+            or USBHardware.isErr2(buf, start+2, StartOnHiNibble)
+            or USBHardware.isErr2(buf, start+3, StartOnHiNibble)
+            or USBHardware.isErr2(buf, start+4, StartOnHiNibble)):
             logerr('ToDateTime: bogus date for %s: error status in buffer' %
                    label)
         else:
@@ -2110,10 +2110,10 @@ class USBHardware(object):
 
     @staticmethod
     def toHumidity_2_0(buf, start, StartOnHiNibble):
-        '''read 2 nibbles, presentation with 0 decimal'''
-        if USBHardware.isErr2(buf, start+0, StartOnHiNibble) :
+        """read 2 nibbles, presentation with 0 decimal"""
+        if USBHardware.isErr2(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.HumidityNP()
-        elif USBHardware.isOFL2(buf, start+0, StartOnHiNibble) :
+        elif USBHardware.isOFL2(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.HumidityOFL()
         else:
             result = USBHardware.toInt_2(buf, start, StartOnHiNibble)
@@ -2121,10 +2121,10 @@ class USBHardware(object):
 
     @staticmethod
     def toTemperature_5_3(buf, start, StartOnHiNibble):
-        '''read 5 nibbles, presentation with 3 decimals; units of degree C'''
-        if USBHardware.isErr5(buf, start+0, StartOnHiNibble) :
+        """read 5 nibbles, presentation with 3 decimals; units of degree C"""
+        if USBHardware.isErr5(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.TemperatureNP()
-        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble) :
+        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.TemperatureOFL()
         else:
             if StartOnHiNibble:
@@ -2144,10 +2144,10 @@ class USBHardware(object):
 
     @staticmethod
     def toTemperature_3_1(buf, start, StartOnHiNibble):
-        '''read 3 nibbles, presentation with 1 decimal; units of degree C'''
-        if USBHardware.isErr3(buf, start+0, StartOnHiNibble) :
+        """read 3 nibbles, presentation with 1 decimal; units of degree C"""
+        if USBHardware.isErr3(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.TemperatureNP()
-        elif USBHardware.isOFL3(buf, start+0, StartOnHiNibble) :
+        elif USBHardware.isOFL3(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.TemperatureOFL()
         else:
             if StartOnHiNibble :
@@ -2163,33 +2163,33 @@ class USBHardware(object):
 
     @staticmethod
     def toWindspeed_6_2(buf, start):
-        '''read 6 nibbles, presentation with 2 decimals; units of km/h'''
+        """read 6 nibbles, presentation with 2 decimals; units of km/h"""
         result = (buf[0][start+0] >> 4)* 16**5 \
             + (buf[0][start+0] & 0xF)*   16**4 \
             + (buf[0][start+1] >>  4)*   16**3 \
             + (buf[0][start+1] & 0xF)*   16**2 \
             + (buf[0][start+2] >>  4)*   16**1 \
             + (buf[0][start+2] & 0xF)
-        result = result / 256.0
-        result = result / 100.0             # km/h
+        result /= 256.0
+        result /= 100.0             # km/h
         return result
 
     @staticmethod
     def toWindspeed_3_1(buf, start, StartOnHiNibble):
-        '''read 3 nibbles, presentation with 1 decimal; units of m/s'''
+        """read 3 nibbles, presentation with 1 decimal; units of m/s"""
         if StartOnHiNibble :
             hibyte = buf[0][start+0]
             lobyte = (buf[0][start+1] >> 4) & 0xF
         else:
             hibyte = 16*(buf[0][start+0] & 0xF) + ((buf[0][start+1] >> 4) & 0xF)
             lobyte = buf[0][start+1] & 0xF            
-        if hibyte == 0xFF and lobyte == 0xE :
+        if hibyte == 0xFF and lobyte == 0xE:
             result = CWeatherTraits.WindNP()
-        elif hibyte == 0xFF and lobyte == 0xF :
+        elif hibyte == 0xFF and lobyte == 0xF:
             result = CWeatherTraits.WindOFL()
         else:
             result = USBHardware.toFloat_3_1(buf, start, StartOnHiNibble) # m/s
-            result = result * 3.6 # km/h       
+            result *= 3.6 # km/h
         return result
 
     @staticmethod
@@ -2199,10 +2199,10 @@ class USBHardware(object):
 
     @staticmethod
     def toPressure_hPa_5_1(buf, start, StartOnHiNibble):
-        '''read 5 nibbles, presentation with 1 decimal; units of hPa (mbar)'''
-        if USBHardware.isErr5(buf, start+0, StartOnHiNibble) :
+        """read 5 nibbles, presentation with 1 decimal; units of hPa (mbar)"""
+        if USBHardware.isErr5(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.PressureNP()
-        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble) :
+        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.PressureOFL()
         elif StartOnHiNibble :
             result = (buf[0][start+0] >> 4)* 1000 \
@@ -2220,10 +2220,10 @@ class USBHardware(object):
 
     @staticmethod
     def toPressure_inHg_5_2(buf, start, StartOnHiNibble):
-        '''read 5 nibbles, presentation with 2 decimals; units of inHg'''
-        if USBHardware.isErr5(buf, start+0, StartOnHiNibble) :
+        """read 5 nibbles, presentation with 2 decimals; units of inHg"""
+        if USBHardware.isErr5(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.PressureNP()
-        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble) :
+        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.PressureOFL()
         elif StartOnHiNibble :
             result = (buf[0][start+0] >> 4)* 100 \
@@ -2404,12 +2404,11 @@ class CCurrentWeatherData(object):
         self._WindDirection5 = w5
 
         if DEBUG_WEATHER_DATA > 2:
-            unknownbuf = [0]
-            unknownbuf[0] = [0]*9
+            unknownbuf = [0]*9
             for i in xrange(0,9):
-                unknownbuf[0][i] = nbuf[0][163+i]
+                unknownbuf[i] = nbuf[163+i]
             strbuf = ""
-            for i in unknownbuf[0]:
+            for i in unknownbuf:
                 strbuf += str("%.2x " % i)
             logdbg('Bytes with unknown meaning at 157-165: %s' % strbuf)
 
@@ -3095,13 +3094,13 @@ class sHID(object):
                             handle = dev.open()
                             try:
                                 buf = self.readCfg(handle, 0x1F9, 7)
-                                sn  = str("%02d"%(buf[0]))
-                                sn += str("%02d"%(buf[1]))
-                                sn += str("%02d"%(buf[2]))
-                                sn += str("%02d"%(buf[3]))
-                                sn += str("%02d"%(buf[4]))
-                                sn += str("%02d"%(buf[5]))
-                                sn += str("%02d"%(buf[6]))
+                                sn  = str("%02d" % (buf[0]))
+                                sn += str("%02d" % (buf[1]))
+                                sn += str("%02d" % (buf[2]))
+                                sn += str("%02d" % (buf[3]))
+                                sn += str("%02d" % (buf[4]))
+                                sn += str("%02d" % (buf[5]))
+                                sn += str("%02d" % (buf[6]))
                                 if str(serial) == sn:
                                     loginf('found transceiver at bus=%s device=%s serial=%s' % (bus.dirname, dev.filename, sn))
                                     return dev
@@ -3197,7 +3196,7 @@ class sHID(object):
         StateBuffer[0][0]=buf[1]
         StateBuffer[0][1]=buf[2]
 
-    def readConfigFlash(self,addr,numBytes,data):
+    def readConfigFlash(self, addr, numBytes, data):
         if numBytes > 512:
             raise Exception('bad number of bytes')
 
@@ -3205,8 +3204,8 @@ class sHID(object):
             buf=[0xcc]*0x0f #0x15
             buf[0] = 0xdd
             buf[1] = 0x0a
-            buf[2] = (addr >>8)  & 0xFF
-            buf[3] = (addr >>0)  & 0xFF
+            buf[2] = (addr >>8) & 0xFF
+            buf[3] = (addr >>0) & 0xFF
             if DEBUG_COMM > 1:
                 self.dump('readCfgFlash>', buf, fmt=DEBUG_DUMP_FORMAT)
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
@@ -3224,7 +3223,7 @@ class sHID(object):
                                        index=0x0000000,
                                        timeout=self.timeout)
             new_data=[0]*0x15
-            if ( numBytes < 16 ):
+            if numBytes < 16:
                 for i in xrange(0, numBytes):
                     new_data[i] = buf[i+4]
                 numBytes = 0
@@ -3235,7 +3234,7 @@ class sHID(object):
                 addr += 16
             if DEBUG_COMM > 1:
                 self.dump('readCfgFlash<', buf, fmt=DEBUG_DUMP_FORMAT)
-        data[0] = new_data
+        data[0] = new_data # FIXME: new_data might be unset
 
     def setState(self,state):
         buf = [0]*0x15

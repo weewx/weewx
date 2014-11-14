@@ -180,7 +180,7 @@ class Station(object):
             else:
                 try:
                     int(c, 16)
-                except ValueError, e:
+                except ValueError:
                     bad_byte = True
                 b.append(c)
         if DEBUG_READ:

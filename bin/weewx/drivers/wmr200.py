@@ -55,14 +55,14 @@ def confeditor_loader():
 
 
 # General decoding sensor maps.
-WIND_DIR_MAP = { 0:'N', 1:'NNE', 2:'NE', 3:'ENE',
-                4:'E', 5:'ESE', 6:'SE', 7:'SSE',
-                8:'S', 9:'SSW', 10:'SW', 11:'WSW',
-                12:'W', 13:'WNW', 14:'NW', 15:'NNW' }
-FORECAST_MAP = { 0:'Partly Cloudy', 1:'Rainy', 2:'Cloudy', 3:'Sunny',
-                4:'Clear Night', 5:'Snowy',
-                6:'Partly Cloudy Night', 7:'Unknown7' }
-TRENDS =      { 0:'Stable', 1:'Rising', 2:'Falling', 3:'Undefined' }
+WIND_DIR_MAP = {0: 'N', 1: 'NNE', 2: 'NE', 3: 'ENE',
+                4: 'E', 5: 'ESE', 6: 'SE', 7: 'SSE',
+                8: 'S', 9: 'SSW', 10: 'SW', 11: 'WSW',
+                12: 'W', 13: 'WNW', 14: 'NW', 15: 'NNW'}
+FORECAST_MAP = {0: 'Partly Cloudy', 1: 'Rainy', 2: 'Cloudy',
+                3: 'Sunny', 4: 'Clear Night', 5: 'Snowy',
+                6: 'Partly Cloudy Night', 7: 'Unknown7'}
+TRENDS = {0: 'Stable', 1: 'Rising', 2: 'Falling', 3: 'Undefined'}
 
 # Size of USB frame to read from weather console.
 _WMR200_USB_FRAME_SIZE = 8
@@ -196,7 +196,7 @@ class UsbDevice(object):
         # Detach any old claimed interfaces
         try:
             self.handle.detachKernelDriver(self.interface)
-        except usb.USBError, exception:
+        except usb.USBError:
             pass
 
         try:
@@ -376,7 +376,7 @@ class Packet(object):
     def packet_process(self):
         """Process the raw data and creates a record field."""
         # Convention is that this driver only works in metric units.
-        self._record.update({'usUnits' : weewx.METRIC})
+        self._record.update({'usUnits': weewx.METRIC})
         if DEBUG_PACKETS_RAW or DEBUG_PACKETS_COOKED:
             logdbg('Processing %s' % self.pkt_name)
         if self.pkt_len and self.pkt_len != self.size_actual():
@@ -447,7 +447,7 @@ class Packet(object):
         if not self._bogus_packet \
            and self._checksum_calculate() != self._checksum_field():
             msg = ('Checksum error act:0x%04x exp:0x%04x'
-                        % (self._checksum_calculate(), self._checksum_field()))
+                   % (self._checksum_calculate(), self._checksum_field()))
             logerr(msg)
             logerr(self.to_string_raw('  packet:'))
             if self.wmr200.ignore_checksum:
@@ -459,8 +459,7 @@ class Packet(object):
 
         # Debug test to force checksum recovery testing.
         if DEBUG_CHECKSUM and (self.pkt_id % DEBUG_CHECKSUM) == 0:
-            msg = ('Debug forced checksum error')
-            raise weewx.CRCError(msg)
+            raise weewx.CRCError('Debug forced checksum error')
 
     @staticmethod
     def timestamp_host():
@@ -526,8 +525,8 @@ class Packet(object):
             out = ' Packet cooked: '
             out += 'id:%d ' % self.pkt_id
             out += '%s ' % self.pkt_name
-            out += '%s ' % weeutil.weeutil.timestamp_to_string\
-                    (self.timestamp_record())
+            out += '%s ' % weeutil.weeutil.timestamp_to_string(
+                self.timestamp_record())
             out += 'len:%d ' % self.size_actual()
             out += 'fields:%d ' % len(self._record)
             out += str(self._record)
@@ -558,7 +557,7 @@ class PacketLive(Packet):
     def packet_process(self):
         """Returns a records field to be processed by the weewx engine."""
         super(PacketLive, self).packet_process()
-        self._record.update({'dateTime' : self.timestamp_live(), })
+        self._record.update({'dateTime': self.timestamp_live(), })
 
     def calc_time_drift(self):
         """Returns the difference between PC time and the packet timestamp.
@@ -567,7 +566,7 @@ class PacketLive(Packet):
         Only done once upon first live packet received."""
         if self.wmr200.time_drift is None:
             self.wmr200.time_drift = self.timestamp_host() \
-                    - self.timestamp_packet()
+                - self.timestamp_packet()
             loginf('Time drift between host and console in seconds:%d' %
                    self.wmr200.time_drift)
 
@@ -605,9 +604,9 @@ class PacketArchive(Packet):
         super(PacketArchive, self).packet_process()
         # If we need to adjust the timestamp if pc time is set we will do it
         # later
-        self._record.update({'dateTime' : self.timestamp_packet(), })
+        self._record.update({'dateTime': self.timestamp_packet(), })
         # Archive packets have extra field indicating interval time.
-        self._record.update({'interval' : \
+        self._record.update({'interval':
                              int(self.wmr200.archive_interval / 60.0), })
 
     def timestamp_adjust_drift(self):
@@ -663,7 +662,7 @@ class PacketControl(Packet):
         
         This packet isn't really passed up to weewx but is assigned a
         timestamp for completeness."""
-        self._record.update({'dateTime' : self.timestamp_host(), })
+        self._record.update({'dateTime': self.timestamp_host(), })
 
     def print_cooked(self):
         """Print the processed packet.
@@ -777,7 +776,7 @@ def decode_wind(pkt, pkt_data):
         if DEBUG_PACKETS_WIND:
             logdbg('  Wind Dir: %s' % (WIND_DIR_MAP[pkt_data[0] & 0x0f]))
             logdbg('  Gust: %.1f m/s Wind:%.1f m/s' % (gust_speed, avg_speed))
-            if windchill != None:
+            if windchill is not None:
                 logdbg('  Windchill: %.1f C' % (windchill))
         return record
 
@@ -895,7 +894,7 @@ class PacketRain(PacketLive):
 def decode_uvi(pkt, pkt_data):
     """Decode the uvi portion of a wmr200 packet."""
     try:
-        record = { 'UV' : pkt_data[0 & 0x0f] }
+        record = {'UV': pkt_data[0 & 0x0f]}
         if DEBUG_PACKETS_UVI:
             logdbg("  UV index:%s\n" % record['UV'])
         return record
@@ -943,11 +942,11 @@ def decode_pressure(pkt, pkt_data):
 
         if DEBUG_PACKETS_PRESSURE:
             logdbg('  Forecast: %s' % FORECAST_MAP[forecast])
-            logdbg('  Raw pressure: %.02f hPa' % (pressure))
+            logdbg('  Raw pressure: %.02f hPa' % pressure)
             if unknown_nibble != 3:
-                logdbg('  Pressure unknown nibble: 0x%x' % (unknown_nibble))
+                logdbg('  Pressure unknown nibble: 0x%x' % unknown_nibble)
             logdbg('  Altitude corrected pressure: %.02f hPa console' %
-                   (alt_pressure_console))
+                   alt_pressure_console)
         return record
 
     except IndexError:
@@ -1018,26 +1017,25 @@ def decode_temp(pkt, pkt_data):
 
         if sensor_id == 0:
             # Indoor temperature sensor.
-            record['inTemp']      = temp
-            record['inHumidity']  = humidity
+            record['inTemp'] = temp
+            record['inHumidity'] = humidity
         elif sensor_id == 1:
             # Outdoor temperature sensor.
-            record['outTemp']     = temp
+            record['outTemp'] = temp
             record['outHumidity'] = humidity
             record['heatindex'] = heat_index
         elif sensor_id >= 2:
             # Extra temperature sensors.
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
-            record['extraTemp%d'  % sensor_id] = temp
+            record['extraTemp%d' % sensor_id] = temp
             record['extraHumid%d' % sensor_id] = humidity
 
         if DEBUG_PACKETS_TEMP:
-            logdbg(('  Temperature id:%d %.1f C trend: %s'
-                    % (sensor_id, temp,
-                       TRENDS[temp_trend])))
-            logdbg('  Humidity id:%d %d%% trend: %s' % (sensor_id, humidity,
-                                                        TRENDS[hum_trend]))
+            logdbg('  Temperature id:%d %.1f C trend: %s'
+                   % (sensor_id, temp, TRENDS[temp_trend]))
+            logdbg('  Humidity id:%d %d%% trend: %s'
+                   % (sensor_id, humidity, TRENDS[hum_trend]))
             logdbg(('  Dew point id:%d: %.1f C' % (sensor_id, dew_point)))
             if heat_index:
                 logdbg('  Heat id:%d index:%d' % (sensor_id, heat_index))
@@ -1286,7 +1284,7 @@ class PollUsbDevice(threading.Thread):
         loginf('USB polling device thread signaled to start')
 
         # Read and discard next data from weather console device.
-        buf = self.usb_device.read_device()
+        _ = self.usb_device.read_device()
         read_timeout_cnt = 0
         read_reset_cnt = 0
 
@@ -1378,7 +1376,7 @@ class PollUsbDevice(threading.Thread):
 class WMR200(weewx.drivers.AbstractDevice):
     """Driver for the Oregon Scientific WMR200 station."""
 
-    def __init__(self, **stn_dict) :
+    def __init__(self, **stn_dict):
         """Initialize the wmr200 driver.
         
         NAMED ARGUMENTS:
@@ -1401,17 +1399,17 @@ class WMR200(weewx.drivers.AbstractDevice):
         super(WMR200, self).__init__()
 
         ## User configurable options
-        self._model        = stn_dict.get('model', 'WMR200')
+        self._model = stn_dict.get('model', 'WMR200')
         # Provide sensor faults in syslog.
         self._sensor_stat = weeutil.weeutil.tobool(stn_dict.get('sensor_status',
                                                                 True))
         # Use pc timestamps or weather console timestamps.
         self._use_pc_time = \
-                weeutil.weeutil.tobool(stn_dict.get('use_pc_time', True))
+            weeutil.weeutil.tobool(stn_dict.get('use_pc_time', True))
 
         # Use archive data when possible.
         self._erase_archive = \
-                weeutil.weeutil.tobool(stn_dict.get('erase_archive', False))
+            weeutil.weeutil.tobool(stn_dict.get('erase_archive', False))
 
         # Archive interval in seconds.
         self._archive_interval = int(stn_dict.get('archive_interval', 60))
@@ -1455,7 +1453,7 @@ class WMR200(weewx.drivers.AbstractDevice):
 
         # Pass USB parameters to the USB device accessor.
         self.usb_device.in_endpoint = in_endpoint
-        self.usb_device.interface  = interface
+        self.usb_device.interface = interface
 
         # Locate the weather console device on the USB bus.
         if not self.usb_device.find_device(vendor_id, product_id):
@@ -1482,8 +1480,7 @@ class WMR200(weewx.drivers.AbstractDevice):
                       'sock_rd'   : self.sock_rd})
 
         # Create the usb polling device thread.
-        self._thread_usb_poll = PollUsbDevice(kwargs={'wmr200' :
-                                                        self})
+        self._thread_usb_poll = PollUsbDevice(kwargs={'wmr200': self})
 
         # Start the usb polling device thread.
         self._poll_device_enable = True
@@ -1532,7 +1529,6 @@ class WMR200(weewx.drivers.AbstractDevice):
         DEBUG_PACKETS_PRESSURE = int(stn_dict.get('debug_packets_pressure', 0))
         global DEBUG_CHECKSUM
         DEBUG_CHECKSUM = int(stn_dict.get('debug_checksum', 0))
-
 
         if DEBUG_CONFIG_DATA:
             logdbg('Configuration setup')
@@ -1749,7 +1745,7 @@ class WMR200(weewx.drivers.AbstractDevice):
                        % pkt.pkt_id)
                 yield pkt.packet_record()
 
-    def XXXgenArchiveRecords(self, since_ts = 0):
+    def XXXgenArchiveRecords(self, since_ts=0):
         """A generator function to return archive packets from the wmr200.
         
         weewx api to return archive records.
@@ -1808,7 +1804,7 @@ class WMR200(weewx.drivers.AbstractDevice):
                     loginf(('genArchive() Ignoring received archive record'
                             ' before requested timestamp'))
 
-    def genStartupRecords(self, since_ts = 0):
+    def genStartupRecords(self, since_ts=0):
         """A generator function to present archive packets on start.
 
         weewx api to return archive records."""
@@ -1929,7 +1925,7 @@ class WMR200(weewx.drivers.AbstractDevice):
                        % (self._archive_startup, cnt))
                 if timestamp_packet_first is not None:
                     startup_time = timestamp_packet_current \
-                            - timestamp_packet_first
+                        - timestamp_packet_first
 
                     loginf(('genStartup() Yielded %d packets in %d sec '
                             ' between these dates %s ==> %s' %

@@ -97,7 +97,7 @@ class WMR100(weewx.drivers.AbstractDevice):
         # Detach any old claimed interfaces
         try:
             self.devh.detachKernelDriver(self.interface)
-        except:
+        except usb.USBError:
             pass
         try:
             self.devh.claimInterface(self.interface)
@@ -109,11 +109,11 @@ class WMR100(weewx.drivers.AbstractDevice):
     def closePort(self):
         try:
             self.devh.releaseInterface()
-        except:
+        except usb.USBError:
             pass
         try:
             self.devh.detachKernelDriver(self.interface)
-        except:
+        except usb.USBError:
             pass
         
     def genLoopPackets(self):
@@ -127,7 +127,7 @@ class WMR100(weewx.drivers.AbstractDevice):
                 _packet_type = _packet[1]
                 if _packet_type in WMR100._dispatch_dict:
                     _record = WMR100._dispatch_dict[_packet_type](self, _packet)
-                    if _record is not None : 
+                    if _record is not None:
                         yield _record
             except IndexError:
                 syslog.syslog(syslog.LOG_ERR, "wmr100: Malformed packet. %s" % _packet)
@@ -164,7 +164,7 @@ class WMR100(weewx.drivers.AbstractDevice):
                         syslog.syslog(syslog.LOG_DEBUG, "wmr100: Exception while calculating checksum.")
                         syslog.syslog(syslog.LOG_DEBUG, "****  %s" % e)
                 else:
-                    actual_checksum   = (buff[-1] << 8) + buff[-2]
+                    actual_checksum = (buff[-1] << 8) + buff[-2]
                     if computed_checksum == actual_checksum:
                         # Looks good. Yield the packet
                         yield buff
@@ -184,8 +184,7 @@ class WMR100(weewx.drivers.AbstractDevice):
     #===============================================================================
     #                         USB functions
     #===============================================================================
-             
-                               
+
     def _findDevice(self):
         """Find the given vendor and product IDs on the USB bus"""
         for bus in usb.busses():
@@ -307,10 +306,10 @@ class WMR100(weewx.drivers.AbstractDevice):
         channel = packet[2] & 0x0f
 
         if channel == 0:
-            _record['inTemp']      = T
+            _record['inTemp'] = T
             _record['inTempBatteryStatus'] = (packet[0] & 0x40) >> 6
         elif channel == 1:
-            _record['outTemp']     = T
+            _record['outTemp'] = T
             # The WMR does not provide wind information in a temperature
             # packet, so we have to use old wind data to calculate wind chill,
             # provided it isn't too old and has gone stale. If no wind data has
@@ -327,12 +326,12 @@ class WMR100(weewx.drivers.AbstractDevice):
         elif channel >= 2:
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
-            _record['extraTemp%d'  % (channel-1)] = T
+            _record['extraTemp%d' % (channel-1)] = T
 
         return _record
 
     def _barometer_packet(self, packet):
-        SP  = float(((packet[3] & 0x0f) << 8) + packet[2])
+        SP = float(((packet[3] & 0x0f) << 8) + packet[2])
         # Although the WMR100 emits SLP, not all consoles in the series
         # (notably, the WMRS200) allow the user to set altitude. So, we must
         # calculate in software. 
@@ -353,8 +352,7 @@ class WMR100(weewx.drivers.AbstractDevice):
                    'dateTime'        : int(time.time() + 0.5),
                    'usUnits'         : weewx.METRIC}
         return _record
-        
-    
+
     def _wind_packet(self, packet):
         """Decode a wind packet. Wind speed will be in kph"""
 

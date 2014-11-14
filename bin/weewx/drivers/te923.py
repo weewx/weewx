@@ -309,11 +309,11 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
     def show_history(self, ts=0, count=0, fmt='raw'):
         """Show the indicated number of records or records since timestamp"""
         print "Querying the station for historical records..."
-        for i,r in enumerate(self.station.genArchiveRecords(ts)):
+        for i, r in enumerate(self.station.genArchiveRecords(ts)):
             if fmt.lower() == 'raw':
                 self.print_raw(r['datetime'], r['ptr'], r['raw_data'])
             elif fmt.lower() == 'table':
-                self.print_table(r['datetime'], r['data'], i==0)
+                self.print_table(r['datetime'], r['data'], i == 0)
             else:
                 print r['datetime'], r['data']
             if count and i > count:
@@ -343,7 +343,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
 class TE923Driver(weewx.drivers.AbstractDevice):
     """Driver for Hideki TE923 stations."""
     
-    def __init__(self, **stn_dict) :
+    def __init__(self, **stn_dict):
         """Initialize the station object.
 
         polling_interval: How often to poll the station, in seconds.
@@ -353,7 +353,6 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         [Optional. Default is 'TE923']
         """
         self._last_rain        = None
-        self._last_rain_ts     = None
 
         global DEBUG_READ
         DEBUG_READ             = int(stn_dict.get('debug_read', 0))
@@ -400,11 +399,9 @@ class TE923Driver(weewx.drivers.AbstractDevice):
                 status = self.station.get_status()
                 packet = data_to_packet(data, status=status,
                                         last_rain=self._last_rain,
-                                        last_rain_ts=self._last_rain_ts,
                                         sensor_map=self.sensor_map,
                                         battery_map=self.battery_map)
                 self._last_rain = packet['rainTotal']
-                self._last_rain_ts = packet['dateTime']
                 ntries = 0
                 yield packet
                 time.sleep(self.polling_interval)
@@ -428,8 +425,7 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         data = self.station.get_status()
         return data
 
-def data_to_packet(data, status=None,
-                   last_rain=None, last_rain_ts=None,
+def data_to_packet(data, status=None, last_rain=None,
                    sensor_map=DEFAULT_SENSOR_MAP,
                    battery_map=DEFAULT_BATTERY_MAP):
     """convert raw data to format and units required by weewx
@@ -548,7 +544,7 @@ def decode_th(buf, i):
         hlabel = 'h_%d' % i
         hstate = 'h_%d_state' % i
 
-    offset = i*3
+    offset = i * 3
     data = {}
     data[tstate] = STATE_OK
     if DEBUG_DECODE:
@@ -597,7 +593,7 @@ def decode_uv(buf):
     """decode data from uv sensor"""
     data = {}
     if DEBUG_DECODE:
-        logdbg("UVX  BUF[18]=%02x BUF[19]=%02x" % (buf[18],buf[19]))
+        logdbg("UVX  BUF[18]=%02x BUF[19]=%02x" % (buf[18], buf[19]))
     if buf[18] == 0xaa and buf[19] == 0x0a:
         data['uv_state'] = STATE_MISSING_LINK
         data['uv'] = None
@@ -743,6 +739,16 @@ def decode_status(buf):
         logdbg("STT  %s %s" % (data['storm'], data['forecast']))
     return data
 
+def _find_dev(vendor_id, product_id, device_id):
+    """Find the vendor and product ID on the USB."""
+    for bus in usb.busses():
+        for dev in bus.devices:
+            if dev.idVendor == vendor_id and dev.idProduct == product_id:
+                if device_id is None or dev.filename == device_id:
+                    loginf('Found device on USB bus=%s device=%s' % (bus.dirname, dev.filename))
+                    return dev
+    return None
+
 class BadRead(weewx.WeeWxIOError):
     """Bogus data length, CRC, header block, or other read failure"""
 
@@ -769,18 +775,8 @@ class TE923(object):
             self.num_rec = 208
             self.num_blk = 256
 
-    def _find(self, vendor_id, product_id, device_id):
-        """Find the vendor and product ID on the USB."""
-        for bus in usb.busses():
-            for dev in bus.devices:
-                if dev.idVendor == vendor_id and dev.idProduct == product_id:
-                    if device_id is None or dev.filename == device_id:
-                        loginf('Found device on USB bus=%s device=%s' % (bus.dirname, dev.filename))
-                        return dev
-        return None
-
     def open(self, interface=0):
-        dev = self._find(self.vendor_id, self.product_id, self.device_id)
+        dev = _find_dev(self.vendor_id, self.product_id, self.device_id)
         if not dev:
             logcrt("Cannot find USB device with VendorID=0x%04x ProductID=0x%04x DeviceID=%s" % (self.vendor_id, self.product_id, self.device_id))
             raise weewx.WeeWxIOError('Unable to find station on USB')
@@ -919,11 +915,10 @@ class TE923(object):
             count = self.num_rec
         tt = time.localtime(time.time())
         addr = None
-        records = []
         for i in range(count):
             logdbg("reading record %d of %d" % (i+1, count))
-            addr,record = self.get_record(addr, tt.tm_year, tt.tm_mon)
-            yield addr,record
+            addr, record = self.get_record(addr, tt.tm_year, tt.tm_mon)
+            yield addr, record
 
     def get_record(self, addr=None, now_year=None, now_month=None):
         """return a single record from station and address of the next
@@ -973,7 +968,7 @@ class TE923(object):
         if addr > radr:
             addr = 0x000101
 
-        return addr,data
+        return addr, data
 
 
 # define a main entry point for basic testing of the station without weewx
@@ -1052,13 +1047,13 @@ if __name__ == '__main__':
                 else:
                     print_readings(data)
             if options.records is not None:
-                for ptr,data in station.gen_records(count=options.records):
+                for ptr, data in station.gen_records(count=options.records):
                     if options.format.lower() == FMT_DICT:
                         print_dict(data)
                     else:
                         print_readings(data)
             if options.blocks is not None:
-                for ptr,block in station.gen_blocks(count=options.blocks):
+                for ptr, block in station.gen_blocks(count=options.blocks):
                     print_hex(ptr, block)
         finally:
             if station is not None:
@@ -1086,7 +1081,7 @@ if __name__ == '__main__':
         output = [str(data['timestamp'])]
         output.append(getvalue(data, 't_in', '%0.2f'))
         output.append(getvalue(data, 'h_in', '%d'))
-        for i in range(1,6):
+        for i in range(1, 6):
             output.append(getvalue(data, 't_%d' % i, '%0.2f'))
             output.append(getvalue(data, 'h_%d' % i, '%d'))
         output.append(getvalue(data, 'slp', '%0.1f'))
