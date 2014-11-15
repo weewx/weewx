@@ -511,7 +511,7 @@ def update_to_v2(config_dict):
         pass
 
     # See if the engine configuration section has the old-style "service_list":
-    if 'service_list' in config_dict['Engines']['WxEngine']:
+    if 'Engines' in config_dict and 'service_list' in config_dict['Engines']['WxEngine']:
         # It does. Break it up into five, smaller lists. If a service
         # does not appear in the dictionary "service_map", meaning we
         # do not know what it is, then stick it in the last group we
