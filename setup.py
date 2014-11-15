@@ -682,16 +682,14 @@ def configure_conf(driver, dryrun):
     # reset the system path
     sys.path = tmp_path
 
-    # read the original configuration from a copy
-    new_fn = "%s.tmp" % config_fn
-    distutils.file_util.copy_file(config_fn, new_fn)
-    new_config = configobj.ConfigObj(new_fn, interpolation=False)
+    # read the original configuration
+    old_config = configobj.ConfigObj(config_fn, interpolation=False)
     orig_stanza_text = None
 
     # if a previous stanza exists for this driver, grab it
-    if driver_name in new_config:
+    if driver_name in old_config:
         orig_stanza = configobj.ConfigObj()
-        orig_stanza[driver_name] = new_config[driver_name]
+        orig_stanza[driver_name] = old_config[driver_name]
         orig_stanza_text = '\n'.join(orig_stanza.write())
 
     # let the driver process the stanza
@@ -699,28 +697,27 @@ def configure_conf(driver, dryrun):
     stanza = configobj.ConfigObj(stanza_text.splitlines())
 
     # copy everything into the new config, put new stanza after [Station]
-    tmp_config = configobj.ConfigObj(indent_type=new_config.indent_type)
-    tmp_config.initial_comment = new_config.initial_comment
-    tmp_config.final_comment = new_config.final_comment
-    for s in new_config:
-        tmp_config[s] = new_config[s]
-        tmp_config.comments[s] = new_config.comments[s]
-        tmp_config.inline_comments[s] = new_config.inline_comments[s]
+    new_config = configobj.ConfigObj(indent_type=old_config.indent_type)
+    new_config.initial_comment = old_config.initial_comment
+    new_config.final_comment = old_config.final_comment
+    for s in old_config:
+        new_config[s] = old_config[s]
+        new_config.comments[s] = old_config.comments[s]
+        new_config.inline_comments[s] = old_config.inline_comments[s]
         if s == 'Station':
-            tmp_config[driver_name] = stanza[driver_name]
-            tmp_config.comments[driver_name] = stanza.comments[driver_name]
-            tmp_config.inline_comments[driver_name] = stanza.inline_comments[driver_name]
-    new_config = tmp_config
-    new_config['Station']['station_type'] = stanza.sections[0]
+            new_config[driver_name] = stanza[driver_name]
+            new_config.comments[driver_name] = stanza.comments[driver_name]
+            new_config.inline_comments[driver_name] = stanza.inline_comments[driver_name]
+    new_config['Station']['station_type'] = driver_name
 
-    # save it
-    new_config.filename = new_fn
+    # save the new configuration
+    new_config.filename = "%s.tmp" % config_fn
     new_config.write()
 
     # move the original aside
     if not dryrun:
         save_path(config_fn)
-        shutil.move(new_fn, config_fn)
+        shutil.move(new_config.filename, config_fn)
 
 
 #==============================================================================
