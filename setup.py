@@ -670,18 +670,19 @@ def configure_conf(driver):
     stanza_text = editor.get_conf()
     sys.path = tmp_path
 
-    stanza = configobj.ConfigObj(stanza_text.splitlines(), indent_type='    ')
+    stanza = configobj.ConfigObj(stanza_text.splitlines())
 
     new_fn = "%s.tmp" % config_fn
     distutils.file_util.copy_file(config_fn, new_fn)
-    new_config = configobj.ConfigObj(new_fn, indent_type='    ',
-                                     interpolation=False)
+    new_config = configobj.ConfigObj(new_fn, interpolation=False)
     if stanza.sections[0] in new_config.sections:
         new_config.merge(stanza)
     else:
-        nc = configobj.ConfigObj(indent_type='    ')
+        nc = configobj.ConfigObj(indent_type=new_config.indent_type)
         for s in new_config:
             nc[s] = new_config[s]
+            nc.comments[s] = new_config.comments[s]
+            nc.inline_comments[s] = new_config.inline_comments[s]
             if s == 'Station':
                 nc[stanza.sections[0]] = stanza[stanza.sections[0]]
         new_config = nc
@@ -689,12 +690,14 @@ def configure_conf(driver):
     new_config.filename = new_fn
     new_config.write()
 
-    save_path(config_fn)
-    shutil.move(new_fn, config_fn)
+#    save_path(config_fn)
+#    shutil.move(new_fn, config_fn)
 
-    # FIXME: this emits a functional config file, but the comments in the
-    # general section are lost, and the indents in the rest of the file are
-    # messed up.
+    # FIXME: this emits a functional config file, but the comments and indents
+    # are messed up.  apparently configobj associates comments *after* a
+    # parameter, not before it.  so anything at the start of the file will
+    # be lost, and comments before a parameter will be associated with the
+    # previous parameter.
 
 
 #==============================================================================
