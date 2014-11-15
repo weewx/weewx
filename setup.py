@@ -778,7 +778,9 @@ class Extension(Logger):
             }
         }
 
-    def __init__(self, filename=None, layout_type=None, tmpdir='/var/tmp'):
+    def __init__(self, filename=None, layout_type=None, tmpdir='/var/tmp',
+                 **kwargs):
+        super(Extension, self).__init__(**kwargs)
         self.filename = filename # could be dir, tarball, or extname
         self.tmpdir = tmpdir
         self.layout_type = layout_type
@@ -844,7 +846,8 @@ class Extension(Logger):
             raise Exception("cannot install from %s" % filename)
         return basename, extdir, delete_when_finished
 
-    def get_cache_dir(self, layout):
+    @staticmethod
+    def get_cache_dir(layout):
         d = os.path.join(layout['BIN_ROOT'], 'user')
         d = os.path.join(d, 'installer')
         return d
@@ -864,7 +867,7 @@ class Extension(Logger):
             try:
                 cmd = 'dpkg-query -s weewx'
                 p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-                (o,e) = p.communicate()
+                (o, e) = p.communicate()
                 for line in o.split('\n'):
                     if line.startswith('Package: weewx'):
                         layout_type = 'deb'
@@ -940,7 +943,8 @@ class Extension(Logger):
 
         return layout
 
-    def verify_src(self, extdir):
+    @staticmethod
+    def verify_src(extdir):
         """ensure that the extension is something we can work with"""
         ifile = os.path.join(extdir, 'install.py')
         if not os.path.exists(ifile):
@@ -1395,10 +1399,10 @@ if __name__ == "__main__":
         print ""
         print "Commands for installing/removing/listing weewx extensions:"
         print ""
-        print "  setup.py --extension --list"
-        print "  setup.py --extension --install forecast.tar.gz"
-        print "  setup.py --extension --uninstall forecast"
-        print "  setup.py --help --extension"
+        print "  setup.py list-extensions"
+        print "  setup.py install --extension=forecast.tar.gz"
+        print "  setup.py uninstall --extension=forecast"
+        print "  setup.py --help-extensions"
         print ""
 
     setup(name='weewx',
