@@ -98,13 +98,11 @@ class AbstractConfEditor(object):
     def version(self):
         raise NotImplementedError("method 'version' is not implemented")
 
-    def get_conf(self):
-        """Return the configuration stanza (text) for this device."""
-        raise NotImplementedError("method 'get_conf' is not implemented")
-
-    def update_conf(self, orig_stanza):
+    def get_conf(self, orig_stanza=None):
         """Given a configuration stanza, return a possibly modified copy
         that will work with the current version of the device driver.
 
-        The default behavior is to return the original stanza unmodified."""
-        return orig_stanza
+        The default behavior is to return the original stanza unmodified.
+
+        The return stanza should be plain text."""
+        raise NotImplementedError("method 'get_conf' is not implemented")

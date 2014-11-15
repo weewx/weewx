@@ -234,12 +234,8 @@ class Station(object):
 
 
 class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self):
-        return """[WS1]
+    default_stanza = """
+[WS1]
     # This section is for the ADS WS1 series of weather stations.
 
     # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
@@ -248,6 +244,13 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.ws1
 """
+
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self, orig_stanza=None):
+        return self.default_stanza
 
 
 # define a main entry point for basic testing of the station without weewx

@@ -1979,12 +1979,8 @@ class WMR200(weewx.drivers.AbstractDevice):
 
 
 class WMR200ConfEditor(weewx.drivers.AbstractConfEditor):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self):
-        return """[WMR200]
+    default_stanza = """
+[WMR200]
     # This section is for the Oregon Scientific WMR200
 
     # The station model, e.g., WMR200, WMR200A, Radio Shack W200
@@ -1993,3 +1989,10 @@ class WMR200ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.wmr200
 """
+
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self, orig_stanza=None):
+        return self.default_stanza

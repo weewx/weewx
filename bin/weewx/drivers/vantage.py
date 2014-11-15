@@ -2255,12 +2255,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
 # =============================================================================
 
 class VantageConfEditor(weewx.drivers.AbstractConfEditor):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self):
-        return """[Vantage]
+    default_stanza =  """
+[Vantage]
     # Connection type: serial or ethernet 
     #  serial (the classic VantagePro)
     #  ethernet (the WeatherLinkIP)
@@ -2307,3 +2303,10 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.vantage
 """
+
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self, orig_stanza=None):
+        return self.default_stanza

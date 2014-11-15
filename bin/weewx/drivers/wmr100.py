@@ -394,12 +394,8 @@ class WMR100(weewx.drivers.AbstractDevice):
 
 
 class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self):
-        return """[WMR100]
+    self.default_stanza = """
+[WMR100]
     # This section is for the Oregon Scientific WMR100
 
     # The station model, e.g., WMR100, WMR100N, WMRS200
@@ -411,3 +407,10 @@ class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.wmr100
 """
+
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self, orig_stanza=None):
+        return self.default_stanza

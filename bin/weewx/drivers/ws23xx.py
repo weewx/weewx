@@ -2005,12 +2005,8 @@ def read_measurements(ws2300, read_requests):
 
 
 class WS23xxConfEditor(weewx.drivers.AbstractConfEditor):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self):
-        return """[WS23xx]
+    default_stanza = """
+[WS23xx]
     # This section is for the La Crosse WS-2300 series of weather stations.
 
     # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
@@ -2022,6 +2018,13 @@ class WS23xxConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.ws23xx
 """
+
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self, orig_stanza=None):
+        return self.default_stanza
 
 
 # define a main entry point for basic testing of the station without weewx

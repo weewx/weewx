@@ -645,6 +645,13 @@ def do_cfg():
     return 0
 
 def configure_conf(driver):
+    # FIXME: this emits a functional config file, but the comments and indents
+    # are messed up.  apparently configobj associates comments *after* a
+    # parameter, not before it.  so anything at the start of the file will
+    # be lost, and comments before a parameter will be associated with the
+    # previous parameter.
+
+    # get the driver-specific stanza from the driver
     tmp_path = list(sys.path)
     sys.path.insert(0, bin_dir)
     from weeutil.weeutil import read_config
@@ -662,42 +669,46 @@ def configure_conf(driver):
         driver_module = sys.modules[driver]
         loader_function = getattr(driver_module, 'confeditor_loader')
         editor = loader_function()
+        print '%s driver version %s' % (driver, editor.version)
     except Exception, e:
         sys.stderr.write("Cannot load conf editor for %s: %s\n" % (driver, e))
         exit(1)
 
-    print '%s driver version %s' % (driver, editor.version)
-    stanza_text = editor.get_conf()
-    sys.path = tmp_path
-
-    stanza = configobj.ConfigObj(stanza_text.splitlines())
-
+    # load the original configuration from a copy
     new_fn = "%s.tmp" % config_fn
     distutils.file_util.copy_file(config_fn, new_fn)
     new_config = configobj.ConfigObj(new_fn, interpolation=False)
-    if stanza.sections[0] in new_config.sections:
-        new_config.merge(stanza)
-    else:
-        nc = configobj.ConfigObj(indent_type=new_config.indent_type)
-        for s in new_config:
-            nc[s] = new_config[s]
-            nc.comments[s] = new_config.comments[s]
-            nc.inline_comments[s] = new_config.inline_comments[s]
-            if s == 'Station':
-                nc[stanza.sections[0]] = stanza[stanza.sections[0]]
-        new_config = nc
+    driver_label = 'Simulator'
+    orig_stanza = None
+    if driver_label in new_config.sections:
+        orig_stanza = new_config.sections[driver_label]
+
+    # get the stanza from the driver
+    stanza_text = editor.get_conf(orig_stanza)
+    stanza = configobj.ConfigObj(stanza_text.splitlines())
+
+    # copy everything into the new config, put new stanza after [Station]
+    tmp_config = configobj.ConfigObj(indent_type=new_config.indent_type)
+    tmp_config.initial_comment = new_config.initial_comment
+    tmp_config.final_comment = new_config.final_comment
+    for s in new_config:
+        tmp_config[s] = new_config[s]
+        tmp_config.comments[s] = new_config.comments[s]
+        tmp_config.inline_comments[s] = new_config.inline_comments[s]
+        if s == 'Station':
+            tmp_config[stanza.sections[0]] = stanza[stanza.sections[0]]
+    new_config = tmp_config
     new_config['Station']['station_type'] = stanza.sections[0]
+
+    # save it
     new_config.filename = new_fn
     new_config.write()
 
-#    save_path(config_fn)
-#    shutil.move(new_fn, config_fn)
+    # move the original aside
+    save_path(config_fn)
+    shutil.move(new_fn, config_fn)
 
-    # FIXME: this emits a functional config file, but the comments and indents
-    # are messed up.  apparently configobj associates comments *after* a
-    # parameter, not before it.  so anything at the start of the file will
-    # be lost, and comments before a parameter will be associated with the
-    # previous parameter.
+    sys.path = tmp_path
 
 
 #==============================================================================

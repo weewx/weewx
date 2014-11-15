@@ -1043,12 +1043,8 @@ def print_dict(data):
 
 
 class WS28xxConfEditor(weewx.drivers.AbstractConfEditor):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self):
-        return """[WS28xx]
+    default_stanza = """
+[WS28xx]
     # This section is for the La Crosse WS-2800 series of weather stations.
 
     # Radio frequency to use between USB transceiver and console: US or EU
@@ -1061,6 +1057,13 @@ class WS28xxConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.ws28xx
 """
+
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self, orig_stanza=None):
+        return self.default_stanza
 
 
 class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):

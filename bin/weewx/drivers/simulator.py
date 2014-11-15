@@ -248,13 +248,9 @@ def confeditor_loader():
     return SimulatorConfEditor()
 
 class SimulatorConfEditor(weewx.drivers.AbstractConfEditor):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self):
-        return """[Simulator]
-    # This section for the weewx weather station simulator
+    default_stanza = """
+[Simulator]
+    # This section is for the weewx weather station simulator
 
     # The time (in seconds) between LOOP packets.
     loop_interval = 2.5
@@ -271,6 +267,15 @@ class SimulatorConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.simulator
 """
+
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self, orig_stanza=None):
+        # FIXME: process original stanza if we get one
+        return self.default_stanza
+
 
 if __name__ == "__main__":
     station = Simulator(mode='simulator',loop_interval=2.0)

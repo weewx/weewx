@@ -300,12 +300,8 @@ class Station(object):
 
 
 class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self):
-        return """[Ultimeter]
+    default_stanza = """
+[Ultimeter]
     # This section is for the PeetBros Ultimeter series of weather stations.
 
     # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
@@ -317,6 +313,13 @@ class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.ultimeter
 """
+
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self, orig_stanza=None):
+        return self.default_stanza
 
 
 # define a main entry point for basic testing of the station without weewx

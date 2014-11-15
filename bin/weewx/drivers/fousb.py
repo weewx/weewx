@@ -293,12 +293,8 @@ def table_dump(date, data, showlabels=False):
 
 
 class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self):
-        return """[FineOffsetUSB]
+    default_stanza = """
+[FineOffsetUSB]
     # This section is for the Fine Offset series of weather stations.
 
     # The station model, e.g., WH1080, WS1090, WS2080, WH3081
@@ -313,6 +309,13 @@ class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.fousb
 """
+
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self, orig_stanza=None):
+        return self.default_stanza
 
 
 class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):

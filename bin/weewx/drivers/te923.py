@@ -208,12 +208,8 @@ def logerr(msg):
 
 
 class TE923ConfEditor(weewx.drivers.AbstractConfEditor):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self):
-        return """[TE923]
+    default_stanza = """
+[TE923]
     # This section is for the Hideki TE923 series of weather stations.
 
     # The station model, e.g., 'Meade TE923W' or 'TFA Nexus'
@@ -249,7 +245,14 @@ class TE923ConfEditor(weewx.drivers.AbstractConfEditor):
         extraBatteryStatus2 =  battery3
         extraBatteryStatus3 =  battery4
         extraBatteryStatus4 =  battery5
- """
+"""
+
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self, orig_stanza=None):
+        return self.default_stanza
 
 
 class TE923Configurator(weewx.drivers.AbstractConfigurator):

@@ -685,12 +685,8 @@ class CC3000(object):
 
 
 class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self):
-        return """[CC3000]
+    default_stanza = """
+[CC3000]
     # This section is for RainWise MarkIII weather stations and CC3000 logger.
 
     # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
@@ -702,6 +698,13 @@ class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.cc3000
 """
+
+    @property
+    def version(self):
+        return DRIVER_VERSION
+
+    def get_conf(self, orig_stanza=None):
+        return self.default_stanza
 
 
 # define a main entry point for basic testing without weewx engine and service
