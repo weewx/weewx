@@ -148,10 +148,11 @@ import weewx
 import weewx.drivers
 import weewx.wxformulas
 
+DRIVER_NAME = 'TE923'
 DRIVER_VERSION = '0.12'
 
 def loader(config_dict, engine):
-    return TE923Driver(**config_dict['TE923'])
+    return TE923Driver(**config_dict[DRIVER_NAME])
 
 def configurator_loader(config_dict):
     return TE923Configurator()
@@ -208,7 +209,9 @@ def logerr(msg):
 
 
 class TE923ConfEditor(weewx.drivers.AbstractConfEditor):
-    default_stanza = """
+    @property
+    def default_conf(self):
+        return """
 [TE923]
     # This section is for the Hideki TE923 series of weather stations.
 
@@ -247,13 +250,6 @@ class TE923ConfEditor(weewx.drivers.AbstractConfEditor):
         extraBatteryStatus4 =  battery5
 """
 
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self, orig_stanza=None):
-        return self.default_stanza
-
 
 class TE923Configurator(weewx.drivers.AbstractConfigurator):
     @property
@@ -283,7 +279,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
               options.format.lower() != 'dict'):
             parser.error("Unknown format '%s'.  Known formats include 'raw', 'table', and 'dict'." % options.format)
 
-        self.station = TE923Driver(**config_dict['TE923'])
+        self.station = TE923Driver(**config_dict[DRIVER_NAME])
         if options.current:
             self.show_current()
         elif options.nrecords is not None:

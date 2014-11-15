@@ -229,10 +229,11 @@ import weewx
 import weewx.drivers
 import weewx.wxformulas
 
+DRIVER_NAME = 'FineOffsetUSB'
 DRIVER_VERSION = '1.7'
 
 def loader(config_dict, engine):
-    return FineOffsetUSB(**config_dict['FineOffsetUSB'])
+    return FineOffsetUSB(**config_dict[DRIVER_NAME])
 
 def configurator_loader(config_dict):
     return FOUSBConfigurator()
@@ -293,7 +294,9 @@ def table_dump(date, data, showlabels=False):
 
 
 class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
-    default_stanza = """
+    @property
+    def default_stanza(self):
+        return """
 [FineOffsetUSB]
     # This section is for the Fine Offset series of weather stations.
 
@@ -310,11 +313,10 @@ class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
     driver = weewx.drivers.fousb
 """
 
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
     def get_conf(self, orig_stanza=None):
+        if orig_stanza is None:
+            # FIXME: detect pressure_offset and warn about it
+            return self.default_stanza
         return self.default_stanza
 
 
@@ -364,7 +366,7 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
               options.format.lower() != 'dict'):
             parser.error("Unknown format '%s'.  Known formats include 'raw', 'table', and 'dict'." % options.format)
 
-        self.station = FineOffsetUSB(**config_dict['FineOffsetUSB'])
+        self.station = FineOffsetUSB(**config_dict[DRIVER_NAME])
         if options.current:
             self.show_current()
         elif options.nrecords is not None:

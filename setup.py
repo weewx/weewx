@@ -634,33 +634,32 @@ def save_path(filepath):
 def do_cfg():
     import optparse
     description = "configure the configuration file"
-    usage = "%prog --configure [--driver=DRIVER]"
+    usage = "%prog configure [config_path] [--driver=DRIVER]"
     parser = optparse.OptionParser(description=description, usage=usage)
-    parser.add_option('--configure', dest='cfg', action='store_true',
-                      help='configure the configuration file')
     parser.add_option('--driver', dest='driver', type=str, metavar='DRIVER',
                       help='use the driver DRIVER, e.g., weewx.driver.vantage')
+    parser.add_option('--dryrun', dest='dryrun', action='store_true',
+                      help='print what would happen but do not do it')
     (options, _args) = parser.parse_args()
-    configure_conf(options.driver)
+    configure_conf(options.driver, options.dryrun)
     return 0
 
-def configure_conf(driver):
+def configure_conf(driver, dryrun):
     # FIXME: this emits a functional config file, but the comments and indents
-    # are messed up.  apparently configobj associates comments *after* a
-    # parameter, not before it.  so anything at the start of the file will
-    # be lost, and comments before a parameter will be associated with the
-    # previous parameter.
-
-    # get the driver-specific stanza from the driver
-    tmp_path = list(sys.path)
-    sys.path.insert(0, bin_dir)
-    from weeutil.weeutil import read_config
+    # may be messed up.  apparently configobj associates comments *after* a
+    # parameter, not before it.  so comments before a parameter will be
+    # associated with the previous parameter.
 
     if driver is None:
         driver = 'weewx.drivers.simulator'
 
+    # adjust system path so we can load the config file and driver
+    tmp_path = list(sys.path)
+    sys.path.insert(0, bin_dir)
+    from weeutil.weeutil import read_config
+
     # Load the configuration file
-    config_fn, config_dict = read_config(None, sys.argv[1:])
+    config_fn, config_dict = read_config(None, sys.argv[2:])
     print 'Using configuration file %s' % config_fn
 
     # Load the configuration editor from the driver file
@@ -669,22 +668,30 @@ def configure_conf(driver):
         driver_module = sys.modules[driver]
         loader_function = getattr(driver_module, 'confeditor_loader')
         editor = loader_function()
-        print '%s driver version %s' % (driver, editor.version)
+        driver_name = driver_module.DRIVER_NAME
+        driver_vers = driver_module.DRIVER_VERSION
+        print 'Using %s version %s (%s)' % (driver_name, driver_vers, driver)
     except Exception, e:
         sys.stderr.write("Cannot load conf editor for %s: %s\n" % (driver, e))
         exit(1)
 
-    # load the original configuration from a copy
+    # reset the system path
+    sys.path = tmp_path
+
+    # read the original configuration from a copy
     new_fn = "%s.tmp" % config_fn
     distutils.file_util.copy_file(config_fn, new_fn)
     new_config = configobj.ConfigObj(new_fn, interpolation=False)
-    driver_label = 'Simulator'
-    orig_stanza = None
-    if driver_label in new_config.sections:
-        orig_stanza = new_config.sections[driver_label]
+    orig_stanza_text = None
 
-    # get the stanza from the driver
-    stanza_text = editor.get_conf(orig_stanza)
+    # if a previous stanza exists for this driver, grab it
+    if driver_name in new_config:
+        orig_stanza = configobj.ConfigObj()
+        orig_stanza[driver_name] = new_config[driver_name]
+        orig_stanza_text = '\n'.join(orig_stanza.write())
+
+    # let the driver process the stanza
+    stanza_text = editor.get_conf(orig_stanza_text)
     stanza = configobj.ConfigObj(stanza_text.splitlines())
 
     # copy everything into the new config, put new stanza after [Station]
@@ -696,7 +703,9 @@ def configure_conf(driver):
         tmp_config.comments[s] = new_config.comments[s]
         tmp_config.inline_comments[s] = new_config.inline_comments[s]
         if s == 'Station':
-            tmp_config[stanza.sections[0]] = stanza[stanza.sections[0]]
+            tmp_config[driver_name] = stanza[driver_name]
+            tmp_config.comments[driver_name] = stanza.comments[driver_name]
+            tmp_config.inline_comments[driver_name] = stanza.inline_comments[driver_name]
     new_config = tmp_config
     new_config['Station']['station_type'] = stanza.sections[0]
 
@@ -705,10 +714,9 @@ def configure_conf(driver):
     new_config.write()
 
     # move the original aside
-    save_path(config_fn)
-    shutil.move(new_fn, config_fn)
-
-    sys.path = tmp_path
+    if not dryrun:
+        save_path(config_fn)
+        shutil.move(new_fn, config_fn)
 
 
 #==============================================================================
@@ -1369,17 +1377,17 @@ def do_merge():
 #==============================================================================
 
 if __name__ == "__main__":
+    if 'configure' in sys.argv:
+        exit(do_cfg())
     if '--merge-config' in sys.argv:
         exit(do_merge())
-    if '--configure' in sys.argv:
-        exit(do_cfg())
     if '--extension' in sys.argv:
         exit(do_ext())
     if '--help' in sys.argv:
         print "Commands for configuring weewx:"
         print ""
-        print "  setup.py --configure [--driver=DRIVER]"
-        print "  setup.py --help --configure"
+        print "  setup.py configure [--driver=DRIVER]"
+        print "  setup.py configure --help"
         print ""
         print "Commands for installing/removing/listing weewx extensions:"
         print ""

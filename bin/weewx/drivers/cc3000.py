@@ -31,10 +31,11 @@ import time
 
 import weewx
 
+DRIVER_NAME = 'CC3000'
 DRIVER_VERSION = '0.8'
 
 def loader(config_dict, engine):
-    return CC3000Driver(**config_dict['CC3000'])
+    return CC3000Driver(**config_dict[DRIVER_NAME])
 
 def configurator_loader(config_dict):
     return CC3000Configurator()
@@ -95,7 +96,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                           help="set units to METRIC or ENGLISH")
 
     def do_options(self, options, parser, config_dict, prompt):
-        self.station = CC3000Driver(**config_dict['CC3000'])
+        self.station = CC3000Driver(**config_dict[DRIVER_NAME])
         if options.nrecords is not None:
             self.show_history(options.nrecords)
         elif options.current:
@@ -685,7 +686,9 @@ class CC3000(object):
 
 
 class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
-    default_stanza = """
+    @property
+    def default_stanza(self):
+        return """
 [CC3000]
     # This section is for RainWise MarkIII weather stations and CC3000 logger.
 
@@ -698,13 +701,6 @@ class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.cc3000
 """
-
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self, orig_stanza=None):
-        return self.default_stanza
 
 
 # define a main entry point for basic testing without weewx engine and service

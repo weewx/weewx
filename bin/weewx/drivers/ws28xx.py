@@ -937,11 +937,12 @@ import weewx.units
 import weewx.wxformulas
 import weeutil.weeutil
 
+DRIVER_NAME = 'WS28xx'
 DRIVER_VERSION = '0.33'
 
 
 def loader(config_dict, engine):
-    return WS28xxDriver(**config_dict['WS28xx'])
+    return WS28xxDriver(**config_dict[DRIVER_NAME])
 
 def configurator_loader(config_dict):
     return WS28xxConfigurator()
@@ -1043,7 +1044,9 @@ def print_dict(data):
 
 
 class WS28xxConfEditor(weewx.drivers.AbstractConfEditor):
-    default_stanza = """
+    @property
+    def default_stanza(self):
+        return """
 [WS28xx]
     # This section is for the La Crosse WS-2800 series of weather stations.
 
@@ -1057,13 +1060,6 @@ class WS28xxConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.ws28xx
 """
-
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self, orig_stanza=None):
-        return self.default_stanza
 
 
 class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
@@ -1095,7 +1091,7 @@ class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
 
     def do_options(self, options, parser, config_dict, prompt):
         maxtries = 3 if options.maxtries is None else int(options.maxtries)
-        self.station = WS28xxDriver(**config_dict['WS28xx'])
+        self.station = WS28xxDriver(**config_dict[DRIVER_NAME])
         if options.check:
             self.check_transceiver(maxtries)
         elif options.pair:

@@ -17,6 +17,7 @@ import weewx.drivers
 import weewx.units
 import weewx.engine
 
+DRIVER_NAME = 'Vantage'
 DRIVER_VERSION = '3.0'
 
 def loader(config_dict, engine):
@@ -1601,7 +1602,7 @@ class VantageService(Vantage, weewx.engine.StdService):
     """Weewx service for the Vantage weather stations."""
     
     def __init__(self, engine, config_dict):
-        Vantage.__init__(self, **config_dict['Vantage'])
+        Vantage.__init__(self, **config_dict[DRIVER_NAME])
         weewx.engine.StdService.__init__(self, engine, config_dict)
 
         self.bind(weewx.STARTUP, self.startup)        
@@ -1729,7 +1730,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         if options.set_tz_code and options.set_tz_offset:
             parser.error("Cannot specify both --set-tz-code and --set-tz-offset")
 
-        station = Vantage(**config_dict['Vantage'])
+        station = Vantage(**config_dict[DRIVER_NAME])
         if options.info:
             self.show_info(station)
         if options.clear:
@@ -2255,7 +2256,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
 # =============================================================================
 
 class VantageConfEditor(weewx.drivers.AbstractConfEditor):
-    default_stanza =  """
+    @property
+    def default_stanza(self):
+        return """
 [Vantage]
     # Connection type: serial or ethernet 
     #  serial (the classic VantagePro)
@@ -2303,10 +2306,3 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.vantage
 """
-
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self, orig_stanza=None):
-        return self.default_stanza

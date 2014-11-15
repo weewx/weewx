@@ -32,10 +32,11 @@ import weewx
 import weewx.drivers
 import weeutil.weeutil
 
+DRIVER_NAME = 'WMR100'
 DRIVER_VERSION = "3.0"
 
 def loader(config_dict, engine):
-    return WMR100(**config_dict['WMR100'])    
+    return WMR100(**config_dict[DRIVER_NAME])    
 
 def confeditor_loader():
     return WMR100ConfEditor()
@@ -394,7 +395,9 @@ class WMR100(weewx.drivers.AbstractDevice):
 
 
 class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
-    self.default_stanza = """
+    @property
+    def default_stanza(self):
+        return """
 [WMR100]
     # This section is for the Oregon Scientific WMR100
 
@@ -407,10 +410,3 @@ class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.wmr100
 """
-
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self, orig_stanza=None):
-        return self.default_stanza

@@ -93,16 +93,20 @@ class AbstractConfEditor(object):
     """The conf editor class provides methods for producing and updating
     configuration stanzas for use in configuration file.
     """
-    
+
     @property
-    def version(self):
-        raise NotImplementedError("method 'version' is not implemented")
+    def default_stanza(self):
+        """Return a plain text stanza"""
+        raise NotImplementedError("property 'default_stanza' is not defined")
 
     def get_conf(self, orig_stanza=None):
         """Given a configuration stanza, return a possibly modified copy
         that will work with the current version of the device driver.
 
-        The default behavior is to return the original stanza unmodified.
+        The default behavior is to return the original stanza, unmodified.
 
-        The return stanza should be plain text."""
-        raise NotImplementedError("method 'get_conf' is not implemented")
+        Derived classes should override this if they need to modify previous
+        configuration options or warn about deprecated or harmful options."""
+        if orig_stanza is not None:
+            return orig_stanza
+        return self.default_stanza

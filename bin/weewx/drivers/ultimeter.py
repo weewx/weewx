@@ -66,10 +66,11 @@ import time
 import weewx
 import weewx.drivers
 
+DRIVER_NAME = 'Ultimeter'
 DRIVER_VERSION = '0.10'
 
 def loader(config_dict, engine):
-    return Ultimeter(**config_dict['Ultimeter'])
+    return Ultimeter(**config_dict[DRIVER_NAME])
 
 def confeditor_loader():
     return UltimeterConfEditor()
@@ -300,7 +301,9 @@ class Station(object):
 
 
 class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
-    default_stanza = """
+    @property
+    def default_stanza(self):
+        return """
 [Ultimeter]
     # This section is for the PeetBros Ultimeter series of weather stations.
 
@@ -313,13 +316,6 @@ class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.ultimeter
 """
-
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self, orig_stanza=None):
-        return self.default_stanza
 
 
 # define a main entry point for basic testing of the station without weewx

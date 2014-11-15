@@ -21,11 +21,12 @@ import weewx.drivers
 import weewx.units
 import weewx.uwxutils
 
+DRIVER_NAME = 'WS1'
 DRIVER_VERSION = '0.14'
 
 
 def loader(config_dict, _):
-    return WS1(**config_dict['WS1'])
+    return WS1(**config_dict[DRIVER_NAME])
 
 def confeditor_loader():
     return WS1ConfEditor()
@@ -234,7 +235,9 @@ class Station(object):
 
 
 class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
-    default_stanza = """
+    @property
+    def default_stanza(self):
+        return """
 [WS1]
     # This section is for the ADS WS1 series of weather stations.
 
@@ -244,13 +247,6 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.ws1
 """
-
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self, orig_stanza=None):
-        return self.default_stanza
 
 
 # define a main entry point for basic testing of the station without weewx

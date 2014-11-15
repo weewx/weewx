@@ -26,11 +26,12 @@ import weewx.drivers
 
 from math import exp
 
+DRIVER_NAME = 'WMR9x8'
 DRIVER_VERSION = "3.0"
 
 
 def loader(config_dict, engine):
-    return WMR9x8(**config_dict['WMR9x8'])
+    return WMR9x8(**config_dict[DRIVER_NAME])
 
 def confeditor_loader():
     return WMR9x8ConfEditor()
@@ -591,7 +592,9 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
 
 class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
-    default_stanza = """
+    @property
+    def default_stanza(self):
+        return """
 [WMR9x8]
     # This section is for the Oregon Scientific WMR918/968
 
@@ -607,10 +610,3 @@ class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.wmr9x8
 """
-
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self, orig_stanza=None):
-        return self.default_stanza

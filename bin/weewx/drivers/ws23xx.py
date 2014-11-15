@@ -246,11 +246,12 @@ import weewx.drivers
 import weewx.units
 import weewx.wxformulas
 
+DRIVER_NAME = 'WS23xx'
 DRIVER_VERSION = '0.21'
 
 
 def loader(config_dict, _):
-    return WS23xxDriver(config_dict=config_dict, **config_dict['WS23xx'])
+    return WS23xxDriver(config_dict=config_dict, **config_dict[DRIVER_NAME])
 
 def configurator_loader(_):
     return WS23xxConfigurator()
@@ -302,7 +303,7 @@ class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
                           help="set the station archive interval to N minutes")
 
     def do_options(self, options, parser, config_dict, prompt):
-        self.station = WS23xxDriver(**config_dict['WS23xx'])
+        self.station = WS23xxDriver(**config_dict[DRIVER_NAME])
         if options.current:
             self.show_current()
         elif options.nrecords is not None:
@@ -2005,7 +2006,9 @@ def read_measurements(ws2300, read_requests):
 
 
 class WS23xxConfEditor(weewx.drivers.AbstractConfEditor):
-    default_stanza = """
+    @property
+    def default_stanza(self):
+        return """
 [WS23xx]
     # This section is for the La Crosse WS-2300 series of weather stations.
 
@@ -2018,13 +2021,6 @@ class WS23xxConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.ws23xx
 """
-
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self, orig_stanza=None):
-        return self.default_stanza
 
 
 # define a main entry point for basic testing of the station without weewx

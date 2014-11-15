@@ -12,8 +12,8 @@ import weedb
 import weewx
 import weeutil.weeutil
 
+DRIVER_NAME = 'Simulator'
 DRIVER_VERSION = "3.0"
-
 
 def loader(config_dict, engine):
 
@@ -22,13 +22,13 @@ def loader(config_dict, engine):
     # knowledge about the database in a driver, albeit just the loader.
 
     start_ts = resume_ts = None
-    if 'start' in config_dict['Simulator']:
+    if 'start' in config_dict[DRIVER_NAME]:
         # A start has been specified. Extract the time stamp.
-        start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%d %H:%M")
+        start_tt = time.strptime(config_dict[DRIVER_NAME]['start'], "%Y-%m-%d %H:%M")
         start_ts = time.mktime(start_tt)
         # If the 'resume' keyword is present and True, then get the last
         # archive record out of the database and resume with that.
-        if weeutil.weeutil.to_bool(config_dict['Simulator'].get('resume', True)):
+        if weeutil.weeutil.to_bool(config_dict[DRIVER_NAME].get('resume', True)):
             import weewx.manager
             try:
                 # Resume with the last time in the database. If there is no such
@@ -42,7 +42,7 @@ def loader(config_dict, engine):
             # The resume keyword is not present. Start with the seed time:
             resume_ts = start_ts
             
-    station = Simulator(start_time=start_ts, resume_time=resume_ts, **config_dict['Simulator'])
+    station = Simulator(start_time=start_ts, resume_time=resume_ts, **config_dict[DRIVER_NAME])
     
     return station
         
@@ -248,7 +248,9 @@ def confeditor_loader():
     return SimulatorConfEditor()
 
 class SimulatorConfEditor(weewx.drivers.AbstractConfEditor):
-    default_stanza = """
+    @property
+    def default_stanza(self):
+        return """
 [Simulator]
     # This section is for the weewx weather station simulator
 
@@ -267,14 +269,6 @@ class SimulatorConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.simulator
 """
-
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self, orig_stanza=None):
-        # FIXME: process original stanza if we get one
-        return self.default_stanza
 
 
 if __name__ == "__main__":

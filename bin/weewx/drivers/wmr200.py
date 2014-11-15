@@ -44,11 +44,12 @@ import weewx
 import weewx.drivers
 import weeutil.weeutil
 
+DRIVER_NAME = 'WMR200'
 DRIVER_VERSION = "3.0"
 
 
 def loader(config_dict, engine):
-    return WMR200(**config_dict['WMR200'])
+    return WMR200(**config_dict[DRIVER_NAME])
 
 def confeditor_loader():
     return WMR200ConfEditor()
@@ -1979,7 +1980,9 @@ class WMR200(weewx.drivers.AbstractDevice):
 
 
 class WMR200ConfEditor(weewx.drivers.AbstractConfEditor):
-    default_stanza = """
+    @property
+    def default_stanza(self):
+        return """
 [WMR200]
     # This section is for the Oregon Scientific WMR200
 
@@ -1989,10 +1992,3 @@ class WMR200ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.wmr200
 """
-
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
-    def get_conf(self, orig_stanza=None):
-        return self.default_stanza
