@@ -210,7 +210,7 @@ def logerr(msg):
 
 class TE923ConfEditor(weewx.drivers.AbstractConfEditor):
     @property
-    def default_conf(self):
+    def default_stanza(self):
         return """
 [TE923]
     # This section is for the Hideki TE923 series of weather stations.
