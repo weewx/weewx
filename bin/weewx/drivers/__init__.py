@@ -43,10 +43,6 @@ class AbstractConfigurator(object):
     operations."""
 
     @property
-    def version(self):
-        raise NotImplementedError("method 'version' is not implemented")
-
-    @property
     def description(self):
         return "Configuration utility for weewx devices."
 

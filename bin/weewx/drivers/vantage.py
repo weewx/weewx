@@ -1654,10 +1654,6 @@ class VantageService(Vantage, weewx.engine.StdService):
 
 class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     @property
-    def version(self):
-        return DRIVER_VERSION
-
-    @property
     def description(self):
         return "Configures the Davis Vantage weather station."
 

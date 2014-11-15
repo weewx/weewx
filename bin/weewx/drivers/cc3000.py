@@ -70,10 +70,6 @@ class ChecksumMismatch(weewx.WeeWxIOError):
 
 
 class CC3000Configurator(weewx.drivers.AbstractConfigurator):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
     def add_options(self, parser):
         super(CC3000Configurator, self).add_options(parser)
         parser.add_option("--info", dest="info", action="store_true",

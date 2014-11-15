@@ -321,10 +321,6 @@ class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
 
 
 class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
-    @property
-    def version(self):
-        return DRIVER_VERSION
-
     def add_options(self, parser):
         super(FOUSBConfigurator, self).add_options(parser)
         parser.add_option("--info", dest="info", action="store_true",

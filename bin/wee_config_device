@@ -27,13 +27,15 @@ def main():
         driver_module = sys.modules[driver]
         loader_function = getattr(driver_module, 'configurator_loader')
         device = loader_function(config_dict)
+        driver_name = driver_module.DRIVER_NAME
+        driver_vers = driver_module.DRIVER_VERSION
+        print 'Using %s version %s (%s)' % (driver_name, driver_vers, driver)
     except Exception, e:
         msg = "Cannot load configurator for %s" % device_type
         syslog.syslog(syslog.LOG_ERR, "%s: %s" % (msg, e))
         print msg
         exit(0)
 
-    print '%s driver version %s' % (device_type, device.version)
     device.configure(config_dict)
 
 if __name__=="__main__":
