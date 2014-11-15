@@ -55,7 +55,7 @@ from subprocess import Popen, PIPE
 
 from distutils.core import setup
 from distutils.command.install_data import install_data
-from distutils.command.install_lib  import install_lib
+from distutils.command.install_lib import install_lib
 from distutils.command.install_scripts import install_scripts
 from distutils.command.sdist import sdist
 import distutils.dir_util
@@ -134,14 +134,12 @@ class weewx_install_data(install_data):
     """Specialized version of install_data """
     
     def copy_file(self, f, install_dir, **kwargs):
-        rv = None
-
         # If this is the configuration file, then merge it instead
         # of copying it
         if f == 'weewx.conf':
             rv = self.process_config_file(f, install_dir, **kwargs)
         elif f in start_scripts:
-            rv = self.massageStartFile(f, install_dir, **kwargs)
+            rv = self.massage_start_file(f, install_dir, **kwargs)
         else:
             rv = install_data.copy_file(self, f, install_dir, **kwargs)
         return rv
@@ -185,7 +183,7 @@ class weewx_install_data(install_data):
 
         return rv
         
-    def massageStartFile(self, f, install_dir, **kwargs):
+    def massage_start_file(self, f, install_dir, **kwargs):
 
         outname = os.path.join(install_dir, os.path.basename(f))
         sre = re.compile(r"WEEWX_ROOT\s*=")
@@ -220,7 +218,7 @@ class weewx_install_scripts(install_scripts):
         
         # Add a symbolic link for weewxd.py to weewxd:
         source = './weewxd'
-        dest   = os.path.join(self.install_dir, 'weewxd.py')
+        dest = os.path.join(self.install_dir, 'weewxd.py')
         os.symlink(source, dest)
         
 #==============================================================================
@@ -249,19 +247,19 @@ class weewx_sdist(sdist):
             # If we're working with the configuration file, make sure it
             # does not have any private data in it.
 
-            if (config.has_key('StdReport') and
-                config['StdReport'].has_key('FTP') and
-                config['StdReport']['FTP'].has_key('password')):
+            if ('StdReport' in config and
+                'FTP' in config['StdReport'] and
+                'password' in config['StdReport']['FTP']):
                 sys.stderr.write("\n*** FTP password found in configuration file. Aborting ***\n\n")
                 exit()
 
             rest_dict = config['StdRESTful']
-            if (rest_dict.has_key('Wunderground') and
-                rest_dict['Wunderground'].has_key('password')):
+            if ('Wunderground' in rest_dict and
+                'password' in rest_dict['Wunderground']):
                 sys.stderr.write("\n*** Wunderground password found in configuration file. Aborting ***\n\n")
                 exit()
-            if (rest_dict.has_key('PWSweather') and
-                rest_dict['PWSweather'].has_key('password')):
+            if ('PWSweather' in rest_dict and
+                'password' in rest_dict['PWSweather']):
                 sys.stderr.write("\n*** PWSweather password found in configuration file. Aborting ***\n\n")
                 exit()
                 
@@ -323,7 +321,7 @@ def check_schema_type(bin_dir):
       'old' : It is an old-style schema.
       'new' : It is a new-style schema
     """
-    save_path = list(sys.path)
+    tmp_path = list(sys.path)
     sys.path.insert(0, bin_dir)
     
     try:
@@ -336,7 +334,7 @@ def check_schema_type(bin_dir):
         try:
             # Try the old style 'drop_list'. If it fails, it must be
             # a new-style schema
-            drop_list = user.schemas.drop_list # @UnusedVariable @UndefinedVariable
+            _ = user.schemas.drop_list # @UnusedVariable @UndefinedVariable
         except AttributeError:
             # New style schema 
             result = 'new'
@@ -347,7 +345,7 @@ def check_schema_type(bin_dir):
             del user.schemas
 
     # Restore the path        
-    sys.path = save_path
+    sys.path = tmp_path
     
     return result
     
@@ -377,7 +375,7 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
     new_config.indent_type = '    '
     new_version_number = version_number.split('.')
     if len(new_version_number[1]) < 2: 
-        new_version_number[1] = '0'+new_version_number[1]
+        new_version_number[1] = '0' + new_version_number[1]
     
     # Sometimes I forget to turn the debug flag off:
     new_config['debug'] = 0
@@ -396,12 +394,13 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
         old_version = old_config.get('version')
         # If the version number does not appear at all, then
         # assume a very old version:
-        if not old_version: old_version = '1.0.0'
+        if not old_version:
+            old_version = '1.0.0'
         old_version_number = old_version.split('.')
         # Take care of the collation problem when comparing things like 
         # version '1.9' to '1.10' by prepending a '0' to the former:
         if len(old_version_number[1]) < 2: 
-            old_version_number[1] = '0'+old_version_number[1]
+            old_version_number[1] = '0' + old_version_number[1]
 
         # I don't know how to merge older, V1.X configuration files, only
         # newer V2.X ones.
@@ -411,11 +410,11 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
             
         else:
             # First update to V2.X
-            if old_version_number[0:2] >= ['2','00']:
-                update_to_v2_X(old_config)
+            if old_version_number[0:2] >= ['2', '00']:
+                update_to_v2(old_config)
                 
             # Now update to V3.X
-            update_to_v3_X(old_config)
+            update_to_v3(old_config)
                 
             # Now merge the updated old configuration file into the new file, thus
             # saving any user modifications. First, turn interpolation off:
@@ -430,7 +429,7 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
     
     return new_config
 
-def update_to_v2_X(config_dict):
+def update_to_v2(config_dict):
     """Updates a configuration file to the latest V2.X version.
     Since V2.7 was the last 2.X version, that's our target"""
 
@@ -441,12 +440,12 @@ def update_to_v2_X(config_dict):
         config_dict['Station']['station_url'] = webpath
     config_dict['Station'].pop('webpath', None)
     
-    if config_dict.has_key('StdArchive'):
+    if 'StdArchive' in config_dict:
         # Option stats_types is no longer used. Get rid of it.
         config_dict['StdArchive'].pop('stats_types', None)
     
     # --- Davis Vantage series ---
-    if config_dict.has_key('Vantage'):
+    if 'Vantage' in config_dict:
         try:
             if config_dict['Vantage']['driver'].strip() == 'weewx.VantagePro':
                 config_dict['Vantage']['driver'] = 'weewx.drivers.vantage'
@@ -456,8 +455,8 @@ def update_to_v2_X(config_dict):
     # --- Oregon Scientific WMR100 ---
     
     # The section name has changed from WMR-USB to WMR100
-    if config_dict.has_key('WMR-USB'):
-        if config_dict.has_key('WMR100'):
+    if 'WMR-USB' in config_dict:
+        if 'WMR100' in config_dict:
             sys.stderr.write("\n*** Configuration file has both a 'WMR-USB' section and a 'WMR100' section. Aborting ***\n\n")
             exit()
         config_dict.rename('WMR-USB', 'WMR100')
@@ -477,8 +476,8 @@ def update_to_v2_X(config_dict):
     # --- Oregon Scientific WMR9x8 series ---
     
     # The section name has changed from WMR-918 to WMR9x8
-    if config_dict.has_key('WMR-918'):
-        if config_dict.has_key('WMR9x8'):
+    if 'WMR-918' in config_dict:
+        if 'WMR9x8' in config_dict:
             sys.stderr.write("\n*** Configuration file has both a 'WMR-918' section and a 'WMR9x8' section. Aborting ***\n\n")
             exit()
         config_dict.rename('WMR-918', 'WMR9x8')
@@ -512,7 +511,7 @@ def update_to_v2_X(config_dict):
         pass
 
     # See if the engine configuration section has the old-style "service_list":
-    if config_dict['Engines']['WxEngine'].has_key('service_list'):
+    if 'service_list' in config_dict['Engines']['WxEngine']:
         # It does. Break it up into five, smaller lists. If a service
         # does not appear in the dictionary "service_map", meaning we
         # do not know what it is, then stick it in the last group we
@@ -530,7 +529,7 @@ def update_to_v2_X(config_dict):
             if svc_name == 'weewx.engine.StdRESTful':
                 continue
             # Do we know about this service?
-            if service_map.has_key(svc_name):
+            if svc_name in service_map:
                 # Yes. Get which group it belongs to, and put it there
                 group = service_map[svc_name]
                 config_dict['Engines']['WxEngine'][group].append(svc_name)
@@ -559,22 +558,22 @@ def update_to_v2_X(config_dict):
         config_dict['Engines']['WxEngine'].pop('service_list')
 
     # Clean up the CWOP configuration
-    if config_dict.has_key('StdRESTful') and config_dict['StdRESTful'].has_key('CWOP'):
+    if 'StdRESTful' in config_dict and 'CWOP' in config_dict['StdRESTful']:
         # Option "interval" has changed to "post_interval"
-        if config_dict['StdRESTful']['CWOP'].has_key('interval'):
+        if 'interval' in config_dict['StdRESTful']['CWOP']:
             config_dict['StdRESTful']['CWOP']['post_interval'] = config_dict['StdRESTful']['CWOP']['interval']
             config_dict['StdRESTful']['CWOP'].pop('interval')
         # Option "server" has become "server_list". It is also no longer
         # included in the default weewx.conf, so just pop it.
-        if config_dict['StdRESTful']['CWOP'].has_key('server'):
+        if 'server' in config_dict['StdRESTful']['CWOP']:
             config_dict['StdRESTful']['CWOP'].pop('server')
 
     # Remove the no longer needed "driver" from all the RESTful services:
-    if config_dict.has_key('StdRESTful'):
+    if 'StdRESTful' in config_dict:
         for section in config_dict['StdRESTful'].sections:
             config_dict['StdRESTful'][section].pop('driver', None)
 
-def update_to_v3_X(config_dict):
+def update_to_v3(config_dict):
     """Update a configuration file to V3.X"""
     
     if 'Databases' in config_dict:
@@ -646,7 +645,7 @@ def do_cfg():
     return 0
 
 def configure_conf(driver):
-    save_syspath = list(sys.path)
+    tmp_path = list(sys.path)
     sys.path.insert(0, bin_dir)
     from weeutil.weeutil import read_config
 
@@ -669,7 +668,7 @@ def configure_conf(driver):
 
     print '%s driver version %s' % (driver, editor.version)
     stanza_text = editor.get_conf()
-    sys.path = save_syspath
+    sys.path = tmp_path
 
     stanza_fn = '/var/tmp/stanza'
     with open(stanza_fn, 'w') as f:
@@ -718,7 +717,7 @@ class Logger(object):
         self.verbosity = verbosity
     def log(self, msg, level=0):
         if self.verbosity >= level:
-            print "%s%s" % ('  '*(level-1), msg)
+            print "%s%s" % ('  ' * (level - 1), msg)
     def set_verbosity(self, verbosity):
         self.verbosity = verbosity
 
@@ -751,6 +750,7 @@ class Extension(Logger):
         self.basename = None
         self.layout = None
         self.delete_extdir = False
+        self.hisdir = None
 
     def set_extension(self, filename):
         self.filename = filename
@@ -772,7 +772,6 @@ class Extension(Logger):
                 self.log("extension cache is %s" % d, level=2)
         except OSError, e:
             self.log("listdir failed: %s" % e, level=2)
-        
 
     def install(self):
         self.layout_type = self.guess_type(self.layout_type)
@@ -804,8 +803,8 @@ class Extension(Logger):
             (basename, extdir) = self.extract_tarball(filename, tmpdir)
             delete_when_finished = True
         else:
-            raise Exception, "cannot install from %s" % filename
-        return (basename, extdir, delete_when_finished)
+            raise Exception("cannot install from %s" % filename)
+        return basename, extdir, delete_when_finished
 
     def get_cache_dir(self, layout):
         d = os.path.join(layout['BIN_ROOT'], 'user')
@@ -818,7 +817,7 @@ class Extension(Logger):
         return d
 
     def guess_type(self, layout_type):
-        '''figure out what kind of installation this is'''
+        """figure out what kind of installation this is"""
 
         # FIXME: bail out if multiple installation types on a single system
 
@@ -839,7 +838,7 @@ class Extension(Logger):
             try:
                 cmd = 'rpm -q weewx'
                 p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-                (o,e) = p.communicate()
+                (o, e) = p.communicate()
                 for line in o.split('\n'):
                     if line.find('weewx') >= 0:
                         layout_type = 'rpm'
@@ -869,7 +868,7 @@ class Extension(Logger):
                 fn = os.path.join(this_dir, 'setup.cfg')
                 config = configobj.ConfigObj(fn)
                 weewx_root = config['install']['home']
-            except:
+            except Exception:
                 # otherwise we are running from destination
                 weewx_root = this_dir
             # adjust all of the paths
@@ -877,7 +876,7 @@ class Extension(Logger):
                 layout[f] = os.path.join(weewx_root, layout[f])
             layout['WEEWX_ROOT'] = weewx_root
         else:
-            raise Exception, "unknown layout type '%s'" % layout_type
+            raise Exception("unknown layout type '%s'" % layout_type)
 
         # be sure each destination directory exists
         for x in layout:
@@ -890,27 +889,27 @@ class Extension(Logger):
             config = configobj.ConfigObj(fn)
             for sg in all_service_groups:
                 try:
-                    config['Engines']['WxEngine'][sg]
-                except Exception, e:
-                    errors.append("[Engines][WxEngine] is missing key %s" % e)
+                    config['Engine']['Services'][sg]
+                except KeyError, e:
+                    errors.append("[Engine][Services] is missing key %s" % e)
         else:
             errors.append("no weewx.conf at %s" % fn)
 
         if errors:
-            raise Exception, "verify layout failed:\n%s" % '\n'.join(errors)
+            raise Exception("verify layout failed:\n%s" % '\n'.join(errors))
 
         self.log("layout is \n  %s" % '\n  '.join(formatdict(layout)), level=1)
 
         return layout
 
     def verify_src(self, extdir):
-        '''ensure that the extension is something we can work with'''
+        """ensure that the extension is something we can work with"""
         ifile = os.path.join(extdir, 'install.py')
         if not os.path.exists(ifile):
-            raise Exception, "no install.py found in %s" % extdir
+            raise Exception("no install.py found in %s" % extdir)
 
     def extract_tarball(self, filename, tmpdir):
-        '''do some basic checks on the tarball then extract it'''
+        """do some basic checks on the tarball then extract it"""
         self.log("verify tarball %s" % filename, level=1)
         import tarfile
         root = None
@@ -932,22 +931,22 @@ class Extension(Logger):
                     root = f.name
                 else:
                     errors.append("non-rooted asset %s" % f.name)
-            if ( f.name.startswith('.')
-                 or f.name.startswith('/')
-                 or f.name.find('..') >= 0 ):
+            if (f.name.startswith('.')
+                or f.name.startswith('/')
+                or f.name.find('..') >= 0):
                 errors.append("suspect file '%s'" % f.name)
         if not has_install:
             errors.append("package has no install.py")
         if errors:
-            raise Exception, "verify tarball failed: %s" % '\n'.join(errors)
+            raise Exception("verify tarball failed: %s" % '\n'.join(errors))
 
         self.log("extracting tarball %s" % filename, level=1)
         archive.extractall(path=tmpdir)
         archive.close()
-        return (root, os.path.join(tmpdir, root))
+        return root, os.path.join(tmpdir, root)
 
     def load_installer(self, dirname, basename, layout):
-        '''load the extension's installer'''
+        """load the extension's installer"""
         self.log("import install.py from %s" % dirname, level=1)
         sys.path.append(dirname)
         ifile = 'install'
@@ -963,10 +962,7 @@ class Extension(Logger):
     def cleanup(self):
         if self.delete_extdir:
             self.log("clean up files extracted from archive", level=1)
-            try:
-                shutil.rmtree(self.extdir)
-            except:
-                pass
+            shutil.rmtree(self.extdir, ignore_errors=True)
 
 class ExtensionInstaller(Logger):
     """Base class for extension installers."""
@@ -978,6 +974,7 @@ class ExtensionInstaller(Logger):
         }
 
     def __init__(self, **kwargs):
+        super(ExtensionInstaller, self).__init__(**kwargs)
         self.version = kwargs.get('version')
         self.name = kwargs.get('name')
         self.description = kwargs.get('description')
@@ -1015,14 +1012,14 @@ class ExtensionInstaller(Logger):
         self.uninstall_history()
 
     def prepend_layout_path(self, path):
-        '''prepend installed path to local path'''
+        """prepend installed path to local path"""
         for d in self.dirs:
             if path.startswith(d):
                 return path.replace(d, self.layout[self.dirs[d]])
         return path
 
     def install_files(self):
-        '''copy files from extracted package, make backup if already exist'''
+        """copy files from extracted package, make backup if already exist"""
         self.log("install_files", level=1)
         for t in self.files:
             dstdir = self.prepend_layout_path(t[0])
@@ -1030,7 +1027,7 @@ class ExtensionInstaller(Logger):
                 self.log("mkdir %s" % dstdir, level=2)
                 if self.doit:
                     os.makedirs(dstdir)
-            except:
+            except os.error:
                 pass
             for f in t[1]:
                 src = os.path.join(self.layout['EXTRACT_ROOT'], f)
@@ -1044,7 +1041,7 @@ class ExtensionInstaller(Logger):
                     distutils.file_util.copy_file(src, dst)
 
     def uninstall_files(self):
-        '''delete files that were installed for this extension'''
+        """delete files that were installed for this extension"""
         self.log("uninstall_files", level=1)
         for t in self.files:
             dstdir = self.prepend_layout_path(t[0])
@@ -1053,8 +1050,8 @@ class ExtensionInstaller(Logger):
                 self.delete_file(dst)
                 # if it is python source, delete any pyc and pyo as well
                 if dst.endswith(".py"):
-                    self.delete_file(dst.replace('.py','.pyc'), False)
-                    self.delete_file(dst.replace('.py','.pyo'), False)
+                    self.delete_file(dst.replace('.py', '.pyc'), False)
+                    self.delete_file(dst.replace('.py', '.pyo'), False)
             # if the directory is empty, delete it
             try:
                 if not os.listdir(dstdir):
@@ -1155,7 +1152,7 @@ class ExtensionInstaller(Logger):
         # backup the old configuration
         self.log("save old configuration", level=2)
         if self.doit:
-            bup = save_path(config.filename)
+            _ = save_path(config.filename)
 
         # save the new configuration
         self.log("save new config %s" % config.filename, level=2)
@@ -1163,7 +1160,7 @@ class ExtensionInstaller(Logger):
             config.write()
 
     def install_history(self):
-        '''copy the installer to a location where we can find it later'''
+        """copy the installer to a location where we can find it later"""
         self.log("install_history", level=1)
         dstdir = os.path.join(self.layout['BIN_ROOT'], 'user')
         dstdir = os.path.join(dstdir, 'installer')
@@ -1177,7 +1174,7 @@ class ExtensionInstaller(Logger):
             distutils.file_util.copy_file(src, dstdir)
 
     def uninstall_history(self):
-        '''remove the installer cache'''
+        """remove the installer cache"""
         self.log("uninstall_history", level=1)
         dstdir = os.path.join(self.layout['BIN_ROOT'], 'user')
         dstdir = os.path.join(dstdir, 'installer')
@@ -1187,43 +1184,43 @@ class ExtensionInstaller(Logger):
             shutil.rmtree(dstdir, True)
 
 def conditional_merge(a, b):
-    '''merge fields from b into a, but only if they do not yet exist in a'''
+    """merge fields from b into a, but only if they do not yet exist in a"""
     for k in b:
         if isinstance(b[k], dict):
-            if not a.has_key(k):
+            if not k in a:
                 a[k] = {}
             conditional_merge(a[k], b[k])
-        elif not a.has_key(k):
+        elif not k in a:
             a[k] = b[k]
 
 def remove_and_prune(a, b):
-    '''remove fields from a that are present in b'''
+    """remove fields from a that are present in b"""
     for k in b:
         if isinstance(b[k], dict):
-            if a.has_key(k) and type(a[k]) is configobj.Section:
+            if k in a and type(a[k]) is configobj.Section:
                 remove_and_prune(a[k], b[k])
                 if not a[k].sections:
                     a.pop(k)
-        elif a.has_key(k):
+        elif k in a:
             a.pop(k)
 
 def prepend_path(d, label, value):
-    '''prepend the value to every instance of the label in dict d'''
-    for k in d.keys():
+    """prepend the value to every instance of the label in dict d"""
+    for k in d:
         if isinstance(d[k], dict):
             prepend_path(d[k], label, value)
         elif k == label:
             d[k] = os.path.join(value, d[k])    
 
 def replace_string(d, label, value):
-    for k in d.keys():
+    for k in d:
         if isinstance(d[k], dict):
             replace_string(d[k], label, value)
         else:
             d[k] = d[k].replace(label, value)
 
 def get_skin_dir(config):
-    '''figure out the effective SKIN_DIR from a weewx configuration'''
+    """figure out the effective SKIN_DIR from a weewx configuration"""
     weewx_root = config['WEEWX_ROOT']
     skin_root = config['StdReport']['SKIN_ROOT']
     return os.path.join(weewx_root, skin_root)
@@ -1278,7 +1275,7 @@ def formatdict(d, indent=0):
                 line.append('  ')
             line.append(k)
             lines.append(''.join(line))
-            lines.extend(formatdict(d[k], indent=indent+1))
+            lines.extend(formatdict(d[k], indent=indent + 1))
         else:
             for _i in range(indent):
                 line.append('  ')
@@ -1294,7 +1291,7 @@ def printdict(d, indent=0):
             for _i in range(indent):
                 print ' ',
             print k
-            printdict(d[k], indent=indent+1)
+            printdict(d[k], indent=indent + 1)
         else:
             for _i in range(indent):
                 print ' ',
@@ -1307,7 +1304,7 @@ def do_merge():
     parser = optparse.OptionParser(description=description, usage=usage)
     parser.add_option('--merge-config', dest='mc', action='store_true',
                       help='merge configuration files')
-    parser.add_option('--install-dir', dest='idir', type=str,metavar='DIR',
+    parser.add_option('--install-dir', dest='idir', type=str, metavar='DIR',
                       help='installation directory DIR')
     parser.add_option('--a', dest='filea', type=str, metavar='FILE',
                       help='first file FILE')
@@ -1337,7 +1334,7 @@ def do_merge():
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         merged_cfg.write(tmpfile)
         if os.path.exists(options.filec):
-            _bup_cfg = save_path(options.filec)
+            _ = save_path(options.filec)
         shutil.copyfile(tmpfile.name, options.filec)
     return 0
 
@@ -1386,12 +1383,12 @@ if __name__ == "__main__":
                          'Cheetah(>=2.0)',
                          'sqlite3(>=2.5)',
                          'PIL(>=1.1.6)'],
-          cmdclass    = {"install_data" : weewx_install_data,
-                         "install_lib"  : weewx_install_lib,
-                         "sdist"        : weewx_sdist,
-                         "install_scripts" : weewx_install_scripts},
+          cmdclass    = {"install_data": weewx_install_data,
+                         "install_lib": weewx_install_lib,
+                         "sdist": weewx_sdist,
+                         "install_scripts": weewx_install_scripts},
           platforms   = ['any'],
-          package_dir = {'' : 'bin'},
+          package_dir = {'': 'bin'},
           packages    = ['examples',
                          'schemas',
                          'user',

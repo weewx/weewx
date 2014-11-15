@@ -48,7 +48,7 @@ def parseArgs():
         sys.stderr.write(parser.parse_args(["--help"]))
         sys.exit(weewx.CMD_ERROR)
     
-    return (options, args)
+    return options, args
 
 #===============================================================================
 #                       Main entry point
