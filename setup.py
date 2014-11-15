@@ -814,6 +814,7 @@ class Extension(Logger):
             self.log("listdir failed: %s" % e, level=2)
 
     def install(self):
+        self.log("request to install %s" % self.filename)
         self.layout_type = self.guess_type(self.layout_type)
         self.layout = self.verify_layout(self.layout_type)
         (self.basename, self.extdir, self.delete_extdir) = \
@@ -826,6 +827,7 @@ class Extension(Logger):
         self.cleanup()
 
     def uninstall(self):
+        self.log("request to uninstall %s" % self.filename)
         self.layout_type = self.guess_type(self.layout_type)
         self.layout = self.verify_layout(self.layout_type)
         self.basename = self.filename
@@ -1267,20 +1269,16 @@ def get_skin_dir(config):
     skin_root = config['StdReport']['SKIN_ROOT']
     return os.path.join(weewx_root, skin_root)
 
-def do_ext():
+def do_ext(action=None):
     import optparse
     description = "install/remove/list extensions to weewx"
-    usage = """%prog --extension --install (filename|directory)
-                            --uninstall extension_name
-                            --list"""
+    usage = """%prog install --extension (filename|directory)
+                uninstall --extension extension_name
+                list-extensions"""
     parser = optparse.OptionParser(description=description, usage=usage)
-    parser.add_option('--extension', dest='ext', action='store_true')
-    parser.add_option('--install', dest='i_ext', type=str, metavar="NAME",
-                      help='install extension from file or directory')
-    parser.add_option('--uninstall', dest='u_ext', type=str,
-                      metavar="NAME", help='uninstall extension')
-    parser.add_option('--list', dest='list_ext', action='store_true',
-                      help='list installed extensions')
+    parser.add_option('--extension', dest='ext', type=str, default=None,
+                      metavar='EXT',
+                      help='extension name, archive file, or directory')
     parser.add_option('--layout', dest='layout', type=str, default=None,
                       metavar='LAYOUT', help='layout is deb, rpm, or py')
     parser.add_option('--tmpdir', dest='tmpdir', type=str, default='/var/tmp',
@@ -1294,13 +1292,13 @@ def do_ext():
     ext = Extension(layout_type=options.layout, tmpdir=options.tmpdir)
     ext.set_verbosity(options.verbosity)
     ext.set_dryrun(options.dryrun)
-    if options.list_ext:
+    if action == 'list':
         ext.enumerate_extensions()
-    elif options.i_ext:
-        ext.set_extension(options.i_ext)
+    elif action == 'install':
+        ext.set_extension(options.ext)
         ext.install()
-    elif options.u_ext:
-        ext.set_extension(options.u_ext)
+    elif action == 'uninstall':
+        ext.set_extension(options.ext)
         ext.uninstall()
     return 0
 
@@ -1389,8 +1387,15 @@ if __name__ == "__main__":
         exit(do_cfg())
     if '--merge-config' in sys.argv:
         exit(do_merge())
-    if '--extension' in sys.argv:
-        exit(do_ext())
+    if 'list-extensions' in sys.argv:
+        exit(do_ext('list-extensions'))
+    if '--extension' in [f[:11] for f in sys.argv]:
+        if 'install' in sys.argv:
+            exit(do_ext('install'))
+        elif 'uninstall' in sys.argv:
+            exit(do_ext('uninstall'))
+        else:
+            exit(do_ext())
     if '--help' in sys.argv:
         print "Commands for configuring weewx:"
         print ""
@@ -1400,9 +1405,9 @@ if __name__ == "__main__":
         print "Commands for installing/removing/listing weewx extensions:"
         print ""
         print "  setup.py list-extensions"
-        print "  setup.py install --extension=forecast.tar.gz"
-        print "  setup.py uninstall --extension=forecast"
-        print "  setup.py --help-extensions"
+        print "  setup.py install --extension forecast.tar.gz"
+        print "  setup.py uninstall --extension forecast"
+        print "  setup.py --help --extension"
         print ""
 
     setup(name='weewx',
