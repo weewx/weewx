@@ -612,8 +612,12 @@ def update_to_v3(config_dict):
                 if not hasattr(service_list, '__iter__'):
                     service_list = [service_list]
                 config_dict['Engine']['Services'][list_name] = [this_item.replace('wxengine', 'engine') for this_item in service_list]
-                if list_name == 'process_services' and 'weewx.wxservices.StdWXCalculate' not in config_dict['Engine']['Services'][list_name]:
-                    config_dict['Engine']['Services'][list_name].append('weewx.wxservices.StdWXCalculate')
+        try:
+            # Finally, make sure the new StdWXCalculate service is in the list:
+            if 'weewx.wxservices.StdWXCalculate' not in config_dict['Engine']['Services']['process_services']:
+                config_dict['Engine']['Services']['process_services'].append('weewx.wxservices.StdWXCalculate')
+        except KeyError:
+            pass
 
 def save_path(filepath):
     # Sometimes the target has a trailing '/'. This will take care of it:
