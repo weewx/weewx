@@ -670,19 +670,31 @@ def configure_conf(driver):
     stanza_text = editor.get_conf()
     sys.path = tmp_path
 
-    stanza_fn = '/var/tmp/stanza'
-    with open(stanza_fn, 'w') as f:
-        f.write(stanza_text)
-    stanza = configobj.ConfigObj(stanza_fn)
+    stanza = configobj.ConfigObj(stanza_text.splitlines(), indent_type='    ')
 
-    tmp_fn = "%s.tmp" % config_fn
-    distutils.file_util.copy_file(config_fn, tmp_fn)
-    new_config = configobj.ConfigObj(tmp_fn)
-    new_config.merge(stanza)
+    new_fn = "%s.tmp" % config_fn
+    distutils.file_util.copy_file(config_fn, new_fn)
+    new_config = configobj.ConfigObj(new_fn, indent_type='    ',
+                                     interpolation=False)
+    if stanza.sections[0] in new_config.sections:
+        new_config.merge(stanza)
+    else:
+        nc = configobj.ConfigObj(indent_type='    ')
+        for s in new_config:
+            nc[s] = new_config[s]
+            if s == 'Station':
+                nc[stanza.sections[0]] = stanza[stanza.sections[0]]
+        new_config = nc
+    new_config['Station']['station_type'] = stanza.sections[0]
+    new_config.filename = new_fn
     new_config.write()
 
     save_path(config_fn)
-    shutil.move(tmp_fn, config_fn)
+    shutil.move(new_fn, config_fn)
+
+    # FIXME: this emits a functional config file, but the comments in the
+    # general section are lost, and the indents in the rest of the file are
+    # messed up.
 
 
 #==============================================================================
