@@ -12,13 +12,16 @@ Should the archive file be backed up before adding the daily summaries?
 
 Update the forecast service
 
+
+
+
+ ---- DONE ----
+
 Update setup.py
  -- Rework deb installer to work with device snippets
  -- Give each driver option to modify driver stanza while updating weewx.conf
  -- the --configure option should modify station_type if successful
-
-
- ---- DONE ----
+(15nov14 mwall)
               
 Update setup.py.
   -- Add configure keyword, with option --device=

@@ -303,9 +303,6 @@ class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
     # The station model, e.g., WH1080, WS1090, WS2080, WH3081
     model = WS2080
 
-    # The polling mode can be PERIODIC or ADAPTIVE
-    polling_mode = PERIODIC
-
     # How often to poll the station for data, in seconds
     polling_interval = 60
 
@@ -315,9 +312,22 @@ class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
 
     def get_conf(self, orig_stanza=None):
         if orig_stanza is None:
-            # FIXME: detect pressure_offset and warn about it
             return self.default_stanza
-        return self.default_stanza
+        import configobj
+        stanza = configobj.ConfigObj(orig_stanza.splitlines())
+        if 'pressure_offset' in stanza[DRIVER_NAME]:
+            print """
+The pressure_offset is no longer supported by the FineOffsetUSB driver.  Move
+the pressure calibration constant to [StdCalibrate] instead."""
+        if ('polling_mode' in stanza[DRIVER_NAME] and
+            stanza[DRIVER_NAME]['polling_mode'] == 'ADAPTIVE'):
+            print """
+Using ADAPTIVE as the polling_mode can lead to USB lockups."""
+        if ('polling_interval' in stanza[DRIVER_NAME] and
+            int(stanza[DRIVER_NAME]['polling_interval']) < 48):
+            print """
+A polling_interval of anything less than 48 seconds is not recommened."""
+        return orig_stanza
 
 
 class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
