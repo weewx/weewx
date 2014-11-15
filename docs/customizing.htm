@@ -4102,32 +4102,27 @@ xstats/bin/user/xstats.py</p>
         <span class='code'>setup.py</span>.  It can install new extensions,
         uninstall installed extensions, or enumerate installed extensions.</p>
       <p>To install an extension:</p>
-      <p class='tty'>./setup.py --extension --install extensions/basic
-./setup.py --extension --install basic.tar.gz</p>
+      <p class='tty'>./setup.py install --extension extensions/basic
+./setup.py install --extension basic.tar.gz</p>
       <p>To uninstall an extension:</p>
-      <p class='tty'>./setup.py --extension --uninstall basic</p>
+      <p class='tty'>./setup.py uninstall --extension basic</p>
       <p>To list installed extensions:</p>
-      <p class='tty'>./setup.py --extension --list</p>
+      <p class='tty'>./setup.py list-extensions</p>
       <p>Other options:</p>
       <p class='tty'>./setup.py --help --extension
-
-Usage: setup.py --extension --install (filename|directory)
-                            --uninstall extension_name
-                            --list
+Usage: setup.py install --extension (filename|directory)
+                uninstall --extension extension_name
+                list-extensions
 
 install/remove/list extensions to weewx
 
 Options:
-  -h, --help        show this help message and exit
-  --extension       
-  --install=NAME    install extension from file or directory
-  --uninstall=NAME  uninstall extension
-  --list            list installed extensions
-  --layout=LAYOUT   layout is deb, rpm, or py
-  --tmpdir=DIR      temporary directory
-  --dryrun          print what would happen but do not do it
-  --verbosity=N     how much status to spew, 0-3
-</p>
+  -h, --help       show this help message and exit
+  --extension=EXT  extension name, archive file, or directory
+  --layout=LAYOUT  layout is deb, rpm, or py
+  --tmpdir=DIR     temporary directory
+  --dryrun         print what would happen but do not do it
+  --verbosity=N    how much status to spew, 0-3</p>
       <p>The ExtensionInstaller will make only the following changes:</p>
       <ul>
         <li>Modifications to <span class='code'>weewx.conf</span></li>

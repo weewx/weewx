@@ -6,8 +6,6 @@ Strategy for extending units.
 
 Move schemas to the extension that uses them.
 
-May need to update the guide on packaging an extension.
-
 Should the archive file be backed up before adding the daily summaries?
 
 Update the forecast service
@@ -16,6 +14,10 @@ Update the forecast service
 
 
  ---- DONE ----
+
+May need to update the guide on packaging an extension.
+modified the docs to match the new setup.py syntax
+(15nov14 mwall)
 
 Update setup.py
  -- Rework deb installer to work with device snippets
