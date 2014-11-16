@@ -2,7 +2,8 @@
 
 Quick start guide
 
-Strategy for extending units.
+Document how to extend the unit system.
+ - Or, maybe leave it for a while, to see if we like it?
 
 Move schemas to the extension that uses them.
 
@@ -10,10 +11,15 @@ Should the archive file be backed up before adding the daily summaries?
 
 Update the forecast service
 
+Add parameter max_delta to $current.
+
 
 
 
  ---- DONE ----
+
+Strategy for extending units.
+(16nov14 -tk)
 
 May need to update the guide on packaging an extension.
 modified the docs to match the new setup.py syntax

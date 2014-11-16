@@ -26,6 +26,31 @@ import gen_fake_data
 config_path = "testgen.conf"
 cwd = None
 
+# We will be testing the ability to extend the unit system, so set that up first:
+class ExtraUnits(dict):
+    def __getitem__(self, obs_type):
+        if obs_type.endswith('Temp'):
+            # Anything that ends with "Temp" is assumed to be in group_temperature
+            return "group_temperature"
+        elif obs_type.startswith('current'):
+            # Anything that starts with "current" is in group_amperage:
+            return "group_amperage"
+        else:
+            # Otherwise, consult the underlying dictionary:
+            return dict.__getitem__(self, obs_type)
+ 
+extra_units = ExtraUnits()
+import weewx.units
+weewx.units.obs_group_dict.extend(extra_units)
+
+# Add the new group group_amperage to the standard unit systems:
+weewx.units.USUnits["group_amperage"] = "amp"
+weewx.units.MetricUnits["group_amperage"] = "amp"
+weewx.units.MetricWXUnits["group_amperage"] = "amp"
+
+weewx.units.default_unit_format_dict["amp"] = "%.1f"
+weewx.units.default_unit_label_dict["amp"] = " A"
+
 class Common(unittest.TestCase):
 
     def setUp(self):

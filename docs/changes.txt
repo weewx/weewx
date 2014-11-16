@@ -4,15 +4,17 @@ weewx change history
 3.0.0 XX/XX/XX
 
 Big update with lots of changes and lots of new features. The overall
-goal was to make it easier for extension writers to use their own
-database, instead of hijacking the weather database.
+goal was to make it easier to write extensions. In particular, it
+is now easier for extensions to have their own database, devices, and
+unit systems.
 
 Skins and skin.conf continue to be 100% backwards compatible (since
 V1.5!).  However, search-list extensions will have to get
 rewritten. Details in the Upgrading Guide.
 
-Unfortunately, weewx.conf is not upwardly compatible. You will have to
-reconfigure from a fresh copy. See the Upgrading Guide.
+Your configuration file, weewx.conf should be updated to V3. But,
+after the upgrade, check it over. Not sure we got everything correct.
+See the Upgrading Guide.
 
 Total rewrite of how data gets bound to a database. You now specify a
 "data binding" to indicate where data should be going, and where it is
@@ -43,6 +45,8 @@ Can now differentiate between the max speed seen in the archive records
 $day.windGust.max).
 
 Allow other data bindings to be used in images.
+
+Made it easier to add new unit types and unit groups.
 
 The archive interval can now change within a database without
 consequences.

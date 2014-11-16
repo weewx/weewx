@@ -29,69 +29,95 @@ unit_nicknames = {weewx.US       : 'US',
                   weewx.METRICWX : 'METRICWX'}
 
 # This data structure maps observation types to a "unit group"
-obs_group_dict = {"altitude"           : "group_altitude",
-                  "cooldeg"            : "group_degree_day",
-                  "heatdeg"            : "group_degree_day",
-                  "gustdir"            : "group_direction",
-                  "vecdir"             : "group_direction",
-                  "windDir"            : "group_direction",
-                  "windGustDir"        : "group_direction",
-                  "interval"           : "group_interval",
-                  "soilMoist1"         : "group_moisture",
-                  "soilMoist2"         : "group_moisture",
-                  "soilMoist3"         : "group_moisture",
-                  "soilMoist4"         : "group_moisture",
-                  "extraHumid1"        : "group_percent",
-                  "extraHumid2"        : "group_percent",
-                  "inHumidity"         : "group_percent",
-                  "outHumidity"        : "group_percent",
-                  "rxCheckPercent"     : "group_percent",
-                  "altimeter"          : "group_pressure",
-                  "barometer"          : "group_pressure",
-                  "pressure"           : "group_pressure",
-                  "radiation"          : "group_radiation",
-                  "ET"                 : "group_rain",
-                  "dayRain"            : "group_rain",
-                  "hail"               : "group_rain",
-                  "hourRain"           : "group_rain",
-                  "monthRain"          : "group_rain",
-                  "rain"               : "group_rain",
-                  "snow"               : "group_rain",
-                  "rain24"             : "group_rain",
-                  "totalRain"          : "group_rain",
-                  "stormRain"          : "group_rain",
-                  "yearRain"           : "group_rain",
-                  "hailRate"           : "group_rainrate",
-                  "rainRate"           : "group_rainrate",
-                  "wind"               : "group_speed",
-                  "windGust"           : "group_speed",
-                  "windSpeed"          : "group_speed",
-                  "windSpeed10"        : "group_speed",
-                  "windgustvec"        : "group_speed",
-                  "windvec"            : "group_speed",
-                  "rms"                : "group_speed2",
-                  "vecavg"             : "group_speed2",
-                  "dewpoint"           : "group_temperature",
-                  "extraTemp1"         : "group_temperature",
-                  "extraTemp2"         : "group_temperature",
-                  "extraTemp3"         : "group_temperature",
-                  "heatindex"          : "group_temperature",
-                  "heatingTemp"        : "group_temperature",
-                  "inTemp"             : "group_temperature",
-                  "leafTemp1"          : "group_temperature",
-                  "leafTemp2"          : "group_temperature",
-                  "outTemp"            : "group_temperature",
-                  "soilTemp1"          : "group_temperature",
-                  "soilTemp2"          : "group_temperature",
-                  "soilTemp3"          : "group_temperature",
-                  "soilTemp4"          : "group_temperature",
-                  "windchill"          : "group_temperature",
-                  "dateTime"           : "group_time",
-                  "UV"                 : "group_uv",
-                  "consBatteryVoltage" : "group_volt",
-                  "heatingVoltage"     : "group_volt",
-                  "referenceVoltage"   : "group_volt",
-                  "supplyVoltage"      : "group_volt"}
+std_obs_group_dict = {"altitude"           : "group_altitude",
+                      "cooldeg"            : "group_degree_day",
+                      "heatdeg"            : "group_degree_day",
+                      "gustdir"            : "group_direction",
+                      "vecdir"             : "group_direction",
+                      "windDir"            : "group_direction",
+                      "windGustDir"        : "group_direction",
+                      "interval"           : "group_interval",
+                      "soilMoist1"         : "group_moisture",
+                      "soilMoist2"         : "group_moisture",
+                      "soilMoist3"         : "group_moisture",
+                      "soilMoist4"         : "group_moisture",
+                      "extraHumid1"        : "group_percent",
+                      "extraHumid2"        : "group_percent",
+                      "inHumidity"         : "group_percent",
+                      "outHumidity"        : "group_percent",
+                      "rxCheckPercent"     : "group_percent",
+                      "altimeter"          : "group_pressure",
+                      "barometer"          : "group_pressure",
+                      "pressure"           : "group_pressure",
+                      "radiation"          : "group_radiation",
+                      "ET"                 : "group_rain",
+                      "dayRain"            : "group_rain",
+                      "hail"               : "group_rain",
+                      "hourRain"           : "group_rain",
+                      "monthRain"          : "group_rain",
+                      "rain"               : "group_rain",
+                      "snow"               : "group_rain",
+                      "rain24"             : "group_rain",
+                      "totalRain"          : "group_rain",
+                      "stormRain"          : "group_rain",
+                      "yearRain"           : "group_rain",
+                      "hailRate"           : "group_rainrate",
+                      "rainRate"           : "group_rainrate",
+                      "wind"               : "group_speed",
+                      "windGust"           : "group_speed",
+                      "windSpeed"          : "group_speed",
+                      "windSpeed10"        : "group_speed",
+                      "windgustvec"        : "group_speed",
+                      "windvec"            : "group_speed",
+                      "rms"                : "group_speed2",
+                      "vecavg"             : "group_speed2",
+                      "dewpoint"           : "group_temperature",
+                      "extraTemp1"         : "group_temperature",
+                      "extraTemp2"         : "group_temperature",
+                      "extraTemp3"         : "group_temperature",
+                      "heatindex"          : "group_temperature",
+                      "heatingTemp"        : "group_temperature",
+                      "inTemp"             : "group_temperature",
+                      "leafTemp1"          : "group_temperature",
+                      "leafTemp2"          : "group_temperature",
+                      "outTemp"            : "group_temperature",
+                      "soilTemp1"          : "group_temperature",
+                      "soilTemp2"          : "group_temperature",
+                      "soilTemp3"          : "group_temperature",
+                      "soilTemp4"          : "group_temperature",
+                      "windchill"          : "group_temperature",
+                      "dateTime"           : "group_time",
+                      "UV"                 : "group_uv",
+                      "consBatteryVoltage" : "group_volt",
+                      "heatingVoltage"     : "group_volt",
+                      "referenceVoltage"   : "group_volt",
+                      "supplyVoltage"      : "group_volt"}
+
+class ObsGroupDict(object):
+    """A list of dictionaries, that are searched in order.
+    
+    It assumes only that any inserted dictionaries support a keyed
+    lookup using the syntax obs[key]."""
+    def __init__(self, starting_dict=None):
+        self.obs_group_dict_list = [starting_dict] if starting_dict else []
+    def __getitem__(self, obs):
+        for obs_group_dict in self.obs_group_dict_list:
+            try:
+                return obs_group_dict[obs]
+            except KeyError:
+                pass
+        raise KeyError(obs)
+    def get(self, obs, default=None):
+        try:
+            return self[obs]
+        except KeyError:
+            return default
+    def extend(self, new_dict):
+        self.obs_group_dict_list.insert(0, new_dict)
+
+# We start with the standard object group dictionary, but users are
+# free to extend it:
+obs_group_dict = ObsGroupDict(std_obs_group_dict)
 
 # Some aggregations when applied to a type result in a different unit
 # group. This data structure maps aggregation type to the group:
@@ -224,9 +250,6 @@ conversionDict = {
                             'day'              : lambda x : x/24.0},
       'day'              : {'second'           : lambda x : x*86400.0,
                             'hour'             : lambda x : x*24.0}}
-
-# This will extract all the target unit types in the above dictionary:
-allPossibleUnitTypes = set(z for d in conversionDict.values() for z in d.keys())
 
 # Default unit formatting to be used in the absence of a skin configuration file
 default_unit_format_dict = {"centibar"           : "%.0f",
@@ -691,7 +714,10 @@ class Converter(object):
         or (None, None) if they cannot be determined.
         """        
         unit_group = _getUnitGroup(obs_type, agg_type)
-        unit_type  = self.group_unit_dict.get(unit_group)
+        if unit_group in self.group_unit_dict:
+            unit_type = self.group_unit_dict[unit_group]
+        else:
+            unit_type = USUnits.get(unit_group)
         return (unit_type, unit_group)
 
 #==============================================================================
@@ -847,9 +873,29 @@ class ValueHelper(object):
     
 
 #==============================================================================
-#                             class UnitInfoHelper
+#                       class UnitInfoHelper and friends
 #==============================================================================
 
+class UnitHelper(object):
+    def __init__(self, converter):
+        self.converter = converter
+    def __getattr__(self, obs_type):
+        return self.converter.getTargetUnit(obs_type)[0]
+
+class FormatHelper(object):
+    def __init__(self, formatter, converter):
+        self.formatter = formatter
+        self.converter = converter
+    def __getattr__(self, obs_type):
+        return get_format_string(self.formatter, self.converter, obs_type)
+    
+class LabelHelper(object):
+    def __init__(self, formatter, converter):
+        self.formatter = formatter
+        self.converter = converter
+    def __getattr__(self, obs_type):
+        return get_label_string(self.formatter, self.converter, obs_type)
+    
 class UnitInfoHelper(object):
     """Helper class used for for the $unit template tag."""
     def __init__(self, formatter, converter):
@@ -857,15 +903,11 @@ class UnitInfoHelper(object):
         formatter: an instance of Formatter
         converter: an instance of Converter
         """
+        self.unit_type = UnitHelper(converter)
+        self.format    = FormatHelper(formatter, converter)
+        self.label     = LabelHelper(formatter, converter)
         self.group_unit_dict = converter.group_unit_dict
-        self.unit_type = {}
-        self.label     = {}
-        self.format    = {}
-        for obs_type in obs_group_dict:
-            self.unit_type[obs_type] = u = converter.getTargetUnit(obs_type)[0]
-            self.format[obs_type] = formatter.get_format_string(u)
-            self.label[obs_type]  = formatter.get_label_string(u)
-    
+
     # This is here for backwards compatibility:
     @property
     def unit_type_dict(self):
@@ -983,6 +1025,18 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
         return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
     else:
         return (None, None)
+
+def get_format_string(formatter, converter, obs_type):
+    # First convert to the target unit type:
+    u = converter.getTargetUnit(obs_type)[0]
+    # Then look up the format string for that unit type:
+    return formatter.get_format_string(u)
+
+def get_label_string(formatter, converter, obs_type, plural=True):
+    # First convert to the target unit type:    
+    u = converter.getTargetUnit(obs_type)[0]
+    # Then look up the label for that unit type:
+    return formatter.get_label_string(u, plural)
 
 class GenWithConvert(object):
     """Generator wrapper. Converts the output of the wrapped generator to a

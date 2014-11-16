@@ -10,7 +10,6 @@ from __future__ import with_statement
 import math
 import syslog
 import sys
-import time
 
 import weewx.accum
 from weewx.units import ValueTuple

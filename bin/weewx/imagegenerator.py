@@ -39,9 +39,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         
         self.image_dict = self.skin_dict['ImageGenerator']
         self.title_dict = self.skin_dict.get('Labels', {}).get('Generic', {})
-        self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
         self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)
-        self.unit_helper= weewx.units.UnitInfoHelper(self.formatter, self.converter)
+        self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
         
     def genImages(self, gen_ts):
         """Generate the images.
@@ -153,8 +152,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Add a unit label. NB: all will get overwritten except the last.
                     # Get the label from the configuration dictionary. 
                     # TODO: Allow multiple unit labels, one for each plot line?
-                    unit_label = line_options.get('y_label',
-                                                  self.unit_helper.label.get(var_type, ''))
+                    unit_label = line_options.get('y_label', weewx.units.get_label_string(self.formatter, self.converter, var_type))
                     # Strip off any leading and trailing whitespace so it's easy to center
                     plot.setUnitLabel(unit_label.strip())
                     
