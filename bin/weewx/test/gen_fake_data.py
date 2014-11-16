@@ -100,9 +100,13 @@ def configDatabase(config_dict, binding, amplitude=1.0,
 
         # Backfill with daily summaries:
         t1 = time.time()
-        nrecs = archive.backfill_day_summary()    
-        t2 = time.time()
-        print "\nTime to backfill stats database with %d records: %6.2fs" % (nrecs, t2-t1)
+        nrecs, ndays = archive.backfill_day_summary()
+        tdiff = time.time() - t1
+        if nrecs:
+            print "\nProcessed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff)
+        else:
+            print "Daily summaries up to date."
+
     
 def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval, 
                    amplitude=1.0, day_phase_offset=0.0, annual_phase_offset=0.0,
