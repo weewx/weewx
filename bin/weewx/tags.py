@@ -57,11 +57,11 @@ class TimeBinder(object):
 
     # What follows is the list of time period attributes:
     
-    def current(self, timestamp=None, data_binding=None):
+    def current(self, timestamp=None, max_delta=None, data_binding=None):
         """Return a CurrentObj"""
         if timestamp is None:
             timestamp = self.report_time
-        return CurrentObj(self.db_lookup, data_binding, current_time=timestamp,
+        return CurrentObj(self.db_lookup, data_binding, current_time=timestamp, max_delta=max_delta,
                           formatter=self.formatter, converter=self.converter, **self.option_dict)
             
     def latest(self, data_binding=None):
@@ -326,12 +326,13 @@ class CurrentObj(object):
       $current.barometer
     """
         
-    def __init__(self, db_lookup, data_binding, current_time, formatter, converter, **option_dict):
+    def __init__(self, db_lookup, data_binding, current_time, formatter, converter, max_delta=None, **option_dict):
         self.db_lookup    = db_lookup
         self.data_binding = data_binding
         self.current_time = current_time
         self.formatter    = formatter
         self.converter    = converter
+        self.max_delta    = max_delta
         
     def __getattr__(self, obs_type):
         """Return the given observation type."""
@@ -347,7 +348,7 @@ class CurrentObj(object):
             vt = weewx.units.UnknownType(self.data_binding)
         else:
             # ... get the current record from it ...  
-            record  = db_manager.getRecord(self.current_time)
+            record  = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
             # ... form a ValueTuple ...
             vt = weewx.units.as_value_tuple(record, obs_type)
         # ... and then finally, return a ValueHelper

@@ -11,12 +11,13 @@ Should the archive file be backed up before adding the daily summaries?
 
 Update the forecast service
 
-Add parameter max_delta to $current.
-
 
 
 
  ---- DONE ----
+
+Add parameter max_delta to $current.
+(16nov14 -tk)
 
 Strategy for extending units.
 (16nov14 -tk)
