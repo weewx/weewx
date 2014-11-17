@@ -16,7 +16,7 @@ class FileParseInstaller(ExtensionInstaller):
             author="Matthew Wall",
             author_email="mwall@users.sourceforge.net",
             config={
-                'Station', {
+                'Station': {
                     'station_type': 'FileParse'},
                 'FileParse': {
                     'poll_interval': '10',

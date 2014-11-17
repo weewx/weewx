@@ -18,7 +18,7 @@ import datetime
 import time
 
 from weewx.cheetahgenerator import SearchList
-from weewx.stats import TimeSpanStats
+from weewx.tags import TimespanBinder
 from weeutil.weeutil import TimeSpan
 
 class ExtStats(SearchList):
@@ -53,7 +53,7 @@ class ExtStats(SearchList):
         week_ts = time.mktime(week_dt.timetuple())
         # Now form a TimeSpanStats object, using the time span just calculated:
         seven_day_stats = TimespanBinder(TimeSpan(week_ts, timespan.stop),
-                                         statsdb,
+                                         db_lookup,
                                          context='seven_day',
                                          formatter=self.generator.formatter,
                                          converter=self.generator.converter)
@@ -62,7 +62,7 @@ class ExtStats(SearchList):
         days_dt = datetime.date.fromtimestamp(timespan.stop) - datetime.timedelta(days=30)
         days_ts = time.mktime(days_dt.timetuple())
         thirty_day_stats = TimespanBinder(TimeSpan(days_ts, timespan.stop),
-                                          statsdb,
+                                          db_lookup,
                                           context='thirty_day',
                                           formatter=self.generator.formatter,
                                           converter=self.generator.converter)

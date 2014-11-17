@@ -52,7 +52,7 @@ import time
 
 import weewx.drivers
 
-DRIVER_VERSION = "0.1"
+DRIVER_VERSION = "0.5"
 
 def logmsg(dst, msg):
     syslog.syslog(dst, 'fileparse: %s' % msg)
@@ -109,7 +109,7 @@ class FileParse(weewx.drivers.AbstractDevice):
 
             # map the data into a weewx loop packet
             _packet = {'dateTime': int(time.time() + 0.5),
-                       'usUnits': weewx.US }
+                       'usUnits': weewx.US}
             for vname in data:
                 _packet[self.label_map.get(vname, vname)] = _get_as_float(data, vname)
 

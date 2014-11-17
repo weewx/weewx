@@ -9,12 +9,14 @@ Move schemas to the extension that uses them.
 
 Should the archive file be backed up before adding the daily summaries?
 
-Update the forecast service
-
 
 
 
  ---- DONE ----
+
+Update the forecast service
+forecast is now working with the database structure
+(17nov14 mwall)
 
 Add parameter max_delta to $current.
 (16nov14 -tk)
