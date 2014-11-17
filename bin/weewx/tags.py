@@ -307,7 +307,7 @@ class ObservationBinder(object):
     def _do_query(self, aggregateType, val=None):
         """Run a query against the databases, using the given aggregation type."""
         db_manager = self.db_lookup(self.data_binding)
-        if aggregateType in ['last', 'lasttime'] or self.context not in day_multiples:
+        if aggregateType in ['last', 'lasttime']:
             result = db_manager.getAggregate(self.timespan, self.obs_type, aggregateType, 
                                              val=val, **self.option_dict)
         else:
