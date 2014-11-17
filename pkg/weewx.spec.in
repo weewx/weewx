@@ -91,12 +91,10 @@ rm %{buildroot}%{dst_cfg_dir}/skins/Standard/backgrounds/night.gif
 
 # patch paths in files we care about
 cat weewx.conf | sed \
- -e 's%station_type =.*%station_type = Simulator%' \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's%HTML_ROOT =.*%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%archive/weewx.sdb%/var/lib/weewx/weewx.sdb%' \
- -e 's%archive/stats.sdb%/var/lib/weewx/stats.sdb%' \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
 cat util/init.d/weewx.%{platform} | sed \
  -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \

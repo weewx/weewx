@@ -19,7 +19,7 @@ set -e
 . /usr/share/debconf/confmodule
 
 cfgfile=/etc/weewx/weewx.conf
-mergeapp=/usr/share/weewx/setup.py
+setupapp=/usr/share/weewx/setup.py
 metric_units="\n\
         [[[Units]]]\n\
             [[[[Groups]]]]\n\
@@ -59,6 +59,26 @@ configure_weewxconf() {
     db_get weewx/station_type
     if [ "$RET" != "" ]; then
         sed -i "s%station_type[ ]*=.*%station_type = $RET%" $cfgfile
+        if [ "$RET" = "CC3000" ]; then
+            db_get weewx/cc3000_model
+            sed -i "/\[CC3000\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
+            db_get weewx/cc3000_port
+            sed -i "/\[CC3000\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
+        fi
+        if [ "$RET" = "FineOffsetUSB" ]; then
+            db_get weewx/fousb_model
+            sed -i "/\[FineOffsetUSB\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
+        fi
+        if [ "$RET" = "TE923" ]; then
+            db_get weewx/te923_model
+            sed -i "/\[TE923\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
+        fi
+        if [ "$RET" = "Ultimeter" ]; then
+            db_get weewx/ultimeter_model
+            sed -i "/\[Ultimeter\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
+            db_get weewx/ultimeter_port
+            sed -i "/\[Ultimeter\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
+        fi
         if [ "$RET" = "Vantage" ]; then
             db_get weewx/vantage_type
             sed -i "/\[Vantage\]/,/\[.*\]/ s% type[ ]*=.*% type = $RET%" $cfgfile
@@ -84,9 +104,9 @@ configure_weewxconf() {
             db_get weewx/wmr9x8_port
             sed -i "/\[WMR9x8\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
         fi
-        if [ "$RET" = "FineOffsetUSB" ]; then
-            db_get weewx/fousb_model
-            sed -i "/\[FineOffsetUSB\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
+        if [ "$RET" = "WS1" ]; then
+            db_get weewx/ws1_port
+            sed -i "/\[WS1\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
         fi
         if [ "$RET" = "WS23xx" ]; then
             db_get weewx/ws23xx_model
@@ -100,32 +120,12 @@ configure_weewxconf() {
             db_get weewx/ws28xx_frequency
             sed -i "/\[WS28xx\]/,/\[.*\]/ s%[# ]*transceiver_frequency[ ]*=.*%    transceiver_frequency = $RET%" $cfgfile
         fi
-        if [ "$RET" = "TE923" ]; then
-            db_get weewx/te923_model
-            sed -i "/\[TE923\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
-        fi
-        if [ "$RET" = "Ultimeter" ]; then
-            db_get weewx/ultimeter_model
-            sed -i "/\[Ultimeter\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
-            db_get weewx/ultimeter_port
-            sed -i "/\[Ultimeter\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
-        fi
-        if [ "$RET" = "WS1" ]; then
-            db_get weewx/ws1_port
-            sed -i "/\[WS1\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
-        fi
-        if [ "$RET" = "CC3000" ]; then
-            db_get weewx/cc3000_model
-            sed -i "/\[CC3000\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
-            db_get weewx/cc3000_port
-            sed -i "/\[CC3000\]/,/\[.*\]/ s% port[ ]*=.*% port = $RET%" $cfgfile
-        fi
     fi
 }
 
 # use weewx setup utilities to merge new features into existing weewx.conf
 merge_weewxconf() {
-    NEWVER=`$mergeapp --version`
+    NEWVER=`$setupapp --version`
     OLDVER=$(get_conf_version $cfgfile)
     if dpkg --compare-versions $OLDVER lt $NEWVER; then
         # this is an old config, so merge it into a new config
@@ -137,7 +137,7 @@ merge_weewxconf() {
                 echo saving distribution config file as $cfgfile-$NEWVER
                 cp -p $cfgfile.dist $cfgfile-$NEWVER
                 echo merging previous and distribution into $cfgfile
-                $mergeapp --merge-config --install-dir / --a $cfgfile-$NEWVER --b $cfgfile-$OLDVER --c $cfgfile
+                $setupapp --merge-config --install-dir / --a $cfgfile-$NEWVER --b $cfgfile-$OLDVER --c $cfgfile
             else
                 echo distribution config file is wrong version for merging
             fi
@@ -151,9 +151,39 @@ merge_weewxconf() {
     fi
 }
 
-# get the version number from the specified file, excluding the debian packaging
+# get the version number from the specified file, without the debian revisions
 get_conf_version() {
     echo `grep version $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//'`
+}
+
+# insert/update the driver configuration stanza into the configuration file
+configure_driver() {
+    driver=unknown
+    db_get weewx/station_type
+    if [ "$RET" = "CC3000" ]; then
+        driver=weewx.drivers.cc3000
+    elif [ "$RET" = "FineOffsetUSB" ]; then
+        driver=weewx.drivers.fousb
+    elif [ "$RET" = "TE923" ]; then
+        driver=weewx.drivers.te923
+    elif [ "$RET" = "Ultimeter" ]; then
+        driver=weewx.drivers.ultimeter
+    elif [ "$RET" = "Vantage" ]; then
+        driver=weewx.drivers.vantage
+    elif [ "$RET" = "WMR100" ]; then
+        driver=weewx.drivers.wmr100
+    elif [ "$RET" = "WMR200" ]; then
+        driver=weewx.drivers.wmr200
+    elif [ "$RET" = "WMR9x8" ]; then
+        driver=weewx.drivers.wmr9x8
+    elif [ "$RET" = "WS1" ]; then
+        driver=weewx.drivers.ws1
+    elif [ "$RET" = "WS23xx" ]; then
+        driver=weewx.drivers.ws23xx
+    elif [ "$RET" = "WS28xx" ]; then
+        driver=weewx.drivers.ws28xx
+    fi
+    $setupapp $cfgfile configure --driver=$driver
 }
 
 case "$1" in
@@ -161,8 +191,10 @@ configure)
         if [ "$2" != "" ]; then
             # this is an upgrade so attempt to merge
             merge_weewxconf
+            configure_driver
         else
             # virgin install so insert debconf values into the config file
+            configure_driver
             configure_weewxconf
         fi
 
