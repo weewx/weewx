@@ -851,7 +851,7 @@ Version: 3.0.0 alpha
             <td class='tty'>/etc/weewx/skins/</td>
           </tr>
           <tr>
-            <td>Sqlite databases</td>
+            <td>SQLite databases</td>
           	<td class="symcode">$SQLITE_ROOT</td>
             <td class='tty'>/var/lib/weewx/</td>
           </tr>
@@ -903,7 +903,7 @@ Version: 3.0.0 alpha
             <td class='tty'>/etc/weewx/skins/</td>
           </tr>
           <tr>
-            <td>Sqlite databases</td>
+            <td>SQLite databases</td>
           	<td class="symcode">$SQLITE_ROOT</td>
             <td class='tty'>/var/lib/weewx/</td>
           </tr>
@@ -960,7 +960,7 @@ Version: 3.0.0 alpha
             <td class='tty'>/home/weewx/skins/</td>
           </tr>
           <tr>
-            <td>Sqlite databases</td>
+            <td>SQLite databases</td>
           	<td class="symcode">$SQLITE_ROOT</td>
             <td class='tty'>/home/weewx/archive</td>
           </tr>
@@ -1960,9 +1960,11 @@ longitude = -77.0366</pre>
 
     <h2 class="config_section" id="DataBindings">[DataBindings]</h2>
     <p>
-      This class links a symbolic "data binding," such as <span
-        class="code">wx_binding</span>, to a database in the section 
-        <a href="#Databases"><span class="code">[Databases]</span></a> below.
+      A "data binding" associates storage characteristics with a specific
+      database.  Each binding contains a database from the
+      <a href="#Databases"><span class='code'>[Databases]</span></a>
+      section plus parameters such as schema, table name, and mechanism
+      for aggregating data.
     </p>
 
     <h3 class="config_section" id="wx_binding">[[wx_binding]]</h3>
@@ -1982,9 +1984,9 @@ longitude = -77.0366</pre>
     <p class="config_important">database</p>
     <p>
       The actual database to be used &mdash; it should match one of the
-      sections in <a href="#Databases"><span class="code">[Databases]</span></a>, below.
+      sections in <a href="#Databases"><span class="code">[Databases]</span></a>.
       Should you decide to use a MySQL database, instead of the default
-      sqlite database, this is the place to change it. Required.
+      SQLite database, this is the place to change it. Required.
     </p>
     <p class="config_option">table_name</p>
     <p>
@@ -1996,7 +1998,7 @@ longitude = -77.0366</pre>
     <p>
       The name of the class to be used to manage the table. Optional.
       Default is class <span class="code">weewx.wxmanager.WXDaySummaryManager</span>.
-      This class offers stores daily summaries in the database, and a
+      This class stores daily summaries in the database, and a
       few types, such as heating- and cooling-degree days, appropriate
       for weather. Normally, this does not need to be changed.
     </p>
@@ -2011,22 +2013,21 @@ longitude = -77.0366</pre>
 
     <h2 class="config_section" id="Databases">[Databases]</h2>
     <p>This section lists actual databases. The name of each database is 
-      given in double brackets below (for example, <span class="code">[[archive_sqlite]]</span>). 
-      The details of the binding follow. You are free to add new bindings.</p>
-    <p>Note that if you choose the <a href="http://www.mysql.com/">MySQL</a> database 
-      it is assumed that you know how to administer it. In particular, you will have 
-      to set up a user with appropriate privileges to create and update the named 
-      databases.</p>
+      given in double brackets, for example,
+      <span class="code">[[archive_sqlite]]</span>. Each database section
+      contains the parameters necessary to create and manage the database.
+      The number of parameters varies depending on the type of database.</p>
+
     <h3 class="config_section">[[archive_sqlite]]</h3>
     <p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database 
-      engine to store archive data. It is open-source, simple, lightweight, highly 
+      engine to store data. SQLite is open-source, simple, lightweight, highly 
       portable, and memory efficient. For most purposes it serves nicely.</p>
     <p class="config_option">database_name</p>
-    <p>The path to the archive sqlite file. A relative path is relative to
+    <p>The path to the SQLite file. A relative path is relative to
       <span class="symcode">$SQLITE_ROOT</span>. Required.</p>
     <p class="config_option" id='archive_timeout'>timeout</p>
     <p>When the database is accessed by multiple threads and one of those threads
-      modifies the database, the Sqlite database is locked until that transaction
+      modifies the database, the SQLite database is locked until that transaction
       is completed. The <span class='code'>timeout</span> option specifies how long
       other threads should wait for the lock to go away before raising an exception.
       The default is 5 seconds.</p>
@@ -2038,16 +2039,20 @@ longitude = -77.0366</pre>
       (autocommit).</p>
 
     <h3 class="config_section">[[archive_mysql]]</h3>
-    <p>This definition uses the MySQL database engine to store archive data.
+    <p>This definition uses the MySQL database engine to store data.
       It is free, highly-scalable, but more complicated to administer. </p>
+    <p>Note that if you choose the <a href="http://www.mysql.com/">MySQL</a>
+      database it is assumed that you know how to administer it. In particular,
+      you will have to set up a user with appropriate create and modify
+      privileges.</p>
     <p class="config_option">host</p>
-    <p>The host the archive database is located on. Default is <span class="code">localhost</span>.</p>
+    <p>The name of the server on which the database is located. Default is <span class="code">localhost</span>.</p>
     <p class="config_option">user</p>
     <p>The user name to be used to log into the server. Required.</p>
     <p class="config_option">password</p>
     <p>The password. Required.</p>
     <p class="config_option">database_name</p>
-    <p>The name of the archive database inside the server. Required.</p>
+    <p>The name of the database. Required.</p>
 
     <h2 class="config_section">[Engines]</h2>
     <p>This section is used to configure the internal service engine in
@@ -2826,10 +2831,10 @@ wind_gust_max_time: None</p>
 
     <h1 id="configuring_mysql">Configuring MySQL</h1>
     <p>This section applies only to those who wish to use the MySQL
-      database, instead of the default sqlite database.</p>
+      database, instead of the default SQLite database.</p>
     <p>
       First, you should change your <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a>
-      section to point to MySQL, instead of sqlite. After the change, it
+      section to point to MySQL, instead of SQLite. After the change, it
       will look something like this (change <span class="highlight">highlighted</span>):
     </p>
     <pre class="tty">
@@ -3000,7 +3005,7 @@ sudo /etc/init.d/weewx restart</pre>
 
     <h1 id="wview_compatibility">Compatibility with <span class="code">wview</span></h1>
     <h2>sqlite3</h2>
-    <p>The sqlite3 archive database used by <span class="code">weewx</span>
+    <p>The SQLite archive database used by <span class="code">weewx</span>
       (nominally, <span class="code">weewx.sdb</span>) is completely
       compatible with the database used by
       <a href="http://www.wviewweather.com">wview</a> (usually called
@@ -3009,7 +3014,7 @@ sudo /etc/init.d/weewx restart</pre>
     </p>
     <p>If you have data from <span class='code'>wview</span>, you can
       'import' them into <span class='code'>weewx</span> by simply copying the 
-	sqlite database
+	SQLite database
       file.  Assuming that the <span class='code'>wview</span> data are in file <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
     <p class='tty'>sudo /etc/init.d/weewx stop
 cd <span class="symcode">$SQLITE_ROOT</span>
@@ -3120,7 +3125,7 @@ sudo /etc/init.d/apache2 restart</p>
     <h2>Weather data</h2> 
     <p>
       Meteorological data are saved in the
-      archive database.  For a Sqlite
+      archive database.  For a SQLite
       configuration, simply save the <span class='code'>weewx.sdb</span>
       file.  For a MySQL configuration, save a dump of the archive database.
     </p>
@@ -3662,7 +3667,7 @@ sqlite&gt; update archive set outTemp=NULL where outTemp &gt; 1000;</pre></li>
     </ol>
 
     <h3>'Database is locked' error</h3>
-    <p>This seems to be a problem with the Raspberry Pi, <strong>when using sqlite</strong>.
+    <p>This seems to be a problem with the Raspberry Pi, <strong>when using SQLite</strong>.
       There is no analogous problem with MySQL databases. You will see errors in the system log that
       looks like this:</p>
     <pre class='tty'>
@@ -3677,7 +3682,7 @@ Feb 12 07:11:06 rpi weewx[20930]:         ****    File "/usr/share/weewx/weedb/s
 Feb 12 07:11:06 rpi weewx[20930]:         ****      raise weedb.OperationalError(e)
 <span class='highlight'>Feb 12 07:11:06 rpi weewx[20930]:         ****  OperationalError: database is locked</span></pre>
     <p>We are still trying to decipher exactly what the problem is, but it seems that 
-      (many? most? all?) implementations of the sqlite 'C' access libraries on the RPi
+      (many? most? all?) implementations of the SQLite 'C' access libraries on the RPi
       sleep for a full second if they find the database locked. This gives them only
       five chances within the 5 second timeout period before an exception is raised.</p>
     <p>Not all Raspberry Pis have this problem. It seems to be most acute when running big
@@ -3692,10 +3697,10 @@ Feb 12 07:11:06 rpi weewx[20930]:         ****      raise weedb.OperationalError
     <p>None of these 'fixes' are very satisfying and we're trying to come up with a more robust solution.</p>
 
     <h3>Strings in the database</h3>
-    <p>If you modify the sqlite archive database using an editing tool,
+    <p>If you modify the SQLite archive database using an editing tool,
       occasionally strings will get embedded in it, causing
       <span class='code'>weewx</span> to raise
-      an exception. <strong>This is only a problem with sqlite</strong>.
+      an exception. <strong>This is only a problem with SQLite</strong>.
       There is no analogous problem with MySQL databases. You will see errors in the system log that
       look something like this:</p>
     <pre class='tty'>
@@ -3734,7 +3739,7 @@ sudo easy_install pysqlite
 sudo easy_install PIL</pre>
     <p>Various possible complications:</p>
     <ul>
-      <li>You may have to install the development environment of sqlite in
+      <li>You may have to install the development environment of SQLite in
 	order to get <span class='code'>pysqlite</span> to install. This worked on my system:
 <pre class="tty">
 apt-get install libsqlite3-dev</pre>
@@ -3936,7 +3941,7 @@ sudo fc-cache -f -v</pre>
       <tr>
 	<td class="text_highlight">db_dict</td>
 	<td>A dictionary with all the data necessary to bind to a database. 
-	  An example for sqlite would be <span class="code">
+	  An example for SQLite would be <span class="code">
             {'driver':'db.sqlite',
             'root':'/home/weewx',
             'database_name':'archive/weewx.sdb'}</span>, 
