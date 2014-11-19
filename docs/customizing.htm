@@ -771,24 +771,19 @@ $month.outTemp.max</pre>
       for an example where this happened.</p> 
 
     <h3 id="general_aggregation_periods">Aggregation periods</h3>
-    <p>
-      Each of the time periods <span class='code'>$day</span>,
-      <span class='code'>$week</span>, <span class='code'>$month</span>,
-      <span class='code'>$year</span>, and <span class='code'>$rainyear</span>
-      represents an <em>aggregation over time</em>. In
-      addition to the time period over which the aggregation will occur, they
-      also require an <em>aggregation type</em>. An example would be the week's
-      total precipitation (where the aggregation type is <span class="code">sum</span>):
-    </p>
+
+    <p>A dot code such as</p> 
     <pre class="tty">$week.rain.sum</pre>
+    <p>represents an <em>aggregation over time</em>, using a certain <em>aggregation type</em>. 
+    In this example, the aggregation time is a week, and the aggregation type is summation.
+    So, this tag represents the total rainfall over a week.
+    </p>
     <p>The most general dot code for an aggregation over time looks like:</p>
     <pre class="tty">$<em>period</em>($data_binding=<em>binding_name</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
     <p>Where:</p>
     <p class="indent">
       <span class="code">period</span> is the time period over which
-      the aggregation is to be done. Possible choices are <span class="code">day</span>,
-      <span class="code">week</span>, <span class="code">month</span>, <span
-        class="code">year</span>, and <span class="code">rainyear</span>.
+      the aggregation is to be done. Possible choices are listed in a table below.
     </p>
     <p class="indent">
       <span class="code">binding_name</span> is a <em>binding name</em>
@@ -825,7 +820,55 @@ $month.outTemp.max</pre>
     </p>
 
 
-
+    <p>
+      There are several different <em>aggregation periods</em> that can be used:
+    </p>
+    <table class="indent" style="width:80%">
+      <tbody>
+        <tr class="first_row">
+          <td><i>Aggregation period</i></td>
+          <td>Example</td>
+          <td>Meaning</td>
+        </tr>
+        <tr>
+          <td class="first_col code">$day</td>
+          <td class="code">$day.outTemp.max</td>
+          <td>Max temperature since midnight today.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">$days_ago($days_ago=<i>x</i>)</td>
+          <td class="code">$days_ago($days_ago=2).outTemp.avg</td>
+          <td>The average temperature day before yesterday (2 days ago).</td>
+        </tr>
+        <tr>
+          <td class="first_col code">$yesterday</td>
+          <td class="code">$yesterday.outTemp.maxtime</td>
+          <td>The time of yesterday's maximum temperature.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">$week</td>
+          <td class="code">$week.outTemp.max</td>
+          <td>This week's max temperature. The start of the week is set by option 
+          <a href="usersguide.htm#week_start"><span class="code">week_start</span></a></td>
+        </tr>
+        <tr>
+          <td class="first_col code">$month</td>
+          <td class="code">$month.outTemp.min</td>
+          <td>The minimum temperature since the start of the month.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">$year</td>
+          <td class="code">$year.outTemp.max</td>
+          <td>The max temperature since the start of the year.</td>
+        </tr>
+        <tr>
+          <td class="first_col code">$rainyear</td>
+          <td class="code">$rainyear.rain.sum</td>
+          <td>The total rainfall for this rain year. The start of the rain year is
+          set by option <a href="usersguide.htm#rain_year_start"><span class="code">rain_year_start</span></a>.</td>
+        </tr>
+      </tbody>
+    </table>  
     <h3 id="unit_conversion_options">Unit conversion options</h3>
       <p>The tag <span class="code">optional_unit_conversion</span>
         can be used with either current observations or aggregations. If

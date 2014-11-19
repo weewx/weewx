@@ -84,6 +84,14 @@ class TimeBinder(object):
                               self.db_lookup, data_binding=data_binding, 
                               context='day', formatter=self.formatter, converter=self.converter,
                               **self.option_dict)
+    def yesterday(self, data_binding=None):
+        return self.days_ago(data_binding, days_ago=1)
+    
+    def days_ago(self, data_binding=None, days_ago=0):
+        return TimespanBinder(weeutil.weeutil.archiveDaysAgoSpan(self.report_time, days_ago=days_ago), 
+                              self.db_lookup, data_binding=data_binding, 
+                              context='day', formatter=self.formatter, converter=self.converter,
+                              **self.option_dict)
     def week(self, data_binding=None):
         week_start = to_int(self.option_dict.get('week_start', 6))
         return TimespanBinder(weeutil.weeutil.archiveWeekSpan(self.report_time, week_start),

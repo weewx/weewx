@@ -343,6 +343,42 @@
 
   <hr/>
   
+  <h1>Tests for tag \$yesterday</h1>
+  <table>
+    <tr>
+        <td>Start of yesterday:</td>
+        <td>$yesterday.dateTime.format("%x %X")</td>
+    </tr>
+    <tr>
+        <td>Start of yesterday (unix epoch time):</td>
+        <td>$yesterday.dateTime.raw</td>
+    </tr>
+    <tr>
+      <td>Max Temperature yesterday</td>
+      <td>$yesterday.outTemp.max</td>
+    </tr>
+    <tr>
+      <td>Min Temperature yesterday</td>
+      <td>$yesterday.outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Time of max temperature yesterday:</td>
+      <td>$yesterday.outTemp.maxtime</td>
+    </tr>
+    <tr>
+      <td>Time of min temperature yesterday:</td>
+      <td>$yesterday.outTemp.mintime</td>
+    </tr>
+    <tr>
+      <td>Yesterday's last temperature</td>
+      <td>$yesterday.outTemp.last</td>
+    </tr>
+    <tr>
+      <td>Time of yesterday's last temperature</td>
+      <td>$yesterday.outTemp.lasttime.format("%x %X")</td>
+    </tr>  
+  </table>
+  
   <h1>Tests for tag \$rainyear</h1>
   <table>
     <tr>

@@ -411,6 +411,24 @@ def intervalgen(start_ts, stop_ts, interval):
                 last_stamp1 = stamp1
             dt1 = dt2
 
+def archiveDaysAgoSpan(time_ts, days_ago=0, grace=1):
+    """Returns a TimeSpan for x days ago
+    
+    Example:
+    >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+    >>> print archiveDaysAgoSpan(time_ts, days_ago=2)
+    [2013-07-02 00:00:00 PDT (1372748400) -> 2013-07-03 00:00:00 PDT (1372834800)]
+    >>> time_ts = time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))
+    >>> print archiveDaysAgoSpan(time_ts, days_ago=2)
+    [2013-07-01 00:00:00 PDT (1372662000) -> 2013-07-02 00:00:00 PDT (1372748400)]
+    """
+    if time_ts is None:
+        return None
+    time_ts -= grace
+    _day_date = datetime.date.fromtimestamp(time_ts)
+    _day_ord = _day_date.toordinal()
+    return TimeSpan(_ord_to_ts(_day_ord - days_ago), _ord_to_ts(_day_ord - days_ago + 1))
+
 def archiveDaySpan(time_ts, grace=1):
     """Returns a TimeSpan representing a day that includes a given time.
     
@@ -432,12 +450,7 @@ def archiveDaySpan(time_ts, grace=1):
     returns: A TimeSpan object one day long that contains time_ts. It
     will begin and end at midnight.
     """
-    if time_ts is None:
-        return None
-    time_ts -= grace
-    _day_date = datetime.date.fromtimestamp(time_ts)
-    _day_ord = _day_date.toordinal()
-    return TimeSpan(_ord_to_ts(_day_ord), _ord_to_ts(_day_ord + 1))
+    return archiveDaysAgoSpan(time_ts, days_ago=0, grace=grace)
 
 def archiveWeekSpan(time_ts, startOfWeek=6, grace=1):
     """Returns a TimeSpan representing a week that includes a given time.

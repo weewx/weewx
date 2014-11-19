@@ -12,9 +12,9 @@ Skins and skin.conf continue to be 100% backwards compatible (since
 V1.5!).  However, search-list extensions will have to get
 rewritten. Details in the Upgrading Guide.
 
-Your configuration file, weewx.conf should be updated to V3. But,
-after the upgrade, check it over. Not sure we got everything correct.
-See the Upgrading Guide.
+Your configuration file, weewx.conf should be automatically updated
+to V3 by the upgrade process. But, check it over. Not sure we got
+everything correct. See the Upgrading Guide.
 
 Total rewrite of how data gets bound to a database. You now specify a
 "data binding" to indicate where data should be going, and where it is
@@ -32,6 +32,13 @@ Allow syntax such as $trend($time_delta=3600).barometer
 Introduced a new tag $latest, which uses the last available timestamp
 in a data binding (which may not be the same as the "current"
 timestamp).
+
+Introduced a new tag $days_ago, which returns the stats for X days ago.
+So, the max temperature the day before yesterday would be 
+$days_ago($days_ago=2).outTemp.max.
+
+Included a shortcut $yesterday: The tag $yesterday.outTemp.max would be
+yesterday's max temperature.
 
 Introduced a new aggregation type ".last", which returns the last
 value in an aggregation interval. E.g., $week.outTemp.last would
