@@ -853,11 +853,12 @@ def get_schema(binding_dict, default_schema='schemas.wview.schema'):
     if schema_name is None:
         schema = None
     elif isinstance(schema_name, str):
+        # Schema is a string, with the name of the schema object
         schema = weeutil.weeutil._get_object(schema_name)
     else:
-        schema = []
-        for k in binding_dict['schema']:
-            schema.append((k, binding_dict['schema'][k]))
+        # Schema is a ConfigObj section (that is, a dictionary). Retrieve the
+        # elements of the schema
+        schema = [(col_name, binding_dict['schema'][col_name]) for col_name in binding_dict['schema']]
     return schema
 
 def open_database(config_dict, data_binding, initialize=False):
