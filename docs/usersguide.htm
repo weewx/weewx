@@ -2019,7 +2019,7 @@ longitude = -77.0366</pre>
       The number of parameters varies depending on the type of database.</p>
 
     <h3 class="config_section">[[archive_sqlite]]</h3>
-    <p>This definition uses the <a href="http://sqlite.org/">sqlite</a> database 
+    <p>This definition uses the <a href="http://sqlite.org/">SQLite</a> database 
       engine to store data. SQLite is open-source, simple, lightweight, highly 
       portable, and memory efficient. For most purposes it serves nicely.</p>
     <p class="config_option">database_name</p>
@@ -2731,15 +2731,23 @@ Mutating actions will request confirmation before proceeding.</p>
     <h3>Pairing</h3>
     <p>The console and transceiver must be paired.  Pairing ensures that your
       transceiver is talking to your console, not your neighbor's console.
-      Pairing should only have to be done once.  You might have to pair again
-      after power cycling the console, for example when you replace the
-      batteries.</p>
+      Pairing should only have to be done once, although you might have to
+      pair again after power cycling the console, for example after you replace
+      the batteries.</p>
     <p>There are two ways to pair the console and the transceiver:</p>
     <ol>
-      <li><strong>The Weewx way.</strong>  With <span class="code">weewx</span>
-        running, press and hold the [v] button on the console until you see
+      <li><strong>The Weewx way.</strong>  Be sure that
+        <span class='code'>weewx</span> is not running.
+        Run the configuration utility,
+        press and hold the [v] button on the console until you see
         'PC' in the display, then release the button.  If the console pairs
-        with the transceiver, 'PC' will go away within a second or two.</li>
+        with the transceiver, 'PC' will go away within a second or two.
+        <p class='tty'>wee_config_device --pair
+
+Pairing transceiver with console...
+Press and hold the [v] key until "PC" appears (attempt 1 of 3)
+Transceiver is paired to console</p>
+      </li>
       <li><strong>The HeavyWeather way.</strong>  Follow the pairing
         instructions that came with the station.  You will have to run
         HeavyWeather on a windows computer with the USB transceiver.  After

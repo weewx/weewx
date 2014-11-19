@@ -146,6 +146,8 @@ Version: 3.0.0 alpha
         which sends an email when an arbitrary expression evaluates <span class="code">True</span>.
         These advanced topics are covered later in the section <em><a href="#service_engine">Customizing
             the weewx service engine</a></em>. </p>
+
+
       <h2>The standard reporting service, <span class="code">StdReport</span></h2>
       <p>For the moment, let us focus on the last service, <span class="code">weewx.engine.StdReport</span>,
         the standard service for creating reports. This will be what most users
@@ -299,6 +301,31 @@ Version: 3.0.0 alpha
         method. Adjust paths as necessary if you used another method.</p>
       <pre class="tty">cd /home/weewx
 ./bin/wee_reports weewx.conf 1398927600</pre>
+
+    <h2>Where to put customizations</h2>
+      <p>For configuration changes, simply modify the
+        <span class="code">weewx</span> configuration file
+        <span class="code">weewx.conf</span>, and possibly modify the
+        skin configuration file <span class="code">skin.conf</span> as
+        described later in this document.  These files and template files
+        in the <span class='code'>skins</span> directory will be preserved
+        when you upgrade.</p>
+      <p>Other customizations require new Python code or modifications of
+        example code. Where should you put the code? If you simply modify
+        the examples in place, then your changes will be overwritten the
+        next time you do an upgrade.</p>
+      <p>A better idea is to put the code in the
+        <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>,
+        directory. For example, copy example code from the
+        <span class="code">examples</span> directory to the
+        <span class="code">user</span> directory, then modify it
+        there.  If your modification does not contain much code,
+        consider putting it in the
+        file <span class="code">extensions.py</span> in the
+        <span class="code">user</span> directory.  Because
+        the <span class="code">user</span> directory is preserved
+        through upgrades, you won't have to redo any changes you might
+        have made.</p>
     
     <h2>The database</h2>
     <p>
@@ -446,7 +473,7 @@ Version: 3.0.0 alpha
     </p>
     <p>
       An additional complication is that <span class="code">weewx</span> can use
-      more than one database implementation: sqlite or MySQL. Making
+      more than one database implementation: SQLite or MySQL. Making
       users specify in the templates not only which database to use,
       but also which implementation, would be unreasonable.
     </p>
@@ -467,29 +494,27 @@ Version: 3.0.0 alpha
       have to specify it explicitly.
     </p>
 
-    <h2>Where to put customizations</h2>
-      <p>For configuration changes, simply modify the
-        <span class="code">weewx</span> configuration file
-        <span class="code">weewx.conf</span>, and possibly modify the
-        skin configuration file <span class="code">skin.conf</span> as
-        described later in this document.  These files will be preserved
-        when you upgrade.</p>
-      <p>Other customizations require new Python code or modifications of
-        example code. Where should you put the code? If you simply modify
-        the examples in place, then your changes will be overwritten the
-        next time you do an upgrade.</p>
-      <p>A better idea is to put the code in the
-        <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>,
-        directory. For example, copy example code from the
-        <span class="code">examples</span> directory to the
-        <span class="code">user</span> directory, then modify it
-        there.  If your modification does not contain much code,
-        consider putting it in the
-        file <span class="code">extensions.py</span> in the
-        <span class="code">user</span> directory.  Because
-        the <span class="code">user</span> directory is preserved
-        through upgrades, you won't have to redo any changes you might
-        have made.</p>
+    <h3>Programming interface</h3>
+    <p><span class='code'>weewx</span> includes a module called
+      <span class='code'>weedb</span> that provides a single interface for
+      many of the differences between database implementations such as SQLite
+      and MySQL.  However, it is not uncommon to make direct SQL queries
+      within services or search list extensions.  In such cases, the SQL
+      should be generic so that it will work with every type of database.</p>
+    <p>The database manager class provides methods to create, open, and
+      query a database.  These are the canonical forms for obtaining a
+      database manager.</p>
+    <p>If you are opening a database from within a weewx service:</p>
+    <p class='tty'>self.dbm = self.engine.dbbinder.get_database(data_binding='name_of_binding', initialize=True)
+self.dbm.backfill_day_summary()   # If necessary</p>
+    <p>If opening a database from somewhere other than a service, and there
+      is no DBBinder available:</p>
+    <p class='tty'>self.dbm = weewx.manager.open_database(config_dict, data_binding='name_of_binding', initialize=True)
+self.dbm.backfill_day_summary()   # If necessary</p>
+    <p>The DBBinder caches managers, and thus database connections.  Beware
+      of using a single manager in two different threads; if you do this
+      with a SQLite database, the queries will fail.</p>
+
 
       <h1 id="customizing_reports">Customizing reports</h1>
       <p>This section discusses the two general strategies for customizing
@@ -2180,13 +2205,13 @@ class MyXSearch(SearchList):                                                 # 1
       It's easy to use more than one database in your reports. Here's an
       example. In my office I have two consoles: a VantagePro2 connected to a
       Dell Optiplex, and a WMR100N, connected to a Raspberry Pi. Each is
-      running <span class="code">weewx</span>. The Dell is using sqlite, the
+      running <span class="code">weewx</span>. The Dell is using SQLite, the
       RPi, MySQL.
     </p>
     <p>Suppose I wish to compare the inside temperatures of the two
       consoles. How would I do that?</p>
     <p>
-      It's easier to access MySQL across a network than sqlite, so let's run the
+      It's easier to access MySQL across a network than SQLite, so let's run the
       reports on the Dell, but access the RPi's MySQL database remotely. Here's
       how the bindings and database sections of <span class="code">weewx.conf</span>
       would look on the Dell:
@@ -3479,7 +3504,7 @@ class MyAlarm(StdService):
         type to your database, or change its unit system. This section shows you
         how to do this, using the utility <span class="symcode">$BIN_ROOT</span><span
           class="code">/wee_config_database</span>.</p>
-      <p>This utility also has the ability to check a sqlite version of the archive
+      <p>This utility also has the ability to check a SQLite version of the archive
         database for embedded strings (where a float is expected).</p>
       <p>Before starting, it's worth running the utility with the <span class="code">--help</span>
         flag to see how it is used:</p>
@@ -3665,7 +3690,7 @@ schema_with_electricity = schemas.wview.wview + [('electricity', 'REAL')]</pre>
         <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
         <p>
           This will create a new database (nominally, <span class="code">weewx.sdb_new</span>
-          if you are using sqlite, <span class="code">weewx_new</span> if you
+          if you are using SQLite, <span class="code">weewx_new</span> if you
           are using MySQL) using the new schema and populate it with data from
           the old database.
         </p>
@@ -3684,7 +3709,7 @@ schema_with_electricity = schemas.wview.wview + [('electricity', 'REAL')]</pre>
           the same name as the old database, or edit <span class="code">weewx.conf</span>
           to use the new database name. To do the former:
         </p>
-        <p>For sqlite:</p> <pre class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
+        <p>For SQLite:</p> <pre class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
 mv weewx.sdb_new weewx.sdb</pre>
         <p>For MySQL:</p> <pre class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
 <span class="prompt">mysql&gt;</span> DROP DATABASE weewx;   # Delete the old database
@@ -3822,7 +3847,7 @@ mv weewx.sdb_new weewx.sdb</pre>
         <p>
           This will create a new database (nominally,
           <span class="code">weewx.sdb_new</span>
-          if you are using sqlite, <span class="code">weewx_new</span> if you
+          if you are using SQLite, <span class="code">weewx_new</span> if you
           are using MySQL), using the schema found in
           <span class="symcode">$BIN_ROOT</span><span class="code">/user/schemas.py</span>, and populate it with data from
           the old database, while performing the unit conversion.
@@ -3842,7 +3867,7 @@ mv weewx.sdb_new weewx.sdb</pre>
           the same name as the old database, or edit <span class="code">weewx.conf</span>
           to use the new database name. To do the former:
         </p>
-        <p>For sqlite:</p> <pre class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
+        <p>For SQLite:</p> <pre class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
 mv weewx.sdb_new weewx.sdb</pre>
         <p>For MySQL:</p> <pre class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
 <span class="prompt">mysql&gt;</span> DROP DATABASE weewx;   # Delete the old database
