@@ -242,6 +242,11 @@ def confeditor_loader():
     return FOUSBConfEditor()
 
 
+# flags for enabling/disabling debug verbosity
+DEBUG_SYNC = 0
+DEBUG_RAIN = 0
+
+
 def stash(slist, s):
     if s.find('settings') != -1:
         slist['settings'].append(s)
@@ -695,10 +700,9 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
     packet['rain'] = weewx.wxformulas.calculate_rain(total, last_rain)
 
     # report rainfall in log to diagnose rain counter issues
-    if weewx.debug:
-        if packet['rain'] is not None and packet['rain'] > 0:
-            logdbg('got rainfall of %.2f cm (new: %.2f old: %.2f)' %
-                   (packet['rain'], packet['rainTotal'], last_rain))
+    if DEBUG_RAIN and packet['rain'] is not None and packet['rain'] > 0:
+        logdbg('got rainfall of %.2f cm (new: %.2f old: %.2f)' %
+               (packet['rain'], packet['rainTotal'], last_rain))
 
     return packet
 
@@ -966,6 +970,11 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         self._last_magic = None
 
         # FIXME: get last_rain_arc and last_rain_ts_arc from database
+
+        global DEBUG_SYNC
+        DEBUG_SYNC = int(stn_dict.get('debug_sync', 0))
+        global DEBUG_RAIN
+        DEBUG_RAIN = int(stn_dict.get('debug_rain', 0))
 
         loginf('driver version is %s' % DRIVER_VERSION)
         if self.pc_hub is not None:
@@ -1473,7 +1482,8 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             else:
                 pause = self.min_pause
             pause = max(pause, self.min_pause)
-            logdbg('delay %s, pause %g' % (str(old_data['delay']), pause))
+            if DEBUG_SYNC:
+                logdbg('delay %s, pause %g' % (str(old_data['delay']), pause))
             time.sleep(pause)
             # get new data
             last_data_time = data_time
@@ -1509,7 +1519,8 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                             self._sensor_clock = None
                     if not self._sensor_clock:
                         self._sensor_clock = data_time
-                        logdbg('setting sensor clock %g' % (data_time % live_interval))
+                        logdbg('setting sensor clock %g' %
+                               (data_time % live_interval))
                     if not next_live:
                         logdbg('live synchronised')
                     next_live = data_time
