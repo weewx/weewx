@@ -14,6 +14,7 @@ import syslog
 
 import weewx
 import weeutil.weeutil
+from weeutil.weeutil import ListOfDicts
 
 class UnknownType(object):
     """Indicates that the observation type is unknown."""
@@ -29,95 +30,71 @@ unit_nicknames = {weewx.US       : 'US',
                   weewx.METRICWX : 'METRICWX'}
 
 # This data structure maps observation types to a "unit group"
-std_obs_group_dict = {"altitude"           : "group_altitude",
-                      "cooldeg"            : "group_degree_day",
-                      "heatdeg"            : "group_degree_day",
-                      "gustdir"            : "group_direction",
-                      "vecdir"             : "group_direction",
-                      "windDir"            : "group_direction",
-                      "windGustDir"        : "group_direction",
-                      "interval"           : "group_interval",
-                      "soilMoist1"         : "group_moisture",
-                      "soilMoist2"         : "group_moisture",
-                      "soilMoist3"         : "group_moisture",
-                      "soilMoist4"         : "group_moisture",
-                      "extraHumid1"        : "group_percent",
-                      "extraHumid2"        : "group_percent",
-                      "inHumidity"         : "group_percent",
-                      "outHumidity"        : "group_percent",
-                      "rxCheckPercent"     : "group_percent",
-                      "altimeter"          : "group_pressure",
-                      "barometer"          : "group_pressure",
-                      "pressure"           : "group_pressure",
-                      "radiation"          : "group_radiation",
-                      "ET"                 : "group_rain",
-                      "dayRain"            : "group_rain",
-                      "hail"               : "group_rain",
-                      "hourRain"           : "group_rain",
-                      "monthRain"          : "group_rain",
-                      "rain"               : "group_rain",
-                      "snow"               : "group_rain",
-                      "rain24"             : "group_rain",
-                      "totalRain"          : "group_rain",
-                      "stormRain"          : "group_rain",
-                      "yearRain"           : "group_rain",
-                      "hailRate"           : "group_rainrate",
-                      "rainRate"           : "group_rainrate",
-                      "wind"               : "group_speed",
-                      "windGust"           : "group_speed",
-                      "windSpeed"          : "group_speed",
-                      "windSpeed10"        : "group_speed",
-                      "windgustvec"        : "group_speed",
-                      "windvec"            : "group_speed",
-                      "rms"                : "group_speed2",
-                      "vecavg"             : "group_speed2",
-                      "dewpoint"           : "group_temperature",
-                      "extraTemp1"         : "group_temperature",
-                      "extraTemp2"         : "group_temperature",
-                      "extraTemp3"         : "group_temperature",
-                      "heatindex"          : "group_temperature",
-                      "heatingTemp"        : "group_temperature",
-                      "inTemp"             : "group_temperature",
-                      "leafTemp1"          : "group_temperature",
-                      "leafTemp2"          : "group_temperature",
-                      "outTemp"            : "group_temperature",
-                      "soilTemp1"          : "group_temperature",
-                      "soilTemp2"          : "group_temperature",
-                      "soilTemp3"          : "group_temperature",
-                      "soilTemp4"          : "group_temperature",
-                      "windchill"          : "group_temperature",
-                      "dateTime"           : "group_time",
-                      "UV"                 : "group_uv",
-                      "consBatteryVoltage" : "group_volt",
-                      "heatingVoltage"     : "group_volt",
-                      "referenceVoltage"   : "group_volt",
-                      "supplyVoltage"      : "group_volt"}
-
-class ObsGroupDict(object):
-    """A list of dictionaries, that are searched in order.
-    
-    It assumes only that any inserted dictionaries support a keyed
-    lookup using the syntax obs[key]."""
-    def __init__(self, starting_dict=None):
-        self.obs_group_dict_list = [starting_dict] if starting_dict else []
-    def __getitem__(self, obs):
-        for obs_group_dict in self.obs_group_dict_list:
-            try:
-                return obs_group_dict[obs]
-            except KeyError:
-                pass
-        raise KeyError(obs)
-    def get(self, obs, default=None):
-        try:
-            return self[obs]
-        except KeyError:
-            return default
-    def extend(self, new_dict):
-        self.obs_group_dict_list.insert(0, new_dict)
-
-# We start with the standard object group dictionary, but users are
+# We start with a standard object group dictionary, but users are
 # free to extend it:
-obs_group_dict = ObsGroupDict(std_obs_group_dict)
+obs_group_dict = ListOfDicts({"altitude"           : "group_altitude",
+                              "cooldeg"            : "group_degree_day",
+                              "heatdeg"            : "group_degree_day",
+                              "gustdir"            : "group_direction",
+                              "vecdir"             : "group_direction",
+                              "windDir"            : "group_direction",
+                              "windGustDir"        : "group_direction",
+                              "interval"           : "group_interval",
+                              "soilMoist1"         : "group_moisture",
+                              "soilMoist2"         : "group_moisture",
+                              "soilMoist3"         : "group_moisture",
+                              "soilMoist4"         : "group_moisture",
+                              "extraHumid1"        : "group_percent",
+                              "extraHumid2"        : "group_percent",
+                              "inHumidity"         : "group_percent",
+                              "outHumidity"        : "group_percent",
+                              "rxCheckPercent"     : "group_percent",
+                              "altimeter"          : "group_pressure",
+                              "barometer"          : "group_pressure",
+                              "pressure"           : "group_pressure",
+                              "radiation"          : "group_radiation",
+                              "ET"                 : "group_rain",
+                              "dayRain"            : "group_rain",
+                              "hail"               : "group_rain",
+                              "hourRain"           : "group_rain",
+                              "monthRain"          : "group_rain",
+                              "rain"               : "group_rain",
+                              "snow"               : "group_rain",
+                              "rain24"             : "group_rain",
+                              "totalRain"          : "group_rain",
+                              "stormRain"          : "group_rain",
+                              "yearRain"           : "group_rain",
+                              "hailRate"           : "group_rainrate",
+                              "rainRate"           : "group_rainrate",
+                              "wind"               : "group_speed",
+                              "windGust"           : "group_speed",
+                              "windSpeed"          : "group_speed",
+                              "windSpeed10"        : "group_speed",
+                              "windgustvec"        : "group_speed",
+                              "windvec"            : "group_speed",
+                              "rms"                : "group_speed2",
+                              "vecavg"             : "group_speed2",
+                              "dewpoint"           : "group_temperature",
+                              "extraTemp1"         : "group_temperature",
+                              "extraTemp2"         : "group_temperature",
+                              "extraTemp3"         : "group_temperature",
+                              "heatindex"          : "group_temperature",
+                              "heatingTemp"        : "group_temperature",
+                              "inTemp"             : "group_temperature",
+                              "leafTemp1"          : "group_temperature",
+                              "leafTemp2"          : "group_temperature",
+                              "outTemp"            : "group_temperature",
+                              "soilTemp1"          : "group_temperature",
+                              "soilTemp2"          : "group_temperature",
+                              "soilTemp3"          : "group_temperature",
+                              "soilTemp4"          : "group_temperature",
+                              "windchill"          : "group_temperature",
+                              "dateTime"           : "group_time",
+                              "UV"                 : "group_uv",
+                              "consBatteryVoltage" : "group_volt",
+                              "heatingVoltage"     : "group_volt",
+                              "referenceVoltage"   : "group_volt",
+                              "supplyVoltage"      : "group_volt"})
 
 # Some aggregations when applied to a type result in a different unit
 # group. This data structure maps aggregation type to the group:
@@ -137,52 +114,52 @@ agg_group = {'mintime'    : "group_time",
 
 # This dictionary maps unit groups to a standard unit type in the 
 # US customary unit system:
-USUnits     = {"group_altitude"    : "foot",
-               "group_count"       : "count",
-               "group_degree_day"  : "degree_F_day",
-               "group_direction"   : "degree_compass",
-               "group_elapsed"     : "second",
-               "group_interval"    : "minute",
-               "group_moisture"    : "centibar",
-               "group_percent"     : "percent",
-               "group_pressure"    : "inHg",
-               "group_radiation"   : "watt_per_meter_squared",
-               "group_rain"        : "inch",
-               "group_rainrate"    : "inch_per_hour",
-               "group_speed"       : "mile_per_hour",
-               "group_speed2"      : "mile_per_hour2",
-               "group_temperature" : "degree_F",
-               "group_time"        : "unix_epoch",
-               "group_deltatime"   : "second",
-               "group_uv"          : "uv_index",
-               "group_volt"        : "volt"}
+USUnits = ListOfDicts({"group_altitude"    : "foot",
+                       "group_count"       : "count",
+                       "group_degree_day"  : "degree_F_day",
+                       "group_direction"   : "degree_compass",
+                       "group_elapsed"     : "second",
+                       "group_interval"    : "minute",
+                       "group_moisture"    : "centibar",
+                       "group_percent"     : "percent",
+                       "group_pressure"    : "inHg",
+                       "group_radiation"   : "watt_per_meter_squared",
+                       "group_rain"        : "inch",
+                       "group_rainrate"    : "inch_per_hour",
+                       "group_speed"       : "mile_per_hour",
+                       "group_speed2"      : "mile_per_hour2",
+                       "group_temperature" : "degree_F",
+                       "group_time"        : "unix_epoch",
+                       "group_deltatime"   : "second",
+                       "group_uv"          : "uv_index",
+                       "group_volt"        : "volt"})
 
 # This dictionary maps unit groups to a standard unit type in the 
 # metric unit system:
-MetricUnits = {"group_altitude"    : "meter",
-               "group_count"       : "count",
-               "group_degree_day"  : "degree_C_day",
-               "group_direction"   : "degree_compass",
-               "group_elapsed"     : "second",
-               "group_interval"    : "minute",
-               "group_moisture"    : "centibar",
-               "group_percent"     : "percent",
-               "group_pressure"    : "mbar",
-               "group_radiation"   : "watt_per_meter_squared",
-               "group_rain"        : "cm",
-               "group_rainrate"    : "cm_per_hour",
-               "group_speed"       : "km_per_hour",
-               "group_speed2"      : "km_per_hour2",
-               "group_temperature" : "degree_C",
-               "group_time"        : "unix_epoch",
-               "group_deltatime"   : "second",
-               "group_uv"          : "uv_index",
-               "group_volt"        : "volt"}
+MetricUnits = ListOfDicts({"group_altitude"    : "meter",
+                           "group_count"       : "count",
+                           "group_degree_day"  : "degree_C_day",
+                           "group_direction"   : "degree_compass",
+                           "group_elapsed"     : "second",
+                           "group_interval"    : "minute",
+                           "group_moisture"    : "centibar",
+                           "group_percent"     : "percent",
+                           "group_pressure"    : "mbar",
+                           "group_radiation"   : "watt_per_meter_squared",
+                           "group_rain"        : "cm",
+                           "group_rainrate"    : "cm_per_hour",
+                           "group_speed"       : "km_per_hour",
+                           "group_speed2"      : "km_per_hour2",
+                           "group_temperature" : "degree_C",
+                           "group_time"        : "unix_epoch",
+                           "group_deltatime"   : "second",
+                           "group_uv"          : "uv_index",
+                           "group_volt"        : "volt"})
 
 # This dictionary maps unit groups to a standard unit type in the 
 # "Metric WX" unit system. It's the same as the "Metric" system,
 # except for rain and speed:
-MetricWXUnits = dict(MetricUnits)
+MetricWXUnits = ListOfDicts(MetricUnits)
 MetricWXUnits['group_rain']     = "mm"
 MetricWXUnits['group_rainrate'] = "mm_per_hour"
 MetricWXUnits['group_speed']    = "meter_per_second"

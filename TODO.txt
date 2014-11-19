@@ -4,10 +4,19 @@ Quick start guide
 
 Document how to extend the unit system.
  - Or, maybe leave it for a while, to see if we like it?
+ 
+Look at using the same strategy to extend the accumulators.
+
+Have the tags pick whether to do aggregation in the main archive
+table or using the daily summaries on the basis of the start time.
 
 Move schemas to the extension that uses them.
 
 Should the archive file be backed up before adding the daily summaries?
+
+Change how DBBinders are created. (See Email chain between tk & MW)
+
+Similarly, refactor restx to do the same thing.
 
 
 

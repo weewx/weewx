@@ -1051,6 +1051,60 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
 
     return config_fn, config_dict
 
+class ListOfDicts(dict):
+    """A list of dictionaries, that are searched in order.
+    
+    It assumes only that any inserted dictionaries support a keyed
+    lookup using the syntax obj[key].
+    
+    Example:
+
+    # Try an empty dictionary:
+    >>> lod = ListOfDicts()
+    >>> print lod['b']
+    Traceback (most recent call last):
+    KeyError: 'b'
+    >>> # Now initialize it with a starting dictionary:
+    >>> lod = ListOfDicts({'a':1, 'b':2, 'c':3})
+    >>> print lod['b']
+    2
+    >>> # Look for a non-existent key
+    >>> print lod['d']
+    Traceback (most recent call last):
+    KeyError: 'd'
+    >>> # Now extend the dictionary:
+    >>> lod.extend({'d':4, 'e':5})
+    >>> # And try the lookup:
+    >>> print lod['d']
+    4
+    >>> # Explicitly add a new key to the dictionary:
+    >>> lod['f'] = 6
+    >>> # Try it:
+    >>> print lod['f']
+    6
+    """
+    def __init__(self, starting_dict=None):
+        if starting_dict:
+            super(ListOfDicts,self).__init__(starting_dict)
+        self.dict_list = []
+
+    def __getitem__(self, key):
+        for this_dict in self.dict_list:
+            try:
+                return this_dict[key]
+            except KeyError:
+                pass
+        return dict.__getitem__(self, key)
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def extend(self, new_dict):
+        self.dict_list.append(new_dict)
+
 if __name__ == '__main__':
     import doctest
 

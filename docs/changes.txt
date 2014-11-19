@@ -4,9 +4,9 @@ weewx change history
 3.0.0 XX/XX/XX
 
 Big update with lots of changes and lots of new features. The overall
-goal was to make it easier to write extensions. In particular, it
-is now easier for extensions to have their own database, devices, and
-unit systems.
+goal was to make it easier to write extensions. This meant making it
+easier to add custom databases, units, accumulators, and many other
+things.
 
 Skins and skin.conf continue to be 100% backwards compatible (since
 V1.5!).  However, search-list extensions will have to get
