@@ -1022,17 +1022,11 @@ def get_index(idx):
     return idx
 
 def tstr_to_ts(tstr):
-    if tstr is None:
-        return None
     try:
-        ts = int(time.mktime(time.strptime(tstr, "%Y-%m-%d %H:%M:%S")))
-    except OverflowError, ValueError:
-        ts = None
-    return ts
-
-    if tstr is None:
-        return None
-    return int(time.mktime(time.strptime(tstr, "%Y-%m-%d %H:%M:%S")))
+        return int(time.mktime(time.strptime(tstr, "%Y-%m-%d %H:%M:%S")))
+    except OverflowError, ValueError, TypeError:
+        pass
+    return None
 
 def bytes_to_addr(a, b, c):
     return ((((a & 0xF) << 8) | b) << 8) | c
