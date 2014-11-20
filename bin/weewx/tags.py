@@ -79,6 +79,13 @@ class TimeBinder(object):
         return TrendObj(time_delta, time_grace, self.db_lookup, data_binding, self.report_time, 
                  self.formatter, self.converter, **self.option_dict)
 
+    def hours_ago(self, data_binding=None, hours_ago=0):
+        return TimespanBinder(weeutil.weeutil.archiveHoursAgoSpan(self.report_time, hours_ago=hours_ago), 
+                              self.db_lookup, data_binding=data_binding, 
+                              context='day', formatter=self.formatter, converter=self.converter,
+                              **self.option_dict)
+    def hour(self, data_binding=None):
+        return self.hours_ago(data_binding)
     def day(self, data_binding=None):
         return TimespanBinder(weeutil.weeutil.archiveDaySpan(self.report_time), 
                               self.db_lookup, data_binding=data_binding, 
@@ -315,7 +322,8 @@ class ObservationBinder(object):
     def _do_query(self, aggregateType, val=None):
         """Run a query against the databases, using the given aggregation type."""
         db_manager = self.db_lookup(self.data_binding)
-        if aggregateType in ['last', 'lasttime']:
+        if aggregateType in ['last', 'lasttime'] or not weeutil.weeutil.isMidnight(self.timespan.start) \
+                                                 or not weeutil.weeutil.isMidnight(self.timespan.stop):
             result = db_manager.getAggregate(self.timespan, self.obs_type, aggregateType, 
                                              val=val, **self.option_dict)
         else:
@@ -441,33 +449,3 @@ class TrendObj(object):
         return weewx.units.ValueHelper(trend, 'current',
                                        self.formatter,
                                        self.converter)
-
-
-# #===============================================================================
-# #                             Class CurrentRecord
-# #===============================================================================
-# 
-# class CurrentRecord(object):
-#     """Helper class for the "Current" record.
-#     
-#     Unlike class CurrentObj above, this class holds the record internally. It does
-#     not do a database lookup.
-#     """
-#         
-#     def __init__(self, record, formatter, converter, **option_dict):
-#         self.record = record
-#         self.formatter = formatter
-#         self.converter = converter
-#         
-#     def __getattr__(self, obs_type):
-#         """Return the trend for the given observation type."""
-#         # The following is so the Python version of Cheetah's NameMapper
-#         # does not think I'm a dictionary:
-#         if obs_type == 'has_key':
-#             raise AttributeError
-#         
-#         vt = weewx.units.as_value_tuple(self.record, obs_type)
-#         return weewx.units.ValueHelper(vt, 'current',
-#                                        self.formatter,
-#                                        self.converter)
-#         

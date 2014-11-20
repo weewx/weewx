@@ -411,6 +411,47 @@ def intervalgen(start_ts, stop_ts, interval):
                 last_stamp1 = stamp1
             dt1 = dt2
 
+def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
+    """Returns a TimeSpan for x hours ago
+    
+    Example:
+    >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+    >>> print archiveHoursAgoSpan(time_ts, hours_ago=0)
+    [2013-07-04 01:00:00 PDT (1372924800) -> 2013-07-04 02:00:00 PDT (1372928400)]
+    >>> print archiveHoursAgoSpan(time_ts, hours_ago=2)
+    [2013-07-03 23:00:00 PDT (1372917600) -> 2013-07-04 00:00:00 PDT (1372921200)]
+    >>> time_ts = time.mktime(datetime.date(2013,07,04).timetuple())
+    >>> print archiveHoursAgoSpan(time_ts, hours_ago=0)
+    [2013-07-03 23:00:00 PDT (1372917600) -> 2013-07-04 00:00:00 PDT (1372921200)]
+    >>> print archiveHoursAgoSpan(time_ts, hours_ago=24)
+    [2013-07-02 23:00:00 PDT (1372831200) -> 2013-07-03 00:00:00 PDT (1372834800)]
+    """
+    if time_ts is None:
+        return None
+    time_ts -= grace
+    dt = datetime.datetime.fromtimestamp(time_ts)
+    hour_start_dt = dt.replace(minute=0, second=0, microsecond=0)
+    start_span_dt = hour_start_dt - datetime.timedelta(hours=hours_ago)
+    stop_span_dt = start_span_dt + datetime.timedelta(hours=1)
+
+    return TimeSpan(time.mktime(start_span_dt.timetuple()), 
+                    time.mktime(stop_span_dt.timetuple()))
+    
+def isMidnight(time_ts):
+    """Is the indicated time on a midnight boundary, local time?
+    
+    Example:
+    >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+    >>> print isMidnight(time_ts)
+    False
+    >>> time_ts = time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))
+    >>> print isMidnight(time_ts)
+    True
+    """
+    
+    time_tt = time.localtime(time_ts)
+    return time_tt.tm_hour==0 and time_tt.tm_min==0 and time_tt.tm_sec==0
+    
 def archiveDaysAgoSpan(time_ts, days_ago=0, grace=1):
     """Returns a TimeSpan for x days ago
     

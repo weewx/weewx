@@ -33,6 +33,13 @@ Introduced a new tag $latest, which uses the last available timestamp
 in a data binding (which may not be the same as the "current"
 timestamp).
 
+Introduced a new tag $hours_ago, which returns the stats for X hours ago.
+So, the max temperature last hour would be 
+$hours_ago($hours_ago=1).outTemp.max.
+
+Introduced a shortcut $hour, which returns the stats for this hour.
+So, the high temperature for this hour would be $hour.outTemp.max
+
 Introduced a new tag $days_ago, which returns the stats for X days ago.
 So, the max temperature the day before yesterday would be 
 $days_ago($days_ago=2).outTemp.max.

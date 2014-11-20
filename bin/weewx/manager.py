@@ -357,13 +357,23 @@ class Manager(object):
         finally:
             _cursor.close()
             
-    gen_agg_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s "\
-                        "WHERE dateTime > ? AND dateTime <= ?"
-    lasttime_agg_sql = "SELECT MAX(dateTime) FROM %(table_name)s "\
-                        "WHERE dateTime > ? AND dateTime <= ?  AND %(obs_type)s IS NOT NULL"
-    last_agg_sql = "SELECT %(obs_type)s FROM %(table_name)s "\
-                        "WHERE dateTime = (" + lasttime_agg_sql + ")"
-
+    sql_dict = {'mintime' : "SELECT dateTime FROM %(table_name)s "\
+                              "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "\
+                              "%(obs_type)s = (SELECT MIN(%(obs_type)s) FROM %(table_name)s "\
+                              "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
+                'maxtime' : "SELECT dateTime FROM %(table_name)s "\
+                              "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "\
+                              "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s "\
+                              "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
+                'last'    : "SELECT %(obs_type)s FROM %(table_name)s "\
+                              "WHERE dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "\
+                              "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL)",
+                'lasttime': "SELECT MAX(dateTime) FROM %(table_name)s "\
+                              "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL"}
+                            
+    simple_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s "\
+                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_type)s IS NOT NULL"
+                   
     def getAggregate(self, timespan, obs_type, aggregate_type, **option_dict):
         """Returns an aggregation of a statistical type for a given time period.
         
@@ -382,21 +392,19 @@ class Manager(object):
         type is unknown. The second element is the unit type (eg, 'degree_F').
         The third element is the unit group (eg, "group_temperature") """
         
-        if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min', 'last', 'lasttime']:
-            raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
+        if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min', 
+                                  'mintime', 'maxtime', 'last', 'lasttime']:
+            raise weewx.ViolatedPrecondition("Invalid aggregation type '%s'" % aggregate_type)
         
         interpolate_dict = {'aggregate_type' : aggregate_type,
                             'obs_type'       : obs_type,
-                            'table_name'     : self.table_name}
+                            'table_name'     : self.table_name,
+                            'start'          : timespan.start,
+                            'stop'           : timespan.stop}
         
-        if aggregate_type == 'last':
-            select_stmt = Manager.last_agg_sql
-        elif aggregate_type == 'lasttime':
-            select_stmt = Manager.lasttime_agg_sql
-        else:
-            select_stmt = Manager.gen_agg_sql
+        select_stmt = Manager.sql_dict.get(aggregate_type, Manager.simple_sql)
             
-        _row = self.getSql(select_stmt % interpolate_dict, timespan)
+        _row = self.getSql(select_stmt % interpolate_dict)
 
         _result = _row[0] if _row else None
         
@@ -484,7 +492,7 @@ class Manager(object):
                 # in the SQL statement. We'll have to do it in Python.
                 # Do we know how to do it?
                 if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min']:
-                    raise weewx.ViolatedPrecondition, "Aggregation type missing or unknown"
+                    raise weewx.ViolatedPrecondition("Invalid aggregation type" % aggregate_type)
                 
                 # This SQL select string will select the proper wind types
                 sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % \

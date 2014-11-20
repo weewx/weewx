@@ -213,6 +213,52 @@
 
   <hr/>
 
+  <h1>Tests for tag \$hour</h1>
+  <table>
+    <tr>
+        <td>Start of hour:</td>
+        <td>$hour.dateTime.format("%x %X")</td>
+    </tr>
+    <tr>
+        <td>Start of hour (unix epoch time):</td>
+        <td>$hour.dateTime.raw</td>
+    </tr>
+    <tr>
+      <td>Max Temperature</td>
+      <td>$hour.outTemp.max</td>
+    </tr>
+    <tr>
+      <td>Min Temperature</td>
+      <td>$hour.outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Time of max temperature:</td>
+      <td>$hour.outTemp.maxtime</td>
+    </tr>
+    <tr>
+      <td>Time of min temperature:</td>
+      <td>$hour.outTemp.mintime</td>
+    </tr>
+  </table>
+  
+  <h1>Iterate over three hours:</h1>
+  <table>
+    <tr>
+      <td>Start of hour</td>
+      <td>Min temperature</td>
+      <td>When</td>
+    </tr>
+    #for $i in range(3,-1,-1)
+    <tr>
+      <td>$hours_ago($hours_ago=$i).dateTime</td>
+      <td>$hours_ago($hours_ago=$i).outTemp.min</td>
+      <td>$hours_ago($hours_ago=$i).outTemp.mintime</td>
+    </tr>
+    #end for
+  </table>
+  
+  
+  
   <h1>Tests for tag \$day</h1>
   <table>
     <tr>

@@ -819,7 +819,6 @@ $month.outTemp.max</pre>
       <em><a href="#formatting_options">Formatting Options</a></em>.
     </p>
 
-
     <p>
       There are several different <em>aggregation periods</em> that can be used:
     </p>
@@ -831,12 +830,22 @@ $month.outTemp.max</pre>
           <td>Meaning</td>
         </tr>
         <tr>
+          <td class="first_col code">$hours_ago($hours_ago=<i>h</i>)</td>
+          <td class="code">$hours_ago($hours_ago=1).outTemp.avg</td>
+          <td>The average temperature last hour (1 hour ago).</td>
+        </tr>
+        <tr>
+          <td class="first_col code">$hour</td>
+          <td class="code">$hour.outTemp.maxtime</td>
+          <td>The time of the maximum temperature this hour.</td>
+        </tr>
+        <tr>
           <td class="first_col code">$day</td>
           <td class="code">$day.outTemp.max</td>
           <td>Max temperature since midnight today.</td>
         </tr>
         <tr>
-          <td class="first_col code">$days_ago($days_ago=<i>x</i>)</td>
+          <td class="first_col code">$days_ago($days_ago=<i>d</i>)</td>
           <td class="code">$days_ago($days_ago=2).outTemp.avg</td>
           <td>The average temperature day before yesterday (2 days ago).</td>
         </tr>
