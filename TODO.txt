@@ -2,6 +2,12 @@
 
 Quick start guide
 
+The station hardware configuration process could be improved. 
+  - Nowhere is it listed what driver to use.
+  - Docs need to be updated with the new two-step process.
+  - Perhaps the configuration routine could be made interactive? It would
+    scan the "drivers" subdirectory and offer up the choices...
+
 Move schemas to the extension that uses them.
 
 Should the archive file be backed up before adding the daily summaries?
