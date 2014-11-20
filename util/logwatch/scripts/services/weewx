@@ -11,11 +11,11 @@ my %counts;
 my %errors;
 
 # keys for individual counts
-my $STARTUPS = 'wxengine: startups';
-my $HUP_RESTARTS = 'wxengine: restart from HUP';
-my $KBD_INTERRUPTS = 'wxengine: keyboard interrupts';
-my $RESTARTS = 'wxengine: restarts';
-my $GARBAGE = 'wxengine: garbage collected';
+my $STARTUPS = 'engine: startups';
+my $HUP_RESTARTS = 'engine: restart from HUP';
+my $KBD_INTERRUPTS = 'engine: keyboard interrupts';
+my $RESTARTS = 'engine: restarts';
+my $GARBAGE = 'engine: garbage collected';
 my $ARCHIVE_RECORDS_ADDED = 'archive: records added';
 my $IMAGES_GENERATED = 'genimages: images generated';
 my $FILES_GENERATED = 'filegenerator: files generated';
@@ -98,30 +98,31 @@ my $clockcount = 0;
 
 while(defined($_ = <STDIN>)) {
     chomp;
-    if (/wxengine: Starting up weewx version/) {
+    if (/engine: Starting up weewx version/) {
         $counts{$STARTUPS} += 1;
-    } elsif (/wxengine: Received signal HUP/) {
+    } elsif (/engine: Received signal HUP/) {
         $counts{$HUP_RESTARTS} += 1;
-    } elsif (/wxengine: Keyboard interrupt/) {
+    } elsif (/engine: Keyboard interrupt/) {
         $counts{$KBD_INTERRUPTS} += 1;
-    } elsif (/wxengine: retrying/) {
+    } elsif (/engine: retrying/) {
         $counts{$RESTARTS} += 1;
-    } elsif (/wxengine: garbage collected (\d+) objects/) {
+    } elsif (/engine: garbage collected (\d+) objects/) {
         $counts{$GARBAGE} += $1;
-    } elsif (/wxengine: Clock error is ([0-9,.-]+)/) {
+    } elsif (/engine: Clock error is ([0-9,.-]+)/) {
         $clocksum += $1;
         $clockmin = $1 if $1 < $clockmin;
         $clockmax = $1 if $1 > $clockmax;
         $clockcount += 1;
-    } elsif (/archive: added/ || /Archive: added archive record/) {
+    } elsif (/manager: added record/) {
         $counts{$ARCHIVE_RECORDS_ADDED} += 1;
     } elsif (/genimages: Generated (\d+) images/) {
         $counts{$IMAGES_GENERATED} += $1;
     } elsif (/genimages: aggregate interval required for aggregate type/ ||
              /genimages: line type \S+ skipped/) {
         $errors{$_} = $errors{$_} ? $errors{$_} + 1 : 1;
-    } elsif (/filegenerator: generated (\d+)/ ||
-             /cheetahgenerator: generated (\d+)/) {
+    } elsif (/cheetahgenerator: Generated (\d+)/ ||
+             /cheetahgenerator: generated (\d+)/ ||
+             /filegenerator: generated (\d+)/) {
         $counts{$FILES_GENERATED} += $1;
     } elsif (/reportengine: copied (\d+) files/) {
         $counts{$FILES_COPIED} += $1;
@@ -227,32 +228,32 @@ while(defined($_ = <STDIN>)) {
              /\*\*\*\*  \'station\'/ ||
              /\*\*\*\* required parameter \'\'station\'\'/ ||
              /\*\*\*\*  Waiting 60 seconds then retrying/ ||
-             /wxengine: The archive interval in the configuration file/ ||
-             /wxengine: Station does not support reading the time/ ||
-             /wxengine: Starting main packet loop/ ||
-             /wxengine: Shut down StdReport thread/ ||
-             /wxengine: Shut down StdRESTful thread/ ||
-             /wxengine: Loading service/ ||
-             /wxengine: Finished loading service/ ||
-             /wxengine: Using archive interval of/ ||
-             /wxengine: Using archive database/ ||
-             /wxengine: Using configuration file/ ||
-             /wxengine: Using stats database/ ||
-             /wxengine: Using station hardware archive interval/ ||
-             /wxengine: Using config file archive interval of/ ||
-             /wxengine: Record generation will be attempted in/ ||
-             /wxengine: StdConvert target unit is/ ||
-             /wxengine: Data will not be posted to/ ||
-             /wxengine: Data will be posted to / ||
-             /wxengine: Started thread for RESTful upload sites./ ||
-             /wxengine: No RESTful upload sites/ ||
-             /wxengine: Loading station type/ ||
-             /wxengine: Initializing weewx version/ ||
-             /wxengine: Using Python/ ||
-             /wxengine: Terminating weewx version/ ||
-             /wxengine: pid file is / ||
-             /wxengine: Use LOOP data in/ ||
-             /wxengine: Received signal/ ||
+             /engine: The archive interval in the configuration file/ ||
+             /engine: Station does not support reading the time/ ||
+             /engine: Starting main packet loop/ ||
+             /engine: Shut down StdReport thread/ ||
+             /engine: Shut down StdRESTful thread/ ||
+             /engine: Loading service/ ||
+             /engine: Finished loading service/ ||
+             /engine: Using archive interval of/ ||
+             /engine: Using archive database/ ||
+             /engine: Using configuration file/ ||
+             /engine: Using stats database/ ||
+             /engine: Using station hardware archive interval/ ||
+             /engine: Using config file archive interval of/ ||
+             /engine: Record generation will be attempted in/ ||
+             /engine: StdConvert target unit is/ ||
+             /engine: Data will not be posted to/ ||
+             /engine: Data will be posted to / ||
+             /engine: Started thread for RESTful upload sites./ ||
+             /engine: No RESTful upload sites/ ||
+             /engine: Loading station type/ ||
+             /engine: Initializing weewx version/ ||
+             /engine: Using Python/ ||
+             /engine: Terminating weewx version/ ||
+             /engine: pid file is / ||
+             /engine: Use LOOP data in/ ||
+             /engine: Received signal/ ||
              /cheetahgenerator: Running / ||
              /cheetahgenerator: skip/ ||
              /VantagePro: Catch up complete/ ||
