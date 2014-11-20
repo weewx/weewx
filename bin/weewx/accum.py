@@ -9,7 +9,9 @@
 etc., of a sequence of records."""
 
 import math
+
 import weewx
+from weewx.units import ListOfDicts
 
 class OutOfSpan(ValueError):
     """Raised when attempting to add a record outside of the timespan held by an accumulator"""
@@ -234,13 +236,8 @@ class Accum(dict):
             raise OutOfSpan, "Attempt to add out-of-interval record"
 
         for obs_type in record:
-            # Is this type in the custom add record dictionary:
-            if obs_type in add_record_dict:
-                # Yes.
-                func = add_record_dict[obs_type] 
-            else:
-                # No. use the default.
-                func = Accum.add_value
+            # Get the proper function ...
+            func = add_record_dict.get(obs_type, Accum.add_value)
             # ... then call it.
             func(self, record, obs_type, add_hilo)
                             
@@ -264,13 +261,9 @@ class Accum(dict):
         
         # Go through all observation types.
         for obs_type in self:
-            # Is this type in the custom extraction dictionary?
-            if obs_type in extract_dict:
-                # Yes it is. Use the supplied function
-                func = extract_dict[obs_type]
-            else:
-                # No. Use the default, which is the average value during the period:
-                func = Accum.avg_extract
+            # Get the proper extraction function...
+            func = extract_dict.get(obs_type, Accum.avg_extract)
+            # ... then call it
             func(self, record, obs_type)
 
         return record
@@ -303,13 +296,8 @@ class Accum(dict):
         if obs_type in self:
             return
 
-        # Check to see if this type requires a special accumulator:        
-        if obs_type in init_dict:
-            # Yes. Instantiate one and assign it.
-            self[obs_type] = init_dict[obs_type]()
-        else:
-            # No. Use the default ScalarStats
-            self[obs_type] = ScalarStats()
+        # Get the proper accumulator for this type:        
+        self[obs_type] = init_dict.get(obs_type, ScalarStats)()
             
     def add_value(self, record, obs_type, add_hilo):
         """Add a single observation to myself."""
@@ -365,21 +353,21 @@ class Accum(dict):
 #                            Configuration dictionaries
 #===============================================================================
 
-init_dict = {'wind' : VecStats}
+init_dict = ListOfDicts({'wind' : VecStats})
 
-add_record_dict = {'windSpeed' : Accum.add_wind_value,
-                   'usUnits'   : Accum.check_units,
-                   'dateTime'  : Accum.noop}
+add_record_dict = ListOfDicts({'windSpeed' : Accum.add_wind_value,
+                               'usUnits'   : Accum.check_units,
+                               'dateTime'  : Accum.noop})
 
-extract_dict = {'wind'      : Accum.wind_extract,
-                'rain'      : Accum.sum_extract,
-                'ET'        : Accum.sum_extract,
-                'dayET'     : Accum.last_extract,
-                'monthET'   : Accum.last_extract,
-                'yearET'    : Accum.last_extract,
-                'hourRain'  : Accum.last_extract,
-                'dayRain'   : Accum.last_extract,
-                'rain24'    : Accum.last_extract,
-                'monthRain' : Accum.last_extract,
-                'yearRain'  : Accum.last_extract,
-                'totalRain' : Accum.last_extract}
+extract_dict = ListOfDicts({'wind'      : Accum.wind_extract,
+                            'rain'      : Accum.sum_extract,
+                            'ET'        : Accum.sum_extract,
+                            'dayET'     : Accum.last_extract,
+                            'monthET'   : Accum.last_extract,
+                            'yearET'    : Accum.last_extract,
+                            'hourRain'  : Accum.last_extract,
+                            'dayRain'   : Accum.last_extract,
+                            'rain24'    : Accum.last_extract,
+                            'monthRain' : Accum.last_extract,
+                            'yearRain'  : Accum.last_extract,
+                            'totalRain' : Accum.last_extract})

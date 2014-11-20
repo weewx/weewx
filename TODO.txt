@@ -2,14 +2,6 @@
 
 Quick start guide
 
-Document how to extend the unit system.
- - Or, maybe leave it for a while, to see if we like it?
- 
-Look at using the same strategy to extend the accumulators.
-
-Have the tags pick whether to do aggregation in the main archive
-table or using the daily summaries on the basis of the start time.
-
 Move schemas to the extension that uses them.
 
 Should the archive file be backed up before adding the daily summaries?
@@ -22,6 +14,15 @@ Similarly, refactor restx to do the same thing.
 
 
  ---- DONE ----
+
+Document how to extend the unit system.
+ - deferred documentation to see if we like it.
+(20nov14 tk)
+ 
+Extending the accumulators
+ - use the same strategy as the unit system
+ - deferred documentation to see if we like it.
+(20nov14 tk)
 
 Update the forecast service
 forecast is now working with the database structure
