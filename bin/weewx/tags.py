@@ -68,7 +68,7 @@ class TimeBinder(object):
         """Return a CurrentObj, using the last available timestamp."""
         manager = self.db_lookup(data_binding)
         timestamp = manager.lastGoodStamp()
-        return self.current(timestamp, data_binding)
+        return self.current(timestamp, data_binding=data_binding)
     
     def trend(self, time_delta=None, time_grace=None, data_binding=None):
         """Returns a TrendObj that is bound to the trend parameters."""

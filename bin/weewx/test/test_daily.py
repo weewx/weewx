@@ -22,6 +22,7 @@ import configobj
 import weeutil.weeutil
 import weewx.tags
 import gen_fake_data
+from weewx.units import ValueHelper
 
 day_keys = [x[0] for x in gen_fake_data.schema if x[0] not in ['dateTime', 'interval', 'usUnits']] + ['wind']
 
@@ -150,6 +151,7 @@ class Common(unittest.TestCase):
             self.assertAlmostEqual(allStats['wind'].rms, rms)
 
     def testTags(self):
+        """Test common tags."""
         global skin_dict
         db_binder = weewx.manager.DBBinder(self.config_dict)
         db_lookup = db_binder.bind_default()
@@ -239,6 +241,39 @@ class Common(unittest.TestCase):
             self.assertTrue(tagStats.year().inHumidity.exists)
             self.assertFalse(tagStats.year().inHumidity.has_data)
 
+    def test_agg_intervals(self):
+        """Test aggregation spans that do not span a day"""
+        db_binder = weewx.manager.DBBinder(self.config_dict)
+        db_lookup = db_binder.bind_default()
+
+        # note that this spans the spring DST boundary:
+        six_hour_span =  weeutil.weeutil.TimeSpan(time.mktime((2010,3,14,1,0,0,0,0,-1)),
+                                                  time.mktime((2010,3,14,8,0,0,0,0,-1)))
+ 
+        tsb = weewx.tags.TimespanBinder(six_hour_span, db_lookup)
+        self.assertEqual(str(tsb.outTemp.max), "21.0°F")
+        self.assertEqual(str(tsb.outTemp.maxtime), "14-Mar-2010 01:10")
+        self.assertEqual(str(tsb.outTemp.min), "7.1°F")
+        self.assertEqual(str(tsb.outTemp.mintime), "14-Mar-2010 07:00")
+        self.assertEqual(str(tsb.outTemp.avg), "11.4°F")
+        
+        rain_span = weeutil.weeutil.TimeSpan(1268622600, 1268633400)
+        tsb = weewx.tags.TimespanBinder(rain_span, db_lookup)
+        self.assertEqual(str(tsb.rain.sum), "0.26 in")
+        
+    def test_agg(self):
+        """Test aggregation in the archive table against aggregation in the daily summary"""
+        
+        week_start_ts = time.mktime((2010,3,14,0,0,0,0,0,-1))
+        week_stop_ts  = time.mktime((2010,3,21,0,0,0,0,0,-1))
+        
+        with weewx.manager.open_database(self.config_dict, 'wx_binding') as manager:
+            for day_span in weeutil.weeutil.genDaySpans(week_start_ts, week_stop_ts):
+                for aggregation in ['min', 'max', 'mintime', 'maxtime', 'avg']:
+                    table = ValueHelper(manager.getAggregate(day_span, 'outTemp', aggregation))
+                    daily = ValueHelper(manager.getDayAggregate(day_span, 'outTemp', aggregation))
+                    self.assertEqual(str(table), str(daily), msg="aggregation=%s; %s vs %s" % (aggregation, table, daily))
+            
     def test_rainYear(self):
         db_binder = weewx.manager.DBBinder(self.config_dict)
         db_lookup = db_binder.bind_default()
@@ -284,7 +319,7 @@ class TestMySQL(Common):
     
 def suite():
     tests = ['test_create_stats', 'testScalarTally', 'testWindTally', 
-             'testTags', 'test_rainYear', 'test_heatcool']
+             'testTags', 'test_rainYear', 'test_agg_intervals', 'test_agg', 'test_heatcool']
     
     # Test both sqlite and MySQL:
     return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
