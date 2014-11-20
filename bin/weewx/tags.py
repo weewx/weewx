@@ -319,16 +319,11 @@ class ObservationBinder(object):
     def has_data(self):
         return self.db_lookup(self.data_binding).has_data(self.obs_type, self.timespan)
 
-    def _do_query(self, aggregateType, val=None):
+    def _do_query(self, aggregate_type, val=None):
         """Run a query against the databases, using the given aggregation type."""
         db_manager = self.db_lookup(self.data_binding)
-        if aggregateType in ['last', 'lasttime'] or not weeutil.weeutil.isMidnight(self.timespan.start) \
-                                                 or not weeutil.weeutil.isMidnight(self.timespan.stop):
-            result = db_manager.getAggregate(self.timespan, self.obs_type, aggregateType, 
-                                             val=val, **self.option_dict)
-        else:
-            result = db_manager.getDayAggregate(self.timespan, self.obs_type, aggregateType, 
-                                                val=val, **self.option_dict)
+        result = db_manager.getAggregate(self.timespan, self.obs_type, aggregate_type, 
+                                         val=val, **self.option_dict)
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
         
 #===============================================================================

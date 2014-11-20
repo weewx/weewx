@@ -1058,8 +1058,9 @@ class DaySummaryManager(Manager):
             # Then save the results:
             self._set_day_summary(_stats_dict, accumulator.timespan.stop, _cursor)
         
-    def getDayAggregate(self, timespan, obs_type, aggregate_type, **option_dict):
+    def getAggregate(self, timespan, obs_type, aggregate_type, **option_dict):
         """Returns an aggregation of a statistical type for a given time period.
+        It will use the daily summaries if possible, otherwise the archive table.
         
         timespan: An instance of weeutil.Timespan with the time period over which
         aggregation is to be done.
@@ -1067,8 +1068,7 @@ class DaySummaryManager(Manager):
         obs_type: The type over which aggregation is to be done (e.g., 'barometer',
         'outTemp', 'rain', ...)
         
-        aggregate_type: The type of aggregation to be done. The keys in the dictionary
-        sqlDict above are the possible aggregation types. 
+        aggregate_type: The type of aggregation to be done.
         
         option_dict: Some aggregations require optional values
         
@@ -1077,6 +1077,16 @@ class DaySummaryManager(Manager):
         type is unknown. The second element is the unit type (eg, 'degree_F').
         The third element is the unit group (eg, "group_temperature") """
         
+        # Can we take advantage of the day summaries optimizations?
+        if aggregate_type in ['last', 'lasttime'] or not weeutil.weeutil.isMidnight(timespan.start) \
+                                                  or not weeutil.weeutil.isMidnight(timespan.stop):
+            # No. We have to calculate the aggregate using the regular archive table:
+            result = Manager.getAggregate(self, timespan, obs_type, aggregate_type, 
+                                          **option_dict)
+            return result
+
+        # We can use the daily summaries. Proceed.
+                
         # This entry point won't work for heating or cooling degree days:
         if weewx.debug:
             assert(obs_type not in ['heatdeg', 'cooldeg'])
@@ -1166,7 +1176,7 @@ class DaySummaryManager(Manager):
     def has_data(self, obs_type, timespan):
         """Checks whether the observation type exists in the database and whether it has any data."""
 
-        return self.exists(obs_type) and self.getDayAggregate(timespan, obs_type, 'count')[0] != 0
+        return self.exists(obs_type) and self.getAggregate(timespan, obs_type, 'count')[0] != 0
 
     def backfill_day_summary(self, start_ts=None, stop_ts=None):
         """Fill the statistical database from an archive database.
