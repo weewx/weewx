@@ -1024,6 +1024,14 @@ def get_index(idx):
 def tstr_to_ts(tstr):
     if tstr is None:
         return None
+    try:
+        ts = int(time.mktime(time.strptime(tstr, "%Y-%m-%d %H:%M:%S")))
+    except OverflowError, ValueError:
+        ts = None
+    return ts
+
+    if tstr is None:
+        return None
     return int(time.mktime(time.strptime(tstr, "%Y-%m-%d %H:%M:%S")))
 
 def bytes_to_addr(a, b, c):
@@ -1389,7 +1397,7 @@ class WS28xxDriver(weewx.drivers.AbstractDevice):
         loginf('Found %d historical records' % len(records))
         last_ts = None
         for r in records:
-            if last_ts is not None:
+            if last_ts is not None and r['dateTime'] is not None:
                 r['usUnits'] = weewx.METRIC
                 r['interval'] = (r['dateTime'] - last_ts) / 60
                 yield r
@@ -4032,6 +4040,8 @@ class CCommunicationService(object):
 
     def startCachingHistory(self, since_ts=0, num_rec=0):
         self.history_cache.clear_records()
+        if since_ts is None:
+            since_ts = 0
         self.history_cache.since_ts = since_ts
         if num_rec > WS28xxDriver.max_records - 2:
             num_rec = WS28xxDriver.max_records - 2
