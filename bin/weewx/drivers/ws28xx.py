@@ -1024,7 +1024,7 @@ def get_index(idx):
 def tstr_to_ts(tstr):
     try:
         return int(time.mktime(time.strptime(tstr, "%Y-%m-%d %H:%M:%S")))
-    except OverflowError, ValueError, TypeError:
+    except (OverflowError, ValueError, TypeError):
         pass
     return None
 
