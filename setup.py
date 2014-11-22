@@ -1272,9 +1272,9 @@ class ExtensionInstaller(Logger):
         # append services to appropriate lists
         for sg in all_service_groups:
             for s in self.services[sg]:
-                if not isinstance(config['Engines']['WxEngine'][sg], list):
-                    config['Engines']['WxEngine'][sg] = [config['Engines']['WxEngine'][sg]]
-                config['Engines']['WxEngine'][sg].append(s)
+                if not isinstance(config['Engine']['Services'][sg], list):
+                    config['Engine']['Services'][sg] = [config['Engine']['Services'][sg]]
+                config['Engine']['Services'][sg].append(s)
 
         self.log("merged configuration:", level=3)
         self.log('\n'.join(formatdict(config)), level=3)
@@ -1292,10 +1292,10 @@ class ExtensionInstaller(Logger):
         for sg in all_service_groups:
             if self.services[sg]:
                 newlist = []
-                for s in config['Engines']['WxEngine'][sg]:
+                for s in config['Engine']['Services'][sg]:
                     if s not in self.services[sg]:
                         newlist.append(s)
-                config['Engines']['WxEngine'][sg] = newlist
+                config['Engine']['Services'][sg] = newlist
 
         # remove any sections we added
         remove_and_prune(config, self.config)
