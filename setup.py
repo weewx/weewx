@@ -751,22 +751,22 @@ def get_driver_infos():
     tmp_path = list(sys.path)
     sys.path.insert(0, bin_dir)
 
-    driver_info = dict()
+    infos = dict()
     for fn in drivers:
         driver = "weewx.drivers.%s" % fn[:-3]
-        driver_info[driver] = dict()
+        infos[driver] = dict()
         try:
             __import__(driver)
             driver_module = sys.modules[driver]
-            driver_info[driver]['name'] = driver_module.DRIVER_NAME
-            driver_info[driver]['version'] = driver_module.DRIVER_VERSION
+            infos[driver]['name'] = driver_module.DRIVER_NAME
+            infos[driver]['version'] = driver_module.DRIVER_VERSION
         except Exception, e:
-            driver_info[driver]['name'] = fn[:-3]
-            driver_info[driver]['fail'] = "%s" % e
+            infos[driver]['name'] = fn[:-3]
+            infos[driver]['fail'] = "%s" % e
 
     # reset the system path
     sys.path = tmp_path
-    return driver_info
+    return infos
 
 def list_drivers():
     infos = get_driver_infos()
@@ -779,7 +779,14 @@ def list_drivers():
     return 0
 
 def prompt_for_settings():
-    print "altitude must be specified with units, for example:"
+    ans = None
+    while ans is None:
+        ans = raw_input("enter a short description: ")
+        if len(ans.strip()) > 0:
+            desc = ans
+        else:
+            ans = None
+    print "specify altitude with units, for example:"
     print "  700, foot"
     print "  10, meter"
     ans = None
@@ -797,32 +804,36 @@ def prompt_for_settings():
                 ans = None
         else:
             ans = None
-    print "latitude must be specified as decimal degrees, for example:"
+    print "specify latitude in decimal degrees, negative for south, for example:"
     print "  45.686"
     ans = None
     while ans is None:
         ans = raw_input("enter the latitude: ")
         try:
             lat = float(ans)
+            if lat < -180 or lat > 180:
+                ans = None
         except ValueError:
             ans = None
-    print "longitude must be specified as decimal degrees, for example:"
+    print "specify longitude in decimal degrees, negative for west, for example:"
     print "  -121.566"
     ans = None
     while ans is None:
         ans = raw_input("enter the longitude: ")
         try:
             lon = float(ans)
+            if lon < -180 or lon > 180:
+                ans = None
         except ValueError:
             ans = None
     ans = None
     while ans is None:
-        ans = raw_input("enter a short description: ")
-        if len(ans.strip()) > 0:
-            dsc = ans
+        ans = raw_input("display metric or US units: ")
+        if ans.lower() in ['metric', 'us']:
+            units = ans.lower()
         else:
             ans = None
-    return dsc, alt, lat, lon
+    return desc, alt, lat, lon, units
 
 
 #==============================================================================
