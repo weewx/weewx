@@ -21,8 +21,10 @@ whether or not software record generation is used.
 
 
 
-
  ---- DONE ----
+
+Include setup.py in the installation (also setup.cfg)
+(22nov14 mwall)
 
 Document how to extend the unit system.
  - deferred documentation to see if we like it.

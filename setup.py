@@ -1375,6 +1375,31 @@ def do_merge():
         shutil.copyfile(tmpfile.name, options.filec)
     return 0
 
+def list_drivers():
+    """scan the drivers folder and list each driver with its package"""
+    from os import listdir
+    from os.path import isfile, join
+    ddir = 'bin/weewx/drivers'
+    drivers = [ f for f in listdir(ddir) if isfile(join(ddir, f)) and f != '__init__.py' and f[-3:] == '.py' ]
+
+    # adjust system path so we can load the config file and driver
+    tmp_path = list(sys.path)
+    sys.path.insert(0, bin_dir)
+
+    for driver in [ "weewx.drivers.%s" % f[:-3] for f in drivers ]:
+        try:
+            __import__(driver)
+            driver_module = sys.modules[driver]
+            driver_name = driver_module.DRIVER_NAME
+            driver_vers = driver_module.DRIVER_VERSION
+            print '%s (%s) (%s)' % (driver, driver_name, driver_vers)
+        except Exception, e:
+            sys.stderr.write("%s (%s)\n" % (driver, e))
+
+    # reset the system path
+    sys.path = tmp_path
+    return 0
+
 #==============================================================================
 # main entry point
 #==============================================================================
@@ -1384,6 +1409,8 @@ if __name__ == "__main__":
         exit(do_cfg())
     if '--merge-config' in sys.argv:
         exit(do_merge())
+    if '--list-drivers' in sys.argv:
+        exit(list_drivers())
     if 'list-extensions' in sys.argv:
         exit(do_ext('list-extensions'))
     if '--extension' in [f[:11] for f in sys.argv]:
@@ -1450,6 +1477,8 @@ if __name__ == "__main__":
             ('',
              ['LICENSE.txt',
               'README',
+              'setup.cfg',
+              'setup.py',
               'weewx.conf']),
             ('docs',
              ['docs/changes.txt',
