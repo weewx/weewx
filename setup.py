@@ -632,7 +632,7 @@ def save_path(filepath):
 # Inject the configuration stanza for a driver into the configuration file
 # and set the station_type to the driver.
 #
-# If no driver is specified, use the Simulator.
+# If no driver is specified, either prompt for a driver or use the Simulator.
 #==============================================================================
 
 def do_cfg():
@@ -640,22 +640,27 @@ def do_cfg():
     description = "configure the configuration file"
     usage = "%prog configure [config_path] [--driver=DRIVER]"
     parser = optparse.OptionParser(description=description, usage=usage)
+    parser.add_option('--no-prompt', dest='noprompt', action='store_true',
+                      help='do not prompt for options')
     parser.add_option('--driver', dest='driver', type=str, metavar='DRIVER',
                       help='use the driver DRIVER, e.g., weewx.driver.vantage')
     parser.add_option('--dryrun', dest='dryrun', action='store_true',
                       help='print what would happen but do not do it')
     (options, _args) = parser.parse_args()
-    configure_conf(options.driver, options.dryrun)
+    configure_conf(options.driver, options.dryrun, options.noprompt)
     return 0
 
-def configure_conf(driver, dryrun):
+def configure_conf(driver, dryrun, noprompt):
     # FIXME: this emits a functional config file, but the comments and indents
     # may be messed up.  apparently configobj associates comments *after* a
     # parameter, not before it.  so comments before a parameter will be
     # associated with the previous parameter.
 
     if driver is None:
-        driver = 'weewx.drivers.simulator'
+        if noprompt:
+            driver = 'weewx.drivers.simulator'
+        else:
+            driver = prompt_for_driver()
 
     # adjust system path so we can load the config file and driver
     tmp_path = list(sys.path)
@@ -718,6 +723,60 @@ def configure_conf(driver, dryrun):
     if not dryrun:
         save_path(config_fn)
         shutil.move(new_config.filename, config_fn)
+
+def prompt_for_driver():
+    infos = get_driver_infos()
+    keys = sorted(infos)
+    for i, d in enumerate(keys):
+        print " %2d) %-15s (%s)" % (i, infos[d].get('name', '?'), d)
+    ans = None
+    while ans is None:
+        ans = raw_input("choose a driver: ")
+        try:
+            idx = int(ans)
+            if idx < 0 or idx > len(keys):
+                ans = None
+        except ValueError:
+            ans = None
+    return keys[idx]
+
+def get_driver_infos():
+    """scan the drivers folder and list each driver with its package"""
+    from os import listdir
+    from os.path import isfile, join
+    ddir = 'bin/weewx/drivers'
+    drivers = [ f for f in listdir(ddir) if isfile(join(ddir, f)) and f != '__init__.py' and f[-3:] == '.py' ]
+
+    # adjust system path so we can load the drivers
+    tmp_path = list(sys.path)
+    sys.path.insert(0, bin_dir)
+
+    driver_info = dict()
+    for fn in drivers:
+        driver = "weewx.drivers.%s" % fn[:-3]
+        driver_info[driver] = dict()
+        try:
+            __import__(driver)
+            driver_module = sys.modules[driver]
+            driver_info[driver]['name'] = driver_module.DRIVER_NAME
+            driver_info[driver]['version'] = driver_module.DRIVER_VERSION
+        except Exception, e:
+            driver_info[driver]['name'] = fn[:-3]
+            driver_info[driver]['fail'] = "%s" % e
+
+    # reset the system path
+    sys.path = tmp_path
+    return driver_info
+
+def list_drivers():
+    infos = get_driver_infos()
+    for d in infos:
+        msg = "%-25s" % d
+        for x in ['name', 'version', 'fail']:
+            if x in infos[d]:
+                msg += " %-15s" % infos[d][x]
+        print msg
+    return 0
 
 
 #==============================================================================
@@ -1375,30 +1434,6 @@ def do_merge():
         shutil.copyfile(tmpfile.name, options.filec)
     return 0
 
-def list_drivers():
-    """scan the drivers folder and list each driver with its package"""
-    from os import listdir
-    from os.path import isfile, join
-    ddir = 'bin/weewx/drivers'
-    drivers = [ f for f in listdir(ddir) if isfile(join(ddir, f)) and f != '__init__.py' and f[-3:] == '.py' ]
-
-    # adjust system path so we can load the config file and driver
-    tmp_path = list(sys.path)
-    sys.path.insert(0, bin_dir)
-
-    for driver in [ "weewx.drivers.%s" % f[:-3] for f in drivers ]:
-        try:
-            __import__(driver)
-            driver_module = sys.modules[driver]
-            driver_name = driver_module.DRIVER_NAME
-            driver_vers = driver_module.DRIVER_VERSION
-            print '%s (%s) (%s)' % (driver, driver_name, driver_vers)
-        except Exception, e:
-            sys.stderr.write("%s (%s)\n" % (driver, e))
-
-    # reset the system path
-    sys.path = tmp_path
-    return 0
 
 #==============================================================================
 # main entry point
