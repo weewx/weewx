@@ -224,7 +224,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         (template, dest_dir, encoding, default_binding) = self._prepGen(report_dict)
 
         # Get start and stop times        
-        default_archive = self.db_binder.get_database(default_binding)
+        default_archive = self.db_binder.get_manager(default_binding)
         start_ts = default_archive.firstGoodStamp()
         if not start_ts:
             loginf('skipping report %s: cannot find start time' % section)
@@ -419,7 +419,7 @@ class Almanac(SearchList):
         # See if we can get more accurate values by looking them up in the weather
         # database. The database might not exist, so be prepared for a KeyError exception.
         try:
-            archive = self.generator.db_binder.get_database()
+            archive = self.generator.db_binder.get_manager()
         except KeyError:
             pass
         else:

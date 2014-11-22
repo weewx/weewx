@@ -79,7 +79,7 @@ class Common(unittest.TestCase):
     
     def test_create_stats(self):
         global day_keys
-        with weewx.manager.open_database(self.config_dict, 'wx_binding') as manager:
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
             self.assertItemsEqual(sorted(manager.daykeys), sorted(day_keys))
             self.assertEqual(manager.connection.columnsOf('archive_day_barometer'),
                              ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'wsum', 'sumtime'])
@@ -88,7 +88,7 @@ class Common(unittest.TestCase):
                               'max_dir', 'xsum', 'ysum', 'dirsumtime', 'squaresum', 'wsquaresum'])
         
     def testScalarTally(self):
-        with weewx.manager.open_database(self.config_dict, 'wx_binding') as manager:
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
             # Pick a random day, say 15 March:
             start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
             stop_ts  = int(time.mktime((2010,3,16,0,0,0,0,0,-1)))
@@ -117,7 +117,7 @@ class Common(unittest.TestCase):
                         self.assertEqual(stats_time, res2[0], "Time check. Failing type %s, aggregate: %s" % (stats_type, aggregate))
     
     def testWindTally(self):
-        with weewx.manager.open_database(self.config_dict, 'wx_binding') as manager:
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
             # Pick a random day, say 15 March:
             start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
             stop_ts  = int(time.mktime((2010,3,16,0,0,0,0,0,-1)))
@@ -153,9 +153,10 @@ class Common(unittest.TestCase):
     def testTags(self):
         """Test common tags."""
         global skin_dict
-        db_binder = weewx.manager.DBBinder(self.config_dict)
+        db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
+                                           self.config_dict['Databases'])
         db_lookup = db_binder.bind_default()
-        with weewx.manager.open_database(self.config_dict, 'wx_binding') as manager:
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
         
             spans = {'day'  : weeutil.weeutil.TimeSpan(time.mktime((2010,3,15,0,0,0,0,0,-1)),
                                                        time.mktime((2010,3,16,0,0,0,0,0,-1))),
@@ -243,7 +244,8 @@ class Common(unittest.TestCase):
 
     def test_agg_intervals(self):
         """Test aggregation spans that do not span a day"""
-        db_binder = weewx.manager.DBBinder(self.config_dict)
+        db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
+                                           self.config_dict['Databases'])
         db_lookup = db_binder.bind_default()
 
         # note that this spans the spring DST boundary:
@@ -267,15 +269,18 @@ class Common(unittest.TestCase):
         week_start_ts = time.mktime((2010,3,14,0,0,0,0,0,-1))
         week_stop_ts  = time.mktime((2010,3,21,0,0,0,0,0,-1))
         
-        with weewx.manager.open_database(self.config_dict, 'wx_binding') as manager:
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
             for day_span in weeutil.weeutil.genDaySpans(week_start_ts, week_stop_ts):
                 for aggregation in ['min', 'max', 'mintime', 'maxtime', 'avg']:
-                    table = ValueHelper(manager.getAggregate(day_span, 'outTemp', aggregation))
-                    daily = ValueHelper(manager.getDayAggregate(day_span, 'outTemp', aggregation))
-                    self.assertEqual(str(table), str(daily), msg="aggregation=%s; %s vs %s" % (aggregation, table, daily))
+                    # Get the answer using the raw archive  table:
+                    table_answer = ValueHelper(weewx.manager.Manager.getAggregate(manager, day_span, 'outTemp', aggregation))
+                    daily_answer = ValueHelper(weewx.manager.DaySummaryManager.getAggregate(manager, day_span, 'outTemp', aggregation))
+                    self.assertEqual(str(table_answer), str(daily_answer), 
+                                     msg="aggregation=%s; %s vs %s" % (aggregation, table_answer, daily_answer))
             
     def test_rainYear(self):
-        db_binder = weewx.manager.DBBinder(self.config_dict)
+        db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
+                                           self.config_dict['Databases'])
         db_lookup = db_binder.bind_default()
 
         stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
@@ -292,7 +297,8 @@ class Common(unittest.TestCase):
 
 
     def test_heatcool(self):
-        db_binder = weewx.manager.DBBinder(self.config_dict)
+        db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
+                                           self.config_dict['Databases'])
         db_lookup = db_binder.bind_default()
         #Test heating and cooling degree days:
         stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))

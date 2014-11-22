@@ -61,7 +61,7 @@ class Common(unittest.TestCase):
         (first_ts, last_ts) = _get_first_last(self.config_dict)
 
         try:
-            with weewx.manager.open_database(self.config_dict, 'wx_binding') as dbmanager:
+            with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as dbmanager:
                 if dbmanager.firstGoodStamp() == first_ts and dbmanager.lastGoodStamp() == last_ts:
                     print "\nSimulator need not be run"
                     return 
@@ -83,7 +83,7 @@ class Common(unittest.TestCase):
 
         global test_types
         archive_interval = self.config_dict['StdArchive'].as_int('archive_interval')
-        with weewx.manager.open_database(self.config_dict, 'wx_binding') as archive:
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as archive:
             for record in archive.genBatchRecords():
                 start_ts = record['dateTime'] - archive_interval
                 # Calculate the average (throw away min and max):

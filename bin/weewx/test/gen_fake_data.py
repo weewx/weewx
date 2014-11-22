@@ -57,7 +57,7 @@ def configDatabase(config_dict, binding, amplitude=1.0,
 
     # Check to see if it already exists and is configured correctly.
     try:
-        with weewx.manager.open_database(config_dict, binding)  as archive:
+        with weewx.manager.open_manager_with_config(config_dict, binding)  as archive:
             if archive.firstGoodStamp() == start_ts and archive.lastGoodStamp() == stop_ts:
                 # Database already exists. We're done.
                 return
@@ -66,7 +66,7 @@ def configDatabase(config_dict, binding, amplitude=1.0,
         
     # Delete anything that might already be there.
     try:
-        weewx.manager.drop_database(config_dict, binding)
+        weewx.manager.drop_database_with_config(config_dict, binding)
     except weedb.DatabaseError:
         pass
     
@@ -78,7 +78,7 @@ def configDatabase(config_dict, binding, amplitude=1.0,
     monkey_dict = config_dict.dict()
     monkey_dict['DataBindings'][binding]['manager'] = 'weewx.manager.Manager'
 
-    with weewx.manager.open_database(monkey_dict, binding, initialize=True) as archive:
+    with weewx.manager.open_manager_with_config(monkey_dict, binding, initialize=True) as archive:
         
         # Because this can generate voluminous log information,
         # suppress all but the essentials:
@@ -93,7 +93,7 @@ def configDatabase(config_dict, binding, amplitude=1.0,
         t2 = time.time()
         print "\nTime to create synthetic archive database = %6.2fs" % (t2-t1,)
         
-    with weewx.manager.open_database(config_dict, binding, initialize=True) as archive:
+    with weewx.manager.open_manager_with_config(config_dict, binding, initialize=True) as archive:
 
         # Now go back to regular logging:
         syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))

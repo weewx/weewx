@@ -12,13 +12,14 @@ Move schemas to the extension that uses them.
 
 Should the archive file be backed up before adding the daily summaries?
 
-Change how DBBinders are created. (See Email chain between tk & MW)
-
 Similarly, refactor restx to do the same thing.
 
 The StdArchive service should extract everything it can from the accumulators,
 whether or not software record generation is used.
 
+Implement a $time_ago, or $timespan tag (see email with Gary Roderick).
+
+Check whether $alltime still works.
 
 
  ---- DONE ----

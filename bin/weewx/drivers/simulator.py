@@ -34,7 +34,7 @@ def loader(config_dict, engine):
                 # Resume with the last time in the database. If there is no such
                 # time, then fall back to the time specified in the configuration
                 # dictionary.
-                with weewx.manager.open_database(config_dict, 'wx_binding') as dbmanager:
+                with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as dbmanager:
                         resume_ts = dbmanager.lastGoodStamp()
             except weedb.OperationalError:
                 pass

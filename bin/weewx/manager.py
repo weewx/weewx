@@ -75,10 +75,10 @@ class Manager(object):
         self.std_unit_system = _row[0] if _row is not None else None
 
     @classmethod
-    def open(cls, archive_db_dict, table_name='archive'):
+    def open(cls, database_dict, table_name='archive'):
         """Open and return a Manager or a subclass of Manager.  
         
-        archive_db_dict: A database dictionary holding the information necessary
+        database_dict: A database dictionary holding the information necessary
         to open the database.
         
         table_name: The name of the table to be used in the database. Default
@@ -87,18 +87,18 @@ class Manager(object):
         # This will raise a weedb.OperationalError if the database does
         # not exist. The 'open' method we are implementing never attempts an
         # initialization, so let it go by.
-        connection = weedb.connect(archive_db_dict)
+        connection = weedb.connect(database_dict)
 
         # Create an instance of the right class and return it:
         dbmanager = cls(connection, table_name)
         return dbmanager
     
     @classmethod
-    def open_with_create(cls, archive_db_dict, table_name='archive', schema=None):
+    def open_with_create(cls, database_dict, table_name='archive', schema=None):
         """Open and return a Manager or a subclass of Manager, initializing
         if necessary.  
         
-        archive_db_dict: A database dictionary holding the information necessary
+        database_dict: A database dictionary holding the information necessary
         to open the database.
         
         table_name: The name of the table to be used in the database. Default
@@ -113,16 +113,16 @@ class Manager(object):
         # This will raise a weedb.OperationalError if the database does
         # not exist. 
         try:
-            connection = weedb.connect(archive_db_dict)
+            connection = weedb.connect(database_dict)
         except weedb.OperationalError:
             # Database does not exist. Did the caller supply a schema?
             if schema is None:
                 # No. Nothing to be done.
                 raise
             # Yes. Create the database:
-            weedb.create(archive_db_dict)
+            weedb.create(database_dict)
             # Now I can get a connection
-            connection = weedb.connect(archive_db_dict)
+            connection = weedb.connect(database_dict)
 
         # Create an instance of the right class and return it:
         dbmanager = cls(connection, table_name=table_name, schema=schema)
@@ -768,33 +768,32 @@ class DBBinder(object):
     """Given a binding name, it returns the matching database as a managed object. Caches
     results."""
 
-    def __init__(self, config_dict):
+    def __init__(self, bindings_dict, databases_dict):
         """ Initialize a DBBinder object.
         
-        config_dict: Typically, this is the weewx configuration dictionary.
-        It should contain two keys, Bindings and Databases, each with
-        a dictionary as a value, holding the bindings and databases, respectively.
-
+        bindings_dict: Typically, this is [DataBindings] section of a
+        weewx.conf configuration dictionary. 
         It should look something like:
-          {
-          'DataBindings' :     
-            'wx_bindings' : {'database_name': 'archive_sqlite',
-                             'manager': 'weewx.wxmanager.WXDaySummaryManager'},
+          {'wx_bindings' : {'database_name': 'archive_sqlite',
+                            'manager': 'weewx.wxmanager.WXDaySummaryManager'}
 
-          'Databases' :
-            {'archive_sqlite' : {'root': '/home/weewx',
-                                 'database_name': 'archive/archive.sdb',
-                                 'driver': 'weedb.sqlite'}
-           }"""
+        databases_dict: Typically, this is the [Databases] section of a
+        weewx.conf configuration dictionary. 
+        It should look something like:
+          {'archive_sqlite' : {'root': '/home/weewx',
+                               'database_name': 'archive/archive.sdb',
+                               'driver': 'weedb.sqlite'}"""
            
-        self.config_dict = config_dict
-        self.database_cache = {}
+        self.bindings_dict = bindings_dict
+        self.databases_dict = databases_dict
+        self.default_binding_dict = {}
+        self.manager_cache = {}
     
     def close(self):
-        for data_binding in self.database_cache.keys():
+        for data_binding in self.manager_cache.keys():
             try:
-                self.database_cache[data_binding].close()
-                del self.database_cache[data_binding]
+                self.manager_cache[data_binding].close()
+                del self.manager_cache[data_binding]
             except Exception:
                 pass
             
@@ -804,13 +803,23 @@ class DBBinder(object):
     def __exit__(self, etyp, einst, etb):
         self.close()
     
-    def get_database(self, data_binding='wx_binding', initialize=False):
+    def set_binding_defaults(self, binding_name, default_binding_dict):
+        self.default_binding_dict[binding_name] = default_binding_dict
+        
+    def get_manager(self, data_binding='wx_binding', initialize=False):
         """Given a binding name, returns the managed object"""
-        if data_binding not in self.database_cache:
-            self.database_cache[data_binding] = open_database(self.config_dict,
-                                                              data_binding,
-                                                              initialize)
-        return self.database_cache[data_binding]
+
+        if data_binding not in self.manager_cache:
+            manager_dict = get_manager_dict(self.bindings_dict, 
+                                            self.databases_dict, 
+                                            data_binding,
+                                            default_binding_dict=self.default_binding_dict)
+            self.manager_cache[data_binding] = open_manager(manager_dict, initialize)
+
+        return self.manager_cache[data_binding]
+    
+    # For backwards compatibility with early alphas:
+    get_database = get_manager
     
     def bind_default(self, default_binding='wx_binding'):
         """Returns a function that holds a default database binding."""
@@ -818,7 +827,7 @@ class DBBinder(object):
         def db_lookup(data_binding=None):
             if data_binding is None:
                 data_binding = default_binding
-            return self.get_database(data_binding)
+            return self.get_manager(data_binding)
 
         return db_lookup
 
@@ -826,73 +835,104 @@ class DBBinder(object):
 #                                 Utilities
 #===============================================================================
 
-def get_database_config(config_dict, data_binding,
-                        default_manager='weewx.wxmanager.WXDaySummaryManager',
-                        default_table='archive'):
-    """Return the database dictionary associated with a binding name."""
+default_binding_dict = {'database' : 'archive_sqlite',
+                        'table_name' : 'archive',
+                        'manager' : 'weewx.wxmanager.WXDaySummaryManager',
+                        'schema' : 'schemas.wview.schema'}
+#
+# A "manager dict" is everything needed to open up a manager. It is basically
+# the same as a binding dictionary, except that the database has been replaced
+# with a database dictionary.
+#
+# As such, it includes keys:
+#
+#  manager: The manager class
+#  table_name: The name of the internal table
+#  schema: The schema to be used in case of initialization
+#  database_dict: The database dictionary. This will be passed
+#      on to weedb.
+#
+def get_manager_dict(bindings_dict, databases_dict, data_binding,
+                     default_binding_dict=default_binding_dict):
+    """Return a manager dict for the given data binding."""
 
-    # Get the database name
+    # Start with a copy of the given defaults:
+    manager_dict = dict(default_binding_dict)
+
     try:
-        database = config_dict['DataBindings'][data_binding]['database']
+        # Add any user overrides:
+        manager_dict.update(bindings_dict[data_binding])
     except KeyError, e:
         raise weewx.UnknownBinding(e)
     
-    # Get the dictionary
-    if database not in config_dict['Databases']:
-        raise weewx.UnknownDatabase(database)
-    database_dict = config_dict['Databases'][database]
-
-    binding_dict = config_dict['DataBindings'][data_binding]
-    # Get the manager if specified, otherwise use a sane default
-    database_manager = binding_dict.get('manager', default_manager)
-    # Get the table if specified, otherwise use a sane default
-    table_name = binding_dict.get('table_name', default_table)
-
-    return (database_manager, database_dict, table_name)
-
-def get_schema(binding_dict, default_schema='schemas.wview.schema'):
-    """Get a schema from a binding dict.  The schema may be specified as
-    a string, in which case we resolve the python object to which it refers.
-    Or it may be specified as a dict with field_name=sql_type pairs.  In
-    the latter case, order matters, so we depend on configobj to maintain
-    order.
-    """
-    schema_name = binding_dict.get('schema', default_schema)
+    
+    # Now get the database dictionary if it's missing:
+    if 'database_dict' not in manager_dict:
+        try:
+            database = manager_dict.pop('database')
+            manager_dict['database_dict'] = databases_dict[database]
+        except KeyError, e:
+            raise weewx.UnknownDatabase(e)
+    
+    # The schema may be specified as a string, in which case we resolve the
+    # python object to which it refers. Or it may be specified as a dict with
+    # field_name=sql_type pairs.
+    schema_name = manager_dict.get('schema')
     if schema_name is None:
-        schema = None
+        manager_dict['schema'] = None
     elif isinstance(schema_name, str):
         # Schema is a string, with the name of the schema object
-        schema = weeutil.weeutil._get_object(schema_name)
+        manager_dict['schema'] = weeutil.weeutil._get_object(schema_name)
     else:
         # Schema is a ConfigObj section (that is, a dictionary). Retrieve the
-        # elements of the schema
-        schema = [(col_name, binding_dict['schema'][col_name]) for col_name in binding_dict['schema']]
-    return schema
+        # elements of the schema in order:
+        manager_dict['schema'] = [(col_name, manager_dict['schema'][col_name]) for col_name in manager_dict['schema']]
 
-def open_database(config_dict, data_binding, initialize=False):
-    """Given a binding name, returns an open manager object."""
-    # Get the database dictionary & manager:
-    database_manager, database_dict, table_name = get_database_config(config_dict, data_binding)
-    # Get the class object of the manager to be used:
-    database_cls = weeutil.weeutil._get_object(database_manager)
+    return manager_dict
+
+def open_manager(manager_dict, initialize=False):
     
+    manager_cls = weeutil.weeutil._get_object(manager_dict['manager'])
     if initialize:
-        schema = get_schema(config_dict['DataBindings'][data_binding])
-        return database_cls.open_with_create(database_dict, table_name=table_name, schema=schema)
+        return manager_cls.open_with_create(manager_dict['database_dict'],
+                                            manager_dict['table_name'],
+                                            manager_dict['schema'])
     else:
-        return database_cls.open(database_dict, table_name=table_name)
-
-def drop_database(config_dict, data_binding):
-    """Drop (delete) the database associated with a binding name"""
-    _, database_dict, _ = get_database_config(config_dict, data_binding)
-    weedb.drop(database_dict)
+        return manager_cls.open(manager_dict['database_dict'],
+                                manager_dict['table_name'])
     
+def open_manager_with_config(config_dict, data_binding,
+                             initialize=False, default_binding_dict=default_binding_dict):
+    """Given a binding name, returns an open manager object."""
+    manager_dict = get_manager_dict(config_dict.get('DataBindings'),
+                                    config_dict['Databases'], 
+                                    data_binding=data_binding,
+                                    default_binding_dict=default_binding_dict)
+    return open_manager(manager_dict, initialize)
+
+def drop_database(manager_dict):
+    """Drop (delete) a database, given a manager dict"""
+    
+    weedb.drop(manager_dict['database_dict'])
+
+def drop_database_with_config(config_dict, data_binding,
+                              default_binding_dict=default_binding_dict):
+    """Drop (delete) the database associated with a binding name"""
+
+    manager_dict = get_manager_dict(config_dict.get('DataBindings'),
+                                    config_dict['Databases'], 
+                                    data_binding=data_binding, 
+                                    default_binding_dict=default_binding_dict)
+    drop_database(manager_dict)    
+
 
 #===============================================================================
+#                        Class DaySummaryManager
+#
 #     Adds daily summaries to the database.
 # 
 #     This class specializes method _addSingleRecord so that it adds
-#     the data to a daily summary, as well as the  =regular archive table.
+#     the data to a daily summary, as well as the regular archive table.
 #     
 #     Note that a date does not include midnight --- that belongs
 #     to the previous day. That is because a data record archives
@@ -910,11 +950,6 @@ def drop_database(config_dict, data_binding):
 #
 #===============================================================================
 
-
-
-#===============================================================================
-#                        Class DaySummaryManager
-#===============================================================================
 
 class DaySummaryManager(Manager):
     """Manage a daily statistical summary. 
