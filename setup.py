@@ -734,7 +734,7 @@ def prompt_for_driver():
         ans = raw_input("choose a driver: ")
         try:
             idx = int(ans)
-            if idx < 0 or idx > len(keys):
+            if idx < 0 or idx >= len(keys):
                 ans = None
         except ValueError:
             ans = None
@@ -777,6 +777,52 @@ def list_drivers():
                 msg += " %-15s" % infos[d][x]
         print msg
     return 0
+
+def prompt_for_settings():
+    print "altitude must be specified with units, for example:"
+    print "  700, foot"
+    print "  10, meter"
+    ans = None
+    while ans is None:
+        ans = raw_input("enter the altitude: ")
+        if ans.find(',') >= 0:
+            parts = ans.split(',')
+            try:
+                float(parts[0])
+                if parts[1].strip() in ['foot', 'meter']:
+                    alt = ans
+                else:
+                    ans = None
+            except ValueError:
+                ans = None
+        else:
+            ans = None
+    print "latitude must be specified as decimal degrees, for example:"
+    print "  45.686"
+    ans = None
+    while ans is None:
+        ans = raw_input("enter the latitude: ")
+        try:
+            lat = float(ans)
+        except ValueError:
+            ans = None
+    print "longitude must be specified as decimal degrees, for example:"
+    print "  -121.566"
+    ans = None
+    while ans is None:
+        ans = raw_input("enter the longitude: ")
+        try:
+            lon = float(ans)
+        except ValueError:
+            ans = None
+    ans = None
+    while ans is None:
+        ans = raw_input("enter a short description: ")
+        if len(ans.strip()) > 0:
+            dsc = ans
+        else:
+            ans = None
+    return dsc, alt, lat, lon
 
 
 #==============================================================================
@@ -1444,6 +1490,9 @@ if __name__ == "__main__":
         exit(do_cfg())
     if '--merge-config' in sys.argv:
         exit(do_merge())
+    if '--prompt' in sys.argv:
+        prompt_for_settings()
+        exit(0)
     if '--list-drivers' in sys.argv:
         exit(list_drivers())
     if 'list-extensions' in sys.argv:
