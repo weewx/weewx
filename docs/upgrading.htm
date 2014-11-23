@@ -350,7 +350,10 @@ weewx.<span class='changed'>engine</span>.StdReport</pre>
 
     <h3>Customized schemas</h3>
     <p>The mechanism for specifying changes to the default schema has changed.
-      If you modified the default schema, you must re-apply the changes
+      The file <span class='code'>user/schemas.py</span> is no longer used.
+      The default schema is now defined in
+      <span class='code'>bin/schemas/wview.py</span>.</p>
+    <p>If you modified the default schema, you must re-apply the changes
       using the new pattern.</p>
     <p>For example, if you created a custom schema in
       <span class='code'>user/schemas.py</span> by extending the default
