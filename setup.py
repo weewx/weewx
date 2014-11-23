@@ -1343,12 +1343,14 @@ class ExtensionInstaller(Logger):
         # so do a conditional merge instead.
         conditional_merge(config, cfg)
 
-        # append services to appropriate lists
+        # append services to appropriate lists...
         for sg in all_service_groups:
             for s in self.services[sg]:
                 if not isinstance(config['Engine']['Services'][sg], list):
                     config['Engine']['Services'][sg] = [config['Engine']['Services'][sg]]
-                config['Engine']['Services'][sg].append(s)
+                # ...but only if not already there
+                if s not in config['Engine']['Services'][sg]:
+                    config['Engine']['Services'][sg].append(s)
 
         self.log("merged configuration:", level=3)
         self.log('\n'.join(formatdict(config)), level=3)
