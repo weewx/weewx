@@ -12,7 +12,7 @@ For more information about Cheetah, see http://www.cheetahtemplate.org
 Configuration Options
 
   search_list = a, b, c              # list of classes derived from SearchList
-  search_list_additions = d, e, f    # will be appended to search_list. Each should be a list.
+  search_list_extensions = d, e, f   # will be appended to search_list. Each should be a list.
   encoding = (html_entities|utf8|strict_ascii)
   template = filename.tmpl           # must end with .tmpl
   stale_age = s                      # age in seconds
@@ -21,16 +21,16 @@ The strings YYYY and MM will be replaced if they appear in the filename.
 
 search_list will override the default search_list
 
-search_list_additions will be appended to search_list
+search_list_extensions will be appended to search_list
 
-Generally it is better to extend by using search_list_additions rather than
+Generally it is better to extend by using search_list_extensions rather than
 search_list, just in case the default search list changes.
 
 Example:
 
 [CheetahGenerator]
-    # How to specify search list additions:
-    search_list_additions = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables
+    # How to specify search list extensions:
+    search_list_extensions = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables
     encoding = html_entities      # html_entities, utf8, strict_ascii
     [[SummaryByMonth]]                              # period
         [[[NOAA_month]]]                            # report
