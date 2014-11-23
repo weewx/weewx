@@ -329,7 +329,7 @@ Version: 3.0.0 alpha
     
     <h2>The database</h2>
     <p>
-      Weewx uses a single database to store and retrieve the records it needs.
+      <span class='code'>Weewx</span> uses a single database to store and retrieve the records it needs.
       It can be implemented by using either
       <a href="http://www.sqlite.org/">SQLITE3</a>,
       an open-source, lightweight SQL database, or
@@ -338,8 +338,7 @@ Version: 3.0.0 alpha
     </p>
     <p>
       If you are familiar with the old, Version 2.X data architecture, you may find this white paper <a
-        href="https://docs.google.com/document/d/1CzuCPu7MsV3Rc3J6GbaMVxtrQ6z5F-xz0glvg3sUWjA/edit?usp=sharing"><i>V3
-          Database architecture</i></a> useful.
+        href="https://docs.google.com/document/d/1CzuCPu7MsV3Rc3J6GbaMVxtrQ6z5F-xz0glvg3sUWjA/edit?usp=sharing"><i>V3 Database architecture</i></a> useful.
     </p>
 
     <h3>Structure</h3>
@@ -518,6 +517,38 @@ self.dbm.backfill_day_summary()   # If necessary</p>
       of using a single manager in two different threads; if you do this
       with a SQLite database, the queries will fail.</p>
 
+    <h2>Units</h2>
+    <p>The unit architecture in <span class='code'>weewx</span> is designed to
+      make basic unit conversions and display of units easy.  It is not
+      designed to provide dimensional analysis, arbitrary conversions, and
+      indications of compatibility.</p>
+    <p>The <i>driver</i> reads observations from an instrument and converts
+      them, as necessary, into a standard set of units.  The actual units
+      used by each instrument vary widely; some instruments use Metric
+      units, others use US Customary units, and many use a mixture.  The
+      driver ensures that the units are consistent for storage in the
+      <span class='code'>weewx</span> database.  By default, and to maintain
+      compatibility with <span class='code'>wview</span>, the database
+      units are US Customary.</p>
+    <p>Much of the <span class='code'>weewx</span> unit architecture is focused
+      on presenting data with the appropriate units.  Although the units of the
+      data in the database are US Customary, they can be displayed in any
+      combination of unit systems.</p>
+    <p>Each <i>observation type</i> such as <span class='code'>outTemp</span> 
+      or <span class='code'>pressure</span> may be associated with a
+      <i>unit group</i> such as <span class='code'>group_temperature</span> or
+      <span class='code'>group_pressure</span>.  Each
+      unit group is associated with a <i>unit type</i> such
+      as <span class='code'>degree_F</span> or
+      <span class='code'>mbar</span>.  The
+      <a href="#customizing_templates">template system</a>
+      uses this architecture to display the names of units and to convert
+      observations from one unit to another.</p>
+    <p>With this architecture one can easily create reports with, say, wind
+      measured in knots, rain measured in mm, and temperatures in degree
+      Celsius.  Or one can create a single set of templates, but display
+      data in different unit systems with only a few stanzas in a configuration
+      file.</p>
 
       <h1 id="customizing_reports">Customizing reports</h1>
       <p>This section discusses the two general strategies for customizing
@@ -678,7 +709,7 @@ self.dbm.backfill_day_summary()   # If necessary</p>
         option, you may have to modify the templates that come with <span class="code">weewx</span>,
         or write your own. </p>
       <p>Template modifications are preserved across upgrades (indeed,
-        everything in the <span class="code">./skins</span> directory is
+        everything in the <span class="code">skins</span> directory is
         preserved), so you don't have to worry about losing changes after an upgrade.</p>
       <p>Template generation is done using the <a href="http://www.cheetahtemplate.org/">Cheetah</a>
         templating engine. This is a very powerful engine, which essentially

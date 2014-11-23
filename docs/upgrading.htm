@@ -551,8 +551,7 @@ site_dict.setdefault('database_dict', db_dict)</pre>
         <td>
           <pre class='tty'>site_dict = config_dict['StdRESTful']['Uploader']
 site_dict = accumulateLeaves(site_dict, max_level=1)
-_, site_dict['database_dict'], _ = \
-    weewx.manager.open_manager_with_config(config_dict, 'wx_binding')</pre>
+manager_dict = weewx.manager.open_manager_with_config(config_dict, 'wx_binding')</pre>
         </td>
       </tr>
     </table>
