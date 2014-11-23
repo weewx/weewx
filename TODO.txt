@@ -2,6 +2,8 @@
 
 Quick start guide
 
+Test restful extensions (again).
+
 The station hardware configuration process could be improved. 
   - Nowhere is it listed what driver to use.
   - Docs need to be updated with the new two-step process.
@@ -11,18 +13,55 @@ The station hardware configuration process could be improved.
 Move schemas to the extension that uses them.
 
 Should the archive file be backed up before adding the daily summaries?
-
-Similarly, refactor restx to do the same thing.
-
-The StdArchive service should extract everything it can from the accumulators,
-whether or not software record generation is used.
-
-Implement a $time_ago, or $timespan tag (see email with Gary Roderick).
-
+  - Probably.
+  
 Check whether $alltime still works.
 
 
- ---- DONE ----
+
+--------------------  Nice to do (V3.1?)  --------------------------- 
+
+The StdArchive service should extract everything it can from the accumulators,
+whether or not software record generation is used.
+  - This could be added later.
+
+Implement a $time_ago, or $timespan tag (see email with Gary Roderick).
+  - This could be added later.
+
+Look at Gary's (?) changes to allow cron-like report generation.
+
+Is max gap fraction meaningful for bar charts now?
+
+Guard against database locks:
+
+Jul 30 08:55:22 hummingbird weewx[959]: wxengine: Caught unrecoverable exception in wxengine:
+Jul 30 08:55:22 hummingbird weewx[959]:     ****  database is locked
+Jul 30 08:55:22 hummingbird weewx[959]:     ****  Traceback (most recent call last):
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 962, in main
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      engine.run()
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 189, in run
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.dispatchEvent(weewx.Event(weewx.POST_LOOP))
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 210, in dispatchEvent
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      callback(event)
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 562, in post_loop
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      self._catchup(self.engine.console.genArchiveRecords)
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 625, in _catchup
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      origin='hardware'))
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 210, in dispatchEvent
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      callback(event)
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 574, in new_archive_record
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.archive.addRecord(event.record)
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/archive.py", line 192, in addRecord
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      e))
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weedb/__init__.py", line 130, in __exit__
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.connection.commit()
+Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weedb/__init__.py", line 97, in commit
+Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.connection.commit()
+Jul 30 08:55:22 hummingbird weewx[959]:     ****  OperationalError: database is locked
+Jul 30 08:55:22 hummingbird weewx[959]:     ****  Exiting.
+
+
+--------------------  DONE  --------------------------- 
 
 Include setup.py in the installation (also setup.cfg)
 (22nov14 mwall)
@@ -107,45 +146,3 @@ I removed Appendix: Statistical types because it is no longer valid. But,
 it needs to be explained somewhere the difference between vector and scalar
 stats.
 [11/11/14. Added a section "Winds" to the Customizing Guide, explaining the differences.]
-
-
-
-
-
-
-
-
-
---------------------  Nice to do someday  --------------------------- 
-
-Look at Gary's (?) changes to allow cron-like report generation.
-
-Is max gap fraction meaningful for bar charts now?
-
-Guard against database locks:
-
-Jul 30 08:55:22 hummingbird weewx[959]: wxengine: Caught unrecoverable exception in wxengine:
-Jul 30 08:55:22 hummingbird weewx[959]:     ****  database is locked
-Jul 30 08:55:22 hummingbird weewx[959]:     ****  Traceback (most recent call last):
-Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 962, in main
-Jul 30 08:55:22 hummingbird weewx[959]:     ****      engine.run()
-Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 189, in run
-Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.dispatchEvent(weewx.Event(weewx.POST_LOOP))
-Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 210, in dispatchEvent
-Jul 30 08:55:22 hummingbird weewx[959]:     ****      callback(event)
-Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 562, in post_loop
-Jul 30 08:55:22 hummingbird weewx[959]:     ****      self._catchup(self.engine.console.genArchiveRecords)
-Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 625, in _catchup
-Jul 30 08:55:22 hummingbird weewx[959]:     ****      origin='hardware'))
-Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 210, in dispatchEvent
-Jul 30 08:55:22 hummingbird weewx[959]:     ****      callback(event)
-Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/wxengine.py", line 574, in new_archive_record
-Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.archive.addRecord(event.record)
-Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weewx/archive.py", line 192, in addRecord
-Jul 30 08:55:22 hummingbird weewx[959]:     ****      e))
-Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weedb/__init__.py", line 130, in __exit__
-Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.connection.commit()
-Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weedb/__init__.py", line 97, in commit
-Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.connection.commit()
-Jul 30 08:55:22 hummingbird weewx[959]:     ****  OperationalError: database is locked
-Jul 30 08:55:22 hummingbird weewx[959]:     ****  Exiting.
