@@ -823,17 +823,21 @@ def list_drivers():
 def prompt_for_info(loc='a simple weather station',
                     lat='45.686', lon='-121.566', alt='0, meter',
                     units='metric'):
+    print "Enter a brief description of the station, such as its location.  For example:"
+    print "Santa's Workshop, North Pole"
     ans = None
     while ans is None:
-        ans = raw_input("enter a short description: ")
+        ans = raw_input("description: ")
         if len(ans.strip()) > 0:
             loc = ans
         else:
             ans = None
-    print "specify altitude with units, for example: 700, foot OR 10, meter"
+    print "Specify altitude, with units 'foot' or 'meter'.  For example:"
+    print "700, foot"
+    print "10, meter"
     ans = None
     while ans is None:
-        ans = raw_input("enter the altitude: ")
+        ans = raw_input("altitude: ")
         if ans.find(',') >= 0:
             parts = ans.split(',')
             try:
@@ -846,29 +850,32 @@ def prompt_for_info(loc='a simple weather station',
                 ans = None
         else:
             ans = None
-    print "specify latitude in decimal degrees, negative for south, for example: 45.686"
+    print "Specify latitude in decimal degrees, negative for south.  For example:"
+    print "45.686"
     ans = None
     while ans is None:
-        ans = raw_input("enter the latitude: ")
+        ans = raw_input("latitude: ")
         try:
             lat = float(ans)
             if lat < -180 or lat > 180:
                 ans = None
         except ValueError:
             ans = None
-    print "specify longitude in decimal degrees, negative for west, for example: -121.566"
+    print "Specify longitude in decimal degrees, negative for west.  For example:"
+    print "-121.566"
     ans = None
     while ans is None:
-        ans = raw_input("enter the longitude: ")
+        ans = raw_input("longitude: ")
         try:
             lon = float(ans)
             if lon < -180 or lon > 180:
                 ans = None
         except ValueError:
             ans = None
+    print "Indicate the preferred units for display: 'metric' or 'us'"
     ans = None
     while ans is None:
-        ans = raw_input("display metric or US units: ")
+        ans = raw_input("units: ")
         if ans.lower() in ['metric', 'us']:
             units = ans.lower()
         else:

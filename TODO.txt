@@ -8,6 +8,9 @@ Should the archive file be backed up before adding the daily summaries?
   - Probably.
   
 
+Prompt for station-specific parameters
+Prompt for extension-specific parameters
+
 Test new setup.py on debian deb upgrades
 Test new extension installer on debian
 Test new setup.py on redhat rpm installs and upgrades
