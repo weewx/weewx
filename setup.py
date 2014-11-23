@@ -626,6 +626,12 @@ def save_path(filepath):
     shutil.move(filepath, newpath)
     return newpath
 
+def mkdir(dirpath):
+    try:
+        os.makedirs(dirpath)
+    except OSError:
+        pass
+
 
 #==============================================================================
 # configure the configuration file
@@ -963,7 +969,6 @@ class Extension(Logger):
 
     def __init__(self, filename=None, layout_type=None, tmpdir='/var/tmp',
                  **kwargs):
-        super(Extension, self).__init__(**kwargs)
         self.filename = filename # could be dir, tarball, or extname
         self.tmpdir = tmpdir
         self.layout_type = layout_type
@@ -1201,7 +1206,6 @@ class ExtensionInstaller(Logger):
         }
 
     def __init__(self, **kwargs):
-        super(ExtensionInstaller, self).__init__(**kwargs)
         self.version = kwargs.get('version')
         self.name = kwargs.get('name')
         self.description = kwargs.get('description')
@@ -1253,7 +1257,7 @@ class ExtensionInstaller(Logger):
             try:
                 self.log("mkdir %s" % dstdir, level=2)
                 if self.doit:
-                    os.makedirs(dstdir)
+                    mkdir(dstdir)
             except os.error:
                 pass
             for f in t[1]:
@@ -1394,7 +1398,7 @@ class ExtensionInstaller(Logger):
         dstdir = os.path.join(dstdir, self.basename)
         self.log("mkdir %s" % dstdir, level=2)
         if self.doit:
-            os.makedirs(dstdir)
+            mkdir(dstdir)
         src = os.path.join(self.layout['EXTRACT_ROOT'], 'install.py')
         self.log("copy %s to %s" % (src, dstdir), level=2)
         if self.doit:
@@ -1475,7 +1479,7 @@ def do_ext(action=None):
     ext = Extension(layout_type=options.layout, tmpdir=options.tmpdir)
     ext.set_verbosity(options.verbosity)
     ext.set_dryrun(options.dryrun)
-    if action == 'list':
+    if action == 'list-extensions':
         ext.enumerate_extensions()
     elif action == 'install':
         ext.set_extension(options.ext)
