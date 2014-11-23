@@ -467,9 +467,9 @@ class StdWunderground(StdRESTful):
             return
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict([config_dict['DataBindings'],
-                                                        config_dict['Databases'],
-                                                        'wx_binding'])
+        _manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'],
+                                                       config_dict['Databases'],
+                                                       'wx_binding')
         
         # The default is to not do an archive post if a rapidfire post
         # has been specified, but this can be overridden
@@ -538,9 +538,9 @@ class StdPWSWeather(StdRESTful):
             return
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict([config_dict['DataBindings'],
+        _manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'],
                                                         config_dict['Databases'],
-                                                        'wx_binding'])
+                                                        'wx_binding')
                 
         _ambient_dict.setdefault('server_url', StdPWSWeather.archive_url)
         self.archive_queue = Queue.Queue()
@@ -587,9 +587,9 @@ class StdWOW(StdRESTful):
             return
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict([config_dict['DataBindings'],
+        _manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'],
                                                         config_dict['Databases'],
-                                                        'wx_binding'])
+                                                        'wx_binding')
                 
         _ambient_dict.setdefault('server_url', StdWOW.archive_url)
         self.archive_queue = Queue.Queue()
@@ -842,9 +842,9 @@ class StdCWOP(StdRESTful):
             return
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict([config_dict['DataBindings'],
+        _manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'],
                                                         config_dict['Databases'],
-                                                        'wx_binding'])
+                                                        'wx_binding')
         
         _cwop_dict.setdefault('latitude',  self.engine.stn_info.latitude_f)
         _cwop_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
@@ -1398,9 +1398,9 @@ class StdAWEKAS(StdRESTful):
         site_dict.setdefault('language', 'de')
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict([config_dict['DataBindings'],
+        _manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'],
                                                         config_dict['Databases'],
-                                                        'wx_binding'])
+                                                        'wx_binding')
         
         self.archive_queue = Queue.Queue()
         self.archive_thread = AWEKASThread(self.archive_queue, **site_dict)
