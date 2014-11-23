@@ -684,7 +684,7 @@ def configure_conf(cfgfn, info, dryrun):
 
     if info is not None and info.get('driver') is not None:
         driver = info.get('driver')
-    else:        
+    else:
         driver = 'weewx.drivers.simulator'
 
     # adjust system path so we can load the config file and driver
@@ -884,7 +884,7 @@ def get_station_info(config_dict):
     """extract station info from config file"""
     info = dict()
     if config_dict is not None and 'Station' in config_dict:
-        for p in ['location', 'latitude', 'longitude', 'altitude']:
+        for p in ['location', 'latitude', 'longitude', 'altitude', 'station_type']:
             if config_dict['Station'].get(p) is not None:
                 info[p] = config_dict['Station'][p]
     return info
@@ -1780,4 +1780,10 @@ if __name__ == "__main__":
 
     # configure the station info and driver for both new install and upgrades
     if 'install' in sys.argv and '--help' not in sys.argv:
+        if (info is not None and info.get('driver') is None and
+            info.get('station_type') is not None):
+            infos = get_driver_infos()
+            for k in infos:
+                if info.get('station_type') == infos[k].get('name'):
+                    info['driver'] = k
         configure_conf(cfgfn, info, False)
