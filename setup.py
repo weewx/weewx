@@ -646,9 +646,6 @@ def mkdir(dirpath):
 # If metric units are specified, override the [[StandardReport]][[[Units]]]
 #==============================================================================
 
-# FIXME: make drivers load even if serial not installed?  what about pyusb?
-#        perhaps bail out gracefully, leaving a generic installation.
-
 def do_cfg():
     import optparse
     description = "configure the configuration file"
@@ -671,15 +668,11 @@ def do_cfg():
     return 0
 
 def configure_conf(cfgfn, info, dryrun):
+    """Configure the configuration file with station info and driver details"""
     # FIXME: this emits a functional config file, but the comments and indents
     # may be messed up.  apparently configobj associates comments *after* a
     # parameter, not before it.  so comments before a parameter will be
     # associated with the previous parameter.
-
-    if info is not None and info.get('driver') is not None:
-        driver = info.get('driver')
-    else:
-        driver = 'weewx.drivers.simulator'
 
     # adjust system path so we can load the config file and driver
     tmp_path = list(sys.path)
@@ -690,18 +683,22 @@ def configure_conf(cfgfn, info, dryrun):
     config_fn, config_dict = read_config(cfgfn)
     print 'Using configuration file %s' % config_fn
 
-    # Load the configuration editor from the driver file
+    # Try to load the driver so we can use its configuration editor.  If that
+    # fails for any reason, complain about it then fallback to the simulator.
+    # The simulator must *always* work properly or we have big problems.
+
+    if info is not None and info.get('driver') is not None:
+        driver = info.get('driver')
+    else:
+        driver = 'weewx.drivers.simulator'
+
     try:
-        __import__(driver)
-        driver_module = sys.modules[driver]
-        loader_function = getattr(driver_module, 'confeditor_loader')
-        editor = loader_function()
-        driver_name = driver_module.DRIVER_NAME
-        driver_vers = driver_module.DRIVER_VERSION
-        print 'Using %s version %s (%s)' % (driver_name, driver_vers, driver)
+        editor, driver_name, driver_vers = load_editor(driver)
     except Exception, e:
-        sys.stderr.write("Cannot load conf editor for %s: %s\n" % (driver, e))
-        exit(1)
+        print "Cannot load conf editor for %s: %s" % (driver, e)
+        driver = 'weewx.drivers.simulator'
+        editor, driver_name, driver_vers = load_editor(driver)
+    print 'Using %s version %s (%s)' % (driver_name, driver_vers, driver)
 
     # reset the system path
     sys.path = tmp_path
@@ -761,6 +758,14 @@ def configure_conf(cfgfn, info, dryrun):
     if not dryrun:
         save_path(config_fn)
         shutil.move(new_config.filename, config_fn)
+
+def load_editor(driver):
+    """Load the configuration editor from the driver file"""
+    __import__(driver)
+    driver_module = sys.modules[driver]
+    loader_function = getattr(driver_module, 'confeditor_loader')
+    editor = loader_function()
+    return editor, driver_module.DRIVER_NAME, driver_module.DRIVER_VERSION
 
 def prompt_for_driver():
     infos = get_driver_infos()
