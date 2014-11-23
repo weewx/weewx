@@ -270,6 +270,10 @@
         <td>$day.dateTime.raw</td>
     </tr>
     <tr>
+        <td>End of day (unix epoch time):</td>
+        <td>$($day.dateTime.raw + 24*3600)</td>
+    </tr>
+    <tr>
       <td>Max Temperature</td>
       <td>$day.outTemp.max</td>
     </tr>
@@ -437,6 +441,23 @@
     </tr>
   </table>
     
+  <h1>Test for tag \$alltime</h1>
+  <table>
+    <tr>
+      <td align="right">Max temp from \$alltime.outTemp.max</td>
+      <td align="left">$alltime.outTemp.max <br/>
+      at $alltime.outTemp.maxtime</td>
+    </tr>
+    <tr>
+      <td align="right">High Wind from "\$alltime.wind.max"</td>
+      <td align="left">
+      $alltime.wind.max <br/>
+      from $alltime.wind.gustdir <br/>
+      at $alltime.wind.maxtime
+      </td>
+    </tr>
+  </table>
+
   <hr/>
 
   <h1>Tests for tag \$Extras</h1>
@@ -514,8 +535,6 @@
       <td align="right">Check its format</td>
       <td align="left">$unit.format.current0</td>
     </tr>
-    
-
   </table>
   
   <hr/>

@@ -2,14 +2,11 @@
 
 Quick start guide
 
-Test restful extensions (again).
-
 Move schemas to the extension that uses them.
 
 Should the archive file be backed up before adding the daily summaries?
   - Probably.
   
-Check whether $alltime still works.
 
 Test new setup.py on debian deb upgrades
 Test new extension installer on debian

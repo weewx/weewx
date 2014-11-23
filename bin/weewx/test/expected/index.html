@@ -117,11 +117,11 @@
     </tr>
     <tr>
       <td>Barometer using $latest</td>
-      <td>31.000 inHg</td>
+      <td>30.780 inHg</td>
     </tr>
     <tr>
       <td>Barometer using $latest and explicit data binding</td>
-      <td>30.500 inHg at 1293868800</td>
+      <td>30.390 inHg at 1283538000</td>
     </tr>
     <tr>
       <td>Wind Chill (normal)</td>
@@ -199,7 +199,7 @@
     </tr>
     <tr>
       <td>Max Temperature</td>
-      <td>53.5&#176;F</td>
+      <td>50.3&#176;F</td>
     </tr>
     <tr>
       <td>Min Temperature</td>
@@ -207,7 +207,7 @@
     </tr>
     <tr>
       <td>Time of max temperature:</td>
-      <td>12:00</td>
+      <td>11:20</td>
     </tr>
     <tr>
       <td>Time of min temperature:</td>
@@ -257,8 +257,12 @@
         <td>1283497200</td>
     </tr>
     <tr>
+        <td>End of day (unix epoch time):</td>
+        <td>1283583600</td>
+    </tr>
+    <tr>
       <td>Max Temperature</td>
-      <td>78.5&#176;F</td>
+      <td>63.3&#176;F</td>
     </tr>
     <tr>
       <td>Min Temperature</td>
@@ -266,7 +270,7 @@
     </tr>
     <tr>
       <td>Time of max temperature:</td>
-      <td>19:00</td>
+      <td>00:10</td>
     </tr>
     <tr>
       <td>Time of min temperature:</td>
@@ -274,15 +278,15 @@
     </tr>
     <tr>
       <td>Last temperature of the day</td>
-      <td>63.6&#176;F</td>
+      <td>50.3&#176;F</td>
     </tr>
     <tr>
       <td>Time of the last temperature of the day</td>
-      <td>09/04/10 00:00:00</td>
+      <td>09/03/10 11:20:00</td>
     </tr>
     <tr>
       <td>Max Temperature in alt_binding</td>
-      <td>59.3&#176;F</td>
+      <td>51.7&#176;F</td>
     </tr>
     <tr>
       <td>Min temp with explicit conversion to Celsius</td>
@@ -322,27 +326,27 @@
     </tr>
     <tr>
       <td>Average wind from "$day.wind.avg"</td>
-      <td>17 mph</td>
+      <td>19 mph</td>
     </tr>
     <tr>
       <td>High Wind from "$day.windSpeed.avg"</td>
-      <td>17 mph</td>
+      <td>19 mph</td>
     </tr>
     <tr>
       <td>Average aggregation (wind)</td>
-      <td>17 mph</td>
+      <td>19 mph</td>
     </tr>
     <tr>
       <td>RMS aggregation(wind)</td>
-      <td>17 mph</td>
+      <td>19 mph</td>
     </tr>
     <tr>
       <td>Aggregation Vector Average (wind)</td>
-      <td>15 mph</td>
+      <td>19 mph</td>
     </tr>
     <tr>
       <td>Aggregation Vector Direction (wind)</td>
-      <td>127&#176;</td>
+      <td>107&#176;</td>
     </tr>
     <tr>
       <td>Test tag "has_data" with nonsense type</td>
@@ -404,10 +408,27 @@
   <table>
     <tr>
       <td>Rainyear total</td>
-      <td>86.59 in</td>
+      <td>58.68 in</td>
     </tr>
   </table>
     
+  <h1>Test for tag $alltime</h1>
+  <table>
+    <tr>
+      <td align="right">Max temp from $alltime.outTemp.max</td>
+      <td align="left">100.0&#176;F <br/>
+      at 02-Jul-2010 19:00</td>
+    </tr>
+    <tr>
+      <td align="right">High Wind from "$alltime.wind.max"</td>
+      <td align="left">
+      24 mph <br/>
+      from 90&#176; <br/>
+      at 02-Jan-2010 00:00
+      </td>
+    </tr>
+  </table>
+
   <hr/>
 
   <h1>Tests for tag $Extras</h1>
@@ -455,7 +476,7 @@
     <tr>
       <td align="right">Example from customizing guide<br/>
       (&quot;$day.outTemp.max.formatted$unit.label.outTemp&quot;)</td>
-      <td align="left">78.5&#176;F</td>
+      <td align="left">63.3&#176;F</td>
     </tr>
     <tr>
       <td align="right">Add a new unit type, existing group</td>
@@ -481,8 +502,6 @@
       <td align="right">Check its format</td>
       <td align="left">%.1f</td>
     </tr>
-    
-
   </table>
   
   <hr/>

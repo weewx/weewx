@@ -12,7 +12,6 @@ import os.path
 import shutil
 import sys
 import syslog
-import time
 import unittest
 
 import configobj
@@ -97,8 +96,8 @@ class Common(unittest.TestCase):
     
     def test_report_engine(self):
         
-        # Pick a random generation time (3-Sep-2010 11:20:00 local):
-        testtime_ts = int(time.mktime((2010,9,3,11,20,0,0,0,-1)))
+        # The generation time should be the same as the last record in the test database:
+        testtime_ts = gen_fake_data.stop_ts
         print "\ntest time is ", weeutil.weeutil.timestamp_to_string(testtime_ts)
 
         stn_info = weewx.station.StationInfo(**self.config_dict['Station'])

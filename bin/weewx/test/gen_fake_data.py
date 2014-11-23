@@ -20,9 +20,9 @@ import schemas.wview
 import weedb
 import weewx.manager
 
-# One year of data:
+# Roughly nine months of data:
 start_tt = (2010,1,1,0,0,0,0,0,-1)
-stop_tt  = (2011,1,1,0,0,0,0,0,-1)
+stop_tt  = (2010,9,3,11,20,0,0,0,-1)
 start_ts = int(time.mktime(start_tt))
 stop_ts  = int(time.mktime(stop_tt))
 

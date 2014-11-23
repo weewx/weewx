@@ -73,6 +73,10 @@ class Manager(object):
         # still indeterminate --- set it to 'None'.
         _row = self.getSql("SELECT usUnits FROM %s LIMIT 1;" % self.table_name)
         self.std_unit_system = _row[0] if _row is not None else None
+        
+        # Finally, cache the first and last timestamps
+        self.first_timestamp = self.firstGoodStamp()
+        self.last_timestamp  = self.lastGoodStamp()
 
     @classmethod
     def open(cls, database_dict, table_name='archive'):
@@ -199,12 +203,21 @@ class Manager(object):
         # (in which case it will have method 'keys'). If so, wrap it in
         # something iterable (a list):
         record_list = [record_obj] if hasattr(record_obj, 'keys') else record_obj
-
+        
+        min_ts = None
+        max_ts = 0
         with weedb.Transaction(self.connection) as cursor:
 
             for record in record_list:
                 self._addSingleRecord(record, cursor, log_level)
+                min_ts = min(min_ts, record['dateTime']) if min_ts is not None else record['dateTime']
+                max_ts = max(max_ts, record['dateTime'])
 
+        # Update the cached timestamps. This has to sit outside the
+        # transaction context, in case an exception occurs.
+        self.first_timestamp = min(min_ts, self.first_timestamp)
+        self.last_timestamp  = max(max_ts, self.last_timestamp)
+        
     def _addSingleRecord(self, record, cursor, log_level):
         """Internal function for adding a single record to the database."""
         
@@ -1112,9 +1125,13 @@ class DaySummaryManager(Manager):
         type is unknown. The second element is the unit type (eg, 'degree_F').
         The third element is the unit group (eg, "group_temperature") """
         
-        # Can we take advantage of the day summaries optimizations?
-        if aggregate_type in ['last', 'lasttime'] or not weeutil.weeutil.isMidnight(timespan.start) \
-                                                  or not weeutil.weeutil.isMidnight(timespan.stop):
+        # We can use the day summary optimizations if the timespan sits on midnight boundaries
+        # or are the first and last records in the database:
+        if aggregate_type in ['last', 'lasttime'] or not (weeutil.weeutil.isMidnight(timespan.start) or \
+                                                          timespan.start == self.first_timestamp) \
+                                                  or not (weeutil.weeutil.isMidnight(timespan.stop)  or \
+                                                          timespan.stop  == self.last_timestamp):
+            
             # No. We have to calculate the aggregate using the regular archive table:
             result = Manager.getAggregate(self, timespan, obs_type, aggregate_type, 
                                           **option_dict)
