@@ -549,7 +549,7 @@ site_dict.setdefault('database_dict', db_dict)</pre>
           <pre class='tty'>site_dict = config_dict['StdRESTful']['Uploader']
 site_dict = accumulateLeaves(site_dict, max_level=1)
 _, site_dict['database_dict'], _ = \
-    weewx.manager.get_database_config(config_dict, 'wx_binding')</pre>
+    weewx.manager.open_manager_with_config(config_dict, 'wx_binding')</pre>
         </td>
       </tr>
     </table>
@@ -574,7 +574,7 @@ with weewx.archive.Archive.open(self.database_dict) as archive:
     data = self.calculate(event.packet, archive)</pre>
         </td>
         <td>
-          <pre class='tty'>dbm = self.engine.dbbinder.get_database('wx_binding')
+          <pre class='tty'>dbm = self.engine.dbbinder.get_manager('wx_binding')
 data = self.calculate(event_data, dbm)</pre>
         </td>
       </tr>
@@ -588,6 +588,37 @@ data = self.calculate(event_data, dbm)</pre>
           <pre class='tty'>val = dbm.getSql("SELECT AVG(windSpeed) FROM %s "
                  "WHERE dateTime>? AND dateTime<=?" %
                  dbm.table_name, (start_ts, end_ts))</pre>
+        </td>
+      </tr>
+    </table>
+
+      <h3>Extension installer</h3>
+      <p>The <span class='code'>setup.py</span> utility is now included in the
+        installation; it is no longer necessary to keep a copy of the
+        <span class='code'>weewx</span> source tree just for the
+        <span class='code'>setup.py</span> utility.</p>
+      <p>For .deb and .rpm installations, the command
+        <span class='code'>wee_setup</span> is a symlink to
+        <span class='code'>setup.py</span>.</p>
+      <p>The options for installing extensions changed slightly to be more
+        consistent with the rest of the options to
+        <span class='code'>setup.py</span>.</p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <pre class='tty'>setup.py --extension --install extensions/basic
+setup.py --extension --install basic.tar.gz
+setup.py --extension --uninstall basic
+setup.py --extension --list
+setup.py --extension --install basic.tar.gz --dryrun</pre>
+        </td>
+        <td>
+          <pre class='tty'>setup.py install --extension=extensions/basic
+setup.py install --extension=basic.tar.gz
+setup.py uninstall --extension basic
+setup.py list-extensions
+setup.py install --extension basic.tar.gz --dry-run</pre>
         </td>
       </tr>
     </table>
