@@ -73,6 +73,31 @@ Version: 3.0.0 alpha
         such, its internal design is subject to change. Be prepared to do
         updates to any code or customization you do! </p>
 
+    <h2>Where to put customizations</h2>
+      <p>For configuration changes, simply modify the
+        <span class="code">weewx</span> configuration file
+        <span class="code">weewx.conf</span>, and possibly modify the
+        skin configuration file <span class="code">skin.conf</span> as
+        described later in this document.  These files and template files
+        in the <span class='code'>skins</span> directory will be preserved
+        when you upgrade.</p>
+      <p>Other customizations require new Python code or modifications of
+        example code. Where should you put the code? If you simply modify
+        the examples in place, then your changes will be overwritten the
+        next time you do an upgrade.</p>
+      <p>A better idea is to put the code in the
+        <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>,
+        directory. For example, copy example code from the
+        <span class="code">examples</span> directory to the
+        <span class="code">user</span> directory, then modify it
+        there.  If your modification does not contain much code,
+        consider putting it in the
+        file <span class="code">extensions.py</span> in the
+        <span class="code">user</span> directory.  Because
+        the <span class="code">user</span> directory is preserved
+        through upgrades, you won't have to redo any changes you might
+        have made.</p>
+
       <h2>Overview of the weewx architecture</h2>
       <p>At a high-level, <span class="code">weewx</span> consists of an engine
         class called <span class="code">StdEngine</span>. It is responsible for
@@ -301,31 +326,6 @@ Version: 3.0.0 alpha
         method. Adjust paths as necessary if you used another method.</p>
       <pre class="tty">cd /home/weewx
 ./bin/wee_reports weewx.conf 1398927600</pre>
-
-    <h2>Where to put customizations</h2>
-      <p>For configuration changes, simply modify the
-        <span class="code">weewx</span> configuration file
-        <span class="code">weewx.conf</span>, and possibly modify the
-        skin configuration file <span class="code">skin.conf</span> as
-        described later in this document.  These files and template files
-        in the <span class='code'>skins</span> directory will be preserved
-        when you upgrade.</p>
-      <p>Other customizations require new Python code or modifications of
-        example code. Where should you put the code? If you simply modify
-        the examples in place, then your changes will be overwritten the
-        next time you do an upgrade.</p>
-      <p>A better idea is to put the code in the
-        <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>,
-        directory. For example, copy example code from the
-        <span class="code">examples</span> directory to the
-        <span class="code">user</span> directory, then modify it
-        there.  If your modification does not contain much code,
-        consider putting it in the
-        file <span class="code">extensions.py</span> in the
-        <span class="code">user</span> directory.  Because
-        the <span class="code">user</span> directory is preserved
-        through upgrades, you won't have to redo any changes you might
-        have made.</p>
     
     <h2>The database</h2>
     <p>
@@ -505,11 +505,14 @@ Version: 3.0.0 alpha
       query a database.  These are the canonical forms for obtaining a
       database manager.</p>
     <p>If you are opening a database from within a weewx service:</p>
-    <p class='tty'>self.dbm = self.engine.dbbinder.get_database(data_binding='name_of_binding', initialize=True)
+    <p class='tty'>self.dbm = self.engine.dbbinder.get_manager(data_binding='name_of_binding', initialize=True)
+self.dbm.backfill_day_summary()   # If necessary</p>
+    <p>If you are opening a database from within a weewx search list extension:</p>
+    <p class='tty'>self.dbm = self.generator.db_binder.get_manager(data_binding='name_of_binding', initialize=True)
 self.dbm.backfill_day_summary()   # If necessary</p>
     <p>If opening a database from somewhere other than a service, and there
       is no DBBinder available:</p>
-    <p class='tty'>self.dbm = weewx.manager.open_database(config_dict, data_binding='name_of_binding', initialize=True)
+    <p class='tty'>self.dbm = weewx.manager.open_manager_with_config(config_dict, data_binding='name_of_binding', initialize=True)
 self.dbm.backfill_day_summary()   # If necessary</p>
     <p>The DBBinder caches managers, and thus database connections.  Beware
       of using a single manager in two different threads; if you do this
