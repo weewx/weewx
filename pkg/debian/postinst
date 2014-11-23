@@ -158,7 +158,7 @@ get_conf_version() {
 
 # insert/update the driver configuration stanza into the configuration file
 configure_driver() {
-    driver=unknown
+    driver=weewx.drivers.simulator
     db_get weewx/station_type
     if [ "$RET" = "CC3000" ]; then
         driver=weewx.drivers.cc3000
