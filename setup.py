@@ -649,12 +649,6 @@ def mkdir(dirpath):
 # FIXME: make drivers load even if serial not installed?  what about pyusb?
 #        perhaps bail out gracefully, leaving a generic installation.
 
-# FIXME: test this on setup.py upgrades
-
-# FIXME: test this on debian installs and upgrades
-
-# FIXME: test this on redhat installs and upgrades
-
 def do_cfg():
     import optparse
     description = "configure the configuration file"
@@ -937,7 +931,6 @@ def get_conf_filename():
 #==============================================================================
 
 # FIXME: consider start/stop of weewx as part of the process
-# FIXME: design something to handle paths for included files in skins
 
 class Logger(object):
     def __init__(self, verbosity=0):

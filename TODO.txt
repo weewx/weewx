@@ -4,12 +4,6 @@ Quick start guide
 
 Test restful extensions (again).
 
-The station hardware configuration process could be improved. 
-  - Nowhere is it listed what driver to use.
-  - Docs need to be updated with the new two-step process.
-  - Perhaps the configuration routine could be made interactive? It would
-    scan the "drivers" subdirectory and offer up the choices...
-
 Move schemas to the extension that uses them.
 
 Should the archive file be backed up before adding the daily summaries?
@@ -17,6 +11,12 @@ Should the archive file be backed up before adding the daily summaries?
   
 Check whether $alltime still works.
 
+Test new setup.py on debian deb upgrades
+Test new extension installer on debian
+Test new setup.py on redhat rpm installs and upgrades
+Test new extension installer on redhat
+Test new setup.py on suse rpm installs and upgrades
+Test new extension installer on suse
 
 
 --------------------  Nice to do (V3.1?)  --------------------------- 
@@ -62,6 +62,13 @@ Jul 30 08:55:22 hummingbird weewx[959]:     ****  Exiting.
 
 
 --------------------  DONE  --------------------------- 
+
+The station hardware configuration process could be improved. 
+  - Nowhere is it listed what driver to use.
+  - Docs need to be updated with the new two-step process.
+  - Perhaps the configuration routine could be made interactive? It would
+    scan the "drivers" subdirectory and offer up the choices...
+(23nov14 mwall)
 
 Include setup.py in the installation (also setup.cfg)
 (22nov14 mwall)
