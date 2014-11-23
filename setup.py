@@ -626,6 +626,7 @@ def save_path(filepath):
     shutil.move(filepath, newpath)
     return newpath
 
+
 #==============================================================================
 # configure the configuration file
 #
@@ -633,34 +634,52 @@ def save_path(filepath):
 # and set the station_type to the driver.
 #
 # If no driver is specified, either prompt for a driver or use the Simulator.
+#
+# If station info is specified, put that into the [Station] section.
+#
+# If metric units are specified, override the [[StandardReport]][[[Units]]]
 #==============================================================================
+
+# FIXME: make drivers load even if serial not installed?  what about pyusb?
+#        perhaps bail out gracefully, leaving a generic installation.
+
+# FIXME: test this on setup.py upgrades
+
+# FIXME: test this on debian installs and upgrades
+
+# FIXME: test this on redhat installs and upgrades
 
 def do_cfg():
     import optparse
     description = "configure the configuration file"
-    usage = "%prog configure [config_path] [--driver=DRIVER]"
+    usage = "%prog configure [--config=FILE] [--driver=DRIVER]"
     parser = optparse.OptionParser(description=description, usage=usage)
     parser.add_option('--no-prompt', dest='noprompt', action='store_true',
                       help='do not prompt for options')
+    parser.add_option('--config', dest='cfgfn', type=str, metavar='FILE',
+                      help='modify the configuration file FILE')
     parser.add_option('--driver', dest='driver', type=str, metavar='DRIVER',
                       help='use the driver DRIVER, e.g., weewx.driver.vantage')
-    parser.add_option('--dryrun', dest='dryrun', action='store_true',
+    parser.add_option('--dry-run', dest='dryrun', action='store_true',
                       help='print what would happen but do not do it')
     (options, _args) = parser.parse_args()
-    configure_conf(options.driver, options.dryrun, options.noprompt)
+
+    if options.driver is None and not options.noprompt:
+        options.driver = prompt_for_driver()
+
+    configure_conf(options.cfgfn, {'driver': options.driver}, options.dryrun)
     return 0
 
-def configure_conf(driver, dryrun, noprompt):
+def configure_conf(cfgfn, info, dryrun):
     # FIXME: this emits a functional config file, but the comments and indents
     # may be messed up.  apparently configobj associates comments *after* a
     # parameter, not before it.  so comments before a parameter will be
     # associated with the previous parameter.
 
-    if driver is None:
-        if noprompt:
-            driver = 'weewx.drivers.simulator'
-        else:
-            driver = prompt_for_driver()
+    if info is not None and info.get('driver') is not None:
+        driver = info.get('driver')
+    else:        
+        driver = 'weewx.drivers.simulator'
 
     # adjust system path so we can load the config file and driver
     tmp_path = list(sys.path)
@@ -668,7 +687,7 @@ def configure_conf(driver, dryrun, noprompt):
     from weeutil.weeutil import read_config
 
     # Load the configuration file
-    config_fn, config_dict = read_config(None, sys.argv[2:])
+    config_fn, config_dict = read_config(cfgfn)
     print 'Using configuration file %s' % config_fn
 
     # Load the configuration editor from the driver file
@@ -714,6 +733,25 @@ def configure_conf(driver, dryrun, noprompt):
             new_config.comments[driver_name] = stanza.comments[driver_name]
             new_config.inline_comments[driver_name] = stanza.inline_comments[driver_name]
     new_config['Station']['station_type'] = driver_name
+
+    # insert any station info
+    if info is not None:
+        for p in ['location', 'latitude', 'longitude', 'altitude']:
+            if info.get(p) is not None:
+                new_config['Station'][p] = info[p]
+        if ('Units' not in new_config['StdReport']['StandardReport'] and
+            info.get('units') == 'metric'):
+            new_config['StdReport']['StandardReport']['Units'] = {}
+            new_config['StdReport']['StandardReport']['Units']['Groups'] = {
+                'group_altitude': 'meter',
+                'group_degree_day': 'degree_C_day',
+                'group_pressure': 'mbar',
+                'group_radiation': 'watt_per_meter_squared',
+                'group_rain': 'mm',
+                'group_rainrate': 'mm_per_hour',
+                'group_speed': 'meter_per_second',
+                'group_speed2': 'meter_per_second2',
+                'group_temperature': 'degree_C'}
 
     # save the new configuration
     new_config.filename = "%s.tmp" % config_fn
@@ -776,19 +814,18 @@ def list_drivers():
             if x in infos[d]:
                 msg += " %-15s" % infos[d][x]
         print msg
-    return 0
 
-def prompt_for_settings():
+def prompt_for_info(loc='a simple weather station',
+                    lat='45.686', lon='-121.566', alt='0, meter',
+                    units='metric'):
     ans = None
     while ans is None:
         ans = raw_input("enter a short description: ")
         if len(ans.strip()) > 0:
-            desc = ans
+            loc = ans
         else:
             ans = None
-    print "specify altitude with units, for example:"
-    print "  700, foot"
-    print "  10, meter"
+    print "specify altitude with units, for example: 700, foot OR 10, meter"
     ans = None
     while ans is None:
         ans = raw_input("enter the altitude: ")
@@ -797,15 +834,14 @@ def prompt_for_settings():
             try:
                 float(parts[0])
                 if parts[1].strip() in ['foot', 'meter']:
-                    alt = ans
+                    alt = [parts[0].strip(), parts[1].strip()]
                 else:
                     ans = None
             except ValueError:
                 ans = None
         else:
             ans = None
-    print "specify latitude in decimal degrees, negative for south, for example:"
-    print "  45.686"
+    print "specify latitude in decimal degrees, negative for south, for example: 45.686"
     ans = None
     while ans is None:
         ans = raw_input("enter the latitude: ")
@@ -815,8 +851,7 @@ def prompt_for_settings():
                 ans = None
         except ValueError:
             ans = None
-    print "specify longitude in decimal degrees, negative for west, for example:"
-    print "  -121.566"
+    print "specify longitude in decimal degrees, negative for west, for example: -121.566"
     ans = None
     while ans is None:
         ans = raw_input("enter the longitude: ")
@@ -833,7 +868,42 @@ def prompt_for_settings():
             units = ans.lower()
         else:
             ans = None
-    return desc, alt, lat, lon, units
+    return {'location': loc,
+            'altitude': alt,
+            'latitude': lat,
+            'longitude': lon,
+            'units': units}
+
+def get_station_info(config_dict):
+    """extract station info from config file"""
+    info = dict()
+    if config_dict is not None and 'Station' in config_dict:
+        for p in ['location', 'latitude', 'longitude', 'altitude']:
+            if config_dict['Station'].get(p) is not None:
+                info[p] = config_dict['Station'][p]
+    return info
+
+def get_conf_filename():
+    """find the full path to weewx.conf.  this should only be run from a source
+    tree, so we look for the setup.cfg to tell us the installation directory,
+    then append the weewx.conf filename to that.
+
+    it would be nice to get this from the standard python setup stuff, but how?
+    """
+    # FIXME: if someone specifies --home or --prefix then this will break
+
+    # try to find the directory in which weewx.conf will be installed
+    idir = None
+    # look in the location specified by setup.cfg
+    fn = os.path.join(this_dir, 'setup.cfg')
+    if os.path.exists(fn):
+        setup_dict = configobj.ConfigObj(fn)
+        if ('install' in setup_dict and
+            setup_dict['install'].get('home') is not None):
+            idir = setup_dict['install'].get('home')
+    if idir is None:
+        return None
+    return "%s/weewx.conf" % idir
 
 
 #==============================================================================
@@ -1396,7 +1466,7 @@ def do_ext(action=None):
                       metavar='LAYOUT', help='layout is deb, rpm, or py')
     parser.add_option('--tmpdir', dest='tmpdir', type=str, default='/var/tmp',
                       metavar="DIR", help='temporary directory')
-    parser.add_option('--dryrun', dest='dryrun', action='store_true',
+    parser.add_option('--dry-run', dest='dryrun', action='store_true',
                       help='print what would happen but do not do it')
     parser.add_option('--verbosity', dest='verbosity', type=int, default=1,
                       metavar="N", help='how much status to spew, 0-3')
@@ -1497,15 +1567,7 @@ def do_merge():
 #==============================================================================
 
 if __name__ == "__main__":
-    if 'configure' in sys.argv:
-        exit(do_cfg())
-    if '--merge-config' in sys.argv:
-        exit(do_merge())
-    if '--prompt' in sys.argv:
-        prompt_for_settings()
-        exit(0)
-    if '--list-drivers' in sys.argv:
-        exit(list_drivers())
+    # options for dealing with extensions
     if 'list-extensions' in sys.argv:
         exit(do_ext('list-extensions'))
     if '--extension' in [f[:11] for f in sys.argv]:
@@ -1515,7 +1577,31 @@ if __name__ == "__main__":
             exit(do_ext('uninstall'))
         else:
             exit(do_ext())
+
+    # used by deb and rpm installers
+    if '--merge-config' in sys.argv:
+        exit(do_merge())
+    # used by deb and rpm installers, or for manual post-install configure
+    if 'configure' in sys.argv:
+        exit(do_cfg())
+
+    # for testing purposes
+    if '--list-drivers' in sys.argv:
+        list_drivers()
+        exit(0)
+    if '--prompt-for-driver' in sys.argv:
+        print prompt_for_driver()
+        exit(0)
+    if '--prompt-for-info' in sys.argv:
+        print prompt_for_info()
+        exit(0)
+
+    # inject weewx-specific help before the standard help message
     if '--help' in sys.argv:
+        print "Commands for installing/upgrading weewx:"
+        print ""
+        print "  setup.py install [--no-prompt]"
+        print ""
         print "Commands for configuring weewx:"
         print ""
         print "  setup.py configure [--driver=DRIVER]"
@@ -1529,6 +1615,21 @@ if __name__ == "__main__":
         print "  setup.py --help --extension"
         print ""
 
+    # if this is a new installation, prompt for station info.  do this before
+    # setup so that bailing out during prompts will result in no actions that
+    # we might have to undo.
+    info = None
+    cfgfn = None
+    if 'install' in sys.argv and '--help' not in sys.argv:
+        cfgfn = get_conf_filename()
+        if cfgfn is not None and os.path.exists(cfgfn):
+            config_dict = configobj.ConfigObj(cfgfn)
+            info = get_station_info(config_dict)
+        if info is None:
+            info = prompt_for_info()
+            info['driver'] = prompt_for_driver()
+
+    # now invoke the standard python setup
     setup(name='weewx',
           version=VERSION,
           description='weather software',
@@ -1536,7 +1637,7 @@ if __name__ == "__main__":
           author='Tom Keffer',
           author_email='tkeffer@gmail.com',
           url='http://www.weewx.com',
-          license = 'GPLv3',
+          license='GPLv3',
           classifiers = ['Development Status :: 5 - Production/Stable',
                          'Intended Audience :: End Users/Desktop',
                          'License :: GPLv3',
@@ -1572,7 +1673,6 @@ if __name__ == "__main__":
             ('',
              ['LICENSE.txt',
               'README',
-              'setup.cfg',
               'setup.py',
               'weewx.conf']),
             ('docs',
@@ -1673,3 +1773,7 @@ if __name__ == "__main__":
             ('util/rsyslog.d',
              ['util/rsyslog.d/weewx.conf'])]
           )
+
+    # configure the station info and driver for both new install and upgrades
+    if 'install' in sys.argv and '--help' not in sys.argv:
+        configure_conf(cfgfn, info, False)

@@ -183,7 +183,7 @@ configure_driver() {
     elif [ "$RET" = "WS28xx" ]; then
         driver=weewx.drivers.ws28xx
     fi
-    $setupapp configure $cfgfile --driver=$driver
+    $setupapp configure --config=$cfgfile --driver=$driver
 }
 
 case "$1" in
