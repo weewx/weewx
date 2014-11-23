@@ -1604,21 +1604,22 @@ if __name__ == "__main__":
 
     # inject weewx-specific help before the standard help message
     if '--help' in sys.argv:
+        prog = os.path.basename(sys.argv[0])
         print "Commands for installing/upgrading weewx:"
         print ""
-        print "  setup.py install [--no-prompt]"
+        print "  %s install [--no-prompt]" % prog
         print ""
         print "Commands for configuring weewx:"
         print ""
-        print "  setup.py configure [--driver=DRIVER]"
-        print "  setup.py configure --help"
+        print "  %s configure [--driver=DRIVER]" % prog
+        print "  %s configure --help" % prog
         print ""
         print "Commands for installing/removing/listing weewx extensions:"
         print ""
-        print "  setup.py list-extensions"
-        print "  setup.py install --extension forecast.tar.gz"
-        print "  setup.py uninstall --extension forecast"
-        print "  setup.py --help --extension"
+        print "  %s list-extensions" % prog
+        print "  %s install --extension forecast.tar.gz" % prog
+        print "  %s uninstall --extension forecast" %prog
+        print "  %s --help --extension" % prog
         print ""
 
     # if this is a new installation, prompt for station info.  do this before
@@ -1777,7 +1778,9 @@ if __name__ == "__main__":
             ('util/logwatch/scripts/services',
              ['util/logwatch/scripts/services/weewx']),
             ('util/rsyslog.d',
-             ['util/rsyslog.d/weewx.conf'])]
+             ['util/rsyslog.d/weewx.conf']),
+            ('util/systemd',
+             ['util/systemd/weewx.service'])]
           )
 
     # configure the station info and driver for both new install and upgrades

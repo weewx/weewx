@@ -177,3 +177,4 @@ util/logwatch/conf/logfiles/weewx.conf
 util/logwatch/conf/services/weewx.conf
 util/logwatch/scripts/services/weewx
 util/rsyslog.d/weewx.conf
+util/systemd/weewx.service
