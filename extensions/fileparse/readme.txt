@@ -1,14 +1,20 @@
 fileparse - simple driver that reads data from a file
 Copyright 2014 Matthew Wall
 
-This driver illustrates how to package a driver so it can be installed by the
-weewx extension installer.
+This example illustrates how to implement a driver and package it so that it
+can be installed by the extension installer.  The fileparse driver reads data
+from a file of name=value pairs.
 
 
 Installation instructions:
 
-cd /home/weewx
+1) run the installer:
+
 setup.py install --extension extensions/fileparse
+
+2) start weewx:
+
+sudo /etc/init.d/weewx start
 
 
 Manual installation instructions:

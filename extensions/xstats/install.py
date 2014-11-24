@@ -15,5 +15,12 @@ class XStatsInstaller(ExtensionInstaller):
             description='Extended statistics for weewx reports',
             author="Matthew Wall",
             author_email="mwall@users.sourceforge.net",
-            files=[('bin/user', ['bin/user/xstats.py'])]
+            config={
+                'StdReport': {
+                    'xstats': {
+                        'skin': 'xstats',
+                        'HTML_ROOT': 'xstats'}}},
+            files=[('bin/user', ['bin/user/xstats.py']),
+                   ('skins/xstats', ['skins/xstats/skin.conf',
+                                     'skins/xstats/index.html.tmpl'])]
             )
