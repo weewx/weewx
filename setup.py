@@ -727,9 +727,16 @@ def configure_conf(cfgfn, info, dryrun):
         new_config.inline_comments[s] = old_config.inline_comments[s]
         if s == 'Station':
             new_config[driver_name] = stanza[driver_name]
-            new_config.comments[driver_name] = stanza.comments[driver_name]
+            new_config.comments[driver_name] = ["", "##############################################################################", ""]
+#            new_config.comments[driver_name] = stanza.comments[driver_name]
             new_config.inline_comments[driver_name] = stanza.inline_comments[driver_name]
     new_config['Station']['station_type'] = driver_name
+
+    # update driver stanza with any overrides from info
+    if info is not None:
+        if driver_name in info:
+            for k in info[driver_name]:
+                new_config[driver_name][k] = info[driver_name][k]
 
     # insert any station info
     if info is not None:
@@ -768,6 +775,7 @@ def load_editor(driver):
     return editor, driver_module.DRIVER_NAME, driver_module.DRIVER_VERSION
 
 def prompt_for_driver():
+    """Get the information about each driver, return as a dictionary."""
     infos = get_driver_infos()
     keys = sorted(infos)
     for i, d in enumerate(keys):
@@ -782,6 +790,19 @@ def prompt_for_driver():
         except ValueError:
             ans = None
     return keys[idx]
+
+def prompt_for_driver_settings(driver):
+    """Let the driver prompt for any required settings."""
+    settings = dict()
+    try:
+        __import__(driver)
+        driver_module = sys.modules[driver]
+        loader_function = getattr(driver_module, 'confeditor_loader')
+        editor = loader_function()
+        settings[driver_module.DRIVER_NAME] = editor.prompt_for_settings()
+    except Exception, e:
+        pass
+    return settings
 
 def get_driver_infos():
     """scan the drivers folder and list each driver with its package"""
@@ -1640,6 +1661,7 @@ if __name__ == "__main__":
         if info is None:
             info = prompt_for_info()
             info['driver'] = prompt_for_driver()
+            info.update(prompt_for_driver_settings(info['driver']))
 
     # now invoke the standard python setup
     setup(name='weewx',

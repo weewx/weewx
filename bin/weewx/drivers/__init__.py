@@ -106,3 +106,8 @@ class AbstractConfEditor(object):
         if orig_stanza is not None:
             return orig_stanza
         return self.default_stanza
+
+    def prompt_for_settings(self):
+        """Prompt for settings required for proper operation of this driver.
+        """
+        return dict()

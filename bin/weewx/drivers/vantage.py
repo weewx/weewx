@@ -2302,3 +2302,43 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.vantage
 """
+
+    def prompt_for_settings(self):
+        settings = dict()
+
+        print "Specify the hardware interface, either 'serial' or 'ethernet'."
+        print "If the station is connected by serial, USB, or serial-to-USB"
+        print "adapter, specify serial.  Specify ethernet for stations with"
+        print "WeatherLinkIP interface."
+        ans = None
+        while ans is None:
+            ans = raw_input("type: ")
+            x = ans.strip().lower()
+            if x == 'serial' or x == 'ethernet':
+                settings['type'] = x
+            else:
+                ans = None
+
+        if settings['type'] == 'serial':
+            print "Specify a port for stations with a serial interface, for"
+            print "example /dev/ttyUSB0 or /dev/ttyS0."
+            ans = None
+            while ans is None:
+                ans = raw_input("port: ")
+                if len(ans.strip()) > 0:
+                    settings['port'] = ans.strip()
+                else:
+                    ans = None
+        else:
+            print "Specify the IP address (e.g., 192.168.0.10) or hostname"
+            print "(e.g., console or console.example.com) for stations with"
+            print "an ethernet interface."
+            ans = None
+            while ans is None:
+                ans = raw_input("host: ")
+                if len(ans.strip()) > 0:
+                    settings['host'] = ans.strip()
+                else:
+                    ans = None
+
+        return settings
