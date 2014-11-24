@@ -1035,6 +1035,26 @@ def to_float(x):
         x = None
     return float(x) if x is not None else None
 
+def min_with_none(x_seq):
+    """Find the minimum in a (possibly empty) sequence, ignoring Nones"""
+    xmin = None
+    for x in x_seq:
+        if xmin is None:
+            xmin = x
+        elif x is not None:
+            xmin = min(x, xmin)
+    return xmin
+
+def max_with_none(x_seq):
+    """Find the maximum in a (possibly empty) sequence, ignoring Nones"""
+    xmax = None
+    for x in x_seq:
+        if xmax is None:
+            xmax = x
+        elif x is not None:
+            xmax = max(x, xmax)
+    return xmax
+        
 def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
     """Read the specified configuration file, return a dictionary of the
     file contents. If no file is specified, look in the standard locations

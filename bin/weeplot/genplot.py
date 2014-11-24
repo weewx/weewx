@@ -460,9 +460,7 @@ class GeneralPlot(object):
             self.xscale = weeplot.utilities.scale(xmin, xmax)
             
     def _calcYScaling(self):
-        """Calculates y scaling. Can be used 'as-is' for most purposes.
-        
-        """
+        """Calculates y scaling. Can be used 'as-is' for most purposes."""
         # The filter is necessary because unfortunately the value 'None' is not
         # excluded from min and max (i.e., min(None, x) is not necessarily x). 
         # The try block is necessary because min of an empty list throws a
@@ -476,18 +474,10 @@ class GeneralPlot(object):
                     yline_max = None
                 yline_min = - yline_max if yline_max is not None else None
             else:
-                try :
-                    yline_min = min(filter(lambda v : v is not None, line.y))
-                except ValueError:
-                    yline_min = None
-                try :
-                    yline_max = max(filter(lambda v : v is not None, line.y))
-                except ValueError:
-                    yline_max = None
-            if ymin is None: ymin = yline_min
-            elif yline_min is not None : ymin = min(yline_min, ymin)
-            if ymax is None: ymax = yline_max
-            elif yline_max is not None : ymax = max(yline_max, ymax)
+                yline_min = weeutil.weeutil.min_with_none(line.y)
+                yline_max = weeutil.weeutil.max_with_none(line.y)
+            ymin = weeutil.weeutil.min_with_none([ymin, yline_min])
+            ymax = weeutil.weeutil.max_with_none([ymax, yline_max])
 
         if ymin is None and ymax is None :
             # No valid data. Pick an arbitrary scaling
@@ -512,25 +502,20 @@ class GeneralPlot(object):
         return ylabel
     
     def _calcXMinMax(self):
-        xmin = None
-        xmax = None
+        xmin = xmax = None
         for line in self.line_list:
-            xlinemin = min(line.x)
-            xlinemax = max(line.x)
-            assert(xlinemin is not None and xlinemax is not None)
-            # If the line represents a bar chart,
-            # then the actual minimum has to be adjusted for the
-            # bar width of the first point
+            xline_min = weeutil.weeutil.min_with_none(line.x)
+            xline_max = weeutil.weeutil.max_with_none(line.x)
+            # If the line represents a bar chart, then the actual minimum has to
+            # be adjusted for the bar width of the first point
             if line.plot_type == 'bar':
-                xlinemin = xlinemin - line.bar_width[0]
-            xmin = min(xlinemin, xmin) if xmin is not None else xlinemin
-            xmax = max(xlinemax, xmax) if xmax is not None else xlinemax
+                xline_min = xline_min - line.bar_width[0]
+            xmin = weeutil.weeutil.min_with_none([xmin, xline_min])
+            xmax = weeutil.weeutil.max_with_none([xmax, xline_max])
         return (xmin, xmax)
 
 class TimePlot(GeneralPlot) :
-    """Class that specializes GeneralPlot for plots where the x-axis is time.
-    
-    """
+    """Class that specializes GeneralPlot for plots where the x-axis is time."""
     
     def _calcXScaling(self):
         """Specialized version for time plots."""

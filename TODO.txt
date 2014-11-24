@@ -15,6 +15,8 @@ Test on suse
  - rpm install and upgrade
  - extension installer
 
+Test reconfiguring database.
+
 
 --------------------  Nice to do (V3.1?)  --------------------------- 
 
