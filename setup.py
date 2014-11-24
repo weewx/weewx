@@ -695,7 +695,7 @@ def configure_conf(cfgfn, info, dryrun):
     try:
         editor, driver_name, driver_vers = load_editor(driver)
     except Exception, e:
-        print "Cannot load conf editor for %s: %s" % (driver, e)
+        print "Driver %s failed to load: %s" % (driver, e)
         driver = 'weewx.drivers.simulator'
         editor, driver_name, driver_vers = load_editor(driver)
     print 'Using %s version %s (%s)' % (driver_name, driver_vers, driver)
@@ -794,14 +794,11 @@ def prompt_for_driver():
 def prompt_for_driver_settings(driver):
     """Let the driver prompt for any required settings."""
     settings = dict()
-    try:
-        __import__(driver)
-        driver_module = sys.modules[driver]
-        loader_function = getattr(driver_module, 'confeditor_loader')
-        editor = loader_function()
-        settings[driver_module.DRIVER_NAME] = editor.prompt_for_settings()
-    except Exception, e:
-        pass
+    __import__(driver)
+    driver_module = sys.modules[driver]
+    loader_function = getattr(driver_module, 'confeditor_loader')
+    editor = loader_function()
+    settings[driver_module.DRIVER_NAME] = editor.prompt_for_settings()
     return settings
 
 def get_driver_infos():
@@ -834,7 +831,8 @@ def get_driver_infos():
 
 def list_drivers():
     infos = get_driver_infos()
-    for d in infos:
+    keys = sorted(infos)
+    for d in keys:
         msg = "%-25s" % d
         for x in ['name', 'version', 'fail']:
             if x in infos[d]:
