@@ -8,7 +8,7 @@ weewx extension installer.
 Installation instructions:
 
 cd /home/weewx
-setup.py --extension --install extensions/basic
+setup.py install --extension extensions/basic
 
 
 Manual installation instructions:

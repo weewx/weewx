@@ -2,8 +2,6 @@
 
 Quick start guide
 
-Move schemas to the extension that uses them.
-
 Should the archive file be backed up before adding the daily summaries?
   - Probably.
 
@@ -30,6 +28,9 @@ Implement a $time_ago, or $timespan tag (see email with Gary Roderick).
 Look at Gary's (?) changes to allow cron-like report generation.
 
 Is max gap fraction meaningful for bar charts now?
+
+Fix units in cmon to use kilo, mega, giga, tera?
+ - scaling probably should be done in the plotting, not unit as types
 
 Guard against database locks:
 
@@ -61,6 +62,9 @@ Jul 30 08:55:22 hummingbird weewx[959]:     ****  Exiting.
 
 
 --------------------  DONE  --------------------------- 
+
+Move schemas to the extension that uses them.
+  - this has always been the case for cmon, pmon, and forecast
 
 Test new extension installer on debian
 (23nov14 mwall)

@@ -8,7 +8,7 @@ weewx extension installer.
 Installation instructions:
 
 cd /home/weewx
-setup.py --extension --install extensions/fileparse
+setup.py install --extension extensions/fileparse
 
 
 Manual installation instructions:

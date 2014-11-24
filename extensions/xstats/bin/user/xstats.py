@@ -21,7 +21,7 @@ from weewx.cheetahgenerator import SearchList
 from weewx.tags import TimespanBinder
 from weeutil.weeutil import TimeSpan
 
-class ExtStats(SearchList):
+class ExtendedStatistics(SearchList):
     
     def __init__(self, generator):
         SearchList.__init__(self, generator)

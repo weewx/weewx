@@ -21,7 +21,7 @@ This search list extension offers extra tags:
 Installation instructions:
 
 cd /home/weewx
-setup.py --extension --install extensions/xstats
+setup.py install --extension extensions/xstats
 
 
 Manual installation instructions:
