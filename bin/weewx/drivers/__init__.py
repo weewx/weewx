@@ -111,3 +111,21 @@ class AbstractConfEditor(object):
         """Prompt for settings required for proper operation of this driver.
         """
         return dict()
+
+    def _prompt(self, label, dflt=None, opts=None):
+        value = None
+        msg = "%s: " % label
+        if dflt is not None:
+            msg = "%s [%s]: " % (label, dflt)
+        while value is None:
+            ans = raw_input(msg)
+            x = ans.strip()
+            if len(x) == 0:
+                if dflt is not None:
+                    value = dflt
+            elif opts is not None:
+                if x in opts:
+                    value = x
+            else:
+                value = x
+        return value

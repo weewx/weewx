@@ -41,13 +41,13 @@ Template: weewx/vantage_port
 Type: string
 Default: /dev/ttyUSB0
 Description: serial port:
- Specify a port for stations with a serial interface, for example /dev/ttyUSB0 or /dev/ttyS0.  For ethernet stations leave this blank.
+ Specify a port for stations with a serial interface, for example /dev/ttyUSB0 or /dev/ttyS0.
 
 Template: weewx/vantage_host
 Type: string
 Default: 192.168.0.10
 Description: weather station hostname or IP address:
- Specify the IP address (e.g. 192.168.0.10) or hostname (e.g. console or console.example.com) for stations with an ethernet interface.  For serial stations leave this blank.
+ Specify the IP address (e.g. 192.168.0.10) or hostname (e.g. console or console.example.com) for stations with an ethernet interface.
 
 Template: weewx/wmr100_model
 Type: string

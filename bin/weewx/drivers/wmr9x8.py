@@ -610,3 +610,9 @@ class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.wmr9x8
 """
+
+    def prompt_for_settings(self):
+        print "Specify the serial port on which the station is connected, for"
+        print "example /dev/ttyUSB0 or /dev/ttyS0."
+        port = self._prompt('port', '/dev/ttyUSB0')
+        return {'port': port}

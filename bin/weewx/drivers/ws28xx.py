@@ -1063,6 +1063,12 @@ class WS28xxConfEditor(weewx.drivers.AbstractConfEditor):
     driver = weewx.drivers.ws28xx
 """
 
+    def prompt_for_settings(self):
+        print "Specify the frequency used between the station and the"
+        print "transceiver, either 'US' (915 MHz) or 'EU' (868.3 MHz)."
+        freq = self._prompt('frequency', 'US', ['US', 'EU'])
+        return {'transceiver_frequency': freq}
+
 
 class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
     def add_options(self, parser):

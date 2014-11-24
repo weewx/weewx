@@ -698,6 +698,12 @@ class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
     driver = weewx.drivers.cc3000
 """
 
+    def prompt_for_settings(self):
+        print "Specify the serial port on which the station is connected, for"
+        print "example /dev/ttyUSB0 or /dev/ttyS0."
+        port = self._prompt('port', '/dev/ttyUSB0')
+        return {'port': port}
+
 
 # define a main entry point for basic testing without weewx engine and service
 # overhead.  invoke this as follows from the weewx root dir:
