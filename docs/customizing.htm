@@ -504,7 +504,7 @@ Version: 3.0.0 alpha
       query a database.  These are the canonical forms for obtaining a
       database manager.</p>
     <p>If you are opening a database from within a weewx service:</p>
-    <p class='tty'>self.dbm = self.engine.dbbinder.get_manager(data_binding='name_of_binding', initialize=True)
+    <p class='tty'>self.dbm = self.engine.db_binder.get_manager(data_binding='name_of_binding', initialize=True)
 self.dbm.backfill_day_summary()   # If necessary</p>
     <p>If you are opening a database from within a weewx search list extension:</p>
     <p class='tty'>self.dbm = self.generator.db_binder.get_manager(data_binding='name_of_binding', initialize=True)
