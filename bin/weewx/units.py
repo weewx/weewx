@@ -833,6 +833,10 @@ class ValueHelper(object):
         returns: A ValueHelper with a FixedConverter that converts to the
         specified units."""
 
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if target_unit in ['__call__', 'has_key']:
+            raise AttributeError
+
         # If we are being asked to perform a conversion, make sure it's a
         # legal one:
         if self.value_t[1] != target_unit:        
@@ -857,6 +861,9 @@ class UnitHelper(object):
     def __init__(self, converter):
         self.converter = converter
     def __getattr__(self, obs_type):
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if obs_type in ['__call__', 'has_key']:
+            raise AttributeError
         return self.converter.getTargetUnit(obs_type)[0]
 
 class FormatHelper(object):
@@ -864,6 +871,9 @@ class FormatHelper(object):
         self.formatter = formatter
         self.converter = converter
     def __getattr__(self, obs_type):
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if obs_type in ['__call__', 'has_key']:
+            raise AttributeError
         return get_format_string(self.formatter, self.converter, obs_type)
     
 class LabelHelper(object):
@@ -871,6 +881,9 @@ class LabelHelper(object):
         self.formatter = formatter
         self.converter = converter
     def __getattr__(self, obs_type):
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if obs_type in ['__call__', 'has_key']:
+            raise AttributeError
         return get_label_string(self.formatter, self.converter, obs_type)
     
 class UnitInfoHelper(object):

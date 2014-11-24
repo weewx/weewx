@@ -117,6 +117,9 @@ class Station(object):
                                        converter=self.converter)
 
     def __getattr__(self, name):
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if name in ['__call__', 'has_key']:
+            raise AttributeError
         # For anything that is not an explicit attribute of me, try
         # my instance of StationInfo. 
         return getattr(self.stn_info, name)

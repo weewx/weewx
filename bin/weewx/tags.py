@@ -222,9 +222,8 @@ class TimespanBinder(object):
 
         returns: An instance of class ObservationBinder."""
 
-        # The following is so the Python version of Cheetah's NameMapper doesn't think
-        # I'm a dictionary:
-        if obs_type == 'has_key':
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if obs_type in ['__call__', 'has_key']:
             raise AttributeError
 
         # Return an ObservationBinder: if an attribute is
@@ -296,10 +295,10 @@ class ObservationBinder(object):
     def sum_ge(self, val):
         return self._do_query('sum_ge', val=val)
 
-    def __getattr__(self, aggregateType):
-        """Return statistical summary using a given aggregateType.
+    def __getattr__(self, aggregate_type):
+        """Return statistical summary using a given aggregate type.
 
-        aggregateType: The type of aggregation over which the summary is to be done.
+        aggregate_type: The type of aggregation over which the summary is to be done.
         This is normally something like 'sum', 'min', 'mintime', 'count', etc.
         However, there are two special aggregation types that can be used to
         determine the existence of data:
@@ -309,7 +308,10 @@ class ObservationBinder(object):
 
         returns: A ValueHelper containing the aggregation data."""
 
-        return self._do_query(aggregateType)
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if aggregate_type in ['__call__', 'has_key']:
+            raise AttributeError
+        return self._do_query(aggregate_type)
     
     @property
     def exists(self):
@@ -347,9 +349,8 @@ class CurrentObj(object):
         
     def __getattr__(self, obs_type):
         """Return the given observation type."""
-        # The following is so the Python version of Cheetah's NameMapper
-        # does not think I'm a dictionary:
-        if obs_type == 'has_key':
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if obs_type in ['__call__', 'has_key']:
             raise AttributeError
 
         try:
@@ -403,9 +404,8 @@ class TrendObj(object):
         
     def __getattr__(self, obs_type):
         """Return the trend for the given observation type."""
-        # The following is so the Python version of Cheetah's NameMapper
-        # does not think I'm a dictionary:
-        if obs_type == 'has_key':
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if obs_type in ['__call__', 'has_key']:
             raise AttributeError
 
         db_manager  = self.db_lookup(self.data_binding)
