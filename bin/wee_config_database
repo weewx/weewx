@@ -98,18 +98,20 @@ def createMainDatabase(config_dict, db_binding):
     # Try a simple open. If it succeeds, that means the database
     # exists and is initialized. Otherwise, an exception will be thrown.
     try:
-        with weewx.manager.open_database(config_dict, db_binding) as dbmanager:
+        with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
             print "Database '%s' already exists. Nothing done." % (dbmanager.database,)
     except weedb.OperationalError:
         # Database does not exist. Try again, but allow initialization:
-        with weewx.manager.open_database(config_dict, db_binding, initialize=True) as dbmanager:
+        with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
             print "Created database '%s'" % (dbmanager.database,)
 
 def dropDaily(config_dict, db_binding):
     """Drop the daily summaries from a weewx database"""
     
-    _, database_dict, _ = weewx.manager.get_database_config(config_dict, db_binding)
-    database_name = database_dict['database_name']
+    manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'], 
+                                                  config_dict['Databases'], 
+                                                  db_binding)
+    database_name = manager_dict['database_dict']['database_name']
 
     ans = None
     while ans not in ['y', 'n']:
@@ -119,7 +121,7 @@ def dropDaily(config_dict, db_binding):
             
             print "Dropping daily summary tables from '%s' ... " % database_name
             try:
-                with weewx.manager.open_database(config_dict, db_binding) as dbmanager:
+                with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
                     try:
                         dbmanager.drop_daily()
                     except weedb.OperationalError, e:
@@ -133,15 +135,17 @@ def dropDaily(config_dict, db_binding):
 def backfillDaily(config_dict, db_binding):
     """Backfill the daily summaries"""
 
-    _, database_dict, _ = weewx.manager.get_database_config(config_dict, db_binding)
-    database_name = database_dict['database_name']
+    manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'], 
+                                                  config_dict['Databases'], 
+                                                  db_binding)
+    database_name = manager_dict['database_dict']['database_name']
 
     print "Backfilling daily summaries in database '%s'" % database_name
 
     t1 = time.time()
     # Open up the archive. This will create the tables necessary for the daily summaries if they
     # don't already exist:
-    with weewx.manager.open_database(config_dict, db_binding, initialize=True) as dbmanager:
+    with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
         nrecs, ndays = dbmanager.backfill_day_summary()
     tdiff = time.time() - t1
     
@@ -153,13 +157,14 @@ def backfillDaily(config_dict, db_binding):
 def reconfigMainDatabase(config_dict, db_binding):
     """Create a new database, then populate it with the contents of an old database"""
 
-    _, old_database_dict, _ = weewx.manager.get_database_config(config_dict, db_binding)
-
+    manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'], 
+                                                  config_dict['Databases'], 
+                                                  db_binding)
     # Make a copy for the new database (we will be modifying it)
-    new_database_dict = old_database_dict.dict()
+    new_database_dict = manager_dict['database_dict'].dict()
     
     # Now modify the database name
-    new_database_dict['database_name'] = old_database_dict['database_name']+'_new'
+    new_database_dict['database_name'] = manager_dict['database_dict']['database_name']+'_new'
 
     # First check and see if the new database already exists. If it does, check
     # with the user whether it's ok to delete it.
@@ -176,7 +181,7 @@ def reconfigMainDatabase(config_dict, db_binding):
                 return
 
     # Get the unit system of the old archive:
-    with weewx.manager.Manager.open(old_database_dict) as old_dbmanager:
+    with weewx.manager.Manager.open(manager_dict['database_dict']) as old_dbmanager:
         old_unit_system = old_dbmanager.std_unit_system
     
     # Get the unit system of the new archive:
@@ -190,7 +195,7 @@ def reconfigMainDatabase(config_dict, db_binding):
         
     ans = None
     while ans not in ['y', 'n']:
-        print "Copying archive database '%s' to '%s'" % (old_database_dict['database_name'], new_database_dict['database_name'])
+        print "Copying archive database '%s' to '%s'" % (manager_dict['database_dict']['database_name'], new_database_dict['database_name'])
         if target_unit_system is None or old_unit_system==target_unit_system:
             print "The new archive will use the same unit system as the old ('%s')." % (weewx.units.unit_nicknames[old_unit_system],)
         else:
@@ -198,7 +203,7 @@ def reconfigMainDatabase(config_dict, db_binding):
                                                                                         weewx.units.unit_nicknames[target_unit_system])
         ans = raw_input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
-            weewx.manager.reconfig(old_database_dict, new_database_dict, target_unit_system)
+            weewx.manager.reconfig(manager_dict['database_dict'], new_database_dict, target_unit_system)
             print "Done."
         elif ans == 'n':
             print "Nothing done."
@@ -208,7 +213,7 @@ def string_check(config_dict, db_binding, fix=False):
     print "Checking archive database for strings..."
 
     # Open up the main database archive
-    with weewx.manager.open_database(config_dict, db_binding) as dbmanager:
+    with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
         
         obs_pytype_list = []
         obs_list = []
