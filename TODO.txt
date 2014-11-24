@@ -6,12 +6,9 @@ Move schemas to the extension that uses them.
 
 Should the archive file be backed up before adding the daily summaries?
   - Probably.
-  
 
-Prompt for station-specific parameters
 Prompt for extension-specific parameters
 
-Test new setup.py on debian deb upgrades
 Test new extension installer on debian
 Test new setup.py on redhat rpm installs and upgrades
 Test new extension installer on redhat
@@ -62,6 +59,12 @@ Jul 30 08:55:22 hummingbird weewx[959]:     ****  Exiting.
 
 
 --------------------  DONE  --------------------------- 
+
+Test new setup.py on debian deb upgrades
+(23nov14 mwall)
+
+Prompt for station-specific parameters
+(23nov14 mwall)
 
 The station hardware configuration process could be improved. 
   - Nowhere is it listed what driver to use.

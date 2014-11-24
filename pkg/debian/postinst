@@ -138,6 +138,7 @@ merge_weewxconf() {
                 cp -p $cfgfile.dist $cfgfile-$NEWVER
                 echo merging previous and distribution into $cfgfile
                 $setupapp --merge-config --install-dir / --a $cfgfile-$NEWVER --b $cfgfile-$OLDVER --c $cfgfile
+                configure_driver
             else
                 echo distribution config file is wrong version for merging
             fi
@@ -147,6 +148,7 @@ merge_weewxconf() {
     else
         # this is a new config, so just insert debconf values into it
         echo using debconf configuration values from previous install
+        configure_driver
         configure_weewxconf
     fi
 }
@@ -191,7 +193,6 @@ configure)
         if [ "$2" != "" ]; then
             # this is an upgrade so attempt to merge
             merge_weewxconf
-            configure_driver
         else
             # virgin install so insert debconf values into the config file
             configure_driver
