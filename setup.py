@@ -993,6 +993,7 @@ class Extension(Logger):
 
     def __init__(self, filename=None, layout_type=None, tmpdir='/var/tmp',
                  **kwargs):
+        super(Extension, self).__init__()
         self.filename = filename # could be dir, tarball, or extname
         self.tmpdir = tmpdir
         self.layout_type = layout_type
@@ -1230,6 +1231,7 @@ class ExtensionInstaller(Logger):
         }
 
     def __init__(self, **kwargs):
+        super(ExtensionInstaller, self).__init__()
         self.version = kwargs.get('version')
         self.name = kwargs.get('name')
         self.description = kwargs.get('description')
@@ -1353,7 +1355,7 @@ class ExtensionInstaller(Logger):
             for k in cfg['Databases']:
                 db = cfg['Databases'][k]
                 if db['driver'] == 'weedb.sqlite' and sqlitecfg:
-                    db['database'] = os.path.join(os.path.dirname(sqlitecfg['database']), db['database'])
+                    db['database_name'] = os.path.join(os.path.dirname(sqlitecfg['database_name']), db['database_name'])
                     db['root'] = sqlitecfg['root']
                 elif db['driver'] == 'weedb.mysql' and mysqlcfg:
                     db['host'] = mysqlcfg['host']

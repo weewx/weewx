@@ -9,11 +9,13 @@ Should the archive file be backed up before adding the daily summaries?
 
 Prompt for extension-specific parameters
 
-Test new extension installer on debian
-Test new setup.py on redhat rpm installs and upgrades
-Test new extension installer on redhat
-Test new setup.py on suse rpm installs and upgrades
-Test new extension installer on suse
+Test on redhat
+ - rpm install and upgrade
+ - extension installer
+
+Test on suse
+ - rpm install and upgrade
+ - extension installer
 
 
 --------------------  Nice to do (V3.1?)  --------------------------- 
@@ -59,6 +61,9 @@ Jul 30 08:55:22 hummingbird weewx[959]:     ****  Exiting.
 
 
 --------------------  DONE  --------------------------- 
+
+Test new extension installer on debian
+(23nov14 mwall)
 
 Test new setup.py on debian deb upgrades
 (23nov14 mwall)
