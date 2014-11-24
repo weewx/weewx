@@ -105,8 +105,8 @@ class StdEngine(object):
     def preLoadServices(self, config_dict):
         
         self.stn_info = weewx.station.StationInfo(self.console, **config_dict['Station'])
-        self.dbbinder = weewx.manager.DBBinder(config_dict['DataBindings'],
-                                               config_dict['Databases'])
+        self.db_binder = weewx.manager.DBBinder(config_dict['DataBindings'],
+                                                config_dict['Databases'])
         
     def loadServices(self, config_dict):
         """Set up the services to be run."""
@@ -245,8 +245,8 @@ class StdEngine(object):
             pass
         
         try:
-            self.dbbinder.close()
-            del self.dbbinder
+            self.db_binder.close()
+            del self.db_binder
         except:
             pass
 
@@ -564,7 +564,7 @@ class StdArchive(StdService):
         # If we happen to startup in the small time interval between the end of
         # the archive interval and the end of the archive delay period, then
         # there will be no old accumulator.
-        dbmanager = self.engine.dbbinder.get_manager(self.data_binding)
+        dbmanager = self.engine.db_binder.get_manager(self.data_binding)
         if hasattr(self, 'old_accumulator'):
             dbmanager.updateHiLo(self.old_accumulator)
             # If the user has requested software generation, then do that:
@@ -587,7 +587,7 @@ class StdArchive(StdService):
     def new_archive_record(self, event):
         """Called when a new archive record has arrived. 
         Put it in the archive database."""
-        dbmanager = self.engine.dbbinder.get_manager(self.data_binding)
+        dbmanager = self.engine.db_binder.get_manager(self.data_binding)
         dbmanager.addRecord(event.record)
 
     def setup_database(self, config_dict):
@@ -595,7 +595,7 @@ class StdArchive(StdService):
 
         # This will create the database if it doesn't exist, then return an
         # opened instance of the database manager. 
-        dbmanager = self.engine.dbbinder.get_manager(self.data_binding, initialize=True)
+        dbmanager = self.engine.db_binder.get_manager(self.data_binding, initialize=True)
         syslog.syslog(syslog.LOG_INFO, "engine: Using binding '%s' to database '%s'" % (self.data_binding, dbmanager.database_name))
         
         # Back fill the daily summaries.
@@ -617,7 +617,7 @@ class StdArchive(StdService):
         If the hardware does not support hardware archives, an exception of
         type NotImplementedError will be thrown.""" 
 
-        dbmanager = self.engine.dbbinder.get_manager(self.data_binding)
+        dbmanager = self.engine.db_binder.get_manager(self.data_binding)
         # Find out when the database was last updated.
         lastgood_ts = dbmanager.lastGoodStamp()
 

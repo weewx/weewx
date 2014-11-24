@@ -172,10 +172,10 @@ class StdWXCalculate(weewx.engine.StdService):
         do not include the latest timestamp so that we do not get the latest
         interval (if it even exists).  We do not include the first timestamp
         because we do not want the interval before that timestamp."""
-        dbmanager = self.engine.dbbinder.get_manager('wx_binding')
+        dbmanager = self.engine.db_binder.get_manager('wx_binding')
         sts = ts - interval
-        r = dbmanager.getSql("SELECT SUM(rain) FROM archive "
-                             "WHERE dateTime>? AND dateTime<?",
+        r = dbmanager.getSql("SELECT SUM(rain) FROM %s "
+                             "WHERE dateTime>? AND dateTime<?" % dbmanager.table_name,
                              (sts, ts))
         return r[0] if r is not None else None
 
@@ -184,7 +184,7 @@ class StdWXCalculate(weewx.engine.StdService):
         temperature is found."""
         ts12 = weeutil.weeutil.startOfInterval(ts - 12*3600, arcint)
         if ts12 != self.last_ts12:
-            dbmanager = self.engine.dbbinder.get_manager('wx_binding')
+            dbmanager = self.engine.db_binder.get_manager('wx_binding')
             r = dbmanager.getRecord(ts12)
             self.t12 = r.get('outTemp') if r is not None else None
             self.last_ts12 = ts12
