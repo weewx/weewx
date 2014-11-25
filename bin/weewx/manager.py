@@ -59,9 +59,11 @@ class Manager(object):
         try:
             self.sqlkeys = self.connection.columnsOf(self.table_name)
         except weedb.OperationalError:
-            # Database exists, but is uninitialized. Did the caller supply a schema?
+            # Database exists, but is uninitialized. Did the caller supply
+            # a schema?
             if schema is None:
                 # No. Nothing to be done.
+                syslog.syslog(syslog.LOG_ERR, "manager: cannot get columns of table %s, and no schema specified" % self.table_name)
                 raise
             # Database exists, but has not been initialized. Initialize it.
             self._initialize_database(schema)
@@ -122,6 +124,7 @@ class Manager(object):
             # Database does not exist. Did the caller supply a schema?
             if schema is None:
                 # No. Nothing to be done.
+                syslog.syslog(syslog.LOG_ERR, "manager: cannot open database, and no schema specified")
                 raise
             # Yes. Create the database:
             weedb.create(database_dict)
