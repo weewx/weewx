@@ -2487,9 +2487,9 @@ class MyXSearch(SearchList):                                                 # 1
     radar_url = http://radar.weather.gov/ridge/radar.php?product=NCR&amp;rid=RTX&amp;loop=yes</pre>
       <p>results in a nice image of a radar centered on Portland,
         Oregon. When you click on it, it gives you a detailed, animated view.
-        Take a look at
+        If you live in the USA, take a look at
         the <a href="http://radar.weather.gov/">NOAA radar website</a>
-        to find a nice one for you in the USA. In other countries, you
+        to find a nice one that will work for you. In other countries, you
         will have to consult your local weather service.
       </p>
       <p class="config_option">googleAnalyticsId </p>
@@ -4029,7 +4029,7 @@ mv weewx.sdb_new weewx.sdb</pre>
         packet must use the same unit system. If your hardware has an error and
         you don't have a value, you can either leave it out of the dictionary or
         (preferred) set its value to <span class="code">None</span>.</p>
-      <p>A couple of observation types are tricky. In particular, rain.
+      <p>A couple of observation types are tricky. In particular, <span class="code">rain</span>.
         Generally, <span class="code">weewx</span> expects to see a packet with
         the amount of rain that fell in that packet period included as
         observation <span class="code">rain</span>. It then sums up all the
@@ -4078,29 +4078,41 @@ mv weewx.sdb_new weewx.sdb</pre>
           </tr>
         </tbody>
       </table>
-      <p></p>
-      <h3><span class="code">genArchiveRecords</span></h3>
+      
+      <h3><span class="code">genArchiveRecords()</span></h3>
       <p>If your hardware does not have an archive record logger,
         then <span class="code">weewx</span> can do the record
         generation for you. It will automatically collect all the
         types it sees in your loop packets then emit a record with the
         averages (in some cases the sum or max value) of all those
         types. If it doesn't see a type, then it won't appear in the
-        emitted record. If your hardware does have a logger, then you
+        emitted record.</p>
+        <p>However, if your hardware does have a logger, then you
         should implement method
-        <span class="code">genArchiveRecords</span> as well. It should
+        <span class="code">genArchiveRecords()</span> as well. It should
         be a generator function that returns all the records since a
         given time. </p>
-      <h3><span class="code">getTime</span></h3>
+        
+      <h3><span class="code">archive_interval</span></h3>
+      <p>If you implement function <span class="code">genArchiveRecords()</span>
+      above, then you should also implement <span class='code'>archive_interval</span>
+      as either an attribute, or as a <a
+        href="https://docs.python.org/2/library/functions.html#property">property
+        function</a>. It should return the archive
+      interval in seconds.</p>
+      
+      <h3><span class="code">getTime()</span></h3>
       <p>If your hardware has an onboard clock and supports reading
         the time from it, then you may want to implement this
         method. It takes no argument. It should return the time in
         Unix Epoch Time. </p>
-      <h3><span class="code">setTime</span></h3>
+
+      <h3><span class="code">setTime()</span></h3>
       <p>If your hardware has an onboard clock and supports <em>setting</em>
         it, then you may want to implement this method.  It takes no
         argument and does not need to return anything.</p>
-      <h3><span class="code">closePort</span></h3>
+
+      <h3><span class="code">closePort()</span></h3>
       <p>If the driver needs to close a serial port, terminate a
         thread, close a database, or perform any other activity before
         the application terminates, then you must supply this
