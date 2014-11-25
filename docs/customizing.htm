@@ -3731,7 +3731,7 @@ class AddElectricity(StdService):
           already have, <span class="code">user/electricity.py</span>? Add to
           the bottom of the file:
         </p> <pre class="tty">import schemas.wview
-schema_with_electricity = schemas.wview.wview + [('electricity', 'REAL')]</pre>
+schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
         <p>
           This creates a new schema (it will have the name <span class="code">user.electricity.schema_with_electricity</span>),
           that is just like the old one, except it has a new type <span
