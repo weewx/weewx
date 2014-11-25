@@ -87,7 +87,7 @@ class Connection(weedb.Connection):
 
         self.file_path = os.path.join(root, database_name)
         if not os.path.exists(self.file_path):
-            raise weedb.OperationalError("Attempt to open a non-existent database %s" % database_name)
+            raise weedb.OperationalError("Attempt to open a non-existent database %s" % self.file_path)
         timeout = to_int(argv.get('timeout', 5))
         isolation_level = argv.get('isolation_level')
         try:
