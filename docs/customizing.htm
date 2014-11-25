@@ -3648,7 +3648,8 @@ appropriate permissions for the requested operation.</pre>
         details on how to write a custom service. However, when you are done it
         will look something like this:</p>
         <p>File <span class="code">user/electricity.py</span></p>
-      <pre class="tty">from weewx.engine import StdService
+      <pre class="tty">import weewx
+from weewx.engine import StdService
         
 class AddElectricity(StdService):
 
