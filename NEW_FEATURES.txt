@@ -18,11 +18,6 @@ Offer tags to support JSON. In particular, vectors. A tag like
 $day.outTemp.vector would offer a vector of temperatures for the day.
 Aggregation would be nice.
 
-Allow statistics to be extracted from the archive database, as well as the
-stats database. This would allow hourly statistics. Taken to the extreme, it
-could also allow the elimination of the stats database if the performance is
-acceptable.
-
 Allow new derived types to be created by the user. Right now, things like
 heating and cooling degree days are hardwired in, but it ought to be possible
 to add things like that modularly. 
@@ -41,14 +36,6 @@ Harden up the MySQL database connection.
 Allow reporting services to be fired off at something other than every
 archive period. In particular, FTP.
 
-possibly implement averaging rainRate calculation instead of the
-current near-instantaneous implementation in fousb
-
-New observation types would have their unit group attached as a suffix.
-E.g., _energy.
-
-Offer a more "weather friendly" Metric unit system.
-
 Offer "cumulative" as an aggregation type.
 
 Allow rain-to-date to be added to a partial rainyear.
@@ -66,8 +53,6 @@ Port to Windows.
 
 Allow variable y-axis labelling. Right now it's hardwired to every other major
 tick mark.
-
-Make units extensible.
 
 Add log_success/log_failure parameters for subsystems other than just restx.
 
