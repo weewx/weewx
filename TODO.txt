@@ -15,7 +15,8 @@ Test on suse
  - rpm install and upgrade
  - extension installer
 
-
+Look at formatting problem fixed by log_success and log_failure.
+ - viz email from mwall
 
 --------------------  Nice to do (V3.1?)  --------------------------- 
 

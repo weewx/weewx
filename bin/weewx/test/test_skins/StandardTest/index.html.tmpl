@@ -97,6 +97,15 @@
       <td>$current($data_binding='foo_binding').outTemp</td>
     </tr>
     <tr>
+      <td>Outside Temperature with explicit time</td>
+      #set $now=$current.dateTime.raw
+      <td>$current($timestamp=$now).outTemp</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature with nonsense time</td>
+      <td>$current($timestamp=$now - 3100).outTemp</td>
+    </tr>
+    <tr>
       <td>Outside Temperature trend ($trend.time_delta.hour.format("%.0f"))</td>
       <td>$trend.outTemp</td>
     </tr>
