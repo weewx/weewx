@@ -416,8 +416,9 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
             # Now update to V3.X
             update_to_v3(old_config)
                 
-            # Now merge the updated old configuration file into the new file, thus
-            # saving any user modifications. First, turn interpolation off:
+            # Now merge the updated old configuration file into the new file,
+            # thus saving any user modifications.
+            # First, turn interpolation off:
             old_config.interpolation = False
             # Then do the merge
             new_config.merge(old_config)
@@ -651,7 +652,7 @@ def do_cfg():
     description = "configure the configuration file"
     usage = "%prog configure [--config=FILE] [--driver=DRIVER]"
     parser = optparse.OptionParser(description=description, usage=usage)
-    parser.add_option('--no-prompt', dest='noprompt', action='store_true',
+    parser.add_option('--quiet', dest='noprompt', action='store_true',
                       help='do not prompt for options')
     parser.add_option('--config', dest='cfgfn', type=str, metavar='FILE',
                       help='modify the configuration file FILE')
@@ -661,10 +662,14 @@ def do_cfg():
                       help='print what would happen but do not do it')
     (options, _args) = parser.parse_args()
 
+    info = dict()
     if options.driver is None and not options.noprompt:
-        options.driver = prompt_for_driver()
+        info['driver'] = prompt_for_driver()
+        info.update(prompt_for_driver_settings(info['driver']))
+    else:
+        info['driver'] = options.driver
 
-    configure_conf(options.cfgfn, {'driver': options.driver}, options.dryrun)
+    configure_conf(options.cfgfn, info, options.dryrun)
     return 0
 
 def configure_conf(cfgfn, info, dryrun):
@@ -909,9 +914,12 @@ def get_station_info(config_dict):
     """extract station info from config file"""
     info = dict()
     if config_dict is not None and 'Station' in config_dict:
-        for p in ['location', 'latitude', 'longitude', 'altitude', 'station_type']:
+        for p in ['location', 'latitude', 'longitude', 'altitude']:
             if config_dict['Station'].get(p) is not None:
                 info[p] = config_dict['Station'][p]
+        if 'station_type' in config_dict['Station']:
+            info['station_type'] = config_dict['Station']['station_type']
+            info['driver'] = config_dict[info['station_type']]['driver']
     return info
 
 def get_conf_filename():
@@ -1633,7 +1641,7 @@ if __name__ == "__main__":
         prog = os.path.basename(sys.argv[0])
         print "Commands for installing/upgrading weewx:"
         print ""
-        print "  %s install [--no-prompt]" % prog
+        print "  %s install [--quiet]" % prog
         print ""
         print "Commands for configuring weewx:"
         print ""
@@ -1648,7 +1656,7 @@ if __name__ == "__main__":
         print "  %s --help --extension" % prog
         print ""
 
-    # if this is a new installation, prompt for station info.  do this before
+    # try to get the configuration for this install/upgrade.  do this before
     # setup so that bailing out during prompts will result in no actions that
     # we might have to undo.
     info = None
@@ -1656,9 +1664,13 @@ if __name__ == "__main__":
     if 'install' in sys.argv and '--help' not in sys.argv:
         cfgfn = get_conf_filename()
         if cfgfn is not None and os.path.exists(cfgfn):
+            # if there is already a conf file, then this is an upgrade
             config_dict = configobj.ConfigObj(cfgfn)
             info = get_station_info(config_dict)
-        if info is None:
+        if info is None and '--quiet' not in sys.argv:
+            # this must be a new install, so prompt for station info, driver
+            # type, and driver-specific parameters, but only if '--quiet' is
+            # not specified.
             info = prompt_for_info()
             info['driver'] = prompt_for_driver()
             info.update(prompt_for_driver_settings(info['driver']))
@@ -1810,12 +1822,6 @@ if __name__ == "__main__":
              ['util/systemd/weewx.service'])]
           )
 
-    # configure the station info and driver for both new install and upgrades
+    # configure the station info and driver for both new install and upgrade
     if 'install' in sys.argv and '--help' not in sys.argv:
-        if (info is not None and info.get('driver') is None and
-            info.get('station_type') is not None):
-            infos = get_driver_infos()
-            for k in infos:
-                if info.get('station_type') == infos[k].get('name'):
-                    info['driver'] = k
         configure_conf(cfgfn, info, False)
