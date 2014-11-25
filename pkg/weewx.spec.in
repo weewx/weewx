@@ -52,8 +52,8 @@ BuildRequires: python, python-configobj
 
 %description
 weewx interacts with a weather station to produce graphs, reports, and HTML
-pages. weewx can upload data to the WeatherUnderground, PWSweather.com, or
-CWOP.
+pages. weewx can upload data to weather services such as WeatherUnderground,
+PWSweather.com, or CWOP.
 
 %prep
 %setup -q
@@ -116,6 +116,7 @@ python -m compileall %{buildroot}%{dst_bin_dir}
 python -m compileall %{dst_bin_dir}
 if [ "$1" = "1" ]; then
   # this is a new installation
+  /usr/share/weewx/setup.py configure --no-prompt
   chkconfig weewx on
   %{initdir}/weewx start
 elif [ "$1" = "2" ]; then
