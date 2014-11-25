@@ -637,6 +637,9 @@ def decode_status(status):
         result[key] = status & mask
     return result
 
+def get_status(code, status):
+    return 1 if status & code == code else 0
+
 def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
     """Map the pywws dictionary to something weewx understands.
 
@@ -671,6 +674,8 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
     # station status is an integer
     if packet['status'] is not None:
         packet['status'] = int(packet['status'])
+        packet['rxCheckPercent'] = 0 if get_status(lost_connection, packet['status']) else 100
+        packet['outTempBatteryStatus'] = get_status(rain_overflow, packet['status'])
 
     # if windspeed is zero there is no wind direction
     if packet['windSpeed'] is None or packet['windSpeed'] == 0:

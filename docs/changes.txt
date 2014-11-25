@@ -109,6 +109,10 @@ Now catches database exceptions raised during commits, converting them
 to weedb exceptions. Weewx catches these, allowing the program to keep
 going, even in the face of most database errors.
 
+For the fine offset stations, record connection status as rxCheckPercent
+(either 0 or 100%) and sensor battery status as outTempBatteryStatus (0
+indicates ok, 1 indicates low battery).
+
 
 2.7.0 10/11/14
 
