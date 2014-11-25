@@ -168,7 +168,7 @@ if __name__=="__main__":
             'process': 'weewxd'},
         'DataBindings': {
             'pmon_binding': {
-                'database': 'pmon_sqlite'
+                'database': 'pmon_sqlite',
                 'manager': 'weewx.manager.DaySummaryManager',
                 'table_name': 'archive',
                 'schema': 'user.pmon.schema'}},
