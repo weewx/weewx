@@ -467,9 +467,10 @@ class StdWunderground(StdRESTful):
             return
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'],
-                                                       config_dict['Databases'],
-                                                       'wx_binding')
+        _manager_dict = weewx.manager.get_manager_dict(
+            config_dict['DataBindings'],
+            config_dict['Databases'],
+            'wx_binding')
         
         # The default is to not do an archive post if a rapidfire post
         # has been specified, but this can be overridden
@@ -538,9 +539,10 @@ class StdPWSWeather(StdRESTful):
             return
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'],
-                                                        config_dict['Databases'],
-                                                        'wx_binding')
+        _manager_dict = weewx.manager.get_manager_dict(
+            config_dict['DataBindings'],
+            config_dict['Databases'],
+            'wx_binding')
                 
         _ambient_dict.setdefault('server_url', StdPWSWeather.archive_url)
         self.archive_queue = Queue.Queue()
@@ -587,9 +589,10 @@ class StdWOW(StdRESTful):
             return
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'],
-                                                        config_dict['Databases'],
-                                                        'wx_binding')
+        _manager_dict = weewx.manager.get_manager_dict(
+            config_dict['DataBindings'],
+            config_dict['Databases'],
+            'wx_binding')
                 
         _ambient_dict.setdefault('server_url', StdWOW.archive_url)
         self.archive_queue = Queue.Queue()
@@ -842,9 +845,10 @@ class StdCWOP(StdRESTful):
             return
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'],
-                                                        config_dict['Databases'],
-                                                        'wx_binding')
+        _manager_dict = weewx.manager.get_manager_dict(
+            config_dict['DataBindings'],
+            config_dict['Databases'],
+            'wx_binding')
         
         _cwop_dict.setdefault('latitude',  self.engine.stn_info.latitude_f)
         _cwop_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
@@ -1386,7 +1390,8 @@ class StdAWEKAS(StdRESTful):
     def __init__(self, engine, config_dict):
         super(StdAWEKAS, self).__init__(engine, config_dict)
         try:
-            site_dict = accumulateLeaves(config_dict['StdRESTful']['AWEKAS'], max_level=1)
+            site_dict = accumulateLeaves(config_dict['StdRESTful']['AWEKAS'],
+                                         max_level=1)
             site_dict['username']
             site_dict['password']
         except KeyError, e:
@@ -1397,10 +1402,10 @@ class StdAWEKAS(StdRESTful):
         site_dict.setdefault('longitude', engine.stn_info.longitude_f)
         site_dict.setdefault('language', 'de')
 
-        # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict(config_dict['DataBindings'],
-                                                        config_dict['Databases'],
-                                                        'wx_binding')
+        site_dict['manager_dict'] = weewx.manager.get_manager_dict(
+            config_dict['DataBindings'],
+            config_dict['Databases'],
+            'wx_binding')
         
         self.archive_queue = Queue.Queue()
         self.archive_thread = AWEKASThread(self.archive_queue, **site_dict)
@@ -1460,8 +1465,6 @@ class AWEKASThread(RESTThread):
           database.
           
         Optional parameters:
-    
-          language: ?
         
           server_url: URL of the server
           Default is the AWEKAS site
@@ -1474,8 +1477,8 @@ class AWEKASThread(RESTThread):
           set to no less than 300. Default is 300
 
           max_backlog: How many records are allowed to accumulate in the queue
-          before the queue is trimmed. Default is sys.maxint (essentially, allow
-          any number).
+          before the queue is trimmed. Default is sys.maxint (essentially,
+          allow any number).
 
           stale: How old a record can be and still considered useful.
           Default is None (never becomes too old).
@@ -1518,11 +1521,11 @@ class AWEKASThread(RESTThread):
         """Add rainRate to the record."""
         # Get the record from my superclass
         r = super(AWEKASThread, self).get_record(record, dbmanager)
-        # Now augment with rainRate, which AWEKAS expects. If the archive does not
-        # have rainRate, an exception will be raised. Prepare to catch it.
+        # Now augment with rainRate, which AWEKAS expects. If the archive does
+        # not have rainRate, an exception will be raised. Prepare to catch it.
         try:
-            rr = dbmanager.getSql('select rainRate from %s where dateTime=?' % dbmanager.table_name,
-                                (r['dateTime'],))
+            rr = dbmanager.getSql('select rainRate from %s where dateTime=?' %
+                                  dbmanager.table_name, (r['dateTime'],))
         except weedb.OperationalError:
             pass
         else:
