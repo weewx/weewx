@@ -862,8 +862,10 @@ def prompt_for_info(loc='a simple weather station',
     print "10, meter"
     ans = None
     while ans is None:
-        ans = raw_input("altitude: ")
-        if ans.find(',') >= 0:
+        ans = raw_input("altitude [0,meter]: ")
+        if len(ans.strip()) == 0:
+            alt = [0, 'meter']
+        elif ans.find(',') >= 0:
             parts = ans.split(',')
             try:
                 float(parts[0])
@@ -875,22 +877,24 @@ def prompt_for_info(loc='a simple weather station',
                 ans = None
         else:
             ans = None
-    print "Specify latitude in decimal degrees, negative for south.  For example:"
-    print "45.686"
+    print "Specify latitude in decimal degrees, negative for south."
     ans = None
     while ans is None:
-        ans = raw_input("latitude: ")
+        ans = raw_input("latitude [0.000]: ")
+        if len(ans.strip()) == 0:
+            ans = 0
         try:
             lat = float(ans)
             if lat < -180 or lat > 180:
                 ans = None
         except ValueError:
             ans = None
-    print "Specify longitude in decimal degrees, negative for west.  For example:"
-    print "-121.566"
+    print "Specify longitude in decimal degrees, negative for west."
     ans = None
     while ans is None:
-        ans = raw_input("longitude: ")
+        ans = raw_input("longitude [0.000]: ")
+        if len(ans.strip()) == 0:
+            ans = 0
         try:
             lon = float(ans)
             if lon < -180 or lon > 180:
@@ -900,8 +904,10 @@ def prompt_for_info(loc='a simple weather station',
     print "Indicate the preferred units for display: 'metric' or 'us'"
     ans = None
     while ans is None:
-        ans = raw_input("units: ")
-        if ans.lower() in ['metric', 'us']:
+        ans = raw_input("units [metric]: ")
+        if len(ans.strip()) == 0:
+            units = 'metric'
+        elif ans.lower() in ['metric', 'us']:
             units = ans.lower()
         else:
             ans = None
