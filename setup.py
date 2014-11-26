@@ -885,7 +885,7 @@ def prompt_for_info(loc='a simple weather station',
             ans = 0
         try:
             lat = float(ans)
-            if lat < -180 or lat > 180:
+            if lat < -90 or lat > 90:
                 ans = None
         except ValueError:
             ans = None
