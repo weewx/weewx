@@ -113,7 +113,7 @@ while(defined($_ = <STDIN>)) {
         $clockmin = $1 if $1 < $clockmin;
         $clockmax = $1 if $1 > $clockmax;
         $clockcount += 1;
-    } elsif (/manager: added record/) {
+    } elsif (/manager: added record/ || /archive: added record/) {
         $counts{$ARCHIVE_RECORDS_ADDED} += 1;
     } elsif (/genimages: Generated (\d+) images/) {
         $counts{$IMAGES_GENERATED} += $1;
@@ -215,10 +215,6 @@ while(defined($_ = <STDIN>)) {
              /\*\*\*\*  Registration interval/ ||
              /restful: Registration successful/ ||
              /restful: Attempting to register/ ||
-             /restx: StationRegistry: Station will/ ||
-             /restx: .*Data will be uploaded/ ||
-             /restx: .*wait interval/ ||
-             /restx: Shut down/ ||
              /stats: Back calculated schema/ ||
              /stats: Backfilling stats database/ ||
              /stats: backfilled \d+ days of statistics/ ||
@@ -254,6 +250,11 @@ while(defined($_ = <STDIN>)) {
              /engine: pid file is / ||
              /engine: Use LOOP data in/ ||
              /engine: Received signal/ ||
+             /engine: Daily summaries up to date/ ||
+             /engine: Using binding/ ||
+             /engine: Archive will use/ ||
+             /engine: Starting backfill of daily summaries/ ||
+             /manager: Created daily summary tables/ ||
              /cheetahgenerator: Running / ||
              /cheetahgenerator: skip/ ||
              /VantagePro: Catch up complete/ ||
@@ -414,6 +415,7 @@ while(defined($_ = <STDIN>)) {
              /owfs: interface is / ||
              /owfs: polling interval is / ||
              /owfs: sensor map is / ||
+             /cmon: service version is/ ||
              /cmon: cpuinfo: / ||
              /cmon: sysinfo: / ||
              /cmon: Skipping record/ ||
@@ -432,9 +434,18 @@ while(defined($_ = <STDIN>)) {
              /forecast: NWSThread: NWS: forecast matrix/ ||
              /forecast: XTideThread: XTide: tide matrix/ ||
              /forecast: XTideThread: XTide: generating tides/ ||
+             /forecast: .*: forecast version/ ||
+             /restx: StationRegistry: Station will/ ||
+             /restx: .*Data will be uploaded/ ||
+             /restx: .*wait interval/ ||
+             /restx: Shut down/ ||
              /restx: \S+: Data will not be posted/ ||
+             /restx: \S+: service version is/ ||
              /restx: AWEKAS: url/ ||
              /restx: EmonCMS: url/ ||
+             /restx: EmonCMS: prefix is/ ||
+             /restx: EmonCMS: desired unit system is/ ||
+             /restx: EmonCMS: using specified input map/ ||
              /restx: OWM: data/ ||
              /restx: SEG: data/ ||
              /restx: WeatherBug: url/ ||
