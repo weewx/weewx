@@ -26,6 +26,13 @@ class Manager(object):
     functions for querying and inserting data into the table. 
     These functions encapsulate whatever sql statements are needed.
     
+    A limitation of this implementation is that it caches the timestamps of the 
+    first and last record in the table. Normally, the caches get updated as data comes
+    in. However, if one manager is updating the table, wile another is doing
+    aggregate queries, the latter manager will be unaware of later records in
+    the database, and may choose the wrong query strategy. In this might be the case,
+    call member function _sync() before starting the query. 
+    
     USEFUL ATTRIBUTES
     
     database_name: The name of the database the manager is bound to.
@@ -36,7 +43,11 @@ class Manager(object):
     
     obskeys: A list of the observation types that the database table supports.
     
-    std_unit_system: The unit system used by the database table."""
+    std_unit_system: The unit system used by the database table.
+    
+    first_timestamp: The timestamp of the earliest record in the table.
+    
+    last_timestamp: The timestamp of the last record in the table."""
     
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an object of type Manager.
@@ -69,17 +80,10 @@ class Manager(object):
             self._initialize_database(schema)
             # Try again:
             self.sqlkeys = self.connection.columnsOf(self.table_name)
-        
-        # Fetch the first row in the database to determine the unit system in
-        # use. If the database has never been used, then the unit system is
-        # still indeterminate --- set it to 'None'.
-        _row = self.getSql("SELECT usUnits FROM %s LIMIT 1;" % self.table_name)
-        self.std_unit_system = _row[0] if _row is not None else None
-        
-        # Finally, cache the first and last timestamps
-        self.first_timestamp = self.firstGoodStamp()
-        self.last_timestamp  = self.lastGoodStamp()
 
+        # Set up cached data:
+        self._sync()
+        
     @classmethod
     def open(cls, database_dict, table_name='archive'):
         """Open and return a Manager or a subclass of Manager.  
@@ -174,6 +178,18 @@ class Manager(object):
     
         syslog.syslog(syslog.LOG_NOTICE, "manager: Created and initialized table '%s' in database '%s'" % 
                       (self.table_name, self.database_name))
+
+    def _sync(self):
+        """Resynch the internal caches."""
+        # Fetch the first row in the database to determine the unit system in
+        # use. If the database has never been used, then the unit system is
+        # still indeterminate --- set it to 'None'.
+        _row = self.getSql("SELECT usUnits FROM %s LIMIT 1;" % self.table_name)
+        self.std_unit_system = _row[0] if _row is not None else None
+        
+        # Cache the first and last timestamps
+        self.first_timestamp = self.firstGoodStamp()
+        self.last_timestamp  = self.lastGoodStamp()
 
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
@@ -1128,17 +1144,18 @@ class DaySummaryManager(Manager):
         type is unknown. The second element is the unit type (eg, 'degree_F').
         The third element is the unit group (eg, "group_temperature") """
         
-        # We can use the day summary optimizations if the timespan sits on midnight boundaries
-        # or are the first and last records in the database:
+        # We can use the day summary optimizations if the starting and ending times of
+        # the aggregation interval sit on midnight boundaries, or are the first or last
+        # records in the database.
         if aggregate_type in ['last', 'lasttime'] or not (weeutil.weeutil.isMidnight(timespan.start) or \
                                                           timespan.start == self.first_timestamp) \
                                                   or not (weeutil.weeutil.isMidnight(timespan.stop)  or \
                                                           timespan.stop  == self.last_timestamp):
             
-            # No. We have to calculate the aggregate using the regular archive table:
-            result = Manager.getAggregate(self, timespan, obs_type, aggregate_type, 
+            # Cannot use the day summaries. We'll have to calculate the aggregate
+            # using the regular archive table:
+            return Manager.getAggregate(self, timespan, obs_type, aggregate_type, 
                                           **option_dict)
-            return result
 
         # We can use the daily summaries. Proceed.
                 

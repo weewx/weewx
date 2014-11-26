@@ -56,7 +56,7 @@ class StationInfo(object):
         # Locations frequently have commas in them. Guard against ConfigObj turning it into a list:
         self.location        = weeutil.weeutil.list_as_string(stn_dict.get('location', 'Unknown'))
         self.week_start      = int(stn_dict.get('week_start', 6))
-        self.station_url     = stn_dict.get('station_url', None)
+        self.station_url     = stn_dict.get('station_url')
         # For backwards compatibility:
         self.webpath         = self.station_url
 

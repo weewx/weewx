@@ -396,7 +396,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # These come from the configuration dictionary:
         self.wait_before_retry= float(vp_dict.get('wait_before_retry', 1.2))
         self.max_tries        = int(vp_dict.get('max_tries'    , 4))
-        self.iss_id           = vp_dict.get('iss_id', None)
+        self.iss_id           = vp_dict.get('iss_id')
         if self.iss_id is not None: self.iss_id           = int(self.iss_id) 
         
         self.save_monthRain = None

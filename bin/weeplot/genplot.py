@@ -66,8 +66,8 @@ class GeneralPlot(object):
         self.axis_label_font_color  = weeplot.utilities.tobgr(config_dict.get('axis_label_font_color', '0x000000'))
         self.axis_label_font_size   = int(config_dict.get('axis_label_font_size', 10))
 
-        self.x_label_format         = config_dict.get('x_label_format', None)
-        self.y_label_format         = config_dict.get('y_label_format', None)
+        self.x_label_format         = config_dict.get('x_label_format')
+        self.y_label_format         = config_dict.get('y_label_format')
         
         # Calculate sensible margins for the given image and font sizes.
         self.lmargin = int(4.0 * self.axis_label_font_size)

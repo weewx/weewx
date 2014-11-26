@@ -129,6 +129,7 @@ class StdReportEngine(threading.Thread):
                 except Exception, e:
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                    weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
                     traceback.print_exc()
                     continue
@@ -213,6 +214,7 @@ class FtpGenerator(ReportGenerator):
         except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError), e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
             syslog.syslog(syslog.LOG_ERR, "reportengine: Caught exception %s in FtpGenerator; %s." % (cl, e))
+            weeutil.weeutil.log_traceback("        ****  ")
             return
         
         t2= time.time()
@@ -241,8 +243,8 @@ class RsyncGenerator(ReportGenerator):
                 local_root  = os.path.join(self.config_dict['WEEWX_ROOT'], html_root),
                 remote_root = self.skin_dict['path'],
                 server      = self.skin_dict['server'],
-                user        = self.skin_dict.get('user', None),
-                port        = self.skin_dict.get('port', None),
+                user        = self.skin_dict.get('user'),
+                port        = self.skin_dict.get('port'),
                 delete      = to_bool(self.skin_dict.get('delete', False)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: rsync upload not requested. Skipped.")
