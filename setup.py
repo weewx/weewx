@@ -672,20 +672,17 @@ def do_cfg():
     configure_conf(options.cfgfn, info, options.dryrun)
     return 0
 
-def configure_conf(cfgfn, info, dryrun):
+def configure_conf(config_fn, info, dryrun):
     """Configure the configuration file with station info and driver details"""
     # FIXME: this emits a functional config file, but the comments and indents
-    # may be messed up.  apparently configobj associates comments *after* a
-    # parameter, not before it.  so comments before a parameter will be
-    # associated with the previous parameter.
+    # may be messed up.
 
-    # adjust system path so we can load the config file and driver
-    tmp_path = list(sys.path)
-    sys.path.insert(0, bin_dir)
-    from weeutil.weeutil import read_config
-
-    # Load the configuration file
-    config_fn, config_dict = read_config(cfgfn)
+    # Load the configuration file.  If we cannot find it, complain and bail.
+    if config_fn is None:
+        config_fn = get_conf_filename()
+    if config_fn is None:
+        print "Cannot determine location of configuration file"
+        return
     print 'Using configuration file %s' % config_fn
 
     # Try to load the driver so we can use its configuration editor.  If that
@@ -696,6 +693,10 @@ def configure_conf(cfgfn, info, dryrun):
         driver = info.get('driver')
     else:
         driver = 'weewx.drivers.simulator'
+
+    # adjust system path so we can load the driver
+    tmp_path = list(sys.path)
+    sys.path.insert(0, bin_dir)
 
     try:
         editor, driver_name, driver_vers = load_editor(driver)
@@ -923,23 +924,30 @@ def get_station_info(config_dict):
     return info
 
 def get_conf_filename():
-    """find the full path to weewx.conf.  this should only be run from a source
-    tree, so we look for the setup.cfg to tell us the installation directory,
-    then append the weewx.conf filename to that.
-
-    it would be nice to get this from the standard python setup stuff, but how?
-    """
+    """Find the full path to weewx.conf.  First look for a setup.cfg file in
+    the same directory from which setup.py was run.  If we find one, use
+    the contents to determine the location of weewx.conf.  If no setup.cfg,
+    then use the location of setup.py to guess the location of weewx.conf.
+    If setup.py is in /usr/share/weewx then this is a deb/rpm install, so
+    weewx.conf is in /etc/weewx.conf.  Anywhere else and the weewx.conf will
+    be in the same directory as setup.py.  Anything other than that we do
+    not recognize, and the weewx.conf must be specified explicitly."""
     # FIXME: if someone specifies --home or --prefix then this will break
 
-    # try to find the directory in which weewx.conf will be installed
+    # try to find the directory in which weewx.conf is or will be installed
     idir = None
-    # look in the location specified by setup.cfg
     fn = os.path.join(this_dir, 'setup.cfg')
     if os.path.exists(fn):
+        # look in the location specified by setup.cfg
         setup_dict = configobj.ConfigObj(fn)
         if ('install' in setup_dict and
             setup_dict['install'].get('home') is not None):
             idir = setup_dict['install'].get('home')
+    elif this_dir == '/usr/share/weewx':
+        # this is a deb or rpm install
+        idir = '/etc/weewx'
+    else:
+        idir = this_dir
     if idir is None:
         return None
     return "%s/weewx.conf" % idir
