@@ -370,6 +370,8 @@ class Formatter(object):
     """Holds formatting information for the various unit types.
     
     Examples (using the default formatters):
+    >>> import os
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> f = Formatter()
     >>> print f.toString((20.0, "degree_C", "group_temperature"))
     20.0°C
@@ -450,10 +452,10 @@ class Formatter(object):
         """Return a suitable format string."""
 
         # First, try my internal format dict
-        if self.unit_format_dict.has_key(unit):
+        if unit in self.unit_format_dict:
             return self.unit_format_dict[unit]
         # If that didn't work, try the default dict:
-        elif default_unit_format_dict.has_key(unit):
+        elif unit in default_unit_format_dict:
             return default_unit_format_dict[unit]
         else:
             # Can't find one. Return a generic formatter:
@@ -471,10 +473,10 @@ class Formatter(object):
         """
 
         # First, try my internal label dictionary:
-        if self.unit_label_dict.has_key(unit):
+        if unit in self.unit_label_dict:
             label = self.unit_label_dict[unit]
         # If that didn't work, try the default label dictionary:
-        elif default_unit_label_dict.has_key(unit):
+        elif unit in default_unit_label_dict:
             label = default_unit_label_dict[unit]
         else:
             # Can't find a label. Just return an empty string:
@@ -556,13 +558,18 @@ class Formatter(object):
         return self.ordinate_names[_sector]
     
     def delta_secs_to_string(self, secs, label_format):
-        """Convert elapsed seconds to a string"""
-    
-        etime_dict={}
+        """Convert elapsed seconds to a string
+        
+        Example:
+        >>> f = Formatter()
+        >>> print f.delta_secs_to_string(3*86400+21*3600+7*60+11, default_time_format_dict["delta_time"])
+        3 days, 21 hours, 7 minutes
+        """
+        etime_dict = {}
         for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60), ('second', 1)):
-            amt = int(secs / interval)
+            amt = int(secs // interval)
             etime_dict[label] = amt
-            etime_dict[label+'_label'] = self.get_label_string(label, not amt==1)
+            etime_dict[label + '_label'] = self.get_label_string(label, not amt == 1)
             secs %= interval
         # The version of locale in Python version 2.5 and 2.6 cannot handle interpolation and raises an
         # exception. Be prepared to catch it and use a regular % formatter
@@ -843,7 +850,7 @@ class ValueHelper(object):
             try:
                 conversionDict[self.value_t[1]][target_unit]
             except KeyError:
-                raise AttributeError, "Illegal conversion from '%s' to '%s'"%(self.value_t[1], target_unit)
+                raise AttributeError("Illegal conversion from '%s' to '%s'"%(self.value_t[1], target_unit))
         return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
     
     def exists(self):
@@ -1120,4 +1127,4 @@ if __name__ == "__main__":
     import doctest
 
     if not doctest.testmod().failed:
-        print "PASSED"
+        print("PASSED")

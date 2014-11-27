@@ -18,8 +18,6 @@ import time
 
 import weewx
 import weewx.drivers
-import weewx.units
-import weewx.uwxutils
 
 DRIVER_NAME = 'WS1'
 DRIVER_VERSION = '0.14'

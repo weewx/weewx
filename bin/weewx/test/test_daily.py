@@ -19,6 +19,8 @@ import unittest
 
 import configobj
 
+os.environ['TZ'] = 'America/Los_Angeles'
+
 import weeutil.weeutil
 import weewx.tags
 import gen_fake_data
@@ -90,7 +92,6 @@ class Common(unittest.TestCase):
                               'max_dir', 'xsum', 'ysum', 'dirsumtime', 'squaresum', 'wsquaresum'])
         
     def testScalarTally(self):
-        os.environ['TZ'] = 'America/Los_Angeles'
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
             # Pick a random day, say 15 March:
             start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
@@ -120,7 +121,6 @@ class Common(unittest.TestCase):
                         self.assertEqual(stats_time, res2[0], "Time check. Failing type %s, aggregate: %s" % (stats_type, aggregate))
     
     def testWindTally(self):
-        os.environ['TZ'] = 'America/Los_Angeles'
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
             # Pick a random day, say 15 March:
             start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
@@ -157,7 +157,6 @@ class Common(unittest.TestCase):
     def testTags(self):
         """Test common tags."""
         global skin_dict
-        os.environ['TZ'] = 'America/Los_Angeles'
         db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
                                            self.config_dict['Databases'])
         db_lookup = db_binder.bind_default()
@@ -249,7 +248,6 @@ class Common(unittest.TestCase):
 
     def test_agg_intervals(self):
         """Test aggregation spans that do not span a day"""
-        os.environ['TZ'] = 'America/Los_Angeles'
         db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
                                            self.config_dict['Databases'])
         db_lookup = db_binder.bind_default()
@@ -265,14 +263,14 @@ class Common(unittest.TestCase):
         self.assertEqual(str(tsb.outTemp.mintime), "14-Mar-2010 07:00")
         self.assertEqual(str(tsb.outTemp.avg), "11.4°F")
         
-        rain_span = weeutil.weeutil.TimeSpan(1268622600, 1268633400)
+        rain_span = weeutil.weeutil.TimeSpan(time.mktime((2010,3,14,20,10,0,0,0,-1)),
+                                             time.mktime((2010,3,14,23,10,0,0,0,-1)))
         tsb = weewx.tags.TimespanBinder(rain_span, db_lookup)
         self.assertEqual(str(tsb.rain.sum), "0.26 in")
         
     def test_agg(self):
         """Test aggregation in the archive table against aggregation in the daily summary"""
         
-        os.environ['TZ'] = 'America/Los_Angeles'
         week_start_ts = time.mktime((2010,3,14,0,0,0,0,0,-1))
         week_stop_ts  = time.mktime((2010,3,21,0,0,0,0,0,-1))
         
@@ -286,7 +284,6 @@ class Common(unittest.TestCase):
                                      msg="aggregation=%s; %s vs %s" % (aggregation, table_answer, daily_answer))
             
     def test_rainYear(self):
-        os.environ['TZ'] = 'America/Los_Angeles'
         db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
                                            self.config_dict['Databases'])
         db_lookup = db_binder.bind_default()
@@ -305,7 +302,6 @@ class Common(unittest.TestCase):
 
 
     def test_heatcool(self):
-        os.environ['TZ'] = 'America/Los_Angeles'
         db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
                                            self.config_dict['Databases'])
         db_lookup = db_binder.bind_default()

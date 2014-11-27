@@ -17,8 +17,6 @@ import syslog
 import time
 import traceback
 
-import configobj
-
 import Sun
 
 def convertToFloat(seq):
@@ -41,6 +39,7 @@ def search_up(d, k, *default):
     
     Example: 
     
+    >>> import configobj
     >>> c = configobj.ConfigObj({"color":"blue", "size":10, "dayimage":{"color":"red"}});
     >>> print search_up(c['dayimage'], 'size')
     10
@@ -54,7 +53,7 @@ def search_up(d, k, *default):
     Traceback (most recent call last):
     AttributeError: flavor
     """
-    if d.has_key(k):
+    if k in d:
         return d[k]
     if d.parent is d:
         if len(default):
@@ -74,6 +73,7 @@ def accumulateLeaves(d, max_level=99):
     
     Example: Supply a default color=blue, size=10. The section "dayimage" overrides the former:
     
+    >>> import configobj
     >>> c = configobj.ConfigObj({"color":"blue", "size":10, "dayimage":{"color":"red", "position":{"x":20, "y":30}}});
     >>> print accumulateLeaves(c["dayimage"])
     {'color': 'red', 'size': 10}
@@ -85,6 +85,8 @@ def accumulateLeaves(d, max_level=99):
     {'color': 'red', 'y': 30, 'x': 20}
     """
     
+    import configobj
+
     # Use recursion. If I am the root object, then there is nothing above 
     # me to accumulate. Start with a virgin ConfigObj
     if d.parent is d :
@@ -213,6 +215,8 @@ def startOfInterval(time_ts, interval):
     >>> start_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> time.ctime(startOfInterval(start_ts,  300))
     'Thu Jul  4 01:55:00 2013'
+    >>> time.ctime(startOfInterval(start_ts,  300.0))
+    'Thu Jul  4 01:55:00 2013'
     >>> time.ctime(startOfInterval(start_ts,  600))
     'Thu Jul  4 01:50:00 2013'
     >>> time.ctime(startOfInterval(start_ts,  900))
@@ -241,11 +245,11 @@ def startOfInterval(time_ts, interval):
     'Thu Jul  4 07:51:00 2013'
     """
 
-    interval_m = interval/60
-    interval_h = interval/3600
+    interval_m = int(interval // 60)
+    interval_h = int(interval // 3600)
     time_tt = time.localtime(time_ts)
-    m = time_tt.tm_min  // interval_m * interval_m
-    h = time_tt.tm_hour // interval_h * interval_h if interval_h > 1 else time_tt.tm_hour
+    m = int(time_tt.tm_min  // interval_m * interval_m)
+    h = int(time_tt.tm_hour // interval_h * interval_h) if interval_h > 1 else time_tt.tm_hour
 
     # Replace the hour, minute, and seconds with the start of the interval.
     # Everything else gets retained:
@@ -278,7 +282,7 @@ class TimeSpan(tuple):
     
     def __new__(cls, *args):
         if args[0] > args[1]:
-            raise ValueError, "start time (%d) is greater than stop time (%d)" % (args[0], args[1]) 
+            raise ValueError("start time (%d) is greater than stop time (%d)" % (args[0], args[1])) 
         return tuple.__new__(cls, args)
 
     @property
@@ -456,6 +460,7 @@ def archiveDaysAgoSpan(time_ts, days_ago=0, grace=1):
     """Returns a TimeSpan for x days ago
     
     Example:
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> print archiveDaysAgoSpan(time_ts, days_ago=2)
     [2013-07-02 00:00:00 PDT (1372748400) -> 2013-07-03 00:00:00 PDT (1372834800)]
@@ -828,25 +833,6 @@ def timestamp_to_gmtime(ts):
     else:
         return "******* N/A *******     (    N/A   )"
         
-    
-def utcdatetime_to_timestamp(dt):
-    """Convert from a datetime object holding a UTC time, to a unix timestamp.
-    
-    dt: An instance of datetime.datetime holding the time in UTC.
-    
-    Returns: A timestamp
-    
-    Example (using 17-Jan-2011 19:21:05 UTC):
-    
-        >>> dt_utc = datetime.datetime(2011, 1, 17, 19, 21, 5)
-        >>> ts = utcdatetime_to_timestamp(dt_utc)
-        >>> print "%s UTC (unix epoch time %.1f)" % (time.asctime(time.gmtime(ts)), ts)
-        Mon Jan 17 19:21:05 2011 UTC (unix epoch time 1295292065.0)
-    """
-    # Amazingly, Python offers no easy way to do this. Here's the best
-    # hack I can some up with:
-    return time.mktime(dt.utctimetuple()) - time.timezone
-
 def utc_to_local_tt(y, m, d,  hrs_utc):
     """Converts from a UTC time to a local time.
     
@@ -1076,7 +1062,7 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
 
     return: filename, dictionary
     """
-
+    import configobj
     locations = ['/etc/weewx', '/home/weewx']
 
     # Figure out the config file
@@ -1182,8 +1168,5 @@ class ListOfDicts(dict):
 if __name__ == '__main__':
     import doctest
 
-    start_ts = time.mktime(time.strptime("2013-07-04 01:00:00", "%Y-%m-%d %H:%M:%S"))
-    print time.ctime(startOfInterval(start_ts,  300))
-
     if not doctest.testmod().failed:
-        print "PASSED"
+        print("PASSED")

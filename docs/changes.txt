@@ -6,7 +6,7 @@ weewx change history
 Big update with lots of changes and lots of new features. The overall
 goal was to make it easier to write and install extensions. Adding
 custom databases, units, accumulators and many other little things
-were made easier.
+have been made easier.
 
 Skins and skin.conf continue to be 100% backwards compatible (since
 V1.5!).  However, search-list extensions will have to be rewritten.

@@ -16,6 +16,8 @@ import os.path
 
 import configobj
 
+os.environ['TZ'] = 'America/Los_Angeles'
+
 import weedb
 import weeutil.weeutil
 import weewx.manager

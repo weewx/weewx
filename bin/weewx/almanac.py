@@ -49,8 +49,11 @@ class Almanac():
         mars.ra: Right ascension of mars
         etc.
     
-    EXAMPLES (note that these will only work in the Pacific Time Zone)
+    EXAMPLES:
     
+    >>> # These examples are designed to work in the Pacific timezone
+    >>> import os
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> t = 1238180400
     >>> print timestamp_to_string(t)
     2009-03-27 12:00:00 PDT (1238180400)
@@ -268,7 +271,7 @@ class Almanac():
         if not self.hasExtras:
             # If the Almanac does not have extended capabilities, we can't
             # do any of the following. Raise an exception.
-            raise AttributeError, "Unknown attribute %s" % attr
+            raise AttributeError("Unknown attribute %s" % attr)
 
         # We do have extended capability. Check to see if the attribute is a calendar event:
         elif attr in ['previous_equinox', 'next_equinox', 
@@ -385,4 +388,5 @@ if __name__ == '__main__':
     import doctest
     from weeutil.weeutil import timestamp_to_string, timestamp_to_gmtime  #@UnusedImport
             
-    doctest.testmod()
+    if not doctest.testmod().failed:
+        print("PASSED")

@@ -74,6 +74,17 @@ done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
 	@echo "see $(BLDDIR)/test-results"
 
+TESTDIR=/home/weewx/archive
+
+MYSQLCLEAN="drop database test_weewx;\n\
+drop database alt_weewx;\n\
+drop database sim_weewx;\n"
+test-clean:
+	rm -f $(TESTDIR)/test_weewx.sdb
+	rm -f $(TESTDIR)/alt_weewx.sdb
+	rm -f $(TESTDIR)/sim_weewx.sdb
+	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
+  	
 install:
 	./setup.py --install
 

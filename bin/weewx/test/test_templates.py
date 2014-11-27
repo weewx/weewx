@@ -16,6 +16,8 @@ import unittest
 
 import configobj
 
+os.environ['TZ'] = 'America/Los_Angeles'
+
 import weewx.reportengine
 import weewx.station
 import weeutil.weeutil
@@ -97,7 +99,6 @@ class Common(unittest.TestCase):
     
     def test_report_engine(self):
         
-        os.environ['TZ'] = 'America/Los_Angeles'
         # The generation time should be the same as the last record in the test database:
         testtime_ts = gen_fake_data.stop_ts
         print "\ntest time is ", weeutil.weeutil.timestamp_to_string(testtime_ts)
