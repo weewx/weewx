@@ -414,7 +414,7 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
                 update_to_v2(old_config)
                 
             # Now update to V3.X
-            update_to_v3(old_config)
+            old_database = update_to_v3(old_config)
                 
             # Now merge the updated old configuration file into the new file,
             # thus saving any user modifications.
@@ -422,6 +422,11 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
             old_config.interpolation = False
             # Then do the merge
             new_config.merge(old_config)
+            if old_database:
+                try:
+                    new_config['DataBindings']['wx_binding']['database'] = old_database
+                except KeyError:
+                    pass
                     
     # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
     new_config['WEEWX_ROOT'] = weewx_root
@@ -576,6 +581,7 @@ def update_to_v2(config_dict):
 
 def update_to_v3(config_dict):
     """Update a configuration file to V3.X"""
+    old_database = None
     
     if 'Databases' in config_dict:
         # The stats database no longer exists. Remove it from the [Databases] section:
@@ -592,7 +598,7 @@ def update_to_v3(config_dict):
         config_dict['StdReport'].pop('stats_database', None)
         
     if 'StdArchive' in config_dict:
-        config_dict['StdArchive'].pop('archive_database', None)
+        old_database = config_dict['StdArchive'].pop('archive_database', None)
         config_dict['StdArchive'].pop('stats_database', None)
         config_dict['StdArchive'].pop('archive_schema', None)
         config_dict['StdArchive'].pop('stats_schema', None)
@@ -619,6 +625,8 @@ def update_to_v3(config_dict):
                 config_dict['Engine']['Services']['process_services'].append('weewx.wxservices.StdWXCalculate')
         except KeyError:
             pass
+        
+    return old_database
 
 def save_path(filepath):
     # Sometimes the target has a trailing '/'. This will take care of it:
