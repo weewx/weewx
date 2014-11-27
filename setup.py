@@ -412,10 +412,10 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
             # First update to V2.X
             if old_version_number[0:2] >= ['2', '00']:
                 update_to_v2(old_config)
-                
+
             # Now update to V3.X
             old_database = update_to_v3(old_config)
-                
+
             # Now merge the updated old configuration file into the new file,
             # thus saving any user modifications.
             # First, turn interpolation off:
@@ -584,7 +584,8 @@ def update_to_v3(config_dict):
     old_database = None
     
     if 'Databases' in config_dict:
-        # The stats database no longer exists. Remove it from the [Databases] section:
+        # The stats database no longer exists. Remove it from the [Databases]
+        # section:
         config_dict['Databases'].pop('stats_sqlite', None)
         config_dict['Databases'].pop('stats_mysql', None)
         # The key "database" changed to "database_name"
