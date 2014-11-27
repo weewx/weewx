@@ -247,7 +247,7 @@ import weewx.units
 import weewx.wxformulas
 
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.21'
+DRIVER_VERSION = '0.22'
 
 
 def loader(config_dict, _):
@@ -422,21 +422,10 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
         self.polling_interval = stn_dict.get('polling_interval', None)
         if self.polling_interval is not None:
             self.polling_interval = int(self.polling_interval)
-        self.disable_catchup = weeutil.weeutil.tobool(stn_dict.get('disable_catchup', False))
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('serial port is %s' % self.port)
         loginf('polling interval is %s' % self.polling_interval)
-
-        # FIXME: this is a hack until we modify the driver api to have an
-        # explicit genCatchupRecords method
-        self.force_recgen = weeutil.weeutil.tobool(stn_dict.get('force_software_record_generation', True))
-        if self.force_recgen:
-            config_dict = stn_dict['config_dict']
-            recgen = config_dict['StdArchive']['record_generation']
-            if recgen.lower() != 'software':
-                loginf("forcing record_generation to 'software'")
-                config_dict['StdArchive']['record_generation'] = 'software'
 
     @property
     def hardware_name(self):
@@ -487,13 +476,10 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
             raise weewx.RetriesExceeded(msg)
 
     def genArchiveRecords(self, since_ts, count=0):
-        if self.disable_catchup:
-            raise NotImplementedError
         with WS23xx(self.port) as s:
             last_rain = None
             for ts, data in s.gen_records(since_ts=since_ts, count=count):
-                record = data_to_packet(data, ts,
-                                        last_rain=last_rain)
+                record = data_to_packet(data, ts, last_rain=last_rain)
                 record['interval'] = data['interval']
                 last_rain = record['rainTotal']
                 yield record

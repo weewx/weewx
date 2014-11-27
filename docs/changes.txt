@@ -113,6 +113,9 @@ For the fine offset stations, record connection status as rxCheckPercent
 (either 0 or 100%) and sensor battery status as outTempBatteryStatus (0
 indicates ok, 1 indicates low battery).
 
+For WS23xx stations, hardware record generation is now enabled and is the
+default (previously, software record generation was the default).
+
 
 2.7.0 10/11/14
 
