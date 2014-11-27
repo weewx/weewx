@@ -70,3 +70,6 @@ class ExtendedStatistics(SearchList):
         return [{'alltime': all_stats,
                  'seven_day': seven_day_stats,
                  'thirty_day': thirty_day_stats}]
+
+# For backwards compatibility:
+ExtStats = ExtendedStatistics
