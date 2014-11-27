@@ -150,6 +150,10 @@ class Manager(object):
     
     def close(self):
         self.connection.close()
+        del self.sqlkeys
+        del self.first_timestamp
+        del self.last_timestamp
+        del self.std_unit_system
 
     def __enter__(self):
         return self
@@ -1333,7 +1337,7 @@ class DaySummaryManager(Manager):
         # Get an empty day accumulator:
         _day_accum = weewx.accum.Accum(_timespan)
         
-        _cursor = cursor if cursor else self.connection.cursor()
+        _cursor = cursor or self.connection.cursor()
 
         try:
             # For each observation type, execute the SQL query and hand the results on

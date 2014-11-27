@@ -12,7 +12,7 @@ import sys
 import syslog
 import time
 import unittest
-import os
+import os.path
 
 import configobj
 
@@ -25,7 +25,10 @@ import weewx.engine
 run_length = 48.0      # How long to run the simulator in hours.
 # The types to actually test:
 test_types = ['outTemp', 'inTemp', 'barometer', 'windSpeed']
-config_path = "simgen.conf"
+
+# Find the configuration file. It's assumed to be in the same directory as me:
+config_path = os.path.join(os.path.dirname(__file__), "simgen.conf")
+
 cwd = None
 
 class Common(unittest.TestCase):

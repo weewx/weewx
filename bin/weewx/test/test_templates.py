@@ -22,7 +22,8 @@ import weeutil.weeutil
 
 import gen_fake_data
 
-config_path = "testgen.conf"
+# Find the configuration file. It's assumed to be in the same directory as me:
+config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
 cwd = None
 
 # We will be testing the ability to extend the unit system, so set that up first:
@@ -96,6 +97,7 @@ class Common(unittest.TestCase):
     
     def test_report_engine(self):
         
+        os.environ['TZ'] = 'America/Los_Angeles'
         # The generation time should be the same as the last record in the test database:
         testtime_ts = gen_fake_data.stop_ts
         print "\ntest time is ", weeutil.weeutil.timestamp_to_string(testtime_ts)

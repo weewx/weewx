@@ -10,7 +10,7 @@
 
 from __future__ import with_statement
 import math
-import os
+import os.path
 import shutil
 import sys
 import syslog
@@ -26,7 +26,9 @@ from weewx.units import ValueHelper
 
 day_keys = [x[0] for x in gen_fake_data.schema if x[0] not in ['dateTime', 'interval', 'usUnits']] + ['wind']
 
-config_path = "testgen.conf"
+# Find the configuration file. It's assumed to be in the same directory as me:
+config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
+
 cwd = None
 
 skin_dict = {'Units' : {'Trend':      {'time_delta': 3600, 'time_grace': 300},
@@ -88,6 +90,7 @@ class Common(unittest.TestCase):
                               'max_dir', 'xsum', 'ysum', 'dirsumtime', 'squaresum', 'wsquaresum'])
         
     def testScalarTally(self):
+        os.environ['TZ'] = 'America/Los_Angeles'
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
             # Pick a random day, say 15 March:
             start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
@@ -117,6 +120,7 @@ class Common(unittest.TestCase):
                         self.assertEqual(stats_time, res2[0], "Time check. Failing type %s, aggregate: %s" % (stats_type, aggregate))
     
     def testWindTally(self):
+        os.environ['TZ'] = 'America/Los_Angeles'
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
             # Pick a random day, say 15 March:
             start_ts = int(time.mktime((2010,3,15,0,0,0,0,0,-1)))
@@ -153,6 +157,7 @@ class Common(unittest.TestCase):
     def testTags(self):
         """Test common tags."""
         global skin_dict
+        os.environ['TZ'] = 'America/Los_Angeles'
         db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
                                            self.config_dict['Databases'])
         db_lookup = db_binder.bind_default()
@@ -208,7 +213,7 @@ class Common(unittest.TestCase):
             self.assertEqual(str(tagStats.month().barometer.max), "31.000 inHg")
             self.assertEqual(str(tagStats.month().barometer.mintime), "05-Mar-2010 00:00")
             self.assertEqual(str(tagStats.month().barometer.maxtime), "03-Mar-2010 00:00")
-            self.assertEqual(str(tagStats.year().barometer.avg), "30.002 inHg")
+            self.assertEqual(str(tagStats.year().barometer.avg), "30.004 inHg")
             self.assertEqual(str(tagStats.year().barometer.min), "29.000 inHg")
             self.assertEqual(str(tagStats.year().barometer.max), "31.000 inHg")
             self.assertEqual(str(tagStats.year().barometer.mintime), "04-Jan-2010 00:00")
@@ -228,7 +233,7 @@ class Common(unittest.TestCase):
             self.assertEqual(str(tagStats.month().outTemp.max), "59.0°F")
             self.assertEqual(str(tagStats.month().outTemp.mintime), "01-Mar-2010 06:00")
             self.assertEqual(str(tagStats.month().outTemp.maxtime), "31-Mar-2010 19:00")
-            self.assertEqual(str(tagStats.year().outTemp.avg), "40.0°F")
+            self.assertEqual(str(tagStats.year().outTemp.avg), "48.3°F")
             self.assertEqual(str(tagStats.year().outTemp.min), "-20.0°F")
             self.assertEqual(str(tagStats.year().outTemp.max), "100.0°F")
             self.assertEqual(str(tagStats.year().outTemp.mintime), "01-Jan-2010 06:00")
@@ -244,6 +249,7 @@ class Common(unittest.TestCase):
 
     def test_agg_intervals(self):
         """Test aggregation spans that do not span a day"""
+        os.environ['TZ'] = 'America/Los_Angeles'
         db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
                                            self.config_dict['Databases'])
         db_lookup = db_binder.bind_default()
@@ -266,6 +272,7 @@ class Common(unittest.TestCase):
     def test_agg(self):
         """Test aggregation in the archive table against aggregation in the daily summary"""
         
+        os.environ['TZ'] = 'America/Los_Angeles'
         week_start_ts = time.mktime((2010,3,14,0,0,0,0,0,-1))
         week_stop_ts  = time.mktime((2010,3,21,0,0,0,0,0,-1))
         
@@ -279,6 +286,7 @@ class Common(unittest.TestCase):
                                      msg="aggregation=%s; %s vs %s" % (aggregation, table_answer, daily_answer))
             
     def test_rainYear(self):
+        os.environ['TZ'] = 'America/Los_Angeles'
         db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
                                            self.config_dict['Databases'])
         db_lookup = db_binder.bind_default()
@@ -288,15 +296,16 @@ class Common(unittest.TestCase):
         tagStats = weewx.tags.TimeBinder(db_lookup, stop_ts,
                                            rain_year_start=1)
             
-        self.assertEqual(str(tagStats.rainyear().rain.sum), "86.59 in")
+        self.assertEqual(str(tagStats.rainyear().rain.sum), "58.68 in")
 
         # Do it again, for starting 1-Oct:
         tagStats = weewx.tags.TimeBinder(db_lookup, stop_ts,
-                                           rain_year_start=10)
-        self.assertEqual(str(tagStats.rainyear().rain.sum), "21.89 in")
+                                           rain_year_start=6)
+        self.assertEqual(str(tagStats.rainyear().rain.sum), "22.72 in")
 
 
     def test_heatcool(self):
+        os.environ['TZ'] = 'America/Los_Angeles'
         db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
                                            self.config_dict['Databases'])
         db_lookup = db_binder.bind_default()
@@ -306,7 +315,7 @@ class Common(unittest.TestCase):
         tagStats = weewx.tags.TimeBinder(db_lookup, stop_ts,
                                              skin_dict=skin_dict)
             
-        self.assertEqual(str(tagStats.year().heatdeg.sum), "10150.7°F-day")
+        self.assertEqual(str(tagStats.year().heatdeg.sum), "5126.3°F-day")
         self.assertEqual(str(tagStats.year().cooldeg.sum), "1026.2°F-day")
     
 
