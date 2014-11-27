@@ -362,7 +362,7 @@ class BodyWrapper(object):
             # to catch an exception if the body is always up.
             try:
                 time_djd = getattr(self.observer, fn)(temp_body, self.sod_djd)
-            except ephem.AlwaysUpError:
+            except (ephem.AlwaysUpError, ephem.NeverUpError):
                 time_djd = None
             return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="ephem_day", formatter=self.formatter)
             
