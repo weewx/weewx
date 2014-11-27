@@ -74,15 +74,15 @@ done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
 	@echo "see $(BLDDIR)/test-results"
 
-TESTDIR=/home/weewx/archive
+TESTDIR=/var/tmp/weewx_test
 
 MYSQLCLEAN="drop database test_weewx;\n\
-drop database alt_weewx;\n\
-drop database sim_weewx;\n"
+drop database test_alt_weewx;\n\
+drop database test_sim;\n"
 test-clean:
-	rm -f $(TESTDIR)/test_weewx.sdb
-	rm -f $(TESTDIR)/alt_weewx.sdb
-	rm -f $(TESTDIR)/sim_weewx.sdb
+	rm -f $(TESTDIR)/test.sdb
+	rm -f $(TESTDIR)/test_alt.sdb
+	rm -f $(TESTDIR)/sim.sdb
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
   	
 install:
