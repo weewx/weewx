@@ -245,6 +245,37 @@ Version: 3.0.0a2
       <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
       <tr>
         <td>
+        </td>
+        <td>
+          <pre class='tty'>[StdReport]
+<span class='added'>    data_binding = wx_binding</span></pre>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <pre class='tty'>[StdArchive]
+<span class='removed'>    archive_database = archive_sqlite
+    stats_database = stats_sqlite
+    archive_schema = user.schemas.defaultArchiveSchema
+    stats_schema = user.schemas.defaultStatsSchema</span></pre>
+        </td>
+        <td>
+          <pre class='tty'>[StdArchive]
+<span class='added'>    data_binding = wx_binding</span></pre>
+        </td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>
+          <pre class='tty'><span class='added'>[DataBindings]
+    [[wx_binding]]
+        database = archive_sqlite
+        manager = weewx.wxmanager.WXDaySummaryManager
+        schema = schemas.wview.schema</span></pre>
+        </td>
+      </tr>
+      <tr>
+        <td>
           <pre class='tty'>[Databases]
     [[archive_sqlite]]
         root = %(WEEWX_ROOT)s
@@ -293,30 +324,6 @@ Version: 3.0.0a2
         </td>
       </tr>
       <tr>
-        <td></td>
-        <td>
-          <pre class='tty'><span class='added'>[DataBindings]
-    [[wx_binding]]
-        database = archive_sqlite
-        table_name = archive
-        manager = weewx.wxmanager.WXDaySummaryManager
-        schema = schemas.wview.schema</span></pre>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <pre class='tty'>[StdReport]
-    ...
-<span class='removed'>    archive_database = archive_sqlite
-    stats_database = stats_sqlite</span></pre>
-        </td>
-        <td>
-          <pre class='tty'>[StdReport]
-    ...
-    <span class='added'>data_binding = wx_binding</span></pre>
-        </td>
-      </tr>
-      <tr>
         <td>
           <pre class='tty'>[<span class='changed'>Engines</span>]
   [[<span class='changed'>WxEngine</span>]]
@@ -326,6 +333,7 @@ weewx.<span class='changed'>wxengine</span>.StdTimeSynch
 weewx.<span class='changed'>wxengine</span>.StdConvert, \
 weewx.<span class='changed'>wxengine</span>.StdCalibrate, \
 weewx.<span class='changed'>wxengine</span>.StdQC
+
     archive_services = \
 weewx.<span class='changed'>wxengine</span>.StdArchive
     restful_services = \
@@ -431,8 +439,8 @@ weewx.<span class='changed'>engine</span>.StdReport</pre>
     search_list_extension = {'alltime'   : all_stats,
                              'seven_day' : seven_day_stats}
         
-    return <span class="changed">search_list_extension</span>
-</pre></td>
+    return <span class="changed">search_list_extension</span></pre>
+          </td>
           <td><pre class="tty"><span class="changed">def get_extension_list</span>(self, timespan, <span class="changed">db_lookup</span>):
 
     all_stats = <span class="changed">TimespanBinder</span>(timespan, 
@@ -449,7 +457,8 @@ weewx.<span class='changed'>engine</span>.StdReport</pre>
     search_list_extension = {'alltime'   : all_stats,
                              'seven_day' : seven_day_stats}
         
-    return <span class="changed">[search_list_extension]</span>  </pre></td>
+    return <span class="changed">[search_list_extension]</span></pre>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -487,15 +496,15 @@ weewx.<span class='changed'>engine</span>.StdReport</pre>
       <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
       <tr>
         <td>
-          <pre class='tty'>import <span class="changed">weewx.abstractstation</span>
+          <pre class='tty'>import weewx.<span class="changed">abstractstation</span>
 
-class ACME960(<span class="changed">weewx.abstractstation.AbstractStation</span>):
+class ACME960(weewx.<span class="changed">abstractstation.AbstractStation</span>):
     ...</pre>
         </td>
         <td>
-          <pre class='tty'>import <span class="changed">weewx.drivers</span>
+          <pre class='tty'>import weewx.<span class="changed">drivers</span>
 
-class ACME960(<span class="changed">weewx.drivers.AbstractDevice</span>):
+class ACME960(weewx.<span class="changed">drivers.AbstractDevice</span>):
     ...</pre>
         </td>
       </tr>
@@ -508,15 +517,15 @@ class ACME960(<span class="changed">weewx.drivers.AbstractDevice</span>):
       <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
       <tr>
         <td>
-          <pre class='tty'>import <span class="changed">weewx.wxengine</span>
+          <pre class='tty'>import weewx.<span class="changed">wxengine</span>
 
-class BetterMousetrapService(<span class="changed">weewx.wxengine.StdService</span>):
+class BetterMousetrapService(weewx.<span class="changed">wxengine</span>.StdService):
     ...</pre>
         </td>
         <td>
-          <pre class='tty'>import <span class="changed">weewx.engine</span>
+          <pre class='tty'>import weewx.<span class="changed">engine</span>
 
-class BetterMousetrapService(<span class="changed">weewx.engine.StdService</span>):
+class BetterMousetrapService(weewx.<span class="changed">engine</span>.StdService):
     ...</pre>
         </td>
       </tr>
@@ -572,13 +581,13 @@ manager_dict = weewx.manager.open_manager_with_config(config_dict, 'wx_binding')
 self.database_dict = config_dict['Databases'][db]
 with weewx.archive.Archive.open(self.database_dict) as archive:
     val = archive.getSql("SELECT AVG(windSpeed) FROM archive "
-                     "WHERE dateTime&gt;? AND dateTime&lt;=?",
-                     (start_ts, end_ts))
+                         "WHERE dateTime&gt;? AND dateTime&lt;=?",
+                         (start_ts, end_ts))
         </td>
-        <td>db_manager = self.engine.dbbinder.get_manager('wx_binding')
-val = db_manager.getSql("SELECT AVG(windSpeed) FROM %s "
-                 "WHERE dateTime&gt;? AND dateTime&lt;=?" % db_manager.table_name, 
-                 (start_ts, end_ts))
+        <td>with self.engine.db_binder.get_manager('wx_binding') as db_manager:
+    val = db_manager.getSql("SELECT AVG(windSpeed) FROM %s "
+                            "WHERE dateTime&gt;? AND dateTime&lt;=?" %
+                            db_manager.table_name, (start_ts, end_ts))
         </td>
       </tr>
     </table>
