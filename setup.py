@@ -784,19 +784,33 @@ def configure_conf(config_fn, info, dryrun):
         for p in ['location', 'latitude', 'longitude', 'altitude']:
             if info.get(p) is not None:
                 new_config['Station'][p] = info[p]
-        if ('Units' not in new_config['StdReport']['StandardReport'] and
-            info.get('units') == 'metric'):
-            new_config['StdReport']['StandardReport']['Units'] = {}
-            new_config['StdReport']['StandardReport']['Units']['Groups'] = {
-                'group_altitude': 'meter',
-                'group_degree_day': 'degree_C_day',
-                'group_pressure': 'mbar',
-                'group_radiation': 'watt_per_meter_squared',
-                'group_rain': 'mm',
-                'group_rainrate': 'mm_per_hour',
-                'group_speed': 'meter_per_second',
-                'group_speed2': 'meter_per_second2',
-                'group_temperature': 'degree_C'}
+        if info.get('units') is not None:
+            if info.get('units') == 'metric':
+                new_config['StdReport']['StandardReport'].update({
+                        'Units': {
+                            'Groups': {
+                                'group_altitude': 'meter',
+                                'group_degree_day': 'degree_C_day',
+                                'group_pressure': 'mbar',
+                                'group_radiation': 'watt_per_meter_squared',
+                                'group_rain': 'mm',
+                                'group_rainrate': 'mm_per_hour',
+                                'group_speed': 'meter_per_second',
+                                'group_speed2': 'meter_per_second2',
+                                'group_temperature': 'degree_C'}}})
+            elif info.get('units') == 'us':
+                new_config['StdReport']['StandardReport'].update({
+                        'Units': {
+                            'Groups': {
+                                'group_altitude': 'foot',
+                                'group_degree_day': 'degree_F_day',
+                                'group_pressure': 'inHg',
+                                'group_radiation': 'watt_per_meter_squared',
+                                'group_rain': 'inch',
+                                'group_rainrate': 'inch_per_hour',
+                                'group_speed': 'mile_per_hour',
+                                'group_speed2': 'mile_per_hour2',
+                                'group_temperature': 'degree_C'}}})
 
     # save the new configuration
     new_config.filename = "%s.tmp" % config_fn
