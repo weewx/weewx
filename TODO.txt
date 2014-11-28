@@ -1,7 +1,5 @@
 --------------------  TODO for V3  --------------------------- 
 
-Quick start guide
-
 Should the archive file be backed up before adding the daily summaries?
   - Probably.
 
@@ -62,6 +60,9 @@ Jul 30 08:55:22 hummingbird weewx[959]:     ****  Exiting.
 
 
 --------------------  DONE  --------------------------- 
+
+Quick start guide
+(11/28/14 tk)
 
 Test on redhat
  - rpm install and upgrade
