@@ -29,7 +29,7 @@ import string
 import syslog
 import time
 
-import weewx
+import weewx.drivers
 
 DRIVER_NAME = 'CC3000'
 DRIVER_VERSION = '0.8'
@@ -492,7 +492,7 @@ class CC3000(object):
         self.open()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, _, value, traceback):
         self.close()
 
     def open(self):

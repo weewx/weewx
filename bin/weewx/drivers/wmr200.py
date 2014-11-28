@@ -40,7 +40,6 @@ import threading
 import time
 import usb
 
-import weewx
 import weewx.drivers
 import weeutil.weeutil
 

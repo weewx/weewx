@@ -144,7 +144,6 @@ import syslog
 import time
 import usb
 
-import weewx
 import weewx.drivers
 import weewx.wxformulas
 
@@ -1006,7 +1005,7 @@ if __name__ == '__main__':
                           help='display N 32-byte blocks of station memory')
         parser.add_option("--format", dest="format", type=str,metavar="FORMAT",
                           help="format for output: te923tool, table, or dict")
-        (options, args) = parser.parse_args()
+        (options, _) = parser.parse_args()
 
         if options.version:
             print "te923 driver version %s" % DRIVER_VERSION

@@ -16,7 +16,6 @@ import serial
 import syslog
 import time
 
-import weewx
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
@@ -135,7 +134,7 @@ class Station(object):
         self.open()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, _, value, traceback):
         self.close()
 
     def open(self):

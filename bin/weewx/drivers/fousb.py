@@ -225,7 +225,6 @@ import syslog
 import time
 import usb
 
-import weewx
 import weewx.drivers
 import weewx.wxformulas
 
@@ -1014,7 +1013,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     self.openPort()
                     self._get_arcint()
                     break
-                except weewx.WeeWxIOError, e:
+                except weewx.WeeWxIOError:
                     self.closePort()
                     power_cycle_station(self.pc_hub, self.pc_port)
         else:

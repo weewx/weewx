@@ -934,9 +934,7 @@ import time
 import traceback
 import usb
 
-import weewx
 import weewx.drivers
-import weewx.units
 import weewx.wxformulas
 import weeutil.weeutil
 

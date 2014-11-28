@@ -9,7 +9,7 @@ import math
 import time
 
 import weedb
-import weewx
+import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'Simulator'
