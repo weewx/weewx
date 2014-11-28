@@ -662,28 +662,49 @@ def do_cfg():
     usage = "%prog configure [--config=FILE] [--driver=DRIVER]"
     parser = optparse.OptionParser(description=description, usage=usage)
     parser.add_option('--quiet', dest='noprompt', action='store_true',
-                      help='do not prompt for options')
+                      help='do not prompt')
     parser.add_option('--config', dest='cfgfn', type=str, metavar='FILE',
                       help='modify the configuration file FILE')
     parser.add_option('--driver', dest='driver', type=str, metavar='DRIVER',
                       help='use the driver DRIVER, e.g., weewx.driver.vantage')
-    parser.add_option('--need-info', dest='need_info', action='store_true',
-                      help='prompt for station info')
+    parser.add_option('--skip-info', dest='skip_info', action='store_true',
+                      help='do not prompt for station info')
     parser.add_option('--dry-run', dest='dryrun', action='store_true',
                       help='print what would happen but do not do it')
     (options, _args) = parser.parse_args()
 
     info = dict()
-    if options.need_info and not options.noprompt:
-        info = prompt_for_info()
+    if not options.cfgfn:
+        options.cfgfn = get_conf_filename()
+    if options.cfgfn:
+        config_dict = configobj.ConfigObj(options.cfgfn)
+        if 'Station' in config_dict:
+            info['location'] = _as_string(config_dict['Station'].get('location'))
+            info['latitude'] = config_dict['Station'].get('latitude')
+            info['longitude'] = config_dict['Station'].get('longitude')
+            info['altitude'] = _as_string(config_dict['Station'].get('altitude'))
+            if 'station_type' in config_dict['Station']:
+                info['station_type'] = config_dict['Station']['station_type']
+                info['driver'] = config_dict[info['station_type']]['driver']
+    if not options.skip_info and not options.noprompt:
+        info.update(prompt_for_info(dflt_loc=info.get('location'),
+                                    dflt_lat=info.get('latitude'),
+                                    dflt_lon=info.get('longitude'),
+                                    dflt_alt=info.get('altitude')))
     if options.driver is None and not options.noprompt:
-        info['driver'] = prompt_for_driver()
+        info['driver'] = prompt_for_driver(info.get('driver'))
         info.update(prompt_for_driver_settings(info['driver']))
     else:
         info['driver'] = options.driver
 
     configure_conf(options.cfgfn, info, options.dryrun)
     return 0
+
+def _as_string(option):
+    if option is None: return None
+    if hasattr(option, '__iter__'):
+        return ', '.join(option)
+    return option
 
 def configure_conf(config_fn, info, dryrun):
     """Configure the configuration file with station info and driver details"""
@@ -793,20 +814,26 @@ def load_editor(driver):
     editor = loader_function()
     return editor, driver_module.DRIVER_NAME, driver_module.DRIVER_VERSION
 
-def prompt_for_driver():
+def prompt_for_driver(dflt_driver=None):
     """Get the information about each driver, return as a dictionary."""
     infos = get_driver_infos()
     keys = sorted(infos)
+    dflt_idx = None
     for i, d in enumerate(keys):
         print " %2d) %-15s (%s)" % (i, infos[d].get('name', '?'), d)
+        if dflt_driver == d:
+            dflt_idx = i
+    msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
     ans = None
     while ans is None:
-        ans = raw_input("choose a driver: ")
+        ans = raw_input(msg)
+        if len(ans.strip()) == 0:
+            ans = dflt_idx
         try:
             idx = int(ans)
             if idx < 0 or idx >= len(keys):
                 ans = None
-        except ValueError:
+        except (ValueError, TypeError):
             ans = None
     return keys[idx]
 
@@ -858,26 +885,29 @@ def list_drivers():
                 msg += " %-15s" % infos[d][x]
         print msg
 
-def prompt_for_info(loc='a simple weather station',
-                    lat='45.686', lon='-121.566', alt='0, meter',
-                    units='metric'):
+def prompt_for_info(dflt_loc=None, dflt_lat='0.000', dflt_lon='0.000',
+                    dflt_alt=[0, 'meter'], units='metric'):
     print "Enter a brief description of the station, such as its location.  For example:"
     print "Santa's Workshop, North Pole"
-    ans = None
-    while ans is None:
-        ans = raw_input("description: ")
+    msg = "description: [%s]: " % dflt_loc if dflt_loc is not None else "description: "
+    loc = None
+    while loc is None:
+        ans = raw_input(msg)
         if len(ans.strip()) > 0:
             loc = ans
+        elif dflt_loc is not None:
+            loc = dflt_loc
         else:
-            ans = None
+            loc = None
     print "Specify altitude, with units 'foot' or 'meter'.  For example:"
-    print "700, foot"
-    print "10, meter"
-    ans = None
-    while ans is None:
-        ans = raw_input("altitude [0,meter]: ")
+    print "35, foot"
+    print "12, meter"
+    msg = "altitude [%s]: " % dflt_alt if dflt_alt is not None else "altitude: "
+    alt = None
+    while alt is None:
+        ans = raw_input(msg)
         if len(ans.strip()) == 0:
-            alt = [0, 'meter']
+            alt = dflt_alt
         elif ans.find(',') >= 0:
             parts = ans.split(',')
             try:
@@ -885,45 +915,47 @@ def prompt_for_info(loc='a simple weather station',
                 if parts[1].strip() in ['foot', 'meter']:
                     alt = [parts[0].strip(), parts[1].strip()]
                 else:
-                    ans = None
-            except ValueError:
-                ans = None
+                    alt = None
+            except (ValueError, TypeError):
+                alt = None
         else:
-            ans = None
+            alt = None
     print "Specify latitude in decimal degrees, negative for south."
-    ans = None
-    while ans is None:
-        ans = raw_input("latitude [0.000]: ")
+    msg = "latitude [%s]: " % dflt_lat if dflt_lat is not None else "latitude: "
+    lat = None
+    while lat is None:
+        ans = raw_input(msg)
         if len(ans.strip()) == 0:
-            ans = 0
+            ans = dflt_lat
         try:
             lat = float(ans)
             if lat < -90 or lat > 90:
-                ans = None
-        except ValueError:
-            ans = None
+                lat = None
+        except (ValueError, TypeError):
+            lat = None
     print "Specify longitude in decimal degrees, negative for west."
-    ans = None
-    while ans is None:
-        ans = raw_input("longitude [0.000]: ")
+    msg = "longitude [%s]: " % dflt_lon if dflt_lon is not None else "longitude: "
+    lon = None
+    while lon is None:
+        ans = raw_input(msg)
         if len(ans.strip()) == 0:
-            ans = 0
+            ans = dflt_lon
         try:
             lon = float(ans)
             if lon < -180 or lon > 180:
-                ans = None
-        except ValueError:
-            ans = None
+                lon = None
+        except (ValueError, TypeError):
+            lon = None
     print "Indicate the preferred units for display: 'metric' or 'us'"
-    ans = None
-    while ans is None:
+    units = None
+    while units is None:
         ans = raw_input("units [metric]: ")
         if len(ans.strip()) == 0:
             units = 'metric'
         elif ans.lower() in ['metric', 'us']:
             units = ans.lower()
         else:
-            ans = None
+            units = None
     return {'location': loc,
             'altitude': alt,
             'latitude': lat,
