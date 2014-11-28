@@ -1,3 +1,6 @@
+weewx (3.0.0a3-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Fri, 28 Nov 2014 13:09:45 -0500
 weewx (3.0.0a2-1) unstable; urgency=low
   * new upstream release
  -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 28 Nov 2014 08:42:34 -0800
