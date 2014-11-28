@@ -1,5 +1,8 @@
 weewx (3.0.0a2-1) unstable; urgency=low
   * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 28 Nov 2014 08:42:34 -0800
+weewx (3.0.0a2-1) unstable; urgency=low
+  * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 27 Nov 2014 15:04:29 -0500
 weewx (3.0.0a1-1) unstable; urgency=low
   * adapt to restructured setup.py options
