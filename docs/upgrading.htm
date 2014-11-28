@@ -197,34 +197,50 @@ Version: 3.0.0a2
 
     <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
-    <h2>V2.7 or earlier</h2>
+    <h2>From V2.7 or earlier</h2>
+    
+    <h3>Overview</h3>
+    <p>While a lot has changed with Version 3, the upgrade process should
+      take care of most changes for most users. However, if you have installed
+      an extension or, especially, if you have written a custom service, search
+      list extension, or uploader, you will have to make some changes.</p>
 
     <h3>Database contents</h3>
     <p>
-      The default schema for the archive data did not change &mdash; it is still
-      the same schema as that used by <span class='code'>wview</span>. However,
-      the statistical database has changed completely: there is no longer any
-      separate "stats" database. Instead, now the archive and statistical data
-      are saved together, in a single database. This makes it easier to
-      keep them together when working with multiple databases.
+      With Version 3, there is no longer a separate "stats" database. Instead,
+      "daily summaries" have been included in the same database as the
+      archive data &mdash; everything is under one name. For example,
+      if you are using sqlite, both the archive data and the daily summaries
+      will be inside file <span class="code">weewx.sdb</span>. With MySQL,
+      everything is inside the database <span class="code">weewx</span>. This
+      makes it easier to keep all data together when working with multiple
+      databases.
     </p>
-    <p>On startup, weewx will automatically backfill the new internal daily
+
+    <p>This change in database structure should be transparent to you. On
+      startup, weewx will automatically backfill the new internal daily
       summaries from the archive data. Your old "stats" database will no longer
-      be used and may safely be deleted.</p>
+      be used and may safely set aside or even deleted.
+    </p>
 
     <h3>Pressure calibration</h3>
-    <p>Since the new StdWXCalculate service is applied after the StdCalibrate
-      services, the <span class='code'>pressure_offset</span> parameter is no
-      longer necessary; pressure calibration can be applied just like any
-      other calibration. If your pressure was calibrated using the
-      <span class='code'>pressure_offset</span> parameter,
-      move the calibration to the [StdCalibrate] section.  This applies only
-      to CC3000, FineOffsetUSB, Ultimeter, WS1, WS23xx, and WS28xx hardware.
+    <p>
+      Since the new <span class="code">StdWXCalculate</span> service is applied
+      after the <span class="code">StdCalibrate</span> services, the <span
+        class='code'>pressure_offset</span> parameter is no longer necessary;
+      pressure calibration can be applied just like any other calibration. If
+      your pressure was calibrated using the <span class='code'>pressure_offset</span>
+      parameter, move the calibration to the <span class="code">[StdCalibrate]</span>
+      section. This applies only to CC3000, FineOffsetUSB, Ultimeter, WS1,
+      WS23xx, and WS28xx hardware.
     </p>
 
-    <h3>weewx.conf</h3>
-    <p>The following table illustrates the changes that must be made in
-    <span class='code'>weewx.conf</span> from 2.x to 3.x:</p>
+    <h3><span class="code">weewx.conf</span></h3>
+    <p>
+      A version 2.X <span class="code">weewx.conf</span> file is not compatible
+      with Version 3.X. However, the upgrade process should automatically update
+      the file. Nevertheless, the changes are documented below:
+    </p>
     <table style='width:100%'>
       <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
       <tr>
@@ -282,6 +298,7 @@ Version: 3.0.0a2
           <pre class='tty'><span class='added'>[DataBindings]
     [[wx_binding]]
         database = archive_sqlite
+        table_name = archive
         manager = weewx.wxmanager.WXDaySummaryManager
         schema = schemas.wview.schema</span></pre>
         </td>
@@ -344,32 +361,6 @@ weewx.restx.StdAWEKAS
     report_services = \
 weewx.<span class='changed'>engine</span>.StdPrint, \
 weewx.<span class='changed'>engine</span>.StdReport</pre>
-        </td>
-      </tr>
-    </table>
-
-    <h3>Customized schemas</h3>
-    <p>The mechanism for specifying changes to the default schema has changed.
-      The file <span class='code'>user/schemas.py</span> is no longer used.
-      The default schema is now defined in
-      <span class='code'>bin/schemas/wview.py</span>.</p>
-    <p>If you modified the default schema, you must re-apply the changes
-      using the new pattern.</p>
-    <p>For example, if you created a custom schema in
-      <span class='code'>user/schemas.py</span> by extending the default
-      archive schema, you must specify that schema in the
-      <span class='code'>[DataBindings]</span> section:</p>
-    <table style='width:100%'>
-      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
-      <tr>
-        <td></td>
-        <td>
-          <pre class='tty'>[DataBindings]
-    [[wx_binding]]
-        database = archive_sqlite
-        table_name = archive
-        manager = weewx.wxmanager.WXDaySummaryManager
-        <span class='highlight'>schema = user.schemas.defaultArchiveSchema</span></pre>
         </td>
       </tr>
     </table>
@@ -541,80 +532,88 @@ class BetterMousetrapService(<span class="changed">weewx.engine.StdService</span
       the RESTful service thread.</p>
     <table style='width:100%'>
       <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
-      <tr>
-        <td>
-          <pre class='tty'>site_dict = weewx.restx.get_dict(config_dict, 'Uploader')
+      <tr class="tty">
+        <td>site_dict = weewx.restx.get_dict(config_dict, 'Uploader')
 db_name = config_dict['StdArchive']['archive_database']
 db_dict = config_dict['Databases'][db_name]
-site_dict.setdefault('database_dict', db_dict)</pre>
+site_dict.setdefault('database_dict', db_dict)
         </td>
-        <td>
-          <pre class='tty'>site_dict = config_dict['StdRESTful']['Uploader']
+        <td>site_dict = config_dict['StdRESTful']['Uploader']
 site_dict = accumulateLeaves(site_dict, max_level=1)
-manager_dict = weewx.manager.open_manager_with_config(config_dict, 'wx_binding')</pre>
+manager_dict = weewx.manager.open_manager_with_config(config_dict, 'wx_binding')
         </td>
       </tr>
     </table>
 
     <h3>Database APIs</h3>
-    <p>The methods for opening and querying databases have changed.  The
-      Manager class replaces the Archive class as the entry point
-      for opening and querying databases.  The table name is no longer
-      hard-coded, so developers should use the table name from the manager.</p>
-    <p>This affects only those who have written code that accesses
+    <p>The methods for obtaining, opening, and querying databases have
+      changed. This affects only those who have written code that accesses
       databases.</p>
-    <p>Here are examples from generators, services, and uploaders.</p>
+    <p>
+      The class <span class="code">Manager</span> and its subclasses have
+      replaced the old <span class="code">Archive</span> class. The table name
+      is no longer hard-coded, so developers should use the table name from the
+      database binding. There is no longer a separate <span class="code">StatsDb</span>
+      class, its functions having been subsumed into the <span class="code">Manager</span>
+      class and its subclasses.
+    </p>
+    <p>
+      A new class <span class="code">DBBinder</span> is the preferred way of
+      getting a <span class="code">Manager</span> class, as it will
+      automatically take care of instantiating the right class, as well as
+      caching instances of <span class="code">Manager</span>. An instance of <span
+        class="code">DBBinder</span> is held by the engine as attribute <span
+        class="code">db_binder</span>. Here's an example of making a simple query.
+    </p>
     <table style='width:100%'>
       <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
-      <tr>
-        <td>
-          <pre class='tty'>db = config_dict['StdArchive']['archive_database']
+      <tr class="tty">
+        <td>db = config_dict['StdArchive']['archive_database']
 self.database_dict = config_dict['Databases'][db]
-...
 with weewx.archive.Archive.open(self.database_dict) as archive:
-    data = self.calculate(event.packet, archive)</pre>
+    val = archive.getSql("SELECT AVG(windSpeed) FROM archive "
+                     "WHERE dateTime&gt;? AND dateTime&lt;=?",
+                     (start_ts, end_ts))
         </td>
-        <td>
-          <pre class='tty'>with self.engine.db_binder.get_manager('wx_binding') as dbm:
-    data = self.calculate(event.packet, dbm)</pre>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <pre class='tty'>val = archive.getSql("SELECT AVG(windSpeed) FROM archive "
-                     "WHERE dateTime>? AND dateTime<=?",
-                     (start_ts, end_ts))</pre>
-        </td>
-        <td>
-          <pre class='tty'>val = dbm.getSql("SELECT AVG(windSpeed) FROM %s "
-                 "WHERE dateTime>? AND dateTime<=?" %
-                 dbm.table_name, (start_ts, end_ts))</pre>
+        <td>db_manager = self.engine.dbbinder.get_manager('wx_binding')
+val = db_manager.getSql("SELECT AVG(windSpeed) FROM %s "
+                 "WHERE dateTime&gt;? AND dateTime&lt;=?" % db_manager.table_name, 
+                 (start_ts, end_ts))
         </td>
       </tr>
     </table>
 
     <h3>Generator APIs</h3>
-    <p>The class for report generators have changed.  The CachedReportGenerator
-      no longer exists; the functionality it provided has been replaced by the
-      database bindiner.</p>
-    <p>This affects only those who have written customer generators.</p>
-    <p>Here are examples:</p>
-    <table style='width:100%'>
-      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
-      <tr>
-        <td>
-          <pre class='tty'>class GaugeGenerator(weewx.reportengine.<span class='changed'>CachedReportGenerator</span>)</pre>
-        </td>
-        <td>
-          <pre class='tty'>class GaugeGenerator(weewx.reportengine.<span class='changed'>ReportGenerator</span>)
+    <p>
+      The base class for report generators has changed. The old class <span
+        class="code">CachedReportGenerator</span> no longer exists; its
+      functionality has been replaced by an instance of <span class="code">DBBinder</span>,
+      held by the generator superclass. This affects only those who have written
+      customer generators.
+    </p>
+    <p>Here's an example:</p>
+    <table style='width: 100%'>
+      <tr class="first_row">
+        <td style='width: 50%'>2.7</td>
+        <td>3.0</td>
+      </tr>
+      <tr class="tty">
+        <td>class GaugeGenerator(weewx.reportengine.<span
+              class='changed'>CachedReportGenerator</span>)
     def run(self):
-        with self.generator.db_binder.get_manager() as dbm:
-            dbm.getSql(...)
+        archive_name = self.config_dict['GaugeGenerator']['archive_name']
+        archive = self._getArchive(archive_name)
+        results = archive.getSql(...)</td>
+        <td>class GaugeGenerator(weewx.reportengine.<span
+              class='changed'>ReportGenerator</span>)
+    def run(self):
+        db_manager = self.generator.db_binder.get_manager()
+        results = db_manager.getSql(...)
         </td>
       </tr>
     </table>
 
-      <h3>Extension installer</h3>
+    <h3>Extension installer</h3>
       <p>The <span class='code'>setup.py</span> utility is now included in the
         installation; it is no longer necessary to keep a copy of the
         <span class='code'>weewx</span> source tree just for the
@@ -645,7 +644,7 @@ setup.py install --extension basic.tar.gz --dry-run</pre>
       </tr>
     </table>
 
-    <h2>V2.6 or earlier</h2>
+    <h2>From V2.6 or earlier</h2>
   <p>Version 2.7 is backwards compatible with earlier versions with
     one minor exception.</p>
   <p>
@@ -684,7 +683,7 @@ second            = " second", " seconds"</pre>
   <pre class="tty">Weewx uptime:  1 day, 1 hour, 41 minutes
 Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
-  <h2>V2.5 or earlier</h2>
+  <h2>From V2.5 or earlier</h2>
     <p>Version 2.6 is backwards compatible with earlier versions, with a couple
     of small exceptions.</p>
     <ul>
@@ -714,7 +713,8 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
       These changes should be done automatically by the
       install routine.</li>
     </ul>
-    <h2>V2.3 or earlier</h2>
+
+    <h2>From V2.3 or earlier</h2>
     <p>The option <span class="code">time_length</span> will now be the exact length 
       of the resultant plot. Before, a plot with <span class="code">time_length</span> 
       equal to 24 hours would result in a plot of 27 hours, now it's 24 hours. If you 
@@ -740,7 +740,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
     service_list = <span class="highlight">weewx.wxengine.StdTimeSynch</span>, weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport
 </p>
 	
-	<h2>V2.2 or earlier</h2>
+	<h2>From V2.2 or earlier</h2>
 	<p>The signature of the function "<span class="code">loader</span>", used to 
 	return an instance of the station device driver, has changed slightly. It 
 	has changed from</p>
@@ -751,7 +751,8 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 	added. This is a reference to the <span class="code">weewx</span> engine.</p>
 	<p>This change will affect only those who have written their own device 
 	driver. </p>
-    <h2>V2.1 or earlier</h2>
+
+    <h2>From V2.1 or earlier</h2>
     <p>Version 2.2 introduces a schema, found in <span class="code">
         bin/user/schemas.py</span>, for the stats database. This schema is
       used only when initially creating the database. If you have a specialized
@@ -759,7 +760,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
       comes with <span class="code">weewx</span>, you should edit this file to
       reflect your changes before attempting to rebuild the database.</p>
 
-    <h2>V1.14 or earlier</h2>
+    <h2>From V1.14 or earlier</h2>
     <p>Version 2.0 introduces many new features, including a revamped internal 
       engine. There are two changes that are not backwards compatible:</p>
     <ul>
@@ -779,7 +780,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
     <p>If you have written a custom report generator it should also be
       backwards compatible.</p>
 
-    <h2>V1.13 or earlier</h2>
+    <h2>From V1.13 or earlier</h2>
     <p>Version 1.14 introduces some new webpages that have been expressly
       formatted for the smartphone by using
       <a href="http://jquery.com/">jQuery</a>.</p>
@@ -830,7 +831,8 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
       will be at <span class="code">public_html/smartphone/index.html</span>. You may want 
       to add a link to this in the template for your main index page
       <span class="code">skins/Standard/index.html.tmpl</span>.</p>
-    <h2>V1.12 or earlier</h2>
+
+    <h2>From V1.12 or earlier</h2>
     <p>Version 1.13 changed the way binding happens to the databases used in reports 
       so that it happens much later. The upshot is that the signature of a few 
       functions changed. Most you are unlikely to encounter. The exception is if you 
@@ -840,7 +842,8 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
       updated to reflect the new function signatures. As a side effect, the 
       illustrated example actually has become much simpler!</p>
     <p>No changes to skins.</p>
-    <h2>V1.9 or earlier</h2>
+
+    <h2>From V1.9 or earlier</h2>
     <p>Version 1.10 introduced several new features. </p>
     <h3>New almanac features, icon, and mobile template</h3>
     <p>Version 1.10 introduces some extra almanac features, such as the azimuth and 
@@ -891,11 +894,13 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
       (which produced &quot;all time&quot; statistics) has been changed to reflect the new 
       signatures.</p>
     <p>This will only affect you if you have written a custom generator.</p>
-    <h2>V1.7.0 or earlier</h2>
+
+    <h2>From V1.7.0 or earlier</h2>
     <p>With the introduction of a standard archiving service, <span class="code">
         StdArchive</span>, the names of some events have changed. This will not affect 
       you unless you have written a custom service.</p>
-    <h2>V.1.5.0 or earlier</h2>
+
+    <h2>From V.1.5.0 or earlier</h2>
     <p>V1.7 introduces <em>skins</em>. The skins live in subdirectory
       <span class="code">skins</span>. They are <em>not</em> compatible with the old
       <span class="code">template</span> subdirectory --- you can&#39;t simply rename
@@ -929,14 +934,15 @@ cooling_base = 65, degree_F</p>
       it has been replaced with directory &#39;<span class="code">skins</span>&#39;. You 
       may delete it if you wish:</p>
     <p class="tty">rm -r <span class='symcode'>$WEEWX_ROOT</span>/templates</p>
-    <h2>V1.4.0 or earlier</h2>
+
+    <h2>From V1.4.0 or earlier</h2>
     <p>Because the configuration file <span class="code">weewx.conf</span> changed 
       significantly going from V1.4 to V1.5, the installation script
       <span class="code">setup.py</span> will NOT merge your old configuration file 
       into the new one. You will have to re-edit <span class="code">weewx.conf</span> 
       to put in your customizations.</p>
-    <h2>V1.2.0 or earlier</h2>
 
+    <h2>From V1.2.0 or earlier</h2>
     <p>Option <span class="code">clock_check</span>, previously found in the <span class="code">[VantagePro]</span> section, is now found in the
       <span class="code">[Station]</span> section. The install program will put a 
       default value in the new place, but it will not delete nor move your old value 
