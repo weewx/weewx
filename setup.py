@@ -685,7 +685,8 @@ def do_cfg():
             info['altitude'] = _as_string(config_dict['Station'].get('altitude'))
             if 'station_type' in config_dict['Station']:
                 info['station_type'] = config_dict['Station']['station_type']
-                info['driver'] = config_dict[info['station_type']]['driver']
+                if info['station_type'] in config_dict:
+                    info['driver'] = config_dict[info['station_type']]['driver']
     if not options.skip_info and not options.noprompt:
         info.update(prompt_for_info(dflt_loc=info.get('location'),
                                     dflt_lat=info.get('latitude'),
