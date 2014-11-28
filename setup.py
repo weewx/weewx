@@ -901,7 +901,7 @@ def list_drivers():
         print msg
 
 def prompt_for_info(dflt_loc=None, dflt_lat='0.000', dflt_lon='0.000',
-                    dflt_alt=['0', 'meter'], units='metric'):
+                    dflt_alt=['0', 'meter'], dflt_units='metric'):
     print "Enter a brief description of the station, such as its location.  For example:"
     print "Santa's Workshop, North Pole"
     msg = "description: [%s]: " % dflt_loc if dflt_loc is not None else "description: "
@@ -964,11 +964,12 @@ def prompt_for_info(dflt_loc=None, dflt_lat='0.000', dflt_lon='0.000',
         except (ValueError, TypeError):
             lon = None
     print "Indicate the preferred units for display: 'metric' or 'us'"
+    msg = "units [%s]: " % dflt_units if dflt_units is not None else "units: "
     units = None
     while units is None:
-        ans = raw_input("units [metric]: ")
-        if len(ans.strip()) == 0:
-            units = 'metric'
+        ans = raw_input(msg)
+        if len(ans.strip()) == 0 and dflt_units is not None:
+            units = dflt_units
         elif ans.lower() in ['metric', 'us']:
             units = ans.lower()
         else:
