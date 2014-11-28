@@ -576,8 +576,8 @@ with weewx.archive.Archive.open(self.database_dict) as archive:
     data = self.calculate(event.packet, archive)</pre>
         </td>
         <td>
-          <pre class='tty'>dbm = self.engine.dbbinder.get_manager('wx_binding')
-data = self.calculate(event_data, dbm)</pre>
+          <pre class='tty'>with self.engine.db_binder.get_manager('wx_binding') as dbm:
+    data = self.calculate(event.packet, dbm)</pre>
         </td>
       </tr>
       <tr>
