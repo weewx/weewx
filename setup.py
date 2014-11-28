@@ -887,7 +887,7 @@ def list_drivers():
         print msg
 
 def prompt_for_info(dflt_loc=None, dflt_lat='0.000', dflt_lon='0.000',
-                    dflt_alt=[0, 'meter'], units='metric'):
+                    dflt_alt=['0', 'meter'], units='metric'):
     print "Enter a brief description of the station, such as its location.  For example:"
     print "Santa's Workshop, North Pole"
     msg = "description: [%s]: " % dflt_loc if dflt_loc is not None else "description: "
