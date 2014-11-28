@@ -3,9 +3,11 @@
 
 [Unit]
 Description=weewx weather system
+Requires=syslog.target
+Requires=ntpd.target
 After=syslog.target
-After=network.target
 After=ntpd.target
+RequiresMountsFor=/home
 
 [Service]
 ExecStart=/home/weewx/bin/weewxd /home/weewx/weewx.conf

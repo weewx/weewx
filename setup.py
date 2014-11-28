@@ -682,7 +682,7 @@ def do_cfg():
             info['location'] = _as_string(config_dict['Station'].get('location'))
             info['latitude'] = config_dict['Station'].get('latitude')
             info['longitude'] = config_dict['Station'].get('longitude')
-            info['altitude'] = _as_string(config_dict['Station'].get('altitude'))
+            info['altitude'] = config_dict['Station'].get('altitude')
             if 'station_type' in config_dict['Station']:
                 info['station_type'] = config_dict['Station']['station_type']
                 if info['station_type'] in config_dict:
@@ -903,7 +903,9 @@ def prompt_for_info(dflt_loc=None, dflt_lat='0.000', dflt_lon='0.000',
     print "Specify altitude, with units 'foot' or 'meter'.  For example:"
     print "35, foot"
     print "12, meter"
-    msg = "altitude [%s]: " % dflt_alt if dflt_alt is not None else "altitude: "
+    msg = "altitude: "
+    if dflt_alt is not None:
+        msg = "altitude [%s]: " % _as_string(dflt_alt)
     alt = None
     while alt is None:
         ans = raw_input(msg)
@@ -1734,6 +1736,13 @@ if __name__ == "__main__":
             info = prompt_for_info()
             info['driver'] = prompt_for_driver()
             info.update(prompt_for_driver_settings(info['driver']))
+
+    # if someone tries to do an install from other than the source tree,
+    # complain about it and bail out.
+    if 'install' in sys.argv and not os.path.exists("%s/setup.cfg" % this_dir):
+        print "The 'install' option can be used to install weewx only when"
+        print "invoked from the source tree."
+        exit(1)
 
     # now invoke the standard python setup
     setup(name='weewx',

@@ -7,14 +7,6 @@ Should the archive file be backed up before adding the daily summaries?
 
 Prompt for extension-specific parameters
 
-Test on redhat
- - rpm install and upgrade
- - extension installer
-
-Test on suse
- - rpm install and upgrade
- - extension installer
-
 
 
 --------------------  Nice to do (V3.1?)  --------------------------- 
@@ -70,6 +62,14 @@ Jul 30 08:55:22 hummingbird weewx[959]:     ****  Exiting.
 
 
 --------------------  DONE  --------------------------- 
+
+Test on redhat
+ - rpm install and upgrade
+ - extension installer
+Test on suse
+ - rpm install and upgrade
+ - extension installer
+(28nov14 mwall)
 
 Move schemas to the extension that uses them.
   - this has always been the case for cmon, pmon, and forecast
