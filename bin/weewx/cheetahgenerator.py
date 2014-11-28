@@ -435,7 +435,7 @@ class Almanac(SearchList):
                 rec = archive.getRecord(celestial_ts, max_delta=3600)
                 if rec is not None:
                     if 'outTemp' in rec:
-                        temperature_C = weewx.units.convert(weewx.units.as_value_tuple(rec, 'outTemp'), "degree_F")[0]
+                        temperature_C = weewx.units.convert(weewx.units.as_value_tuple(rec, 'outTemp'), "degree_C")[0]
                     if 'barometer' in rec:
                         pressure_mbar = weewx.units.convert(weewx.units.as_value_tuple(rec, 'barometer'), "mbar")[0]
         
