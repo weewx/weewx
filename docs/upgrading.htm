@@ -558,13 +558,12 @@ manager_dict = weewx.manager.open_manager_with_config(config_dict, 'wx_binding')
 
     <h3>Database APIs</h3>
     <p>The methods for opening and querying databases have changed.  The
-      DBBinder class replaces the Archive class as the entry point
+      Manager class replaces the Archive class as the entry point
       for opening and querying databases.  The table name is no longer
-      hard-coded, so developers should use the table name from the database
-      binding.</p>
+      hard-coded, so developers should use the table name from the manager.</p>
     <p>This affects only those who have written code that accesses
       databases.</p>
-    <p>Here are examples from services and uploaders.</p>
+    <p>Here are examples from generators, services, and uploaders.</p>
     <table style='width:100%'>
       <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
       <tr>
@@ -590,6 +589,27 @@ with weewx.archive.Archive.open(self.database_dict) as archive:
           <pre class='tty'>val = dbm.getSql("SELECT AVG(windSpeed) FROM %s "
                  "WHERE dateTime>? AND dateTime<=?" %
                  dbm.table_name, (start_ts, end_ts))</pre>
+        </td>
+      </tr>
+    </table>
+
+    <h3>Generator APIs</h3>
+    <p>The class for report generators have changed.  The CachedReportGenerator
+      no longer exists; the functionality it provided has been replaced by the
+      database bindiner.</p>
+    <p>This affects only those who have written customer generators.</p>
+    <p>Here are examples:</p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <pre class='tty'>class GaugeGenerator(weewx.reportengine.<span class='changed'>CachedReportGenerator</span>)</pre>
+        </td>
+        <td>
+          <pre class='tty'>class GaugeGenerator(weewx.reportengine.<span class='changed'>ReportGenerator</span>)
+    def run(self):
+        with self.generator.db_binder.get_manager() as dbm:
+            dbm.getSql(...)
         </td>
       </tr>
     </table>
