@@ -667,11 +667,15 @@ def do_cfg():
                       help='modify the configuration file FILE')
     parser.add_option('--driver', dest='driver', type=str, metavar='DRIVER',
                       help='use the driver DRIVER, e.g., weewx.driver.vantage')
+    parser.add_option('--need-info', dest='need_info', action='store_true',
+                      help='prompt for station info')
     parser.add_option('--dry-run', dest='dryrun', action='store_true',
                       help='print what would happen but do not do it')
     (options, _args) = parser.parse_args()
 
     info = dict()
+    if options.need_info and not options.noprompt:
+        info = prompt_for_info()
     if options.driver is None and not options.noprompt:
         info['driver'] = prompt_for_driver()
         info.update(prompt_for_driver_settings(info['driver']))
@@ -958,7 +962,7 @@ def get_conf_filename():
         if ('install' in setup_dict and
             setup_dict['install'].get('home') is not None):
             idir = setup_dict['install'].get('home')
-    elif this_dir == '/usr/share/weewx':
+    elif this_dir == '/usr/share/weewx' or this_dir == '/usr/bin':
         # this is a deb or rpm install
         idir = '/etc/weewx'
     else:
