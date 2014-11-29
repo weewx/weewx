@@ -1,11 +1,9 @@
 #
-# Copyright (c) 2012-2014 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2012-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Driver for the MySQL database"""
 
@@ -30,12 +28,12 @@ def guard(fn):
     return guarded_fn
 
 
-def connect(host='localhost', user='', password='', database='', driver='', **kwargs):
+def connect(host='localhost', user='', password='', database_name='', driver='', **kwargs):
     """Connect to the specified database"""
-    return Connection(host=host, user=user, password=password, database=database, **kwargs)
+    return Connection(host=host, user=user, password=password, database_name=database_name, **kwargs)
 
 
-def create(host='localhost', user='', password='', database='', driver='', **kwargs):
+def create(host='localhost', user='', password='', database_name='', driver='', **kwargs):
     """Create the specified database. If it already exists,
     an exception of type weedb.DatabaseExists will be thrown."""
     # Open up a connection w/o specifying the database.
@@ -47,17 +45,17 @@ def create(host='localhost', user='', password='', database='', driver='', **kwa
         # An exception will get thrown if the database already exists.
         try:
             # Now create the database.
-            cursor.execute("CREATE DATABASE %s" % (database,))
+            cursor.execute("CREATE DATABASE %s" % (database_name,))
         except _mysql_exceptions.ProgrammingError:
             # The database already exists. Change the type of exception.
-            raise weedb.DatabaseExists("Database %s already exists" % (database,))
+            raise weedb.DatabaseExists("Database %s already exists" % (database_name,))
         finally:
             cursor.close()
     except _mysql_exceptions.OperationalError, e:
         raise weedb.OperationalError(e)
 
 
-def drop(host='localhost', user='', password='', database='', driver='', **kwargs):
+def drop(host='localhost', user='', password='', database_name='', driver='', **kwargs):
     """Drop (delete) the specified database."""
     # Open up a connection
     try:
@@ -66,9 +64,9 @@ def drop(host='localhost', user='', password='', database='', driver='', **kwarg
                                   passwd=password, **kwargs)
         cursor = connect.cursor()
         try:
-            cursor.execute("DROP DATABASE %s" % database)
+            cursor.execute("DROP DATABASE %s" % database_name)
         except _mysql_exceptions.OperationalError:
-            raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (database,))
+            raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (database_name,))
         finally:
             cursor.close()
     except _mysql_exceptions.OperationalError, e:
@@ -78,7 +76,7 @@ def drop(host='localhost', user='', password='', database='', driver='', **kwarg
 class Connection(weedb.Connection):
     """A wrapper around a MySQL connection object."""
 
-    def __init__(self, host='localhost', user='', password='', database='', **kwargs):
+    def __init__(self, host='localhost', user='', password='', database_name='', **kwargs):
         """Initialize an instance of Connection.
 
         Parameters:
@@ -92,13 +90,13 @@ class Connection(weedb.Connection):
         If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
         try:
-            connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database, **kwargs)
+            connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database_name, **kwargs)
         except _mysql_exceptions.OperationalError, e:
             # The MySQL driver does not include the database in the
             # exception information. Tack it on, in case it might be useful.
-            raise weedb.OperationalError(str(e) + " while opening database '%s'" % (database,))
+            raise weedb.OperationalError(str(e) + " while opening database '%s'" % (database_name,))
 
-        weedb.Connection.__init__(self, connection, database, 'mysql')
+        weedb.Connection.__init__(self, connection, database_name, 'mysql')
 
         # Allowing threads other than the main thread to see any transactions
         # seems to require an isolation level of READ UNCOMMITTED.
@@ -155,7 +153,8 @@ class Connection(weedb.Connection):
                 else:
                     coltype = str(row[1]).upper()
                 is_primary = True if row[3] == 'PRI' else False
-                yield (irow, colname, coltype, to_bool(row[2]), row[4], is_primary)
+                can_be_null = False if row[2]=='' else to_bool(row[2])
+                yield (irow, colname, coltype, can_be_null, row[4], is_primary)
                 irow += 1
         finally:
             cursor.close()

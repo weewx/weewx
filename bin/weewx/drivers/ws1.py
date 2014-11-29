@@ -1,17 +1,7 @@
 #!/usr/bin/env python
 # $Id$
-#
 # Copyright 2014 Matthew Wall
-#
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or any later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.
-#
-# See http://www.gnu.org/licenses/
+# See the file LICENSE.txt for your full rights.
 
 """Driver for ADS WS1 weather stations.
 
@@ -26,19 +16,26 @@ import serial
 import syslog
 import time
 
-import weewx
-import weewx.abstractstation
-import weewx.units
-import weewx.uwxutils
-import weewx.wxformulas
+import weewx.drivers
+
+DRIVER_NAME = 'WS1'
+DRIVER_VERSION = '0.14'
+
+
+def loader(config_dict, _):
+    return WS1(**config_dict[DRIVER_NAME])
+
+def confeditor_loader():
+    return WS1ConfEditor()
+
 
 INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DRIVER_VERSION = '0.13'
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
+
 
 def logmsg(level, msg):
     syslog.syslog(level, 'ws1: %s' % msg)
@@ -52,18 +49,11 @@ def loginf(msg):
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
-def loader(config_dict, engine):
-    """Get the altitude, in feet, from the Station section of the dict."""
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    altitude_ft = altitude_m / METER_PER_FOOT
-    station = WS1(altitude=altitude_ft, **config_dict['WS1'])
-    return station
-
 def _format(buf):
     return ' '.join(["%0.2X" % ord(c) for c in buf])
 
-class WS1(weewx.abstractstation.AbstractStation):
-    '''weewx driver that communicates with an ADS-WS1 station
+class WS1(weewx.drivers.AbstractDevice):
+    """weewx driver that communicates with an ADS-WS1 station
     
     port - serial port
     [Required. Default is /dev/ttyS0]
@@ -74,21 +64,18 @@ class WS1(weewx.abstractstation.AbstractStation):
     max_tries - how often to retry serial communication before giving up
     [Optional. Default is 5]
 
-    pressure_offset - pressure calibration, mbar
-    [Optional. Default is 0]
-    '''
+    retry_wait - how long to wait, in seconds, before retrying after a failure
+    [Optional. Default is 10]
+    """
     def __init__(self, **stn_dict):
-        self.altitude = stn_dict['altitude']
         self.port = stn_dict.get('port', DEFAULT_PORT)
         self.polling_interval = float(stn_dict.get('polling_interval', 1))
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 10))
-        self.pressure_offset = float(stn_dict.get('pressure_offset', 0))
         self.last_rain = None
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
         loginf('polling interval is %s' % self.polling_interval)
-        loginf('pressure offset is %s' % self.pressure_offset)
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
 
@@ -97,12 +84,12 @@ class WS1(weewx.abstractstation.AbstractStation):
         while ntries < self.max_tries:
             ntries += 1
             try:
-                packet = {'dateTime': int(time.time()+0.5),
-                          'usUnits' : weewx.US }
+                packet = {'dateTime': int(time.time() + 0.5),
+                          'usUnits': weewx.US}
                 # open a new connection to the station for each reading
                 with Station(self.port) as station:
-                    reading = station.get_readings()
-                data = Station.parse_readings(reading)
+                    readings = station.get_readings()
+                data = Station.parse_readings(readings)
                 packet.update(data)
                 self._augment_packet(packet)
                 ntries = 0
@@ -123,22 +110,6 @@ class WS1(weewx.abstractstation.AbstractStation):
         return "WS1"
 
     def _augment_packet(self, packet):
-        """add derived metrics to a packet"""
-        adjp = packet['pressure']
-        if self.pressure_offset is not None and adjp is not None:
-            adjp += self.pressure_offset * INHG_PER_MBAR
-        slp_mbar = weewx.wxformulas.sealevel_pressure_Metric(
-            adjp / INHG_PER_MBAR, self.altitude * METER_PER_FOOT,
-            (packet['outTemp'] - 32) * 5/9)
-        packet['barometer'] = slp_mbar * INHG_PER_MBAR
-        packet['altimeter'] = weewx.wxformulas.altimeter_pressure_US(
-            adjp, self.altitude, algorithm='aaNOAA')
-        packet['windchill'] = weewx.wxformulas.windchillF(
-            packet['outTemp'], packet['windSpeed'])
-        packet['heatindex'] = weewx.wxformulas.heatindexF(
-            packet['outTemp'], packet['outHumidity'])
-        packet['dewpoint'] = weewx.wxformulas.dewpointF(
-            packet['outTemp'], packet['outHumidity'])
 
         # calculate the rain
         if self.last_rain is not None:
@@ -151,6 +122,7 @@ class WS1(weewx.abstractstation.AbstractStation):
         if not packet['windSpeed']:
             packet['windDir'] = None
 
+
 class Station(object):
     def __init__(self, port):
         self.port = port
@@ -162,7 +134,7 @@ class Station(object):
         self.open()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, _, value, traceback):
         self.close()
 
     def open(self):
@@ -206,7 +178,7 @@ class Station(object):
             else:
                 try:
                     int(c, 16)
-                except ValueError, e:
+                except ValueError:
                     bad_byte = True
                 b.append(c)
         if DEBUG_READ:
@@ -219,7 +191,7 @@ class Station(object):
 
     @staticmethod
     def parse_readings(b):
-        '''WS1 station emits data in PeetBros format:
+        """WS1 station emits data in PeetBros format:
 
         http://www.peetbros.com/shop/custom.aspx?recid=29
 
@@ -242,21 +214,43 @@ class Station(object):
           mmmm - time (minute of day)
           RRRR - daily rain (0.01 in)
           WWWW - one minute wind average (0.1 kph)
-        '''
-        data = {}
-        data['windSpeed'] = int(b[0:4], 16) * 0.1 * MILE_PER_KM # mph
-        data['windDir'] = int(b[6:8], 16) * 1.411764 # compass degrees
-        data['outTemp'] = int(b[8:12], 16) * 0.1 # degree_F
-        data['long_term_rain'] = int(b[12:16], 16) * 0.01 # inch
-        data['pressure'] = int(b[16:20], 16) * 0.1 * INHG_PER_MBAR # inHg
-        data['inTemp'] = int(b[20:24], 16) * 0.1 # degree_F
-        data['outHumidity'] = int(b[24:28], 16) * 0.1 # percent
-        data['inHumidity'] = int(b[28:32], 16) * 0.1 # percent
+        """
+        data = dict()
+        data['windSpeed'] = int(b[0:4], 16) * 0.1 * MILE_PER_KM  # mph
+        data['windDir'] = int(b[6:8], 16) * 1.411764  # compass degrees
+        data['outTemp'] = int(b[8:12], 16) * 0.1  # degree_F
+        data['long_term_rain'] = int(b[12:16], 16) * 0.01  # inch
+        data['pressure'] = int(b[16:20], 16) * 0.1 * INHG_PER_MBAR  # inHg
+        data['inTemp'] = int(b[20:24], 16) * 0.1  # degree_F
+        data['outHumidity'] = int(b[24:28], 16) * 0.1  # percent
+        data['inHumidity'] = int(b[28:32], 16) * 0.1  # percent
         data['day_of_year'] = int(b[32:36], 16)
         data['minute_of_day'] = int(b[36:40], 16)
-        data['daily_rain'] = int(b[40:44], 16) * 0.01 # inch
-        data['wind_average'] = int(b[44:48], 16) * 0.1 * MILE_PER_KM # mph
+        data['daily_rain'] = int(b[40:44], 16) * 0.01  # inch
+        data['wind_average'] = int(b[44:48], 16) * 0.1 * MILE_PER_KM  # mph
         return data
+
+
+class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def default_stanza(self):
+        return """
+[WS1]
+    # This section is for the ADS WS1 series of weather stations.
+
+    # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
+    port = /dev/ttyUSB0
+
+    # The driver to use:
+    driver = weewx.drivers.ws1
+"""
+
+    def prompt_for_settings(self):
+        print "Specify the serial port on which the station is connected, for"
+        print "example /dev/ttyUSB0 or /dev/ttyS0."
+        port = self._prompt('port', '/dev/ttyUSB0')
+        return {'port': port}
+
 
 # define a main entry point for basic testing of the station without weewx
 # engine and service overhead.  invoke this as follows from the weewx root dir:
@@ -268,23 +262,19 @@ if __name__ == '__main__':
 
     usage = """%prog [options] [--help]"""
 
-    def main():
-        syslog.openlog('ws1', syslog.LOG_PID | syslog.LOG_CONS)
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        parser = optparse.OptionParser(usage=usage)
-        parser.add_option('--version', dest='version', action='store_true',
-                          help='display driver version')
-        parser.add_option('--port', dest='port', metavar='PORT',
-                          help='serial port to which the station is connected',
-                          default=DEFAULT_PORT)
-        (options, args) = parser.parse_args()
+    syslog.openlog('ws1', syslog.LOG_PID | syslog.LOG_CONS)
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('--version', dest='version', action='store_true',
+                      help='display driver version')
+    parser.add_option('--port', dest='port', metavar='PORT',
+                      help='serial port to which the station is connected',
+                      default=DEFAULT_PORT)
+    (options, args) = parser.parse_args()
 
-        if options.version:
-            print "ADS WS1 driver version %s" % DRIVER_VERSION
-            exit(0)
+    if options.version:
+        print "ADS WS1 driver version %s" % DRIVER_VERSION
+        exit(0)
 
-        with Station(options.port) as s:
-            print s.get_readings()
-
-if __name__ == '__main__':
-    main()
+    with Station(options.port) as s:
+        print s.get_readings()

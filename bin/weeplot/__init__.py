@@ -3,9 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Package weeplot. A set of modules for doing simple plots
 

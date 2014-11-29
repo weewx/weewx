@@ -1,14 +1,20 @@
 basic - a very basic weewx skin
 Copyright 2014 Matthew Wall
 
-This skin illustrates how to package a skin so it can be installed by the
-weewx extension installer.
+This example illustrates how to implement a skin and package it so that it
+can be installed by the extension installer.
 
 
 Installation instructions:
 
-cd /home/weewx
-setup.py --extension --install extensions/basic
+1) run the installer:
+
+setup.py install --extension extensions/basic
+
+2) restart weewx:
+
+sudo /etc/init.d/weewx stop
+sudo /etc/init.d/weewx start
 
 
 Manual installation instructions:

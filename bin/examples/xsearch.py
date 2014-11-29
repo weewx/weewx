@@ -1,11 +1,9 @@
 #
-#    Copyright (c) 2009, 2010, 2013 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 
 """Example of how to extend the search list used by the Cheetah generator.
@@ -37,50 +35,53 @@ import datetime
 import time
 
 from weewx.cheetahgenerator import SearchList
-from weewx.stats import TimeSpanStats
+from weewx.tags import TimespanBinder
 from weeutil.weeutil import TimeSpan
 
-class MyXSearch(SearchList):                                           # 1
-    
-    def __init__(self, generator):                                     # 2
+class MyXSearch(SearchList):                                                 # 1
+    """My search list extension"""
+
+    def __init__(self, generator):                                           # 2
         SearchList.__init__(self, generator)
-  
-    def get_extension(self, valid_timespan, archivedb, statsdb):       # 3
+    
+    def get_extension_list(self, timespan, db_lookup):                       # 3
         """Returns a search list extension with two additions.
         
         Parameters:
-          valid_timespan: An instance of weeutil.weeutil.TimeSpan. This will
-                          hold the start and stop times of the domain of 
-                          valid times.
+          timespan: An instance of weeutil.weeutil.TimeSpan. This will
+                    hold the start and stop times of the domain of 
+                    valid times.
 
-          archivedb: An instance of weewx.archive.Archive
-          
-          statsdb:   An instance of weewx.stats.StatsDb
+          db_lookup: This is a function that, given a data binding
+                     as its only parameter, will return a database manager
+                     object.
         """
 
-        # First, get a TimeSpanStats object for all time. This one is easy
-        # because the object valid_timespan already holds all valid times to be
+        # First, create TimespanBinder object for all time. This one is easy
+        # because the object timespan already holds all valid times to be
         # used in the report.
-        all_stats = TimeSpanStats(valid_timespan,
-                                  statsdb,
-                                  formatter=self.generator.formatter,
-                                  converter=self.generator.converter)  # 4
+        all_stats = TimespanBinder(timespan, 
+                                   db_lookup,
+                                   formatter=self.generator.formatter,
+                                   converter=self.generator.converter)       # 4
         
-        # Now get a TimeSpanStats object for the last seven days. This one we
+        # Now get a TimespanBinder object for the last seven days. This one we
         # will have to calculate. First, calculate the time at midnight, seven
         # days ago. The variable week_dt will be an instance of datetime.date.
-        week_dt = datetime.date.fromtimestamp(valid_timespan.stop) - datetime.timedelta(weeks=1)    # 5
-        # Now convert it to unix epoch time:
-        week_ts = time.mktime(week_dt.timetuple())                     # 6
-        # Now form a TimeSpanStats object, using the time span we just
+        week_dt = datetime.date.fromtimestamp(timespan.stop) - \
+                    datetime.timedelta(weeks=1)                              # 5
+        # Convert it to unix epoch time:
+        week_ts = time.mktime(week_dt.timetuple())                           # 6
+        # Form a TimespanBinder object, using the time span we just
         # calculated:
-        seven_day_stats = TimeSpanStats(TimeSpan(week_ts, valid_timespan.stop),
-                                        statsdb,
-                                        formatter=self.generator.formatter,
-                                        converter=self.generator.converter) # 7
+        seven_day_stats = TimespanBinder(TimeSpan(week_ts, timespan.stop),
+                                         db_lookup,
+                                         formatter=self.generator.formatter,
+                                         converter=self.generator.converter) # 7
 
         # Now create a small dictionary with keys 'alltime' and 'seven_day':
         search_list_extension = {'alltime'   : all_stats,
-                                 'seven_day' : seven_day_stats}             # 8
+                                 'seven_day' : seven_day_stats}              # 8
         
-        return search_list_extension
+        # Finally, return our extension as a list:
+        return [search_list_extension]                                       # 9

@@ -1,17 +1,6 @@
-# LaCrosse WS28xx driver for weewx
 # $Id$
-#
 # Copyright 2013 Matthew Wall
-#
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or any later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.
-#
-# See http://www.gnu.org/licenses/
+# See the file LICENSE.txt for your full rights.
 #
 # Thanks to Eddie De Pieri for the first Python implementation for WS-28xx.
 # Eddie did the difficult work of decompiling HeavyWeather then converting
@@ -131,6 +120,9 @@ console clock.  The console can record up to 1797 history records.
 
 Reading 1795 history records took about 110 minutes on a raspberry pi, for
 an average of 3.6 seconds per history record.
+
+Reading 1795 history records took 65 minutes on a synology ds209+ii, for
+an average of 2.2 seconds per history record.
 
 Reading 1750 history records took 19 minutes using HeavyWeatherPro on a
 Windows 7 64-bit laptop.
@@ -926,7 +918,6 @@ Step 8. Go to step 1 to wait for state 0xde16 again.
 # TODO: how often is currdat.lst modified with/without hi-speed mode?
 # TODO: thread locking around observation data
 # TODO: eliminate polling, make MainThread get data as soon as RFThread updates
-# TODO: eliminate pressure_offset and use StdCalibrate instead?
 # TODO: get rid of Length/Buffer construct, replace with a Buffer class or obj
 
 # FIXME: the history retrieval assumes a constant archive interval across all
@@ -936,18 +927,30 @@ Step 8. Go to step 1 to wait for state 0xde16 again.
 from datetime import datetime
 
 import StringIO
+import sys
 import syslog
 import threading
 import time
 import traceback
 import usb
 
-import weewx.abstractstation
-import weewx.units
+import weewx.drivers
 import weewx.wxformulas
 import weeutil.weeutil
 
-DRIVER_VERSION = '0.32'
+DRIVER_NAME = 'WS28xx'
+DRIVER_VERSION = '0.33'
+
+
+def loader(config_dict, engine):
+    return WS28xxDriver(**config_dict[DRIVER_NAME])
+
+def configurator_loader(config_dict):
+    return WS28xxConfigurator()
+
+def confeditor_loader():
+    return WS28xxConfEditor()
+
 
 # flags for enabling/disabling debug verbosity
 DEBUG_COMM = 0
@@ -977,7 +980,7 @@ def log_traceback(dst=syslog.LOG_INFO, prefix='**** '):
     traceback.print_exc(file=sfd)
     sfd.seek(0)
     for line in sfd:
-        logmsg(dst, prefix+line)
+        logmsg(dst, prefix + line)
     del sfd
 
 def log_frame(n, buf):
@@ -985,7 +988,7 @@ def log_frame(n, buf):
     strbuf = ''
     for i in xrange(0,n):
         strbuf += str('%02x ' % buf[i])
-        if (i+1) % 16 == 0:
+        if (i + 1) % 16 == 0:
             logdbg(strbuf)
             strbuf = ''
     if strbuf:
@@ -1010,21 +1013,23 @@ def calc_checksum(buf, start, end=None):
     return cs
 
 def get_next_index(idx):
-    return get_index(idx+1)
+    return get_index(idx + 1)
 
 def get_index(idx):
     if idx < 0:
-        return idx + WS28xx.max_records
-    elif idx >= WS28xx.max_records:
-        return idx - WS28xx.max_records
+        return idx + WS28xxDriver.max_records
+    elif idx >= WS28xxDriver.max_records:
+        return idx - WS28xxDriver.max_records
     return idx
 
 def tstr_to_ts(tstr):
-    if tstr is None:
-        return None
-    return int(time.mktime(time.strptime(tstr, "%Y-%m-%d %H:%M:%S")))
+    try:
+        return int(time.mktime(time.strptime(tstr, "%Y-%m-%d %H:%M:%S")))
+    except (OverflowError, ValueError, TypeError):
+        pass
+    return None
 
-def bytes_to_addr(a,b,c):
+def bytes_to_addr(a, b, c):
     return ((((a & 0xF) << 8) | b) << 8) | c
 
 def addr_to_index(addr):
@@ -1033,26 +1038,220 @@ def addr_to_index(addr):
 def index_to_addr(idx):
     return 18 * idx + 416
 
-def loader(config_dict, engine):
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    station = WS28xx(altitude=altitude_m, **config_dict['WS28xx'])
-    return station
+def print_dict(data):
+    for x in sorted(data.keys()):
+        if x == 'dateTime':
+            print '%s: %s' % (x, weeutil.weeutil.timestamp_to_string(data[x]))
+        else:
+            print '%s: %s' % (x, data[x])
 
-class WS28xx(weewx.abstractstation.AbstractStation):
+
+class WS28xxConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def default_stanza(self):
+        return """
+[WS28xx]
+    # This section is for the La Crosse WS-2800 series of weather stations.
+
+    # Radio frequency to use between USB transceiver and console: US or EU
+    # US uses 915 MHz, EU uses 868.3 MHz.  Default is US.
+    transceiver_frequency = US
+
+    # The station model, e.g., 'LaCrosse C86234' or 'TFA Primus'
+    model = LaCrosse WS28xx
+
+    # The driver to use:
+    driver = weewx.drivers.ws28xx
+"""
+
+    def prompt_for_settings(self):
+        print "Specify the frequency used between the station and the"
+        print "transceiver, either 'US' (915 MHz) or 'EU' (868.3 MHz)."
+        freq = self._prompt('frequency', 'US', ['US', 'EU'])
+        return {'transceiver_frequency': freq}
+
+
+class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
+    def add_options(self, parser):
+        super(WS28xxConfigurator, self).add_options(parser)
+        parser.add_option("--check-transceiver", dest="check",
+                          action="store_true",
+                          help="check USB transceiver")
+        parser.add_option("--pair", dest="pair", action="store_true",
+                          help="pair the USB transceiver with station console")
+        parser.add_option("--info", dest="info", action="store_true",
+                          help="display weather station configuration")
+        parser.add_option("--set-interval", dest="interval",
+                          type=int, metavar="N",
+                          help="set logging interval to N minutes")
+        parser.add_option("--current", dest="current", action="store_true",
+                          help="get the current weather conditions")
+        parser.add_option("--history", dest="nrecords", type=int, metavar="N",
+                          help="display N history records")
+        parser.add_option("--history-since", dest="recmin",
+                          type=int, metavar="N",
+                          help="display history records since N minutes ago")
+        parser.add_option("--maxtries", dest="maxtries", type=int,
+                          help="maximum number of retries, 0 indicates no max")
+
+    def do_options(self, options, parser, config_dict, prompt):
+        maxtries = 3 if options.maxtries is None else int(options.maxtries)
+        self.station = WS28xxDriver(**config_dict[DRIVER_NAME])
+        if options.check:
+            self.check_transceiver(maxtries)
+        elif options.pair:
+            self.pair(maxtries)
+        elif options.interval is not None:
+            self.set_interval(maxtries, options.interval, prompt)
+        elif options.current:
+            self.show_current(maxtries)
+        elif options.nrecords is not None:
+            self.show_history(maxtries, count=options.nrecords)
+        elif options.recmin is not None:
+            ts = int(time.time()) - options.recmin * 60
+            self.show_history(maxtries, ts=ts)
+        else:
+            self.show_info(maxtries)
+        self.station.closePort()
+
+    def check_transceiver(self, maxtries):
+        """See if the transceiver is installed and operational."""
+        print 'Checking for transceiver...'
+        ntries = 0
+        while ntries < maxtries:
+            ntries += 1
+            if self.station.transceiver_is_present():
+                print 'Transceiver is present'
+                sn = self.station.get_transceiver_serial()
+                print 'serial: %s' % sn
+                tid = self.station.get_transceiver_id()
+                print 'id: %d (0x%04x)' % (tid, tid)
+                break
+            print 'Not found (attempt %d of %d) ...' % (ntries, maxtries)
+            time.sleep(5)
+        else:
+            print 'Transceiver not responding.'
+
+    def pair(self, maxtries):
+        """Pair the transceiver with the station console."""
+        print 'Pairing transceiver with console...'
+        maxwait = 90 # how long to wait between button presses, in seconds
+        ntries = 0
+        while ntries < maxtries or maxtries == 0:
+            if self.station.transceiver_is_paired():
+                print 'Transceiver is paired to console'
+                break
+            ntries += 1
+            msg = 'Press and hold the [v] key until "PC" appears'
+            if maxtries > 0:
+                msg += ' (attempt %d of %d)' % (ntries, maxtries)
+            else:
+                msg += ' (attempt %d)' % ntries
+            print msg
+            now = start_ts = int(time.time())
+            while (now - start_ts < maxwait and
+                   not self.station.transceiver_is_paired()):
+                time.sleep(5)
+                now = int(time.time())
+        else:
+            print 'Transceiver not paired to console.'
+
+    def get_interval(self, maxtries):
+        cfg = self.get_config(maxtries)
+        if cfg is None:
+            return None
+        return getHistoryInterval(cfg['history_interval'])
+
+    def get_config(self, maxtries):
+        start_ts = None
+        ntries = 0
+        while ntries < maxtries or maxtries == 0:
+            cfg = self.station.get_config()
+            if cfg is not None:
+                return cfg
+            ntries += 1
+            if start_ts is None:
+                start_ts = int(time.time())
+            else:
+                dur = int(time.time()) - start_ts
+                print 'No data after %d seconds (press SET to sync)' % dur
+            time.sleep(30)
+        return None
+
+    def set_interval(self, maxtries, interval, prompt):
+        """Set the station archive interval"""
+        print "This feature is not yet implemented"
+
+    def show_info(self, maxtries):
+        """Query the station then display the settings."""
+        print 'Querying the station for the configuration...'
+        cfg = self.get_config(maxtries)
+        if cfg is not None:
+            print_dict(cfg)
+
+    def show_current(self, maxtries):
+        """Get current weather observation."""
+        print 'Querying the station for current weather data...'
+        start_ts = None
+        ntries = 0
+        while ntries < maxtries or maxtries == 0:
+            packet = self.station.get_observation()
+            if packet is not None:
+                print_dict(packet)
+                break
+            ntries += 1
+            if start_ts is None:
+                start_ts = int(time.time())
+            else:
+                dur = int(time.time()) - start_ts
+                print 'No data after %d seconds (press SET to sync)' % dur
+            time.sleep(30)
+
+    def show_history(self, maxtries, ts=0, count=0):
+        """Display the indicated number of records or the records since the 
+        specified timestamp (local time, in seconds)"""
+        print "Querying the station for historical records..."
+        ntries = 0
+        last_n = nrem = None
+        last_ts = int(time.time())
+        self.station.start_caching_history(since_ts=ts, num_rec=count)
+        while nrem is None or nrem > 0:
+            if ntries >= maxtries:
+                print 'Giving up after %d tries' % ntries
+                break
+            time.sleep(30)
+            ntries += 1
+            now = int(time.time())
+            n = self.station.get_num_history_scanned()
+            if n == last_n:
+                dur = now - last_ts
+                print 'No data after %d seconds (press SET to sync)' % dur
+            else:
+                ntries = 0
+                last_ts = now
+            last_n = n
+            nrem = self.station.get_uncached_history_count()
+            ni = self.station.get_next_history_index()
+            li = self.station.get_latest_history_index()
+            msg = "  scanned %s records: current=%s latest=%s remaining=%s\r" % (n, ni, li, nrem)
+            sys.stdout.write(msg)
+            sys.stdout.flush()
+        self.station.stop_caching_history()
+        records = self.station.get_history_cache_records()
+        self.station.clear_history_cache()
+        print
+        print 'Found %d records' % len(records)
+        for r in records:
+            print r
+
+
+class WS28xxDriver(weewx.drivers.AbstractDevice):
     """Driver for LaCrosse WS28xx stations."""
 
     max_records = 1797
 
     def __init__(self, **stn_dict) :
         """Initialize the station object.
-
-        altitude: Altitude of the station
-        [Required. No default]
-
-        pressure_offset: Calibration offset in millibars for the station
-        pressure sensor.  This offset is added to the station sensor output
-        before barometer and altimeter pressures are calculated.
-        [Optional. No Default]
 
         model: Which station model is this?
         [Optional. Default is 'LaCrosse WS28xx']
@@ -1080,19 +1279,15 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         [Optional. Default is None]
         """
 
-        self.altitude          = stn_dict['altitude']
-        self.model             = stn_dict.get('model', 'LaCrosse WS28xx')
-        self.polling_interval  = int(stn_dict.get('polling_interval', 30))
-        self.comm_interval     = int(stn_dict.get('comm_interval', 3))
-        self.frequency         = stn_dict.get('transceiver_frequency', 'US')
-        self.device_id         = stn_dict.get('device_id', None)
-        self.serial            = stn_dict.get('serial', None)
-        self.pressure_offset   = stn_dict.get('pressure_offset', None)
-        if self.pressure_offset is not None:
-            self.pressure_offset = float(self.pressure_offset)
+        self.model            = stn_dict.get('model', 'LaCrosse WS28xx')
+        self.polling_interval = int(stn_dict.get('polling_interval', 30))
+        self.comm_interval    = int(stn_dict.get('comm_interval', 3))
+        self.frequency        = stn_dict.get('transceiver_frequency', 'US')
+        self.device_id        = stn_dict.get('device_id', None)
+        self.serial           = stn_dict.get('serial', None)
 
-        self.vendor_id         = 0x6666
-        self.product_id        = 0x5555
+        self.vendor_id        = 0x6666
+        self.product_id       = 0x5555
 
         now = int(time.time())
         self._service = None
@@ -1117,8 +1312,6 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('frequency is %s' % self.frequency)
-        loginf('altitude is %s meters' % str(self.altitude))
-        loginf('pressure offset is %s' % str(self.pressure_offset))
 
         self.startUp()
 
@@ -1146,7 +1339,7 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
             # if no new weather data, return an empty packet
             if packet is None:
-                packet = { 'usUnits': weewx.METRIC, 'dateTime': now }
+                packet = {'usUnits': weewx.METRIC, 'dateTime': now}
                 # if no new weather data for awhile, log it
                 if self._last_obs_ts is None or \
                         now - self._last_obs_ts > self._nodata_interval:
@@ -1205,10 +1398,9 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         loginf('Found %d historical records' % len(records))
         last_ts = None
         for r in records:
-            if last_ts is not None:
+            if last_ts is not None and r['dateTime'] is not None:
                 r['usUnits'] = weewx.METRIC
                 r['interval'] = (r['dateTime'] - last_ts) / 60
-                self.augment_data(r)
                 yield r
             last_ts = r['dateTime']
 
@@ -1258,26 +1450,6 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 
     def get_last_contact(self):
         return self._service.getLastStat().last_seen_ts
-
-    def augment_data(self, data):
-        # heat index is not provided by the station
-        data['heatindex'] = weewx.wxformulas.heatindexC(
-            data['outTemp'], data['outHumidity'])
-        # dewpoint is provided by station, but we calculate it instead
-        data['dewpoint'] = weewx.wxformulas.dewpointC(
-            data['outTemp'], data['outHumidity'])
-        # windchill is provided by station, but we calculate it instead
-        data['windchill'] = weewx.wxformulas.windchillC(
-            data['outTemp'], data['windSpeed'])
-
-        # station reports gauge pressure, must calculate other pressures
-        adjp = data['pressure']
-        if self.pressure_offset is not None and adjp is not None:
-            adjp += self.pressure_offset
-        data['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
-            adjp, self.altitude, data['outTemp'])
-        data['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
-            adjp, self.altitude, algorithm='aaNOAA')
 
     def get_observation(self):
         data = self._service.getWeatherData()
@@ -1333,8 +1505,6 @@ class WS28xx(weewx.abstractstation.AbstractStation):
         if packet['rain'] is not None:
             packet['rain'] /= 10 # weewx wants cm
 
-        self.augment_data(packet)
-
         # track the signal strength and battery levels
         laststat = self._service.getLastStat()
         packet['rxCheckPercent'] = laststat.LastLinkQuality
@@ -1389,11 +1559,11 @@ class WS28xx(weewx.abstractstation.AbstractStation):
 # eddie de pieri, which is in turn based on the HeavyWeather implementation.
 
 class BadResponse(Exception):
-    '''raised when unexpected data found in frame buffer'''
+    """raised when unexpected data found in frame buffer"""
     pass
 
 class DataWritten(Exception):
-    '''raised when message 'data written' in frame buffer'''
+    """raised when message 'data written' in frame buffer"""
     pass
 
 class BitHandling:
@@ -1401,31 +1571,31 @@ class BitHandling:
     @staticmethod
     def testBit(int_type, offset):
         mask = 1 << offset
-        return(int_type & mask)
+        return int_type & mask
 
     # return an integer with the bit at 'offset' set to 1.
     @staticmethod
     def setBit(int_type, offset):
         mask = 1 << offset
-        return(int_type | mask)
+        return int_type | mask
 
     # return an integer with the bit at 'offset' set to 1.
     @staticmethod
     def setBitVal(int_type, offset, val):
         mask = val << offset
-        return(int_type | mask)
+        return int_type | mask
 
     # return an integer with the bit at 'offset' cleared.
     @staticmethod
     def clearBit(int_type, offset):
         mask = ~(1 << offset)
-        return(int_type & mask)
+        return int_type & mask
 
     # return an integer with the bit at 'offset' inverted, 0->1 and 1->0.
     @staticmethod
     def toggleBit(int_type, offset):
         mask = 1 << offset
-        return(int_type ^ mask)
+        return int_type ^ mask
 
 class EHistoryInterval:
     hi01Min          = 0
@@ -1599,10 +1769,10 @@ def getFrequencyStandard(frequency):
 # 2 - thermo-hygro
 # 3 - console
 
-batterybits = { 'wind':0, 'rain':1, 'th':2, 'console':3 }
+batterybits = {'wind':0, 'rain':1, 'th':2, 'console':3}
 
 def getBatteryStatus(status, flag):
-    '''Return 1 if bit is set, 0 otherwise'''
+    """Return 1 if bit is set, 0 otherwise"""
     bit = batterybits.get(flag)
     if bit is None:
         return None
@@ -1632,13 +1802,13 @@ def getHistoryInterval(i):
 # OFL - outside factory limits
 class CWeatherTraits(object):
     windDirMap = {
-        0:"N", 1:"NNE", 2:"NE", 3:"ENE", 4:"E", 5:"ESE", 6:"SE", 7:"SSE",
-        8:"S", 9:"SSW", 10:"SW", 11:"WSW", 12:"W", 13:"WNW", 14:"NW",
-        15:"NWN", 16:"err", 17:"inv", 18:"None" }
+        0: "N", 1: "NNE", 2: "NE", 3: "ENE", 4: "E", 5: "ESE", 6: "SE",
+        7: "SSE", 8: "S", 9: "SSW", 10: "SW", 11: "WSW", 12: "W",
+        13: "WNW", 14: "NW", 15: "NWN", 16: "err", 17: "inv", 18: "None" }
     forecastMap = {
-        0:"Rainy(Bad)", 1:"Cloudy(Neutral)", 2:"Sunny(Good)",  3:"Error" }
+        0: "Rainy(Bad)", 1: "Cloudy(Neutral)", 2: "Sunny(Good)",  3: "Error" }
     trendMap = {
-        0:"Stable(Neutral)", 1:"Rising(Up)", 2:"Falling(Down)", 3:"Error" }
+        0: "Stable(Neutral)", 1: "Rising(Up)", 2: "Falling(Down)", 3: "Error" }
 
     @staticmethod
     def TemperatureNP():
@@ -1708,7 +1878,7 @@ _bad_labels = ['RainLastMonthMax','RainLastWeekMax','PressureRelativeMin']
 class USBHardware(object):
     @staticmethod
     def isOFL2(buf, start, StartOnHiNibble):
-        if StartOnHiNibble :
+        if StartOnHiNibble:
             result = (buf[0][start+0] >>  4) == 15 \
                 or (buf[0][start+0] & 0xF) == 15
         else:
@@ -1718,7 +1888,7 @@ class USBHardware(object):
 
     @staticmethod
     def isOFL3(buf, start, StartOnHiNibble):
-        if StartOnHiNibble :
+        if StartOnHiNibble:
             result = (buf[0][start+0] >>  4) == 15 \
                 or (buf[0][start+0] & 0xF) == 15 \
                 or (buf[0][start+1] >>  4) == 15
@@ -1730,7 +1900,7 @@ class USBHardware(object):
 
     @staticmethod
     def isOFL5(buf, start, StartOnHiNibble):
-        if StartOnHiNibble :
+        if StartOnHiNibble:
             result = (buf[0][start+0] >>  4) == 15 \
                 or (buf[0][start+0] & 0xF) == 15 \
                 or (buf[0][start+1] >>  4) == 15 \
@@ -1746,7 +1916,7 @@ class USBHardware(object):
 
     @staticmethod
     def isErr2(buf, start, StartOnHiNibble):
-        if StartOnHiNibble :
+        if StartOnHiNibble:
             result = (buf[0][start+0] >>  4) >= 10 \
                 and (buf[0][start+0] >>  4) != 15 \
                 or  (buf[0][start+0] & 0xF) >= 10 \
@@ -1760,7 +1930,7 @@ class USBHardware(object):
         
     @staticmethod
     def isErr3(buf, start, StartOnHiNibble):
-        if StartOnHiNibble :
+        if StartOnHiNibble:
             result = (buf[0][start+0] >>  4) >= 10 \
                 and (buf[0][start+0] >>  4) != 15 \
                 or  (buf[0][start+0] & 0xF) >= 10 \
@@ -1778,7 +1948,7 @@ class USBHardware(object):
         
     @staticmethod
     def isErr5(buf, start, StartOnHiNibble):
-        if StartOnHiNibble :
+        if StartOnHiNibble:
             result = (buf[0][start+0] >>  4) >= 10 \
                 and (buf[0][start+0] >>  4) != 15 \
                 or  (buf[0][start+0] & 0xF) >= 10 \
@@ -1817,7 +1987,7 @@ class USBHardware(object):
 
     @staticmethod
     def toInt_2(buf, start, StartOnHiNibble):
-        '''read 2 nibbles'''
+        """read 2 nibbles"""
         if StartOnHiNibble:
             rawpre  = (buf[0][start+0] >>  4)* 10 \
                 + (buf[0][start+0] & 0xF)* 1
@@ -1828,12 +1998,12 @@ class USBHardware(object):
 
     @staticmethod
     def toRain_7_3(buf, start, StartOnHiNibble):
-        '''read 7 nibbles, presentation with 3 decimals; units of mm'''
-        if ( USBHardware.isErr2(buf, start+0, StartOnHiNibble) or
-             USBHardware.isErr5(buf, start+1, StartOnHiNibble)):
+        """read 7 nibbles, presentation with 3 decimals; units of mm"""
+        if (USBHardware.isErr2(buf, start+0, StartOnHiNibble) or
+            USBHardware.isErr5(buf, start+1, StartOnHiNibble)):
             result = CWeatherTraits.RainNP()
-        elif ( USBHardware.isOFL2(buf, start+0, StartOnHiNibble) or
-               USBHardware.isOFL5(buf, start+1, StartOnHiNibble) ):
+        elif (USBHardware.isOFL2(buf, start+0, StartOnHiNibble) or
+              USBHardware.isOFL5(buf, start+1, StartOnHiNibble)):
             result = CWeatherTraits.RainOFL()
         elif StartOnHiNibble:
             result  = (buf[0][start+0] >>  4)*  1000 \
@@ -1856,13 +2026,13 @@ class USBHardware(object):
     @staticmethod
     def toRain_6_2(buf, start, StartOnHiNibble):
         '''read 6 nibbles, presentation with 2 decimals; units of mm'''
-        if ( USBHardware.isErr2(buf, start+0, StartOnHiNibble) or
-             USBHardware.isErr2(buf, start+1, StartOnHiNibble) or
-             USBHardware.isErr2(buf, start+2, StartOnHiNibble) ):
+        if (USBHardware.isErr2(buf, start+0, StartOnHiNibble) or
+            USBHardware.isErr2(buf, start+1, StartOnHiNibble) or
+            USBHardware.isErr2(buf, start+2, StartOnHiNibble) ):
             result = CWeatherTraits.RainNP()
-        elif ( USBHardware.isOFL2(buf, start+0, StartOnHiNibble) or
-               USBHardware.isOFL2(buf, start+1, StartOnHiNibble) or
-               USBHardware.isOFL2(buf, start+2, StartOnHiNibble) ):
+        elif (USBHardware.isOFL2(buf, start+0, StartOnHiNibble) or
+              USBHardware.isOFL2(buf, start+1, StartOnHiNibble) or
+              USBHardware.isOFL2(buf, start+2, StartOnHiNibble)):
             result = CWeatherTraits.RainOFL()
         elif StartOnHiNibble:
             result  = (buf[0][start+0] >>  4)*  1000 \
@@ -1882,8 +2052,8 @@ class USBHardware(object):
 
     @staticmethod
     def toRain_3_1(buf, start, StartOnHiNibble):
-        '''read 3 nibbles, presentation with 1 decimal; units of 0.1 inch'''
-        if StartOnHiNibble :
+        """read 3 nibbles, presentation with 1 decimal; units of 0.1 inch"""
+        if StartOnHiNibble:
             hibyte = buf[0][start+0]
             lobyte = (buf[0][start+1] >> 4) & 0xF
         else:
@@ -1900,7 +2070,7 @@ class USBHardware(object):
 
     @staticmethod  
     def toFloat_3_1(buf, start, StartOnHiNibble):
-        '''read 3 nibbles, presentation with 1 decimal'''
+        """read 3 nibbles, presentation with 1 decimal"""
         if StartOnHiNibble:
             result = (buf[0][start+0] >>  4)*16**2 \
                 + (buf[0][start+0] & 0xF)*   16**1 \
@@ -1914,13 +2084,13 @@ class USBHardware(object):
 
     @staticmethod
     def toDateTime(buf, start, StartOnHiNibble, label):
-        '''read 10 nibbles, presentation as DateTime'''
+        """read 10 nibbles, presentation as DateTime"""
         result = None
-        if ( USBHardware.isErr2(buf, start+0, StartOnHiNibble)
-             or USBHardware.isErr2(buf, start+1, StartOnHiNibble)
-             or USBHardware.isErr2(buf, start+2, StartOnHiNibble)
-             or USBHardware.isErr2(buf, start+3, StartOnHiNibble)
-             or USBHardware.isErr2(buf, start+4, StartOnHiNibble) ):
+        if (USBHardware.isErr2(buf, start+0, StartOnHiNibble)
+            or USBHardware.isErr2(buf, start+1, StartOnHiNibble)
+            or USBHardware.isErr2(buf, start+2, StartOnHiNibble)
+            or USBHardware.isErr2(buf, start+3, StartOnHiNibble)
+            or USBHardware.isErr2(buf, start+4, StartOnHiNibble)):
             logerr('ToDateTime: bogus date for %s: error status in buffer' %
                    label)
         else:
@@ -1944,10 +2114,10 @@ class USBHardware(object):
 
     @staticmethod
     def toHumidity_2_0(buf, start, StartOnHiNibble):
-        '''read 2 nibbles, presentation with 0 decimal'''
-        if USBHardware.isErr2(buf, start+0, StartOnHiNibble) :
+        """read 2 nibbles, presentation with 0 decimal"""
+        if USBHardware.isErr2(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.HumidityNP()
-        elif USBHardware.isOFL2(buf, start+0, StartOnHiNibble) :
+        elif USBHardware.isOFL2(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.HumidityOFL()
         else:
             result = USBHardware.toInt_2(buf, start, StartOnHiNibble)
@@ -1955,10 +2125,10 @@ class USBHardware(object):
 
     @staticmethod
     def toTemperature_5_3(buf, start, StartOnHiNibble):
-        '''read 5 nibbles, presentation with 3 decimals; units of degree C'''
-        if USBHardware.isErr5(buf, start+0, StartOnHiNibble) :
+        """read 5 nibbles, presentation with 3 decimals; units of degree C"""
+        if USBHardware.isErr5(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.TemperatureNP()
-        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble) :
+        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.TemperatureOFL()
         else:
             if StartOnHiNibble:
@@ -1978,10 +2148,10 @@ class USBHardware(object):
 
     @staticmethod
     def toTemperature_3_1(buf, start, StartOnHiNibble):
-        '''read 3 nibbles, presentation with 1 decimal; units of degree C'''
-        if USBHardware.isErr3(buf, start+0, StartOnHiNibble) :
+        """read 3 nibbles, presentation with 1 decimal; units of degree C"""
+        if USBHardware.isErr3(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.TemperatureNP()
-        elif USBHardware.isOFL3(buf, start+0, StartOnHiNibble) :
+        elif USBHardware.isOFL3(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.TemperatureOFL()
         else:
             if StartOnHiNibble :
@@ -1997,33 +2167,33 @@ class USBHardware(object):
 
     @staticmethod
     def toWindspeed_6_2(buf, start):
-        '''read 6 nibbles, presentation with 2 decimals; units of km/h'''
+        """read 6 nibbles, presentation with 2 decimals; units of km/h"""
         result = (buf[0][start+0] >> 4)* 16**5 \
             + (buf[0][start+0] & 0xF)*   16**4 \
             + (buf[0][start+1] >>  4)*   16**3 \
             + (buf[0][start+1] & 0xF)*   16**2 \
             + (buf[0][start+2] >>  4)*   16**1 \
             + (buf[0][start+2] & 0xF)
-        result = result / 256.0
-        result = result / 100.0             # km/h
+        result /= 256.0
+        result /= 100.0             # km/h
         return result
 
     @staticmethod
     def toWindspeed_3_1(buf, start, StartOnHiNibble):
-        '''read 3 nibbles, presentation with 1 decimal; units of m/s'''
+        """read 3 nibbles, presentation with 1 decimal; units of m/s"""
         if StartOnHiNibble :
             hibyte = buf[0][start+0]
             lobyte = (buf[0][start+1] >> 4) & 0xF
         else:
             hibyte = 16*(buf[0][start+0] & 0xF) + ((buf[0][start+1] >> 4) & 0xF)
             lobyte = buf[0][start+1] & 0xF            
-        if hibyte == 0xFF and lobyte == 0xE :
+        if hibyte == 0xFF and lobyte == 0xE:
             result = CWeatherTraits.WindNP()
-        elif hibyte == 0xFF and lobyte == 0xF :
+        elif hibyte == 0xFF and lobyte == 0xF:
             result = CWeatherTraits.WindOFL()
         else:
             result = USBHardware.toFloat_3_1(buf, start, StartOnHiNibble) # m/s
-            result = result * 3.6 # km/h       
+            result *= 3.6 # km/h
         return result
 
     @staticmethod
@@ -2033,10 +2203,10 @@ class USBHardware(object):
 
     @staticmethod
     def toPressure_hPa_5_1(buf, start, StartOnHiNibble):
-        '''read 5 nibbles, presentation with 1 decimal; units of hPa (mbar)'''
-        if USBHardware.isErr5(buf, start+0, StartOnHiNibble) :
+        """read 5 nibbles, presentation with 1 decimal; units of hPa (mbar)"""
+        if USBHardware.isErr5(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.PressureNP()
-        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble) :
+        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.PressureOFL()
         elif StartOnHiNibble :
             result = (buf[0][start+0] >> 4)* 1000 \
@@ -2054,10 +2224,10 @@ class USBHardware(object):
 
     @staticmethod
     def toPressure_inHg_5_2(buf, start, StartOnHiNibble):
-        '''read 5 nibbles, presentation with 2 decimals; units of inHg'''
-        if USBHardware.isErr5(buf, start+0, StartOnHiNibble) :
+        """read 5 nibbles, presentation with 2 decimals; units of inHg"""
+        if USBHardware.isErr5(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.PressureNP()
-        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble) :
+        elif USBHardware.isOFL5(buf, start+0, StartOnHiNibble):
             result = CWeatherTraits.PressureOFL()
         elif StartOnHiNibble :
             result = (buf[0][start+0] >> 4)* 100 \
@@ -2238,12 +2408,11 @@ class CCurrentWeatherData(object):
         self._WindDirection5 = w5
 
         if DEBUG_WEATHER_DATA > 2:
-            unknownbuf = [0]
-            unknownbuf[0] = [0]*9
+            unknownbuf = [0]*9
             for i in xrange(0,9):
-                unknownbuf[0][i] = nbuf[0][163+i]
+                unknownbuf[i] = nbuf[163+i]
             strbuf = ""
-            for i in unknownbuf[0]:
+            for i in unknownbuf:
                 strbuf += str("%.2x " % i)
             logdbg('Bytes with unknown meaning at 157-165: %s' % strbuf)
 
@@ -2929,13 +3098,13 @@ class sHID(object):
                             handle = dev.open()
                             try:
                                 buf = self.readCfg(handle, 0x1F9, 7)
-                                sn  = str("%02d"%(buf[0]))
-                                sn += str("%02d"%(buf[1]))
-                                sn += str("%02d"%(buf[2]))
-                                sn += str("%02d"%(buf[3]))
-                                sn += str("%02d"%(buf[4]))
-                                sn += str("%02d"%(buf[5]))
-                                sn += str("%02d"%(buf[6]))
+                                sn  = str("%02d" % (buf[0]))
+                                sn += str("%02d" % (buf[1]))
+                                sn += str("%02d" % (buf[2]))
+                                sn += str("%02d" % (buf[3]))
+                                sn += str("%02d" % (buf[4]))
+                                sn += str("%02d" % (buf[5]))
+                                sn += str("%02d" % (buf[6]))
                                 if str(serial) == sn:
                                     loginf('found transceiver at bus=%s device=%s serial=%s' % (bus.dirname, dev.filename, sn))
                                     return dev
@@ -3031,7 +3200,7 @@ class sHID(object):
         StateBuffer[0][0]=buf[1]
         StateBuffer[0][1]=buf[2]
 
-    def readConfigFlash(self,addr,numBytes,data):
+    def readConfigFlash(self, addr, numBytes, data):
         if numBytes > 512:
             raise Exception('bad number of bytes')
 
@@ -3039,8 +3208,8 @@ class sHID(object):
             buf=[0xcc]*0x0f #0x15
             buf[0] = 0xdd
             buf[1] = 0x0a
-            buf[2] = (addr >>8)  & 0xFF
-            buf[3] = (addr >>0)  & 0xFF
+            buf[2] = (addr >>8) & 0xFF
+            buf[3] = (addr >>0) & 0xFF
             if DEBUG_COMM > 1:
                 self.dump('readCfgFlash>', buf, fmt=DEBUG_DUMP_FORMAT)
             self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
@@ -3058,7 +3227,7 @@ class sHID(object):
                                        index=0x0000000,
                                        timeout=self.timeout)
             new_data=[0]*0x15
-            if ( numBytes < 16 ):
+            if numBytes < 16:
                 for i in xrange(0, numBytes):
                     new_data[i] = buf[i+4]
                 numBytes = 0
@@ -3069,7 +3238,7 @@ class sHID(object):
                 addr += 16
             if DEBUG_COMM > 1:
                 self.dump('readCfgFlash<', buf, fmt=DEBUG_DUMP_FORMAT)
-        data[0] = new_data
+        data[0] = new_data # FIXME: new_data might be unset
 
     def setState(self,state):
         buf = [0]*0x15
@@ -3418,7 +3587,7 @@ class CCommunicationService(object):
                 hidx = self.history_cache.next_index
             elif self.DataStore.getLastHistoryIndex() is not None:
                 hidx = self.DataStore.getLastHistoryIndex()
-        if hidx is None or hidx < 0 or hidx >= WS28xx.max_records:
+        if hidx is None or hidx < 0 or hidx >= WS28xxDriver.max_records:
             haddr = 0xffffff
         else:
             haddr = index_to_addr(hidx)
@@ -3872,9 +4041,11 @@ class CCommunicationService(object):
 
     def startCachingHistory(self, since_ts=0, num_rec=0):
         self.history_cache.clear_records()
+        if since_ts is None:
+            since_ts = 0
         self.history_cache.since_ts = since_ts
-        if num_rec > WS28xx.max_records - 2:
-            num_rec = WS28xx.max_records - 2
+        if num_rec > WS28xxDriver.max_records - 2:
+            num_rec = WS28xxDriver.max_records - 2
         self.history_cache.num_rec = num_rec
         self.command = EAction.aGetHistory
 

@@ -3,9 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """
 Package of user extensions to weewx.

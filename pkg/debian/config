@@ -10,7 +10,7 @@ db_version 2.0
 db_capb backup
 
 STATE=1 
-while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
+while [ "$STATE" != 0 -a "$STATE" != 7 ]; do
     case "$STATE" in
         1)
             db_input high weewx/location || true
@@ -34,9 +34,28 @@ while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
 
         6) # prompt for station-specific parameters
             db_get weewx/station_type
+
+            if [ "$RET" = "CC3000" ]; then
+                db_input high weewx/cc3000_model || true
+                db_input high weewx/cc3000_port || true
+            fi
+
+            if [ "$RET" = "FineOffsetUSB" ]; then
+                db_input high weewx/fousb_model || true
+            fi
+
+            if [ "$RET" = "TE923" ]; then
+                db_input high weewx/te923_model || true
+            fi
+
+            if [ "$RET" = "Ultimeter" ]; then
+                db_input high weewx/ultimeter_model || true
+                db_input high weewx/ultimeter_port || true
+            fi
+
             if [ "$RET" = "Vantage" ]; then
                 db_input high weewx/vantage_type || true
-                db_go
+                db_go || true
                 db_get weewx/vantage_type
                 if [ "$RET" = "serial" ]; then
                     db_input high weewx/vantage_port || true
@@ -55,44 +74,21 @@ while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
 
             if [ "$RET" = "WMR9x8" ]; then
                 db_input high weewx/wmr9x8_model || true
-                db_go
                 db_input high weewx/wmr9x8_port || true
-            fi
-
-            if [ "$RET" = "FineOffsetUSB" ]; then
-                db_input high weewx/fousb_model || true
-            fi
-
-            if [ "$RET" = "WS23xx" ]; then
-                db_input high weewx/ws23xx_model || true
-                db_go
-                db_input high weewx/ws23xx_port || true
-            fi
-
-            if [ "$RET" = "WS28xx" ]; then
-                db_input high weewx/ws28xx_model || true
-                db_go
-                db_input high weewx/ws28xx_frequency || true
-            fi
-
-            if [ "$RET" = "TE923" ]; then
-                db_input high weewx/te923_model || true
-            fi
-
-            if [ "$RET" = "Ultimeter" ]; then
-                db_input high weewx/ultimeter_model || true
-                db_go
-                db_input high weewx/ultimeter_port || true
             fi
 
             if [ "$RET" = "WS1" ]; then
                 db_input high weewx/ws1_port || true
             fi
 
-            if [ "$RET" = "CC3000" ]; then
-                db_input high weewx/cc3000_model || true
-                db_go
-                db_input high weewx/cc3000_port || true
+            if [ "$RET" = "WS23xx" ]; then
+                db_input high weewx/ws23xx_model || true
+                db_input high weewx/ws23xx_port || true
+            fi
+
+            if [ "$RET" = "WS28xx" ]; then
+                db_input high weewx/ws28xx_model || true
+                db_input high weewx/ws28xx_frequency || true
             fi
             ;;
     esac
@@ -103,3 +99,9 @@ while [ "$STATE" != 0 -a "$STATE" != 6 ]; do
         STATE=$(($STATE - 1))
     fi
 done
+
+if [ "$STATE" = 0 ]; then
+    # user has cancelled the first prompt.  according to debconf docs we
+    # should return 10, leaving the package installed but unconfigured.
+    exit 10
+fi

@@ -20,9 +20,7 @@ AUTHOR:
 DATE: 
     5-Oct-2011
 """
-#    $Revision$
-#    $Author$
-#    $Date$
+# $Id$
 import serial
 import struct
 import time

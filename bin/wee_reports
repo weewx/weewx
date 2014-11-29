@@ -4,9 +4,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Module can be called as a main program to generate reports, etc.,
 that are current as of the last archive record in the archive database."""
@@ -25,12 +23,12 @@ from weeutil.weeutil import timestamp_to_string
 description = """Runs all weewx reports. This is a useful debugging tool:
 you don't have to wait for the end of an archive interval to run the reports."""
 
-usage="""%prog: [config_file] [timestamp] [--config=CONFIG_FILE] [--help]"""
+usage = """%prog: [config_file] [timestamp] [--config=CONFIG_FILE] [--help]"""
 
 def main():
 
     # Set defaults for the system logger:
-    syslog.openlog('wee_reports', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('wee_reports', syslog.LOG_PID | syslog.LOG_CONS)
 
     # Create a command line parser:
     parser = optparse.OptionParser(description=description, usage=usage)
@@ -44,7 +42,7 @@ def main():
     config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
     
     # If the user specified a time, retrieve it. Otherwise, set to None
-    gen_ts = None if len(args)<1 else int(args[0])
+    gen_ts = None if len(args) < 1 else int(args[0])
     
     print "Using configuration file %s." % config_fn
 

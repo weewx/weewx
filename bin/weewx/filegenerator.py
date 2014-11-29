@@ -3,9 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id: filegenerator.py 2608 2014-11-14 12:37:17Z mwall $
 #
 
 import weewx.cheetahgenerator

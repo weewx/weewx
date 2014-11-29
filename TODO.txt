@@ -1,10 +1,34 @@
-TODO before the next release:
+--------------------  TODO for V3  --------------------------- 
 
-Document the new capabilities of the wee_config_vantage utility.
+Should the archive file be backed up before adding the daily summaries?
+  - Probably.
 
-Figure out why the heartbeat doesn't work on the WMR200.
+Prompt for extension-specific parameters
 
-add documentation for the extension installer and extension packaging.
+
+
+--------------------  Nice to do (V3.1?)  --------------------------- 
+
+Make setup.py do nicer formatting to weewx.conf
+  - spacing before when injecting skin stanzas
+  - spacing before when injecting database and binding stanzas
+  - rows of hashmarks when injecting service stanzas such as [Forecast]
+  - inject service stanzas somewhere other than end of file
+  - inject skin stanzas before ftp and rsync
+
+The StdArchive service should extract everything it can from the accumulators,
+whether or not software record generation is used.
+  - This could be added later.
+
+Implement a $time_ago, or $timespan tag (see email with Gary Roderick).
+  - This could be added later.
+
+Look at Gary's (?) changes to allow cron-like report generation.
+
+Is max gap fraction meaningful for bar charts now?
+
+Fix units in cmon to use kilo, mega, giga, tera?
+ - scaling probably should be done in the plotting, not unit as types
 
 Guard against database locks:
 
@@ -33,3 +57,120 @@ Jul 30 08:55:22 hummingbird weewx[959]:     ****    File "/home/weewx/bin/weedb/
 Jul 30 08:55:22 hummingbird weewx[959]:     ****      self.connection.commit()
 Jul 30 08:55:22 hummingbird weewx[959]:     ****  OperationalError: database is locked
 Jul 30 08:55:22 hummingbird weewx[959]:     ****  Exiting.
+
+
+--------------------  DONE  --------------------------- 
+
+Quick start guide
+(11/28/14 tk)
+
+Test on redhat
+ - rpm install and upgrade
+ - extension installer
+Test on suse
+ - rpm install and upgrade
+ - extension installer
+(28nov14 mwall)
+
+Move schemas to the extension that uses them.
+  - this has always been the case for cmon, pmon, and forecast
+
+Test new extension installer on debian
+(23nov14 mwall)
+
+Test new setup.py on debian deb upgrades
+(23nov14 mwall)
+
+Prompt for station-specific parameters
+(23nov14 mwall)
+
+The station hardware configuration process could be improved. 
+  - Nowhere is it listed what driver to use.
+  - Docs need to be updated with the new two-step process.
+  - Perhaps the configuration routine could be made interactive? It would
+    scan the "drivers" subdirectory and offer up the choices...
+(23nov14 mwall)
+
+Include setup.py in the installation (also setup.cfg)
+(22nov14 mwall)
+
+Document how to extend the unit system.
+ - deferred documentation to see if we like it.
+(20nov14 tk)
+ 
+Extending the accumulators
+ - use the same strategy as the unit system
+ - deferred documentation to see if we like it.
+(20nov14 tk)
+
+Update the forecast service
+forecast is now working with the database structure
+(17nov14 mwall)
+
+Add parameter max_delta to $current.
+(16nov14 -tk)
+
+Strategy for extending units.
+(16nov14 -tk)
+
+May need to update the guide on packaging an extension.
+modified the docs to match the new setup.py syntax
+(15nov14 mwall)
+
+Update setup.py
+ -- Rework deb installer to work with device snippets
+ -- Give each driver option to modify driver stanza while updating weewx.conf
+ -- the --configure option should modify station_type if successful
+(15nov14 mwall)
+              
+Update setup.py.
+  -- Add configure keyword, with option --device=
+  setup.py --configure [--driver=weewx.drivers.simulator]
+(14nov14 mwall)
+
+Update skins: exfoliation amphibian simple
+Update drivers: owfs link fileparse
+Update services: cmon crt cwxn
+Put fileparse driver into extensions directory as driver example
+(14nov14 mwall)
+
+Check existing extensions: basic xstats
+(13nov14 mwall)
+
+Update services to use new database
+cmon pmon
+(13nov14 mwall)
+
+Update setup.py.
+  -- General update strategy for weewx.conf
+     (11/13/14 by tk)
+     
+Update uploader extensions to use new database.
+emoncms mqtt owm seg thingspeak twitter wbug wcloud wetter windfinder xively
+(11/12/14 by Matthew)
+
+Update Upgrading Guide.
+ - explain how to migrate data from a v2 database to a v3 database
+ - Changes in search list extensions
+ 
+Verify that examples still work:
+  alarm.py 
+  lowBattery.py
+  xsearch.py
+(11/10/14. All are OK. I checked/updated them when updating the docs)
+
+The table name is explicitly specified in the uploader database queries. E.g.,
+  "SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM archive WHERE dateTime>=? AND dateTime<=?"
+Does this matter?
+(11/11/14. Now substitutes the table name into the query string)
+
+On startup, the log should indicate not only which binding is in use, but what
+it is bound to (sqlite or mysql).
+
+Both tables archive_day_windSpeed and archive_day_wind exist. 
+[11/11/14. Both now get updated. $day.wind.max and $day.windSpeed.max return the same thing]
+
+I removed Appendix: Statistical types because it is no longer valid. But,
+it needs to be explained somewhere the difference between vector and scalar
+stats.
+[11/11/14. Added a section "Winds" to the Customizing Guide, explaining the differences.]

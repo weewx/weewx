@@ -7,28 +7,64 @@ Description: display units:
 
 Template: weewx/location
 Type: string
-Default: Hood River, Oregon
+Default: Santa's Workshop, North Pole
 Description: location of the weather station:
  This is a string that describes the location of the weather station, for example 'Hood River, Oregon' or 'Boston, MA'.
 
 Template: weewx/latlon
 Type: string
-Default: 45.686,-121.566
+Default: 90.000, 0.000
 Description: latitude, longitude of the weather station:
- The latitude and longitude should be specified in decimal degrees, with negative values for southern and western hemispheres.  For example, '42.385, -71.060'
+ The latitude and longitude should be specified in decimal degrees, with negative values for southern and western hemispheres.  For example, '45.686,-121.566' or '42.385, -71.060'
 
 Template: weewx/altitude
 Type: string
-Default: 700, foot
+Default: 0, meter
 Description: altitude of the weather station:
  Normally the altitude is downloaded from the station hardware, but not all stations support this.  Specify the altitude of the station and the singular form of the unit used for the altitude, for example '700, foot' or '120, meter'
 
 Template: weewx/station_type
 Type: select
-Choices: Vantage, WMR100, WMR200, WMR9x8, FineOffsetUSB, WS28xx, WS23xx, TE923, Ultimeter, WS1, Simulator
+Choices: Simulator, CC3000, FineOffsetUSB, TE923, Ultimeter, Vantage, WMR100, WMR200, WMR9x8, WS1, WS23xx, WS28xx
 Default: Simulator
 Description: weather station type:
  The weather station hardware type.  Specify simulator to run weewx without a weather station.
+
+Template: weewx/cc3000_port
+Type: string
+Default: /dev/ttyUSB0
+Description: serial port:
+ Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
+
+Template: weewx/cc3000_model
+Type: string
+Default: RainWise
+Description: weather station model:
+ Specify the station model, for example RainWise CC3000.
+
+Template: weewx/fousb_model
+Type: string
+Default: WS2080
+Description: weather station model:
+ Specify the station model, for example WH1080, WS2080, WH3080.
+
+Template: weewx/te923_model
+Type: string
+Default: TE923
+Description: weather station model:
+ Specify the station model, for example TFA Nexus, IROX Pro X, or Meade TE923W.
+
+Template: weewx/ultimeter_model
+Type: string
+Default: Ultimeter
+Description: weather station model:
+ Specify the station model, for example Ultimeter 2000, Ultimeter 100
+
+Template: weewx/ultimeter_port
+Type: string
+Default: /dev/ttyUSB0
+Description: serial port:
+ Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
 
 Template: weewx/vantage_type
 Type: select
@@ -41,13 +77,13 @@ Template: weewx/vantage_port
 Type: string
 Default: /dev/ttyUSB0
 Description: serial port:
- Specify a port for stations with a serial interface, for example /dev/ttyUSB0 or /dev/ttyS0.  For ethernet stations leave this blank.
+ Specify a port for stations with a serial interface, for example /dev/ttyUSB0 or /dev/ttyS0.
 
 Template: weewx/vantage_host
 Type: string
 Default: 192.168.0.10
 Description: weather station hostname or IP address:
- Specify the IP address (e.g. 192.168.0.10) or hostname (e.g. console or console.example.com) for stations with an ethernet interface.  For serial stations leave this blank.
+ Specify the IP address (e.g. 192.168.0.10) or hostname (e.g. console or console.example.com) for stations with an ethernet interface.
 
 Template: weewx/wmr100_model
 Type: string
@@ -73,24 +109,11 @@ Default: /dev/ttyUSB0
 Description: serial port:
  Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
 
-Template: weewx/fousb_model
+Template: weewx/ws1_port
 Type: string
-Default: WS2080
-Description: weather station model:
- Specify the station model, for example WH1080, WS2080, WH3080.
-
-Template: weewx/ws28xx_model
-Type: string
-Default: LaCrosse WS-2810
-Description: weather station model:
- Specify the station model, for example TFA Primus, La Crosse C86234.
-
-Template: weewx/ws28xx_frequency
-Type: select
-Choices: US, EU
-Default: US
-Description: weather station frequency:
- Specify the frequency used between the station and the transceiver, either US (915 MHz) or EU (868.3 MHz).
+Default: /dev/ttyUSB0
+Description: serial port:
+ Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
 
 Template: weewx/ws23xx_model
 Type: string
@@ -104,38 +127,15 @@ Default: /dev/ttyUSB0
 Description: serial port:
  Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
 
-Template: weewx/te923_model
+Template: weewx/ws28xx_model
 Type: string
-Default: TE923
+Default: LaCrosse WS-2810
 Description: weather station model:
- Specify the station model, for example TFA Nexus, IROX Pro X, or Meade TE923W.
+ Specify the station model, for example TFA Primus, La Crosse C86234.
 
-Template: weewx/ultimeter_model
-Type: string
-Default: Ultimeter
-Description: weather station model:
- Specify the station model, for example Ultimeter 2000, Ultimeter 100
-
-Template: weewx/ultimeter_port
-Type: string
-Default: /dev/ttyUSB0
-Description: serial port:
- Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
-
-Template: weewx/ws1_port
-Type: string
-Default: /dev/ttyUSB0
-Description: serial port:
- Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
-
-Template: weewx/cc3000_port
-Type: string
-Default: /dev/ttyUSB0
-Description: serial port:
- Specify the serial port on which the station is connected, for example /dev/ttyUSB0 or /dev/ttyS0.
-
-Template: weewx/cc3000_model
-Type: string
-Default: RainWise
-Description: weather station model:
- Specify the station model, for example RainWise CC3000.
+Template: weewx/ws28xx_frequency
+Type: select
+Choices: US, EU
+Default: US
+Description: weather station frequency:
+ Specify the frequency used between the station and the transceiver, either US (915 MHz) or EU (868.3 MHz).

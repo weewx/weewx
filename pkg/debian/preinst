@@ -1,0 +1,25 @@
+#!/bin/sh
+# $Id: postinst 2738 2014-11-29 04:17:12Z mwall $
+# preinst script for weewx debian package
+# Copyright 2014 Matthew Wall
+
+# abort if any command returns error
+set -e
+
+# get debconf stuff so we can set configuration defaults
+. /usr/share/debconf/confmodule
+
+case "$1" in
+     install|upgrade)
+     ;;
+
+     abort-upgrade)
+     ;;
+
+     *)
+        echo "preinst called with unknown argument \`$1'" >&2
+        exit 1
+     ;;
+esac
+
+exit 0

@@ -1,23 +1,19 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Generate images for up to an effective date. 
-Needs to be refactored into smaller functions.
+Needs to be refactored into smaller functions."""
 
-"""
-
+from __future__ import with_statement
 import time
 import datetime
 import syslog
 import os.path
 
-import weedb
 import weeplot.genplot
 import weeplot.utilities
 import weeutil.weeutil
@@ -29,7 +25,7 @@ from weeutil.weeutil import to_bool, to_int
 #                    Class ImageGenerator
 #===============================================================================
 
-class ImageGenerator(weewx.reportengine.CachedReportGenerator):
+class ImageGenerator(weewx.reportengine.ReportGenerator):
     """Class for managing the image generator."""
 
     def run(self):
@@ -43,9 +39,8 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
         
         self.image_dict = self.skin_dict['ImageGenerator']
         self.title_dict = self.skin_dict.get('Labels', {}).get('Generic', {})
-        self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
         self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)
-        self.unit_helper= weewx.units.UnitInfoHelper(self.formatter, self.converter)
+        self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
         
     def genImages(self, gen_ts):
         """Generate the images.
@@ -55,7 +50,7 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
     
         gen_ts: The time around which plots are to be generated. This will also be used as
         the bottom label in the plots. [optional. Default is to use the time of the last record
-        in the archive database.]
+        in the database.]
         """
         t1 = time.time()
         ngen = 0
@@ -69,12 +64,11 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                 # Accumulate all options from parent nodes:
                 plot_options = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname])
 
-                # Get the database archive
-                archivedb = self._getArchive(plot_options['archive_database'])
-            
                 plotgen_ts = gen_ts
                 if not plotgen_ts:
-                    plotgen_ts = archivedb.lastGoodStamp()
+                    binding = plot_options['data_binding']
+                    archive = self.db_binder.get_manager(binding)
+                    plotgen_ts = archive.lastGoodStamp()
                     if not plotgen_ts:
                         plotgen_ts = time.time()
 
@@ -91,7 +85,7 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                 # Wrap in a try block in case it already exists.
                 try:
                     os.makedirs(os.path.dirname(img_file))
-                except:
+                except OSError:
                     pass
                 
                 # Create a new instance of a time plot and start adding to it
@@ -126,11 +120,39 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                     # use the section name.
                     var_type = line_options.get('data_type', line_name)
 
+                    # Look for aggregation type:
+                    aggregate_type = line_options.get('aggregate_type')
+                    if aggregate_type in (None, '', 'None', 'none'):
+                        # No aggregation specified.
+                        aggregate_type = aggregate_interval = None
+                    else :
+                        try:
+                            # Aggregation specified. Get the interval.
+                            aggregate_interval = line_options.as_int('aggregate_interval')
+                        except KeyError:
+                            syslog.syslog(syslog.LOG_ERR, "genimages: aggregate interval required for aggregate type %s" % aggregate_type)
+                            syslog.syslog(syslog.LOG_ERR, "genimages: line type %s skipped" % var_type)
+                            continue
+
+                    # Now we have everything we need to find and hit the database:
+                    binding = line_options['data_binding']
+                    archive = self.db_binder.get_manager(binding)
+                    (start_vec_t, stop_vec_t, data_vec_t) = \
+                            archive.getSqlVectors(var_type, minstamp, maxstamp, 
+                                                  aggregate_interval, aggregate_type)
+
+                    if weewx.debug:
+                        assert(len(start_vec_t) == len(stop_vec_t))
+
+                    # Do any necessary unit conversions:
+                    new_start_vec_t = self.converter.convert(start_vec_t)
+                    new_stop_vec_t  = self.converter.convert(stop_vec_t)
+                    new_data_vec_t = self.converter.convert(data_vec_t)
+
                     # Add a unit label. NB: all will get overwritten except the last.
                     # Get the label from the configuration dictionary. 
                     # TODO: Allow multiple unit labels, one for each plot line?
-                    unit_label = line_options.get('y_label',
-                                                  self.unit_helper.label.get(var_type, ''))
+                    unit_label = line_options.get('y_label', weewx.units.get_label_string(self.formatter, self.converter, var_type))
                     # Strip off any leading and trailing whitespace so it's easy to center
                     plot.setUnitLabel(unit_label.strip())
                     
@@ -150,13 +172,29 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                     
                     # Get the type of plot ("bar', 'line', or 'vector')
                     plot_type = line_options.get('plot_type', 'line')
-                    
+
+                    interval_vec = None                        
+
+                    # Some plot types require special treatments:                    
                     if plot_type == 'vector':
                         vector_rotate_str = line_options.get('vector_rotate')
                         vector_rotate = -float(vector_rotate_str) if vector_rotate_str is not None else None
                     else:
                         vector_rotate = None
-                        
+
+                        if plot_type == 'bar':
+                            gap_fraction = line_options.get('bar_gap_fraction')
+                            interval_vec = [x[1] - x[0]for x in zip(new_start_vec_t.value, new_stop_vec_t.value)]
+                        elif plot_type == 'line':
+                            gap_fraction = line_options.get('line_gap_fraction')
+                        else:
+                            gap_fraction = None
+                        if gap_fraction is not None:
+                            gap_fraction = float(gap_fraction)
+                            if not 0 < gap_fraction < 1:
+                                syslog.syslog(syslog.LOG_ERR, "genimages: gap fraction must be greater than zero and less than one. Ignored.")
+                                gap_fraction = None
+
                     # Get the type of line ('solid' or 'none' is all that's offered now)
                     line_type = line_options.get('line_type', 'solid')
                     if line_type.strip().lower() in ['', 'none']:
@@ -165,43 +203,8 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                     marker_type = line_options.get('marker_type')
                     marker_size = to_int(line_options.get('marker_size'))
                     
-                    # Look for aggregation type:
-                    aggregate_type = line_options.get('aggregate_type')
-                    if aggregate_type in (None, '', 'None', 'none'):
-                        # No aggregation specified.
-                        aggregate_type     = None
-                        # Set the aggregate interval to the nominal archive interval:
-                        aggregate_interval = self._getArchiveInterval(archivedb)
-                    else :
-                        try:
-                            # Aggregation specified. Get the interval.
-                            aggregate_interval = line_options.as_int('aggregate_interval')
-                        except KeyError:
-                            syslog.syslog(syslog.LOG_ERR, "genimages: aggregate interval required for aggregate type %s" % aggregate_type)
-                            syslog.syslog(syslog.LOG_ERR, "genimages: line type %s skipped" % var_type)
-                            continue
-
-                    # Get the fraction that defines gap size
-                    if plot_type == 'bar':
-                        gap_fraction = line_options.get('bar_gap_fraction')
-                    elif plot_type == 'line':
-                        gap_fraction = line_options.get('line_gap_fraction')
-                    else:
-                        gap_fraction = None
-                    if gap_fraction is not None:
-                        gap_fraction = float(gap_fraction)
-                        if not 0 < gap_fraction < 1:
-                            syslog.syslog(syslog.LOG_ERR, "genimages: gap fraction must be greater than zero and less than one. Ignored.")
-                            gap_fraction = None
-
-                    # Get the time and data vectors from the database:
-                    (time_vec_t, data_vec_t) = archivedb.getSqlVectorsExtended(var_type, minstamp, maxstamp, 
-                                                                               aggregate_interval, aggregate_type)
-
-                    new_time_vec_t = self.converter.convert(time_vec_t)
-                    new_data_vec_t = self.converter.convert(data_vec_t)
                     # Add the line to the emerging plot:
-                    plot.addLine(weeplot.genplot.PlotLine(new_time_vec_t[0], new_data_vec_t[0],
+                    plot.addLine(weeplot.genplot.PlotLine(new_stop_vec_t[0], new_data_vec_t[0],
                                                           label         = label, 
                                                           color         = color,
                                                           width         = width,
@@ -209,7 +212,7 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
                                                           line_type     = line_type,
                                                           marker_type   = marker_type,
                                                           marker_size   = marker_size,
-                                                          bar_width     = aggregate_interval,
+                                                          bar_width     = interval_vec,
                                                           vector_rotate = vector_rotate,
                                                           gap_fraction  = gap_fraction))
                     
@@ -222,17 +225,6 @@ class ImageGenerator(weewx.reportengine.CachedReportGenerator):
         t2 = time.time()
         
         syslog.syslog(syslog.LOG_INFO, "genimages: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
-
-
-    def _getArchiveInterval(self, archive):
-        if not hasattr(self, 'archive_interval'):
-            try:
-                _row = archive.getSql("SELECT MIN(`interval`) FROM %s" % archive.table)
-                self.archive_interval = _row[0] if _row else None
-            except weedb.OperationalError, e:
-                syslog.syslog(syslog.LOG_INFO, "genimages: cannot determine interval from %s: %s" % (archive.table, e))
-                self.archive_interval = None
-        return self.archive_interval
 
 def skipThisPlot(time_ts, aggregate_interval, img_file):
     """A plot can be skipped if it was generated recently and has not changed.

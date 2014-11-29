@@ -4,9 +4,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Test module weewx.units"""
 
@@ -145,22 +143,6 @@ class ValueHelperTest(unittest.TestCase):
         # Now try a 'None' value:
         vh = weewx.units.ValueHelper((None, "second", "group_deltatime"))
         self.assertEqual(vh.string(), "   N/A")
-        
-class ValueDictTest(unittest.TestCase):
-    
-    def testFormatting(self):
-        d_m =  {'outTemp'   : (20.01, 'degree_C', 'group_temperature'),
-                'barometer' : (1002.3, 'mbar', 'group_pressure')}
-        # Test against the default (US) converter:
-        vd = weewx.units.ValueDict(d_m)
-        self.assertEqual(str(vd['outTemp']), "68.0°F")
-        self.assertEqual(str(vd['outTemp'].degree_C), "20.0°C")
-        
-        # Test with an explicit (Metric) converter:
-        c_m = weewx.units.Converter(weewx.units.MetricUnits)
-        vd = weewx.units.ValueDict(d_m, converter=c_m)
-        self.assertEqual(str(vd['outTemp']), "20.0°C")
-        self.assertEqual(str(vd['outTemp'].degree_F), "68.0°F")
         
 if __name__ == '__main__':
     unittest.main()

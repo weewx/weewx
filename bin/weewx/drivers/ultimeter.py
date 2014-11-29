@@ -1,18 +1,8 @@
 #!/usr/bin/env python
 # $Id$
-#
 # Copyright 2014 Matthew Wall
 # Copyright 2014 Nate Bargmann <n0nb@n0nb.us>
-#
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or any later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.
-#
-# See http://www.gnu.org/licenses/
+# See the file LICENSE.txt for your full rights.
 
 """Driver for Peet Bros Ultimeter weather stations except the Ultimeter II
 
@@ -73,13 +63,18 @@ import serial
 import syslog
 import time
 
-import weewx
-import weewx.abstractstation
-import weewx.units
-import weewx.uwxutils
-import weewx.wxformulas
+import weewx.drivers
 
-DRIVER_VERSION = '0.9.5'
+DRIVER_NAME = 'Ultimeter'
+DRIVER_VERSION = '0.10'
+
+def loader(config_dict, engine):
+    return Ultimeter(**config_dict[DRIVER_NAME])
+
+def confeditor_loader():
+    return UltimeterConfEditor()
+
+
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 
@@ -106,16 +101,12 @@ def logerr(msg):
 def logcrt(msg):
     logmsg(syslog.LOG_CRIT, msg)
 
-def loader(config_dict, engine):
-    """Get the altitude, in feet, from the Station section of the dict."""
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    altitude_vt = (altitude_m, 'meter', 'group_altitude')
-    altitude_ft = weewx.units.convert(altitude_vt, 'foot')[0]
-    station = Ultimeter(altitude=altitude_ft, **config_dict['Ultimeter'])
-    return station
 
-class Ultimeter(weewx.abstractstation.AbstractStation):
-    '''weewx driver that communicates with a Peet Bros Ultimeter station
+class Ultimeter(weewx.drivers.AbstractDevice):
+    """weewx driver that communicates with a Peet Bros Ultimeter station
+
+    model: Which station model is this?
+    [Optional. Default is 'Ultimeter']
 
     port - serial port
     [Required. Default is /dev/ttyS0]
@@ -125,17 +116,13 @@ class Ultimeter(weewx.abstractstation.AbstractStation):
 
     max_tries - how often to retry serial communication before giving up
     [Optional. Default is 5]
-
-    pressure_offset - pressure calibration, mbar
-    [Optional. Default is 0]
-
-    '''
+    """
     def __init__(self, **stn_dict):
-        self.altitude = stn_dict['altitude']
+        self.model = stn_dict.get('model', 'Ultimeter')
         self.port = stn_dict.get('port', DEFAULT_PORT)
         self.polling_interval = float(stn_dict.get('polling_interval', 1))
         self.max_tries = int(stn_dict.get('max_tries', 5))
-        self.pressure_offset = float(stn_dict.get('pressure_offset', 0))
+        self.retry_wait = int(stn_dict.get('retry_wait', 10))
         self.last_rain = None
         self.last_rain_ts = None
         loginf('driver version is %s' % DRIVER_VERSION)
@@ -149,21 +136,22 @@ class Ultimeter(weewx.abstractstation.AbstractStation):
         while ntries < self.max_tries:
             ntries += 1
             try:
-                packet = {'dateTime': int(time.time()+0.5),
-                          'usUnits' : weewx.US }
+                packet = {'dateTime': int(time.time() + 0.5),
+                          'usUnits': weewx.US}
                 # open a new connection to the station for each reading
                 with Station(self.port) as station:
-                    bytes = station.get_readings()
-                data = Station.parse_readings(bytes)
+                    readings = station.get_readings()
+                data = Station.parse_readings(readings)
                 packet.update(data)
                 self._augment_packet(packet)
                 ntries = 0
                 yield packet
                 if self.polling_interval:
                     time.sleep(self.polling_interval)
-            except weewx.WeeWxIOError, e:
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
                 logerr("Failed attempt %d of %d to get LOOP data: %s" %
                        (ntries, self.max_tries, e))
+                time.sleep(self.retry_wait)
         else:
             msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
             logerr(msg)
@@ -171,35 +159,15 @@ class Ultimeter(weewx.abstractstation.AbstractStation):
 
     @property
     def hardware_name(self):
-        return Station.getName()
+        return self.model
 
     def _augment_packet(self, packet):
-        """add derived metrics to a packet"""
-        adjp = packet['barometer']
-        if self.pressure_offset is not None and adjp is not None:
-            adjp += self.pressure_offset * 0.0295333727 # convert to inHg
-        # FIXME: this is supposed to use mean temperature
-        packet['pressure'] = weewx.uwxutils.TWxUtilsUS.SeaLevelToStationPressure(adjp, self.altitude, packet['outTemp'], packet['outTemp'], packet['outHumidity'])
-        packet['altimeter'] = weewx.wxformulas.altimeter_pressure_US(
-            packet['pressure'], self.altitude, algorithm='aaNOAA')
-        packet['windchill'] = weewx.wxformulas.windchillF(
-            packet['outTemp'], packet['windSpeed'])
-        packet['heatindex'] = weewx.wxformulas.heatindexF(
-            packet['outTemp'], packet['outHumidity'])
-        packet['dewpoint'] = weewx.wxformulas.dewpointF(
-            packet['outTemp'], packet['outHumidity'])
-
         # calculate the rain
         if self.last_rain is not None:
             packet['rain'] = packet['long_term_rain'] - self.last_rain
         else:
             packet['rain'] = None
         self.last_rain = packet['long_term_rain']
-
-        # calculate the rain rate
-        packet['rainRate'] = weewx.wxformulas.calculate_rain_rate(
-            packet['rain'], packet['dateTime'], self.last_rain_ts)
-        self.last_rain_ts = packet['dateTime']
 
 class Station(object):
     def __init__(self, port):
@@ -212,12 +180,8 @@ class Station(object):
         self.open()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, _, value, traceback):
         self.close()
-
-    @staticmethod
-    def getName(self):
-        return "Ultimeter"
 
     def open(self):
         logdbg("open serial port %s" % self.port)
@@ -243,10 +207,7 @@ class Station(object):
             self.serial_port = None
 
     def read(self, nchar=1):
-        try:
-            buf = self.serial_port.read(nchar)
-        except serial.serialutil.SerialException, e:
-            raise weewx.WeeWxIOError(e)
+        buf = self.serial_port.read(nchar)
         n = len(buf)
         if n != nchar:
             if DEBUG_READ:
@@ -263,34 +224,34 @@ class Station(object):
                                      (len(data), n))
 
     def get_readings(self):
-        bytes = []
+        bites = []
         while True:
             c = self.read(1)
             if c == "\r" or c == "\n":
                 break
-            elif c == '!' and len(bytes) > 0:
+            elif c == '!' and len(bites) > 0:
                 break
             elif c == '!':
-                bytes = []
+                bites = []
             elif c == '-':
                 # Ultimeter may put hyphens in the string if a sensor
                 # is not installed.  Make the reading zero instead.
-                bytes.append('0')
+                bites.append('0')
             elif _is_hex(c) is True:
                 # Ultimeter uses hexadecimal characters for its values.
                 # Guard against garbage.
-                bytes.append(c)
+                bites.append(c)
             else:
-                bytes = []
+                bites = []
         if DEBUG_READ:
-            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in bytes]))
-        if len(bytes) != 48:
-            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(bytes))
-        return ''.join(bytes)
+            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in bites]))
+        if len(bites) != 48:
+            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(bites))
+        return ''.join(bites)
 
     @staticmethod
-    def parse_readings(bytes):
-        '''Ultimeter stations emit data in PeetBros format.  Each line has 52
+    def parse_readings(bites):
+        """Ultimeter stations emit data in PeetBros format.  Each line has 52
         characters - 2 header bytes, 48 data bytes, and a carriage return
         and line feed (new line):
 
@@ -323,19 +284,44 @@ class Station(object):
         humidity (hhhh) since there is no indoor humidty sensor installed.
         The driver will identify the hyphens and replace them with the '0'
         character.
-        '''
-        data = {}
-        data['windSpeed'] = int(bytes[0:4], 16) * 0.1  * 0.621371 # mph
-        data['windDir'] = int(bytes[6:8], 16) * 1.411764 # compass degrees
-        data['outTemp'] = int(bytes[8:12], 16) * 0.1 # degree_F
-        data['long_term_rain'] = int(bytes[12:16], 16) * 0.01 # inch
-        data['barometer'] = int(bytes[16:20], 16) * 0.1  * 0.0295333727 # inHg
-        data['inTemp'] = int(bytes[20:24], 16) * 0.1 # degree_F
-        data['outHumidity'] = int(bytes[24:28], 16) * 0.1 # percent
-        data['inHumidity'] = int(bytes[28:32], 16) * 0.1 # percent
-        data['daily_rain'] = int(bytes[40:44], 16) * 0.01 # inch
-        data['wind_average'] = int(bytes[44:48], 16) * 0.1 * 0.621371 # mph
+        """
+        data = dict()
+        data['windSpeed'] = int(bites[0:4], 16) * 0.1 * 0.621371  # mph
+        data['windDir'] = int(bites[6:8], 16) * 1.411764  # compass degrees
+        data['outTemp'] = int(bites[8:12], 16) * 0.1  # degree_F
+        data['long_term_rain'] = int(bites[12:16], 16) * 0.01  # inch
+        data['barometer'] = int(bites[16:20], 16) * 0.1 * 0.0295333727  # inHg
+        data['inTemp'] = int(bites[20:24], 16) * 0.1  # degree_F
+        data['outHumidity'] = int(bites[24:28], 16) * 0.1  # percent
+        data['inHumidity'] = int(bites[28:32], 16) * 0.1  # percent
+        data['daily_rain'] = int(bites[40:44], 16) * 0.01  # inch
+        data['wind_average'] = int(bites[44:48], 16) * 0.1 * 0.621371  # mph
         return data
+
+
+class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def default_stanza(self):
+        return """
+[Ultimeter]
+    # This section is for the PeetBros Ultimeter series of weather stations.
+
+    # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
+    port = /dev/ttyUSB0
+
+    # The station model, e.g., Ultimeter 2000, Ultimeter 100
+    model = Ultimeter
+
+    # The driver to use:
+    driver = weewx.drivers.ultimeter
+"""
+
+    def prompt_for_settings(self):
+        print "Specify the serial port on which the station is connected, for"
+        print "example /dev/ttyUSB0 or /dev/ttyS0."
+        port = self._prompt('port', '/dev/ttyUSB0')
+        return {'port': port}
+
 
 # define a main entry point for basic testing of the station without weewx
 # engine and service overhead.  invoke this as follows from the weewx root dir:
@@ -347,23 +333,19 @@ if __name__ == '__main__':
 
     usage = """%prog [options] [--help]"""
 
-    def main():
-        syslog.openlog('ultimeter', syslog.LOG_PID | syslog.LOG_CONS)
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        parser = optparse.OptionParser(usage=usage)
-        parser.add_option('--version', dest='version', action='store_true',
-                          help='display driver version')
-        parser.add_option('--port', dest='port', metavar='PORT',
-                          help='serial port to which the station is connected',
-                          default=DEFAULT_PORT)
-        (options, args) = parser.parse_args()
+    syslog.openlog('ultimeter', syslog.LOG_PID | syslog.LOG_CONS)
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('--version', dest='version', action='store_true',
+                      help='display driver version')
+    parser.add_option('--port', dest='port', metavar='PORT',
+                      help='serial port to which the station is connected',
+                      default=DEFAULT_PORT)
+    (options, args) = parser.parse_args()
 
-        if options.version:
-            print "ultimeter driver version %s" % DRIVER_VERSION
-            exit(0)
+    if options.version:
+        print "ultimeter driver version %s" % DRIVER_VERSION
+        exit(0)
 
-        with Station(options.port) as s:
-            print s.get_readings()
-
-if __name__ == '__main__':
-    main()
+    with Station(options.port) as s:
+        print s.get_readings()

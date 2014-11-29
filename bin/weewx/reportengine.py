@@ -1,14 +1,13 @@
 #
-#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Engine for generating reports"""
 
+# System imports:
 import ftplib
 import glob
 import os.path
@@ -20,12 +19,17 @@ import threading
 import time
 import traceback
 
+# 3rd party imports:
 import configobj
 
+# Weewx imports:
 import weeutil.weeutil
-import weewx.archive
-import weewx.stats
 from weeutil.weeutil import to_bool
+import weewx.manager
+
+#===============================================================================
+#                    Class StdReportEngine
+#===============================================================================
 
 class StdReportEngine(threading.Thread):
     """Reporting engine for weewx.
@@ -62,20 +66,16 @@ class StdReportEngine(threading.Thread):
         self.gen_ts      = gen_ts
         self.first_run   = first_run
         
-    def setup(self):
-        if self.gen_ts:
-            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for time %s" % 
-                          weeutil.weeutil.timestamp_to_string(self.gen_ts))
-        else:
-            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for latest time in the database.")
-        
-    
     def run(self):
         """This is where the actual work gets done.
         
         Runs through the list of reports. """
         
-        self.setup()
+        if self.gen_ts:
+            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for time %s" % 
+                          weeutil.weeutil.timestamp_to_string(self.gen_ts))
+        else:
+            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for latest time in the database.")
 
         # Iterate over each requested report
         for report in self.config_dict['StdReport'].sections:
@@ -92,7 +92,8 @@ class StdReportEngine(threading.Thread):
             # a try block in case we fail
             try :
                 skin_dict = configobj.ConfigObj(skin_config_path, file_error=True)
-                syslog.syslog(syslog.LOG_DEBUG, "reportengine: Found configuration file %s for report %s" % (skin_config_path, report))
+                syslog.syslog(syslog.LOG_DEBUG, "reportengine: Found configuration file %s for report %s" %
+                              (skin_config_path, report))
             except IOError, e:
                 syslog.syslog(syslog.LOG_ERR, "reportengine: Cannot read skin configuration file %s for report %s: %s" % (skin_config_path, report, e))
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
@@ -102,9 +103,8 @@ class StdReportEngine(threading.Thread):
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
                 continue
 
-            # Add the default archive and stats databases:
-            skin_dict['archive_database'] = self.config_dict['StdArchive']['archive_database']
-            skin_dict['stats_database']   = self.config_dict['StdArchive']['stats_database']
+            # Add the default database binding:
+            skin_dict.setdefault('data_binding', 'wx_binding')
 
             # Inject any overrides the user may have specified in the
             # weewx.conf configuration file for all reports:
@@ -129,7 +129,9 @@ class StdReportEngine(threading.Thread):
                 except Exception, e:
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                    weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
+                    traceback.print_exc()
                     continue
     
                 try:
@@ -137,15 +139,20 @@ class StdReportEngine(threading.Thread):
                     obj.start()
                     
                 except Exception, e:
-                    # Caught unrecoverable error. Log it, exit
+                    # Caught unrecoverable error. Log it, continue on to the next generator.
                     syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % (generator,))
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % str(e))
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated...")
                     traceback.print_exc()
+                    continue
                     
                 finally:
                     obj.finalize()
+        
+#===============================================================================
+#                    Class ReportGenerator
+#===============================================================================
 
 
 class ReportGenerator(object):
@@ -156,6 +163,8 @@ class ReportGenerator(object):
         self.gen_ts      = gen_ts
         self.first_run   = first_run
         self.stn_info    = stn_info
+        self.db_binder   = weewx.manager.DBBinder(self.config_dict['DataBindings'],
+                                                  self.config_dict['Databases'])
         
     def start(self):
         self.run()
@@ -164,7 +173,11 @@ class ReportGenerator(object):
         pass
     
     def finalize(self):
-        pass
+        self.db_binder.close()
+
+#===============================================================================
+#                    Class FtpGenerator
+#===============================================================================
 
 class FtpGenerator(ReportGenerator):
     """Class for managing the "FTP generator".
@@ -201,12 +214,17 @@ class FtpGenerator(ReportGenerator):
         except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError), e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
             syslog.syslog(syslog.LOG_ERR, "reportengine: Caught exception %s in FtpGenerator; %s." % (cl, e))
+            weeutil.weeutil.log_traceback("        ****  ")
             return
         
         t2= time.time()
         syslog.syslog(syslog.LOG_INFO, """reportengine: ftp'd %d files in %0.2f seconds""" % (N, (t2-t1)))
             
                 
+#===============================================================================
+#                    Class RsynchGenerator
+#===============================================================================
+
 class RsyncGenerator(ReportGenerator):
     """Class for managing the "rsync generator".
     
@@ -225,8 +243,8 @@ class RsyncGenerator(ReportGenerator):
                 local_root  = os.path.join(self.config_dict['WEEWX_ROOT'], html_root),
                 remote_root = self.skin_dict['path'],
                 server      = self.skin_dict['server'],
-                user        = self.skin_dict.get('user', None),
-                port        = self.skin_dict.get('port', None),
+                user        = self.skin_dict.get('user'),
+                port        = self.skin_dict.get('port'),
                 delete      = to_bool(self.skin_dict.get('delete', False)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: rsync upload not requested. Skipped.")
@@ -239,6 +257,10 @@ class RsyncGenerator(ReportGenerator):
             syslog.syslog(syslog.LOG_ERR, "reportengine: Caught exception %s in RsyncGenerator; %s." % (cl, e))
             
                 
+#===============================================================================
+#                    Class CopyGenerator
+#===============================================================================
+
 class CopyGenerator(ReportGenerator):
     """Class for managing the 'copy generator.'
     
@@ -293,50 +315,3 @@ class CopyGenerator(ReportGenerator):
                 ncopy += 1
         
         syslog.syslog(syslog.LOG_DEBUG, "reportengine: copied %d files to %s" % (ncopy, html_dest_dir))
-        
-
-class CachedReportGenerator(ReportGenerator):
-    """Report generator that can cache archive and stats database connections."""
-    
-    def start(self):
-        self._initArchiveCache()
-        self._initStatsCache()
-        self.run()
-    
-    def finalize(self):
-        self._closeStatsCache()
-        self._closeArchiveCache()
-
-    def _initArchiveCache(self):
-        self.archive_cache = {}
-        
-    def _closeArchiveCache(self):
-        for archive_name in self.archive_cache.keys():
-            try:
-                self.archive_cache[archive_name].close()
-                del self.archive_cache[archive_name]
-            except Exception:
-                pass
-            
-    def _getArchive(self, archive_name):
-        if archive_name not in self.archive_cache:
-            archive_dict = self.config_dict['Databases'][archive_name]
-            self.archive_cache[archive_name] = weewx.archive.Archive.open(archive_dict)
-        return self.archive_cache[archive_name]
-        
-    def _initStatsCache(self):
-        self.stats_cache = {}
-        
-    def _closeStatsCache(self):
-        for stats_name in self.stats_cache.keys():
-            try:
-                self.stats_cache[stats_name].close()
-                del self.stats_cache[stats_name]
-            except Exception:
-                pass
-            
-    def _getStats(self, stats_name):
-        if stats_name not in self.stats_cache:
-            stats_dict = self.config_dict['Databases'][stats_name]
-            self.stats_cache[stats_name] = weewx.stats.StatsDb.open(stats_dict)
-        return self.stats_cache[stats_name]

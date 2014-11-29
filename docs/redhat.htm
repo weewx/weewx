@@ -4,7 +4,7 @@
   <head>
     <meta content="en-us" http-equiv="Content-Language" />
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-    <title>Installation on Redhat Linux</title>
+    <title>Installation on Redhat systems</title>
     <link href="css/weewx_docs.css" rel="stylesheet" />
     <style type="text/css">
 .os-icons {
@@ -20,14 +20,87 @@
     </style>
   </head>
   <body>
-    <h1 class="title">weewx: Installation on Redhat Linux</h1>
+    <h1 class="title">weewx: Installation on Redhat-based systems</h1>
     <p class='os-icons'>      
-      <img class='logo' src='logo-redhat.png'/>
-      <img class='logo' src='logo-centos.png'/>
-      <img class='logo' src='logo-fedora.png'/>
+      <img class='logo' src='images/logo-redhat.png'/>
+      <img class='logo' src='images/logo-centos.png'/>
+      <img class='logo' src='images/logo-fedora.png'/>
     </p>
     <p>
-      This is a guide to install <span class='code'>weewx</span> from RPM package on systems such as Redhat, CentOS or Fedora.</p>
+      This is a guide to installing <span class='code'>weewx</span>
+      from an RPM package on systems such as Redhat, CentOS or Fedora.</p>
+
+    <h2>Download</h2>
+    <p>
+      Download the package <span class='code'>weewx-X.Y.Z-R.rpm</span> from <a href="http://sourceforge.net/projects/weewx/files">Sourceforge</a>.
+    </p>
+
+    <h2>Install</h2>
+    <p>
+      Install pre-requisites:
+    </p>
+    <p class='tty'>sudo yum install python-configobj
+      sudo yum install python-cheetah
+      sudo yum install python-imaging
+      sudo yum install python-setuptools
+      sudo easy_install pyserial
+      sudo easy_install pyusb
+    </p>
+    <p>
+      Install by double-clicking the .rpm file, or via command line:
+    </p>
+    <p class='tty'>sudo rpm -i weewx-X.Y.Z-R.rpm</p>
+    <p>
+      If you see errors about untrusted signature, or MISSING KEYS, you can
+      either install the <a href="http://weewx.com/keys.html">weewx GPG keys</a>:
+    </p>
+    <p class='tty'>sudo rpm --import http://weewx.com/keys.html</p>
+    <p>or tell rpm to ignore the signature:</p>
+    <p class='tty'>sudo rpm -i --nosignature weewx-X.Y.Z-R.rpm</p>
+
+    <h2>Verify</h2>
+    <p>
+      After 5 minutes, open the station web page in a web browser.  You should see generic station information and data.
+    </p>
+    <p class='tty'><a href="file:///var/www/html/weewx/index.html">file:///var/www/html/weewx/index.html</a></p>
+
+    <h2>Status</h2>
+    <p>
+      Look in the system log for messages from <span class='code'>weewx</span>.
+    </p>
+    <p class='tty'>sudo tail -f /var/log/messages</p>
+
+    <h2>Configure</h2>
+    <p>
+      The default installation uses Simulator as the <span class='code'>station_type</span>.  To use real hardware, stop <span class='code'>weewx</span>, change to the actual station type and station parameters, delete the simulation data, then restart <span class='code'>weewx</span>:</p>
+    <p class='tty'>sudo /etc/init.d/weewx stop
+sudo rm /var/lib/weewx/weewx.sdb
+sudo wee_setup configure
+sudo /etc/init.d/weewx start</p>
+
+    <h2>Start/Stop</h2>
+    <p>To start/stop <span class='code'>weewx</span>:</p>
+    <p class='tty'>sudo /etc/init.d/weewx start
+      sudo /etc/init.d/weewx stop
+    </p>
+
+    <h2>Customize</h2>
+    <p>
+      To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span class='code'>/etc/weewx/weewx.conf</span>.  See the <a href="usersguide.htm">User Guide</a> and <a href="customizing.htm">Customization Guide</a> for details.
+    </p>
+    <p>
+      <span class='code'>weewx</span> must be restarted for configuration file
+      changes to take effect.
+    </p>
+
+    <h2>Uninstall</h2>
+    <p>To uninstall <span class='code'>weewx</span>, removing configuration files but retaining data:</p>
+    <p class='tty'>sudo rpm -e weewx</p>
+    <p>To remove data:</p>
+    <p class='tty'>sudo rm -r /var/lib/weewx
+sudo rm -r /var/www/html/weewx</p>
+
+    <h2>Layout</h2>
     <p>The installation will result in the following layout:</p>
     <table class='locations' style="width:40%; font-size: 90%">
       <tr>
@@ -55,87 +128,6 @@
         <td class='tty'>/usr/share/doc/weewx-x.y.z/</td>
       </tr>
     </table>
-
-    <h3>Download</h3>
-    <p>
-      Download the package <span class='code'>weewx-X.Y.Z-R.rpm</span> from <a href="http://sourceforge.net/projects/weewx/files">Sourceforge</a>.
-    </p>
-
-    <h3>Install</h3>
-    <p>
-      Install pre-requisites:
-    </p>
-    <p class='tty'>sudo yum install python-configobj
-      sudo yum install python-cheetah
-      sudo yum install python-imaging
-      sudo yum install python-setuptools
-      sudo easy_install pyserial
-      sudo easy_install pyusb
-    </p>
-    <p>
-      Install by double-clicking the .rpm file, or via command line:
-    </p>
-    <p class='tty'>sudo rpm -i weewx-X.Y.Z-R.rpm</p>
-    <p>
-      If you see errors about untrusted signature, or MISSING KEYS, you can
-      either install the <a href="http://weewx.com/keys.html">weewx GPG keys</a>:
-    </p>
-    <p class='tty'>sudo rpm --import http://weewx.com/keys.html</p>
-    <p>or tell rpm to ignore the signature:</p>
-    <p class='tty'>sudo rpm -i --nosignature weewx-X.Y.Z-R.rpm</p>
-
-    <h3>Verify</h3>
-    <p>
-      After 5 minutes, open the station web page in a web browser.  You should see generic station information and data.
-    </p>
-    <p class='tty'><a href="file:///var/www/html/weewx/index.html">file:///var/www/html/weewx/index.html</a></p>
-
-    <h3>Status</h3>
-    <p>
-      Look in the system log for messages from <span class='code'>weewx</span>.
-    </p>
-    <p class='tty'>sudo tail -f /var/log/messages</p>
-
-    <h3>Configure</h3>
-    <p>
-      The default installation uses Simulator as the <span class='code'>station_type</span>.  This should be changed to the actual weather station type.  Edit the configuration file <span class='code'>/etc/weewx/weewx.conf</span>.  Set at least the following:
-    </p>
-      <ul>
-        <li>location</li>
-        <li>latitude</li>
-        <li>longitude</li>
-        <li>altitude</li>
-        <li>station_type</li>
-      </ul>
-    <p>
-      Also set any parameters specific to the station, such as the <span class='code'>port</span> for stations connected via serial port.
-    </p>
-    <p>
-      <span class='code'>weewx</span> must be restarted for configuration file
-      changes to take effect.
-    </p>
-
-    <h3>Start/Stop</h3>
-    <p>To start/stop <span class='code'>weewx</span>:</p>
-    <p class='tty'>sudo /etc/init.d/weewx start
-      sudo /etc/init.d/weewx stop
-    </p>
-
-    <h3>Customize</h3>
-    <p>
-      To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span class='code'>/etc/weewx/weewx.conf</span>.  See the <a href="usersguide.htm">User Guide</a> and <a href="customizing.htm">Customization Guide</a> for details.
-    </p>
-    <p>
-      <span class='code'>weewx</span> must be restarted for configuration file
-      changes to take effect.
-    </p>
-
-    <h3>Uninstall</h3>
-    <p>To uninstall <span class='code'>weewx</span>, removing configuration files but retaining data:</p>
-    <p class='tty'>sudo rpm -e weewx</p>
-    <p>To remove data:</p>
-    <p class='tty'>sudo rm -r /var/lib/weewx
-sudo rm -r /var/www/html/weewx</p>
 
     <p class='copyright'>
       &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer

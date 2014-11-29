@@ -52,8 +52,8 @@ BuildRequires: python, python-configobj
 
 %description
 weewx interacts with a weather station to produce graphs, reports, and HTML
-pages. weewx can upload data to the WeatherUnderground, PWSweather.com, or
-CWOP.
+pages. weewx can upload data to weather services such as WeatherUnderground,
+PWSweather.com, or CWOP.
 
 %prep
 %setup -q
@@ -91,12 +91,10 @@ rm %{buildroot}%{dst_cfg_dir}/skins/Standard/backgrounds/night.gif
 
 # patch paths in files we care about
 cat weewx.conf | sed \
- -e 's%station_type =.*%station_type = Simulator%' \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's%HTML_ROOT =.*%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%archive/weewx.sdb%/var/lib/weewx/weewx.sdb%' \
- -e 's%archive/stats.sdb%/var/lib/weewx/stats.sdb%' \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
 cat util/init.d/weewx.%{platform} | sed \
  -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
@@ -109,12 +107,7 @@ ln -s ../share/weewx/setup.py %{buildroot}%{_bindir}/wee_setup
 ln -s ../share/weewx/weewxd %{buildroot}%{_bindir}/weewxd
 ln -s ../share/weewx/wee_reports %{buildroot}%{_bindir}/wee_reports
 ln -s ../share/weewx/wee_config_database %{buildroot}%{_bindir}/wee_config_database
-ln -s ../share/weewx/wee_config_cc3000 %{buildroot}%{_bindir}/wee_config_cc3000
-ln -s ../share/weewx/wee_config_fousb %{buildroot}%{_bindir}/wee_config_fousb
-ln -s ../share/weewx/wee_config_te923 %{buildroot}%{_bindir}/wee_config_te923
-ln -s ../share/weewx/wee_config_vantage %{buildroot}%{_bindir}/wee_config_vantage
-ln -s ../share/weewx/wee_config_ws23xx %{buildroot}%{_bindir}/wee_config_ws23xx
-ln -s ../share/weewx/wee_config_ws28xx %{buildroot}%{_bindir}/wee_config_ws28xx
+ln -s ../share/weewx/wee_config_device %{buildroot}%{_bindir}/wee_config_device
 
 # pre-compile the python code
 python -m compileall %{buildroot}%{dst_bin_dir}
@@ -123,6 +116,7 @@ python -m compileall %{buildroot}%{dst_bin_dir}
 python -m compileall %{dst_bin_dir}
 if [ "$1" = "1" ]; then
   # this is a new installation
+  /usr/share/weewx/setup.py configure --config=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --quiet
   chkconfig weewx on
   %{initdir}/weewx start
 elif [ "$1" = "2" ]; then
@@ -162,12 +156,7 @@ rm -rf %{buildroot}
 %{_bindir}/wee_setup
 %{_bindir}/wee_reports
 %{_bindir}/wee_config_database
-%{_bindir}/wee_config_cc3000
-%{_bindir}/wee_config_fousb
-%{_bindir}/wee_config_te923
-%{_bindir}/wee_config_vantage
-%{_bindir}/wee_config_ws23xx
-%{_bindir}/wee_config_ws28xx
+%{_bindir}/wee_config_device
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
 %changelog

@@ -3,9 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Various handy utilities that don't belong anywhere else."""
 
@@ -19,8 +17,6 @@ import syslog
 import time
 import traceback
 
-import configobj
-
 import Sun
 
 def convertToFloat(seq):
@@ -30,7 +26,44 @@ def convertToFloat(seq):
     res = [None if s in ('None', 'none') else float(s) for s in seq]
     return res
 
-def accumulateLeaves(d):
+def search_up(d, k, *default):
+    """Search a ConfigObj dictionary for a key. If it's not found, try my parent, and so on
+    to the root.
+    
+    d: An instance of configobj.Section
+    
+    k: A key to be searched for. If not found in d, it's parent will be searched
+    
+    default: If the key is not found, then the default is returned. If no default is given,
+    then an AttributeError exception is raised.
+    
+    Example: 
+    
+    >>> import configobj
+    >>> c = configobj.ConfigObj({"color":"blue", "size":10, "dayimage":{"color":"red"}});
+    >>> print search_up(c['dayimage'], 'size')
+    10
+    >>> print search_up(c, 'color')
+    blue
+    >>> print search_up(c['dayimage'], 'color')
+    red
+    >>> print search_up(c['dayimage'], 'flavor', 'salty')
+    salty
+    >>> print search_up(c['dayimage'], 'flavor')
+    Traceback (most recent call last):
+    AttributeError: flavor
+    """
+    if k in d:
+        return d[k]
+    if d.parent is d:
+        if len(default):
+            return default[0]
+        else:
+            raise AttributeError(k)
+    else:
+        return search_up(d.parent, k, *default)
+    
+def accumulateLeaves(d, max_level=99):
     """Merges leaf options above a ConfigObj section with itself, accumulating the results.
     
     This routine is useful for specifying defaults near the root node, 
@@ -40,18 +73,30 @@ def accumulateLeaves(d):
     
     Example: Supply a default color=blue, size=10. The section "dayimage" overrides the former:
     
-    >>> c = configobj.ConfigObj({"color":"blue", "size":10, "dayimage":{"color":"red"}});
+    >>> import configobj
+    >>> c = configobj.ConfigObj({"color":"blue", "size":10, "dayimage":{"color":"red", "position":{"x":20, "y":30}}});
     >>> print accumulateLeaves(c["dayimage"])
     {'color': 'red', 'size': 10}
+    >>> print accumulateLeaves(c["dayimage"], max_level=0)
+    {'color': 'red'}
+    >>> print accumulateLeaves(c["dayimage"]["position"])
+    {'color': 'red', 'size': 10, 'y': 30, 'x': 20}
+    >>> print accumulateLeaves(c["dayimage"]["position"], max_level=1)
+    {'color': 'red', 'y': 30, 'x': 20}
     """
     
+    import configobj
+
     # Use recursion. If I am the root object, then there is nothing above 
     # me to accumulate. Start with a virgin ConfigObj
     if d.parent is d :
         cum_dict = configobj.ConfigObj()
-    else :
-        # Otherwise, recursively accumulate scalars above me
-        cum_dict = accumulateLeaves(d.parent)
+    else:
+        if max_level:
+            # Otherwise, recursively accumulate scalars above me
+            cum_dict = accumulateLeaves(d.parent, max_level-1)
+        else:
+            cum_dict = configobj.ConfigObj()
         
     # Now merge my scalars into the results:
     merge_dict = {}
@@ -170,6 +215,8 @@ def startOfInterval(time_ts, interval):
     >>> start_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> time.ctime(startOfInterval(start_ts,  300))
     'Thu Jul  4 01:55:00 2013'
+    >>> time.ctime(startOfInterval(start_ts,  300.0))
+    'Thu Jul  4 01:55:00 2013'
     >>> time.ctime(startOfInterval(start_ts,  600))
     'Thu Jul  4 01:50:00 2013'
     >>> time.ctime(startOfInterval(start_ts,  900))
@@ -198,11 +245,11 @@ def startOfInterval(time_ts, interval):
     'Thu Jul  4 07:51:00 2013'
     """
 
-    interval_m = interval/60
-    interval_h = interval/3600
+    interval_m = int(interval // 60)
+    interval_h = int(interval // 3600)
     time_tt = time.localtime(time_ts)
-    m = time_tt.tm_min  // interval_m * interval_m
-    h = time_tt.tm_hour // interval_h * interval_h if interval_h > 1 else time_tt.tm_hour
+    m = int(time_tt.tm_min  // interval_m * interval_m)
+    h = int(time_tt.tm_hour // interval_h * interval_h) if interval_h > 1 else time_tt.tm_hour
 
     # Replace the hour, minute, and seconds with the start of the interval.
     # Everything else gets retained:
@@ -235,7 +282,7 @@ class TimeSpan(tuple):
     
     def __new__(cls, *args):
         if args[0] > args[1]:
-            raise ValueError, "start time (%d) is greater than stop time (%d)" % (args[0], args[1]) 
+            raise ValueError("start time (%d) is greater than stop time (%d)" % (args[0], args[1])) 
         return tuple.__new__(cls, args)
 
     @property
@@ -306,6 +353,24 @@ def intervalgen(start_ts, stop_ts, interval):
     (Note how in this example the local time boundaries are constant, despite
     DST kicking in. The interval length is not constant.)
     
+    Another example, this one over the Fall DST boundary, and using 1 hour intervals:
+
+    >>> startstamp = 1257051600
+    >>> print timestamp_to_string(startstamp)
+    2009-10-31 22:00:00 PDT (1257051600)
+    >>> stopstamp = 1257080400
+    >>> print timestamp_to_string(stopstamp)
+    2009-11-01 05:00:00 PST (1257080400)
+    >>> for span in intervalgen(startstamp, stopstamp, 3600):
+    ...    print span
+    [2009-10-31 22:00:00 PDT (1257051600) -> 2009-10-31 23:00:00 PDT (1257055200)]
+    [2009-10-31 23:00:00 PDT (1257055200) -> 2009-11-01 00:00:00 PDT (1257058800)]
+    [2009-11-01 00:00:00 PDT (1257058800) -> 2009-11-01 01:00:00 PDT (1257062400)]
+    [2009-11-01 01:00:00 PDT (1257062400) -> 2009-11-01 02:00:00 PST (1257069600)]
+    [2009-11-01 02:00:00 PST (1257069600) -> 2009-11-01 03:00:00 PST (1257073200)]
+    [2009-11-01 03:00:00 PST (1257073200) -> 2009-11-01 04:00:00 PST (1257076800)]
+    [2009-11-01 04:00:00 PST (1257076800) -> 2009-11-01 05:00:00 PST (1257080400)]
+    
     start_ts: The start of the first interval in unix epoch time. In unix epoch time.
     
     stop_ts: The end of the last interval will be equal to or less than this.
@@ -350,6 +415,66 @@ def intervalgen(start_ts, stop_ts, interval):
                 last_stamp1 = stamp1
             dt1 = dt2
 
+def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
+    """Returns a TimeSpan for x hours ago
+    
+    Example:
+    >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+    >>> print archiveHoursAgoSpan(time_ts, hours_ago=0)
+    [2013-07-04 01:00:00 PDT (1372924800) -> 2013-07-04 02:00:00 PDT (1372928400)]
+    >>> print archiveHoursAgoSpan(time_ts, hours_ago=2)
+    [2013-07-03 23:00:00 PDT (1372917600) -> 2013-07-04 00:00:00 PDT (1372921200)]
+    >>> time_ts = time.mktime(datetime.date(2013,07,04).timetuple())
+    >>> print archiveHoursAgoSpan(time_ts, hours_ago=0)
+    [2013-07-03 23:00:00 PDT (1372917600) -> 2013-07-04 00:00:00 PDT (1372921200)]
+    >>> print archiveHoursAgoSpan(time_ts, hours_ago=24)
+    [2013-07-02 23:00:00 PDT (1372831200) -> 2013-07-03 00:00:00 PDT (1372834800)]
+    """
+    if time_ts is None:
+        return None
+    time_ts -= grace
+    dt = datetime.datetime.fromtimestamp(time_ts)
+    hour_start_dt = dt.replace(minute=0, second=0, microsecond=0)
+    start_span_dt = hour_start_dt - datetime.timedelta(hours=hours_ago)
+    stop_span_dt = start_span_dt + datetime.timedelta(hours=1)
+
+    return TimeSpan(time.mktime(start_span_dt.timetuple()), 
+                    time.mktime(stop_span_dt.timetuple()))
+    
+def isMidnight(time_ts):
+    """Is the indicated time on a midnight boundary, local time?
+    
+    Example:
+    >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+    >>> print isMidnight(time_ts)
+    False
+    >>> time_ts = time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))
+    >>> print isMidnight(time_ts)
+    True
+    """
+    
+    time_tt = time.localtime(time_ts)
+    return time_tt.tm_hour==0 and time_tt.tm_min==0 and time_tt.tm_sec==0
+    
+def archiveDaysAgoSpan(time_ts, days_ago=0, grace=1):
+    """Returns a TimeSpan for x days ago
+    
+    Example:
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+    >>> print archiveDaysAgoSpan(time_ts, days_ago=2)
+    [2013-07-02 00:00:00 PDT (1372748400) -> 2013-07-03 00:00:00 PDT (1372834800)]
+    >>> time_ts = time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))
+    >>> print archiveDaysAgoSpan(time_ts, days_ago=2)
+    [2013-07-01 00:00:00 PDT (1372662000) -> 2013-07-02 00:00:00 PDT (1372748400)]
+    """
+    if time_ts is None:
+        return None
+    time_ts -= grace
+    _day_date = datetime.date.fromtimestamp(time_ts)
+    _day_ord = _day_date.toordinal()
+    return TimeSpan(_ord_to_ts(_day_ord - days_ago), _ord_to_ts(_day_ord - days_ago + 1))
+
 def archiveDaySpan(time_ts, grace=1):
     """Returns a TimeSpan representing a day that includes a given time.
     
@@ -371,12 +496,7 @@ def archiveDaySpan(time_ts, grace=1):
     returns: A TimeSpan object one day long that contains time_ts. It
     will begin and end at midnight.
     """
-    if time_ts is None:
-        return None
-    time_ts -= grace
-    _day_date = datetime.date.fromtimestamp(time_ts)
-    _day_ord = _day_date.toordinal()
-    return TimeSpan(_ord_to_ts(_day_ord), _ord_to_ts(_day_ord + 1))
+    return archiveDaysAgoSpan(time_ts, days_ago=0, grace=grace)
 
 def archiveWeekSpan(time_ts, startOfWeek=6, grace=1):
     """Returns a TimeSpan representing a week that includes a given time.
@@ -713,25 +833,6 @@ def timestamp_to_gmtime(ts):
     else:
         return "******* N/A *******     (    N/A   )"
         
-    
-def utcdatetime_to_timestamp(dt):
-    """Convert from a datetime object holding a UTC time, to a unix timestamp.
-    
-    dt: An instance of datetime.datetime holding the time in UTC.
-    
-    Returns: A timestamp
-    
-    Example (using 17-Jan-2011 19:21:05 UTC):
-    
-        >>> dt_utc = datetime.datetime(2011, 1, 17, 19, 21, 5)
-        >>> ts = utcdatetime_to_timestamp(dt_utc)
-        >>> print "%s UTC (unix epoch time %.1f)" % (time.asctime(time.gmtime(ts)), ts)
-        Mon Jan 17 19:21:05 2011 UTC (unix epoch time 1295292065.0)
-    """
-    # Amazingly, Python offers no easy way to do this. Here's the best
-    # hack I can some up with:
-    return time.mktime(dt.utctimetuple()) - time.timezone
-
 def utc_to_local_tt(y, m, d,  hrs_utc):
     """Converts from a UTC time to a local time.
     
@@ -920,6 +1021,26 @@ def to_float(x):
         x = None
     return float(x) if x is not None else None
 
+def min_with_none(x_seq):
+    """Find the minimum in a (possibly empty) sequence, ignoring Nones"""
+    xmin = None
+    for x in x_seq:
+        if xmin is None:
+            xmin = x
+        elif x is not None:
+            xmin = min(x, xmin)
+    return xmin
+
+def max_with_none(x_seq):
+    """Find the maximum in a (possibly empty) sequence, ignoring Nones"""
+    xmax = None
+    for x in x_seq:
+        if xmax is None:
+            xmax = x
+        elif x is not None:
+            xmax = max(x, xmax)
+    return xmax
+        
 def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
     """Read the specified configuration file, return a dictionary of the
     file contents. If no file is specified, look in the standard locations
@@ -941,7 +1062,7 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
 
     return: filename, dictionary
     """
-
+    import configobj
     locations = ['/etc/weewx', '/home/weewx']
 
     # Figure out the config file
@@ -990,11 +1111,62 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
 
     return config_fn, config_dict
 
+class ListOfDicts(dict):
+    """A list of dictionaries, that are searched in order.
+    
+    It assumes only that any inserted dictionaries support a keyed
+    lookup using the syntax obj[key].
+    
+    Example:
+
+    # Try an empty dictionary:
+    >>> lod = ListOfDicts()
+    >>> print lod['b']
+    Traceback (most recent call last):
+    KeyError: 'b'
+    >>> # Now initialize it with a starting dictionary:
+    >>> lod = ListOfDicts({'a':1, 'b':2, 'c':3})
+    >>> print lod['b']
+    2
+    >>> # Look for a non-existent key
+    >>> print lod['d']
+    Traceback (most recent call last):
+    KeyError: 'd'
+    >>> # Now extend the dictionary:
+    >>> lod.extend({'d':4, 'e':5})
+    >>> # And try the lookup:
+    >>> print lod['d']
+    4
+    >>> # Explicitly add a new key to the dictionary:
+    >>> lod['f'] = 6
+    >>> # Try it:
+    >>> print lod['f']
+    6
+    """
+    def __init__(self, starting_dict=None):
+        if starting_dict:
+            super(ListOfDicts,self).__init__(starting_dict)
+        self.dict_list = []
+
+    def __getitem__(self, key):
+        for this_dict in self.dict_list:
+            try:
+                return this_dict[key]
+            except KeyError:
+                pass
+        return dict.__getitem__(self, key)
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def extend(self, new_dict):
+        self.dict_list.append(new_dict)
+
 if __name__ == '__main__':
     import doctest
 
-    start_ts = time.mktime(time.strptime("2013-07-04 01:00:00", "%Y-%m-%d %H:%M:%S"))
-    print time.ctime(startOfInterval(start_ts,  300))
-
     if not doctest.testmod().failed:
-        print "PASSED"
+        print("PASSED")

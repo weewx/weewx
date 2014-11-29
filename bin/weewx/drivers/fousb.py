@@ -1,17 +1,6 @@
-# FineOffset module for weewx
 # $Id$
-#
 # Copyright 2012 Matthew Wall
-#
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or any later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.
-#
-# See http://www.gnu.org/licenses/
+# See the file LICENSE.txt for your full rights.
 #
 # Thanks to Jim Easterbrook for pywws.  This implementation includes
 # significant portions that were copied directly from pywws.
@@ -45,6 +34,13 @@
 # cases, data collection continues with no problem.  for example, a brand new
 # WS2080A console reports 44 bf as its magic number, but performs just fine.
 # --mwall 02oct2013
+#
+# fine offset documentation indicates that set_clock should work, but so far
+# it has not worked on any ambient weather WS2080 or WS1090 station i have
+# tried.  it looks like the station clock is set, but at some point the fixed
+# block reverts to the previous clock value.  also unclear is the behavior
+# when the station attempts to sync with radio clock signal from sensor.
+# -- mwall 14feb2013
 
 """Classes and functions for interfacing with FineOffset weather stations.
 
@@ -224,23 +220,354 @@ The WH1080 acknowledges the write with an 8 byte chunk: A5A5 A5A5.
 """
 
 import datetime
-import math
-import time
+import sys
 import syslog
-import threading
+import time
 import usb
 
-import weeutil.weeutil
-import weewx.abstractstation
-import weewx.units
+import weewx.drivers
 import weewx.wxformulas
 
-DRIVER_VERSION = '1.6'
+DRIVER_NAME = 'FineOffsetUSB'
+DRIVER_VERSION = '1.7'
 
 def loader(config_dict, engine):
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    station = FineOffsetUSB(altitude=altitude_m,**config_dict['FineOffsetUSB'])
-    return station
+    return FineOffsetUSB(**config_dict[DRIVER_NAME])
+
+def configurator_loader(config_dict):
+    return FOUSBConfigurator()
+
+def confeditor_loader():
+    return FOUSBConfEditor()
+
+
+# flags for enabling/disabling debug verbosity
+DEBUG_SYNC = 0
+DEBUG_RAIN = 0
+
+
+def stash(slist, s):
+    if s.find('settings') != -1:
+        slist['settings'].append(s)
+    elif s.find('display') != -1:
+        slist['display_settings'].append(s)
+    elif s.find('alarm') != -1:
+        slist['alarm_settings'].append(s)
+    elif s.find('min.') != -1 or s.find('max.') != -1:
+        slist['minmax_values'].append(s)
+    else:
+        slist['values'].append(s)
+    return slist
+
+def fmtparam(label, value):
+    fmt = '%s'
+    if label in datum_display_formats.keys():
+        fmt = datum_display_formats[label]
+    fmt = '%s: ' + fmt
+    return fmt % (label.rjust(30), value)
+
+def getvalues(station, name, value):
+    values = {}
+    if type(value) is tuple:
+        values[name] = station.get_fixed_block(name.split('.'))
+    elif type(value) is dict:
+        for x in value.keys():
+            n = x
+            if len(name) > 0:
+                n = name + '.' + x
+            values.update(getvalues(station, n, value[x]))
+    return values
+
+def raw_dump(date, pos, data):
+    print date,
+    print "%04x" % pos,
+    for item in data:
+        print "%02x" % item,
+    print
+
+def table_dump(date, data, showlabels=False):
+    if showlabels:
+        print '# date time',
+        for key in data.keys():
+            print key,
+        print
+    print date,
+    for key in data.keys():
+        print data[key],
+    print
+
+
+class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def default_stanza(self):
+        return """
+[FineOffsetUSB]
+    # This section is for the Fine Offset series of weather stations.
+
+    # The station model, e.g., WH1080, WS1090, WS2080, WH3081
+    model = WS2080
+
+    # How often to poll the station for data, in seconds
+    polling_interval = 60
+
+    # The driver to use:
+    driver = weewx.drivers.fousb
+"""
+
+    def get_conf(self, orig_stanza=None):
+        if orig_stanza is None:
+            return self.default_stanza
+        import configobj
+        stanza = configobj.ConfigObj(orig_stanza.splitlines())
+        if 'pressure_offset' in stanza[DRIVER_NAME]:
+            print """
+The pressure_offset is no longer supported by the FineOffsetUSB driver.  Move
+the pressure calibration constant to [StdCalibrate] instead."""
+        if ('polling_mode' in stanza[DRIVER_NAME] and
+            stanza[DRIVER_NAME]['polling_mode'] == 'ADAPTIVE'):
+            print """
+Using ADAPTIVE as the polling_mode can lead to USB lockups."""
+        if ('polling_interval' in stanza[DRIVER_NAME] and
+            int(stanza[DRIVER_NAME]['polling_interval']) < 48):
+            print """
+A polling_interval of anything less than 48 seconds is not recommened."""
+        return orig_stanza
+
+
+class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
+    def add_options(self, parser):
+        super(FOUSBConfigurator, self).add_options(parser)
+        parser.add_option("--info", dest="info", action="store_true",
+                          help="display weather station configuration")
+        parser.add_option("--current", dest="current", action="store_true",
+                          help="get the current weather conditions")
+        parser.add_option("--history", dest="nrecords", type=int, metavar="N",
+                          help="display N records")
+        parser.add_option("--history-since", dest="recmin",
+                          type=int, metavar="N",
+                          help="display records since N minutes ago")
+        parser.add_option("--clear-memory", dest="clear", action="store_true",
+                          help="clear station memory")
+        parser.add_option("--set-time", dest="clock", action="store_true",
+                          help="set station clock to computer time")
+        parser.add_option("--set-interval", dest="interval",
+                          type=int, metavar="N",
+                          help="set logging interval to N minutes")
+        parser.add_option("--live", dest="live", action="store_true",
+                          help="display live readings from the station")
+        parser.add_option("--logged", dest="logged", action="store_true",
+                          help="display logged readings from the station")
+        parser.add_option("--fixed-block", dest="showfb", action="store_true",
+                          help="display the contents of the fixed block")
+        parser.add_option("--check-usb", dest="chkusb", action="store_true",
+                          help="test the quality of the USB connection")
+        parser.add_option("--check-fixed-block", dest="chkfb",
+                          action="store_true",
+                          help="monitor the contents of the fixed block")
+        parser.add_option("--format", dest="format",
+                          type=str, metavar="FORMAT",
+                          help="format for output, one of raw, table, or dict")
+
+    def do_options(self, options, parser, config_dict, prompt):
+        if options.format is None:
+            options.format = 'table'
+        elif (options.format.lower() != 'raw' and
+              options.format.lower() != 'table' and
+              options.format.lower() != 'dict'):
+            parser.error("Unknown format '%s'.  Known formats include 'raw', 'table', and 'dict'." % options.format)
+
+        self.station = FineOffsetUSB(**config_dict[DRIVER_NAME])
+        if options.current:
+            self.show_current()
+        elif options.nrecords is not None:
+            self.show_history(0, options.nrecords, options.format)
+        elif options.recmin is not None:
+            ts = int(time.time()) - options.recmin * 60
+            self.show_history(ts, 0, options.format)
+        elif options.live:
+            self.show_readings(False)
+        elif options.logged:
+            self.show_readings(True)
+        elif options.showfb:
+            self.show_fixedblock()
+        elif options.chkfb:
+            self.check_fixedblock()
+        elif options.chkusb:
+            self.check_usb()
+        elif options.clock:
+            self.set_clock(prompt)
+        elif options.interval is not None:
+            self.set_interval(options.interval, prompt)
+        elif options.clear:
+            self.clear_history(prompt)
+        else:
+            self.show_info()
+        self.station.closePort()
+
+    def show_info(self):
+        """Query the station then display the settings."""
+
+        print "Querying the station..."
+        val = getvalues(self.station, '', fixed_format)
+
+        print 'Fine Offset station settings:'
+        print '%s: %s' % ('local time'.rjust(30),
+                          time.strftime('%Y.%m.%d %H:%M:%S %Z',
+                                        time.localtime()))
+        print '%s: %s' % ('polling mode'.rjust(30), self.station.polling_mode)
+
+        slist = {'values':[], 'minmax_values':[], 'settings':[],
+                 'display_settings':[], 'alarm_settings':[]}
+        for x in sorted(val.keys()):
+            if type(val[x]) is dict:
+                for y in val[x].keys():
+                    label = x + '.' + y
+                    s = fmtparam(label, val[x][y])
+                    slist = stash(slist, s)
+            else:
+                s = fmtparam(x, val[x])
+                slist = stash(slist, s)
+        for k in ('values', 'minmax_values', 'settings',
+                  'display_settings', 'alarm_settings'):
+            print ''
+            for s in slist[k]:
+                print s
+
+    def check_usb(self):
+        """Run diagnostics on the USB connection."""
+        print "This will read from the station console repeatedly to see if"
+        print "there are errors in the USB communications.  Leave this running"
+        print "for an hour or two to see if any bad reads are encountered."
+        print "Bad reads will be reported in the system log.  A few bad reads"
+        print "per hour is usually acceptable."
+        ptr = data_start
+        total_count = 0
+        bad_count = 0
+        while True:
+            if total_count % 1000 == 0:
+                active = self.station.current_pos()
+            while True:
+                ptr += 0x20
+                if ptr >= 0x10000:
+                    ptr = data_start
+                if active < ptr - 0x10 or active >= ptr + 0x20:
+                    break
+            result_1 = self.station._read_block(ptr, retry=False)
+            result_2 = self.station._read_block(ptr, retry=False)
+            if result_1 != result_2:
+                syslog.syslog(syslog.LOG_INFO, 'read_block change %06x' % ptr)
+                syslog.syslog(syslog.LOG_INFO, '  %s' % str(result_1))
+                syslog.syslog(syslog.LOG_INFO, '  %s' % str(result_2))
+                bad_count += 1
+            total_count += 1
+            print "\rbad/total: %d/%d " % (bad_count, total_count),
+            sys.stdout.flush()
+
+    def check_fixedblock(self):
+        """Display changes to fixed block as they occur."""
+        print 'This will read the fixed block then display changes as they'
+        print 'occur.  Typically the most common change is the incrementing'
+        print 'of the data pointer, which happens whenever readings are saved'
+        print 'to the station memory.  For example, if the logging interval'
+        print 'is set to 5 minutes, the fixed block should change at least'
+        print 'every 5 minutes.'
+        raw_fixed = self.station.get_raw_fixed_block()
+        while True:
+            new_fixed = self.station.get_raw_fixed_block(unbuffered=True)
+            for ptr in range(len(new_fixed)):
+                if new_fixed[ptr] != raw_fixed[ptr]:
+                    print datetime.datetime.now().strftime('%H:%M:%S'),
+                    print ' %04x (%d) %02x -> %02x' % (
+                        ptr, ptr, raw_fixed[ptr], new_fixed[ptr])
+                    raw_fixed = new_fixed
+                    time.sleep(0.5)
+
+    def show_fixedblock(self):
+        """Display the raw fixed block contents."""
+        fb = self.station.get_raw_fixed_block(unbuffered=True)
+        for i, ptr in enumerate(range(len(fb))):
+            print '%02x' % fb[ptr],
+            if (i+1) % 16 == 0:
+                print
+
+    def show_readings(self, logged_only):
+        """Display live readings from the station."""
+        for data,ptr,_ in self.station.live_data(logged_only):
+            print '%04x' % ptr,
+            print data['idx'].strftime('%H:%M:%S'),
+            del data['idx']
+            print data
+
+    def show_current(self):
+        """Display latest readings from the station."""
+        for packet in self.station.genLoopPackets():
+            print packet
+            break
+
+    def show_history(self, ts=0, count=0, fmt='raw'):
+        """Display the indicated number of records or the records since the 
+        specified timestamp (local time, in seconds)"""
+        records = self.station.get_records(since_ts=ts, num_rec=count)
+        for i,r in enumerate(records):
+            if fmt.lower() == 'raw':
+                raw_dump(r['datetime'], r['ptr'], r['raw_data'])
+            elif fmt.lower() == 'table':
+                table_dump(r['datetime'], r['data'], i==0)
+            else:
+                print r['datetime'], r['data']
+
+    def clear_history(self, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            v = self.station.get_fixed_block(['data_count'], True)
+            print "Records in memory:", v
+            if prompt:
+                ans = raw_input("Clear console memory (y/n)? ")
+            else:
+                print 'Clearing console memory'
+                ans = 'y'
+            if ans == 'y' :
+                self.station.clear_history()
+                v = self.station.get_fixed_block(['data_count'], True)
+                print "Records in memory:", v
+            elif ans == 'n':
+                print "Clear memory cancelled."
+
+    def set_interval(self, interval, prompt):
+        v = self.station.get_fixed_block(['read_period'], True)
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Interval is", v
+            if prompt:
+                ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
+            else:
+                print "Setting interval to %d minutes" % interval
+                ans = 'y'
+            if ans == 'y' :
+                self.station.set_read_period(interval)
+                v = self.station.get_fixed_block(['read_period'], True)
+                print "Interval is now", v
+            elif ans == 'n':
+                print "Set interval cancelled."
+
+    def set_clock(self, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            v = self.station.get_fixed_block(['date_time'], True)
+            print "Station clock is", v
+            now = datetime.datetime.now()
+            if prompt:
+                ans = raw_input("Set station clock to %s (y/n)? " % now)
+            else:
+                print "Setting station clock to %s" % now
+                ans = 'y'
+            if ans == 'y' :
+                self.station.set_clock()
+                v = self.station.get_fixed_block(['date_time'], True)
+                print "Station clock is now", v
+            elif ans == 'n':
+                print "Set clock cancelled."
+
 
 # these are the raw data we get from the station:
 # param     values     invalid description
@@ -276,9 +603,6 @@ keymap = {
     'rain'        : ('rain',         0.1), # station is mm, weewx wants cm
     'radiation'   : ('illuminance',  0.01075), # lux, weewx wants W/m^2
     'UV'          : ('uv',           1.0),
-    'dewpoint'    : ('dewpoint',     1.0),
-    'heatindex'   : ('heatindex',    1.0),
-    'windchill'   : ('windchill',    1.0),
     'status'      : ('status',       1.0),
 }
 
@@ -312,17 +636,15 @@ def decode_status(status):
         result[key] = status & mask
     return result
 
-def pywws2weewx(p, ts, pressure_offset, altitude,
-                last_rain, last_rain_ts, max_rain_rate):
+def get_status(code, status):
+    return 1 if status & code == code else 0
+
+def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
     """Map the pywws dictionary to something weewx understands.
 
     p: dictionary of pywws readings
 
     ts: timestamp in UTC
-
-    pressure_offset: pressure calibration offset in mbar
-
-    altitude: station altitude in meters
 
     last_rain: last rain total in cm
 
@@ -351,29 +673,14 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
     # station status is an integer
     if packet['status'] is not None:
         packet['status'] = int(packet['status'])
+        packet['rxCheckPercent'] = 0 if get_status(lost_connection, packet['status']) else 100
+        packet['outTempBatteryStatus'] = get_status(rain_overflow, packet['status'])
 
     # if windspeed is zero there is no wind direction
     if packet['windSpeed'] is None or packet['windSpeed'] == 0:
         packet['windDir'] = None
     if packet['windGust'] is None or packet['windGust'] == 0:
         packet['windGustDir'] = None
-
-    # calculated elements not directly reported by station
-    packet['heatindex'] = weewx.wxformulas.heatindexC(
-        packet['outTemp'], packet['outHumidity'])
-    packet['dewpoint'] = weewx.wxformulas.dewpointC(
-        packet['outTemp'], packet['outHumidity'])
-    packet['windchill'] = weewx.wxformulas.windchillC(
-        packet['outTemp'], packet['windSpeed'])
-
-    # station reports gauge pressure, must calculate other pressures
-    adjp = packet['pressure']
-    if pressure_offset is not None and adjp is not None:
-        adjp += pressure_offset
-    packet['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
-        adjp, altitude, packet['outTemp'])
-    packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
-        adjp, altitude, algorithm='aaNOAA')
 
     # calculate the rain increment from the rain total
     # watch for spurious rain counter decrement.  if decrement is significant
@@ -396,28 +703,10 @@ def pywws2weewx(p, ts, pressure_offset, altitude,
                 total += rain_max * 0.3
     packet['rain'] = weewx.wxformulas.calculate_rain(total, last_rain)
 
-    # calculate the rain rate
-    packet['rainRate'] = weewx.wxformulas.calculate_rain_rate(
-        packet['rain'], packet['dateTime'], last_rain_ts)
-
     # report rainfall in log to diagnose rain counter issues
-    if weewx.debug:
-        if packet['rain'] is not None and packet['rain'] > 0:
-            logdbg('got rainfall of %.2f cm (new: %.2f old: %.2f)' %
-                   (packet['rain'], packet['rainTotal'], last_rain))
-        if packet['rainRate'] is not None and packet['rainRate'] > 0:
-            logdbg('calculated rainrate of %.2f cm/hr '
-                   '(%.2f cm in %d seconds)' % (packet['rainRate'],
-                                                packet['rain'],
-                                                int(ts - last_rain_ts)))
-
-    # if the rain rate is bogus, ignore the rain and rainRate values
-    if packet['rainRate'] is not None and packet['rainRate'] > max_rain_rate:
-        logerr('maximum rain rate exceeded: max: %.2f rate: %.2f cm/hr '
-               '(%.2f cm in %d s)' % (max_rain_rate, packet['rainRate'],
-                                      packet['rain'], int(ts - last_rain_ts)))
-        packet['rain'] = None
-        packet['rainRate'] = None
+    if DEBUG_RAIN and packet['rain'] is not None and packet['rain'] > 0:
+        logdbg('got rainfall of %.2f cm (new: %.2f old: %.2f)' %
+               (packet['rain'], packet['rainTotal'], last_rain))
 
     return packet
 
@@ -596,7 +885,7 @@ class ObservationError(Exception):
 PERIODIC_POLLING = 'PERIODIC'
 ADAPTIVE_POLLING = 'ADAPTIVE'
 
-class FineOffsetUSB(weewx.abstractstation.AbstractStation):
+class FineOffsetUSB(weewx.drivers.AbstractDevice):
     """Driver for FineOffset USB stations."""
     
     def __init__(self, **stn_dict) :
@@ -604,14 +893,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
         model: Which station model is this?
         [Optional. Default is 'WH1080 (USB)']
-
-        altitude: Altitude of the station console.
-        [Required. No Default.]
-
-        pressure_offset: Calibration offset in millibars for the station
-        pressure sensor.  This offset is added to the station sensor output
-        before barometer and altimeter pressures are calculated.
-        [Optional. No Default]
 
         polling_mode: The mechanism to use when polling the station.  PERIODIC
         polling queries the station console at regular intervals.  ADAPTIVE
@@ -645,7 +926,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         [Optional. No default]
         """
 
-        self.altitude          = stn_dict['altitude']
         self.model             = stn_dict.get('model', 'WH1080 (USB)')
         self.polling_mode      = stn_dict.get('polling_mode', PERIODIC_POLLING)
         self.polling_interval  = int(stn_dict.get('polling_interval', 60))
@@ -654,9 +934,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 30.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
         self.device_id         = stn_dict.get('device_id', None)
-        self.pressure_offset   = stn_dict.get('pressure_offset', None)
-        if self.pressure_offset is not None:
-            self.pressure_offset = float(self.pressure_offset)
 
         # FIXME: prefer 'power_cycle_on_fail = (True|False)'
         self.pc_hub            = stn_dict.get('power_cycle_hub', None)
@@ -698,6 +975,11 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
 
         # FIXME: get last_rain_arc and last_rain_ts_arc from database
 
+        global DEBUG_SYNC
+        DEBUG_SYNC = int(stn_dict.get('debug_sync', 0))
+        global DEBUG_RAIN
+        DEBUG_RAIN = int(stn_dict.get('debug_rain', 0))
+
         loginf('driver version is %s' % DRIVER_VERSION)
         if self.pc_hub is not None:
             loginf('power cycling enabled for port %s on hub %s' %
@@ -705,8 +987,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         loginf('polling mode is %s' % self.polling_mode)
         if self.polling_mode.lower() == PERIODIC_POLLING.lower():
             loginf('polling interval is %s' % self.polling_interval)
-        loginf('altitude is %s meters' % str(self.altitude))
-        loginf('pressure offset is %s' % str(self.pressure_offset))
 
         self.openPort()
 
@@ -733,7 +1013,7 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                     self.openPort()
                     self._get_arcint()
                     break
-                except weewx.WeeWxIOError, e:
+                except weewx.WeeWxIOError:
                     self.closePort()
                     power_cycle_station(self.pc_hub, self.pc_port)
         else:
@@ -811,7 +1091,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
         for p in self.get_observations():
             ts = int(time.time() + 0.5)
             packet = pywws2weewx(p, ts,
-                                 self.pressure_offset, self.altitude,
                                  self._last_rain_loop, self._last_rain_ts_loop,
                                  self.max_rain_rate)
             self._last_rain_loop = packet['rainTotal']
@@ -840,7 +1119,6 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             # FIXME: deal with daylight saving corner case
             ts = delta.days * 86400 + delta.seconds
             data = pywws2weewx(r['data'], ts,
-                               self.pressure_offset, self.altitude,
                                self._last_rain_arc, self._last_rain_ts_arc,
                                self.max_rain_rate)
             data['interval'] = r['interval']
@@ -1208,7 +1486,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
             else:
                 pause = self.min_pause
             pause = max(pause, self.min_pause)
-            logdbg('delay %s, pause %g' % (str(old_data['delay']), pause))
+            if DEBUG_SYNC:
+                logdbg('delay %s, pause %g' % (str(old_data['delay']), pause))
             time.sleep(pause)
             # get new data
             last_data_time = data_time
@@ -1244,7 +1523,8 @@ class FineOffsetUSB(weewx.abstractstation.AbstractStation):
                             self._sensor_clock = None
                     if not self._sensor_clock:
                         self._sensor_clock = data_time
-                        logdbg('setting sensor clock %g' % (data_time % live_interval))
+                        logdbg('setting sensor clock %g' %
+                               (data_time % live_interval))
                     if not next_live:
                         logdbg('live synchronised')
                     next_live = data_time

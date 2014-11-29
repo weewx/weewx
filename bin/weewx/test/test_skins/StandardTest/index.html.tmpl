@@ -1,7 +1,5 @@
 #errorCatcher Echo
-##    $Revision$
-##    $Author$
-##    $Date$
+## $Id$
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -87,8 +85,42 @@
       <td>$current.outTemp.degree_F.format("%.3f")</td>
     </tr>
     <tr>
+      <td>Outside Temperature (with explicit binding to 'wx_binding')</td>
+      <td>$current($data_binding='wx_binding').outTemp</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (with explicit binding to 'alt_binding')</td>
+      <td>$current($data_binding='alt_binding').outTemp</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature with nonsense binding 'foo_binding'</td>
+      <td>$current($data_binding='foo_binding').outTemp</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature with explicit time</td>
+      #set $now=$current.dateTime.raw
+      <td>$current($timestamp=$now).outTemp</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature with nonsense time</td>
+      <td>$current($timestamp=$now - 3100).outTemp</td>
+    </tr>
+    <tr>
       <td>Outside Temperature trend ($trend.time_delta.hour.format("%.0f"))</td>
       <td>$trend.outTemp</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature trend with explicit time_delta (3600 seconds)</td>
+      <td>$trend($time_delta=3600).outTemp</td>
+    </tr>
+    <tr>
+      ## This test uses a previous value known to be None:
+      <td>Outside Temperature trend where previous value is known to be None (9000 seconds)</td>
+      <td>$trend($time_delta=9000).outTemp</td>
+    </tr>
+    <tr>
+      <td>Trend with nonsense type</td>
+      <td>$trend.foobar</td>
     </tr>
     <tr>
       <td>Barometer (normal)</td>
@@ -97,6 +129,14 @@
     <tr>
       <td>Barometer trend ($trend.time_delta.hour.format("%.0f"))</td>
       <td>$trend.barometer</td>
+    </tr>
+    <tr>
+      <td>Barometer using \$latest</td>
+      <td>$latest.barometer</td>
+    </tr>
+    <tr>
+      <td>Barometer using \$latest and explicit data binding</td>
+      <td>$latest($data_binding='alt_binding').barometer at $latest($data_binding='alt_binding').dateTime.raw</td>
     </tr>
     <tr>
       <td>Wind Chill (normal)</td>
@@ -182,8 +222,66 @@
 
   <hr/>
 
+  <h1>Tests for tag \$hour</h1>
+  <table>
+    <tr>
+        <td>Start of hour:</td>
+        <td>$hour.dateTime.format("%x %X")</td>
+    </tr>
+    <tr>
+        <td>Start of hour (unix epoch time):</td>
+        <td>$hour.dateTime.raw</td>
+    </tr>
+    <tr>
+      <td>Max Temperature</td>
+      <td>$hour.outTemp.max</td>
+    </tr>
+    <tr>
+      <td>Min Temperature</td>
+      <td>$hour.outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Time of max temperature:</td>
+      <td>$hour.outTemp.maxtime</td>
+    </tr>
+    <tr>
+      <td>Time of min temperature:</td>
+      <td>$hour.outTemp.mintime</td>
+    </tr>
+  </table>
+  
+  <h1>Iterate over three hours:</h1>
+  <table>
+    <tr>
+      <td>Start of hour</td>
+      <td>Min temperature</td>
+      <td>When</td>
+    </tr>
+    #for $i in range(3,-1,-1)
+    <tr>
+      <td>$hours_ago($hours_ago=$i).dateTime</td>
+      <td>$hours_ago($hours_ago=$i).outTemp.min</td>
+      <td>$hours_ago($hours_ago=$i).outTemp.mintime</td>
+    </tr>
+    #end for
+  </table>
+  
+  
+  
   <h1>Tests for tag \$day</h1>
   <table>
+    <tr>
+        <td>Start of day:</td>
+        <td>$day.dateTime.format("%x %X")</td>
+    </tr>
+    <tr>
+        <td>Start of day (unix epoch time):</td>
+        <td>$day.dateTime.raw</td>
+    </tr>
+    <tr>
+        <td>End of day (unix epoch time):</td>
+        <td>$($day.dateTime.raw + 24*3600)</td>
+    </tr>
     <tr>
       <td>Max Temperature</td>
       <td>$day.outTemp.max</td>
@@ -199,6 +297,18 @@
     <tr>
       <td>Time of min temperature:</td>
       <td>$day.outTemp.mintime</td>
+    </tr>
+    <tr>
+      <td>Last temperature of the day</td>
+      <td>$day.outTemp.last</td>
+    </tr>
+    <tr>
+      <td>Time of the last temperature of the day</td>
+      <td>$day.outTemp.lasttime.format("%x %X")</td>
+    </tr>
+    <tr>
+      <td>Max Temperature in alt_binding</td>
+      <td>$day($data_binding='alt_binding').outTemp.max</td>
     </tr>
     <tr>
       <td>Min temp with explicit conversion to Celsius</td>
@@ -225,8 +335,24 @@
       <td>$day.rain.sum</td>
     </tr>
     <tr>
-      <td>High Wind</td>
+      <td>High Wind from "\$day.wind.max"</td>
       <td>$day.wind.max from $day.wind.gustdir at $day.wind.maxtime</td>
+    </tr>
+    <tr>
+      <td>High Wind from "\$day.windGust.max"</td>
+      <td>$day.windGust.max</td>
+    </tr>
+    <tr>
+      <td>High Wind from "\$day.windSpeed.max"</td>
+      <td>$day.windSpeed.max</td>
+    </tr>
+    <tr>
+      <td>Average wind from "\$day.wind.avg"</td>
+      <td>$day.wind.avg</td>
+    </tr>
+    <tr>
+      <td>High Wind from "\$day.windSpeed.avg"</td>
+      <td>$day.windSpeed.avg</td>
     </tr>
     <tr>
       <td>Average aggregation (wind)</td>
@@ -280,6 +406,42 @@
 
   <hr/>
   
+  <h1>Tests for tag \$yesterday</h1>
+  <table>
+    <tr>
+        <td>Start of yesterday:</td>
+        <td>$yesterday.dateTime.format("%x %X")</td>
+    </tr>
+    <tr>
+        <td>Start of yesterday (unix epoch time):</td>
+        <td>$yesterday.dateTime.raw</td>
+    </tr>
+    <tr>
+      <td>Max Temperature yesterday</td>
+      <td>$yesterday.outTemp.max</td>
+    </tr>
+    <tr>
+      <td>Min Temperature yesterday</td>
+      <td>$yesterday.outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Time of max temperature yesterday:</td>
+      <td>$yesterday.outTemp.maxtime</td>
+    </tr>
+    <tr>
+      <td>Time of min temperature yesterday:</td>
+      <td>$yesterday.outTemp.mintime</td>
+    </tr>
+    <tr>
+      <td>Yesterday's last temperature</td>
+      <td>$yesterday.outTemp.last</td>
+    </tr>
+    <tr>
+      <td>Time of yesterday's last temperature</td>
+      <td>$yesterday.outTemp.lasttime.format("%x %X")</td>
+    </tr>  
+  </table>
+  
   <h1>Tests for tag \$rainyear</h1>
   <table>
     <tr>
@@ -288,6 +450,23 @@
     </tr>
   </table>
     
+  <h1>Test for tag \$alltime</h1>
+  <table>
+    <tr>
+      <td align="right">Max temp from \$alltime.outTemp.max</td>
+      <td align="left">$alltime.outTemp.max <br/>
+      at $alltime.outTemp.maxtime</td>
+    </tr>
+    <tr>
+      <td align="right">High Wind from "\$alltime.wind.max"</td>
+      <td align="left">
+      $alltime.wind.max <br/>
+      from $alltime.wind.gustdir <br/>
+      at $alltime.wind.maxtime
+      </td>
+    </tr>
+  </table>
+
   <hr/>
 
   <h1>Tests for tag \$Extras</h1>
@@ -341,8 +520,30 @@
       (&quot;\$day.outTemp.max.formatted\$unit.label.outTemp&quot;)</td>
       <td align="left">$day.outTemp.max.formatted$unit.label.outTemp</td>
     </tr>
-    
-
+    <tr>
+      <td align="right">Add a new unit type, existing group</td>
+      <td align="left">$unit.unit_type.fooTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Check its label</td>
+      <td align="left">$unit.label.fooTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Check its format</td>
+      <td align="left">$unit.format.fooTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Add a new unit type, new group</td>
+      <td align="left">$unit.unit_type.current0</td>
+    </tr>
+    <tr>
+      <td align="right">Check its label</td>
+      <td align="left">$unit.label.current0</td>
+    </tr>
+    <tr>
+      <td align="right">Check its format</td>
+      <td align="left">$unit.format.current0</td>
+    </tr>
   </table>
   
   <hr/>

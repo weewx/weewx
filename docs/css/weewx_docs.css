@@ -1,17 +1,16 @@
-/* styles for weewx documentation */
-﻿/* $Id$ */
+﻿/* 
+ * Styles for the weewx documentation
+ *
+ * $Id$ 
+ */
 
 html, body{
   font-family: Verdana,arial,sans-serif;
   font-size: 11pt;
-  color: black;
 }
 li {
   margin-right: 10%;
   margin-top: 10px;
-}
-#toc li {
-  margin-top: 0px;
 }
 dt {
   margin-top: 10px;
@@ -48,7 +47,6 @@ h4 {
 table {
   border-collapse: collapse;
   border: 1px solid #cccccc;
-  width: 80%
 }
 tr {
   vertical-align: top;
@@ -74,7 +72,7 @@ caption {
 }
 .indent {
   margin-left: 40px;
-  margin-right: 80px;
+  margin-right: 40px;
 }
 .station_data {
   margin-left: 40px;
@@ -91,33 +89,33 @@ caption {
 .tty {
   font-family: "Courier New", Courier, monospace;
   font-size: 90%;
-  margin: 0px 20px 0px 20px;
   background-color: #FFFFe0;
   border: 1px solid #ddddaa;
-  padding: 3px;
+  padding: 3px 8px 3px 8px;
+  margin: 5px 15px 5px 15px;
   white-space: pre;
+  line-height: normal;
 }
 .title {
   margin-top: 0px;
+  text-align: center;
 }
 .config_section {
 }
-.config_option {
+.config_option, .config_important {
   font-family: "Courier New", Courier, monospace;
   font-weight: bold;
   color: black;
-  margin-bottom: -12px;
+  margin-top: 1.5em;
+  margin-bottom: 0px;
 }
 .config_important {
-  font-family: "Courier New", Courier, monospace;
-  font-weight: bold;
   color: #bb9900;
-  margin-bottom: -12px;
 }
 .highlight {
-  background-color: #FFCC99;
+  background-color: #ffe0b0;
 }
-.text_highlight, .first_col{
+.text_highlight, .first_col {
   font-weight: bold;
   background-color: #eef0f0;
   padding-left: 10px;
@@ -134,12 +132,11 @@ table .first_row {
 }
 .example_output {
   font-family: "Times New Roman", Times, serif;
-  padding: 5px;
-  border: thin #000000 dotted;
-  margin: 0px 20px 0px 20px;
-}
-div#toc ul {
-  list-style: none;
+  padding: 3px 8px 3px 8px;
+  margin: 5px 15px 5px 15px;
+  border: 1px solid #cccccc;
+  box-shadow: 2px 2px 3px #dddddd;
+  display:inline-block;
 }
 .image {
   padding: 5px;
@@ -152,22 +149,25 @@ div#toc ul {
 .image_caption {
   font-size: 80%;
   text-align: center;	
+  padding: 5px;
 }
 .note {
   background-color: #cce0d0;
   border: 1px solid #aac0b0;
-  margin: 10px;
-  margin-left: 30px;
-  padding: 12px;
-  width: 80%;
+  margin: 10px 30px 10px 30px;
+  padding: 10px;
+  webkit-border-radius: 6px;
+  moz-border-radius: 6px;
+  border-radius: 6px;
 }
 .warning {
   background-color: #ffeeee;
   border: 1px solid #ffdddd;
-  margin: 10px;
-  margin-left: 30px;
-  padding: 12px;
-  width: 80%;
+  margin: 10px 30px 10px 30px;
+  padding: 10px;
+  webkit-border-radius: 6px;
+  moz-border-radius: 6px;
+  border-radius: 6px;
 }
 .copyright {
   font-style: italic;
@@ -203,22 +203,33 @@ div#toc ul {
   margin-left: 20px;
   margin-right: 20px;
 }
+.tabs img {
+  display:inline;
+}
 .tab {
   font-size: 80%;
   font-weight: bold;
-  color: #aaaaaa;
   margin: 0px;
   padding: 4px 16px 4px 16px;
   float: left;
   cursor: pointer;
+  webkit-border-top-left-radius: 6px;
+  moz-border-top-left-radius: 6px;
+  border-top-left-radius: 6px;
+  webkit-border-top-right-radius: 6px;
+  moz-border-top-right-radius: 6px;
+  border-top-right-radius: 6px;
+  color: #aaaaaa;
+  border-top: 1px solid #cccccc;
+  border-left: 1px solid #cccccc;
+  border-right: 1px solid #cccccc;
 }
 .selected {
+  background-color: #aacccc;
   color: black;
   border-top: 1px solid #447777;
   border-left: 1px solid #447777;
   border-right: 1px solid #447777;
-  background-color: #aacccc;
-  //background-color: #FFFFe0;
 }
 .version {
   font-size: 60%;
@@ -230,7 +241,84 @@ div#toc ul {
 .popup-note {
   font-size: 80%;
 }
+
+#technical_content{
+  float: right;
+  width: 82%;
+}
+
+/*
+ * This section mimics the style that
+ * the reporting engine produces, so the docs
+ * can reproduce it.
+ */
+.stats {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  padding: 13px 58px 13px 58px;
+}
+.stats table {
+    border: thin solid #000000;
+    width: 100%;
+}
+.stats td {
+    border: thin solid #000000;
+    padding: 2px;
+}
+.stats_label {
+    color: green;
+}
+.stats_data {
+    color: red;
+}
+
+/* Overrides for the jQuery UI widgets */
 div .ui-widget-header {
   border: 1px solid black;
   background: #aacccc;
+}
+
+/* no spurious background images please */
+.ui-widget-content {
+  background: white;
+}
+
+/* Overrides for tocify Table-of-Contents */
+.tocify {
+  width: 15%;
+  margin-left: 5px;
+  padding-left: 5px;
+  border: 0;
+  webkit-border-radius: 0px;
+  moz-border-radius: 0px;
+  border-radius: 0px;
+  top: 40px;
+}
+.tocify ul, .tocify li {
+  line-height: 1.2;
+}
+.tocify-header ul, .tocify-header li{
+  padding-left: 10px;
+  text-indent: -10px;
+}
+.tocify-subheader {
+  display: inherit;
+}
+/* prevent dancing toc by eliminating the default bold during mouseover */
+#toc .ui-state-hover {
+  background: #ddefef;
+}
+#toc .ui-state-hover a{
+  font-weight: normal;
+  color: black;
+}
+#toc .ui-state-default {
+  font-weight: normal;
+  background: #aacccc;
+}
+#toc .ui-state-default a{
+  color: black;
+}
+#toc_controls {
+  position: fixed;
+  padding: 5px;
 }

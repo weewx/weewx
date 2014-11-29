@@ -4,28 +4,54 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Test tag notation for template generation."""
 from __future__ import with_statement
 import os.path
+import shutil
 import sys
 import syslog
-import time
 import unittest
 
 import configobj
+
+os.environ['TZ'] = 'America/Los_Angeles'
 
 import weewx.reportengine
 import weewx.station
 import weeutil.weeutil
 
-import gen_fake_data    # @UnresolvedImport
+import gen_fake_data
 
-config_path = "testgen.conf"
+# Find the configuration file. It's assumed to be in the same directory as me:
+config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
 cwd = None
+
+# We will be testing the ability to extend the unit system, so set that up first:
+class ExtraUnits(dict):
+    def __getitem__(self, obs_type):
+        if obs_type.endswith('Temp'):
+            # Anything that ends with "Temp" is assumed to be in group_temperature
+            return "group_temperature"
+        elif obs_type.startswith('current'):
+            # Anything that starts with "current" is in group_amperage:
+            return "group_amperage"
+        else:
+            # Otherwise, consult the underlying dictionary:
+            return dict.__getitem__(self, obs_type)
+ 
+extra_units = ExtraUnits()
+import weewx.units
+weewx.units.obs_group_dict.extend(extra_units)
+
+# Add the new group group_amperage to the standard unit systems:
+weewx.units.USUnits["group_amperage"] = "amp"
+weewx.units.MetricUnits["group_amperage"] = "amp"
+weewx.units.MetricWXUnits["group_amperage"] = "amp"
+
+weewx.units.default_unit_format_dict["amp"] = "%.1f"
+weewx.units.default_unit_label_dict["amp"] = " A"
 
 class Common(unittest.TestCase):
 
@@ -54,35 +80,37 @@ class Common(unittest.TestCase):
             sys.stderr.write("Error while parsing configuration file %s" % config_path)
             raise
 
-        self.archive_db_dict = self.config_dict['Databases'][self.archive_db]        
-        self.stats_db_dict   = self.config_dict['Databases'][self.stats_db]
-
         # Remove the old directory:
         try:
-            os.rmdir(self.config_dict['StdReport']['HTML_ROOT'])
-        except OSError:
-            pass
+            test_html_dir = os.path.join(self.config_dict['WEEWX_ROOT'], self.config_dict['StdReport']['HTML_ROOT'])
+            shutil.rmtree(test_html_dir)
+        except OSError, e:
+            if os.path.exists(test_html_dir):
+                print >>sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
+                print >>sys.stderr, "Reason:", e
+                print >>sys.stderr, "Aborting"
+                exit(1)
 
         # This will generate the test databases if necessary:
-        gen_fake_data.configDatabases(self.archive_db_dict, self.stats_db_dict)
+        gen_fake_data.configDatabases(self.config_dict, database_type=self.database_type)
 
     def tearDown(self):
         pass
     
     def test_report_engine(self):
         
-        # Pick a random generation time (3-Sep-2010 11:20:00 local):
-        testtime_ts = int(time.mktime((2010,9,3,11,20,0,0,0,-1)))
-        print "test time is ", weeutil.weeutil.timestamp_to_string(testtime_ts)
+        # The generation time should be the same as the last record in the test database:
+        testtime_ts = gen_fake_data.stop_ts
+        print "\ntest time is ", weeutil.weeutil.timestamp_to_string(testtime_ts)
 
         stn_info = weewx.station.StationInfo(**self.config_dict['Station'])
-    
+        
         t = weewx.reportengine.StdReportEngine(self.config_dict, stn_info, testtime_ts)
 
         # Find the test skins and then have SKIN_ROOT point to it:
         test_dir = sys.path[0]
         t.config_dict['StdReport']['SKIN_ROOT'] = os.path.join(test_dir, 'test_skins')
-
+        
         # Although the report engine inherits from Thread, we can just run it in the main thread:
         print "Starting report engine test"
         t.run()
@@ -95,8 +123,8 @@ class Common(unittest.TestCase):
                      'metric/index.html', 'metric/bymonth.txt', 'metric/byyear.txt']:
             actual_file   = os.path.join(test_html_dir, file_name)
             expected_file = os.path.join(expected_dir, file_name)
-            print "Checking file: ", actual_file
-            print "  against file:", expected_file
+#             print "Checking file: ", actual_file
+#             print "  against file:", expected_file
             actual   = open(actual_file)
             expected = open(expected_file)
 
@@ -107,24 +135,22 @@ class Common(unittest.TestCase):
                 expected_line = expected.readline()
                 if actual_line == '' or expected_line == '':
                     break
-                self.assertEqual(actual_line, expected_line, "%s[%d]:\n%r vs\n%r" % (actual_file, n, actual_line, expected_line))
+                self.assertEqual(actual_line, expected_line, msg="%s[%d]:\n%r vs\n%r" % (actual_file, n, actual_line, expected_line))
             
             print "Checked %d lines" % (n,)
 
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
-        self.archive_db = "archive_sqlite"
-        self.stats_db   = "stats_sqlite"
-        self.HTML_ROOT  = 'test_skins_sqlite'
+        self.database_type = "sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
         
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
-        self.archive_db = "archive_mysql"
-        self.stats_db   = "stats_mysql"
+        self.database_type = "mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
+        
         
     
 def suite():

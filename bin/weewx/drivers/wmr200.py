@@ -1,20 +1,9 @@
+# $Id$
 # Copyright (c) 2013 Chris Manton <cmanton@gmail.com>  www.onesockoff.org
-#
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or any later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.
-#
-# See http://www.gnu.org/licenses/
+# See the file LICENSE.txt for your full rights.
 #
 # Special recognition to Lars de Bruin <l...@larsdebruin.net> for contributing
 # packet decoding code.
-#
-#    $Revision$
-#    $Date$
 #
 # pylint parameters
 # suppress global variable warnings
@@ -51,20 +40,29 @@ import threading
 import time
 import usb
 
+import weewx.drivers
 import weeutil.weeutil
-import weewx.abstractstation
-import weewx.units
-import weewx.wxformulas
+
+DRIVER_NAME = 'WMR200'
+DRIVER_VERSION = "3.0"
+
+
+def loader(config_dict, engine):
+    return WMR200(**config_dict[DRIVER_NAME])
+
+def confeditor_loader():
+    return WMR200ConfEditor()
+
 
 # General decoding sensor maps.
-WIND_DIR_MAP = { 0:'N', 1:'NNE', 2:'NE', 3:'ENE',
-                4:'E', 5:'ESE', 6:'SE', 7:'SSE',
-                8:'S', 9:'SSW', 10:'SW', 11:'WSW',
-                12:'W', 13:'WNW', 14:'NW', 15:'NNW' }
-FORECAST_MAP = { 0:'Partly Cloudy', 1:'Rainy', 2:'Cloudy', 3:'Sunny',
-                4:'Clear Night', 5:'Snowy',
-                6:'Partly Cloudy Night', 7:'Unknown7' }
-TRENDS =      { 0:'Stable', 1:'Rising', 2:'Falling', 3:'Undefined' }
+WIND_DIR_MAP = {0: 'N', 1: 'NNE', 2: 'NE', 3: 'ENE',
+                4: 'E', 5: 'ESE', 6: 'SE', 7: 'SSE',
+                8: 'S', 9: 'SSW', 10: 'SW', 11: 'WSW',
+                12: 'W', 13: 'WNW', 14: 'NW', 15: 'NNW'}
+FORECAST_MAP = {0: 'Partly Cloudy', 1: 'Rainy', 2: 'Cloudy',
+                3: 'Sunny', 4: 'Clear Night', 5: 'Snowy',
+                6: 'Partly Cloudy Night', 7: 'Unknown7'}
+TRENDS = {0: 'Stable', 1: 'Rising', 2: 'Falling', 3: 'Undefined'}
 
 # Size of USB frame to read from weather console.
 _WMR200_USB_FRAME_SIZE = 8
@@ -145,13 +143,6 @@ def logcrt(msg):
     logmsg(syslog.LOG_CRIT, 'C ' + msg)
 
 
-def loader(config_dict, engine):
-    """Used to load the driver."""
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    station = WMR200(altitude=altitude_m, **config_dict['WMR200'])
-    return station
-
-
 class WMR200ProtocolError(weewx.WeeWxIOError):
     """Used to signal a protocol error condition"""
     def __init__(self, msg):
@@ -171,6 +162,10 @@ class UsbDevice(object):
         # debug byte count
         self.byte_cnt_rd = 0
         self.byte_cnt_wr = 0
+        # default to a sane endpoint
+        self.in_endpoint = usb.ENDPOINT_IN + 1
+        # only one interface
+        self.interface = 0
 
     def find_device(self, vendor_id, product_id):
         """Find the given vendor and product IDs on the USB bus
@@ -201,7 +196,7 @@ class UsbDevice(object):
         # Detach any old claimed interfaces
         try:
             self.handle.detachKernelDriver(self.interface)
-        except usb.USBError, exception:
+        except usb.USBError:
             pass
 
         try:
@@ -237,6 +232,7 @@ class UsbDevice(object):
             logerr(msg)
             raise weewx.WeeWxIOError(msg)
 
+        report = None
         try:
             report = self.handle.interruptRead(self.in_endpoint,
                                                _WMR200_USB_FRAME_SIZE,
@@ -258,9 +254,9 @@ class UsbDevice(object):
                 logdbg('read_device(): %s' % buf)
             return report[1:report[0] + 1]
 
-        except IndexError:
+        except IndexError, e:
             # This indicates we failed an index range above.
-            logerr('read_device() Failed the index rage %s' % report)
+            logerr('read_device() Failed the index rage %s: %s' % (report, e))
 
         except usb.USBError, ex:
             # No data presented on the bus.  This is a normal part of
@@ -380,7 +376,7 @@ class Packet(object):
     def packet_process(self):
         """Process the raw data and creates a record field."""
         # Convention is that this driver only works in metric units.
-        self._record.update({'usUnits' : weewx.METRIC})
+        self._record.update({'usUnits': weewx.METRIC})
         if DEBUG_PACKETS_RAW or DEBUG_PACKETS_COOKED:
             logdbg('Processing %s' % self.pkt_name)
         if self.pkt_len and self.pkt_len != self.size_actual():
@@ -451,7 +447,7 @@ class Packet(object):
         if not self._bogus_packet \
            and self._checksum_calculate() != self._checksum_field():
             msg = ('Checksum error act:0x%04x exp:0x%04x'
-                        % (self._checksum_calculate(), self._checksum_field()))
+                   % (self._checksum_calculate(), self._checksum_field()))
             logerr(msg)
             logerr(self.to_string_raw('  packet:'))
             if self.wmr200.ignore_checksum:
@@ -463,8 +459,7 @@ class Packet(object):
 
         # Debug test to force checksum recovery testing.
         if DEBUG_CHECKSUM and (self.pkt_id % DEBUG_CHECKSUM) == 0:
-            msg = ('Debug forced checksum error')
-            raise weewx.CRCError(msg)
+            raise weewx.CRCError('Debug forced checksum error')
 
     @staticmethod
     def timestamp_host():
@@ -488,7 +483,7 @@ class Packet(object):
             day    = pkt_data[2]
             month  = pkt_data[3]
             year   = 2000 + pkt_data[4]
-            return time.mktime((year, month, day, hour, minute, \
+            return time.mktime((year, month, day, hour, minute,
                                 0, -1, -1, -1))
         except IndexError:
             log_msg = ('Packet length too short to get timestamp len:%d'
@@ -530,8 +525,8 @@ class Packet(object):
             out = ' Packet cooked: '
             out += 'id:%d ' % self.pkt_id
             out += '%s ' % self.pkt_name
-            out += '%s ' % weeutil.weeutil.timestamp_to_string\
-                    (self.timestamp_record())
+            out += '%s ' % weeutil.weeutil.timestamp_to_string(
+                self.timestamp_record())
             out += 'len:%d ' % self.size_actual()
             out += 'fields:%d ' % len(self._record)
             out += str(self._record)
@@ -562,7 +557,7 @@ class PacketLive(Packet):
     def packet_process(self):
         """Returns a records field to be processed by the weewx engine."""
         super(PacketLive, self).packet_process()
-        self._record.update({'dateTime' : self.timestamp_live(), })
+        self._record.update({'dateTime': self.timestamp_live(), })
 
     def calc_time_drift(self):
         """Returns the difference between PC time and the packet timestamp.
@@ -571,7 +566,7 @@ class PacketLive(Packet):
         Only done once upon first live packet received."""
         if self.wmr200.time_drift is None:
             self.wmr200.time_drift = self.timestamp_host() \
-                    - self.timestamp_packet()
+                - self.timestamp_packet()
             loginf('Time drift between host and console in seconds:%d' %
                    self.wmr200.time_drift)
 
@@ -609,9 +604,9 @@ class PacketArchive(Packet):
         super(PacketArchive, self).packet_process()
         # If we need to adjust the timestamp if pc time is set we will do it
         # later
-        self._record.update({'dateTime' : self.timestamp_packet(), })
+        self._record.update({'dateTime': self.timestamp_packet(), })
         # Archive packets have extra field indicating interval time.
-        self._record.update({'interval' : \
+        self._record.update({'interval':
                              int(self.wmr200.archive_interval / 60.0), })
 
     def timestamp_adjust_drift(self):
@@ -667,7 +662,7 @@ class PacketControl(Packet):
         
         This packet isn't really passed up to weewx but is assigned a
         timestamp for completeness."""
-        self._record.update({'dateTime' : self.timestamp_host(), })
+        self._record.update({'dateTime': self.timestamp_host(), })
 
     def print_cooked(self):
         """Print the processed packet.
@@ -721,17 +716,6 @@ class PacketArchiveData(PacketArchive):
             msg = ('%s decode index failure' % self.pkt_name)
             logerr(msg)
             raise WMR200ProtocolError(msg)
-
-        try:
-            # Calculate windchill using most recent outdoor temp.
-            if self.wmr200.use_calc_windchill:
-                self._record['windchill'] = \
-                        weewx.wxformulas.windchillC(
-                            self._record['outTemp'],
-                            self._record['windSpeed'])
-        except KeyError:
-            # We may not have all the required records.
-            pass
 
         # Tell wmr200 console we have processed it and can handle more.
         self.wmr200.request_archive_data()
@@ -792,7 +776,7 @@ def decode_wind(pkt, pkt_data):
         if DEBUG_PACKETS_WIND:
             logdbg('  Wind Dir: %s' % (WIND_DIR_MAP[pkt_data[0] & 0x0f]))
             logdbg('  Gust: %.1f m/s Wind:%.1f m/s' % (gust_speed, avg_speed))
-            if windchill != None:
+            if windchill is not None:
                 logdbg('  Windchill: %.1f C' % (windchill))
         return record
 
@@ -815,16 +799,6 @@ class PacketWind(PacketLive):
         Returns a packet that can be processed by the weewx engine."""
         super(PacketWind, self).packet_process()
         self._record.update(decode_wind(self, self._pkt_data[7:14]))
-        try:
-            # Replace windchill record calculated from recent outdoor temp.
-            if self.wmr200.use_calc_windchill:
-                self._record['windchill'] = \
-                        weewx.wxformulas.windchillC(
-                            self.wmr200.last_temp_record['outTemp'],
-                            self._record['windSpeed'])
-        except (KeyError, AttributeError, TypeError):
-            # We may not have a last temp record yet so ignore for now.
-            pass
 
 def decode_rain(pkt, pkt_data):
     """Decode the rain portion of a wmr200 packet."""
@@ -920,7 +894,7 @@ class PacketRain(PacketLive):
 def decode_uvi(pkt, pkt_data):
     """Decode the uvi portion of a wmr200 packet."""
     try:
-        record = { 'UV' : pkt_data[0 & 0x0f] }
+        record = {'UV': pkt_data[0 & 0x0f]}
         if DEBUG_PACKETS_UVI:
             logdbg("  UV index:%s\n" % record['UV'])
         return record
@@ -962,24 +936,17 @@ def decode_pressure(pkt, pkt_data):
                                      | pkt_data[2])
         unknown_nibble = (pkt_data[3] >> 4)
 
-        alt_pressure_weewx = \
-                weewx.wxformulas.altimeter_pressure_Metric\
-                (pressure, pkt.wmr200.altitude)
-
         record = {'barometer'   : alt_pressure_console,
                   'altimeter'   : pressure,
-                  'pressure'    : alt_pressure_weewx,
                   'forecastIcon': forecast}
 
         if DEBUG_PACKETS_PRESSURE:
             logdbg('  Forecast: %s' % FORECAST_MAP[forecast])
-            logdbg('  Raw pressure: %.02f hPa' % (pressure))
+            logdbg('  Raw pressure: %.02f hPa' % pressure)
             if unknown_nibble != 3:
-                logdbg('  Pressure unknown nibble: 0x%x' % (unknown_nibble))
+                logdbg('  Pressure unknown nibble: 0x%x' % unknown_nibble)
             logdbg('  Altitude corrected pressure: %.02f hPa console' %
-                   (alt_pressure_console))
-            logdbg('  Altitude corrected pressure: %.02f hPa weewx' %
-                   (alt_pressure_weewx))
+                   alt_pressure_console)
         return record
 
     except IndexError:
@@ -1050,32 +1017,25 @@ def decode_temp(pkt, pkt_data):
 
         if sensor_id == 0:
             # Indoor temperature sensor.
-            record['inTemp']      = temp
-            record['inHumidity']  = humidity
+            record['inTemp'] = temp
+            record['inHumidity'] = humidity
         elif sensor_id == 1:
             # Outdoor temperature sensor.
-            record['outTemp']     = temp
+            record['outTemp'] = temp
             record['outHumidity'] = humidity
-            record['dewpoint'] = \
-                    weewx.wxformulas.dewpointC(temp, humidity)
-            if pkt.wmr200.use_calc_heatindex:
-                record['heatindex'] = \
-                        weewx.wxformulas.heatindexC(temp, humidity)
-            else:
-                record['heatindex'] = heat_index
+            record['heatindex'] = heat_index
         elif sensor_id >= 2:
             # Extra temperature sensors.
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
-            record['extraTemp%d'  % sensor_id] = temp
+            record['extraTemp%d' % sensor_id] = temp
             record['extraHumid%d' % sensor_id] = humidity
 
         if DEBUG_PACKETS_TEMP:
-            logdbg(('  Temperature id:%d %.1f C trend: %s'
-                    % (sensor_id, temp,
-                       TRENDS[temp_trend])))
-            logdbg('  Humidity id:%d %d%% trend: %s' % (sensor_id, humidity,
-                                                        TRENDS[hum_trend]))
+            logdbg('  Temperature id:%d %.1f C trend: %s'
+                   % (sensor_id, temp, TRENDS[temp_trend]))
+            logdbg('  Humidity id:%d %d%% trend: %s'
+                   % (sensor_id, humidity, TRENDS[hum_trend]))
             logdbg(('  Dew point id:%d: %.1f C' % (sensor_id, dew_point)))
             if heat_index:
                 logdbg('  Heat id:%d index:%d' % (sensor_id, heat_index))
@@ -1324,7 +1284,7 @@ class PollUsbDevice(threading.Thread):
         loginf('USB polling device thread signaled to start')
 
         # Read and discard next data from weather console device.
-        buf = self.usb_device.read_device()
+        _ = self.usb_device.read_device()
         read_timeout_cnt = 0
         read_reset_cnt = 0
 
@@ -1413,20 +1373,17 @@ class PollUsbDevice(threading.Thread):
         self._cv_poll.notify()
         self._cv_poll.release()
 
-class WMR200(weewx.abstractstation.AbstractStation):
+class WMR200(weewx.drivers.AbstractDevice):
     """Driver for the Oregon Scientific WMR200 station."""
 
-    def __init__(self, **stn_dict) :
+    def __init__(self, **stn_dict):
         """Initialize the wmr200 driver.
         
         NAMED ARGUMENTS:
-        altitude: The altitude in meters for proper barometer calculation. [Required]
         model: Which station model is this? [Optional]
         sensor_status: Print sensor faults or failures to syslog. [Optional]
         use_pc_time: Use the console timestamp or the Pc. [Optional]
-        use_calc_heatindex: Use a calculated heatindex over console data.  [Optional]
-        use_calc_windchill: Use a calculated windchill over console data.  [Optional]
-        erase_archive:  Erasae archive upon startup.  [Optional]
+        erase_archive:  Erase archive upon startup.  [Optional]
         archive_interval: Time in seconds between intervals [Optional]
         archive_threshold: Max time in seconds between valid archive packets [Optional]
         ignore_checksum: Ignore checksum failures and drop packet.
@@ -1442,26 +1399,17 @@ class WMR200(weewx.abstractstation.AbstractStation):
         super(WMR200, self).__init__()
 
         ## User configurable options
-        self._altitude     = stn_dict['altitude']
-        self._model        = stn_dict.get('model', 'WMR200')
+        self._model = stn_dict.get('model', 'WMR200')
         # Provide sensor faults in syslog.
         self._sensor_stat = weeutil.weeutil.tobool(stn_dict.get('sensor_status',
                                                                 True))
         # Use pc timestamps or weather console timestamps.
         self._use_pc_time = \
-                weeutil.weeutil.tobool(stn_dict.get('use_pc_time', True))
-
-        # Use calculated heatindex rather than console presented one.
-        self._use_calc_heatindex = \
-                weeutil.weeutil.tobool(stn_dict.get('use_calc_heatindex', True))
-
-        # Use calculated windchill rather than console presented one.
-        self._use_calc_windchill = \
-                weeutil.weeutil.tobool(stn_dict.get('use_calc_windchill', True))
+            weeutil.weeutil.tobool(stn_dict.get('use_pc_time', True))
 
         # Use archive data when possible.
         self._erase_archive = \
-                weeutil.weeutil.tobool(stn_dict.get('erase_archive', False))
+            weeutil.weeutil.tobool(stn_dict.get('erase_archive', False))
 
         # Archive interval in seconds.
         self._archive_interval = int(stn_dict.get('archive_interval', 60))
@@ -1505,7 +1453,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
 
         # Pass USB parameters to the USB device accessor.
         self.usb_device.in_endpoint = in_endpoint
-        self.usb_device.interface  = interface
+        self.usb_device.interface = interface
 
         # Locate the weather console device on the USB bus.
         if not self.usb_device.find_device(vendor_id, product_id):
@@ -1532,8 +1480,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
                       'sock_rd'   : self.sock_rd})
 
         # Create the usb polling device thread.
-        self._thread_usb_poll = PollUsbDevice(kwargs={'wmr200' :
-                                                        self})
+        self._thread_usb_poll = PollUsbDevice(kwargs={'wmr200': self})
 
         # Start the usb polling device thread.
         self._poll_device_enable = True
@@ -1583,16 +1530,10 @@ class WMR200(weewx.abstractstation.AbstractStation):
         global DEBUG_CHECKSUM
         DEBUG_CHECKSUM = int(stn_dict.get('debug_checksum', 0))
 
-
         if DEBUG_CONFIG_DATA:
             logdbg('Configuration setup')
-            logdbg('  Altitude:%d' % self._altitude)
             logdbg('  Log sensor faults: %s' % self._sensor_stat)
             logdbg('  Using PC Time: %s' % self._use_pc_time)
-            logdbg('  Using calculated heatindex: %s'
-                   % self._use_calc_heatindex)
-            logdbg('  Using calculated windchill: %s'
-                   % self._use_calc_windchill)
             logdbg('  Erase archive data: %s' % self._erase_archive)
             logdbg('  Archive interval: %d' % self._archive_interval)
             logdbg('  Archive threshold: %d' % self._archive_threshold)
@@ -1603,11 +1544,6 @@ class WMR200(weewx.abstractstation.AbstractStation):
         return self._model
 
     @property
-    def altitude(self):
-        """Return the altitude in meters for various calculations."""
-        return self._altitude
-
-    @property
     def sensor_stat(self):
         """Return if sensor status is enabled for device."""
         return self._sensor_stat
@@ -1616,16 +1552,6 @@ class WMR200(weewx.abstractstation.AbstractStation):
     def use_pc_time(self):
         """Flag to use pc time rather than weather console time."""
         return self._use_pc_time
-
-    @property
-    def use_calc_heatindex(self):
-        """Flag to use calculated heatindex rather than weather console."""
-        return self._use_calc_heatindex
-
-    @property
-    def use_calc_windchill(self):
-        """Flag to use calculated windchill rather than weather console."""
-        return self._use_calc_windchill
 
     @property
     def archive_interval(self):
@@ -1819,7 +1745,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
                        % pkt.pkt_id)
                 yield pkt.packet_record()
 
-    def XXXgenArchiveRecords(self, since_ts = 0):
+    def XXXgenArchiveRecords(self, since_ts=0):
         """A generator function to return archive packets from the wmr200.
         
         weewx api to return archive records.
@@ -1878,7 +1804,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
                     loginf(('genArchive() Ignoring received archive record'
                             ' before requested timestamp'))
 
-    def genStartupRecords(self, since_ts = 0):
+    def genStartupRecords(self, since_ts=0):
         """A generator function to present archive packets on start.
 
         weewx api to return archive records."""
@@ -1957,7 +1883,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
                 timestamp_packet_interval = timestamp_packet_current \
                         - timestamp_packet_previous
 
-                if pkt.timestamp_record() > (timestamp_packet_previous \
+                if pkt.timestamp_record() > (timestamp_packet_previous
                                              + self._archive_threshold):
                     loginf(('genStartup() Discarding received archive'
                             ' record exceeding archive interval cnt:%d'
@@ -1999,7 +1925,7 @@ class WMR200(weewx.abstractstation.AbstractStation):
                        % (self._archive_startup, cnt))
                 if timestamp_packet_first is not None:
                     startup_time = timestamp_packet_current \
-                            - timestamp_packet_first
+                        - timestamp_packet_first
 
                     loginf(('genStartup() Yielded %d packets in %d sec '
                             ' between these dates %s ==> %s' %
@@ -2051,3 +1977,17 @@ class WMR200(weewx.abstractstation.AbstractStation):
         self.usb_device.close_device()
         loginf('Driver gracefully exiting')
 
+
+class WMR200ConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def default_stanza(self):
+        return """
+[WMR200]
+    # This section is for the Oregon Scientific WMR200
+
+    # The station model, e.g., WMR200, WMR200A, Radio Shack W200
+    model = WMR200
+
+    # The driver to use:
+    driver = weewx.drivers.wmr200
+"""

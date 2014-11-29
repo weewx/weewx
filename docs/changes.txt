@@ -1,20 +1,120 @@
 weewx change history
 --------------------
 
-X.X.X XX/XX/XX
+3.0.0 XX/XX/XX
+
+Big update with lots of changes and lots of new features. The overall
+goal was to make it easier to write and install extensions. Adding
+custom databases, units, accumulators and many other little things
+have been made easier.
+
+Skins and skin.conf continue to be 100% backwards compatible (since
+V1.5!).  However, search-list extensions will have to be rewritten.
+Details in the Upgrading Guide.
+
+Previously, configuration options for all possible devices were
+included in the configuration file, weewx.conf. Now, for new installs,
+it has been slimmed down to the minimum and, instead, configuration
+options are added on an "as needed" basis, using a new setup.py option
+"configure".
+
+Your configuration file, weewx.conf should be automatically updated to
+V3 by the upgrade process, using your previously chosen hardware. But,
+check it over. Not sure we got everything correct. See the Upgrading
+Guide.
+
+Specific changes follow.
+
+Total rewrite of how data gets bound to a database. You now specify a
+"data binding" to indicate where data should be going, and where it is
+coming from. The default binding is "wx_binding," the weather binding,
+so most users will not have to change a thing.
+ 
+Other database bindings can be used in tags. Example:
+  $current($data_binding=$alt_binding).outTemp
+Alternate times can also be specified:
+  $current($timestamp=$othertime).outTemp
+
+Explicit time differences for trends can now be specified:
+$trend($time_delta=3600).barometer
+
+Introduced a new tag $latest, which uses the last available timestamp
+in a data binding (which may or may not be the same as the "current"
+timestamp).
+
+Introduced a new tag $hours_ago, which returns the stats for X hours
+ago.  So, the max temperature last hour would be
+$hours_ago($hours_ago=1).outTemp.max.
+
+Introduced a shortcut $hour, which returns the stats for this hour.
+So, the high temperature for this hour would be $hour.outTemp.max
+
+Introduced a new tag $days_ago, which returns the stats for X days
+ago.  So, the max temperature the day before yesterday would be
+$days_ago($days_ago=2).outTemp.max.
+
+Included a shortcut $yesterday: The tag $yesterday.outTemp.max would
+be yesterday's max temperature.
+
+Introduced a new aggregation type ".last", which returns the last
+value in an aggregation interval. E.g., $week.outTemp.last would
+return the last temperature seen in the week.
+
+Introduced a new aggregation type ".lasttime" which returns the time
+of the above.
+
+Can now differentiate between the max speed seen in the archive
+records (e.g., $day.windSpeed.max) and the max gust seen
+($day.wind.max or $day.windGust.max).
+
+Allow other data bindings to be used in images.
+
+Made it easier to add new unit types and unit groups.
+
+The archive interval can now change within a database without
+consequences.
+
+Total rewrite of how devices are configured. A single utility
+wee_config_device replaces each of the device-specific configuration
+utilities.
+
+The Customizing Guide was extended with additional examples and option
+documentation.
+
+Removed the no longer needed serviced StdRESTful, obsolete since V2.6
+
+Fixed bug in querying for schemas that prevented older versions of
+MySQL (V4.X) from working.
+
+Improved error handling and retries for ws1, ultimeter, and cc3000
+drivers.
+
+Fixed missing dew initializations in wmr9x8 driver.  Fixed
+model/_model initialization in wmr9x8 driver.
+
+Fixed uninitialized usb interface in wmr200 driver.
+
+Fixed wakup/wakeup typo in _getEEPROM_value in vantage driver.
 
 Made the ftpupload algorithm a little more robust to corruption of the
 file that records the last upload time.
 
-Added observation type 'snow'. It generally follows the semantics
-of 'rain'.
+Added observation type 'snow'. It generally follows the semantics of
+'rain'.
 
-Fixed possible fatal exception in WS23xx driver.  Fixed use of str as variable
-name in WS23xx driver.
+Fixed possible fatal exception in WS23xx driver.  Fixed use of str as
+variable name in WS23xx driver.
 
-Now catches database exceptions raised during commits, converting them to
-weedb exceptions. Weewx catches these, allowing the program to keep going, even
-in the face of most database errors.
+Now catches database exceptions raised during commits, converting them
+to weedb exceptions. Weewx catches these, allowing the program to keep
+going, even in the face of most database errors.
+
+For the fine offset stations, record connection status as rxCheckPercent
+(either 0 or 100%) and sensor battery status as outTempBatteryStatus (0
+indicates ok, 1 indicates low battery).
+
+For WS23xx stations, hardware record generation is now enabled and is the
+default (previously, software record generation was the default).
 
 
 2.7.0 10/11/14

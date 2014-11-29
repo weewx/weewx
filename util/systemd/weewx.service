@@ -1,0 +1,21 @@
+# $Id$
+# systemd configuration for weewx
+
+[Unit]
+Description=weewx weather system
+Requires=syslog.target
+Requires=ntpd.target
+After=syslog.target
+After=ntpd.target
+RequiresMountsFor=/home
+
+[Service]
+ExecStart=/home/weewx/bin/weewxd /home/weewx/weewx.conf
+ExecReload=/bin/kill -HUP $MAINPID
+Type=forking
+PIDFile=/var/run/weewx.pid
+#User=weewx
+#Group=weewx
+
+[Install]
+WantedBy=multi-user.target

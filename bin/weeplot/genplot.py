@@ -3,9 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Routines for generating image plots.
 """
@@ -68,8 +66,8 @@ class GeneralPlot(object):
         self.axis_label_font_color  = weeplot.utilities.tobgr(config_dict.get('axis_label_font_color', '0x000000'))
         self.axis_label_font_size   = int(config_dict.get('axis_label_font_size', 10))
 
-        self.x_label_format         = config_dict.get('x_label_format', None)
-        self.y_label_format         = config_dict.get('y_label_format', None)
+        self.x_label_format         = config_dict.get('x_label_format')
+        self.y_label_format         = config_dict.get('y_label_format')
         
         # Calculate sensible margins for the given image and font sizes.
         self.lmargin = int(4.0 * self.axis_label_font_size)
@@ -326,18 +324,10 @@ class GeneralPlot(object):
                            width = width,
                            maxdx = maxdx)
             elif this_line.plot_type == 'bar' :
-                for ibox in xrange(len(this_line.x)):
-                    x = this_line.x[ibox]
-                    y = this_line.y[ibox]
-                    if y is None :
+                for x, y, bar_width in zip(this_line.x, this_line.y, this_line.bar_width):
+                    if y is None:
                         continue
-                    if ibox > 0:
-                        xleft = this_line.x[ibox-1]
-                    else:
-                        xleft = x - this_line.bar_width
-                    if maxdx is not None and x - xleft > maxdx:
-                        continue
-                    sdraw.rectangle(((xleft, self.yscale[0]), (x, y)), fill=fill_color, outline=color)
+                    sdraw.rectangle(((x - bar_width, self.yscale[0]), (x, y)), fill=fill_color, outline=color)
             elif this_line.plot_type == 'vector' :
                 for (x, vec) in zip(this_line.x, this_line.y):
                     sdraw.vector(x, vec,
@@ -470,9 +460,7 @@ class GeneralPlot(object):
             self.xscale = weeplot.utilities.scale(xmin, xmax)
             
     def _calcYScaling(self):
-        """Calculates y scaling. Can be used 'as-is' for most purposes.
-        
-        """
+        """Calculates y scaling. Can be used 'as-is' for most purposes."""
         # The filter is necessary because unfortunately the value 'None' is not
         # excluded from min and max (i.e., min(None, x) is not necessarily x). 
         # The try block is necessary because min of an empty list throws a
@@ -486,18 +474,10 @@ class GeneralPlot(object):
                     yline_max = None
                 yline_min = - yline_max if yline_max is not None else None
             else:
-                try :
-                    yline_min = min(filter(lambda v : v is not None, line.y))
-                except ValueError:
-                    yline_min = None
-                try :
-                    yline_max = max(filter(lambda v : v is not None, line.y))
-                except ValueError:
-                    yline_max = None
-            if ymin is None: ymin = yline_min
-            elif yline_min is not None : ymin = min(yline_min, ymin)
-            if ymax is None: ymax = yline_max
-            elif yline_max is not None : ymax = max(yline_max, ymax)
+                yline_min = weeutil.weeutil.min_with_none(line.y)
+                yline_max = weeutil.weeutil.max_with_none(line.y)
+            ymin = weeutil.weeutil.min_with_none([ymin, yline_min])
+            ymax = weeutil.weeutil.max_with_none([ymax, yline_max])
 
         if ymin is None and ymax is None :
             # No valid data. Pick an arbitrary scaling
@@ -522,25 +502,20 @@ class GeneralPlot(object):
         return ylabel
     
     def _calcXMinMax(self):
-        xmin = None
-        xmax = None
+        xmin = xmax = None
         for line in self.line_list:
-            xlinemin = min(line.x)
-            xlinemax = max(line.x)
-            assert(xlinemin is not None and xlinemax is not None)
-            # If the line represents a bar chart,
-            # then the actual minimum has to be adjusted for the
-            # bar width
+            xline_min = weeutil.weeutil.min_with_none(line.x)
+            xline_max = weeutil.weeutil.max_with_none(line.x)
+            # If the line represents a bar chart, then the actual minimum has to
+            # be adjusted for the bar width of the first point
             if line.plot_type == 'bar':
-                xlinemin = xlinemin - line.bar_width
-            xmin = min(xlinemin, xmin) if xmin is not None else xlinemin
-            xmax = max(xlinemax, xmax) if xmax is not None else xlinemax
+                xline_min = xline_min - line.bar_width[0]
+            xmin = weeutil.weeutil.min_with_none([xmin, xline_min])
+            xmax = weeutil.weeutil.max_with_none([xmax, xline_max])
         return (xmin, xmax)
 
 class TimePlot(GeneralPlot) :
-    """Class that specializes GeneralPlot for plots where the x-axis is time.
-    
-    """
+    """Class that specializes GeneralPlot for plots where the x-axis is time."""
     
     def _calcXScaling(self):
         """Specialized version for time plots."""

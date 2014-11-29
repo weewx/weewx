@@ -1,11 +1,9 @@
 #
-# Copyright (c) 2012-2014 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2012-2014 Tom Keffer <tkeffer@gmail.com>
 #
-# See the file LICENSE.txt for your full rights.
+#    See the file LICENSE.txt for your full rights.
 #
-# $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Middleware that sits above DBAPI and makes it a little more database independent."""
 
@@ -72,11 +70,11 @@ def drop(db_dict):
 class Connection(object):
     """Abstract base class, representing a connection to a database."""
 
-    def __init__(self, connection, database, dbtype):
+    def __init__(self, connection, database_name, dbtype):
         """Superclass should raise exception of type weedb.OperationalError
         if the database does not exist."""
         self.connection = connection
-        self.database = database
+        self.database_name = database_name
         self.dbtype = dbtype
 
     def cursor(self):

@@ -4,9 +4,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """For uploading files to a remove server via Rsync"""
 

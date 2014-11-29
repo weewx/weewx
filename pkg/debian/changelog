@@ -1,3 +1,25 @@
+weewx (3.0.0a5-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 29 Nov 2014 11:32:52 -0500
+weewx (3.0.0a4-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 29 Nov 2014 07:30:45 -0500
+weewx (3.0.0a3-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 28 Nov 2014 10:24:52 -0800
+weewx (3.0.0a3-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Fri, 28 Nov 2014 13:09:45 -0500
+weewx (3.0.0a2-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 28 Nov 2014 08:42:34 -0800
+weewx (3.0.0a2-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 27 Nov 2014 15:04:29 -0500
+weewx (3.0.0a1-1) unstable; urgency=low
+  * adapt to restructured setup.py options
+  * alphabetize list of station types for easier browsing/finding
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Fri, 31 Oct 2014 22:38:18 -0400
 weewx (2.7.0-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 11 Oct 2014 21:13:16 -0400

@@ -1,40 +1,106 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <!-- $Id$ -->
-  <head>
-    <meta http-equiv="Content-Language" content="en-us" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>weewx: Upgrade Guide</title>
-    <link href="css/weewx_docs.css" rel="stylesheet" />
-  </head>
+<!-- $Id$ -->
+<head>
+  <meta http-equiv="Content-Language" content="en-us" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>weewx: Upgrade Guide</title>
+  <link href="css/weewx_docs.css" rel="stylesheet" />
+  <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet" />
+  <link href="css/jquery.tocify.css" rel="stylesheet" />
+  <link href="css/weewx_docs.css" rel="stylesheet" />
+  <script src="js/jquery-1.11.1.min.js" type="text/javascript"></script>
+  <script src="js/jquery-ui-1.10.4.custom.min.js"></script>
+  <script src="js/jquery.tocify-1.9.0.min.js"></script>
+  <script src="js/weewx.js"></script>
+  <script>
+    $(function() {
+      var level = get_default_level();
+      create_toc_control(level);
+      generate_toc(level);
+    })
 
-  <body>
+    $(window).scroll(function(){
+      $('#toc_controls').css({
+        'left': 8 - $(this).scrollLeft()
+      });
+      $('#toc').css({
+        'left': 8 - $(this).scrollLeft()
+      });
+      $('#legend').css({
+        'left': - $(this).scrollLeft()
+      });
+    });
+  </script>
+  <style>
+table .tty {
+  margin: 0;
+}
+#legend {
+  position: fixed;
+  top: 400px;
+  left: 0px;
+  width: 10%;
+  margin: 15px;
+}
+#legend p {
+  width: 100%;
+  font-size: 80%;
+  border: 1px solid #888888;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.removed {
+  background: #ffdddd;
+}
+.changed {
+  background: #ffe0b0;
+}
+.added {
+  background: #ddffdd;
+}
+  </style>
+</head>
+
+<body>
+
+  <div id="toc_parent">
+    <div id="toc_controls">
+    </div>
+    <div id="toc">
+    </div>
+  </div>
+
+  <div id='legend'>
+    <p class='removed'>removed</p>
+    <p class='changed' style='text-align: center'>changed</p>
+    <p class='added' style='text-align: right'>added</p>
+  </div>
+
+  <div id="technical_content">
 
     <a href='http://weewx.com'>
-      <img src='logo-weewx.png' class='logo' align='right' />
+      <img src='images/logo-weewx.png' class='logo' align='right' />
     </a>
     <h1 class="title">Upgrading <span class="code">weewx</span><br/>
       <span class='version'>
-Version: 2.7.0
+Version: 3.0.0b1
       </span>
     </h1>
 
-    <p>This document contains the following sections:</p>
+    <p>This document explains the three methods of upgrading:</p>
       <ul>
         <li><a href="#Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></li>
         <li><a href="#Upgrading_using_DEB_package">Upgrading using DEB package</a></li>
         <li><a href="#Upgrading_using_RPM_package">Upgrading using RPM package</a></li>
-        <li><a href="#Instructions_for_specific_versions">Instructions for specific versions</a></li>
       </ul>
-    <p>The section <em><a href="#Instructions_for_specific_versions">Instructions for Specific Versions</a></em> applies to each installation method.</p>
+    <p>The section <em><a href="#Instructions_for_specific_versions">Instructions for Specific Versions</a></em> describes changes required from one version to the next.  These changes apply to every upgrade method.</p>
 
     <p class="warning"><strong>Warning!</strong><br/>
-      You must use the same upgrade technique as your initial install!<br/>
-      <br/>
+      You must use the same upgrade technique as your initial install!
       For example, if you used <span class="code">setup.py</span> to install
       <span class='code'>weewx</span>, you should use
-      <span class="code">setup.py</span> to upgrade.<br/>
-      <br/>
+      <span class="code">setup.py</span> to upgrade.
       If you used a DEB or RPM package to install, then you should upgrade
       using the same package type.
     </p>
@@ -131,7 +197,463 @@ Version: 2.7.0
 
     <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
-  <h2>V2.6 or earlier</h2>
+    <h2>From V2.7 or earlier</h2>
+    
+    <h3>Overview</h3>
+    <p>While a lot has changed with Version 3, the upgrade process should
+      take care of most changes for most users. However, if you have installed
+      an extension or, especially, if you have written a custom service, search
+      list extension, or uploader, you will have to make some changes.</p>
+
+    <h3>Database contents</h3>
+    <p>
+      With Version 3, there is no longer a separate "stats" database. Instead,
+      "daily summaries" have been included in the same database as the
+      archive data &mdash; everything is under one name. For example,
+      if you are using sqlite, both the archive data and the daily summaries
+      will be inside file <span class="code">weewx.sdb</span>. With MySQL,
+      everything is inside the database <span class="code">weewx</span>. This
+      makes it easier to keep all data together when working with multiple
+      databases.
+    </p>
+
+    <p>This change in database structure should be transparent to you. On
+      startup, weewx will automatically backfill the new internal daily
+      summaries from the archive data. Your old "stats" database will no longer
+      be used and may safely set aside or even deleted.
+    </p>
+
+    <h3>Pressure calibration</h3>
+    <p>
+      Since the new <span class="code">StdWXCalculate</span> service is applied
+      after the <span class="code">StdCalibrate</span> services, the <span
+        class='code'>pressure_offset</span> parameter is no longer necessary;
+      pressure calibration can be applied just like any other calibration. If
+      your pressure was calibrated using the <span class='code'>pressure_offset</span>
+      parameter, move the calibration to the <span class="code">[StdCalibrate]</span>
+      section. This applies only to CC3000, FineOffsetUSB, Ultimeter, WS1,
+      WS23xx, and WS28xx hardware.
+    </p>
+
+    <h3><span class="code">weewx.conf</span></h3>
+    <p>
+      A version 2.X <span class="code">weewx.conf</span> file is not compatible
+      with Version 3.X. However, the upgrade process should automatically update
+      the file. Nevertheless, the changes are documented below:
+    </p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+        </td>
+        <td>
+          <pre class='tty'>[StdReport]
+<span class='added'>    data_binding = wx_binding</span></pre>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <pre class='tty'>[StdArchive]
+<span class='removed'>    archive_database = archive_sqlite
+    stats_database = stats_sqlite
+    archive_schema = user.schemas.defaultArchiveSchema
+    stats_schema = user.schemas.defaultStatsSchema</span></pre>
+        </td>
+        <td>
+          <pre class='tty'>[StdArchive]
+<span class='added'>    data_binding = wx_binding</span></pre>
+        </td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>
+          <pre class='tty'><span class='added'>[DataBindings]
+    [[wx_binding]]
+        database = archive_sqlite
+        manager = weewx.wxmanager.WXDaySummaryManager
+        schema = schemas.wview.schema</span></pre>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <pre class='tty'>[Databases]
+    [[archive_sqlite]]
+        root = %(WEEWX_ROOT)s
+        <span class='changed'>database</span> = archive/weewx.sdb
+        driver = weedb.sqlite
+<span class='removed'>    [[stats_sqlite]]
+        root = %(WEEWX_ROOT)s
+        database = archive/stats.sdb
+        driver = weedb.sqlite</span>
+    [[archive_mysql]]
+        host = localhost
+        user = weewx
+        password = weewx
+        <span class='changed'>database</span> = weewx
+        driver = weedb.mysql
+<span class='removed'>    [[stats_mysql]]
+        host = localhost
+        user = weewx
+        password = weewx
+        database = stats
+        driver = weedb.mysql</span></pre>
+        </td>
+        <td>
+          <pre class='tty'>[Databases]
+    [[archive_sqlite]]
+        root = %(WEEWX_ROOT)s
+        <span class='changed'>database_name</span> = archive/weewx.sdb
+        driver = weedb.sqlite
+
+
+
+
+    [[archive_mysql]]
+        host = localhost
+        user = weewx
+        password = weewx
+        <span class='changed'>database_name</span> = weewx
+        driver = weedb.mysql
+
+
+
+
+
+
+</pre>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <pre class='tty'>[<span class='changed'>Engines</span>]
+  [[<span class='changed'>WxEngine</span>]]
+    prep_services = \
+weewx.<span class='changed'>wxengine</span>.StdTimeSynch
+    process_services = \
+weewx.<span class='changed'>wxengine</span>.StdConvert, \
+weewx.<span class='changed'>wxengine</span>.StdCalibrate, \
+weewx.<span class='changed'>wxengine</span>.StdQC
+
+    archive_services = \
+weewx.<span class='changed'>wxengine</span>.StdArchive
+    restful_services = \
+weewx.restx.StdStationRegistry, \
+weewx.restx.StdWunderground, \
+weewx.restx.StdPWSweather, \
+weewx.restx.StdCWOP, \
+weewx.restx.StdWOW, \
+weewx.restx.StdAWEKAS
+    report_services = \
+weewx.<span class='changed'>wxengine</span>.StdPrint, \
+weewx.<span class='changed'>wxengine</span>.StdReport</pre>
+        </td>
+        <td>
+          <pre class='tty'>[<span class='changed'>Engine</span>]
+  [[<span class='changed'>Services</span>]]
+    prep_services = \
+weewx.<span class='changed'>engine</span>.StdTimeSynch
+    process_services = \
+weewx.<span class='changed'>engine</span>.StdConvert, \
+weewx.<span class='changed'>engine</span>.StdCalibrate, \
+weewx.<span class='changed'>engine</span>.StdQC<span class='added'>, \
+weewx.wxservices.StdWXCalculate</span>
+    archive_services = \
+weewx.<span class='changed'>engine</span>.StdArchive
+    restful_services = \
+weewx.restx.StdStationRegistry, \
+weewx.restx.StdWunderground, \
+weewx.restx.StdPWSweather, \
+weewx.restx.StdCWOP, \
+weewx.restx.StdWOW, \
+weewx.restx.StdAWEKAS
+    report_services = \
+weewx.<span class='changed'>engine</span>.StdPrint, \
+weewx.<span class='changed'>engine</span>.StdReport</pre>
+        </td>
+      </tr>
+    </table>
+
+    <h3>Custom data sources in skins</h3>
+    <p>The mechanism for specifying non-default data sources in skins has
+      changed.  If you modified the Standard skin, or created or used other
+      skins that draw data from a database other than the weather database,
+      you must change how the other sources are specified.</p>
+      <p>For example, in the <span class='code'>cmon</span> extension:</p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <pre class='tty'>[ImageGenerator]
+    ...
+    [[day_images]]
+        ...
+        [[[daycpu]]]
+            <span class='changed'>archive_database = cmon_sqlite</span>
+            [[[cpu_user]]]
+            [[[cpu_idle]]]
+            [[[cpu_system]]]</pre>
+        </td>
+        <td>
+          <pre class='tty'>[ImageGenerator]
+    ...
+    [[day_images]]
+        ...
+        [[[daycpu]]]
+            <span class='changed'>data_binding = cmon_binding</span>
+            [[[cpu_user]]]
+            [[[cpu_idle]]]
+            [[[cpu_system]]]</pre>
+        </td>
+      </tr>
+    </table>
+    
+    <h3>Search list extensions</h3>
+    <p>
+      The introduction of <em>data bindings</em> has meant a change in the
+      calling signature of <em>search list extensions.</em> By way of example,
+      here's the example from the section
+      <a href="customizing.htm#extending_thelist"><i>Extending the list</i></a>
+      in the <i>Customizing Guide</i>, with the
+      differences highlighted.
+    </p>
+    <table style="width:100%;">
+      <tbody>
+        <tr class="first_row">
+          <td>2.7</td>
+          <td>3.0</td>
+        </tr>
+        <tr>
+          <td><pre class="tty"><span class="changed">def get_extension</span>(self, timespan, <span class="changed">archivedb, statsdb</span>):
+
+    all_stats = <span class="changed">TimeSpanStats</span>(timespan,
+                              <span class="changed">statsdb</span>,
+                              formatter=self.generator.formatter,
+                              converter=self.generator.converter)
+    week_dt = datetime.date.fromtimestamp(timespan.stop) - datetime.timedelta(weeks=1)
+    week_ts = time.mktime(week_dt.timetuple())
+    seven_day_stats = <span class="changed">TimeSpanStats</span>(TimeSpan(week_ts, timespan.stop),
+                                    <span class="changed">statsdb</span>,
+                                    formatter=self.generator.formatter,
+                                    converter=self.generator.converter)
+
+    search_list_extension = {'alltime'   : all_stats,
+                             'seven_day' : seven_day_stats}
+        
+    return <span class="changed">search_list_extension</span></pre>
+          </td>
+          <td><pre class="tty"><span class="changed">def get_extension_list</span>(self, timespan, <span class="changed">db_lookup</span>):
+
+    all_stats = <span class="changed">TimespanBinder</span>(timespan, 
+                               <span class="changed">db_lookup</span>,
+                               formatter=self.generator.formatter,
+                               converter=self.generator.converter)
+    week_dt = datetime.date.fromtimestamp(timespan.stop) - datetime.timedelta(weeks=1)
+    week_ts = time.mktime(week_dt.timetuple())
+    seven_day_stats = <span class="changed">TimespanBinder</span>(TimeSpan(week_ts, timespan.stop),
+                                     <span class="changed">db_lookup</span>,
+                                     formatter=self.generator.formatter,
+                                     converter=self.generator.converter)
+
+    search_list_extension = {'alltime'   : all_stats,
+                             'seven_day' : seven_day_stats}
+        
+    return <span class="changed">[search_list_extension]</span></pre>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>A few things to note:</p>
+    <ul>
+      <li>The name of the extension function has changed from <span
+        class="code">get_extension</span> to <span class="code">get_extension_list</span>.
+      </li>
+      <li>The calling signature has changed. Instead of an archive database
+        and a stats database being passed in, a single <em>database lookup
+          function</em> is passed in.
+      </li>
+      <li>The name of the top-level class in the tag chain has changed from
+        <span class="code">TimeSpanStats</span> to <span class="code">TimespanBinder</span>.
+        See the <i>Customizing Guide</i> for details.
+      </li>
+      <li>Instead of returning a single search list extension, the function
+        should now return a Python <span class="code">list</span> of extensions.
+        The list will be searched in order.
+      </li>
+    </ul>
+
+    <h3>Derived quantities</h3>
+    <p>Some calculations that were done in drivers or in hardware are now
+      done consistently by the new StdWXCalculate service.  Drivers should no
+      longer calculate derived quantities such as windchill, heatindex,
+      dewpoint, or rain rate.</p>
+
+    <h3>Driver APIs</h3>
+    <p>The base class for drivers has been renamed, and new, optional,
+      methods have been defined to provide hooks for configuring hardware
+      and producing default and upgraded configuration stanzas.</p>
+    <p>These changes affect only those who have written custom drivers.</p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <pre class='tty'>import weewx.<span class="changed">abstractstation</span>
+
+class ACME960(weewx.<span class="changed">abstractstation.AbstractStation</span>):
+    ...</pre>
+        </td>
+        <td>
+          <pre class='tty'>import weewx.<span class="changed">drivers</span>
+
+class ACME960(weewx.<span class="changed">drivers.AbstractDevice</span>):
+    ...</pre>
+        </td>
+      </tr>
+    </table>
+
+    <h3>Service APIs</h3>
+    <p>The base class for services has moved.</p>
+    <p>This affects only those who have written custom services.</p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <pre class='tty'>import weewx.<span class="changed">wxengine</span>
+
+class BetterMousetrapService(weewx.<span class="changed">wxengine</span>.StdService):
+    ...</pre>
+        </td>
+        <td>
+          <pre class='tty'>import weewx.<span class="changed">engine</span>
+
+class BetterMousetrapService(weewx.<span class="changed">engine</span>.StdService):
+    ...</pre>
+        </td>
+      </tr>
+    </table>
+
+    <h3>RESTful APIs</h3>
+    <p>Some of the methods internal to RESTful services have changed,
+      specifically those that relate to getting configuration options
+      from <span class='code'>weewx.conf</span> and configuring databases.
+      </p>
+    <p>This affects only those who have written custom RESTful services.</p>
+    <p>Here is an example of obtaining the database dictionary for use in
+      the RESTful service thread.</p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr class="tty">
+        <td>site_dict = weewx.restx.get_dict(config_dict, 'Uploader')
+db_name = config_dict['StdArchive']['archive_database']
+db_dict = config_dict['Databases'][db_name]
+site_dict.setdefault('database_dict', db_dict)
+        </td>
+        <td>site_dict = config_dict['StdRESTful']['Uploader']
+site_dict = accumulateLeaves(site_dict, max_level=1)
+manager_dict = weewx.manager.open_manager_with_config(config_dict, 'wx_binding')
+        </td>
+      </tr>
+    </table>
+
+    <h3>Database APIs</h3>
+    <p>The methods for obtaining, opening, and querying databases have
+      changed. This affects only those who have written code that accesses
+      databases.</p>
+    <p>
+      The class <span class="code">Manager</span> and its subclasses have
+      replaced the old <span class="code">Archive</span> class. The table name
+      is no longer hard-coded, so developers should use the table name from the
+      database binding. There is no longer a separate <span class="code">StatsDb</span>
+      class, its functions having been subsumed into the <span class="code">Manager</span>
+      class and its subclasses.
+    </p>
+    <p>
+      A new class <span class="code">DBBinder</span> is the preferred way of
+      getting a <span class="code">Manager</span> class, as it will
+      automatically take care of instantiating the right class, as well as
+      caching instances of <span class="code">Manager</span>. An instance of <span
+        class="code">DBBinder</span> is held by the engine as attribute <span
+        class="code">db_binder</span>. Here's an example of making a simple query.
+    </p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr class="tty">
+        <td>db = config_dict['StdArchive']['archive_database']
+self.database_dict = config_dict['Databases'][db]
+with weewx.archive.Archive.open(self.database_dict) as archive:
+    val = archive.getSql("SELECT AVG(windSpeed) FROM archive "
+                         "WHERE dateTime&gt;? AND dateTime&lt;=?",
+                         (start_ts, end_ts))
+        </td>
+        <td>with self.engine.db_binder.get_manager('wx_binding') as db_manager:
+    val = db_manager.getSql("SELECT AVG(windSpeed) FROM %s "
+                            "WHERE dateTime&gt;? AND dateTime&lt;=?" %
+                            db_manager.table_name, (start_ts, end_ts))
+        </td>
+      </tr>
+    </table>
+
+    <h3>Generator APIs</h3>
+    <p>
+      The base class for report generators has changed. The old class <span
+        class="code">CachedReportGenerator</span> no longer exists; its
+      functionality has been replaced by an instance of <span class="code">DBBinder</span>,
+      held by the generator superclass. This affects only those who have written
+      customer generators.
+    </p>
+    <p>Here's an example:</p>
+    <table style='width: 100%'>
+      <tr class="first_row">
+        <td style='width: 50%'>2.7</td>
+        <td>3.0</td>
+      </tr>
+      <tr class="tty">
+        <td>class GaugeGenerator(weewx.reportengine.<span
+              class='changed'>CachedReportGenerator</span>)
+    def run(self):
+        archive_name = self.config_dict['GaugeGenerator']['archive_name']
+        archive = self._getArchive(archive_name)
+        results = archive.getSql(...)</td>
+        <td>class GaugeGenerator(weewx.reportengine.<span
+              class='changed'>ReportGenerator</span>)
+    def run(self):
+        db_manager = self.generator.db_binder.get_manager()
+        results = db_manager.getSql(...)
+        </td>
+      </tr>
+    </table>
+
+    <h3>Extension installer</h3>
+      <p>The <span class='code'>setup.py</span> utility is now included in the
+        installation; it is no longer necessary to keep a copy of the
+        <span class='code'>weewx</span> source tree just for the
+        <span class='code'>setup.py</span> utility.</p>
+      <p>For .deb and .rpm installations, the command
+        <span class='code'>wee_setup</span> is a symlink to
+        <span class='code'>setup.py</span>.</p>
+      <p>The options for installing extensions changed slightly to be more
+        consistent with the rest of the options to
+        <span class='code'>setup.py</span>.</p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <pre class='tty'>setup.py --extension --install extensions/basic
+setup.py --extension --install basic.tar.gz
+setup.py --extension --uninstall basic
+setup.py --extension --list
+setup.py --extension --install basic.tar.gz --dryrun</pre>
+        </td>
+        <td>
+          <pre class='tty'>setup.py install --extension=extensions/basic
+setup.py install --extension=basic.tar.gz
+setup.py uninstall --extension basic
+setup.py list-extensions
+setup.py install --extension basic.tar.gz --dry-run</pre>
+        </td>
+      </tr>
+    </table>
+
+    <h2>From V2.6 or earlier</h2>
   <p>Version 2.7 is backwards compatible with earlier versions with
     one minor exception.</p>
   <p>
@@ -170,7 +692,7 @@ second            = " second", " seconds"</pre>
   <pre class="tty">Weewx uptime:  1 day, 1 hour, 41 minutes
 Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
-  <h2>V2.5 or earlier</h2>
+  <h2>From V2.5 or earlier</h2>
     <p>Version 2.6 is backwards compatible with earlier versions, with a couple
     of small exceptions.</p>
     <ul>
@@ -200,7 +722,8 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
       These changes should be done automatically by the
       install routine.</li>
     </ul>
-    <h2>V2.3 or earlier</h2>
+
+    <h2>From V2.3 or earlier</h2>
     <p>The option <span class="code">time_length</span> will now be the exact length 
       of the resultant plot. Before, a plot with <span class="code">time_length</span> 
       equal to 24 hours would result in a plot of 27 hours, now it's 24 hours. If you 
@@ -226,7 +749,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
     service_list = <span class="highlight">weewx.wxengine.StdTimeSynch</span>, weewx.wxengine.StdConvert, weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdPrint, weewx.wxengine.StdRESTful, weewx.wxengine.StdReport
 </p>
 	
-	<h2>V2.2 or earlier</h2>
+	<h2>From V2.2 or earlier</h2>
 	<p>The signature of the function "<span class="code">loader</span>", used to 
 	return an instance of the station device driver, has changed slightly. It 
 	has changed from</p>
@@ -237,7 +760,8 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 	added. This is a reference to the <span class="code">weewx</span> engine.</p>
 	<p>This change will affect only those who have written their own device 
 	driver. </p>
-    <h2>V2.1 or earlier</h2>
+
+    <h2>From V2.1 or earlier</h2>
     <p>Version 2.2 introduces a schema, found in <span class="code">
         bin/user/schemas.py</span>, for the stats database. This schema is
       used only when initially creating the database. If you have a specialized
@@ -245,7 +769,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
       comes with <span class="code">weewx</span>, you should edit this file to
       reflect your changes before attempting to rebuild the database.</p>
 
-    <h2>V1.14 or earlier</h2>
+    <h2>From V1.14 or earlier</h2>
     <p>Version 2.0 introduces many new features, including a revamped internal 
       engine. There are two changes that are not backwards compatible:</p>
     <ul>
@@ -265,7 +789,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
     <p>If you have written a custom report generator it should also be
       backwards compatible.</p>
 
-    <h2>V1.13 or earlier</h2>
+    <h2>From V1.13 or earlier</h2>
     <p>Version 1.14 introduces some new webpages that have been expressly
       formatted for the smartphone by using
       <a href="http://jquery.com/">jQuery</a>.</p>
@@ -316,7 +840,8 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
       will be at <span class="code">public_html/smartphone/index.html</span>. You may want 
       to add a link to this in the template for your main index page
       <span class="code">skins/Standard/index.html.tmpl</span>.</p>
-    <h2>V1.12 or earlier</h2>
+
+    <h2>From V1.12 or earlier</h2>
     <p>Version 1.13 changed the way binding happens to the databases used in reports 
       so that it happens much later. The upshot is that the signature of a few 
       functions changed. Most you are unlikely to encounter. The exception is if you 
@@ -326,7 +851,8 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
       updated to reflect the new function signatures. As a side effect, the 
       illustrated example actually has become much simpler!</p>
     <p>No changes to skins.</p>
-    <h2>V1.9 or earlier</h2>
+
+    <h2>From V1.9 or earlier</h2>
     <p>Version 1.10 introduced several new features. </p>
     <h3>New almanac features, icon, and mobile template</h3>
     <p>Version 1.10 introduces some extra almanac features, such as the azimuth and 
@@ -377,11 +903,13 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
       (which produced &quot;all time&quot; statistics) has been changed to reflect the new 
       signatures.</p>
     <p>This will only affect you if you have written a custom generator.</p>
-    <h2>V1.7.0 or earlier</h2>
+
+    <h2>From V1.7.0 or earlier</h2>
     <p>With the introduction of a standard archiving service, <span class="code">
         StdArchive</span>, the names of some events have changed. This will not affect 
       you unless you have written a custom service.</p>
-    <h2>V.1.5.0 or earlier</h2>
+
+    <h2>From V.1.5.0 or earlier</h2>
     <p>V1.7 introduces <em>skins</em>. The skins live in subdirectory
       <span class="code">skins</span>. They are <em>not</em> compatible with the old
       <span class="code">template</span> subdirectory --- you can&#39;t simply rename
@@ -415,14 +943,15 @@ cooling_base = 65, degree_F</p>
       it has been replaced with directory &#39;<span class="code">skins</span>&#39;. You 
       may delete it if you wish:</p>
     <p class="tty">rm -r <span class='symcode'>$WEEWX_ROOT</span>/templates</p>
-    <h2>V1.4.0 or earlier</h2>
+
+    <h2>From V1.4.0 or earlier</h2>
     <p>Because the configuration file <span class="code">weewx.conf</span> changed 
       significantly going from V1.4 to V1.5, the installation script
       <span class="code">setup.py</span> will NOT merge your old configuration file 
       into the new one. You will have to re-edit <span class="code">weewx.conf</span> 
       to put in your customizations.</p>
-    <h2>V1.2.0 or earlier</h2>
-    <h3>Optional</h3>
+
+    <h2>From V1.2.0 or earlier</h2>
     <p>Option <span class="code">clock_check</span>, previously found in the <span class="code">[VantagePro]</span> section, is now found in the
       <span class="code">[Station]</span> section. The install program will put a 
       default value in the new place, but it will not delete nor move your old value 
@@ -446,6 +975,8 @@ rm <span class='symcode'>$WEEWX_ROOT</span>/bin/weewx/mainloop.py</p>
       &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
     </p>
 
-  </body>
+  </div> <!-- #technical_content -->
+
+</body>
 
 </html>

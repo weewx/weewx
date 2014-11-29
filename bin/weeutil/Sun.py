@@ -1,8 +1,6 @@
 # -*- coding: iso-8859-1 -*-
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """ 
 SUNRISET.C - computes Sun rise/set times, start/end of twilight, and

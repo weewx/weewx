@@ -59,12 +59,10 @@ install: build
 
 # patch paths in files we care about
 	cat $(SRC)/weewx.conf | sed \
- -e 's%station_type =.*%station_type = Simulator%' \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's%HTML_ROOT =.*%HTML_ROOT = /var/www/weewx%' \
  -e 's%archive/weewx.sdb%/var/lib/weewx/weewx.sdb%' \
- -e 's%archive/stats.sdb%/var/lib/weewx/stats.sdb%' \
  > $(DST_CFGDIR)/weewx.conf
 	cat $(SRC)/util/init.d/weewx.debian | sed \
  -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
@@ -77,12 +75,7 @@ install: build
 	ln -s ../share/weewx/weewxd $(DST)/usr/bin/weewxd
 	ln -s ../share/weewx/wee_reports $(DST)/usr/bin/wee_reports
 	ln -s ../share/weewx/wee_config_database $(DST)/usr/bin/wee_config_database
-	ln -s ../share/weewx/wee_config_cc3000 $(DST)/usr/bin/wee_config_cc3000
-	ln -s ../share/weewx/wee_config_fousb $(DST)/usr/bin/wee_config_fousb
-	ln -s ../share/weewx/wee_config_te923 $(DST)/usr/bin/wee_config_te923
-	ln -s ../share/weewx/wee_config_vantage $(DST)/usr/bin/wee_config_vantage
-	ln -s ../share/weewx/wee_config_ws23xx $(DST)/usr/bin/wee_config_ws23xx
-	ln -s ../share/weewx/wee_config_ws28xx $(DST)/usr/bin/wee_config_ws28xx
+	ln -s ../share/weewx/wee_config_device $(DST)/usr/bin/wee_config_device
 
 # keep lintian happy
 	cp $(SRC)/debian/copyright $(DST_DOCDIR)

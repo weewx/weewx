@@ -3,7 +3,9 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-# $Id$
+#    $Id$
+#
+
 """Various weather related formulas and utilities."""
 
 import math
@@ -178,8 +180,6 @@ def altimeter_pressure_Metric(SP_mbar, Z_meter, algorithm='aaASOS'):
 
 def _etterm(elev_meter, t_C):
     """Calculate elevation/temperature term for sea level calculation."""
-    if elev_meter is None or t_C is None:
-        return None
     t_K = t_C + 273.15
     return math.exp( - elev_meter / (t_K * 29.263))
 
@@ -195,14 +195,15 @@ def sealevel_pressure_Metric(sp_mbar, elev_meter, t_C):
 
     bp - sea level pressure (barometer) in millibars
     """
-
-    pt = _etterm(elev_meter, t_C)
-    if sp_mbar is None or pt is None:
+    if sp_mbar is None or elev_meter is None or t_C is None:
         return None
+    pt = _etterm(elev_meter, t_C)
     bp_mbar = sp_mbar / pt if pt != 0 else 0
     return bp_mbar
 
 def sealevel_pressure_US(sp_inHg, elev_foot, t_F):
+    if sp_inHg is None or elev_foot is None or t_F is None:
+        return None
     sp_mbar = sp_inHg / INHG_PER_MBAR
     elev_meter = elev_foot * METER_PER_FOOT
     t_C = (t_F - 32) * 5 / 9

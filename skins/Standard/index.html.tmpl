@@ -1,7 +1,5 @@
 #errorCatcher Echo
-##    $Revision$
-##    $Author$
-##    $Date$
+## $Id$
 ##
 ## Specifying an encoding of UTF-8 is usually safe, but if your text is 
 ## actually in Latin-1, then you should replace the string "UTF-8" with "latin-1"
@@ -338,6 +336,12 @@
           <div class="celestial_group">
             #if $almanac.hasExtras
             ## Extended almanac information is available. Do the full set of tables.
+            #set $sun_altitude = $almanac.sun.alt
+            #if $sun_altitude < 0
+            #set $sun_None="<i>(Always down)</i>"
+            #else
+            #set $sun_None="<i>(Always up)</i>"
+            #end if
             <div class="celestial_body">
               <table>
                 <caption class="caption">Sun</caption>
@@ -347,7 +351,7 @@
                 </tr>
                 <tr>
                   <td class="label">Sunrise:</td>
-                  <td class="data">$almanac.sun.rise</td>
+                  <td class="data">$almanac.sun.rise.string($sun_None)</td>
                 </tr>
                 <tr>
                   <td class="label">Transit:</td>
@@ -355,7 +359,7 @@
                 </tr>
                 <tr>
                   <td class="label">Sunset:</td>
-                  <td class="data">$almanac.sun.set</td>
+                  <td class="data">$almanac.sun.set.string($sun_None)</td>
                 </tr>
                 <tr>
                   <td class="label">End civil twilight:</td>
@@ -367,7 +371,7 @@
                 </tr>
                 <tr>
                   <td class="label">Altitude:</td>
-                  <td class="data">$("%.1f&deg;" % $almanac.sun.alt)</td>
+                  <td class="data">$("%.1f&deg;" % $sun_altitude)</td>
                 </tr>
                 <tr>
                   <td class="label">Right ascension:</td>
@@ -485,9 +489,6 @@
           <img src="daywinddir.png"   alt="Hi Wind" />
           <img src="dayinside.png"    alt="Inside" />
           <img src="daywindvec.png"   alt="Wind Vector" />
-          #if $day.UV.has_data
-          <img src="dayuv.png" alt="UV Index" />
-          #end if
           #if $day.radiation.has_data
           <img src="dayradiation.png" alt="Radiation" />
           #end if

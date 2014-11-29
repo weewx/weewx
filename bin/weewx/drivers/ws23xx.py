@@ -1,17 +1,7 @@
 #!usr/bin/env python
 # $Id$
-#
 # Copyright 2013 Matthew Wall
-#
-# This program is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation, either version 3 of the License, or any later version.
-#
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.
-#
-# See http://www.gnu.org/licenses/
+# See the file LICENSE.txt for your full rights.
 #
 # Thanks to Kenneth Lavrsen for the Open2300 implementation:
 #   http://www.lavrsen.dk/foswiki/bin/view/Open2300/WebHome
@@ -247,14 +237,29 @@ import fcntl
 import os
 import select
 import struct
+import termios
 import tty
 
 import weeutil.weeutil
-import weewx.abstractstation
+import weewx
+import weewx.drivers
 import weewx.units
 import weewx.wxformulas
 
-DRIVER_VERSION = '0.20'
+DRIVER_NAME = 'WS23xx'
+DRIVER_VERSION = '0.22'
+
+
+def loader(config_dict, _):
+    return WS23xxDriver(config_dict=config_dict, **config_dict[DRIVER_NAME])
+
+def configurator_loader(_):
+    return WS23xxConfigurator()
+
+def confeditor_loader():
+    return WS23xxConfEditor()
+
+
 DEFAULT_PORT = '/dev/ttyUSB0'
 
 def logmsg(dst, msg):
@@ -272,20 +277,130 @@ def logcrt(msg):
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
-def loader(config_dict, engine):
-    altitude_m = weewx.units.getAltitudeM(config_dict)
-    station = WS23xx(altitude=altitude_m, config_dict=config_dict,
-                     **config_dict['WS23xx'])
-    return station
 
-class WS23xx(weewx.abstractstation.AbstractStation):
+class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
+    def add_options(self, parser):
+        super(WS23xxConfigurator, self).add_options(parser)
+        parser.add_option("--info", dest="info", action="store_true",
+                          help="display weather station configuration")
+        parser.add_option("--current", dest="current", action="store_true",
+                          help="get the current weather conditions")
+        parser.add_option("--history", dest="nrecords", type=int, metavar="N",
+                          help="display N history records")
+        parser.add_option("--history-since", dest="recmin",
+                          type=int, metavar="N",
+                          help="display history records since N minutes ago")
+        parser.add_option("--clear-memory", dest="clear", action="store_true",
+                          help="clear station memory")
+        parser.add_option("--set-time", dest="settime", action="store_true",
+                          help="set the station clock to the current time")
+        parser.add_option("--set-interval", dest="interval",
+                          type=int, metavar="N",
+                          help="set the station archive interval to N minutes")
+
+    def do_options(self, options, parser, config_dict, prompt):
+        self.station = WS23xxDriver(**config_dict[DRIVER_NAME])
+        if options.current:
+            self.show_current()
+        elif options.nrecords is not None:
+            self.show_history(count=options.nrecords)
+        elif options.recmin is not None:
+            ts = int(time.time()) - options.recmin * 60
+            self.show_history(ts=ts)
+        elif options.settime:
+            self.set_clock(prompt)
+        elif options.interval is not None:
+            self.set_interval(options.interval, prompt)
+        elif options.clear:
+            self.clear_history(prompt)
+        else:
+            self.show_info()
+        self.station.closePort()
+
+    def show_info(self):
+        """Query the station then display the settings."""
+        print 'Querying the station for the configuration...'
+        config = self.station.getConfig()
+        for key in sorted(config):
+            print '%s: %s' % (key, config[key])
+
+    def show_current(self):
+        """Get current weather observation."""
+        print 'Querying the station for current weather data...'
+        for packet in self.station.genLoopPackets():
+            print packet
+            break
+
+    def show_history(self, ts=None, count=0):
+        """Show the indicated number of records or records since timestamp"""
+        print "Querying the station for historical records..."
+        for i, r in enumerate(self.station.genArchiveRecords(since_ts=ts,
+                                                             count=count)):
+            print r
+            if count and i > count:
+                break
+
+    def set_clock(self, prompt):
+        """Set station clock to current time."""
+        ans = None
+        while ans not in ['y', 'n']:
+            v = self.station.getTime()
+            vstr = weeutil.weeutil.timestamp_to_string(v)
+            print "Station clock is", vstr
+            if prompt:
+                ans = raw_input("Set station clock (y/n)? ")
+            else:
+                print "Setting station clock"
+                ans = 'y'
+            if ans == 'y':
+                self.station.setTime()
+                v = self.station.getTime()
+                vstr = weeutil.weeutil.timestamp_to_string(v)
+                print "Station clock is now", vstr
+            elif ans == 'n':
+                print "Set clock cancelled."
+
+    def set_interval(self, interval, prompt):
+        print "Changing the interval will clear the station memory."
+        v = self.station.getArchiveInterval()
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Interval is", v
+            if prompt:
+                ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
+            else:
+                print "Setting interval to %d minutes" % interval
+                ans = 'y'
+            if ans == 'y':
+                self.station.setArchiveInterval(interval)
+                v = self.station.getArchiveInterval()
+                print "Interval is now", v
+            elif ans == 'n':
+                print "Set interval cancelled."
+
+    def clear_history(self, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            v = self.station.getRecordCount()
+            print "Records in memory:", v
+            if prompt:
+                ans = raw_input("Clear console memory (y/n)? ")
+            else:
+                print 'Clearing console memory'
+                ans = 'y'
+            if ans == 'y':
+                self.station.clearHistory()
+                v = self.station.getRecordCount()
+                print "Records in memory:", v
+            elif ans == 'n':
+                print "Clear memory cancelled."
+
+
+class WS23xxDriver(weewx.drivers.AbstractDevice):
     """Driver for LaCrosse WS23xx stations."""
     
-    def __init__(self, **stn_dict) :
+    def __init__(self, **stn_dict):
         """Initialize the station object.
-
-        altitude: Altitude of the station
-        [Required. No default]
 
         port: The serial port, e.g., /dev/ttyS0 or /dev/ttyUSB0
         [Required. Default is /dev/ttyS0]
@@ -293,59 +408,24 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         polling_interval: How often to poll the station, in seconds.
         [Optional. Default is 8 (wired) or 30 (wireless)]
 
-        pressure_offset: Calibration offset in millibars for the station
-        pressure sensor.  This offset is added to the station sensor output
-        before barometer and altimeter pressures are calculated.
-        [Optional. No Default]
-
         model: Which station model is this?
         [Optional. Default is 'LaCrosse WS23xx']
-
-        calculate_windchill: Calculate the windchill instead of using the
-        value from the station.
-        [Optional.  Default is False]
-
-        calculate_dewpoint: Calculate the dewpoint instead of using the
-        value from the station.
-        [Optional.  Default is False]
         """
         self._last_rain = None
         self._last_cn = None
         self._poll_wait = 60
 
-        self.altitude          = stn_dict['altitude']
-        self.model             = stn_dict.get('model', 'LaCrosse WS23xx')
-        self.port              = stn_dict.get('port', DEFAULT_PORT)
-        self.max_tries         = int(stn_dict.get('max_tries', 5))
-        self.retry_wait        = int(stn_dict.get('retry_wait', 30))
-        self.polling_interval  = stn_dict.get('polling_interval', None)
+        self.model = stn_dict.get('model', 'LaCrosse WS23xx')
+        self.port = stn_dict.get('port', DEFAULT_PORT)
+        self.max_tries = int(stn_dict.get('max_tries', 5))
+        self.retry_wait = int(stn_dict.get('retry_wait', 30))
+        self.polling_interval = stn_dict.get('polling_interval', None)
         if self.polling_interval is not None:
             self.polling_interval = int(self.polling_interval)
-        self.calc_windchill    = weeutil.weeutil.tobool(stn_dict.get('calculate_windchill', False))
-        self.calc_dewpoint     = weeutil.weeutil.tobool(stn_dict.get('calculate_dewpoint', False))
-        self.pressure_offset   = stn_dict.get('pressure_offset', None)
-        if self.pressure_offset is not None:
-            self.pressure_offset = float(self.pressure_offset)
-        self.disable_catchup   = weeutil.weeutil.tobool(stn_dict.get('disable_catchup', False))
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('serial port is %s' % self.port)
-        loginf('pressure offset is %s' % self.pressure_offset)
         loginf('polling interval is %s' % self.polling_interval)
-        loginf('windchill will be %s' %
-               ('calculated' if self.calc_windchill else 'read from station'))
-        loginf('dewpoint will be %s' %
-               ('calculated' if self.calc_dewpoint else 'read from station'))
-
-        # FIXME: this is a hack until we modify the driver api to have an
-        # explicit genCatchupRecords method
-        self.force_recgen = weeutil.weeutil.tobool(stn_dict.get('force_software_record_generation', True))
-        if self.force_recgen:
-            config_dict = stn_dict['config_dict']
-            recgen = config_dict['StdArchive']['record_generation']
-            if recgen.lower() != 'software':
-                loginf("forcing record_generation to 'software'")
-                config_dict['StdArchive']['record_generation'] = 'software'
 
     @property
     def hardware_name(self):
@@ -364,14 +444,10 @@ class WS23xx(weewx.abstractstation.AbstractStation):
         while ntries < self.max_tries:
             ntries += 1
             try:
-                with Station(self.port) as s:
+                with WS23xx(self.port) as s:
                     data = s.get_raw_data(SENSOR_IDS)
                 packet = data_to_packet(data, int(time.time() + 0.5),
-                                        altitude=self.altitude,
-                                        pressure_offset=self.pressure_offset,
-                                        last_rain=self._last_rain,
-                                        calc_dewpoint=self.calc_dewpoint,
-                                        calc_windchill=self.calc_windchill)
+                                        last_rain=self._last_rain)
                 self._last_rain = packet['rainTotal']
                 ntries = 0
                 yield packet
@@ -400,39 +476,32 @@ class WS23xx(weewx.abstractstation.AbstractStation):
             raise weewx.RetriesExceeded(msg)
 
     def genArchiveRecords(self, since_ts, count=0):
-        if self.disable_catchup:
-            raise NotImplementedError
-        with Station(self.port) as s:
+        with WS23xx(self.port) as s:
             last_rain = None
-            for ts,data in s.gen_records(since_ts=since_ts, count=count):
-                record = data_to_packet(data, ts,
-                                        altitude=self.altitude,
-                                        pressure_offset=self.pressure_offset,
-                                        last_rain=last_rain,
-                                        calc_dewpoint=True,
-                                        calc_windchill=True)
+            for ts, data in s.gen_records(since_ts=since_ts, count=count):
+                record = data_to_packet(data, ts, last_rain=last_rain)
                 record['interval'] = data['interval']
                 last_rain = record['rainTotal']
                 yield record
 
 #    def getTime(self) :
-#        with Station(self.port) as s:
+#        with WS23xx(self.port) as s:
 #            return s.get_time()
 
 #    def setTime(self):
-#        with Station(self.port) as s:
+#        with WS23xx(self.port) as s:
 #            s.set_time()
 
     def getArchiveInterval(self):
-        with Station(self.port) as s:
+        with WS23xx(self.port) as s:
             return s.get_archive_interval()
 
     def setArchiveInterval(self, interval):
-        with Station(self.port) as s:
+        with WS23xx(self.port) as s:
             s.set_archive_interval(interval)
 
     def getConfig(self):
-        with Station(self.port) as s:
+        with WS23xx(self.port) as s:
             data = s.get_raw_data(Measure.IDS.keys())
             fdata = {}
             for key in data:
@@ -440,24 +509,23 @@ class WS23xx(weewx.abstractstation.AbstractStation):
             return fdata
 
     def getRecordCount(self):
-        with Station(self.port) as s:
+        with WS23xx(self.port) as s:
             return s.get_record_count()
 
     def clearHistory(self):
-        with Station(self.port) as s:
+        with WS23xx(self.port) as s:
             s.clear_memory()
 
 
 # ids for current weather conditions and connection type
-SENSOR_IDS = [ 'it','ih','ot','oh','pa','wind','rh','rt','dp','wc','cn' ]
+SENSOR_IDS = ['it','ih','ot','oh','pa','wind','rh','rt','dp','wc','cn']
 # polling interval, in seconds, for various connection types
-POLLING_INTERVAL = { 0:("cable",8), 3:("lost",60), 15:("wireless",30) }
+POLLING_INTERVAL = {0: ("cable", 8), 3: ("lost", 60), 15: ("wireless", 30)}
 
 def get_conn_info(conn_type):
-    return POLLING_INTERVAL.get(conn_type, ("unknown",60))
+    return POLLING_INTERVAL.get(conn_type, ("unknown", 60))
 
-def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
-                   calc_dewpoint=False, calc_windchill=False):
+def data_to_packet(data, ts, last_rain=None):
     """Convert raw data to format and units required by weewx.
 
                     station      weewx (metric)
@@ -473,7 +541,7 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
     rain rate                    cm/h
     """
 
-    packet = {}
+    packet = dict()
     packet['usUnits'] = weewx.METRIC
     packet['dateTime'] = ts
     packet['inTemp'] = data['it']
@@ -482,7 +550,7 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
     packet['outHumidity'] = data['oh']
     packet['pressure'] = data['pa']
 
-    ws,wd,wso,wsv = data['wind']
+    ws, wd, wso, wsv = data['wind']
     if wso == 0 and wsv == 0:
         packet['windSpeed'] = ws
         if packet['windSpeed'] is not None:
@@ -490,7 +558,7 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
         packet['windDir'] = wd if packet['windSpeed'] else None
     else:
         loginf('invalid wind reading: speed=%s dir=%s overflow=%s invalid=%s' %
-               (ws,wd,wso,wsv))
+               (ws, wd, wso, wsv))
         packet['windSpeed'] = None
         packet['windDir'] = None
 
@@ -502,43 +570,18 @@ def data_to_packet(data, ts, altitude=0, pressure_offset=None, last_rain=None,
         packet['rainTotal'] /= 10 # weewx wants cm
     packet['rain'] = weewx.wxformulas.calculate_rain(
         packet['rainTotal'], last_rain)
+
+    # station provides some derived variables
     packet['rainRate'] = data['rh']
     if packet['rainRate'] is not None:
         packet['rainRate'] /= 10 # weewx wants cm/hr
+    packet['dewpoint'] = data['dp']
+    packet['windchill'] = data['wc']
 
-    packet['heatindex'] = weewx.wxformulas.heatindexC(
-        packet['outTemp'], packet['outHumidity'])
-
-    # station has dewpoint, but provide option to calculate
-    if calc_dewpoint or data['dp'] is None:
-        packet['dewpoint'] = weewx.wxformulas.dewpointC(
-            packet['outTemp'], packet['outHumidity'])
-        logdbg("dewpoint: calculated=%s station=%s" %
-               (packet['dewpoint'], data['dp']))
-    else:
-        packet['dewpoint'] = data['dp']
-
-    # station has windchill, but provide option to calculate
-    if calc_windchill or data['wc'] is None:
-        packet['windchill'] = weewx.wxformulas.windchillC(
-            packet['outTemp'], packet['windSpeed'])
-        logdbg("windchill: calculated=%s station=%s" %
-               (packet['windchill'], data['wc']))
-    else:
-        packet['windchill'] = data['wc']
-
-    # station reports gauge pressure, calculate other pressures
-    adjp = packet['pressure']
-    if pressure_offset is not None and adjp is not None:
-        adjp += pressure_offset
-    packet['barometer'] = weewx.wxformulas.sealevel_pressure_Metric(
-        adjp, altitude, packet['outTemp'])
-    packet['altimeter'] = weewx.wxformulas.altimeter_pressure_Metric(
-        adjp, altitude, algorithm='aaNOAA')
     return packet
 
 
-class Station(object):
+class WS23xx(object):
     """Wrap the Ws2300 object so we can easily open serial port, read/write,
     close serial port without all of the try/except/finally scaffolding."""
 
@@ -581,7 +624,7 @@ class Station(object):
     def set_archive_interval(self, interval):
         """Set the archive interval in minutes."""
         if int(interval) < 1:
-            raise ValueError, 'archive interval must be greater than zero'
+            raise ValueError('archive interval must be greater than zero')
         logdbg('setting hardware archive interval to %s minutes' % interval)
         interval -= 1
         for m,v in [(Measure.IDS['hi'],interval), # archive interval in minutes
@@ -634,10 +677,10 @@ class Station(object):
 
         logdbg("gen_records: since_ts=%s count=%s clock=%s" % 
                (since_ts, count, use_computer_clock))
-        measures = [ Measure.IDS['hi'], Measure.IDS['hw'],
-                     Measure.IDS['hc'], Measure.IDS['hn'] ]
+        measures = [Measure.IDS['hi'], Measure.IDS['hw'],
+                    Measure.IDS['hc'], Measure.IDS['hn']]
         raw_data = read_measurements(self.ws, measures)
-        interval = 1+int(measures[0].conv.binary2value(raw_data[0])) # minute
+        interval = 1 + int(measures[0].conv.binary2value(raw_data[0])) # minute
         latest_ts = int(measures[1].conv.binary2value(raw_data[1])) # epoch
         time_to_next = int(measures[2].conv.binary2value(raw_data[2])) # minute
         numrec = int(measures[3].conv.binary2value(raw_data[3]))
@@ -672,12 +715,8 @@ class Station(object):
         measures = [HistoryMeasure(n) for n in range(count-1, -1, -1)]
         raw_data = read_measurements(self.ws, measures)
         last_ts = latest_ts - (count-1) * interval * 60
-        last_rain = None
         for measure, nybbles in zip(measures, raw_data):
             value = measure.conv.binary2value(nybbles)
-            delta = weewx.wxformulas.calculate_rain(value.rain, last_rain)
-            rainrate = weewx.wxformulas.calculate_rain_rate(
-                delta, last_ts, last_ts-interval*60)
             data_dict = {
                 'interval': interval,
                 'it': value.temp_indoor,
@@ -687,19 +726,18 @@ class Station(object):
                 'pa': value.pressure_absolute,
                 'rt': value.rain,
                 'wind': (value.wind_speed, value.wind_direction, 0, 0),
-                'rh': rainrate,
-                'dp': None, # no dewpoint in history
-                'wc': None, # no windchill in history
+                'rh': None,  # no rain rate in history
+                'dp': None,  # no dewpoint in history
+                'wc': None,  # no windchill in history
                 }
             yield last_ts, data_dict
             last_ts += interval * 60
-            last_rain = value.rain
 
     def get_raw_data(self, labels):
         """Get raw data from the station, return as dictionary."""
-        measures = [ Measure.IDS[m] for m in labels ]
+        measures = [Measure.IDS[m] for m in labels]
         raw_data = read_measurements(self.ws, measures)
-        data_dict = dict(zip(labels, [ m.conv.binary2value(d) for m, d in zip(measures, raw_data) ]))
+        data_dict = dict(zip(labels, [m.conv.binary2value(d) for m, d in zip(measures, raw_data)]))
         return data_dict
 
 
@@ -1949,6 +1987,28 @@ def read_measurements(ws2300, read_requests):
     return results
 
 
+class WS23xxConfEditor(weewx.drivers.AbstractConfEditor):
+    @property
+    def default_stanza(self):
+        return """
+[WS23xx]
+    # This section is for the La Crosse WS-2300 series of weather stations.
+
+    # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
+    port = /dev/ttyUSB0
+
+    # The station model, e.g., 'LaCrosse WS2317' or 'TFA Primus'
+    model = LaCrosse WS23xx
+
+    # The driver to use:
+    driver = weewx.drivers.ws23xx
+"""
+
+    def prompt_for_settings(self):
+        print "Specify the serial port on which the station is connected, for"
+        print "example /dev/ttyUSB0 or /dev/ttyS0."
+        port = self._prompt('port', '/dev/ttyUSB0')
+        return {'port': port}
 
 
 # define a main entry point for basic testing of the station without weewx
@@ -1961,50 +2021,46 @@ if __name__ == '__main__':
 
     usage = """%prog [options] [--debug] [--help]"""
 
-    def main():
-        syslog.openlog('ws23xx', syslog.LOG_PID | syslog.LOG_CONS)
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
-        port = DEFAULT_PORT
-        parser = optparse.OptionParser(usage=usage)
-        parser.add_option('--version', dest='version', action='store_true',
-                          help='display driver version')
-        parser.add_option('--debug', dest='debug', action='store_true',
-                          help='display diagnostic information while running')
-        parser.add_option('--port', dest='port', metavar='PORT',
-                          help='serial port to which the station is connected')
-        parser.add_option('--readings', dest='readings', action='store_true',
-                          help='display sensor readings')
-        parser.add_option("--records", dest="records", type=int, metavar="N",
-                          help="display N station records, oldest to newest")
-        parser.add_option('--help-measures', dest='hm', action='store_true',
-                          help='display measure names')
-        parser.add_option('--measure', dest='measure', type=str,
-                          metavar="MEASURE", help='display single measure')
+    syslog.openlog('ws23xx', syslog.LOG_PID | syslog.LOG_CONS)
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+    port = DEFAULT_PORT
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('--version', dest='version', action='store_true',
+                      help='display driver version')
+    parser.add_option('--debug', dest='debug', action='store_true',
+                      help='display diagnostic information while running')
+    parser.add_option('--port', dest='port', metavar='PORT',
+                      help='serial port to which the station is connected')
+    parser.add_option('--readings', dest='readings', action='store_true',
+                      help='display sensor readings')
+    parser.add_option("--records", dest="records", type=int, metavar="N",
+                      help="display N station records, oldest to newest")
+    parser.add_option('--help-measures', dest='hm', action='store_true',
+                      help='display measure names')
+    parser.add_option('--measure', dest='measure', type=str,
+                      metavar="MEASURE", help='display single measure')
 
-        (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args()
 
-        if options.version:
-            print "ws23xx driver version %s" % DRIVER_VERSION
-            exit(1)
+    if options.version:
+        print "ws23xx driver version %s" % DRIVER_VERSION
+        exit(1)
 
-        if options.debug is not None:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        if options.port:
-            port = options.port
+    if options.debug is not None:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    if options.port:
+        port = options.port
 
-        with Station(port) as s:
-            if options.readings:
-                data = s.get_raw_data(SENSOR_IDS)
-                print data
-            if options.records is not None:
-                for ts,record in s.gen_records(count=options.records):
-                    print ts,record
-            if options.measure:
-                data = s.get_raw_data([options.measure])
-                print data
-            if options.hm:
-                for m in Measure.IDS:
-                    print "%s\t%s" % (m, Measure.IDS[m].name)
-
-if __name__ == '__main__':
-    main()
+    with WS23xx(port) as s:
+        if options.readings:
+            data = s.get_raw_data(SENSOR_IDS)
+            print data
+        if options.records is not None:
+            for ts,record in s.gen_records(count=options.records):
+                print ts,record
+        if options.measure:
+            data = s.get_raw_data([options.measure])
+            print data
+        if options.hm:
+            for m in Measure.IDS:
+                print "%s\t%s" % (m, Measure.IDS[m].name)

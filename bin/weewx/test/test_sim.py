@@ -1,11 +1,9 @@
 #
-#    Copyright (c) 2012 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2012, 2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author: tkeffer $
-#    $Date$
+#    $Id$
 #
 """Test the accumulators by using the simulator wx station"""
 
@@ -14,19 +12,25 @@ import sys
 import syslog
 import time
 import unittest
-import os
+import os.path
 
 import configobj
 
-import weeutil.weeutil
-import weewx.wxengine
+os.environ['TZ'] = 'America/Los_Angeles'
+
 import weedb
+import weeutil.weeutil
+import weewx.manager
 import weewx.drivers.simulator
+import weewx.engine
 
 run_length = 48.0      # How long to run the simulator in hours.
 # The types to actually test:
 test_types = ['outTemp', 'inTemp', 'barometer', 'windSpeed']
-config_path = "simgen.conf"
+
+# Find the configuration file. It's assumed to be in the same directory as me:
+config_path = os.path.join(os.path.dirname(__file__), "simgen.conf")
+
 cwd = None
 
 class Common(unittest.TestCase):
@@ -56,23 +60,21 @@ class Common(unittest.TestCase):
             sys.stderr.write("Error while parsing configuration file %s" % config_path)
             raise
 
+        # Fiddle with config_dict to reflect the database in use:
+        self.config_dict['DataBindings']['wx_binding']['database'] = self.database
+        
         (first_ts, last_ts) = _get_first_last(self.config_dict)
 
-        # Set the database to be used in the configuration dictionary
-        self.config_dict['StdArchive']['archive_database'] = self.archive_db
-        self.config_dict['StdArchive']['stats_database']   = self.stats_db
-        self.archive_db_dict = self.config_dict['Databases'][self.archive_db]
-
         try:
-            with weewx.archive.Archive.open(self.archive_db_dict) as archive:
-                if archive.firstGoodStamp() == first_ts and archive.lastGoodStamp() == last_ts:
-                    print "Simulator need not be run"
+            with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as dbmanager:
+                if dbmanager.firstGoodStamp() == first_ts and dbmanager.lastGoodStamp() == last_ts:
+                    print "\nSimulator need not be run"
                     return 
         except weedb.OperationalError:
             pass
         
         # This will generate the simulator data:
-        engine = weewx.wxengine.StdEngine(self.config_dict)
+        engine = weewx.engine.StdEngine(self.config_dict)
         try:
             engine.run()
         except weewx.StopNow:
@@ -86,7 +88,7 @@ class Common(unittest.TestCase):
 
         global test_types
         archive_interval = self.config_dict['StdArchive'].as_int('archive_interval')
-        with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as archive:
             for record in archive.genBatchRecords():
                 start_ts = record['dateTime'] - archive_interval
                 # Calculate the average (throw away min and max):
@@ -95,7 +97,7 @@ class Common(unittest.TestCase):
                     self.assertAlmostEqual(obs_avg[obs_type], record[obs_type], 2)
                     
         
-class Stopper(weewx.wxengine.StdService):
+class Stopper(weewx.engine.StdService):
     """Special service which stops the engine when it gets to a certain time."""
     
     def __init__(self, engine, config_dict):
@@ -115,15 +117,13 @@ class Stopper(weewx.wxengine.StdService):
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
-        self.archive_db = "archive_sqlite"
-        self.stats_db   = "stats_sqlite"
+        self.database = "archive_sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
         
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
-        self.archive_db = "archive_mysql"
-        self.stats_db   = "stats_mysql"
+        self.database = "archive_mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
         
 def _get_first_last(config_dict):
@@ -168,8 +168,7 @@ def calc_stats(config_dict, start_ts, stop_ts):
 
 def suite():
     tests = ['test_archive_data']
-#    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
-    return unittest.TestSuite(map(TestSqlite, tests))
+    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

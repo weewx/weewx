@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2010-2014 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-# $Id$
-#
+#    $ $
+
 """Data structures and functions for dealing with units."""
 
 import locale
@@ -14,6 +14,7 @@ import syslog
 
 import weewx
 import weeutil.weeutil
+from weeutil.weeutil import ListOfDicts
 
 class UnknownType(object):
     """Indicates that the observation type is unknown."""
@@ -29,69 +30,71 @@ unit_nicknames = {weewx.US       : 'US',
                   weewx.METRICWX : 'METRICWX'}
 
 # This data structure maps observation types to a "unit group"
-obs_group_dict = {"altitude"           : "group_altitude",
-                  "cooldeg"            : "group_degree_day",
-                  "heatdeg"            : "group_degree_day",
-                  "gustdir"            : "group_direction",
-                  "vecdir"             : "group_direction",
-                  "windDir"            : "group_direction",
-                  "windGustDir"        : "group_direction",
-                  "interval"           : "group_interval",
-                  "soilMoist1"         : "group_moisture",
-                  "soilMoist2"         : "group_moisture",
-                  "soilMoist3"         : "group_moisture",
-                  "soilMoist4"         : "group_moisture",
-                  "extraHumid1"        : "group_percent",
-                  "extraHumid2"        : "group_percent",
-                  "inHumidity"         : "group_percent",
-                  "outHumidity"        : "group_percent",
-                  "rxCheckPercent"     : "group_percent",
-                  "altimeter"          : "group_pressure",
-                  "barometer"          : "group_pressure",
-                  "pressure"           : "group_pressure",
-                  "radiation"          : "group_radiation",
-                  "ET"                 : "group_rain",
-                  "dayRain"            : "group_rain",
-                  "hail"               : "group_rain",
-                  "hourRain"           : "group_rain",
-                  "monthRain"          : "group_rain",
-                  "rain"               : "group_rain",
-                  "snow"               : "group_rain",
-                  "rain24"             : "group_rain",
-                  "totalRain"          : "group_rain",
-                  "stormRain"          : "group_rain",
-                  "yearRain"           : "group_rain",
-                  "hailRate"           : "group_rainrate",
-                  "rainRate"           : "group_rainrate",
-                  "wind"               : "group_speed",
-                  "windGust"           : "group_speed",
-                  "windSpeed"          : "group_speed",
-                  "windSpeed10"        : "group_speed",
-                  "windgustvec"        : "group_speed",
-                  "windvec"            : "group_speed",
-                  "rms"                : "group_speed2",
-                  "vecavg"             : "group_speed2",
-                  "dewpoint"           : "group_temperature",
-                  "extraTemp1"         : "group_temperature",
-                  "extraTemp2"         : "group_temperature",
-                  "extraTemp3"         : "group_temperature",
-                  "heatindex"          : "group_temperature",
-                  "heatingTemp"        : "group_temperature",
-                  "inTemp"             : "group_temperature",
-                  "leafTemp1"          : "group_temperature",
-                  "leafTemp2"          : "group_temperature",
-                  "outTemp"            : "group_temperature",
-                  "soilTemp1"          : "group_temperature",
-                  "soilTemp2"          : "group_temperature",
-                  "soilTemp3"          : "group_temperature",
-                  "soilTemp4"          : "group_temperature",
-                  "windchill"          : "group_temperature",
-                  "dateTime"           : "group_time",
-                  "UV"                 : "group_uv",
-                  "consBatteryVoltage" : "group_volt",
-                  "heatingVoltage"     : "group_volt",
-                  "referenceVoltage"   : "group_volt",
-                  "supplyVoltage"      : "group_volt"}
+# We start with a standard object group dictionary, but users are
+# free to extend it:
+obs_group_dict = ListOfDicts({"altitude"           : "group_altitude",
+                              "cooldeg"            : "group_degree_day",
+                              "heatdeg"            : "group_degree_day",
+                              "gustdir"            : "group_direction",
+                              "vecdir"             : "group_direction",
+                              "windDir"            : "group_direction",
+                              "windGustDir"        : "group_direction",
+                              "interval"           : "group_interval",
+                              "soilMoist1"         : "group_moisture",
+                              "soilMoist2"         : "group_moisture",
+                              "soilMoist3"         : "group_moisture",
+                              "soilMoist4"         : "group_moisture",
+                              "extraHumid1"        : "group_percent",
+                              "extraHumid2"        : "group_percent",
+                              "inHumidity"         : "group_percent",
+                              "outHumidity"        : "group_percent",
+                              "rxCheckPercent"     : "group_percent",
+                              "altimeter"          : "group_pressure",
+                              "barometer"          : "group_pressure",
+                              "pressure"           : "group_pressure",
+                              "radiation"          : "group_radiation",
+                              "ET"                 : "group_rain",
+                              "dayRain"            : "group_rain",
+                              "hail"               : "group_rain",
+                              "hourRain"           : "group_rain",
+                              "monthRain"          : "group_rain",
+                              "rain"               : "group_rain",
+                              "snow"               : "group_rain",
+                              "rain24"             : "group_rain",
+                              "totalRain"          : "group_rain",
+                              "stormRain"          : "group_rain",
+                              "yearRain"           : "group_rain",
+                              "hailRate"           : "group_rainrate",
+                              "rainRate"           : "group_rainrate",
+                              "wind"               : "group_speed",
+                              "windGust"           : "group_speed",
+                              "windSpeed"          : "group_speed",
+                              "windSpeed10"        : "group_speed",
+                              "windgustvec"        : "group_speed",
+                              "windvec"            : "group_speed",
+                              "rms"                : "group_speed2",
+                              "vecavg"             : "group_speed2",
+                              "dewpoint"           : "group_temperature",
+                              "extraTemp1"         : "group_temperature",
+                              "extraTemp2"         : "group_temperature",
+                              "extraTemp3"         : "group_temperature",
+                              "heatindex"          : "group_temperature",
+                              "heatingTemp"        : "group_temperature",
+                              "inTemp"             : "group_temperature",
+                              "leafTemp1"          : "group_temperature",
+                              "leafTemp2"          : "group_temperature",
+                              "outTemp"            : "group_temperature",
+                              "soilTemp1"          : "group_temperature",
+                              "soilTemp2"          : "group_temperature",
+                              "soilTemp3"          : "group_temperature",
+                              "soilTemp4"          : "group_temperature",
+                              "windchill"          : "group_temperature",
+                              "dateTime"           : "group_time",
+                              "UV"                 : "group_uv",
+                              "consBatteryVoltage" : "group_volt",
+                              "heatingVoltage"     : "group_volt",
+                              "referenceVoltage"   : "group_volt",
+                              "supplyVoltage"      : "group_volt"})
 
 # Some aggregations when applied to a type result in a different unit
 # group. This data structure maps aggregation type to the group:
@@ -100,6 +103,7 @@ agg_group = {'mintime'    : "group_time",
              'maxtime'    : "group_time",
              'minmaxtime' : "group_time",
              "maxsumtime" : "group_time",
+             "lasttime"   : "group_time",
              'count'      : "group_count",
              'max_ge'     : "group_count",
              'max_le'     : "group_count",
@@ -110,52 +114,52 @@ agg_group = {'mintime'    : "group_time",
 
 # This dictionary maps unit groups to a standard unit type in the 
 # US customary unit system:
-USUnits     = {"group_altitude"    : "foot",
-               "group_count"       : "count",
-               "group_degree_day"  : "degree_F_day",
-               "group_direction"   : "degree_compass",
-               "group_elapsed"     : "second",
-               "group_interval"    : "minute",
-               "group_moisture"    : "centibar",
-               "group_percent"     : "percent",
-               "group_pressure"    : "inHg",
-               "group_radiation"   : "watt_per_meter_squared",
-               "group_rain"        : "inch",
-               "group_rainrate"    : "inch_per_hour",
-               "group_speed"       : "mile_per_hour",
-               "group_speed2"      : "mile_per_hour2",
-               "group_temperature" : "degree_F",
-               "group_time"        : "unix_epoch",
-               "group_deltatime"   : "second",
-               "group_uv"          : "uv_index",
-               "group_volt"        : "volt"}
+USUnits = ListOfDicts({"group_altitude"    : "foot",
+                       "group_count"       : "count",
+                       "group_degree_day"  : "degree_F_day",
+                       "group_direction"   : "degree_compass",
+                       "group_elapsed"     : "second",
+                       "group_interval"    : "minute",
+                       "group_moisture"    : "centibar",
+                       "group_percent"     : "percent",
+                       "group_pressure"    : "inHg",
+                       "group_radiation"   : "watt_per_meter_squared",
+                       "group_rain"        : "inch",
+                       "group_rainrate"    : "inch_per_hour",
+                       "group_speed"       : "mile_per_hour",
+                       "group_speed2"      : "mile_per_hour2",
+                       "group_temperature" : "degree_F",
+                       "group_time"        : "unix_epoch",
+                       "group_deltatime"   : "second",
+                       "group_uv"          : "uv_index",
+                       "group_volt"        : "volt"})
 
 # This dictionary maps unit groups to a standard unit type in the 
 # metric unit system:
-MetricUnits = {"group_altitude"    : "meter",
-               "group_count"       : "count",
-               "group_degree_day"  : "degree_C_day",
-               "group_direction"   : "degree_compass",
-               "group_elapsed"     : "second",
-               "group_interval"    : "minute",
-               "group_moisture"    : "centibar",
-               "group_percent"     : "percent",
-               "group_pressure"    : "mbar",
-               "group_radiation"   : "watt_per_meter_squared",
-               "group_rain"        : "cm",
-               "group_rainrate"    : "cm_per_hour",
-               "group_speed"       : "km_per_hour",
-               "group_speed2"      : "km_per_hour2",
-               "group_temperature" : "degree_C",
-               "group_time"        : "unix_epoch",
-               "group_deltatime"   : "second",
-               "group_uv"          : "uv_index",
-               "group_volt"        : "volt"}
+MetricUnits = ListOfDicts({"group_altitude"    : "meter",
+                           "group_count"       : "count",
+                           "group_degree_day"  : "degree_C_day",
+                           "group_direction"   : "degree_compass",
+                           "group_elapsed"     : "second",
+                           "group_interval"    : "minute",
+                           "group_moisture"    : "centibar",
+                           "group_percent"     : "percent",
+                           "group_pressure"    : "mbar",
+                           "group_radiation"   : "watt_per_meter_squared",
+                           "group_rain"        : "cm",
+                           "group_rainrate"    : "cm_per_hour",
+                           "group_speed"       : "km_per_hour",
+                           "group_speed2"      : "km_per_hour2",
+                           "group_temperature" : "degree_C",
+                           "group_time"        : "unix_epoch",
+                           "group_deltatime"   : "second",
+                           "group_uv"          : "uv_index",
+                           "group_volt"        : "volt"})
 
 # This dictionary maps unit groups to a standard unit type in the 
 # "Metric WX" unit system. It's the same as the "Metric" system,
 # except for rain and speed:
-MetricWXUnits = dict(MetricUnits)
+MetricWXUnits = ListOfDicts(MetricUnits)
 MetricWXUnits['group_rain']     = "mm"
 MetricWXUnits['group_rainrate'] = "mm_per_hour"
 MetricWXUnits['group_speed']    = "meter_per_second"
@@ -223,9 +227,6 @@ conversionDict = {
                             'day'              : lambda x : x/24.0},
       'day'              : {'second'           : lambda x : x*86400.0,
                             'hour'             : lambda x : x*24.0}}
-
-# This will extract all the target unit types in the above dictionary:
-allPossibleUnitTypes = set(z for d in conversionDict.values() for z in d.keys())
 
 # Default unit formatting to be used in the absence of a skin configuration file
 default_unit_format_dict = {"centibar"           : "%.0f",
@@ -369,6 +370,8 @@ class Formatter(object):
     """Holds formatting information for the various unit types.
     
     Examples (using the default formatters):
+    >>> import os
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> f = Formatter()
     >>> print f.toString((20.0, "degree_C", "group_temperature"))
     20.0°C
@@ -449,10 +452,10 @@ class Formatter(object):
         """Return a suitable format string."""
 
         # First, try my internal format dict
-        if self.unit_format_dict.has_key(unit):
+        if unit in self.unit_format_dict:
             return self.unit_format_dict[unit]
         # If that didn't work, try the default dict:
-        elif default_unit_format_dict.has_key(unit):
+        elif unit in default_unit_format_dict:
             return default_unit_format_dict[unit]
         else:
             # Can't find one. Return a generic formatter:
@@ -470,10 +473,10 @@ class Formatter(object):
         """
 
         # First, try my internal label dictionary:
-        if self.unit_label_dict.has_key(unit):
+        if unit in self.unit_label_dict:
             label = self.unit_label_dict[unit]
         # If that didn't work, try the default label dictionary:
-        elif default_unit_label_dict.has_key(unit):
+        elif unit in default_unit_label_dict:
             label = default_unit_label_dict[unit]
         else:
             # Can't find a label. Just return an empty string:
@@ -555,13 +558,18 @@ class Formatter(object):
         return self.ordinate_names[_sector]
     
     def delta_secs_to_string(self, secs, label_format):
-        """Convert elapsed seconds to a string"""
-    
-        etime_dict={}
+        """Convert elapsed seconds to a string
+        
+        Example:
+        >>> f = Formatter()
+        >>> print f.delta_secs_to_string(3*86400+21*3600+7*60+11, default_time_format_dict["delta_time"])
+        3 days, 21 hours, 7 minutes
+        """
+        etime_dict = {}
         for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60), ('second', 1)):
-            amt = int(secs / interval)
+            amt = int(secs // interval)
             etime_dict[label] = amt
-            etime_dict[label+'_label'] = self.get_label_string(label, not amt==1)
+            etime_dict[label + '_label'] = self.get_label_string(label, not amt == 1)
             secs %= interval
         # The version of locale in Python version 2.5 and 2.6 cannot handle interpolation and raises an
         # exception. Be prepared to catch it and use a regular % formatter
@@ -668,17 +676,14 @@ class Converter(object):
         >>> print target_dict
         {'outTemp': 68.0, 'interval': 15, 'barometer': 30.0, 'dateTime': 194758100}
         """
-        # Wrap the source dictionary in a ValueTupleDict. This will cause
-        # keyed values to be returned as ValueTuples:
-        obs_vdt = ValueTupleDict(obs_dict)
-        
         target_dict = {}
-        for obs_type in obs_vdt:
+        for obs_type in obs_dict:
             if obs_type == 'usUnits': continue
             # Do the conversion, but keep only the first value in
             # the ValueTuple:
-            target_dict[obs_type] = self.convert(obs_vdt[obs_type])[0]
+            target_dict[obs_type] = self.convert(as_value_tuple(obs_dict, obs_type))[0]
         return target_dict
+            
             
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
@@ -693,7 +698,10 @@ class Converter(object):
         or (None, None) if they cannot be determined.
         """        
         unit_group = _getUnitGroup(obs_type, agg_type)
-        unit_type  = self.group_unit_dict.get(unit_group)
+        if unit_group in self.group_unit_dict:
+            unit_type = self.group_unit_dict[unit_group]
+        else:
+            unit_type = USUnits.get(unit_group)
         return (unit_type, unit_group)
 
 #==============================================================================
@@ -832,13 +840,17 @@ class ValueHelper(object):
         returns: A ValueHelper with a FixedConverter that converts to the
         specified units."""
 
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if target_unit in ['__call__', 'has_key']:
+            raise AttributeError
+
         # If we are being asked to perform a conversion, make sure it's a
         # legal one:
         if self.value_t[1] != target_unit:        
             try:
                 conversionDict[self.value_t[1]][target_unit]
             except KeyError:
-                raise AttributeError, "Illegal conversion from '%s' to '%s'"%(self.value_t[1], target_unit)
+                raise AttributeError("Illegal conversion from '%s' to '%s'"%(self.value_t[1], target_unit))
         return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
     
     def exists(self):
@@ -847,120 +859,40 @@ class ValueHelper(object):
     def has_data(self):
         return self.exists() and self.value_t[0] is not None
     
+
 #==============================================================================
-#                            class ValueDict
+#                       class UnitInfoHelper and friends
 #==============================================================================
 
-class ValueDict(object):
-    """A dictionary that returns values as ValueHelper.
-    
-    This dictionary holds a dictionary that returns ValueTuples.
-    Then, when it is keyed, it wraps the returned ValueTuples in a 
-    ValueHelper, which can then be used for context sensitive formatting. 
-    
-    Example:
-    >>> vd = ValueDict({'outTemp'   : (20.3, 'degree_C', 'group_temperature'),\
-                        'barometer' : (30.02 , 'inHg', 'group_pressure') })
-    >>> print vd['outTemp']
-    68.5°F
-    
-    Print barometric pressure, overriding the units to millibars:
-    >>> print vd['barometer'].mbar
-    1016.5 mbar
-    """
-    
-    def __init__(self, d, context='current', formatter=Formatter(), converter=Converter()):
-        """Initialize the ValueDict from a dictionary with keys of observation
-        types, values of value tuples.
-        
-        d: A dictionary with keys of observation types, values a ValueTuple
-        
-        context: The time context of the dictionary. This will be passed on to
-        the returned instance of ValueHelper. [Optional. If not given,
-        'current' will be used]
+class UnitHelper(object):
+    def __init__(self, converter):
+        self.converter = converter
+    def __getattr__(self, obs_type):
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if obs_type in ['__call__', 'has_key']:
+            raise AttributeError
+        return self.converter.getTargetUnit(obs_type)[0]
 
-        formatter: A unit formatter. This will be passed on to the returned
-        DictBinder. [Optional. If not given, the default Formatter() will
-        be passed on.]
-        
-        converter: A unit converter. This will be passed on to the returned
-        DictBinder. [Optional. If not given, the default Converter() will
-        be passed on.] 
-        """
-        self.dictionary= d
-        self.context   = context
+class FormatHelper(object):
+    def __init__(self, formatter, converter):
         self.formatter = formatter
         self.converter = converter
-        
-    def __getitem__(self, obs_type):
-        """Look up an observation type (eg, 'outTemp') and return it as a ValueHelper.
-        
-        obs_type: The key.
-        
-        Returns: A ValueHelper, or an object of type UnknownType if the key does
-        not appear in the dictionary.
-        """
-        vt = self.dictionary.get(obs_type, UnknownType(obs_type))
-        return ValueHelper(vt, context=self.context, formatter=self.formatter,
-                           converter=self.converter)
-
     def __getattr__(self, obs_type):
-        """Look up an observation type (eg, 'outTemp') and return it as a ValueHelper.
-        
-        obs_type: An attribute
-        
-        Returns: A ValueHelper, or an object of type UnknownType if the key does
-        not appear in the dictionary.
-        """
-        # The following is so the Python version of Cheetah's NameMapper does not
-        # think I'm a functor or real dictionary.
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
         if obs_type in ['__call__', 'has_key']:
-            raise AttributeError(obs_type)
-        vt = self.dictionary.get(obs_type, UnknownType(obs_type))
-        return ValueHelper(vt, context=self.context, formatter=self.formatter,
-                           converter=self.converter)
+            raise AttributeError
+        return get_format_string(self.formatter, self.converter, obs_type)
     
-#==============================================================================
-#                             class ValueTupleDict
-#==============================================================================
-
-class ValueTupleDict(dict):
-    """A dictionary like any other dictionary, except that when keyed, it
-    returns its results as a ValueTuple. It is useful to be fed into
-    ValudDict above.
+class LabelHelper(object):
+    def __init__(self, formatter, converter):
+        self.formatter = formatter
+        self.converter = converter
+    def __getattr__(self, obs_type):
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if obs_type in ['__call__', 'has_key']:
+            raise AttributeError
+        return get_label_string(self.formatter, self.converter, obs_type)
     
-    Example:
-    >>> vtd = ValueTupleDict({'usUnits' : 1, 'outTemp' : 68.0})
-    >>> print vtd['outTemp']
-    (68.0, 'degree_F', 'group_temperature')
-    >>> print vtd.get('outTemp')
-    (68.0, 'degree_F', 'group_temperature')
-    >>> print vtd.get('foo', 100.0)
-    100.0
-    """
-    def __getitem__(self, key):
-
-        # Get the standard unit system from the underlying dictionary:
-        std_unit_system = dict.__getitem__(self, 'usUnits')
-        # Get the unadorned value from the underlying dictionary:
-        val = dict.__getitem__(self, key)
-        
-        # Given this standard unit system, what is the unit type of this
-        # particular observation type?
-        (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(key)
-        # Form the value-tuple and return it 
-        return ValueTuple(val, unit_type, unit_group)
-    
-    def get(self, key, default=None):
-        if self.has_key(key):
-            return self[key]
-        else:
-            return default
-    
-#==============================================================================
-#                             class UnitInfoHelper
-#==============================================================================
-
 class UnitInfoHelper(object):
     """Helper class used for for the $unit template tag."""
     def __init__(self, formatter, converter):
@@ -968,15 +900,11 @@ class UnitInfoHelper(object):
         formatter: an instance of Formatter
         converter: an instance of Converter
         """
+        self.unit_type = UnitHelper(converter)
+        self.format    = FormatHelper(formatter, converter)
+        self.label     = LabelHelper(formatter, converter)
         self.group_unit_dict = converter.group_unit_dict
-        self.unit_type = {}
-        self.label     = {}
-        self.format    = {}
-        for obs_type in obs_group_dict:
-            self.unit_type[obs_type] = u = converter.getTargetUnit(obs_type)[0]
-            self.format[obs_type] = formatter.get_format_string(u)
-            self.label[obs_type]  = formatter.get_label_string(u)
-    
+
     # This is here for backwards compatibility:
     @property
     def unit_type_dict(self):
@@ -1095,6 +1023,18 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     else:
         return (None, None)
 
+def get_format_string(formatter, converter, obs_type):
+    # First convert to the target unit type:
+    u = converter.getTargetUnit(obs_type)[0]
+    # Then look up the format string for that unit type:
+    return formatter.get_format_string(u)
+
+def get_label_string(formatter, converter, obs_type, plural=True):
+    # First convert to the target unit type:    
+    u = converter.getTargetUnit(obs_type)[0]
+    # Then look up the label for that unit type:
+    return formatter.get_label_string(u, plural)
+
 class GenWithConvert(object):
     """Generator wrapper. Converts the output of the wrapped generator to a
     target unit system.
@@ -1134,21 +1074,6 @@ class GenWithConvert(object):
         _record_c['usUnits'] = self.target_unit_system
         return _record_c
 
-
-def getAltitude(config_dict, units):
-    """Get altitude, in specified units, from the Station section of dict."""
-    altitude_t = weeutil.weeutil.option_as_list(
-        config_dict['Station'].get('altitude', (None, None)))
-    altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
-    altitude = convert(altitude_vt, units)[0]
-    return altitude
-
-def getAltitudeM(config_dict):
-    return getAltitude(config_dict, 'meter')
-
-def getAltitudeFt(config_dict):
-    return getAltitude(config_dict, 'foot')
-
 def to_US(datadict):
     """Convert the units used in a dictionary to US Customary."""
     return to_std_system(datadict, weewx.US)
@@ -1173,9 +1098,33 @@ def to_std_system(datadict, unit_system):
         _datadict_target['usUnits'] = unit_system
         return _datadict_target
 
+def as_value_tuple(record_dict, obs_type):
+    """Look up an observation type in a record dictionary, returning the result
+    as a ValueTuple. If not found, an object of type UnknownType will be returned."""
+
+    # Is the record None?
+    if record_dict is None:
+        # Yes. The record was probably not in the database. Signal a value of None
+        # and, arbitrarily, pick the US unit system:
+        val = None
+        std_unit_system = weewx.US
+    elif obs_type not in record_dict:
+        # There is a record, but the observation type is not in it
+        return UnknownType(obs_type)
+    else:
+        # There is a record, and the observation type is in it.
+        val = record_dict[obs_type]
+        std_unit_system = record_dict['usUnits']
+
+    # Given this standard unit system, what is the unit type of this
+    # particular observation type?
+    (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
+    # Form the value-tuple and return it:
+    return ValueTuple(val, unit_type, unit_group)
+
 if __name__ == "__main__":
     
     import doctest
 
     if not doctest.testmod().failed:
-        print "PASSED"
+        print("PASSED")

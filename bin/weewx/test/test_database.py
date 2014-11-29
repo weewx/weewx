@@ -4,21 +4,19 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision: 670 $
-#    $Author: tkeffer $
-#    $Date: 2012-10-11 16:55:54 -0700 (Thu, 11 Oct 2012) $
+#    $Id$
 #
 """Test archive and stats database modules"""
 from __future__ import with_statement
 import unittest
 import time
 
-import weewx.archive
+import weewx.manager
 import weedb
 import weeutil.weeutil
 
-archive_sqlite = {'database': '/tmp/weedb.sdb', 'driver':'weedb.sqlite'}
-archive_mysql  = {'database': 'test_weedb', 'user':'weewx', 'password':'weewx', 'driver':'weedb.mysql'}
+archive_sqlite = {'database_name': '/var/tmp/weewx_test/weedb.sdb', 'driver':'weedb.sqlite'}
+archive_mysql  = {'database_name': 'test_weedb', 'user':'weewx', 'password':'weewx', 'driver':'weedb.mysql'}
 
 archive_schema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
                   ('usUnits',              'INTEGER NOT NULL'),
@@ -80,20 +78,20 @@ class Common(unittest.TestCase):
         
     def test_no_archive(self):
         # Attempt to open a non-existent database results in an exception:
-        self.assertRaises(weedb.OperationalError, weewx.archive.Archive.open, self.archive_db_dict)
+        self.assertRaises(weedb.OperationalError, weewx.manager.Manager.open, self.archive_db_dict)
 
     def test_unitialized_archive(self):
         _connect = weedb.create(self.archive_db_dict)
-        self.assertRaises(weewx.UninitializedDatabase, weewx.archive.Archive(_connect))
+        self.assertRaises(weewx.UninitializedDatabase, weewx.manager.Manager(_connect))
         
     def test_create_archive(self):
-        archive = weewx.archive.Archive.open_with_create(self.archive_db_dict, archive_schema)
+        archive = weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema)
         self.assertItemsEqual(archive.connection.tables(), ['archive'])
         self.assertEqual(archive.connection.columnsOf('archive'), ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
         archive.close()
         
         # Now that the database exists, these should also succeed:
-        archive = weewx.archive.Archive.open(self.archive_db_dict)
+        archive = weewx.manager.Manager.open(self.archive_db_dict)
         self.assertItemsEqual(archive.connection.tables(), ['archive'])
         self.assertEqual(archive.connection.columnsOf('archive'), ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
         self.assertEqual(archive.sqlkeys, ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
@@ -101,7 +99,7 @@ class Common(unittest.TestCase):
         archive.close()
         
     def test_empty_archive(self):
-        archive = weewx.archive.Archive.open_with_create(self.archive_db_dict, archive_schema)
+        archive = weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema)
         self.assertEqual(archive.firstGoodStamp(), None)
         self.assertEqual(archive.lastGoodStamp(), None)
         self.assertEqual(archive.getRecord(123456789), None)
@@ -109,11 +107,11 @@ class Common(unittest.TestCase):
         
     def test_add_archive_records(self):
         # Test adding records using a 'with' statement:
-        with weewx.archive.Archive.open_with_create(self.archive_db_dict, archive_schema) as archive:
+        with weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema) as archive:
             archive.addRecord(genRecords())
 
         # Now test to see what's in there:            
-        with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+        with weewx.manager.Manager.open(self.archive_db_dict) as archive:
             self.assertEqual(archive.firstGoodStamp(), start_ts)
             self.assertEqual(archive.lastGoodStamp(), stop_ts)
             self.assertEqual(archive.std_unit_system, std_unit_system)
@@ -138,15 +136,25 @@ class Common(unittest.TestCase):
 
     def test_get_records(self):
         # Add a bunch of records:
-        with weewx.archive.Archive.open_with_create(self.archive_db_dict, archive_schema) as archive:
+        with weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema) as archive:
             archive.addRecord(genRecords())
 
         # Now fetch them:
-        with weewx.archive.Archive.open(self.archive_db_dict) as archive:
-            # Test getSql:
+        with weewx.manager.Manager.open(self.archive_db_dict) as archive:
+            # Test getSql on existing type:
             bar0 = archive.getSql("SELECT barometer FROM archive WHERE dateTime=?", (start_ts,))
             self.assertEqual(bar0[0], barfunc(0))
-            
+
+            # Test getSql on existing type, no record:
+            bar0 = archive.getSql("SELECT barometer FROM archive WHERE dateTime=?", (start_ts + 1,))
+            self.assertEqual(bar0, None)
+
+            # Try getSql on non-existing types
+            self.assertRaises(weedb.OperationalError, archive.getSql, "SELECT foo FROM archive WHERE dateTime=?",
+                              (start_ts,))
+            self.assertRaises(weedb.OperationalError, archive.getSql, "SELECT barometer FROM foo WHERE dateTime=?",
+                              (start_ts,))
+
             # Test genSql:
             for (irec,_row) in enumerate(archive.genSql("SELECT barometer FROM archive;")):
                 self.assertEqual(_row[0], barfunc(irec))
@@ -176,20 +184,25 @@ class Common(unittest.TestCase):
             target_ts = timevec[nrecs/2] - interval/2
             _rec = archive.getRecord(target_ts, max_delta=interval/50)
             self.assertEqual(_rec, None)
+
+            # Try finding a non-existent record:
+            target_ts = timevec[nrecs/2] + 1
+            _rec = archive.getRecord(target_ts)
+            self.assertEqual(_rec, None)
             
         # Now try fetching them as vectors:
-        with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+        with weewx.manager.Manager.open(self.archive_db_dict) as archive:
             barvec = archive.getSqlVectors('barometer', start_ts, stop_ts)
-            # Recall that barvec will be a 2-way tuple. The first element is the value tuple of
-            # the time vector, the second of the data vector.
-            self.assertEqual(barvec[0], ([timefunc(irec) for irec in range(nrecs)], "unix_epoch", "group_time"))
-            self.assertEqual(barvec[1], ([barfunc(irec)  for irec in range(nrecs)], "inHg",       "group_pressure"))
+            # Recall that barvec will be a 3-way tuple. The first element is the vector of starting
+            # times, the second the vector of ending times, and the third the data vector.
+            self.assertEqual(barvec[1], ([timefunc(irec) for irec in range(nrecs)], "unix_epoch", "group_time"))
+            self.assertEqual(barvec[2], ([barfunc(irec)  for irec in range(nrecs)], "inHg",       "group_pressure"))
 
         # Now try fetching the vectora gain, but using aggregation.
         # Start by setting up a generator function that will return the records to be
         # included in each aggregation
         gen = gen_included_recs(timevec, start_ts, stop_ts, 6*interval)
-        with weewx.archive.Archive.open(self.archive_db_dict) as archive:
+        with weewx.manager.Manager.open(self.archive_db_dict) as archive:
             barvec = archive.getSqlVectors('barometer', start_ts, stop_ts, aggregate_interval=6*interval, aggregate_type='avg')
             n_expected = int(nrecs / 6)
             self.assertEqual(n_expected, len(barvec[0][0]))
@@ -198,11 +211,11 @@ class Common(unittest.TestCase):
                 recs = gen.next()
                 # Make sure the timestamp of the aggregation interval is the same as the last
                 # record to be included in the aggregation:
-                self.assertEqual(timevec[max(recs)], barvec[0][0][irec])
+                self.assertEqual(timevec[max(recs)], barvec[1][0][irec])
                 # Calculate the expected average of the records included in the aggregation.
                 expected_avg = sum((barfunc(i) for i in recs)) / len(recs)
                 # Compare them.
-                self.assertAlmostEqual(expected_avg, barvec[1][0][irec])
+                self.assertAlmostEqual(expected_avg, barvec[2][0][irec])
 
 class TestSqlite(Common):
 

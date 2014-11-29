@@ -3,9 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision$
-#    $Author$
-#    $Date$
+#    $Id$
 #
 """Defines (mostly static) information about a station."""
 import time
@@ -58,7 +56,7 @@ class StationInfo(object):
         # Locations frequently have commas in them. Guard against ConfigObj turning it into a list:
         self.location        = weeutil.weeutil.list_as_string(stn_dict.get('location', 'Unknown'))
         self.week_start      = int(stn_dict.get('week_start', 6))
-        self.station_url     = stn_dict.get('station_url', None)
+        self.station_url     = stn_dict.get('station_url')
         # For backwards compatibility:
         self.webpath         = self.station_url
 
@@ -119,6 +117,9 @@ class Station(object):
                                        converter=self.converter)
 
     def __getattr__(self, name):
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if name in ['__call__', 'has_key']:
+            raise AttributeError
         # For anything that is not an explicit attribute of me, try
         # my instance of StationInfo. 
         return getattr(self.stn_info, name)

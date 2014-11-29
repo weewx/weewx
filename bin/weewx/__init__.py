@@ -8,7 +8,7 @@
 """Package weewx, containing modules specific to the weewx runtime engine."""
 import time
 
-__version__="2.7.0"
+__version__="3.0.0b1"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -60,8 +60,14 @@ class StopNow(StandardError):
     """Exception thrown to stop the engine."""
     
 class UninitializedDatabase(StandardError):
-    """Exception thrown when attempting to use an unitialized database."""
+    """Exception thrown when attempting to use an uninitialized database."""
     
+class UnknownDatabase(StandardError):
+    """Exception thrown when attempting to use an unknown database."""
+
+class UnknownBinding(StandardError):
+    """Exception thrown when attempting to use an unknown data binding."""
+
 #===============================================================================
 #                       Possible event types.
 #===============================================================================

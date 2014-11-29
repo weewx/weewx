@@ -3,9 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Revision: 689 $
-#    $Author: tkeffer $
-#    $Date: 2012-10-16 15:54:56 -0700 (Tue, 16 Oct 2012) $
+#    $Id$
 #
 """Test the weedb package"""
 
@@ -14,8 +12,8 @@ import unittest
 
 import weedb
 
-sqlite_db_dict = {'database': '/tmp/test.sdb', 'driver':'weedb.sqlite', 'timeout': '2'}
-mysql_db_dict  = {'database': 'test', 'user':'weewx', 'password':'weewx', 'driver':'weedb.mysql'}
+sqlite_db_dict = {'database_name': '/tmp/test.sdb', 'driver':'weedb.sqlite', 'timeout': '2'}
+mysql_db_dict  = {'database_name': 'test', 'user':'weewx', 'password':'weewx', 'driver':'weedb.mysql'}
 
 # Schema summary:
 # (col_number, col_name, col_type, can_be_null, default_value, part_of_primary)

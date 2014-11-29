@@ -80,16 +80,56 @@
       <td>50.284&#176;F</td>
     </tr>
     <tr>
-      <td>Outside Temperature trend (3 hrs)</td>
+      <td>Outside Temperature (with explicit binding to 'wx_binding')</td>
+      <td>10.2&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (with explicit binding to 'alt_binding')</td>
+      <td>7.3&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature with nonsense binding 'foo_binding'</td>
+      <td>?'foo_binding'?</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature with explicit time</td>
+      <td>10.2&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature with nonsense time</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature trend (3 hours)</td>
       <td>5.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature trend with explicit time_delta (3600 seconds)</td>
+      <td>2.4&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature trend where previous value is known to be None (9000 seconds)</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Trend with nonsense type</td>
+      <td>?'foobar'?</td>
     </tr>
     <tr>
       <td>Barometer (normal)</td>
       <td>1042.2 mbar</td>
     </tr>
     <tr>
-      <td>Barometer trend (3 hrs)</td>
+      <td>Barometer trend (3 hours)</td>
       <td>-3.6 mbar</td>
+    </tr>
+    <tr>
+      <td>Barometer using $latest</td>
+      <td>1042.2 mbar</td>
+    </tr>
+    <tr>
+      <td>Barometer using $latest and explicit data binding</td>
+      <td>1029.0 mbar at 1283538000</td>
     </tr>
     <tr>
       <td>Wind Chill (normal)</td>
@@ -155,11 +195,82 @@
 
   <hr/>
 
+  <h1>Tests for tag $hour</h1>
+  <table>
+    <tr>
+        <td>Start of hour:</td>
+        <td>09/03/10 11:00:00</td>
+    </tr>
+    <tr>
+        <td>Start of hour (unix epoch time):</td>
+        <td>1283536800.0</td>
+    </tr>
+    <tr>
+      <td>Max Temperature</td>
+      <td>10.2&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature</td>
+      <td>9.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Time of max temperature:</td>
+      <td>11:20</td>
+    </tr>
+    <tr>
+      <td>Time of min temperature:</td>
+      <td>11:10</td>
+    </tr>
+  </table>
+  
+  <h1>Iterate over three hours:</h1>
+  <table>
+    <tr>
+      <td>Start of hour</td>
+      <td>Min temperature</td>
+      <td>When</td>
+    </tr>
+    <tr>
+      <td>08:00</td>
+      <td>4.3&#176;C</td>
+      <td>08:10</td>
+    </tr>
+    <tr>
+      <td>09:00</td>
+      <td>5.5&#176;C</td>
+      <td>09:10</td>
+    </tr>
+    <tr>
+      <td>10:00</td>
+      <td>7.4&#176;C</td>
+      <td>10:10</td>
+    </tr>
+    <tr>
+      <td>11:00</td>
+      <td>9.7&#176;C</td>
+      <td>11:10</td>
+    </tr>
+  </table>
+  
+  
+  
   <h1>Tests for tag $day</h1>
   <table>
     <tr>
+        <td>Start of day:</td>
+        <td>09/03/10 00:00:00</td>
+    </tr>
+    <tr>
+        <td>Start of day (unix epoch time):</td>
+        <td>1283497200</td>
+    </tr>
+    <tr>
+        <td>End of day (unix epoch time):</td>
+        <td>1283583600</td>
+    </tr>
+    <tr>
       <td>Max Temperature</td>
-      <td>25.9&#176;C</td>
+      <td>17.4&#176;C</td>
     </tr>
     <tr>
       <td>Min Temperature</td>
@@ -167,11 +278,23 @@
     </tr>
     <tr>
       <td>Time of max temperature:</td>
-      <td>19:00</td>
+      <td>00:10</td>
     </tr>
     <tr>
       <td>Time of min temperature:</td>
       <td>07:00</td>
+    </tr>
+    <tr>
+      <td>Last temperature of the day</td>
+      <td>10.2&#176;C</td>
+    </tr>
+    <tr>
+      <td>Time of the last temperature of the day</td>
+      <td>09/03/10 11:20:00</td>
+    </tr>
+    <tr>
+      <td>Max Temperature in alt_binding</td>
+      <td>10.9&#176;C</td>
     </tr>
     <tr>
       <td>Min temp with explicit conversion to Celsius</td>
@@ -198,24 +321,40 @@
       <td>14.7 mm</td>
     </tr>
     <tr>
-      <td>High Wind</td>
+      <td>High Wind from "$day.wind.max"</td>
       <td>39 kph from 90&#176; at 01:00</td>
     </tr>
     <tr>
+      <td>High Wind from "$day.windGust.max"</td>
+      <td>39 kph</td>
+    </tr>
+    <tr>
+      <td>High Wind from "$day.windSpeed.max"</td>
+      <td>32 kph</td>
+    </tr>
+    <tr>
+      <td>Average wind from "$day.wind.avg"</td>
+      <td>31 kph</td>
+    </tr>
+    <tr>
+      <td>High Wind from "$day.windSpeed.avg"</td>
+      <td>31 kph</td>
+    </tr>
+    <tr>
       <td>Average aggregation (wind)</td>
-      <td>27 kph</td>
+      <td>31 kph</td>
     </tr>
     <tr>
       <td>RMS aggregation(wind)</td>
-      <td>27 kph</td>
+      <td>31 kph</td>
     </tr>
     <tr>
       <td>Aggregation Vector Average (wind)</td>
-      <td>24 kph</td>
+      <td>30 kph</td>
     </tr>
     <tr>
       <td>Aggregation Vector Direction (wind)</td>
-      <td>127&#176;</td>
+      <td>107&#176;</td>
     </tr>
     <tr>
       <td>Test tag "has_data" with nonsense type</td>
@@ -237,14 +376,67 @@
 
   <hr/>
   
+  <h1>Tests for tag $yesterday</h1>
+  <table>
+    <tr>
+        <td>Start of yesterday:</td>
+        <td>09/02/10 00:00:00</td>
+    </tr>
+    <tr>
+        <td>Start of yesterday (unix epoch time):</td>
+        <td>1283410800</td>
+    </tr>
+    <tr>
+      <td>Max Temperature yesterday</td>
+      <td>26.2&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature yesterday</td>
+      <td>4.1&#176;C</td>
+    </tr>
+    <tr>
+      <td>Time of max temperature yesterday:</td>
+      <td>19:00</td>
+    </tr>
+    <tr>
+      <td>Time of min temperature yesterday:</td>
+      <td>07:00</td>
+    </tr>
+    <tr>
+      <td>Yesterday's last temperature</td>
+      <td>17.9&#176;C</td>
+    </tr>
+    <tr>
+      <td>Time of yesterday's last temperature</td>
+      <td>09/03/10 00:00:00</td>
+    </tr>  
+  </table>
+  
   <h1>Tests for tag $rainyear</h1>
   <table>
     <tr>
       <td>Rainyear total</td>
-      <td>2199.4 mm</td>
+      <td>1490.5 mm</td>
     </tr>
   </table>
     
+  <h1>Test for tag $alltime</h1>
+  <table>
+    <tr>
+      <td align="right">Max temp from $alltime.outTemp.max</td>
+      <td align="left">37.8&#176;C <br/>
+      at 02-Jul-2010 19:00</td>
+    </tr>
+    <tr>
+      <td align="right">High Wind from "$alltime.wind.max"</td>
+      <td align="left">
+      39 kph <br/>
+      from 90&#176; <br/>
+      at 02-Jan-2010 00:00
+      </td>
+    </tr>
+  </table>
+
   <hr/>
 
   <h1>Tests for tag $Extras</h1>
@@ -292,10 +484,32 @@
     <tr>
       <td align="right">Example from customizing guide<br/>
       (&quot;$day.outTemp.max.formatted$unit.label.outTemp&quot;)</td>
-      <td align="left">25.9&#176;C</td>
+      <td align="left">17.4&#176;C</td>
     </tr>
-    
-
+    <tr>
+      <td align="right">Add a new unit type, existing group</td>
+      <td align="left">degree_C</td>
+    </tr>
+    <tr>
+      <td align="right">Check its label</td>
+      <td align="left">&#176;C</td>
+    </tr>
+    <tr>
+      <td align="right">Check its format</td>
+      <td align="left">%.1f</td>
+    </tr>
+    <tr>
+      <td align="right">Add a new unit type, new group</td>
+      <td align="left">amp</td>
+    </tr>
+    <tr>
+      <td align="right">Check its label</td>
+      <td align="left"> A</td>
+    </tr>
+    <tr>
+      <td align="right">Check its format</td>
+      <td align="left">%.1f</td>
+    </tr>
   </table>
   
   <hr/>

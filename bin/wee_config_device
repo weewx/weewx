@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+# $Id$
+# Copyright 2013 Matthew Wall
+# See the file LICENSE.txt for your full rights.
+
+"""Command line utility for configuring devices."""
+
+import sys
+import syslog
+import weeutil.weeutil
+
+def main():
+    syslog.openlog('wee_config_device', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+
+    # Load the configuration file
+    config_fn, config_dict = weeutil.weeutil.read_config(None, sys.argv[1:])
+    print 'Using configuration file %s' % config_fn
+
+    # Find the device type
+    device_type = config_dict['Station']['station_type']
+    driver = config_dict[device_type]['driver']
+
+    # Try to load the driver
+    try:
+        __import__(driver)
+        driver_module = sys.modules[driver]
+        loader_function = getattr(driver_module, 'configurator_loader')
+        device = loader_function(config_dict)
+        driver_name = driver_module.DRIVER_NAME
+        driver_vers = driver_module.DRIVER_VERSION
+        print 'Using %s version %s (%s)' % (driver_name, driver_vers, driver)
+    except Exception, e:
+        msg = "Cannot load configurator for %s" % device_type
+        syslog.syslog(syslog.LOG_ERR, "%s: %s" % (msg, e))
+        print msg
+        exit(0)
+
+    device.configure(config_dict)
+
+if __name__=="__main__":
+    main()
