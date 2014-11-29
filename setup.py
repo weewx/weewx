@@ -667,36 +667,34 @@ def do_cfg():
                       help='modify the configuration file FILE')
     parser.add_option('--driver', dest='driver', type=str, metavar='DRIVER',
                       help='use the driver DRIVER, e.g., weewx.driver.vantage')
-    parser.add_option('--skip-info', dest='skip_info', action='store_true',
-                      help='do not prompt for station info')
+    parser.add_option('--units', dest='units', type=str, metavar='UNITS',
+                      help='preferred units for display, either METRIC or US')
+    parser.add_option('--skip-previous', dest='skip_prev', action='store_true',
+                      help='ignore any existing configuration options')
     parser.add_option('--dry-run', dest='dryrun', action='store_true',
                       help='print what would happen but do not do it')
     (options, _args) = parser.parse_args()
 
     info = dict()
-    if not options.cfgfn:
-        options.cfgfn = get_conf_filename()
-    if options.cfgfn:
-        config_dict = configobj.ConfigObj(options.cfgfn)
-        if 'Station' in config_dict:
-            info['location'] = _as_string(config_dict['Station'].get('location'))
-            info['latitude'] = config_dict['Station'].get('latitude')
-            info['longitude'] = config_dict['Station'].get('longitude')
-            info['altitude'] = config_dict['Station'].get('altitude')
-            if 'station_type' in config_dict['Station']:
-                info['station_type'] = config_dict['Station']['station_type']
-                if info['station_type'] in config_dict:
-                    info['driver'] = config_dict[info['station_type']]['driver']
-    if not options.skip_info and not options.noprompt:
+    if not options.skip_prev:
+        if not options.cfgfn:
+            options.cfgfn = get_conf_filename()
+        if options.cfgfn:
+            config_dict = configobj.ConfigObj(options.cfgfn)
+            info.update(get_station_info(config_dict))
+    if options.units is not None:
+        info['units'] = options.units.lower()
+    if options.driver is not None:
+        info['driver'] = options.driver
+    if not options.noprompt:
         info.update(prompt_for_info(dflt_loc=info.get('location'),
                                     dflt_lat=info.get('latitude'),
                                     dflt_lon=info.get('longitude'),
-                                    dflt_alt=info.get('altitude')))
-    if options.driver is None and not options.noprompt:
-        info['driver'] = prompt_for_driver(info.get('driver'))
-        info.update(prompt_for_driver_settings(info['driver']))
-    else:
-        info['driver'] = options.driver
+                                    dflt_alt=info.get('altitude'),
+                                    dflt_units=info.get('units')))
+        if options.driver is None:
+            info['driver'] = prompt_for_driver(info.get('driver'))
+            info.update(prompt_for_driver_settings(info['driver']))
 
     configure_conf(options.cfgfn, info, options.dryrun)
     return 0
@@ -707,7 +705,7 @@ def _as_string(option):
         return ', '.join(option)
     return option
 
-def configure_conf(config_fn, info, dryrun):
+def configure_conf(config_fn, info, dryrun=False):
     """Configure the configuration file with station info and driver details"""
     # FIXME: this emits a functional config file, but the comments and indents
     # may be messed up.
@@ -721,42 +719,41 @@ def configure_conf(config_fn, info, dryrun):
     print 'Using configuration file %s' % config_fn
 
     # Try to load the driver so we can use its configuration editor.  If that
-    # fails for any reason, complain about it then fallback to the simulator.
-    # The simulator must *always* work properly or we have big problems.
+    # fails for any reason, complain about it and bail out.
+    driver = info.get('driver') if info is not None else None
 
-    if info is not None and info.get('driver') is not None:
-        driver = info.get('driver')
-    else:
-        driver = 'weewx.drivers.simulator'
+    editor = driver_name = driver_vers = None
+    if driver is not None:
+        # adjust system path so we can load the driver
+        tmp_path = list(sys.path)
+        sys.path.insert(0, bin_dir)
 
-    # adjust system path so we can load the driver
-    tmp_path = list(sys.path)
-    sys.path.insert(0, bin_dir)
+        try:
+            editor, driver_name, driver_vers = load_editor(driver)
+        except Exception, e:
+            print "Driver %s failed to load: %s" % (driver, e)
+            return
+        print 'Using %s version %s (%s)' % (driver_name, driver_vers, driver)
 
-    try:
-        editor, driver_name, driver_vers = load_editor(driver)
-    except Exception, e:
-        print "Driver %s failed to load: %s" % (driver, e)
-        driver = 'weewx.drivers.simulator'
-        editor, driver_name, driver_vers = load_editor(driver)
-    print 'Using %s version %s (%s)' % (driver_name, driver_vers, driver)
-
-    # reset the system path
-    sys.path = tmp_path
+        # reset the system path
+        sys.path = tmp_path
 
     # read the original configuration
     old_config = configobj.ConfigObj(config_fn, interpolation=False)
-    orig_stanza_text = None
 
-    # if a previous stanza exists for this driver, grab it
-    if driver_name in old_config:
-        orig_stanza = configobj.ConfigObj()
-        orig_stanza[driver_name] = old_config[driver_name]
-        orig_stanza_text = '\n'.join(orig_stanza.write())
+    stanza = None
+    if editor is not None:
+        orig_stanza_text = None
 
-    # let the driver process the stanza
-    stanza_text = editor.get_conf(orig_stanza_text)
-    stanza = configobj.ConfigObj(stanza_text.splitlines())
+        # if a previous stanza exists for this driver, grab it
+        if driver_name in old_config:
+            orig_stanza = configobj.ConfigObj()
+            orig_stanza[driver_name] = old_config[driver_name]
+            orig_stanza_text = '\n'.join(orig_stanza.write())
+
+        # let the driver process the stanza or give us a new one
+        stanza_text = editor.get_conf(orig_stanza_text)
+        stanza = configobj.ConfigObj(stanza_text.splitlines())
 
     # copy everything into the new config, put new stanza after [Station]
     new_config = configobj.ConfigObj(indent_type=old_config.indent_type)
@@ -766,18 +763,18 @@ def configure_conf(config_fn, info, dryrun):
         new_config[s] = old_config[s]
         new_config.comments[s] = old_config.comments[s]
         new_config.inline_comments[s] = old_config.inline_comments[s]
-        if s == 'Station':
+        if s == 'Station' and stanza is not None:
             new_config[driver_name] = stanza[driver_name]
             new_config.comments[driver_name] = ["", "##############################################################################", ""]
 #            new_config.comments[driver_name] = stanza.comments[driver_name]
             new_config.inline_comments[driver_name] = stanza.inline_comments[driver_name]
-    new_config['Station']['station_type'] = driver_name
+            new_config[s]['station_type'] = driver_name
 
     # update driver stanza with any overrides from info
-    if info is not None:
-        if driver_name in info:
-            for k in info[driver_name]:
-                new_config[driver_name][k] = info[driver_name][k]
+#    if info is not None:
+#        if driver_name in info:
+#            for k in info[driver_name]:
+#                new_config[driver_name][k] = info[driver_name][k]
 
     # insert any station info
     if info is not None:
@@ -786,6 +783,7 @@ def configure_conf(config_fn, info, dryrun):
                 new_config['Station'][p] = info[p]
         if info.get('units') is not None:
             if info.get('units') == 'metric':
+                print "Using Metric units for display"
                 new_config['StdReport']['StandardReport'].update({
                         'Units': {
                             'Groups': {
@@ -799,6 +797,7 @@ def configure_conf(config_fn, info, dryrun):
                                 'group_speed2': 'meter_per_second2',
                                 'group_temperature': 'degree_C'}}})
             elif info.get('units') == 'us':
+                print "Using US units for display"
                 new_config['StdReport']['StandardReport'].update({
                         'Units': {
                             'Groups': {
@@ -810,7 +809,7 @@ def configure_conf(config_fn, info, dryrun):
                                 'group_rainrate': 'inch_per_hour',
                                 'group_speed': 'mile_per_hour',
                                 'group_speed2': 'mile_per_hour2',
-                                'group_temperature': 'degree_C'}}})
+                                'group_temperature': 'degree_F'}}})
 
     # save the new configuration
     new_config.filename = "%s.tmp" % config_fn
@@ -900,7 +899,7 @@ def list_drivers():
                 msg += " %-15s" % infos[d][x]
         print msg
 
-def prompt_for_info(dflt_loc=None, dflt_lat='0.000', dflt_lon='0.000',
+def prompt_for_info(dflt_loc=None, dflt_lat='90.000', dflt_lon='0.000',
                     dflt_alt=['0', 'meter'], dflt_units='metric'):
     print "Enter a brief description of the station, such as its location.  For example:"
     print "Santa's Workshop, North Pole"
@@ -981,15 +980,17 @@ def prompt_for_info(dflt_loc=None, dflt_lat='0.000', dflt_lon='0.000',
             'units': units}
 
 def get_station_info(config_dict):
-    """extract station info from config file"""
+    """Extract station info from config dictionary."""
     info = dict()
     if config_dict is not None and 'Station' in config_dict:
-        for p in ['location', 'latitude', 'longitude', 'altitude']:
-            if config_dict['Station'].get(p) is not None:
-                info[p] = config_dict['Station'][p]
+        info['location'] = _as_string(config_dict['Station'].get('location'))
+        info['latitude'] = config_dict['Station'].get('latitude')
+        info['longitude'] = config_dict['Station'].get('longitude')
+        info['altitude'] = config_dict['Station'].get('altitude')
         if 'station_type' in config_dict['Station']:
             info['station_type'] = config_dict['Station']['station_type']
-            info['driver'] = config_dict[info['station_type']]['driver']
+            if info['station_type'] in config_dict:
+                info['driver'] = config_dict[info['station_type']]['driver']
     return info
 
 def get_conf_filename():
@@ -1744,13 +1745,18 @@ if __name__ == "__main__":
             # if there is already a conf file, then this is an upgrade
             config_dict = configobj.ConfigObj(cfgfn)
             info = get_station_info(config_dict)
-        if info is None and '--quiet' not in sys.argv:
-            # this must be a new install, so prompt for station info, driver
-            # type, and driver-specific parameters, but only if '--quiet' is
-            # not specified.
-            info = prompt_for_info()
-            info['driver'] = prompt_for_driver()
-            info.update(prompt_for_driver_settings(info['driver']))
+        if info is None:
+            if '--quiet' in sys.argv:
+                # for silent installs, do not prompt but end up with a fully
+                # functional installation.
+                info = {'driver': 'weewx.drivers.simulator'}
+            else:
+                # this must be a new install, so prompt for station info, driver
+                # type, and driver-specific parameters, but only if '--quiet' is
+                # not specified.
+                info = prompt_for_info()
+                info['driver'] = prompt_for_driver()
+                info.update(prompt_for_driver_settings(info['driver']))
 
     # if someone tries to do an install from other than the source tree,
     # complain about it and bail out.
@@ -1908,4 +1914,4 @@ if __name__ == "__main__":
 
     # configure the station info and driver for both new install and upgrade
     if 'install' in sys.argv and '--help' not in sys.argv:
-        configure_conf(cfgfn, info, False)
+        configure_conf(cfgfn, info)

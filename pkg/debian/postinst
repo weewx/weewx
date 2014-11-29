@@ -20,21 +20,13 @@ set -e
 
 cfgfile=/etc/weewx/weewx.conf
 setupapp=/usr/share/weewx/setup.py
-metric_units="\n\
-        [[[Units]]]\n\
-            [[[[Groups]]]]\n\
-                group_altitude     = meter\n\
-                group_degree_day   = degree_C_day\n\
-                group_pressure     = mbar\n\
-                group_radiation    = watt_per_meter_squared\n\
-                group_rain         = mm\n\
-                group_rainrate     = mm_per_hour\n\
-                group_speed        = meter_per_second\n\
-                group_speed2       = meter_per_second2\n\
-                group_temperature  = degree_C\n"
 
 # insert any configuration variables into the configuration file
 configure_weewxconf() {
+    if [ ! -f $cfgfile ]; then
+        return
+    fi
+
     db_get weewx/location
     sed -i "/\[Station\]/,/\[.*\]/ s%location =.*%location = \"$RET\"%" $cfgfile
 
@@ -48,11 +40,6 @@ configure_weewxconf() {
     a=$(echo $RET | cut -d, -f1)
     u=$(echo $RET | cut -d, -f2)
     sed -i "/\[Station\]/,/\[.*\]/ s%altitude[ ]*=.*%altitude = $a, $u%" $cfgfile
-
-    db_get weewx/units
-    if [ "$RET" = "Metric" ]; then
-        sed -i "/\[\[StandardReport\]\]/,/\[\[.*\]\]/ s%skin = Standard%skin = Standard\n${metric_units}%" $cfgfile
-    fi
 
     # FIXME: generalize this so it does not have to be modified every time a
     #        new station type is added or new station options are added.
@@ -125,6 +112,10 @@ configure_weewxconf() {
 
 # use weewx setup utilities to merge new features into existing weewx.conf
 merge_weewxconf() {
+    if [ ! -f $cfgfile ]; then
+        return
+    fi
+
     NEWVER=`$setupapp --version`
     OLDVER=$(get_conf_version $cfgfile)
     if dpkg --compare-versions $OLDVER lt $NEWVER; then
@@ -138,6 +129,7 @@ merge_weewxconf() {
                 cp -p $cfgfile.dist $cfgfile-$NEWVER
                 echo merging previous and distribution into $cfgfile
                 $setupapp --merge-config --install-dir / --a $cfgfile-$NEWVER --b $cfgfile-$OLDVER --c $cfgfile
+                # give drivers a chance to update/warn with no prompts
                 configure_driver
             else
                 echo distribution config file is wrong version for merging
@@ -149,6 +141,7 @@ merge_weewxconf() {
         # this is a new config, so just insert debconf values into it
         echo using debconf configuration values from previous install
         configure_driver
+        configure_units
         configure_weewxconf
     fi
 }
@@ -160,6 +153,10 @@ get_conf_version() {
 
 # insert/update the driver configuration stanza into the configuration file
 configure_driver() {
+    if [ ! -f $cfgfile ]; then
+        return
+    fi
+
     driver=weewx.drivers.simulator
     db_get weewx/station_type
     if [ "$RET" = "CC3000" ]; then
@@ -185,7 +182,21 @@ configure_driver() {
     elif [ "$RET" = "WS28xx" ]; then
         driver=weewx.drivers.ws28xx
     fi
-    $setupapp configure --config=$cfgfile --driver=$driver
+    $setupapp configure --config=$cfgfile --driver=$driver --quiet
+}
+
+# insert/update the driver configuration stanza into the configuration file
+configure_units() {
+    if [ ! -f $cfgfile ]; then
+        return
+    fi
+
+    units=us
+    db_get weewx/units
+    if [ "$RET" = "Metric" ]; then
+        units=metric
+    fi
+    $setupapp configure --config=$cfgfile --units=$units --quiet
 }
 
 case "$1" in
@@ -196,6 +207,7 @@ configure)
         else
             # virgin install so insert debconf values into the config file
             configure_driver
+            configure_units
             configure_weewxconf
         fi
 

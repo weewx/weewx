@@ -37,7 +37,6 @@ while [ "$STATE" != 0 -a "$STATE" != 7 ]; do
 
             if [ "$RET" = "CC3000" ]; then
                 db_input high weewx/cc3000_model || true
-                db_go
                 db_input high weewx/cc3000_port || true
             fi
 
@@ -51,13 +50,12 @@ while [ "$STATE" != 0 -a "$STATE" != 7 ]; do
 
             if [ "$RET" = "Ultimeter" ]; then
                 db_input high weewx/ultimeter_model || true
-                db_go
                 db_input high weewx/ultimeter_port || true
             fi
 
             if [ "$RET" = "Vantage" ]; then
                 db_input high weewx/vantage_type || true
-                db_go
+                db_go || true
                 db_get weewx/vantage_type
                 if [ "$RET" = "serial" ]; then
                     db_input high weewx/vantage_port || true
@@ -76,7 +74,6 @@ while [ "$STATE" != 0 -a "$STATE" != 7 ]; do
 
             if [ "$RET" = "WMR9x8" ]; then
                 db_input high weewx/wmr9x8_model || true
-                db_go
                 db_input high weewx/wmr9x8_port || true
             fi
 
@@ -86,13 +83,11 @@ while [ "$STATE" != 0 -a "$STATE" != 7 ]; do
 
             if [ "$RET" = "WS23xx" ]; then
                 db_input high weewx/ws23xx_model || true
-                db_go
                 db_input high weewx/ws23xx_port || true
             fi
 
             if [ "$RET" = "WS28xx" ]; then
                 db_input high weewx/ws28xx_model || true
-                db_go
                 db_input high weewx/ws28xx_frequency || true
             fi
             ;;

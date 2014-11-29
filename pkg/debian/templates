@@ -7,25 +7,25 @@ Description: display units:
 
 Template: weewx/location
 Type: string
-Default: Hood River, Oregon
+Default: Santa's Workshop, North Pole
 Description: location of the weather station:
  This is a string that describes the location of the weather station, for example 'Hood River, Oregon' or 'Boston, MA'.
 
 Template: weewx/latlon
 Type: string
-Default: 45.686,-121.566
+Default: 90.000, 0.000
 Description: latitude, longitude of the weather station:
- The latitude and longitude should be specified in decimal degrees, with negative values for southern and western hemispheres.  For example, '42.385, -71.060'
+ The latitude and longitude should be specified in decimal degrees, with negative values for southern and western hemispheres.  For example, '45.686,-121.566' or '42.385, -71.060'
 
 Template: weewx/altitude
 Type: string
-Default: 700, foot
+Default: 0, meter
 Description: altitude of the weather station:
  Normally the altitude is downloaded from the station hardware, but not all stations support this.  Specify the altitude of the station and the singular form of the unit used for the altitude, for example '700, foot' or '120, meter'
 
 Template: weewx/station_type
 Type: select
-Choices: Simulator, CC3000, FineOffsetUSB, TE923, Ultimeter, Vantage, WMR100, WMR200, WMR9x8, WS1, WS28xx, WS23xx
+Choices: Simulator, CC3000, FineOffsetUSB, TE923, Ultimeter, Vantage, WMR100, WMR200, WMR9x8, WS1, WS23xx, WS28xx
 Default: Simulator
 Description: weather station type:
  The weather station hardware type.  Specify simulator to run weewx without a weather station.

@@ -116,7 +116,7 @@ python -m compileall %{buildroot}%{dst_bin_dir}
 python -m compileall %{dst_bin_dir}
 if [ "$1" = "1" ]; then
   # this is a new installation
-  /usr/share/weewx/setup.py configure --config=/etc/weewx/weewx.conf --quiet
+  /usr/share/weewx/setup.py configure --config=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --quiet
   chkconfig weewx on
   %{initdir}/weewx start
 elif [ "$1" = "2" ]; then
