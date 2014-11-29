@@ -46,7 +46,7 @@
     </a>
     <h1 class="title">Customizing weewx<br />
       <span class="version">
-Version: 3.0.0a4
+Version: 3.0.0a5
       </span>
     </h1>
 
@@ -70,8 +70,9 @@ Version: 3.0.0a4
         unusual type you are unlikely to run into trouble. </p>
       <p class="warning"><strong>Warning!</strong><br />
         <span class="code">weewx</span> is still an experimental system and, as
-        such, its internal design is subject to change. Be prepared to do
-        updates to any code or customization you do! </p>
+        such, its internal design is subject to change. Future upgrades may
+        break any customizations you have done, particularly if they involve
+        the API (skin customizations tend to be more stable). </p>
 
     <h2>Where to put customizations</h2>
       <p>For configuration changes, simply modify the
@@ -176,7 +177,7 @@ Version: 3.0.0a4
       <h2>The standard reporting service, <span class="code">StdReport</span></h2>
       <p>For the moment, let us focus on the last service, <span class="code">weewx.engine.StdReport</span>,
         the standard service for creating reports. This will be what most users
-        will want to customize even if it means just changing a few options. </p>
+        will want to customize, even if it means just changing a few options. </p>
       <h3>Reports</h3>
       <p>The Standard Report Service runs zero or more <em>Reports</em>. The
         specific reports which get run are set in the configuration file <span
@@ -504,18 +505,26 @@ Version: 3.0.0a4
       query a database.  These are the canonical forms for obtaining a
       database manager.</p>
     <p>If you are opening a database from within a weewx service:</p>
-    <p class='tty'>self.dbm = self.engine.db_binder.get_manager(data_binding='name_of_binding', initialize=True)
-self.dbm.backfill_day_summary()   # If necessary</p>
+    <pre class='tty'>db_manager = self.engine.db_binder.get_manager(data_binding='name_of_binding', initialize=True)
+
+# Sample query:
+db_manager.getSql("SELECT SUM(rain) FROM %s "\
+    "WHERE dateTime&gt;? AND dateTime&lt;=?" % db_manager.table_name, (start_ts, stop_ts))</pre>
     <p>If you are opening a database from within a weewx search list extension:</p>
-    <p class='tty'>self.dbm = self.generator.db_binder.get_manager(data_binding='name_of_binding', initialize=True)
-self.dbm.backfill_day_summary()   # If necessary</p>
+    <pre class='tty'>db_manager = self.generator.db_binder.get_manager(data_binding='name_of_binding')
+
+# Sample query:
+db_manager.getSql("SELECT SUM(rain) FROM %s "\
+    "WHERE dateTime&gt;? AND dateTime&lt;=?" % db_manager.table_name, (start_ts, stop_ts))</pre>
     <p>If opening a database from somewhere other than a service, and there
       is no DBBinder available:</p>
-    <p class='tty'>self.dbm = weewx.manager.open_manager_with_config(config_dict, data_binding='name_of_binding', initialize=True)
-self.dbm.backfill_day_summary()   # If necessary</p>
-    <p>The DBBinder caches managers, and thus database connections.  Beware
-      of using a single manager in two different threads; if you do this
-      with a SQLite database, the queries will fail.</p>
+    <pre class='tty'>db_manager = weewx.manager.open_manager_with_config(config_dict, data_binding='name_of_binding', initialize=)
+
+# Sample query:
+db_manager.getSql("SELECT SUM(rain) FROM %s "\
+    "WHERE dateTime&gt;? AND dateTime&lt;=?" % db_manager.table_name, (start_ts, stop_ts))</pre>
+    <p>The DBBinder caches managers, and thus database connections. It cannot
+    be shared between threads.</p>
 
     <h2>Units</h2>
     <p>The unit architecture in <span class='code'>weewx</span> is designed to
