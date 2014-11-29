@@ -1762,7 +1762,8 @@ if __name__ == "__main__":
     # complain about it and bail out.
     if 'install' in sys.argv and not os.path.exists("%s/setup.cfg" % this_dir):
         print "The 'install' option can be used to install weewx only when"
-        print "invoked from the source tree."
+        print "invoked from the source tree.  To install an extension, use"
+        print "the '--extension' option."
         exit(1)
 
     # now invoke the standard python setup

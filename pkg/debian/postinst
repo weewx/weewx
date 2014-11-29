@@ -185,7 +185,7 @@ configure_driver() {
     $setupapp configure --config=$cfgfile --driver=$driver --quiet
 }
 
-# insert/update the driver configuration stanza into the configuration file
+# insert/update the units configuration stanza into the configuration file
 configure_units() {
     if [ ! -f $cfgfile ]; then
         return

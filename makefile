@@ -84,7 +84,7 @@ test-clean:
 	rm -f $(TESTDIR)/test_alt.sdb
 	rm -f $(TESTDIR)/sim.sdb
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
-  	
+
 install:
 	./setup.py --install
 
@@ -168,6 +168,7 @@ deb-package: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/copyright $(DEBBLDDIR)/debian
 	cp pkg/debian/postinst $(DEBBLDDIR)/debian
 	cp pkg/debian/postrm $(DEBBLDDIR)/debian
+	cp pkg/debian/preinst $(DEBBLDDIR)/debian
 	cp pkg/debian/prerm $(DEBBLDDIR)/debian
 	cp pkg/debian/rules $(DEBBLDDIR)/debian
 	cp pkg/debian/source/format $(DEBBLDDIR)/debian/source
