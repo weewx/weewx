@@ -99,3 +99,9 @@ while [ "$STATE" != 0 -a "$STATE" != 7 ]; do
         STATE=$(($STATE - 1))
     fi
 done
+
+if [ "$STATE" = 0 ]; then
+    # user has cancelled the first prompt.  according to debconf docs we
+    # should return 10, leaving the package installed but unconfigured.
+    exit 10
+fi
