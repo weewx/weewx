@@ -53,38 +53,41 @@ sudo apt-get -f install</pre>
   <p>The installer will prompt for a location, latitude/longitude, altitude,
     station type, and parameters specific to your station hardware.</p>
 
-  <h2>Verify</h2>
-  <p>
-    After <a href="#" id="how-long-target">5 minutes or so</a>, open the station
-    web page in a web browser. You should see your station information and data.
-  </p>
-  <div id="how-long-description" title="How long to wait?" style='display: none'
-    class='popup-note'>
-    <p>If your station supports hardware archiving (such as the Davis
-      Vantage stations), then how long you will have to wait will depend on the
-      archive interval set in your hardware.</p>
-  </div>
-  <script type="text/javascript">
-			$("#how-long-target").click(function() {
-				$("#how-long-description").dialog({
-					position : {
-						my : "left top",
-						at : "right bottom",
-						of : "#how-long-target"
-					}
-				});
-				return false; // Ensures that the "link" isn't followed
-			});
-  </script>
-  <pre class='tty'>
-    <a href="file:///var/www/weewx/index.html">file:///var/www/weewx/index.html</a>
-  </pre>
-
   <h2>Status</h2>
   <p>
     Look in the system log for messages from <span class='code'>weewx</span>.
   </p>
   <p class='tty'>sudo tail -f /var/log/syslog</p>
+
+  <h2>Verify</h2>
+  <p>
+    After about <a href="#" id="how-long-target">5 minutes</a>, open the station
+    web page in a web browser. You should see your station information and data.
+  </p>
+  <div id="how-long-description" title="How long to wait?"
+       style='display: none' class='popup-note'>
+    <p>If your station supports hardware archiving (such as the Davis
+      Vantage stations), then how long you will have to wait will depend on the
+      <a href="usersguide.htm#archive_interval">archive interval</a>
+      set in your hardware.</p>
+    <p>The <a href="usersguide.htm#archive_interval">User's Guide</a>
+      includes instructions for changing the archive interval.</a>
+  </div>
+  <script type="text/javascript">
+$("#how-long-target").click(function() {
+  $("#how-long-description").dialog({
+    position : {
+      my : "left top",
+      at : "right bottom",
+      of : "#how-long-target"
+    }
+  });
+  return false; // Ensures that the "link" isn't followed
+});
+  </script>
+  <pre class='tty'>
+    <a href="file:///var/www/weewx/index.html">file:///var/www/weewx/index.html</a>
+  </pre>
 
   <h2>Customize</h2>
   <p>

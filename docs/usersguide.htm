@@ -3522,6 +3522,36 @@ sudo apt-get install ftp
 	about <a href="http://sourceforge.net/p/weewx/wiki/folockup/">Fine
 	Offset lockups</a> can be found in the Wiki.</p>
 
+      <h3 id='archive_interval'>Archive interval</h3>
+      <p>Most hardware with data-logging includes a parameter to specify
+        the archive interval used by the logger.  If the hardware and driver
+        support it, <span class='code'>weewx</span> will use this interval
+        as the <span class='code'><em>archive_interval</em></span>.  If not,
+        <span class='code'>weewx</span> will fall back to the
+        <span class='code'>archive_interval</span> specified in
+        <a href='[StdArchive]'><span class='code'>[StdArchive]</span></a>.
+        The default value is 300 seconds (5 minutes).
+      </p>
+      <p>If the archive interval in the hardware is long, it will take a
+        long time before anything shows up in the
+        <span class='code'>weewx</span> reports.  For example, WS23xx stations
+        ship with an archive interval of 60 minutes, and Fine Offset stations
+        ship with an archive interval of 30 minutes.
+        If you run <span class='code'>weewx</span> with a WS23xx station in
+        its factory default configuration, it will take 60 minutes before the
+        first data point shows up, then another 60 minutes until the next one,
+        and so on.
+      </p>
+      <p>
+        Since reports are generated when a new archive record arrives,
+        a long archive interval means that repors will be generated
+        infrequently.
+      </p>
+      <p>If you want data and reports closer to real-time, use the
+        <a href="#configuring_hardware"><span class="code">wee_config_device</span></a>
+        utility to change the interval.
+      </p>
+
     <h2>Software problems</h2>
     
     <p>This section covers some common software configuration problems.</p>
@@ -3666,7 +3696,7 @@ Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</p>
       in <span class="code">weewx.conf</span> does not match the station's
       hardware interval, <span class="code">weewx</span> defers to the
       station's interval.</p>
-    <p>Use the appropriate <a href="#configuring_hardware"><span class="code">wee_config_device</span></a> utility to change the station's interval.</p>
+    <p>Use the <a href="#configuring_hardware"><span class="code">wee_config_device</span></a> utility to change the station's interval.</p>
 
     <h3 id='spikes'>Spikes in the graphs</h3>
     <p>Occasionally you may see anomalous readings, typically manifested as
