@@ -116,6 +116,9 @@ indicates ok, 1 indicates low battery).
 For WS23xx stations, hardware record generation is now enabled and is the
 default (previously, software record generation was the default).
 
+Fixed bug in WS28xx driver the prevented reading of historical records
+when starting with an empty database.
+
 
 2.7.0 10/11/14
 
