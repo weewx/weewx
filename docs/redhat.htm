@@ -74,8 +74,8 @@
     <p>
       The default installation uses Simulator as the <span class='code'>station_type</span>.  To use real hardware, stop <span class='code'>weewx</span>, change to the actual station type and station parameters, delete the simulation data, then restart <span class='code'>weewx</span>:</p>
     <p class='tty'>sudo /etc/init.d/weewx stop
-sudo rm /var/lib/weewx/weewx.sdb
 sudo wee_setup configure
+sudo rm /var/lib/weewx/weewx.sdb
 sudo /etc/init.d/weewx start</p>
 
     <h2>Start/Stop</h2>
