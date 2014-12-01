@@ -138,8 +138,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     binding = line_options['data_binding']
                     archive = self.db_binder.get_manager(binding)
                     (start_vec_t, stop_vec_t, data_vec_t) = \
-                            archive.getSqlVectors(var_type, minstamp, maxstamp, 
-                                                  aggregate_interval, aggregate_type)
+                            archive.getSqlVectors((minstamp, maxstamp), var_type, aggregate_type=aggregate_type,
+                                                  aggregate_interval=aggregate_interval)
 
                     if weewx.debug:
                         assert(len(start_vec_t) == len(stop_vec_t))

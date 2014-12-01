@@ -410,7 +410,8 @@ class Manager(object):
     simple_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s "\
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_type)s IS NOT NULL"
                    
-    def getAggregate(self, timespan, obs_type, aggregate_type, **option_dict):
+    def getAggregate(self, timespan, obs_type,
+                     aggregate_type, **option_dict):
         """Returns an aggregation of a statistical type for a given time period.
         
         timespan: An instance of weeutil.Timespan with the time period over which
@@ -449,37 +450,29 @@ class Manager(object):
         # Form the value tuple and return it:
         return weewx.units.ValueTuple(_result, t, g)
     
-    
-    def getSqlVectors(self, ext_type, startstamp, stopstamp, 
-                              aggregate_interval = None, 
-                              aggregate_type = None):
+    def getSqlVectors(self, timespan, obs_type, 
+                      aggregate_type=None,
+                      aggregate_interval=None): 
         """Get time and (possibly aggregated) data vectors within a time
         interval.
         
-        This function is very similar to getSqlVectors, except that for
+        This function is very similar to _getSqlVectors, except that for
         special types 'windvec' and 'windgustvec', it returns wind data
         broken down into its x- and y-components.
         
-        sql_type: The SQL type to be retrieved (e.g., 'outTemp', or 'windvec').
+        timespan: The timespan over which the aggregation is to be done.
+        
+        obs_type: The observation type to be retrieved (e.g., 'outTemp', or 'windvec').
         If this type is the special types 'windvec', or 'windgustvec', then
         what will be returned is a vector of complex numbers. 
         
-        startstamp: If aggregation_interval is None, then data with timestamps
-        greater than or equal to this value will be returned. If
-        aggregation_interval is not None, then the start of the first interval
-        will be greater than (exclusive of) this value. 
-        
-        stopstamp: Records with time stamp less than or equal to this will be
-        retrieved. If interval is not None, then the last interval will
-        include this value.
+        aggregate_type: None if no aggregation is desired, otherwise the type
+        of aggregation (e.g., 'sum', 'avg', etc.)  Default: None (no aggregation)
         
         aggregate_interval: None if no aggregation is desired, otherwise
         this is the time interval over which a result will be aggregated.
         Required if aggregate_type is non-None. 
         Default: None (no aggregation)
-        
-        aggregate_type: None if no aggregation is desired, otherwise the type
-        of aggregation (e.g., 'sum', 'avg', etc.)  Default: None (no aggregation)
         
         returns: a 3-way tuple of value tuples:
           (start_vec, stop_vec, data_vec)
@@ -498,11 +491,11 @@ class Manager(object):
                          'windgustvec' : ('windGust,  windGustDir')}
         
         # Check to see if the requested type is not 'windvec' or 'windgustvec'
-        if ext_type not in windvec_types:
+        if obs_type not in windvec_types:
             # The type is not one of the extended wind types. Use the regular
             # version:
-            return self._getSqlVectors(ext_type, startstamp, stopstamp, 
-                                      aggregate_interval, aggregate_type)
+            return self._getSqlVectors(timespan, obs_type, 
+                                      aggregate_type, aggregate_interval)
 
         # It is an extended wind type. Prepare the lists that will hold the
         # final results.
@@ -532,10 +525,10 @@ class Manager(object):
                 
                 # This SQL select string will select the proper wind types
                 sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % \
-                    (windvec_types[ext_type], self.table_name)
+                    (windvec_types[obs_type], self.table_name)
 
                 # Go through each aggregation interval, calculating the aggregation.
-                for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
+                for stamp in weeutil.weeutil.intervalgen(timespan[0], timespan[1], aggregate_interval):
     
                     _mag_extreme = _dir_at_extreme = None
                     _xsum = _ysum = 0.0
@@ -605,9 +598,9 @@ class Manager(object):
                 # data in the requested time period
                 # This SQL select string will select the proper wind types
                 sql_str = 'SELECT dateTime, %s, usUnits, `interval` FROM %s WHERE dateTime >= ? AND dateTime <= ?' % \
-                        (windvec_types[ext_type], self.table_name)
+                        (windvec_types[obs_type], self.table_name)
                 
-                for _rec in _cursor.execute(sql_str, (startstamp, stopstamp)):
+                for _rec in _cursor.execute(sql_str, timespan):
                     start_vec.append(_rec[0] - _rec[4])
                     stop_vec.append(_rec[0])
                     if std_unit_system:
@@ -633,7 +626,7 @@ class Manager(object):
             _cursor.close()
 
         (time_type, time_group) = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
-        (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, ext_type, aggregate_type)
+        (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
         return (weewx.units.ValueTuple(start_vec, time_type, time_group),
                 weewx.units.ValueTuple(stop_vec, time_type, time_group),
                 weewx.units.ValueTuple(data_vec, data_type, data_group))
@@ -651,28 +644,39 @@ class Manager(object):
             # check against subsequent records:
             self.std_unit_system = unit_system
 
-    def _getSqlVectors(self, sql_type, startstamp, stopstamp,
-                      aggregate_interval=None, 
-                      aggregate_type=None):
+    def _getSqlVectors(self, timespan, sql_type, 
+                      aggregate_type=None,
+                      aggregate_interval=None): 
         """Get time and (possibly aggregated) data vectors within a time
         interval. 
         
-        The return value is a 2-way tuple. The first member is a vector of time
-        values, the second member an instance of weewx.std_unit_system.Value
-        with a value of a vector of data values, and a unit_type given by
-        sql_type. 
+        timespan: The timespan over which the aggregation is to be done.
         
-        An example of a returned value: 
-            (time_vec, Value(outTempVec, 'outTemp'))
+        sql_type: The observation type to be retrieved. The type should be one
+        of the columns in the archive database.
         
+        aggregate_type: None if no aggregation is desired, otherwise the type
+        of aggregation (e.g., 'sum', 'avg', etc.)  Default: None (no aggregation)
+        
+        aggregate_interval: None if no aggregation is desired, otherwise
+        this is the time interval over which a result will be aggregated.
+        Required if aggregate_type is non-None. 
+        Default: None (no aggregation)
+
+        returns: a 3-way tuple of value tuples:
+          (start_vec, stop_vec, data_vec)
+        The first element holds a ValueTuple with the start times of the aggregation interval.
+        The second element holds a ValueTuple with the stop times of the aggregation interval.
+        The third element holds a ValueTuple with the data aggregation over the interval.
+
         If aggregation is desired (aggregate_interval is not None), then each
         element represents a time interval exclusive on the left, inclusive on
         the right. The time elements will all fall on the same local time
         boundary as startstamp. 
 
-        For example, if startstamp is 8-Mar-2009 18:00 and aggregate_interval
-        is 10800 (3 hours), then the returned time vector will be
-        (shown in local times):
+        For example, if the starting time in the timespan is 8-Mar-2009 18:00
+        and aggregate_interval is 10800 (3 hours), then the returned time vector
+        will be (shown in local times):
         
         8-Mar-2009 21:00
         9-Mar-2009 00:00
@@ -688,35 +692,11 @@ class Manager(object):
         
         There is another assumption that the unit type does not change within
         a time interval.
-        
-        sql_type: The SQL type to be retrieved (e.g., 'outTemp') 
-        
-        startstamp: If aggregation_interval is None, then data with timestamps
-        greater than or equal to this value will be returned. If
-        aggregation_interval is not None, then the start of the first interval
-        will be greater than (exclusive of) this value. 
-        
-        stopstamp: Records with time stamp less than or equal to this will be
-        retrieved. If interval is not None, then the last interval will
-        include this value.
-        
-        aggregate_interval: None if no aggregation is desired, otherwise
-        this is the time interval over which a result will be aggregated.
-        Required if aggregate_type is non-None.
-        Default: None (no aggregation)
-        
-        aggregate_type: None if no aggregation is desired, otherwise the
-        type of aggregation (e.g., 'sum', 'avg', etc.)  
-
-        returns: a 3-way tuple of value tuples:
-          (start_vec, stop_vec, data_vec)
-        The first element holds a ValueTuple with the start times of the aggregation interval.
-        The second element holds a ValueTuple with the stop times of the aggregation interval.
-        The third element holds a ValueTuple with the data aggregation over the interval.
 
         See the file weewx.units for the definition of a ValueTuple.
         """
 
+        startstamp, stopstamp = timespan
         start_vec = list()
         stop_vec  = list()
         data_vec  = list()

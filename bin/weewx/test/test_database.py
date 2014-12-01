@@ -192,7 +192,7 @@ class Common(unittest.TestCase):
             
         # Now try fetching them as vectors:
         with weewx.manager.Manager.open(self.archive_db_dict) as archive:
-            barvec = archive.getSqlVectors('barometer', start_ts, stop_ts)
+            barvec = archive.getSqlVectors((start_ts, stop_ts), 'barometer')
             # Recall that barvec will be a 3-way tuple. The first element is the vector of starting
             # times, the second the vector of ending times, and the third the data vector.
             self.assertEqual(barvec[1], ([timefunc(irec) for irec in range(nrecs)], "unix_epoch", "group_time"))
@@ -203,7 +203,7 @@ class Common(unittest.TestCase):
         # included in each aggregation
         gen = gen_included_recs(timevec, start_ts, stop_ts, 6*interval)
         with weewx.manager.Manager.open(self.archive_db_dict) as archive:
-            barvec = archive.getSqlVectors('barometer', start_ts, stop_ts, aggregate_interval=6*interval, aggregate_type='avg')
+            barvec = archive.getSqlVectors((start_ts, stop_ts), 'barometer', aggregate_type='avg', aggregate_interval=6*interval)
             n_expected = int(nrecs / 6)
             self.assertEqual(n_expected, len(barvec[0][0]))
             for irec in range(n_expected):

@@ -12,10 +12,6 @@ from weeutil.weeutil import to_int
 import weewx.units
 from weewx.units import ValueTuple
 
-# The contexts that are multiples of a day, and can use the daily summaries
-# to answer aggregation queries:
-day_multiples = ['day', 'week', 'month', 'year', 'rainyear']
-
 #===============================================================================
 #                    Class TimeBinder
 #===============================================================================
