@@ -1343,34 +1343,6 @@ longitude = -77.0366</pre>
       series of weather stations with USB connectors.</p>
     <p class="config_important">model</p>
     <p>Set to the station model. For example, WMR200 or WMR200A.</p>
-    <p class="config_option">altitude</p>
-    <p>Used by weewx to calibrate station pressure.<p>
-    <p class="config_option">archive_interval</p>
-    <p>Set the wmr200 archive interval in seconds.  Default is 60 seconds.</p>
-    <p>The wmr200 hardware records archive data at an immutable rate of 60 seconds.
-      This field may be set to a higher value enabling the weewx engine
-      to coalesce live data packets.  However, when the wmr200 is not connected
-      to a system via USB or if the weewx software is not running, the wmr200 console
-      will continue to store weather data in onboard console memory at a fixed rate of 
-      60 seconds.</p>
-    <p class="config_option">erase_archive</p>
-    <p>If True, erase onboard console memory archive on startup.  Default is False.</p>
-    <p class="config_option">archive_startup</p>
-    <p>When retrieving archive data packets from the wmr200 onboard console memory, 
-      there is no explicit indication that all the data has been drained.  This field
-      specifies when to transition from archive mode to live mode.  This transition
-      occurs when no archive packets are detected within this time interval.  
-      Default is 120 seconds.<p>
-    <p class="config_option">archive_threshold</p>
-    <p>Occasionally when retrieving archive packets from the wmr200 onboard memory
-      a stale data packet will be detected.  The archive packets are presented in
-      sequential order typically timestamped 60 seconds apart.  However, there is no 
-      guarantee the archive packets are exactly 60 seconds apart.  Should an incoming
-      archive data packet timestamp exceed the previous archive data packet one by the
-      amount in this field it will be dropped.  
-      Default is 1512000 seconds (1 week).</p>
-    <p class="config_option">sensor_status</p>
-    <p>If True, emit sensor faults and failures to log.  Default is True.</p>
     <p class="config_option">use_pc_time</p>
     <p>If True, use the computer time, otherwise use the station time.  Default
       is True.</p>
