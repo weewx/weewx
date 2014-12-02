@@ -7,7 +7,7 @@
 #
 """The wview schema, which is also used by weewx."""
 
-#===============================================================================
+# =============================================================================
 # This is a list containing the default schema of the archive database.  It is
 # identical to what is used by wview. It is only used for initialization ---
 # afterwards, the schema is obtained dynamically from the database.  Although a
