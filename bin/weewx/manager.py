@@ -966,7 +966,12 @@ def drop_database_with_config(config_dict, data_binding,
 #
 #===============================================================================
 
-
+def show_progress(nrec, last_time):
+    """Utility function to show our progress while backfilling"""
+    print >>sys.stdout, "Records processed: %d; Last date: %s\r" % \
+        (nrec, weeutil.weeutil.timestamp_to_string(last_time)),
+    sys.stdout.flush()
+        
 class DaySummaryManager(Manager):
     """Manage a daily statistical summary. 
     
@@ -1234,7 +1239,8 @@ class DaySummaryManager(Manager):
 
         return self.exists(obs_type) and self.getAggregate(timespan, obs_type, 'count')[0] != 0
 
-    def backfill_day_summary(self, start_ts=None, stop_ts=None):
+    def backfill_day_summary(self, start_ts=None, stop_ts=None, 
+                             progress_fn=show_progress):
         """Fill the statistical database from an archive database.
         
         Normally, the daily summaries get filled by LOOP packets (to get maximum time
@@ -1248,6 +1254,8 @@ class DaySummaryManager(Manager):
         
         stop_ts: Archive data with a timestamp less than or equal to this will be
         used. [Optional. Default is to end with the last datum in the archive.]
+        
+        progress_fn: This function will be called after processing every 1000 records.
         
         returns: A 2-way tuple (nrecs, ndays) where 
           nrecs is the number of records backfilled;
@@ -1292,9 +1300,8 @@ class DaySummaryManager(Manager):
                 # Remember the timestamp for this record.
                 _lastTime = _rec['dateTime']
                 nrecs += 1
-                if nrecs%1000 == 0:
-                    print >>sys.stdout, "Records processed: %d; Last date: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(_lastTime)),
-                    sys.stdout.flush()
+                if progress_fn and nrecs%1000 == 0:
+                    progress_fn(nrecs, _lastTime)
     
             # We're done. Record the daily summary for the last day.
             if _day_accum:
