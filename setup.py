@@ -633,6 +633,13 @@ def save_path(filepath):
     # Sometimes the target has a trailing '/'. This will take care of it:
     filepath = os.path.normpath(filepath)
     newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
+    # Check to see if this name already exists
+    if os.path.exists(newpath):
+        # It already exists. Stick a version number on it:
+        version = 1
+        while os.path.exists(newpath + '-' + str(version)):
+            version += 1
+        newpath = newpath + '-' + str(version)
     shutil.move(filepath, newpath)
     return newpath
 
@@ -1166,7 +1173,7 @@ class Extension(Logger):
             try:
                 cmd = 'dpkg-query -s weewx'
                 p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-                (o, e) = p.communicate()
+                (o, _) = p.communicate()
                 for line in o.split('\n'):
                     if line.startswith('Package: weewx'):
                         layout_type = 'deb'
@@ -1178,7 +1185,7 @@ class Extension(Logger):
             try:
                 cmd = 'rpm -q weewx'
                 p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-                (o, e) = p.communicate()
+                (o, _) = p.communicate()
                 for line in o.split('\n'):
                     if line.find('weewx') >= 0:
                         layout_type = 'rpm'
