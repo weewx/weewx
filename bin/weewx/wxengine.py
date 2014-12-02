@@ -3,7 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Id: engine.py 2598 2014-11-14 01:14:25Z tkeffer $
+#    $Id$
 
 import weewx.engine
 
