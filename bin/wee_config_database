@@ -203,7 +203,10 @@ def reconfigMainDatabase(config_dict, db_binding):
                                                                                         weewx.units.unit_nicknames[target_unit_system])
         ans = raw_input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
-            weewx.manager.reconfig(manager_dict['database_dict'], new_database_dict, target_unit_system)
+            weewx.manager.reconfig(manager_dict['database_dict'],
+                                   new_database_dict, 
+                                   new_unit_system=target_unit_system,
+                                   new_schema=manager_dict['schema'])
             print "Done."
         elif ans == 'n':
             print "Nothing done."
