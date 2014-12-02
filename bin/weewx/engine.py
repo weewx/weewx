@@ -32,6 +32,10 @@ from weeutil.weeutil import to_bool, to_int
 class BreakLoop(Exception):
     pass
 
+# All existent service groups:
+all_service_groups = ['prep_services', 'data_services', 'process_services',
+                      'archive_services', 'restful_services', 'report_services']
+
 #==============================================================================
 #                    Class StdEngine
 #==============================================================================
@@ -110,6 +114,7 @@ class StdEngine(object):
         
     def loadServices(self, config_dict):
         """Set up the services to be run."""
+        global all_service_groups
 
         # This will hold the list of objects, after the services has been
         # instantiated:
@@ -120,9 +125,7 @@ class StdEngine(object):
         # down in an orderly way.
         try:
             # Go through each of the service lists one by one:
-            for service_group in ['prep_services', 'process_services',
-                                  'archive_services', 'restful_services',
-                                  'report_services']:
+            for service_group in all_service_groups:
                 # For each service list, retrieve all the listed services.
                 # Provide a default, empty list in case the service list is
                 # missing completely:
