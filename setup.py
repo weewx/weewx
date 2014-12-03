@@ -1459,8 +1459,9 @@ class ExtensionInstaller(Logger):
             elif not isinstance(config['Engine']['Services'][sg], list):
                 config['Engine']['Services'][sg] = [config['Engine']['Services'][sg]]
             # ... but only if not already there
-            if s not in config['Engine']['Services'][sg]:
-                config['Engine']['Services'][sg].append(s)
+            for s in self.service_groups[sg]:
+                if s not in config['Engine']['Services'][sg]:
+                    config['Engine']['Services'][sg].append(s)
 
         self.log("merged configuration:", level=3)
         self.log('\n'.join(formatdict(config)), level=3)
