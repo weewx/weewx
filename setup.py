@@ -79,16 +79,13 @@ start_scripts = ['util/init.d/weewx.bsd',
                  'util/init.d/weewx.redhat',
                  'util/init.d/weewx.suse']
 
-service_map = {'weewx.wxengine.StdTimeSynch' : 'prep_services', 
-               'weewx.wxengine.StdConvert'   : 'process_services', 
-               'weewx.wxengine.StdCalibrate' : 'process_services', 
-               'weewx.wxengine.StdQC'        : 'process_services', 
-               'weewx.wxengine.StdArchive'   : 'archive_services',
-               'weewx.wxengine.StdPrint'     : 'report_services', 
-               'weewx.wxengine.StdReport'    : 'report_services'}
-
-all_service_groups = ['prep_services', 'process_services', 'archive_services', 
-                      'restful_services', 'report_services']
+service_map_v2 = {'weewx.wxengine.StdTimeSynch' : 'prep_services', 
+                  'weewx.wxengine.StdConvert'   : 'process_services', 
+                  'weewx.wxengine.StdCalibrate' : 'process_services', 
+                  'weewx.wxengine.StdQC'        : 'process_services', 
+                  'weewx.wxengine.StdArchive'   : 'archive_services',
+                  'weewx.wxengine.StdPrint'     : 'report_services', 
+                  'weewx.wxengine.StdReport'    : 'report_services'}
 
 #==============================================================================
 # install_lib
@@ -519,13 +516,14 @@ def update_to_v2(config_dict):
     # See if the engine configuration section has the old-style "service_list":
     if 'Engines' in config_dict and 'service_list' in config_dict['Engines']['WxEngine']:
         # It does. Break it up into five, smaller lists. If a service
-        # does not appear in the dictionary "service_map", meaning we
+        # does not appear in the dictionary "service_map_v2", meaning we
         # do not know what it is, then stick it in the last group we
         # have seen. This should get its position about right.
         last_group = 'prep_services'
         
         # Set up a bunch of empty groups in the right order
-        for group in all_service_groups:
+        for group in ['prep_services', 'process_services', 'archive_services', 
+                      'restful_services', 'report_services']:
             config_dict['Engines']['WxEngine'][group] = list()
 
         # Now map the old service names to the right group
@@ -535,9 +533,9 @@ def update_to_v2(config_dict):
             if svc_name == 'weewx.wxengine.StdRESTful':
                 continue
             # Do we know about this service?
-            if svc_name in service_map:
+            if svc_name in service_map_v2:
                 # Yes. Get which group it belongs to, and put it there
-                group = service_map[svc_name]
+                group = service_map_v2[svc_name]
                 config_dict['Engines']['WxEngine'][group].append(svc_name)
                 last_group = group
             else:
@@ -1230,16 +1228,9 @@ class Extension(Logger):
             if not os.path.isdir(layout[x]):
                 errors.append("missing directory %s (%s)" % (x, layout[x]))
 
-        # be sure weewx.conf exists and has the new service lists
+        # be sure weewx.conf exists
         fn = os.path.join(layout['CONFIG_ROOT'], 'weewx.conf')
-        if os.path.exists(fn):
-            config = configobj.ConfigObj(fn)
-            for sg in all_service_groups:
-                try:
-                    config['Engine']['Services'][sg]
-                except KeyError, e:
-                    errors.append("[Engine][Services] is missing key %s" % e)
-        else:
+        if not os.path.exists(fn):
             errors.append("no weewx.conf at %s" % fn)
 
         if errors:
@@ -1330,12 +1321,13 @@ class ExtensionInstaller(Logger):
         self.author_email = kwargs.get('author_email')
         self.files = kwargs.get('files', [])
         self.config = kwargs.get('config', {})
-        self.services = {}
-        for sg in all_service_groups:
+        self.service_groups = {}
+        for sg in ['prep_services', 'data_services', 'process_services',
+                   'archive_services', 'restful_services', 'report_services']:
             v = kwargs.get(sg, [])
             if not isinstance(v, list):
                 v = [v]
-            self.services[sg] = v
+            self.service_groups[sg] = v
         self.layout = None
         self.basename = None
         self.doit = True
@@ -1461,13 +1453,14 @@ class ExtensionInstaller(Logger):
         conditional_merge(config, cfg)
 
         # append services to appropriate lists...
-        for sg in all_service_groups:
-            for s in self.services[sg]:
-                if not isinstance(config['Engine']['Services'][sg], list):
-                    config['Engine']['Services'][sg] = [config['Engine']['Services'][sg]]
-                # ...but only if not already there
-                if s not in config['Engine']['Services'][sg]:
-                    config['Engine']['Services'][sg].append(s)
+        for sg in self.service_groups:
+            if not sg in config['Engine']['Services']:
+                config['Engine']['Services'][sg] = []
+            elif not isinstance(config['Engine']['Services'][sg], list):
+                config['Engine']['Services'][sg] = [config['Engine']['Services'][sg]]
+            # ... but only if not already there
+            if s not in config['Engine']['Services'][sg]:
+                config['Engine']['Services'][sg].append(s)
 
         self.log("merged configuration:", level=3)
         self.log('\n'.join(formatdict(config)), level=3)
@@ -1482,11 +1475,11 @@ class ExtensionInstaller(Logger):
         config = configobj.ConfigObj(fn)
 
         # remove any services we added
-        for sg in all_service_groups:
-            if self.services[sg]:
+        for sg in self.service_groups:
+            if sg in config['Engine']['Services'][sg]:
                 newlist = []
                 for s in config['Engine']['Services'][sg]:
-                    if s not in self.services[sg]:
+                    if s not in self.service_groups[sg]:
                         newlist.append(s)
                 config['Engine']['Services'][sg] = newlist
 
