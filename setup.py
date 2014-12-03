@@ -1477,7 +1477,7 @@ class ExtensionInstaller(Logger):
 
         # remove any services we added
         for sg in self.service_groups:
-            if sg in config['Engine']['Services'][sg]:
+            if sg in config['Engine']['Services']:
                 newlist = []
                 for s in config['Engine']['Services'][sg]:
                     if s not in self.service_groups[sg]:
