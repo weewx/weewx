@@ -271,6 +271,7 @@ Version: 3.0.0b2
     [[wx_binding]]
         database = archive_sqlite
         manager = weewx.wxmanager.WXDaySummaryManager
+        table_name = archive
         schema = schemas.wview.schema</span></pre>
         </td>
       </tr>
@@ -406,6 +407,69 @@ weewx.<span class='changed'>engine</span>.StdReport</pre>
         </td>
       </tr>
     </table>
+
+    <h3>Extensions</h3>
+    <p>
+      Many skins will work in v3 with no modification required.  However,
+      every search list extension will have to be upgraded, every restful
+      extension must be upgraded, and some other services must be upgraded.
+    <p>
+      There is no automated upgrade system for extensions; if an extension
+      must be upgraded, you must do it manually.  If the extension has any
+      python code, this will mean replacing any v2-compatible code with
+      v3-compatible code.  In some cases parts of the configuration file
+      <span class='code'>weewx.conf</span> must be modified.
+    </p>
+    <p>
+      For example, to update the <span class='code'>pmon</span> extension,
+      replace <span class='code'>bin/user/pmon.py</span> with the
+      v3-compatible <span class='code'>pmon.py</span> and modify
+      <span class='code'>weewx.conf</span> as shown in this table:
+    </p>
+    <table style='width:100%'>
+      <tr class="first_row"><td style='width:50%'>2.7</td><td>3.0</td></tr>
+      <tr>
+        <td>
+          <pre class='tty'>[ProcessMonitor]
+    <span class='changed'>database = pmon_sqlite</span></pre>
+        </td>
+        <td>
+          <pre class='tty'>[ProcessMonitor]
+    <span class='changed'>data_binding = pmon_binding</span></pre>
+        </td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>
+          <pre class='tty'><span class='added'>[DataBindings]
+    [[pmon_binding]]
+        database = pmon_sqlite
+        manager = weewx.manager.DaySummaryManager
+        table_name = archive
+        schema = user.pmon.schema</span></pre>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <pre class='tty'>[Databases]
+    [[pmon_sqlite]]
+        root = %(WEEWX_ROOT)s
+        <span class='changed'>database</span> = archive/pmon.sdb
+        driver = weedb.sqlite</pre>
+        </td>
+        <td>
+          <pre class='tty'>[Databases]
+    [[pmon_sqlite]]
+        root = %(WEEWX_ROOT)s
+        <span class='changed'>database_name</span> = archive/pmon.sdb
+        driver = weedb.sqlite</pre>
+        </td>
+      </tr>
+    </table>
+    <p>
+      For other extensions, see the extension's documentation or contact
+      the author of the extension.
+    </p>
     
     <h3>Search list extensions</h3>
     <p>
@@ -644,8 +708,8 @@ setup.py --extension --list
 setup.py --extension --install basic.tar.gz --dryrun</pre>
         </td>
         <td>
-          <pre class='tty'>setup.py install --extension=extensions/basic
-setup.py install --extension=basic.tar.gz
+          <pre class='tty'>setup.py install --extension extensions/basic
+setup.py install --extension basic.tar.gz
 setup.py uninstall --extension basic
 setup.py list-extensions
 setup.py install --extension basic.tar.gz --dry-run</pre>
