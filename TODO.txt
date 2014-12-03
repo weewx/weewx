@@ -3,8 +3,6 @@
 Should the archive file be backed up before adding the daily summaries?
   - Probably.
 
-Prompt for extension-specific parameters
-
 
 
 --------------------  Nice to do (V3.1?)  --------------------------- 
@@ -12,6 +10,7 @@ Prompt for extension-specific parameters
 Make setup.py do nicer formatting to weewx.conf
   - spacing before when injecting skin stanzas
   - spacing before when injecting database and binding stanzas
+  - spacing before when injecting restful stanzas
   - rows of hashmarks when injecting service stanzas such as [Forecast]
   - inject service stanzas somewhere other than end of file
   - inject skin stanzas before ftp and rsync
@@ -29,6 +28,12 @@ Is max gap fraction meaningful for bar charts now?
 
 Fix units in cmon to use kilo, mega, giga, tera?
  - scaling probably should be done in the plotting, not unit as types
+
+Doing 'setup.py install --extension' should prompt for required parameters
+ - deferring this.  for now the installer should inject required parameters
+   into weewx.conf.  for passwords and tokens, inject INSERT_XXX_HERE.  when
+   service starts up, detect missing or default passwords/tokens and bail out
+   with a log message (as the restful services do).
 
 Guard against database locks:
 
