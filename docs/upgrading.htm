@@ -57,7 +57,7 @@ table .tty {
   background: #ffe0b0;
 }
 .added {
-  background: #ddffdd;
+  background: #ccffcc;
 }
   </style>
 </head>
@@ -487,7 +487,7 @@ weewx.<span class='changed'>engine</span>.StdReport</pre>
           <td>3.0</td>
         </tr>
         <tr>
-          <td><pre class="tty"><span class="changed">def get_extension</span>(self, timespan, <span class="changed">archivedb, statsdb</span>):
+          <td><pre class="tty">def <span class="changed">get_extension</span>(self, timespan, <span class="changed">archivedb, statsdb</span>):
 
     all_stats = <span class="changed">TimeSpanStats</span>(timespan,
                               <span class="changed">statsdb</span>,
@@ -503,9 +503,9 @@ weewx.<span class='changed'>engine</span>.StdReport</pre>
     search_list_extension = {'alltime'   : all_stats,
                              'seven_day' : seven_day_stats}
         
-    return <span class="changed">search_list_extension</span></pre>
+    return search_list_extension</pre>
           </td>
-          <td><pre class="tty"><span class="changed">def get_extension_list</span>(self, timespan, <span class="changed">db_lookup</span>):
+          <td><pre class="tty">def <span class="changed">get_extension_list</span>(self, timespan, <span class="changed">db_lookup</span>):
 
     all_stats = <span class="changed">TimespanBinder</span>(timespan, 
                                <span class="changed">db_lookup</span>,
@@ -521,7 +521,7 @@ weewx.<span class='changed'>engine</span>.StdReport</pre>
     search_list_extension = {'alltime'   : all_stats,
                              'seven_day' : seven_day_stats}
         
-    return <span class="changed">[search_list_extension]</span></pre>
+    return <span class="added">[</span>search_list_extension<span class="added">]</span></pre>
           </td>
         </tr>
       </tbody>
