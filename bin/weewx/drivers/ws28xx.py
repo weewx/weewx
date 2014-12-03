@@ -3126,7 +3126,7 @@ class sHID(object):
         # be sure kernel does not claim the interface
         try:
             self.devh.detachKernelDriver(interface)
-        except Exception, e:
+        except Exception:
             pass
 
         # attempt to claim the interface

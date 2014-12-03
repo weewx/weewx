@@ -786,8 +786,8 @@ class TE923(object):
         # be sure kernel does not claim the interface
         try:
             self.devh.detachKernelDriver(interface)
-        except Exception, e:
-            loginf('Detach kernel driver failed: %s' % e)
+        except Exception:
+            pass
 
         # attempt to claim the interface
         try:
