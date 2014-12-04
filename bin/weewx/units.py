@@ -4,7 +4,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $ $
+#    $Id$
 
 """Data structures and functions for dealing with units."""
 
@@ -132,7 +132,11 @@ USUnits = ListOfDicts({"group_altitude"    : "foot",
                        "group_time"        : "unix_epoch",
                        "group_deltatime"   : "second",
                        "group_uv"          : "uv_index",
-                       "group_volt"        : "volt"})
+                       "group_volt"        : "volt",
+                       "group_amp"         : "amp",
+                       "group_power"       : "watt",
+                       "group_energy"      : "watt_hour",
+                       "group_volume"      : "gallon"})
 
 # This dictionary maps unit groups to a standard unit type in the 
 # metric unit system:
@@ -154,7 +158,11 @@ MetricUnits = ListOfDicts({"group_altitude"    : "meter",
                            "group_time"        : "unix_epoch",
                            "group_deltatime"   : "second",
                            "group_uv"          : "uv_index",
-                           "group_volt"        : "volt"})
+                           "group_volt"        : "volt",
+                           "group_amp"         : "amp",
+                           "group_power"       : "watt",
+                           "group_energy"      : "watt_hour",
+                           "group_volume"      : "litre"})
 
 # This dictionary maps unit groups to a standard unit type in the 
 # "Metric WX" unit system. It's the same as the "Metric" system,
@@ -226,7 +234,13 @@ conversionDict = {
       'hour'             : {'second'           : lambda x : x*3600.0,
                             'day'              : lambda x : x/24.0},
       'day'              : {'second'           : lambda x : x*86400.0,
-                            'hour'             : lambda x : x*24.0}}
+                            'hour'             : lambda x : x*24.0},
+      'gallon'           : {'litre'            : lambda x : x * 3.78541,
+                            'cubic_foot'       : lambda x : x * 0.133681},
+      'litre'            : {'gallon'           : lambda x : x * 0.264172,
+                            'cubic_foot'       : lambda x : x * 0.0353147},
+      'cubic_foot'       : {'gallon'           : lambda x : x * 7.48052,
+                            'litre'            : lambda x : x * 28.3168}}
 
 # Default unit formatting to be used in the absence of a skin configuration file
 default_unit_format_dict = {"centibar"           : "%.0f",
@@ -261,6 +275,12 @@ default_unit_format_dict = {"centibar"           : "%.0f",
                             "second"             : "%.0f",
                             "uv_index"           : "%.1f",
                             "volt"               : "%.1f",
+                            "amp"                : "%.1f",
+                            "watt"               : "%.1f",
+                            "watt_hour"          : "%.1f",
+                            "gallon"             : "%.1f",
+                            "litre"              : "%.1f",
+                            "cubic_foot"         : "%.1f",
                             "watt_per_meter_squared" : "%.0f",
                             "NONE"              : "   N/A"}
 
@@ -298,6 +318,12 @@ default_unit_label_dict = { "centibar"          : " cb",
                             "second"            : (" second", " seconds"),
                             "uv_index"          : "",
                             "volt"              : " V",
+                            "amp"               : " amp",
+                            "watt"              : " W",
+                            "watt_hour"         : " Wh",
+                            "gallon"            : " gal",
+                            "litre"             : " l",
+                            "cubic_foot"        : " ft\xc2\xb3",
                             "watt_per_meter_squared" : " W/m\xc2\xb2",
                             "NONE"              : "" }
 
