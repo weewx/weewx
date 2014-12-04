@@ -1545,50 +1545,21 @@ def prettify(config, src):
         if k in ['StdRESTful', 'DataBindings', 'Databases', 'StdReport']:
             for j in src[k]:
                 if k == 'StdReport':
-                    reorder_blocks(config, k, j, 'RSYNC')
-                    reorder_blocks(config, k, j, 'FTP')
+                    reorder_sections(config[k], j, 'RSYNC')
+                    reorder_sections(config[k], j, 'FTP')
                 config[k].comments[j] = minor_comment_block
         else:
-            reorder_blocks(config, None, k, 'StdRESTful')
+            reorder_sections(config, k, 'StdRESTful')
             config.comments[k] = major_comment_block
 
-def reorder_blocks(c, section_name, src, dst):
-    """Reorder sections within a configobj.  Put src just before dst."""
-    # FIXME: i'm sure there is a better way to do this, but after a couple of
-    # hours struggling with pop and section reordering and Section initialize
-    # i gave up and ended up with this.
-
-    # create a copy of the original configobj
-    tmp = configobj.ConfigObj(indent_type=c.indent_type,
-                              interpolation=c.interpolation)
-    tmp.initial_comment = c.initial_comment
-    tmp.final_comment = c.final_comment
-    for s in c:
-        tmp[s] = c[s]
-        tmp.comments[s] = c.comments[s]
-        tmp.inline_comments[s] = c.inline_comments[s]
-
-    # figure out which section we are supposed to be working on
-    if section_name is None:
-        c_root = c
-        tmp_root = tmp
-    else:
-        c_root = c[section_name]
-        tmp_root = tmp[section_name]
-
-    # clear the original, then copy each section back to the original from
-    # the copy, inserting the src just before the dst.
-    c_root.clear()
-    for s in tmp_root:
-        if s == dst:
-            c_root[src] = tmp_root[src]
-            c_root.comments[src] = tmp_root.comments[src]
-            c_root.inline_comments[src] = tmp_root.inline_comments[src]
-        elif s == src:
-            continue
-        c_root[s] = tmp_root[s]
-        c_root.comments[s] = tmp_root.comments[s]
-        c_root.inline_comments[s] = tmp_root.inline_comments[s]
+def reorder_sections(c, src, dst):
+    try:
+        src_idx = c.sections.index(src)
+        dst_idx = c.sections.index(dst)
+        c.sections.pop(src_idx)
+        c.sections = c.sections[0:dst_idx] + [src] + c.sections[dst_idx:]
+    except ValueError:
+        pass
 
 def conditional_merge(a, b):
     """merge fields from b into a, but only if they do not yet exist in a"""
