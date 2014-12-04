@@ -87,6 +87,9 @@ service_map_v2 = {'weewx.wxengine.StdTimeSynch' : 'prep_services',
                   'weewx.wxengine.StdPrint'     : 'report_services', 
                   'weewx.wxengine.StdReport'    : 'report_services'}
 
+minor_comment_block = [""]
+major_comment_block = ["", "##############################################################################", ""]
+
 #==============================================================================
 # install_lib
 #==============================================================================
@@ -770,7 +773,7 @@ def configure_conf(config_fn, info, dryrun=False):
         new_config.inline_comments[s] = old_config.inline_comments[s]
         if s == 'Station' and stanza is not None:
             new_config[driver_name] = stanza[driver_name]
-            new_config.comments[driver_name] = ["", "##############################################################################", ""]
+            new_config.comments[driver_name] = major_comment_block
 #            new_config.comments[driver_name] = stanza.comments[driver_name]
             new_config.inline_comments[driver_name] = stanza.inline_comments[driver_name]
             new_config[s]['station_type'] = driver_name
@@ -1199,11 +1202,7 @@ class Extension(Logger):
         return layout_type
 
     def verify_layout(self, layout_type):
-        errors = []
-
-        if layout_type == 'deb':
-            layout = dict(self._layouts['pkg'])
-        elif layout_type == 'rpm':
+        if layout_type == 'deb' or layout_type == 'rpm':
             layout = dict(self._layouts['pkg'])
         elif layout_type == 'py':
             layout = dict(self._layouts['py'])
@@ -1222,6 +1221,8 @@ class Extension(Logger):
             layout['WEEWX_ROOT'] = weewx_root
         else:
             raise Exception("unknown layout type '%s'" % layout_type)
+
+        errors = []
 
         # be sure each destination directory exists
         for x in layout:
@@ -1452,6 +1453,9 @@ class ExtensionInstaller(Logger):
         # so do a conditional merge instead.
         conditional_merge(config, cfg)
 
+        # make the formatting match that of the default weewx.conf
+        prettify(config, cfg)
+
         # append services to appropriate lists...
         for sg in self.service_groups:
             if not sg in config['Engine']['Services']:
@@ -1526,6 +1530,65 @@ class ExtensionInstaller(Logger):
         self.log("delete %s" % dstdir, level=2)
         if self.doit:
             shutil.rmtree(dstdir, True)
+
+def prettify(config, src):
+    """clean up the config file:
+
+    - put any global stanzas just before StdRESTful
+    - prepend any global stanzas with a line of comment characters
+    - put any StdReport stanzas before ftp and rsync
+    - prepend any StdReport stanzas with a single empty line
+    - prepend any database or databinding stanzas with a single empty line
+    - prepend any restful stanzas with a single empty line
+    """
+    for k in src:
+        if k in ['StdRESTful', 'DataBindings', 'Databases', 'StdReport']:
+            for j in src[k]:
+                if k == 'StdReport':
+                    reorder_blocks(config, k, j, 'RSYNC')
+                    reorder_blocks(config, k, j, 'FTP')
+                config[k].comments[j] = minor_comment_block
+        else:
+            reorder_blocks(config, None, k, 'StdRESTful')
+            config.comments[k] = major_comment_block
+
+def reorder_blocks(c, section_name, src, dst):
+    """Reorder sections within a configobj.  Put src just before dst."""
+    # FIXME: i'm sure there is a better way to do this, but after a couple of
+    # hours struggling with pop and section reordering and Section initialize
+    # i gave up and ended up with this.
+
+    # create a copy of the original configobj
+    tmp = configobj.ConfigObj(indent_type=c.indent_type,
+                              interpolation=c.interpolation)
+    tmp.initial_comment = c.initial_comment
+    tmp.final_comment = c.final_comment
+    for s in c:
+        tmp[s] = c[s]
+        tmp.comments[s] = c.comments[s]
+        tmp.inline_comments[s] = c.inline_comments[s]
+
+    # figure out which section we are supposed to be working on
+    if section_name is None:
+        c_root = c
+        tmp_root = tmp
+    else:
+        c_root = c[section_name]
+        tmp_root = tmp[section_name]
+
+    # clear the original, then copy each section back to the original from
+    # the copy, inserting the src just before the dst.
+    c_root.clear()
+    for s in tmp_root:
+        if s == dst:
+            c_root[src] = tmp_root[src]
+            c_root.comments[src] = tmp_root.comments[src]
+            c_root.inline_comments[src] = tmp_root.inline_comments[src]
+        elif s == src:
+            continue
+        c_root[s] = tmp_root[s]
+        c_root.comments[s] = tmp_root.comments[s]
+        c_root.inline_comments[s] = tmp_root.inline_comments[s]
 
 def conditional_merge(a, b):
     """merge fields from b into a, but only if they do not yet exist in a"""
