@@ -1553,13 +1553,13 @@ def prettify(config, src):
             config.comments[k] = major_comment_block
 
 def reorder_sections(c, src, dst):
-    try:
-        src_idx = c.sections.index(src)
-        dst_idx = c.sections.index(dst)
-        c.sections.pop(src_idx)
-        c.sections = c.sections[0:dst_idx] + [src] + c.sections[dst_idx:]
-    except ValueError:
-        pass
+    if src not in c.sections or dst not in c.sections:
+        return
+    src_idx = c.sections.index(src)
+    c.sections.pop(src_idx)
+    dst_idx = c.sections.index(dst)
+    c.sections = c.sections[0:dst_idx] + [src] + c.sections[dst_idx:]
+    # if index raises an exception, we want to fail hard
 
 def conditional_merge(a, b):
     """merge fields from b into a, but only if they do not yet exist in a"""
