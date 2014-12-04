@@ -136,7 +136,8 @@ USUnits = ListOfDicts({"group_altitude"    : "foot",
                        "group_amp"         : "amp",
                        "group_power"       : "watt",
                        "group_energy"      : "watt_hour",
-                       "group_volume"      : "gallon"})
+                       "group_volume"      : "gallon",
+                       "group_data"        : "byte"})
 
 # This dictionary maps unit groups to a standard unit type in the 
 # metric unit system:
@@ -162,7 +163,8 @@ MetricUnits = ListOfDicts({"group_altitude"    : "meter",
                            "group_amp"         : "amp",
                            "group_power"       : "watt",
                            "group_energy"      : "watt_hour",
-                           "group_volume"      : "litre"})
+                           "group_volume"      : "litre",
+                           "group_data"        : "byte"})
 
 # This dictionary maps unit groups to a standard unit type in the 
 # "Metric WX" unit system. It's the same as the "Metric" system,
@@ -240,7 +242,37 @@ conversionDict = {
       'litre'            : {'gallon'           : lambda x : x * 0.264172,
                             'cubic_foot'       : lambda x : x * 0.0353147},
       'cubic_foot'       : {'gallon'           : lambda x : x * 7.48052,
-                            'litre'            : lambda x : x * 28.3168}}
+                            'litre'            : lambda x : x * 28.3168},
+      'bit'              : {'byte'             : lambda x : x / 8,
+                            'kilobyte'         : lambda x : x / (8*1024),
+                            'megabyte'         : lambda x : x / (8*1024*1024),
+                            'gigabyte'         : lambda x : x / (8*1024*1024*1024),
+                            'terabyte'         : lambda x : x / (8*1024*1024*1024*1024)},
+      'byte'             : {'bit'              : lambda x : x * 8,
+                            'kilobyte'         : lambda x : x / 1024,
+                            'megabyte'         : lambda x : x / (1024*1024),
+                            'gigabyte'         : lambda x : x / (1024*1024*1024),
+                            'terabyte'         : lambda x : x / (1024*1024*1024*1024)},
+      'kilobyte'         : {'bit'              : lambda x : x * 8 * 1024,
+                            'byte'             : lambda x : x * 1024,
+                            'megabyte'         : lambda x : x / 1024,
+                            'gigabyte'         : lambda x : x / (1024*1024),
+                            'terabyte'         : lambda x : x / (1024*1024*1024)},
+      'megabyte'         : {'bit'              : lambda x : x * 8*1024*1024,
+                            'byte'             : lambda x : x * 1024*1024,
+                            'kilobyte'         : lambda x : x * 1024,
+                            'gigabyte'         : lambda x : x / 1024,
+                            'terabyte'         : lambda x : x / (1024*1024)},
+      'gigabyte'         : {'bit'              : lambda x : x * 8*1024*1024*1024,
+                            'byte'             : lambda x : x * 1024*1024*1024,
+                            'kilobyte'         : lambda x : x * 1024*1024,
+                            'megabyte'         : lambda x : x * 1024,
+                            'terabyte'         : lambda x : x / 1024},
+      'terabyte'         : {'bit'              : lambda x : x * 8*1024*1024*1024*1024,
+                            'byte'             : lambda x : x * 1024*1024*1024*1024,
+                            'kilobyte'         : lambda x : x * 1024*1024*1024,
+                            'megabyte'         : lambda x : x * 1024*1024,
+                            'gigabyte'         : lambda x : x * 1024}}
 
 # Default unit formatting to be used in the absence of a skin configuration file
 default_unit_format_dict = {"centibar"           : "%.0f",
@@ -281,6 +313,12 @@ default_unit_format_dict = {"centibar"           : "%.0f",
                             "gallon"             : "%.1f",
                             "litre"              : "%.1f",
                             "cubic_foot"         : "%.1f",
+                            "bit"                : "%.0f",
+                            "byte"               : "%.0f",
+                            "kilobyte"           : "%.0f",
+                            "megabyte"           : "%.0f",
+                            "gigabyte"           : "%.0f",
+                            "terabyte"           : "%.0f",
                             "watt_per_meter_squared" : "%.0f",
                             "NONE"              : "   N/A"}
 
@@ -324,6 +362,12 @@ default_unit_label_dict = { "centibar"          : " cb",
                             "gallon"            : " gal",
                             "litre"             : " l",
                             "cubic_foot"        : " ft\xc2\xb3",
+                            "bit"               : " b",
+                            "byte"              : " B",
+                            "kilobyte"          : " KB",
+                            "megabyte"          : " MB",
+                            "gigabyte"          : " GB",
+                            "terabyte"          : " TB",
                             "watt_per_meter_squared" : " W/m\xc2\xb2",
                             "NONE"              : "" }
 
