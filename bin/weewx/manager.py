@@ -1370,7 +1370,7 @@ class DaySummaryManager(Manager):
             try:
                 cursor.execute(_sql_replace_str, _write_tuple)
             except weedb.OperationalError, e:
-                syslog.syslog(syslog.LOG_ERR, "manager: Operational error database %s; %s" % (self.manager, e))
+                syslog.syslog(syslog.LOG_ERR, "manager: Operational error database %s; %s" % (self.database_name, e))
                 
         # Update the time of the last daily summary update:
         cursor.execute(DaySummaryManager.meta_replace_str % self.table_name, ('lastUpdate', str(int(lastUpdate))))
