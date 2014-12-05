@@ -1,3 +1,6 @@
+weewx (3.0.0-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 05 Dec 2014 10:36:34 -0800
 weewx (3.0.0b3-1) unstable; urgency=low
   * new upstream release
  -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 05 Dec 2014 04:49:15 -0800
