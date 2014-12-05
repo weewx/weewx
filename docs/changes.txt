@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.0.0 XX/XX/XX
+3.0.0 05-Dec-2014
 
 Big update with lots of changes and lots of new features. The overall
 goal was to make it easier to write and install extensions. Adding
