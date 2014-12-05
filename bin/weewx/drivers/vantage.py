@@ -563,6 +563,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         yields: a sequence of dictionaries containing the data
         """
+        import weewx.wxformulas
         
         # Wake up the console...
         self.port.wakeup_console(self.max_tries, self.wait_before_retry)
@@ -589,6 +590,20 @@ class Vantage(weewx.drivers.AbstractDevice):
                     continue
                 # Unpack the raw archive packet:
                 _record = self._unpackArchivePacket(_record_string)
+                
+                # Because the dump command does not go through the normal weewx
+                # engine pipeline, we have to add these important software derived
+                # variables here.
+                try:
+                    T = _record['outTemp']
+                    R = _record['outHumidity']
+                    W = _record['windSpeed']
+                
+                    _record['dewpoint']  = weewx.wxformulas.dewpointF(T, R)
+                    _record['heatindex'] = weewx.wxformulas.heatindexF(T, R)
+                    _record['windchill'] = weewx.wxformulas.windchillF(T, W)
+                except KeyError:
+                    pass
 
                 yield _record
 
