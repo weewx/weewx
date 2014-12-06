@@ -747,52 +747,51 @@ def configure_conf(config_fn, info, dryrun=False):
         sys.path = tmp_path
 
     # read the original configuration
-    old_config = configobj.ConfigObj(config_fn, interpolation=False)
+    config = configobj.ConfigObj(config_fn, interpolation=False)
 
+    # determine what driver-specific stanza we will need
     stanza = None
     if editor is not None:
         orig_stanza_text = None
 
         # if a previous stanza exists for this driver, grab it
-        if driver_name in old_config:
-            orig_stanza = configobj.ConfigObj()
-            orig_stanza[driver_name] = old_config[driver_name]
+        if driver_name in config:
+            orig_stanza = configobj.ConfigObj(interpolation=False)
+            orig_stanza[driver_name] = config[driver_name]
             orig_stanza_text = '\n'.join(orig_stanza.write())
 
         # let the driver process the stanza or give us a new one
         stanza_text = editor.get_conf(orig_stanza_text)
         stanza = configobj.ConfigObj(stanza_text.splitlines())
 
-    # copy everything into the new config, put new stanza after [Station]
-    new_config = configobj.ConfigObj(indent_type=old_config.indent_type)
-    new_config.initial_comment = old_config.initial_comment
-    new_config.final_comment = old_config.final_comment
-    for s in old_config:
-        new_config[s] = old_config[s]
-        new_config.comments[s] = old_config.comments[s]
-        new_config.inline_comments[s] = old_config.inline_comments[s]
-        if s == 'Station' and stanza is not None:
-            new_config[driver_name] = stanza[driver_name]
-            new_config.comments[driver_name] = major_comment_block
-#            new_config.comments[driver_name] = stanza.comments[driver_name]
-            new_config.inline_comments[driver_name] = stanza.inline_comments[driver_name]
-            new_config[s]['station_type'] = driver_name
+    # put the new stanza immediately after [Station]
+    if stanza is not None and 'Station' in config:
+        # insert the stanza
+        config[driver_name] = stanza[driver_name]
+        config.comments[driver_name] = major_comment_block
+        # reorder the sections
+        idx = config.sections.index(driver_name)
+        config.sections.pop(idx)
+        idx = config.sections.index('Station')
+        config.sections = config.sections[0:idx+1] + [driver_name] + config.sections[idx+1:]
+        # make the stanza the station type
+        config['Station']['station_type'] = driver_name
 
-    # update driver stanza with any overrides from info
+    # apply any overrides from the info
     if info is not None:
+        # update driver stanza with any overrides from info
         if driver_name in info:
             for k in info[driver_name]:
-                new_config[driver_name][k] = info[driver_name][k]
-
-    # insert any station info
-    if info is not None:
+                config[driver_name][k] = info[driver_name][k]
+        # update station information with info overrides
         for p in ['location', 'latitude', 'longitude', 'altitude']:
             if info.get(p) is not None:
-                new_config['Station'][p] = info[p]
+                config['Station'][p] = info[p]
+        # update units display with any info overrides
         if info.get('units') is not None:
             if info.get('units') == 'metric':
                 print "Using Metric units for display"
-                new_config['StdReport']['StandardReport'].update({
+                config['StdReport']['StandardReport'].update({
                         'Units': {
                             'Groups': {
                                 'group_altitude': 'meter',
@@ -805,7 +804,7 @@ def configure_conf(config_fn, info, dryrun=False):
                                 'group_temperature': 'degree_C'}}})
             elif info.get('units') == 'us':
                 print "Using US units for display"
-                new_config['StdReport']['StandardReport'].update({
+                config['StdReport']['StandardReport'].update({
                         'Units': {
                             'Groups': {
                                 'group_altitude': 'foot',
@@ -818,13 +817,13 @@ def configure_conf(config_fn, info, dryrun=False):
                                 'group_temperature': 'degree_F'}}})
 
     # save the new configuration
-    new_config.filename = "%s.tmp" % config_fn
-    new_config.write()
+    config.filename = "%s.tmp" % config_fn
+    config.write()
 
     # move the original aside
     if not dryrun:
         save_path(config_fn)
-        shutil.move(new_config.filename, config_fn)
+        shutil.move(config.filename, config_fn)
 
 def load_editor(driver):
     """Load the configuration editor from the driver file"""
