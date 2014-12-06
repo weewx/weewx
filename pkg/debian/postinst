@@ -130,7 +130,7 @@ merge_weewxconf() {
                 echo merging previous and distribution into $cfgfile
                 $setupapp --merge-config --install-dir / --a $cfgfile-$NEWVER --b $cfgfile-$OLDVER --c $cfgfile
                 # give drivers a chance to update/warn with no prompts
-                configure_driver
+                configure_post driver
             else
                 echo distribution config file is wrong version for merging
             fi
@@ -140,8 +140,7 @@ merge_weewxconf() {
     else
         # this is a new config, so just insert debconf values into it
         echo using debconf configuration values from previous install
-        configure_driver
-        configure_units
+        configure_post driver units
         configure_weewxconf
     fi
 }
@@ -152,51 +151,50 @@ get_conf_version() {
 }
 
 # insert/update the driver configuration stanza into the configuration file
-configure_driver() {
+configure_post() {
     if [ ! -f $cfgfile ]; then
         return
     fi
 
-    driver=weewx.drivers.simulator
-    db_get weewx/station_type
-    if [ "$RET" = "CC3000" ]; then
-        driver=weewx.drivers.cc3000
-    elif [ "$RET" = "FineOffsetUSB" ]; then
-        driver=weewx.drivers.fousb
-    elif [ "$RET" = "TE923" ]; then
-        driver=weewx.drivers.te923
-    elif [ "$RET" = "Ultimeter" ]; then
-        driver=weewx.drivers.ultimeter
-    elif [ "$RET" = "Vantage" ]; then
-        driver=weewx.drivers.vantage
-    elif [ "$RET" = "WMR100" ]; then
-        driver=weewx.drivers.wmr100
-    elif [ "$RET" = "WMR200" ]; then
-        driver=weewx.drivers.wmr200
-    elif [ "$RET" = "WMR9x8" ]; then
-        driver=weewx.drivers.wmr9x8
-    elif [ "$RET" = "WS1" ]; then
-        driver=weewx.drivers.ws1
-    elif [ "$RET" = "WS23xx" ]; then
-        driver=weewx.drivers.ws23xx
-    elif [ "$RET" = "WS28xx" ]; then
-        driver=weewx.drivers.ws28xx
-    fi
-    $setupapp configure --config=$cfgfile --driver=$driver --quiet
-}
-
-# insert/update the units configuration stanza into the configuration file
-configure_units() {
-    if [ ! -f $cfgfile ]; then
-        return
+    if [ "$1" = "driver" -o "$2" = "driver" ]; then
+        driver=weewx.drivers.simulator
+        db_get weewx/station_type
+        if [ "$RET" = "CC3000" ]; then
+            driver=weewx.drivers.cc3000
+        elif [ "$RET" = "FineOffsetUSB" ]; then
+            driver=weewx.drivers.fousb
+        elif [ "$RET" = "TE923" ]; then
+            driver=weewx.drivers.te923
+        elif [ "$RET" = "Ultimeter" ]; then
+            driver=weewx.drivers.ultimeter
+        elif [ "$RET" = "Vantage" ]; then
+            driver=weewx.drivers.vantage
+        elif [ "$RET" = "WMR100" ]; then
+            driver=weewx.drivers.wmr100
+        elif [ "$RET" = "WMR200" ]; then
+            driver=weewx.drivers.wmr200
+        elif [ "$RET" = "WMR9x8" ]; then
+            driver=weewx.drivers.wmr9x8
+        elif [ "$RET" = "WS1" ]; then
+            driver=weewx.drivers.ws1
+        elif [ "$RET" = "WS23xx" ]; then
+            driver=weewx.drivers.ws23xx
+        elif [ "$RET" = "WS28xx" ]; then
+            driver=weewx.drivers.ws28xx
+        fi
+        dopt=" --driver=$driver"
     fi
 
-    units=us
-    db_get weewx/units
-    if [ "$RET" = "Metric" ]; then
-        units=metric
+    if [ "$1" = "units" -o "$2" = "units" ]; then
+        units=us
+        db_get weewx/units
+        if [ "$RET" = "Metric" ]; then
+            units=metric
+        fi
+        uopt=" --units=$units"
     fi
-    $setupapp configure --config=$cfgfile --units=$units --quiet
+
+    $setupapp configure --config=$cfgfile $dopt $uopt --quiet
 }
 
 case "$1" in
@@ -206,8 +204,7 @@ configure)
             merge_weewxconf
         else
             # virgin install so insert debconf values into the config file
-            configure_driver
-            configure_units
+            configure_post driver units
             configure_weewxconf
         fi
 
