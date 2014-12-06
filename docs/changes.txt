@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+3.0.1 06-Dec-2014
+
+Fixed bug in setup.py that would forget to insert device-specific options
+in weewx.conf during new installations.
+
+
 3.0.0 05-Dec-2014
 
 Big update with lots of changes and lots of new features. The overall

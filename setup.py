@@ -1784,9 +1784,9 @@ if __name__ == "__main__":
                 # functional installation.
                 info = {'driver': 'weewx.drivers.simulator'}
             else:
-                # this must be a new install, so prompt for station info, driver
-                # type, and driver-specific parameters, but only if '--quiet' is
-                # not specified.
+                # this must be a new install, so prompt for station info,
+                # driver type, and driver-specific parameters, but only if
+                # '--quiet' is not specified.
                 info = prompt_for_info()
                 info['driver'] = prompt_for_driver()
                 info.update(prompt_for_driver_settings(info['driver']))
