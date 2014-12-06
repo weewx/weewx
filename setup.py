@@ -779,10 +779,10 @@ def configure_conf(config_fn, info, dryrun=False):
             new_config[s]['station_type'] = driver_name
 
     # update driver stanza with any overrides from info
-#    if info is not None:
-#        if driver_name in info:
-#            for k in info[driver_name]:
-#                new_config[driver_name][k] = info[driver_name][k]
+    if info is not None:
+        if driver_name in info:
+            for k in info[driver_name]:
+                new_config[driver_name][k] = info[driver_name][k]
 
     # insert any station info
     if info is not None:

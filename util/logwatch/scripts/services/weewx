@@ -245,6 +245,7 @@ while(defined($_ = <STDIN>)) {
              /engine: No RESTful upload sites/ ||
              /engine: Loading station type/ ||
              /engine: Initializing weewx version/ ||
+             /engine: Initializing engine/ ||
              /engine: Using Python/ ||
              /engine: Terminating weewx version/ ||
              /engine: pid file is / ||
@@ -441,13 +442,18 @@ while(defined($_ = <STDIN>)) {
              /restx: Shut down/ ||
              /restx: \S+: Data will not be posted/ ||
              /restx: \S+: service version is/ ||
+             /restx: \S+: skipping upload/ ||
+             /restx: \S+: desired unit system is/ ||
              /restx: AWEKAS: url/ ||
              /restx: EmonCMS: url/ ||
              /restx: EmonCMS: prefix is/ ||
              /restx: EmonCMS: desired unit system is/ ||
              /restx: EmonCMS: using specified input map/ ||
+             /restx: MQTT: Topic is/ ||
              /restx: OWM: data/ ||
              /restx: SEG: data/ ||
+             /restx: Twitter: binding is/ ||
+             /restx: Twitter: Data will be tweeted/ ||
              /restx: WeatherBug: url/ ||
              /restx: Xively: data/ ||
              /restx: Xively: url/ ||
