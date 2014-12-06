@@ -2271,6 +2271,8 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
     def default_stanza(self):
         return """
 [Vantage]
+    # This section is for the Davis Vantage series of weather stations.
+
     # Connection type: serial or ethernet 
     #  serial (the classic VantagePro)
     #  ethernet (the WeatherLinkIP)
