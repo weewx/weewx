@@ -879,7 +879,7 @@ def get_manager_dict(bindings_dict, databases_dict, data_binding,
         # Add any user overrides:
         manager_dict.update(bindings_dict[data_binding])
     except KeyError, e:
-        raise weewx.UnknownBinding(e)
+        raise weewx.UnknownBinding("Unknown data binding '%s'" % e)
     
     
     # Now get the database dictionary if it's missing:
