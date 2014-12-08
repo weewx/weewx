@@ -8,7 +8,7 @@
 SIGN=1
 
 # destination for uploading everything
-RELDIR=frs.sourceforge.net:/home/frs/project/weewx
+RELDIR=frs.sourceforge.net:/home/frs/project/weewx/development_versions
 
 # extract version to be used in package controls and labels
 VERSION=$(shell grep __version__ bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
