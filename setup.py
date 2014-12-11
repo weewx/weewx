@@ -409,9 +409,9 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
             print >>sys.stderr, "You will have to do it manually."
             
         else:
-            # First update to V2.X
+            # First update to the latest v2
             if old_version_number[0:2] >= ['2', '00']:
-                update_to_v2(old_config)
+                update_to_v27(old_config)
 
             # Now update to V3.X
             old_database = update_to_v3(old_config)
@@ -435,7 +435,7 @@ def merge_config_files(new_config_path, old_config_path, weewx_root,
     
     return new_config
 
-def update_to_v2(config_dict):
+def update_to_v27(config_dict):
     """Updates a configuration file to the latest V2.X version.
     Since V2.7 was the last 2.X version, that's our target"""
 
