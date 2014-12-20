@@ -435,6 +435,7 @@ while(defined($_ = <STDIN>)) {
              /forecast: NWSThread: NWS: forecast matrix/ ||
              /forecast: XTideThread: XTide: tide matrix/ ||
              /forecast: XTideThread: XTide: generating tides/ ||
+             /forecast: XTideThread: XTide: got no tidal events/ ||
              /forecast: .*: forecast version/ ||
              /restx: StationRegistry: Station will/ ||
              /restx: .*Data will be uploaded/ ||
