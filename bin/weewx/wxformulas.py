@@ -158,6 +158,8 @@ def altimeter_pressure_US(SP_inHg, Z_foot, algorithm='aaASOS'):
     """
     if SP_inHg is None or Z_foot is None:
         return None
+    if SP_inHg <= 0.008859:
+        return None
     return weewx.uwxutils.TWxUtilsUS.StationToAltimeter(SP_inHg, Z_foot,
                                                         algorithm=algorithm)
 
