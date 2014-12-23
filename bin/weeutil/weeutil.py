@@ -136,6 +136,7 @@ def stampgen(startstamp, stopstamp, interval):
 
     Example:
     
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> startstamp = 1236560400
     >>> print timestamp_to_string(startstamp)
     2009-03-08 18:00:00 PDT (1236560400)
@@ -212,6 +213,7 @@ def startOfInterval(time_ts, interval):
 
     Examples:
     
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> start_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> time.ctime(startOfInterval(start_ts,  300))
     'Thu Jul  4 01:55:00 2013'
@@ -334,6 +336,7 @@ def intervalgen(start_ts, stop_ts, interval):
     
     Example:
     
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> startstamp = 1236477600
     >>> print timestamp_to_string(startstamp)
     2009-03-07 18:00:00 PST (1236477600)
@@ -419,6 +422,7 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
     """Returns a TimeSpan for x hours ago
     
     Example:
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> print archiveHoursAgoSpan(time_ts, hours_ago=0)
     [2013-07-04 01:00:00 PDT (1372924800) -> 2013-07-04 02:00:00 PDT (1372928400)]
@@ -445,6 +449,7 @@ def isMidnight(time_ts):
     """Is the indicated time on a midnight boundary, local time?
     
     Example:
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> print isMidnight(time_ts)
     False
@@ -611,6 +616,7 @@ def genDaySpans(start_ts, stop_ts):
     
     Example:
     
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> start_ts = 1204796460
     >>> stop_ts  = 1205265720
     
@@ -657,6 +663,7 @@ def genMonthSpans(start_ts, stop_ts):
     
     Example:
     
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> start_ts = 1196705700
     >>> stop_ts  = 1206101100
     >>> print "start time is", timestamp_to_string(start_ts)
@@ -810,6 +817,7 @@ def timestamp_to_string(ts):
     
     Example:
 
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> print timestamp_to_string(1196705700)
     2007-12-03 10:15:00 PST (1196705700)
     >>> print timestamp_to_string(None)
