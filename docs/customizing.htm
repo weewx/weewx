@@ -3820,8 +3820,8 @@ mv weewx.sdb_new weewx.sdb</pre>
           startup. Alternatively, it can be done manually using the <span
             class="code">wee_config_database</span> utility and the <span
             class="code">--backfill-daily</span> option:
-        </p> <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --backfill-daily <span
-            class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
+        </p>
+        <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --backfill-daily </pre>
       </li>
     </ol>
     
@@ -3939,7 +3939,7 @@ mv weewx.sdb_new weewx.sdb</pre>
           Now run the utility <span class="code">wee_config_database</span>
           with the <span class="code">--reconfigure</span> option:
         </p>
-        <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
+        <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --reconfigure</pre>
         <p>
           This will create a new database (nominally,
           <span class="code">weewx.sdb_new</span>
@@ -3978,11 +3978,18 @@ mv weewx.sdb_new weewx.sdb</pre>
           startup. Alternatively, it can be done manually using the <span
             class="code">wee_config_database</span> utility and the <span
             class="code">--backfill-daily</span> option:
-        </p> <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --backfill-daily <span
-            class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
+        </p>
+        <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --backfill-daily</pre>
       </li>
     </ol>
 
+	<h2>Dropping and rebuilding the daily summaries</h2>
+	<p>The tool <span class="code">wee_config_database</span> can also be used to drop the daily
+	summaries:</p>
+	<pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --drop-daily</pre>
+	<p>The summaries will automatically be rebuilt the next time <span class="code">weewx</span> starts,
+	or they can be rebuilt with the tool:</p>
+	<pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --backfill-daily</pre>
 
     <h1 id="porting">Porting to new hardware</h1>
       <p>Naturally, this is an advanced topic but, nevertheless, I'd
