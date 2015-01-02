@@ -1,6 +1,14 @@
 weewx change history
 --------------------
 
+X.X.X XX/XX/XX
+
+Fixed bug in setup.py that caused list-drivers to fail on .deb and .rpm
+installs.
+
+Added a wait-and-check to the stop option in the weewx.debian rc script.
+
+
 3.0.1 12/07/14
 
 Fixed bug in setup.py that would forget to insert device-specific options
