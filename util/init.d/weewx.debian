@@ -74,7 +74,7 @@ do_stop()
 {
     RETVAL=2
     c=1
-    while [ $c -lt 10 -a "$RETVAL" = 2 ]; do
+    while [ $c -lt 10 -a "$RETVAL" = "2" ]; do
         c=`expr $c + 1`
         start-stop-daemon --stop --pidfile $PIDFILE
         RETVAL="$?"
