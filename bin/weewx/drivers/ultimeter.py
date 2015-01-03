@@ -169,6 +169,10 @@ class Ultimeter(weewx.drivers.AbstractDevice):
             packet['rain'] = None
         self.last_rain = packet['long_term_rain']
 
+        # no wind direction when wind speed is zero
+        if not packet['windSpeed']:
+            packet['windDir'] = None
+
 class Station(object):
     def __init__(self, port):
         self.port = port
