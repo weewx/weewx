@@ -1088,7 +1088,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         setup_bits             = self._getEEPROM_value(0x2B)[0]
         self.rain_year_start   = self._getEEPROM_value(0x2C)[0]
         self.archive_interval_ = self._getEEPROM_value(0x2D)[0] * 60
-        self.altitude          = self._getEEPROM_value(0x0F, "<H")[0]
+        self.altitude          = self._getEEPROM_value(0x0F, "<h")[0]
         self.altitude_vt       = weewx.units.ValueTuple(self.altitude, "foot", "group_altitude") 
 
         barometer_unit_code   =  unit_bits & 0x03
