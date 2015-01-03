@@ -356,21 +356,28 @@ class WMR100(weewx.drivers.AbstractDevice):
     def _wind_packet(self, packet):
         """Decode a wind packet. Wind speed will be in kph"""
 
-        # The console returns wind speeds in m/s. Our metric system requires kph,
-        # so the result needs to be multiplied by 3.6        
-        _record = {'windSpeed'         : ((packet[6] << 4) + ((packet[5]) >> 4)) * 3.6 / 10.0,
+        _record = {'windSpeed'         : ((packet[6] << 4) + ((packet[5]) >> 4)),
+                   'windGust'          : (((packet[5] & 0x0f) << 8) + packet[4]),
                    'windDir'           : (packet[2] & 0x0f) * 360.0 / 16.0,
                    'windBatteryStatus' : (packet[0] >> 4),
                    'dateTime'          : int(time.time() + 0.5),
-                   'usUnits'           : weewx.METRIC}
+                   'usUnits'           : weewx.METRICWX}
+
+        # Sometimes the station emits a wind gust that is less than the average wind.
+        # If this happens, ignore it.
+        if _record['windGust'] < _record['windSpeed']:
+            _record['windGust'] = None
+            _record['windGustDir'] = None
+        else:
+            # Otherwise, use the regular wind direction for the gust direction
+            _record['windGustDir'] =_record['windDir']
+
         # Wind direction is undefined if wind speed is zero:
         if _record['windSpeed'] == 0:
             _record['windDir'] = None
-        # Sometimes the station emits a wind gust that is less than the average wind.
-        # Ignore it if this is the case.
-        windGustSpeed = (((packet[5] & 0x0f) << 8) + packet[4]) * 3.6 / 10.0
-        if windGustSpeed >= _record['windSpeed']:
-            _record['windGust'] = windGustSpeed
+        if _record['windGust'] == 0:
+            _record['windGustDir'] = None
+
         # Save the wind record to be used for windchill and heat index
         self.last_wind_record = _record
         return _record

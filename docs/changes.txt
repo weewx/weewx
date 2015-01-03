@@ -11,6 +11,8 @@ Added a wait-and-check to the stop option in the weewx.debian rc script.
 Fixed bug in the Vantage driver that causes below sea-level altitudes 
 to be read as a large positive number.
 
+Fixed bug in wmr100 driver that causes gust wind direction to be zero.
+
 
 3.0.1 12/07/14
 
