@@ -356,8 +356,8 @@ class WMR100(weewx.drivers.AbstractDevice):
     def _wind_packet(self, packet):
         """Decode a wind packet. Wind speed will be in kph"""
 
-        _record = {'windSpeed'         : ((packet[6] << 4) + ((packet[5]) >> 4)),
-                   'windGust'          : (((packet[5] & 0x0f) << 8) + packet[4]),
+        _record = {'windSpeed'         : ((packet[6] << 4) + ((packet[5]) >> 4)) / 10.0,
+                   'windGust'          : (((packet[5] & 0x0f) << 8) + packet[4]) / 10.0,
                    'windDir'           : (packet[2] & 0x0f) * 360.0 / 16.0,
                    'windBatteryStatus' : (packet[0] >> 4),
                    'dateTime'          : int(time.time() + 0.5),
