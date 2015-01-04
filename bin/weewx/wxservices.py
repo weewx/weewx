@@ -86,9 +86,9 @@ class StdWXCalculate(weewx.engine.StdService):
                 data['outTemp'], data['outHumidity'])
 
     def calc_inDewpoint(self, data, data_type):
-        if 'outTemp' in data and 'inHumidity' in data:
+        if 'inTemp' in data and 'inHumidity' in data:
             data['inDewpoint'] = weewx.wxformulas.dewpointF(
-                data['outTemp'], data['inHumidity'])
+                data['inTemp'], data['inHumidity'])
 
     def calc_windchill(self, data, data_type):
         if 'outTemp' in data and 'windSpeed' in data:
