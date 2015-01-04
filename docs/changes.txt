@@ -17,6 +17,11 @@ Fixed bug in wmr200 driver that causes gust wind direction to be null.
 
 Fixed ultimeter driver to ensure wind direction is None when no wind speed.
 
+Fixed bug in calculation of inDewpoint.
+
+Assign default units for extraHumid3,4,5,6,7, extraTemp4,5,6,7, leafTemp3,4,
+and leafWet1,2.
+
 
 3.0.1 12/07/14
 
