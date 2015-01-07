@@ -64,6 +64,7 @@ class StdWXCalculate(weewx.engine.StdService):
         self.do_calculations(event.record)
 
     def do_calculations(self, data_dict, data_type='archive'):
+        self.adjust_winddir(data_dict)
         data_us = weewx.units.to_US(data_dict)
         for obs in self._dispatch_list:
             calc = False
@@ -77,7 +78,6 @@ class StdWXCalculate(weewx.engine.StdService):
                 calc = True
             if calc:
                 getattr(self, 'calc_'+obs)(data_us, data_type)
-        self.adjust_winddir(data_dict)
         data_x = weewx.units.to_std_system(data_us, data_dict['usUnits'])
         data_dict.update(data_x)
 
