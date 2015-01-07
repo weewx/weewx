@@ -77,8 +77,15 @@ class StdWXCalculate(weewx.engine.StdService):
                 calc = True
             if calc:
                 getattr(self, 'calc_'+obs)(data_us, data_type)
+        self.adjust_winddir(data_dict)
         data_x = weewx.units.to_std_system(data_us, data_dict['usUnits'])
         data_dict.update(data_x)
+
+    def adjust_winddir(self, data):
+        if 'windSpeed' in data and not data['windSpeed']:
+            data['windDir'] = None
+        if 'windGust' in data and not data['windGust']:
+            data['windGustDir'] = None
 
     def calc_dewpoint(self, data, data_type):
         if 'outTemp' in data and 'outHumidity' in data:
