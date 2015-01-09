@@ -3,34 +3,17 @@
 # Copyright 2014 Matthew Wall
 # Copyright 2014 Nate Bargmann <n0nb@n0nb.us>
 # See the file LICENSE.txt for your full rights.
+#
+# Credit to and contributions from:
+#   Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
+#     http://server1.nuge.com/~weather/
+#   Steve (sesykes71) for testing the first implementations of this driver
+#   Garret Power for decoding improvements and testing
 
 """Driver for Peet Bros Ultimeter weather stations except the Ultimeter II
 
-Thanks to Steve (sesykes71)  for the testing that made this driver possible.
-
-Thanks to Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
-
-  http://server1.nuge.com/~weather/
-
-The driver assumes the Ultimeter is emitting data in Peet Bros Data Logger
-mode format:
-
-!!000000BE02EB000027700000023A023A0025005800000000
-  SSSSXXDDTTTTLLLLPPPPttttHHHHhhhhddddmmmmRRRRWWWW
-
-SSSS - wind speed (0.1 km/h)
-XX   - wind direction calibration
-DD   - wind direction (0-255)
-TTTT - outdoor temperature (0.1 F)
-LLLL - long term rain (0.01 in)
-PPPP - pressure (0.1 mbar)
-tttt - indoor temperature (0.1 F)
-HHHH - outdoor humidity (0.1 %)
-hhhh - indoor humidity (0.1 %)
-dddd - date (day of year)
-mmmm - time (minute of day)
-RRRR - daily rain (0.01 in)
-WWWW - one minute wind average (0.1 km/h)
+This driver assumes the Ultimeter is emitting data in Peet Bros Data Logger
+mode format.
 
 Resources for the Ultimeter stations
 
@@ -39,6 +22,9 @@ Ultimeter Models 2100, 2000, 800, & 100 serial specifications:
 
 Ultimeter 2000 Pinouts and Parsers:
   http://www.webaugur.com/ham-radio/52-ultimeter-2000-pinouts-and-parsers.html
+
+Ultimeter II
+  not supported by this driver
 
 All models communicate over an RS-232 compatible serial port using three
 wires--RXD, TXD, and Ground (except Ultimeter II which omits TXD).  Port
@@ -55,7 +41,6 @@ Modem Mode commands used by the driver
 
     >I          Set output mode to Data Logger Mode (continuous output)
 
-
 """
 
 from __future__ import with_statement
@@ -66,7 +51,11 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'Ultimeter'
-DRIVER_VERSION = '0.10'
+DRIVER_VERSION = '0.11'
+
+INHG_PER_MBAR = 0.0295333727
+METER_PER_FOOT = 0.3048
+MILE_PER_KM = 0.621371
 
 def loader(config_dict, engine):
     return Ultimeter(**config_dict[DRIVER_NAME])
@@ -77,14 +66,6 @@ def confeditor_loader():
 
 DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
-
-def _is_hex(c):
-    """Test character for a valid hexadecimal digit."""
-    try:
-        int(c, 16)
-        return True
-    except ValueError:
-        return False
 
 def logmsg(level, msg):
     syslog.syslog(level, 'ultimeter: %s' % msg)
@@ -98,14 +79,11 @@ def loginf(msg):
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
-
 
 class Ultimeter(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with a Peet Bros Ultimeter station
 
-    model: Which station model is this?
+    model: station model, e.g., 'Ultimeter 2000' or 'Ultimeter 100'
     [Optional. Default is 'Ultimeter']
 
     port - serial port
@@ -124,7 +102,6 @@ class Ultimeter(weewx.drivers.AbstractDevice):
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 10))
         self.last_rain = None
-        self.last_rain_ts = None
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
         loginf('polling interval is %s' % str(self.polling_interval))
@@ -172,6 +149,33 @@ class Ultimeter(weewx.drivers.AbstractDevice):
         # no wind direction when wind speed is zero
         if not packet['windSpeed']:
             packet['windDir'] = None
+
+def _is_valid_char(c):
+    """See whether a character is a valid hexadecimal digit or hyphen."""
+    if c == '-':
+        return True
+    try:
+        int(c, 16)
+        return True
+    except ValueError:
+        return False
+
+def _decode(s, multiplier=None):
+    """Ultimeter puts hyphens in the string when a sensor is not installed.
+    When we get a hyphen or any other non-hex character, return None.
+    Negative values are represented in twos complement format.
+    """
+    v = None
+    try:
+        v = int(s, 16)
+        bits = 4 * len(s)
+        if v & (1<<(bits-1)) != 0:
+            v = v - (1<<bits)
+        if multiplier is not None:
+            v *= multiplier
+    except ValueError:
+        pass
+    return v
 
 class Station(object):
     def __init__(self, port):
@@ -228,33 +232,27 @@ class Station(object):
                                      (len(data), n))
 
     def get_readings(self):
-        bites = []
+        buf = []
         while True:
             c = self.read(1)
             if c == "\r" or c == "\n":
                 break
-            elif c == '!' and len(bites) > 0:
+            elif c == '!' and len(buf) > 0:
                 break
             elif c == '!':
-                bites = []
-            elif c == '-':
-                # Ultimeter may put hyphens in the string if a sensor
-                # is not installed.  Make the reading zero instead.
-                bites.append('0')
-            elif _is_hex(c) is True:
-                # Ultimeter uses hexadecimal characters for its values.
-                # Guard against garbage.
-                bites.append(c)
+                buf = []
+            elif _is_valid_char(c):
+                buf.append(c)
             else:
-                bites = []
+                buf = []
         if DEBUG_READ:
-            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in bites]))
-        if len(bites) != 48:
-            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(bites))
-        return ''.join(bites)
+            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
+        if len(buf) != 48:
+            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(buf))
+        return ''.join(buf)
 
     @staticmethod
-    def parse_readings(bites):
+    def parse_readings(buf):
         """Ultimeter stations emit data in PeetBros format.  Each line has 52
         characters - 2 header bytes, 48 data bytes, and a carriage return
         and line feed (new line):
@@ -276,30 +274,24 @@ class Station(object):
           RRRR - daily rain (0.01 in)
           WWWW - one minute wind average (0.1 kph)
 
-        For date, time, and other non-standard readings use labels that
-        will not interfere with weewx/wview conventions.
-
         "pressure" reported by the Ultimeter 2000 is correlated to the local
         official barometer reading as part of the setup of the station
         console so this value is assigned to the 'barometer' key and
         the pressure and altimeter values are calculated from it.
-
-        My Ultimeter 2000 puts hyphens, '-', in the place of the indoor
-        humidity (hhhh) since there is no indoor humidty sensor installed.
-        The driver will identify the hyphens and replace them with the '0'
-        character.
         """
         data = dict()
-        data['windSpeed'] = int(bites[0:4], 16) * 0.1 * 0.621371  # mph
-        data['windDir'] = int(bites[6:8], 16) * 1.411764  # compass degrees
-        data['outTemp'] = int(bites[8:12], 16) * 0.1  # degree_F
-        data['long_term_rain'] = int(bites[12:16], 16) * 0.01  # inch
-        data['barometer'] = int(bites[16:20], 16) * 0.1 * 0.0295333727  # inHg
-        data['inTemp'] = int(bites[20:24], 16) * 0.1  # degree_F
-        data['outHumidity'] = int(bites[24:28], 16) * 0.1  # percent
-        data['inHumidity'] = int(bites[28:32], 16) * 0.1  # percent
-        data['daily_rain'] = int(bites[40:44], 16) * 0.01  # inch
-        data['wind_average'] = int(bites[44:48], 16) * 0.1 * 0.621371  # mph
+        data['windSpeed'] = _decode(buf[0:4], 0.1 * MILE_PER_KM)  # mph
+        data['windDir'] = _decode(buf[6:8], 1.411764)  # compass degrees
+        data['outTemp'] = _decode(buf[8:12], 0.1)  # degree_F
+        data['long_term_rain'] = _decode(buf[12:16], 0.01)  # inch
+        data['barometer'] = _decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
+        data['inTemp'] = _decode(buf[20:24], 0.1)  # degree_F
+        data['outHumidity'] = _decode(buf[24:28], 0.1)  # percent
+        data['inHumidity'] = _decode(buf[28:32], 0.1)  # percent
+        data['day_of_year'] = _decode(buf[32:36])
+        data['minute_of_day'] = _decode(buf[36:40])
+        data['daily_rain'] = _decode(buf[40:44], 0.01)  # inch
+        data['wind_average'] = _decode(buf[44:48], 0.1 * MILE_PER_KM)  # mph
         return data
 
 
