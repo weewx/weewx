@@ -224,34 +224,6 @@ def calculate_rain(newtotal, oldtotal):
         delta = None
     return delta
 
-def calculate_rain_rate(delta, curr_ts, last_ts):
-    """Calculate the rain rate based on the time between two rain readings.
-
-    delta: rainfall since last reading, in units of x
-
-    curr_ts: timestamp of current reading, in seconds
-
-    last_ts: timestamp of last reading, in seconds
-
-    return: rain rate in x per hour
-
-    If the period between readings is zero, ignore the rainfall since there
-    is no way to calculate a rate with no period."""
-
-    if curr_ts is None:
-        return None
-    if last_ts is None:
-        last_ts = curr_ts
-    if delta is not None:
-        period = curr_ts - last_ts
-        if period != 0:
-            rate = 3600 * delta / period
-        else:
-            rate = None
-    else:
-        rate = None
-    return rate
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod()

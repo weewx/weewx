@@ -49,9 +49,8 @@ class StdWXCalculate(weewx.engine.StdService):
         self.t12 = None
         self.last_ts12 = None
         self.arcint = None
-        self.last_rain_arc_ts = None
-        self.last_rain_loop_ts = None
-        self.rain_period = None # specify in seconds to use db query
+        self.rain_period = 900 # in seconds
+        self.rain_events = []
 
         # we will process both loop and archive events
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
@@ -133,46 +132,29 @@ class StdWXCalculate(weewx.engine.StdService):
                 data['pressure'], self.altitude_ft, algorithm='aaNOAA')
 
     # rainRate is simply the amount of rain in a period scaled to quantity/hr.
-    # if the rain_period is defined, then that period is used for archive
-    # records instead of the archive interval.  this will result in a smaller
-    # rainRate that ramps up and ramps down over time.
+    # use a sliding window for the time period and the total rainfall in that
+    # period for the amount of rain.  the window size is controlled by the
+    # rain_period parameter.
     def calc_rainRate(self, data, data_type):
-        if 'rain' in data:
-            if data_type == 'archive' and self.rain_period is not None:
-                # use window of data from database projected to rain/hour.
-                # we must add rain from this record since database may not
-                # yet contain data from this record (and our query
-                # intentionally neglects it).
-                oldrain = self.get_rain(data['dateTime'], self.rain_period)
-                if oldrain is not None and data['rain'] is not None:
-                    allrain = oldrain + data['rain']
-                elif data['rain'] is not None:
-                    allrain = data['rain']
-                elif oldrain is not None:
-                    allrain = oldrain
-                else:
-                    allrain = None
-                data['rainRate'] = weewx.wxformulas.calculate_rain_rate(
-                    allrain,data['dateTime'],data['dateTime']-self.rain_period)
-            elif data_type == 'archive':
-                # for archive records, use rain since last record projected
-                # to amount/hour.
-                data['rainRate'] = weewx.wxformulas.calculate_rain_rate(
-                    data['rain'], data['dateTime'], self.last_rain_arc_ts)
-                self.last_rain_arc_ts = data['dateTime']
-            else:
-                # for loop packets, use rain since last packet projected
-                # to amount/hour.
-                data['rainRate'] = weewx.wxformulas.calculate_rain_rate(
-                    data['rain'], data['dateTime'], self.last_rain_loop_ts)
-                self.last_rain_loop_ts = data['dateTime']
+        # if this is a loop packet then cull and add to the queue
+        if data_type == 'loop':
+            events = []
+            for e in self.rain_events:
+                if e[0] > data['dateTime'] - self.rain_period:
+                    events.append((e[0], e[1]))
+            if 'rain' in data and data['rain']:
+                events.append((data['dateTime'], data['rain']))
+            self.rain_events = events
+        # for both loop and archive, add up the rain...
+        sum = 0
+        for e in self.rain_events:
+            sum += e[1]
+        # ...then divide by the period and scale to an hour
+        data['rainRate'] = 3600 * sum / self.rain_period
 
     def get_arcint(self, data):
         if 'interval' in data and self.arcint != data['interval'] * 60:
             self.arcint = data['interval'] * 60
-            # warn if rain period is not multiple of archive interval
-            if self.arcint is not None and self.rain_period is not None and self.rain_period % self.arcint != 0:
-                syslog.syslog(syslog.LOG_INFO, "StdWXCalculate: rain_period (%s) is not a multiple of archive_interval (%s)" % (self.rain_period, self.arcint))
 
     def get_rain(self, ts, interval=3600):
         """Get the quantity of rain from the past interval seconds.  We

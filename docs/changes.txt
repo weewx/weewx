@@ -15,14 +15,20 @@ Fixed bug in wmr100 driver that causes gust wind direction to be null.
 
 Fixed bug in wmr200 driver that causes gust wind direction to be null.
 
-Fixed ultimeter driver to ensure wind direction is None when no wind speed.
+Fixed ultimeter driver to ensure wind direction is None when no wind speed
+(thanks to Steve Sykes).
 
-Fixed bug in calculation of inDewpoint.
+Fixed bug in calculation of inDewpoint (thanks to Howard Walter)
 
 Assign default units for extraHumid3,4,5,6,7, extraTemp4,5,6,7, leafTemp3,4,
 and leafWet1,2.
 
 Use StdWXCalculate to ensure that wind direction is None if no wind speed.
+
+Fixed sign bug in ultimeter driver (thanks to Garret Power)
+
+Use a sliding window with default period of 15 minutes to calculate the
+rainRate for stations that do not provide it.
 
 
 3.0.1 12/07/14
