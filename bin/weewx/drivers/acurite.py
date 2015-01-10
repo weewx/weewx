@@ -4,7 +4,13 @@
 # See the file LICENSE.txt for your full rights.
 #
 # Credits:
-# Thanks to dave of 'desert home'
+# Thanks to Rich of Modern Toil (2012)
+#  http://moderntoil.com/?p=794
+#
+# Thanks to George Nincehelser
+#  http://nincehelser.com/ipwx/
+#
+# Thanks to Dave of 'desert home' (2014)
 #  http://www.desert-home.com/2014/11/acurite-weather-station-raspberry-pi.html
 #
 # Slow-clap thanks to Michael Walsh
@@ -19,6 +25,8 @@ There are many variants of the AcuRite weather stations and sensors.  This
 driver is known to work with the consoles that have a USB interface such as
 models 01025 and 01035.  It should also work with the (low end?) variant
 with model number 02032C.
+
+The AcuRite stations were introduced in 2011.
 
 AcuRite publishes the following specifications:
 
@@ -71,8 +79,9 @@ The AcuRite station has 4 USB modes:
 The console does not respond to USB requests when in mode 1 or mode 2.
 
 The console shows up as a USB device even if it is turned off.  If the console
-is powered on then communication starts, then power is removed, communication
-will continue.  So the console appears to draw some power from the bus.
+is powered on, then communication initiated, then power is removed, the
+communication will continue.  So the console appears to draw some power from
+the bus.
 
 Apparently some stations have issues when the history buffer fills up.
 
@@ -81,7 +90,8 @@ the 02032 (and possibly other stations) should not use history mode at all
 because the data are written to flash memory, which wears out, sometimes
 quickly.  Some reports say this 'bricks' the station, however those appear
 to be a mis-use of 'brick', because the station still works and communication
-can sometimes be re-established.
+can sometimes be re-established.  In addition to the flash issue there may
+be firmware timing issues.
 
 The acurite stations are probably a poor choice for remote operation.  If
 the power cycles on the console, communication might not be possible.  Some
@@ -117,7 +127,7 @@ R1 - 10 bytes
 5: wind dir    (x & 0x0f)
 6: ?                              always seems to be 0
 7: rain        (x & 0x7f)
-8: signal strength (x & 0x0f)     observed values: 0,1,2,3
+8: rssi        (x & 0x0f)         observed values: 0,1,2,3
 9: ?battery level   (x & 0xff)    observed values: 0x00 and 0xff
 
 0: identifier, 01 for R1 messages
@@ -130,7 +140,7 @@ R1 - 10 bytes
 5: temp        (x & 0x0f) << 7
 6: temp        (x & 0x7f)
 7: humidity    (x & 0x7f)
-8: signal strength (x & 0x0f)     observed values: 0,1,2,3
+8: rssi        (x & 0x0f)         observed values: 0,1,2,3
 9: ?battery level   (x & 0xff)    observed values: 0x00 and 0xff
 
 R2 - 25 bytes
@@ -157,7 +167,11 @@ connection to sensor unit lost
 # FIXME: how to detect console type?
 
 # FIXME: decode console battery level
-# FIXME: decode channel identifier (A,B,C)
+# FIXME: decode sensor type
+
+# FIXME: decode inside temperature
+# FIXME: decode pressure
+# FIXME: decode inside humidity
 # FIXME: heatindex, windchill, ?, rain rate, peak wind, avg wind
 
 from __future__ import with_statement
@@ -168,7 +182,7 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.2'
+DRIVER_VERSION = '0.3'
 
 
 def loader(config_dict, engine):
@@ -251,7 +265,7 @@ class AcuRite(weewx.drivers.AbstractDevice):
                 packet['rain'] = None
             self.last_rain = packet['rain_total']
         # if there is no connection to sensors, clear the readings
-        if 'sensor' in packet and packet['sensor'] == 0:
+        if 'rssi' in packet and packet['rssi'] == 0:
             packet['outTemp'] = None
             packet['outHumidity'] = None
             packet['windSpeed'] = None
@@ -364,7 +378,7 @@ class Station(object):
         if len(raw) == 10:
             data['channel'] = Station.decode_channel(raw)
             data['sensor_id'] = Station.decode_sensor_id(raw)
-            data['signal'] = Station.decode_signal(raw)
+            data['rssi'] = Station.decode_rssi(raw)
             data['sensor_battery'] = Station.decode_sensor_battery(raw)
             if raw[3] & 0x0f == 1 or raw[3] & 0x0f == 8:
                 data['windSpeed'] = Station.decode_windspeed(raw)
@@ -399,7 +413,7 @@ class Station(object):
         return lhs | rhs
 
     @staticmethod
-    def decode_signal(data):
+    def decode_rssi(data):
         # signal strength goes from 0 to 3, inclusive
         return data[8] & 0x0f
 
