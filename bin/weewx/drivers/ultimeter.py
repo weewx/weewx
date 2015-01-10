@@ -160,17 +160,20 @@ def _is_valid_char(c):
     except ValueError:
         return False
 
-def _decode(s, multiplier=None):
+def _decode(s, multiplier=None, neg=False):
     """Ultimeter puts hyphens in the string when a sensor is not installed.
     When we get a hyphen or any other non-hex character, return None.
-    Negative values are represented in twos complement format.
+    Negative values are represented in twos complement format.  Only do the
+    check for negative values if requested - the neg flag indicates that
+    negative values are possible.
     """
     v = None
     try:
         v = int(s, 16)
-        bits = 4 * len(s)
-        if v & (1<<(bits-1)) != 0:
-            v = v - (1<<bits)
+        if neg:
+            bits = 4 * len(s)
+            if v & (1<<(bits-1)) != 0:
+                v = v - (1<<bits)
         if multiplier is not None:
             v *= multiplier
     except ValueError:
@@ -282,10 +285,10 @@ class Station(object):
         data = dict()
         data['windSpeed'] = _decode(buf[0:4], 0.1 * MILE_PER_KM)  # mph
         data['windDir'] = _decode(buf[6:8], 1.411764)  # compass degrees
-        data['outTemp'] = _decode(buf[8:12], 0.1)  # degree_F
+        data['outTemp'] = _decode(buf[8:12], 0.1, neg=True)  # degree_F
         data['long_term_rain'] = _decode(buf[12:16], 0.01)  # inch
         data['barometer'] = _decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
-        data['inTemp'] = _decode(buf[20:24], 0.1)  # degree_F
+        data['inTemp'] = _decode(buf[20:24], 0.1, neg=True)  # degree_F
         data['outHumidity'] = _decode(buf[24:28], 0.1)  # percent
         data['inHumidity'] = _decode(buf[28:32], 0.1)  # percent
         data['day_of_year'] = _decode(buf[32:36])
