@@ -83,6 +83,12 @@ quickly.  Some reports say this 'bricks' the station, however those appear
 to be a mis-use of 'brick', because the station still works and communication
 can sometimes be re-established.
 
+The acurite stations are probably a poor choice for remote operation.  If
+the power cycles on the console, communication might not be possible.  Some
+consoles (but not all?) default to mode 2, which means no USB communication.
+
+Communication Formats
+
 The AcuRite station emits three different data strings, R1, R2 and R3.  The R1
 string is 10 bytes long, contains readings from the remote sensors, and comes
 in different flavors.  One contains wind speed, wind direction, and rain
@@ -98,18 +104,33 @@ R1 - 10 bytes
 01 CF FF FF FF FF FF FF 00 00
 01 8b fa 78 00 08 48 25 03 ff
 01 8b fa 71 00 06 00 02 03 ff
+01 C0 5C 78 00 08 1F 53 03 FF
+01 C0 5C 71 00 05 00 0C 03 FF
 
 0: identifier, 01 for R1 messages
-1: ?sensor_id
-2: ?sensor_id
-3: message flavor, 1 (windSpeed, windDir, rain) or 8 (windSpeed, temp, humid)
+1: channel       (x & 0xf0)       observed values: C=A,8=B,0=C
+1: sensor_id hi  (x & 0x0f)
+2: sensor_id lo
+3: message flavor, 1 (windSpeed, windDir, rain)
 4: wind speed  (x & 0x1f) << 3
 5: wind speed  (x & 0x70) >> 4
 5: wind dir    (x & 0x0f)
+6: ?                              always seems to be 0
+7: rain        (x & 0x7f)
+8: signal strength (x & 0x0f)     observed values: 0,1,2,3
+9: ?battery level   (x & 0xff)    observed values: 0x00 and 0xff
+
+0: identifier, 01 for R1 messages
+1: channel       (x & 0xf0)       observed values: C=A,8=B,0=C
+1: sensor_id hi  (x & 0x0f)
+2: sensor_id lo
+3: message flavor, 8 (windSpeed, outTemp, outHumidity)
+4: wind speed  (x & 0x1f) << 3
+5: wind speed  (x & 0x70) >> 4
 5: temp        (x & 0x0f) << 7
 6: temp        (x & 0x7f)
-7: rain        (x & 0x7f)
-8: ?signal strength (x & 0x0f)    observed values: 0,1,2,3
+7: humidity    (x & 0x7f)
+8: signal strength (x & 0x0f)     observed values: 0,1,2,3
 9: ?battery level   (x & 0xff)    observed values: 0x00 and 0xff
 
 R2 - 25 bytes
@@ -122,15 +143,10 @@ R3 - 594 bytes?
 Sample Messages
 
 01 CF FF FF FF FF FF FF 00 00
-no connection to sensor unit
+no sensor unit found
 
-02 00 00 4C BE 0D EC 01 52 03 62 7E 38 18 EE 09 C4 08 22 06 07 7B A4 8A 46
-25.087inhg 849.5hpa 12.321psi 66.1F 19.0C -
-67F 28% 30.18
-
-02 00 00 4C BE 0D EC 01 52 03 62 7E 38 18 EE 09 C4 08 22 06 07 7B 54 8A 74
-25.090inhg 849.6hpa 12.323psi 64.8F 18.2C -
-66F 29% 30.18
+01 8b fa 71 00 06 00 0c 00 00
+connection to sensor unit lost
 
 """
 
@@ -152,7 +168,7 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.1'
+DRIVER_VERSION = '0.2'
 
 
 def loader(config_dict, engine):
@@ -234,14 +250,27 @@ class AcuRite(weewx.drivers.AbstractDevice):
             else:
                 packet['rain'] = None
             self.last_rain = packet['rain_total']
+        # if there is no connection to sensors, clear the readings
+        if 'sensor' in packet and packet['sensor'] == 0:
+            packet['outTemp'] = None
+            packet['outHumidity'] = None
+            packet['windSpeed'] = None
+            packet['windDir'] = None
+            packet['rain'] = None
 
 
 class Station(object):
+    # these identify the weather station on the USB
+    VENDOR_ID = 0x24c0
+    PRODUCT_ID = 0x0003
+
+    # map the raw wind direction index to degrees on the compass
     IDX_TO_DEG = {6: 0.0, 14: 22.5, 12: 45.0, 8: 67.5, 10: 90.0, 11: 112.5,
                   9: 135.0, 13: 157.5, 15: 180.0, 7: 202.5, 5: 225.0, 1: 247.5,
                   3: 270.0, 2: 292.5, 0: 315.0, 4: 337.5}
-    VENDOR_ID = 0x24c0
-    PRODUCT_ID = 0x0003
+    # map the raw channel value to something we prefer
+    # A is 1, B is 2, C is 3
+    CHANNELS = {12: 1, 8: 2, 0: 3}
 
     def __init__(self, vendor_id=VENDOR_ID, product_id=PRODUCT_ID, dev_id=None):
         self.vendor_id = vendor_id
@@ -333,6 +362,8 @@ class Station(object):
     def decode(raw):
         data = dict()
         if len(raw) == 10:
+            data['channel'] = Station.decode_channel(raw)
+            data['sensor_id'] = Station.decode_sensor_id(raw)
             data['signal'] = Station.decode_signal(raw)
             data['sensor_battery'] = Station.decode_sensor_battery(raw)
             if raw[3] & 0x0f == 1 or raw[3] & 0x0f == 8:
@@ -355,6 +386,17 @@ class Station(object):
         else:
             logerr("unknown data string with length %d" % len(raw))
         return data
+
+    @staticmethod
+    def decode_channel(data):
+        v = data[1] & 0xf0
+        return Station.CHANNELS.get(v)
+
+    @staticmethod
+    def decode_sensor_id(data):
+        lhs = (data[1] & 0x0f) << 8
+        rhs = data[2]
+        return lhs | rhs
 
     @staticmethod
     def decode_signal(data):
@@ -381,8 +423,7 @@ class Station(object):
         # extract the wind direction from an R1 message
         # decoded value is one of 16 points, convert to degrees
         v = data[5] & 0x0f
-        deg = Station.IDX_TO_DEG.get(v)
-        return deg if deg is not None else None
+        return Station.IDX_TO_DEG.get(v)
 
     @staticmethod
     def decode_outtemp(data):
@@ -473,10 +514,10 @@ if __name__ == '__main__':
             ts = int(time.time())
             tstr = "%s (%d)" % (time.strftime("%Y-%m-%d %H:%M:%S %Z",
                                               time.localtime(ts)), ts)
-            r1 = s.read_R1()
+#            r1 = s.read_R1()
             r2 = s.read_R2()
 #            r3 = s.read_R3()
-            print tstr, ' '.join(['%02x' % x for x in r1]), Station.decode(r1)
+#            print tstr, ' '.join(['%02x' % x for x in r1]), Station.decode(r1)
             print tstr, ' '.join(['%02x' % x for x in r2]), Station.decode(r2)
 #            print tstr, ' '.join(['%02x' % x for x in r3])
             time.sleep(18)
