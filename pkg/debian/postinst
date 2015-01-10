@@ -46,6 +46,10 @@ configure_weewxconf() {
     db_get weewx/station_type
     if [ "$RET" != "" ]; then
         sed -i "s%station_type[ ]*=.*%station_type = $RET%" $cfgfile
+        if [ "$RET" = "AcuRite" ]; then
+            db_get weewx/acurite_model
+            sed -i "/\[AcuRite\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
+        fi
         if [ "$RET" = "CC3000" ]; then
             db_get weewx/cc3000_model
             sed -i "/\[CC3000\]/,/\[.*\]/ s%[# ]*model[ ]*=.*% model = $RET%" $cfgfile
@@ -159,7 +163,9 @@ configure_post() {
     if [ "$1" = "driver" -o "$2" = "driver" ]; then
         driver=weewx.drivers.simulator
         db_get weewx/station_type
-        if [ "$RET" = "CC3000" ]; then
+        if [ "$RET" = "AcuRite" ]; then
+            driver=weewx.drivers.acurite
+        elif [ "$RET" = "CC3000" ]; then
             driver=weewx.drivers.cc3000
         elif [ "$RET" = "FineOffsetUSB" ]; then
             driver=weewx.drivers.fousb

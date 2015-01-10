@@ -35,6 +35,10 @@ while [ "$STATE" != 0 -a "$STATE" != 7 ]; do
         6) # prompt for station-specific parameters
             db_get weewx/station_type
 
+            if [ "$RET" = "AcuRite" ]; then
+                db_input high weewx/acurite_model || true
+            fi
+
             if [ "$RET" = "CC3000" ]; then
                 db_input high weewx/cc3000_model || true
                 db_input high weewx/cc3000_port || true
