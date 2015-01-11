@@ -247,7 +247,7 @@ import weewx.units
 import weewx.wxformulas
 
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.23'
+DRIVER_VERSION = '0.22'
 
 
 def loader(config_dict, _):
@@ -334,7 +334,8 @@ class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
     def show_history(self, ts=None, count=0):
         """Show the indicated number of records or records since timestamp"""
         print "Querying the station for historical records..."
-        for i, r in enumerate(self.station.genStartupRecords(since_ts=ts)):
+        for i, r in enumerate(self.station.genStartupRecords(since_ts=ts,
+                                                             count=count)):
             print r
             if count and i > count:
                 break
@@ -474,10 +475,10 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
             logerr(msg)
             raise weewx.RetriesExceeded(msg)
 
-    def genStartupRecords(self, since_ts):
+    def genArchiveRecords(self, since_ts, count=0):
         with WS23xx(self.port) as s:
             last_rain = None
-            for ts, data in s.gen_records(since_ts=since_ts, count=0):
+            for ts, data in s.gen_records(since_ts=since_ts, count=count):
                 record = data_to_packet(data, ts, last_rain=last_rain)
                 record['interval'] = data['interval']
                 last_rain = record['rainTotal']
