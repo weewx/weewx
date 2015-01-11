@@ -32,7 +32,7 @@ Description: weather station type:
 
 Template: weewx/acurite_model
 Type: string
-Default: 01035
+Default: Acurite 01035
 Description: weather station model:
  Specify the station model, for example 01025, 01035, 01036, 02032C
 

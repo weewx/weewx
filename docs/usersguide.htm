@@ -120,6 +120,42 @@ Version: 3.0.1
 	<td>Maturity</td>
       </tr>
       <tr>
+	<td class="text_highlight" rowspan="5">AcuRite</td>
+	<td>01025</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>AcuRite<sup><a href='#acurite'>12</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>01035</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>AcuRite<sup><a href='#acurite'>12</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>01036</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>AcuRite<sup><a href='#acurite'>12</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>01525</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>AcuRite<sup><a href='#acurite'>12</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
+	<td>02032</td>
+	<td>USB</td>
+	<td class="code">pyusb</td>
+        <td>AcuRite<sup><a href='#acurite'>12</a></sup></td>
+	<td>Experimental</td>
+      </tr>
+      <tr>
 	<td class="text_highlight">Argent Data Systems</td>
 	<td>WS1</td>
 	<td>Serial</td>
@@ -748,6 +784,8 @@ Version: 3.0.1
       <li><a id="rainwise">RainWise Mark III Stations.</a> Tested on the
        <a href="http://www.rainwise.com/">CC3000 Data Logger</a>.
       </li>
+      <li><a id="acurite">AcuRite Weather Stations.</a> Test on the
+        <a href="http://www.acurite.com/8-pro-digital-weather-station-with-pc-connect-01036.html">01036RX</a>.
     </ol>
 
     <h1 id="prerequisites">System requirements</h1>
@@ -1133,6 +1171,10 @@ longitude = -77.0366</pre>
           debugging.</td>
       </tr>
       <tr>
+        <td class="code first_col">AcuRite</td>
+        <td>AcuRite 5-in-1 stations with USB interface</td>
+      </tr>
+      <tr>
         <td class="code first_col">CC3000</td>
         <td>RainWise CC3000 data logger</td>
       </tr>
@@ -1217,6 +1259,13 @@ longitude = -77.0366</pre>
     <p class="config_option">start</p>
     <p>The start time for the generator in the format <span class="code">YYYY-MM-DD 
 	hh:mm</span>. Optional. Default is the present time.</p>
+
+    <h3 class="config_section">[AcuRite]</h3>
+    <p>This section is for options relating to the AcuRite 5-in-1 series of
+      weather stations with USB connectors.</p>
+    <p class="config_important">model</p>
+    <p>Set to the station model. For example, "AcuRite 01035", "AcuRite 01036",
+      or "02032C"</p>
 
     <h3 class="config_section">[CC3000]</h3>
     <p>This section is for options relating to the RainWise Mark III weather
@@ -2155,6 +2204,15 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
       your configuration file is in a non-standard location, specify the
       path to the configuration file as the first argument.  For example,</p>
     <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device /path/to/weewx.conf --help </p>
+
+
+    <h2 id="wee_config_acurite">AcuRite</h2>
+    <p>The <span class='code'>wee_config_device</span> utility cannot
+      configure AcuRite stations.</p>
+    <p>The AcuRite console must be set to USB mode 3 or 4.</p>
+    <p>The wind speed updates every 18 seconds.  The wind direction updates
+      every 30 seconds.  Other sensors update every 60 seconds.</p>
+    <p>The AcuRite stations do not record wind gusts.</p>
 
 
     <h2 id="wee_config_cc3000">CC3000</h2>
