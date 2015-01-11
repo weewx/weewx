@@ -42,14 +42,17 @@ class StdWXCalculate(weewx.engine.StdService):
         super(StdWXCalculate, self).__init__(engine, config_dict)
 
         # get any configuration settings
-        self.calculations = config_dict.get('StdWXCalculate', {})
+        d = config_dict.get('StdWXCalculate', {})
+        self.rain_period = int(d.get('rain_period', 900))
+        self.calculations = dict()
+        for v in self._dispatch_list:
+            self.calculations[v] = d.get(v, 'prefer_hardware')
 
         # various bits we need for internal housekeeping
         self.altitude_ft = weewx.units.convert(engine.stn_info.altitude_vt, "foot")[0]
         self.t12 = None
         self.last_ts12 = None
         self.arcint = None
-        self.rain_period = 900 # in seconds
         self.rain_events = []
 
         # we will process both loop and archive events
@@ -60,9 +63,9 @@ class StdWXCalculate(weewx.engine.StdService):
         self.do_calculations(event.packet, 'loop')
 
     def new_archive_record(self, event):
-        self.do_calculations(event.record)
+        self.do_calculations(event.record, 'archive')
 
-    def do_calculations(self, data_dict, data_type='archive'):
+    def do_calculations(self, data_dict, data_type):
         self.adjust_winddir(data_dict)
         data_us = weewx.units.to_US(data_dict)
         for obs in self._dispatch_list:
@@ -81,6 +84,7 @@ class StdWXCalculate(weewx.engine.StdService):
         data_dict.update(data_x)
 
     def adjust_winddir(self, data):
+        """If there is no wind speed, then the wind direction is undefined."""
         if 'windSpeed' in data and not data['windSpeed']:
             data['windDir'] = None
         if 'windGust' in data and not data['windGust']:
