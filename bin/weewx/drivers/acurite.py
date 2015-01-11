@@ -57,6 +57,11 @@ sensor in the console reports a station pressure, but the firmware does some
 kind of averaging to it so the console displays a pressure that is usually
 nothing close to the station pressure.
 
+Apparently at least some of the consoles use the HP03S integrated pressure
+sensor.
+
+  http://www.hoperf.com/upload/sensor/HP03S.pdf
+
 According to AcuRite they use a 'patented, self-adjusting altitude pressure
 compensation' algorithm.
 
@@ -79,17 +84,17 @@ The AcuRite station has 4 USB modes:
 The console does not respond to USB requests when in mode 1 or mode 2.
 
 The console shows up as a USB device even if it is turned off.  If the console
-is powered on, then communication initiated, then power is removed, the
-communication will continue.  So the console appears to draw some power from
-the bus.
+is powered on and communication has been established, then power is removed,
+the communication will continue.  So the console appears to draw some power
+from the bus.
 
 Apparently some stations have issues when the history buffer fills up.
 
 Some reports say that the station stops recording data.  Some reports say that
 the 02032 (and possibly other stations) should not use history mode at all
 because the data are written to flash memory, which wears out, sometimes
-quickly.  Some reports say this 'bricks' the station, however those appear
-to be a mis-use of 'brick', because the station still works and communication
+quickly.  Some reports say this 'bricks' the station, however those reports
+mis-use the term 'brick', because the station still works and communication
 can sometimes be re-established.  In addition to the flash issue there may
 be firmware timing issues.
 
@@ -118,34 +123,39 @@ R1 - 10 bytes
 01 C0 5C 71 00 05 00 0C 03 FF
 
 0: identifier, 01 for R1 messages
-1: channel       (x & 0xf0)       observed values: C=A,8=B,0=C
-1: sensor_id hi  (x & 0x0f)
+1: channel      (x & 0xf0)       observed values: C=A,8=B,0=C
+1: sensor_id hi (x & 0x0f)
 2: sensor_id lo
-3: message flavor, 1 (windSpeed, windDir, rain)
-4: wind speed  (x & 0x1f) << 3
-5: wind speed  (x & 0x70) >> 4
-5: wind dir    (x & 0x0f)
-6: ?                              always seems to be 0
-7: rain        (x & 0x7f)
-8: rssi        (x & 0x0f)         observed values: 0,1,2,3
-9: ?battery level   (x & 0xff)    observed values: 0x00 and 0xff
+3: message flavor                type 1 is windSpeed, windDir, rain
+4: wind speed   (x & 0x1f) << 3
+5: wind speed   (x & 0x70) >> 4
+5: wind dir     (x & 0x0f)
+6: ?                             always seems to be 0
+7: rain         (x & 0x7f)
+8: rssi         (x & 0x0f)       observed values: 0,1,2,3
+9: ?battery level   (x & 0xff)   observed values: 0x00 and 0xff
 
 0: identifier, 01 for R1 messages
-1: channel       (x & 0xf0)       observed values: C=A,8=B,0=C
-1: sensor_id hi  (x & 0x0f)
+1: channel      (x & 0xf0)       observed values: C=A,8=B,0=C
+1: sensor_id hi (x & 0x0f)
 2: sensor_id lo
-3: message flavor, 8 (windSpeed, outTemp, outHumidity)
+3: message flavor                type 8 is windSpeed, outTemp, outHumidity
 4: wind speed  (x & 0x1f) << 3
 5: wind speed  (x & 0x70) >> 4
 5: temp        (x & 0x0f) << 7
 6: temp        (x & 0x7f)
 7: humidity    (x & 0x7f)
-8: rssi        (x & 0x0f)         observed values: 0,1,2,3
-9: ?battery level   (x & 0xff)    observed values: 0x00 and 0xff
+8: rssi        (x & 0x0f)        observed values: 0,1,2,3
+9: ?battery level   (x & 0xff)   observed values: 0x00 and 0xff
+
 
 R2 - 25 bytes
  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
 02 00 00 4C BE 0D EC 01 52 03 62 7E 38 18 EE 09 C4 08 22 06 07 7B A4 8A 46
+
+ 0-20: ?
+21-24: pressure and inside temperature
+
 
 R3 - 594 bytes?
 
@@ -182,7 +192,7 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.3'
+DRIVER_VERSION = '0.4'
 
 
 def loader(config_dict, engine):
@@ -212,14 +222,14 @@ class AcuRite(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an AcuRite weather station.
 
     model: Which station model is this?
-    [Optional. Default is '01035']
+    [Optional. Default is 'AcuRite']
 
-    max_tries - how often to retry communication before giving up
-    [Optional. Default is 5]
+    max_tries - How often to retry communication before giving up.
+    [Optional. Default is 10]
     """
     def __init__(self, **stn_dict):
-        self.model = stn_dict.get('model', '01035')
-        self.max_tries = int(stn_dict.get('max_tries', 5))
+        self.model = stn_dict.get('model', 'AcuRite')
+        self.max_tries = int(stn_dict.get('max_tries', 10))
         self.retry_wait = int(stn_dict.get('retry_wait', 10))
         self.polling_interval = int(stn_dict.get('polling_interval', 18))
         self.last_rain = None
@@ -313,9 +323,9 @@ class Station(object):
         if not self.handle:
             raise weewx.WeeWxIOError('Open USB device failed')
 
-        loginf('mfr: %s' % self.handle.getString(dev.iManufacturer,30))
-        loginf('product: %s' % self.handle.getString(dev.iProduct,30))
-        loginf('interface: %d' % interface)
+        logdbg('mfr: %s' % self.handle.getString(dev.iManufacturer,30))
+        logdbg('product: %s' % self.handle.getString(dev.iProduct,30))
+        logdbg('interface: %d' % interface)
 
         # for linux systems, be sure kernel does not claim the interface 
         try:
@@ -481,7 +491,7 @@ class Station(object):
             for dev in bus.devices:
                 if dev.idVendor == vendor_id and dev.idProduct == product_id:
                     if device_id is None or dev.filename == device_id:
-                        loginf('Found device at bus=%s device=%s' %
+                        logdbg('Found device at bus=%s device=%s' %
                                (bus.dirname, dev.filename))
                         return dev
         return None
@@ -494,8 +504,8 @@ class AcuRiteConfEditor(weewx.drivers.AbstractConfEditor):
 [AcuRite]
     # This section is for the AcuRite weather stations.
 
-    # The station model, e.g., '01025', '01035', or '02032C'
-    model = '01035'
+    # The station model, e.g., 'AcuRite 01025' or 'AcuRite 02032C'
+    model = 'AcuRite 01035'
 
     # The driver to use:
     driver = weewx.drivers.acurite
