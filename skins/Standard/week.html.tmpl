@@ -13,10 +13,9 @@
     <script type="text/javascript">
       function openURL(urlname)
       {
-      window.location=urlname;
+        window.location=urlname;
       }
     </script>
-
   </head>
 
   <body>
@@ -178,7 +177,7 @@
                 </td>
               </tr>
               #end if
-              #if $week.ET.has_data and $week.ET.sum.raw >0.0
+              #if $week.ET.has_data and $week.ET.sum.raw > 0.0
               <tr>
                 <td class="stats_label">
                   High ET<br/>
@@ -247,8 +246,8 @@
                   Low Humidity
                 </td>
                 <td class="stats_data">
-                  $month.outHumidity.max $month.outHumidity.maxtime<br/>
-                  $month.outHumidity.min $month.outHumidity.mintime
+                  $month.outHumidity.max at $month.outHumidity.maxtime<br/>
+                  $month.outHumidity.min at $month.outHumidity.mintime
                 </td>
               </tr>
               <tr>
@@ -257,8 +256,8 @@
                   Low Dewpoint
                 </td>
                 <td class="stats_data">
-                  $month.dewpoint.max $month.dewpoint.maxtime<br/>
-                  $month.dewpoint.min $month.dewpoint.mintime
+                  $month.dewpoint.max at $month.dewpoint.maxtime<br/>
+                  $month.dewpoint.min at $month.dewpoint.mintime
                 </td>
               </tr>
               <tr>
@@ -343,8 +342,8 @@
                   $month.extraTemp1.max at $month.extraTemp1.maxtime<br/>
                   $month.extraTemp1.min at $month.extraTemp1.mintime
                 </td>
-              #end if
               </tr>
+              #end if
               #if $month.UV.has_data
               <tr>
                 <td class="stats_label">
