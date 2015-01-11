@@ -3651,6 +3651,15 @@ appropriate permissions for the requested operation.</pre>
         meter for the electricity consumed during the interval, then store the
         results in the archive database, along with the weather data. How would
         you do this?</p>
+    <p>The steps include:</p>
+    <ol>
+      <li>Create a custom service that retrieves the data</li>
+      <li>Add the new type to the archive database</li>
+      <li>Specify units for the new type</li>
+      <li>Use the new type in templates and plots</li>
+    </ol>
+
+      <h3>Create a custom service</h3>
       <p>First, you would write a custom service that retrieves the electrical
         consumption data and adds it to the archive record. See the section <a
           href="#service_engine">Customizing the weewx service engine</a> for
@@ -3700,7 +3709,7 @@ class AddElectricity(StdService):
         restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW, weewx.restx.StdAWEKAS
         report_services = weewx.engine.StdPrint, weewx.engine.StdReport</pre>
 
-    <h3 id="add_archive_type">Adding a new type to the archive database</h3>
+    <h3 id="add_archive_type">Add a new type to the archive database</h3>
     <p>
       So, now you have created a new observation type, <span class="code">electricity</span>.
       Trouble is, there is no corresponding type in the schema of the SQL
@@ -3824,8 +3833,22 @@ mv weewx.sdb_new weewx.sdb</pre>
         <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --backfill-daily </pre>
       </li>
     </ol>
-    
-    <h3>Using the new type</h3>
+
+    <h3>Specify units for the new type</h3>
+    <p>To make unit conversions and formatting work automatically for the
+      new data type, the data type must be assigned a unit group.</p>
+    <p>Extend the units dictionary by adding entries in the file
+      <span class='code'>user/extensions.py</span></p>
+    <pre class='tty'>import weewx.units
+weewx.units.obs_group_dict['voltage'] = 'group_volt'
+weewx.units.obs_group_dict['electricity'] = 'group_power'</pre>
+    <p>This will make reports and plots use formats and conversions defined
+      for <span class='code'>group_volt</span> whenever they encounter data
+      with type <span class='code'>voltage</span>, and
+      <span class='code'>group_power</span> whenever they encounter data
+      with type <span class='code'>electricity</span>.</p>
+
+    <h3>Use the new type</h3>
       <p>Now you've added a new type. How do you use it? </p>
       <p>Pretty much like any other type. For example, to do a plot of the
         month's electric consumption, totaled by day, add this section to the <span
