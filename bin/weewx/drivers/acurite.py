@@ -23,10 +23,11 @@
 
 There are many variants of the AcuRite weather stations and sensors.  This
 driver is known to work with the consoles that have a USB interface such as
-models 01025 and 01035.  It should also work with the (low end?) variant
-with model number 02032C.
+models 01025 and 01035.  It should also work with the 02032C.
 
-The AcuRite stations were introduced in 2011.
+The AcuRite stations were introduced in 2011.  The 02032 model was introduced
+in 2013 or 2014.  It appears to be a low-end model - it has fewer buttons,
+apparently a different type of flash memory, and probably different firmware.
 
 AcuRite publishes the following specifications:
 
@@ -42,7 +43,8 @@ AcuRite publishes the following specifications:
         display power: 4.5V AC adapter (6 AA bateries, optional)
          sensor power: 4 AA batteries
 
-The memory size is 512 KB (not expandable).
+The memory size is 512 KB and is not expandable.  The firmware cannot be
+modified or upgraded.
 
 According to AcuRite specs, the update frequencies are as follows:
 
@@ -58,20 +60,13 @@ kind of averaging to it so the console displays a pressure that is usually
 nothing close to the station pressure.
 
 Apparently at least some of the consoles use the HP03S integrated pressure
-sensor.
+sensor:
 
   http://www.hoperf.com/upload/sensor/HP03S.pdf
 
 According to AcuRite they use a 'patented, self-adjusting altitude pressure
-compensation' algorithm.
-
-  corrected_reading = 29.92 * current_reading / average_reading
-
-  current_reading - absolute sensor reading
-  average_reading - arithmetic mean of the absolute sensor reading
-
-They do not specify whether the average is computed from a number of samples
-or over a specific time period.
+compensation' algorithm.  They do not specify exactly how this is calculated,
+but perhaps it is published in the patent?
 
 The AcuRite station has 4 USB modes:
 
@@ -108,9 +103,11 @@ The AcuRite station emits three different data strings, R1, R2 and R3.  The R1
 string is 10 bytes long, contains readings from the remote sensors, and comes
 in different flavors.  One contains wind speed, wind direction, and rain
 counter.  Another contains wind speed, temperature, and humidity.  The R2
-string is 25 bytes long and appears to contain readings from the console
-sensors.  The R3 string contains historical data and (apparently) the humidity
-readings from the console sensors.
+string is 25 bytes long and contains the temperature and pressure readings
+from the console, plus a whole bunch of calibration constants required to
+figure out the actual pressure and temperature.  The R3 string contains
+historical data and (apparently) the humidity readings from the console
+sensors.
 
 Message Maps
 
@@ -122,7 +119,7 @@ R1 - 10 bytes
 01 C0 5C 78 00 08 1F 53 03 FF
 01 C0 5C 71 00 05 00 0C 03 FF
 
-0: identifier, 01 for R1 messages
+0: identifier                    01 indicates R1 messages
 1: channel      (x & 0xf0)       observed values: C=A,8=B,0=C
 1: sensor_id hi (x & 0x0f)
 2: sensor_id lo
@@ -135,7 +132,7 @@ R1 - 10 bytes
 8: rssi         (x & 0x0f)       observed values: 0,1,2,3
 9: ?battery level   (x & 0xff)   observed values: 0x00 and 0xff
 
-0: identifier, 01 for R1 messages
+0: identifier                    01 indicates R1 messages
 1: channel      (x & 0xf0)       observed values: C=A,8=B,0=C
 1: sensor_id hi (x & 0x0f)
 2: sensor_id lo
@@ -153,8 +150,22 @@ R2 - 25 bytes
  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
 02 00 00 4C BE 0D EC 01 52 03 62 7E 38 18 EE 09 C4 08 22 06 07 7B A4 8A 46
 
- 0-20: ?
-21-24: pressure and inside temperature
+ 0: identifier                                     02 indicates R2 messages
+ 1: ?                                              always seems to be 0
+ 2: ?                                              always seems to be 0
+ 3-4:   C1 sensitivity coefficient                 0x100 - 0xffff
+ 5-6:   C2 offset coefficient                      0x00 - 0x1fff
+ 7-8:   C3 temperature coefficient of sensitivity  0x00 - 0x400
+ 9-10:  C4 temperature coefficient of offset       0x00 - 0x1000
+ 11-12: C5 reference temperature                   0x1000 - 0xffff
+ 13-14: C6 temperature coefficient of temperature  0x00 - 0x4000
+ 15-16: C7 offset fine tuning                      0x960 - 0xa28
+ 17:    A sensor-specific parameter                0x01 - 0x3f
+ 18:    B sensor-specific parameter                0x01 - 0x3f
+ 19:    C sensor-specific parameter                0x01 - 0x0f
+ 20:    D sensor-specific parameter                0x01 - 0x0f
+ 21-22: TR measured temperature                    0x00 - 0xffff
+ 23-24: PR measured pressure                       0x00 - 0xffff
 
 
 R3 - 594 bytes?
@@ -192,7 +203,7 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.4'
+DRIVER_VERSION = '0.5'
 
 
 def loader(config_dict, engine):
@@ -404,9 +415,7 @@ class Station(object):
                 logerr("R1: unexpected byte %02x" % raw[3])
                 logerr(' '.join(['%02x' % x for x in raw]))
         elif len(raw) == 25:
-            data['pressure'] = Station.decode_pressure(raw)
-            data['inTemp'] = Station.decode_intemp(raw)
-            data['inHumidity'] = Station.decode_inhumid(raw)
+            data['pressure'], data['inTemp'] = Station.decode_pt(raw)
         else:
             logerr("unknown data string with length %d" % len(raw))
         return data
@@ -470,18 +479,36 @@ class Station(object):
         return (data[7] & 0x7f) * 0.01
 
     @staticmethod
-    def decode_intemp(data):
-        # FIXME: decode inside temperature
-        return None
+    def decode_pt(data):
+        # decode pressure and temperature from the R2 message
+        # decoded pressure is mbar, decoded temperature is degree C
+        c1 = (data[3] << 8) + data[4]
+        c2 = (data[5] << 8) + data[6]
+        c3 = (data[7] << 8) + data[8]
+        c4 = (data[9] << 8) + data[10]
+        c5 = (data[11] << 8) + data[12]
+        c6 = (data[13] << 8) + data[14]
+        c7 = (data[15] << 8) + data[16]
+        a = data[17]
+        b = data[18]
+        c = data[19]
+        d = data[20]
+        d2 = (data[21] << 8) + data[22]
+        d1 = (data[23] << 8) + data[24]
+        if d2 >= c5:
+            dut = d2 - c5 - ((d2-c5)/128) * ((d2-c5)/128) * a / pow(2, c)
+        else:
+            dut = d2 - c5 - ((d2-c5)/128) * ((d2-c5)/128) * b / pow(2, c)
+        off = 4 * (c2 + (c4 - 1024) * dut / 16384)
+        sens = c1 + c3 * dut / 1024
+        x = sens * (d1 - 7168) / 16384 - off
+        p = 0.1 * (x * 10 / 32 + c7)
+        t = 0.1 * (250 + dut * c6 / 65536 - dut / pow(2, d))
+        return p, t
 
     @staticmethod
     def decode_inhumid(data):
         # FIXME: decode inside humidity
-        return None
-
-    @staticmethod
-    def decode_pressure(data):
-        # FIXME: decode pressure
         return None
 
     @staticmethod
