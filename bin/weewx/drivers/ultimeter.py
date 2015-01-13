@@ -8,12 +8,18 @@
 #   Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
 #     http://server1.nuge.com/~weather/
 #   Steve (sesykes71) for testing the first implementations of this driver
-#   Garret Power for decoding improvements and testing
+#   Garret Power for improved decoding and proper handling of negative values
+#   Chris Thompstone for testing the fast-read implementation
+#
+# Thanks to PeetBros for publishing the communication protocols and details
+# about each model they manufacture.
 
 """Driver for Peet Bros Ultimeter weather stations except the Ultimeter II
 
 This driver assumes the Ultimeter is emitting data in Peet Bros Data Logger
-mode format.
+mode format.  This driver will set the mode automatically on stations
+manufactured after 2004.  Stations manufactured before 2004 must be set to
+data logger mode using the buttons on the console.
 
 Resources for the Ultimeter stations
 
@@ -51,13 +57,15 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'Ultimeter'
-DRIVER_VERSION = '0.11'
+DRIVER_VERSION = '0.13'
 
 INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-def loader(config_dict, engine):
+DEBUG_SERIAL = 0
+
+def loader(config_dict, _):
     return Ultimeter(**config_dict[DRIVER_NAME])
 
 def confeditor_loader():
@@ -65,7 +73,6 @@ def confeditor_loader():
 
 
 DEFAULT_PORT = '/dev/ttyS0'
-DEBUG_READ = 0
 
 def logmsg(level, msg):
     syslog.syslog(level, 'ultimeter: %s' % msg)
@@ -89,50 +96,46 @@ class Ultimeter(weewx.drivers.AbstractDevice):
     port - serial port
     [Required. Default is /dev/ttyS0]
 
-    polling_interval - how often to query the serial interface, seconds
-    [Optional. Default is 1]
-
     max_tries - how often to retry serial communication before giving up
-    [Optional. Default is 5]
+    [Optional. Default is 10]
     """
     def __init__(self, **stn_dict):
         self.model = stn_dict.get('model', 'Ultimeter')
         self.port = stn_dict.get('port', DEFAULT_PORT)
-        self.polling_interval = float(stn_dict.get('polling_interval', 1))
-        self.max_tries = int(stn_dict.get('max_tries', 5))
+        self.max_tries = int(stn_dict.get('max_tries', 10))
         self.retry_wait = int(stn_dict.get('retry_wait', 10))
         self.last_rain = None
+
+        global DEBUG_SERIAL
+        DEBUG_SERIAL = int(stn_dict.get('debug_serial', 0))
+
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
-        loginf('polling interval is %s' % str(self.polling_interval))
-        global DEBUG_READ
-        DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
+        self.station = Station(self.port)
+        self.station.open()
+
+    def closePort(self):
+        if self.station is not None:
+            self.station.close()
+            self.station = None
+
+    def getTime(self):
+        return self.station.get_time()
+
+    def setTime(self):
+        self.station.set_time(int(time.time()))
 
     def genLoopPackets(self):
-        ntries = 0
-        while ntries < self.max_tries:
-            ntries += 1
-            try:
-                packet = {'dateTime': int(time.time() + 0.5),
-                          'usUnits': weewx.US}
-                # open a new connection to the station for each reading
-                with Station(self.port) as station:
-                    readings = station.get_readings()
-                data = Station.parse_readings(readings)
-                packet.update(data)
-                self._augment_packet(packet)
-                ntries = 0
-                yield packet
-                if self.polling_interval:
-                    time.sleep(self.polling_interval)
-            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
-                logerr("Failed attempt %d of %d to get LOOP data: %s" %
-                       (ntries, self.max_tries, e))
-                time.sleep(self.retry_wait)
-        else:
-            msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
-            logerr(msg)
-            raise weewx.RetriesExceeded(msg)
+        self.station.set_logger_mode()
+        while True:
+            packet = {'dateTime': int(time.time() + 0.5),
+                      'usUnits': weewx.US}
+            readings = self.station.get_readings_with_retry(self.max_tries,
+                                                            self.retry_wait)
+            data = Station.parse_readings(readings)
+            packet.update(data)
+            self._augment_packet(packet)
+            yield packet
 
     @property
     def hardware_name(self):
@@ -150,42 +153,18 @@ class Ultimeter(weewx.drivers.AbstractDevice):
         if not packet['windSpeed']:
             packet['windDir'] = None
 
-def _is_valid_char(c):
-    """See whether a character is a valid hexadecimal digit or hyphen."""
-    if c == '-':
-        return True
-    try:
-        int(c, 16)
-        return True
-    except ValueError:
-        return False
-
-def _decode(s, multiplier=None, neg=False):
-    """Ultimeter puts hyphens in the string when a sensor is not installed.
-    When we get a hyphen or any other non-hex character, return None.
-    Negative values are represented in twos complement format.  Only do the
-    check for negative values if requested - the neg flag indicates that
-    negative values are possible.
-    """
-    v = None
-    try:
-        v = int(s, 16)
-        if neg:
-            bits = 4 * len(s)
-            if v & (1<<(bits-1)) != 0:
-                v = v - (1<<bits)
-        if multiplier is not None:
-            v *= multiplier
-    except ValueError:
-        pass
-    return v
 
 class Station(object):
     def __init__(self, port):
         self.port = port
         self.baudrate = 2400
-        self.timeout = 30
+        self.timeout = 3 # seconds
         self.serial_port = None
+        # setting the year works only for models 2004 and later
+        self.can_set_year = True
+        # modem mode is available only on models 2004 and later
+        # not available on pre-2004 models 50/100/500/700/800
+        self.has_modem_mode = True
 
     def __enter__(self):
         self.open()
@@ -199,63 +178,92 @@ class Station(object):
         self.serial_port = serial.Serial(self.port, self.baudrate,
                                          timeout=self.timeout)
 
-        # Set date and time as internal clock skews.
-        self.serial_port.write(">A%04d%04d\r"
-            % (time.localtime().tm_yday - 1, time.localtime().tm_min
-            + time.localtime().tm_hour * 60))
-
-        # Set to Data Logger Mode
-        self.serial_port.write(">I\r")
-
     def close(self):
         if self.serial_port is not None:
             logdbg("close serial port %s" % self.port)
-
-            # Set to Modem Mode (stops Data Logger output)
-            self.serial_port.write(">\r")
-
             self.serial_port.close()
             self.serial_port = None
 
-    def read(self, nchar=1):
-        buf = self.serial_port.read(nchar)
-        n = len(buf)
-        if n != nchar:
-            if DEBUG_READ:
-                logdbg("partial buffer: '%s'" %
-                       ' '.join(["%0.2X" % ord(c) for c in buf]))
-            raise weewx.WeeWxIOError("Read expected %d chars, got %d" %
-                                     (nchar, n))
-        return buf
+    def get_time(self):
+        try:
+            self.set_logger_mode()
+            buf = self.get_readings_with_retry()
+            data = Station.parse_readings(buf)
+            d = data['day_of_year']  # seems to start at 0
+            m = data['minute_of_day']  # 0 is midnight before start of day
+            tstr = time.localtime()
+            y = tstr.tm_year
+            s = tstr.tm_sec
+            ts = time.mktime((y,1,1,0,0,s,0,0,0)) + d * 86400 + m * 60
+            logdbg("station time: day:%s min:%s (%s)" % (d, m, ts)) 
+            return ts
+        except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+            logerr("get_time failed: %s" % e)
+        return int(time.time())
 
-    def write(self, data):
-        n = self.serial_port.write(data)
-        if n is not None and n != len(data):
-            raise weewx.WeeWxIOError("Write expected %d chars, sent %d" %
-                                     (len(data), n))
+    def set_time(self, ts):
+        # go to modem mode so we do not get logger chatter
+        self.set_modem_mode()
+
+        # set time should work on all models
+        tstr = time.localtime(ts)
+        tcmd = ">A%04d%04d\r" % (
+            tstr.tm_yday - 1, tstr.tm_min + tstr.tm_hour * 60)
+        logdbg("set station time to %d (%s)" % (ts, tcmd))
+        self.serial_port.write(tcmd)
+
+        # year works only for models 2004 and later
+        if self.can_set_year:
+            y = tstr.tm_year
+            ycmd = ">U%s" % y
+            logdbg("set station year to %s (%s)" % (y, ycmd))
+            self.serial_port.write(ycmd)
+
+    def set_logger_mode(self):
+        # in logger mode, station sends logger mode records continuously
+        if DEBUG_SERIAL:
+            logdbg("set station to logger mode")
+        self.serial_port.write(">I\r")
+
+    def set_modem_mode(self):
+        # setting to modem mode should stop data logger output
+        if self.has_modem_mode:
+            if DEBUG_SERIAL:
+                logdbg("set station to modem mode")
+            self.serial_port.write(">\r")
 
     def get_readings(self):
-        buf = []
-        while True:
-            c = self.read(1)
-            if c == "\r" or c == "\n":
-                break
-            elif c == '!' and len(buf) > 0:
-                break
-            elif c == '!':
-                buf = []
-            elif _is_valid_char(c):
-                buf.append(c)
-            else:
-                buf = []
-        if DEBUG_READ:
-            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
-        if len(buf) != 48:
-            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(buf))
-        return ''.join(buf)
+        buf = self.serial_port.readline()
+        if DEBUG_SERIAL:
+            logdbg("station said: %s" %
+                   ' '.join(["%0.2X" % ord(c) for c in buf]))
+        buf = buf.strip() # FIXME: is this necessary?
+        return buf
+
+    def validate_string(self, buf):
+        if len(buf) not in [42, 46, 50]:
+            raise weewx.WeeWxIOError("Got %d bytes, expected 50" % len(buf))
+        if buf[0:2] != '!!':
+            raise weewx.WeeWxIOError("Unexpected header bytes '%s'" % buf[0:2])
+        return buf
+
+    def get_readings_with_retry(self, max_tries=5, retry_wait=10):
+        for ntries in range(0, max_tries):
+            try:
+                buf = self.get_readings()
+                self.validate_string(buf)
+                return buf
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+                loginf("Failed attempt %d of %d to get readings: %s" %
+                       (ntries + 1, max_tries, e))
+                time.sleep(retry_wait)
+        else:
+            msg = "Max retries (%d) exceeded for readings" % max_tries
+            logerr(msg)
+            raise weewx.RetriesExceeded(msg)
 
     @staticmethod
-    def parse_readings(buf):
+    def parse_readings(raw):
         """Ultimeter stations emit data in PeetBros format.  Each line has 52
         characters - 2 header bytes, 48 data bytes, and a carriage return
         and line feed (new line):
@@ -281,21 +289,49 @@ class Station(object):
         official barometer reading as part of the setup of the station
         console so this value is assigned to the 'barometer' key and
         the pressure and altimeter values are calculated from it.
+
+        Some stations may omit daily_rain or wind_average, so check for those.
         """
+        buf = raw[2:]
         data = dict()
-        data['windSpeed'] = _decode(buf[0:4], 0.1 * MILE_PER_KM)  # mph
-        data['windDir'] = _decode(buf[6:8], 1.411764)  # compass degrees
-        data['outTemp'] = _decode(buf[8:12], 0.1, neg=True)  # degree_F
-        data['long_term_rain'] = _decode(buf[12:16], 0.01)  # inch
-        data['barometer'] = _decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
-        data['inTemp'] = _decode(buf[20:24], 0.1, neg=True)  # degree_F
-        data['outHumidity'] = _decode(buf[24:28], 0.1)  # percent
-        data['inHumidity'] = _decode(buf[28:32], 0.1)  # percent
-        data['day_of_year'] = _decode(buf[32:36])
-        data['minute_of_day'] = _decode(buf[36:40])
-        data['daily_rain'] = _decode(buf[40:44], 0.01)  # inch
-        data['wind_average'] = _decode(buf[44:48], 0.1 * MILE_PER_KM)  # mph
+        data['windSpeed'] = Station._decode(buf[0:4], 0.1 * MILE_PER_KM)  # mph
+        data['windDir'] = Station._decode(buf[6:8], 1.411764)  # compass deg
+        data['outTemp'] = Station._decode(buf[8:12], 0.1, neg=True)  # degree_F
+        data['long_term_rain'] = Station._decode(buf[12:16], 0.01)  # inch
+        data['barometer'] = Station._decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
+        data['inTemp'] = Station._decode(buf[20:24], 0.1, neg=True)  # degree_F
+        data['outHumidity'] = Station._decode(buf[24:28], 0.1)  # percent
+        data['inHumidity'] = Station._decode(buf[28:32], 0.1)  # percent
+        data['day_of_year'] = Station._decode(buf[32:36])
+        data['minute_of_day'] = Station._decode(buf[36:40])
+        if len(buf) > 40:
+            data['daily_rain'] = Station._decode(buf[40:44], 0.01)  # inch
+        if len(buf) > 44:
+            data['wind_average'] = Station._decode(buf[44:48], 0.1 * MILE_PER_KM)  # mph
         return data
+
+    @staticmethod
+    def _decode(s, multiplier=None, neg=False):
+        """Ultimeter puts hyphens in the string when a sensor is not installed.
+        When we get a hyphen or any other non-hex character, return None.
+        Negative values are represented in twos complement format.  Only do the
+        check for negative values if requested, since some parameters use the
+        full set of bits (e.g., wind direction) and some do not
+        (e.g., temperature).
+        """
+        v = None
+        try:
+            v = int(s, 16)
+            if neg:
+                bits = 4 * len(s)
+                if v & (1 << (bits - 1)) != 0:
+                    v -= (1 << bits)
+            if multiplier is not None:
+                v *= multiplier
+        except ValueError, e:
+            if s != '----':
+                logdbg("decode failed for '%s': %s" % (s, e))
+        return v
 
 
 class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
@@ -347,4 +383,6 @@ if __name__ == '__main__':
         exit(0)
 
     with Station(options.port) as s:
-        print s.get_readings()
+        s.set_logger_mode()
+        while True:
+            print time.time(), s.get_readings()
