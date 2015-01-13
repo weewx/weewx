@@ -54,10 +54,9 @@ According to AcuRite specs, the update frequencies are as follows:
   pc connect csv data logging: 12 minute intervals
   pc connect to acurite software: 18 second updates
 
-There is a lot of monkey business with respect to the pressure.  The pressure
-sensor in the console reports a station pressure, but the firmware does some
-kind of averaging to it so the console displays a pressure that is usually
-nothing close to the station pressure.
+The pressure sensor in the console reports a station pressure, but the
+firmware does some kind of averaging to it so the console displays a pressure
+that is usually nothing close to the station pressure.
 
 Apparently at least some of the consoles use the HP03S integrated pressure
 sensor:
@@ -65,8 +64,7 @@ sensor:
   http://www.hoperf.com/upload/sensor/HP03S.pdf
 
 According to AcuRite they use a 'patented, self-adjusting altitude pressure
-compensation' algorithm.  They do not specify exactly how this is calculated,
-but perhaps it is published in the patent?
+compensation' algorithm.
 
 The AcuRite station has 4 USB modes:
 
@@ -118,32 +116,34 @@ R1 - 10 bytes
 01 8b fa 71 00 06 00 02 03 ff
 01 C0 5C 78 00 08 1F 53 03 FF
 01 C0 5C 71 00 05 00 0C 03 FF
+01 CF FF FF FF FF FF FF 00 00      no sensor unit found
+01 8b fa 71 00 06 00 0c 00 00      connection to sensor unit lost
 
-0: identifier                    01 indicates R1 messages
-1: channel      (x & 0xf0)       observed values: C=A,8=B,0=C
-1: sensor_id hi (x & 0x0f)
+0: identifier                      01 indicates R1 messages
+1: channel        x & 0xf0         observed values: 0xC=A, 0x8=B, 0x0=C
+1: sensor_id hi   x & 0x0f
 2: sensor_id lo
-3: message flavor                type 1 is windSpeed, windDir, rain
-4: wind speed   (x & 0x1f) << 3
-5: wind speed   (x & 0x70) >> 4
-5: wind dir     (x & 0x0f)
-6: ?                             always seems to be 0
-7: rain         (x & 0x7f)
-8: rssi         (x & 0x0f)       observed values: 0,1,2,3
-9: ?battery level   (x & 0xff)   observed values: 0x00 and 0xff
+3: message flavor                  type 1 is windSpeed, windDir, rain
+4: wind speed     (x & 0x1f) << 3
+5: wind speed     (x & 0x70) >> 4
+5: wind dir       (x & 0x0f)
+6: ?                               always seems to be 0
+7: rain           (x & 0x7f)
+8: rssi           (x & 0x0f)       observed values: 0,1,2,3
+9: ?battery level (x & 0xff)       observed values: 0x00, 0xff
 
-0: identifier                    01 indicates R1 messages
-1: channel      (x & 0xf0)       observed values: C=A,8=B,0=C
-1: sensor_id hi (x & 0x0f)
+0: identifier                      01 indicates R1 messages
+1: channel        x & 0xf0         observed values: 0xC=A, 0x8=B, 0x0=C
+1: sensor_id hi   x & 0x0f
 2: sensor_id lo
-3: message flavor                type 8 is windSpeed, outTemp, outHumidity
-4: wind speed  (x & 0x1f) << 3
-5: wind speed  (x & 0x70) >> 4
-5: temp        (x & 0x0f) << 7
-6: temp        (x & 0x7f)
-7: humidity    (x & 0x7f)
-8: rssi        (x & 0x0f)        observed values: 0,1,2,3
-9: ?battery level   (x & 0xff)   observed values: 0x00 and 0xff
+3: message flavor                  type 8 is windSpeed, outTemp, outHumidity
+4: wind speed     (x & 0x1f) << 3
+5: wind speed     (x & 0x70) >> 4
+5: temp           (x & 0x0f) << 7
+6: temp           (x & 0x7f)
+7: humidity       (x & 0x7f)
+8: rssi           (x & 0x0f)       observed values: 0,1,2,3
+9: ?battery level (x & 0xff)       observed values: 0x00, 0xff
 
 
 R2 - 25 bytes
@@ -170,28 +170,21 @@ R2 - 25 bytes
 
 R3 - 594 bytes?
 
-
-Sample Messages
-
-01 CF FF FF FF FF FF FF 00 00
-no sensor unit found
-
-01 8b fa 71 00 06 00 0c 00 00
-connection to sensor unit lost
-
 """
 
 # FIXME: how to set mode via software?
+# FIXME: how to detect mode via software?
 # FIXME: how to download stored data?
 # FIXME: can the archive interval be changed?
 # FIXME: how to clear station memory?
 # FIXME: how to detect console type?
-
 # FIXME: decode console battery level
-# FIXME: decode sensor type
+# FIXME: decode sensor type - hi byte of byte 3 in R1 message?
 
 # FIXME: decode inside humidity
 # FIXME: decode historical records
+
+# FIXME: is it better to open device for each read, or maintain open device?
 
 from __future__ import with_statement
 import syslog
@@ -201,11 +194,11 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.6'
+DRIVER_VERSION = '0.7'
 
 
 def loader(config_dict, engine):
-    return AcuRite(**config_dict[DRIVER_NAME])
+    return AcuRiteDriver(**config_dict[DRIVER_NAME])
 
 def confeditor_loader():
     return AcuRiteConfEditor()
@@ -227,7 +220,7 @@ def logcrt(msg):
     logmsg(syslog.LOG_CRIT, msg)
 
 
-class AcuRite(weewx.drivers.AbstractDevice):
+class AcuRiteDriver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an AcuRite weather station.
 
     model: Which station model is this?
@@ -243,6 +236,10 @@ class AcuRite(weewx.drivers.AbstractDevice):
         self.polling_interval = int(stn_dict.get('polling_interval', 18))
         self.last_rain = None
         loginf('driver version is %s' % DRIVER_VERSION)
+
+    @property
+    def hardware_name(self):
+        return self.model
 
     def genLoopPackets(self):
         ntries = 0
@@ -270,17 +267,15 @@ class AcuRite(weewx.drivers.AbstractDevice):
             logerr(msg)
             raise weewx.RetriesExceeded(msg)
 
-    @property
-    def hardware_name(self):
-        return self.model
-
     def _augment_packet(self, packet):
+        # calculate the rain delta from the total
         if 'rain_total' in packet:
             if self.last_rain is not None:
                 packet['rain'] = packet['rain_total'] - self.last_rain
             else:
                 packet['rain'] = None
             self.last_rain = packet['rain_total']
+
         # if there is no connection to sensors, clear the readings
         if 'rssi' in packet and packet['rssi'] == 0:
             packet['outTemp'] = None
@@ -288,6 +283,12 @@ class AcuRite(weewx.drivers.AbstractDevice):
             packet['windSpeed'] = None
             packet['windDir'] = None
             packet['rain'] = None
+
+        # map raw data to observations in the default database schema
+        if 'sensor_battery' in packet:
+            packet['outTempBatteryStatus'] = 0 if packet['sensor_battery'] else 1
+        if 'rssi' in packet:
+            packet['rxCheckPercent'] = packet['rssi'] / Station.MAX_RSSI
 
 
 class Station(object):
@@ -299,9 +300,13 @@ class Station(object):
     IDX_TO_DEG = {6: 0.0, 14: 22.5, 12: 45.0, 8: 67.5, 10: 90.0, 11: 112.5,
                   9: 135.0, 13: 157.5, 15: 180.0, 7: 202.5, 5: 225.0, 1: 247.5,
                   3: 270.0, 2: 292.5, 0: 315.0, 4: 337.5}
+
     # map the raw channel value to something we prefer
     # A is 1, B is 2, C is 3
     CHANNELS = {12: 1, 8: 2, 0: 3}
+
+    # maximum value for the rssi
+    MAX_RSSI = 3.0
 
     def __init__(self, vendor_id=VENDOR_ID, product_id=PRODUCT_ID, dev_id=None):
         self.vendor_id = vendor_id
@@ -318,7 +323,6 @@ class Station(object):
         self.close()
 
     def open(self):
-        interface = 0
         dev = self._find_dev(self.vendor_id, self.product_id, self.device_id)
         if not dev:
             logcrt("Cannot find USB device with "
@@ -332,7 +336,9 @@ class Station(object):
 
         logdbg('mfr: %s' % self.handle.getString(dev.iManufacturer,30))
         logdbg('product: %s' % self.handle.getString(dev.iProduct,30))
-        logdbg('interface: %d' % interface)
+
+        # the station shows up as a HID with only one interface
+        interface = 0
 
         # for linux systems, be sure kernel does not claim the interface 
         try:
@@ -349,8 +355,6 @@ class Station(object):
             logcrt("Unable to claim USB interface %s: %s" % (interface, e))
             raise weewx.WeeWxIOError(e)
 
-#        self.set_idle()
-
     def close(self):
         if self.handle is not None:
             try:
@@ -359,26 +363,15 @@ class Station(object):
                 logerr("release failed: %s" % e)
             self.handle = None
 
-    def set_idle(self):
-        ret = self.handle.controlMsg(requestType=(usb.RECIP_INTERFACE +
-                                                  usb.TYPE_CLASS),
-                                     request=(usb.RECIP_INTERFACE +
-                                              usb.REQ_CLEAR_FEATURE),
-                                     buffer=0x0,
-                                     value=0x0,
-                                     index=0x0,
-                                     timeout=self.timeout)
-
     def read(self, msgtype, nbytes):
-        ret = self.handle.controlMsg(requestType=(usb.RECIP_INTERFACE +
-                                                  usb.TYPE_CLASS +
-                                                  usb.ENDPOINT_IN),
-                                     request=usb.REQ_CLEAR_FEATURE,
-                                     buffer=nbytes,
-                                     value=0x0100 + msgtype,
-                                     index=0x0,
-                                     timeout=self.timeout)
-        return [x for x in ret]
+        return self.handle.controlMsg(requestType=(usb.RECIP_INTERFACE +
+                                                   usb.TYPE_CLASS +
+                                                   usb.ENDPOINT_IN),
+                                      request=usb.REQ_CLEAR_FEATURE,
+                                      buffer=nbytes,
+                                      value=0x0100 + msgtype,
+                                      index=0x0,
+                                      timeout=self.timeout)
 
     def read_R1(self):
         return self.read(1, 10)
@@ -393,11 +386,17 @@ class Station(object):
     def decode(raw):
         data = dict()
         if len(raw) == 10:
-            data['channel'] = Station.decode_channel(raw)
-            data['sensor_id'] = Station.decode_sensor_id(raw)
-            data['rssi'] = Station.decode_rssi(raw)
-            data['sensor_battery'] = Station.decode_sensor_battery(raw)
-            if raw[3] & 0x0f == 1 or raw[3] & 0x0f == 8:
+            if raw[3] == 0xff and raw[2] == 0xcf:
+                loginf("no sensor cluster found")
+                data['channel'] = None
+                data['sensor_id'] = None
+                data['rssi'] = None
+                data['sensor_battery'] = None
+            elif raw[3] & 0x0f == 1 or raw[3] & 0x0f == 8:
+                data['channel'] = Station.decode_channel(raw)
+                data['sensor_id'] = Station.decode_sensor_id(raw)
+                data['rssi'] = Station.decode_rssi(raw)
+                data['sensor_battery'] = Station.decode_sensor_battery(raw)
                 data['windSpeed'] = Station.decode_windspeed(raw)
                 if raw[3] & 0x0f == 1:
                     data['windDir'] = Station.decode_winddir(raw)
@@ -405,15 +404,14 @@ class Station(object):
                 else:
                     data['outTemp'] = Station.decode_outtemp(raw)
                     data['outHumidity'] = Station.decode_outhumid(raw)
-            elif raw[3] == 0xff and raw[2] == 0xcf:
-                loginf("no sensor cluster found")
             else:
-                logerr("R1: unexpected byte %02x" % raw[3])
+                logerr("R1: unknown message type %02x" % raw[3])
                 logerr(' '.join(['%02x' % x for x in raw]))
         elif len(raw) == 25:
             data['pressure'], data['inTemp'] = Station.decode_pt(raw)
         else:
             logerr("unknown data string with length %d" % len(raw))
+            logerr(' '.join(['%02x' % x for x in raw]))
         return data
 
     @staticmethod
@@ -437,15 +435,17 @@ class Station(object):
         # battery level is 0xff or 0x00
         # return the weewx convention of 0 for ok, 1 for fail
         # FIXME: need to verify this
-        return 0 if data[9] & 0xff else 1
+        return data[9] & 0xff
 
     @staticmethod
     def decode_windspeed(data):
         # extract the wind speed from an R1 message
-        # decoded value is mph, convert to kph
+        # decoded value is mph
+        # return value is kph
+        # FIXME: need to verify this over a range of speeds
         lhs = (data[4] & 0x1f) << 3
         rhs = (data[5] & 0x70) >> 4
-        return 0.5 * (lhs | rhs)
+        return 0.5 * (lhs | rhs) * 1.60934
 
     @staticmethod
     def decode_winddir(data):
@@ -457,8 +457,12 @@ class Station(object):
     @staticmethod
     def decode_outtemp(data):
         # extract the temperature from an R1 message
-        # decoded value is degree C
-        return 0.01 * ((data[5] << 8) + data[6])
+        # decoded value is degree F
+        # return value is degree C
+        # FIXME: encoded value is probably degree C, not degree F, so the
+        #        decoding is probably easier than this...
+        t_F = 0.1 * ((((data[5] & 0x0f) << 7) | (data[6] & 0x7f)) - 400)
+        return (t_F - 32) * 5 / 9
 
     @staticmethod
     def decode_outhumid(data):
@@ -523,7 +527,7 @@ class AcuRiteConfEditor(weewx.drivers.AbstractConfEditor):
     def default_stanza(self):
         return """
 [AcuRite]
-    # This section is for the AcuRite weather stations.
+    # This section is for AcuRite weather stations.
 
     # The station model, e.g., 'AcuRite 01025' or 'AcuRite 02032C'
     model = 'AcuRite 01035'
