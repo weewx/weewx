@@ -190,10 +190,8 @@ connection to sensor unit lost
 # FIXME: decode console battery level
 # FIXME: decode sensor type
 
-# FIXME: decode inside temperature
-# FIXME: decode pressure
 # FIXME: decode inside humidity
-# FIXME: heatindex, windchill, ?, rain rate, peak wind, avg wind
+# FIXME: decode historical records
 
 from __future__ import with_statement
 import syslog
@@ -203,7 +201,7 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.5'
+DRIVER_VERSION = '0.6'
 
 
 def loader(config_dict, engine):
@@ -252,15 +250,13 @@ class AcuRite(weewx.drivers.AbstractDevice):
             ntries += 1
             try:
                 packet = {'dateTime': int(time.time() + 0.5),
-                          'usUnits': weewx.US}
+                          'usUnits': weewx.METRIC}
                 with Station() as station:
-                    raw = station.read_R1()
-                    data = Station.decode(raw)
-                    packet.update(data)
-                    raw = station.read_R2()
-                    data = Station.decode(raw)
-                    packet.update(data)
-                    self._augment_packet(packet)
+                    raw1 = station.read_R1()
+                    raw2 = station.read_R2()
+                packet.update(Station.decode(raw1))
+                packet.update(Station.decode(raw2))
+                self._augment_packet(packet)
                 ntries = 0
                 yield packet
                 time.sleep(self.polling_interval)
@@ -462,10 +458,7 @@ class Station(object):
     def decode_outtemp(data):
         # extract the temperature from an R1 message
         # decoded value is degree C
-        lhs = (data[5] & 0x0f) << 7
-        rhs = data[6] & 0x7f
-        combined = lhs | rhs
-        return (combined - 400) / 10.0
+        return 0.01 * ((data[5] << 8) + data[6])
 
     @staticmethod
     def decode_outhumid(data):
@@ -475,8 +468,9 @@ class Station(object):
 
     @staticmethod
     def decode_rain(data):
-        # decoded value is a count of bucket tips, each tip is 0.01 inch
-        return (data[7] & 0x7f) * 0.01
+        # decoded value is a count of bucket tips
+        # each tip is 0.01 inch, return value is cm
+        return (data[7] & 0x7f) * 0.0254
 
     @staticmethod
     def decode_pt(data):
@@ -565,10 +559,10 @@ if __name__ == '__main__':
             ts = int(time.time())
             tstr = "%s (%d)" % (time.strftime("%Y-%m-%d %H:%M:%S %Z",
                                               time.localtime(ts)), ts)
-#            r1 = s.read_R1()
+            r1 = s.read_R1()
             r2 = s.read_R2()
 #            r3 = s.read_R3()
-#            print tstr, ' '.join(['%02x' % x for x in r1]), Station.decode(r1)
+            print tstr, ' '.join(['%02x' % x for x in r1]), Station.decode(r1)
             print tstr, ' '.join(['%02x' % x for x in r2]), Station.decode(r2)
 #            print tstr, ' '.join(['%02x' % x for x in r3])
             time.sleep(18)
