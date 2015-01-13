@@ -1234,7 +1234,7 @@ or in foobar units: $day.barometer.min.foobar
 
       <h3>Tag <span class="code">$trend</span></h3>
       <p>The tag <span class="code">$trend</span> is available for time trends,
-        such as barometer trends. Here are some examples:</p>
+        such as changes in barometric pressure. Here are some examples:</p>
       <table class="indent" style="width: 50%" summary="Examples of using unit formats">
         <tbody>
           <tr class="first_row">
@@ -1264,8 +1264,8 @@ or in foobar units: $day.barometer.min.foobar
         </tbody>
       </table>
     <p>
-      Not how you can explicitly specify a value in the tag itself (2nd example
-      above). If you do not specify a value, then a default time
+      Note how you can explicitly specify a value in the tag itself (2nd
+      example above). If you do not specify a value, then a default time
       interval, set by option <span class="code"><a href="#trend">time_delta</a></span>
       in the skin configuration file, will be used. This value can be retrieved
       by using the syntax <span class="code">$trend.time_delta</span> (3rd
@@ -5028,6 +5028,37 @@ Options:
         <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
       </p>
 
+<h2 id="acurite_station_data">AcuRite</h2>
+<table class='station_data'>
+  <caption>AcuRite station data</caption>
+  <tbody class='code'>
+  <tr class="first_row">
+    <td style='width:200px'>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+  </tr>
+  <tr><td class='first_col'>barometer</td>   <td>S</td><td> </td></tr>
+  <tr><td class='first_col'>pressure</td>    <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>altimeter</td>   <td>S</td><td> </td></tr>
+  <tr><td class='first_col'>inTemp</td>      <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>outTemp</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>inHumidity</td>  <td> </td><td> </td></tr>
+  <tr><td class='first_col'>outHumidity</td> <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windSpeed</td>   <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>windDir</td>     <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rain</td>        <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>S</td><td> </td></tr>
+  <tr><td class='first_col'>dewpoint</td>    <td>S</td><td> </td></tr>
+  <tr><td class='first_col'>windchill</td>   <td>S</td><td> </td></tr>
+  <tr><td class='first_col'>heatindex</td>   <td>S</td><td> </td></tr>
+  <tr><td class='first_col'>rxCheckPercent</td>       <td>H</td><td></td></tr>
+  <tr><td class='first_col'>outTempBatteryStatus</td> <td>H</td><td></td></tr>
+  </tbody>
+</table>
+<p class='station_data_key'>
+Each packet contains a subset of all possible readings.  For example, one type of packet contains <span class='code'>windSpeed</span>, <span class='code'>windDir</span> and <span class='code'>rain</span>.  A different type of packet contains <span class='code'>windSpeed</span>, <span class='code'>outTemp</span> and <span class='code'>outHumidity</span>.
+</p>
+
 <h2 id="cc3000_station_data">CC3000</h2>
 <table class='station_data'>
   <caption>CC3000 station data</caption>
@@ -5047,11 +5078,14 @@ Options:
   <tr><td class='first_col'>windSpeed</td>   <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>windDir</td>     <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>rain</td>        <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>S</td><td>S</td></tr>
   <tr><td class='first_col'>dewpoint</td>    <td>S</td><td>S</td></tr>
   <tr><td class='first_col'>windchill</td>   <td>S</td><td>S</td></tr>
   <tr><td class='first_col'>heatindex</td>   <td>S</td><td>S</td></tr>
   <tr><td class='first_col'>radiation</td>   <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>UV</td>          <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>consBatteryVoltage</td> <td>H</td><td></td></tr>
+  <tr><td class='first_col'>bkupBatteryVoltage</td> <td>H</td><td></td></tr>
   </tbody>
 </table>
 <p class='station_data_key'>
@@ -5079,13 +5113,15 @@ data are available only with the optional solar radiation sensor.
   <tr><td class='first_col'>windDir</td>     <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>windGust</td>    <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>windGustDir</td> <td>D</td><td>D</td></tr>
-  <tr><td class='first_col'>rainRate</td>    <td>S</td><td>S</td></tr>
   <tr><td class='first_col'>rain</td>        <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>S</td><td>S</td></tr>
   <tr><td class='first_col'>dewpoint</td>    <td>H/S</td><td>S</td></tr>
   <tr><td class='first_col'>windchill</td>   <td>H/S</td><td>S</td></tr>
   <tr><td class='first_col'>heatindex</td>   <td>H/S</td><td>S</td></tr>
   <tr><td class='first_col'>radiation</td>   <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>UV</td>          <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rxCheckPercent</td>       <td>H</td><td></td></tr>
+  <tr><td class='first_col'>outTempBatteryStatus</td> <td>H</td><td></td></tr>
   </tbody>
 </table>
 <p class='station_data_key'>
@@ -5113,8 +5149,8 @@ data are available only from 30xx stations.
   <tr><td class='first_col'>windDir</td>     <td>H</td><td> </td></tr>
   <tr><td class='first_col'>windGust</td>    <td>H</td><td> </td></tr>
   <tr><td class='first_col'>windGustDir</td> <td>D</td><td> </td></tr>
-  <tr><td class='first_col'>rainRate</td>    <td>S</td><td> </td></tr>
   <tr><td class='first_col'>rain</td>        <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>S</td><td> </td></tr>
   <tr><td class='first_col'>dewpoint</td>    <td>S</td><td> </td></tr>
   <tr><td class='first_col'>windchill</td>   <td>H/S</td><td> </td></tr>
   <tr><td class='first_col'>heatindex</td>   <td>S</td><td> </td></tr>
@@ -5161,8 +5197,8 @@ solar radiation sensor.
   <tr><td class='first_col'>outHumidity</td> <td>H</td><td> </td></tr>
   <tr><td class='first_col'>windSpeed</td>   <td>H</td><td> </td></tr>
   <tr><td class='first_col'>windDir</td>     <td>H</td><td> </td></tr>
-  <tr><td class='first_col'>rainRate</td>    <td>S</td><td> </td></tr>
   <tr><td class='first_col'>rain</td>        <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>S</td><td> </td></tr>
   <tr><td class='first_col'>dewpoint</td>    <td>S</td><td> </td></tr>
   <tr><td class='first_col'>windchill</td>   <td>S</td><td> </td></tr>
   <tr><td class='first_col'>heatindex</td>   <td>S</td><td> </td></tr>
@@ -5170,7 +5206,7 @@ solar radiation sensor.
 </table>
 <p class='station_data_key'>
 The <span class='code'>rain</span> and <span class='code'>rainRate</span> are
-available only on stations with the optional rain bucket.
+available only on stations with the optional rain sensor.
 </p>
 <p class='station_data_key'>
 Pressure, inside temperature, and inside humidity data are not available on
@@ -5197,8 +5233,8 @@ all types of Ultimeter stations.
   <tr><td class='first_col'>windDir</td>     <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>windGust</td>    <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>windGustDir</td> <td>H</td><td>H</td></tr>
-  <tr><td class='first_col'>rainRate</td>    <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>rain</td>        <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>dewpoint</td>    <td>S</td><td>S</td></tr>
   <tr><td class='first_col'>windchill</td>   <td>S</td><td>S</td></tr>
   <tr><td class='first_col'>heatindex</td>   <td>S</td><td>S</td></tr>
@@ -5258,8 +5294,8 @@ all types of Ultimeter stations.
   <tr><td class='first_col'>windSpeed</td>   <td>H</td><td> </td></tr>
   <tr><td class='first_col'>windDir</td>     <td>H</td><td> </td></tr>
   <tr><td class='first_col'>windGust</td>    <td>H</td><td> </td></tr>
-  <tr><td class='first_col'>rainRate</td>    <td>H</td><td> </td></tr>
   <tr><td class='first_col'>rain</td>        <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>H</td><td> </td></tr>
   <tr><td class='first_col'>dewpoint</td>    <td>S</td><td> </td></tr>
   <tr><td class='first_col'>windchill</td>   <td>S</td><td> </td></tr>
   <tr><td class='first_col'>heatindex</td>   <td>S</td><td> </td></tr>
@@ -5297,8 +5333,8 @@ Each packet contains a subset of all possible readings.  For example, a temperat
   <tr><td class='first_col'>windSpeed</td>   <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>windDir</td>     <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>windGust</td>    <td>H</td><td>H</td></tr>
-  <tr><td class='first_col'>rainRate</td>    <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>rain</td>        <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>dewpoint</td>    <td>S</td><td>S</td></tr>
   <tr><td class='first_col'>windchill</td>   <td>H/S</td><td>H/S</td></tr>
   <tr><td class='first_col'>heatindex</td>   <td>H/S</td><td>H/S</td></tr>
@@ -5339,8 +5375,8 @@ Each packet contains a subset of all possible readings.  For example, a temperat
   <tr><td class='first_col'>windDir</td>     <td>H</td><td> </td></tr>
   <tr><td class='first_col'>windGust</td>    <td>H</td><td> </td></tr>
   <tr><td class='first_col'>windGustDir</td> <td>H</td><td> </td></tr>
-  <tr><td class='first_col'>rainRate</td>    <td>H</td><td> </td></tr>
   <tr><td class='first_col'>rain</td>        <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>H</td><td> </td></tr>
   <tr><td class='first_col'>dewpoint</td>    <td>S</td><td> </td></tr>
   <tr><td class='first_col'>windchill</td>   <td>H</td><td> </td></tr>
   <tr><td class='first_col'>heatindex</td>   <td>S</td><td> </td></tr>
@@ -5386,6 +5422,7 @@ Each packet contains a subset of all possible readings.  For example, a temperat
   <tr><td class='first_col'>windSpeed</td>   <td>H</td><td> </td></tr>
   <tr><td class='first_col'>windDir</td>     <td>H</td><td> </td></tr>
   <tr><td class='first_col'>rain</td>        <td>H</td><td> </td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>S</td><td> </td></tr>
   <tr><td class='first_col'>dewpoint</td>    <td>S</td><td> </td></tr>
   <tr><td class='first_col'>windchill</td>   <td>S</td><td> </td></tr>
   <tr><td class='first_col'>heatindex</td>   <td>S</td><td> </td></tr>
@@ -5412,8 +5449,8 @@ Each packet contains a subset of all possible readings.  For example, a temperat
   <tr><td class='first_col'>windDir</td>     <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>windGust</td>    <td>D</td><td>D</td></tr>
   <tr><td class='first_col'>windGustDir</td> <td>D</td><td>D</td></tr>
-  <tr><td class='first_col'>rainRate</td>    <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>rain</td>        <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>dewpoint</td>    <td>S</td><td>S</td></tr>
   <tr><td class='first_col'>windchill</td>   <td>H/S</td><td>H/S</td></tr>
   <tr><td class='first_col'>heatindex</td>   <td>H/S</td><td>H/S</td></tr>
@@ -5440,8 +5477,8 @@ Each packet contains a subset of all possible readings.  For example, a temperat
   <tr><td class='first_col'>windDir</td>     <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>windGust</td>    <td>H</td><td>H</td></tr>
   <tr><td class='first_col'>windGustDir</td> <td>D</td><td>D</td></tr>
-  <tr><td class='first_col'>rainRate</td>    <td>H</td><td> </td></tr>
   <tr><td class='first_col'>rain</td>        <td>H</td><td>H</td></tr>
+  <tr><td class='first_col'>rainRate</td>    <td>H</td><td> </td></tr>
   <tr><td class='first_col'>dewpoint</td>    <td>S</td><td>S</td></tr>
   <tr><td class='first_col'>windchill</td>   <td>H/S</td><td>H/S</td></tr>
   <tr><td class='first_col'>heatindex</td>   <td>H/S</td><td>H/S</td></tr>
