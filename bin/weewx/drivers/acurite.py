@@ -58,13 +58,16 @@ The pressure sensor in the console reports a station pressure, but the
 firmware does some kind of averaging to it so the console displays a pressure
 that is usually nothing close to the station pressure.
 
-Apparently at least some of the consoles use the HP03S integrated pressure
-sensor:
+According to AcuRite they use a 'patented, self-adjusting altitude pressure
+compensation' algorithm.  Not helpful, and in practice not accurate.  So we
+try to get the raw data.
+
+Apparently the AcuRite bridge uses the HP03S integrated pressure sensor:
 
   http://www.hoperf.com/upload/sensor/HP03S.pdf
 
-According to AcuRite they use a 'patented, self-adjusting altitude pressure
-compensation' algorithm.
+The calculation in that specification happens to work for the AcuRite weather
+stations as well.
 
 The AcuRite station has 4 USB modes:
 
@@ -103,9 +106,9 @@ in different flavors.  One contains wind speed, wind direction, and rain
 counter.  Another contains wind speed, temperature, and humidity.  The R2
 string is 25 bytes long and contains the temperature and pressure readings
 from the console, plus a whole bunch of calibration constants required to
-figure out the actual pressure and temperature.  The R3 string contains
-historical data and (apparently) the humidity readings from the console
-sensors.
+figure out the actual pressure and temperature.  The R3 string is 33 bytes
+and contains historical data and (apparently) the humidity readings from the
+console sensors.
 
 Message Maps
 
@@ -168,7 +171,7 @@ R2 - 25 bytes
  23-24: PR measured pressure                       0x00 - 0xffff
 
 
-R3 - 594 bytes?
+R3 - 33 bytes
 
 """
 
@@ -194,7 +197,7 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.7'
+DRIVER_VERSION = '0.8'
 
 
 def loader(config_dict, engine):
@@ -380,12 +383,32 @@ class Station(object):
         return self.read(2, 25)
 
     def read_R3(self):
-        return self.read(3, 594)
+        y = self.handle.controlMsg(requestType=(usb.RECIP_INTERFACE +
+                                                usb.TYPE_CLASS),
+                                   request=usb.REQ_SET_CONFIGURATION,
+                                   buffer=2,
+                                   value=0x0201,
+                                   index=0x0,
+                                   timeout=self.timeout)
+        # FIXME: what do the two bytes mean?
+        print tstr, ' '.join(['%02x' % x for x in y])
+        for i in range(0, 18):
+            y = self.handle.controlMsg(requestType=(usb.RECIP_INTERFACE +
+                                                    usb.TYPE_CLASS +
+                                                    usb.ENDPOINT_IN),
+                                       request=usb.REQ_CLEAR_FEATURE,
+                                       buffer=33,
+                                       value=0x0103,
+                                       index=0x0,
+                                       timeout=self.timeout)
+            print tstr, ' '.join(['%02x' % x for x in y])
+            time.sleep(2)
+        return y
 
     @staticmethod
     def decode(raw):
         data = dict()
-        if len(raw) == 10:
+        if len(raw) == 10 and raw[0] == 0x01:
             if raw[3] == 0xff and raw[2] == 0xcf:
                 loginf("no sensor cluster found")
                 data['channel'] = None
@@ -405,9 +428,9 @@ class Station(object):
                     data['outTemp'] = Station.decode_outtemp(raw)
                     data['outHumidity'] = Station.decode_outhumid(raw)
             else:
-                logerr("R1: unknown message type %02x" % raw[3])
+                logerr("unknown R1 flavor %02x" % raw[3])
                 logerr(' '.join(['%02x' % x for x in raw]))
-        elif len(raw) == 25:
+        elif len(raw) == 25 and raw[0] == 0x02:
             data['pressure'], data['inTemp'] = Station.decode_pt(raw)
         else:
             logerr("unknown data string with length %d" % len(raw))
@@ -416,14 +439,11 @@ class Station(object):
 
     @staticmethod
     def decode_channel(data):
-        v = data[1] & 0xf0
-        return Station.CHANNELS.get(v)
+        return Station.CHANNELS.get(data[1] & 0xf0)
 
     @staticmethod
     def decode_sensor_id(data):
-        lhs = (data[1] & 0x0f) << 8
-        rhs = data[2]
-        return lhs | rhs
+        return ((data[1] & 0x0f) << 8) | data[2]
 
     @staticmethod
     def decode_rssi(data):
@@ -442,10 +462,10 @@ class Station(object):
         # extract the wind speed from an R1 message
         # decoded value is mph
         # return value is kph
-        # FIXME: need to verify this over a range of speeds
-        lhs = (data[4] & 0x1f) << 3
-        rhs = (data[5] & 0x70) >> 4
-        return 0.5 * (lhs | rhs) * 1.60934
+        # FIXME: the speed decoding is not correct
+        a = (data[4] & 0x1f) << 3
+        b = (data[5] & 0x70) >> 4
+        return 0.5 * (a | b) * 1.60934
 
     @staticmethod
     def decode_winddir(data):
@@ -458,11 +478,12 @@ class Station(object):
     def decode_outtemp(data):
         # extract the temperature from an R1 message
         # decoded value is degree F
+#        t_F = 0.1 * ((((data[5] & 0x0f) << 7) | (data[6] & 0x7f)) - 400)
+#        return (t_F - 32) * 5 / 9
         # return value is degree C
-        # FIXME: encoded value is probably degree C, not degree F, so the
-        #        decoding is probably easier than this...
-        t_F = 0.1 * ((((data[5] & 0x0f) << 7) | (data[6] & 0x7f)) - 400)
-        return (t_F - 32) * 5 / 9
+        a = (data[5] & 0x0f) << 7
+        b = (data[6] & 0x7f)
+        return (a | b) / 18.0 - 40.0
 
     @staticmethod
     def decode_outhumid(data):
@@ -494,14 +515,14 @@ class Station(object):
         d2 = (data[21] << 8) + data[22]
         d1 = (data[23] << 8) + data[24]
         if d2 >= c5:
-            dut = d2 - c5 - ((d2-c5)/128) * ((d2-c5)/128) * a / pow(2, c)
+            dut = d2 - c5 - ((d2-c5)/128) * ((d2-c5)/128) * a / (2<<(c-1))
         else:
-            dut = d2 - c5 - ((d2-c5)/128) * ((d2-c5)/128) * b / pow(2, c)
+            dut = d2 - c5 - ((d2-c5)/128) * ((d2-c5)/128) * b / (2<<(c-1))
         off = 4 * (c2 + (c4 - 1024) * dut / 16384)
         sens = c1 + c3 * dut / 1024
         x = sens * (d1 - 7168) / 16384 - off
         p = 0.1 * (x * 10 / 32 + c7)
-        t = 0.1 * (250 + dut * c6 / 65536 - dut / pow(2, d))
+        t = 0.1 * (250 + dut * c6 / 65536 - dut / (2<<(d-1)))
         return p, t
 
     @staticmethod
