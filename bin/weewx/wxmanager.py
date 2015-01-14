@@ -28,7 +28,7 @@ class WXDaySummaryManager(weewx.manager.DaySummaryManager):
     # Sql statement to be used to create the wind daily summaries:
     wx_sql_create_str = "CREATE TABLE %s_day_wind (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "\
       "min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, "\
-      "wsum REAL, sumtime REAL, "\
+      "wsum REAL, sumtime INTEGER, "\
       "max_dir REAL, xsum REAL, ysum REAL, dirsumtime INTEGER, squaresum REAL, wsquaresum REAL);"
                              
     def _initialize_day_tables(self, archiveSchema, cursor):

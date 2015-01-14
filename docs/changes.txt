@@ -35,6 +35,9 @@ The ultimeter driver now reads data as fast as the station can produce it.
 Typically this results in LOOP data 2 or 3 times per second, instead of
 once per second.  Thanks to user Chris Thompstone.
 
+The daily summary for wind now uses type INTEGER for column sumtime,
+like the other observation types.
+
 
 3.0.1 12/07/14
 
