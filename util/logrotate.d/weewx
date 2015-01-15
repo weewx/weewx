@@ -5,13 +5,18 @@
   compress
   delaycompress
   notifempty
-#  create 644 root adm
-  create 644 syslog adm
+# debian uses root:adm
+  create 644 root adm
+# ubuntu uses syslog:adm
+#  create 644 syslog adm
   sharedscripts
   postrotate
-    service rsyslog restart > /dev/null
+# standard way of invoking rc scripts
+    /etc/init.d/rsyslog stop
+    /etc/init.d/rsyslog start
+# upstart way of invoking rc scripts
+#    service rsyslog restart > /dev/null
+# some redhat/fedora systems have their own way
 #    reload rsyslog > /dev/null 2>&1
-#    /etc/init.d/rsyslog stop
-#    /etc/init.d/rsyslog start
   endscript
 }
