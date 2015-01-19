@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # $Id$
 # Copyright 2014 Matthew Wall
-# See the file LICENSE.txt for your full rights.
+# See the file LICENSE.txt for your rights.
 
 """Driver for ADS WS1 weather stations.
 
@@ -19,11 +19,11 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.14'
+DRIVER_VERSION = '0.15'
 
 
 def loader(config_dict, _):
-    return WS1(**config_dict[DRIVER_NAME])
+    return WS1Driver(**config_dict[DRIVER_NAME])
 
 def confeditor_loader():
     return WS1ConfEditor()
@@ -52,7 +52,7 @@ def logerr(msg):
 def _format(buf):
     return ' '.join(["%0.2X" % ord(c) for c in buf])
 
-class WS1(weewx.drivers.AbstractDevice):
+class WS1Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an ADS-WS1 station
     
     port - serial port
@@ -78,6 +78,10 @@ class WS1(weewx.drivers.AbstractDevice):
         loginf('polling interval is %s' % self.polling_interval)
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
+
+    @property
+    def hardware_name(self):
+        return "WS1"
 
     def genLoopPackets(self):
         ntries = 0
@@ -105,13 +109,8 @@ class WS1(weewx.drivers.AbstractDevice):
             logerr(msg)
             raise weewx.RetriesExceeded(msg)
 
-    @property
-    def hardware_name(self):
-        return "WS1"
-
     def _augment_packet(self, packet):
-
-        # calculate the rain
+        # calculate the rain delta from rain total
         if self.last_rain is not None:
             packet['rain'] = packet['long_term_rain'] - self.last_rain
         else:
@@ -119,7 +118,7 @@ class WS1(weewx.drivers.AbstractDevice):
         self.last_rain = packet['long_term_rain']
 
         # no wind direction when wind speed is zero
-        if not packet['windSpeed']:
+        if 'windSpeed' in packet and not packet['windSpeed']:
             packet['windDir'] = None
 
 
@@ -157,12 +156,6 @@ class Station(object):
             raise weewx.WeeWxIOError("Read expected %d chars, got %d" %
                                      (nchar, n))
         return buf
-
-    def write(self, data):
-        n = self.serial_port.write(data)
-        if n is not None and n != len(data):
-            raise weewx.WeeWxIOError("Write expected %d chars, sent %d" %
-                                     (len(data), n))
 
     def get_readings(self):
         b = []
@@ -277,4 +270,5 @@ if __name__ == '__main__':
         exit(0)
 
     with Station(options.port) as s:
-        print s.get_readings()
+        while True:
+            print time.time(), s.get_readings()
