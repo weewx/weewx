@@ -2,7 +2,7 @@
 # $Id$
 # Copyright 2014 Matthew Wall
 # Copyright 2014 Nate Bargmann <n0nb@n0nb.us>
-# See the file LICENSE.txt for your full rights.
+# See the file LICENSE.txt for your rights.
 #
 # Credit to and contributions from:
 #   Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
@@ -119,10 +119,14 @@ class Ultimeter(weewx.drivers.AbstractDevice):
             self.station.close()
             self.station = None
 
-    def getTime(self):
+    @property
+    def hardware_name(self):
+        return self.model
+
+    def DISABLED_getTime(self):
         return self.station.get_time()
 
-    def setTime(self):
+    def DISABLED_setTime(self):
         self.station.set_time(int(time.time()))
 
     def genLoopPackets(self):
@@ -137,12 +141,8 @@ class Ultimeter(weewx.drivers.AbstractDevice):
             self._augment_packet(packet)
             yield packet
 
-    @property
-    def hardware_name(self):
-        return self.model
-
     def _augment_packet(self, packet):
-        # calculate the rain
+        # calculate the rain delta from rain total
         if self.last_rain is not None:
             packet['rain'] = packet['long_term_rain'] - self.last_rain
         else:
@@ -150,7 +150,7 @@ class Ultimeter(weewx.drivers.AbstractDevice):
         self.last_rain = packet['long_term_rain']
 
         # no wind direction when wind speed is zero
-        if not packet['windSpeed']:
+        if 'windSpeed' in packet and not packet['windSpeed']:
             packet['windDir'] = None
 
 
@@ -242,7 +242,7 @@ class Station(object):
 
     def validate_string(self, buf):
         if len(buf) not in [42, 46, 50]:
-            raise weewx.WeeWxIOError("Got %d bytes, expected 50" % len(buf))
+            raise weewx.WeeWxIOError("Unexpected buffer length %d" % len(buf))
         if buf[0:2] != '!!':
             raise weewx.WeeWxIOError("Unexpected header bytes '%s'" % buf[0:2])
         return buf
