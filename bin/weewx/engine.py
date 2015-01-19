@@ -754,11 +754,12 @@ class StdReport(StdService):
 
     def shutDown(self):
         if self.thread:
+            syslog.syslog(syslog.LOG_INFO, "engine: Shutting down StdReport thread")
             self.thread.join(20.0)
             if self.thread.isAlive():
                 syslog.syslog(syslog.LOG_ERR, "engine: Unable to shut down StdReport thread")
             else:
-                syslog.syslog(syslog.LOG_DEBUG, "engine: Shut down StdReport thread.")
+                syslog.syslog(syslog.LOG_DEBUG, "engine: StdReport thread has been terminated")
         self.thread = None
         self.launch_time = None
 
