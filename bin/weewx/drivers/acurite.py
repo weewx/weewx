@@ -13,6 +13,9 @@
 # Thanks to Dave of 'desert home' (2014)
 #  http://www.desert-home.com/2014/11/acurite-weather-station-raspberry-pi.html
 #
+# Thanks to Brett Warden
+#  figured out a linear function for the pressure sensor in the 02032
+#
 # Slow-clap thanks to Michael Walsh
 #  http://forum1.valleyinfosys.com/index.php
 #
@@ -27,7 +30,7 @@ models 01025 and 01035.  It should also work with the 02032C.
 
 The AcuRite stations were introduced in 2011.  The 02032 model was introduced
 in 2013 or 2014.  It appears to be a low-end model - it has fewer buttons,
-apparently a different type of flash memory, and probably different firmware.
+and a different pressure sensor.
 
 AcuRite publishes the following specifications:
 
@@ -66,8 +69,11 @@ Apparently the AcuRite bridge uses the HP03S integrated pressure sensor:
 
   http://www.hoperf.com/upload/sensor/HP03S.pdf
 
-The calculation in that specification happens to work for the AcuRite weather
-stations as well.
+The calculation in that specification happens to work for some of the AcuRite
+consoles (01035, 01036, others?).  However, some AcuRite consoles (only the
+02032?) use the MS5607-02BA03 sensor:
+
+  http://www.meas-spec.com/downloads/MS5607-02BA03.pdf
 
 The AcuRite station has 4 USB modes:
 
@@ -91,8 +97,9 @@ the 02032 (and possibly other stations) should not use history mode at all
 because the data are written to flash memory, which wears out, sometimes
 quickly.  Some reports say this 'bricks' the station, however those reports
 mis-use the term 'brick', because the station still works and communication
-can sometimes be re-established.  In addition to the flash issue there may
-be firmware timing issues.
+can sometimes be re-established.
+
+There may be firmware timing issues that affect USB communication.
 
 The acurite stations are probably a poor choice for remote operation.  If
 the power cycles on the console, communication might not be possible.  Some
@@ -197,7 +204,7 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.8'
+DRIVER_VERSION = '0.9'
 
 
 def loader(config_dict, engine):
@@ -222,6 +229,9 @@ def logerr(msg):
 def logcrt(msg):
     logmsg(syslog.LOG_CRIT, msg)
 
+def _fmt_bytes(data):
+    return ' '.join(['%02x' % x for x in data])
+
 
 class AcuRiteDriver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an AcuRite weather station.
@@ -245,6 +255,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         return self.model
 
     def genLoopPackets(self):
+        last_raw2 = None
         ntries = 0
         while ntries < self.max_tries:
             ntries += 1
@@ -254,8 +265,10 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 with Station() as station:
                     raw1 = station.read_R1()
                     raw2 = station.read_R2()
-                packet.update(Station.decode(raw1))
-                packet.update(Station.decode(raw2))
+                Station.check_pt_constants(raw2, last_raw2)
+                last_raw2 = raw2
+                packet.update(Station.decode_R1(raw1))
+                packet.update(Station.decode_R2(raw2))
                 self._augment_packet(packet)
                 ntries = 0
                 yield packet
@@ -279,6 +292,10 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 packet['rain'] = None
             self.last_rain = packet['rain_total']
 
+        # no wind direction when wind speed is zero
+        if 'windSpeed' in packet and not packet['windSpeed']:
+            packet['windDir'] = None
+
         # if there is no connection to sensors, clear the readings
         if 'rssi' in packet and packet['rssi'] == 0:
             packet['outTemp'] = None
@@ -291,7 +308,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         if 'sensor_battery' in packet:
             packet['outTempBatteryStatus'] = 0 if packet['sensor_battery'] else 1
         if 'rssi' in packet:
-            packet['rxCheckPercent'] = packet['rssi'] / Station.MAX_RSSI
+            packet['rxCheckPercent'] = 100 * packet['rssi'] / Station.MAX_RSSI
 
 
 class Station(object):
@@ -337,8 +354,11 @@ class Station(object):
         if not self.handle:
             raise weewx.WeeWxIOError('Open USB device failed')
 
-        logdbg('mfr: %s' % self.handle.getString(dev.iManufacturer,30))
-        logdbg('product: %s' % self.handle.getString(dev.iProduct,30))
+        # These nominally report an empty string for the manufacturer and
+        # 'Chaney Instruments' for the product.  However, they do not work
+        # reliably, so these lines are commented for production use.
+#        logdbg('mfr: %s' % self.handle.getString(dev.iManufacturer,30))
+#        logdbg('product: %s' % self.handle.getString(dev.iProduct,30))
 
         # the station shows up as a HID with only one interface
         interface = 0
@@ -383,34 +403,26 @@ class Station(object):
         return self.read(2, 25)
 
     def read_R3(self):
-        y = self.handle.controlMsg(requestType=(usb.RECIP_INTERFACE +
-                                                usb.TYPE_CLASS),
-                                   request=usb.REQ_SET_CONFIGURATION,
-                                   buffer=2,
-                                   value=0x0201,
-                                   index=0x0,
-                                   timeout=self.timeout)
+        # FIXME: how many times can we do this read?  18?  hundreds?
+        # FIXME: is this a memory dump?
+        # FIXME: what controls the return values?
+        return self.read(3, 33)
+
+    def read_x(self):
         # FIXME: what do the two bytes mean?
-        print tstr, ' '.join(['%02x' % x for x in y])
-        for i in range(0, 18):
-            y = self.handle.controlMsg(requestType=(usb.RECIP_INTERFACE +
-                                                    usb.TYPE_CLASS +
-                                                    usb.ENDPOINT_IN),
-                                       request=usb.REQ_CLEAR_FEATURE,
-                                       buffer=33,
-                                       value=0x0103,
-                                       index=0x0,
-                                       timeout=self.timeout)
-            print tstr, ' '.join(['%02x' % x for x in y])
-            time.sleep(2)
-        return y
+        return self.handle.controlMsg(requestType=(usb.RECIP_INTERFACE +
+                                                   usb.TYPE_CLASS),
+                                      request=usb.REQ_SET_CONFIGURATION,
+                                      buffer=2,
+                                      value=0x0201,
+                                      index=0x0,
+                                      timeout=self.timeout)
 
     @staticmethod
-    def decode(raw):
+    def decode_R1(raw):
         data = dict()
         if len(raw) == 10 and raw[0] == 0x01:
             if raw[3] == 0xff and raw[2] == 0xcf:
-                loginf("no sensor cluster found")
                 data['channel'] = None
                 data['sensor_id'] = None
                 data['rssi'] = None
@@ -428,13 +440,19 @@ class Station(object):
                     data['outTemp'] = Station.decode_outtemp(raw)
                     data['outHumidity'] = Station.decode_outhumid(raw)
             else:
-                logerr("unknown R1 flavor %02x" % raw[3])
-                logerr(' '.join(['%02x' % x for x in raw]))
-        elif len(raw) == 25 and raw[0] == 0x02:
+                logerr("unknown R1 flavor %02x: %s" % (
+                        raw[3], _fmt_bytes(raw)))
+        else:
+            logerr("unknown R1 length %d: %s" % (len(raw), _fmt_bytes(raw)))
+        return data
+
+    @staticmethod
+    def decode_R2(raw):
+        data = dict()
+        if len(raw) == 25 and raw[0] == 0x02:
             data['pressure'], data['inTemp'] = Station.decode_pt(raw)
         else:
-            logerr("unknown data string with length %d" % len(raw))
-            logerr(' '.join(['%02x' % x for x in raw]))
+            logerr("unknown R2 length %d: %s" % (len(raw), _fmt_bytes(raw)))
         return data
 
     @staticmethod
@@ -501,19 +519,29 @@ class Station(object):
     def decode_pt(data):
         # decode pressure and temperature from the R2 message
         # decoded pressure is mbar, decoded temperature is degree C
-        c1 = (data[3] << 8) + data[4]
-        c2 = (data[5] << 8) + data[6]
-        c3 = (data[7] << 8) + data[8]
-        c4 = (data[9] << 8) + data[10]
-        c5 = (data[11] << 8) + data[12]
-        c6 = (data[13] << 8) + data[14]
-        c7 = (data[15] << 8) + data[16]
-        a = data[17]
-        b = data[18]
-        c = data[19]
-        d = data[20]
+        c1,c2,c3,c4,c5,c6,c7,a,b,c,d = Station.get_pt_constants(data)
         d2 = (data[21] << 8) + data[22]
         d1 = (data[23] << 8) + data[24]
+
+        if (c1 == 0x8000 and c2 == c3 == 0x0 and c4 == 0x0400 and c5 == 0x1000
+            and c6 == 0x0 and c7 == 0x0960 and a == b == c == d == 0x1):
+            return Station.decode_pt_MS5607(d1, d2)
+        elif (0x100 <= c1 <= 0xffff and
+              0x0 <= c2 <= 0x1fff and
+              0x0 <= c3 <= 0x400 and
+              0x0 <= c4 <= 0x1000 and
+              0x1000 <= c5 <= 0xffff and
+              0x0 <= c6 <= 0x4000 and
+              0x960 <= c7 <= 0xa28 and
+              0x01 <= a <= 0x3f and 0x01 <= b <= 0x3f and
+              0x01 <= c <= 0x0f and 0x01 <= d <= 0x0f):
+            return Station.decode_pt_HP03S(c1,c2,c3,c4,c5,c6,c7,a,b,c,d,d1,d2)
+        logerr("unknown R2 calibration constants: %s" % _fmt_bytes(data))
+        return None, None
+
+    @staticmethod
+    def decode_pt_HP03S(c1,c2,c3,c4,c5,c6,c7,a,b,c,d,d1,d2):
+        # for devices with the HP03S pressure sensor
         if d2 >= c5:
             dut = d2 - c5 - ((d2-c5)/128) * ((d2-c5)/128) * a / (2<<(c-1))
         else:
@@ -526,9 +554,41 @@ class Station(object):
         return p, t
 
     @staticmethod
+    def decode_pt_MS5607(d1, d2):
+        # for devices with the MS5607 sensor, do a linear scaling
+        p = 0.062424282478109 * d1 - 206.48350164881
+        t = 0.049538214503151 * d2 - 1801.189704931
+        return p, t
+
+    @staticmethod
     def decode_inhumid(data):
         # FIXME: decode inside humidity
         return None
+
+    @staticmethod
+    def get_pt_constants(data):
+        c1 = (data[3] << 8) + data[4]
+        c2 = (data[5] << 8) + data[6]
+        c3 = (data[7] << 8) + data[8]
+        c4 = (data[9] << 8) + data[10]
+        c5 = (data[11] << 8) + data[12]
+        c6 = (data[13] << 8) + data[14]
+        c7 = (data[15] << 8) + data[16]
+        a = data[17]
+        b = data[18]
+        c = data[19]
+        d = data[20]
+        return (c1,c2,c3,c4,c5,c6,c7,a,b,c,d)
+
+    @staticmethod
+    def check_pt_constants(a, b):
+        if b is None or len(a) != 25 or len(b) != 25:
+            return
+        c1 = Station.get_pt_constants(a)
+        c2 = Station.get_pt_constants(b)
+        if c1 != c2:
+            logerr("R2 constants changed: old: [%s] new: [%s]" % (
+                    _fmt_bytes(a), _fmt_bytes(b)))
 
     @staticmethod
     def _find_dev(vendor_id, product_id, device_id=None):
@@ -587,7 +647,7 @@ if __name__ == '__main__':
             r1 = s.read_R1()
             r2 = s.read_R2()
 #            r3 = s.read_R3()
-            print tstr, ' '.join(['%02x' % x for x in r1]), Station.decode(r1)
-            print tstr, ' '.join(['%02x' % x for x in r2]), Station.decode(r2)
-#            print tstr, ' '.join(['%02x' % x for x in r3])
+            print tstr, _fmt_bytes(r1), Station.decode_R1(r1)
+            print tstr, _fmt_bytes(r2), Station.decode_R2(r2)
+#            print tstr, _fmt_bytes(r3)
             time.sleep(18)

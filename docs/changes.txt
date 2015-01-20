@@ -29,7 +29,8 @@ Fixed sign bug in ultimeter driver.  Thanks to user Garrett Power.
 Use a sliding window with default period of 15 minutes to calculate the
 rainRate for stations that do not provide it.
 
-Added support for AcuRite weather stations.
+Added support for AcuRite weather stations.  Thanks to users Rich of Modern
+Toil, George Nincehelser, Brett Warden, Preston Moulton, and Andy.
 
 The ultimeter driver now reads data as fast as the station can produce it.
 Typically this results in LOOP data 2 or 3 times per second, instead of
