@@ -121,39 +121,47 @@ Message Maps
 
 R1 - 10 bytes
  0  1  2  3  4  5  6  7  8  9
-01 CF FF FF FF FF FF FF 00 00
+01 CF FF FF FF FF FF FF 00 00      no sensor unit found
+01 FF FF FF FF FF FF FF FF 00      no sensor unit found
+01 8b fa 71 00 06 00 0c 00 00      connection to sensor unit lost
+01 8b fa 78 00 08 75 24 01 00      
 01 8b fa 78 00 08 48 25 03 ff
 01 8b fa 71 00 06 00 02 03 ff
 01 C0 5C 78 00 08 1F 53 03 FF
 01 C0 5C 71 00 05 00 0C 03 FF
-01 CF FF FF FF FF FF FF 00 00      no sensor unit found
-01 8b fa 71 00 06 00 0c 00 00      connection to sensor unit lost
+
+01 CS SS ?1 ?W WD 00 RR ?r ??
+01 CS SS ?8 ?W WT TT HH ?r ??
 
 0: identifier                      01 indicates R1 messages
-1: channel        x & 0xf0         observed values: 0xC=A, 0x8=B, 0x0=C
-1: sensor_id hi   x & 0x0f
+1: channel         x & 0xf0        observed values: 0xC=A, 0x8=B, 0x0=C
+1: sensor_id hi    x & 0x0f
 2: sensor_id lo
-3: message flavor                  type 1 is windSpeed, windDir, rain
+3: ?sensor type    x & 0xf0        7 is 5-in-1
+3: message flavor  x & 0x0f        type 1 is windSpeed, windDir, rain
 4: wind speed     (x & 0x1f) << 3
 5: wind speed     (x & 0x70) >> 4
 5: wind dir       (x & 0x0f)
 6: ?                               always seems to be 0
 7: rain           (x & 0x7f)
+8: ?battery       (x & 0xf0)
 8: rssi           (x & 0x0f)       observed values: 0,1,2,3
-9: ?battery level (x & 0xff)       observed values: 0x00, 0xff
+9:                                 observed values: 0x00, 0xff
 
 0: identifier                      01 indicates R1 messages
-1: channel        x & 0xf0         observed values: 0xC=A, 0x8=B, 0x0=C
-1: sensor_id hi   x & 0x0f
+1: channel         x & 0xf0        observed values: 0xC=A, 0x8=B, 0x0=C
+1: sensor_id hi    x & 0x0f
 2: sensor_id lo
-3: message flavor                  type 8 is windSpeed, outTemp, outHumidity
+3: ?sensor type    x & 0xf0        7 is 5-in-1
+3: message flavor  x & 0x0f        type 8 is windSpeed, outTemp, outHumidity
 4: wind speed     (x & 0x1f) << 3
 5: wind speed     (x & 0x70) >> 4
 5: temp           (x & 0x0f) << 7
 6: temp           (x & 0x7f)
 7: humidity       (x & 0x7f)
+8: ?battery       (x & 0xf0)
 8: rssi           (x & 0x0f)       observed values: 0,1,2,3
-9: ?battery level (x & 0xff)       observed values: 0x00, 0xff
+9:                                 observed values: 0x00, 0xff
 
 
 R2 - 25 bytes
@@ -204,7 +212,8 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.9'
+DRIVER_VERSION = '0.10'
+DEBUG_RAW = 0
 
 
 def loader(config_dict, engine):
@@ -250,6 +259,9 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         self.last_rain = None
         loginf('driver version is %s' % DRIVER_VERSION)
 
+        global DEBUG_RAW
+        DEBUG_RAW = int(stn_dict.get('debug_raw', 0))
+
     @property
     def hardware_name(self):
         return self.model
@@ -265,7 +277,10 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 with Station() as station:
                     raw1 = station.read_R1()
                     raw2 = station.read_R2()
-                Station.check_pt_constants(raw2, last_raw2)
+                if DEBUG_RAW > 0:
+                    logdbg("R1: %s" % _fmt_bytes(raw1))
+                    logdbg("R2: %s" % _fmt_bytes(raw2))
+                Station.check_pt_constants(last_raw2, raw2)
                 last_raw2 = raw2
                 packet.update(Station.decode_R1(raw1))
                 packet.update(Station.decode_R2(raw2))
@@ -297,7 +312,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
             packet['windDir'] = None
 
         # if there is no connection to sensors, clear the readings
-        if 'rssi' in packet and packet['rssi'] == 0:
+        if 'rssi' in packet and  packet['rssi'] == 0:
             packet['outTemp'] = None
             packet['outHumidity'] = None
             packet['windSpeed'] = None
@@ -307,7 +322,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         # map raw data to observations in the default database schema
         if 'sensor_battery' in packet:
             packet['outTempBatteryStatus'] = 0 if packet['sensor_battery'] else 1
-        if 'rssi' in packet:
+        if 'rssi' in packet and packet['rssi'] is not None:
             packet['rxCheckPercent'] = 100 * packet['rssi'] / Station.MAX_RSSI
 
 
@@ -383,7 +398,7 @@ class Station(object):
             try:
                 self.handle.releaseInterface()
             except Exception, e:
-                logerr("release failed: %s" % e)
+                logerr("release interface failed: %s" % e)
             self.handle = None
 
     def read(self, msgtype, nbytes):
@@ -423,11 +438,19 @@ class Station(object):
         data = dict()
         if len(raw) == 10 and raw[0] == 0x01:
             if raw[3] == 0xff and raw[2] == 0xcf:
+                loginf("R1: no sensors found: %s" % _fmt_bytes(raw))
                 data['channel'] = None
                 data['sensor_id'] = None
                 data['rssi'] = None
                 data['sensor_battery'] = None
-            elif raw[3] & 0x0f == 1 or raw[3] & 0x0f == 8:
+            elif raw[9] == 0x00:
+                loginf("R1: dodgey data: %s" % _fmt_bytes(raw))
+                data['channel'] = Station.decode_channel(raw)
+                data['sensor_id'] = Station.decode_sensor_id(raw)
+                data['rssi'] = Station.decode_rssi(raw)
+                data['sensor_battery'] = Station.decode_sensor_battery(raw)
+            elif (raw[3] & 0xf0 == 0x70 and
+                  (raw[3] & 0x0f == 1 or raw[3] & 0x0f == 8)):
                 data['channel'] = Station.decode_channel(raw)
                 data['sensor_id'] = Station.decode_sensor_id(raw)
                 data['rssi'] = Station.decode_rssi(raw)
@@ -440,10 +463,10 @@ class Station(object):
                     data['outTemp'] = Station.decode_outtemp(raw)
                     data['outHumidity'] = Station.decode_outhumid(raw)
             else:
-                logerr("unknown R1 flavor %02x: %s" % (
+                logerr("R1: unknown flavor %02x: %s" % (
                         raw[3], _fmt_bytes(raw)))
         else:
-            logerr("unknown R1 length %d: %s" % (len(raw), _fmt_bytes(raw)))
+            logerr("R1: unknown: %s" % _fmt_bytes(raw))
         return data
 
     @staticmethod
@@ -452,7 +475,7 @@ class Station(object):
         if len(raw) == 25 and raw[0] == 0x02:
             data['pressure'], data['inTemp'] = Station.decode_pt(raw)
         else:
-            logerr("unknown R2 length %d: %s" % (len(raw), _fmt_bytes(raw)))
+            logerr("R2: unknown: %s" % _fmt_bytes(raw))
         return data
 
     @staticmethod
@@ -470,10 +493,10 @@ class Station(object):
 
     @staticmethod
     def decode_sensor_battery(data):
-        # battery level is 0xff or 0x00
+        # battery level is 0xf or 0x0?
         # return the weewx convention of 0 for ok, 1 for fail
         # FIXME: need to verify this
-        return data[9] & 0xff
+        return 0 if (data[8] & 0xf0) == 0 else 1
 
     @staticmethod
     def decode_windspeed(data):
@@ -495,7 +518,6 @@ class Station(object):
     @staticmethod
     def decode_outtemp(data):
         # extract the temperature from an R1 message
-        # decoded value is degree F
 #        t_F = 0.1 * ((((data[5] & 0x0f) << 7) | (data[6] & 0x7f)) - 400)
 #        return (t_F - 32) * 5 / 9
         # return value is degree C
@@ -536,7 +558,7 @@ class Station(object):
               0x01 <= a <= 0x3f and 0x01 <= b <= 0x3f and
               0x01 <= c <= 0x0f and 0x01 <= d <= 0x0f):
             return Station.decode_pt_HP03S(c1,c2,c3,c4,c5,c6,c7,a,b,c,d,d1,d2)
-        logerr("unknown R2 calibration constants: %s" % _fmt_bytes(data))
+        logerr("R2: unknown calibration constants: %s" % _fmt_bytes(data))
         return None, None
 
     @staticmethod
@@ -582,12 +604,12 @@ class Station(object):
 
     @staticmethod
     def check_pt_constants(a, b):
-        if b is None or len(a) != 25 or len(b) != 25:
+        if a is None or len(a) != 25 or len(b) != 25:
             return
         c1 = Station.get_pt_constants(a)
         c2 = Station.get_pt_constants(b)
         if c1 != c2:
-            logerr("R2 constants changed: old: [%s] new: [%s]" % (
+            logerr("R2: constants changed: old: [%s] new: [%s]" % (
                     _fmt_bytes(a), _fmt_bytes(b)))
 
     @staticmethod
@@ -597,7 +619,7 @@ class Station(object):
             for dev in bus.devices:
                 if dev.idVendor == vendor_id and dev.idProduct == product_id:
                     if device_id is None or dev.filename == device_id:
-                        logdbg('Found device at bus=%s device=%s' %
+                        logdbg('Found station at bus=%s device=%s' %
                                (bus.dirname, dev.filename))
                         return dev
         return None
