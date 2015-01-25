@@ -121,52 +121,55 @@ Message Maps
 
 R1 - 10 bytes
  0  1  2  3  4  5  6  7  8  9
+01 CS SS ?1 ?W WD 00 RR ?r ??
+01 CS SS ?8 ?W WT TT HH ?r ??
+
 01 CF FF FF FF FF FF FF 00 00      no sensor unit found
 01 FF FF FF FF FF FF FF FF 00      no sensor unit found
 01 8b fa 71 00 06 00 0c 00 00      connection to sensor unit lost
-01 8b fa 78 00 08 75 24 01 00      
-01 8b fa 78 00 08 48 25 03 ff
-01 8b fa 71 00 06 00 02 03 ff
-01 C0 5C 78 00 08 1F 53 03 FF
-01 C0 5C 71 00 05 00 0C 03 FF
-
-01 CS SS ?1 ?W WD 00 RR ?r ??
-01 CS SS ?8 ?W WT TT HH ?r ??
+01 8b fa 78 00 08 75 24 01 00      connection to sensor unit weak/lost
+01 8b fa 78 00 08 48 25 03 ff      flavor 8
+01 8b fa 71 00 06 00 02 03 ff      flavor 1
+01 C0 5C 78 00 08 1F 53 03 FF      flavor 8
+01 C0 5C 71 00 05 00 0C 03 FF      flavor 1
 
 0: identifier                      01 indicates R1 messages
 1: channel         x & 0xf0        observed values: 0xC=A, 0x8=B, 0x0=C
 1: sensor_id hi    x & 0x0f
 2: sensor_id lo
-3: ?sensor type    x & 0xf0        7 is 5-in-1
+3: ?sensor type    x & 0xf0        7 is 5-in-1?
 3: message flavor  x & 0x0f        type 1 is windSpeed, windDir, rain
 4: wind speed     (x & 0x1f) << 3
 5: wind speed     (x & 0x70) >> 4
 5: wind dir       (x & 0x0f)
 6: ?                               always seems to be 0
 7: rain           (x & 0x7f)
-8: ?battery       (x & 0xf0)
+8: ?battery       (x & 0xf0)       0 is normal?
 8: rssi           (x & 0x0f)       observed values: 0,1,2,3
-9:                                 observed values: 0x00, 0xff
+9: ?                               observed values: 0x00, 0xff
 
 0: identifier                      01 indicates R1 messages
 1: channel         x & 0xf0        observed values: 0xC=A, 0x8=B, 0x0=C
 1: sensor_id hi    x & 0x0f
 2: sensor_id lo
-3: ?sensor type    x & 0xf0        7 is 5-in-1
+3: ?sensor type    x & 0xf0        7 is 5-in-1?
 3: message flavor  x & 0x0f        type 8 is windSpeed, outTemp, outHumidity
 4: wind speed     (x & 0x1f) << 3
 5: wind speed     (x & 0x70) >> 4
 5: temp           (x & 0x0f) << 7
 6: temp           (x & 0x7f)
 7: humidity       (x & 0x7f)
-8: ?battery       (x & 0xf0)
+8: ?battery       (x & 0xf0)       0 is normal?
 8: rssi           (x & 0x0f)       observed values: 0,1,2,3
-9:                                 observed values: 0x00, 0xff
+9: ?                               observed values: 0x00, 0xff
 
 
 R2 - 25 bytes
  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+02 00 00 C1 C1 C2 C2 C3 C3 C4 C4 C5 C5 C6 C6 C7 C7 AA BB CC DD TR TR PR PR
+
 02 00 00 4C BE 0D EC 01 52 03 62 7E 38 18 EE 09 C4 08 22 06 07 7B A4 8A 46
+02 00 00 80 00 00 00 00 00 04 00 10 00 00 00 09 60 01 01 01 01 8F C7 4C D3
 
  0: identifier                                     02 indicates R2 messages
  1: ?                                              always seems to be 0
@@ -187,10 +190,20 @@ R2 - 25 bytes
 
 
 R3 - 33 bytes
+ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 ...
+03 aa 55 01 00 00 00 20 20 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ...
 
+
+X1 - 2 bytes
+ 0  2
+7c e2
+84 e2
+
+0: ?
+1: ?
 """
 
-# FIXME: how to set mode via software?
+# FIXME: can we set mode via software?
 # FIXME: how to detect mode via software?
 # FIXME: how to download stored data?
 # FIXME: can the archive interval be changed?
@@ -212,7 +225,7 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.10'
+DRIVER_VERSION = '0.11'
 DEBUG_RAW = 0
 
 
@@ -257,6 +270,8 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         self.retry_wait = int(stn_dict.get('retry_wait', 10))
         self.polling_interval = int(stn_dict.get('polling_interval', 18))
         self.last_rain = None
+        self.last_r3 = None
+        self.r3_fail_count = 0
         loginf('driver version is %s' % DRIVER_VERSION)
 
         global DEBUG_RAW
@@ -272,14 +287,16 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         while ntries < self.max_tries:
             ntries += 1
             try:
-                packet = {'dateTime': int(time.time() + 0.5),
-                          'usUnits': weewx.METRIC}
+                now = int(time.time() + 0.5)
+                packet = {'dateTime': now, 'usUnits': weewx.METRIC}
                 with Station() as station:
                     raw1 = station.read_R1()
                     raw2 = station.read_R2()
+#                    raw3 = self.read_R3(station, now)
                 if DEBUG_RAW > 0:
                     logdbg("R1: %s" % _fmt_bytes(raw1))
                     logdbg("R2: %s" % _fmt_bytes(raw2))
+#                    logdbg("R3: %s" % _fmt_bytes(raw3))
                 Station.check_pt_constants(last_raw2, raw2)
                 last_raw2 = raw2
                 packet.update(Station.decode_R1(raw1))
@@ -321,9 +338,31 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
 
         # map raw data to observations in the default database schema
         if 'sensor_battery' in packet:
-            packet['outTempBatteryStatus'] = 0 if packet['sensor_battery'] else 1
+            if packet['sensor_battery'] is not None:
+                packet['txTempBatteryStatus'] = 1 if packet['sensor_battery'] else 0
+            else:
+                packet['txTempBatteryStatus'] = None
         if 'rssi' in packet and packet['rssi'] is not None:
             packet['rxCheckPercent'] = 100 * packet['rssi'] / Station.MAX_RSSI
+
+    def read_R3(self, station, now):
+        # attempt to read R3 every 12 minutes.  if the read fails multiple
+        # times, make a single log message about enabling usb mode 3 then do
+        # not try it again.
+        r3 = []
+        if self.r3_fail_count > 3:
+            return r3
+        if self.last_r3 is None or now - self.last_r3 > 720:
+            try:
+                x = statoin.read_x()
+                r3 = station.read_R3()
+                self.last_r3 = now
+            except usb.USBError, e:
+                logdbg("R3: read failed: %s" % e)
+                self.r3_fail_count += 1
+                if self.r3_fail_count > 3:
+                    loginf("R3: put station in USB mode 3 to enable R3 data")
+        return r3
 
 
 class Station(object):
@@ -418,7 +457,7 @@ class Station(object):
         return self.read(2, 25)
 
     def read_R3(self):
-        # FIXME: how many times can we do this read?  18?  hundreds?
+        # FIXME: how many times can we do this read before timeout?
         # FIXME: is this a memory dump?
         # FIXME: what controls the return values?
         return self.read(3, 33)
@@ -444,13 +483,14 @@ class Station(object):
                 data['rssi'] = None
                 data['sensor_battery'] = None
             elif raw[9] == 0x00:
-                loginf("R1: dodgey data: %s" % _fmt_bytes(raw))
+                loginf("R1: ignoring dodgey data: %s" % _fmt_bytes(raw))
                 data['channel'] = Station.decode_channel(raw)
                 data['sensor_id'] = Station.decode_sensor_id(raw)
                 data['rssi'] = Station.decode_rssi(raw)
-                data['sensor_battery'] = Station.decode_sensor_battery(raw)
-            elif (raw[3] & 0xf0 == 0x70 and
-                  (raw[3] & 0x0f == 1 or raw[3] & 0x0f == 8)):
+                data['sensor_battery'] = None
+            elif raw[3] & 0x0f == 1 or raw[3] & 0x0f == 8:
+                if raw[3] & 0xf0 != 0x70:
+                    loginf("R1: unexpected sensor type: %s" % _fmt_bytes(raw))
                 data['channel'] = Station.decode_channel(raw)
                 data['sensor_id'] = Station.decode_sensor_id(raw)
                 data['rssi'] = Station.decode_rssi(raw)
@@ -463,10 +503,11 @@ class Station(object):
                     data['outTemp'] = Station.decode_outtemp(raw)
                     data['outHumidity'] = Station.decode_outhumid(raw)
             else:
-                logerr("R1: unknown flavor %02x: %s" % (
-                        raw[3], _fmt_bytes(raw)))
+                logerr("R1: unknown format: %s" % _fmt_bytes(raw))
+        elif len(raw) == 10:
+            logerr("R1: bad format: %s" % _fmt_bytes(raw))
         else:
-            logerr("R1: unknown: %s" % _fmt_bytes(raw))
+            logerr("R1: bad length: %s" % _fmt_bytes(raw))
         return data
 
     @staticmethod
@@ -474,8 +515,10 @@ class Station(object):
         data = dict()
         if len(raw) == 25 and raw[0] == 0x02:
             data['pressure'], data['inTemp'] = Station.decode_pt(raw)
+        elif len(raw) == 25:
+            logerr("R2: bad format: %s" % _fmt_bytes(raw))
         else:
-            logerr("R2: unknown: %s" % _fmt_bytes(raw))
+            logerr("R2: bad length: %s" % _fmt_bytes(raw))
         return data
 
     @staticmethod
@@ -494,9 +537,8 @@ class Station(object):
     @staticmethod
     def decode_sensor_battery(data):
         # battery level is 0xf or 0x0?
-        # return the weewx convention of 0 for ok, 1 for fail
         # FIXME: need to verify this
-        return 0 if (data[8] & 0xf0) == 0 else 1
+        return data[8] & 0xf0
 
     @staticmethod
     def decode_windspeed(data):
@@ -666,10 +708,20 @@ if __name__ == '__main__':
             ts = int(time.time())
             tstr = "%s (%d)" % (time.strftime("%Y-%m-%d %H:%M:%S %Z",
                                               time.localtime(ts)), ts)
+
+#            try:
+#                x = s.read_x()
+#                print tstr, _fmt_bytes(x)
+#                for i in range(0, 500):
+#                    r3 = s.read_R3()
+#                    print tstr, _fmt_bytes(r3)
+#                    time.sleep(1)
+#           except usb.USBError, e:
+#                print tstr, e
+#            time.sleep(12*60)
+
             r1 = s.read_R1()
             r2 = s.read_R2()
-#            r3 = s.read_R3()
             print tstr, _fmt_bytes(r1), Station.decode_R1(r1)
             print tstr, _fmt_bytes(r2), Station.decode_R2(r2)
-#            print tstr, _fmt_bytes(r3)
             time.sleep(18)
