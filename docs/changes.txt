@@ -8,7 +8,8 @@ Fixed setup.py bug that caused list-drivers to fail on deb and rpm installs.
 Added a wait-and-check to the stop option in the weewx.debian rc script.
 
 Fixed bug in the Vantage driver that causes below sea-level altitudes 
-to be read as a large positive number.
+to be read as a large positive number. Also, fixed problem with altitude
+units when doing --info (ticket #42).
 
 Fixed bug in wmr100 driver that causes gust wind direction to be null.
 

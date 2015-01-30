@@ -1796,6 +1796,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             _firmware_version = '<Unavailable>'
     
         console_time = station.getConsoleTime()
+        altitude_converted = weewx.units.convert(station.altitude_vt, station.altitude_unit)[0]
     
         print >>dest, """Davis Vantage EEPROM settings:
     
@@ -1819,7 +1820,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
       Rain:                         %s
       Wind:                         %s
       """ % (station.hardware_name, _firmware_date, _firmware_version,
-             station.archive_interval, station.altitude, station.altitude_unit,
+             station.archive_interval, altitude_converted, station.altitude_unit,
              station.wind_cup_size, station.rain_bucket_size,
              station.rain_year_start, console_time,
              station.barometer_unit, station.temperature_unit, 

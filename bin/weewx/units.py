@@ -993,7 +993,7 @@ def convert(val_t, target_unit_type):
     target_unit_type: The unit type (e.g., "meter", or "mbar") to
     which the value is to be converted. 
     
-    returns: An instance of weewx.ValueTuple, converted into the desired units.
+    returns: An instance of ValueTuple, converted into the desired units.
     """
     # If the value is already in the target unit type, then just return it:
     if val_t[1] == target_unit_type:
