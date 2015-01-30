@@ -1,5 +1,3 @@
-Links to Wunderfixer seem to have gotten lost on the website.
-
 wee_config_device --dump should be able to dump to a metric units database.
 
 See if it is possible to make cheetahgenerator not require a default wx_binding
