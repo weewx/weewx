@@ -51,7 +51,8 @@ Fixed problem where dumping to database could cause stats to get added to
 the daily summaries twice.
 
 Secure FTP (SFTP) sessions are now possible, but don't work very well with
-Microsoft FTP servers.
+Microsoft FTP servers. Requires Python v2.7. Will not work with older
+versions of Python. Fixes ticket #37.
 
 
 3.0.1 12/07/14

@@ -66,6 +66,16 @@ class FtpUpload(object):
         
         returns: the number of files uploaded."""
         
+        if self.secure:
+            try:
+                FTPClass = ftplib.FTP_TLS
+            except AttributeError:
+                FTPClass = ftplib.FTP
+                syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Your version of Python does not support SFTP. Using unsecure connection.")
+                self.secure = False
+        else:
+            FTPClass = ftplib.FTP
+        
         # Get the timestamp and members of the last upload:
         (timestamp, fileset) = self.getLastUpload()
 
@@ -73,10 +83,10 @@ class FtpUpload(object):
         try:
             if self.secure:
                 syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Attempting secure connection to %s" % self.server)
-                ftp_server = ftplib.FTP_TLS()
+                ftp_server = FTPClass()
             else:
                 syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Attempting connection to %s" % self.server)
-                ftp_server = ftplib.FTP()
+                ftp_server = FTPClass()
             ftp_server.connect(self.server, self.port)
 
             # Uncommenting the following line will send lots of debug information to stdout:
