@@ -703,7 +703,7 @@ class AmbientThread(RESTThread):
     
         _liststr = ["action=updateraw", 
                     "ID=%s" % self.station,
-                    "PASSWORD=%s" % self.password,
+                    "PASSWORD=%s" % urllib.quote(self.password),
                     "softwaretype=weewx-%s" % weewx.__version__]
         
         # Go through each of the supported types, formatting it, then adding
@@ -718,7 +718,7 @@ class AmbientThread(RESTThread):
                     # fiddled with formatting, and it seems that escaping the
                     # colons helps its reliability. But, I could be imagining
                     # things.
-                    _v = urllib.quote(datetime.datetime.utcfromtimestamp(_v).isoformat('+'), '-+')
+                    _v = urllib.quote(str(datetime.datetime.utcfromtimestamp(_v)))
                 # Format the value, and accumulate in _liststr:
                 _liststr.append(AmbientThread._formats[_key] % _v)
         # Now stick all the pieces together with an ampersand between them:
