@@ -50,6 +50,9 @@ Fixes ticket #40.
 Fixed problem where dumping to database could cause stats to get added to
 the daily summaries twice.
 
+Secure FTP (SFTP) sessions are now possible, but don't work very well with
+Microsoft FTP servers.
+
 
 3.0.1 12/07/14
 

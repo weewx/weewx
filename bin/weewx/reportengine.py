@@ -204,7 +204,8 @@ class FtpGenerator(ReportGenerator):
                                                   port        = int(self.skin_dict.get('port', 21)),
                                                   name        = self.skin_dict['REPORT_NAME'],
                                                   passive     = to_bool(self.skin_dict.get('passive', True)),
-                                                  max_tries   = int(self.skin_dict.get('max_tries', 3)))
+                                                  max_tries   = int(self.skin_dict.get('max_tries', 3)),
+                                                  secure      = to_bool(self.skin_dict.get('secure_ftp', False)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: FTP upload not requested. Skipped.")
             return
