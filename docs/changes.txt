@@ -42,7 +42,13 @@ like the other observation types.
 
 Utility wee_reports no longer chokes if the optionally-specified timestamp
 is not in the database. Can also use "nearest time" if option 'max_delta'
-is specified in [CheetahGenerator].  
+is specified in [CheetahGenerator].
+
+Utility wee_config_device can now dump Vantage loggers to metric databases.
+Fixes ticket #40.
+
+Fixed problem where dumping to database could cause stats to get added to
+the daily summaries twice.
 
 
 3.0.1 12/07/14

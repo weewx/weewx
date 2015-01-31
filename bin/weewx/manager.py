@@ -232,9 +232,15 @@ class Manager(object):
         with weedb.Transaction(self.connection) as cursor:
 
             for record in record_list:
-                self._addSingleRecord(record, cursor, log_level)
-                min_ts = min(min_ts, record['dateTime']) if min_ts is not None else record['dateTime']
-                max_ts = max(max_ts, record['dateTime'])
+                try:
+                    self._addSingleRecord(record, cursor, log_level)
+                    min_ts = min(min_ts, record['dateTime']) if min_ts is not None else record['dateTime']
+                    max_ts = max(max_ts, record['dateTime'])
+                except Exception, e:
+                    syslog.syslog(syslog.LOG_ERR, "manager: unable to add record %s to database '%s': %s" %
+                                  (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
+                                   self.database_name,
+                                   e))
 
         # Update the cached timestamps. This has to sit outside the
         # transaction context, in case an exception occurs.
@@ -271,16 +277,10 @@ class Manager(object):
         q_str = ','.join('?' * len(key_list))
         # Form the SQL insert statement:
         sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str) 
-        try:
-            cursor.execute(sql_insert_stmt, value_list)
-            syslog.syslog(log_level, "manager: added record %s to database '%s'" % 
-                          (weeutil.weeutil.timestamp_to_string(record['dateTime']),
-                           self.database_name))
-        except Exception, e:
-            syslog.syslog(syslog.LOG_ERR, "manager: unable to add record %s to database '%s': %s" %
-                          (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
-                           self.database_name,
-                           e))
+        cursor.execute(sql_insert_stmt, value_list)
+        syslog.syslog(log_level, "manager: added record %s to database '%s'" % 
+                      (weeutil.weeutil.timestamp_to_string(record['dateTime']),
+                       self.database_name))
 
     def genBatchRows(self, startstamp=None, stopstamp=None):
         """Generator function that yields raw rows from the archive database

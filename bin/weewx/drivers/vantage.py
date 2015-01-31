@@ -2225,12 +2225,15 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                                             default_binding_dict={'table_name' : 'archive',
                                                                                   'manager' : 'weewx.wxmanager.WXDaySummaryManager',
                                                                                   'schema' : 'schemas.wview.schema'}) as archive:
-                    print "Starting dump ..."
                     nrecs = 0
-                    for record in station.genArchiveDump():
+                    # Wrap the Vantage generator function in a converter, which will convert the units to the
+                    # same units used by the database:
+                    converted_generator = weewx.units.GenWithConvert(station.genArchiveDump(), archive.std_unit_system)
+                    print "Starting dump ..."
+                    for record in converted_generator:
                         archive.addRecord(record)
                         nrecs += 1
-                        if nrecs%10 == 0:
+                        if nrecs % 10 == 0:
                             print >>sys.stdout, "Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(record['dateTime'])),
                             sys.stdout.flush()
                     print "\nFinished dump. %d records added" % (nrecs,)
