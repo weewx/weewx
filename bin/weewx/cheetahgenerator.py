@@ -70,7 +70,7 @@ import weewx.reportengine
 import weewx.station
 import weewx.units
 import weewx.tags
-from weeutil.weeutil import to_int
+from weeutil.weeutil import to_int, timestamp_to_string
 
 # Default search list:
 default_search_list = [
@@ -111,9 +111,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         stn_info:         An instance of weewx.station.StationInfo
         formatter:        An instance of weewx.units.Formatter
         converter:        An instance of weewx.units.Converter
-        unitInfoHelper:   An instance of weewx.units.UnitInfoHelper
-        search_list_exts: A list holding search list extensions, new style
-        search_list_objs: A list holding search list extensions, old style
+        search_list_objs: A list holding search list extensions
         db_binder:        An instance of weewx.manager.DBBinder from which the data should be extracted
     """
 
@@ -227,10 +225,19 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         default_archive = self.db_binder.get_manager(default_binding)
         start_ts = default_archive.firstGoodStamp()
         if not start_ts:
-            loginf('skipping report %s: cannot find start time' % section)
+            loginf('Skipping template %s: cannot find start time' % section['template'])
             return ngen
-        stop_ts = gen_ts if gen_ts else default_archive.lastGoodStamp()
 
+        if gen_ts:
+            record = default_archive.getRecord(gen_ts, max_delta=to_int(report_dict.get('max_delta')))
+            if record:
+                stop_ts = record['dateTime']
+            else:
+                loginf('Skipping template %s; generate time %s not in database' % (section['template'], timestamp_to_string(gen_ts)) )
+                return ngen
+        else:
+            stop_ts = default_archive.lastGoodStamp()
+        
         # Get an appropriate generator function
         summarize_by = report_dict['summarize_by']
         if summarize_by in CheetahGenerator.generator_dict:
@@ -270,7 +277,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 try:
                     last_mod = os.path.getmtime(_fullname)
                     if t_now - last_mod < stale:
-                        logdbg("skip '%s': last_mod=%s age=%s stale=%s" %
+                        logdbg("Skip '%s': last_mod=%s age=%s stale=%s" %
                                (_filename, last_mod, t_now - last_mod, stale))
                         continue
                 except os.error:

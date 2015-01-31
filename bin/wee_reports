@@ -6,8 +6,7 @@
 #
 #    $Id$
 #
-"""Module can be called as a main program to generate reports, etc.,
-that are current as of the last archive record in the archive database."""
+"""Executable that can run all reports."""
 
 import socket
 import syslog
@@ -34,22 +33,22 @@ def main():
     parser = optparse.OptionParser(description=description, usage=usage)
     
     # Add the various options:
-    parser.add_option("--config", dest="cfgfn", type=str, metavar="CONFIG_FILE",
+    parser.add_option("--config", dest="config_path", type=str, metavar="CONFIG_FILE",
                       help="Use the configuration file CONFIG_FILE")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
+    config_path, config_dict = weeutil.weeutil.read_config(options.config_path, args)
     
     # If the user specified a time, retrieve it. Otherwise, set to None
     gen_ts = None if len(args) < 1 else int(args[0])
     
-    print "Using configuration file %s." % config_fn
+    print "Using configuration file %s." % config_path
 
     if gen_ts is None:
         print "Generating for all time"
     else:
-        print "Generating for time", timestamp_to_string(gen_ts)
+        print "Generating for requested time", timestamp_to_string(gen_ts)
         
     # Look for the debug flag. If set, ask for extra logging
     weewx.debug = int(config_dict.get('debug', 0))
