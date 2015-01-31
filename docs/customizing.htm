@@ -631,14 +631,16 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
       <p>The options that were changed have been <span class="highlight">&nbsp;highlighted&nbsp;</span>.
         Details of the various unit options are given in the
         <em><a href="#units">Appendix: Units</a></em>.</p>
-      <p>Other options are available, such as changing the text label for
-        various observation types. For example, suppose your weather console is
-        actually located in a barn, not indoors, and you want the plot for the
-        temperature at the console to be labeled "Barn Temperature," rather than
-        the default "Inside Temperature." This can be done by changing the <span
-          class="code">inTemp</span> option located in section <span class="code">[Labels][[Generic]]</span>
-        from the default </p>
-      <pre class="tty">[Units]
+    <p>
+      Other options are available, such as changing the text label for various
+      observation types. For example, suppose your weather console is actually
+      located in a barn, not indoors, and you want the plot for the temperature
+      at the console to be labeled "Barn Temperature," rather than the default
+      "Inside Temperature." This can be done by changing the <span class="code">inTemp</span>
+      option located in section <a href="#Labels_Generic"><span class="code">[Labels][[Generic]]</span></a>
+      from the default
+    </p>
+    <pre class="tty">[Units]
     [[Generic]]
         inTemp  = Inside Temperature
         outTemp = Outside Temperature
@@ -1277,7 +1279,7 @@ or in foobar units: $day.barometer.min.foobar
     <p class="example_output">The barometer trend over 3 hrs is +.03 inHg.</p>
 
     <h3>Tag <span class="code">$unit</span></h3>
-      <p>The unit type, label, and string formats are also available, allowing
+      <p>The type, label, and string formats for all units are also available, allowing
         you to do highly customized labels: </p>
       <table class="indent" style="width: 50%" summary="Examples of using unit formats">
         <tbody>
@@ -1306,7 +1308,36 @@ or in foobar units: $day.barometer.min.foobar
       <p>(assuming metric values have been specified for <span class="code">group_temperature</span>),
         essentially reproducing the results of the simpler tag <span class="code">$day.outTemp.max</span>.
       </p>
-      <h3>Iteration</h3>
+
+    <h3>
+      Tag <span class="code">$obs</span>
+    </h3>
+    <p>
+      The labels used for the various observation types are available using tag
+      <span class="code">$obs</span>. These are basically the values given in
+      the skin dictionary, section <a href="#Labels_Generic"><span
+        class="code">[Labels][[Generic]]</span></a>.
+    </p>
+    <table class="indent" style="width: 50%"
+      summary="Example off using observation labels">
+      <tbody>
+        <tr class="first_row">
+          <td>Tag</td>
+          <td>Results</td>
+        </tr>
+        <tr>
+          <td class="code first_col">$obs.label.outTemp</td>
+          <td class="code">Outside Temperature</td>
+        </tr>
+        <tr>
+          <td class="code first_col">$obs.label.UV</td>
+          <td class="code">UV Index</td>
+        </tr>
+      </tbody>
+    </table>
+
+
+    <h3>Iteration</h3>
       <p>For dot codes using an aggregation <em>e.g.</em>,
         <span class="code">$day</span>, <span class="code">$week</span>,
         <span class="code">$month</span>, <span class="code">$year</span>,
@@ -2717,11 +2748,12 @@ cooling_base = 20.0, degree_C</pre>
                 </ol>
                 <p>This allows you to decide whether or not you want leading zeroes. The 
                 default includes leading zeroes and is &quot;%02d&quot;, &quot;%03d&quot;, &quot;%05.2f&quot;</p>
-      <h3 class="config_section">[[Generic]]</h3>
+      <h3 class="config_section" id="Labels_Generic">[[Generic]]</h3>
       <p>This sub-section specifies default labels to be used for each observation
         type. For example, options </p>
-      <pre class="tty">inTemp = Temperature inside the house
-outTemp = Outside Temperature</pre>
+      <pre class="tty">inTemp  = Temperature inside the house
+outTemp = Outside Temperature
+UV      = UV Index</pre>
       <p>would cause the given labels to be used for plots of <span
           class="code">inTemp</span> and <span class="code">outTemp</span>. 
           If no option is given, then the observation type itself will

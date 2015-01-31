@@ -957,6 +957,14 @@ class UnitInfoHelper(object):
     def unit_type_dict(self):
         return self.group_unit_dict
     
+class ObsInfoHelper(object):
+    """Helper class to implement the $obs template tag."""    
+    def __init__(self, skin_dict):
+        try:
+            self.label = dict(skin_dict['Labels']['Generic'])
+        except KeyError:
+            self.label = {}
+
 #==============================================================================
 #                             Helper functions
 #==============================================================================

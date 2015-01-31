@@ -497,8 +497,11 @@ class UnitInfo(SearchList):
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)
+        # This implements the $unit tag:
         self.unit = weewx.units.UnitInfoHelper(generator.formatter,
                                                generator.converter)
+        # This implements the $obs tag:
+        self.obs = weewx.units.ObsInfoHelper(generator.skin_dict)
 
 class Extras(SearchList):
     """Class for exposing the [Extras] section in the skin config dictionary

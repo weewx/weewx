@@ -55,7 +55,10 @@ Microsoft FTP servers. Requires Python v2.7. Will not work with older
 versions of Python. Fixes ticket #37.
 
 WeatherUnderground passwords are now quoted, allowing special characters
-to be used.
+to be used. Fixes ticket #35.
+
+New tag $obs, allowing access to the contents of the skin configuration
+section [Labels][[Generic]]. Fixes ticket #33.
 
 
 3.0.1 12/07/14
