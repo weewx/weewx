@@ -87,8 +87,8 @@ Version: 3.0.1
         the examples in place, then your changes will be overwritten the
         next time you do an upgrade.</p>
       <p>A better idea is to put the code in the
-        <span class="symcode">$BIN_ROOT</span><span class="code">/user</span>,
-        directory. For example, copy example code from the
+        <span class="code">user</span>, directory. For example,
+        copy example code from the
         <span class="code">examples</span> directory to the
         <span class="code">user</span> directory, then modify it
         there.  If your modification does not contain much code,
@@ -199,7 +199,8 @@ Version: 3.0.1
           </tr>
           <tr>
             <td class="code first_col">FTP</td>
-            <td>Arranges to upload everything in the <span class="symcode">$HTML_ROOT</span>
+            <td>Arranges to upload everything in the
+              <span class="symcode">HTML_ROOT</span>
               directory up to a remote webserver.</td>
           </tr>
           <tr>
@@ -228,17 +229,20 @@ Version: 3.0.1
         configuration file <span class="code">weewx.conf</span> or the skin
         configuration file <span class="code">skin.conf</span>. </p>
       <p>Like all reports, the FTP and RSYNC "Reports" also use a skin, and
-        include a skin configuration file, although they are quite minimal. </p>
-      <p>Skins live in their own directory located in <a href="#" id="skin-root-description-target">
-          <span class="symcode">$SKIN_ROOT</span></a>.
+        include a skin configuration file, although they are quite minimal.</p>
+      <p>Skins live in their own directory called
+        <span class='code'>skins</span> and referred to as
+        <a href="#" id="skin-root-description-target">
+          <span class="symcode">SKIN_ROOT</span></a>.
       </p>
 
-      <div id="skin-root-description" title="$SKIN_ROOT" style="display:none"><p>The symbol <span class='code'>
-          $SKIN_ROOT</span> is a symbolic name to the location of the directory where
+      <div id="skin-root-description" title="SKIN_ROOT" style="display:none">
+        <p>The symbol <span class='code'>SKIN_ROOT</span> is a symbolic name
+          to the location of the directory where
           your skins are located. It is not to be taken literally. Consult the
-          <a href="usersguide.htm#dir-layout-table">directory layout table</a> in 
-          the User's Guide for its exact location, dependent
-          on how you installed weewx and what operating system you are using</p></div>
+          <a href="usersguide.htm#dir-layout-table">directory layout table</a>
+          in the User's Guide for its exact location, dependent on how you
+          installed weewx and what operating system you are using</p></div>
       <script type="text/javascript">
         $("#skin-root-description-target").click(
           function () {
@@ -325,8 +329,7 @@ Version: 3.0.1
         using 1 May 2014 00:00 PDT as the "Current" time. NB: this example
         assumes you used the <span class="code">setup.py</span> install
         method. Adjust paths as necessary if you used another method.</p>
-      <pre class="tty">cd /home/weewx
-./bin/wee_reports weewx.conf 1398927600</pre>
+      <pre class="tty">wee_reports weewx.conf 1398927600</pre>
     
     <h2>The database</h2>
     <p>
@@ -584,10 +587,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
     </p>
     <p>
       For the standard skin that comes with <span class="code">weewx</span>,
-      the file is <span class="symcode">$SKIN_ROOT</span><span
-        class="code">/Standard/skin.conf</span>. It includes many, many
-      options that can be changed. For a complete list, see the section
-      <em><a href="#standard_skin">The Standard <span class="code">skin.conf</span></a></em>.
+      the file is <span class="code">skins/Standard/skin.conf</span>.
+      It includes many, many options that can be changed. For a complete list,
+      see the section <em><a href="#standard_skin">The Standard <span class="code">skin.conf</span></a></em>.
     </p>
     <p>
       For example, suppose you wish to use metric units in the
@@ -662,8 +664,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         to see the effects of any changes.</p>
       <p>Revisiting our example, suppose you want two reports, one in US
         Customary, the other in Metric. The former will go in the directory
-        <span class="symcode"> $HTML_ROOT</span>, the latter in a directory,
-        <span class="symcode"> $HTML_ROOT</span><span class="code">/metric</span>.
+        <span class="symcode">HTML_ROOT</span>, the latter in a directory,
+        <span class="symcode">HTML_ROOT</span><span class="code">/metric</span>.
         If you just simply modify <span class="code">skin.conf</span>, you can
         get one, but not both at the same time. Alternatively, you could create
         a whole new skin by copying all the files to a new skin directory
@@ -1869,8 +1871,8 @@ $station.altitude</pre>
           days ago.
         </li>
       </ul>
-      <p>This example is included in the distribution as <span class="symcode">
-          $BIN_ROOT</span><span class="code">/examples/xsearch.py</span>: </p>
+      <p>This example is included in the distribution as
+        <span class="code">examples/xsearch.py</span>: </p>
         <pre class="tty">import datetime
 import time
 
@@ -2050,10 +2052,9 @@ class MyXSearch(SearchList):                                                 # 1
         &lt;td&gt;$seven_day.rain.sum
     &lt;/tr&gt;
 &lt;/table&gt;</pre>
-      <p>If you place a custom generator somewhere other than the
-        <span class="symcode">$BIN_ROOT</span> hierarchy where
-        <span class="code">weewxd</span> resides, you may have to specify its
-        location in the environment variable
+      <p>If you place a custom generator somewhere other than the hierarchy
+        where <span class="code">weewxd</span> resides, you may have to
+        specify its location in the environment variable
         <span class="code">PYTHONPATH</span>
         in the shell where you start weewx:
       </p>
@@ -2475,7 +2476,7 @@ class MyXSearch(SearchList):                                                 # 1
       <p>This section is a reference to the options appearing in the skin
         configuration file.  The default skin is the Standard skin, with a
         skin configuration file located at
-        <span class="symcode">$SKIN_ROOT</span><span class="code">/Standard/skin.conf</span>. </p>
+        <span class="symcode">SKIN_ROOT</span><span class="code">/Standard/skin.conf</span>. </p>
       <p>The most important options, the ones you are likely to have to
         customize, are
         <span class="config_important"><strong>highlighted</strong></span>.</p>
@@ -2782,7 +2783,7 @@ UV      = UV Index</pre>
         template sits in and will also be the directory the results will be
         put in, and <span class="code">F.E</span> is the generated file name.
         So, given a template file with name <span class="code">Acme/index.html.tmpl</span>,
-        the results will be put in <span class="symcode">$HTML_ROOT</span><span class="code">/Acme/index.html</span>. </p>
+        the results will be put in <span class="symcode">HTML_ROOT</span><span class="code">/Acme/index.html</span>. </p>
       <p>The configuration for a group of templates will look something like this:</p>
     <pre class="tty">[CheetahGenerator]
     [[index]]
@@ -3408,7 +3409,7 @@ UV      = UV Index</pre>
         This could be done by subclassing the default print service <span class="code">StdPrint</span>
         and overriding member function <span class="code">new_loop_packet()</span>.
       </p>
-      <p>Create the file <span class="symcode">$BIN_ROOT</span><span class="code">/user/myprint.py</span>:
+      <p>Create the file <span class="code">user/myprint.py</span>:
       </p>
       <pre class="tty">from weewx.engine import StdPrint
 from weeutil.weeutil import timestamp_to_string
@@ -3445,8 +3446,7 @@ class MyPrint(StdPrint):
         adding the functionality you need. Here is an example that implements an
         alarm, which sends off an email when an arbitrary expression evaluates <span
           class="code">True</span>. This example is included in the standard
-        distribution in directory <span class="symcode">$BIN_ROOT</span><span
-          class="code">/examples</span>.</p>
+        distribution in directory <span class="code">/examples</span>.</p>
       <p>File <span class="code">examples/alarm.py</span>: </p>
       <pre class="tty">import time
 import smtplib
@@ -3577,8 +3577,8 @@ class MyAlarm(StdService):
         member function, <span class="code">self.newArchiveRecord</span>. When
         the event <span class='code'>NEW_ARCHIVE_RECORD</span> occurs,
         the function <span class="code">self.newArchiveRecord</span> will be called. There
-        are many other events that can be interecepted. Look in the file <span
-        class="symcode">$BIN_ROOT</span><span class="code">/weewx/__init__.py</span>.
+        are many other events that can be interecepted. Look in the file
+        <span class="code">weewx/__init__.py</span>.
       </li>
       <li>This is where the test is done for whether or not to sound the
         alarm. The <span class="code">[Alarm]</span> configuration options
@@ -3628,14 +3628,14 @@ class MyAlarm(StdService):
       <p>For most users the default database will work just fine. It has the
         added advantage of being compatible with the wview database.
         Nevertheless, there may be occasions where you may want to add a SQL
-        type to your database, or change its unit system. This section shows you
-        how to do this, using the utility <span class="symcode">$BIN_ROOT</span><span
-          class="code">/wee_config_database</span>.</p>
+        type to your database, or change its unit system. This section shows
+        you how to do this, using the utility 
+        <span class="code">wee_config_database</span>.</p>
       <p>This utility also has the ability to check a SQLite version of the archive
         database for embedded strings (where a float is expected).</p>
       <p>Before starting, it's worth running the utility with the <span class="code">--help</span>
         flag to see how it is used:</p>
-      <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --help</pre>
+      <pre class="tty">wee_config_database --help</pre>
       <p>This will result in an output that looks something like this:</p>
       <pre class="tty">
 Usage: wee_config_database: [config_path] 
@@ -3824,7 +3824,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
           with the <span class="code">--reconfigure</span> option and the path
           to the configuration file:
         </p>
-        <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database --reconfigure <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
+        <p class="tty">wee_config_database weewx.conf --reconfigure</p>
         <p>
           This will create a new database (nominally, <span class="code">weewx.sdb_new</span>
           if you are using SQLite, <span class="code">weewx_new</span> if you
@@ -3846,7 +3846,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
           the same name as the old database, or edit <span class="code">weewx.conf</span>
           to use the new database name. To do the former:
         </p>
-        <p>For SQLite:</p> <pre class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
+        <p>For SQLite:</p> <pre class="tty">cd <span class="symcode">SQLITE_ROOT</span>
 mv weewx.sdb_new weewx.sdb</pre>
         <p>For MySQL:</p> <pre class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
 <span class="prompt">mysql&gt;</span> DROP DATABASE weewx;   # Delete the old database
@@ -3862,7 +3862,7 @@ mv weewx.sdb_new weewx.sdb</pre>
             class="code">wee_config_database</span> utility and the <span
             class="code">--backfill-daily</span> option:
         </p>
-        <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --backfill-daily </pre>
+        <pre class="tty">wee_config_database weewx.conf --backfill-daily</pre>
       </li>
     </ol>
 
@@ -3994,14 +3994,14 @@ weewx.units.obs_group_dict['electricity'] = 'group_power'</pre>
           Now run the utility <span class="code">wee_config_database</span>
           with the <span class="code">--reconfigure</span> option:
         </p>
-        <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --reconfigure</pre>
+        <pre class="tty">wee_config_database weewx.conf --reconfigure</pre>
         <p>
           This will create a new database (nominally,
           <span class="code">weewx.sdb_new</span>
           if you are using SQLite, <span class="code">weewx_new</span> if you
           are using MySQL), using the schema found in
-          <span class="symcode">$BIN_ROOT</span><span class="code">/user/schemas.py</span>, and populate it with data from
-          the old database, while performing the unit conversion.
+          <span class="code">user/schemas.py</span>, and populate it with data
+          from the old database, while performing the unit conversion.
         </p>
       </li>
       <li>
@@ -4018,7 +4018,7 @@ weewx.units.obs_group_dict['electricity'] = 'group_power'</pre>
           the same name as the old database, or edit <span class="code">weewx.conf</span>
           to use the new database name. To do the former:
         </p>
-        <p>For SQLite:</p> <pre class="tty">cd <span class="symcode">$SQLITE_ROOT</span>
+        <p>For SQLite:</p> <pre class="tty">cd <span class="symcode">SQLITE_ROOT</span>
 mv weewx.sdb_new weewx.sdb</pre>
         <p>For MySQL:</p> <pre class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
 <span class="prompt">mysql&gt;</span> DROP DATABASE weewx;   # Delete the old database
@@ -4034,17 +4034,17 @@ mv weewx.sdb_new weewx.sdb</pre>
             class="code">wee_config_database</span> utility and the <span
             class="code">--backfill-daily</span> option:
         </p>
-        <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --backfill-daily</pre>
+        <pre class="tty">wee_config_database weewx.conf --backfill-daily</pre>
       </li>
     </ol>
 
 	<h2>Dropping and rebuilding the daily summaries</h2>
 	<p>The tool <span class="code">wee_config_database</span> can also be used to drop the daily
 	summaries:</p>
-	<pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --drop-daily</pre>
+	<pre class="tty">wee_config_database weewx.conf --drop-daily</pre>
 	<p>The summaries will automatically be rebuilt the next time <span class="code">weewx</span> starts,
 	or they can be rebuilt with the tool:</p>
-	<pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --backfill-daily</pre>
+	<pre class="tty">wee_config_database weewx.conf --backfill-daily</pre>
 
     <h1 id="porting">Porting to new hardware</h1>
       <p>Naturally, this is an advanced topic but, nevertheless, I'd

@@ -890,38 +890,38 @@ Version: 3.0.1
             <td colspan='3' class='locations_banner'>Application layout for install using DEB package</td>
           </tr>
           <tr class="first_row" style="background-color: inherit">
-          	<td>Role</td>
-          	<td>Symbolic Name</td>
-          	<td>Nominal Location</td>
-          	</tr>
+            <td>Role</td>
+            <td>Symbolic Name</td>
+            <td>Nominal Location</td>
+          </tr>
           <tr>
             <td>Executables</td>
-          	<td class="symcode">$BIN_ROOT</td>
+            <td class="symcode">BIN_ROOT</td>
             <td class='tty'>/usr/share/weewx/</td>
           </tr>
           <tr>
             <td>Configuration directory</td>
-          	<td class="symcode">$CONFIG_ROOT</td>
+            <td class="symcode">CONFIG_ROOT</td>
             <td class='tty'>/etc/weewx/</td>
           </tr>
           <tr>
             <td>Skins and templates</td>
-          	<td class="symcode">$SKIN_ROOT</td>
+            <td class="symcode">SKIN_ROOT</td>
             <td class='tty'>/etc/weewx/skins/</td>
           </tr>
           <tr>
             <td>SQLite databases</td>
-          	<td class="symcode">$SQLITE_ROOT</td>
+            <td class="symcode">SQLITE_ROOT</td>
             <td class='tty'>/var/lib/weewx/</td>
           </tr>
           <tr>
             <td>Web pages and images</td>
-            <td class="symcode">$HTML_ROOT</td>
+            <td class="symcode">HTML_ROOT</td>
             <td class='tty'>/var/www/weewx/</td>
           </tr>
           <tr>
             <td>Documentation</td>
-            <td class="symcode">$DOC_ROOT</td>
+            <td class="symcode">DOC_ROOT</td>
             <td class='tty'>/usr/share/doc/weewx/</td>
           </tr>
           <tr>
@@ -942,33 +942,33 @@ Version: 3.0.1
             <td colspan='3' class='locations_banner'>Application layout for install using RPM package</td>
           </tr>
           <tr class="first_row" style="background-color: inherit">
-          	<td>Role</td>
-          	<td>Symbolic Name</td>
-          	<td>Nominal Location</td>
-          	</tr>
+            <td>Role</td>
+            <td>Symbolic Name</td>
+            <td>Nominal Location</td>
+          </tr>
           <tr>
             <td>Executables</td>
-          	<td class="symcode">$BIN_ROOT</td>
+            <td class="symcode">BIN_ROOT</td>
             <td class='tty'>/usr/share/weewx/</td>
           </tr>
           <tr>
             <td>Configuration directory</td>
-          	<td class="symcode">$CONFIG_ROOT</td>
+            <td class="symcode">CONFIG_ROOT</td>
             <td class='tty'>/etc/weewx</td>
           </tr>
           <tr>
             <td>Skins and templates</td>
-          	<td class="symcode">$SKIN_ROOT</td>
+            <td class="symcode">SKIN_ROOT</td>
             <td class='tty'>/etc/weewx/skins/</td>
           </tr>
           <tr>
             <td>SQLite databases</td>
-          	<td class="symcode">$SQLITE_ROOT</td>
+            <td class="symcode">SQLITE_ROOT</td>
             <td class='tty'>/var/lib/weewx/</td>
           </tr>
           <tr>
             <td>Web pages and images</td>
-            <td class="symcode">$HTML_ROOT</td>
+            <td class="symcode">HTML_ROOT</td>
             <td class='tty'>/var/www/html/weewx/</td>
           </tr>
           <tr>
@@ -994,43 +994,43 @@ Version: 3.0.1
             <td colspan='3' class='locations_banner'>Application layout for install using <span class='code'>setup.py</span></td>
           </tr>
           <tr class="first_row" style="background-color: inherit">
-          	<td>Role</td>
-          	<td>Symbolic Name</td>
-          	<td>Nominal Location</td>
+            <td>Role</td>
+            <td>Symbolic Name</td>
+            <td>Nominal Location</td>
           </tr>
           <tr>
-          	<td><span class='code'>weewx</span> root directory</td>
-          	<td class="symcode">$WEEWX_ROOT</td>
-          	<td class="tty">/home/weewx</td>
+            <td><span class='code'>weewx</span> root directory</td>
+            <td class="symcode">WEEWX_ROOT</td>
+            <td class="tty">/home/weewx</td>
           </tr>
           <tr>
             <td>Executables</td>
-          	<td class="symcode">$BIN_ROOT</td>
+            <td class="symcode">BIN_ROOT</td>
             <td class='tty'>/home/weewx/bin/</td>
           </tr>
           <tr>
             <td>Configuration directory</td>
-          	<td class="symcode">$CONFIG_ROOT</td>
+            <td class="symcode">CONFIG_ROOT</td>
             <td class='tty'>/home/weewx/</td>
           </tr>
           <tr>
             <td>Skins and templates</td>
-          	<td class="symcode">$SKIN_ROOT</td>
+            <td class="symcode">SKIN_ROOT</td>
             <td class='tty'>/home/weewx/skins/</td>
           </tr>
           <tr>
             <td>SQLite databases</td>
-          	<td class="symcode">$SQLITE_ROOT</td>
+            <td class="symcode">SQLITE_ROOT</td>
             <td class='tty'>/home/weewx/archive</td>
           </tr>
           <tr>
             <td>Web pages and images</td>
-            <td class="symcode">$HTML_ROOT</td>
+            <td class="symcode">HTML_ROOT</td>
             <td class='tty'>/home/weewx/public_html/</td>
           </tr>
           <tr>
             <td>Documentation</td>
-            <td class="symcode">$DOC_ROOT</td>
+            <td class="symcode">DOC_ROOT</td>
             <td class='tty'>/home/weewx/docs/</td>
           </tr>
           <tr>
@@ -1068,32 +1068,20 @@ Version: 3.0.1
 
     <h1 id="configuring">Configuring <span class="code">weewx</span></h1>
 
-    <p>This section covers configuring <span class="code">weewx</span>, in particular the
-      configuration file <a href="#" id="config-root-description-target">
-      <span class="symcode">$CONFIG_ROOT</span></a><span class="code"><em>/weewx.conf</em></span>.</p>
+    <p>This section covers configuring <span class="code">weewx</span>,
+      in particular the configuration file
+      <span class="code">weewx.conf</span>.</p>
 
-    <div id="config-root-description" title="$CONFIG_ROOT" style='display:none' class='popup-note'>
-      <p>We have used the notation
-        <span class='code'>$CONFIG_ROOT</span> to
-        symbolically indicate the directory where this file is located. The
-        exact location will depend on your installation method and operating
+      <p class='note'>The location of <span class="code">weewx.conf</span>
+        will depend on your installation method and operating
         system. For example, if you used the
-        <span class='code'>setup.py</span>
-        method, then the symbol <span class='code'>$CONFIG_ROOT</span> will
-        represent <span class='code'>/home/weewx</span>, and so your
-        configuration file will be located in
+        <span class='code'>setup.py</span> method, then the nominal location is
+        <span class='code'>/home/weewx</span>, and so your
+        configuration file will be
         <span class='code'>/home/weewx/weewx.conf</span>. For other
         configurations, consult the
         <a href="#dir-layout-table">application layout table</a> in the
         'Installation methods' section.</p>
-    </div>
-    <script type="text/javascript">
-      $("#config-root-description-target").click(
-        function () {
-          $("#config-root-description").dialog({position: {my:"left top", at:"right bottom", of: "#config-root-description-target" }});
-          return false; // Ensures that the "link" isn't followed
-      });
-    </script>
 
     <p class='note'>There is another configuration file, <span class="code">skin.conf</span>,
       for presentation-specific options.  It is described in the
@@ -1728,10 +1716,10 @@ longitude = -77.0366</pre>
     </p>
     <p class="config_option">SKIN_ROOT </p>
     <p>The directory where the skins live. A relative path is relative to
-      <span class="symcode">$WEEWX_ROOT</span>.</p>
+      <span class="symcode">WEEWX_ROOT</span>.</p>
     <p class="config_option">HTML_ROOT </p>
     <p>The target directory for the generated files. A relative path is
-      relative to <span class="symcode">$WEEWX_ROOT</span>. Generated 
+      relative to <span class="symcode">WEEWX_ROOT</span>. Generated 
 	files and images will be put here. </p>
     <p class="config_option">data_binding</p>
     <p>
@@ -1752,7 +1740,7 @@ longitude = -77.0366</pre>
     <h3 class="config_section">[[FTP]]</h3>
     <p>While this &quot;report&quot; does not actually generate anything, it 
       uses the report machinery to upload files from directory <span class="symcode">
-	$HTML_ROOT</span> to a remote webserver. It does an incremental update, 
+	HTML_ROOT</span> to a remote webserver. It does an incremental update, 
       that is, it only FTPs any files that have changed, saving the outgoing bandwidth 
       of your Internet connection. </p>
     <p>If you do not use such a server, comment out the first four options below.
@@ -1790,7 +1778,7 @@ longitude = -77.0366</pre>
     <h3 class="config_section">[[RSYNC]]</h3>
     <p>While this &quot;report&quot; does not actually generate anything, it 
       uses the report machinery to upload files from directory <span class="symcode">
-	$HTML_ROOT</span> to a remote webserver. It does an incremental update, 
+	HTML_ROOT</span> to a remote webserver. It does an incremental update, 
       that is, it only synchronizes those files that have changed, saving the outgoing 
       bandwidth of your Internet connection. </p>
     <p>If you do not use such a server, comment out the options below. </p>
@@ -2097,9 +2085,16 @@ longitude = -77.0366</pre>
     <p>This definition uses the <a href="http://sqlite.org/">SQLite</a> database 
       engine to store data. SQLite is open-source, simple, lightweight, highly 
       portable, and memory efficient. For most purposes it serves nicely.</p>
+    <p class="config_option">root</p>
+      <p>The root directory from which relative paths descend. Default is
+        the <span class="symcode">WEEWX_ROOT</span> directory.</p>
     <p class="config_option">database_name</p>
-    <p>The path to the SQLite file. A relative path is relative to
-      <span class="symcode">$SQLITE_ROOT</span>. Required.</p>
+    <p>The name of the SQLite file. A path can also be specified with the name.
+      A relative path is relative to the <span class="code">root</span>
+      parameter. Default is <span class="code">archive/weewx.sdb</span> for
+      <span class="code">setup.py</span> installations or
+      <span class="code">/var/lib/weewx/weewx.sdb</span> for DEB or RPM
+          installations.</p>
     <p class="config_option" id='archive_timeout'>timeout</p>
     <p>When the database is accessed by multiple threads and one of those threads
       modifies the database, the SQLite database is locked until that transaction
@@ -2202,13 +2197,13 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
       and some stations are only partly configurable by software.</p>
     <p>Run the utility with the <span class='code'>--help</span> option
       to see which options are available.</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --help </p>
+    <p class="tty">wee_config_device --help</p>
     <p>The utility requires a <span class='code'>weewx.conf</span> file.
       If no file is specified, it will look for
       <span class='code'>weewx.conf</span> in the standard location.  If
       your configuration file is in a non-standard location, specify the
       path to the configuration file as the first argument.  For example,</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device /path/to/weewx.conf --help </p>
+    <p class="tty">wee_config_device /path/to/weewx.conf --help</p>
 
 
     <h2 id="wee_config_acurite">AcuRite</h2>
@@ -2257,7 +2252,7 @@ Mutating actions will request confirmation before proceeding.</p>
     <h3>Station information</h3>
     <p>Display the station settings with the <span class='code'>--info</span>
       option.</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </pre>
+    <pre class="tty">wee_config_device --info</pre>
     <p>This will result in something like this:</p>
     <pre class='tty'>firmware: Rainwise CC-3000 Version: 1.3 Build 006 Sep 04 2013
 time: 2014/06/02 08:22:17
@@ -2269,7 +2264,7 @@ interval: 1</pre>
     <p>CC3000 loggers ship from the factory with an archive interval
       of 1 minutes (60 seconds).  To change the station's
       interval to 5 minutes, do the following:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --set-interval=5</p>
+    <p class="tty">wee_config_device --set-interval=5</p>
 
 
     <h2 id="wee_config_fousb">FineOffsetUSB</h2>
@@ -2320,7 +2315,7 @@ Mutating actions will request confirmation before proceeding.</p>
     <h3>Station information</h3>
     <p>Display the station settings with the <span class='code'>--info</span>
       option.</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </pre>
+    <pre class="tty">wee_config_device --info</pre>
     <p>This will result in something like this:</p>
     <pre class='tty'>Fine Offset station settings:
                     local time: 2013.02.11 18:34:28 CET
@@ -2355,19 +2350,19 @@ Mutating actions will request confirmation before proceeding.</p>
     <p>Fine Offset stations ship from the factory with an archive interval
       (read_period) of 30 minutes (1800 seconds).  To change the station's
       interval to 5 minutes, do the following:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --set-interval=5</p>
+    <p class="tty">wee_config_device --set-interval=5</p>
 
     <h3 id="fo_dumping_the_console_memory">Dumping the console memory</h3>
     <p>Fine Offset stations store records in a circular buffer &mdash; once the buffer fills, the oldest records are replaced by newer records.  The 1080 and 2080 consoles store up to 4080 records.  The 3080 consoles store up to 3264 records.  The <span class='code'>data_count</span> indicates how many records are in memory.  The <span class='code'>read_period</span> indicates the number of minutes between records.  <span class='code'>wee_config_device</span> can display these records in space-delimited, raw bytes, or dictionary format.</p>
     <p>For example, to display the most recent 30 records from the console memory:</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --history=30</pre>
+    <pre class="tty">wee_config_device --history=30</pre>
     <p>To clear the console memory:</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --clear-memory</pre>
+    <pre class="tty">wee_config_device --clear-memory</pre>
 
     <h3>Checking the USB quality</h3>
     <p>Use the <span class='code'>wee_config_device</span> utility to test the quality of the USB connection between computer and console.  Poor quality USB cables, under-powered USB hubs, and other devices on the bus can interfere with communication.</p>
     <p>To test the quality of the USB connection to the console:</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --check-usb</pre>
+    <pre class="tty">wee_config_device --check-usb</pre>
     <p>Let the utility run for at least a few minutes, or possibly an hour or two.  It is not unusual to see a few bad reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable, USB hub, or removing other devices from the bus.</p>
 
     <h3 id="polling_mode_and_the_polling_interval">Polling mode and the polling interval</h3>
@@ -2501,7 +2496,7 @@ Mutating actions will request confirmation before proceeding.</p>
     <h3>Station information</h3>
     <p>Use the <span class="code">--info</span> option to display the
       current EEPROM settings: </p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </pre>
+    <pre class="tty">wee_config_device --info</pre>
     <p>This will print out something like: </p>
     <pre class="tty">Davis Vantage EEPROM settings:
     
@@ -2575,7 +2570,7 @@ Mutating actions will request confirmation before proceeding.</p>
 
     <h3 id="vantage_time_zone">Time zone</h3>
     <p>To set the time zone code to Central European Time (code 20):</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --set-tz-code=20</pre>
+    <pre class="tty">wee_config_device --set-tz-code=20</pre>
     <p class="warning">You can set either the time zone code <em>or</em> the 
 	time zone offset, but not both. </p>
 
@@ -2588,7 +2583,7 @@ Mutating actions will request confirmation before proceeding.</p>
       archive interval of at least 300 seconds, or trim the number of
       files you are using.</p>
     <p>To change the archive interval to 10 minutes (600 seconds):</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --set-interval=600</pre>
+    <pre class="tty">wee_config_device --set-interval=600</pre>
     <p>I have found that a five minute (300 seconds) archive interval works
       well for the Vantage stations. Because of the large amount of onboard
       memory they carry, going to a larger interval does not have any real
@@ -2599,7 +2594,7 @@ Mutating actions will request confirmation before proceeding.</p>
       with a different kind, you might want to reconfigure. For example, to
       change to a 0.1 mm bucket (bucket code &quot;2&quot;), use the
       following:</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --set-bucket=2</pre>
+    <pre class="tty">wee_config_device --set-bucket=2</pre>
 
     <h3 id="vantage_configuring_additional_sensors">Additional sensors</h3>
     <p>If you have additional sensors for your Vantage station, you
@@ -2610,11 +2605,11 @@ Mutating actions will request confirmation before proceeding.</p>
       utility <span class="code">wee_config_device</span> lets
       you do this from the command line.</p>
     <p>For example, to add an extra temperature sensor to channel 3, do the following:</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --set-transmitter-type=3,1,2</pre>
+    <pre class="tty">wee_config_device --set-transmitter-type=3,1,2</pre>
     <p>This says to turn on channel 3, set its type to 1 ("Temperature only"), and have it show up in the
       database as <span class="code">extraTemp2</span>. Here's another example, this time for a combined
       temperature / humidity sensor:</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --set-transmitter-type=5,3,2,4</pre>
+    <pre class="tty">wee_config_device --set-transmitter-type=5,3,2,4</pre>
     <p>This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"), 
       and it will show up in the database
       as <span class="code">extraTemp2</span> and <span class="code">extraHumid4</span>.</p>
@@ -2632,7 +2627,7 @@ Mutating actions will request confirmation before proceeding.</p>
       180&deg; offset correction. You can do this with the following
       command:</p>
 
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --set-offset=windDir,180</pre>
+    <pre class="tty">wee_config_device --set-offset=windDir,180</pre>
 
     <h3 id="vantage_dumping_the_logger_memory">Dumping the logger memory</h3>
 	  <p>Generally, <span class="code">weewx</span> downloads only new archive 
@@ -2644,7 +2639,7 @@ Mutating actions will request confirmation before proceeding.</p>
 	  lose any data which might have accumulated in the logger memory, but not 
 	  yet downloaded. By using the <span class="code">--dump</span> command 
 	  before clearing the memory, you might be able to save these data. </p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --dump</pre>
+    <pre class="tty">wee_config_device --dump</pre>
 	  <p>This will dump all data archived in the Vantage memory directly to the 
 	  database, without regard to whether or not they have been seen before. 
 	  Because the command dumps <em>all</em> data, it may result in many 
@@ -2724,7 +2719,7 @@ Mutating actions will request confirmation before proceeding.</p>
     <h3>Station information</h3>
     <p>Display the station settings with the <span class='code'>--info</span>
       option.</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </pre>
+    <pre class="tty">wee_config_device --info </pre>
     <p>This will result in something like this:</p>
     <pre class='tty'>buzzer: 0
 connection time till connect: 1.5
@@ -2754,7 +2749,7 @@ in humidity: 48.0
     <p>WS23xx stations ship from the factory with an archive interval of 60
       minutes (3600 seconds).  To change the station's interval to 5 minutes,
       do the following:</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --set-interval=5</p>
+    <p class="tty">wee_config_device --set-interval=5</p>
     <p class="warning"><strong>Warning!</strong><br/>
       Changing the recording interval will clear the station memory.</p>
 
@@ -2767,9 +2762,9 @@ in humidity: 48.0
       <span class='code'>history interval</span> indicates the number of
       minutes between records.</p>
     <p>For example, to display the latest 30 records from the console memory:</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --history=30</pre>
+    <pre class="tty">wee_config_device --history=30</pre>
     <p>To clear the console memory:</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --clear-memory</pre>
+    <pre class="tty">wee_config_device --clear-memory</pre>
 
 
     <h2 id="wee_config_ws28xx">WS28xx</h2>
@@ -2873,7 +2868,7 @@ Transceiver is paired to console</p>
     <h3>Station information</h3>
     <p>Display the station settings with the <span class='code'>--info</span>
       option.</p>
-    <p class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --info </p>
+    <p class="tty">wee_config_device --info</p>
     <p>This will result in something like this:</p>
     <p class='tty'>alarm_flags_other: 0
 alarm_flags_wind_dir: 0
@@ -2973,7 +2968,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@local
     <p>To run <span class="code">weewx</span> directly, invoke
       the main program, <span class="code">weewxd</span>, giving 
       the configuration file as its only parameter: </p>
-    <pre class="tty">sudo <span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</pre>
+    <pre class="tty">sudo weewxd weewx.conf</pre>
     <p>It should start by downloading any data stored in your weather station
       (if the station has a data logger) into the archive database. For some
       stations, such as the Davis Vantage with a couple thousand records, this
@@ -2999,20 +2994,21 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
       run as a daemon, started automatically when the server is rebooted. </p>
     <p>If you use a packaged install from a DEB or RPM distribution, this is 
       done automatically. You can ignore this section.</p>
-    <p>Start by selecting the appropriate run script. They can be found under
-      <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/</span>. </p>
+    <p>Start by selecting the appropriate run script. They can be found in the
+      source or installation under
+      <span class="code">util/init.d/</span>. </p>
     <table class="locations" style="width:90%">
       <tr>
 	<td style='width:30%'>Debian/Ubuntu/Mint:</td>
-	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian</span></td>
+	<td class='tty'><span class="code">util/init.d/weewx.debian</span></td>
       </tr>
       <tr>
 	<td >Redhat/CentOS/Mint:</td>
-	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.redhat</span></td>
+	<td class='tty'><span class="code">util/init.d/weewx.redhat</span></td>
       </tr>
       <tr>
 	<td>SuSE:</td>
-	<td class='tty'><span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.suse</span></td>
+	<td class='tty'><span class="code">util/init.d/weewx.suse</span></td>
       </tr>
     </table>
     <p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span> 
@@ -3023,15 +3019,15 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
     <table class="locations" style="width:90%">
       <tr>
 	<td style="width: 30%">Debian/Ubuntu/Mint:</td>
-	<td class='tty'>cp <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.debian /etc/init.d/weewx</span></td>
+	<td class='tty'>cp <span class="code">util/init.d/weewx.debian /etc/init.d/weewx</span></td>
       </tr>
       <tr>
 	<td>Redhat/CentOS/Fedora:</td>
-	<td class='tty'>cp <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.redhat /etc/rc.d/init.d/weewx</span></td>
+	<td class='tty'>cp <span class="code">util/init.d/weewx.redhat /etc/rc.d/init.d/weewx</span></td>
       </tr>
       <tr>
 	<td>SuSE:</td>
-	<td class='tty'>cp <span class="symcode">$WEEWX_ROOT</span><span class="code">/util/init.d/weewx.suse /etc/init.d/weewx</span></td>
+	<td class='tty'>cp <span class="code">util/init.d/weewx.suse /etc/init.d/weewx</span></td>
       </tr>
     </table>
     <p>Make sure the script is executable: </p>
@@ -3106,10 +3102,11 @@ sudo /etc/init.d/weewx restart</pre>
     </p>
     <p>If you have data from <span class='code'>wview</span>, you can
       'import' them into <span class='code'>weewx</span> by simply copying the 
-	SQLite database
-      file.  Assuming that the <span class='code'>wview</span> data are in file <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
+      SQLite database file.  Assuming that the <span class='code'>wview</span>
+      data are in file
+      <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
     <p class='tty'>sudo /etc/init.d/weewx stop
-cd <span class="symcode">$SQLITE_ROOT</span>
+cd <span class="symcode">SQLITE_ROOT</span>
 mv weewx.sdb weewx.sdb.bak
 cp /var/wview/archive/wview-archive.sdb weewx.sdb
 sudo /etc/init.d/weewx start</p>
@@ -3168,7 +3165,8 @@ sudo /etc/init.d/weewx start</p>
 	Apache:</p>
     <p class='tty'>sudo cp util/apache/conf.d/weewx.conf /etc/apache2/conf.d
 sudo /etc/init.d/apache2 restart</p>
-    <p>Be sure that the path in the Apache configuration snippet matches the <span class='code'>HTML_ROOT</span> defined in the
+    <p>Be sure that the path in the Apache configuration snippet matches the
+      <span class='code'>HTML_ROOT</span> defined in the
       <span class='code'>weewx</span> configuration file.</p>
     <p class='tty'>Alias /weewx <strong>/home/weewx/public_html</strong>
 &lt;Directory <strong>/home/weewx/public_html</strong>&gt;
@@ -3288,13 +3286,13 @@ sudo /etc/init.d/apache2 restart</p>
         is, &quot;Did you look at the log file?&quot;
         <p class='tty' style="margin-top: 1em">sudo tail -f /var/log/syslog</p>
       </li>
-      <li style="margin-bottom: 1em">Run <span class="code">weewxd</span> directly from
-        the command line, rather than as a
+      <li style="margin-bottom: 1em">Run <span class="code">weewxd</span>
+        directly from the command line, rather than as a
         daemon. Generally, <span class="code">weewx</span> will catch
         and log any unrecoverable exceptions. But if you are getting
         strange results, it is worth running directly and looking for
         any clues.
-        <p class='tty' style="margin-top: 1em">sudo <span class="symcode">$BIN_ROOT</span>/weewxd <span class="symcode">$CONFIG_ROOT</span>/weewx.conf</p>
+        <p class='tty' style="margin-top: 1em">sudo weewxd weewx.conf</p>
       </li>
     </ul>
 
@@ -3457,9 +3455,9 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
 	<span class="code">wee_config_device</span>. This may cause loss of data, but 
 	usually works. Adjust paths as necessary:</li>
     </ol>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_device --clear </pre>
-	  <p>See also the section <em><a href="#Dumping_the_logger_memory">Dumping 
-	  the logger memory</a></em>, which may help you avoid data loss.</p>
+    <pre class="tty">wee_config_device --clear</pre>
+      <p>See also the section <em><a href="#Dumping_the_logger_memory">Dumping 
+	    the logger memory</a></em>, which may help you avoid data loss.</p>
     <h3>3rd party Vantage connectors</h3>
     <p>This section is for those who are using a homebrew or 3rd party connector 
       to a Davis Vantage console that does not contain a logger, such as the
@@ -3717,9 +3715,9 @@ Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</p>
     <ol>
       <li>stop <span class='code'>weewx</span></li>
       <li>Make a copy of the archive database
-      <pre class='tty'>cp $SQLITE_ROOT/weewx.sdb $SQLITE_ROOT/weewx-YYMMDD.sdb</pre></li>
+      <pre class='tty'>cp weewx.sdb weewx-YYMMDD.sdb</pre></li>
       <li>Verify the bad data exist where you think they exist
-      <pre class='tty'>sqlite3 $SQLITE_ROOT/weewx.sdb
+      <pre class='tty'>sqlite3 weewx.sdb
 sqlite&gt; select dateTime,outTemp from archive where outTemp &gt; 1000;</pre></li>
       <li>See whether the bad temperature and wind data happened at the same time
       <pre class='tty'>sqlite&gt; select dateTime,outTemp,windSpeed from archive where outTemp &gt; 1000;</pre></li>
@@ -3788,7 +3786,7 @@ Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
       Run it with the option <span class='code'>--string-check</span> to
       search for these embedded strings. Add the option
       <span class='code'>--fix</span> to have the utility fix them:</p>
-    <pre class="tty"><span class="symcode">$BIN_ROOT</span>/wee_config_database <span class="symcode">$CONFIG_ROOT</span>/weewx.conf --string-check --fix</pre>
+    <pre class="tty">wee_config_database weewx.conf --string-check --fix</pre>
 
     <h3>Python 2.5</h3>
     <p>Weewx should work with Python version 2.5, but it may take some fiddling
