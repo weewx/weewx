@@ -903,8 +903,9 @@ def getConfiguration(config_path):
         syslog.syslog(syslog.LOG_CRIT, "engine: Unable to open configuration file %s" % config_path)
         # Reraise the exception (this should cause the program to exit)
         raise
-    except configobj.ConfigObjError:
+    except configobj.ConfigObjError, e:
         syslog.syslog(syslog.LOG_CRIT, "engine: Error while parsing configuration file %s" % config_path)
+        syslog.syslog(syslog.LOG_CRIT, "****    Reason: '%s'" % e)
         raise
 
     syslog.syslog(syslog.LOG_INFO, "engine: Using configuration file %s" % config_path)

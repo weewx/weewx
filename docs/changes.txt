@@ -60,6 +60,8 @@ to be used. Fixes ticket #35.
 New tag $obs, allowing access to the contents of the skin configuration
 section [Labels][[Generic]]. Fixes ticket #33.
 
+Better error message if there's a parse error in the configuration file.
+
 
 3.0.1 12/07/14
 
