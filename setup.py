@@ -1142,7 +1142,9 @@ class Extension(Logger):
         self.installer.uninstall()
 
     def verify_installer(self, filename, tmpdir):
-        if os.path.isdir(filename):
+        if not os.path.exists(filename):
+            raise Exception("no such file/folder %s" % filename)
+        elif os.path.isdir(filename):
             basename = os.path.basename(filename)
             extdir = filename
             delete_when_finished = False
