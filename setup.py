@@ -1188,7 +1188,7 @@ class Extension(Logger):
                 p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
                 (o, _) = p.communicate()
                 for line in o.split('\n'):
-                    if line.find('weewx') >= 0:
+                    if line.find('weewx') >= 0 and line.find('noarch') >= 0:
                         layout_type = 'rpm'
             except:
                 pass
