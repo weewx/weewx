@@ -30,7 +30,10 @@ import weeutil.weeutil
 from weeutil.weeutil import to_bool, to_int
 
 class BreakLoop(Exception):
-    pass
+    """Exception raised when it's time to break the main loop."""
+
+class InitializationError(weewx.WeeWxIOError):
+    """Exception raised when unable to initialize the console."""
 
 # All existent service groups:
 all_service_groups = ['prep_services', 'data_services', 'process_services',
@@ -101,10 +104,8 @@ class StdEngine(object):
             # Call it with the configuration dictionary as the only argument:
             self.console = loader_function(config_dict, self)
         except Exception, ex:
-            # Caught unrecoverable error. Log it:
-            syslog.syslog(syslog.LOG_CRIT, "engine: Unable to load driver: %s" % ex)
-            # Reraise the exception:
-            raise
+            # Signal that we have an initialization error:
+            raise InitializationError(ex)
         
     def preLoadServices(self, config_dict):
         
@@ -809,11 +810,6 @@ def main(options, args, EngineClass=StdEngine) :
         syslog.syslog(syslog.LOG_INFO, "engine: pid file is %s" % options.pidfile)
         daemon.daemonize(pidfile=options.pidfile)
 
-    # If an exception occurs the first time through, then the problem is most
-    # likely a configuration problem.  But, if it happens later, it could be
-    # I/O error and it is worth retrying
-    successful_init = False
-    
     while True:
 
         os.chdir(cwd)
@@ -833,18 +829,30 @@ def main(options, args, EngineClass=StdEngine) :
 
             # Create and initialize the engine
             engine = EngineClass(config_dict)
-            successful_init = True
     
             syslog.syslog(syslog.LOG_INFO, "engine: Starting up weewx version %s" % weewx.__version__)
 
             # Start the engine
             engine.run()
     
+        # Catch any console initialization error:
+        except InitializationError, e:
+            # Log it:
+            syslog.syslog(syslog.LOG_CRIT, "engine: Unable to load driver: %s" % e)
+            # See if we should loop, waiting for the console to be ready, or exit:
+            if options.loop_on_init:
+                syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 60 seconds then retrying...")
+                time.sleep(60)
+                syslog.syslog(syslog.LOG_NOTICE, "engine: retrying...")
+            else:
+                syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
+                sys.exit(weewx.IO_ERROR)
+
         # Catch any recoverable weewx I/O errors:
         except weewx.WeeWxIOError, e:
             # Caught an I/O error. Log it, wait 60 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "engine: Caught WeeWxIOError: %s" % e)
-            if options.exit or (not successful_init and not options.retry):
+            if options.exit:
                 syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
                 sys.exit(weewx.IO_ERROR)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 60 seconds then retrying...")
@@ -881,18 +889,16 @@ def main(options, args, EngineClass=StdEngine) :
             # Reraise the exception (this should cause the program to exit)
             raise
     
-        # Catch any other errors. Log them. Exit unless retry is requested
-        except Exception, e:
-            syslog.syslog(syslog.LOG_CRIT, "engine: Caught Exception: %s" % e)
-            # Include a stack traceback in the log
+        # Catch any non-recoverable errors. Log them, exit
+        except Exception, ex:
+            # Caught unrecoverable error. Log it, exit
+            syslog.syslog(syslog.LOG_CRIT, "engine: Caught unrecoverable exception in engine:")
+            syslog.syslog(syslog.LOG_CRIT, "    ****  %s" % ex)
+            # Include a stack traceback in the log:
             weeutil.weeutil.log_traceback("    ****  ")
-            if not options.retry:
-                syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
-                # Reraise the exception (this should cause the program to exit)
-                raise
-            syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 2 minutes then retrying...")
-            time.sleep(120)
-            syslog.syslog(syslog.LOG_NOTICE, "engine: retrying...")
+            syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
+            # Reraise the exception (this should cause the program to exit)
+            raise
 
 def getConfiguration(config_path):
     """Return the configuration file at the given path."""
