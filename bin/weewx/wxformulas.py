@@ -9,12 +9,24 @@
 """Various weather related formulas and utilities."""
 
 import math
+import time
 import weewx.uwxutils
 
 INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
+METER_PER_MILE = 1609.34
+MM_PER_INCH = 25.4
 
-def dewpointF(T, R) :
+def CtoK(x):
+    return x + 273.15
+
+def CtoF(x):
+    return x * 1.8 + 32.0
+
+def FtoC(x):
+    return (x - 32.0) * 5.0 / 9.0
+
+def dewpointF(T, R):
     """Calculate dew point. 
     
     T: Temperature in Fahrenheit
@@ -32,15 +44,16 @@ def dewpointF(T, R) :
     -23.5
     """
 
-    if T is None or R is None :
+    if T is None or R is None:
         return None
 
-    TdC = dewpointC((T - 32.0)*5.0/9.0, R)
+    TdC = dewpointC(FtoC(T), R)
 
-    return TdC * 9.0/5.0 + 32.0 if TdC is not None else None
+    return CtoF(TdC) if TdC is not None else None
 
 def dewpointC(T, R):
-    """Calculate dew point. From http://en.wikipedia.org/wiki/Dew_point
+    """Calculate dew point.
+    http://en.wikipedia.org/wiki/Dew_point
     
     T: Temperature in Celsius
     
@@ -49,7 +62,7 @@ def dewpointC(T, R):
     Returns: Dewpoint in Celsius
     """
 
-    if T is None or R is None :
+    if T is None or R is None:
         return None
     R = R / 100.0
     try:
@@ -59,8 +72,9 @@ def dewpointC(T, R):
         TdC = None
     return TdC
 
-def windchillF(T_F, V_mph) :
-    """Calculate wind chill. From http://www.nws.noaa.gov/om/windchill
+def windchillF(T_F, V_mph):
+    """Calculate wind chill.
+    http://www.nws.noaa.gov/om/windchill
     
     T_F: Temperature in Fahrenheit
     
@@ -72,9 +86,10 @@ def windchillF(T_F, V_mph) :
     if T_F is None or V_mph is None:
         return None
 
-    # Formula only valid for temperatures below 50F and wind speeds over 3.0 mph
-    if T_F >= 50.0 or V_mph <= 3.0 : 
+    # only valid for temperatures below 50F and wind speeds over 3.0 mph
+    if T_F >= 50.0 or V_mph <= 3.0: 
         return T_F
+
     WcF = 35.74 + 0.6215 * T_F + (-35.75  + 0.4275 * T_F) * math.pow(V_mph, 0.16) 
     return WcF
 
@@ -90,15 +105,16 @@ def windchillC(T_C, V_kph):
     if T_C is None or V_kph is None:
         return None
     
-    T_F = T_C * (9.0/5.0) + 32.0
+    T_F = CtoF(T_C)
     V_mph = 0.621371192 * V_kph
     
     WcF = windchillF(T_F, V_mph)
     
-    return (WcF - 32.0) * (5.0 / 9.0) if WcF is not None else None
+    return FtoC(WcF) if WcF is not None else None
     
-def heatindexF(T, R) :
-    """Calculate heat index. From http://www.crh.noaa.gov/jkl/?n=heat_index_calculator
+def heatindexF(T, R):
+    """Calculate heat index.
+    http://www.crh.noaa.gov/jkl/?n=heat_index_calculator
     
     T: Temperature in Fahrenheit
     
@@ -120,25 +136,25 @@ def heatindexF(T, R) :
     126.6232036
 
     """
-    if T is None or R is None :
+    if T is None or R is None:
         return None
     
     # Formula only valid for temperatures over 80F:
     if T < 80.0 or R  < 40.0:
         return T
 
-    hiF = -42.379 + 2.04901523 * T + 10.14333127 * R - 0.22475541 * T * R - 6.83783e-3 * T**2\
+    hi_F = -42.379 + 2.04901523 * T + 10.14333127 * R - 0.22475541 * T * R - 6.83783e-3 * T**2\
     -5.481717e-2 * R**2 + 1.22874e-3 * T**2 * R + 8.5282e-4 * T * R**2 - 1.99e-6 * T**2 * R**2
-    if hiF < T :
-        hiF = T
-    return hiF
+    if hi_F < T:
+        hi_F = T
+    return hi_F
 
 def heatindexC(T_C, R):
-    if T_C is None or R is None :
+    if T_C is None or R is None:
         return None
-    T_F = T_C * (9.0/5.0) + 32.0
-    hiF = heatindexF(T_F, R)
-    return (hiF - 32.0) * (5.0/9.0)
+    T_F = CtoF(T_C)
+    hi_F = heatindexF(T_F, R)
+    return FtoC(hi_F)
 
 def heating_degrees(t, base):
     return max(base - t, 0) if t is not None else None
@@ -182,7 +198,7 @@ def altimeter_pressure_Metric(SP_mbar, Z_meter, algorithm='aaASOS'):
 
 def _etterm(elev_meter, t_C):
     """Calculate elevation/temperature term for sea level calculation."""
-    t_K = t_C + 273.15
+    t_K = CtoK(t_C)
     return math.exp( - elev_meter / (t_K * 29.263))
 
 def sealevel_pressure_Metric(sp_mbar, elev_meter, t_C):
@@ -208,7 +224,7 @@ def sealevel_pressure_US(sp_inHg, elev_foot, t_F):
         return None
     sp_mbar = sp_inHg / INHG_PER_MBAR
     elev_meter = elev_foot * METER_PER_FOOT
-    t_C = (t_F - 32) * 5 / 9
+    t_C = FtoC(t_F)
     slp_mbar = sealevel_pressure_Metric(sp_mbar, elev_meter, t_C)
     slp_inHg = slp_mbar * INHG_PER_MBAR
     return slp_inHg
@@ -223,6 +239,294 @@ def calculate_rain(newtotal, oldtotal):
     else:
         delta = None
     return delta
+
+def max_solar_rad(ts, lat, lon, altitude_m, atc=0.8):
+    """Calculate maximum solar radiation
+    Ryan-Stolzenbach, MIT 1972
+    http://www.ecy.wa.gov/programs/eap/models.html
+
+    ts - time as unix epoch
+
+    altitude_m - altitude in meters
+    """
+    from weewx.almanac import Almanac
+    msr = 0.0
+    try:
+        alm = Almanac(ts, lat, lon, altitude_m)
+        el = alm.sun.alt
+        R = alm.sun.earth_distance
+        z = altitude_m
+        r0 = 1367
+        sinal = math.sin(el)
+        if sinal >= 0:
+            al = math.asin(sinal)
+            a0 = al * 57.2957795
+            rm = math.pow((288-0.0065*z)/288,5.256)/(sinal+0.15*math.pow(a0+3.885,-1.253))
+            toa = r0 * sinal / (R * R)
+            msr = toa * (math.pow(atc, rm))
+    except (AttributeError, ValueError, OverflowError):
+        msr = None
+    return msr
+
+def cloudbase_Metric(t_C, rh, altitude_m):
+    """Calculate the cloud base in meters
+
+    t_C - temperature in degrees Celsius
+
+    rh - relative humidity [0-100]
+
+    altitude_m - altitude in meters
+    """
+    if t_C is None or rh is None:
+        return None
+    dp_C = dewpointC(t_C, rh)
+    if dp_C is None:
+        return None
+    cb = (t_C - dp_C) * 1000 / 2.5
+    return altitude_m + cb * METER_PER_FOOT if cb is not None else None
+
+def cloudbase_US(t_F, rh, altitude_ft):
+    """Calculate the cloud base in feet
+
+    t_F - temperature in degrees Fahrenheit
+
+    rh - relative humidity [0-100]
+
+    altitude_ft - altitude in feet
+    """
+    if t_F is None or rh is None:
+        return None
+    dp_F = dewpointF(t_F, rh)
+    if dp_F is None:
+        return None
+    cb = altitude_ft + (t_F - dp_F) * 1000.0 / 4.4
+    return cb
+
+def humidexC(t_C, rh):
+    """Calculate the humidex
+    http://www.physlink.com/reference/weather.cfm
+
+    t_C - temperature in degree Celsius
+
+    rh - relative humidity [0-100]
+    """
+    dp_C = dewpointC(t_C, rh)
+    if dp_C is None or dp_C < 273:
+        return None
+    try:
+        dp_K = CtoK(dp_C)
+        e = 6.11 * math.exp(5417.7530 * (1/273.16 - 1/dp_K))
+        h = 0.5555 * (e - 10.0)
+        humidex = t_C
+        if h > 0:
+            humidex += h
+    except (ValueError, OverflowError):
+        humidex = None
+    return humidex
+
+def humidexF(t_F, rh):
+    """Calculate the humidex in degree Fahrenheit
+
+    t_F - temperature in degree Fahrenheit
+
+    rh - relative humidity [0-100]
+    """
+    h_C = humidexC(FtoC(t_F), rh)
+    return CtoF(h_C) if h_C is not None else None
+
+def apptempC(t_C, rh, ws_mps):
+    """Calculate the apparent temperature in degree Celsius
+
+    t_C - temperature in degree Celsius
+
+    rh - relative humidity [0-100]
+
+    ws_mps - wind speed in meters per second
+
+    http://www.bom.gov.au/info/thermal_stress/#atapproximation
+      AT = Ta + 0.33*e - 0.70*ws - 4.00
+    where
+      AT and Ta (air temperature) are deg-C
+      e is water vapor pressure
+      ws is wind speed (m/s) at elevation of 10 meters
+      e = rh / 100 * 6.105 * exp(17.27 * Ta / (237.7 + Ta))
+      rh is relative humidity
+
+    http://www.ncdc.noaa.gov/societal-impacts/apparent-temp/
+      AT = -2.7 + 1.04*T + 2.0*e -0.65*v
+    where
+      AT and T (air temperature) are deg-C
+      e is vapor pressure in kPa
+      v is 10m wind speed in m/sec
+    """
+    if rh < 0 or rh > 100:
+        return None
+    if ws_mps < 0:
+        return None
+    try:
+        e = (rh / 100.0) * 6.105 * math.exp(17.27 * t_C / (237.7 + t_C))
+        at_C = t_C + 0.33 * e - 0.7 * ws_mps - 4.0
+    except (ValueError, OverflowError):
+        at_C = None
+    return at_C
+
+def apptempF(t_F, rh, ws_mph):
+    """Calculate apparent temperature in degree Fahrenheit
+
+    t_F - temperature in degree Fahrenheit
+
+    rh - relative humidity [0-100]
+
+    ws_mph - wind speed in miles per hour
+    """
+    t_C = FtoC(t_F)
+    ws_mps = ws_mph * METER_PER_MILE / 3600.0
+    at_C = apptempC(t_C, rh, ws_mps)
+    return CtoF(at_C) if at_C is not None else None
+
+def beaufort(ws_kts):
+    """Return the beaufort number given a wind speed in knots"""
+    if ws_kts is None:
+        return None
+    elif ws_kts < 1:
+        return 0
+    elif ws_kts < 4:
+        return 1
+    elif ws_kts < 7:
+        return 2
+    elif ws_kts < 11:
+        return 3
+    elif ws_kts < 17:
+        return 4
+    elif ws_kts < 22:
+        return 5
+    elif ws_kts < 28:
+        return 6
+    elif ws_kts < 34:
+        return 7
+    elif ws_kts < 41:
+        return 8
+    elif ws_kts < 48:
+        return 9
+    elif ws_kts < 56:
+        return 10
+    elif ws_kts < 64:
+        return 11
+    return 12
+
+def windrun_km(data):
+    """calculate the wind run from an array of (interval,velocity) tuples.
+    the interval is in minutes
+    velocity is km/hr
+    return value is in km
+    """
+    run = 0.0
+    for x in data:
+        if x[0] and x[1]:
+            run += x[0] * x[1] / 60.0
+    return run
+
+def windrun_mile():
+    """calculate the wind run from an array of (interval,velocity) tuples.
+    the interval is in minutes
+    velocity is mile/hr
+    return value is in miles
+    """
+    run = 0.0
+    for x in data:
+        if x[0] and x[1]:
+            run += x[0] * x[1] / 60.0
+    return run
+
+def evapotranspiration_Metric(tmax_C, tmin_C, sr, ws_mps, z_m, lat, ts=None):
+    """Calculate the evapotranspiration
+    http://edis.ifas.ufl.edu/ae459
+
+    tmax_C - maximum temperature in degrees Celsius
+
+    tmin_C - minimum temperature in degrees Celsius
+
+    sr - mean daily/hourly solar radiation in watts per square meter per day/hr
+
+    ws_mps - average daily/hourly wind speed in meters per second
+
+    z_m - height in meters at which windspeed is measured
+
+    ts - current timestamp as unix epoch
+
+    lat - latitude in degrees
+
+    returns evapotranspiration in mm per day/hour
+    """
+    if ts is None:
+        ts = time.time()
+    # figure out the day of year [1-366] from the timestamp
+    doy = time.localtime(ts)[7]
+    # step 1: calculate mean temperature
+    tavg_C = 0.5 * (tmax_C + tmin_C)
+    # step 2: convert sr from W/m^2 per day to MJ/m^2 per day
+    rs = sr * 0.0864
+    # step 3: adjust windspeed for height
+    u2 = 4.87 * ws_mps / math.log(67.8 * z_m - 5.42)
+    # step 4: calculate the slope of saturation vapor pressure curve
+    slope = 4098.0 * (0.6108 * math.exp(17.27 * tavg_C / (tavg_C + 273.3))) / ((tavg_C + 273.3) * (tavg_C + 273.3))
+    # step 5: calculate the atmospheric pressure
+    p = 101.3 * math.pow((293.0 - 0.0065 * z_m) / 293.0, 5.26)
+    # step 6: calculate the psychrometric constant
+    g = 0.000665 * p
+    # step 7: calculate the delta term
+    dt = slope / (slope + g * (1.0 + 0.34 * u2))
+    # step 8: calculate the psi term
+    pt = g / (slope + g * (1.0 + 0.34 * u2))
+    # step 9: calculate the temperature term
+    tt = 900.0 * u2 / (tavg_C + 273.0)
+    # step 10: calculate mean saturation vapor pressure
+    etmin = 0.6108 * math.exp(17.27 * tmin_C / (tmin_C + 273.3))
+    etmax = 0.6108 * math.exp(17.27 * tmax_C / (tmax_C + 273.3))
+    es = 0.5 * (etmax + etmin)
+    # step 11: calculate actual vapor pressure
+    # a: if rhmax and rhmin are available
+#    ea = (etmin * rhmax + etmax * rhmin) / 200.0
+    # b: using only rhmax
+#    ea = etmin * rhmax / 100.0
+    # c: using rhavg
+#    ea = rhavg * (etmin + etmax) / 200.0
+    # d: with no humidity data
+    ea = 0.6108 * math.exp(17.27 * tmin_C / (tmin_C + 273.3))
+    # step 12: earth-sun relative distance and solar declination
+    dr = 1.0 + 0.033 * math.cos(doy * 2.0 * math.pi / 365.0)
+    sd = 0.409 * math.sin(doy * 2.0 * math.pi / 365.0 - 1.39)
+    # step 13: convert latitude to radians
+    phi = lat * math.pi / 180.0
+    # step 14: sunset hour angle
+    w = math.acos( - math.tan(phi) * math.tan(sd))
+    # step 15: extraterrestrial radiation
+    gsc = 0.082
+    ra = 24.0 * 60.0 / math.pi * gsc * dr * (w * math.sin(phi) * math.sin(sd) + math.cos(phi) * math.cos(sd) * math.sin(w))
+    # step 16: clear sky solar radiation
+    rso = (0.75 + 2e-5 * z_m) * ra
+    # step 17: net solar or net shortwave radiation
+    a = 0.23
+    rns = (1.0 - a) * rs
+    # step 18: net outgoing long wave solar radiation
+    sigma = 4.903e-9
+    rnl = sigma * 0.5 * (math.pow(tmax_C + 273.16, 4) + math.pow(tmin_C + 273.16, 4)) * (0.34 - 0.14 * math.sqrt(ea)) * (1.35 * rs / rso - 0.35)
+    # step 19: net radiation
+    rn = rns - rnl
+    # step 20: overall evapotranspiration
+    ev_rad = dt * rn
+    ev_wind = pt * tt * (es - ea)
+    evt = ev_rad + ev_wind
+    return evt
+
+def evapotranspiration_US(tmax_F, tmin_F, sr, ws_mph, z_ft, lat, ts):
+    tmax_C = FtoC(tmax_F)
+    tmin_C = FtoC(tmin_F)
+    ws_mps = ws_mph * METER_PER_MILE / 3600.0
+    z_m = z_ft * METER_PER_FOOT
+    evt = evapotranspiration_Metric(tmax_C, tmin_C, sr, ws_mps, z_m, lat, ts)
+    return evt / MM_PER_INCH if evt is not None else None
+
 
 if __name__ == '__main__':
     import doctest
