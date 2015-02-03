@@ -257,32 +257,32 @@ def solar_rad_Bras(lat, lon, altitude_m, ts=None, nfac=2):
 
     Example:
 
-    for t in range(0,24):
-        weewx.wxformulas.solar_rad_Bras(42, -72, 0, t*3600+1422936471) 
-    0.0
-    0.0
-    0.0
-    0.0
-    0.0
-    0.0
-    0.0
-    0.0
-    1.8609350030696032
-    100.80926954196848
-    248.7067844375056
-    374.67912619923788
-    454.89757282909846
-    478.76127752636285
-    443.47196369866617
-    353.22877477665912
-    220.51032098099319
-    73.705341807915531
-    0.0
-    0.0
-    0.0
-    0.0
-    0.0
-    0.0
+    >>> for t in range(0,24):
+    ...    print "%.2f" % solar_rad_Bras(42, -72, 0, t*3600+1422936471) 
+    0.00
+    0.00
+    0.00
+    0.00
+    0.00
+    0.00
+    0.00
+    0.00
+    1.86
+    100.81
+    248.71
+    374.68
+    454.90
+    478.76
+    443.47
+    353.23
+    220.51
+    73.71
+    0.00
+    0.00
+    0.00
+    0.00
+    0.00
+    0.00
     """
     from weewx.almanac import Almanac
     if ts is None:
@@ -323,32 +323,32 @@ def solar_rad_RS(lat, lon, altitude_m, ts=None, atc=0.8):
 
     Example:
 
-    for t in range(0,24):
-        weewx.wxformulas.max_solar_rad(42, -72, 0, t*3600+1422936471)
-    0.0
-    0.0
-    0.0
-    0.0
-    0.0
-    0.0
-    0.0
-    0.0
-    0.087729314682496382
-    79.312457785298392
-    234.77452711591494
-    369.79713070200268
-    455.65813322121505
-    481.15434301784779
-    443.44374345443799
-    346.80741584765246
-    204.64460818761449
-    52.631572716380596
-    0.0
-    0.0
-    0.0
-    0.0
-    0.0
-    0.0
+    >>> for t in range(0,24):
+    ...    print "%.2f" % solar_rad_RS(42, -72, 0, t*3600+1422936471)
+    0.00
+    0.00
+    0.00
+    0.00
+    0.00
+    0.00
+    0.00
+    0.00
+    0.09
+    79.31
+    234.77
+    369.80
+    455.66
+    481.15
+    443.44
+    346.81
+    204.64
+    52.63
+    0.00
+    0.00
+    0.00
+    0.00
+    0.00
+    0.00
     """
     from weewx.almanac import Almanac
     if atc < 0.7 or atc > 0.91:
@@ -517,30 +517,6 @@ def beaufort(ws_kts):
         return 11
     return 12
 
-def windrun_km(data):
-    """calculate the wind run from an array of (interval,velocity) tuples.
-    the interval is in minutes
-    velocity is km/hr
-    return value is in km
-    """
-    run = 0.0
-    for x in data:
-        if x[0] and x[1]:
-            run += x[0] * x[1] / 60.0
-    return run
-
-def windrun_mile():
-    """calculate the wind run from an array of (interval,velocity) tuples.
-    the interval is in minutes
-    velocity is mile/hr
-    return value is in miles
-    """
-    run = 0.0
-    for x in data:
-        if x[0] and x[1]:
-            run += x[0] * x[1] / 60.0
-    return run
-
 def evapotranspiration_Metric(tmax_C, tmin_C, sr, ws_mps, z_m, lat, ts=None):
     """Calculate the evapotranspiration
     http://edis.ifas.ufl.edu/ae459
@@ -631,6 +607,9 @@ def evapotranspiration_US(tmax_F, tmin_F, sr, ws_mph, z_ft, lat, ts):
     return evt / MM_PER_INCH if evt is not None else None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    
     import doctest
-    doctest.testmod()
+
+    if not doctest.testmod().failed:
+        print("PASSED")

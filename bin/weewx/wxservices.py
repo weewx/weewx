@@ -1,10 +1,12 @@
-# $Id$
-# Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
-# See the file LICENSE.txt for your full rights.
+#
+#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
+#    $Id$
+#
 
 """Services specific to weather."""
-
-import syslog
 
 import weewx.units
 import weewx.engine
@@ -150,11 +152,11 @@ class StdWXCalculate(weewx.engine.StdService):
                 events.append((data['dateTime'], data['rain']))
             self.rain_events = events
         # for both loop and archive, add up the rain...
-        sum = 0
+        rainsum = 0
         for e in self.rain_events:
-            sum += e[1]
+            rainsum += e[1]
         # ...then divide by the period and scale to an hour
-        data['rainRate'] = 3600 * sum / self.rain_period
+        data['rainRate'] = 3600 * rainsum / self.rain_period
 
     def get_arcint(self, data):
         if 'interval' in data and self.arcint != data['interval'] * 60:
