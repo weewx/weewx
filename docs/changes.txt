@@ -65,6 +65,9 @@ Better error message if there's a parse error in the configuration file.
 Added wxformulas for evapotranspiration, humidex, apparent temperature, and
 other calculations.
 
+Added --retry option to weewxd for startup when device may or may not be
+attached or accessible.
+
 
 3.0.1 12/07/14
 

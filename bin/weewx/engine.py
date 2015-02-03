@@ -844,7 +844,7 @@ def main(options, args, EngineClass=StdEngine) :
         except weewx.WeeWxIOError, e:
             # Caught an I/O error. Log it, wait 60 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "engine: Caught WeeWxIOError: %s" % e)
-            if options.exit or not successful_init:
+            if options.exit or (not successful_init and not options.retry):
                 syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
                 sys.exit(weewx.IO_ERROR)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 60 seconds then retrying...")
@@ -854,7 +854,7 @@ def main(options, args, EngineClass=StdEngine) :
         except weedb.OperationalError, e:
             # Caught a database error. Log it, wait 120 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "engine: Caught database OperationalError: %s" % e)
-            if options.exit :
+            if options.exit:
                 syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
                 sys.exit(weewx.DB_ERROR)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 2 minutes then retrying...")
@@ -875,22 +875,24 @@ def main(options, args, EngineClass=StdEngine) :
             syslog.syslog(syslog.LOG_INFO, "engine: Terminating weewx version %s" % weewx.__version__)
             sys.exit()
 
-        # For command-line, catch any keyboard interrupts and log them:
+        # Catch any keyboard interrupts and log them
         except KeyboardInterrupt:
             syslog.syslog(syslog.LOG_CRIT,"engine: Keyboard interrupt.")
             # Reraise the exception (this should cause the program to exit)
             raise
     
-        # Catch any non-recoverable errors. Log them, exit
-        except Exception, ex:
-            # Caught unrecoverable error. Log it, exit
-            syslog.syslog(syslog.LOG_CRIT, "engine: Caught unrecoverable exception in engine:")
-            syslog.syslog(syslog.LOG_CRIT, "    ****  %s" % ex)
-            # Include a stack traceback in the log:
+        # Catch any other errors. Log them. Exit unless retry is requested
+        except Exception, e:
+            syslog.syslog(syslog.LOG_CRIT, "engine: Caught Exception: %s" % e)
+            # Include a stack traceback in the log
             weeutil.weeutil.log_traceback("    ****  ")
-            syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
-            # Reraise the exception (this should cause the program to exit)
-            raise
+            if not options.retry:
+                syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
+                # Reraise the exception (this should cause the program to exit)
+                raise
+            syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 2 minutes then retrying...")
+            time.sleep(120)
+            syslog.syslog(syslog.LOG_NOTICE, "engine: retrying...")
 
 def getConfiguration(config_path):
     """Return the configuration file at the given path."""
