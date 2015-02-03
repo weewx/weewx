@@ -26,6 +26,9 @@ def CtoF(x):
 def FtoC(x):
     return (x - 32.0) * 5.0 / 9.0
 
+def degtorad(x):
+    return x * math.pi / 180.0
+
 def dewpointF(T, R):
     """Calculate dew point. 
     
@@ -240,33 +243,133 @@ def calculate_rain(newtotal, oldtotal):
         delta = None
     return delta
 
-def max_solar_rad(ts, lat, lon, altitude_m, atc=0.8):
+def solar_rad_Bras(lat, lon, altitude_m, ts=None, nfac=2):
+    """Calculate maximum solar radiation using Bras method
+    http://www.ecy.wa.gov/programs/eap/models.html
+
+    lat, lon - latitude and longitude in decimal degrees
+
+    altitude_m - altitude in meters
+
+    ts - timestamp as unix epoch
+
+    nfac - atmospheric turbidity (2=clear, 4-5=smoggy)
+
+    Example:
+
+    for t in range(0,24):
+        weewx.wxformulas.solar_rad_Bras(42, -72, 0, t*3600+1422936471) 
+    0.0
+    0.0
+    0.0
+    0.0
+    0.0
+    0.0
+    0.0
+    0.0
+    1.8609350030696032
+    100.80926954196848
+    248.7067844375056
+    374.67912619923788
+    454.89757282909846
+    478.76127752636285
+    443.47196369866617
+    353.22877477665912
+    220.51032098099319
+    73.705341807915531
+    0.0
+    0.0
+    0.0
+    0.0
+    0.0
+    0.0
+    """
+    from weewx.almanac import Almanac
+    if ts is None:
+        ts = time.time()
+    sr = 0.0
+    try:
+        alm = Almanac(ts, lat, lon, altitude_m)
+        el = alm.sun.alt # solar elevation degrees from horizon
+        R = alm.sun.earth_distance
+        # NREL solar constant W/m^2
+        nrel = 1367.0
+        # radiation on horizontal surface at top of atmosphere (bras eqn 2.9)
+        sinel = math.sin(degtorad(el))
+        io = sinel * nrel / (R * R)
+        if sinel >= 0:
+            # optical air mass (bras eqn 2.22)
+            m = 1.0 / (sinel + 0.15 * math.pow(el + 3.885, -1.253))
+            # molecular scattering coefficient (bras eqn 2.26)
+            a1 = 0.128 - 0.054 * math.log(m) / math.log(10.0)
+            # clear-sky radiation at earth surface W / m^2 (bras eqn 2.25)
+            sr = io * math.exp(-nfac * a1 * m)
+    except (AttributeError, ValueError, OverflowError):
+        sr = None
+    return sr
+
+def solar_rad_RS(lat, lon, altitude_m, ts=None, atc=0.8):
     """Calculate maximum solar radiation
     Ryan-Stolzenbach, MIT 1972
     http://www.ecy.wa.gov/programs/eap/models.html
 
-    ts - time as unix epoch
+    lat, lon - latitude and longitude in decimal degrees
 
     altitude_m - altitude in meters
+
+    ts - time as unix epoch
+
+    atc - atmospheric transmission coefficient (0.7-0.91)
+
+    Example:
+
+    for t in range(0,24):
+        weewx.wxformulas.max_solar_rad(42, -72, 0, t*3600+1422936471)
+    0.0
+    0.0
+    0.0
+    0.0
+    0.0
+    0.0
+    0.0
+    0.0
+    0.087729314682496382
+    79.312457785298392
+    234.77452711591494
+    369.79713070200268
+    455.65813322121505
+    481.15434301784779
+    443.44374345443799
+    346.80741584765246
+    204.64460818761449
+    52.631572716380596
+    0.0
+    0.0
+    0.0
+    0.0
+    0.0
+    0.0
     """
     from weewx.almanac import Almanac
-    msr = 0.0
+    if atc < 0.7 or atc > 0.91:
+        atc = 0.8
+    if ts is None:
+        ts = time.time()
+    sr = 0.0
     try:
         alm = Almanac(ts, lat, lon, altitude_m)
-        el = alm.sun.alt
+        el = alm.sun.alt # solar elevation degrees from horizon
         R = alm.sun.earth_distance
         z = altitude_m
-        r0 = 1367
-        sinal = math.sin(el)
-        if sinal >= 0:
-            al = math.asin(sinal)
-            a0 = al * 57.2957795
-            rm = math.pow((288-0.0065*z)/288,5.256)/(sinal+0.15*math.pow(a0+3.885,-1.253))
-            toa = r0 * sinal / (R * R)
-            msr = toa * (math.pow(atc, rm))
+        nrel = 1367.0 # NREL solar constant, W/m^2
+        sinal = math.sin(degtorad(el))
+        if sinal >= 0: # sun must be above horizon
+            rm = math.pow((288.0-0.0065*z)/288.0,5.256)/(sinal+0.15*math.pow(el+3.885,-1.253))
+            toa = nrel * sinal / (R * R)
+            sr = toa * math.pow(atc, rm)
     except (AttributeError, ValueError, OverflowError):
-        msr = None
-    return msr
+        sr = None
+    return sr
 
 def cloudbase_Metric(t_C, rh, altitude_m):
     """Calculate the cloud base in meters
