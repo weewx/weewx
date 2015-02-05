@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009, 2012, 2013, 2014 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009 - 2015 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -34,9 +34,11 @@ class GeneralPlot(object):
         
         self.xscale = None
         self.yscale = None
-        
-        self.image_width            = int(config_dict.get('image_width',  300))
-        self.image_height           = int(config_dict.get('image_height', 180))
+
+        self.anti_alias             = int(config_dict.get('anti_alias',  1))
+
+        self.image_width            = int(config_dict.get('image_width',  300)) * self.anti_alias
+        self.image_height           = int(config_dict.get('image_height', 180)) * self.anti_alias
         self.image_background_color = weeplot.utilities.tobgr(config_dict.get('image_background_color', '0xf5f5f5'))
 
         self.chart_background_color = weeplot.utilities.tobgr(config_dict.get('chart_background_color', '0xd8d8d8'))
@@ -50,32 +52,32 @@ class GeneralPlot(object):
 
         
         self.top_label_font_path    = config_dict.get('top_label_font_path')
-        self.top_label_font_size    = int(config_dict.get('top_label_font_size', 10))
+        self.top_label_font_size    = int(config_dict.get('top_label_font_size', 10)) * self.anti_alias
 
         self.unit_label             = None
         self.unit_label_font_path   = config_dict.get('unit_label_font_path')
         self.unit_label_font_color  = weeplot.utilities.tobgr(config_dict.get('unit_label_font_color', '0x000000'))
-        self.unit_label_font_size   = int(config_dict.get('unit_label_font_size', 10))
-        self.unit_label_position    = (10, 0)
+        self.unit_label_font_size   = int(config_dict.get('unit_label_font_size', 10)) * self.anti_alias
+        self.unit_label_position    = (10, 0) * self.anti_alias
         
         self.bottom_label_font_path = config_dict.get('bottom_label_font_path')
         self.bottom_label_font_color= weeplot.utilities.tobgr(config_dict.get('bottom_label_font_color', '0x000000'))
-        self.bottom_label_font_size = int(config_dict.get('bottom_label_font_size', 10))
+        self.bottom_label_font_size = int(config_dict.get('bottom_label_font_size', 10)) * self.anti_alias
 
         self.axis_label_font_path   = config_dict.get('axis_label_font_path')
         self.axis_label_font_color  = weeplot.utilities.tobgr(config_dict.get('axis_label_font_color', '0x000000'))
-        self.axis_label_font_size   = int(config_dict.get('axis_label_font_size', 10))
+        self.axis_label_font_size   = int(config_dict.get('axis_label_font_size', 10)) * self.anti_alias
 
         self.x_label_format         = config_dict.get('x_label_format')
         self.y_label_format         = config_dict.get('y_label_format')
         
         # Calculate sensible margins for the given image and font sizes.
         self.lmargin = int(4.0 * self.axis_label_font_size)
-        self.rmargin = 20
+        self.rmargin = 20 * self.anti_alias
         self.bmargin = int(1.5 * (self.bottom_label_font_size + self.axis_label_font_size) + 0.5)
         self.tmargin = int(1.5 * self.top_label_font_size + 0.5)
         self.tbandht = int(1.2 * self.top_label_font_size + 0.5)
-        self.padding =  3
+        self.padding =  3 * self.anti_alias
 
         self.render_rose            = False
         self.rose_width             = int(config_dict.get('rose_width', 21))
@@ -186,6 +188,9 @@ class GeneralPlot(object):
         if self.render_rose:
             self._renderRose(image, draw)
 
+        if self.anti_alias != 1:
+            image.thumbnail((self.image_width / self.anti_alias, self.image_height / self.anti_alias), Image.ANTIALIAS)
+
         return image
     
     def _getImageDraw(self, image):
@@ -260,7 +265,8 @@ class GeneralPlot(object):
 
         drawlabel = False
         for x in weeutil.weeutil.stampgen(self.xscale[0], self.xscale[1], self.xscale[2]) :
-            sdraw.line((x, x), (self.yscale[0], self.yscale[1]), fill=self.chart_gridline_color)
+            sdraw.line((x, x), (self.yscale[0], self.yscale[1]), fill=self.chart_gridline_color,
+                       width=self.anti_alias)
             drawlabel = not drawlabel
             if drawlabel:
                 xlabel = self._genXLabel(x)
@@ -282,7 +288,8 @@ class GeneralPlot(object):
         # Draw the (constant y) grid lines 
         for i in xrange(nygridlines) :
             y = self.yscale[0] + i * self.yscale[2]
-            sdraw.line((self.xscale[0], self.xscale[1]), (y, y), fill=self.chart_gridline_color)
+            sdraw.line((self.xscale[0], self.xscale[1]), (y, y), fill=self.chart_gridline_color,
+                       width=self.anti_alias)
             # Draw a label on every other line:
             if i%2 == 0 :
                 ylabel = self._genYLabel(y)
@@ -307,7 +314,7 @@ class GeneralPlot(object):
             iline=nlines-j-1
             color = self.chart_line_colors[iline%ncolors] if this_line.color is None else this_line.color
             fill_color = self.chart_fill_colors[iline%nfcolors] if this_line.fill_color is None else this_line.fill_color
-            width = self.chart_line_widths[iline%nwidths] if this_line.width is None else this_line.width
+            width = (self.chart_line_widths[iline%nwidths] if this_line.width is None else this_line.width) * self.anti_alias
 
             # Calculate the size of a gap in data
             maxdx = None
@@ -319,7 +326,7 @@ class GeneralPlot(object):
                            this_line.y, 
                            line_type=this_line.line_type,
                            marker_type=this_line.marker_type,
-                           marker_size=this_line.marker_size,
+                           marker_size=this_line.marker_size * self.anti_alias,
                            fill  = color,
                            width = width,
                            maxdx = maxdx)

@@ -49,6 +49,7 @@ bin/weewx/wxformulas.py
 bin/weewx/wxmanager.py
 bin/weewx/wxservices.py
 bin/weewx/drivers/__init__.py
+bin/weewx/drivers/acurite.py
 bin/weewx/drivers/cc3000.py
 bin/weewx/drivers/fousb.py
 bin/weewx/drivers/simulator.py
@@ -181,6 +182,7 @@ util/init.d/weewx.debian
 util/init.d/weewx.lsb
 util/init.d/weewx.redhat
 util/init.d/weewx.suse
+util/launchd/com.weewx.weewxd.plist
 util/logrotate.d/weewx
 util/logwatch/conf/logfiles/weewx.conf
 util/logwatch/conf/services/weewx.conf

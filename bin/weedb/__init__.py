@@ -14,6 +14,8 @@ Weedb generally follows the MySQL exception model. Specifically:
     being raised.
   - Select statements requesting non-existing columns result in a weedb.OperationalError
     exception being raised.
+  - Attempt to add a duplicate key results in a weedb.IntegrityError exception
+    being raised.
 """
 
 import sys
