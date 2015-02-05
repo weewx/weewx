@@ -130,9 +130,9 @@ class Common(unittest.TestCase):
             existing_record = {'dateTime': start_ts, 'interval': interval, 'usUnits' : 1, 'outTemp': 68.0}
             archive.addRecord(existing_record)
             
-            # Test changing the unit system. It should raise a ValueError exception:
+            # Test changing the unit system. It should raise a UnitError exception:
             metric_record = {'dateTime': stop_ts + interval, 'interval': interval, 'usUnits' : 16, 'outTemp': 20.0}
-            self.assertRaises(ValueError, archive.addRecord, metric_record)
+            self.assertRaises(weewx.UnitError, archive.addRecord, metric_record)
 
     def test_get_records(self):
         # Add a bunch of records:
@@ -152,7 +152,7 @@ class Common(unittest.TestCase):
             # Try getSql on non-existing types
             self.assertRaises(weedb.OperationalError, archive.getSql, "SELECT foo FROM archive WHERE dateTime=?",
                               (start_ts,))
-            self.assertRaises(weedb.OperationalError, archive.getSql, "SELECT barometer FROM foo WHERE dateTime=?",
+            self.assertRaises(weedb.ProgrammingError, archive.getSql, "SELECT barometer FROM foo WHERE dateTime=?",
                               (start_ts,))
 
             # Test genSql:

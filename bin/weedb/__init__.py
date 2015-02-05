@@ -5,7 +5,16 @@
 #
 #    $Id$
 #
-"""Middleware that sits above DBAPI and makes it a little more database independent."""
+"""Middleware that sits above DBAPI and makes it a little more database independent.
+
+Weedb generally follows the MySQL exception model. Specifically:
+  - Operations on a non-existent database result in a weedb.OperationalError exception
+    being raised.
+  - Operations on a non-existent table result in a weedb.ProgrammingError exception
+    being raised.
+  - Select statements requesting non-existing columns result in a weedb.OperationalError
+    exception being raised.
+"""
 
 import sys
 
@@ -13,18 +22,20 @@ import sys
 class DatabaseError(StandardError):
     """Base class of all weedb exceptions."""
 
-
 class OperationalError(DatabaseError):
     """Runtime database errors."""
 
-
+class ProgrammingError(DatabaseError):
+    """SQL or other programming error."""
+    
 class DatabaseExists(DatabaseError):
     """Attempt to create a database that already exists"""
-
 
 class NoDatabase(DatabaseError):
     """Operation attempted on a database that does not exist."""
 
+class IntegrityError(DatabaseError):
+    """Operation attempted involving the relational integrity of the database."""
 
 # In what follows, the test whether a database dictionary has function "dict" is
 # to get around a bug in ConfigObj. It seems to be unable to unpack (using the
@@ -88,7 +99,7 @@ class Connection(object):
         cursor = self.cursor()
         try:
             cursor.execute(sql_string, sql_tuple)
-        except DatabaseError:
+        finally:
             cursor.close()
 
     def tables(self):
@@ -106,8 +117,8 @@ class Connection(object):
         raise NotImplementedError
 
     def columnsOf(self, table):
-        """Returns a list of the column names in the specified table.
-        Raises exception of type weedb.OperationalError if the table does not exist."""
+        """Returns a list of the column names in the specified table. Implementers
+        should raise an exception of type weedb.ProgrammingError if the table does not exist."""
         raise NotImplementedError
 
     def begin(self):

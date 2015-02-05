@@ -22,7 +22,11 @@ def guard(fn):
     def guarded_fn(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except (_mysql_exceptions.OperationalError, _mysql_exceptions.ProgrammingError), e:
+        except _mysql_exceptions.IntegrityError, e:
+            raise weedb.IntegrityError(e)
+        except _mysql_exceptions.ProgrammingError, e:
+            raise weedb.ProgrammingError(e)
+        except _mysql_exceptions.OperationalError, e:
             raise weedb.OperationalError(e)
 
     return guarded_fn

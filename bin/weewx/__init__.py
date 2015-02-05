@@ -8,7 +8,7 @@
 """Package weewx, containing modules specific to the weewx runtime engine."""
 import time
 
-__version__="3.1.0b1"
+__version__="3.1.0"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -67,6 +67,9 @@ class UnknownDatabase(StandardError):
 
 class UnknownBinding(StandardError):
     """Exception thrown when attempting to use an unknown data binding."""
+
+class UnitError(ValueError):
+    """Exception thrown when there is a mismatch in unit systems."""
 
 #===============================================================================
 #                       Possible event types.

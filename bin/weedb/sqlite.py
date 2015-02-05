@@ -28,7 +28,13 @@ def guard(fn):
     def guarded_fn(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
+        except sqlite3.IntegrityError, e:
+            raise weedb.IntegrityError(e)
         except sqlite3.OperationalError, e:
+            # Change no such table errors into a ProgrammingError
+            # (this is what MySQL does).
+            if e.message.lower().startswith("no such table"):
+                raise weedb.ProgrammingError(e)
             raise weedb.OperationalError(e)
 
     return guarded_fn
@@ -146,7 +152,7 @@ class Connection(weedb.Connection):
 
         # If there are no columns (which means the table did not exist) raise an exceptional
         if not column_list:
-            raise weedb.OperationalError("No such table %s" % table)
+            raise weedb.ProgrammingError("No such table %s" % table)
         return column_list
 
     @guard

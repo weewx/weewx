@@ -58,7 +58,7 @@ class Manager(object):
         is 'archive'.
         
         schema: The schema to be used. Optional. If not supplied, then an
-        exception of type weedb.OperationalError will be raised if the database
+        exception of type weedb.ProgrammingError will be raised if the database
         does not exist, and of type weedb.UnitializedDatabase if it exists, but
         has not been initialized.
         """
@@ -69,7 +69,7 @@ class Manager(object):
         # Now get the SQL types. 
         try:
             self.sqlkeys = self.connection.columnsOf(self.table_name)
-        except weedb.OperationalError:
+        except weedb.ProgrammingError:
             # Database exists, but is uninitialized. Did the caller supply
             # a schema?
             if schema is None:
@@ -236,7 +236,7 @@ class Manager(object):
                     self._addSingleRecord(record, cursor, log_level)
                     min_ts = min(min_ts, record['dateTime']) if min_ts is not None else record['dateTime']
                     max_ts = max(max_ts, record['dateTime'])
-                except Exception, e:
+                except (weedb.IntegrityError, weedb.OperationalError), e:
                     syslog.syslog(syslog.LOG_ERR, "manager: unable to add record %s to database '%s': %s" %
                                   (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
                                    self.database_name,
@@ -636,9 +636,9 @@ class Manager(object):
 
         if self.std_unit_system is not None:
             if unit_system != self.std_unit_system:
-                raise ValueError("Unit system of incoming record (0x%x) "\
-                                 "differs from the archive database (0x%x)" % 
-                                 (unit_system, self.std_unit_system))
+                raise weewx.UnitError("Unit system of incoming record (0x%x) "\
+                                      "differs from the archive database (0x%x)" % 
+                                      (unit_system, self.std_unit_system))
         else:
             # This is the first record. Remember the unit system to
             # check against subsequent records:

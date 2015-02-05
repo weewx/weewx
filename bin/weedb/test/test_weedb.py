@@ -68,8 +68,8 @@ class Common(unittest.TestCase):
         weedb.create(self.db_dict)
         _connect = weedb.connect(self.db_dict)
         self.assertEqual(_connect.tables(), [])
-        self.assertRaises(weedb.OperationalError, _connect.columnsOf, 'test1')
-        self.assertRaises(weedb.OperationalError, _connect.columnsOf, 'foo')
+        self.assertRaises(weedb.ProgrammingError, _connect.columnsOf, 'test1')
+        self.assertRaises(weedb.ProgrammingError, _connect.columnsOf, 'foo')
         _connect.close()
         
     def test_create(self):
@@ -82,12 +82,16 @@ class Common(unittest.TestCase):
             self.assertEqual(schema[icol], col)
         for icol, col in enumerate(_connect.genSchemaOf('test2')):
             self.assertEqual(schema[icol], col)
+        # Make sure an IntegrityError gets raised in the case of a duplicate key:
+        with weedb.Transaction(_connect) as _cursor:
+            self.assertRaises(weedb.IntegrityError, _cursor.execute, 
+                              "INSERT INTO test1 (dateTime, min, mintime) VALUES (0, 10, 0)")
         _connect.close()
         
     def test_bad_table(self):
         self.populate_db()
         _connect = weedb.connect(self.db_dict)
-        self.assertRaises(weedb.OperationalError, _connect.columnsOf, 'foo')
+        self.assertRaises(weedb.ProgrammingError, _connect.columnsOf, 'foo')
         _connect.close()
         
     def test_select(self):
@@ -123,7 +127,7 @@ class Common(unittest.TestCase):
         _cursor = _connect.cursor()
         
         # Test SELECT on a bad table name
-        with self.assertRaises(weedb.OperationalError):
+        with self.assertRaises(weedb.ProgrammingError):
             _cursor.execute("SELECT dateTime, min FROM foo")
 
         # Test SELECT on a bad column name

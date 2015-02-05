@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.1.0 XX/XX/XX
+3.1.0 02/05/15
 
 Fixed setup.py bug that caused list-drivers to fail on deb and rpm installs.
 
@@ -67,6 +67,9 @@ other calculations.
 
 Added --loop-on-init option for weewxd. If set, the engine will keep retrying
 if the device cannot be loaded. Otherwise, it will exit.
+
+Changes in the weedb exception model to bring it closer to the MySQL exception
+model. This will only affect those programming directly to the weedb API.
 
 
 3.0.1 12/07/14
