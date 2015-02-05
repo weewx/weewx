@@ -14,7 +14,7 @@ import time
 
 from weeutil.weeutil import startOfInterval, option_as_list, TimeSpan, genYearSpans, genMonthSpans, genDaySpans
 from weeutil.weeutil import archiveDaySpan, archiveWeekSpan, archiveMonthSpan, archiveYearSpan, archiveRainYearSpan
-from weeutil.weeutil import startOfDay, startOfArchiveDay, intervalgen, stampgen, timestamp_to_string
+from weeutil.weeutil import startOfDay, startOfArchiveDay, intervalgen, stampgen
 
 os.environ['TZ'] = 'America/Los_Angeles'
 
