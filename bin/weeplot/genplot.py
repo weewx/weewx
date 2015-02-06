@@ -322,11 +322,14 @@ class GeneralPlot(object):
                 maxdx = this_line.gap_fraction * (self.xscale[1] - self.xscale[0])
 
             if this_line.plot_type == 'line' :
+                ms = this_line.marker_size
+                if ms is not None:
+                    ms *= self.anti_alias
                 sdraw.line(this_line.x, 
                            this_line.y, 
                            line_type=this_line.line_type,
                            marker_type=this_line.marker_type,
-                           marker_size=this_line.marker_size * self.anti_alias,
+                           marker_size=ms,
                            fill  = color,
                            width = width,
                            maxdx = maxdx)
