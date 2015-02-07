@@ -201,7 +201,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         line_type = None
                         
                     marker_type = line_options.get('marker_type')
-                    marker_size = to_int(line_options.get('marker_size'), 8)
+                    marker_size = to_int(line_options.get('marker_size', 8))
                     
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(new_stop_vec_t[0], new_data_vec_t[0],
