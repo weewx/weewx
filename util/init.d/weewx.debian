@@ -56,8 +56,6 @@ SCRIPTNAME=/etc/init.d/$NAME
 #   2 if daemon could not be started
 # check using ps not the pid file.  pid file could be leftover.
 do_start() {
-    mkdir -p /var/weewx/log
-
     NPROC=$(count_procs)
     if [ $NPROC != 0 ]; then
 	return 1
