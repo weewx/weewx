@@ -91,6 +91,16 @@ that use the Prolific chipset (PL2303) will work, but not all of them.
 
 Known to work: ATEN UC-232A
 
+Bounds checking
+
+ wind speed: 0-113 mph
+ wind direction: 0-360
+ humidity: 0-100
+ temperature: ok if not -22F and humidity is valid
+ dewpoint: ok if not -22F and humidity is valid
+ barometer: 25-35 inHg
+ rain rate: 0-10 in/hr
+
 Discrepancies Between Implementations
 
 As of December 2013, there are significant differences between the open2300,

@@ -10,6 +10,7 @@
 # Python imports
 import gc
 import os.path
+import platform
 import signal
 import socket
 import sys
@@ -801,6 +802,7 @@ def main(options, args, EngineClass=StdEngine) :
 
     syslog.syslog(syslog.LOG_INFO, "engine: Initializing weewx version %s" % weewx.__version__)
     syslog.syslog(syslog.LOG_INFO, "engine: Using Python %s" % sys.version)
+    syslog.syslog(syslog.LOG_INFO, "engine: Platform %s" % platform.platform())
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.

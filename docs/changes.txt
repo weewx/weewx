@@ -1,6 +1,17 @@
 weewx change history
 --------------------
 
+X.X.X XX/XX/XX
+
+Fixed bug in 12-hour temperature lookup for calculating station pressure from
+sea level pressure when database units are other than US unit system.
+
+Added guards for bogus values in various wxformula functions.
+
+Added windrun, evapotranspiration, humidex, apparent temperature, maximum
+theoretical solar radiation, beaufort, and cloudbase to StdWXCalculate.
+
+
 3.1.0 02/05/15
 
 Fixed setup.py bug that caused list-drivers to fail on deb and rpm installs.

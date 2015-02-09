@@ -225,7 +225,7 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.11'
+DRIVER_VERSION = '0.12'
 DEBUG_RAW = 0
 
 
@@ -272,6 +272,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         self.last_rain = None
         self.last_r3 = None
         self.r3_fail_count = 0
+        self.r3_max_fail = 3
         loginf('driver version is %s' % DRIVER_VERSION)
 
         global DEBUG_RAW
@@ -309,7 +310,6 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 logerr("Failed attempt %d of %d to get LOOP data: %s" %
                        (ntries, self.max_tries, e))
                 time.sleep(self.retry_wait)
-                cnt = 0
         else:
             msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
             logerr(msg)
@@ -350,7 +350,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         # times, make a single log message about enabling usb mode 3 then do
         # not try it again.
         r3 = []
-        if self.r3_fail_count > 3:
+        if self.r3_fail_count > self.r3_max_fail:
             return r3
         if self.last_r3 is None or now - self.last_r3 > 720:
             try:
@@ -360,7 +360,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
             except usb.USBError, e:
                 logdbg("R3: read failed: %s" % e)
                 self.r3_fail_count += 1
-                if self.r3_fail_count > 3:
+                if self.r3_fail_count > self.r3_max_fail:
                     loginf("R3: put station in USB mode 3 to enable R3 data")
         return r3
 
@@ -382,9 +382,9 @@ class Station(object):
     # maximum value for the rssi
     MAX_RSSI = 3.0
 
-    def __init__(self, vendor_id=VENDOR_ID, product_id=PRODUCT_ID, dev_id=None):
-        self.vendor_id = vendor_id
-        self.product_id = product_id
+    def __init__(self, vend_id=VENDOR_ID, prod_id=PRODUCT_ID, dev_id=None):
+        self.vendor_id = vend_id
+        self.product_id = prod_id
         self.device_id = dev_id
         self.handle = None
         self.timeout = 1000
@@ -408,47 +408,54 @@ class Station(object):
         if not self.handle:
             raise weewx.WeeWxIOError('Open USB device failed')
 
-        # These nominally report an empty string for the manufacturer and
-        # 'Chaney Instruments' for the product.  However, they do not work
-        # reliably, so these lines are commented for production use.
-#        logdbg('mfr: %s' % self.handle.getString(dev.iManufacturer,30))
-#        logdbg('product: %s' % self.handle.getString(dev.iProduct,30))
-
         # the station shows up as a HID with only one interface
         interface = 0
 
         # for linux systems, be sure kernel does not claim the interface 
         try:
             self.handle.detachKernelDriver(interface)
-        except Exception:
+        except (AttributeError, usb.USBError):
             pass
+
+        # FIXME: is it necessary to set the configuration?
+        try:
+            self.handle.setConfiguration(dev.configurations[0])
+        except usb.USBError, e:
+            loginf("Set configuration failed: %s" % e)
 
         # attempt to claim the interface
         try:
             self.handle.claimInterface(interface)
-            self.handle.setAltInterface(interface)
         except usb.USBError, e:
             self.close()
             logcrt("Unable to claim USB interface %s: %s" % (interface, e))
             raise weewx.WeeWxIOError(e)
 
+        # FIXME: is it necessary to set the alt interface?
+        try:
+            self.handle.setAltInterface(interface)
+        except usb.USBError, e:
+            loginf("Set alt interface failed: %s" % e)
+
+        # FIXME: reset causes all kinds of problems
+#        self.handle.reset()
+
     def close(self):
         if self.handle is not None:
             try:
                 self.handle.releaseInterface()
-            except Exception, e:
+            except usb.USBError, e:
                 logerr("release interface failed: %s" % e)
             self.handle = None
 
     def read(self, msgtype, nbytes):
-        return self.handle.controlMsg(requestType=(usb.RECIP_INTERFACE +
-                                                   usb.TYPE_CLASS +
-                                                   usb.ENDPOINT_IN),
-                                      request=usb.REQ_CLEAR_FEATURE,
-                                      buffer=nbytes,
-                                      value=0x0100 + msgtype,
-                                      index=0x0,
-                                      timeout=self.timeout)
+        return self.handle.controlMsg(
+            requestType=usb.RECIP_INTERFACE + usb.TYPE_CLASS + usb.ENDPOINT_IN,
+            request=usb.REQ_CLEAR_FEATURE,
+            buffer=nbytes,
+            value=0x0100 + msgtype,
+            index=0x0,
+            timeout=self.timeout)
 
     def read_R1(self):
         return self.read(1, 10)
@@ -464,13 +471,13 @@ class Station(object):
 
     def read_x(self):
         # FIXME: what do the two bytes mean?
-        return self.handle.controlMsg(requestType=(usb.RECIP_INTERFACE +
-                                                   usb.TYPE_CLASS),
-                                      request=usb.REQ_SET_CONFIGURATION,
-                                      buffer=2,
-                                      value=0x0201,
-                                      index=0x0,
-                                      timeout=self.timeout)
+        return self.handle.controlMsg(
+            requestType=usb.RECIP_INTERFACE + usb.TYPE_CLASS,
+            request=usb.REQ_SET_CONFIGURATION,
+            buffer=2,
+            value=0x0201,
+            index=0x0,
+            timeout=self.timeout)
 
     @staticmethod
     def decode_R1(raw):
@@ -482,7 +489,7 @@ class Station(object):
                 data['sensor_id'] = None
                 data['rssi'] = None
                 data['sensor_battery'] = None
-            elif raw[9] == 0x00:
+            elif raw[9] != 0xff:
                 loginf("R1: ignoring dodgey data: %s" % _fmt_bytes(raw))
                 data['channel'] = Station.decode_channel(raw)
                 data['sensor_id'] = Station.decode_sensor_id(raw)
@@ -504,10 +511,10 @@ class Station(object):
                     data['outHumidity'] = Station.decode_outhumid(raw)
             else:
                 logerr("R1: unknown format: %s" % _fmt_bytes(raw))
-        elif len(raw) == 10:
-            logerr("R1: bad format: %s" % _fmt_bytes(raw))
-        else:
+        elif len(raw) != 10:
             logerr("R1: bad length: %s" % _fmt_bytes(raw))
+        else:
+            logerr("R1: bad format: %s" % _fmt_bytes(raw))
         return data
 
     @staticmethod
@@ -515,10 +522,10 @@ class Station(object):
         data = dict()
         if len(raw) == 25 and raw[0] == 0x02:
             data['pressure'], data['inTemp'] = Station.decode_pt(raw)
-        elif len(raw) == 25:
-            logerr("R2: bad format: %s" % _fmt_bytes(raw))
-        else:
+        elif len(raw) != 25:
             logerr("R2: bad length: %s" % _fmt_bytes(raw))
+        else:
+            logerr("R2: bad format: %s" % _fmt_bytes(raw))
         return data
 
     @staticmethod

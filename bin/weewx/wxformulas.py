@@ -26,6 +26,12 @@ def CtoF(x):
 def FtoC(x):
     return (x - 32.0) * 5.0 / 9.0
 
+def mps_to_mph(x):
+    return x * 3600.0 / METER_PER_MILE
+
+def kph_to_mph(x):
+    return x * 1000.0 / METER_PER_MILE
+
 def degtorad(x):
     return x * math.pi / 180.0
 
@@ -414,6 +420,8 @@ def humidexC(t_C, rh):
     rh - relative humidity [0-100]
     """
     dp_C = dewpointC(t_C, rh)
+    if t_C is None or rh is None:
+        return None
     if dp_C is None or dp_C < 273:
         return None
     try:
@@ -434,6 +442,8 @@ def humidexF(t_F, rh):
 
     rh - relative humidity [0-100]
     """
+    if t_F is None or rh is None:
+        return None
     h_C = humidexC(FtoC(t_F), rh)
     return CtoF(h_C) if h_C is not None else None
 
@@ -462,9 +472,11 @@ def apptempC(t_C, rh, ws_mps):
       e is vapor pressure in kPa
       v is 10m wind speed in m/sec
     """
-    if rh < 0 or rh > 100:
+    if t_C is None:
         return None
-    if ws_mps < 0:
+    if rh is None or rh < 0 or rh > 100:
+        return None
+    if ws_mps is None or ws_mps < 0:
         return None
     try:
         e = (rh / 100.0) * 6.105 * math.exp(17.27 * t_C / (237.7 + t_C))
@@ -482,6 +494,12 @@ def apptempF(t_F, rh, ws_mph):
 
     ws_mph - wind speed in miles per hour
     """
+    if t_F is None:
+        return None
+    if rh is None or rh < 0 or rh > 100:
+        return None
+    if ws_mph is None or ws_mph < 0:
+        return None
     t_C = FtoC(t_F)
     ws_mps = ws_mph * METER_PER_MILE / 3600.0
     at_C = apptempC(t_C, rh, ws_mps)
@@ -517,7 +535,7 @@ def beaufort(ws_kts):
         return 11
     return 12
 
-def evapotranspiration_Metric(tmax_C, tmin_C, sr, ws_mps, z_m, lat, ts=None):
+def evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts=None):
     """Calculate the evapotranspiration
     http://edis.ifas.ufl.edu/ae459
 
@@ -525,7 +543,7 @@ def evapotranspiration_Metric(tmax_C, tmin_C, sr, ws_mps, z_m, lat, ts=None):
 
     tmin_C - minimum temperature in degrees Celsius
 
-    sr - mean daily/hourly solar radiation in watts per square meter per day/hr
+    sr_avg - mean daily/hourly solar radiation in watts per sq meter per day/hr
 
     ws_mps - average daily/hourly wind speed in meters per second
 
@@ -537,6 +555,8 @@ def evapotranspiration_Metric(tmax_C, tmin_C, sr, ws_mps, z_m, lat, ts=None):
 
     returns evapotranspiration in mm per day/hour
     """
+    if tmax_C is None or tmin_C is None or sr_avg is None or ws_mps is None:
+        return None
     if ts is None:
         ts = time.time()
     # figure out the day of year [1-366] from the timestamp
@@ -544,7 +564,7 @@ def evapotranspiration_Metric(tmax_C, tmin_C, sr, ws_mps, z_m, lat, ts=None):
     # step 1: calculate mean temperature
     tavg_C = 0.5 * (tmax_C + tmin_C)
     # step 2: convert sr from W/m^2 per day to MJ/m^2 per day
-    rs = sr * 0.0864
+    rs = sr_avg * 0.0864
     # step 3: adjust windspeed for height
     u2 = 4.87 * ws_mps / math.log(67.8 * z_m - 5.42)
     # step 4: calculate the slope of saturation vapor pressure curve
@@ -598,12 +618,14 @@ def evapotranspiration_Metric(tmax_C, tmin_C, sr, ws_mps, z_m, lat, ts=None):
     evt = ev_rad + ev_wind
     return evt
 
-def evapotranspiration_US(tmax_F, tmin_F, sr, ws_mph, z_ft, lat, ts):
+def evapotranspiration_US(tmax_F, tmin_F, sr_avg, ws_mph, z_ft, lat, ts=None):
+    if tmax_F is None or tmin_F is None or sr_avg is None or ws_mph is None:
+        return None
     tmax_C = FtoC(tmax_F)
     tmin_C = FtoC(tmin_F)
     ws_mps = ws_mph * METER_PER_MILE / 3600.0
     z_m = z_ft * METER_PER_FOOT
-    evt = evapotranspiration_Metric(tmax_C, tmin_C, sr, ws_mps, z_m, lat, ts)
+    evt = evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts)
     return evt / MM_PER_INCH if evt is not None else None
 
 
