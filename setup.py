@@ -49,7 +49,6 @@ import re
 import shutil
 import sys
 import tempfile
-import time
 import configobj
 from subprocess import Popen, PIPE
 
@@ -60,18 +59,19 @@ from distutils.command.install_scripts import install_scripts
 from distutils.command.sdist import sdist
 import distutils.dir_util
 
-# Find the install bin subdirectory:
+# Find the install bin subdirectory and insert it into the path:
 this_file = os.path.join(os.getcwd(), __file__)
 this_dir = os.path.abspath(os.path.dirname(this_file))
-bin_dir = os.path.abspath(os.path.join(this_dir, 'bin'))
+install_bin_dir = os.path.abspath(os.path.join(this_dir, 'bin'))
+sys.path.insert(0, install_bin_dir)
 
 # Get the version:
-save_syspath = list(sys.path)
-sys.path.insert(0, bin_dir)
 import weewx
 VERSION = weewx.__version__
-del weewx
-sys.path = save_syspath
+
+# Import the config utilities:
+import weeutil.config
+from weeutil.config import save_path, mkdir
 
 start_scripts = ['util/init.d/weewx.bsd',
                  'util/init.d/weewx.debian',
@@ -98,6 +98,8 @@ class weewx_install_lib(install_lib):
     """Specialized version of install_lib""" 
 
     def run(self):
+        global install_bin_dir
+        
         # Determine whether the user is still using an old-style schema
         schema_type = check_schema_type(self.install_dir)
 
@@ -122,7 +124,7 @@ class weewx_install_lib(install_lib):
         # But, there is one exception: if the old user subdirectory included an
         # old-style schema, then it should be overwritten with the new version.
         if schema_type == 'old':
-            incoming_schema_path = os.path.join(bin_dir, 'user/schemas.py')
+            incoming_schema_path = os.path.join(install_bin_dir, 'user/schemas.py')
             target_path = os.path.join(self.install_dir, 'user/schemas.py')
             distutils.file_util.copy_file(incoming_schema_path, target_path)
 
@@ -630,27 +632,6 @@ def update_to_v3(config_dict):
         
     return old_database
 
-def save_path(filepath):
-    # Sometimes the target has a trailing '/'. This will take care of it:
-    filepath = os.path.normpath(filepath)
-    newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
-    # Check to see if this name already exists
-    if os.path.exists(newpath):
-        # It already exists. Stick a version number on it:
-        version = 1
-        while os.path.exists(newpath + '-' + str(version)):
-            version += 1
-        newpath = newpath + '-' + str(version)
-    shutil.move(filepath, newpath)
-    return newpath
-
-def mkdir(dirpath):
-    try:
-        os.makedirs(dirpath)
-    except OSError:
-        pass
-
-
 #==============================================================================
 # configure the configuration file
 #
@@ -732,9 +713,9 @@ def configure_conf(config_fn, info, dryrun=False):
 
     editor = driver_name = driver_vers = None
     if driver is not None:
-        # adjust system path so we can load the driver
-        tmp_path = list(sys.path)
-        sys.path.insert(0, bin_dir)
+#         # adjust system path so we can load the driver
+#         tmp_path = list(sys.path)
+#         sys.path.insert(0, bin_dir)
 
         try:
             editor, driver_name, driver_vers = load_editor(driver)
@@ -743,8 +724,8 @@ def configure_conf(config_fn, info, dryrun=False):
             return
         print 'Using %s version %s (%s)' % (driver_name, driver_vers, driver)
 
-        # reset the system path
-        sys.path = tmp_path
+#         # reset the system path
+#         sys.path = tmp_path
 
     # read the original configuration
     config = configobj.ConfigObj(config_fn, interpolation=False)
@@ -874,9 +855,9 @@ def get_driver_infos():
         ddir = os.path.join(this_dir, 'bin/weewx/drivers')
     drivers = [ f for f in os.listdir(ddir) if os.path.isfile(os.path.join(ddir, f)) and f != '__init__.py' and f[-3:] == '.py' ]
 
-    # adjust system path so we can load the drivers
-    tmp_path = list(sys.path)
-    sys.path.insert(0, bin_dir)
+#     # adjust system path so we can load the drivers
+#     tmp_path = list(sys.path)
+#     sys.path.insert(0, bin_dir)
 
     infos = dict()
     for fn in drivers:
@@ -891,8 +872,8 @@ def get_driver_infos():
             infos[driver]['name'] = fn[:-3]
             infos[driver]['fail'] = "%s" % e
 
-    # reset the system path
-    sys.path = tmp_path
+#     # reset the system path
+#     sys.path = tmp_path
     return infos
 
 def list_drivers():
