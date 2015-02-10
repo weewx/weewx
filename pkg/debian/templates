@@ -25,14 +25,14 @@ Description: altitude of the weather station:
 
 Template: weewx/station_type
 Type: select
-Choices: Simulator, Acurite, CC3000, FineOffsetUSB, TE923, Ultimeter, Vantage, WMR100, WMR200, WMR9x8, WS1, WS23xx, WS28xx
+Choices: Simulator, AcuRite, CC3000, FineOffsetUSB, TE923, Ultimeter, Vantage, WMR100, WMR200, WMR9x8, WS1, WS23xx, WS28xx
 Default: Simulator
 Description: weather station type:
  The weather station hardware type.  Specify simulator to run weewx without a weather station.
 
 Template: weewx/acurite_model
 Type: string
-Default: Acurite 01035
+Default: AcuRite 01035
 Description: weather station model:
  Specify the station model, for example 01025, 01035, 01036, 02032C
 
