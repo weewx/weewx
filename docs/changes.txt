@@ -13,6 +13,8 @@ theoretical solar radiation, beaufort, and cloudbase to StdWXCalculate.
 
 Fixed bug in debian install script - 'Acurite' was not in the list of stations.
 
+Added group_distance with units mile and km.
+
 
 3.1.0 02/05/15
 
