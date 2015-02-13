@@ -263,7 +263,7 @@ conversionDict = {
       'bit'              : {'byte'             : lambda x : x / 8},
       'byte'             : {'bit'              : lambda x : x * 8},
       'km'               : {'mile'             : lambda x : x * 0.621371192},
-      'mile'             : {'mk'               : lambda x : x * 1.609344}}
+      'mile'             : {'km'               : lambda x : x * 1.609344}}
 
 # Default unit formatting when nothing specified in skin configuration file
 default_unit_format_dict = {"amp"                : "%.1f",
