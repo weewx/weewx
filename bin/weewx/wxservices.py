@@ -9,7 +9,6 @@
 """Services specific to weather."""
 
 import weedb
-import weewx
 import weewx.units
 import weewx.engine
 import weewx.wxformulas
@@ -81,8 +80,8 @@ class StdWXCalculate(weewx.engine.StdService):
         self.altitude_m = weewx.units.convert(engine.stn_info.altitude_vt, "meter")[0]
         self.latitude = engine.stn_info.latitude_f
         self.longitude = engine.stn_info.longitude_f
-        self.t12 = None
-        self.last_ts12 = None
+        self.temperature_12h_ago = None
+        self.ts_12h_ago = None
         self.arcint = None
         self.rain_events = []
 
@@ -146,14 +145,14 @@ class StdWXCalculate(weewx.engine.StdService):
         self._get_arcint(data)
         if (self.arcint is not None and 'barometer' in data and
             'outTemp' in data and 'outHumidity' in data):
-            t12 = self._get_temperature_12h(data['dateTime'], self.arcint)
+            temperature_12h_ago = self._get_temperature_12h(data['dateTime'], self.arcint)
             if (data['barometer'] is not None and
                 data['outTemp'] is not None and
                 data['outHumidity'] is not None and
-                t12 is not None):
+                temperature_12h_ago is not None):
                 data['pressure'] = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
                     data['barometer'], self.altitude_ft,
-                    data['outTemp'], t12, data['outHumidity'])
+                    data['outTemp'], temperature_12h_ago, data['outHumidity'])
             else:
                 data['pressure'] = None
 
@@ -222,25 +221,29 @@ class StdWXCalculate(weewx.engine.StdService):
         # calculate ET only for archive packets
         if data_type == 'loop':
             return
-        ets = data['dateTime']
-        sts = ets - self.et_period
+        end_ts = data['dateTime']
+        start_ts = end_ts - self.et_period
         try:
             dbmanager = self.engine.db_binder.get_manager('wx_binding')
             r = dbmanager.getSql(
                 "SELECT"
                 " MAX(outTemp),MIN(outTemp),AVG(radiation),AVG(windSpeed),usUnits"
                 " FROM %s WHERE dateTime>? AND dateTime <=?"
-                % dbmanager.table_name, (sts, ets))
-            if r[4] == weewx.METRIC or r[4] == weewx.METRICWX:
-                r[0] = weewx.wxformulas.CtoF(r[0])
-                r[1] = weewx.wxformulas.CtoF(r[1])
-                if r[4] == weewx.METRICWX:
-                    r[3] = weewx.wxformulas.mps_to_mph(r[3])
-                else:
-                    r[3] = weewx.wxformulas.kph_to_mph(r[3])
-            data['ET'] = weewx.wxformulas.evapotranspiration_US(
-                r[0], r[1], r[2], r[3], self.wind_height, self.latitude,
-                data['dateTime'])
+                % dbmanager.table_name, (start_ts, end_ts))
+            if r is None or None in r:
+                data['ET'] = None
+            else:
+                T_max, T_min, rad_avg, wind_avg, std_unit = r
+                if std_unit == weewx.METRIC or std_unit == weewx.METRICWX:
+                    T_max = weewx.wxformulas.CtoF(T_max)
+                    T_min = weewx.wxformulas.CtoF(T_min)
+                    if std_unit == weewx.METRICWX:
+                        wind_avg = weewx.wxformulas.mps_to_mph(wind_avg)
+                    else:
+                        wind_avg = weewx.wxformulas.kph_to_mph(wind_avg)
+                data['ET'] = weewx.wxformulas.evapotranspiration_US(
+                    T_max, T_min, rad_avg, wind_avg, self.wind_height, self.latitude,
+                    data['dateTime'])
         except weedb.DatabaseError:
             pass
 
@@ -259,16 +262,18 @@ class StdWXCalculate(weewx.engine.StdService):
                                         " FROM %s"
                                         " WHERE dateTime>? AND dateTime<=?" %
                                         dbmanager.table_name, (sts, ets)):
+                if row is None or None in row:
+                    continue
                 if row[1]:
-                    inc = row[0] / 60.0
+                    inc_hours = row[0] / 60.0
                     if row[2] == weewx.METRICWX:
-                        run += weewx.wxformulas.mps_to_mph(row[1]) * inc
+                        run += weewx.wxformulas.mps_to_mph(row[1]) * inc_hours
                     elif row[2] == weewx.METRIC:
-                        run += weewx.wxformulas.kph_to_mph(row[1]) * inc
+                        run += weewx.wxformulas.kph_to_mph(row[1]) * inc_hours
                     else:
-                        run += row[1] * inc
+                        run += row[1] * inc_hours
             data['windrun'] = run
-        except weedb.DatabaseError, e:
+        except weedb.DatabaseError:
             pass
 
     def _get_arcint(self, data):
@@ -279,15 +284,23 @@ class StdWXCalculate(weewx.engine.StdService):
         """Get the temperature from 12 hours ago.  Return None if no
         temperature is found.  Convert to US if necessary since this
         service operates in US unit system."""
+
         ts12 = weeutil.weeutil.startOfInterval(ts - 12*3600, arcint)
-        if ts12 != self.last_ts12:
+
+        # No need to look up the temperature if we're still in the same
+        # archive interval:
+        if ts12 != self.ts_12h_ago:
+            # We're in a new interval. Hit the database to get the temperature
             dbmanager = self.engine.db_binder.get_manager('wx_binding')
-            r = dbmanager.getRecord(ts12)
-            t = None
-            if r is not None:
-                t = r.get('outTemp')
-                if t is not None and r.get('usUnits') != weewx.US:
-                    t = weewx.wxformulas.CtoF(t)
-            self.t12 = t
-            self.last_ts12 = ts12
-        return self.t12
+            record = dbmanager.getRecord(ts12)
+            if record is None:
+                # Nothing in the database. Set temperature to None.
+                self.temperature_12h_ago = None
+            else:
+                # Convert to US if necessary:
+                record_US = weewx.units.to_US(record)
+                self.temperature_12h_ago = record_US['outTemp']
+            # Save the timestamp
+            self.ts_12h_ago = ts12
+
+        return self.temperature_12h_ago
