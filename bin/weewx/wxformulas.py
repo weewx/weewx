@@ -386,8 +386,6 @@ def cloudbase_Metric(t_C, rh, altitude_m):
 
     altitude_m - altitude in meters
     """
-    if t_C is None or rh is None:
-        return None
     dp_C = dewpointC(t_C, rh)
     if dp_C is None:
         return None
@@ -403,8 +401,6 @@ def cloudbase_US(t_F, rh, altitude_ft):
 
     altitude_ft - altitude in feet
     """
-    if t_F is None or rh is None:
-        return None
     dp_F = dewpointF(t_F, rh)
     if dp_F is None:
         return None
@@ -413,27 +409,32 @@ def cloudbase_US(t_F, rh, altitude_ft):
 
 def humidexC(t_C, rh):
     """Calculate the humidex
-    http://www.physlink.com/reference/weather.cfm
+    Reference (look under heading "Humidex"):
+    http://climate.weather.gc.ca/climate_normals/normals_documentation_e.html?docID=1981
 
     t_C - temperature in degree Celsius
 
     rh - relative humidity [0-100]
+
+    Examples:
+    >>> print "%.2f" % humidexC(30.0, 80.0)
+    43.64
+    >>> print "%.2f" % humidexC(30.0, 20.0)
+    30.00
+    >>> print "%.2f" % humidexC(0, 80.0)
+    0.00
+    >>> print humidexC(30.0, None)
+    None
     """
-    dp_C = dewpointC(t_C, rh)
-    if t_C is None or rh is None:
-        return None
-    if dp_C is None or dp_C < 273:
-        return None
     try:
+        dp_C = dewpointC(t_C, rh)
         dp_K = CtoK(dp_C)
         e = 6.11 * math.exp(5417.7530 * (1/273.16 - 1/dp_K))
         h = 0.5555 * (e - 10.0)
-        humidex = t_C
-        if h > 0:
-            humidex += h
-    except (ValueError, OverflowError):
-        humidex = None
-    return humidex
+    except (ValueError, OverflowError, TypeError):
+        return None
+
+    return t_C + h if h > 0 else t_C
 
 def humidexF(t_F, rh):
     """Calculate the humidex in degree Fahrenheit
@@ -442,7 +443,7 @@ def humidexF(t_F, rh):
 
     rh - relative humidity [0-100]
     """
-    if t_F is None or rh is None:
+    if t_F is None:
         return None
     h_C = humidexC(FtoC(t_F), rh)
     return CtoF(h_C) if h_C is not None else None
