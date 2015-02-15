@@ -11,7 +11,6 @@
 import os
 import time
 import shutil
-import syslog
 import sys
 
 import configobj
@@ -53,7 +52,7 @@ def find_file(file_path=None, args=None,
                 break
 
     if file_path is None:
-        raise ConfigPathError("Unable to find %s" % file_name)
+        raise ConfigPathError("Unable to find file '%s'. Tried directories %s" % (file_name, locations))
     elif not os.path.isfile(file_path):
         raise ConfigPathError("%s is not a file" % file_path)
 
