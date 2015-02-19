@@ -57,7 +57,7 @@
 <p>For the latest Weewx release see <a href="https://github.com/weewx/weewx/releases/latest">
 https://github.com/weewx/weewx/releases/latest</a>.</p>
 
-<p>Weewx is licensed under the GNU Public License v3.</p>
+<h1>More information</h1>
 
 <p>
   Weewx documentation is in docs/readme.htm or can be found on the web at <a
@@ -70,3 +70,6 @@ https://github.com/weewx/weewx/releases/latest</a>.</p>
   Community support can be found at: <a
     href="https://groups.google.com/forum/#!forum/weewx-user">https://groups.google.com/forum/#!forum/weewx-user</a>
 </p>
+
+<p>Weewx is licensed under the GNU Public License v3.</p>
+
