@@ -53,6 +53,10 @@
   <li>Extensive almanac information</li>
 </ul>
 
+<h1>Downloads</h1>
+<p>For the latest Weewx release see <a href="https://github.com/weewx/weewx/releases/latest">
+https://github.com/weewx/weewx/releases/latest</a>.</p>
+
 <p>Weewx is licensed under the GNU Public License v3.</p>
 
 <p>
