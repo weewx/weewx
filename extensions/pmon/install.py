@@ -1,4 +1,3 @@
-# $Id$
 # installer for pmon
 # Copyright 2014 Matthew Wall
 

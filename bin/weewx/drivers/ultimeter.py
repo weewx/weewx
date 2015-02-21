@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# $Id$
+#
 # Copyright 2014 Matthew Wall
 # Copyright 2014 Nate Bargmann <n0nb@n0nb.us>
 # See the file LICENSE.txt for your rights.

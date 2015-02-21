@@ -1,9 +1,7 @@
 #
-#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
-#
-#    $Id$
 #
 """Statistical accumulators. They accumulate the highs, lows, averages,
 etc., of a sequence of records."""

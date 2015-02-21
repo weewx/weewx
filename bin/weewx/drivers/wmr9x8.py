@@ -1,4 +1,4 @@
-# $Id$
+#
 # Copyright (c) 2012 Will Page <compenguy@gmail.com>
 # See the file LICENSE.txt for your full rights.
 #

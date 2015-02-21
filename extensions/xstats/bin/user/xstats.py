@@ -1,8 +1,11 @@
-# extended stats based on the xsearch example
-# $Id$
-# Copyright 2013 Matthew Wall, all rights reserved
+#
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
+"""Extended stats based on the xsearch example
 
-"""This search list extension offers extra tags:
+This search list extension offers extra tags:
 
   'alltime':    All time statistics.
 

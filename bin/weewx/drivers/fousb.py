@@ -1,4 +1,3 @@
-# $Id$
 # Copyright 2012 Matthew Wall
 # See the file LICENSE.txt for your full rights.
 #

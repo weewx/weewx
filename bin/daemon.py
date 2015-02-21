@@ -1,6 +1,8 @@
 # -*- coding: iso-8859-1 -*-
 #
-#    $Id$
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
 #
 '''
     This module is used to fork the current process into a daemon.

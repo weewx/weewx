@@ -1,3 +1,8 @@
+#
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
 """Demonstrates DMPAFT "resend" bug. 
 
 The Davis documentation says that a page can be resent on request, but it

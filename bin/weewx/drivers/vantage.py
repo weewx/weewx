@@ -1,7 +1,8 @@
-# $Id$
-# Copyright (c) 2009-2013 Tom Keffer <tkeffer@gmail.com>
-# See the file LICENSE.txt for your full rights.
-
+#
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
 """Classes and functions for interfacing with a Davis VantagePro, VantagePro2,
 or VantageVue weather station"""
 

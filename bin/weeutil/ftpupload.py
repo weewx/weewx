@@ -1,9 +1,7 @@
 #
-#    Copyright (c) 2009, 2010 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
-#
-#    $Id$
 #
 """For uploading files to a remove server via FTP"""
 
@@ -168,13 +166,14 @@ class FtpUpload(object):
         
         timeStampFile = os.path.join(self.local_root, "#%s.last" % self.name )
 
-        # If the file does not exist, an IOError exception will be raised. Be
-        # prepared to catch it.
+        # If the file does not exist, an IOError exception will be raised. 
+        # If the file exists, but is truncated, an EOFError will be raised.
+        # Either way, be prepared to catch it.
         try:
             with open(timeStampFile, "r") as f:
                 timestamp = cPickle.load(f)
                 fileset   = cPickle.load(f) 
-        except IOError:
+        except (IOError, EOFError):
             timestamp = 0
             fileset = set()
             # Either the file does not exist, or it is garbled.

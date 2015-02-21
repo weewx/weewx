@@ -1,4 +1,3 @@
-# $Id$
 # installer for the 'basic' skin
 # Copyright 2014 Matthew Wall
 

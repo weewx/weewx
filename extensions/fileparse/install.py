@@ -1,4 +1,3 @@
-# $Id$
 # installer for the fileparse driver
 # Copyright 2014 Matthew Wall
 
