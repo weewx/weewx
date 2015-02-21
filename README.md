@@ -26,9 +26,12 @@
   <li>Davis Vantage series;</li>
   <li>Oregon Scientific WMR100, WMR200, WMR9x8, and other variants;</li>
   <li>Fine Offset WH10xx, WH20xx, and WH30xx series (including Ambient,
-    Elecsa, Maplin, Tycon, Watson);</li>
+    Elecsa, Maplin, Tycon, Watson, and others);</li>
   <li>LaCrosse WS-23XX and WS-28XX (including TFA);</li>
   <li>Hideki TE923 (including Cresta, Honeywell, and others);</li>
+  <li>PeetBros Ultimeter;</li>
+  <li>RainWise;</li>
+  <li>AcuRite;</li>
   <li>One-wire.</li>
 </ul>
 
@@ -60,11 +63,11 @@ https://github.com/weewx/weewx/releases/latest</a>.</p>
 <h1>More information</h1>
 
 <p>
-  Weewx documentation is in docs/readme.htm or can be found on the web at <a
+  Weewx documentation is in docs/readme.htm or on the web at <a
     href="http://weewx.com/docs.html">http://weewx.com/docs.html</a>
 </p>
 <p>
-  A Wiki is available on Github: <a href="https://github.com/weewx/weewx/wiki">https://github.com/weewx/weewx/wiki</a>
+  A Wiki is available at <a href="https://github.com/weewx/weewx/wiki">https://github.com/weewx/weewx/wiki</a>
 </p>
 <p>
   Community support can be found at: <a
