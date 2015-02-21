@@ -1,5 +1,4 @@
 # Adapted for use with weewx
-# $Id$
 #
 # This source code may be freely used, including for commercial purposes
 # Steve Hatchett info@softwx.com

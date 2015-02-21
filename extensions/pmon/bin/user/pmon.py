@@ -1,4 +1,3 @@
-# $Id$
 # Copyright 2013 Matthew Wall
 """weewx module that records process information.
 

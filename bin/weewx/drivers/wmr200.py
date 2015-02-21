@@ -1,4 +1,4 @@
-# $Id$
+#
 # Copyright (c) 2013 Chris Manton <cmanton@gmail.com>  www.onesockoff.org
 # See the file LICENSE.txt for your full rights.
 #

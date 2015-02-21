@@ -1,4 +1,3 @@
-# $Id$
 # installer for xstats
 # Copyright 2014 Matthew Wall
 

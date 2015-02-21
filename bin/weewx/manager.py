@@ -1,9 +1,7 @@
 #
-#    Copyright (c) 2009-2014 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
-#
-#    $Id$
 #
 """Classes and functions for interfacing with a weewx archive."""
 from __future__ import with_statement

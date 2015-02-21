@@ -1,9 +1,7 @@
 #
-#    Copyright (c) 2009 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
-#
-#    $Id$
 #
 """Various utilities used by the plot package.
 

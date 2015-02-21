@@ -1,7 +1,8 @@
-# $Id$
-# Copyright (c) 2012 Tom Keffer <tkeffer@gmail.com>
-# See the file LICENSE.txt for your full rights.
-
+#
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
 """Classes and functions for interfacing with an Oregon Scientific WMR100 station.
    The WMRS200 reportedly works with this driver (NOT the WMR200, which is a different beast).
 

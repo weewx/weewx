@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2013 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
-#
-#    $Id$
 #
 """Transfer from sqlite to MySQL database or vv. Adjust parameters as necessary."""
 from __future__ import with_statement

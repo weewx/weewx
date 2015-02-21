@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2011 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
-#
-#    $Id$
 #
 """Generate fake data used by the tests.
 

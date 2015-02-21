@@ -1,7 +1,4 @@
 # -*- coding: iso-8859-1 -*-
-#
-#    $Id$
-#
 """ 
 SUNRISET.C - computes Sun rise/set times, start/end of twilight, and
              the length of the day at any date and latitude
