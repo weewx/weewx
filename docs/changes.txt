@@ -18,6 +18,12 @@ Fixed bug in debian install script - 'Acurite' was not in the list of stations.
 
 Added group_distance with units mile and km.
 
+Increased precision of wind and wind gust posts to WU from 0 to 1 
+decimal point.
+
+Increased precision of barometer posts to WOW from 1 to 3 decimal points.
+
+
 
 3.1.0 02/05/15
 
