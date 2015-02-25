@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2014-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Id: wee_config_database 2763 2014-12-02 01:16:13Z tkeffer $
-#
-
 """Configure the configuration file."""
 from __future__ import with_statement
 
