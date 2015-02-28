@@ -1,7 +1,19 @@
+<style>
+h1 {
+  font-size: 130%;
+}
+h2 {
+  font-size: 110%;
+}
+.subtitle {
+  font-size: 110%;
+  font-weight: bold;
+}
+</style>
 <h1>
   <a href='http://www.weewx.com'>WeeWX</a>
 </h1>
-<h4>Open source software for your weather station</h4>
+<p class='subtitle'>Open source software for your weather station</p>
 
 <h2>Description</h2>
 <p>The weewx weather system is written in Python and runs on Linux,
@@ -58,7 +70,10 @@
 
 <h2>Downloads</h2>
 <p>
-For the latest Weewx release see <a href="https://github.com/weewx/weewx/releases/latest">https://github.com/weewx/weewx/releases/latest</a>
+For the latest Weewx release see:
+  <blockquote>
+    <a href="https://github.com/weewx/weewx/releases/latest">https://github.com/weewx/weewx/releases/latest</a>
+  </blockquote>
 </p>
 
 <h2>More information</h2>
@@ -71,11 +86,15 @@ For the latest Weewx release see <a href="https://github.com/weewx/weewx/release
 </p>
 <p>
   The wiki includes user-contributed extensions and suggestions at:
+  <blockquote>
     <a href="https://github.com/weewx/weewx/wiki">https://github.com/weewx/weewx/wiki</a>
+  </blockquote>
 </p>
 <p>
-  Community support can be found at: <a
-    href="https://groups.google.com/forum/#!forum/weewx-user">https://groups.google.com/forum/#!forum/weewx-user</a>
+  Community support can be found at:
+  <blockquote>
+    <a href="https://groups.google.com/forum/#!forum/weewx-user">https://groups.google.com/forum/#!forum/weewx-user</a>
+  </blockquote>
 </p>
 
 <p>Weewx is licensed under the GNU Public License v3.</p>
