@@ -3,8 +3,7 @@
 </h1>
 <h4>Open source software for your weather station</h4>
 
-
-<h1>Description</h1>
+<h2>Description</h2>
 <p>The weewx weather system is written in Python and runs on Linux,
   including the Raspberry Pi. It generates plots, HTML pages, and monthly and
   yearly summary reports, which can be uploaded to a web server. Thousands of
@@ -12,7 +11,7 @@
 
 <p>Runs exceptionally well on a Raspberry Pi.</p>
 
-<p>Supported online services:</p>
+<p>Support for many online services, including:</p>
 <ul>
   <li>The Weather Underground</li>
   <li>CWOP</li>
@@ -32,16 +31,17 @@
   <li>PeetBros Ultimeter;</li>
   <li>RainWise;</li>
   <li>AcuRite;</li>
+  <li>KlimaLogg;</li>
   <li>One-wire.</li>
 </ul>
 
 <p>
   See the <a href="http://www.weewx.com/hardware.html">hardware list</a> on the
   weewx website for a complete list of supported stations, and for pictures to
-  help identify your hardware!
+  help identify your hardware!  The <a href="http://www.weewx.com/hwcmp.html">hardware comparison</a> shows specifications for many different types of hardware, including some not yet supported by weewx.
 </p>
 
-<h1>Features</h1>
+<h2>Features</h2>
 <ul>
   <li>Robust and hard-to-crash</li>
   <li>Designed with the enthusiast in mind</li>
@@ -56,18 +56,22 @@
   <li>Extensive almanac information</li>
 </ul>
 
-<h1>Downloads</h1>
-<p>For the latest Weewx release see <a href="https://github.com/weewx/weewx/releases/latest">
-https://github.com/weewx/weewx/releases/latest</a>.</p>
+<h2>Downloads</h2>
+<p>
+For the latest Weewx release see <a href="https://github.com/weewx/weewx/releases/latest">https://github.com/weewx/weewx/releases/latest</a>
+</p>
 
-<h1>More information</h1>
+<h2>More information</h2>
 
 <p>
-  Weewx documentation is in docs/readme.htm or on the web at <a
-    href="http://weewx.com/docs.html">http://weewx.com/docs.html</a>
+  Weewx documentation is in docs/readme.htm or at:
+  <blockquote>
+    <a href="http://weewx.com/docs.html">http://weewx.com/docs.html</a>
+  </blockquote>
 </p>
 <p>
-  A Wiki is available at <a href="https://github.com/weewx/weewx/wiki">https://github.com/weewx/weewx/wiki</a>
+  The wiki includes user-contributed extensions and suggestions at:
+    <a href="https://github.com/weewx/weewx/wiki">https://github.com/weewx/weewx/wiki</a>
 </p>
 <p>
   Community support can be found at: <a
