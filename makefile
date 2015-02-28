@@ -7,8 +7,11 @@
 # if you do not want to sign the packages, set SIGN to 0
 SIGN=1
 
-# destination for uploading everything
-RELDIR=frs.sourceforge.net:/home/frs/project/weewx/development_versions
+# destination for uploading docs
+DOCDST=weewx.com:/
+
+# destination for releases
+RELDIR=../weewx-release
 
 # extract version to be used in package controls and labels
 VERSION=$(shell grep __version__ bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
@@ -16,6 +19,7 @@ VERSION=$(shell grep __version__ bin/weewx/__init__.py | sed -e 's/__version__=/
 CWD = $(shell pwd)
 BLDDIR=build
 DSTDIR=dist
+DOCSRC=docs
 
 all: help
 
@@ -37,10 +41,12 @@ help: info
 	@echo "     check-rpm  check the rpm package"
 	@echo "    check-docs  run weblint on the docs"
 	@echo ""
-	@echo "    upload-src  upload the src package"
-	@echo "    upload-deb  upload the deb package"
-	@echo "    upload-rpm  upload the rpm package"
-	@echo " upload-readme  upload the README.txt for sourceforge"
+	@echo "   release-src  release the src package"
+	@echo "   release-deb  release the deb package"
+	@echo "   release-rpm  release the rpm package"
+	@echo "release-readme  release the README.txt"
+	@echo ""
+	@echo "   upload-docs  upload docs to weewx.com"
 	@echo ""
 	@echo "          test  run all unit tests"
 	@echo "                SUITE=path/to/foo.py to run only foo tests"
@@ -93,10 +99,14 @@ src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
 	rm -f MANIFEST
 	./setup.py sdist
 
-upload-src:
-	scp $(DSTDIR)/$(SRCPKG) $(USER)@$(RELDIR)
+release-src:
+	cp $(DSTDIR)/$(SRCPKG) $(RELDIR)
 
-# create the README.txt for uploading to sourceforge
+# upload docs to the weewx web site
+upload-docs:
+	ftp -u $(USER)@$(DOCDST) $(DOCSRC)/*.htm $(DOCSRC)/changes.txt $(DOCSRC)/images/*.png $(DOCSRC)/images/*.jpg $(DOCSRC)/js/*.js $(DOCSRC)/css/weewx_$(DOCSRC).css $(DOCSRC)/css/jquery.tocify.css $(DOCSRC)/css/ui-lightness/*.css $(DOCSRC)/css/ui-lightness/images/*.png $(DOCSRC)/css/ui-lightness/images/*.gif
+
+# create the README.txt for uploading
 README_HEADER="\
 --------------------\n\
 weewx packages      \n\
@@ -124,8 +134,8 @@ readme: docs/changes.txt
 	echo $(README_HEADER) > $(DSTDIR)/README.txt
 	pkg/mkchangelog.pl --ifile docs/changes.txt >> $(DSTDIR)/README.txt
 
-upload-readme: readme
-	scp $(DSTDIR)/README.txt $(USER)@$(RELDIR)
+release-readme: readme
+	cp $(DSTDIR)/README.txt $(RELDIR)
 
 # update the version in all relevant places
 VDOCS=customizing.htm usersguide.htm upgrading.htm
@@ -181,8 +191,8 @@ deb-package: $(DSTDIR)/$(SRCPKG)
 check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
-upload-deb:
-	scp $(DSTDIR)/$(DEBPKG) $(USER)@$(RELDIR)
+release-deb:
+	cp $(DSTDIR)/$(DEBPKG) $(RELDIR)
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
@@ -223,8 +233,8 @@ endif
 check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
 
-upload-rpm:
-	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(RELDIR)
+release-rpm:
+	cp $(DSTDIR)/$(RPMPKG) $(RELDIR)
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
