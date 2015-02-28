@@ -3,3 +3,5 @@
 .pydevproject
 .settings
 *.pyc
+build
+dist
