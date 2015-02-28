@@ -1,15 +1,15 @@
 <h1>
   <a href='http://www.weewx.com'>WeeWX</a>
 </h1>
-<p style='font-size: 110%; font-weight: bold;'>Open source software for your weather station</p>
+<p><i>Open source software for your weather station</i></p>
 
 <h2>Description</h2>
-<p>The weewx weather system is written in Python and runs on Linux,
-  including the Raspberry Pi. It generates plots, HTML pages, and monthly and
+<p>The weewx weather system is written in Python and runs on Linux, MacOSX,
+  Solaris, and *BSD.  It runs exceptionally well on a Raspberry Pi.
+  It generates plots, HTML pages, and monthly and
   yearly summary reports, which can be uploaded to a web server. Thousands of
-  users worldwide!</p>
-
-<p>Runs exceptionally well on a Raspberry Pi.</p>
+  users worldwide!
+</p>
 
 <p>Support for many online services, including:</p>
 <ul>
@@ -52,7 +52,7 @@
   <li>Support for US and metric units</li>
   <li>Support for multiple skins</li>
   <li>Optional uploads to Weather Underground, CWOP, AWEKAS and WOW</li>
-  <li>Uploads to your website via FTP</li>
+  <li>Uploads to your website via FTP, SFTP, or rsync</li>
   <li>Extensive almanac information</li>
 </ul>
 
@@ -64,7 +64,7 @@ For the latest Weewx release see:
   <a href="https://github.com/weewx/weewx/releases/latest">https://github.com/weewx/weewx/releases/latest</a>
 </p>
 
-<h2>More information</h2>
+<h2>Documentation and Support</h2>
 
 <p>
   Weewx documentation is in docs/readme.htm or at:
@@ -84,5 +84,6 @@ For the latest Weewx release see:
   <a href="https://groups.google.com/forum/#!forum/weewx-user">https://groups.google.com/forum/#!forum/weewx-user</a>
 </p>
 
-<p>Weewx is licensed under the GNU Public License v3.</p>
+<h2>Licensing</h2>
 
+<p>Weewx is licensed under the GNU Public License v3.</p>
