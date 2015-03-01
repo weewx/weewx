@@ -117,37 +117,45 @@ def logmsg(dst, msg):
                         (_WMR200_DRIVER_NAME,
                          threading.currentThread().getName(), msg)))
 
-
 def logdbg(msg):
     """Debug syslog helper"""
     logmsg(syslog.LOG_DEBUG, 'D ' + msg)
-
 
 def loginf(msg):
     """Info syslog helper"""
     logmsg(syslog.LOG_INFO, 'I ' + msg)
 
-
 def logwar(msg):
     """Warning syslog helper"""
     logmsg(syslog.LOG_WARNING, 'W ' + msg)
 
-
 def logerr(msg):
     """Error syslog helper"""
     logmsg(syslog.LOG_ERR, 'E ' + msg)
-
 
 def logcrt(msg):
     """Critical syslog helper"""
     logmsg(syslog.LOG_CRIT, 'C ' + msg)
 
 
+class WMR200PacketParsingError(Exception):
+    """A driver handled recoverable packet parsing error condition."""
+    def __init__(self, msg):
+        super(WMR200PacketParsingError, self).__init__()
+        self._msg = msg
+
+    @property
+    def msg(self):
+        """Exception message to be logged to console."""
+        return self._msg
+
+
 class WMR200ProtocolError(weewx.WeeWxIOError):
     """Used to signal a protocol error condition"""
     def __init__(self, msg):
         super(WMR200ProtocolError, self).__init__()
-        self._msg = msg
+        self._msg = msg 
+        logerr(msg)
 
 
 class UsbDevice(object):
@@ -324,18 +332,11 @@ class Packet(object):
         self._pkt_data = []
         # Record dictionary to pass to weewx engine.
         self._record = {}
-        # Determines if a bogus packet has been detected.
-        self._bogus_packet = False
         # Add the command byte as the first field
         self.append_data(self.pkt_cmd)
         # Packet identifier
         Packet.pkt_id += 1
         self.pkt_id = Packet.pkt_id
-
-    @property
-    def is_bogus(self):
-        """Returns boolean if detected bogus packet."""
-        return self._bogus_packet
 
     def append_data(self, char):
         """Appends new data to packet buffer.
@@ -344,11 +345,9 @@ class Packet(object):
         Upon startup or other times we can may get out
         of sync with the weather console."""
         self._pkt_data.append(char)
-        # We do an immediate check to toss bogus packets should
-        # they ve encountered.
         if len(self._pkt_data) == 2 and \
-           self._pkt_data[1] > _WMR200_MAX_PACKET_SIZE:
-            self._bogus_packet = True
+          self._pkt_data[1] > _WMR200_MAX_PACKET_SIZE:
+            raise weewx.WeeWxIOError('Max packet size exceeded')     
 
     def size_actual(self):
         """Size of bytes of data in packet received from console."""
@@ -366,12 +365,10 @@ class Packet(object):
         """Determines if packet is complete and ready for weewx engine
         processing.
         
-        This assumes the packet is at least 2 bytes long"""
-        # If we have detected a bogus packet then ensure we drop this
-        # packet via this path.
+        This method assumes the packet is at least 2 bytes long"""
         if self.size_actual() < 2:
             return False
-        return self._bogus_packet or self.size_actual() == self.size_expected()
+        return self.size_actual() == self.size_expected()
 
     def packet_process(self):
         """Process the raw data and creates a record field."""
@@ -425,7 +422,6 @@ class Packet(object):
 
         except IndexError:
             msg = 'Packet too small to compute 16 bit checksum'
-            logerr(msg)
             raise WMR200ProtocolError(msg)
 
     def _checksum_field(self):
@@ -437,24 +433,18 @@ class Packet(object):
             return (self._pkt_data[-1] << 8) | self._pkt_data[-2]
         except IndexError:
             msg = 'Packet too small to contain 16 bit checksum'
-            logerr(msg)
             raise WMR200ProtocolError(msg)
 
     def verify_checksum(self):
         """Verifies packet for checksum correctness.
         
         Raises exception upon checksum failure unless configured to drop."""
-        if not self._bogus_packet \
-           and self._checksum_calculate() != self._checksum_field():
-            msg = ('Checksum error act:0x%04x exp:0x%04x'
-                   % (self._checksum_calculate(), self._checksum_field()))
-            logerr(msg)
-            logerr(self.to_string_raw('  packet:'))
+        if self._checksum_calculate() != self._checksum_field():
+            msg = ('Checksum miscompare act:0x%04x exp:0x%04x' % 
+                (self._checksum_calculate(), self._checksum_field()))
+            logerr(self.to_string_raw('%s packet:' % msg))
             if self.wmr200.ignore_checksum:
-                logerr('Dropping packet')
-                self._bogus_packet = True
-                return
-
+                raise WMR200PacketParsingError(msg)
             raise weewx.CRCError(msg)
 
         # Debug test to force checksum recovery testing.
@@ -486,16 +476,15 @@ class Packet(object):
             return time.mktime((year, month, day, hour, minute,
                                 0, -1, -1, -1))
         except IndexError:
-            log_msg = ('Packet length too short to get timestamp len:%d'
-                       % len(self._pkt_data))
-            logerr(log_msg)
-            raise WMR200ProtocolError(log_msg)
+            msg = ('Packet length too short to get timestamp len:%d'
+                    % len(self._pkt_data))
+            raise WMR200ProtocolError(msg)
 
         except (OverflowError, ValueError), exception:
-            log_msg = ('Packet timestamp with bogus fields %s raw:%s' %
-                       (exception, self.to_string_raw()))
-            logerr(log_msg)
-            raise WMR200ProtocolError(log_msg)
+            msg = ('Packet timestamp with bogus fields min:%d hr:%d day:%d'
+	               ' m:%d y:%d %s' % (pkt_data[0], pkt_data[1], 
+                   pkt_data[2], pkt_data[3], pkt_data[4], exception))
+            raise WMR200PacketParsingError(msg)
 
     def timestamp_packet(self):
         """Pulls the epoch timestamp from the packet.  
@@ -538,11 +527,13 @@ class Packet(object):
 
 class PacketLive(Packet):
     """Packets with live sensor data from console."""
-    pkt_cnt = 0
+    # Number of live packets received from console.
+    pkt_rx = 0
+    # Queue of processed packets to be delivered to weewx.
     pkt_queue = []
     def __init__(self, wmr200):
         super(PacketLive, self).__init__(wmr200)
-        PacketLive.pkt_cnt += 1
+        PacketLive.pkt_rx += 1
 
     @staticmethod
     def packet_live_data():
@@ -583,11 +574,13 @@ class PacketLive(Packet):
 
 class PacketArchive(Packet):
     """Packets with archived sensor data from console."""
-    pkt_cnt = 0
+    # Number of archive packets received from console.
+    pkt_rx = 0
+    # Queue of processed packets to be delivered to weewx.
     pkt_queue = []
     def __init__(self, wmr200):
         super(PacketArchive, self).__init__(wmr200)
-        PacketArchive.pkt_cnt += 1
+        PacketArchive.pkt_rx += 1
 
     @staticmethod
     def packet_live_data():
@@ -625,10 +618,11 @@ class PacketArchive(Packet):
 
 class PacketControl(Packet):
     """Packets with protocol control info from console."""
-    pkt_cnt = 0
+    # Number of control packets received from console.
+    pkt_rx = 0
     def __init__(self, wmr200):
         super(PacketControl, self).__init__(wmr200)
-        PacketControl.pkt_cnt += 1
+        PacketControl.pkt_rx += 1
 
     @staticmethod
     def packet_live_data():
@@ -651,8 +645,6 @@ class PacketControl(Packet):
     def packet_complete(self):
         """Determines if packet is complete and ready for weewx engine
         processing."""
-        # If we have detected a bogus packet then ensure we drop this
-        # packet via this path.
         if self.size_actual() == 1:
             return True
         return False
@@ -714,7 +706,6 @@ class PacketArchiveData(PacketArchive):
                                                 self._pkt_data[base:base+7]))
         except IndexError:
             msg = ('%s decode index failure' % self.pkt_name)
-            logerr(msg)
             raise WMR200ProtocolError(msg)
 
         # Tell wmr200 console we have processed it and can handle more.
@@ -792,7 +783,6 @@ def decode_wind(pkt, pkt_data):
 
     except IndexError:
         msg = ('%s decode index failure' % pkt.pkt_name())
-        logerr(msg)
         raise WMR200ProtocolError(msg)
 
 class PacketWind(PacketLive):
@@ -843,7 +833,6 @@ def decode_rain(pkt, pkt_data):
 
     except IndexError:
         msg = ('%s decode index failure' % pkt.pkt_name())
-        logerr(msg)
         raise WMR200ProtocolError(msg)
 
 
@@ -852,7 +841,10 @@ def adjust_rain(pkt, packet):
     Because the WMR does not offer anything like bucket tips, we must
     calculate it by looking for the change in total rain.
     After driver startup we need to initialize the total rain presented 
-    by the console."""
+    by the console.
+      There are two different rain total last values kept.  One for archive
+    data and one for live loop data.  They are addressed using a static
+    variable within the scope of the respective class name."""
     record = {}
 
     # Get the total current rain field from the console.
@@ -876,6 +868,7 @@ def adjust_rain(pkt, packet):
                (packet.pkt_name, rain_total))
 
     packet.rain_total_last = rain_total
+
     return record
 
 class PacketRain(PacketLive):
@@ -911,7 +904,6 @@ def decode_uvi(pkt, pkt_data):
 
     except IndexError:
         msg = ('%s index decode index failure' % pkt.pkt_name())
-        logerr(msg)
         raise WMR200ProtocolError(msg)
 
 
@@ -961,7 +953,6 @@ def decode_pressure(pkt, pkt_data):
 
     except IndexError:
         msg = ('%s index decode index failure' % pkt.pkt_name())
-        logerr(msg)
         raise WMR200ProtocolError(msg)
 
 
@@ -1053,7 +1044,6 @@ def decode_temp(pkt, pkt_data):
 
     except IndexError:
         msg = ('%s index decode index failure' % pkt.pkt_name())
-        logerr(msg)
         raise WMR200ProtocolError(msg)
 
 
@@ -1365,7 +1355,7 @@ class PollUsbDevice(threading.Thread):
         buf = [0x20, 0x00, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00]
         try:
             self.usb_device.write_device(buf)
-            loginf('Reset device')
+            loginf('Reset console device')
             self._ok_to_read = True
             time.sleep(1)
 
@@ -1509,12 +1499,15 @@ class WMR200(weewx.drivers.AbstractDevice):
         # initial timestamp, so we'll seed this with current PC time.
         self.last_time_epoch = int(time.time() + 0.5)
 
-        # Restart counter in case driver crashes and is restarted by the
+        # Restart counter when driver crashes and is restarted by the
         # weewx engine.
         global STAT_RESTART
         STAT_RESTART += 1
         if STAT_RESTART > 1:
             logwar(('Restart count: %d') % STAT_RESTART)
+
+        # Reset any other state during startup or after a crash.
+        PacketArchiveData.rain_total_last = None
 
         # Debugging flags
         global DEBUG_WRITES
@@ -1681,10 +1674,10 @@ class WMR200(weewx.drivers.AbstractDevice):
 
     def print_stats(self):
         """Print summary of driver statistics."""
-        loginf(('Received packets live_cnt:%d archive_cnt:%d'
-                ' control_cnt:%d') % (PacketLive.pkt_cnt,
-                                      PacketArchive.pkt_cnt,
-                                      PacketControl.pkt_cnt))
+        loginf(('Received packet count live:%d archive:%d'
+                ' control:%d') % (PacketLive.pkt_rx,
+                                      PacketArchive.pkt_rx,
+                                      PacketControl.pkt_rx))
         loginf('Received bytes:%d sent bytes:%d' %
                (self.usb_device.byte_cnt_rd,
                 self.usb_device.byte_cnt_wr))
@@ -1699,23 +1692,25 @@ class WMR200(weewx.drivers.AbstractDevice):
         # This will raise exception if checksum fails.
         self._pkt.verify_checksum()
 
-        # Drop any bogus packets.
-        if self._pkt.is_bogus:
-            logerr(self._pkt.to_string_raw('Discarding bogus packet:'))
-        else:
+        try:
             # Process the actual packet.
             self._pkt.packet_process()
             if self._pkt.packet_live_data():
                 PacketLive.pkt_queue.append(self._pkt)
-                logdbg('  Queuing live packet cnt:%d len:%d' %
-                       (PacketLive.pkt_cnt, len(PacketLive.pkt_queue)))
+                logdbg('  Queuing live packet rx:%d live_queue_len:%d' %
+                       (PacketLive.pkt_rx, len(PacketLive.pkt_queue)))
             elif self._pkt.packet_archive_data():
                 PacketArchive.pkt_queue.append(self._pkt)
-                logdbg('  Queuing archive packet cnt:%d len:%d'
-                       % (PacketArchive.pkt_cnt, len(PacketArchive.pkt_queue)))
+                logdbg('  Queuing archive packet rx:%d archive_queue_len:%d'
+                       % (PacketArchive.pkt_rx, len(PacketArchive.pkt_queue)))
             else:
                 logdbg(('  Acknowledged control packet'
-                        ' cnt:%d') % PacketControl.pkt_cnt)
+                        ' rx:%d') % PacketControl.pkt_rx)
+        except WMR200PacketParsingError, e:
+            # Drop any bogus packets.
+            logerr(self._pkt.to_string_raw('Discarding bogus packet: %s ' 
+                   % e.msg))
+
         # Reset this packet to get ready for next one
         self._pkt = None
 
