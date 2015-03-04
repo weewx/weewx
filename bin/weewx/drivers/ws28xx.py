@@ -1763,13 +1763,13 @@ def getFrequencyStandard(frequency):
     logerr("unknown frequency '%s', using US" % frequency)
     return EFrequency.fsUS
 
-# HWPro presents battery flags as WS/TH/RAIN/WIND
-# 0 - wind
-# 1 - rain
-# 2 - thermo-hygro
-# 3 - console
+# bit value battery_flag
+# 0   1     thermo/hygro
+# 1   2     rain
+# 2   4     wind
+# 3   8     console
 
-batterybits = {'wind':0, 'rain':1, 'th':2, 'console':3}
+batterybits = {'th':0, 'rain':1, 'wind':2, 'console':3}
 
 def getBatteryStatus(status, flag):
     """Return 1 if bit is set, 0 otherwise"""
