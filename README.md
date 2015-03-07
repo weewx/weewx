@@ -4,7 +4,7 @@
 <p><i>Open source software for your weather station</i></p>
 
 <h2>Description</h2>
-<p>The weewx weather system is written in Python and runs on Linux, MacOSX,
+<p>The WeeWX weather system is written in Python and runs on Linux, MacOSX,
   Solaris, and *BSD.  It runs exceptionally well on a Raspberry Pi.
   It generates plots, HTML pages, and monthly and
   yearly summary reports, which can be uploaded to a web server. Thousands of
@@ -22,23 +22,23 @@
 
 <p>Support for over 30 types of hardware including, but not limited to:</p>
 <ul>
-  <li>Davis Vantage series;</li>
+  <li>Davis Vantage;</li>
   <li>Oregon Scientific WMR100, WMR200, WMR9x8, and other variants;</li>
   <li>Fine Offset WH10xx, WH20xx, and WH30xx series (including Ambient,
     Elecsa, Maplin, Tycon, Watson, and others);</li>
   <li>LaCrosse WS-23XX and WS-28XX (including TFA);</li>
-  <li>Hideki TE923 (including Cresta, Honeywell, and others);</li>
+  <li>Hideki TE923 (including TFA, Cresta, Honeywell, and others);</li>
   <li>PeetBros Ultimeter;</li>
-  <li>RainWise;</li>
-  <li>AcuRite;</li>
-  <li>KlimaLogg;</li>
-  <li>One-wire.</li>
+  <li>RainWise CC3000 and MKIII;</li>
+  <li>AcuRite 5-in-1;</li>
+  <li>KlimaLogg Pro;</li>
+  <li>One-wire (including Inspeed, ADS, AAG, Hobby-Boards).</li>
 </ul>
 
 <p>
   See the <a href="http://www.weewx.com/hardware.html">hardware list</a> on the
-  weewx website for a complete list of supported stations, and for pictures to
-  help identify your hardware!  The <a href="http://www.weewx.com/hwcmp.html">hardware comparison</a> shows specifications for many different types of hardware, including some not yet supported by weewx.
+  WeeWX website for a complete list of supported stations, and for pictures to
+  help identify your hardware!  The <a href="http://www.weewx.com/hwcmp.html">hardware comparison</a> shows specifications for many different types of hardware, including some not yet supported by WeeWX.
 </p>
 
 <h2>Features</h2>
@@ -49,16 +49,18 @@
     (Python skills recommended)</li>
   <li>Growing ecosystem of 3rd party extensions</li>
   <li>Internationalized language support</li>
+  <li>Localized date/time support</li>
   <li>Support for US and metric units</li>
   <li>Support for multiple skins</li>
-  <li>Optional uploads to Weather Underground, CWOP, AWEKAS and WOW</li>
+  <li>Support sqlite and MySQL</li>
+  <li>Optional uploads to Weather Underground, CWOP, AWEKAS, WOW, and others</li>
   <li>Uploads to your website via FTP, SFTP, or rsync</li>
   <li>Extensive almanac information</li>
 </ul>
 
 <h2>Downloads</h2>
 <p>
-For the latest Weewx release see:
+For the latest WeeWX release see:
 </p>
 <p style='padding-left: 50px'>
   <a href="https://github.com/weewx/weewx/releases/latest">https://github.com/weewx/weewx/releases/latest</a>
@@ -67,7 +69,13 @@ For the latest Weewx release see:
 <h2>Documentation and Support</h2>
 
 <p>
-  Weewx documentation is in docs/readme.htm or at:
+  The WeeWX website includes a <a href="http://weewx.com/showcase.html">showcase</a> of sample web sites, a <a href="http://weewx.com/stations.html">map</a> of stations using WeeWX, and <a href="http://weewx.com/news.html">announcements</a>.
+</p>
+<p style='padding-left: 50px'>
+  <a href="http://weewx.com/">http://weewx.com/</a>
+</p>
+<p>
+  WeeWX documentation is in docs/readme.htm or at:
 </p>
 <p style='padding-left: 50px'>
   <a href="http://weewx.com/docs.html">http://weewx.com/docs.html</a>
@@ -81,9 +89,9 @@ For the latest Weewx release see:
 <p>
   Community support can be found at:
 <p style='padding-left: 50px;'>
-  <a href="https://groups.google.com/forum/#!forum/weewx-user">https://groups.google.com/forum/#!forum/weewx-user</a>
+  <a href="https://groups.google.com/group/weewx-user">https://groups.google.com/forum/#!forum/weewx-user</a>
 </p>
 
 <h2>Licensing</h2>
 
-<p>Weewx is licensed under the GNU Public License v3.</p>
+<p>WeeWX is licensed under the GNU Public License v3.</p>
