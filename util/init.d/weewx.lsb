@@ -1,5 +1,4 @@
 #!/bin/bash
-# $Id$
 # Author: Tom Keffer <keffer@gmail.com>
 # LSB system startup script for weewx
 

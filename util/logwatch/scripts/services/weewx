@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# $Id$
 # logwatch script to process weewx log files
 # Copyright 2013 Matthew Wall
 

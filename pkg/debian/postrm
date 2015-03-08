@@ -1,5 +1,4 @@
 #!/bin/sh -e
-# $Id$
 # postrm script for weewx debian package
 # Copyright 2013 Matthew Wall
 #

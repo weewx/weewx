@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id$ -->
 <!-- property list file for weewx daemon -->
 <!-- put this file in /Library/LaunchDaemons -->
 <!-- to start weewx: -->

@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 # prerm script for weewx debian package
 # Copyright 2013 Matthew Wall
 #

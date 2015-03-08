@@ -1,9 +1,8 @@
-/*
- *  Copyright (c) 2014 Tom Keffer <tkeffer@gmail.com>
- * 
- *  See the file LICENSE.txt for your full rights.
+/*  Javascript for the weewx documentation
  *
- *  $Id$
+ *  Copyright (c) 2015 Tom Keffer <tkeffer@gmail.com>
+ * 
+ *  See the file LICENSE.txt for your rights.
  */
 
 function wee_gen_id(text, element) {

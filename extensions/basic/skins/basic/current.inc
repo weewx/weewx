@@ -1,5 +1,4 @@
 ## basic for weewx - Copyright 2013 Matthew Wall
-## $Id$
 
 <!-- current readings in tabular form -->
 
