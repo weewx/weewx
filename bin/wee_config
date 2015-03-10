@@ -26,35 +26,39 @@ search_locations = [os.path.normpath(os.path.join(my_dir, '..')), '/etc/weewx', 
 minor_comment_block = [""]
 major_comment_block = ["", "##############################################################################", ""]
 
-description="""Use this utility to configure the weewx configuration file weewx.conf.
+usage="""wee_config --help
+       wee_config --version
+       wee_config list-drivers
+       wee_config merge CONFIG_FILE|--config=CONFIG_FILE --template=TEMPLATE_FILE 
+           [--output=OUTFILE] [--no-prompt]
+       wee_config driver CONFIG_FILE|--config=CONFIG_FILE 
+           [--driver[=DRIVER]] [--no-prompt]
+       wee_config station CONFIG_FILE|--config=CONFIG_FILE 
+           [--latitude=yy.y] [--longitude=xx.x] [--foot-altitude=FEET|--meter-altitude=METERS] 
+           [--description="Home Sweet Home"] [--no-prompt]
+       wee_config reports CONFIG_FILE|--config=CONFIG_FILE 
+           [--units=(us|metric)] [--no-prompt]
 
-A "template configuration" is used as a starting point, but is optional.
-Given by option --template.
-
-The "configuration file" is then merged into that, overwriting any
-values. This file is usually given as a command-line argument, or it
-can be specified with option --config.
-
-The resulting, merged file can then be further modified using other options.
+wee_config is used to configure your weewx configuration file (nominally, weewx.conf).
+Its location can be given as a command-line argument, or it can be specified 
+with option --config.
 
 By default, the final results are writen to the same file name as the
 configuration file. The original is backed up first. Alternatively, it
-will be written to the destination given by the --output option."""
- 
-usage="""%prog: [config_path] 
-                   [--help]
-                   [--config=CONFIG_FILE]
-                   [--template=TEMPLATE_FILE]
-                   [--units=(metric|us)]
-                   [--driver[=DRIVER]]
-                   [--station]
-                   [--output=OUTPUT_FILE]
-                   [--no-prompt]
-                   [--version]
-                   [--list-drivers]
-                   [--help]
-       The path to the config file can be specified as either a
-       command-line argument, or by using option --config. """
+will be written to the destination given by the --output option.
+
+COMMANDS:
+
+--version    Print the version of weewx, then exit.
+list-drivers List the available weewx device drivers.
+merge        Update an existing configuration file, then merge it into a template, 
+             overwriting any options. The results can be written to a specified 
+             destination OUTFILE or, if not specified, to the original
+             configuration file (a backup will be made).
+driver       Add the specified driver to the configuration file, prompting if necessary.
+station      Configuration the [Station] stanza, prompting if necessary.
+reports      Configure the report StdReport.
+"""
 
 def main():
 
@@ -62,31 +66,41 @@ def main():
     syslog.openlog('wee_config', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
-    parser = optparse.OptionParser(description=description, usage=usage)
+    parser = optparse.OptionParser(usage=usage)
     
     # Add the various options:
+    parser.add_option("--version", action="store_true",
+                      help="Print the version of weewx and exit.")
     parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE. Default is /etc/weewx/weewx.conf or /home/weewx/weewx.conf.")
+    parser.add_option("--no-prompt", action="store_true",
+                      help="Do not issue prompts. Take all options from the command-line.")
     parser.add_option("--template", metavar="TEMPLATE_FILE",
                       help="Start with the template TEMPLATE_FILE. The configuration file will be merged into this, " 
                       "overwriting any keys.")
-    parser.add_option("--units", choices=["us", "metric"], metavar="(metric|us)",
-                      help="Set display units to 'metric' or 'us'")
-    parser.add_option("--driver", metavar="DRIVER", 
-                      help="Install and configure driver DRIVER. If missing, then prompt for driver.")
-    parser.add_option("--station",
-                      help="Prompt for lat, lon and station description.")
     parser.add_option("--output", metavar="OUTPUT_FILE",
                       help="Where the results should be put. The default is to overwrite CONFIG_FILE, saving a backup first")
-    parser.add_option("--no-prompt", action="store_true",
-                      help="Do not issue prompts before reading response.")
-    parser.add_option("--version", action="store_true",
-                      help="Print the version of weewx and exit.")
-    parser.add_option("--list-drivers", action="store_true",
-                      help="For testing purposes")
+    parser.add_option("--driver", metavar="DRIVER_PATH", 
+                      help="The path of the driver to be installed")
+    parser.add_option("--latitude", metavar="yy.y",
+                      help="The station latitude")
+    parser.add_option("--longitude", metavar="xx.x",
+                      help="The station longitude")
+    parser.add_option("--foot-altitude", metavar="FEET",
+                      help="The station altitude in feet")
+    parser.add_option("--meter-altitude", metavar="METER",
+                      help="The station altitude in meters")
+    parser.add_option("--description",
+                      help="""A text description of the station. For example, "Santa's workshop, North Pole" """)
+    parser.add_option("--units", choices=["us", "metric"], metavar="(metric|us)",
+                      help="Set display units to 'metric' or 'us'")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
+
+    if options.version:
+        print weewx.__version__
+        exit(0)
 
     # Find the config file, if possible:
     try:
@@ -99,16 +113,23 @@ def main():
             print >>sys.stdout, "Syntax error in file '%s': %s" % (config_path, e)
             exit(1)
     except weeutil.config.ConfigPathError, e:
-        print >>sys.stdout, "Unable to find 'weewx.conf'."
-        print >>sys.stdout, "Error: %s" % e
-        exit(1)
+        if options.template:
+            print >>sys.stdout, "Unable to find 'weewx.conf'."
+            print >>sys.stdout, "Error: %s" % e
+            exit(1)
 
-    if options.version:
-        print weewx.__version__
-        exit(0)
     if options.list_drivers:
         print_drivers()
         exit(0)
+        
+    if options.template:
+        try:        
+            # Open up and parse the template:
+            template_dict = configobj.ConfigObj(options.template, file_error=True)
+        except SyntaxError, e:
+            print >>sys.stdout, "Syntax error in config template '%s': %s" % (options.template, e)
+            exit(1)
+        merge_template(options.template, config_dict)
         
     # Extract the station info from the config file:
     info = get_station_info(config_dict)
