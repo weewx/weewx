@@ -223,11 +223,11 @@ class StdWXCalculate(weewx.engine.StdService):
         else:
             data['apptemp'] = None
 
-#    def calc_beaufort(self, data, data_type):
-#        if 'windSpeed' in data:
-#            vt = (data['windSpeed'], "mile_per_hour", "group_speed")
-#            ws_kts = weewx.units.convert(vt, "knot")[0]
-#            data['beaufort'] = weewx.wxformulas.beaufort(ws_kts)
+    def calc_beaufort(self, data, data_type):
+        if 'windSpeed' in data:
+            vt = (data['windSpeed'], "mile_per_hour", "group_speed")
+            ws_kts = weewx.units.convert(vt, "knot")[0]
+            data['beaufort'] = weewx.wxformulas.beaufort(ws_kts)
 
     def calc_ET(self, data, data_type):
         """Get maximum and minimum temperatures and average radiation and
@@ -258,7 +258,8 @@ class StdWXCalculate(weewx.engine.StdService):
                     else:
                         wind_avg = weewx.wxformulas.kph_to_mph(wind_avg)
                 data['ET'] = weewx.wxformulas.evapotranspiration_US(
-                    T_max, T_min, rad_avg, wind_avg, self.wind_height, self.latitude,
+                    T_max, T_min, rad_avg, wind_avg,
+                    self.wind_height, self.latitude,
                     data['dateTime'])
         except weedb.DatabaseError:
             pass

@@ -25,7 +25,6 @@ AUTHOR:
 DATE: 
     5-Oct-2011
 """
-# $Id$
 import serial
 import struct
 import time

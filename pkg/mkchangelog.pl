@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# $Id$
 # Copyright Matthew Wall
 #
 # Convert the changelog to various formats, or create a changelog stub suitable

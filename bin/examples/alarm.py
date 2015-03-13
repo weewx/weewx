@@ -104,15 +104,22 @@ class MyAlarm(StdService):
         if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) >= self.time_wait :
             # Get the new archive record:
             record = event.record
-            # Evaluate the expression in the context of the event archive record.
-            # Sound the alarm if it evaluates true:
-            if eval(self.expression, None, record):                       # NOTE 2
-                # Sound the alarm!
-                # Launch in a separate thread so it doesn't block the main LOOP thread:
-                t  = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, record))
-                t.start()
-                # Record when the message went out:
-                self.last_msg_ts = time.time()
+            
+            # Be prepared to catch an exception in the case that the expression contains 
+            # a variable that is not in the record:
+            try:                                                              # NOTE 2
+                # Evaluate the expression in the context of the event archive record.
+                # Sound the alarm if it evaluates true:
+                if eval(self.expression, None, record):                       # NOTE 3
+                    # Sound the alarm!
+                    # Launch in a separate thread so it doesn't block the main LOOP thread:
+                    t  = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, record))
+                    t.start()
+                    # Record when the message went out:
+                    self.last_msg_ts = time.time()
+            except NameError, e:
+                # The record was missing a named variable. Write a debug message, then keep going
+                syslog.syslog(syslog.LOG_DEBUG, "alarm: %s" % e)
 
     def soundTheAlarm(self, rec):
         """This function is called when the given expression evaluates True."""

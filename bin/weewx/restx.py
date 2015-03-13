@@ -682,9 +682,9 @@ class AmbientThread(RESTThread):
                 'barometer'   : 'baromin=%.3f',
                 'outTemp'     : 'tempf=%.1f',
                 'outHumidity' : 'humidity=%03.0f',
-                'windSpeed'   : 'windspeedmph=%03.0f',
+                'windSpeed'   : 'windspeedmph=%03.1f',
                 'windDir'     : 'winddir=%03.0f',
-                'windGust'    : 'windgustmph=%03.0f',
+                'windGust'    : 'windgustmph=%03.1f',
                 'dewpoint'    : 'dewptf=%.1f',
                 'hourRain'    : 'rainin=%.2f',
                 'dayRain'     : 'dailyrainin=%.2f',
@@ -752,7 +752,7 @@ class WOWThread(AmbientThread):
     
     # Types and formats of the data to be published:
     _formats = {'dateTime'    : 'dateutc=%s',
-                'barometer'   : 'baromin=%.1f',
+                'barometer'   : 'baromin=%.3f',
                 'outTemp'     : 'tempf=%.1f',
                 'outHumidity' : 'humidity=%.0f',
                 'windSpeed'   : 'windspeedmph=%.0f',

@@ -938,7 +938,7 @@ import weewx.wxformulas
 import weeutil.weeutil
 
 DRIVER_NAME = 'WS28xx'
-DRIVER_VERSION = '0.33'
+DRIVER_VERSION = '0.34'
 
 
 def loader(config_dict, engine):
@@ -1313,6 +1313,7 @@ class WS28xxDriver(weewx.drivers.AbstractDevice):
         loginf('frequency is %s' % self.frequency)
 
         self.startUp()
+        time.sleep(10) # give the rf thread time to start up
 
     @property
     def hardware_name(self):
@@ -1324,7 +1325,7 @@ class WS28xxDriver(weewx.drivers.AbstractDevice):
 
     def genLoopPackets(self):
         """Generator function that continuously returns decoded packets."""
-        while True:
+        while self._service.isRunning():
             now = int(time.time()+0.5)
             packet = self.get_observation()
             if packet is not None:
@@ -1336,33 +1337,33 @@ class WS28xxDriver(weewx.drivers.AbstractDevice):
                 else:
                     packet = None
 
-            # if no new weather data, return an empty packet
-            if packet is None:
-                packet = {'usUnits': weewx.METRIC, 'dateTime': now}
-                # if no new weather data for awhile, log it
-                if self._last_obs_ts is None or \
-                        now - self._last_obs_ts > self._nodata_interval:
-                    if now - self._last_nodata_log_ts > self._log_interval:
-                        msg = 'no new weather data'
-                        if self._last_obs_ts is not None:
-                            msg += ' after %d seconds' % (
-                                now - self._last_obs_ts)
-                        loginf(msg)
-                        self._last_nodata_log_ts = now
+            # if no new weather data, log it
+            if (packet is None
+                and (self._last_obs_ts is None
+                     or now - self._last_obs_ts > self._nodata_interval)
+                and (now - self._last_nodata_log_ts > self._log_interval)):
+                msg = 'no new weather data'
+                if self._last_obs_ts is not None:
+                    msg += ' after %d seconds' % (now - self._last_obs_ts)
+                loginf(msg)
+                self._last_nodata_log_ts = now
 
             # if no contact with console for awhile, log it
             ts = self.get_last_contact()
-            if ts is None or now - ts > self._nocontact_interval:
-                if now - self._last_contact_log_ts > self._log_interval:
-                    msg = 'no contact with console'
-                    if ts is not None:
-                        msg += ' after %d seconds' % (now - ts)
-                    msg += ': press [SET] to sync'
-                    loginf(msg)
-                    self._last_contact_log_ts = now
+            if (ts is None or now - ts > self._nocontact_interval
+                and now - self._last_contact_log_ts > self._log_interval):
+                msg = 'no contact with console'
+                if ts is not None:
+                    msg += ' after %d seconds' % (now - ts)
+                msg += ': press [SET] to sync'
+                loginf(msg)
+                self._last_contact_log_ts = now
 
-            yield packet
+            if packet is not None:
+                yield packet
             time.sleep(self.polling_interval)                    
+        else:
+            raise weewx.WeeWxIOError('RF thread is not running')
 
     def genStartupRecords(self, ts):
         loginf('Scanning historical records')
@@ -1762,13 +1763,13 @@ def getFrequencyStandard(frequency):
     logerr("unknown frequency '%s', using US" % frequency)
     return EFrequency.fsUS
 
-# HWPro presents battery flags as WS/TH/RAIN/WIND
-# 0 - wind
-# 1 - rain
-# 2 - thermo-hygro
-# 3 - console
+# bit value battery_flag
+# 0   1     thermo/hygro
+# 1   2     rain
+# 2   4     wind
+# 3   8     console
 
-batterybits = {'wind':0, 'rain':1, 'th':2, 'console':3}
+batterybits = {'th':0, 'rain':1, 'wind':2, 'console':3}
 
 def getBatteryStatus(status, flag):
     """Return 1 if bit is set, 0 otherwise"""
@@ -4101,8 +4102,9 @@ class CCommunicationService(object):
                 self.doRFCommunication()
         except Exception, e:
             logerr('exception in doRF: %s' % e)
-            if weewx.debug:
-                log_traceback(dst=syslog.LOG_DEBUG)
+#            if weewx.debug:
+#                log_traceback(dst=syslog.LOG_DEBUG)
+            log_traceback(dst=syslog.LOG_INFO)
             self.running = False
             raise
         finally:

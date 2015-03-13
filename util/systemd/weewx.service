@@ -1,4 +1,3 @@
-# $Id$
 # systemd configuration for weewx
 
 [Unit]

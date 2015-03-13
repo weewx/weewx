@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: postinst 2738 2014-11-29 04:17:12Z mwall $
 # preinst script for weewx debian package
 # Copyright 2014 Matthew Wall
 

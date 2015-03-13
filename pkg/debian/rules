@@ -1,6 +1,5 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
-# $Id$
 # debian makefile for weewx
 # Copyright 2013 Matthew Wall
 
