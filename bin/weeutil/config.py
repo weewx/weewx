@@ -5,6 +5,7 @@
 #
 """Utilities used by the setup and configure programs"""
 
+import copy
 import os
 import time
 import shutil
@@ -171,7 +172,7 @@ def merge_config(config_dict, template_dict):
     
     return output_dict
 
-def update_to_v27(config_dict):
+def update_to_v27(old_config_dict):
     """Updates a configuration file to the latest V2.X version.
     Since V2.7 was the last 2.X version, that's our target"""
 
@@ -183,86 +184,88 @@ def update_to_v27(config_dict):
                   'weewx.wxengine.StdPrint'     : 'report_services', 
                   'weewx.wxengine.StdReport'    : 'report_services'}
 
+    # Make a deep copy of the old config dictionary, then start modifying it:
+    new_config_dict = copy.deepcopy(old_config_dict)
 
     # webpath is now station_url
-    webpath = config_dict['Station'].get('webpath', None)
-    station_url = config_dict['Station'].get('station_url', None)
+    webpath = new_config_dict['Station'].get('webpath', None)
+    station_url = new_config_dict['Station'].get('station_url', None)
     if webpath is not None and station_url is None:
-        config_dict['Station']['station_url'] = webpath
-    config_dict['Station'].pop('webpath', None)
+        new_config_dict['Station']['station_url'] = webpath
+    new_config_dict['Station'].pop('webpath', None)
     
-    if 'StdArchive' in config_dict:
+    if 'StdArchive' in new_config_dict:
         # Option stats_types is no longer used. Get rid of it.
-        config_dict['StdArchive'].pop('stats_types', None)
+        new_config_dict['StdArchive'].pop('stats_types', None)
     
     # --- Davis Vantage series ---
-    if 'Vantage' in config_dict:
+    if 'Vantage' in new_config_dict:
         try:
-            if config_dict['Vantage']['driver'].strip() == 'weewx.VantagePro':
-                config_dict['Vantage']['driver'] = 'weewx.drivers.vantage'
+            if new_config_dict['Vantage']['driver'].strip() == 'weewx.VantagePro':
+                new_config_dict['Vantage']['driver'] = 'weewx.drivers.vantage'
         except KeyError:
             pass
     
     # --- Oregon Scientific WMR100 ---
     
     # The section name has changed from WMR-USB to WMR100
-    if 'WMR-USB' in config_dict:
-        if 'WMR100' in config_dict:
+    if 'WMR-USB' in new_config_dict:
+        if 'WMR100' in new_config_dict:
             sys.stderr.write("\n*** Configuration file has both a 'WMR-USB' section and a 'WMR100' section. Aborting ***\n\n")
             exit()
-        config_dict.rename('WMR-USB', 'WMR100')
+        new_config_dict.rename('WMR-USB', 'WMR100')
     # If necessary, reflect the section name in the station type:
     try:
-        if config_dict['Station']['station_type'].strip() == 'WMR-USB':
-            config_dict['Station']['station_type'] = 'WMR100'
+        if new_config_dict['Station']['station_type'].strip() == 'WMR-USB':
+            new_config_dict['Station']['station_type'] = 'WMR100'
     except KeyError:
         pass
     # Finally, the name of the driver has been changed
     try:
-        if config_dict['WMR100']['driver'].strip() == 'weewx.wmrx':
-            config_dict['WMR100']['driver'] = 'weewx.drivers.wmr100'
+        if new_config_dict['WMR100']['driver'].strip() == 'weewx.wmrx':
+            new_config_dict['WMR100']['driver'] = 'weewx.drivers.wmr100'
     except KeyError:
         pass
         
     # --- Oregon Scientific WMR9x8 series ---
     
     # The section name has changed from WMR-918 to WMR9x8
-    if 'WMR-918' in config_dict:
-        if 'WMR9x8' in config_dict:
+    if 'WMR-918' in new_config_dict:
+        if 'WMR9x8' in new_config_dict:
             sys.stderr.write("\n*** Configuration file has both a 'WMR-918' section and a 'WMR9x8' section. Aborting ***\n\n")
             exit()
-        config_dict.rename('WMR-918', 'WMR9x8')
+        new_config_dict.rename('WMR-918', 'WMR9x8')
     # If necessary, reflect the section name in the station type:
     try:
-        if config_dict['Station']['station_type'].strip() == 'WMR-918':
-            config_dict['Station']['station_type'] = 'WMR9x8'
+        if new_config_dict['Station']['station_type'].strip() == 'WMR-918':
+            new_config_dict['Station']['station_type'] = 'WMR9x8'
     except KeyError:
         pass
     # Finally, the name of the driver has been changed
     try:
-        if config_dict['WMR9x8']['driver'].strip() == 'weewx.WMR918':
-            config_dict['WMR9x8']['driver'] = 'weewx.drivers.wmr9x8'
+        if new_config_dict['WMR9x8']['driver'].strip() == 'weewx.WMR918':
+            new_config_dict['WMR9x8']['driver'] = 'weewx.drivers.wmr9x8'
     except KeyError:
         pass
     
     # --- Fine Offset instruments ---
 
     try:
-        if config_dict['FineOffsetUSB']['driver'].strip() == 'weewx.fousb':
-            config_dict['FineOffsetUSB']['driver'] = 'weewx.drivers.fousb'
+        if new_config_dict['FineOffsetUSB']['driver'].strip() == 'weewx.fousb':
+            new_config_dict['FineOffsetUSB']['driver'] = 'weewx.drivers.fousb'
     except KeyError:
         pass
 
     #--- The weewx Simulator ---
 
     try:
-        if config_dict['Simulator']['driver'].strip() == 'weewx.simulator':
-            config_dict['Simulator']['driver'] = 'weewx.drivers.simulator'
+        if new_config_dict['Simulator']['driver'].strip() == 'weewx.simulator':
+            new_config_dict['Simulator']['driver'] = 'weewx.drivers.simulator'
     except KeyError:
         pass
 
     # See if the engine configuration section has the old-style "service_list":
-    if 'Engines' in config_dict and 'service_list' in config_dict['Engines']['WxEngine']:
+    if 'Engines' in new_config_dict and 'service_list' in new_config_dict['Engines']['WxEngine']:
         # It does. Break it up into five, smaller lists. If a service
         # does not appear in the dictionary "service_map_v2", meaning we
         # do not know what it is, then stick it in the last group we
@@ -272,10 +275,10 @@ def update_to_v27(config_dict):
         # Set up a bunch of empty groups in the right order
         for group in ['prep_services', 'process_services', 'archive_services', 
                       'restful_services', 'report_services']:
-            config_dict['Engines']['WxEngine'][group] = list()
+            new_config_dict['Engines']['WxEngine'][group] = list()
 
         # Now map the old service names to the right group
-        for _svc_name in config_dict['Engines']['WxEngine']['service_list']:
+        for _svc_name in new_config_dict['Engines']['WxEngine']['service_list']:
             svc_name = _svc_name.strip()
             # Skip the no longer needed StdRESTful service:
             if svc_name == 'weewx.wxengine.StdRESTful':
@@ -284,93 +287,124 @@ def update_to_v27(config_dict):
             if svc_name in service_map_v2:
                 # Yes. Get which group it belongs to, and put it there
                 group = service_map_v2[svc_name]
-                config_dict['Engines']['WxEngine'][group].append(svc_name)
+                new_config_dict['Engines']['WxEngine'][group].append(svc_name)
                 last_group = group
             else:
                 # No. Put it in the last group.
-                config_dict['Engines']['WxEngine'][last_group].append(svc_name)
+                new_config_dict['Engines']['WxEngine'][last_group].append(svc_name)
 
         # Now add the restful services, using the old driver name to help us
-        for section in config_dict['StdRESTful'].sections:
-            svc = config_dict['StdRESTful'][section]['driver']
+        for section in new_config_dict['StdRESTful'].sections:
+            svc = new_config_dict['StdRESTful'][section]['driver']
             # weewx.restful has changed to weewx.restx
             if svc.startswith('weewx.restful'):
                 svc = 'weewx.restx.Std' + section
             # awekas is in weewx.restx since 2.6
             if svc.endswith('AWEKAS'):
                 svc = 'weewx.restx.AWEKAS'
-            config_dict['Engines']['WxEngine']['restful_services'].append(svc)
+            new_config_dict['Engines']['WxEngine']['restful_services'].append(svc)
 
         # Depending on how old a version the user has, the station registry
         # may have to be included:
-        if 'weewx.restx.StdStationRegistry' not in config_dict['Engines']['WxEngine']['restful_services']:
-            config_dict['Engines']['WxEngine']['restful_services'].append('weewx.restx.StdStationRegistry')
+        if 'weewx.restx.StdStationRegistry' not in new_config_dict['Engines']['WxEngine']['restful_services']:
+            new_config_dict['Engines']['WxEngine']['restful_services'].append('weewx.restx.StdStationRegistry')
         
         # Get rid of the no longer needed service_list:
-        config_dict['Engines']['WxEngine'].pop('service_list')
+        new_config_dict['Engines']['WxEngine'].pop('service_list')
 
     # Clean up the CWOP configuration
-    if 'StdRESTful' in config_dict and 'CWOP' in config_dict['StdRESTful']:
+    if 'StdRESTful' in new_config_dict and 'CWOP' in new_config_dict['StdRESTful']:
         # Option "interval" has changed to "post_interval"
-        if 'interval' in config_dict['StdRESTful']['CWOP']:
-            config_dict['StdRESTful']['CWOP']['post_interval'] = config_dict['StdRESTful']['CWOP']['interval']
-            config_dict['StdRESTful']['CWOP'].pop('interval')
+        if 'interval' in new_config_dict['StdRESTful']['CWOP']:
+            new_config_dict['StdRESTful']['CWOP']['post_interval'] = new_config_dict['StdRESTful']['CWOP']['interval']
+            new_config_dict['StdRESTful']['CWOP'].pop('interval')
         # Option "server" has become "server_list". It is also no longer
         # included in the default weewx.conf, so just pop it.
-        if 'server' in config_dict['StdRESTful']['CWOP']:
-            config_dict['StdRESTful']['CWOP'].pop('server')
+        if 'server' in new_config_dict['StdRESTful']['CWOP']:
+            new_config_dict['StdRESTful']['CWOP'].pop('server')
 
     # Remove the no longer needed "driver" from all the RESTful services:
-    if 'StdRESTful' in config_dict:
-        for section in config_dict['StdRESTful'].sections:
-            config_dict['StdRESTful'][section].pop('driver', None)
+    if 'StdRESTful' in new_config_dict:
+        for section in new_config_dict['StdRESTful'].sections:
+            new_config_dict['StdRESTful'][section].pop('driver', None)
 
-def update_to_v3(config_dict):
+    return new_config_dict
+
+def update_to_v3(old_config_dict):
     """Update a configuration file to V3.X"""
     old_database = None
     
-    if 'Databases' in config_dict:
+    # Make a deep copy of the old config dictionary, then start modifying it:
+    new_config_dict = copy.deepcopy(old_config_dict)
+
+    if 'Databases' in new_config_dict:
         # The stats database no longer exists. Remove it from the [Databases]
         # section:
-        config_dict['Databases'].pop('stats_sqlite', None)
-        config_dict['Databases'].pop('stats_mysql', None)
+        new_config_dict['Databases'].pop('stats_sqlite', None)
+        new_config_dict['Databases'].pop('stats_mysql', None)
         # The key "database" changed to "database_name"
-        for stanza in config_dict['Databases']:
-            if 'database' in config_dict['Databases'][stanza]:
-                config_dict['Databases'][stanza].rename('database', 'database_name')
+        for stanza in new_config_dict['Databases']:
+            if 'database' in new_config_dict['Databases'][stanza]:
+                new_config_dict['Databases'][stanza].rename('database', 'database_name')
         
-    if 'StdReport' in config_dict:
+    if 'StdReport' in new_config_dict:
         # The key "data_binding" is now used instead of these:
-        config_dict['StdReport'].pop('archive_database', None)
-        config_dict['StdReport'].pop('stats_database', None)
+        new_config_dict['StdReport'].pop('archive_database', None)
+        new_config_dict['StdReport'].pop('stats_database', None)
         
-    if 'StdArchive' in config_dict:
-        old_database = config_dict['StdArchive'].pop('archive_database', None)
-        config_dict['StdArchive'].pop('stats_database', None)
-        config_dict['StdArchive'].pop('archive_schema', None)
-        config_dict['StdArchive'].pop('stats_schema', None)
+    if 'StdArchive' in new_config_dict:
+        old_database = new_config_dict['StdArchive'].pop('archive_database', None)
+        new_config_dict['StdArchive'].pop('stats_database', None)
+        new_config_dict['StdArchive'].pop('archive_schema', None)
+        new_config_dict['StdArchive'].pop('stats_schema', None)
         
     # Section ['Engines'] got renamed to ['Engine']
-    if 'Engine' not in config_dict and 'Engines' in config_dict:
-        config_dict.rename('Engines', 'Engine')
+    if 'Engine' not in new_config_dict and 'Engines' in new_config_dict:
+        new_config_dict.rename('Engines', 'Engine')
         # Subsection [['WxEngine']] got renamed to [['Services']]
-        if 'WxEngine' in config_dict['Engine']:
-            config_dict['Engine'].rename('WxEngine', 'Services')
+        if 'WxEngine' in new_config_dict['Engine']:
+            new_config_dict['Engine'].rename('WxEngine', 'Services')
 
             # Finally, module "wxengine" got renamed to "engine". Go through
             # each of the service lists, making the change
-            for list_name in config_dict['Engine']['Services']:
-                service_list = config_dict['Engine']['Services'][list_name]
+            for list_name in new_config_dict['Engine']['Services']:
+                service_list = new_config_dict['Engine']['Services'][list_name]
                 # If service_list is not already a list (it could be just a single name),
                 # then make it a list:
                 if not hasattr(service_list, '__iter__'):
                     service_list = [service_list]
-                config_dict['Engine']['Services'][list_name] = [this_item.replace('wxengine', 'engine') for this_item in service_list]
+                new_config_dict['Engine']['Services'][list_name] = [this_item.replace('wxengine', 'engine') for this_item in service_list]
         try:
             # Finally, make sure the new StdWXCalculate service is in the list:
-            if 'weewx.wxservices.StdWXCalculate' not in config_dict['Engine']['Services']['process_services']:
-                config_dict['Engine']['Services']['process_services'].append('weewx.wxservices.StdWXCalculate')
+            if 'weewx.wxservices.StdWXCalculate' not in new_config_dict['Engine']['Services']['process_services']:
+                new_config_dict['Engine']['Services']['process_services'].append('weewx.wxservices.StdWXCalculate')
         except KeyError:
             pass
         
-    return old_database
+    # If there was an old database, add it in the new, correct spot:
+    if old_database:
+        if 'DataBindings' not in new_config_dict:
+            new_config_dict['DataBindings'] = {'wx_binding' : {'database' : old_database}}
+            # Move the freshly inserted section [DataBindings] (which should 
+            # be at the end) to just before [Databases]
+            move_section_up(new_config_dict, 'Databases')
+            # Transfer the Databases comments to DataBindings:
+            new_config_dict.comments['DataBindings'] = new_config_dict.comments['Databases']
+            new_config_dict.comments['Databases'] = [""]
+            # Now patch up the various DataBindings comments:
+            new_config_dict['DataBindings'].comments['wx_binding'] = ["    # This section binds a data store to a database",""]
+            new_config_dict['DataBindings']['wx_binding'].comments['database'] = ["        # The database must match one of the sections in [Databases]"]
+
+    return new_config_dict
+
+def move_section_up(config, before):
+    """Moves the last section in a ConfigObj so it is just before
+    the given section"""
+    
+    # Find the given section:
+    loc = config.sections.index(before)
+    # Now move the last section so it sits just before it.
+    # Get a shorthand name to reduce the typing involved:
+    s = config.sections
+    config.sections = s[:loc] + s[-1:] + s[loc:-1]
+    
