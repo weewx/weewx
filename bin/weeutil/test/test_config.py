@@ -51,13 +51,15 @@ class ConfigTest(unittest.TestCase):
 
         out_str.seek(0)
         fd_expected = open('expected/weewx30_expected.conf')
+        N = 0
         for expected in fd_expected:
             actual = out_str.readline()
-            self.assertEqual(actual, expected)
+            N += 1
+            self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
         
         # Make sure there are no extra lines in the updated config:
         more = out_str.readline()
-        self.assertEqual(more, '')
+        self.assertEqual(more, '', "Unexpected additional lines")
         
         out_str.close()
         

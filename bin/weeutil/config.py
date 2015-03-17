@@ -10,11 +10,15 @@ import os
 import time
 import shutil
 import sys
+import StringIO
 
 import configobj
 
 class ConfigPathError(IOError):
     """Error in path to config file."""
+
+minor_comment_block = [""]
+major_comment_block = ["", "##############################################################################", ""]
 
 def find_file(file_path=None, args=None, 
                 locations=['/etc/weewx', '/home/weewx'], file_name='weewx.conf'):
@@ -177,12 +181,12 @@ def update_to_v27(old_config_dict):
     Since V2.7 was the last 2.X version, that's our target"""
 
     service_map_v2 = {'weewx.wxengine.StdTimeSynch' : 'prep_services', 
-                  'weewx.wxengine.StdConvert'   : 'process_services', 
-                  'weewx.wxengine.StdCalibrate' : 'process_services', 
-                  'weewx.wxengine.StdQC'        : 'process_services', 
-                  'weewx.wxengine.StdArchive'   : 'archive_services',
-                  'weewx.wxengine.StdPrint'     : 'report_services', 
-                  'weewx.wxengine.StdReport'    : 'report_services'}
+                      'weewx.wxengine.StdConvert'   : 'process_services', 
+                      'weewx.wxengine.StdCalibrate' : 'process_services', 
+                      'weewx.wxengine.StdQC'        : 'process_services', 
+                      'weewx.wxengine.StdArchive'   : 'archive_services',
+                      'weewx.wxengine.StdPrint'     : 'report_services', 
+                      'weewx.wxengine.StdReport'    : 'report_services'}
 
     # Make a deep copy of the old config dictionary, then start modifying it:
     new_config_dict = copy.deepcopy(old_config_dict)
@@ -334,6 +338,22 @@ def update_to_v3(old_config_dict):
     """Update a configuration file to V3.X"""
     old_database = None
     
+    v3_additions = """[DataBindings]
+    # This section binds a data store to a database
+
+    [[wx_binding]]
+        # The database must match one of the sections in [Databases] 
+        database = archive_sqlite
+        # The name of the table within the database
+        table_name = archive
+        # The manager handles aggregation of data for historical summaries
+        manager = weewx.wxmanager.WXDaySummaryManager
+        # The schema defines the structure of the database.
+        # It is *only* used when the database is created.
+        schema = schemas.wview.schema
+
+"""
+    
     # Make a deep copy of the old config dictionary, then start modifying it:
     new_config_dict = copy.deepcopy(old_config_dict)
 
@@ -381,19 +401,24 @@ def update_to_v3(old_config_dict):
         except KeyError:
             pass
         
-    # If there was an old database, add it in the new, correct spot:
-    if old_database:
-        if 'DataBindings' not in new_config_dict:
-            new_config_dict['DataBindings'] = {'wx_binding' : {'database' : old_database}}
-            # Move the freshly inserted section [DataBindings] (which should 
-            # be at the end) to just before [Databases]
-            move_section_up(new_config_dict, 'Databases')
-            # Transfer the Databases comments to DataBindings:
-            new_config_dict.comments['DataBindings'] = new_config_dict.comments['Databases']
-            new_config_dict.comments['Databases'] = [""]
-            # Now patch up the various DataBindings comments:
-            new_config_dict['DataBindings'].comments['wx_binding'] = ["    # This section binds a data store to a database",""]
-            new_config_dict['DataBindings']['wx_binding'].comments['database'] = ["        # The database must match one of the sections in [Databases]"]
+    if 'DataBindings' not in new_config_dict:
+        # Insert a [DataBindings] section. First create it
+        c = configobj.ConfigObj(StringIO.StringIO(v3_additions))
+        # Now merge it in:
+        new_config_dict.merge(c)
+        # For some reason, ConfigObj strips any leading comments. Add them back in:
+        new_config_dict.comments['DataBindings'] = major_comment_block 
+        # Move the new section to just before [Databases]
+        move_section_up(new_config_dict, 'Databases')
+        # No comments between the [DataBindings] and [Databases] sections:
+        new_config_dict.comments['Databases'] = [""]
+
+        # If there was an old database, add it in the new, correct spot:
+        if old_database:
+            try:
+                new_config_dict['DataBindings']['wx_binding']['database'] = old_database
+            except KeyError:
+                pass
 
     return new_config_dict
 
