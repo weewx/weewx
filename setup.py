@@ -6,31 +6,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-""" Customized weewx setup script.
-
-    In addition to the normal setup script duties, this script does the
-    following:
-
- 1. When building a source distribution ('sdist') it checks for
-    password information in the configuration file weewx.conf and
-    that US units are the standard units.
-
- 2. It merges any existing weewx.conf configuration files into the new, thus
-    preserving any user changes.
-    
- 3. It installs the skins subdirectory only if the user doesn't already 
-    have one.
-    
- 4. It sets the option ['WEEWX_ROOT'] in weewx.conf to reflect
-    the actual installation directory (as set in setup.cfg or specified
-    in the command line to setup.py install)
-    
- 5. In a similar manner, it sets WEEWX_ROOT in the daemon startup script.
-
- 6. It saves any pre-existing bin subdirectory.
- 
- 7. It saves the bin/user subdirectory.
-"""
+""" Customized weewx setup script."""
 
 import os.path
 import re
@@ -47,36 +23,26 @@ from distutils.command.install_scripts import install_scripts
 from distutils.command.sdist import sdist
 import distutils.dir_util
 
-# Find the install bin subdirectory and insert it into the path:
+# Find the install bin subdirectory and insert it into the path.
+# This will allow the weewx utilities to be used.
 this_file = os.path.join(os.getcwd(), __file__)
 this_dir = os.path.abspath(os.path.dirname(this_file))
 install_bin_dir = os.path.abspath(os.path.join(this_dir, 'bin'))
 sys.path.insert(0, install_bin_dir)
 
-# Get the version:
+# Now that we've injected the bin subdirectory in the path, we can
+# import the config utilities ...
+import weeutil.config
+
+# ... and the version:
 import weewx
 VERSION = weewx.__version__
-
-# Import the config utilities:
-import weeutil.config
-from weeutil.config import save_path, mkdir
 
 start_scripts = ['util/init.d/weewx.bsd',
                  'util/init.d/weewx.debian',
                  'util/init.d/weewx.lsb',
                  'util/init.d/weewx.redhat',
                  'util/init.d/weewx.suse']
-
-service_map_v2 = {'weewx.wxengine.StdTimeSynch' : 'prep_services', 
-                  'weewx.wxengine.StdConvert'   : 'process_services', 
-                  'weewx.wxengine.StdCalibrate' : 'process_services', 
-                  'weewx.wxengine.StdQC'        : 'process_services', 
-                  'weewx.wxengine.StdArchive'   : 'archive_services',
-                  'weewx.wxengine.StdPrint'     : 'report_services', 
-                  'weewx.wxengine.StdReport'    : 'report_services'}
-
-minor_comment_block = [""]
-major_comment_block = ["", "##############################################################################", ""]
 
 #==============================================================================
 # install_lib
@@ -93,7 +59,7 @@ class weewx_install_lib(install_lib):
 
         # Save any existing 'bin' subdirectory:
         if os.path.exists(self.install_dir):
-            bin_savedir = save_path(self.install_dir)
+            bin_savedir = weeutil.config.save_path(self.install_dir)
             print "Saved bin subdirectory as %s" % bin_savedir
         else:
             bin_savedir = None
@@ -150,8 +116,10 @@ class weewx_install_data(install_data):
 
         # The path where the weewx.conf configuration file will be installed
         install_path = os.path.join(install_dir, os.path.basename(f))
-    
-        new_config = merge_config_files(f, install_path, install_dir)
+        
+        # Merge any old config file with the incoming template    
+        new_config = weeutil.config.merge_config_files(f, install_path, install_dir)
+        
         # Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         
@@ -160,7 +128,7 @@ class weewx_install_data(install_data):
         
         # Save the old config file if it exists:
         if os.path.exists(install_path):
-            backup_path = save_path(install_path)
+            backup_path = weeutil.config.save_path(install_path)
             print "Saved old configuration file as %s" % backup_path
             
         # Now install the temporary file (holding the merged config data)
@@ -339,286 +307,6 @@ def check_schema_type(bin_dir):
     
     return result
     
-def merge_config_files(new_config_path, old_config_path, weewx_root,
-                       version_number=VERSION):
-    """Merges any old config file into the new one, and sets WEEWX_ROOT.
-    
-    If an old configuration file exists, it will merge the contents
-    into the new file. It also sets variable ['WEEWX_ROOT']
-    to reflect the installation directory.
-    
-    new_config_path: Path where the new configuration file can be found.
-    
-    old_config_path: Path where the old configuration file can be found.
-    
-    weewx_root: What WEEWX_ROOT should be set to.
-    
-    version_number: The version number of the new configuration file.
-    
-    RETURNS:
-    
-    The (possibly) merged new configuration file.    
-    """
-
-    # Create a ConfigObj using the new contents:
-    new_config = configobj.ConfigObj(new_config_path)
-    new_config.indent_type = '    '
-    new_version_number = version_number.split('.')
-    if len(new_version_number[1]) < 2: 
-        new_version_number[1] = '0' + new_version_number[1]
-    
-    # Sometimes I forget to turn the debug flag off:
-    new_config['debug'] = 0
-    
-    # And forget that while my rain year starts in October, 
-    # for most people it starts in January!
-    new_config['Station']['rain_year_start'] = 1
-
-    # The default target conversion units should be 'US':
-    new_config['StdConvert']['target_unit'] = 'US'
-    
-    # Check to see if there is an existing config file.
-    # If so, merge its contents with the new one
-    if os.path.exists(old_config_path):
-        old_config = configobj.ConfigObj(old_config_path)
-        old_version = old_config.get('version')
-        # If the version number does not appear at all, then
-        # assume a very old version:
-        if not old_version:
-            old_version = '1.0.0'
-        old_version_number = old_version.split('.')
-        # Take care of the collation problem when comparing things like 
-        # version '1.9' to '1.10' by prepending a '0' to the former:
-        if len(old_version_number[1]) < 2: 
-            old_version_number[1] = '0' + old_version_number[1]
-
-        # I don't know how to merge older, V1.X configuration files, only
-        # newer V2.X ones.
-        if old_version_number[0] == '1':
-            print >>sys.stderr, "Don't know how to merge old Version %s weewx.conf" % old_version
-            print >>sys.stderr, "You will have to do it manually."
-            
-        else:
-            # First update to the latest v2
-            if old_version_number[0:2] >= ['2', '00']:
-                update_to_v27(old_config)
-
-            # Now update to V3.X
-            old_database = update_to_v3(old_config)
-
-            # Now merge the updated old configuration file into the new file,
-            # thus saving any user modifications.
-            # First, turn interpolation off:
-            old_config.interpolation = False
-            # Then do the merge
-            new_config.merge(old_config)
-            if old_database:
-                try:
-                    new_config['DataBindings']['wx_binding']['database'] = old_database
-                except KeyError:
-                    pass
-                    
-    # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
-    new_config['WEEWX_ROOT'] = weewx_root
-    # Add the version:
-    new_config['version'] = version_number
-    
-    return new_config
-
-def update_to_v27(config_dict):
-    """Updates a configuration file to the latest V2.X version.
-    Since V2.7 was the last 2.X version, that's our target"""
-
-    # webpath is now station_url
-    webpath = config_dict['Station'].get('webpath', None)
-    station_url = config_dict['Station'].get('station_url', None)
-    if webpath is not None and station_url is None:
-        config_dict['Station']['station_url'] = webpath
-    config_dict['Station'].pop('webpath', None)
-    
-    if 'StdArchive' in config_dict:
-        # Option stats_types is no longer used. Get rid of it.
-        config_dict['StdArchive'].pop('stats_types', None)
-    
-    # --- Davis Vantage series ---
-    if 'Vantage' in config_dict:
-        try:
-            if config_dict['Vantage']['driver'].strip() == 'weewx.VantagePro':
-                config_dict['Vantage']['driver'] = 'weewx.drivers.vantage'
-        except KeyError:
-            pass
-    
-    # --- Oregon Scientific WMR100 ---
-    
-    # The section name has changed from WMR-USB to WMR100
-    if 'WMR-USB' in config_dict:
-        if 'WMR100' in config_dict:
-            sys.stderr.write("\n*** Configuration file has both a 'WMR-USB' section and a 'WMR100' section. Aborting ***\n\n")
-            exit()
-        config_dict.rename('WMR-USB', 'WMR100')
-    # If necessary, reflect the section name in the station type:
-    try:
-        if config_dict['Station']['station_type'].strip() == 'WMR-USB':
-            config_dict['Station']['station_type'] = 'WMR100'
-    except KeyError:
-        pass
-    # Finally, the name of the driver has been changed
-    try:
-        if config_dict['WMR100']['driver'].strip() == 'weewx.wmrx':
-            config_dict['WMR100']['driver'] = 'weewx.drivers.wmr100'
-    except KeyError:
-        pass
-        
-    # --- Oregon Scientific WMR9x8 series ---
-    
-    # The section name has changed from WMR-918 to WMR9x8
-    if 'WMR-918' in config_dict:
-        if 'WMR9x8' in config_dict:
-            sys.stderr.write("\n*** Configuration file has both a 'WMR-918' section and a 'WMR9x8' section. Aborting ***\n\n")
-            exit()
-        config_dict.rename('WMR-918', 'WMR9x8')
-    # If necessary, reflect the section name in the station type:
-    try:
-        if config_dict['Station']['station_type'].strip() == 'WMR-918':
-            config_dict['Station']['station_type'] = 'WMR9x8'
-    except KeyError:
-        pass
-    # Finally, the name of the driver has been changed
-    try:
-        if config_dict['WMR9x8']['driver'].strip() == 'weewx.WMR918':
-            config_dict['WMR9x8']['driver'] = 'weewx.drivers.wmr9x8'
-    except KeyError:
-        pass
-    
-    # --- Fine Offset instruments ---
-
-    try:
-        if config_dict['FineOffsetUSB']['driver'].strip() == 'weewx.fousb':
-            config_dict['FineOffsetUSB']['driver'] = 'weewx.drivers.fousb'
-    except KeyError:
-        pass
-
-    #--- The weewx Simulator ---
-
-    try:
-        if config_dict['Simulator']['driver'].strip() == 'weewx.simulator':
-            config_dict['Simulator']['driver'] = 'weewx.drivers.simulator'
-    except KeyError:
-        pass
-
-    # See if the engine configuration section has the old-style "service_list":
-    if 'Engines' in config_dict and 'service_list' in config_dict['Engines']['WxEngine']:
-        # It does. Break it up into five, smaller lists. If a service
-        # does not appear in the dictionary "service_map_v2", meaning we
-        # do not know what it is, then stick it in the last group we
-        # have seen. This should get its position about right.
-        last_group = 'prep_services'
-        
-        # Set up a bunch of empty groups in the right order
-        for group in ['prep_services', 'process_services', 'archive_services', 
-                      'restful_services', 'report_services']:
-            config_dict['Engines']['WxEngine'][group] = list()
-
-        # Now map the old service names to the right group
-        for _svc_name in config_dict['Engines']['WxEngine']['service_list']:
-            svc_name = _svc_name.strip()
-            # Skip the no longer needed StdRESTful service:
-            if svc_name == 'weewx.wxengine.StdRESTful':
-                continue
-            # Do we know about this service?
-            if svc_name in service_map_v2:
-                # Yes. Get which group it belongs to, and put it there
-                group = service_map_v2[svc_name]
-                config_dict['Engines']['WxEngine'][group].append(svc_name)
-                last_group = group
-            else:
-                # No. Put it in the last group.
-                config_dict['Engines']['WxEngine'][last_group].append(svc_name)
-
-        # Now add the restful services, using the old driver name to help us
-        for section in config_dict['StdRESTful'].sections:
-            svc = config_dict['StdRESTful'][section]['driver']
-            # weewx.restful has changed to weewx.restx
-            if svc.startswith('weewx.restful'):
-                svc = 'weewx.restx.Std' + section
-            # awekas is in weewx.restx since 2.6
-            if svc.endswith('AWEKAS'):
-                svc = 'weewx.restx.AWEKAS'
-            config_dict['Engines']['WxEngine']['restful_services'].append(svc)
-
-        # Depending on how old a version the user has, the station registry
-        # may have to be included:
-        if 'weewx.restx.StdStationRegistry' not in config_dict['Engines']['WxEngine']['restful_services']:
-            config_dict['Engines']['WxEngine']['restful_services'].append('weewx.restx.StdStationRegistry')
-        
-        # Get rid of the no longer needed service_list:
-        config_dict['Engines']['WxEngine'].pop('service_list')
-
-    # Clean up the CWOP configuration
-    if 'StdRESTful' in config_dict and 'CWOP' in config_dict['StdRESTful']:
-        # Option "interval" has changed to "post_interval"
-        if 'interval' in config_dict['StdRESTful']['CWOP']:
-            config_dict['StdRESTful']['CWOP']['post_interval'] = config_dict['StdRESTful']['CWOP']['interval']
-            config_dict['StdRESTful']['CWOP'].pop('interval')
-        # Option "server" has become "server_list". It is also no longer
-        # included in the default weewx.conf, so just pop it.
-        if 'server' in config_dict['StdRESTful']['CWOP']:
-            config_dict['StdRESTful']['CWOP'].pop('server')
-
-    # Remove the no longer needed "driver" from all the RESTful services:
-    if 'StdRESTful' in config_dict:
-        for section in config_dict['StdRESTful'].sections:
-            config_dict['StdRESTful'][section].pop('driver', None)
-
-def update_to_v3(config_dict):
-    """Update a configuration file to V3.X"""
-    old_database = None
-    
-    if 'Databases' in config_dict:
-        # The stats database no longer exists. Remove it from the [Databases]
-        # section:
-        config_dict['Databases'].pop('stats_sqlite', None)
-        config_dict['Databases'].pop('stats_mysql', None)
-        # The key "database" changed to "database_name"
-        for stanza in config_dict['Databases']:
-            if 'database' in config_dict['Databases'][stanza]:
-                config_dict['Databases'][stanza].rename('database', 'database_name')
-        
-    if 'StdReport' in config_dict:
-        # The key "data_binding" is now used instead of these:
-        config_dict['StdReport'].pop('archive_database', None)
-        config_dict['StdReport'].pop('stats_database', None)
-        
-    if 'StdArchive' in config_dict:
-        old_database = config_dict['StdArchive'].pop('archive_database', None)
-        config_dict['StdArchive'].pop('stats_database', None)
-        config_dict['StdArchive'].pop('archive_schema', None)
-        config_dict['StdArchive'].pop('stats_schema', None)
-        
-    # Section ['Engines'] got renamed to ['Engine']
-    if 'Engine' not in config_dict and 'Engines' in config_dict:
-        config_dict.rename('Engines', 'Engine')
-        # Subsection [['WxEngine']] got renamed to [['Services']]
-        if 'WxEngine' in config_dict['Engine']:
-            config_dict['Engine'].rename('WxEngine', 'Services')
-
-            # Finally, module "wxengine" got renamed to "engine". Go through
-            # each of the service lists, making the change
-            for list_name in config_dict['Engine']['Services']:
-                service_list = config_dict['Engine']['Services'][list_name]
-                # If service_list is not already a list (it could be just a single name),
-                # then make it a list:
-                if not hasattr(service_list, '__iter__'):
-                    service_list = [service_list]
-                config_dict['Engine']['Services'][list_name] = [this_item.replace('wxengine', 'engine') for this_item in service_list]
-        try:
-            # Finally, make sure the new StdWXCalculate service is in the list:
-            if 'weewx.wxservices.StdWXCalculate' not in config_dict['Engine']['Services']['process_services']:
-                config_dict['Engine']['Services']['process_services'].append('weewx.wxservices.StdWXCalculate')
-        except KeyError:
-            pass
-        
-    return old_database
 
 #==============================================================================
 # configure the configuration file
@@ -676,12 +364,6 @@ def do_cfg():
     configure_conf(options.cfgfn, info, options.dryrun)
     return 0
 
-def _as_string(option):
-    if option is None: return None
-    if hasattr(option, '__iter__'):
-        return ', '.join(option)
-    return option
-
 def configure_conf(config_fn, info, dryrun=False):
     """Configure the configuration file with station info and driver details"""
     # FIXME: this emits a functional config file, but the comments and indents
@@ -737,12 +419,8 @@ def configure_conf(config_fn, info, dryrun=False):
     if stanza is not None and 'Station' in config:
         # insert the stanza
         config[driver_name] = stanza[driver_name]
-        config.comments[driver_name] = major_comment_block
-        # reorder the sections
-        idx = config.sections.index(driver_name)
-        config.sections.pop(idx)
-        idx = config.sections.index('Station')
-        config.sections = config.sections[0:idx+1] + [driver_name] + config.sections[idx+1:]
+        weeutil.config.reorder_sections(config, driver_name, 'Station', after=True)
+        config.comments[driver_name] = weeutil.config.major_comment_block
         # make the stanza the station type
         config['Station']['station_type'] = driver_name
 
@@ -791,7 +469,7 @@ def configure_conf(config_fn, info, dryrun=False):
 
     # move the original aside
     if not dryrun:
-        save_path(config_fn)
+        weeutil.config.save_path(config_fn)
         shutil.move(config.filename, config_fn)
 
 def load_editor(driver):
@@ -893,7 +571,7 @@ def prompt_for_info(dflt_loc=None, dflt_lat='90.000', dflt_lon='0.000',
     print "12, meter"
     msg = "altitude: "
     if dflt_alt is not None:
-        msg = "altitude [%s]: " % _as_string(dflt_alt)
+        msg = "altitude [%s]: " % weeutil.config._as_string(dflt_alt)
     alt = None
     while alt is None:
         ans = raw_input(msg)
@@ -958,7 +636,7 @@ def get_station_info(config_dict):
     """Extract station info from config dictionary."""
     info = dict()
     if config_dict is not None and 'Station' in config_dict:
-        info['location'] = _as_string(config_dict['Station'].get('location'))
+        info['location'] = weeutil.config._as_string(config_dict['Station'].get('location'))
         info['latitude'] = config_dict['Station'].get('latitude')
         info['longitude'] = config_dict['Station'].get('longitude')
         info['altitude'] = config_dict['Station'].get('altitude')
@@ -1338,7 +1016,7 @@ class ExtensionInstaller(Logger):
             try:
                 self.log("mkdir %s" % dstdir, level=2)
                 if self.doit:
-                    mkdir(dstdir)
+                    weeutil.config.mkdir(dstdir)
             except os.error:
                 pass
             for f in t[1]:
@@ -1347,7 +1025,7 @@ class ExtensionInstaller(Logger):
                 if os.path.exists(dst):
                     self.log("save existing file %s" % dst, level=2)
                     if self.doit:
-                        save_path(dst)
+                        weeutil.config.save_path(dst)
                 self.log("copy %s to %s" % (src, dst), level=2)
                 if self.doit:
                     distutils.file_util.copy_file(src, dst)
@@ -1396,11 +1074,11 @@ class ExtensionInstaller(Logger):
         config = configobj.ConfigObj(fn)
 
         # prepend any html paths with existing HTML_ROOT
-        prepend_path(cfg, 'HTML_ROOT', config['StdReport']['HTML_ROOT'])
+        weeutil.config.prepend_path(cfg, 'HTML_ROOT', config['StdReport']['HTML_ROOT'])
 
         # if any variable begins with SKIN_DIR, replace with effective skin
         # directory (absolute or relative) from weewx.conf
-        replace_string(cfg, 'INST_SKIN_ROOT', get_skin_dir(config))
+        weeutil.config.replace_string(cfg, 'INST_SKIN_ROOT', get_skin_dir(config))
 
         # massage the database dictionaries for this extension
         # FIXME: use parameterized root if possible
@@ -1422,10 +1100,10 @@ class ExtensionInstaller(Logger):
         # merge the new options into the old config.  we cannot simply do
         # config.merge(cfg) because that would overwrite any existing fields.
         # so do a conditional merge instead.
-        conditional_merge(config, cfg)
+        weeutil.config.conditional_merge(config, cfg)
 
         # make the formatting match that of the default weewx.conf
-        prettify(config, cfg)
+        weeutil.config.prettify(config, cfg)
 
         # append services to appropriate lists...
         for sg in self.service_groups:
@@ -1460,7 +1138,7 @@ class ExtensionInstaller(Logger):
                 config['Engine']['Services'][sg] = newlist
 
         # remove any sections we added
-        remove_and_prune(config, self.config)
+        weeutil.config.remove_and_prune(config, self.config)
 
         self.log("unmerged configuration:", level=3)
         self.log('\n'.join(formatdict(config)), level=3)
@@ -1471,7 +1149,7 @@ class ExtensionInstaller(Logger):
         # backup the old configuration
         self.log("save old configuration", level=2)
         if self.doit:
-            _ = save_path(config.filename)
+            _ = weeutil.config.save_path(config.filename)
 
         # save the new configuration
         self.log("save new config %s" % config.filename, level=2)
@@ -1486,7 +1164,7 @@ class ExtensionInstaller(Logger):
         dstdir = os.path.join(dstdir, self.basename)
         self.log("mkdir %s" % dstdir, level=2)
         if self.doit:
-            mkdir(dstdir)
+            weeutil.config.mkdir(dstdir)
         src = os.path.join(self.layout['EXTRACT_ROOT'], 'install.py')
         self.log("copy %s to %s" % (src, dstdir), level=2)
         if self.doit:
@@ -1501,72 +1179,6 @@ class ExtensionInstaller(Logger):
         self.log("delete %s" % dstdir, level=2)
         if self.doit:
             shutil.rmtree(dstdir, True)
-
-def prettify(config, src):
-    """clean up the config file:
-
-    - put any global stanzas just before StdRESTful
-    - prepend any global stanzas with a line of comment characters
-    - put any StdReport stanzas before ftp and rsync
-    - prepend any StdReport stanzas with a single empty line
-    - prepend any database or databinding stanzas with a single empty line
-    - prepend any restful stanzas with a single empty line
-    """
-    for k in src:
-        if k in ['StdRESTful', 'DataBindings', 'Databases', 'StdReport']:
-            for j in src[k]:
-                if k == 'StdReport':
-                    reorder_sections(config[k], j, 'RSYNC')
-                    reorder_sections(config[k], j, 'FTP')
-                config[k].comments[j] = minor_comment_block
-        else:
-            reorder_sections(config, k, 'StdRESTful')
-            config.comments[k] = major_comment_block
-
-def reorder_sections(c, src, dst):
-    if src not in c.sections or dst not in c.sections:
-        return
-    src_idx = c.sections.index(src)
-    c.sections.pop(src_idx)
-    dst_idx = c.sections.index(dst)
-    c.sections = c.sections[0:dst_idx] + [src] + c.sections[dst_idx:]
-    # if index raises an exception, we want to fail hard
-
-def conditional_merge(a, b):
-    """merge fields from b into a, but only if they do not yet exist in a"""
-    for k in b:
-        if isinstance(b[k], dict):
-            if not k in a:
-                a[k] = {}
-            conditional_merge(a[k], b[k])
-        elif not k in a:
-            a[k] = b[k]
-
-def remove_and_prune(a, b):
-    """remove fields from a that are present in b"""
-    for k in b:
-        if isinstance(b[k], dict):
-            if k in a and type(a[k]) is configobj.Section:
-                remove_and_prune(a[k], b[k])
-                if not a[k].sections:
-                    a.pop(k)
-        elif k in a:
-            a.pop(k)
-
-def prepend_path(d, label, value):
-    """prepend the value to every instance of the label in dict d"""
-    for k in d:
-        if isinstance(d[k], dict):
-            prepend_path(d[k], label, value)
-        elif k == label:
-            d[k] = os.path.join(value, d[k])    
-
-def replace_string(d, label, value):
-    for k in d:
-        if isinstance(d[k], dict):
-            replace_string(d[k], label, value)
-        else:
-            d[k] = d[k].replace(label, value)
 
 def get_skin_dir(config):
     """figure out the effective SKIN_DIR from a weewx configuration"""
@@ -1672,14 +1284,14 @@ def do_merge():
     if len(errmsg) > 0:
         print '\n'.join(errmsg)
         return 1
-    merged_cfg = merge_config_files(options.filea, options.fileb, options.idir)
+    merged_cfg = weeutil.config.merge_config_files(options.filea, options.fileb, options.idir)
     if options.debug:
         printdict(merged_cfg)
     else:
         tmpfile = tempfile.NamedTemporaryFile("w", 1)
         merged_cfg.write(tmpfile)
         if os.path.exists(options.filec):
-            _ = save_path(options.filec)
+            _ = weeutil.config.save_path(options.filec)
         shutil.copyfile(tmpfile.name, options.filec)
     return 0
 

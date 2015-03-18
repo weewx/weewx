@@ -26,6 +26,7 @@ bin/weeplot/utilities.py
 bin/weeutil/Moon.py
 bin/weeutil/Sun.py
 bin/weeutil/__init__.py
+bin/weeutil/config.py
 bin/weeutil/ftpupload.py
 bin/weeutil/rsyncupload.py
 bin/weeutil/weeutil.py
@@ -142,8 +143,8 @@ extensions/xstats/changelog
 extensions/xstats/install.py
 extensions/xstats/readme.txt
 extensions/xstats/bin/user/xstats.py
-extensions/xstats/skins/xstats/index.html.tmpl
 extensions/xstats/skins/xstats/skin.conf
+extensions/xstats/skins/xstats/xstats.html.tmpl
 skins/Ftp/skin.conf
 skins/Rsync/skin.conf
 skins/Standard/favicon.ico

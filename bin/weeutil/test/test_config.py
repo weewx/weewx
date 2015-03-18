@@ -90,6 +90,12 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual("{'section_a': {'a': '1'}, 'section_c': {'c': '3'}, "
                          "'section_b': {'b': '2'}, 'section_d': {'d': '4'}}", str(x_dict))
         
+        xio.seek(0)
+        x_dict = configobj.ConfigObj(xio)
+        weeutil.config.reorder_sections(x_dict, 'section_c', 'section_b', after=True)
+        self.assertEqual("{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, "
+                         "'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
+        
         xio = StringIO.StringIO(x_str)
         yio = StringIO.StringIO(y_str)
         x_dict = configobj.ConfigObj(xio)
