@@ -145,31 +145,22 @@ def merge_config(config_dict, template_dict):
         raise ValueError("Cannot merge version %s. Too old" % old_version)
 
     # First update to the latest v2
-    if old_version_number[0:2] >= ['2', '00']:
-        update_to_v27(config_dict)
+    config_dict = update_to_v27(config_dict)
 
     # Now update to V3.X
-    old_database = update_to_v3(config_dict)
+    config_dict = update_to_v3(config_dict)
 
-    # The resulting config file will be the template, with the config_dict
-    # merged into it. Start with a copy of the template:
-    output_dict = configobj.ConfigObj(template_dict)
+    # Copy the template config file --- we will be modifying it.
+    output_dict = copy.deepcopy(template_dict)
     output_dict.indent_type = '    '
     
-    # Now merge the updated old configuration file into the output file,
+    # Now merge the updated old configuration file into the template,
     # thus saving any user modifications.
     # First, turn interpolation off:
     output_dict.interpolation = False
 
     # Then do the merge
     output_dict.merge(config_dict)
-    
-    # Patch up the binding to the database.
-    if old_database:
-        try:
-            output_dict['DataBindings']['wx_binding']['database'] = old_database
-        except KeyError:
-            pass
     
     # Finally, update the version number:
     output_dict['version'] = template_dict['version']
@@ -409,7 +400,7 @@ def update_to_v3(old_config_dict):
         # For some reason, ConfigObj strips any leading comments. Add them back in:
         new_config_dict.comments['DataBindings'] = major_comment_block 
         # Move the new section to just before [Databases]
-        move_section_up(new_config_dict, 'Databases')
+        reorder_sections(new_config_dict, 'DataBindings', 'Databases')
         # No comments between the [DataBindings] and [Databases] sections:
         new_config_dict.comments['Databases'] = [""]
 
@@ -422,14 +413,114 @@ def update_to_v3(old_config_dict):
 
     return new_config_dict
 
-def move_section_up(config, before):
-    """Moves the last section in a ConfigObj so it is just before
-    the given section"""
+def prettify(config, src):
+    """clean up the config file:
+
+    - put any global stanzas just before StdRESTful
+    - prepend any global stanzas with a line of comment characters
+    - put any StdReport stanzas before ftp and rsync
+    - prepend any StdReport stanzas with a single empty line
+    - prepend any database or databinding stanzas with a single empty line
+    - prepend any restful stanzas with a single empty line
+    """
+    for k in src:
+        if k in ['StdRESTful', 'DataBindings', 'Databases', 'StdReport']:
+            for j in src[k]:
+                if k == 'StdReport':
+                    reorder_sections(config[k], j, 'RSYNC')
+                    reorder_sections(config[k], j, 'FTP')
+                config[k].comments[j] = minor_comment_block
+        else:
+            reorder_sections(config, k, 'StdRESTful')
+            config.comments[k] = major_comment_block
+
+def reorder_sections(config_dict, src, dst):
+    """Move the section with key src to just before the
+    section with key dst.
     
-    # Find the given section:
-    loc = config.sections.index(before)
-    # Now move the last section so it sits just before it.
-    # Get a shorthand name to reduce the typing involved:
-    s = config.sections
-    config.sections = s[:loc] + s[-1:] + s[loc:-1]
+    Example:
+    >>> config_dict = configobj.ConfigObj({'a':1, 'b':2, 'c':3, 'd':4})
+    >>> reorder_sections(config_dict, 'c', 'b')
+    >>> print config_dict
+    {'a': 1, 'c': 3, 'b': 2, 'd': 4}
+    """
+    # We need both keys to procede:
+    if src not in config_dict.sections or dst not in config_dict.sections:
+        return
+    # If index raises an exception, we want to fail hard.
+    # Find the source section (the one we intend to move):
+    src_idx = config_dict.sections.index(src)
+    # Remove it
+    config_dict.sections.pop(src_idx)
+    # Find the destination
+    dst_idx = config_dict.sections.index(dst)
+    # Now reorder the attribute 'sections', putting src just before dst:
+    config_dict.sections = config_dict.sections[:dst_idx] + [src] + config_dict.sections[dst_idx:]
+
+def conditional_merge(a_dict, b_dict):
+    """Merge fields from b_dict into a_dict, but only if they do not yet exist in a_dict
     
+    Example:
+    >>> # Use StringIOs to keep the ordering:
+    >>> a_dict = configobj.ConfigObj(StringIO.StringIO("a=1\\nb=2\\nc=3\\nd=4\\n"))
+    >>> b_dict = configobj.ConfigObj(StringIO.StringIO("a=11\\nb=12\\ne=15\\n"))
+    >>> conditional_merge(a_dict, b_dict)
+    >>> print a_dict
+    {'a': '1', 'b': '2', 'c': '3', 'd': '4', 'e': '15'}
+    """
+    for k in b_dict:
+        if isinstance(b_dict[k], dict):
+            if not k in a_dict:
+                a_dict[k] = {}
+            conditional_merge(a_dict[k], b_dict[k])
+        elif not k in a_dict:
+            a_dict[k] = b_dict[k]
+
+def remove_and_prune(a_dict, b_dict):
+    """Remove fields from a that are present in b
+    Example:
+    >>> a_dict = configobj.ConfigObj({'a':1, 'b':2, 'c':3, 'd':4})
+    >>> b_dict = configobj.ConfigObj({'a':11, 'b':12, 'e':1})
+    >>> remove_and_prune(a_dict, b_dict)
+    >>> print a_dict
+    {'c': 3, 'd': 4}
+    """
+    for k in b_dict:
+        if isinstance(b_dict[k], dict):
+            if k in a_dict and type(a_dict[k]) is configobj.Section:
+                remove_and_prune(a_dict[k], b_dict[k])
+                if not a_dict[k].sections:
+                    a_dict.pop(k)
+        elif k in a_dict:
+            a_dict.pop(k)
+
+def prepend_path(d, label, value):
+    """prepend the value to every instance of the label in dict d"""
+    for k in d:
+        if isinstance(d[k], dict):
+            prepend_path(d[k], label, value)
+        elif k == label:
+            d[k] = os.path.join(value, d[k])    
+
+def replace_string(d, label, value):
+    for k in d:
+        if isinstance(d[k], dict):
+            replace_string(d[k], label, value)
+        else:
+            d[k] = d[k].replace(label, value)
+
+# def move_section_up(config, before):
+#     """Moves the last section in a ConfigObj so it is just before
+#     the given section"""
+#     
+#     # Find the given section:
+#     loc = config.sections.index(before)
+#     # Now move the last section so it sits just before it.
+#     # Get a shorthand name to reduce the typing involved:
+#     s = config.sections
+#     config.sections = s[:loc] + s[-1:] + s[loc:-1]
+if __name__ == '__main__':
+    import doctest
+
+    if not doctest.testmod().failed:
+        print("PASSED")

@@ -63,6 +63,21 @@ class ConfigTest(unittest.TestCase):
         
         out_str.close()
         
+#     def test_merge(self):
+#         
+#         # Start with a typical V2.0 user file:
+#         
+#         config_user_dict = configobj.ConfigObj('weewx_user.conf')
+#         
+#         # The V3.1 config file becomes the template:
+#         template = configobj.ConfigObj('weewx31.conf')
+#         
+#         out_dict = weeutil.config.merge_config(config_user_dict, template)
+#         
+#         fd = open('expected/weewx_user_expected.conf', 'w')
+#         out_dict.write(fd)
+#         fd.close()
+        
 if __name__ == '__main__':
     unittest.main()
         
