@@ -121,7 +121,7 @@ class weewx_install_data(install_data):
         new_config = weeutil.config.merge_config_files(f, install_path, install_dir)
         
         # Get a temporary file:
-        tmpfile = tempfile.NamedTemporaryFile("w", 1)
+        tmpfile = tempfile.NamedTemporaryFile("w")
         
         # Write the new configuration file to it:
         new_config.write(tmpfile)
@@ -147,7 +147,7 @@ class weewx_install_data(install_data):
         sre = re.compile(r"WEEWX_ROOT\s*=")
 
         infile = open(f, "r")
-        tmpfile = tempfile.NamedTemporaryFile("w", 1)
+        tmpfile = tempfile.NamedTemporaryFile("w")
         
         for line in infile:
             if sre.match(line):
