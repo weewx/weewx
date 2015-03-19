@@ -45,9 +45,11 @@ class ConfigTest(unittest.TestCase):
 
         out_str.seek(0)
         fd_expected = open('expected/weewx27_expected.conf')
+        N = 0
         for expected in fd_expected:
             actual = out_str.readline()
-            self.assertEqual(actual, expected)
+            N += 1
+            self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
             
         # Make sure there are no extra lines in the updated config:
         more = out_str.readline()
@@ -112,20 +114,33 @@ class ConfigTest(unittest.TestCase):
         weeutil.config.remove_and_prune(x_dict, y_dict)
         self.assertEqual("{'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
 
-#     def test_merge(self):
-#         
-#         # Start with a typical V2.0 user file:
-#         
-#         config_user_dict = configobj.ConfigObj('weewx_user.conf')
-#         
-#         # The V3.1 config file becomes the template:
-#         template = configobj.ConfigObj('weewx31.conf')
-#         
-#         out_dict = weeutil.config.merge_config(config_user_dict, template)
-#         
-#         fd = open('expected/weewx_user_expected.conf', 'w')
-#         out_dict.write(fd)
-#         fd.close()
+    def test_merge(self):
+         
+        # Start with a typical V2.0 user file:
+        config_dict = configobj.ConfigObj('weewx_user.conf')
+         
+        # The V3.1 config file becomes the template:
+        template = configobj.ConfigObj('weewx31.conf')
+         
+        weeutil.config.merge_config(config_dict, template)
+        
+        # Write it out to a StringIO, then start checking it against the expected
+        out_str = StringIO.StringIO()
+        config_dict.write(out_str)
+
+        out_str.seek(0)
+        fd_expected = open('expected/weewx_user_expected.conf')
+        N = 0
+        for expected in fd_expected:
+            actual = out_str.readline()
+            N += 1
+            self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
+            
+        # Make sure there are no extra lines in the updated config:
+        more = out_str.readline()
+        self.assertEqual(more, '')
+        
+        out_str.close()
         
 if __name__ == '__main__':
     unittest.main()
