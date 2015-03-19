@@ -31,58 +31,6 @@ y_str = """
           
 class ConfigTest(unittest.TestCase):
     
-    def test_upgrade_v27(self):
-
-        # Start with the Version 2.0 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx20.conf')
-        
-        # Upgrade the V2.0 configuration dictionary to V2.7:
-        weeutil.config.update_to_v27(config_dict)
-        
-        # Write it out to a StringIO, then start checking it against the expected
-        out_str = StringIO.StringIO()
-        config_dict.write(out_str)
-
-        out_str.seek(0)
-        fd_expected = open('expected/weewx27_expected.conf')
-        N = 0
-        for expected in fd_expected:
-            actual = out_str.readline()
-            N += 1
-            self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
-            
-        # Make sure there are no extra lines in the updated config:
-        more = out_str.readline()
-        self.assertEqual(more, '')
-        
-        out_str.close()
-        
-    def test_upgrade_30(self):
-        
-        # Start with the Version 2.7 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx27.conf')  
-
-        # Upgrade to V3.0
-        weeutil.config.update_to_v30(config_dict)
-        
-        # Write it out to a StringIO, then start checking it against the expected
-        out_str = StringIO.StringIO()
-        config_dict.write(out_str)
-
-        out_str.seek(0)
-        fd_expected = open('expected/weewx30_expected.conf')
-        N = 0
-        for expected in fd_expected:
-            actual = out_str.readline()
-            N += 1
-            self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
-        
-        # Make sure there are no extra lines in the updated config:
-        more = out_str.readline()
-        self.assertEqual(more, '', "Unexpected additional lines")
-        
-        out_str.close()
-        
     def test_utilities(self):
         global x_str, y_str
         
@@ -114,6 +62,54 @@ class ConfigTest(unittest.TestCase):
         weeutil.config.remove_and_prune(x_dict, y_dict)
         self.assertEqual("{'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
 
+    def test_upgrade_v27(self):
+
+        # Start with the Version 2.0 weewx.conf file:
+        config_dict = configobj.ConfigObj('weewx20.conf')
+        
+        # Upgrade the V2.0 configuration dictionary to V2.7:
+        weeutil.config.update_to_v27(config_dict)
+        
+        # Write it out to a StringIO, then start checking it against the expected
+        out_str = StringIO.StringIO()
+        config_dict.write(out_str)
+
+        out_str.seek(0)
+        fd_expected = open('expected/weewx27_expected.conf')
+        N = 0
+        for expected in fd_expected:
+            actual = out_str.readline()
+            N += 1
+            self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
+            
+        # Make sure there are no extra lines in the updated config:
+        more = out_str.readline()
+        self.assertEqual(more, '')
+        
+    def test_upgrade_30(self):
+        
+        # Start with the Version 2.7 weewx.conf file:
+        config_dict = configobj.ConfigObj('weewx27.conf')  
+
+        # Upgrade to V3.0
+        weeutil.config.update_to_v30(config_dict)
+        
+        # Write it out to a StringIO, then start checking it against the expected
+        out_str = StringIO.StringIO()
+        config_dict.write(out_str)
+
+        out_str.seek(0)
+        fd_expected = open('expected/weewx30_expected.conf')
+        N = 0
+        for expected in fd_expected:
+            actual = out_str.readline()
+            N += 1
+            self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
+        
+        # Make sure there are no extra lines in the updated config:
+        more = out_str.readline()
+        self.assertEqual(more, '', "Unexpected additional lines")
+        
     def test_merge(self):
          
         # Start with a typical V2.0 user file:
@@ -139,8 +135,6 @@ class ConfigTest(unittest.TestCase):
         # Make sure there are no extra lines in the updated config:
         more = out_str.readline()
         self.assertEqual(more, '')
-        
-        out_str.close()
         
 if __name__ == '__main__':
     unittest.main()

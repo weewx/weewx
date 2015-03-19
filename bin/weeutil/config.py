@@ -5,6 +5,7 @@
 #
 """Utilities used by the setup and configure programs"""
 
+import glob
 import os
 import time
 import shutil
@@ -12,9 +13,6 @@ import sys
 import StringIO
 
 import configobj
-
-class ConfigPathError(IOError):
-    """Error in path to config file."""
 
 minor_comment_block = [""]
 major_comment_block = ["", "##############################################################################", ""]
@@ -26,7 +24,7 @@ def find_file(file_path=None, args=None,
     If the file cannot be found in file_path, then
     the command line arguments are searched. If it cannot be found
     there, then a list of path locations is searched. If it still
-    cannot be found, then returns None. 
+    cannot be found, then raises an exception IOError.
 
     file_path: A candidate path to the file.
 
@@ -53,9 +51,9 @@ def find_file(file_path=None, args=None,
                 break
 
     if file_path is None:
-        raise ConfigPathError("Unable to find file '%s'. Tried directories %s" % (file_name, locations))
+        raise IOError("Unable to find file '%s'. Tried directories %s" % (file_name, locations))
     elif not os.path.isfile(file_path):
-        raise ConfigPathError("%s is not a file" % file_path)
+        raise IOError("%s is not a file" % file_path)
 
     return file_path
 
@@ -72,21 +70,19 @@ def read_config(config_path, args=None,
 
     return: path-to-file, dictionary
     """
+    # Find and open the config file:
     try:
-        # Find the config file:
-        final_config_path = find_file(config_path, args, locations=locations, file_name=file_name)
+        config_path = find_file(config_path, args, locations=locations)
+        try:        
+            # Now open it up and parse it.
+            config_dict = configobj.ConfigObj(config_path, file_error=True)
+        except SyntaxError, e:
+            sys.exit("Syntax error in file '%s': %s" % (config_path, e))
     except IOError, e:
-        print >>sys.stdout, e
-        exit(1)
-
-    try:        
-        # Now open it up and parse it.
-        config_dict = configobj.ConfigObj(final_config_path, file_error=True)
-    except SyntaxError, e:
-        print >>sys.stdout, "Syntax error in file '%s': %s" % (final_config_path, e)
-        exit(1)
-
-    return final_config_path, config_dict
+        print >>sys.stdout, "Unable to find the configuration file."
+        print >>sys.stdout, "Reason: %s" % e
+        sys.exit(1)
+    return config_path, config_dict
 
 def save_path(filepath):
     # Sometimes the target has a trailing '/'. This will take care of it:
@@ -523,3 +519,31 @@ def replace_string(a_dict, label, value):
             replace_string(a_dict[k], label, value)
         else:
             a_dict[k] = a_dict[k].replace(label, value)
+
+def get_driver_infos():
+    """Scan the drivers folder, extracting information about each available driver.
+    Return as a dictionary, keyed by driver name."""
+    
+    import weewx.drivers
+    driver_directory = os.path.dirname(os.path.abspath(weewx.drivers.__file__))
+    driver_list = [ os.path.basename(f) for f in glob.glob(os.path.join(driver_directory, "*.py"))]
+
+    driver_info_dict = {}
+    for driver_file in driver_list:
+        if driver_file == '__init__.py':
+            continue
+        # Get the driver module name. This will be something like 'weewx.drivers.fousb'
+        driver = os.path.splitext("weewx.drivers.%s" % driver_file)[0]
+        # Create an entry for it
+        driver_info_dict[driver] = dict()
+        try:
+            # Now import the driver, and extract info about it
+            __import__(driver)
+            driver_module = sys.modules[driver]
+            driver_info_dict[driver]['name'] = driver_module.DRIVER_NAME
+            driver_info_dict[driver]['version'] = driver_module.DRIVER_VERSION
+        except Exception, e:
+            driver_info_dict[driver]['name'] = driver
+            driver_info_dict[driver]['fail'] = "%s" % e
+
+    return driver_info_dict

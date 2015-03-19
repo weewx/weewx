@@ -125,6 +125,7 @@ class weewx_install_data(install_data):
         
         # Write the new configuration file to it:
         new_config.write(tmpfile)
+        tmpfile.flush()
         
         # Save the old config file if it exists:
         if os.path.exists(install_path):
@@ -155,6 +156,7 @@ class weewx_install_data(install_data):
             else:
                 tmpfile.writelines(line)
         
+        tmpfile.flush()
         rv = install_data.copy_file(self, tmpfile.name, outname, **kwargs)
 
         # Set the permission bits unless this is a dry run:

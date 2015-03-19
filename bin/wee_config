@@ -8,11 +8,11 @@
 from __future__ import with_statement
 
 import os
+import shutil
 import sys
 import syslog
 import optparse
-import shutil
-import glob
+import tempfile
 
 import configobj
 
@@ -98,41 +98,50 @@ def main():
 
     if options.version:
         print weewx.__version__
-        exit(0)
+        sys.exit(0)
 
     # Get the command:
     command = args[0].lower()
     # Shift the args left
     del args[0]
         
-    # Find the config file, if possible:
-    try:
-        config_path = weeutil.config.find_file(options.config_path, args, locations=search_locations)
-        print "Using configuration file %s" % config_path
-        try:        
-            # Now open it up and parse it.
-            config_dict = configobj.ConfigObj(config_path, file_error=True)
-        except SyntaxError, e:
-            print >>sys.stdout, "Syntax error in file '%s': %s" % (config_path, e)
-            exit(1)
-    except weeutil.config.ConfigPathError, e:
-        if not options.template:
-            print >>sys.stdout, "Unable to find the configuration file."
-            print >>sys.stdout, "Reason: %s" % e
-            exit(1)
-        config_dict = None
-
     if command == 'list-drivers':
         print_drivers()
-        exit(0)
-    
-    elif command == 'merge':
-        command_merge(config_dict, template=options.template, 
-                      output=options.output, no_prompt=options.no_prompt)
+        sys.exit(0)
         
+    config_path, config_dict = weeutil.config.read_config(options.config_path, args, locations=search_locations)
+    
+    if command == 'merge':
+        command_merge(config_dict, template=options.template)
+    else:
+        exit("Unrecognized command '%s'" % command)
+        
+    # Now save the resultant config file, backing up as necessary.
+    
+    if options.output:
+        fd = open(options.output, 'w')
+        config_dict.write(fd)
+        fd.close()
+    else:
+        # Get a temporary file:
+        tmpfile = tempfile.NamedTemporaryFile("w")
+        
+        # Write the merged configuration file to it:
+        config_dict.write(tmpfile)
+        tmpfile.flush()
+        
+        # Save the old config file if it exists:
+        if os.path.exists(config_path):
+            backup_path = weeutil.config.save_path(config_path)
+            print "Saved old configuration file as %s" % backup_path
+            
+        # Now install the temporary file (holding the merged config data)
+        # into the proper place:
+        shutil.copyfile(tmpfile.name, config_path)
+
     return 0
 
-def command_merge(config_dict, template=None, output=None, no_prompt=None):
+def command_merge(config_dict, template):
     
     if not template:
         print >>sys.stdout, "Merge command requires template file"
@@ -145,9 +154,8 @@ def command_merge(config_dict, template=None, output=None, no_prompt=None):
         print >>sys.stdout, "Syntax error in template '%s': %s" % (template, e)
         exit(1)
 
-    output_dict = weeutil.config.merge_config(config_dict, template_dict)
-    
-        
+    weeutil.config.merge_config(config_dict, template_dict)
+
     
 def get_station_info(config_dict):
     """Extract station info from config dictionary."""
@@ -262,7 +270,7 @@ def prompt_for_info(location=None, latitude=90.0, longitude=0.0,
 
 def prompt_for_driver(dflt_driver=None):
     """Get the information about each driver, return as a dictionary."""
-    infos = get_driver_infos()
+    infos = weeutil.config.get_driver_infos()
     keys = sorted(infos)
     dflt_idx = None
     for i, d in enumerate(keys):
@@ -296,7 +304,7 @@ def prompt_for_driver_settings(driver):
 
 def print_drivers():
     """Get information about all the available drivers, then print it out."""
-    driver_info_dict = get_driver_infos()
+    driver_info_dict = weeutil.config.get_driver_infos()
     keys = sorted(driver_info_dict)
     for d in keys:
         msg = "%-25s" % d
@@ -305,33 +313,7 @@ def print_drivers():
                 msg += " %-15s" % driver_info_dict[d][x]
         print msg
 
-def get_driver_infos():
-    """Scan the drivers folder, extracting information about each available driver.
-    Return as a dictionary, keyed by driver name."""
-    
-    import weewx.drivers
-    driver_directory = os.path.dirname(os.path.abspath(weewx.drivers.__file__))
-    driver_list = [ os.path.basename(f) for f in glob.glob(os.path.join(driver_directory, "*.py"))]
 
-    driver_info_dict = {}
-    for driver_file in driver_list:
-        if driver_file == '__init__.py':
-            continue
-        # Get the driver module name. This will be something like 'weewx.drivers.fousb'
-        driver = os.path.splitext("weewx.drivers.%s" % driver_file)[0]
-        # Create an entry for it
-        driver_info_dict[driver] = dict()
-        try:
-            # Now import the driver, and extract info about it
-            __import__(driver)
-            driver_module = sys.modules[driver]
-            driver_info_dict[driver]['name'] = driver_module.DRIVER_NAME
-            driver_info_dict[driver]['version'] = driver_module.DRIVER_VERSION
-        except Exception, e:
-            driver_info_dict[driver]['name'] = driver
-            driver_info_dict[driver]['fail'] = "%s" % e
-
-    return driver_info_dict
 
 if __name__=="__main__" :
     main()
