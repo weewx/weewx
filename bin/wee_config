@@ -29,27 +29,27 @@ major_comment_block = ["", "####################################################
 usage="""wee_config --help
        wee_config --version
        wee_config --list-drivers
-       wee_config --merge CONFIG_FILE|--config=CONFIG_FILE --template=TEMPLATE_FILE 
+       wee_config --update CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG
            [--output=OUTFILE] [--no-prompt]
-       wee_config --driver=[DRIVER] CONFIG_FILE|--config=CONFIG_FILE 
-           [--no-prompt]
-       wee_config --station CONFIG_FILE|--config=CONFIG_FILE 
-           [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz,(foot|meter)] 
-           [--description="Home Sweet Home"] [--no-prompt]
-       wee_config --reports CONFIG_FILE|--config=CONFIG_FILE 
-           [--units=(us|metric)] [--no-prompt]
+       wee_config --merge  CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG 
+           --output=OUTFILE
+       wee_config --modify CONFIG_FILE|--config=CONFIG_FILE
+           [--driver[=DRIVER]] [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz,(foot|meter)] 
+           [--description="Home Sweet Home"] [--units=(us|metric)]
+           [--output=OUTFILE] [--no-prompt]
            
 COMMANDS (can be combined):
 
+--help         Print instructions, then exit.
 --version      Print the version of weewx, then exit.
 --list-drivers List the available weewx device drivers, then exit.
+--update       Update configuration file to latest version
 --merge        Update an existing configuration file, then merge it into a template, 
-               overwriting any options. The results can be written to a specified 
-               destination OUTFILE or, if not specified, to the original
-               configuration file (a backup will be made).
---driver       Add the specified driver to the configuration file, prompting if necessary.
---station      Configure the [Station] stanza, prompting if necessary.
---reports      Configure the [StdReport] stanza, prompting if necessary."""
+               overwriting any options. The results will be written
+               destination OUTFILE. Never prompts.
+--modify       Modify the configuration file, prompting as necessary. Useful for
+               adding a driver.
+"""
 
 description="""wee_config is used to configure your weewx configuration file (nominally, weewx.conf).
 Its location can be given as a command-line argument, or it can be specified 

@@ -354,11 +354,11 @@ def do_cfg():
     if options.driver is not None:
         info['driver'] = options.driver
     if not options.noprompt:
-        info.update(prompt_for_info(dflt_loc=info.get('location'),
-                                    dflt_lat=info.get('latitude'),
-                                    dflt_lon=info.get('longitude'),
-                                    dflt_alt=info.get('altitude'),
-                                    dflt_units=info.get('units')))
+        info.update(weeutil.config.prompt_for_info(dflt_loc=info.get('location'),
+                                                   dflt_lat=info.get('latitude'),
+                                                   dflt_lon=info.get('longitude'),
+                                                   dflt_alt=info.get('altitude'),
+                                                   dflt_units=info.get('units')))
         if options.driver is None:
             info['driver'] = prompt_for_driver(info.get('driver'))
             info.update(prompt_for_driver_settings(info['driver']))
@@ -554,85 +554,6 @@ def list_drivers():
                 msg += " %-15s" % infos[d][x]
         print msg
 
-def prompt_for_info(dflt_loc=None, dflt_lat='90.000', dflt_lon='0.000',
-                    dflt_alt=['0', 'meter'], dflt_units='metric'):
-    print "Enter a brief description of the station, such as its location.  For example:"
-    print "Santa's Workshop, North Pole"
-    msg = "description: [%s]: " % dflt_loc if dflt_loc is not None else "description: "
-    loc = None
-    while loc is None:
-        ans = raw_input(msg)
-        if len(ans.strip()) > 0:
-            loc = ans
-        elif dflt_loc is not None:
-            loc = dflt_loc
-        else:
-            loc = None
-    print "Specify altitude, with units 'foot' or 'meter'.  For example:"
-    print "35, foot"
-    print "12, meter"
-    msg = "altitude: "
-    if dflt_alt is not None:
-        msg = "altitude [%s]: " % weeutil.config._as_string(dflt_alt)
-    alt = None
-    while alt is None:
-        ans = raw_input(msg)
-        if len(ans.strip()) == 0:
-            alt = dflt_alt
-        elif ans.find(',') >= 0:
-            parts = ans.split(',')
-            try:
-                float(parts[0])
-                if parts[1].strip() in ['foot', 'meter']:
-                    alt = [parts[0].strip(), parts[1].strip()]
-                else:
-                    alt = None
-            except (ValueError, TypeError):
-                alt = None
-        else:
-            alt = None
-    print "Specify latitude in decimal degrees, negative for south."
-    msg = "latitude [%s]: " % dflt_lat if dflt_lat is not None else "latitude: "
-    lat = None
-    while lat is None:
-        ans = raw_input(msg)
-        if len(ans.strip()) == 0:
-            ans = dflt_lat
-        try:
-            lat = float(ans)
-            if lat < -90 or lat > 90:
-                lat = None
-        except (ValueError, TypeError):
-            lat = None
-    print "Specify longitude in decimal degrees, negative for west."
-    msg = "longitude [%s]: " % dflt_lon if dflt_lon is not None else "longitude: "
-    lon = None
-    while lon is None:
-        ans = raw_input(msg)
-        if len(ans.strip()) == 0:
-            ans = dflt_lon
-        try:
-            lon = float(ans)
-            if lon < -180 or lon > 180:
-                lon = None
-        except (ValueError, TypeError):
-            lon = None
-    print "Indicate the preferred units for display: 'metric' or 'us'"
-    msg = "units [%s]: " % dflt_units if dflt_units is not None else "units: "
-    units = None
-    while units is None:
-        ans = raw_input(msg)
-        if len(ans.strip()) == 0 and dflt_units is not None:
-            units = dflt_units
-        elif ans.lower() in ['metric', 'us']:
-            units = ans.lower()
-        else:
-            units = None
-    return {'location': loc,
-            'altitude': alt,
-            'latitude': lat,
-            'longitude': lon,
-            'units': units}
 
 def get_station_info(config_dict):
     """Extract station info from config dictionary."""
@@ -1329,7 +1250,7 @@ if __name__ == "__main__":
         print prompt_for_driver()
         exit(0)
     if '--prompt-for-info' in sys.argv:
-        print prompt_for_info()
+        print weeutil.config.prompt_for_info()
         exit(0)
 
     # inject weewx-specific help before the standard help message
@@ -1372,7 +1293,7 @@ if __name__ == "__main__":
                 # this must be a new install, so prompt for station info,
                 # driver type, and driver-specific parameters, but only if
                 # '--quiet' is not specified.
-                info = prompt_for_info()
+                info = weeutil.config.prompt_for_info()
                 info['driver'] = prompt_for_driver()
                 info.update(prompt_for_driver_settings(info['driver']))
 

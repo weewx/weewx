@@ -148,42 +148,44 @@ def merge_config_files(template_path, old_config_path, weewx_root):
     
     return config_dict
 
+def update_config(config_dict):
+    """Update a (possibly old) configuration dictionary to the latest format.
+
+    Raises exception of type ValueError if it cannot be done.
+    """
+    
+    # Get the version number. If it does not appear at all, then
+    # assume a very old version:
+    config_version = config_dict.get('version') or '1.0.0'
+
+    major, minor, _ = config_version.split('.')
+    # Take care of the collation problem when comparing things like 
+    # version '1.9' to '1.10' by prepending a '0' to the former:
+    if len(minor) < 2: 
+        minor = '0' + minor
+
+    # I don't know how to merge older, V1.X configuration files, only
+    # newer V2.X ones.
+    if major == '1':
+        raise ValueError("Cannot merge version %s. Too old" % config_version)
+
+    if major == '2' and minor < '07':
+        update_to_v27(config_dict)
+
+    if major < '3':
+        update_to_v30(config_dict)
+
 def merge_config(config_dict, template_dict):
     """Merge the configuration dictionary into the template dictionary,
     overriding any options. Return the results.
-    
-    Raises exception of type ValueError if it cannot be done.
     
     config_dict: This is usually the existing, older configuration dictionary.
     
     template_dict: This is usually the newer dictionary supplied by the installer.
     """
     
-    # Get the version number:
-    old_version = config_dict.get('version')
-    # If the version number does not appear at all, then
-    # assume a very old version:
-    if not old_version:
-        old_version = '1.0.0'
-    old_version_number = old_version.split('.')
-    # Take care of the collation problem when comparing things like 
-    # version '1.9' to '1.10' by prepending a '0' to the former:
-    if len(old_version_number[1]) < 2: 
-        old_version_number[1] = '0' + old_version_number[1]
-
-    # I don't know how to merge older, V1.X configuration files, only
-    # newer V2.X ones.
-    if old_version_number[0] == '1':
-        raise ValueError("Cannot merge version %s. Too old" % old_version)
-
-    # First update to the latest v2
-    update_to_v27(config_dict)
-
-    # Now update to V3.0
-    update_to_v30(config_dict)
     
     config_dict.interpolate = False
-    config_dict.indent_type = '    '
 
     # Merge new stuff from the template:
     conditional_merge(config_dict, template_dict)
@@ -548,3 +550,97 @@ def get_driver_infos():
             driver_info_dict[driver]['fail'] = "%s" % e
 
     return driver_info_dict
+
+def prompt_for_info(dflt_loc=None, dflt_lat='90.000', dflt_lon='0.000',
+                    dflt_alt=['0', 'meter'], dflt_units='metric'):
+    
+    #
+    #  Description
+    #
+    print "Enter a brief description of the station, such as its location.  For example:"
+    print "Santa's Workshop, North Pole"
+    msg = "description: [%s]: " % dflt_loc if dflt_loc else "description: "
+    loc = None
+    while loc is None:
+        ans = raw_input(msg).strip()
+        if ans:
+            loc = ans
+        elif dflt_loc:
+            loc = dflt_loc
+
+    #
+    #  Altitude
+    #
+    print "Specify altitude, with units 'foot' or 'meter'.  For example:"
+    print "35, foot"
+    print "12, meter"
+    msg = "altitude [%s]: " % _as_string(dflt_alt) if dflt_alt else "altitude: "
+    alt = None
+    while alt is None:
+        ans = raw_input(msg).strip()
+        if ans:
+            parts = ans.split(',')
+            if len(parts) == 2:
+                try:
+                    # Test whether the first token can be converted into a number.
+                    # If not, an exception will be raised.
+                    float(parts[0])
+                    if parts[1].strip() in ['foot', 'meter']:
+                        alt = [parts[0].strip(), parts[1].strip()]
+                except (ValueError, TypeError):
+                    pass
+        elif dflt_alt:
+            alt = dflt_alt
+    
+        if not alt:
+            print "Unrecognized response. Try again."
+
+    #
+    # Latitude & Longitude
+    #
+    print "Specify latitude in decimal degrees, negative for south."
+    msg = "latitude [%s]: " % dflt_lat if dflt_lat else "latitude: "
+    lat = None
+    while lat is None:
+        ans = raw_input(msg).strip()
+        if not ans:
+            ans = dflt_lat
+        try:
+            lat = float(ans)
+            if lat < -90 or lat > 90:
+                lat = None
+        except (ValueError, TypeError):
+            lat = None
+    print "Specify longitude in decimal degrees, negative for west."
+    msg = "longitude [%s]: " % dflt_lon if dflt_lon else "longitude: "
+    lon = None
+    while lon is None:
+        ans = raw_input(msg).strip()
+        if not ans:
+            ans = dflt_lon
+        try:
+            lon = float(ans)
+            if lon < -180 or lon > 180:
+                lon = None
+        except (ValueError, TypeError):
+            lon = None
+            
+    #
+    # Display units
+    #
+    print "Indicate the preferred units for display: 'metric' or 'us'"
+    msg = "units [%s]: " % dflt_units if dflt_units else "units: "
+    units = None
+    while units is None:
+        ans = raw_input(msg).strip().lower()
+        if ans:
+            if ans in ['metric', 'us']:
+                units = ans
+        elif dflt_units:
+            units = dflt_units
+
+    return {'location': loc,
+            'altitude': alt,
+            'latitude': lat,
+            'longitude': lon,
+            'units': units}
