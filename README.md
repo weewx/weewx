@@ -63,7 +63,7 @@
 For the latest WeeWX release see:
 </p>
 <p style='padding-left: 50px'>
-  <a href="https://github.com/weewx/weewx/releases/latest">https://github.com/weewx/weewx/releases/latest</a>
+  <a href="https://sourceforge.net/projects/weewx/files/">https://sourceforge.net/projects/weewx/files/</a>
 </p>
 
 <h2>Documentation and Support</h2>
