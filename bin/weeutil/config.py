@@ -423,6 +423,7 @@ def update_to_v30(config_dict):
         reorder_sections(config_dict, 'DataBindings', 'Databases')
         # No comments between the [DataBindings] and [Databases] sections:
         config_dict.comments['Databases'] = [""]
+        config_dict.inline_comments['Databases'] = []
 
         # If there was an old database, add it in the new, correct spot:
         if old_database:

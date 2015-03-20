@@ -28,37 +28,44 @@ major_comment_block = ["", "####################################################
 
 usage="""wee_config --help
        wee_config --version
-       wee_config list-drivers
-       wee_config merge CONFIG_FILE|--config=CONFIG_FILE --template=TEMPLATE_FILE 
+       wee_config --list-drivers
+       wee_config --merge CONFIG_FILE|--config=CONFIG_FILE --template=TEMPLATE_FILE 
            [--output=OUTFILE] [--no-prompt]
-       wee_config driver CONFIG_FILE|--config=CONFIG_FILE 
-           [--driver[=DRIVER]] [--no-prompt]
-       wee_config station CONFIG_FILE|--config=CONFIG_FILE 
+       wee_config --driver=[DRIVER] CONFIG_FILE|--config=CONFIG_FILE 
+           [--no-prompt]
+       wee_config --station CONFIG_FILE|--config=CONFIG_FILE 
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz,(foot|meter)] 
            [--description="Home Sweet Home"] [--no-prompt]
-       wee_config reports CONFIG_FILE|--config=CONFIG_FILE 
+       wee_config --reports CONFIG_FILE|--config=CONFIG_FILE 
            [--units=(us|metric)] [--no-prompt]
+           
+COMMANDS (can be combined):
 
-wee_config is used to configure your weewx configuration file (nominally, weewx.conf).
+--version      Print the version of weewx, then exit.
+--list-drivers List the available weewx device drivers, then exit.
+--merge        Update an existing configuration file, then merge it into a template, 
+               overwriting any options. The results can be written to a specified 
+               destination OUTFILE or, if not specified, to the original
+               configuration file (a backup will be made).
+--driver       Add the specified driver to the configuration file, prompting if necessary.
+--station      Configure the [Station] stanza, prompting if necessary.
+--reports      Configure the [StdReport] stanza, prompting if necessary."""
+
+description="""wee_config is used to configure your weewx configuration file (nominally, weewx.conf).
 Its location can be given as a command-line argument, or it can be specified 
 with option --config.
 
 By default, the final results are writen to the same file name as the
 configuration file. The original is backed up first. Alternatively, it
 will be written to the destination given by the --output option.
-
-COMMANDS:
-
---version    Print the version of weewx, then exit.
-list-drivers List the available weewx device drivers.
-merge        Update an existing configuration file, then merge it into a template, 
-             overwriting any options. The results can be written to a specified 
-             destination OUTFILE or, if not specified, to the original
-             configuration file (a backup will be made).
-driver       Add the specified driver to the configuration file, prompting if necessary.
-station      Configuration the [Station] stanza, prompting if necessary.
-reports      Configure the report StdReport.
 """
+
+def driver_callback(option, opt, value, parser):
+    print option
+    print opt
+    print value
+    print parser
+    return 'foobar'
 
 def main():
 
@@ -66,11 +73,23 @@ def main():
     syslog.openlog('wee_config', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
-    parser = optparse.OptionParser(usage=usage)
+    parser = optparse.OptionParser(usage=usage, description=description)
     
     # Add the various options:
     parser.add_option("--version", action="store_true",
                       help="Print the version of weewx and exit.")
+    parser.add_option("--list-drivers", action="store_true",
+                     help="List all the available weewx device drivers, then exit.")
+    parser.add_option("--merge", action="store_true",
+                      help="Update an existing configuration file to the current version, then merge "
+                      "it into a template.")
+    parser.add_option("--driver", action="callback", callback=driver_callback, metavar="DRIVER", dest="driver",
+                      help="Add the specified driver to the configuration file. "
+                      "If DRIVER is not given, you will be prompted for it.")
+    parser.add_option("--station", action="store_true",
+                      help="Configure the [Station] stanza of the configuration file, prompting if necessary.")
+    parser.add_option("--reports", action="store_true",
+                      help="Configure the [StdReport] stanza of the configuration file, prompting if necessary.")
     parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE. Default is /etc/weewx/weewx.conf or /home/weewx/weewx.conf.")
     parser.add_option("--no-prompt", action="store_true",
@@ -80,8 +99,6 @@ def main():
                       "overwriting any keys.")
     parser.add_option("--output", metavar="OUTPUT_FILE",
                       help="Where the results should be put. The default is to overwrite CONFIG_FILE, saving a backup first")
-    parser.add_option("--driver", metavar="DRIVER_PATH", 
-                      help="The path of the driver to be installed")
     parser.add_option("--latitude", metavar="yy.y",
                       help="The station latitude")
     parser.add_option("--longitude", metavar="xx.x",
@@ -100,45 +117,48 @@ def main():
         print weewx.__version__
         sys.exit(0)
 
-    # Get the command:
-    command = args[0].lower()
-    # Shift the args left
-    del args[0]
-        
-    if command == 'list-drivers':
+    if options.list_drivers:
         print_drivers()
         sys.exit(0)
         
     config_path, config_dict = weeutil.config.read_config(options.config_path, args, locations=search_locations)
-    
-    if command == 'merge':
-        command_merge(config_dict, template=options.template)
-    else:
-        exit("Unrecognized command '%s'" % command)
-        
-    # Now save the resultant config file, backing up as necessary.
-    
-    if options.output:
-        fd = open(options.output, 'w')
-        config_dict.write(fd)
-        fd.close()
-    else:
-        # Get a temporary file:
-        tmpfile = tempfile.NamedTemporaryFile("w")
-        
-        # Write the merged configuration file to it:
-        config_dict.write(tmpfile)
-        tmpfile.flush()
-        
-        # Save the old config file if it exists:
-        if os.path.exists(config_path):
-            backup_path = weeutil.config.save_path(config_path)
-            print "Saved old configuration file as %s" % backup_path
-            
-        # Now install the temporary file (holding the merged config data)
-        # into the proper place:
-        shutil.copyfile(tmpfile.name, config_path)
 
+    save_me = False    
+    if options.merge:
+        command_merge(config_dict, template=options.template)
+        save_me = True
+        
+    if options.driver:
+        print options.driver
+    if save_me:
+        
+        # Save the resultant config file, backing up as necessary.
+        
+        if options.output:
+            fd = open(options.output, 'w')
+            config_dict.write(fd)
+            fd.close()
+        else:
+            # Get a temporary file:
+            tmpfile = tempfile.NamedTemporaryFile("w")
+            
+            # Write the merged configuration file to it:
+            config_dict.write(tmpfile)
+            tmpfile.flush()
+            
+            # Save the old config file if it exists:
+            if os.path.exists(config_path):
+                backup_path = weeutil.config.save_path(config_path)
+                print "Saved old configuration file as %s" % backup_path
+                
+            # Now install the temporary file (holding the merged config data)
+            # into the proper place:
+            shutil.copyfile(tmpfile.name, config_path)
+            
+            sys.exit(0)
+
+    else:
+        sys.exit("Nothing done.")
     return 0
 
 def command_merge(config_dict, template):
