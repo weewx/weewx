@@ -48,30 +48,52 @@ class StdWXCalculate(weewx.engine.StdService):
         ]
 
     def __init__(self, engine, config_dict):
+        """Initialize the calculation service.  Sample configuration:
+
+        [StdWXCalculate]
+            rain_period = 900
+            et_period = 3600
+            ignore_zero_wind = True
+            atc = 0.8
+            [[Calculations]]
+                windchill = hardware
+                heatindex = prefer_hardware
+                dewpoint = software
+            [[Algorithms]]
+                altimeter = aaASOS
+        """
         super(StdWXCalculate, self).__init__(engine, config_dict)
 
         # get any configuration settings
-        d = config_dict.get('StdWXCalculate', {})
+        svc_dict = config_dict.get('StdWXCalculate', {})
         # window of time to measure rain rate, in seconds
-        self.rain_period = int(d.get('rain_period', 900))
+        self.rain_period = int(svc_dict.get('rain_period', 900))
         # window of time for evapotranspiration calculation, in seconds
-        self.et_period = int(d.get('et_period', 3600))
+        self.et_period = int(svc_dict.get('et_period', 3600))
         # does zero wind mean no wind direction
-        self.ignore_zero_wind = weeutil.weeutil.to_bool(d.get('ignore_zero_wind', True))
+        self.ignore_zero_wind = weeutil.weeutil.to_bool(svc_dict.get('ignore_zero_wind', True))
         # atmospheric transmission coefficient [0.7-0.91]
-        self.atc = float(d.get('atc', 0.8))
+        self.atc = float(svc_dict.get('atc', 0.8))
         if self.atc < 0.7:
             self.atc = 0.7
         if self.atc > 0.91:
             self.atc = 0.91
         # height above ground at which wind is measured, in meters
-        self.wind_height = float(d.get('wind_height', 2.0))
+        self.wind_height = float(svc_dict.get('wind_height', 2.0))
 
         # find out which calculations should be performed
-        # FIXME: these probably belong in a sub-section [[Calculations]]
+        # we recognize only the names in our dispatch list; others are ignored
         self.calculations = dict()
+        calc_dict = svc_dict.get('Calculations', {})
         for v in self._dispatch_list:
-            self.calculations[v] = d.get(v, 'prefer_hardware')
+            if v in calc_dict:
+                self.calculations[v] = calc_dict[v]
+            else:
+                # fallback to 3.0/3.1 behavior of no 'Calculations' stanza
+                self.calculations[v] = svc_dict.get(v, 'prefer_hardware')
+
+        # get any custom algorithms
+        self.algorithms = svc_dict.get('Algorithms', {})
 
         # various bits we need for internal housekeeping
         self.altitude_ft = weewx.units.convert(engine.stn_info.altitude_vt, "foot")[0]
@@ -171,8 +193,11 @@ class StdWXCalculate(weewx.engine.StdService):
 
     def calc_altimeter(self, data, data_type):
         if 'pressure' in data:
+            algo = self.algorithms.get('altimeter', 'aaNOAA')
+            if not algo.startswith('aa'):
+                algo = 'aa%s' % algo
             data['altimeter'] = weewx.wxformulas.altimeter_pressure_US(
-                data['pressure'], self.altitude_ft, algorithm='aaNOAA')
+                data['pressure'], self.altitude_ft, algorithm=algo)
         else:
             data['altimeter'] = None
 
