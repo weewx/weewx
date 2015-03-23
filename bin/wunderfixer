@@ -8,10 +8,6 @@
 # 
 # See the file LICENSE.txt for your full rights.
 #
-#    $Revision $
-#    $Author: tkeffer $
-#    $Date: $
-#
 #===============================================================================
 """This utility fills in missing data on the Weather Underground.  It
 goes through all the records in a weewx archive file for a given
@@ -21,7 +17,7 @@ Weather Underground with the missing data.
 
 CHANGE HISTORY
 --------------------------------
-1.0.0   2/28/15
+1.0.0a1   2/28/15
 Now uses weewx API allowing use with any database supported by weewx.
 Now supports weewx databases using any weewx supported unit system (eg US, 
 METRIC and METRIXWX).
