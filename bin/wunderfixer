@@ -53,16 +53,17 @@ import urllib
 import urllib2
 
 import weeutil.weeutil
+from weeutil.weeutil import timestamp_to_string
 import weewx.manager
 import weewx.units
 import weewx.restx
 
 usagestr = """%prog CONFIG_FILE|--config=CONFIG_FILE
-                      [--binding=BINDING]
-                      [--station STATION] [--password PASSWORD]
-                      [--date YYYY-MM-DD] [--epsilon SECONDS]
-                      [--verbose] [--test] [--query]
-                      [--log LOG_FACILITY] [--help]
+                  [--binding=BINDING]
+                  [--station STATION] [--password PASSWORD]
+                  [--date YYYY-MM-DD] [--epsilon SECONDS]
+                  [--verbose] [--log LOG_FACILITY] [--test] [--query]
+                  [--help]
 
 This utility fills in missing data on the Weather Underground.  It goes through
 all the records in a weewx archive for a given day, comparing to see whether a 
@@ -102,26 +103,32 @@ def main() :
     """main program body for wunderfixer"""
  
     parser = optparse.OptionParser(usage=usagestr)
-    parser.add_option("-c", "--config",   type="string",       dest="config",   
-                      help="Use configuration file CONFIG_PATH. Default is /etc/weewx/weewx.conf or /home/weewx/weewx.conf.", metavar="CONFIG_PATH")
-    parser.add_option("-b", "--binding",  type="string",       dest="binding",  
-                      help="The database binding to be used. Default is 'wx_binding'.", metavar="BINDING", default='wx_binding')
-    parser.add_option("-s", "--station",  type="string",       dest="station",  
-                      help="Weather Underground station to check. Optional. Default is to take from configuration file.")
-    parser.add_option("-p", "--password", type="string",       dest="password", 
-                      help="Weather Underground station password. Optional. Default is to take from configuration file.")
-    parser.add_option("-d", "--date",     type="string",       dest="date",     
-                      help="Date to check as a string of form \"YYYY-MM-DD\" (default is today)", metavar="YYYY-MM-DD")
-    parser.add_option("-e", "--epsilon",  type="int",          dest="epsilon",  
-                      help="Timestamps within this value in seconds compare true (default 120)", metavar="SECONDS", default=120)
-    parser.add_option("-v", "--verbose",  action="store_true", dest="verbose",  
-                      help="Print useful extra output (optional)")
-    parser.add_option("-l", "--log",      type="string",       dest="logging",  
-                      help="Log selected output to syslog. If omitted no syslog logging occurs. If LOG_FACILITY is 'weewx' then logs are written to the same log used by weewx. Any other parameter will log to syslog.  (optional)", metavar="LOG_FACILITY")
-    parser.add_option("-t", "--test",     action="store_true", dest="simulate", 
-                      help="Test what would happen, but don't do anything (optional)")
-    parser.add_option("-q", "--query",    action="store_true", dest="query",    
-                      help="For each record, query the user before making a change (optional)")
+    parser.add_option("-c", "--config", type="string", dest="config", metavar="CONFIG_PATH",
+                      help="Use configuration file CONFIG_PATH. "
+                      "Default is /etc/weewx/weewx.conf or /home/weewx/weewx.conf.")
+    parser.add_option("-b", "--binding", type="string", dest="binding",
+                      metavar="BINDING", default='wx_binding',
+                      help="The database binding to be used. Default is 'wx_binding'.")
+    parser.add_option("-s", "--station", type="string", dest="station",
+                      help="Weather Underground station to check. Optional. "
+                      "Default is to take from configuration file.")
+    parser.add_option("-p", "--password", type="string", dest="password",
+                      help="Weather Underground station password. Optional. "
+                      "Default is to take from configuration file.")
+    parser.add_option("-d", "--date", type="string", dest="date", metavar="YYYY-MM-DD",
+                      help="Date to check as a string of form YYYY-MM-DD. Default is today.")
+    parser.add_option("-e", "--epsilon", type="int", dest="epsilon", metavar="SECONDS", default=120,
+                      help="Timestamps within this value in seconds compare true (default 120)")
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
+                      help="Print useful extra output.")
+    parser.add_option("-l", "--log", type="string", dest="logging", metavar="LOG_FACILITY",
+                      help="Log selected output to syslog. If omitted no syslog logging occurs. "
+                      "If LOG_FACILITY is 'weewx' then logs are written to the same log used by weewx. "
+                      "Any other parameter will log to syslog.")
+    parser.add_option("-t", "--test", action="store_true", dest="simulate",
+                      help="Test what would happen, but don't do anything.")
+    parser.add_option("-q", "--query", action="store_true", dest="query",
+                      help="For each record, query the user before making a change.")
 
     (options, args) = parser.parse_args()
 
@@ -213,7 +220,8 @@ def main() :
         sys.stdout.flush()
         print >>sys.stderr, "\nNo results returned from Weather Underground (perhaps a bad station name??)."
         print >>sys.stderr, "Publishing anyway."
-        wlog.slog(syslog.LOG_ERR, "No results returned from Weather Underground for station '%s'(perhaps a bad station name??). Publishing anyway." % options.station)
+        wlog.slog(syslog.LOG_ERR, "No results returned from Weather Underground for station '%s'"
+                  "(perhaps a bad station name??). Publishing anyway." % options.station)
 
     # Look for any records missing in the WU list, then sort the results:        
     missing_records = sorted([x for x in archive_results if not x in wunder_results])
@@ -252,7 +260,7 @@ def main() :
             _ans=raw_input("...fix? (y/n/a/q):")
             if _ans == "q" :
                 print "Quitting."
-                wlog.slog(syslog.LOG_DEBUG, "%s ... exiting" % record)
+                wlog.slog(syslog.LOG_DEBUG, "... exiting")
                 exit()
             if _ans == "a" :
                 _ans = "y"
@@ -264,26 +272,28 @@ def main() :
                 wunder.postData(record)
                 no_published += 1
                 print >>sys.stdout, " ...published."
-                wlog.slog(syslog.LOG_DEBUG, "%s ...published" % record)
+                wlog.slog(syslog.LOG_DEBUG, "%s ...published" % timestamp_to_string(record['dateTime']))
             except FailedPost, e:
                 print >>sys.stderr, e
                 print >>sys.stderr, "Aborted."
-                wlog.slog(syslog.LOG_ERR, "%s ...error %s. Aborting." % (record, e))
+                wlog.slog(syslog.LOG_ERR, "%s ...error %s. Aborting." % (timestamp_to_string(record['dateTime']), e))
                 exit()
             except IOError, e:
                 print >>sys.stderr, " ... not published."
                 print "Reason: ", e
-                wlog.slog(syslog.LOG_ERR, "%s ...not published. Reason '%s'" % (record, e))
+                wlog.slog(syslog.LOG_ERR, "%s ...not published. Reason '%s'" % (timestamp_to_string(record['dateTime']), e))
                 if hasattr(e, 'reason'):
                     print >>sys.stderr, "Failed to reach server. Reason: %s" % e.reason
-                    wlog.slog(syslog.LOG_ERR, "%s ...not published. Failed to reach server. Reason '%s'" % (record, e.reason))
+                    wlog.slog(syslog.LOG_ERR, "%s ...not published. Failed to reach server. Reason '%s'" % 
+                              (timestamp_to_string(record['dateTime']), e.reason))
                 if hasattr(e, 'code'):
                     print >>sys.stderr, "Failed to reach server. Error code: %s" % e.code
-                    wlog.slog(syslog.LOG_ERR, "%s ...not published. Failed to reach server. Error code '%s'" % (record, e.code))
+                    wlog.slog(syslog.LOG_ERR, "%s ...not published. Failed to reach server. Error code '%s'" % 
+                              (timestamp_to_string(record['dateTime']), e.code))
 
         else :
             print " ... skipped."
-            wlog.slog(syslog.LOG_DEBUG, "%s ...skipped" % record)
+            wlog.slog(syslog.LOG_DEBUG, "%s ...skipped" % timestamp_to_string(record['dateTime']))
     wlog.slog(syslog.LOG_INFO, "%s out of %s missing records published to '%s' for date %s."
               " Wunderfixer exiting." % (no_published, len(missing_records), options.station, date_date))
 
@@ -507,15 +517,6 @@ def print_record(record):
     # _strlist is a list of strings. Convert it into one long string:
     _string_result = ';'.join(_strlist)
     return _string_result
-
-def timestamp_to_string(ts):
-    """
-    Return a string formatted from the timestamp
-    """
-    if ts:
-        return "%s (%d)" % (time.strftime("%Y-%m-%d %H:%M", time.localtime(ts)), ts)
-    else:
-        return "****** N/A ******** (    N/A   )"
 
 def getArchiveDayTimeStamps(dbmanager, dayRequested):
     """Returns all time stamps in a weewx archive file for a given day
