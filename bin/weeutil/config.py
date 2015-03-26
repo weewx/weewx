@@ -553,7 +553,6 @@ def get_driver_infos():
 
 def prompt_for_info(dflt_loc=None, dflt_lat='90.000', dflt_lon='0.000',
                     dflt_alt=['0', 'meter'], dflt_units='metric'):
-    
     #
     #  Description
     #
@@ -598,32 +597,26 @@ def prompt_for_info(dflt_loc=None, dflt_lat='90.000', dflt_lon='0.000',
     #
     # Latitude & Longitude
     #
+    def get_val(msg, low_limit, high_limit, dflt_v):
+        v = None
+        while v is None:
+            ans = raw_input(msg).strip()
+            if not ans:
+                ans = dflt_v
+            try:
+                v = float(ans)
+                if v < low_limit or v > high_limit:
+                    v = None
+            except (ValueError, TypeError):
+                v = None
+        return v
+        
     print "Specify latitude in decimal degrees, negative for south."
     msg = "latitude [%s]: " % dflt_lat if dflt_lat else "latitude: "
-    lat = None
-    while lat is None:
-        ans = raw_input(msg).strip()
-        if not ans:
-            ans = dflt_lat
-        try:
-            lat = float(ans)
-            if lat < -90 or lat > 90:
-                lat = None
-        except (ValueError, TypeError):
-            lat = None
+    lat = get_val(msg, -90, 90, dflt_lat)
     print "Specify longitude in decimal degrees, negative for west."
     msg = "longitude [%s]: " % dflt_lon if dflt_lon else "longitude: "
-    lon = None
-    while lon is None:
-        ans = raw_input(msg).strip()
-        if not ans:
-            ans = dflt_lon
-        try:
-            lon = float(ans)
-            if lon < -180 or lon > 180:
-                lon = None
-        except (ValueError, TypeError):
-            lon = None
+    lon = get_val(msg, -180, 180, dflt_lon)
             
     #
     # Display units
