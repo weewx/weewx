@@ -29,9 +29,9 @@ major_comment_block = ["", "####################################################
 usage="""wee_config --help
        wee_config --version
        wee_config --list-drivers
-       wee_config --update CONFIG_FILE|--config=CONFIG_FILE --new-config=DIST_CONFIG
+       wee_config --update CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG
            [--output=OUTFILE] [--no-prompt]
-       wee_config --merge  CONFIG_FILE|--config=CONFIG_FILE --new-config=DIST_CONFIG 
+       wee_config --merge  CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG 
            --output=OUTFILE
        wee_config --modify CONFIG_FILE|--config=CONFIG_FILE
            [--driver=(DRIVER|prompt)]
@@ -44,29 +44,19 @@ COMMANDS:
 --help         Print instructions, then exit.
 --version      Print the version of weewx, then exit.
 --list-drivers List the available weewx device drivers, then exit.
---update       Update old configuration file CONFIG_FILE to latest version, 
-               then merge it with new configuration file DIST_CONFIG. 
-               The results will be written to OUTFILE or, if not given,
-               to a timestamped backup.  Optionally prompts. 
---merge        Update old configuration file CONFIG_FILE to latest version, 
-               then merge it with new configuration file DIST_CONFIG. 
-               The results will be written to OUTFILE. Never prompts. 
---modify       Modify the configuration file, prompting as necessary. Useful for
-               adding a driver.
+--update       Update the contents of configuration file CONFIG_FILE,
+               then merge the result with the contents of a default
+               configuration file DIST_CONFIG.  The results will be
+               written to CONFIG_FILE unless an OUTFILE is specified.               
+--merge        Merge the contents of configuration file CONFIG_FILE with
+               the contents of DIST_CONFIG, saving the result to OUTFILE.
+               DIST_CONFIG and OUTFILE must be specified.
+--modify       Modify the configuration file, prompting as necessary.
 
 wee_config is used to configure your weewx configuration file (nominally,
 weewx.conf). Its location can be given as a command-line argument, 
 or it can be specified with option --config.
-
-Commands --update and --merge are mutually exclusive. 
-
-Command --modify can be combined with --update or --merge, but not both. 
 """
-
-class MyFormatter(optparse.IndentedHelpFormatter):
-    """Custom formatter prevents ugly formatting of 'description'"""
-    def format_description(self, description):
-        return description if description is not None else ""
 
 def main():
 
@@ -91,14 +81,14 @@ def main():
                       help="Modify the configuration file. Prompt as necessary. Use this to add "
                       "a new driver.")
     parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
-                      help="Use configuration file CONFIG_FILE. Default is /etc/weewx/weewx.conf or /home/weewx/weewx.conf.")
-    parser.add_option("--new-config", metavar="DIST_CONFIG",
+                      help="Use configuration file CONFIG_FILE.")
+    parser.add_option("--dist-config",
                       help="Path to the new, incoming configuration file. This is usually supplied "
                       "by a distribution.")
     parser.add_option("--output", metavar="OUT_CONFIG",
-                      help="Where the results should be put.")
+                      help="Where the results should be written.")
     parser.add_option("--no-prompt", action="store_true",
-                      help="Do not issue prompts. Take all options from the command-line.")
+                      help="Do not issue prompts. Use default values or specified options.")
     parser.add_option("--driver", metavar="(DRIVER|prompt)", dest="driver",
                       help="Add the specified driver DRIVER to the configuration file. "
                       "If --driver=prompt is used, you will be prompted for the driver name.")
@@ -106,7 +96,7 @@ def main():
                       help="The station latitude")
     parser.add_option("--longitude", metavar="xx.x",
                       help="The station longitude")
-    parser.add_option("--altitude", metavar="zz,(FOOT|meter)",
+    parser.add_option("--altitude", metavar="zz,(foot|meter)",
                       help="The station altitude in either feet or meters. E.g., '750,foot'")
     parser.add_option("--description",
                       help="""A text description of the station. For example, "Santa's workshop, North Pole" """)
@@ -194,103 +184,6 @@ def get_station_info(config_dict):
             if stn_info['station_type'] in config_dict:
                 stn_info['driver'] = config_dict[stn_info['station_type']]['driver']
     return stn_info
-
-def prompt_for_info(location=None, latitude=90.0, longitude=0.0,
-                    altitude=(0, 'meter'), units='metric', **kwargs):
-    
-    # --- LOCATION ---
-    print "Enter a brief description of the station, such as its location.  For example:"
-    print "Santa's Workshop, North Pole"
-    msg = "description [%s] > " % location if location is not None else "description > "
-    ans = None
-    while ans is None:
-        ans = raw_input(msg).strip()
-        if ans:
-            location = ans
-
-    # --- ALTITUDE ---
-    print "Specify altitude, with units 'foot' or 'meter'.  For example:"
-    print "35, foot"
-    print "12, meter"
-    msg = "altitude > " if altitude is None else "altitude [%s, %s] > " % tuple(altitude)
-
-    ans = None
-    while ans is None:
-        ans = raw_input(msg).strip().lower()
-        if ans and ans.find(',') > 0:
-            parts = ans.split(',')
-            try:
-                unit = parts[1].strip()
-                if unit in ['foot', 'meter']:
-                    altitude = [float(parts[0].strip()), unit]
-                else:
-                    ans = None
-            except (ValueError, TypeError):
-                print >>sys.stderr, "Invalid response."
-                ans = None
-        elif ans == '':
-            break
-        else:
-            ans = None
-
-    # --- LATITUDE ---
-    print "Specify latitude in decimal degrees, negative for south."
-    msg = "latitude > " if latitude is None else "latitude [%s] > " % latitude 
-    ans = None
-    while ans is None:
-        ans = raw_input(msg).strip()
-        if ans:
-            try:
-                latitude = float(ans)
-                if latitude < -90 or latitude > 90:
-                    ans = None
-            except (ValueError, TypeError):
-                print >>sys.stderr, "Invalid response."
-                ans = None
-        elif ans == '':
-            break
-        else:
-            ans = None
-            
-    # --- LONGITUDE ---
-    print "Specify longitude in decimal degrees, negative for west."
-    msg = "longitude > " if longitude is None else "longitude [%s] > " % longitude 
-    ans = None
-    while ans is None:
-        ans = raw_input(msg).strip()
-        if ans:
-            try:
-                longitude = float(ans)
-                if latitude < -180 or latitude > 180:
-                    ans = None
-            except (ValueError, TypeError):
-                print >>sys.stderr, "Invalid response."
-                ans = None
-        elif ans == '':
-            break
-        else:
-            ans = None
-
-    # --- UNITs ---
-    print "Indicate the preferred units for display: 'metric' or 'us'"
-    msg =  "units > " if units is None else "units [%s] > " % units
-    ans = None
-    while ans is None:
-        ans = raw_input(msg).strip().lower()
-        if ans in ['metric', 'us']:
-            units = ans
-        elif ans=='':
-            break
-        else:
-            print >>sys.stderr, "Unrecognized response. Please try again."
-            ans = None
-
-    # Return the final results:
-    return {'location' : location,
-            'altitude' : altitude,
-            'latitude' : latitude,
-            'longitude': longitude,
-            'units'    : units}
 
 def prompt_for_driver(dflt_driver=None):
     """Get the information about each driver, return as a dictionary."""
