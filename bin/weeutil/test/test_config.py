@@ -117,7 +117,9 @@ class ConfigTest(unittest.TestCase):
          
         # The V3.1 config file becomes the template:
         template = configobj.ConfigObj('weewx31.conf')
-         
+        
+        # First update, then merge:
+        weeutil.config.update_config(config_dict)
         weeutil.config.merge_config(config_dict, template)
         
         # Write it out to a StringIO, then start checking it against the expected
@@ -136,6 +138,5 @@ class ConfigTest(unittest.TestCase):
         more = out_str.readline()
         self.assertEqual(more, '')
         
-if __name__ == '__main__':
-    unittest.main()
+unittest.main()
         

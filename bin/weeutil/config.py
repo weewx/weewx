@@ -110,43 +110,43 @@ def _as_string(option):
         return ', '.join(option)
     return option
 
-def merge_config_files(template_path, old_config_path, weewx_root):
-    """Merges any old config file into the new one, and sets WEEWX_ROOT.
-    
-    If an old configuration file exists, it will merge the contents
-    into the new file. It also sets variable ['WEEWX_ROOT']
-    to reflect the installation directory.
-    
-    template_path: Path where the new configuration file can be found.
-    
-    old_config_path: Path where the old configuration file can be found.
-    
-    weewx_root: What WEEWX_ROOT should be set to.
-    
-    version_number: The version number of the new configuration file.
-    
-    RETURNS:
-    
-    The (possibly) merged new configuration file.    
-    """
-
-    # Get the template config file
-    template_config = configobj.ConfigObj(template_path)
-    template_config.indent_type = '    '
-    
-    # Check to see if there is an existing config file.
-    if os.path.exists(old_config_path):
-        config_dict = configobj.ConfigObj(old_config_path)
-        # Do a merge of any missing stuff from the template
-        merge_config(config_dict, template_config)
-    else:
-        # No existing config file. Substitute the template:
-        config_dict = template_config
-
-    # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
-    config_dict['WEEWX_ROOT'] = weewx_root
-    
-    return config_dict
+# def merge_config_files(template_path, old_config_path, weewx_root):
+#     """Merges any old config file into the new one, and sets WEEWX_ROOT.
+#     
+#     If an old configuration file exists, it will merge the contents
+#     into the new file. It also sets variable ['WEEWX_ROOT']
+#     to reflect the installation directory.
+#     
+#     template_path: Path where the new configuration file can be found.
+#     
+#     old_config_path: Path where the old configuration file can be found.
+#     
+#     weewx_root: What WEEWX_ROOT should be set to.
+#     
+#     version_number: The version number of the new configuration file.
+#     
+#     RETURNS:
+#     
+#     The (possibly) merged new configuration file.    
+#     """
+# 
+#     # Get the template config file
+#     template_config = configobj.ConfigObj(template_path)
+#     template_config.indent_type = '    '
+#     
+#     # Check to see if there is an existing config file.
+#     if os.path.exists(old_config_path):
+#         config_dict = configobj.ConfigObj(old_config_path)
+#         # Do a merge of any missing stuff from the template
+#         merge_config(config_dict, template_config)
+#     else:
+#         # No existing config file. Substitute the template:
+#         config_dict = template_config
+# 
+#     # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
+#     config_dict['WEEWX_ROOT'] = weewx_root
+#     
+#     return config_dict
 
 def update_config(config_dict):
     """Update a (possibly old) configuration dictionary to the latest format.
@@ -183,7 +183,6 @@ def merge_config(config_dict, template_dict):
     
     template_dict: This is usually the newer dictionary supplied by the installer.
     """
-    
     
     config_dict.interpolate = False
 

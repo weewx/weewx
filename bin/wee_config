@@ -30,14 +30,14 @@ usage="""wee_config --help
        wee_config --version
        wee_config --list-drivers
        wee_config --update CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG
-           [--output=OUTFILE] [--no-prompt]
+           [--output=OUT_CONFIG] [--no-prompt]
        wee_config --merge  CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG 
-           --output=OUTFILE
+           --output=OUT_CONFIG
        wee_config --modify CONFIG_FILE|--config=CONFIG_FILE
            [--driver=(DRIVER|prompt)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
            [--description="Home Sweet Home"] [--units=(us|metric)]
-           [--output=OUTFILE] [--no-prompt]
+           [--output=OUT_CONFIG] [--no-prompt]
            
 COMMANDS:
 
@@ -45,13 +45,14 @@ COMMANDS:
 --version      Print the version of weewx, then exit.
 --list-drivers List the available weewx device drivers, then exit.
 --update       Update the contents of configuration file CONFIG_FILE,
-               then merge the result with the contents of a default
-               configuration file DIST_CONFIG.  The results will be
-               written to CONFIG_FILE unless an OUTFILE is specified.               
---merge        Merge the contents of configuration file CONFIG_FILE with
-               the contents of DIST_CONFIG, saving the result to OUTFILE.
-               DIST_CONFIG and OUTFILE must be specified.
+               then merge the result into configuration file DIST_CONFIG.
+               Write the results to CONFIG_FILE unless an OUT_CONFIG
+               is specified.               
+--merge        Update the contents of configuration file CONFIG_FILE,
+               then merge the result into configuration file DIST_CONFIG.
+               Write the results to OUT_CONFIG. 
 --modify       Modify the configuration file, prompting as necessary.
+               Use this to add a driver.
 
 wee_config is used to configure your weewx configuration file (nominally,
 weewx.conf). Its location can be given as a command-line argument, 
@@ -73,13 +74,12 @@ def main():
                      help="List all the available weewx device drivers, then exit.")
     parser.add_option("--update", action="store_true",
                       help="Update an existing configuration file to the current version, then merge "
-                      "with DIST_CONFIG. Save to OUT_CONFIG or, if not given, a timestamped backup.")
+                      "into DIST_CONFIG. Save results to CONFIG_FILE.")
     parser.add_option("--merge", action="store_true",
                       help="Update an existing configuration file to the current version, then merge "
-                      "with DIST_C ONFIG. Save to OUT_CONFIG.")
+                      "into DIST_CONFIG. Save results to OUT_CONFIG.")
     parser.add_option("--modify", action="store_true",
-                      help="Modify the configuration file. Prompt as necessary. Use this to add "
-                      "a new driver.")
+                      help="Modify the configuration file. Prompt as necessary.")
     parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
     parser.add_option("--dist-config",
@@ -113,15 +113,44 @@ def main():
     if options.list_drivers:
         print_drivers()
         sys.exit(0)
+
+    #
+    # Check for errors in the options.
+    #
     
+    # Cannot have both update and merge
+    if options.update and options.merge:
+        exit("Commands --update and --merge are mutually exclusive")
+    
+    # Check for missing --dist-config
+    if (options.update or options.merge) and not options.dist_config:
+            exit("Option --dist-config required.")
+            
+    # The merge option requires --output
+    if options.merge and not options.output:
+        exit("Command --merge requires option --output")
+
     # Get the configuration file:
     config_path, config_dict = weeutil.config.read_config(options.config_path, args, locations=search_locations)
+    print "Using configuration file found at", config_path
 
     # Flag for whether the output needs to be saved:
     save_me = False
     
-    if options.merge:
-        command_merge(config_dict, template=options.template)
+    if options.update or options.merge:
+    
+        # Open up and parse the distribution config file:
+        try:        
+            dist_config_dict = configobj.ConfigObj(options.dist_config, file_error=True)
+        except SyntaxError, e:
+            exit("Syntax error in distribution configuration file '%s': %s" % (dist_config, e))
+            
+        # Update the old configuration file:
+        weeutil.config.update_config(config_dict)
+        
+        # Then merge it into the distribution file
+        weeutil.config.merge_config(config_dict, dist_config_dict)
+
         save_me = True
         
     if save_me:
@@ -155,22 +184,6 @@ def main():
         sys.exit("Nothing done.")
     return 0
 
-def command_merge(config_dict, template):
-    
-    if not template:
-        print >>sys.stdout, "Merge command requires template file"
-        exit(1)
-
-    # Open up and parse the template:
-    try:        
-        template_dict = configobj.ConfigObj(template, file_error=True)
-    except SyntaxError, e:
-        print >>sys.stdout, "Syntax error in template '%s': %s" % (template, e)
-        exit(1)
-
-    weeutil.config.merge_config(config_dict, template_dict)
-
-    
 def get_station_info(config_dict):
     """Extract station info from config dictionary."""
     stn_info = dict()
