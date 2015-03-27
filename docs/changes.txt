@@ -3,6 +3,10 @@ weewx change history
 
 X.X.X XX/XX/XX
 
+Weewx now comes with Wunderfixer as part of the standard installation.
+Wunderfixer now works with MySQL databases (as well as sqlite), and with
+databases in all unit systems.
+
 Fixed bug in 12-hour temperature lookup for calculating station pressure from
 sea level pressure when database units are other than US unit system.
 
