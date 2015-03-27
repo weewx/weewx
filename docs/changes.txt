@@ -35,6 +35,8 @@ Added better recovery from USB failures in the ws28xx driver.
 Added option to specify algorithm in StdWXCalculate.  So far this applies
 only to the altimeter calculation.
 
+Improved timing algorithm for AcuRite data.  Thanks to Brett Warden.
+
 
 3.1.0 02/05/15
 
