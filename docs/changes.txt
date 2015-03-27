@@ -3,6 +3,10 @@ weewx change history
 
 X.X.X XX/XX/XX
 
+Wunderfixer is now included with weewx --- no need to download it separately. 
+It now works with MySQL, as well as sqlite, databases. It also supports
+metric databases. Thanks to user Gary Roderick!
+
 Fixed bug in 12-hour temperature lookup for calculating station pressure from
 sea level pressure when database units are other than US unit system.
 
@@ -13,6 +17,9 @@ theoretical solar radiation, beaufort, and cloudbase to StdWXCalculate.
 
 If StdWXCalculate cannot calculate a derived varible when asked to, it now
 sets the value to null. Fixes issue #10.
+
+Added option to specify algorithm in StdWXCalculate.  So far this applies
+only to the altimeter calculation.
 
 Fixed bug in debian install script - 'Acurite' was not in the list of stations.
 
@@ -27,6 +34,8 @@ The "alarm" example now includes a try block to catch a NameError exception
 should the alarm expression include a variable not in the archive record.
 
 Added better recovery from USB failures in the ws28xx driver.
+
+Improved timing algorithm for AcuRite data.  Thanks to Brett Warden.
 
 
 3.1.0 02/05/15

@@ -135,16 +135,8 @@ so that
 
 pywws does not do barometer or altimeter calculations.
 
-this implementation does the following:
-
-  pressure = abs_pressure + offset
-  barometer = sp2bp(adjp, altitude, temperature)
-  altimeter = sp2ap(adjp, altitude)
-
-where 'offset' is specified in weewx.conf (default is 0), 'altitude' is
-specified in weewx.conf, and 'temperature' is read from the sensors.
-
-The 'barometer' value is reported to wunderground, cwop, etc.
+this implementation reports the abs_pressure from the hardware as 'pressure'.
+altimeter and barometer are calculated by weewx.
 
 Illuminance and Radiation
 

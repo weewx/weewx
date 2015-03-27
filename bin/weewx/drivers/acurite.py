@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#
 # Copyright 2014 Matthew Wall
 # See the file LICENSE.txt for your full rights.
 #
@@ -84,6 +83,8 @@ The AcuRite station has 4 USB modes:
   4   x                        x
 
 The console does not respond to USB requests when in mode 1 or mode 2.
+
+There is no known way to change the USB mode via software.
 
 The console shows up as a USB device even if it is turned off.  If the console
 is powered on and communication has been established, then power is removed,
@@ -203,7 +204,6 @@ X1 - 2 bytes
 1: ?
 """
 
-# FIXME: can we set mode via software?
 # FIXME: how to detect mode via software?
 # FIXME: how to download stored data?
 # FIXME: can the archive interval be changed?
@@ -225,7 +225,7 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.12'
+DRIVER_VERSION = '0.14'
 DEBUG_RAW = 0
 
 
@@ -264,17 +264,25 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
     max_tries - How often to retry communication before giving up.
     [Optional. Default is 10]
     """
+    _R1_INTERVAL = 18    # 5-in-1 sensor updates every 18 seconds
+    _R2_INTERVAL = 60    # console sensor updates every 60 seconds
+    _R3_INTERVAL = 12*60 # historical records updated every 12 minutes
+
     def __init__(self, **stn_dict):
+        loginf('driver version is %s' % DRIVER_VERSION)
         self.model = stn_dict.get('model', 'AcuRite')
         self.max_tries = int(stn_dict.get('max_tries', 10))
-        self.retry_wait = int(stn_dict.get('retry_wait', 10))
-        self.polling_interval = int(stn_dict.get('polling_interval', 18))
+        self.retry_wait = int(stn_dict.get('retry_wait', 30))
+        self.polling_interval = int(stn_dict.get('polling_interval', 6))
+        self.enable_r3 = int(stn_dict.get('enable_r3', 0))
+        if self.enable_r3:
+            loginf('R3 data will be attempted')
         self.last_rain = None
         self.last_r3 = None
         self.r3_fail_count = 0
         self.r3_max_fail = 3
-        loginf('driver version is %s' % DRIVER_VERSION)
-
+        self.r1_next_read = 0
+        self.r2_next_read = 0
         global DEBUG_RAW
         DEBUG_RAW = int(stn_dict.get('debug_raw', 0))
 
@@ -288,24 +296,38 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         while ntries < self.max_tries:
             ntries += 1
             try:
-                now = int(time.time() + 0.5)
-                packet = {'dateTime': now, 'usUnits': weewx.METRIC}
+                packet = {'dateTime': int(time.time() + 0.5),
+                          'usUnits': weewx.METRIC}
+                raw1 = raw2 = None
                 with Station() as station:
-                    raw1 = station.read_R1()
-                    raw2 = station.read_R2()
-#                    raw3 = self.read_R3(station, now)
-                if DEBUG_RAW > 0:
-                    logdbg("R1: %s" % _fmt_bytes(raw1))
-                    logdbg("R2: %s" % _fmt_bytes(raw2))
-#                    logdbg("R3: %s" % _fmt_bytes(raw3))
-                Station.check_pt_constants(last_raw2, raw2)
-                last_raw2 = raw2
-                packet.update(Station.decode_R1(raw1))
-                packet.update(Station.decode_R2(raw2))
+                    if time.time() >= self.r1_next_read:
+                        raw1 = station.read_R1()
+                        self.r1_next_read = time.time() + self._R1_INTERVAL
+                        if DEBUG_RAW > 0 and raw1:
+                            logdbg("R1: %s" % _fmt_bytes(raw1))
+                    if time.time() >= self.r2_next_read:
+                        raw2 = station.read_R2()
+                        self.r2_next_read = time.time() + self._R2_INTERVAL
+                        if DEBUG_RAW > 0 and raw2:
+                            logdbg("R2: %s" % _fmt_bytes(raw2))
+                    if self.enable_r3:
+                        raw3 = self.read_R3_block(station)
+                        if DEBUG_RAW > 0 and raw3:
+                            for row in raw3:
+                                logdbg("R3: %s" % _fmt_bytes(row))
+                if raw1:
+                    packet.update(Station.decode_R1(raw1))
+                if raw2:
+                    Station.check_pt_constants(last_raw2, raw2)
+                    last_raw2 = raw2
+                    packet.update(Station.decode_R2(raw2))
                 self._augment_packet(packet)
                 ntries = 0
                 yield packet
-                time.sleep(self.polling_interval)
+                next_read = min(self.r1_next_read, self.r2_next_read)
+                delay = max(next_read - time.time(), self.polling_interval)
+                logdbg("next read in %s seconds" % delay)
+                time.sleep(delay)
             except (usb.USBError, weewx.WeeWxIOError), e:
                 logerr("Failed attempt %d of %d to get LOOP data: %s" %
                        (ntries, self.max_tries, e))
@@ -345,22 +367,30 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         if 'rssi' in packet and packet['rssi'] is not None:
             packet['rxCheckPercent'] = 100 * packet['rssi'] / Station.MAX_RSSI
 
-    def read_R3(self, station, now):
+    def read_R3_block(self, station):
         # attempt to read R3 every 12 minutes.  if the read fails multiple
         # times, make a single log message about enabling usb mode 3 then do
         # not try it again.
+        #
+        # when the station is not in mode 3, attempts to read R3 leave
+        # it in an uncommunicative state.  doing a reset, close, then open
+        # will sometimes, but not always, get communication started again on
+        # 01036 stations.
         r3 = []
-        if self.r3_fail_count > self.r3_max_fail:
+        if self.r3_fail_count >= self.r3_max_fail:
             return r3
-        if self.last_r3 is None or now - self.last_r3 > 720:
+        if (self.last_r3 is None or
+            time.time() - self.last_r3 > self._R3_INTERVAL):
             try:
-                x = statoin.read_x()
-                r3 = station.read_R3()
-                self.last_r3 = now
+                x = station.read_x()
+                for i in range(17):
+                    r3.append(station.read_R3())
+                self.last_r3 = time.time()
             except usb.USBError, e:
-                logdbg("R3: read failed: %s" % e)
                 self.r3_fail_count += 1
-                if self.r3_fail_count > self.r3_max_fail:
+                logdbg("R3: read failed %d of %d: %s" %
+                       (self.r3_fail_count, self.r3_max_fail, e))
+                if self.r3_fail_count >= self.r3_max_fail:
                     loginf("R3: put station in USB mode 3 to enable R3 data")
         return r3
 
@@ -408,6 +438,8 @@ class Station(object):
         if not self.handle:
             raise weewx.WeeWxIOError('Open USB device failed')
 
+#        self.handle.reset()
+
         # the station shows up as a HID with only one interface
         interface = 0
 
@@ -437,9 +469,6 @@ class Station(object):
         except usb.USBError, e:
             loginf("Set alt interface failed: %s" % e)
 
-        # FIXME: reset causes all kinds of problems
-#        self.handle.reset()
-
     def close(self):
         if self.handle is not None:
             try:
@@ -447,6 +476,9 @@ class Station(object):
             except usb.USBError, e:
                 logerr("release interface failed: %s" % e)
             self.handle = None
+
+    def reset(self):
+        self.handle.reset()
 
     def read(self, msgtype, nbytes):
         return self.handle.controlMsg(
@@ -465,8 +497,6 @@ class Station(object):
 
     def read_R3(self):
         # FIXME: how many times can we do this read before timeout?
-        # FIXME: is this a memory dump?
-        # FIXME: what controls the return values?
         return self.read(3, 33)
 
     def read_x(self):
@@ -526,6 +556,34 @@ class Station(object):
             logerr("R2: bad length: %s" % _fmt_bytes(raw))
         else:
             logerr("R2: bad format: %s" % _fmt_bytes(raw))
+        return data
+
+    @staticmethod
+    def decode_R3(raw):
+        data = dict()
+        buf = []
+        fail = False
+        for i, r in enumerate(raw):
+            if len(r) == 33 and r[0] == 0x03:
+                try:
+                    for b in r:
+                        buf.append(int(b, 16))
+                except ValueError, e:
+                    logerr("R3: bad value in row %d: %s" % (i, _fmt_bytes(r)))
+                    fail = True
+            elif len(r) != 33:
+                logerr("R3: bad length in row %d: %s" % (i, _fmt_bytes(r)))
+                fail = True
+            else:
+                logerr("R3: bad format in row %d: %s" % (i, _fmt_bytes(r)))
+                fail = True
+        if fail:
+            return data
+        for i in range(2, len(buf)-2):
+            if buf[i-2] == 0xff and buf[i-1] == 0xaa and buf[i] == 0x55:
+                data['numrec'] = buf[i+1] + buf[i+2] * 0x100
+                break
+        data['raw'] = raw
         return data
 
     @staticmethod
@@ -710,25 +768,31 @@ if __name__ == '__main__':
         print "acurite driver version %s" % DRIVER_VERSION
         exit(0)
 
+    test_r1 = True
+    test_r2 = True
+    test_r3 = False
+    delay = 12*60
     with Station() as s:
         while True:
             ts = int(time.time())
             tstr = "%s (%d)" % (time.strftime("%Y-%m-%d %H:%M:%S %Z",
                                               time.localtime(ts)), ts)
-
-#            try:
-#                x = s.read_x()
-#                print tstr, _fmt_bytes(x)
-#                for i in range(0, 500):
-#                    r3 = s.read_R3()
-#                    print tstr, _fmt_bytes(r3)
-#                    time.sleep(1)
-#           except usb.USBError, e:
-#                print tstr, e
-#            time.sleep(12*60)
-
-            r1 = s.read_R1()
-            r2 = s.read_R2()
-            print tstr, _fmt_bytes(r1), Station.decode_R1(r1)
-            print tstr, _fmt_bytes(r2), Station.decode_R2(r2)
-            time.sleep(18)
+            if test_r1:
+                r1 = s.read_R1()
+                print tstr, _fmt_bytes(r1), Station.decode_R1(r1)
+                delay = min(delay, 18)
+            if test_r2:
+                r2 = s.read_R2()
+                print tstr, _fmt_bytes(r2), Station.decode_R2(r2)
+                delay = min(delay, 60)
+            if test_r3:
+                try:
+                    x = s.read_x()
+                    print tstr, _fmt_bytes(x)
+                    for i in range(0, 17):
+                        r3 = s.read_R3()
+                        print tstr, _fmt_bytes(r3)
+                except usb.USBError, e:
+                    print tstr, e
+                delay = min(delay, 12*60)
+            time.sleep(delay)
