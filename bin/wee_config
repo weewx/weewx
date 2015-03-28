@@ -18,13 +18,20 @@ import configobj
 
 import weewx
 import weeutil.config
-from weeutil.config import save_path, mkdir, _as_string
 
 my_dir = os.path.abspath(os.path.dirname(__file__))
 search_locations = [os.path.normpath(os.path.join(my_dir, '..')), '/etc/weewx', '/home/weewx']
 
 minor_comment_block = [""]
 major_comment_block = ["", "##############################################################################", ""]
+
+stn_info_defaults = {'location' : '',
+                     'latitude' : '0',
+                     'longitude' : '0',
+                     'altitude' : '[0, meter]',
+                     'units' : 'metric',
+                     'station_type' : 'Vantage',
+                     'driver' : 'weewx.drivers.Vantage'}
 
 usage="""wee_config --help
        wee_config --version
@@ -34,9 +41,9 @@ usage="""wee_config --help
        wee_config --merge  CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG 
            --output=OUT_CONFIG
        wee_config --modify CONFIG_FILE|--config=CONFIG_FILE
-           [--driver=(DRIVER|prompt)]
+           [--driver=DRIVER]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
-           [--description="Home Sweet Home"] [--units=(us|metric)]
+           [--location="Home Sweet Home"] [--units=(us|metric)]
            [--output=OUT_CONFIG] [--no-prompt]
            
 COMMANDS:
@@ -89,16 +96,15 @@ def main():
                       help="Where the results should be written.")
     parser.add_option("--no-prompt", action="store_true",
                       help="Do not issue prompts. Use default values or specified options.")
-    parser.add_option("--driver", metavar="(DRIVER|prompt)", dest="driver",
-                      help="Add the specified driver DRIVER to the configuration file. "
-                      "If --driver=prompt is used, you will be prompted for the driver name.")
+    parser.add_option("--driver", metavar="DRIVER", dest="driver",
+                      help="Use the driver DRIVER, e.g., weewx.driver.vantage. ")
     parser.add_option("--latitude", metavar="yy.y",
                       help="The station latitude")
     parser.add_option("--longitude", metavar="xx.x",
                       help="The station longitude")
-    parser.add_option("--altitude", metavar="zz,(foot|meter)",
+    parser.add_option("--altitude", metavar="zz,(foot|meter)", default='[0, meter]',
                       help="The station altitude in either feet or meters. E.g., '750,foot'")
-    parser.add_option("--description",
+    parser.add_option("--location",
                       help="""A text description of the station. For example, "Santa's workshop, North Pole" """)
     parser.add_option("--units", choices=["us", "metric"], metavar="(metric|us)",
                       help="Set display units to 'metric' or 'us'")
@@ -130,7 +136,7 @@ def main():
     if options.merge and not options.output:
         exit("Command --merge requires option --output")
 
-    # Get the configuration file:
+    # Looks good. Get the configuration file:
     config_path, config_dict = weeutil.config.read_config(options.config_path, args, locations=search_locations)
     print "Using configuration file found at", config_path
 
@@ -143,7 +149,7 @@ def main():
         try:        
             dist_config_dict = configobj.ConfigObj(options.dist_config, file_error=True)
         except SyntaxError, e:
-            exit("Syntax error in distribution configuration file '%s': %s" % (dist_config, e))
+            exit("Syntax error in distribution configuration file '%s': %s" % (options.dist_config, e))
             
         # Update the old configuration file:
         weeutil.config.update_config(config_dict)
@@ -152,6 +158,35 @@ def main():
         weeutil.config.merge_config(config_dict, dist_config_dict)
 
         save_me = True
+        
+    if options.modify:
+        
+        # Get defaults out of the config file:
+        stn_info = weeutil.config.get_station_info(config_dict)
+
+        # Get command line overrides, and apply them to stn_info:
+        for k in stn_info:
+            if hasattr(options, k) and getattr(options,k) is not None:
+                stn_info[k] = getattr(options, k)
+
+        # If any are still None, replace them with defaults:
+        for k in stn_info_defaults:
+            if stn_info[k] is None:
+                stn_info[k] = stn_info_defaults[k]
+                
+        # Unless --no-prompt has been specified, give the user a chance to change things:
+        if not options.no_prompt:
+            stn_info.update(weeutil.config.prompt_for_info(**stn_info))
+
+            if not options.driver:
+                driver = prompt_for_driver(stn_info.get('driver'))
+                stn_info['driver'] = driver
+
+        # Look up driver info:
+        driver_editor, driver_name, driver_version = weeutil.config.load_driver_editor(stn_info.get('driver'))
+        
+        print "Station info", stn_info
+        exit()
         
     if save_me:
         
@@ -183,20 +218,6 @@ def main():
     else:
         sys.exit("Nothing done.")
     return 0
-
-def get_station_info(config_dict):
-    """Extract station info from config dictionary."""
-    stn_info = dict()
-    if config_dict is not None and 'Station' in config_dict:
-        stn_info['location'] = _as_string(config_dict['Station'].get('location'))
-        stn_info['latitude'] = config_dict['Station'].get('latitude')
-        stn_info['longitude'] = config_dict['Station'].get('longitude')
-        stn_info['altitude'] = config_dict['Station'].get('altitude')
-        if 'station_type' in config_dict['Station']:
-            stn_info['station_type'] = config_dict['Station']['station_type']
-            if stn_info['station_type'] in config_dict:
-                stn_info['driver'] = config_dict[stn_info['station_type']]['driver']
-    return stn_info
 
 def prompt_for_driver(dflt_driver=None):
     """Get the information about each driver, return as a dictionary."""

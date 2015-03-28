@@ -474,13 +474,13 @@ def configure_conf(config_fn, info, dryrun=False):
         weeutil.config.save_path(config_fn)
         shutil.move(config.filename, config_fn)
 
-def load_editor(driver):
-    """Load the configuration editor from the driver file"""
-    __import__(driver)
-    driver_module = sys.modules[driver]
-    loader_function = getattr(driver_module, 'confeditor_loader')
-    editor = loader_function()
-    return editor, driver_module.DRIVER_NAME, driver_module.DRIVER_VERSION
+# def load_editor(driver):
+#     """Load the configuration editor from the driver file"""
+#     __import__(driver)
+#     driver_module = sys.modules[driver]
+#     loader_function = getattr(driver_module, 'confeditor_loader')
+#     editor = loader_function()
+#     return editor, driver_module.DRIVER_NAME, driver_module.DRIVER_VERSION
 
 def prompt_for_driver(dflt_driver=None):
     """Get the information about each driver, return as a dictionary."""

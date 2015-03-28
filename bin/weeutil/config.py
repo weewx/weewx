@@ -522,6 +522,25 @@ def replace_string(a_dict, label, value):
         else:
             a_dict[k] = a_dict[k].replace(label, value)
 
+def get_station_info(config_dict):
+    """Extract station info from config dictionary."""
+    stn_info = dict()
+    if config_dict is not None:
+        if 'Station' in config_dict:
+            stn_info['location'] = _as_string(config_dict['Station'].get('location'))
+            stn_info['latitude'] = config_dict['Station'].get('latitude')
+            stn_info['longitude'] = config_dict['Station'].get('longitude')
+            stn_info['altitude'] = config_dict['Station'].get('altitude')
+            if 'station_type' in config_dict['Station']:
+                stn_info['station_type'] = config_dict['Station']['station_type']
+                if stn_info['station_type'] in config_dict:
+                    stn_info['driver'] = config_dict[stn_info['station_type']]['driver']
+        if 'StdReport' in config_dict:
+            # TODO: Perhaps we could add some smarts here?
+            stn_info['units'] = None
+            
+    return stn_info
+
 def get_driver_infos():
     """Scan the drivers folder, extracting information about each available driver.
     Return as a dictionary, keyed by driver name."""
@@ -550,21 +569,29 @@ def get_driver_infos():
 
     return driver_info_dict
 
-def prompt_for_info(dflt_loc=None, dflt_lat='90.000', dflt_lon='0.000',
-                    dflt_alt=['0', 'meter'], dflt_units='metric'):
+def load_driver_editor(driver):
+    """Load the configuration editor from the driver file"""
+    __import__(driver)
+    driver_module = sys.modules[driver]
+    loader_function = getattr(driver_module, 'confeditor_loader')
+    editor = loader_function()
+    return editor, driver_module.DRIVER_NAME, driver_module.DRIVER_VERSION
+
+def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
+                    altitude=['0', 'meter'], units='metric', **kwargs):
     #
     #  Description
     #
     print "Enter a brief description of the station, such as its location.  For example:"
     print "Santa's Workshop, North Pole"
-    msg = "description: [%s]: " % dflt_loc if dflt_loc else "description: "
+    msg = "description: [%s]: " % location if location else "description: "
     loc = None
     while loc is None:
         ans = raw_input(msg).strip()
         if ans:
             loc = ans
-        elif dflt_loc:
-            loc = dflt_loc
+        elif location:
+            loc = location
 
     #
     #  Altitude
@@ -572,7 +599,7 @@ def prompt_for_info(dflt_loc=None, dflt_lat='90.000', dflt_lon='0.000',
     print "Specify altitude, with units 'foot' or 'meter'.  For example:"
     print "35, foot"
     print "12, meter"
-    msg = "altitude [%s]: " % _as_string(dflt_alt) if dflt_alt else "altitude: "
+    msg = "altitude [%s]: " % _as_string(altitude) if altitude else "altitude: "
     alt = None
     while alt is None:
         ans = raw_input(msg).strip()
@@ -587,8 +614,8 @@ def prompt_for_info(dflt_loc=None, dflt_lat='90.000', dflt_lon='0.000',
                         alt = [parts[0].strip(), parts[1].strip()]
                 except (ValueError, TypeError):
                     pass
-        elif dflt_alt:
-            alt = dflt_alt
+        elif altitude:
+            alt = altitude
     
         if not alt:
             print "Unrecognized response. Try again."
@@ -611,28 +638,28 @@ def prompt_for_info(dflt_loc=None, dflt_lat='90.000', dflt_lon='0.000',
         return v
         
     print "Specify latitude in decimal degrees, negative for south."
-    msg = "latitude [%s]: " % dflt_lat if dflt_lat else "latitude: "
-    lat = get_val(msg, -90, 90, dflt_lat)
+    msg = "latitude [%s]: " % latitude if latitude else "latitude: "
+    lat = get_val(msg, -90, 90, latitude)
     print "Specify longitude in decimal degrees, negative for west."
-    msg = "longitude [%s]: " % dflt_lon if dflt_lon else "longitude: "
-    lon = get_val(msg, -180, 180, dflt_lon)
+    msg = "longitude [%s]: " % longitude if longitude else "longitude: "
+    lon = get_val(msg, -180, 180, longitude)
             
     #
     # Display units
     #
     print "Indicate the preferred units for display: 'metric' or 'us'"
-    msg = "units [%s]: " % dflt_units if dflt_units else "units: "
-    units = None
-    while units is None:
+    msg = "units [%s]: " % units if units else "units: "
+    uni = None
+    while uni is None:
         ans = raw_input(msg).strip().lower()
         if ans:
             if ans in ['metric', 'us']:
-                units = ans
-        elif dflt_units:
-            units = dflt_units
+                uni = ans
+        elif units:
+            uni = units
 
-    return {'location': loc,
-            'altitude': alt,
-            'latitude': lat,
+    return {'location' : loc,
+            'altitude' : alt,
+            'latitude' : lat,
             'longitude': lon,
-            'units': units}
+            'units'    : uni}
