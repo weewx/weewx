@@ -120,12 +120,12 @@ def list_as_string(option):
     a string
     >>> print list_as_string(['a', 'string'])
     a, string
+    >>> print list_as_string('Reno, NV')
+    Reno, NV
     """
-    if option is None: return None
-    if hasattr(option, '__iter__'):
+    if option is not None and hasattr(option, '__iter__'):
         return ', '.join(option)
-    else:
-        return option
+    return option
 
 def stampgen(startstamp, stopstamp, interval):
     """Generator function yielding a sequence of timestamps, spaced interval apart.
