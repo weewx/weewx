@@ -17,7 +17,7 @@ import tempfile
 import configobj
 
 import weewx
-import weeutil.config
+import config_util
 
 my_dir = os.path.abspath(os.path.dirname(__file__))
 search_locations = [os.path.normpath(os.path.join(my_dir, '..')), '/etc/weewx', '/home/weewx']
@@ -137,7 +137,7 @@ def main():
         exit("Command --merge requires option --output")
 
     # Looks good. Get the configuration file:
-    config_path, config_dict = weeutil.config.read_config(options.config_path, args, locations=search_locations)
+    config_path, config_dict = config_util.read_config(options.config_path, args, locations=search_locations)
     print "Using configuration file found at", config_path
 
     # Flag for whether the output needs to be saved:
@@ -152,17 +152,17 @@ def main():
             exit("Syntax error in distribution configuration file '%s': %s" % (options.dist_config, e))
             
         # Update the old configuration file:
-        weeutil.config.update_config(config_dict)
+        config_util.update_config(config_dict)
         
         # Then merge it into the distribution file
-        weeutil.config.merge_config(config_dict, dist_config_dict)
+        config_util.merge_config(config_dict, dist_config_dict)
 
         save_me = True
         
     if options.modify:
         
         # Get defaults out of the config file:
-        stn_info = weeutil.config.get_station_info(config_dict)
+        stn_info = config_util.get_station_info(config_dict)
 
         # Get command line overrides, and apply them to stn_info:
         for k in stn_info:
@@ -176,14 +176,14 @@ def main():
                 
         # Unless --no-prompt has been specified, give the user a chance to change things:
         if not options.no_prompt:
-            stn_info.update(weeutil.config.prompt_for_info(**stn_info))
+            stn_info.update(config_util.prompt_for_info(**stn_info))
 
             if not options.driver:
                 driver = prompt_for_driver(stn_info.get('driver'))
                 stn_info['driver'] = driver
 
         # Look up driver info:
-        driver_editor, driver_name, driver_version = weeutil.config.load_driver_editor(stn_info.get('driver'))
+        driver_editor, driver_name, driver_version = config_util.load_driver_editor(stn_info.get('driver'))
         
         print "Station info", stn_info
         exit()
@@ -206,7 +206,7 @@ def main():
             
             # Save the old config file if it exists:
             if os.path.exists(config_path):
-                backup_path = weeutil.config.save_path(config_path)
+                backup_path = config_util.save_path(config_path)
                 print "Saved old configuration file as %s" % backup_path
                 
             # Now install the temporary file (holding the merged config data)
@@ -221,7 +221,7 @@ def main():
 
 def prompt_for_driver(dflt_driver=None):
     """Get the information about each driver, return as a dictionary."""
-    infos = weeutil.config.get_driver_infos()
+    infos = config_util.get_driver_infos()
     keys = sorted(infos)
     dflt_idx = None
     for i, d in enumerate(keys):
@@ -255,7 +255,7 @@ def prompt_for_driver_settings(driver):
 
 def print_drivers():
     """Get information about all the available drivers, then print it out."""
-    driver_info_dict = weeutil.config.get_driver_infos()
+    driver_info_dict = config_util.get_driver_infos()
     keys = sorted(driver_info_dict)
     for d in keys:
         msg = "%-25s" % d
