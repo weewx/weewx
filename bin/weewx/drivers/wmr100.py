@@ -25,6 +25,7 @@
 
 import time
 import operator
+import socket
 import syslog
 
 import usb
@@ -41,55 +42,17 @@ def loader(config_dict, engine):
 def confeditor_loader():
     return WMR100ConfEditor()
 
+class WMR100USBPort:
+    def __init__(self, vendor_id, product_id, interface, in_endpoint, timeout, wait_before_retry, max_tries):
+        self.vendor_id = vendor_id
+        self.product_id = product_id
+        self.interface = interface
+        self.IN_endpoint = in_endpoint
+        self.timeout = timeout
+        self.wait_before_retry = wait_before_retry
+        self.max_tries = max_tries
 
-class WMR100(weewx.drivers.AbstractDevice):
-    """Driver for the WMR100 station."""
-    
-    def __init__(self, **stn_dict) :
-        """Initialize an object of type WMR100.
-        
-        NAMED ARGUMENTS:
-        
-        model: Which station model is this?
-        [Optional. Default is 'WMR100']
-
-        stale_wind: Max time wind speed can be used to calculate wind chill
-        before being declared unusable. [Optional. Default is 30 seconds]
-        
-        timeout: How long to wait, in seconds, before giving up on a response from the
-        USB port. [Optional. Default is 15 seconds]
-        
-        wait_before_retry: How long to wait before retrying. [Optional.
-        Default is 5 seconds]
-
-        max_tries: How many times to try before giving up. [Optional.
-        Default is 3]
-        
-        vendor_id: The USB vendor ID for the WMR [Optional. Default is 0xfde.
-        
-        product_id: The USB product ID for the WM [Optional. Default is 0xca01.
-        
-        interface: The USB interface [Optional. Default is 0]
-        
-        IN_endpoint: The IN USB endpoint used by the WMR. [Optional. Default is usb.ENDPOINT_IN + 1]
-        """
-        
-        self.model             = stn_dict.get('model', 'WMR100')
-        # TODO: Consider putting these in the driver loader instead:
-        self.record_generation = stn_dict.get('record_generation', 'software')
-        self.stale_wind        = float(stn_dict.get('stale_wind', 30.0))
-        self.timeout           = float(stn_dict.get('timeout', 15.0))
-        self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
-        self.max_tries         = int(stn_dict.get('max_tries', 3))
-        self.vendor_id         = int(stn_dict.get('vendor_id',  '0x0fde'), 0)
-        self.product_id        = int(stn_dict.get('product_id', '0xca01'), 0)
-        self.interface         = int(stn_dict.get('interface', 0))
-        self.IN_endpoint       = int(stn_dict.get('IN_endpoint', usb.ENDPOINT_IN + 1))
-
-        self.last_totalRain = None
-        self.openPort()
-
-    def openPort(self):
+    def open(self):
         dev = self._findDevice()
         if not dev:
             syslog.syslog(syslog.LOG_ERR, "wmr100: Unable to find USB device (0x%04x, 0x%04x)" % (self.vendor_id, self.product_id))
@@ -103,11 +66,11 @@ class WMR100(weewx.drivers.AbstractDevice):
         try:
             self.devh.claimInterface(self.interface)
         except usb.USBError, e:
-            self.closePort()
+            self.close()
             syslog.syslog(syslog.LOG_CRIT, "wmr100: Unable to claim USB interface. Reason: %s" % e)
             raise weewx.WeeWxIOError(e)
-        
-    def closePort(self):
+
+    def close(self):
         try:
             self.devh.releaseInterface()
         except usb.USBError:
@@ -116,7 +79,170 @@ class WMR100(weewx.drivers.AbstractDevice):
             self.devh.detachKernelDriver(self.interface)
         except usb.USBError:
             pass
+
+    def _findDevice(self):
+        """Find the given vendor and product IDs on the USB bus"""
+        for bus in usb.busses():
+            for dev in bus.devices:
+                if dev.idVendor == self.vendor_id and dev.idProduct == self.product_id:
+                    return dev
+
+    def _genBytes_raw(self):
+        """Generates a sequence of bytes from the WMR USB reports."""
+
+        try:
+            # Only need to be sent after a reset or power failure of the station:
+            self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,       # requestType
+                                 0x0000009,                                  # request
+                                 [0x20,0x00,0x08,0x01,0x00,0x00,0x00,0x00],  # buffer
+                                 0x0000200,                                  # value
+                                 0x0000000,                                  # index
+                                 1000)                                       # timeout
+        except usb.USBError, e:
+            syslog.syslog(syslog.LOG_ERR, "wmr100: Unable to send USB control message")
+            syslog.syslog(syslog.LOG_ERR, "****  %s" % e)
+            # Convert to a Weewx error:
+            raise weewx.WakeupError(e)
+
+        nerrors=0
+        while True:
+            try:
+                # Continually loop, retrieving "USB reports". They are 8 bytes long each.
+                report = self.devh.interruptRead(self.IN_endpoint,
+                                                 8, # bytes to read
+                                                 int(self.timeout*1000))
+                # While the report is 8 bytes long, only a smaller, variable portion of it
+                # has measurement data. This amount is given by byte zero. Return each
+                # byte, starting with byte one:
+                for i in range(1, report[0]+1):
+                    yield report[i]
+                nerrors = 0
+            except (IndexError, usb.USBError), e:
+                syslog.syslog(syslog.LOG_DEBUG, "wmr100: Bad USB report received.")
+                syslog.syslog(syslog.LOG_DEBUG, "***** %s" % e)
+                nerrors += 1
+                if nerrors>self.max_tries:
+                    syslog.syslog(syslog.LOG_ERR, "wmr100: Max retries exceeded while fetching USB reports")
+                    raise weewx.RetriesExceeded("Max retries exceeded while fetching USB reports")
+                time.sleep(self.wait_before_retry)
+
+class WMR100TCPPort:
+    def __init__(self, host, port, timeout, wait_before_retry, max_tries):
+        self.host = host
+        self.port = port
+        self.timeout = timeout
+        self.wait_before_retry = wait_before_retry
+        self.max_tries = max_tries
+
+    def open(self):
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.connect((self.host, self.port))
+            self.socket.settimeout(self.timeout)
+        except socket.error:
+            raise weewx.WeeWxIOError("Can't connect to %s:%d" % (self.host, self.port))
+
+    def close(self):
+        try:
+            self.socket.shutdown(socket.SHUT_RDWR)
+        except socket.error:
+            pass
+        try:
+            self.socket.close()
+        except socket.error:
+            pass
+        self.socket = None
+
+    def _genBytes_raw(self):
+        nerrors=0
+        while True:
+            try:
+                if not self.socket:
+                    self.open()
+                data = self.socket.recv(128)
+                if len(data) == 0:
+                    raise socket.error("Connection closed")
+                for c in data:
+                    yield ord(c)
+                nerrors = 0
+            except (weewx.WeeWxIOError, socket.error), e:
+                syslog.syslog(syslog.LOG_DEBUG, "wmr100: Socket problem.")
+                syslog.syslog(syslog.LOG_DEBUG, "***** %s" % e)
+                nerrors += 1
+                if nerrors > self.max_tries:
+                    syslog.syslog(syslog.LOG_ERR, "wmr100: Max retries exceeded while fetching socket data")
+                    raise weewx.RetriesExceeded("Max retries exceeded while fetching socket data")
+                self.close()
+                time.sleep(self.wait_before_retry)
+
+class WMR100(weewx.drivers.AbstractDevice):
+    """Driver for the WMR100 station."""
+    
+    def __init__(self, **stn_dict) :
+        """Initialize an object of type WMR100.
         
+        NAMED ARGUMENTS:
+        
+        model: Which station model is this?
+        [Optional. Default is 'WMR100']
+
+        connection_type: The type of connection (usb|tcp) [Optional. Default is usb]
+
+        stale_wind: Max time wind speed can be used to calculate wind chill
+        before being declared unusable. [Optional. Default is 30 seconds]
+        
+        timeout: How long to wait, in seconds, before giving up on a response from the
+        USB or TCP port. [Optional. Default is 15 seconds]
+        
+        wait_before_retry: How long to wait before retrying. [Optional.
+        Default is 5 seconds]
+
+        max_tries: How many times to try before giving up. [Optional.
+        Default is 3]
+        
+        vendor_id: The USB vendor ID for the WMR [Optional. Default is 0xfde].
+        
+        product_id: The USB product ID for the WM [Optional. Default is 0xca01].
+        
+        interface: The USB interface [Optional. Default is 0]
+        
+        IN_endpoint: The IN USB endpoint used by the WMR. [Optional. Default is usb.ENDPOINT_IN + 1]
+
+        tcp_host: The TCP communication host [Required if TCP communication]
+
+        tcp_port: The TCP communication port [Required if TCP communication]
+        """
+        
+        self.model             = stn_dict.get('model', 'WMR100')
+        # TODO: Consider putting these in the driver loader instead:
+        self.record_generation = stn_dict.get('record_generation', 'software')
+        self.stale_wind        = float(stn_dict.get('stale_wind', 30.0))
+        self.last_totalRain = None
+
+        self.port = WMR100._portFactory(stn_dict)
+        self.port.open()
+
+    @staticmethod
+    def _portFactory(stn_dict):
+        timeout           = float(stn_dict.get('timeout', 15.0))
+        wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
+        max_tries         = int(stn_dict.get('max_tries', 3))
+        connection_type   = stn_dict.get('connection_type', 'usb').lower()
+
+        if connection_type == 'usb':
+            vendor_id    = int(stn_dict.get('vendor_id',  '0x0fde'), 0)
+            product_id   = int(stn_dict.get('product_id', '0xca01'), 0)
+            interface    = int(stn_dict.get('interface', 0))
+            in_endpoint  = int(stn_dict.get('IN_endpoint', usb.ENDPOINT_IN + 1))
+            return WMR100USBPort(vendor_id, product_id, interface, in_endpoint,
+                                 timeout, wait_before_retry, max_tries)
+        elif connection_type == 'tcp':
+            host = stn_dict['tcp_host']
+            port = int(stn_dict['tcp_port'])
+            return WMR100TCPPort(host, port, timeout, wait_before_retry, max_tries)
+
+        raise weewx.UnsupportedFeature(stn_dict['connection_type'])
+
     def genLoopPackets(self):
         """Generator function that continuously returns loop packets"""
         
@@ -144,7 +270,7 @@ class WMR100(weewx.drivers.AbstractDevice):
         # Wrap the byte generator function in GenWithPeek so we 
         # can peek at the next byte in the stream. The result, the variable
         # genBytes, will be a generator function.
-        genBytes = weeutil.weeutil.GenWithPeek(self._genBytes_raw())
+        genBytes = weeutil.weeutil.GenWithPeek(self.port._genBytes_raw())
 
         # Start by throwing away any partial packets:
         for ibyte in genBytes:
@@ -182,56 +308,6 @@ class WMR100(weewx.drivers.AbstractDevice):
     def hardware_name(self):
         return self.model
         
-    #===============================================================================
-    #                         USB functions
-    #===============================================================================
-
-    def _findDevice(self):
-        """Find the given vendor and product IDs on the USB bus"""
-        for bus in usb.busses():
-            for dev in bus.devices:
-                if dev.idVendor == self.vendor_id and dev.idProduct == self.product_id:
-                    return dev
-
-    def _genBytes_raw(self):
-        """Generates a sequence of bytes from the WMR USB reports."""
-        
-        try:
-            # Only need to be sent after a reset or power failure of the station:
-            self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,       # requestType
-                                 0x0000009,                                  # request
-                                 [0x20,0x00,0x08,0x01,0x00,0x00,0x00,0x00],  # buffer
-                                 0x0000200,                                  # value
-                                 0x0000000,                                  # index
-                                 1000)                                       # timeout
-        except usb.USBError, e:
-            syslog.syslog(syslog.LOG_ERR, "wmr100: Unable to send USB control message")
-            syslog.syslog(syslog.LOG_ERR, "****  %s" % e)
-            # Convert to a Weewx error:
-            raise weewx.WakeupError(e)
-            
-        nerrors=0
-        while True:
-            try:
-                # Continually loop, retrieving "USB reports". They are 8 bytes long each.
-                report = self.devh.interruptRead(self.IN_endpoint,
-                                                 8, # bytes to read
-                                                 int(self.timeout*1000))
-                # While the report is 8 bytes long, only a smaller, variable portion of it
-                # has measurement data. This amount is given by byte zero. Return each
-                # byte, starting with byte one:
-                for i in range(1, report[0]+1):
-                    yield report[i]
-                nerrors = 0
-            except (IndexError, usb.USBError), e:
-                syslog.syslog(syslog.LOG_DEBUG, "wmr100: Bad USB report received.")
-                syslog.syslog(syslog.LOG_DEBUG, "***** %s" % e)
-                nerrors += 1
-                if nerrors>self.max_tries:
-                    syslog.syslog(syslog.LOG_ERR, "wmr100: Max retries exceeded while fetching USB reports")
-                    raise weewx.RetriesExceeded("Max retries exceeded while fetching USB reports")
-                time.sleep(self.wait_before_retry)
-    
     #===============================================================================
     #                         LOOP packet decoding functions
     #===============================================================================
@@ -411,9 +487,27 @@ class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
     # The station model, e.g., WMR100, WMR100N, WMRS200
     model = WMR100
 
+    # Connection type: usb or tcp
+    connection_type = usb
+
     # How long a wind record can be used to calculate wind chill (in seconds)
     stale_wind = 30
+
+    # if using tcp, host and port are required:
+    tcp_host = 1.2.3.4
+    tcp_port = 12345
 
     # The driver to use:
     driver = weewx.drivers.wmr100
 """
+
+    def prompt_for_settings(self):
+        settings = dict()
+        print "Specify the hardware interface, either 'usb' or 'tcp'."
+        settings['connection_type'] = self._prompt('type', 'usb', ['usb', 'tcp'])
+        if settings['connection_type'] == 'tcp':
+            print "Specify the IP address (e.g., 192.168.0.10) or hostname"
+            settings['tcp_host'] = self._prompt('host')
+            print "Specify the TCP port number"
+            settings['tcp_port'] = self._prompt('port')
+        return settings
