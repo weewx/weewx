@@ -55,6 +55,8 @@ class StdWXCalculate(weewx.engine.StdService):
             et_period = 3600
             ignore_zero_wind = True
             atc = 0.8
+            wind_height = 2.0
+            max_delta_12h = 1800
             [[Calculations]]
                 windchill = hardware
                 heatindex = prefer_hardware
@@ -76,10 +78,12 @@ class StdWXCalculate(weewx.engine.StdService):
         self.atc = float(svc_dict.get('atc', 0.8))
         if self.atc < 0.7:
             self.atc = 0.7
-        if self.atc > 0.91:
+        elif self.atc > 0.91:
             self.atc = 0.91
         # height above ground at which wind is measured, in meters
         self.wind_height = float(svc_dict.get('wind_height', 2.0))
+        # Time window to accept a record 12 hours ago:
+        self.max_delta_12h = int(svc_dict.get('max_delta_12h', 1800))
 
         # find out which calculations should be performed
         # we recognize only the names in our dispatch list; others are ignored
@@ -334,7 +338,7 @@ class StdWXCalculate(weewx.engine.StdService):
         if ts12 != self.ts_12h_ago:
             # We're in a new interval. Hit the database to get the temperature
             dbmanager = self.engine.db_binder.get_manager('wx_binding')
-            record = dbmanager.getRecord(ts12)
+            record = dbmanager.getRecord(ts12, max_delta = self.max_delta_12h)
             if record is None:
                 # Nothing in the database. Set temperature to None.
                 self.temperature_12h_ago = None
