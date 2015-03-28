@@ -1117,6 +1117,48 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
 
     return config_fn, config_dict
 
+def print_dict(d, margin=0, increment=4):
+    """Pretty print a dictionary.
+    
+    Example:
+    >>> print_dict({'sec1' : {'a':1, 'b':2, 'sec2': {'f':9}}, 'e':3})
+     sec1
+         a = 1
+         b = 2
+         sec2
+             f = 9
+     e = 3
+    """
+    for k in d:
+        if type(d[k]) is dict:
+            print margin * ' ', k
+            print_dict(d[k], margin + increment, increment)
+        else:
+            print margin * ' ', k, '=', d[k]
+
+def prompt_with_options(prompt, default=None, options=None):
+    """Ask the user for an input with an optional default value.
+    
+    prompt: A string to be used for a prompt.
+    
+    default: A default value. If the user simply hits <enter>, this
+    is the value returned. Optional.
+    
+    options: A list of possible choices. The returned value must be in
+    this list. Optional."""
+    
+    msg = "%s [%s]: " % (prompt, default) if default is not None else "%s: " % prompt
+    value = None
+    while value is None:
+        value = raw_input(msg).strip()
+        if value:
+            if options and value not in options:
+                value = None
+        elif default is not None:
+            value = default
+        
+    return value
+
 class ListOfDicts(dict):
     """A list of dictionaries, that are searched in order.
     
