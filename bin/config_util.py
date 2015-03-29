@@ -583,18 +583,20 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     # Latitude & Longitude
     #
     def get_val(msg, low_limit, high_limit, dflt_v):
-        v = None
-        while v is None:
+        ans = None
+        while ans is None:
             ans = raw_input(msg).strip()
             if not ans:
                 ans = dflt_v
+            # Make sure it can be converted to a float, and that it is
+            # within range
             try:
                 v = float(ans)
                 if v < low_limit or v > high_limit:
-                    v = None
+                    ans = None
             except (ValueError, TypeError):
-                v = None
-        return v
+                ans = None
+        return ans
         
     print "Specify latitude in decimal degrees, negative for south."
     msg = "latitude [%s]: " % latitude if latitude else "latitude: "
