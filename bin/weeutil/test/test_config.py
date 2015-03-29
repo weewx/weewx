@@ -7,12 +7,14 @@
 
 import StringIO
 import unittest
+import os
+import sys
 
 import configobj
 
 try:
     from mock import patch
-    import __builtin__
+    import __builtin__  # @UnusedImport
     have_mock = True
 except ImportError:
     print "Module 'mock' not installed. Testing will be restricted."
@@ -73,55 +75,65 @@ class ConfigTest(unittest.TestCase):
 
     if have_mock:
 
-        # Test a normal input
-        @patch('__builtin__.raw_input', side_effect=['Anytown', '100, meter', '45.0', '180.0', 'us'])
-        def test_prompt1(self, input):
-            stn_info = config_util.prompt_for_info()
-            self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
-                                        'latitude': '45.0',
-                                        'location': 'Anytown',
-                                        'longitude': '180.0',
-                                        'units': 'us'})
-
-        # Test for a default input
-        @patch('__builtin__.raw_input', side_effect=['Anytown', '', '45.0', '180.0', 'us'])
-        def test_prompt2(self, input):
-            stn_info = config_util.prompt_for_info()
-            self.assertEqual(stn_info, {'altitude': ['0', 'meter'],
-                                        'latitude': '45.0',
-                                        'location': 'Anytown',
-                                        'longitude': '180.0',
-                                        'units': 'us'})
-
-        # Test for an out-of-bounds latitude
-        @patch('__builtin__.raw_input', side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'us'])
-        def test_prompt3(self, input):
-            stn_info = config_util.prompt_for_info()
-            self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
-                                        'latitude': '45.0',
-                                        'location': 'Anytown',
-                                        'longitude': '180.0',
-                                        'units': 'us'})
-
-        # Test for a bad length unit type
-        @patch('__builtin__.raw_input', side_effect=['Anytown', '100, foo', '100,meter', '45.0', '180.0', 'us'])
-        def test_prompt4(self, input):
-            stn_info = config_util.prompt_for_info()
-            self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
-                                        'latitude': '45.0',
-                                        'location': 'Anytown',
-                                        'longitude': '180.0',
-                                        'units': 'us'})
-
-        # Test for a bad display unit
-        @patch('__builtin__.raw_input', side_effect=['Anytown', '100, meter', '45.0', '180.0', 'foo', 'us'])
-        def test_prompt5(self, input):
-            stn_info = config_util.prompt_for_info()
-            self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
-                                        'latitude': '45.0',
-                                        'location': 'Anytown',
-                                        'longitude': '180.0',
-                                        'units': 'us'})
+        def test_prompt_for_info(self):
+            
+            # Suppress stdout by temporarily assigning it to /dev/null
+            save_stdout = sys.stdout
+            sys.stdout = open(os.devnull, 'w')
+            try:
+                
+                # Test a normal input
+                with patch('__builtin__.raw_input',
+                           side_effect=['Anytown', '100, meter', '45.0', '180.0', 'us']):
+                    stn_info = config_util.prompt_for_info()
+                    self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
+                                                'latitude': '45.0',
+                                                'location': 'Anytown',
+                                                'longitude': '180.0',
+                                                'units': 'us'})
+    
+                # Test for a default input
+                with patch('__builtin__.raw_input',
+                           side_effect=['Anytown', '', '45.0', '180.0', 'us']):
+                    stn_info = config_util.prompt_for_info()
+                    self.assertEqual(stn_info, {'altitude': ['0', 'meter'],
+                                                'latitude': '45.0',
+                                                'location': 'Anytown',
+                                                'longitude': '180.0',
+                                                'units': 'us'})
+        
+                # Test for an out-of-bounds latitude
+                with patch('__builtin__.raw_input',
+                           side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'us']):
+                    stn_info = config_util.prompt_for_info()
+                    self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
+                                                'latitude': '45.0',
+                                                'location': 'Anytown',
+                                                'longitude': '180.0',
+                                                'units': 'us'})
+        
+                # Test for a bad length unit type
+                with patch('__builtin__.raw_input',
+                           side_effect=['Anytown', '100, foo', '100,meter', '45.0', '180.0', 'us']):
+                    stn_info = config_util.prompt_for_info()
+                    self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
+                                                'latitude': '45.0',
+                                                'location': 'Anytown',
+                                                'longitude': '180.0',
+                                                'units': 'us'})
+        
+                # Test for a bad display unit
+                with patch('__builtin__.raw_input',
+                           side_effect=['Anytown', '100, meter', '45.0', '180.0', 'foo', 'us']):
+                    stn_info = config_util.prompt_for_info()
+                    self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
+                                                'latitude': '45.0',
+                                                'location': 'Anytown',
+                                                'longitude': '180.0',
+                                                'units': 'us'})
+            finally:
+                # Restore stdout:
+                sys.stdout = save_stdout
 
     def test_upgrade_v27(self):
 
