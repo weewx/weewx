@@ -17,6 +17,7 @@ import tempfile
 import configobj
 
 import weewx
+import weeutil.weeutil
 import config_util
 
 my_dir = os.path.abspath(os.path.dirname(__file__))
@@ -28,7 +29,7 @@ major_comment_block = ["", "####################################################
 stn_info_defaults = {'location' : '',
                      'latitude' : '0',
                      'longitude' : '0',
-                     'altitude' : '[0, meter]',
+                     'altitude' : ['0', 'meter'],
                      'units' : 'metric',
                      'station_type' : 'Vantage',
                      'driver' : 'weewx.drivers.Vantage'}
@@ -102,12 +103,14 @@ def main():
                       help="The station latitude")
     parser.add_option("--longitude", metavar="xx.x",
                       help="The station longitude")
-    parser.add_option("--altitude", metavar="zz,(foot|meter)", default='[0, meter]',
+    parser.add_option("--altitude", metavar="zz,(foot|meter)",
                       help="The station altitude in either feet or meters. E.g., '750,foot'")
     parser.add_option("--location",
                       help="""A text description of the station. For example, "Santa's workshop, North Pole" """)
     parser.add_option("--units", choices=["us", "metric"], metavar="(metric|us)",
                       help="Set display units to 'metric' or 'us'")
+    parser.add_option("--debug", action="store_true",
+                      help="Print some intermediate data structures")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
@@ -160,34 +163,9 @@ def main():
         save_me = True
         
     if options.modify:
-        
-        # Get defaults out of the config file:
-        stn_info = config_util.get_station_info(config_dict)
 
-        # Get command line overrides, and apply them to stn_info:
-        for k in stn_info:
-            if hasattr(options, k) and getattr(options,k) is not None:
-                stn_info[k] = getattr(options, k)
-
-        # If any are still None, replace them with defaults:
-        for k in stn_info_defaults:
-            if stn_info[k] is None:
-                stn_info[k] = stn_info_defaults[k]
-                
-        # Unless --no-prompt has been specified, give the user a chance to change things:
-        if not options.no_prompt:
-            stn_info.update(config_util.prompt_for_info(**stn_info))
-
-            if not options.driver:
-                driver = prompt_for_driver(stn_info.get('driver'))
-                stn_info['driver'] = driver
-
-        # Look up driver info:
-        driver_editor, driver_name, driver_version = config_util.load_driver_editor(stn_info.get('driver'))
-        
-        print "Station info", stn_info
+        modify_config(config_dict, options)
         exit()
-        
     if save_me:
         
         # Save the resultant config file, backing up as necessary.
@@ -219,6 +197,112 @@ def main():
         sys.exit("Nothing done.")
     return 0
 
+def modify_config(config_dict, options):
+    """Modify the configuration dictionary according to any command
+    line options. Give the user a chance too."""
+    
+    # Get defaults out of the config file:
+    stn_info = config_util.get_station_info(config_dict)
+
+    # Get command line overrides, and apply them to stn_info:
+    for k in stn_info:
+        if hasattr(options, k) and getattr(options,k) is not None:
+            stn_info[k] = getattr(options, k)
+
+    # If any are still None, replace them with defaults:
+    for k in stn_info_defaults:
+        if stn_info[k] is None:
+            stn_info[k] = stn_info_defaults[k]
+            
+    # Unless --no-prompt has been specified, give the user a chance to change things:
+    if not options.no_prompt:
+        stn_info.update(config_util.prompt_for_info(**stn_info))
+
+        if not options.driver:
+            driver = prompt_for_driver(stn_info.get('driver'))
+            stn_info['driver'] = driver
+
+    # OK, we now have all the station info. Time to inject the driver stanza,
+    # if necessary.
+    driver = stn_info.get('driver')
+    try:
+        # Look up driver info:
+        driver_editor, driver_name, driver_version = \
+            config_util.load_driver_editor(driver)
+    except Exception, e:
+        exit("Driver %s failed to load: %s" (driver, e))
+    stn_info['station_type'] = driver_name
+    print 'Using %s version %s (%s)' % (stn_info['station_type'], driver_version, driver)
+
+    if options.debug:
+        print "Station info:\n", weeutil.weeutil.print_dict(stn_info)
+
+    stanza = None
+    if driver_editor is not None:
+        orig_stanza_text = None
+
+        # if a previous stanza exists for this driver, grab it
+        if driver_name in config_dict:
+            orig_stanza = configobj.ConfigObj(interpolation=False)
+            orig_stanza[driver_name] = config_dict[driver_name]
+            orig_stanza_text = '\n'.join(orig_stanza.write())
+
+        # let the driver process the stanza or give us a new one
+        stanza_text = driver_editor.get_conf(orig_stanza_text)
+        stanza = configobj.ConfigObj(stanza_text.splitlines())
+
+    # put the new stanza immediately after [Station]
+    if stanza is not None and 'Station' in config_dict:
+        # insert the stanza
+        config_dict[driver_name] = stanza[driver_name]
+        config_dict.comments[driver_name] = major_comment_block
+        # reorder the sections
+        idx = config_dict.sections.index(driver_name)
+        config_dict.sections.pop(idx)
+        idx = config_dict.sections.index('Station')
+        config_dict.sections = config_dict.sections[0:idx+1] + [driver_name] + config_dict.sections[idx+1:]
+        # make the stanza the station type
+        config_dict['Station']['station_type'] = driver_name
+
+    # apply any overrides from the stn_info
+    if stn_info is not None:
+        # update driver stanza with any overrides from stn_info
+        if driver_name in stn_info:
+            for k in stn_info[driver_name]:
+                config_dict[driver_name][k] = stn_info[driver_name][k]
+        # update station information with info overrides
+        for p in ['location', 'latitude', 'longitude', 'altitude']:
+            if stn_info.get(p) is not None:
+                config_dict['Station'][p] = stn_info[p]
+        # update units display with any info overrides
+        if stn_info.get('units') is not None:
+            if stn_info.get('units') == 'metric':
+                print "Using Metric units for display"
+                config_dict['StdReport']['StandardReport'].update({
+                        'Units': {
+                            'Groups': {
+                                'group_altitude': 'meter',
+                                'group_degree_day': 'degree_C_day',
+                                'group_pressure': 'mbar',
+                                'group_rain': 'mm',
+                                'group_rainrate': 'mm_per_hour',
+                                'group_speed': 'meter_per_second',
+                                'group_speed2': 'meter_per_second2',
+                                'group_temperature': 'degree_C'}}})
+            elif stn_info.get('units') == 'us':
+                print "Using US units for display"
+                config_dict['StdReport']['StandardReport'].update({
+                        'Units': {
+                            'Groups': {
+                                'group_altitude': 'foot',
+                                'group_degree_day': 'degree_F_day',
+                                'group_pressure': 'inHg',
+                                'group_rain': 'inch',
+                                'group_rainrate': 'inch_per_hour',
+                                'group_speed': 'mile_per_hour',
+                                'group_speed2': 'mile_per_hour2',
+                                'group_temperature': 'degree_F'}}})
+
 def prompt_for_driver(dflt_driver=None):
     """Get the information about each driver, return as a dictionary."""
     infos = config_util.get_driver_infos()
@@ -236,7 +320,7 @@ def prompt_for_driver(dflt_driver=None):
             ans = dflt_idx
         try:
             idx = int(ans)
-            if idx < 0 or idx >= len(keys):
+            if not 0 <= idx < len(keys):
                 ans = None
         except (ValueError, TypeError):
             ans = None

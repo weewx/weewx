@@ -14,6 +14,8 @@ import StringIO
 
 import configobj
 
+import weeutil.weeutil
+
 minor_comment_block = [""]
 major_comment_block = ["", "##############################################################################", ""]
 
@@ -103,50 +105,6 @@ def mkdir(dirpath):
         os.makedirs(dirpath)
     except OSError:
         pass
-
-def _as_string(option):
-    if option is None: return None
-    if hasattr(option, '__iter__'):
-        return ', '.join(option)
-    return option
-
-# def merge_config_files(template_path, old_config_path, weewx_root):
-#     """Merges any old config file into the new one, and sets WEEWX_ROOT.
-#     
-#     If an old configuration file exists, it will merge the contents
-#     into the new file. It also sets variable ['WEEWX_ROOT']
-#     to reflect the installation directory.
-#     
-#     template_path: Path where the new configuration file can be found.
-#     
-#     old_config_path: Path where the old configuration file can be found.
-#     
-#     weewx_root: What WEEWX_ROOT should be set to.
-#     
-#     version_number: The version number of the new configuration file.
-#     
-#     RETURNS:
-#     
-#     The (possibly) merged new configuration file.    
-#     """
-# 
-#     # Get the template config file
-#     template_config = configobj.ConfigObj(template_path)
-#     template_config.indent_type = '    '
-#     
-#     # Check to see if there is an existing config file.
-#     if os.path.exists(old_config_path):
-#         config_dict = configobj.ConfigObj(old_config_path)
-#         # Do a merge of any missing stuff from the template
-#         merge_config(config_dict, template_config)
-#     else:
-#         # No existing config file. Substitute the template:
-#         config_dict = template_config
-# 
-#     # Make sure WEEWX_ROOT reflects the choice made in setup.cfg:
-#     config_dict['WEEWX_ROOT'] = weewx_root
-#     
-#     return config_dict
 
 def update_config(config_dict):
     """Update a (possibly old) configuration dictionary to the latest format.
@@ -527,7 +485,7 @@ def get_station_info(config_dict):
     stn_info = dict()
     if config_dict is not None:
         if 'Station' in config_dict:
-            stn_info['location'] = _as_string(config_dict['Station'].get('location'))
+            stn_info['location'] = weeutil.weeutil.list_as_string(config_dict['Station'].get('location'))
             stn_info['latitude'] = config_dict['Station'].get('latitude')
             stn_info['longitude'] = config_dict['Station'].get('longitude')
             stn_info['altitude'] = config_dict['Station'].get('altitude')
@@ -599,7 +557,8 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     print "Specify altitude, with units 'foot' or 'meter'.  For example:"
     print "35, foot"
     print "12, meter"
-    msg = "altitude [%s]: " % _as_string(altitude) if altitude else "altitude: "
+    print "altitude is", altitude
+    msg = "altitude [%s]: " % weeutil.weeutil.list_as_string(altitude) if altitude else "altitude: "
     alt = None
     while alt is None:
         ans = raw_input(msg).strip()
