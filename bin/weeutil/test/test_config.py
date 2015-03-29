@@ -135,6 +135,47 @@ class ConfigTest(unittest.TestCase):
                 # Restore stdout:
                 sys.stdout = save_stdout
 
+    if have_mock:
+        def test_prompt_with_options(self):
+            # Suppress stdout by temporarily assigning it to /dev/null
+            save_stdout = sys.stdout
+            sys.stdout = open(os.devnull, 'w')
+            try:
+                with patch('__builtin__.raw_input', return_value="yes"):
+                    response = config_util.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+                    self.assertEqual(response, "yes")
+                with patch('__builtin__.raw_input', return_value="no"):
+                    response = config_util.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+                    self.assertEqual(response, "no")
+                with patch('__builtin__.raw_input', return_value=""):
+                    response = config_util.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+                    self.assertEqual(response, "yes")
+                with patch('__builtin__.raw_input', side_effect=["make me", "no"]):
+                    response = config_util.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+                    self.assertEqual(response, "no")
+            finally:
+                # Restore stdout:
+                sys.stdout = save_stdout
+                    
+    if have_mock:
+        def test_prompt_with_limits(self):
+            # Suppress stdout by temporarily assigning it to /dev/null
+            save_stdout = sys.stdout
+            sys.stdout = open(os.devnull, 'w')
+            try:
+                with patch('__builtin__.raw_input', return_value="45"):
+                    response = config_util.prompt_with_limits("latitude", "0.0", -90, 90)
+                    self.assertEqual(response, "45")
+                with patch('__builtin__.raw_input', return_value=""):
+                    response = config_util.prompt_with_limits("latitude", "0.0", -90, 90)
+                    self.assertEqual(response, "0.0")
+                with patch('__builtin__.raw_input', side_effect=["-120", "-45"]):
+                    response = config_util.prompt_with_limits("latitude", "0.0", -90, 90)
+                    self.assertEqual(response, "-45")
+            finally:
+                # Restore stdout:
+                sys.stdout = save_stdout
+                    
     def test_upgrade_v27(self):
 
         # Start with the Version 2.0 weewx.conf file:

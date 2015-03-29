@@ -542,14 +542,7 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     #
     print "Enter a brief description of the station, such as its location.  For example:"
     print "Santa's Workshop, North Pole"
-    msg = "description: [%s]: " % location if location else "description: "
-    loc = None
-    while loc is None:
-        ans = raw_input(msg).strip()
-        if ans:
-            loc = ans
-        elif location:
-            loc = location
+    loc = prompt_with_options("description", location)
 
     #
     #  Altitude
@@ -582,45 +575,75 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     #
     # Latitude & Longitude
     #
-    def get_val(msg, low_limit, high_limit, dflt_v):
-        ans = None
-        while ans is None:
-            ans = raw_input(msg).strip()
-            if not ans:
-                ans = dflt_v
-            # Make sure it can be converted to a float, and that it is
-            # within range
-            try:
-                v = float(ans)
-                if v < low_limit or v > high_limit:
-                    ans = None
-            except (ValueError, TypeError):
-                ans = None
-        return ans
-        
     print "Specify latitude in decimal degrees, negative for south."
-    msg = "latitude [%s]: " % latitude if latitude else "latitude: "
-    lat = get_val(msg, -90, 90, latitude)
+    lat = prompt_with_limits("latitude", latitude, -90, 90)
     print "Specify longitude in decimal degrees, negative for west."
-    msg = "longitude [%s]: " % longitude if longitude else "longitude: "
-    lon = get_val(msg, -180, 180, longitude)
+    lon = prompt_with_limits("longitude", longitude, -180, 180)
             
     #
     # Display units
     #
     print "Indicate the preferred units for display: 'metric' or 'us'"
-    msg = "units [%s]: " % units if units else "units: "
-    uni = None
-    while uni is None:
-        ans = raw_input(msg).strip().lower()
-        if ans:
-            if ans in ['metric', 'us']:
-                uni = ans
-        elif units:
-            uni = units
+    uni = prompt_with_options("units", units, ['us', 'metric'])
 
     return {'location' : loc,
             'altitude' : alt,
             'latitude' : lat,
             'longitude': lon,
             'units'    : uni}
+
+
+def prompt_with_options(prompt, default=None, options=None):
+    """Ask the user for an input with an optional default value.
+    
+    prompt: A string to be used for a prompt.
+    
+    default: A default value. If the user simply hits <enter>, this
+    is the value returned. Optional.
+    
+    options: A list of possible choices. The returned value must be in
+    this list. Optional."""
+    
+    msg = "%s [%s]: " % (prompt, default) if default is not None else "%s: " % prompt
+    value = None
+    while value is None:
+        value = raw_input(msg).strip()
+        if value:
+            if options and value not in options:
+                value = None
+        elif default is not None:
+            value = default
+        
+    return value
+
+def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
+    """Ask the user for an input with an optional default value. The
+    returned value must lie between optional upper and lower bounds.
+    
+    prompt: A string to be used for a prompt.
+    
+    default: A default value. If the user simply hits <enter>, this
+    is the value returned. Optional.
+    
+    low_limit: The value must be equal to or greater than this value.
+    Optional.
+    
+    high_limit: The value must be less than or equal to this value.
+    Optional.
+    """
+    msg = "%s [%s]: " % (prompt, default) if default is not None else "%s: " % prompt
+    value = None
+    while value is None:
+        value = raw_input(msg).strip()
+        if value:
+            try:
+                v = float(value)
+                if (low_limit is not None and v < low_limit) or \
+                   (high_limit is not None and v > high_limit):
+                    value = None
+            except (ValueError, TypeError):
+                value = None
+        elif default is not None:
+            value = default
+
+    return value
