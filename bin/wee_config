@@ -21,15 +21,16 @@ import weeutil.weeutil
 import config_util
 
 my_dir = os.path.abspath(os.path.dirname(__file__))
+# This will search in the directory above where I am located, plus /etc/weewx and /home/weewx
 search_locations = [os.path.normpath(os.path.join(my_dir, '..')), '/etc/weewx', '/home/weewx']
 
-stn_info_defaults = {'location' : '',
-                     'latitude' : '0',
-                     'longitude' : '0',
-                     'altitude' : ['0', 'meter'],
-                     'units' : 'metric',
+stn_info_defaults = {'location'     : '',
+                     'latitude'     : '0',
+                     'longitude'    : '0',
+                     'altitude'     : ['0', 'meter'],
+                     'units'        : 'metric',
                      'station_type' : 'Vantage',
-                     'driver' : 'weewx.drivers.Vantage'}
+                     'driver'       : 'weewx.drivers.Vantage'}
 
 usage="""wee_config --help
        wee_config --version
@@ -169,9 +170,9 @@ def main():
         # Save the resultant config file, backing up as necessary.
         
         if options.output:
-            fd = open(options.output, 'w')
-            config_dict.write(fd)
-            fd.close()
+            with open(options.output, 'w') as fd:
+                config_dict.write(fd)
+            print "Saved modified configuration file to %s" % options.output
         else:
             # Get a temporary file:
             tmpfile = tempfile.NamedTemporaryFile("w")
@@ -189,11 +190,11 @@ def main():
             # into the proper place:
             shutil.copyfile(tmpfile.name, config_path)
             
-            sys.exit(0)
-
+            print "Saved modified configuration file to %s" % config_path
     else:
-        sys.exit("Nothing done.")
-    return 0
+        print "Nothing done."
+
+    sys.exit(0)
 
 def modify_config(config_dict, options):
     """Modify the configuration dictionary according to any command
@@ -327,7 +328,6 @@ def prompt_for_driver_settings(driver):
     settings[driver_module.DRIVER_NAME] = editor.prompt_for_settings()
     return settings
 
-
 def print_drivers():
     """Get information about all the available drivers, then print it out."""
     driver_info_dict = config_util.get_driver_infos()
@@ -338,8 +338,6 @@ def print_drivers():
             if x in driver_info_dict[d]:
                 msg += " %-15s" % driver_info_dict[d][x]
         print msg
-
-
 
 if __name__=="__main__" :
     main()

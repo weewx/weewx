@@ -4,6 +4,7 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test the configuration utilities."""
+from __future__ import with_statement
 
 import StringIO
 import unittest
