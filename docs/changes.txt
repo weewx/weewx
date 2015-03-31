@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-X.X.X XX/XX/XX
+3.2.0 XX/XX/XX
 
 Wunderfixer is now included with weewx --- no need to download it separately. 
 It now works with MySQL, as well as sqlite, databases. It also supports
@@ -20,6 +20,9 @@ sets the value to null. Fixes issue #10.
 
 Added option to specify algorithm in StdWXCalculate.  So far this applies
 only to the altimeter calculation.
+
+Added option max_delta_12h in StdWXCalculate, a window in which a record will 
+be accepted as being "12 hours ago." Default is 1800 seconds.
 
 Fixed bug in debian install script - 'Acurite' was not in the list of stations.
 
