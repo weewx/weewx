@@ -275,33 +275,16 @@ class WeeConfig(object):
                     config_dict['Station'][p] = stn_info[p]
             # update units display with any info overrides
             if stn_info.get('units') is not None:
-                if stn_info.get('units') == 'metric':
+                if stn_info.get('units') in ['metric', 'metricwx']:
                     print "Using Metric units for display"
                     config_dict['StdReport']['StandardReport'].update({
                             'Units': {
-                                'Groups': {
-                                    'group_altitude': 'meter',
-                                    'group_degree_day': 'degree_C_day',
-                                    'group_pressure': 'mbar',
-                                    'group_rain': 'mm',
-                                    'group_rainrate': 'mm_per_hour',
-                                    'group_speed': 'meter_per_second',
-                                    'group_speed2': 'meter_per_second2',
-                                    'group_temperature': 'degree_C'}}})
+                                'Groups': config_util.metricwx_group}})
                 elif stn_info.get('units') == 'us':
                     print "Using US units for display"
                     config_dict['StdReport']['StandardReport'].update({
                             'Units': {
-                                'Groups': {
-                                    'group_altitude': 'foot',
-                                    'group_degree_day': 'degree_F_day',
-                                    'group_pressure': 'inHg',
-                                    'group_rain': 'inch',
-                                    'group_rainrate': 'inch_per_hour',
-                                    'group_speed': 'mile_per_hour',
-                                    'group_speed2': 'mile_per_hour2',
-                                    'group_temperature': 'degree_F'}}})
-
+                                'Groups': config_util.us_group}})
 
 if __name__=="__main__" :
     main()

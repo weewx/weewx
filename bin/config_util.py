@@ -19,6 +19,33 @@ import weeutil.weeutil
 minor_comment_block = [""]
 major_comment_block = ["", "##############################################################################", ""]
 
+us_group = {'group_altitude': 'foot',
+            'group_degree_day': 'degree_F_day',
+            'group_pressure': 'inHg',
+            'group_rain': 'inch',
+            'group_rainrate': 'inch_per_hour',
+            'group_speed': 'mile_per_hour',
+            'group_speed2': 'mile_per_hour2',
+            'group_temperature': 'degree_F'}
+
+metric_group   = {'group_altitude': 'meter',
+                  'group_degree_day': 'degree_C_day',
+                  'group_pressure': 'mbar',
+                  'group_rain': 'cm',
+                  'group_rainrate': 'cm_per_hour',
+                  'group_speed': 'km_per_hour',
+                  'group_speed2': 'km_per_hour2',
+                  'group_temperature': 'degree_C'}
+
+metricwx_group = {'group_altitude': 'meter',
+                  'group_degree_day': 'degree_C_day',
+                  'group_pressure': 'mbar',
+                  'group_rain': 'mm',
+                  'group_rainrate': 'mm_per_hour',
+                  'group_speed': 'meter_per_second',
+                  'group_speed2': 'meter_per_second2',
+                  'group_temperature': 'degree_C'}
+
 def find_file(file_path=None, args=None, 
                 locations=['/etc/weewx', '/home/weewx'], file_name='weewx.conf'):
     """Find and return a path to a file, looking in "the usual places."
@@ -494,11 +521,23 @@ def get_station_info(config_dict):
                 if stn_info['station_type'] in config_dict:
                     stn_info['driver'] = config_dict[stn_info['station_type']]['driver']
         if 'StdReport' in config_dict:
-            # TODO: Perhaps we could add some smarts here?
-            stn_info['units'] = None
+            stn_info['units'] = get_unit_info(config_dict)
             
     return stn_info
 
+def get_unit_info(config_dict):
+    """Intuit what unit system the reports are in."""
+    try:
+        group_dict = config_dict['StdReport']['StandardReport']['Units']['Groups']   
+        if all(group_dict[group] == us_group[group] for group in us_group):
+            return 'us'
+        elif all(group_dict[group] == metric_group[group] for group in metric_group):
+            return 'metric'
+        elif all(group_dict[group] == metricwx_group[group] for group in metricwx_group):
+            return 'metricwx'
+    except KeyError:
+        return None
+    
 def get_driver_infos():
     """Scan the drivers folder, extracting information about each available driver.
     Return as a dictionary, keyed by driver name."""
