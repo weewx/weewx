@@ -7,7 +7,6 @@
 """Configure the databases used by weewx"""
 from __future__ import with_statement
 
-import os.path
 import optparse
 import syslog
 import sys
@@ -17,10 +16,7 @@ import user.extensions      #@UnusedImport
 import weedb
 import weewx.manager
 import weewx.units
-import weeutil.config
-
-my_dir = os.path.abspath(os.path.dirname(__file__))
-search_locations = [os.path.normpath(os.path.join(my_dir, '..')), '/etc/weewx', '/home/weewx']
+import config_util
 
 description="""Configure the weewx databases. Most of these functions are
 handled automatically by weewx, but they may be useful as a utility in special
@@ -42,8 +38,6 @@ appropriate permissions for the requested operation."""
 
 def main():
 
-    global search_locations
-    
     # Set defaults for the system logger:
     syslog.openlog('wee_config_database', syslog.LOG_PID|syslog.LOG_CONS)
 
@@ -74,8 +68,7 @@ def main():
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    config_path, config_dict = weeutil.config.read_config(options.config_path, args,
-                                                          locations=search_locations)
+    config_path, config_dict = config_util.read_config(options.config_path, args)
     print "Using configuration file %s" % config_path
     
     db_binding = options.binding

@@ -8,18 +8,14 @@
 
 import socket
 import syslog
-import os.path
 
 import optparse
 
 import user.extensions #@UnusedImport
 import weewx.station
 import weewx.reportengine
-import weeutil.config
+import config_util
 from weeutil.weeutil import timestamp_to_string
-
-my_dir = os.path.abspath(os.path.dirname(__file__))
-search_locations = [os.path.normpath(os.path.join(my_dir, '..')), '/etc/weewx', '/home/weewx']
 
 description = """Runs all weewx reports. This is a useful debugging tool:
 you don't have to wait for the end of an archive interval to run the reports."""
@@ -40,8 +36,7 @@ def main():
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    config_path, config_dict = weeutil.config.read_config(options.config_path, args,
-                                                          locations=search_locations)
+    config_path, config_dict = config_util.read_config(options.config_path, args)
     
     # If the user specified a time, retrieve it. Otherwise, set to None
     gen_ts = int(args[0]) if args else None
