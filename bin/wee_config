@@ -113,231 +113,195 @@ def main():
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
     
-    if options.version:
-        print weewx.__version__
-        sys.exit(0)
-
-    if options.list_drivers:
-        print_drivers()
-        sys.exit(0)
-
-    #
-    # Check for errors in the options.
-    #
+    config_mgr = WeeConfig()
+    sys.exit(config_mgr.run(args, options))
     
-    # Cannot have both update and merge
-    if options.update and options.merge:
-        exit("Commands --update and --merge are mutually exclusive")
     
-    # Check for missing --dist-config
-    if (options.update or options.merge) and not options.dist_config:
-            exit("Option --dist-config required.")
-            
-    # The merge option requires --output
-    if options.merge and not options.output:
-        exit("Command --merge requires option --output")
-
-    # Looks good. Get the configuration file:
-    config_path, config_dict = config_util.read_config(options.config_path, args, locations=search_locations)
-    print "Using configuration file found at", config_path
-
-    # Flag for whether the output needs to be saved:
-    save_me = False
+class WeeConfig(object):
     
-    if options.update or options.merge:
+    def run(self, args, options):
+        if options.version:
+            print weewx.__version__
+            sys.exit(0)
     
-        # Open up and parse the distribution config file:
-        try:        
-            dist_config_dict = configobj.ConfigObj(options.dist_config, file_error=True)
-        except SyntaxError, e:
-            exit("Syntax error in distribution configuration file '%s': %s" % (options.dist_config, e))
-            
-        # Update the old configuration file:
-        config_util.update_config(config_dict)
+        if options.list_drivers:
+            config_util.print_drivers()
+            sys.exit(0)
+    
+        #
+        # Check for errors in the options.
+        #
         
-        # Then merge it into the distribution file
-        config_util.merge_config(config_dict, dist_config_dict)
-
-        save_me = True
+        # Cannot have both update and merge
+        if options.update and options.merge:
+            exit("Commands --update and --merge are mutually exclusive")
         
-    if options.modify:
-
-        modify_config(config_dict, options)
-        save_me = True
-        
-    if save_me:
-        
-        # Save the resultant config file, backing up as necessary.
-        
-        if options.output:
-            with open(options.output, 'w') as fd:
-                config_dict.write(fd)
-            print "Saved modified configuration file to %s" % options.output
-        else:
-            # Get a temporary file:
-            tmpfile = tempfile.NamedTemporaryFile("w")
-            
-            # Write the merged configuration file to it:
-            config_dict.write(tmpfile)
-            tmpfile.flush()
-            
-            # Save the old config file if it exists:
-            if os.path.exists(config_path):
-                backup_path = config_util.save_path(config_path)
-                print "Saved old configuration file as %s" % backup_path
+        # Check for missing --dist-config
+        if (options.update or options.merge) and not options.dist_config:
+                exit("Option --dist-config required.")
                 
-            # Now install the temporary file (holding the merged config data)
-            # into the proper place:
-            shutil.copyfile(tmpfile.name, config_path)
-            
-            print "Saved modified configuration file to %s" % config_path
-    else:
-        print "Nothing done."
-
-    sys.exit(0)
-
-def modify_config(config_dict, options):
-    """Modify the configuration dictionary according to any command
-    line options. Give the user a chance too."""
+        # The merge option requires --output
+        if options.merge and not options.output:
+            exit("Command --merge requires option --output")
     
-    # Get defaults out of the config file:
-    stn_info = config_util.get_station_info(config_dict)
-
-    # Get command line overrides, and apply them to stn_info:
-    for k in stn_info:
-        # Override only if the option exists and is not None:
-        if hasattr(options, k) and getattr(options,k) is not None:
-            stn_info[k] = getattr(options, k)
-
-    # If any are still None, replace them with defaults:
-    for k in stn_info_defaults:
-        if stn_info[k] is None:
-            stn_info[k] = stn_info_defaults[k]
+        # Looks good. Get the configuration file:
+        config_path, config_dict = config_util.read_config(options.config_path, args, locations=search_locations)
+        print "Using configuration file found at", config_path
+    
+        # Flag for whether the output needs to be saved:
+        save_me = False
+        
+        if options.update or options.merge:
+        
+            # Open up and parse the distribution config file:
+            try:        
+                dist_config_dict = configobj.ConfigObj(options.dist_config, file_error=True)
+            except SyntaxError, e:
+                exit("Syntax error in distribution configuration file '%s': %s" % (options.dist_config, e))
+                
+            # Update the old configuration file:
+            config_util.update_config(config_dict)
             
-    # Unless --no-prompt has been specified, give the user a chance to change things:
-    if not options.no_prompt:
-        stn_info.update(config_util.prompt_for_info(**stn_info))
+            # Then merge it into the distribution file
+            config_util.merge_config(config_dict, dist_config_dict)
+    
+            save_me = True
+            
+        if options.modify:
+    
+            self.modify_config(config_dict, options)
+            save_me = True
+            
+        if save_me:
+            
+            # Save the resultant config file, backing up as necessary.
+            
+            if options.output:
+                with open(options.output, 'w') as fd:
+                    config_dict.write(fd)
+                print "Saved modified configuration file to %s" % options.output
+            else:
+                # Get a temporary file:
+                tmpfile = tempfile.NamedTemporaryFile("w")
+                
+                # Write the merged configuration file to it:
+                config_dict.write(tmpfile)
+                tmpfile.flush()
+                
+                # Save the old config file if it exists:
+                if os.path.exists(config_path):
+                    backup_path = config_util.save_path(config_path)
+                    print "Saved old configuration file as %s" % backup_path
+                    
+                # Now install the temporary file (holding the merged config data)
+                # into the proper place:
+                shutil.copyfile(tmpfile.name, config_path)
+                
+                print "Saved modified configuration file to %s" % config_path
+        else:
+            print "Nothing done."
+    
+        return 0
 
-        if not options.driver:
-            driver = prompt_for_driver(stn_info.get('driver'))
-            stn_info['driver'] = driver
-
-    # OK, we now have all the station info. Time to inject the driver stanza,
-    # if necessary.
-    driver = stn_info.get('driver')
-    try:
-        # Look up driver info:
-        driver_editor, driver_name, driver_version = \
-            config_util.load_driver_editor(driver)
-    except Exception, e:
-        exit("Driver %s failed to load: %s" (driver, e))
-    stn_info['station_type'] = driver_name
-    print 'Using %s version %s (%s)' % (stn_info['station_type'], driver_version, driver)
-
-    if options.debug:
-        print "Station info:\n", weeutil.weeutil.print_dict(stn_info)
-
-    stanza = None
-    if driver_editor is not None:
-        orig_stanza_text = None
-
-        # if a previous stanza exists for this driver, grab it
-        if driver_name in config_dict:
-            orig_stanza = configobj.ConfigObj(interpolation=False)
-            orig_stanza[driver_name] = config_dict[driver_name]
-            orig_stanza_text = '\n'.join(orig_stanza.write())
-
-        # let the driver process the stanza or give us a new one
-        stanza_text = driver_editor.get_conf(orig_stanza_text)
-        stanza = configobj.ConfigObj(stanza_text.splitlines())
-
-    if stanza is not None:
-        # Insert the stanza in the configuration dictionary:
-        config_dict[driver_name] = stanza[driver_name]
-        # If we have a [Station] section, the move the new stanza to just after it
-        if 'Station' in config_dict:
-            config_util.reorder_sections(config_dict, driver_name, 'Station', after=True)
-            # make the stanza the station type
-            config_dict['Station']['station_type'] = driver_name
-
-    # apply any overrides from the stn_info
-    if stn_info is not None:
-        # update station information with info overrides
-        for p in ['location', 'latitude', 'longitude', 'altitude']:
-            if stn_info.get(p) is not None:
-                config_dict['Station'][p] = stn_info[p]
-        # update units display with any info overrides
-        if stn_info.get('units') is not None:
-            if stn_info.get('units') == 'metric':
-                print "Using Metric units for display"
-                config_dict['StdReport']['StandardReport'].update({
-                        'Units': {
-                            'Groups': {
-                                'group_altitude': 'meter',
-                                'group_degree_day': 'degree_C_day',
-                                'group_pressure': 'mbar',
-                                'group_rain': 'mm',
-                                'group_rainrate': 'mm_per_hour',
-                                'group_speed': 'meter_per_second',
-                                'group_speed2': 'meter_per_second2',
-                                'group_temperature': 'degree_C'}}})
-            elif stn_info.get('units') == 'us':
-                print "Using US units for display"
-                config_dict['StdReport']['StandardReport'].update({
-                        'Units': {
-                            'Groups': {
-                                'group_altitude': 'foot',
-                                'group_degree_day': 'degree_F_day',
-                                'group_pressure': 'inHg',
-                                'group_rain': 'inch',
-                                'group_rainrate': 'inch_per_hour',
-                                'group_speed': 'mile_per_hour',
-                                'group_speed2': 'mile_per_hour2',
-                                'group_temperature': 'degree_F'}}})
-
-def prompt_for_driver(dflt_driver=None):
-    """Get the information about each driver, return as a dictionary."""
-    infos = config_util.get_driver_infos()
-    keys = sorted(infos)
-    dflt_idx = None
-    for i, d in enumerate(keys):
-        print " %2d) %-15s (%s)" % (i, infos[d].get('name', '?'), d)
-        if dflt_driver == d:
-            dflt_idx = i
-    msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
-    ans = None
-    while ans is None:
-        ans = raw_input(msg).strip()
-        if not ans:
-            ans = dflt_idx
+    def modify_config(self, config_dict, options):
+        """Modify the configuration dictionary according to any command
+        line options. Give the user a chance too."""
+        
+        # Get defaults out of the config file:
+        stn_info = config_util.get_station_info(config_dict)
+    
+        # Get command line overrides, and apply them to stn_info:
+        for k in stn_info:
+            # Override only if the option exists and is not None:
+            if hasattr(options, k) and getattr(options,k) is not None:
+                stn_info[k] = getattr(options, k)
+    
+        # If any are still None, replace them with defaults:
+        for k in stn_info_defaults:
+            if stn_info[k] is None:
+                stn_info[k] = stn_info_defaults[k]
+                
+        # Unless --no-prompt has been specified, give the user a chance to change things:
+        if not options.no_prompt:
+            stn_info.update(config_util.prompt_for_info(**stn_info))
+    
+            if not options.driver:
+                driver = config_util.prompt_for_driver(stn_info.get('driver'))
+                stn_info['driver'] = driver
+    
+        # OK, we now have all the station info. Time to inject the driver stanza,
+        # if necessary.
+        driver = stn_info.get('driver')
         try:
-            idx = int(ans)
-            if not 0 <= idx < len(keys):
-                ans = None
-        except (ValueError, TypeError):
-            ans = None
-    return keys[idx]
+            # Look up driver info:
+            driver_editor, driver_name, driver_version = \
+                config_util.load_driver_editor(driver)
+        except Exception, e:
+            exit("Driver %s failed to load: %s" (driver, e))
+        stn_info['station_type'] = driver_name
+        print 'Using %s version %s (%s)' % (stn_info['station_type'], driver_version, driver)
+    
+        if options.debug:
+            print "Station info:\n", weeutil.weeutil.print_dict(stn_info)
+    
+        stanza = None
+        if driver_editor is not None:
+            orig_stanza_text = None
+    
+            # if a previous stanza exists for this driver, grab it
+            if driver_name in config_dict:
+                orig_stanza = configobj.ConfigObj(interpolation=False)
+                orig_stanza[driver_name] = config_dict[driver_name]
+                orig_stanza_text = '\n'.join(orig_stanza.write())
+    
+            # let the driver process the stanza or give us a new one
+            stanza_text = driver_editor.get_conf(orig_stanza_text)
+            stanza = configobj.ConfigObj(stanza_text.splitlines())
+    
+        if stanza is not None:
+            # Insert the stanza in the configuration dictionary:
+            config_dict[driver_name] = stanza[driver_name]
+            # If we have a [Station] section, the move the new stanza to just after it
+            if 'Station' in config_dict:
+                config_util.reorder_sections(config_dict, driver_name, 'Station', after=True)
+                # make the stanza the station type
+                config_dict['Station']['station_type'] = driver_name
+    
+        # apply any overrides from the stn_info
+        if stn_info is not None:
+            # update station information with info overrides
+            for p in ['location', 'latitude', 'longitude', 'altitude']:
+                if stn_info.get(p) is not None:
+                    config_dict['Station'][p] = stn_info[p]
+            # update units display with any info overrides
+            if stn_info.get('units') is not None:
+                if stn_info.get('units') == 'metric':
+                    print "Using Metric units for display"
+                    config_dict['StdReport']['StandardReport'].update({
+                            'Units': {
+                                'Groups': {
+                                    'group_altitude': 'meter',
+                                    'group_degree_day': 'degree_C_day',
+                                    'group_pressure': 'mbar',
+                                    'group_rain': 'mm',
+                                    'group_rainrate': 'mm_per_hour',
+                                    'group_speed': 'meter_per_second',
+                                    'group_speed2': 'meter_per_second2',
+                                    'group_temperature': 'degree_C'}}})
+                elif stn_info.get('units') == 'us':
+                    print "Using US units for display"
+                    config_dict['StdReport']['StandardReport'].update({
+                            'Units': {
+                                'Groups': {
+                                    'group_altitude': 'foot',
+                                    'group_degree_day': 'degree_F_day',
+                                    'group_pressure': 'inHg',
+                                    'group_rain': 'inch',
+                                    'group_rainrate': 'inch_per_hour',
+                                    'group_speed': 'mile_per_hour',
+                                    'group_speed2': 'mile_per_hour2',
+                                    'group_temperature': 'degree_F'}}})
 
-def prompt_for_driver_settings(driver):
-    """Let the driver prompt for any required settings."""
-    settings = dict()
-    __import__(driver)
-    driver_module = sys.modules[driver]
-    loader_function = getattr(driver_module, 'confeditor_loader')
-    editor = loader_function()
-    settings[driver_module.DRIVER_NAME] = editor.prompt_for_settings()
-    return settings
-
-def print_drivers():
-    """Get information about all the available drivers, then print it out."""
-    driver_info_dict = config_util.get_driver_infos()
-    keys = sorted(driver_info_dict)
-    for d in keys:
-        msg = "%-25s" % d
-        for x in ['name', 'version', 'fail']:
-            if x in driver_info_dict[d]:
-                msg += " %-15s" % driver_info_dict[d][x]
-        print msg
 
 if __name__=="__main__" :
     main()

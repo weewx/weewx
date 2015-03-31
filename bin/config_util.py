@@ -647,3 +647,47 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
             value = default
 
     return value
+
+def prompt_for_driver(dflt_driver=None):
+    """Get the information about each driver, return as a dictionary."""
+    infos = get_driver_infos()
+    keys = sorted(infos)
+    dflt_idx = None
+    for i, d in enumerate(keys):
+        print " %2d) %-15s (%s)" % (i, infos[d].get('name', '?'), d)
+        if dflt_driver == d:
+            dflt_idx = i
+    msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
+    ans = None
+    while ans is None:
+        ans = raw_input(msg).strip()
+        if not ans:
+            ans = dflt_idx
+        try:
+            idx = int(ans)
+            if not 0 <= idx < len(keys):
+                ans = None
+        except (ValueError, TypeError):
+            ans = None
+    return keys[idx]
+
+def prompt_for_driver_settings(driver):
+    """Let the driver prompt for any required settings."""
+    settings = dict()
+    __import__(driver)
+    driver_module = sys.modules[driver]
+    loader_function = getattr(driver_module, 'confeditor_loader')
+    editor = loader_function()
+    settings[driver_module.DRIVER_NAME] = editor.prompt_for_settings()
+    return settings
+
+def print_drivers():
+    """Get information about all the available drivers, then print it out."""
+    driver_info_dict = get_driver_infos()
+    keys = sorted(driver_info_dict)
+    for d in keys:
+        msg = "%-25s" % d
+        for x in ['name', 'version', 'fail']:
+            if x in driver_info_dict[d]:
+                msg += " %-15s" % driver_info_dict[d][x]
+        print msg
