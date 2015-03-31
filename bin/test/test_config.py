@@ -8,7 +8,9 @@ from __future__ import with_statement
 
 import StringIO
 import unittest
+import tempfile
 import os
+import os.path
 import sys
 
 import configobj
@@ -42,6 +44,32 @@ y_str = """
           c = 15"""
 
 class ConfigTest(unittest.TestCase):
+
+    def test_find_file(self):
+        # Test the utility function config_util.find_file()
+
+        with tempfile.NamedTemporaryFile() as test_fd:
+            # Get info about the temp file:
+            full_path = test_fd.name
+            dir_path = os.path.dirname(full_path)
+            filename = os.path.basename(full_path)
+            # Find the file with an explicit path:
+            result = config_util.find_file(full_path)
+            self.assertEqual(result, full_path)
+            # Find the file with an explicit, but wrong, path:
+            self.assertRaises(IOError, config_util.find_file, full_path + "foo")
+            # Find the file using the "args" optional list:
+            result = config_util.find_file(None, [full_path])
+            self.assertEqual(result, full_path)
+            # Find the file using the "args" optional list, but with a wrong name:
+            self.assertRaises(IOError, config_util.find_file,
+                              None, [full_path + "foo"])
+            # Now search a list of directory locations given a file name:
+            result = config_util.find_file(None, file_name=filename, locations=['/usr/bin', dir_path])
+            self.assertEqual(result, full_path)
+            # Do the same, but with a non-existent file name:
+            self.assertRaises(IOError, config_util.find_file,
+                              None, file_name=filename + "foo", locations=['/usr/bin', dir_path])
 
     def test_utilities(self):
         global x_str, y_str
@@ -77,12 +105,12 @@ class ConfigTest(unittest.TestCase):
     if have_mock:
 
         def test_prompt_for_info(self):
-            
+
             # Suppress stdout by temporarily assigning it to /dev/null
             save_stdout = sys.stdout
             sys.stdout = open(os.devnull, 'w')
             try:
-                
+
                 # Test a normal input
                 with patch('__builtin__.raw_input',
                            side_effect=['Anytown', '100, meter', '45.0', '180.0', 'us']):
@@ -92,7 +120,7 @@ class ConfigTest(unittest.TestCase):
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
                                                 'units': 'us'})
-    
+
                 # Test for a default input
                 with patch('__builtin__.raw_input',
                            side_effect=['Anytown', '', '45.0', '180.0', 'us']):
@@ -102,7 +130,7 @@ class ConfigTest(unittest.TestCase):
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
                                                 'units': 'us'})
-        
+
                 # Test for an out-of-bounds latitude
                 with patch('__builtin__.raw_input',
                            side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'us']):
@@ -112,7 +140,7 @@ class ConfigTest(unittest.TestCase):
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
                                                 'units': 'us'})
-        
+
                 # Test for a bad length unit type
                 with patch('__builtin__.raw_input',
                            side_effect=['Anytown', '100, foo', '100,meter', '45.0', '180.0', 'us']):
@@ -122,7 +150,7 @@ class ConfigTest(unittest.TestCase):
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
                                                 'units': 'us'})
-        
+
                 # Test for a bad display unit
                 with patch('__builtin__.raw_input',
                            side_effect=['Anytown', '100, meter', '45.0', '180.0', 'foo', 'us']):
@@ -157,7 +185,7 @@ class ConfigTest(unittest.TestCase):
             finally:
                 # Restore stdout:
                 sys.stdout = save_stdout
-                    
+
     if have_mock:
         def test_prompt_with_limits(self):
             # Suppress stdout by temporarily assigning it to /dev/null
@@ -176,7 +204,7 @@ class ConfigTest(unittest.TestCase):
             finally:
                 # Restore stdout:
                 sys.stdout = save_stdout
-                    
+
     def test_upgrade_v27(self):
 
         # Start with the Version 2.0 weewx.conf file:

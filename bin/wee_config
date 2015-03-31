@@ -20,10 +20,6 @@ import weewx
 import weeutil.weeutil
 import config_util
 
-my_dir = os.path.abspath(os.path.dirname(__file__))
-# This will search in the directory above where I am located, plus /etc/weewx and /home/weewx
-search_locations = [os.path.normpath(os.path.join(my_dir, '..')), '/etc/weewx', '/home/weewx']
-
 stn_info_defaults = {'location'     : '',
                      'latitude'     : '0',
                      'longitude'    : '0',
@@ -145,7 +141,7 @@ class WeeConfig(object):
             exit("Command --merge requires option --output")
     
         # Looks good. Get the configuration file:
-        config_path, config_dict = config_util.read_config(options.config_path, args, locations=search_locations)
+        config_path, config_dict = config_util.read_config(options.config_path, args)
         print "Using configuration file found at", config_path
     
         # Flag for whether the output needs to be saved:
@@ -157,7 +153,8 @@ class WeeConfig(object):
             try:        
                 dist_config_dict = configobj.ConfigObj(options.dist_config, file_error=True)
             except SyntaxError, e:
-                exit("Syntax error in distribution configuration file '%s': %s" % (options.dist_config, e))
+                sys.exit("Syntax error in distribution configuration file '%s': %s" % 
+                         (options.dist_config, e))
                 
             # Update the old configuration file:
             config_util.update_config(config_dict)

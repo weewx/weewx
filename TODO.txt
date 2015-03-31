@@ -1,8 +1,10 @@
 TODO: items for the next release; complete list is at github
 -------------------------------------------------------------------------------
 
-Is max gap fraction meaningful for bar charts now?
+Add a --install command.
 
+Major comment block not getting added reliably when a new driver stanza
+is injected.
 
 DONE: -------------------------------------------------------------------------
 

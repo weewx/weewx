@@ -28,7 +28,7 @@ us_group = {'group_altitude': 'foot',
             'group_speed2': 'mile_per_hour2',
             'group_temperature': 'degree_F'}
 
-metric_group   = {'group_altitude': 'meter',
+metric_group = {'group_altitude': 'meter',
                   'group_degree_day': 'degree_C_day',
                   'group_pressure': 'mbar',
                   'group_rain': 'cm',
@@ -46,25 +46,35 @@ metricwx_group = {'group_altitude': 'meter',
                   'group_speed2': 'meter_per_second2',
                   'group_temperature': 'degree_C'}
 
-def find_file(file_path=None, args=None, 
+def find_file(file_path=None, args=None,
                 locations=['/etc/weewx', '/home/weewx'], file_name='weewx.conf'):
-    """Find and return a path to a file, looking in "the usual places."
+    """Find and return a path to a file, looking in "the usual places.
     
-    If the file cannot be found in file_path, then
-    the command line arguments are searched. If it cannot be found
-    there, then a list of path locations is searched. If it still
-    cannot be found, then raises an exception IOError.
+    General strategy:
+
+    First, file_path is tried. If not found there, then the first element of args is
+    tried. 
+    
+    If those both fail, then the list of directory locations is searched, looking
+    for a file with file name file_name. 
+    
+    If after all that, the file still cannot be found, then an exception IOError
+    will be raised.
+    
+    Parameters:
 
     file_path: A candidate path to the file.
 
-    args: command-line arguments
+    args: command-line arguments. If the file cannot be found in file_path, then
+    the first element in args will be tried.
     
     locations: A list of directories to be searched. 
     Default is ['etc/weewx', '/home/weewx'].
 
-    file_name: The name of the file to be found. Default is 'weewx.conf'
+    file_name: The name of the file to be found. Default is 'weewx.conf'. This is used
+    only if the directories must be searched. Default is 'weewx.conf'.
 
-    returns: path to the file
+    returns: full path to the file
     """
 
     if file_path is None:
@@ -76,8 +86,7 @@ def find_file(file_path=None, args=None,
         for directory in locations:
             candidate = os.path.join(directory, file_name)
             if os.path.isfile(candidate):
-                file_path = candidate
-                break
+                return candidate
 
     if file_path is None:
         raise IOError("Unable to find file '%s'. Tried directories %s" % (file_name, locations))
@@ -86,7 +95,7 @@ def find_file(file_path=None, args=None,
 
     return file_path
 
-def read_config(config_path, args=None, 
+def read_config(config_path, args=None,
                 locations=['/etc/weewx', '/home/weewx'], file_name='weewx.conf'):
     """Read the specified configuration file, return a dictionary of the
     file contents. If no file is specified, look in the standard locations
@@ -102,14 +111,14 @@ def read_config(config_path, args=None,
     # Find and open the config file:
     try:
         config_path = find_file(config_path, args, locations=locations)
-        try:        
+        try:
             # Now open it up and parse it.
             config_dict = configobj.ConfigObj(config_path, file_error=True)
         except SyntaxError, e:
             sys.exit("Syntax error in file '%s': %s" % (config_path, e))
     except IOError, e:
-        print >>sys.stdout, "Unable to find the configuration file."
-        print >>sys.stdout, "Reason: %s" % e
+        print >> sys.stdout, "Unable to find the configuration file."
+        print >> sys.stdout, "Reason: %s" % e
         sys.exit(1)
     return config_path, config_dict
 
@@ -138,15 +147,15 @@ def update_config(config_dict):
 
     Raises exception of type ValueError if it cannot be done.
     """
-    
+
     # Get the version number. If it does not appear at all, then
     # assume a very old version:
     config_version = config_dict.get('version') or '1.0.0'
 
     major, minor, _ = config_version.split('.')
-    # Take care of the collation problem when comparing things like 
+    # Take care of the collation problem when comparing things like
     # version '1.9' to '1.10' by prepending a '0' to the former:
-    if len(minor) < 2: 
+    if len(minor) < 2:
         minor = '0' + minor
 
     # I don't know how to merge older, V1.X configuration files, only
@@ -168,7 +177,7 @@ def merge_config(config_dict, template_dict):
     
     template_dict: This is usually the newer dictionary supplied by the installer.
     """
-    
+
     config_dict.interpolate = False
 
     # Merge new stuff from the template:
@@ -176,19 +185,19 @@ def merge_config(config_dict, template_dict):
 
     # Finally, update the version number:
     config_dict['version'] = template_dict['version']
-    
+
     return config_dict
 
 def update_to_v27(config_dict):
     """Updates a configuration file to the latest V2.X version.
     Since V2.7 was the last 2.X version, that's our target"""
 
-    service_map_v2 = {'weewx.wxengine.StdTimeSynch' : 'prep_services', 
-                      'weewx.wxengine.StdConvert'   : 'process_services', 
-                      'weewx.wxengine.StdCalibrate' : 'process_services', 
-                      'weewx.wxengine.StdQC'        : 'process_services', 
+    service_map_v2 = {'weewx.wxengine.StdTimeSynch' : 'prep_services',
+                      'weewx.wxengine.StdConvert'   : 'process_services',
+                      'weewx.wxengine.StdCalibrate' : 'process_services',
+                      'weewx.wxengine.StdQC'        : 'process_services',
                       'weewx.wxengine.StdArchive'   : 'archive_services',
-                      'weewx.wxengine.StdPrint'     : 'report_services', 
+                      'weewx.wxengine.StdPrint'     : 'report_services',
                       'weewx.wxengine.StdReport'    : 'report_services'}
 
     # webpath is now station_url
@@ -197,11 +206,11 @@ def update_to_v27(config_dict):
     if webpath is not None and station_url is None:
         config_dict['Station']['station_url'] = webpath
     config_dict['Station'].pop('webpath', None)
-    
+
     if 'StdArchive' in config_dict:
         # Option stats_types is no longer used. Get rid of it.
         config_dict['StdArchive'].pop('stats_types', None)
-    
+
     # --- Davis Vantage series ---
     if 'Vantage' in config_dict:
         try:
@@ -209,13 +218,14 @@ def update_to_v27(config_dict):
                 config_dict['Vantage']['driver'] = 'weewx.drivers.vantage'
         except KeyError:
             pass
-    
+
     # --- Oregon Scientific WMR100 ---
-    
+
     # The section name has changed from WMR-USB to WMR100
     if 'WMR-USB' in config_dict:
         if 'WMR100' in config_dict:
-            sys.stderr.write("\n*** Configuration file has both a 'WMR-USB' section and a 'WMR100' section. Aborting ***\n\n")
+            sys.stderr.write("\n*** Configuration file has both a 'WMR-USB' "
+                             "section and a 'WMR100' section. Aborting ***\n\n")
             exit()
         config_dict.rename('WMR-USB', 'WMR100')
     # If necessary, reflect the section name in the station type:
@@ -230,13 +240,14 @@ def update_to_v27(config_dict):
             config_dict['WMR100']['driver'] = 'weewx.drivers.wmr100'
     except KeyError:
         pass
-        
+
     # --- Oregon Scientific WMR9x8 series ---
-    
+
     # The section name has changed from WMR-918 to WMR9x8
     if 'WMR-918' in config_dict:
         if 'WMR9x8' in config_dict:
-            sys.stderr.write("\n*** Configuration file has both a 'WMR-918' section and a 'WMR9x8' section. Aborting ***\n\n")
+            sys.stderr.write("\n*** Configuration file has both a 'WMR-918' "
+                             "section and a 'WMR9x8' section. Aborting ***\n\n")
             exit()
         config_dict.rename('WMR-918', 'WMR9x8')
     # If necessary, reflect the section name in the station type:
@@ -251,7 +262,7 @@ def update_to_v27(config_dict):
             config_dict['WMR9x8']['driver'] = 'weewx.drivers.wmr9x8'
     except KeyError:
         pass
-    
+
     # --- Fine Offset instruments ---
 
     try:
@@ -275,9 +286,9 @@ def update_to_v27(config_dict):
         # do not know what it is, then stick it in the last group we
         # have seen. This should get its position about right.
         last_group = 'prep_services'
-        
+
         # Set up a bunch of empty groups in the right order
-        for group in ['prep_services', 'process_services', 'archive_services', 
+        for group in ['prep_services', 'process_services', 'archive_services',
                       'restful_services', 'report_services']:
             config_dict['Engines']['WxEngine'][group] = list()
 
@@ -312,7 +323,7 @@ def update_to_v27(config_dict):
         # may have to be included:
         if 'weewx.restx.StdStationRegistry' not in config_dict['Engines']['WxEngine']['restful_services']:
             config_dict['Engines']['WxEngine']['restful_services'].append('weewx.restx.StdStationRegistry')
-        
+
         # Get rid of the no longer needed service_list:
         config_dict['Engines']['WxEngine'].pop('service_list')
 
@@ -337,7 +348,7 @@ def update_to_v27(config_dict):
 def update_to_v30(config_dict):
     """Update a configuration file to V3.0"""
     old_database = None
-    
+
     v3_additions = """[DataBindings]
     # This section binds a data store to a database
 
@@ -363,18 +374,18 @@ def update_to_v30(config_dict):
         for stanza in config_dict['Databases']:
             if 'database' in config_dict['Databases'][stanza]:
                 config_dict['Databases'][stanza].rename('database', 'database_name')
-        
+
     if 'StdReport' in config_dict:
         # The key "data_binding" is now used instead of these:
         config_dict['StdReport'].pop('archive_database', None)
         config_dict['StdReport'].pop('stats_database', None)
-        
+
     if 'StdArchive' in config_dict:
         old_database = config_dict['StdArchive'].pop('archive_database', None)
         config_dict['StdArchive'].pop('stats_database', None)
         config_dict['StdArchive'].pop('archive_schema', None)
         config_dict['StdArchive'].pop('stats_schema', None)
-        
+
     # Section ['Engines'] got renamed to ['Engine']
     if 'Engine' not in config_dict and 'Engines' in config_dict:
         config_dict.rename('Engines', 'Engine')
@@ -390,21 +401,22 @@ def update_to_v30(config_dict):
                 # then make it a list:
                 if not hasattr(service_list, '__iter__'):
                     service_list = [service_list]
-                config_dict['Engine']['Services'][list_name] = [this_item.replace('wxengine', 'engine') for this_item in service_list]
+                config_dict['Engine']['Services'][list_name] = \
+                    [this_item.replace('wxengine', 'engine') for this_item in service_list]
         try:
             # Finally, make sure the new StdWXCalculate service is in the list:
             if 'weewx.wxservices.StdWXCalculate' not in config_dict['Engine']['Services']['process_services']:
                 config_dict['Engine']['Services']['process_services'].append('weewx.wxservices.StdWXCalculate')
         except KeyError:
             pass
-        
+
     if 'DataBindings' not in config_dict:
         # Insert a [DataBindings] section. First create it
         c = configobj.ConfigObj(StringIO.StringIO(v3_additions))
         # Now merge it in:
         config_dict.merge(c)
         # For some reason, ConfigObj strips any leading comments. Add them back in:
-        config_dict.comments['DataBindings'] = major_comment_block 
+        config_dict.comments['DataBindings'] = major_comment_block
         # Move the new section to just before [Databases]
         reorder_sections(config_dict, 'DataBindings', 'Databases')
         # No comments between the [DataBindings] and [Databases] sections:
@@ -456,7 +468,8 @@ def reorder_sections(config_dict, src, dst, after=False):
     # Find the destination
     dst_idx = config_dict.sections.index(dst)
     # Now reorder the attribute 'sections', putting src just before dst:
-    config_dict.sections = config_dict.sections[:dst_idx+bump] + [src] + config_dict.sections[dst_idx+bump:]
+    config_dict.sections = config_dict.sections[:dst_idx + bump] + [src] + \
+                           config_dict.sections[dst_idx + bump:]
 
 def conditional_merge(a_dict, b_dict):
     """Merge fields from b_dict into a_dict, but only if they do not yet exist in a_dict"""
@@ -498,7 +511,7 @@ def prepend_path(a_dict, label, value):
         if isinstance(a_dict[k], dict):
             prepend_path(a_dict[k], label, value)
         elif k == label:
-            a_dict[k] = os.path.join(value, a_dict[k])    
+            a_dict[k] = os.path.join(value, a_dict[k])
 
 def replace_string(a_dict, label, value):
     for k in a_dict:
@@ -522,13 +535,14 @@ def get_station_info(config_dict):
                     stn_info['driver'] = config_dict[stn_info['station_type']]['driver']
         if 'StdReport' in config_dict:
             stn_info['units'] = get_unit_info(config_dict)
-            
+
     return stn_info
 
 def get_unit_info(config_dict):
     """Intuit what unit system the reports are in."""
     try:
-        group_dict = config_dict['StdReport']['StandardReport']['Units']['Groups']   
+        group_dict = config_dict['StdReport']['StandardReport']['Units']['Groups']
+        # Look for a strict superset of the group settings:
         if all(group_dict[group] == us_group[group] for group in us_group):
             return 'us'
         elif all(group_dict[group] == metric_group[group] for group in metric_group):
@@ -537,11 +551,11 @@ def get_unit_info(config_dict):
             return 'metricwx'
     except KeyError:
         return None
-    
+
 def get_driver_infos():
     """Scan the drivers folder, extracting information about each available driver.
     Return as a dictionary, keyed by driver name."""
-    
+
     import weewx.drivers
     driver_directory = os.path.dirname(os.path.abspath(weewx.drivers.__file__))
     driver_list = [ os.path.basename(f) for f in glob.glob(os.path.join(driver_directory, "*.py"))]
@@ -563,6 +577,8 @@ def get_driver_infos():
         except Exception, e:
             driver_info_dict[driver]['name'] = driver
             driver_info_dict[driver]['fail'] = "%s" % e
+        finally:
+            del driver_module
 
     return driver_info_dict
 
@@ -607,7 +623,7 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
                     pass
         elif altitude:
             alt = altitude
-    
+
         if not alt:
             print "Unrecognized response. Try again."
 
@@ -618,7 +634,7 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     lat = prompt_with_limits("latitude", latitude, -90, 90)
     print "Specify longitude in decimal degrees, negative for west."
     lon = prompt_with_limits("longitude", longitude, -180, 180)
-            
+
     #
     # Display units
     #
@@ -642,7 +658,7 @@ def prompt_with_options(prompt, default=None, options=None):
     
     options: A list of possible choices. The returned value must be in
     this list. Optional."""
-    
+
     msg = "%s [%s]: " % (prompt, default) if default is not None else "%s: " % prompt
     value = None
     while value is None:
@@ -652,7 +668,7 @@ def prompt_with_options(prompt, default=None, options=None):
                 value = None
         elif default is not None:
             value = default
-        
+
     return value
 
 def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
