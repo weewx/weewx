@@ -31,6 +31,11 @@ stn_info_defaults = {'location'     : '',
 usage="""wee_config --help
        wee_config --version
        wee_config --list-drivers
+       wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
+           [--driver=DRIVER]
+           [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
+           [--location="Home Sweet Home"] [--units=(us|metric)]
+           [--no-prompt]
        wee_config --update CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG
            [--output=OUT_CONFIG] [--no-prompt]
        wee_config --merge  CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG 
@@ -46,6 +51,7 @@ COMMANDS:
 --help         Print instructions, then exit.
 --version      Print the version of weewx, then exit.
 --list-drivers List the available weewx device drivers, then exit.
+--install      Install DIST_CONFIG to OUT_CONFIG, prompting as necessary.
 --update       Update the contents of configuration file CONFIG_FILE,
                then merge the result into configuration file DIST_CONFIG.
                Write the results to CONFIG_FILE unless an OUT_CONFIG
@@ -73,7 +79,9 @@ def main():
     parser.add_option("--version", action="store_true",
                       help="Print the version of weewx and exit.")
     parser.add_option("--list-drivers", action="store_true",
-                     help="List all the available weewx device drivers, then exit.")
+                      help="List all the available weewx device drivers, then exit.")
+    parser.add_option("--install", action="store_true",
+                      help="Install DIST_CONFIG to OUT_FILE. Prompt as necessary.")
     parser.add_option("--update", action="store_true",
                       help="Update an existing configuration file to the current version, then merge "
                       "into DIST_CONFIG. Save results to CONFIG_FILE.")
@@ -127,27 +135,27 @@ class WeeConfig(object):
         #
         # Check for errors in the options.
         #
-        
-        # Cannot have both update and merge
-        if options.update and options.merge:
-            exit("Commands --update and --merge are mutually exclusive")
+
+        # Can have only one of install, update, and merge:
+        if sum(1 if x is True else 0 for x in [options.install, options.update, options.merge]) > 1:
+            exit("Can have only one of install, update, or merge")
         
         # Check for missing --dist-config
-        if (options.update or options.merge) and not options.dist_config:
+        if (options.install or options.update or options.merge) and not options.dist_config:
                 exit("Option --dist-config required.")
                 
-        # The merge option requires --output
-        if options.merge and not options.output:
-            exit("Command --merge requires option --output")
-    
-        # Looks good. Get the configuration file:
-        config_path, config_dict = config_util.read_config(options.config_path, args)
-        print "Using configuration file found at", config_path
+        # The install and merge options requires --output
+        if (options.install or options.merge) and not options.output:
+            sys.exit("Command requires option --output")
+            
+        # The install option does not take an old config file
+        if options.install and (options.config_path or len(args)):
+            sys.exit("Command --install does not allow an old config file.")
     
         # Flag for whether the output needs to be saved:
         save_me = False
         
-        if options.update or options.merge:
+        if options.install or options.update or options.merge:
         
             # Open up and parse the distribution config file:
             try:        
@@ -156,15 +164,21 @@ class WeeConfig(object):
                 sys.exit("Syntax error in distribution configuration file '%s': %s" % 
                          (options.dist_config, e))
                 
-            # Update the old configuration file:
-            config_util.update_config(config_dict)
-            
-            # Then merge it into the distribution file
-            config_util.merge_config(config_dict, dist_config_dict)
+            if options.install:
+                config_dict = dist_config_dict
+            else:
+                config_path, config_dict = config_util.read_config(options.config_path, args)
+                print "Using configuration file found at", config_path
+    
+                # Update the old configuration file:
+                config_util.update_config(config_dict)
+                
+                # Then merge it into the distribution file
+                config_util.merge_config(config_dict, dist_config_dict)
     
             save_me = True
             
-        if options.modify:
+        if options.install or options.modify:
     
             self.modify_config(config_dict, options)
             save_me = True
@@ -215,7 +229,7 @@ class WeeConfig(object):
     
         # If any are still None, replace them with defaults:
         for k in stn_info_defaults:
-            if stn_info[k] is None:
+            if k not in stn_info or stn_info[k] is None:
                 stn_info[k] = stn_info_defaults[k]
                 
         # Unless --no-prompt has been specified, give the user a chance to change things:
@@ -225,7 +239,8 @@ class WeeConfig(object):
             if not options.driver:
                 driver = config_util.prompt_for_driver(stn_info.get('driver'))
                 stn_info['driver'] = driver
-    
+                stn_info.update(config_util.prompt_for_driver_settings(driver))
+
         # OK, we now have all the station info. Time to inject the driver stanza,
         # if necessary.
         driver = stn_info.get('driver')
@@ -266,6 +281,10 @@ class WeeConfig(object):
     
         # apply any overrides from the stn_info
         if stn_info is not None:
+            # update driver stanza with any overrides from info
+            if driver_name in stn_info:
+                for k in stn_info[driver_name]:
+                    config_dict[driver_name][k] = stn_info[driver_name][k]
             # update station information with info overrides
             for p in ['location', 'latitude', 'longitude', 'altitude']:
                 if stn_info.get(p) is not None:
