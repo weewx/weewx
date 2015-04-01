@@ -5,11 +5,14 @@
 #
 """Various handy utilities that don't belong anywhere else."""
 
+from __future__ import with_statement
+
 import StringIO
 import calendar
 import datetime
 import math
 import os
+import shutil
 import sys
 import syslog
 import time
@@ -1135,6 +1138,21 @@ def print_dict(d, margin=0, increment=4):
             print_dict(d[k], margin + increment, increment)
         else:
             print margin * ' ', k, '=', d[k]
+
+def save_with_timestamp(filepath):
+    """Save a file to a path with a timestamo."""
+    # Sometimes the target has a trailing '/'. This will take care of it:
+    filepath = os.path.normpath(filepath)
+    newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
+    # Check to see if this name already exists
+    if os.path.exists(newpath):
+        # It already exists. Stick a version number on it:
+        version = 1
+        while os.path.exists(newpath + '-' + str(version)):
+            version += 1
+        newpath = newpath + '-' + str(version)
+    shutil.move(filepath, newpath)
+    return newpath
 
 class ListOfDicts(dict):
     """A list of dictionaries, that are searched in order.

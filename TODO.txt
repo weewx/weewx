@@ -4,6 +4,9 @@ TODO: items for the next release; complete list is at github
 Major comment block not getting added reliably when a new driver stanza
 is injected.
 
+Remove weeutil.weeutil.read_config(), fixing any references to it.
+
+
 DONE: -------------------------------------------------------------------------
 
 Quick start guide

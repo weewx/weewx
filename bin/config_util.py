@@ -5,12 +5,14 @@
 #
 """Utilities used by the setup and configure programs"""
 
+from __future__ import with_statement
+
 import glob
 import os
-import time
 import shutil
 import sys
 import StringIO
+import tempfile
 
 import configobj
 
@@ -45,6 +47,10 @@ metricwx_group = {'group_altitude': 'meter',
                   'group_speed': 'meter_per_second',
                   'group_speed2': 'meter_per_second2',
                   'group_temperature': 'degree_C'}
+
+#==============================================================================
+#              Utilities that find and save ConfigObj objects
+#==============================================================================
 
 def find_file(file_path=None, args=None,
                 locations=['/etc/weewx', '/home/weewx'], file_name='weewx.conf'):
@@ -122,25 +128,38 @@ def read_config(config_path, args=None,
         sys.exit(1)
     return config_path, config_dict
 
-def save_path(filepath):
-    # Sometimes the target has a trailing '/'. This will take care of it:
-    filepath = os.path.normpath(filepath)
-    newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
-    # Check to see if this name already exists
-    if os.path.exists(newpath):
-        # It already exists. Stick a version number on it:
-        version = 1
-        while os.path.exists(newpath + '-' + str(version)):
-            version += 1
-        newpath = newpath + '-' + str(version)
-    shutil.move(filepath, newpath)
-    return newpath
+def save_config(config_dict, config_path):
+    """Save the config file, backing up as necessary."""
+    
+    # Check to see if the file exists:
+    if os.path.exists(config_path):
+        
+        # Yes. We'll have to back it up.
+        backup_path = weeutil.weeutil.save_with_timestamp(config_path)
 
-def mkdir(dirpath):
-    try:
-        os.makedirs(dirpath)
-    except OSError:
-        pass
+        # Now we can save the file. Get a temporary file:
+        tmpfile = tempfile.NamedTemporaryFile("w")
+        
+        # Write the configuration dictionary to it:
+        config_dict.write(tmpfile)
+        tmpfile.flush()
+    
+        # Now install the temporary file (holding the config data)
+        # into the proper place:
+        shutil.copyfile(tmpfile.name, config_path)
+
+    else:
+        
+        # No existing file. Just write.
+        with open(config_path, 'w') as fd:
+            config_dict.write(fd)
+        backup_path = None
+
+    return backup_path
+
+#==============================================================================
+#              Utilities that update ConfigObj objects
+#==============================================================================
 
 def update_config(config_dict):
     """Update a (possibly old) configuration dictionary to the latest format.
@@ -432,6 +451,46 @@ def update_to_v30(config_dict):
 
     config_dict['version'] = '3.0.0'
 
+#==============================================================================
+#              Utilities that extract from ConfigObj objects
+#==============================================================================
+
+def get_station_info(config_dict):
+    """Extract station info from config dictionary."""
+    stn_info = dict()
+    if config_dict is not None:
+        if 'Station' in config_dict:
+            stn_info['location'] = weeutil.weeutil.list_as_string(config_dict['Station'].get('location'))
+            stn_info['latitude'] = config_dict['Station'].get('latitude')
+            stn_info['longitude'] = config_dict['Station'].get('longitude')
+            stn_info['altitude'] = config_dict['Station'].get('altitude')
+            if 'station_type' in config_dict['Station']:
+                stn_info['station_type'] = config_dict['Station']['station_type']
+                if stn_info['station_type'] in config_dict:
+                    stn_info['driver'] = config_dict[stn_info['station_type']]['driver']
+        if 'StdReport' in config_dict:
+            stn_info['units'] = get_unit_info(config_dict)
+
+    return stn_info
+
+def get_unit_info(config_dict):
+    """Intuit what unit system the reports are in."""
+    try:
+        group_dict = config_dict['StdReport']['StandardReport']['Units']['Groups']
+        # Look for a strict superset of the group settings:
+        if all(group_dict[group] == us_group[group] for group in us_group):
+            return 'us'
+        elif all(group_dict[group] == metric_group[group] for group in metric_group):
+            return 'metric'
+        elif all(group_dict[group] == metricwx_group[group] for group in metricwx_group):
+            return 'metricwx'
+    except KeyError:
+        return None
+
+#==============================================================================
+#                Utilities that manipulate ConfigObj objects
+#==============================================================================
+
 def prettify(config, src):
     """clean up the config file:
 
@@ -520,37 +579,9 @@ def replace_string(a_dict, label, value):
         else:
             a_dict[k] = a_dict[k].replace(label, value)
 
-def get_station_info(config_dict):
-    """Extract station info from config dictionary."""
-    stn_info = dict()
-    if config_dict is not None:
-        if 'Station' in config_dict:
-            stn_info['location'] = weeutil.weeutil.list_as_string(config_dict['Station'].get('location'))
-            stn_info['latitude'] = config_dict['Station'].get('latitude')
-            stn_info['longitude'] = config_dict['Station'].get('longitude')
-            stn_info['altitude'] = config_dict['Station'].get('altitude')
-            if 'station_type' in config_dict['Station']:
-                stn_info['station_type'] = config_dict['Station']['station_type']
-                if stn_info['station_type'] in config_dict:
-                    stn_info['driver'] = config_dict[stn_info['station_type']]['driver']
-        if 'StdReport' in config_dict:
-            stn_info['units'] = get_unit_info(config_dict)
-
-    return stn_info
-
-def get_unit_info(config_dict):
-    """Intuit what unit system the reports are in."""
-    try:
-        group_dict = config_dict['StdReport']['StandardReport']['Units']['Groups']
-        # Look for a strict superset of the group settings:
-        if all(group_dict[group] == us_group[group] for group in us_group):
-            return 'us'
-        elif all(group_dict[group] == metric_group[group] for group in metric_group):
-            return 'metric'
-        elif all(group_dict[group] == metricwx_group[group] for group in metricwx_group):
-            return 'metricwx'
-    except KeyError:
-        return None
+#==============================================================================
+#                Utilities that work on drivers
+#==============================================================================
 
 def get_driver_infos():
     """Scan the drivers folder, extracting information about each available driver.
@@ -589,6 +620,21 @@ def load_driver_editor(driver):
     loader_function = getattr(driver_module, 'confeditor_loader')
     editor = loader_function()
     return editor, driver_module.DRIVER_NAME, driver_module.DRIVER_VERSION
+
+def print_drivers():
+    """Get information about all the available drivers, then print it out."""
+    driver_info_dict = get_driver_infos()
+    keys = sorted(driver_info_dict)
+    for d in keys:
+        msg = "%-25s" % d
+        for x in ['name', 'version', 'fail']:
+            if x in driver_info_dict[d]:
+                msg += " %-15s" % driver_info_dict[d][x]
+        print msg
+
+#==============================================================================
+#                Utilities that seek info from the command line
+#==============================================================================
 
 def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
                     altitude=['0', 'meter'], units='metric', **kwargs):
@@ -648,6 +694,39 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
             'units'    : uni}
 
 
+def prompt_for_driver(dflt_driver=None):
+    """Get the information about each driver, return as a dictionary."""
+    infos = get_driver_infos()
+    keys = sorted(infos)
+    dflt_idx = None
+    for i, d in enumerate(keys):
+        print " %2d) %-15s (%s)" % (i, infos[d].get('name', '?'), d)
+        if dflt_driver == d:
+            dflt_idx = i
+    msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
+    ans = None
+    while ans is None:
+        ans = raw_input(msg).strip()
+        if not ans:
+            ans = dflt_idx
+        try:
+            idx = int(ans)
+            if not 0 <= idx < len(keys):
+                ans = None
+        except (ValueError, TypeError):
+            ans = None
+    return keys[idx]
+
+def prompt_for_driver_settings(driver):
+    """Let the driver prompt for any required settings."""
+    settings = dict()
+    __import__(driver)
+    driver_module = sys.modules[driver]
+    loader_function = getattr(driver_module, 'confeditor_loader')
+    editor = loader_function()
+    settings[driver_module.DRIVER_NAME] = editor.prompt_for_settings()
+    return settings
+
 def prompt_with_options(prompt, default=None, options=None):
     """Ask the user for an input with an optional default value.
     
@@ -702,47 +781,3 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
             value = default
 
     return value
-
-def prompt_for_driver(dflt_driver=None):
-    """Get the information about each driver, return as a dictionary."""
-    infos = get_driver_infos()
-    keys = sorted(infos)
-    dflt_idx = None
-    for i, d in enumerate(keys):
-        print " %2d) %-15s (%s)" % (i, infos[d].get('name', '?'), d)
-        if dflt_driver == d:
-            dflt_idx = i
-    msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
-    ans = None
-    while ans is None:
-        ans = raw_input(msg).strip()
-        if not ans:
-            ans = dflt_idx
-        try:
-            idx = int(ans)
-            if not 0 <= idx < len(keys):
-                ans = None
-        except (ValueError, TypeError):
-            ans = None
-    return keys[idx]
-
-def prompt_for_driver_settings(driver):
-    """Let the driver prompt for any required settings."""
-    settings = dict()
-    __import__(driver)
-    driver_module = sys.modules[driver]
-    loader_function = getattr(driver_module, 'confeditor_loader')
-    editor = loader_function()
-    settings[driver_module.DRIVER_NAME] = editor.prompt_for_settings()
-    return settings
-
-def print_drivers():
-    """Get information about all the available drivers, then print it out."""
-    driver_info_dict = get_driver_infos()
-    keys = sorted(driver_info_dict)
-    for d in keys:
-        msg = "%-25s" % d
-        for x in ['name', 'version', 'fail']:
-            if x in driver_info_dict[d]:
-                msg += " %-15s" % driver_info_dict[d][x]
-        print msg

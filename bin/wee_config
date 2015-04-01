@@ -7,12 +7,9 @@
 """Configure the configuration file."""
 from __future__ import with_statement
 
-import os
-import shutil
 import sys
 import syslog
 import optparse
-import tempfile
 
 import configobj
 
@@ -166,6 +163,7 @@ class WeeConfig(object):
                 
             if options.install:
                 config_dict = dist_config_dict
+                config_path = options.output
             else:
                 config_path, config_dict = config_util.read_config(options.config_path, args)
                 print "Using configuration file found at", config_path
@@ -184,31 +182,7 @@ class WeeConfig(object):
             save_me = True
             
         if save_me:
-            
-            # Save the resultant config file, backing up as necessary.
-            
-            if options.output:
-                with open(options.output, 'w') as fd:
-                    config_dict.write(fd)
-                print "Saved modified configuration file to %s" % options.output
-            else:
-                # Get a temporary file:
-                tmpfile = tempfile.NamedTemporaryFile("w")
-                
-                # Write the merged configuration file to it:
-                config_dict.write(tmpfile)
-                tmpfile.flush()
-                
-                # Save the old config file if it exists:
-                if os.path.exists(config_path):
-                    backup_path = config_util.save_path(config_path)
-                    print "Saved old configuration file as %s" % backup_path
-                    
-                # Now install the temporary file (holding the merged config data)
-                # into the proper place:
-                shutil.copyfile(tmpfile.name, config_path)
-                
-                print "Saved modified configuration file to %s" % config_path
+            self.save_config(config_dict, config_path)
         else:
             print "Nothing done."
     
@@ -301,6 +275,15 @@ class WeeConfig(object):
                     config_dict['StdReport']['StandardReport'].update({
                             'Units': {
                                 'Groups': config_util.us_group}})
+
+    def save_config(self, config_dict, config_path):
+        """Save the config file, backing up as necessary."""
+
+        backup_path = config_util.save_config(config_dict, config_path)
+        if backup_path:        
+            print "Saved backup to %s" % backup_path
+            
+        print "Saved configuration file to %s" % config_path
 
 if __name__=="__main__" :
     main()
