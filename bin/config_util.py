@@ -54,7 +54,7 @@ metricwx_group = {'group_altitude': 'meter',
 
 def find_file(file_path=None, args=None,
                 locations=['/etc/weewx', '/home/weewx'], file_name='weewx.conf'):
-    """Find and return a path to a file, looking in "the usual places.
+    """Find and return a path to a file, looking in "the usual places."
     
     General strategy:
 
@@ -116,7 +116,8 @@ def read_config(config_path, args=None,
     """
     # Find and open the config file:
     try:
-        config_path = find_file(config_path, args, locations=locations)
+        config_path = find_file(config_path, args, 
+                                locations=locations, file_name=file_name)
         try:
             # Now open it up and parse it.
             config_dict = configobj.ConfigObj(config_path, file_error=True)

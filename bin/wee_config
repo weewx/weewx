@@ -157,6 +157,8 @@ class WeeConfig(object):
             # Open up and parse the distribution config file:
             try:        
                 dist_config_dict = configobj.ConfigObj(options.dist_config, file_error=True)
+            except IOError, e:
+                sys.exit(str(e))
             except SyntaxError, e:
                 sys.exit("Syntax error in distribution configuration file '%s': %s" % 
                          (options.dist_config, e))
