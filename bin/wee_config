@@ -231,6 +231,8 @@ class WeeConfig(object):
         if stanza is not None:
             # Insert the stanza in the configuration dictionary:
             config_dict[driver_name] = stanza[driver_name]
+            # Add a major comment deliminator:
+            config_dict.comments[driver_name] = config_util.major_comment_block
             # If we have a [Station] section, the move the new stanza to just after it
             if 'Station' in config_dict:
                 config_util.reorder_sections(config_dict, driver_name, 'Station', after=True)
