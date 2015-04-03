@@ -2,7 +2,7 @@
 LICENSE.txt
 README
 setup.cfg
-setup.py
+setup2.py
 weewx.conf
 bin/daemon.py
 bin/wee_config_database
@@ -26,7 +26,6 @@ bin/weeplot/utilities.py
 bin/weeutil/Moon.py
 bin/weeutil/Sun.py
 bin/weeutil/__init__.py
-bin/weeutil/config.py
 bin/weeutil/ftpupload.py
 bin/weeutil/rsyncupload.py
 bin/weeutil/weeutil.py
@@ -77,6 +76,7 @@ docs/css/jquery.tocify.css
 docs/css/weewx_docs.css
 docs/css/ui-lightness/jquery-ui-1.10.4.custom.css
 docs/css/ui-lightness/jquery-ui-1.10.4.custom.min.css
+docs/css/ui-lightness/images/animated-overlay.gif
 docs/css/ui-lightness/images/ui-bg_diagonals-thick_18_b81900_40x40.png
 docs/css/ui-lightness/images/ui-bg_diagonals-thick_20_666666_40x40.png
 docs/css/ui-lightness/images/ui-bg_flat_10_000000_40x100.png
@@ -99,6 +99,7 @@ docs/images/daywindvec.png
 docs/images/ferrites.jpg
 docs/images/funky_degree.png
 docs/images/image_parts.png
+docs/images/image_parts.xcf
 docs/images/logo-apple.png
 docs/images/logo-centos.png
 docs/images/logo-debian.png
