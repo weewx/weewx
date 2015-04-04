@@ -159,6 +159,75 @@ def save_config(config_dict, config_path):
     return backup_path
 
 #==============================================================================
+#              Utilities that modify ConfigObj objects
+#==============================================================================
+
+def modify_config(config_dict, stn_info, debug=False):
+    # Get the driver editor, name, and version:
+    driver = stn_info.get('driver')
+    try:
+        # Look up driver info:
+        driver_editor, driver_name, driver_version = \
+            load_driver_editor(driver)
+    except Exception, e:
+        exit("Driver %s failed to load: %s" (driver, e))
+    stn_info['station_type'] = driver_name
+    print 'Using %s version %s (%s)' % (stn_info['station_type'], driver_version, driver)
+
+    if debug:
+        print "Station info:\n", weeutil.weeutil.print_dict(stn_info)
+
+    # Get a driver stanza, if possible
+    stanza = None
+    if driver_editor is not None:
+        orig_stanza_text = None
+
+        # if a previous stanza exists for this driver, grab it
+        if driver_name in config_dict:
+            orig_stanza = configobj.ConfigObj(interpolation=False)
+            orig_stanza[driver_name] = config_dict[driver_name]
+            orig_stanza_text = '\n'.join(orig_stanza.write())
+
+        # let the driver process the stanza or give us a new one
+        stanza_text = driver_editor.get_conf(orig_stanza_text)
+        stanza = configobj.ConfigObj(stanza_text.splitlines())
+
+    # If we have a stanza, inject it into the configuration dictionary
+    if stanza is not None:
+        # Insert the stanza in the configuration dictionary:
+        config_dict[driver_name] = stanza[driver_name]
+        # Add a major comment deliminator:
+        config_dict.comments[driver_name] = major_comment_block
+        # If we have a [Station] section, the move the new stanza to just after it
+        if 'Station' in config_dict:
+            reorder_sections(config_dict, driver_name, 'Station', after=True)
+            # make the stanza the station type
+            config_dict['Station']['station_type'] = driver_name
+
+    # Apply any overrides from the stn_info
+    if stn_info is not None:
+        # Update driver stanza with any overrides from stn_info
+        if driver_name in stn_info:
+            for k in stn_info[driver_name]:
+                config_dict[driver_name][k] = stn_info[driver_name][k]
+        # Update station information with stn_info overrides
+        for p in ['location', 'latitude', 'longitude', 'altitude']:
+            if stn_info.get(p) is not None:
+                config_dict['Station'][p] = stn_info[p]
+        # Update units display with any stn_info overrides
+        if stn_info.get('units') is not None:
+            if stn_info.get('units') in ['metric', 'metricwx']:
+                print "Using Metric units for display"
+                config_dict['StdReport']['StandardReport'].update({
+                        'Units': {
+                            'Groups': metricwx_group}})
+            elif stn_info.get('units') == 'us':
+                print "Using US units for display"
+                config_dict['StdReport']['StandardReport'].update({
+                        'Units': {
+                            'Groups': us_group}})
+
+#==============================================================================
 #              Utilities that update ConfigObj objects
 #==============================================================================
 

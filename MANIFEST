@@ -4,6 +4,7 @@ README
 setup.cfg
 setup2.py
 weewx.conf
+bin/config_util.py
 bin/daemon.py
 bin/wee_config_database
 bin/wee_config_device
