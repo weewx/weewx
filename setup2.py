@@ -6,6 +6,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
+"""Customized distutils setup file for weewx."""
 
 from __future__ import with_statement
 
@@ -18,11 +19,11 @@ import shutil
 import configobj
 
 from distutils.core import setup
-from distutils.command.install import install
 from distutils.command.install_data import install_data
 from distutils.command.install_lib import install_lib
 from distutils.command.install_scripts import install_scripts
 from distutils.command.sdist import sdist
+import distutils.dir_util
 
 # Useful for debugging setup.py. Set the environment variable
 # DISTUTILS_DEBUG to get more info.
@@ -42,49 +43,15 @@ VERSION = weewx.__version__
 import config_util
 import weeutil.weeutil
 
+start_scripts = ['util/init.d/weewx.bsd',
+                 'util/init.d/weewx.debian',
+                 'util/init.d/weewx.lsb',
+                 'util/init.d/weewx.redhat',
+                 'util/init.d/weewx.suse']
+
 # The default station information:
-stn_info = {'location'     : '',
-            'latitude'     : '0',
-            'longitude'    : '0',
-            'altitude'     : ['0', 'meter'],
-            'units'        : 'metric',
-            'station_type' : 'Simulator',
+stn_info = {'station_type' : 'Simulator',
             'driver'       : 'weewx.drivers.Simulator'}
-
-#==============================================================================
-# install
-#==============================================================================
-
-class weewx_install(install):
-    """Specialized version of install. It adds a --no-prompt option, and, if not
-    set, prompts for information on a new install."""
-    # Add an option for --no-prompt:
-    user_options = install.user_options + [('no-prompt', None, 'Do not prompt for info')]
-
-    def run(self, *args, **kwargs):
-        global stn_info
-        
-        config_path = os.path.join(self.home, 'weewx.conf')
-        # Is there an old config file? 
-        if not os.path.isfile(config_path):
-            # No old config file. Must be a new install. If we can prompt,
-            # then get the station info from the user. Otherwise, just
-            # use the defaults
-            if not self.no_prompt:
-                # Prompt the user for the station information:
-                stn_info = config_util.prompt_for_info()
-                driver = config_util.prompt_for_driver(stn_info.get('driver'))
-                stn_info['driver'] = driver
-                stn_info.update(config_util.prompt_for_driver_settings(driver))
-
-        if DEBUG:
-            print "Station info =", stn_info
-            
-        install.run(self, *args, **kwargs)
-
-    def initialize_options(self, *args, **kwargs):
-        self.no_prompt = False
-        install.initialize_options(self, *args, **kwargs)
 
 #==============================================================================
 # install_lib
@@ -129,6 +96,14 @@ class weewx_install_lib(install_lib):
 class weewx_install_data(install_data):
     """Specialized version of install_data """
     
+    # Add an option for --no-prompt:
+    user_options = install_data.user_options + [('no-prompt', None, 'Do not prompt for info')]
+
+    def initialize_options(self, *args, **kwargs):
+        # By default, prompting is allowed:
+        self.no_prompt = False
+        install_data.initialize_options(self, *args, **kwargs)
+
     def copy_file(self, f, install_dir, **kwargs):
         # If this is the configuration file, then merge it instead
         # of copying it
@@ -153,10 +128,8 @@ class weewx_install_data(install_data):
         install_data.run(self)
        
     def process_config_file(self, f, install_dir, **kwargs):
+        global stn_info
 
-        # The path where the weewx.conf configuration file will be installed
-        install_path = os.path.join(install_dir, os.path.basename(f))
-        
         # Open up and parse the distribution config file:
         try:        
             dist_config_dict = configobj.ConfigObj(f, file_error=True)
@@ -166,6 +139,9 @@ class weewx_install_data(install_data):
             sys.exit("Syntax error in distribution configuration file '%s': %s" % 
                      (f, e))
         
+        # The path where the weewx.conf configuration file will be installed
+        install_path = os.path.join(install_dir, os.path.basename(f))
+        
         # Do we have an old config file?
         if os.path.isfile(install_path):
             # Yes. Read it
@@ -173,24 +149,34 @@ class weewx_install_data(install_data):
             if DEBUG:
                 print "Old configuration file found at", config_path
 
-            # Update the old configuration file:
+            # Update the old configuration file to the current version:
             config_util.update_config(config_dict)
             
             # Then merge it into the distribution file
             config_util.merge_config(config_dict, dist_config_dict)
-        else:        
+        else:
+            # No old config file. Use the distribution file, then, if we can,
+            # prompt the user for station specific info
             config_dict = dist_config_dict
+            if not self.no_prompt:
+                # Prompt the user for the station information:
+                stn_info = config_util.prompt_for_info()
+                driver = config_util.prompt_for_driver(stn_info.get('driver'))
+                stn_info['driver'] = driver
+                stn_info.update(config_util.prompt_for_driver_settings(driver))
+                if DEBUG:
+                    print "Station info =", stn_info
             config_util.modify_config(config_dict, stn_info, DEBUG)
     
-        # Get a temporary file:
+        # Time to write it out. Get a temporary file:
         with tempfile.NamedTemporaryFile("w") as tmpfile:
             # Write the finished configuration file to it:
             config_dict.write(tmpfile)
             tmpfile.flush()
             
             # Save the old config file if it exists:
-            if os.path.exists(install_path):
-                backup_path = save_path(install_path)
+            if not self.dry_run and os.path.exists(install_path):
+                backup_path = weeutil.weeutil.save_with_timestamp(install_path)
                 print "Saved old configuration file as %s" % backup_path
                 
             # Now install the temporary file (holding the merged config data)
@@ -203,26 +189,26 @@ class weewx_install_data(install_data):
 
         return rv
 
-def massage_start_file(self, f, install_dir, **kwargs):
-
-        outname = os.path.join(install_dir, os.path.basename(f))
-        sre = re.compile(r"WEEWX_ROOT\s*=")
-
-        with open(f, 'r') as infile:
-            with tempfile.NamedTemporaryFile("w") as tmpfile:
-                for line in infile:
-                    if sre.match(line):
-                        tmpfile.writelines("WEEWX_ROOT=%s\n" % self.install_dir)
-                    else:
-                        tmpfile.writelines(line)
-                tmpfile.flush()
-                rv = install_data.copy_file(self, tmpfile.name, outname, **kwargs)
-
-        # Set the permission bits unless this is a dry run:
-        if not self.dry_run:
-            shutil.copymode(f, outname)
-
-        return rv
+    def massage_start_file(self, f, install_dir, **kwargs):
+    
+            outname = os.path.join(install_dir, os.path.basename(f))
+            sre = re.compile(r"WEEWX_ROOT\s*=")
+    
+            with open(f, 'r') as infile:
+                with tempfile.NamedTemporaryFile("w") as tmpfile:
+                    for line in infile:
+                        if sre.match(line):
+                            tmpfile.writelines("WEEWX_ROOT=%s\n" % self.install_dir)
+                        else:
+                            tmpfile.writelines(line)
+                    tmpfile.flush()
+                    rv = install_data.copy_file(self, tmpfile.name, outname, **kwargs)
+    
+            # Set the permission bits unless this is a dry run:
+            if not self.dry_run:
+                shutil.copymode(f, outname)
+    
+            return rv
 
 #==============================================================================
 # install_scripts
@@ -324,6 +310,12 @@ def remove_obsolete_files(install_dir):
         os.remove(os.path.join(install_dir, 'docs/CHANGES.txt'))
     except OSError:
         pass
+    
+    # setup.py is no longer left in WEEWX_ROOT.
+    try:
+        os.remove(os.path.join(install_dir, 'setup.py'))
+    except OSError:
+        pass
 
 def get_schema_type(bin_dir):
     """Checks whether the schema in user.schemas is a new style or old style
@@ -399,7 +391,6 @@ if __name__ == "__main__":
                     'weeutil',
                     'weewx'],
           cmdclass={"sdist"   : weewx_sdist,
-                    "install" : weewx_install,
                     "install_scripts": weewx_install_scripts,
                     "install_data"   : weewx_install_data,
                     "install_lib"    : weewx_install_lib},
@@ -485,7 +476,6 @@ if __name__ == "__main__":
                       ('docs/js',
                        ['docs/js/jquery-1.11.1.min.js',
                         'docs/js/jquery-ui-1.10.4.custom.min.js',
-                        'docs/js/jquery.toc-1.1.4.min.js',
                         'docs/js/jquery.tocify-1.9.0.js',
                         'docs/js/jquery.tocify-1.9.0.min.js',
                         'docs/js/weewx.js']),
