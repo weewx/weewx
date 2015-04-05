@@ -136,7 +136,7 @@ def save_config(config_dict, config_path):
     if os.path.exists(config_path):
         
         # Yes. We'll have to back it up.
-        backup_path = weeutil.weeutil.save_with_timestamp(config_path)
+        backup_path = weeutil.weeutil.move_with_timestamp(config_path)
 
         # Now we can save the file. Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w")
@@ -170,7 +170,7 @@ def modify_config(config_dict, stn_info, debug=False):
         driver_editor, driver_name, driver_version = \
             load_driver_editor(driver)
     except Exception, e:
-        exit("Driver %s failed to load: %s" (driver, e))
+        exit("Driver %s failed to load: %s" % (driver, e))
     stn_info['station_type'] = driver_name
     print 'Using %s version %s (%s)' % (stn_info['station_type'], driver_version, driver)
 

@@ -19,6 +19,7 @@ import shutil
 import configobj
 
 from distutils.core import setup
+from distutils.command.install import install
 from distutils.command.install_data import install_data
 from distutils.command.install_lib import install_lib
 from distutils.command.install_scripts import install_scripts
@@ -26,7 +27,7 @@ from distutils.command.sdist import sdist
 import distutils.dir_util
 
 # Useful for debugging setup.py. Set the environment variable
-# DISTUTILS_DEBUG to get more info.
+# DISTUTILS_DEBUG to get more debug info.
 from distutils.debug import DEBUG
 
 # Find the install bin subdirectory:
@@ -51,14 +52,34 @@ start_scripts = ['util/init.d/weewx.bsd',
 
 # The default station information:
 stn_info = {'station_type' : 'Simulator',
-            'driver'       : 'weewx.drivers.Simulator'}
+            'driver'       : 'weewx.drivers.simulator'}
+
+#==============================================================================
+# install
+#==============================================================================
+ 
+class weewx_install(install):
+    """Specialized version of install, which adds a --no-prompt option to
+    the 'install' command."""
+
+    # Add an option for --no-prompt:
+    user_options = install.user_options + [('no-prompt', None, 'Do not prompt for station info')]
+  
+    def initialize_options(self, *args, **kwargs):
+        install.initialize_options(self, *args, **kwargs)
+        self.no_prompt = None
+        
+    def finalize_options(self):
+        install.finalize_options(self)
+        if self.no_prompt is None:
+            self.no_prompt = False
 
 #==============================================================================
 # install_lib
 #==============================================================================
 
 class weewx_install_lib(install_lib):
-    """Specialized version of install_lib""" 
+    """Specialized version of install_lib, which backs up old bin subdirectories.""" 
 
     def run(self):
         # Determine whether the user is still using an old-style schema
@@ -66,7 +87,7 @@ class weewx_install_lib(install_lib):
 
         # Save any existing 'bin' subdirectory:
         if os.path.exists(self.install_dir):
-            bin_savedir = weeutil.weeutil.save_with_timestamp(self.install_dir)
+            bin_savedir = weeutil.weeutil.move_with_timestamp(self.install_dir)
             print "Saved bin subdirectory as %s" % bin_savedir
         else:
             bin_savedir = None
@@ -94,15 +115,20 @@ class weewx_install_lib(install_lib):
 #==============================================================================
 
 class weewx_install_data(install_data):
-    """Specialized version of install_data """
+    """Specialized version of install_data. Mostly, it deals with upgrading
+    and merging any old weewx.conf configuration files."""
     
-    # Add an option for --no-prompt:
-    user_options = install_data.user_options + [('no-prompt', None, 'Do not prompt for info')]
+    def initialize_options(self):
+        # Initialize my superclass's options:
+        install_data.initialize_options(self)
+        # Set to None so we inherit whatever setting comes from weewx_install:
+        self.no_prompt = None
 
-    def initialize_options(self, *args, **kwargs):
-        # By default, prompting is allowed:
-        self.no_prompt = False
-        install_data.initialize_options(self, *args, **kwargs)
+    def finalize_options(self):
+        # Finalize my superclass's options:
+        install_data.finalize_options(self)
+        # This will set no_prompt to whatever is in weewx_install:
+        self.set_undefined_options('install', ('no_prompt', 'no_prompt'))
 
     def copy_file(self, f, install_dir, **kwargs):
         # If this is the configuration file, then merge it instead
@@ -176,7 +202,7 @@ class weewx_install_data(install_data):
             
             # Save the old config file if it exists:
             if not self.dry_run and os.path.exists(install_path):
-                backup_path = weeutil.weeutil.save_with_timestamp(install_path)
+                backup_path = weeutil.weeutil.move_with_timestamp(install_path)
                 print "Saved old configuration file as %s" % backup_path
                 
             # Now install the temporary file (holding the merged config data)
@@ -235,7 +261,7 @@ class weewx_sdist(sdist):
     the configuration file before creating the distribution.
 
     For other sdist methods, see:
- http://epydoc.sourceforge.net/stdlib/distutils.command.sdist.sdist-class.html
+    http://epydoc.sourceforge.net/stdlib/distutils.command.sdist.sdist-class.html
     """
 
     def copy_file(self, f, install_dir, **kwargs):
@@ -361,9 +387,7 @@ def get_schema_type(bin_dir):
 #==============================================================================
 
 if __name__ == "__main__":
-    # Get the data to be installed from the manifest:
 
-    # now invoke the standard python setup
     setup(name='weewx',
           version=VERSION,
           description='weather software',
@@ -391,6 +415,7 @@ if __name__ == "__main__":
                     'weeutil',
                     'weewx'],
           cmdclass={"sdist"   : weewx_sdist,
+                    "install" : weewx_install,
                     "install_scripts": weewx_install_scripts,
                     "install_data"   : weewx_install_data,
                     "install_lib"    : weewx_install_lib},

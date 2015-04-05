@@ -1126,8 +1126,8 @@ def print_dict(d, margin=0, increment=4):
         else:
             print margin * ' ', k, '=', d[k]
 
-def save_with_timestamp(filepath):
-    """Save a file to a path with a timestamo."""
+def move_with_timestamp(filepath):
+    """Save a file to a path with a timestamp."""
     # Sometimes the target has a trailing '/'. This will take care of it:
     filepath = os.path.normpath(filepath)
     newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
