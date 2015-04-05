@@ -14,7 +14,7 @@ import optparse
 import user.extensions #@UnusedImport
 import weewx.station
 import weewx.reportengine
-import weeutil.weeutil
+import config_util
 from weeutil.weeutil import timestamp_to_string
 
 description = """Runs all weewx reports. This is a useful debugging tool:
@@ -36,12 +36,12 @@ def main():
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    config_path, config_dict = weeutil.weeutil.read_config(options.config_path, args)
+    config_path, config_dict = config_util.read_config(options.config_path, args)
     
     # If the user specified a time, retrieve it. Otherwise, set to None
-    gen_ts = None if len(args) < 1 else int(args[0])
+    gen_ts = int(args[0]) if args else None
     
-    print "Using configuration file %s." % config_path
+    print "Using configuration file %s" % config_path
 
     if gen_ts is None:
         print "Generating for all time"

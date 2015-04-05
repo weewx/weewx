@@ -2,8 +2,9 @@
 LICENSE.txt
 README
 setup.cfg
-setup.py
+setup2.py
 weewx.conf
+bin/config_util.py
 bin/daemon.py
 bin/wee_config_database
 bin/wee_config_device
@@ -76,6 +77,7 @@ docs/css/jquery.tocify.css
 docs/css/weewx_docs.css
 docs/css/ui-lightness/jquery-ui-1.10.4.custom.css
 docs/css/ui-lightness/jquery-ui-1.10.4.custom.min.css
+docs/css/ui-lightness/images/animated-overlay.gif
 docs/css/ui-lightness/images/ui-bg_diagonals-thick_18_b81900_40x40.png
 docs/css/ui-lightness/images/ui-bg_diagonals-thick_20_666666_40x40.png
 docs/css/ui-lightness/images/ui-bg_flat_10_000000_40x100.png
@@ -98,6 +100,7 @@ docs/images/daywindvec.png
 docs/images/ferrites.jpg
 docs/images/funky_degree.png
 docs/images/image_parts.png
+docs/images/image_parts.xcf
 docs/images/logo-apple.png
 docs/images/logo-centos.png
 docs/images/logo-debian.png
@@ -142,8 +145,8 @@ extensions/xstats/changelog
 extensions/xstats/install.py
 extensions/xstats/readme.txt
 extensions/xstats/bin/user/xstats.py
-extensions/xstats/skins/xstats/index.html.tmpl
 extensions/xstats/skins/xstats/skin.conf
+extensions/xstats/skins/xstats/xstats.html.tmpl
 skins/Ftp/skin.conf
 skins/Rsync/skin.conf
 skins/Standard/favicon.ico

@@ -16,7 +16,7 @@ import user.extensions      #@UnusedImport
 import weedb
 import weewx.manager
 import weewx.units
-import weeutil.weeutil
+import config_util
 
 description="""Configure the weewx databases. Most of these functions are
 handled automatically by weewx, but they may be useful as a utility in special
@@ -45,7 +45,7 @@ def main():
     parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
     
     # Add the various options:
-    parser.add_option("--config", dest="cfgfn", type=str, metavar="CONFIG_PATH",
+    parser.add_option("--config", dest="config_path", type=str, metavar="CONFIG_PATH",
                       help="Use configuration file CONFIG_PATH. Default is /etc/weewx/weewx.conf or /home/weewx/weewx.conf.")
     parser.add_option("--create-archive", dest="create_archive", action='store_true',
                       help="Create the archive database.")
@@ -68,8 +68,8 @@ def main():
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    config_fn, config_dict = weeutil.weeutil.read_config(options.cfgfn, args)
-    print "Using configuration file %s." % config_fn
+    config_path, config_dict = config_util.read_config(options.config_path, args)
+    print "Using configuration file %s" % config_path
     
     db_binding = options.binding
     database = config_dict['DataBindings'][db_binding]['database']

@@ -5,11 +5,14 @@
 #
 """Various handy utilities that don't belong anywhere else."""
 
+from __future__ import with_statement
+
 import StringIO
 import calendar
 import datetime
 import math
 import os
+import shutil
 import sys
 import syslog
 import time
@@ -120,12 +123,12 @@ def list_as_string(option):
     a string
     >>> print list_as_string(['a', 'string'])
     a, string
+    >>> print list_as_string('Reno, NV')
+    Reno, NV
     """
-    if option is None: return None
-    if hasattr(option, '__iter__'):
+    if option is not None and hasattr(option, '__iter__'):
         return ', '.join(option)
-    else:
-        return option
+    return option
 
 def stampgen(startstamp, stopstamp, interval):
     """Generator function yielding a sequence of timestamps, spaced interval apart.
@@ -1047,7 +1050,7 @@ def max_with_none(x_seq):
             xmax = max(x, xmax)
     return xmax
         
-def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
+def read_config(file_path, args=None, msg_to_stderr=True, exit_on_fail=True):
     """Read the specified configuration file, return a dictionary of the
     file contents. If no file is specified, look in the standard locations
     for weewx.conf. Returns the filename of the actual configuration file
@@ -1056,7 +1059,7 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
     first arg will be interpreted as the filename as long as it does not
     start with a hyphen.
 
-    config_fn: configuration filename
+    file_path: Possible path to the file
 
     args: command-line arguments
 
@@ -1064,58 +1067,79 @@ def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
     messages go to syslog.
 
     exit_on_fail: If this is true, exit when file not found or parsing fails.
-    Otherwise re-throw the exception that caused the error.
+    Otherwise re-raise the exception that caused the error.
 
-    return: filename, dictionary
+    return: A tuple: (path-to-config-file, config_dict)
     """
+    import config_util
     import configobj
-    locations = ['/etc/weewx', '/home/weewx']
 
-    # Figure out the config file
-    if config_fn is None:
-        if args is not None and len(args) > 0 and not args[0].startswith('-'):
-            config_fn = args[0]
-            # Shift args to the left:
-            del args[0]
-    if config_fn is None:
-        for f in locations:
-            fn = f + '/weewx.conf'
-            if os.path.isfile(fn):
-                config_fn = fn
-                break
-    if config_fn is None:
-        msg = 'No configuration file specified, and none found in any of:\n  %s' % ', '.join(locations)
+    try:
+        config_path = config_util.find_file(file_path, args)
+    except IOError, e:
         if msg_to_stderr:
-            print >>sys.stderr, msg
+            print >>sys.stderr, str(e)
         else:
-            syslog.syslog(syslog.LOG_CRIT, msg)
+            syslog.syslog(syslog.LOG_CRIT, str(e))
         if exit_on_fail:
             exit(1)
-        return None, None
+        raise
 
     # Try to open up the configuration file. Declare an error if unable to.
     try :
-        config_dict = configobj.ConfigObj(config_fn, file_error=True)
-    except IOError:
-        msg = "Unable to open configuration file %s" % config_fn
+        config_dict = configobj.ConfigObj(config_path, file_error=True)
+    except IOError, e:
         if msg_to_stderr:
-            print >>sys.stderr, msg
+            print >>sys.stderr, str(e)
         else:
-            syslog.syslog(syslog.LOG_CRIT, msg)
+            syslog.syslog(syslog.LOG_CRIT, str(e))
         if exit_on_fail:
-            exit(1)
+            sys.exit(str(e))
         raise
-    except configobj.ConfigObjError:
-        msg = "Error wile parsing configuration file %s" % config_fn
+    except configobj.ConfigObjError, e:
         if msg_to_stderr:
-            print >>sys.stderr, msg
+            print >>sys.stderr, str(e)
         else:
-            syslog.syslog(syslog.LOG_CRIT, msg)
+            syslog.syslog(syslog.LOG_CRIT, str(e))
         if exit_on_fail:
-            exit(1)
+            sys.exit(1)
         raise
 
-    return config_fn, config_dict
+    return config_path, config_dict
+
+def print_dict(d, margin=0, increment=4):
+    """Pretty print a dictionary.
+    
+    Example:
+    >>> print_dict({'sec1' : {'a':1, 'b':2, 'sec2': {'f':9}}, 'e':3})
+     sec1
+         a = 1
+         b = 2
+         sec2
+             f = 9
+     e = 3
+    """
+    for k in d:
+        if type(d[k]) is dict:
+            print margin * ' ', k
+            print_dict(d[k], margin + increment, increment)
+        else:
+            print margin * ' ', k, '=', d[k]
+
+def save_with_timestamp(filepath):
+    """Save a file to a path with a timestamo."""
+    # Sometimes the target has a trailing '/'. This will take care of it:
+    filepath = os.path.normpath(filepath)
+    newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
+    # Check to see if this name already exists
+    if os.path.exists(newpath):
+        # It already exists. Stick a version number on it:
+        version = 1
+        while os.path.exists(newpath + '-' + str(version)):
+            version += 1
+        newpath = newpath + '-' + str(version)
+    shutil.move(filepath, newpath)
+    return newpath
 
 class ListOfDicts(dict):
     """A list of dictionaries, that are searched in order.

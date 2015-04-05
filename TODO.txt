@@ -1,7 +1,6 @@
 TODO: items for the next release; complete list is at github
 -------------------------------------------------------------------------------
 
-Is max gap fraction meaningful for bar charts now?
 
 
 DONE: -------------------------------------------------------------------------
