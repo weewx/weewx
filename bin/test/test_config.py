@@ -25,6 +25,11 @@ except ImportError:
 
 import config_util
 
+# Change directory so we can find the config files and expected values:
+this_file = os.path.join(os.getcwd(), __file__)
+this_dir = os.path.abspath(os.path.dirname(this_file))
+os.chdir(this_dir)
+
 x_str = """
         [section_a]
           a = 1
