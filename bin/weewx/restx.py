@@ -1056,8 +1056,9 @@ class CWOPThread(RESTThread):
                         self._send(_sock, login, 'login')
                         # ... and then the packet
                         self._send(_sock, tnc_packet, 'packet')
-                        syslog.syslog(syslog.LOG_DEBUG, "restx: %s: APRS Packet: %s" %
-                                  (self.protocol_name, tnc_packet))
+                        if weewx.debug >= 2:
+                                   syslog.syslog(syslog.LOG_DEBUG, "restx: %s: APRS Packet: %s" %
+                                   (self.protocol_name, tnc_packet))
                         return
                         
                     finally:
