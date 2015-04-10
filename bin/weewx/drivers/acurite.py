@@ -225,7 +225,7 @@ import usb
 import weewx.drivers
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.14'
+DRIVER_VERSION = '0.15'
 DEBUG_RAW = 0
 
 
