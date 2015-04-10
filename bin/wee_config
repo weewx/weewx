@@ -16,14 +16,6 @@ import configobj
 import weewx
 import config_util
 
-stn_info_defaults = {'location'     : '',
-                     'latitude'     : '0',
-                     'longitude'    : '0',
-                     'altitude'     : ['0', 'meter'],
-                     'units'        : 'metric',
-                     'station_type' : 'Vantage',
-                     'driver'       : 'weewx.drivers.Vantage'}
-
 usage="""wee_config --help
        wee_config --version
        wee_config --list-drivers
@@ -63,6 +55,10 @@ weewx.conf). Its location can be given as a command-line argument,
 or it can be specified with option --config.
 """
 
+# The default station information:
+stn_info_defaults = {'station_type' : 'Simulator',
+                     'driver'       : 'weewx.drivers.simulator'}
+
 def main():
 
     # Set defaults for the system logger:
@@ -95,7 +91,7 @@ def main():
                       help="Where the results should be written.")
     parser.add_option("--no-prompt", action="store_true",
                       help="Do not issue prompts. Use default values or specified options.")
-    parser.add_option("--driver", metavar="DRIVER", dest="driver",
+    parser.add_option("--driver", metavar="DRIVER",
                       help="Use the driver DRIVER, e.g., weewx.driver.vantage. ")
     parser.add_option("--latitude", metavar="yy.y",
                       help="The station latitude")
