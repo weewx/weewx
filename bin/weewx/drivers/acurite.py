@@ -138,14 +138,14 @@ R1 - 10 bytes
 1: channel         x & 0xf0        observed values: 0xC=A, 0x8=B, 0x0=C
 1: sensor_id hi    x & 0x0f
 2: sensor_id lo
-3: ?sensor type    x & 0xf0        7 is 5-in-1?
+3: ?status         x & 0xf0        7 is 5-in-1?  7 is battery ok?
 3: message flavor  x & 0x0f        type 1 is windSpeed, windDir, rain
 4: wind speed     (x & 0x1f) << 3
 5: wind speed     (x & 0x70) >> 4
 5: wind dir       (x & 0x0f)
 6: ?                               always seems to be 0
 7: rain           (x & 0x7f)
-8: ?battery       (x & 0xf0)       0 is normal?
+8: ?
 8: rssi           (x & 0x0f)       observed values: 0,1,2,3
 9: ?                               observed values: 0x00, 0xff
 
@@ -153,14 +153,14 @@ R1 - 10 bytes
 1: channel         x & 0xf0        observed values: 0xC=A, 0x8=B, 0x0=C
 1: sensor_id hi    x & 0x0f
 2: sensor_id lo
-3: ?sensor type    x & 0xf0        7 is 5-in-1?
+3: ?status         x & 0xf0        7 is 5-in-1?  7 is battery ok?
 3: message flavor  x & 0x0f        type 8 is windSpeed, outTemp, outHumidity
 4: wind speed     (x & 0x1f) << 3
 5: wind speed     (x & 0x70) >> 4
 5: temp           (x & 0x0f) << 7
 6: temp           (x & 0x7f)
 7: humidity       (x & 0x7f)
-8: ?battery       (x & 0xf0)       0 is normal?
+8: ?
 8: rssi           (x & 0x0f)       observed values: 0,1,2,3
 9: ?                               observed values: 0x00, 0xff
 
@@ -601,9 +601,9 @@ class Station(object):
 
     @staticmethod
     def decode_sensor_battery(data):
-        # battery level is 0xf or 0x0?
-        # FIXME: need to verify this
-        return data[8] & 0xf0
+        # 0x7 indicates battery ok, 0xb indicates low battery?
+        a = (data[3] & 0xf0) >> 4
+        return 0 if a == 0x7 else 1
 
     @staticmethod
     def decode_windspeed(data):
@@ -625,8 +625,6 @@ class Station(object):
     @staticmethod
     def decode_outtemp(data):
         # extract the temperature from an R1 message
-#        t_F = 0.1 * ((((data[5] & 0x0f) << 7) | (data[6] & 0x7f)) - 400)
-#        return (t_F - 32) * 5 / 9
         # return value is degree C
         a = (data[5] & 0x0f) << 7
         b = (data[6] & 0x7f)
@@ -642,18 +640,20 @@ class Station(object):
     def decode_rain(data):
         # decoded value is a count of bucket tips
         # each tip is 0.01 inch, return value is cm
-        return (data[7] & 0x7f) * 0.0254
+        return (((data[6] & 0x3f) << 7) | (data[7] & 0x7f)) * 0.0254
 
     @staticmethod
     def decode_pt(data):
         # decode pressure and temperature from the R2 message
         # decoded pressure is mbar, decoded temperature is degree C
         c1,c2,c3,c4,c5,c6,c7,a,b,c,d = Station.get_pt_constants(data)
-        d2 = (data[21] << 8) + data[22]
-        d1 = (data[23] << 8) + data[24]
 
         if (c1 == 0x8000 and c2 == c3 == 0x0 and c4 == 0x0400 and c5 == 0x1000
             and c6 == 0x0 and c7 == 0x0960 and a == b == c == d == 0x1):
+            d2 = ((data[21] & 0x0f) << 8) + data[22]
+            if d2 >= 0x0800:
+                d2 -= 0x1000
+            d1 = (data[23] << 8) + data[24]
             return Station.decode_pt_MS5607(d1, d2)
         elif (0x100 <= c1 <= 0xffff and
               0x0 <= c2 <= 0x1fff and
@@ -664,6 +664,8 @@ class Station(object):
               0x960 <= c7 <= 0xa28 and
               0x01 <= a <= 0x3f and 0x01 <= b <= 0x3f and
               0x01 <= c <= 0x0f and 0x01 <= d <= 0x0f):
+            d2 = (data[21] << 8) + data[22]
+            d1 = (data[23] << 8) + data[24]
             return Station.decode_pt_HP03S(c1,c2,c3,c4,c5,c6,c7,a,b,c,d,d1,d2)
         logerr("R2: unknown calibration constants: %s" % _fmt_bytes(data))
         return None, None
@@ -685,8 +687,8 @@ class Station(object):
     @staticmethod
     def decode_pt_MS5607(d1, d2):
         # for devices with the MS5607 sensor, do a linear scaling
-        p = 0.062424282478109 * d1 - 206.48350164881
-        t = 0.049538214503151 * d2 - 1801.189704931
+        p = 0.062585727 * d1 - 209.6211
+        t = 25.0 + 0.05 * d2
         return p, t
 
     @staticmethod
