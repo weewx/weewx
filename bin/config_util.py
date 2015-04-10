@@ -851,3 +851,25 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
             value = default
 
     return value
+
+def extract_roots(config_path, config_dict):
+    """Get the location of the various root directories used by weewx."""
+    
+    root_dict = {'WEEWX_ROOT' : config_dict['WEEWX_ROOT'],
+                 'CONFIG_ROOT' : os.path.dirname(config_path),
+                 'BIN_ROOT' : config_dict.get('BIN_ROOT')}
+    # If there is no BIN_ROOT in the configuration dictionary, then set it
+    # to the location of this file:
+    if root_dict['BIN_ROOT'] is None:
+        root_dict['BIN_ROOT'] = os.path.dirname(__file__)
+    # The extensions directory can be found off of BIN_ROOT:
+    root_dict['EXT_ROOT'] = os.path.join(root_dict['BIN_ROOT'], 'user', 'installer')
+    # Add SKIN_ROOT if it can be found:
+    try:
+        root_dict['SKIN_ROOT'] = os.path.abspath(os.path.join(root_dict['WEEWX_ROOT'],
+                                                              config_dict['StdReport']['SKIN_ROOT']))
+    except KeyError:
+        pass
+    
+    return root_dict
+    
