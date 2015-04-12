@@ -228,6 +228,11 @@ DRIVER_NAME = 'AcuRite'
 DRIVER_VERSION = '0.15'
 DEBUG_RAW = 0
 
+# USB constants for HID
+USB_HID_GET_REPORT = 0x01
+USB_HID_SET_REPORT = 0x09
+USB_HID_INPUT_REPORT = 0x0100
+USB_HID_OUTPUT_REPORT = 0x0200
 
 def loader(config_dict, engine):
     return AcuRiteDriver(**config_dict[DRIVER_NAME])
@@ -480,12 +485,12 @@ class Station(object):
     def reset(self):
         self.handle.reset()
 
-    def read(self, msgtype, nbytes):
+    def read(self, report_number, nbytes):
         return self.handle.controlMsg(
             requestType=usb.RECIP_INTERFACE + usb.TYPE_CLASS + usb.ENDPOINT_IN,
-            request=usb.REQ_CLEAR_FEATURE,
+            request=USB_HID_GET_REPORT,
             buffer=nbytes,
-            value=0x0100 + msgtype,
+            value=USB_HID_INPUT_REPORT + report_number,
             index=0x0,
             timeout=self.timeout)
 
@@ -503,9 +508,9 @@ class Station(object):
         # FIXME: what do the two bytes mean?
         return self.handle.controlMsg(
             requestType=usb.RECIP_INTERFACE + usb.TYPE_CLASS,
-            request=usb.REQ_SET_CONFIGURATION,
+            request=USB_HID_SET_REPORT,
             buffer=2,
-            value=0x0201,
+            value=USB_HID_OUTPUT_REPORT + 0x01,
             index=0x0,
             timeout=self.timeout)
 
