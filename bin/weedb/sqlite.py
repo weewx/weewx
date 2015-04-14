@@ -154,6 +154,16 @@ class Connection(weedb.Connection):
         return column_list
 
     @guard
+    def get_variable(self, var_name):
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute("PRAGMA %s;" % var_name)
+            row = cursor.fetchone()
+            return None if row is None else (var_name, row[0])
+        finally:
+            cursor.close()
+
+    @guard
     def begin(self):
         self.connection.execute("BEGIN TRANSACTION")
 
