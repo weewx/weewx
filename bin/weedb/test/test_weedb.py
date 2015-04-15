@@ -197,17 +197,34 @@ class TestSqlite(Common):
         self.db_dict = sqlite_db_dict
         super(TestSqlite, self).__init__(*args, **kwargs)
         
+    def test_variable(self):
+        weedb.create(self.db_dict)
+        _connect = weedb.connect(self.db_dict)
+        _v = _connect.get_variable('journal_mode')
+        self.assertEqual(_v[1].lower(), 'delete')
+        _v = _connect.get_variable('foo')
+        self.assertEqual(_v, None)
+        _connect.close()
+        
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
         self.db_dict = mysql_db_dict
         super(TestMySQL, self).__init__(*args, **kwargs)
-        
+
+    def test_variable(self):
+        weedb.create(self.db_dict)
+        _connect = weedb.connect(self.db_dict)
+        _v = _connect.get_variable('lower_case_table_names')
+        self.assertTrue(_v[1] in ['0', '1', '2'], "Unknown lower_case_table_names value")
+        _v = _connect.get_variable('foo')
+        self.assertEqual(_v, None)
+        _connect.close()
     
 def suite():
     tests = ['test_drop', 'test_double_create', 'test_no_db', 'test_no_tables', 
              'test_create', 'test_bad_table', 'test_select', 'test_bad_select',
-             'test_rollback', 'test_transaction']
+             'test_rollback', 'test_transaction', 'test_variable']
     return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
 
 if __name__ == '__main__':
