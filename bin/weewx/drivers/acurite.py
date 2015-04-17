@@ -18,7 +18,7 @@
 # Thanks to Weather Guy and Andrew Daviel (2015)
 #  decoding of the R3 messages
 #
-# Slow-clap thanks to Michael Walsh
+# golf clap to Michael Walsh
 #  http://forum1.valleyinfosys.com/index.php
 #
 # No thanks to AcuRite or Chaney instruments.  They refused to provide any
@@ -288,6 +288,7 @@ X1 - 2 bytes
 
 # FIXME: decode inside humidity
 # FIXME: decode historical records
+# FIXME: perhaps retry read when dodgey data or short read?
 
 from __future__ import with_statement
 import syslog
@@ -295,6 +296,7 @@ import time
 import usb
 
 import weewx.drivers
+import weewx.wxformulas
 
 DRIVER_NAME = 'AcuRite'
 DRIVER_VERSION = '0.15'
@@ -402,7 +404,8 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 ntries = 0
                 yield packet
                 next_read = min(self.r1_next_read, self.r2_next_read)
-                delay = max(next_read - time.time(), self.polling_interval)
+                delay = max(int(next_read - time.time() + 1),
+                            self.polling_interval)
                 logdbg("next read in %s seconds" % delay)
                 time.sleep(delay)
             except (usb.USBError, weewx.WeeWxIOError), e:
@@ -417,11 +420,13 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
     def _augment_packet(self, packet):
         # calculate the rain delta from the total
         if 'rain_total' in packet:
-            if self.last_rain is not None:
-                packet['rain'] = packet['rain_total'] - self.last_rain
-            else:
-                packet['rain'] = None
-            self.last_rain = packet['rain_total']
+            total = packet['rain_total']
+            if (total is not None and self.last_rain is not None and
+                total < self.last_rain):
+                loginf("rain counter decrement ignored:"
+                       " new: %s old: %s" % (total, self.last_rain))
+            packet['rain'] = wxformulas.calculate_rain(total, self.last_rain)
+            self.last_rain = total
 
         # no wind direction when wind speed is zero
         if 'windSpeed' in packet and not packet['windSpeed']:
