@@ -59,10 +59,17 @@ def main():
     # Now we are ready to parse the command line:
     (options, _args) = parser.parse_args()
 
-    ext = Extension(_args, **vars(options))
-    ext.run()
-    return 0
+    ext = Extension(_args,
+                    config=options.config,
+                    tmpdir=options.tmpdir,
+                    bin_root=options.bin_root,
+                    dry_run=options.dry_run,
+                    logger=Logger(verbosity=options.verbosity))
+    
+    if options.list_extensions:
+        ext.enumerate_extensions()
 
+    return 0
 
 class Logger(object):
     def __init__(self, verbosity=0):
@@ -74,13 +81,10 @@ class Logger(object):
         self.verbosity = verbosity
 
 class Extension(object):
-    
-    def __init__(self, args=None, list_extensions=None, install=None, uninstall=None, config=None,
-                 tmpdir=None, bin_root=None, dry_run=None, verbosity=None):
-        self.logger = Logger(verbosity)
-        self.list_extensions = list_extensions
-        self.install = install
-        self.uninstall = uninstall
+    """Engine that manages extensions."""
+    def __init__(self, args=None, config=None, tmpdir=None, bin_root=None, 
+                 dry_run=None, logger=Logger()):
+        self.logger = logger
         self.tmpdir = tmpdir
         self.dry_run = dry_run
         self.config_path, self.config_dict = config_util.read_config(config, args)
@@ -90,10 +94,6 @@ class Extension(object):
         self.root_dict = config_util.extract_roots(self.config_path, self.config_dict)
         self.logger.log("root dictionary: %s" % self.root_dict, 1)
         
-    def run(self):
-        if self.list_extensions:
-            self.enumerate_extensions()
-            
     def enumerate_extensions(self):
         ext_root = self.root_dict['EXT_ROOT']
         try:
@@ -106,6 +106,7 @@ class Extension(object):
                 self.logger.log("No extensions installed", level=0)
         except OSError:
             self.logger.log("No extension cache '%s'" % ext_root, level=2)
+            self.logger.log("No extensions installed", level=0)
 
 if __name__=="__main__" :
     main()
