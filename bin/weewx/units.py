@@ -152,7 +152,8 @@ USUnits = ListOfDicts({"group_altitude"    : "foot",
                        "group_energy"      : "watt_hour",
                        "group_volume"      : "gallon",
                        "group_data"        : "byte",
-                       "group_distance"    : "mile"})
+                       "group_distance"    : "mile",
+                       "group_length"      : "inch"})
 
 # This dictionary maps unit groups to a standard unit type in the 
 # metric unit system:
@@ -180,7 +181,8 @@ MetricUnits = ListOfDicts({"group_altitude"    : "meter",
                            "group_energy"      : "watt_hour",
                            "group_volume"      : "litre",
                            "group_data"        : "byte",
-                           "group_distance"    : "km"})
+                           "group_distance"    : "km",
+                           "group_length"      : "cm"})
 
 # This dictionary maps unit groups to a standard unit type in the 
 # "Metric WX" unit system. It's the same as the "Metric" system,
