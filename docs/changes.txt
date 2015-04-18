@@ -43,15 +43,16 @@ Fixed bug that shows itself if marker_size is not specified in skin.conf
 
 Added better recovery from USB failures in the ws28xx driver.
 
-Improved timing algorithm for AcuRite data.  Thanks to Brett Warden.
-
-Added AcuRite log entries to logwatch script.  Thanks to Andy.
-
-Prevent negative rainfall amounts in AcuRite driver - use 13 bits for
-counter instead of 12 bits.
-
-Use only 12 bits for inside temperature in AcuRite driver when decoding
-for 02032 stations.
+Changes to the AcuRite driver include:
+ - The AcuRite driver now reports partial packets as soon as it gets them
+     instead of retaining data until it can report a complete packet
+ - Improved timing algorithm for AcuRite data.  Thanks to Brett Warden.
+ - Added acurite log entries to logwatch script.  Thanks to Andy.
+ - Prevent negative rainfall amounts in acurite driver by detecting
+     counter wraparound
+ - Use 13 bits for rain counter instead of 12 bits
+ - Use only 12 bits for inside temperature in acurite driver when decoding
+     for 02032 stations
 
 
 3.1.0 02/05/15
