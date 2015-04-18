@@ -15,7 +15,7 @@ Added guards for bogus values in various wxformula functions.
 Added windrun, evapotranspiration, humidex, apparent temperature, maximum
 theoretical solar radiation, beaufort, and cloudbase to StdWXCalculate.
 
-If StdWXCalculate cannot calculate a derived varible when asked to, it now
+If StdWXCalculate cannot calculate a derived variable when asked to, it now
 sets the value to null. Fixes issue #10.
 
 Added option to specify algorithm in StdWXCalculate.  So far this applies
@@ -28,6 +28,9 @@ Fixed bug in debian install script - 'Acurite' was not in the list of stations.
 
 Added group_distance with units mile and km.
 
+The WU uploader now publishes soil temperature and moisture, as well as
+leaf wetness.
+
 Increased precision of wind and wind gust posts to WU from 0 to 1 
 decimal point.
 
@@ -36,18 +39,18 @@ Increased precision of barometer posts to WOW from 1 to 3 decimal points.
 The "alarm" example now includes a try block to catch a NameError exception
 should the alarm expression include a variable not in the archive record.
 
+Fixed bug that shows itself if marker_size is not specified in skin.conf
+
 Added better recovery from USB failures in the ws28xx driver.
 
 Improved timing algorithm for AcuRite data.  Thanks to Brett Warden.
 
-Fixed bug that shows itself if marker_size is not specified in skin.conf
+Added AcuRite log entries to logwatch script.  Thanks to Andy.
 
-Added acurite log entries to logwatch script.  Thanks to Andy.
-
-Prevent negative rainfall amounts in acurite driver - use 13 bits for
+Prevent negative rainfall amounts in AcuRite driver - use 13 bits for
 counter instead of 12 bits.
 
-Use only 12 bits for inside temperature in acurite driver when decoding
+Use only 12 bits for inside temperature in AcuRite driver when decoding
 for 02032 stations.
 
 

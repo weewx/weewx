@@ -690,6 +690,16 @@ class AmbientThread(RESTThread):
                 'dayRain'     : 'dailyrainin=%.2f',
                 'radiation'   : 'solarradiation=%.2f',
                 'UV'          : 'UV=%.2f',
+                'soilTemp1'   : "soiltempf=%.1f",
+                'soilTemp2'   : "soiltemp2f=%.1f",
+                'soilTemp3'   : "soiltemp3f=%.1f",
+                'soilTemp4'   : "soiltemp4f=%.1f",
+                'soilMoist1'  : "soilmoisture=%03.0f",
+                'soilMoist2'  : "soilmoisture2=%03.0f",
+                'soilMoist3'  : "soilmoisture3=%03.0f",
+                'soilMoist4'  : "soilmoisture4=%03.0f",
+                'leafWet1'    : "leafwetness=%03.0f",
+                'leafWet2'    : "leafwetness2=%03.0f",
                 'realtime'    : 'realtime=%s',
                 'rtfreq'      : 'rtfreq=%s'}
     
