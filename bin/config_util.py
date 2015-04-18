@@ -17,6 +17,7 @@ import tempfile
 import configobj
 
 import weeutil.weeutil
+from weewx.engine import all_service_groups
 
 minor_comment_block = [""]
 major_comment_block = ["", "##############################################################################", ""]
@@ -47,6 +48,15 @@ metricwx_group = {'group_altitude': 'meter',
                   'group_speed': 'meter_per_second',
                   'group_speed2': 'meter_per_second2',
                   'group_temperature': 'degree_C'}
+
+class Logger(object):
+    def __init__(self, verbosity=0):
+        self.verbosity = verbosity
+    def log(self, msg, level=0):
+        if self.verbosity >= level:
+            print "%s%s" % ('  ' * (level - 1), msg)
+    def set_verbosity(self, verbosity):
+        self.verbosity = verbosity
 
 #==============================================================================
 #              Utilities that find and save ConfigObj objects
@@ -852,6 +862,13 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
 
     return value
 
+#==============================================================================
+#            Classes and utilities for installing extensions
+#==============================================================================
+
+class ExtensionInstaller(dict):
+    """Base class for extension installers."""
+
 def extract_roots(config_path, config_dict):
     """Get the location of the various root directories used by weewx."""
     
@@ -873,3 +890,4 @@ def extract_roots(config_path, config_dict):
     
     return root_dict
     
+
