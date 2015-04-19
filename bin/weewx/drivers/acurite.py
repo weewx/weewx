@@ -425,7 +425,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 total < self.last_rain):
                 loginf("rain counter decrement ignored:"
                        " new: %s old: %s" % (total, self.last_rain))
-            packet['rain'] = wxformulas.calculate_rain(total, self.last_rain)
+            packet['rain'] = weewx.wxformulas.calculate_rain(total, self.last_rain)
             self.last_rain = total
 
         # no wind direction when wind speed is zero
