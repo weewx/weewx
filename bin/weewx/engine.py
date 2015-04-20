@@ -15,6 +15,7 @@ import socket
 import sys
 import syslog
 import time
+import thread
 
 # 3rd party imports:
 import configobj
@@ -747,11 +748,15 @@ class StdReport(StdService):
         if self.thread and self.thread.isAlive() and time.time()-self.launch_time < self.max_wait:
             return
             
-        self.thread = weewx.reportengine.StdReportEngine(self.config_dict,
-                                                         self.engine.stn_info,
-                                                         first_run= not self.launch_time) 
-        self.thread.start()
-        self.launch_time = time.time()
+        try:
+            self.thread = weewx.reportengine.StdReportEngine(self.config_dict,
+                                                             self.engine.stn_info,
+                                                             first_run= not self.launch_time) 
+            self.thread.start()
+            self.launch_time = time.time()
+        except thread.error:
+            syslog.syslog(syslog.LOG_ERR, "Unable to launch report thread.")
+            self.thread = None
 
     def shutDown(self):
         if self.thread:

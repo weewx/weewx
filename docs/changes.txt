@@ -30,6 +30,8 @@ Added group_distance with units mile and km.
 
 Added group_length with units inch and cm.
 
+Failure to launch a report thread no longer crashes program.
+
 The WU uploader now publishes soil temperature and moisture, as well as
 leaf wetness.
 
