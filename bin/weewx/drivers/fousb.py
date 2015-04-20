@@ -932,7 +932,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         if self.pc_port is not None:
             self.pc_port = int(self.pc_port)
 
-        self.data_format   ='1080'
+        self.data_format   = stn_dict.get('data_format', '1080')
         self.vendor_id     = 0x1941
         self.product_id    = 0x8021
         self.usb_interface = 0

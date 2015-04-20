@@ -28,6 +28,8 @@ Fixed bug in debian install script - 'Acurite' was not in the list of stations.
 
 Added group_distance with units mile and km.
 
+Added group_length with units inch and cm.
+
 The WU uploader now publishes soil temperature and moisture, as well as
 leaf wetness.
 
@@ -42,6 +44,8 @@ should the alarm expression include a variable not in the archive record.
 Fixed bug that shows itself if marker_size is not specified in skin.conf
 
 Added better recovery from USB failures in the ws28xx driver.
+
+Added data_format option to FineOffset driver.  Thanks to Darryl Dixon.
 
 Changes to the AcuRite driver include:
  - The AcuRite driver now reports partial packets as soon as it gets them
