@@ -756,6 +756,7 @@ class StdReport(StdService):
             self.launch_time = time.time()
         except thread.error:
             syslog.syslog(syslog.LOG_ERR, "Unable to launch report thread.")
+            self.thread = None
 
     def shutDown(self):
         if self.thread:
