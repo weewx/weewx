@@ -889,5 +889,49 @@ def extract_roots(config_path, config_dict):
         pass
     
     return root_dict
-    
+
+def extract_tarball(filename, tmpdir, logger=Logger()):
+    """do some basic checks on the tarball then extract it"""
+    import tarfile
+    logger.log("Extracting from tarball %s" % filename, level=1)
+    tar_archive = tarfile.open(filename, mode='r')
+    try:
+        tar_archive.extractall(tmpdir)
+        member_names = [x.name for x in tar_archive.getmembers()]
+        return member_names
+    finally:
+        tar_archive.close()
+
+#     root = None
+#     has_install = False
+#     errors = []
+#     archive = tarfile.open(filename, mode='r')
+#     for f in archive.getmembers():
+#         if f.name.endswith('install.py'):
+#             has_install = True
+#         idx = f.name.find('/')
+#         if idx >= 0:
+#             r = f.name[0:idx]
+#             if root is None:
+#                 root = r
+#             elif root != r:
+#                 errors.append("multiple roots %s != %s" % (root, r))
+#         else:
+#             if root is None:
+#                 root = f.name
+#             else:
+#                 errors.append("non-rooted asset %s" % f.name)
+#         if (f.name.startswith('.')
+#             or f.name.startswith('/')
+#             or f.name.find('..') >= 0):
+#             errors.append("suspect file '%s'" % f.name)
+#     if not has_install:
+#         errors.append("package has no install.py")
+#     if errors:
+#         raise Exception("verify tarball failed: %s" % '\n'.join(errors))
+# 
+#     self.log("extracting tarball %s" % filename, level=1)
+#     archive.extractall(path=tmpdir)
+#     archive.close()
+#     return root, os.path.join(tmpdir, root)
 

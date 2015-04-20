@@ -11,10 +11,14 @@ from __future__ import with_statement
 import sys
 import os
 import optparse
+import shutil
 from subprocess import Popen, PIPE
 
 import config_util
 from config_util import Logger
+
+class InstallError(Exception):
+    """Exception thrown when installing an extension."""
 
 usage = """wee_extension --help
        wee_extension --list
@@ -66,11 +70,19 @@ def main():
     
     if options.list_extensions:
         ext.enumerate_extensions()
+        
+    if options.install:
+        ext.install_extension(options.install)
 
     return 0
 
 class ExtensionEngine(object):
     """Engine that manages extensions."""
+    # Extension components can be installed to these locations
+    target_dirs = {
+        'bin': 'BIN_ROOT',
+        'skins': 'SKIN_ROOT'}
+
     def __init__(self, args=None, config=None, tmpdir=None, bin_root=None, 
                  dry_run=None, logger=Logger()):
         self.logger = logger
@@ -81,7 +93,7 @@ class ExtensionEngine(object):
         # default (which could be 'None')
         self.config_dict.setdefault('BIN_ROOT', bin_root)
         self.root_dict = config_util.extract_roots(self.config_path, self.config_dict)
-        self.logger.log("root dictionary: %s" % self.root_dict, 1)
+        self.logger.log("root dictionary: %s" % self.root_dict, 4)
         
     def enumerate_extensions(self):
         ext_root = self.root_dict['EXT_ROOT']
@@ -98,54 +110,66 @@ class ExtensionEngine(object):
             self.logger.log("No extensions installed", level=0)
             
     def install_extension(self, extension_path):
-        self.logger.log("Request to install %s" % extension_path)
-        ifile = 'install'
-        __import__(ifile)
-        module = sys.modules[ifile]
-        loader = getattr(module, 'loader')
-        installer = loader()
-
-        self.logger.log("Request to install extension %s" % extension_path)
-
-
-        self.log("install_files", level=1)
-        for t in installer['files']:
-            dstdir = self.prepend_layout_path(t[0])
+        self.logger.log("Request to install '%s'" % extension_path)
+        if os.path.isfile(extension_path):
+            # It's a file, hopefully a tarball. Extract it, then install
             try:
-                self.log("mkdir %s" % dstdir, level=2)
-                if self.doit:
-                    mkdir(dstdir)
-            except os.error:
-                pass
-            for f in t[1]:
-                src = os.path.join(self.layout['EXTRACT_ROOT'], f)
-                dst = self.prepend_layout_path(f)
-                if os.path.exists(dst):
-                    self.log("save existing file %s" % dst, level=2)
-                    if self.doit:
-                        save_path(dst)
-                self.log("copy %s to %s" % (src, dst), level=2)
-                if self.doit:
-                    distutils.file_util.copy_file(src, dst)
-                    
+                member_names = config_util.extract_tarball(extension_path, self.tmpdir, self.logger)
+                extension_reldir = os.path.commonprefix(member_names)
+                if extension_reldir == '':
+                    raise InstallError("No common path in tarfile '%s'. Unable to install." % extension_path)
+                extension_dir = os.path.join(self.tmpdir, extension_reldir)
+                self.install_from_dir(extension_dir)
+            finally:
+                shutil.rmtree
+        elif os.path.isdir(extension_path):
+            # It's a directory, presumably containing the extension. Install directly
+            self.install_from_dir(extension_path)
+        else:
+            raise InstallError("Extension '%s' not found or cannot be identified." % extension_path)
+    
+        self.logger.log("Finished installing extension '%s'" % extension_path)
 
+    def install_from_dir(self, extension_dir):
+        self.logger.log("Request to install extension found in directory %s" % extension_dir, level=2)
+        old_path = sys.path
+        try:
+            # Inject both the location of the extension, and my parent directory (so the extension
+            # can find setup.py) into the path:
+            sys.path[0:0] = [extension_dir, os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))]
+            __import__('install')
+            module = sys.modules['install']
+            loader = getattr(module, 'loader')
+            installer = loader()
+            self.logger.log("Found extension with name '%s'" % installer.get('name', 'Unknown'), level=2)
 
-#         self.log("request to install %s" % self.filename)
-#         self.layout_type = self.guess_type(self.layout_type)
-#         self.layout = self.verify_layout(self.layout_type)
-#         (self.basename, self.extdir, self.delete_extdir) = \
-#             self.verify_installer(self.filename, self.tmpdir)
-#         self.verify_src(self.extdir)
-#         # everything is ok, so use the extdir
-#         self.layout['EXTRACT_ROOT'] = self.extdir
-#         self.load_installer(self.extdir, self.basename, self.layout)
-#         self.installer.install()
-#         self.cleanup()
+            # Go through all the files used by the extension:
+            for file_path in installer['files']:
+                # For each file, check and see if it's a type we know about
+                for directory in ExtensionEngine.target_dirs:
+                    # This will be something like 'bin', or 'skins':
+                    source_type = os.path.commonprefix((file_path[0], directory))
+                    if source_type:
+                        # This will be something like 'BIN_ROOT' or 'SKIN_ROOT':
+                        root_type = ExtensionEngine.target_dirs[source_type]
+                        for install_file in file_path[1]:
+                            source = os.path.join(extension_dir, install_file)
+                            destination = os.path.abspath(os.path.join(self.root_dict[root_type], '..', install_file))
+                            self.logger.log("Copying from '%s' to '%s'" % (source, destination), level=3)
+                            if not self.dry_run:
+                                try:
+                                    os.makedirs(os.path.dirname(destination))
+                                except OSError:
+                                    pass
+                                shutil.copy(source, destination)
+                        break
+                else:
+                    sys.exit("Unknown destination for file %s" % file_path)
+        finally:
+            # Restore the path
+            sys.path = old_path
 
-#         self.install_files()
-#         self.merge_config_options()
-#         self.install_history()
-        
+        # TODO: Merge config options
 
 if __name__=="__main__" :
     main()

@@ -12,6 +12,8 @@ import tempfile
 import os
 import os.path
 import sys
+import shutil
+import dircache
 
 import configobj
 
@@ -285,5 +287,35 @@ class ConfigTest(unittest.TestCase):
         # Make sure there are no extra lines in the updated config:
         more = out_str.readline()
         self.assertEqual(more, '')
+
+class ExtensionTest(unittest.TestCase):
+    """Tests of utility functions used by the extension installer."""
+    
+    def setUp(self):
+        shutil.rmtree('/tmp/pmon', ignore_errors=True)
+
+    def tearDown(self):
+        shutil.rmtree('/tmp/pmon', ignore_errors=True)
+
+    def test_tar_extract(self):
+        member_names = config_util.extract_tarball('./pmon.tgz', '/tmp')
+        self.assertEqual(member_names, ['pmon', 
+                                        'pmon/readme.txt', 
+                                        'pmon/skins', 
+                                        'pmon/skins/pmon', 
+                                        'pmon/skins/pmon/index.html.tmpl', 
+                                        'pmon/skins/pmon/skin.conf', 
+                                        'pmon/changelog', 
+                                        'pmon/install.py', 
+                                        'pmon/bin', 
+                                        'pmon/bin/user', 
+                                        'pmon/bin/user/pmon.py'])
+        actual_files = [x for x in os.walk('/tmp/pmon')]
+        self.assertEqual(actual_files, [('/tmp/pmon', ['skins', 'bin'], ['changelog', 'readme.txt', 'install.py']), 
+                                        ('/tmp/pmon/skins', ['pmon'], []),
+                                        ('/tmp/pmon/skins/pmon', [], ['skin.conf', 'index.html.tmpl']),
+                                        ('/tmp/pmon/bin', ['user'], []),
+                                        ('/tmp/pmon/bin/user', [], ['pmon.py'])]
+)
 
 unittest.main()
