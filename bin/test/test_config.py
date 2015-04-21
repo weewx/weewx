@@ -331,30 +331,34 @@ class ExtensionInstallTest(unittest.TestCase):
     """Tests of the extension installer."""
     
     def setUp(self):
-        shutil.rmtree('/var/tmp/wee_test', ignore_errors=True)
-
+        # We're going to install a "mini-weewx" in this temporary directory:
+        self.weewx_root = '/var/tmp/wee_test'
+        # Remove the old tree, in case it exists:
+        shutil.rmtree(self.weewx_root, ignore_errors=True)
+        
+        # Now build a new configuration
+        self.user_dir = os.path.join(self.weewx_root, 'bin', 'user')
+        self.skin_dir = os.path.join(self.weewx_root, 'skins')
+        self.bin_dir  = os.path.join(self.weewx_root, 'bin')
+        distutils.dir_util.copy_tree('../../bin/user', self.user_dir)
+        distutils.dir_util.copy_tree('../../skins/Standard', os.path.join(self.skin_dir, 'Standard'))
+        shutil.copy('weewx31.conf', self.weewx_root)
+        
     def tearDown(self):
-        "Remove any installed directories"
-        #shutil.rmtree('/var/tmp/wee_test', ignore_errors=True)
+        "Remove any installed test configuration"
+        #shutil.rmtree(self.weewx_root, ignore_errors=True)
 
     def test_install(self):
-        # Make a kind of "mini-weewx" install
-        weewx_root = '/var/tmp/wee_test'
-        user_dir = os.path.join(weewx_root, 'bin', 'user')
-        skin_dir = os.path.join(weewx_root, 'skins')
-        bin_dir  = os.path.join(weewx_root, 'bin')
-        distutils.dir_util.copy_tree('../../bin/user', user_dir)
-        distutils.dir_util.copy_tree('../../skins/Standard', os.path.join(skin_dir, 'Standard'))
-        shutil.copy('weewx31.conf', weewx_root)
-        config_path = os.path.join(weewx_root,'weewx31.conf')
+        # Find and read the test configuration
+        config_path = os.path.join(self.weewx_root,'weewx31.conf')
         config_dict = configobj.ConfigObj(config_path)
         
         # Note that the actual location of the "mini-weewx" is over in /var/tmp
-        config_dict['WEEWX_ROOT'] = weewx_root
+        config_dict['WEEWX_ROOT'] = self.weewx_root
 
         # Initialize the install engine. Note that we want the bin root in /var/tmp, not here:
         engine = wee_extension.ExtensionEngine(config_path, config_dict, 
-                                               bin_root=bin_dir,
+                                               bin_root=self.bin_dir,
                                                logger= config_util.Logger(verbosity=-1)) 
         
         # Make sure the root dictionary got calculated correctly:
@@ -364,10 +368,28 @@ class ExtensionInstallTest(unittest.TestCase):
                                             'SKIN_ROOT': '/var/tmp/wee_test/skins',
                                             'CONFIG_ROOT': '/var/tmp/wee_test'})
         
+        # Now install the extension...
         engine.install_extension('./pmon.tgz')
-        self.assertTrue(os.path.isfile(os.path.join(user_dir, 'pmon.py')))
-        self.assertTrue(os.path.isdir(os.path.join(skin_dir, 'pmon')))
-        self.assertTrue(os.path.isfile(os.path.join(skin_dir, 'pmon','index.html.tmpl')))
-        self.assertTrue(os.path.isfile(os.path.join(skin_dir, 'pmon','skin.conf')))
         
+        # ... and assert that it got installed correctly
+        self.assertTrue(os.path.isfile(os.path.join(self.user_dir, 'pmon.py')))
+        self.assertTrue(os.path.isdir(os.path.join(self.skin_dir, 'pmon')))
+        self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon','index.html.tmpl')))
+        self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon','skin.conf')))
+        
+        # Get, then check the new config dict:
+        test_dict = configobj.ConfigObj(config_path)
+        self.assertEqual(test_dict['StdReport']['pmon'],
+                         {'HTML_ROOT': 'pmon', 'skin': 'pmon'})
+        self.assertEqual(test_dict['Databases']['pmon_sqlite'], 
+                         {'database_name': 'pmon.sdb',
+                          'driver': 'weedb.sqlite'})
+        self.assertEqual(test_dict['DataBindings']['pmon_binding'], 
+                         {'manager': 'weewx.manager.DaySummaryManager',
+                          'schema': 'user.pmon.schema',
+                          'table_name': 'archive',
+                          'database': 'pmon_sqlite'})
+        self.assertEqual(test_dict['ProcessMonitor'],
+                         {'data_binding': 'pmon_binding',
+                          'process': 'weewxd'})
 unittest.main()

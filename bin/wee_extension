@@ -126,7 +126,7 @@ class ExtensionEngine(object):
                 extension_dir = os.path.join(self.tmpdir, extension_reldir)
                 self.install_from_dir(extension_dir)
             finally:
-                shutil.rmtree
+                shutil.rmtree(extension_dir, ignore_errors=True)
         elif os.path.isdir(extension_path):
             # It's a directory, presumably containing the extension. Install directly
             self.install_from_dir(extension_path)
@@ -174,7 +174,9 @@ class ExtensionEngine(object):
             # Restore the path
             sys.path = old_path
 
-        # TODO: Merge config options
+        if 'config' in installer:
+            config_util.conditional_merge(self.config_dict, installer['config'])
+            config_util.save_config(self.config_dict, self.config_path)
 
 if __name__=="__main__" :
     main()
