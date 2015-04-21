@@ -17,7 +17,7 @@ import shutil
 import distutils.dir_util
 import configobj
 
-import weecfg
+import weecfg.extension
 
 try:
     from mock import patch
@@ -32,10 +32,6 @@ except ImportError:
 this_file = os.path.join(os.getcwd(), __file__)
 this_dir = os.path.abspath(os.path.dirname(this_file))
 os.chdir(this_dir)
-
-# Can't just say "import wee_extension" because it does not
-# have a ".py" suffix
-wee_extension = imp.load_source('wee_extension', '../../wee_extension')
 
 x_str = """
         [section_a]
@@ -357,9 +353,9 @@ class ExtensionInstallTest(unittest.TestCase):
         config_dict['WEEWX_ROOT'] = self.weewx_root
 
         # Initialize the install engine. Note that we want the bin root in /var/tmp, not here:
-        engine = wee_extension.ExtensionEngine(config_path, config_dict, 
-                                               bin_root=self.bin_dir,
-                                               logger= weecfg.Logger(verbosity=-1)) 
+        engine = weecfg.extension.ExtensionEngine(config_path, config_dict, 
+                                                  bin_root=self.bin_dir,
+                                                  logger= weecfg.Logger(verbosity=-1)) 
         
         # Make sure the root dictionary got calculated correctly:
         self.assertEqual(engine.root_dict, {'WEEWX_ROOT': '/var/tmp/wee_test',
