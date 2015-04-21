@@ -6,6 +6,7 @@
 """Test the configuration utilities."""
 from __future__ import with_statement
 
+import imp
 import StringIO
 import unittest
 import tempfile
@@ -14,8 +15,18 @@ import os.path
 import sys
 import shutil
 import dircache
+import distutils.dir_util
 
 import configobj
+
+import config_util
+
+# Change directory so we can find the config files and expected values:
+this_file = os.path.join(os.getcwd(), __file__)
+this_dir = os.path.abspath(os.path.dirname(this_file))
+os.chdir(this_dir)
+
+wee_extension = imp.load_source('wee_extension', '../wee_extension')
 
 try:
     from mock import patch
@@ -24,13 +35,6 @@ try:
 except ImportError:
     print "Module 'mock' not installed. Testing will be restricted."
     have_mock = False
-
-import config_util
-
-# Change directory so we can find the config files and expected values:
-this_file = os.path.join(os.getcwd(), __file__)
-this_dir = os.path.abspath(os.path.dirname(this_file))
-os.chdir(this_dir)
 
 x_str = """
         [section_a]
@@ -292,30 +296,61 @@ class ExtensionTest(unittest.TestCase):
     """Tests of utility functions used by the extension installer."""
     
     def setUp(self):
-        shutil.rmtree('/tmp/pmon', ignore_errors=True)
+        shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
+        shutil.rmtree('/var/tmp/wee_test', ignore_errors=True)
 
     def tearDown(self):
-        shutil.rmtree('/tmp/pmon', ignore_errors=True)
+        shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
+#         shutil.rmtree('/var/tmp/wee_test', ignore_errors=True)
 
-    def test_tar_extract(self):
-        member_names = config_util.extract_tarball('./pmon.tgz', '/tmp')
-        self.assertEqual(member_names, ['pmon', 
-                                        'pmon/readme.txt', 
-                                        'pmon/skins', 
-                                        'pmon/skins/pmon', 
-                                        'pmon/skins/pmon/index.html.tmpl', 
-                                        'pmon/skins/pmon/skin.conf', 
-                                        'pmon/changelog', 
-                                        'pmon/install.py', 
-                                        'pmon/bin', 
-                                        'pmon/bin/user', 
-                                        'pmon/bin/user/pmon.py'])
-        actual_files = [x for x in os.walk('/tmp/pmon')]
-        self.assertEqual(actual_files, [('/tmp/pmon', ['skins', 'bin'], ['changelog', 'readme.txt', 'install.py']), 
-                                        ('/tmp/pmon/skins', ['pmon'], []),
-                                        ('/tmp/pmon/skins/pmon', [], ['skin.conf', 'index.html.tmpl']),
-                                        ('/tmp/pmon/bin', ['user'], []),
-                                        ('/tmp/pmon/bin/user', [], ['pmon.py'])]
-)
+#     def test_tar_extract(self):
+#         member_names = config_util.extract_tarball('./pmon.tgz', '/var/tmp')
+#         self.assertEqual(member_names, ['pmon', 
+#                                         'pmon/readme.txt', 
+#                                         'pmon/skins', 
+#                                         'pmon/skins/pmon', 
+#                                         'pmon/skins/pmon/index.html.tmpl', 
+#                                         'pmon/skins/pmon/skin.conf', 
+#                                         'pmon/changelog', 
+#                                         'pmon/install.py', 
+#                                         'pmon/bin', 
+#                                         'pmon/bin/user', 
+#                                         'pmon/bin/user/pmon.py'])
+#         actual_files = []
+#         for direc in os.walk('/var/tmp/pmon'):
+#             for filename in direc[2]:
+#                 actual_files.append(os.path.join(direc[0], filename))
+#         self.assertEqual(sorted(actual_files),
+#                          ['/var/tmp/pmon/bin/user/pmon.py', 
+#                           '/var/tmp/pmon/changelog', 
+#                           '/var/tmp/pmon/install.py', 
+#                           '/var/tmp/pmon/readme.txt', 
+#                           '/var/tmp/pmon/skins/pmon/index.html.tmpl', 
+#                           '/var/tmp/pmon/skins/pmon/skin.conf'])
+        
+    def test_install(self):
+        # Make a kind of "mini-weewx" install
+        weewx_root = '/var/tmp/wee_test'
+        user_dir = os.path.join(weewx_root, 'bin', 'user')
+        skin_dir = os.path.join(weewx_root, 'skins')
+        bin_dir  = os.path.join(weewx_root, 'bin')
+        distutils.dir_util.copy_tree('../../bin/user', user_dir)
+        distutils.dir_util.copy_tree('../../skins/Standard', os.path.join(skin_dir, 'Standard'))
+        shutil.copy('weewx31.conf', weewx_root)
+        config_path = os.path.join(weewx_root,'weewx31.conf')
+        config_dict = configobj.ConfigObj(config_path)
+        
+        # Note that the actual location of the "mini-weewx" is over in /var/tmp
+        config_dict['WEEWX_ROOT'] = weewx_root
 
+        # Initialize the install engine. Note that we want the bin root in /var/tmp, not here:
+        engine = wee_extension.ExtensionEngine(config_path, config_dict, bin_root=bin_dir) 
+        
+        # Make sure the root dictionary got calculated correctly:
+        self.assertEqual(engine.root_dict, {'WEEWX_ROOT': '/var/tmp/wee_test',
+                                            'BIN_ROOT': '/var/tmp/wee_test/bin',
+                                            'EXT_ROOT': '/var/tmp/wee_test/bin/user/installer',
+                                            'SKIN_ROOT': '/var/tmp/wee_test/skins',
+                                            'CONFIG_ROOT': '/var/tmp/wee_test'})
+        
 unittest.main()

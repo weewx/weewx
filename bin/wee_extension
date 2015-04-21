@@ -61,8 +61,10 @@ def main():
     # Now we are ready to parse the command line:
     (options, _args) = parser.parse_args()
 
-    ext = ExtensionEngine(_args,
-                          config=options.config,
+    config_path, config_dict = config_util.read_config(options.config, _args)
+    
+    ext = ExtensionEngine(config_path=config_path,
+                          config_dict=config_dict,
                           tmpdir=options.tmpdir,
                           bin_root=options.bin_root,
                           dry_run=options.dry_run,
@@ -83,15 +85,18 @@ class ExtensionEngine(object):
         'bin': 'BIN_ROOT',
         'skins': 'SKIN_ROOT'}
 
-    def __init__(self, args=None, config=None, tmpdir=None, bin_root=None, 
-                 dry_run=None, logger=Logger()):
-        self.logger = logger
-        self.tmpdir = tmpdir
-        self.dry_run = dry_run
-        self.config_path, self.config_dict = config_util.read_config(config, args)
+    def __init__(self, config_path, config_dict, tmpdir=None, bin_root=None, 
+                 dry_run=None, logger=None):
+
+        self.logger = logger or Logger()
+        self.config_path = config_path
+        self.config_dict = config_dict
+        self.tmpdir = tmpdir or '/var/tmp'
         # BIN_ROOT does not normally appear in the configuration dictionary. Set a
         # default (which could be 'None')
         self.config_dict.setdefault('BIN_ROOT', bin_root)
+        self.dry_run = dry_run
+
         self.root_dict = config_util.extract_roots(self.config_path, self.config_dict)
         self.logger.log("root dictionary: %s" % self.root_dict, 4)
         
