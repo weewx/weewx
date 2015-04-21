@@ -1071,11 +1071,11 @@ def read_config(file_path, args=None, msg_to_stderr=True, exit_on_fail=True):
 
     return: A tuple: (path-to-config-file, config_dict)
     """
-    import config_util
+    import weecfg
     import configobj
 
     try:
-        config_path = config_util.find_file(file_path, args)
+        config_path = weecfg.find_file(file_path, args)
     except IOError, e:
         if msg_to_stderr:
             print >>sys.stderr, str(e)

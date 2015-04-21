@@ -14,8 +14,8 @@ import optparse
 import shutil
 from subprocess import Popen, PIPE
 
-import config_util
-from config_util import Logger
+import weecfg
+from weecfg import Logger
 
 class InstallError(Exception):
     """Exception thrown when installing an extension."""
@@ -61,7 +61,7 @@ def main():
     # Now we are ready to parse the command line:
     (options, _args) = parser.parse_args()
 
-    config_path, config_dict = config_util.read_config(options.config, _args)
+    config_path, config_dict = weecfg.read_config(options.config, _args)
     
     ext = ExtensionEngine(config_path=config_path,
                           config_dict=config_dict,
@@ -97,7 +97,7 @@ class ExtensionEngine(object):
         self.config_dict.setdefault('BIN_ROOT', bin_root)
         self.dry_run = dry_run
 
-        self.root_dict = config_util.extract_roots(self.config_path, self.config_dict)
+        self.root_dict = weecfg.extract_roots(self.config_path, self.config_dict)
         self.logger.log("root dictionary: %s" % self.root_dict, 4)
         
     def enumerate_extensions(self):
@@ -119,7 +119,7 @@ class ExtensionEngine(object):
         if os.path.isfile(extension_path):
             # It's a file, hopefully a tarball. Extract it, then install
             try:
-                member_names = config_util.extract_tarball(extension_path, self.tmpdir, self.logger)
+                member_names = weecfg.extract_tarball(extension_path, self.tmpdir, self.logger)
                 extension_reldir = os.path.commonprefix(member_names)
                 if extension_reldir == '':
                     raise InstallError("No common path in tarfile '%s'. Unable to install." % extension_path)
@@ -175,8 +175,8 @@ class ExtensionEngine(object):
             sys.path = old_path
 
         if 'config' in installer:
-            config_util.conditional_merge(self.config_dict, installer['config'])
-            config_util.save_config(self.config_dict, self.config_path)
+            weecfg.conditional_merge(self.config_dict, installer['config'])
+            weecfg.save_config(self.config_dict, self.config_path)
 
 if __name__=="__main__" :
     main()

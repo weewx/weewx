@@ -129,7 +129,7 @@ class AbstractConfEditor(object):
         return dict()
 
     def _prompt(self, label, dflt=None, opts=None):
-        import config_util
-        val = config_util.prompt_with_options(label, dflt, opts)
-        del config_util
+        import weecfg
+        val = weecfg.prompt_with_options(label, dflt, opts)
+        del weecfg
         return val

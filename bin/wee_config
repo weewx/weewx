@@ -14,7 +14,7 @@ import optparse
 import configobj
 
 import weewx
-import config_util
+import weecfg
 
 usage="""wee_config --help
        wee_config --version
@@ -121,7 +121,7 @@ class WeeConfig(object):
             sys.exit(0)
     
         if options.list_drivers:
-            config_util.print_drivers()
+            weecfg.print_drivers()
             sys.exit(0)
     
         #
@@ -162,14 +162,14 @@ class WeeConfig(object):
                 config_dict = dist_config_dict
                 config_path = options.output
             else:
-                config_path, config_dict = config_util.read_config(options.config_path, args)
+                config_path, config_dict = weecfg.read_config(options.config_path, args)
                 print "Using configuration file found at", config_path
     
                 # Update the old configuration file:
-                config_util.update_config(config_dict)
+                weecfg.update_config(config_dict)
                 
                 # Then merge it into the distribution file
-                config_util.merge_config(config_dict, dist_config_dict)
+                weecfg.merge_config(config_dict, dist_config_dict)
     
             save_me = True
             
@@ -193,14 +193,14 @@ class WeeConfig(object):
         # Extract stn_info from the config_dict and command-line options:
         stn_info = self.get_stn_info(config_dict, options)
 
-        return config_util.modify_config(config_dict, stn_info, options.debug)
+        return weecfg.modify_config(config_dict, stn_info, options.debug)
     
     def get_stn_info(self, config_dict, options):
         """Build the stn_info structure. This generally contains stuff
         that wee_config can inject into the config_dict."""
         
         # Get defaults out of the config file:
-        stn_info = config_util.get_station_info(config_dict)
+        stn_info = weecfg.get_station_info(config_dict)
     
         # Get command line overrides, and apply them to stn_info:
         for k in stn_info:
@@ -215,19 +215,19 @@ class WeeConfig(object):
                 
         # Unless --no-prompt has been specified, give the user a chance to change things:
         if not options.no_prompt:
-            stn_info.update(config_util.prompt_for_info(**stn_info))
+            stn_info.update(weecfg.prompt_for_info(**stn_info))
     
             if not options.driver:
-                driver = config_util.prompt_for_driver(stn_info.get('driver'))
+                driver = weecfg.prompt_for_driver(stn_info.get('driver'))
                 stn_info['driver'] = driver
-                stn_info.update(config_util.prompt_for_driver_settings(driver))
+                stn_info.update(weecfg.prompt_for_driver_settings(driver))
                 
         return stn_info
     
     def save_config(self, config_dict, config_path):
         """Save the config file, backing up as necessary."""
 
-        backup_path = config_util.save_config(config_dict, config_path)
+        backup_path = weecfg.save_config(config_dict, config_path)
         if backup_path:        
             print "Saved backup to %s" % backup_path
             

@@ -17,7 +17,7 @@ import shutil
 import distutils.dir_util
 import configobj
 
-import config_util
+import weecfg
 
 try:
     from mock import patch
@@ -35,7 +35,7 @@ os.chdir(this_dir)
 
 # Can't just say "import wee_extension" because it does not
 # have a ".py" suffix
-wee_extension = imp.load_source('wee_extension', '../wee_extension')
+wee_extension = imp.load_source('wee_extension', '../../wee_extension')
 
 x_str = """
         [section_a]
@@ -58,7 +58,7 @@ y_str = """
 class ConfigTest(unittest.TestCase):
 
     def test_find_file(self):
-        # Test the utility function config_util.find_file()
+        # Test the utility function weecfg.find_file()
 
         with tempfile.NamedTemporaryFile() as test_fd:
             # Get info about the temp file:
@@ -66,21 +66,21 @@ class ConfigTest(unittest.TestCase):
             dir_path = os.path.dirname(full_path)
             filename = os.path.basename(full_path)
             # Find the file with an explicit path:
-            result = config_util.find_file(full_path)
+            result = weecfg.find_file(full_path)
             self.assertEqual(result, full_path)
             # Find the file with an explicit, but wrong, path:
-            self.assertRaises(IOError, config_util.find_file, full_path + "foo")
+            self.assertRaises(IOError, weecfg.find_file, full_path + "foo")
             # Find the file using the "args" optional list:
-            result = config_util.find_file(None, [full_path])
+            result = weecfg.find_file(None, [full_path])
             self.assertEqual(result, full_path)
             # Find the file using the "args" optional list, but with a wrong name:
-            self.assertRaises(IOError, config_util.find_file,
+            self.assertRaises(IOError, weecfg.find_file,
                               None, [full_path + "foo"])
             # Now search a list of directory locations given a file name:
-            result = config_util.find_file(None, file_name=filename, locations=['/usr/bin', dir_path])
+            result = weecfg.find_file(None, file_name=filename, locations=['/usr/bin', dir_path])
             self.assertEqual(result, full_path)
             # Do the same, but with a non-existent file name:
-            self.assertRaises(IOError, config_util.find_file,
+            self.assertRaises(IOError, weecfg.find_file,
                               None, file_name=filename + "foo", locations=['/usr/bin', dir_path])
 
     def test_utilities(self):
@@ -88,13 +88,13 @@ class ConfigTest(unittest.TestCase):
 
         xio = StringIO.StringIO(x_str)
         x_dict = configobj.ConfigObj(xio)
-        config_util.reorder_sections(x_dict, 'section_c', 'section_b')
+        weecfg.reorder_sections(x_dict, 'section_c', 'section_b')
         self.assertEqual("{'section_a': {'a': '1'}, 'section_c': {'c': '3'}, "
                          "'section_b': {'b': '2'}, 'section_d': {'d': '4'}}", str(x_dict))
 
         xio.seek(0)
         x_dict = configobj.ConfigObj(xio)
-        config_util.reorder_sections(x_dict, 'section_c', 'section_b', after=True)
+        weecfg.reorder_sections(x_dict, 'section_c', 'section_b', after=True)
         self.assertEqual("{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, "
                          "'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
 
@@ -102,7 +102,7 @@ class ConfigTest(unittest.TestCase):
         yio = StringIO.StringIO(y_str)
         x_dict = configobj.ConfigObj(xio)
         y_dict = configobj.ConfigObj(yio)
-        config_util.conditional_merge(x_dict, y_dict)
+        weecfg.conditional_merge(x_dict, y_dict)
         self.assertEqual("{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, 'section_c': {'c': '3'}, "
                          "'section_d': {'d': '4'}, 'section_e': {'c': '15'}}", str(x_dict))
 
@@ -111,7 +111,7 @@ class ConfigTest(unittest.TestCase):
         yio = StringIO.StringIO(y_str)
         x_dict = configobj.ConfigObj(xio)
         y_dict = configobj.ConfigObj(yio)
-        config_util.remove_and_prune(x_dict, y_dict)
+        weecfg.remove_and_prune(x_dict, y_dict)
         self.assertEqual("{'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
 
     if have_mock:
@@ -126,7 +126,7 @@ class ConfigTest(unittest.TestCase):
                 # Test a normal input
                 with patch('__builtin__.raw_input',
                            side_effect=['Anytown', '100, meter', '45.0', '180.0', 'us']):
-                    stn_info = config_util.prompt_for_info()
+                    stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
                                                 'latitude': '45.0',
                                                 'location': 'Anytown',
@@ -136,7 +136,7 @@ class ConfigTest(unittest.TestCase):
                 # Test for a default input
                 with patch('__builtin__.raw_input',
                            side_effect=['Anytown', '', '45.0', '180.0', 'us']):
-                    stn_info = config_util.prompt_for_info()
+                    stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['0', 'meter'],
                                                 'latitude': '45.0',
                                                 'location': 'Anytown',
@@ -146,7 +146,7 @@ class ConfigTest(unittest.TestCase):
                 # Test for an out-of-bounds latitude
                 with patch('__builtin__.raw_input',
                            side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'us']):
-                    stn_info = config_util.prompt_for_info()
+                    stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
                                                 'latitude': '45.0',
                                                 'location': 'Anytown',
@@ -156,7 +156,7 @@ class ConfigTest(unittest.TestCase):
                 # Test for a bad length unit type
                 with patch('__builtin__.raw_input',
                            side_effect=['Anytown', '100, foo', '100,meter', '45.0', '180.0', 'us']):
-                    stn_info = config_util.prompt_for_info()
+                    stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
                                                 'latitude': '45.0',
                                                 'location': 'Anytown',
@@ -166,7 +166,7 @@ class ConfigTest(unittest.TestCase):
                 # Test for a bad display unit
                 with patch('__builtin__.raw_input',
                            side_effect=['Anytown', '100, meter', '45.0', '180.0', 'foo', 'us']):
-                    stn_info = config_util.prompt_for_info()
+                    stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
                                                 'latitude': '45.0',
                                                 'location': 'Anytown',
@@ -183,16 +183,16 @@ class ConfigTest(unittest.TestCase):
             sys.stdout = open(os.devnull, 'w')
             try:
                 with patch('__builtin__.raw_input', return_value="yes"):
-                    response = config_util.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+                    response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
                     self.assertEqual(response, "yes")
                 with patch('__builtin__.raw_input', return_value="no"):
-                    response = config_util.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+                    response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
                     self.assertEqual(response, "no")
                 with patch('__builtin__.raw_input', return_value=""):
-                    response = config_util.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+                    response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
                     self.assertEqual(response, "yes")
                 with patch('__builtin__.raw_input', side_effect=["make me", "no"]):
-                    response = config_util.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+                    response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
                     self.assertEqual(response, "no")
             finally:
                 # Restore stdout:
@@ -205,13 +205,13 @@ class ConfigTest(unittest.TestCase):
             sys.stdout = open(os.devnull, 'w')
             try:
                 with patch('__builtin__.raw_input', return_value="45"):
-                    response = config_util.prompt_with_limits("latitude", "0.0", -90, 90)
+                    response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
                     self.assertEqual(response, "45")
                 with patch('__builtin__.raw_input', return_value=""):
-                    response = config_util.prompt_with_limits("latitude", "0.0", -90, 90)
+                    response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
                     self.assertEqual(response, "0.0")
                 with patch('__builtin__.raw_input', side_effect=["-120", "-45"]):
-                    response = config_util.prompt_with_limits("latitude", "0.0", -90, 90)
+                    response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
                     self.assertEqual(response, "-45")
             finally:
                 # Restore stdout:
@@ -223,7 +223,7 @@ class ConfigTest(unittest.TestCase):
         config_dict = configobj.ConfigObj('weewx20.conf')
 
         # Upgrade the V2.0 configuration dictionary to V2.7:
-        config_util.update_to_v27(config_dict)
+        weecfg.update_to_v27(config_dict)
 
         # Write it out to a StringIO, then start checking it against the expected
         out_str = StringIO.StringIO()
@@ -247,7 +247,7 @@ class ConfigTest(unittest.TestCase):
         config_dict = configobj.ConfigObj('weewx27.conf')
 
         # Upgrade to V3.0
-        config_util.update_to_v30(config_dict)
+        weecfg.update_to_v30(config_dict)
 
         # Write it out to a StringIO, then start checking it against the expected
         out_str = StringIO.StringIO()
@@ -274,8 +274,8 @@ class ConfigTest(unittest.TestCase):
         template = configobj.ConfigObj('weewx31.conf')
 
         # First update, then merge:
-        config_util.update_config(config_dict)
-        config_util.merge_config(config_dict, template)
+        weecfg.update_config(config_dict)
+        weecfg.merge_config(config_dict, template)
 
         # Write it out to a StringIO, then start checking it against the expected
         out_str = StringIO.StringIO()
@@ -303,7 +303,7 @@ class ExtensionUtilityTest(unittest.TestCase):
         shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
 
     def test_tar_extract(self):
-        member_names = config_util.extract_tarball('./pmon.tgz', '/var/tmp')
+        member_names = weecfg.extract_tarball('./pmon.tgz', '/var/tmp')
         self.assertEqual(member_names, ['pmon', 
                                         'pmon/readme.txt', 
                                         'pmon/skins', 
@@ -340,8 +340,8 @@ class ExtensionInstallTest(unittest.TestCase):
         self.user_dir = os.path.join(self.weewx_root, 'bin', 'user')
         self.skin_dir = os.path.join(self.weewx_root, 'skins')
         self.bin_dir  = os.path.join(self.weewx_root, 'bin')
-        distutils.dir_util.copy_tree('../../bin/user', self.user_dir)
-        distutils.dir_util.copy_tree('../../skins/Standard', os.path.join(self.skin_dir, 'Standard'))
+        distutils.dir_util.copy_tree('../../../bin/user', self.user_dir)
+        distutils.dir_util.copy_tree('../../../skins/Standard', os.path.join(self.skin_dir, 'Standard'))
         shutil.copy('weewx31.conf', self.weewx_root)
         
     def tearDown(self):
@@ -359,7 +359,7 @@ class ExtensionInstallTest(unittest.TestCase):
         # Initialize the install engine. Note that we want the bin root in /var/tmp, not here:
         engine = wee_extension.ExtensionEngine(config_path, config_dict, 
                                                bin_root=self.bin_dir,
-                                               logger= config_util.Logger(verbosity=-1)) 
+                                               logger= weecfg.Logger(verbosity=-1)) 
         
         # Make sure the root dictionary got calculated correctly:
         self.assertEqual(engine.root_dict, {'WEEWX_ROOT': '/var/tmp/wee_test',

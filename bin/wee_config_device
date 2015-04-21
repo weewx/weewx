@@ -9,14 +9,14 @@
 import sys
 import syslog
 
-import config_util
+import weecfg
 
 def main():
     syslog.openlog('wee_config_device', syslog.LOG_PID|syslog.LOG_CONS)
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
     # Load the configuration file
-    config_fn, config_dict = config_util.read_config(None, sys.argv[1:])
+    config_fn, config_dict = weecfg.read_config(None, sys.argv[1:])
     print 'Using configuration file %s' % config_fn
 
     # Find the device type

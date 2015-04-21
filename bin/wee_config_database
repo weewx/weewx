@@ -16,7 +16,7 @@ import user.extensions      #@UnusedImport
 import weedb
 import weewx.manager
 import weewx.units
-import config_util
+import weecfg
 
 description="""Configure the weewx databases. Most of these functions are
 handled automatically by weewx, but they may be useful as a utility in special
@@ -68,7 +68,7 @@ def main():
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    config_path, config_dict = config_util.read_config(options.config_path, args)
+    config_path, config_dict = weecfg.read_config(options.config_path, args)
     print "Using configuration file %s" % config_path
     
     db_binding = options.binding

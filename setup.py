@@ -41,7 +41,7 @@ sys.path.insert(0, bin_dir)
 # Now we can import some weewx modules
 import weewx
 VERSION = weewx.__version__
-import config_util
+import weecfg
 import weeutil.weeutil
 
 start_scripts = ['util/init.d/weewx.bsd',
@@ -55,7 +55,7 @@ stn_info = {'station_type' : 'Simulator',
             'driver'       : 'weewx.drivers.simulator'}
 
 # For backwards compatibility of extension installers:
-ExtensionInstaller = config_util.ExtensionInstaller
+ExtensionInstaller = weecfg.ExtensionInstaller
 
 #==============================================================================
 # install
@@ -174,28 +174,28 @@ class weewx_install_data(install_data):
         # Do we have an old config file?
         if os.path.isfile(install_path):
             # Yes. Read it
-            config_path, config_dict = config_util.read_config(install_path, None)
+            config_path, config_dict = weecfg.read_config(install_path, None)
             if DEBUG:
                 print "Old configuration file found at", config_path
 
             # Update the old configuration file to the current version:
-            config_util.update_config(config_dict)
+            weecfg.update_config(config_dict)
             
             # Then merge it into the distribution file
-            config_util.merge_config(config_dict, dist_config_dict)
+            weecfg.merge_config(config_dict, dist_config_dict)
         else:
             # No old config file. Use the distribution file, then, if we can,
             # prompt the user for station specific info
             config_dict = dist_config_dict
             if not self.no_prompt:
                 # Prompt the user for the station information:
-                stn_info = config_util.prompt_for_info()
-                driver = config_util.prompt_for_driver(stn_info.get('driver'))
+                stn_info = weecfg.prompt_for_info()
+                driver = weecfg.prompt_for_driver(stn_info.get('driver'))
                 stn_info['driver'] = driver
-                stn_info.update(config_util.prompt_for_driver_settings(driver))
+                stn_info.update(weecfg.prompt_for_driver_settings(driver))
                 if DEBUG:
                     print "Station info =", stn_info
-            config_util.modify_config(config_dict, stn_info, DEBUG)
+            weecfg.modify_config(config_dict, stn_info, DEBUG)
     
         # Time to write it out. Get a temporary file:
         with tempfile.NamedTemporaryFile("w") as tmpfile:
@@ -427,13 +427,13 @@ if __name__ == "__main__":
           packages=['examples',
                     'schemas',
                     'user',
+                    'weecfg',
                     'weedb',
                     'weeplot',
                     'weeutil',
                     'weewx',
                     'weewx.drivers'],
-          py_modules=['daemon',
-                      'config_util'],
+          py_modules=['daemon'],
           scripts=['bin/wee_config_database',
                    'bin/wee_config_device',
                    'bin/weewxd',
