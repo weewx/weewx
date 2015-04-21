@@ -391,4 +391,7 @@ class ExtensionInstallTest(unittest.TestCase):
         self.assertEqual(test_dict['ProcessMonitor'],
                          {'data_binding': 'pmon_binding',
                           'process': 'weewxd'})
+        
+        self.assertTrue('user.pmon.ProcessMonitor' in test_dict['Engine']['Services']['process_services'])
+        
 unittest.main()

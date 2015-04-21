@@ -13,6 +13,8 @@ import sys
 
 import weecfg
 from weecfg import Logger
+from weewx.engine import all_service_groups
+import weeutil.weeutil
 
 class InstallError(Exception):
     """Exception thrown when installing an extension."""
@@ -88,7 +90,8 @@ class ExtensionEngine(object):
             module = sys.modules['install']
             loader = getattr(module, 'loader')
             installer = loader()
-            self.logger.log("Found extension with name '%s'" % installer.get('name', 'Unknown'), level=2)
+            extension_name = installer.get('name', 'Unknown')
+            self.logger.log("Found extension with name '%s'" % extension_name, level=2)
 
             # Go through all the files used by the extension:
             for file_path in installer['files']:
@@ -116,7 +119,32 @@ class ExtensionEngine(object):
             # Restore the path
             sys.path = old_path
 
+        needs_save = False
+        
+        # Find any new top_level sections, so we can include a major comment block with them:
+        new_top_level = []
         if 'config' in installer:
+            for top_level in installer['config']:
+                if top_level not in self.config_dict:
+                    new_top_level.append(top_level)
+                    
+            # Inject any new config data into the configuration file
             weecfg.conditional_merge(self.config_dict, installer['config'])
+            
+            # Now include the major comment block for any new top level sections
+            for new_section in new_top_level:
+                self.config_dict.comments[new_section] = weecfg.major_comment_block + \
+                            ["# Options for extension '%s'" % extension_name]
+                
+            needs_save = True
+        
+        for service_group in all_service_groups:
+            if service_group in installer:
+                extension_svcs = weeutil.weeutil.option_as_list(installer[service_group])
+                for svc in extension_svcs:
+                    if svc not in self.config_dict['Engine']['Services'][service_group]:
+                        self.config_dict['Engine']['Services'][service_group].append(svc)
+                        needs_save = True
+                        
+        if needs_save:
             weecfg.save_config(self.config_dict, self.config_path)
-
