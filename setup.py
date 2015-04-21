@@ -41,7 +41,7 @@ sys.path.insert(0, bin_dir)
 # Now we can import some weewx modules
 import weewx
 VERSION = weewx.__version__
-import weecfg
+import weecfg.extension
 import weeutil.weeutil
 
 start_scripts = ['util/init.d/weewx.bsd',
@@ -53,9 +53,6 @@ start_scripts = ['util/init.d/weewx.bsd',
 # The default station information:
 stn_info = {'station_type' : 'Simulator',
             'driver'       : 'weewx.drivers.simulator'}
-
-# For backwards compatibility of extension installers:
-ExtensionInstaller = weecfg.ExtensionInstaller
 
 #==============================================================================
 # install

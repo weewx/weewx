@@ -17,6 +17,9 @@ from weecfg import Logger
 class InstallError(Exception):
     """Exception thrown when installing an extension."""
 
+class ExtensionInstaller(dict):
+    """Base class for extension installers."""
+
 class ExtensionEngine(object):
     """Engine that manages extensions."""
     # Extension components can be installed to these locations
@@ -116,3 +119,4 @@ class ExtensionEngine(object):
         if 'config' in installer:
             weecfg.conditional_merge(self.config_dict, installer['config'])
             weecfg.save_config(self.config_dict, self.config_path)
+

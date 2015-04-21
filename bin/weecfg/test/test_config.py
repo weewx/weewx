@@ -27,6 +27,9 @@ except ImportError:
     print "Module 'mock' not installed. Testing will be restricted."
     have_mock = False
 
+# Redirect the import of setup:
+sys.modules['setup'] = weecfg.extension
+
 # Change directory so we can find things dependent on the location of
 # this file, such as config files and expected values:
 this_file = os.path.join(os.getcwd(), __file__)

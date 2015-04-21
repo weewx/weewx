@@ -7,10 +7,14 @@
 #
 """Install and remove extensions."""
 import optparse
+import sys
 
-import weecfg
-from weecfg.extension import ExtensionEngine
+import weecfg.extension
 from weecfg import Logger
+from weecfg.extension import ExtensionEngine
+
+# Redirect the import of setup:
+sys.modules['setup'] = weecfg.extension
 
 usage = """wee_extension --help
        wee_extension --list

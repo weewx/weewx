@@ -863,11 +863,8 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
     return value
 
 #==============================================================================
-#            Classes and utilities for installing extensions
+#            Miscellaneous utilities
 #==============================================================================
-
-class ExtensionInstaller(dict):
-    """Base class for extension installers."""
 
 def extract_roots(config_path, config_dict):
     """Get the location of the various root directories used by weewx."""
@@ -890,13 +887,17 @@ def extract_roots(config_path, config_dict):
     
     return root_dict
 
-def extract_tarball(filename, tmpdir, logger=Logger()):
-    """do some basic checks on the tarball then extract it"""
+def extract_tarball(filename, target_dir, logger=None):
+    """Extract a tarball into a given directory
+    
+    Returns: A list containing the member files
+    """
+    logger = logger or Logger()
     import tarfile
     logger.log("Extracting from tarball %s" % filename, level=1)
     tar_archive = tarfile.open(filename, mode='r')
     try:
-        tar_archive.extractall(tmpdir)
+        tar_archive.extractall(target_dir)
         member_names = [x.name for x in tar_archive.getmembers()]
         return member_names
     finally:
