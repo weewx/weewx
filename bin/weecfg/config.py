@@ -39,7 +39,8 @@ class ConfigEngine(object):
         if (options.install or options.update or options.merge) and not options.dist_config:
                 exit("Command requires option --dist-config to be specified.")
                 
-        # The install and merge options requires --output
+        # The install and merge options requires --output. Indeed,
+        # this is the only difference between --update and --merge.
         if (options.install or options.merge) and not options.output:
             sys.exit("Command requires option --output to be specified.")
             
@@ -51,8 +52,8 @@ class ConfigEngine(object):
         save_me = False
         
         if options.install or options.update or options.merge:
-        
-            # Open up and parse the distribution config file:
+            # These options require a distribution config file. 
+            # Open it up and parse it:
             try:        
                 dist_config_dict = configobj.ConfigObj(options.dist_config, file_error=True)
             except IOError, e:
@@ -60,24 +61,25 @@ class ConfigEngine(object):
             except SyntaxError, e:
                 sys.exit("Syntax error in distribution configuration file '%s': %s" % 
                          (options.dist_config, e))
-                
-            if options.install:
-                config_dict = dist_config_dict
-                config_path = options.output
-            else:
-                config_path, config_dict = weecfg.read_config(options.config_path, args)
-                print "Using configuration file found at", config_path
-    
-                # Update the old configuration file:
-                weecfg.update_config(config_dict)
-                
-                # Then merge it into the distribution file
-                weecfg.merge_config(config_dict, dist_config_dict)
-    
+        
+        # The --install option uses the distribution config file as its config files.
+        # All others require an existing, user config file
+        if options.install:
+            config_dict = dist_config_dict
+            config_path = options.output
+        else:
+            config_path, config_dict = weecfg.read_config(options.config_path, args)
+            print "Using configuration file found at", config_path
+
+        if options.update or options.merge:
+            # Update the old configuration file:
+            weecfg.update_config(config_dict)
+            
+            # Then merge it into the distribution file
+            weecfg.merge_config(config_dict, dist_config_dict)
             save_me = True
             
         if options.install or options.modify:
-    
             self.modify_config(config_dict, options)
             save_me = True
             

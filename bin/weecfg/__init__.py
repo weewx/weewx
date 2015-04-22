@@ -267,6 +267,8 @@ def update_config(config_dict):
 
     if major < '3':
         update_to_v30(config_dict)
+        
+    update_to_v32(config_dict)
 
 def merge_config(config_dict, template_dict):
     """Merge the configuration dictionary into the template dictionary,
@@ -530,6 +532,14 @@ def update_to_v30(config_dict):
                 pass
 
     config_dict['version'] = '3.0.0'
+
+def update_to_v32(config_dict):
+    """Update a configuration file to V3.2"""
+    # The only difference is that we are no longer using SVN, so get rid
+    # of its ident
+    for i in range(len(config_dict.initial_comment)):
+        if config_dict.initial_comment[i].find("$Id") >= 0:
+            config_dict.initial_comment[i] = "#                                                                            #"
 
 #==============================================================================
 #              Utilities that extract from ConfigObj objects
