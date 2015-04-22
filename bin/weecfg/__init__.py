@@ -663,12 +663,13 @@ def replace_string(a_dict, label, value):
 #                Utilities that work on drivers
 #==============================================================================
 
-def get_driver_infos():
+def get_driver_infos(driver_dir='weewx.drivers'):
     """Scan the drivers folder, extracting information about each available driver.
     Return as a dictionary, keyed by driver name."""
 
-    import weewx.drivers
-    driver_directory = os.path.dirname(os.path.abspath(weewx.drivers.__file__))
+    __import__(driver_dir)
+    driver_package = sys.modules[driver_dir]
+    driver_directory = os.path.dirname(os.path.abspath(driver_package.__file__))
     driver_list = [ os.path.basename(f) for f in glob.glob(os.path.join(driver_directory, "*.py"))]
 
     driver_info_dict = {}
@@ -685,11 +686,10 @@ def get_driver_infos():
             driver_module = sys.modules[driver]
             driver_info_dict[driver]['name'] = driver_module.DRIVER_NAME
             driver_info_dict[driver]['version'] = driver_module.DRIVER_VERSION
+            del driver_module
         except Exception, e:
             driver_info_dict[driver]['name'] = driver
-            driver_info_dict[driver]['fail'] = "%s" % e
-        finally:
-            del driver_module
+            driver_info_dict[driver]['fail'] = str(e)
 
     return driver_info_dict
 

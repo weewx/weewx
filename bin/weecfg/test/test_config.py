@@ -264,6 +264,15 @@ class ConfigTest(unittest.TestCase):
         more = out_str.readline()
         self.assertEqual(more, '', "Unexpected additional lines")
 
+    def test_driver_info(self):
+        """Test the discovery and listing of drivers."""
+        driver_info_dict = weecfg.get_driver_infos()
+        # Cannot really test for version numbers of all drivers. Pick one.
+        self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['name'], 'WMR100')
+        import weewx.drivers.wmr100
+        self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['version'], weewx.drivers.wmr100.DRIVER_VERSION)
+        del weewx.drivers.wmr100
+        
     def test_merge(self):
 
         # Start with a typical V2.0 user file:

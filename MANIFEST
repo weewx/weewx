@@ -2,12 +2,13 @@
 LICENSE.txt
 README
 setup.cfg
-setup2.py
+setup.py
 weewx.conf
-bin/config_util.py
 bin/daemon.py
+bin/wee_config
 bin/wee_config_database
 bin/wee_config_device
+bin/wee_extension
 bin/wee_reports
 bin/weewxd
 bin/examples/__init__.py
@@ -18,6 +19,9 @@ bin/schemas/__init__.py
 bin/schemas/wview.py
 bin/user/__init__.py
 bin/user/extensions.py
+bin/weecfg/__init__.py
+bin/weecfg/config.py
+bin/weecfg/extension.py
 bin/weedb/__init__.py
 bin/weedb/mysql.py
 bin/weedb/sqlite.py
