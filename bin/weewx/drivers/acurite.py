@@ -299,7 +299,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.15'
+DRIVER_VERSION = '0.16'
 DEBUG_RAW = 0
 
 # USB constants for HID
@@ -594,37 +594,50 @@ class Station(object):
     def decode_R1(raw):
         data = dict()
         if len(raw) == 10 and raw[0] == 0x01:
-            if raw[3] == 0xff and raw[2] == 0xcf:
-                loginf("R1: no sensors found: %s" % _fmt_bytes(raw))
+            if Station.check_R1(raw):
+                data['channel'] = Station.decode_channel(raw)
+                data['sensor_id'] = Station.decode_sensor_id(raw)
+                data['rssi'] = Station.decode_rssi(raw)
+                if data['rssi'] == 0:
+                    data['sensor_battery'] = None
+                    loginf("R1: ignoring stale data: %s" % _fmt_bytes(raw))
+                else:
+                    data['sensor_battery'] = Station.decode_sensor_battery(raw)
+                    data['windSpeed'] = Station.decode_windspeed(raw)
+                    if raw[3] & 0x0f == 1:
+                        data['windDir'] = Station.decode_winddir(raw)
+                        data['rain_total'] = Station.decode_rain(raw)
+                    else:
+                        data['outTemp'] = Station.decode_outtemp(raw)
+                        data['outHumidity'] = Station.decode_outhumid(raw)
+            else:
                 data['channel'] = None
                 data['sensor_id'] = None
                 data['rssi'] = None
                 data['sensor_battery'] = None
-            elif raw[9] != 0xff and raw[9] != 0x00:
-                loginf("R1: ignoring dodgey data: %s" % _fmt_bytes(raw))
-                data['channel'] = Station.decode_channel(raw)
-                data['sensor_id'] = Station.decode_sensor_id(raw)
-                data['rssi'] = Station.decode_rssi(raw)
-                data['sensor_battery'] = None
-            elif raw[3] & 0x0f == 1 or raw[3] & 0x0f == 8:
-                data['channel'] = Station.decode_channel(raw)
-                data['sensor_id'] = Station.decode_sensor_id(raw)
-                data['rssi'] = Station.decode_rssi(raw)
-                data['sensor_battery'] = Station.decode_sensor_battery(raw)
-                data['windSpeed'] = Station.decode_windspeed(raw)
-                if raw[3] & 0x0f == 1:
-                    data['windDir'] = Station.decode_winddir(raw)
-                    data['rain_total'] = Station.decode_rain(raw)
-                else:
-                    data['outTemp'] = Station.decode_outtemp(raw)
-                    data['outHumidity'] = Station.decode_outhumid(raw)
-            else:
-                logerr("R1: unknown format: %s" % _fmt_bytes(raw))
         elif len(raw) != 10:
             logerr("R1: bad length: %s" % _fmt_bytes(raw))
         else:
             logerr("R1: bad format: %s" % _fmt_bytes(raw))
         return data
+
+    @staticmethod
+    def check_R1(raw):
+        ok = True
+        if raw[3] == 0xff and raw[2] == 0xcf:
+            loginf("R1: no sensors found: %s" % _fmt_bytes(raw))
+            ok = False
+        else:
+            if raw[3] & 0x0f != 1 and raw[3] & 0x0f != 8:
+                loginf("R1: bogus message flavor (%02x): %s" % (raw[3], _fmt_bytes(raw)))
+                ok = False
+            if raw[9] != 0xff and raw[9] != 0x00:
+                loginf("R1: bogus final byte (%02x): %s" % (raw[9], _fmt_bytes(raw)))
+                ok = False
+            if raw[8] & 0x0f < 0 or raw[8] & 0x0f > 3:
+                loginf("R1: bogus signal strength (%02x): %s" % ((raw[8] & 0x0f), _fmt_bytes(raw)))
+                ok = False
+        return ok
 
     @staticmethod
     def decode_R2(raw):
