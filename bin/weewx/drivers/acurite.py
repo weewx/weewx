@@ -600,15 +600,13 @@ class Station(object):
                 data['sensor_id'] = None
                 data['rssi'] = None
                 data['sensor_battery'] = None
-            elif raw[9] != 0xff:
+            elif raw[9] != 0xff and raw[9] != 0x00:
                 loginf("R1: ignoring dodgey data: %s" % _fmt_bytes(raw))
                 data['channel'] = Station.decode_channel(raw)
                 data['sensor_id'] = Station.decode_sensor_id(raw)
                 data['rssi'] = Station.decode_rssi(raw)
                 data['sensor_battery'] = None
             elif raw[3] & 0x0f == 1 or raw[3] & 0x0f == 8:
-                if raw[3] & 0xf0 != 0x70:
-                    loginf("R1: unexpected sensor type: %s" % _fmt_bytes(raw))
                 data['channel'] = Station.decode_channel(raw)
                 data['sensor_id'] = Station.decode_sensor_id(raw)
                 data['rssi'] = Station.decode_rssi(raw)
