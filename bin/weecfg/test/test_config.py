@@ -340,8 +340,12 @@ class ExtensionInstallTest(unittest.TestCase):
     def setUp(self):
         # We're going to install a "mini-weewx" in this temporary directory:
         self.weewx_root = '/var/tmp/wee_test'
-        # Remove the old tree, in case it exists:
-        shutil.rmtree(self.weewx_root, ignore_errors=True)
+        # NB: If we use distutils to copy trees, we have to use it to remove
+        # them because it caches directories it has created.
+        try:
+            distutils.dir_util.remove_tree(self.weewx_root)
+        except OSError:
+            pass
         
         # Now build a new configuration
         self.user_dir = os.path.join(self.weewx_root, 'bin', 'user')
@@ -353,9 +357,13 @@ class ExtensionInstallTest(unittest.TestCase):
         
     def tearDown(self):
         "Remove any installed test configuration"
-        #shutil.rmtree(self.weewx_root, ignore_errors=True)
+        try:
+            distutils.dir_util.remove_tree(self.weewx_root)
+        except OSError:
+            pass
 
     def test_install(self):
+        print "testing install"
         # Find and read the test configuration
         config_path = os.path.join(self.weewx_root,'weewx31.conf')
         config_dict = configobj.ConfigObj(config_path)
@@ -371,6 +379,7 @@ class ExtensionInstallTest(unittest.TestCase):
         # Make sure the root dictionary got calculated correctly:
         self.assertEqual(engine.root_dict, {'WEEWX_ROOT': '/var/tmp/wee_test',
                                             'BIN_ROOT': '/var/tmp/wee_test/bin',
+                                            'USER_ROOT': '/var/tmp/wee_test/bin/user',
                                             'EXT_ROOT': '/var/tmp/wee_test/bin/user/installer',
                                             'SKIN_ROOT': '/var/tmp/wee_test/skins',
                                             'CONFIG_ROOT': '/var/tmp/wee_test'})
@@ -380,7 +389,7 @@ class ExtensionInstallTest(unittest.TestCase):
         
         # ... and assert that it got installed correctly
         self.assertTrue(os.path.isfile(os.path.join(self.user_dir, 'pmon.py')))
-        self.assertTrue(os.path.isfile(os.path.join(self.user_dir, 'installer', 'install.py')))
+        self.assertTrue(os.path.isfile(os.path.join(self.user_dir, 'installer', 'pmon', 'install.py')))
         self.assertTrue(os.path.isdir(os.path.join(self.skin_dir, 'pmon')))
         self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon','index.html.tmpl')))
         self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon','skin.conf')))
@@ -402,5 +411,34 @@ class ExtensionInstallTest(unittest.TestCase):
                           'process': 'weewxd'})
         
         self.assertTrue('user.pmon.ProcessMonitor' in test_dict['Engine']['Services']['process_services'])
+        
+    def test_uninstall(self):
+        print "testing uninstall"
+        # Find and read the test configuration
+        config_path = os.path.join(self.weewx_root,'weewx31.conf')
+        config_dict = configobj.ConfigObj(config_path)
+        
+        # Note that the actual location of the "mini-weewx" is over in /var/tmp
+        config_dict['WEEWX_ROOT'] = self.weewx_root
+
+        # Initialize the install engine. Note that we want the bin root in /var/tmp, not here:
+        engine = weecfg.extension.ExtensionEngine(config_path, config_dict, 
+                                                  bin_root=self.bin_dir,
+                                                  logger= weecfg.Logger(verbosity=-1)) 
+        # First install...
+        engine.install_extension('./pmon.tgz')
+        # ... then uninstall it:
+        engine.uninstall_extension('pmon')
+        
+        # Assert that everything got removed correctly:
+        self.assertTrue(not os.path.exists(os.path.join(self.user_dir, 'pmon.py')))
+        self.assertTrue(not os.path.exists(os.path.join(self.user_dir, 'installer', 'pmon', 'install.py')))
+        self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon')))
+        self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon','index.html.tmpl')))
+        self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon','skin.conf')))
+        
+        # Get, then check the new config dict:
+        test_dict = configobj.ConfigObj(config_path)
+
         
 unittest.main()

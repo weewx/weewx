@@ -71,6 +71,9 @@ def main():
         
     if options.install:
         ext.install_extension(options.install)
+        
+    if options.uninstall:
+        ext.uninstall_extension(options.uninstall)
 
     return 0
 

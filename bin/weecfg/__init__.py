@@ -579,26 +579,26 @@ def get_unit_info(config_dict):
 #                Utilities that manipulate ConfigObj objects
 #==============================================================================
 
-def prettify(config, src):
-    """clean up the config file:
-
-    - put any global stanzas just before StdRESTful
-    - prepend any global stanzas with a line of comment characters
-    - put any StdReport stanzas before ftp and rsync
-    - prepend any StdReport stanzas with a single empty line
-    - prepend any database or databinding stanzas with a single empty line
-    - prepend any restful stanzas with a single empty line
-    """
-    for k in src:
-        if k in ['StdRESTful', 'DataBindings', 'Databases', 'StdReport']:
-            for j in src[k]:
-                if k == 'StdReport':
-                    reorder_sections(config[k], j, 'RSYNC')
-                    reorder_sections(config[k], j, 'FTP')
-                config[k].comments[j] = minor_comment_block
-        else:
-            reorder_sections(config, k, 'StdRESTful')
-            config.comments[k] = major_comment_block
+# def prettify(config, src):
+#     """clean up the config file:
+# 
+#     - put any global stanzas just before StdRESTful
+#     - prepend any global stanzas with a line of comment characters
+#     - put any StdReport stanzas before ftp and rsync
+#     - prepend any StdReport stanzas with a single empty line
+#     - prepend any database or databinding stanzas with a single empty line
+#     - prepend any restful stanzas with a single empty line
+#     """
+#     for k in src:
+#         if k in ['StdRESTful', 'DataBindings', 'Databases', 'StdReport']:
+#             for j in src[k]:
+#                 if k == 'StdReport':
+#                     reorder_sections(config[k], j, 'RSYNC')
+#                     reorder_sections(config[k], j, 'FTP')
+#                 config[k].comments[j] = minor_comment_block
+#         else:
+#             reorder_sections(config, k, 'StdRESTful')
+#             config.comments[k] = major_comment_block
 
 def reorder_sections(config_dict, src, dst, after=False):
     """Move the section with key src to just before (after=False) or after (after=True)the
@@ -652,20 +652,20 @@ def remove_and_prune(a_dict, b_dict):
         elif k in a_dict:
             a_dict.pop(k)
 
-def prepend_path(a_dict, label, value):
-    """Prepend the value to every instance of the label in dict a_dict"""
-    for k in a_dict:
-        if isinstance(a_dict[k], dict):
-            prepend_path(a_dict[k], label, value)
-        elif k == label:
-            a_dict[k] = os.path.join(value, a_dict[k])
+# def prepend_path(a_dict, label, value):
+#     """Prepend the value to every instance of the label in dict a_dict"""
+#     for k in a_dict:
+#         if isinstance(a_dict[k], dict):
+#             prepend_path(a_dict[k], label, value)
+#         elif k == label:
+#             a_dict[k] = os.path.join(value, a_dict[k])
 
-def replace_string(a_dict, label, value):
-    for k in a_dict:
-        if isinstance(a_dict[k], dict):
-            replace_string(a_dict[k], label, value)
-        else:
-            a_dict[k] = a_dict[k].replace(label, value)
+# def replace_string(a_dict, label, value):
+#     for k in a_dict:
+#         if isinstance(a_dict[k], dict):
+#             replace_string(a_dict[k], label, value)
+#         else:
+#             a_dict[k] = a_dict[k].replace(label, value)
 
 #==============================================================================
 #                Utilities that work on drivers
@@ -884,7 +884,9 @@ def extract_roots(config_path, config_dict):
     # to the location of this file:
     if root_dict['BIN_ROOT'] is None:
         root_dict['BIN_ROOT'] = os.path.dirname(__file__)
-    # The extensions directory can be found off of BIN_ROOT:
+    # The user subdirectory:
+    root_dict['USER_ROOT'] = os.path.join(root_dict['BIN_ROOT'], 'user')
+    # The extensions directory can be found off of USER_ROOT:
     root_dict['EXT_ROOT'] = os.path.join(root_dict['BIN_ROOT'], 'user', 'installer')
     # Add SKIN_ROOT if it can be found:
     try:
@@ -910,3 +912,22 @@ def extract_tarball(filename, target_dir, logger=None):
         return member_names
     finally:
         tar_archive.close()
+        
+def get_extension_installer(extension_installer_dir):
+    """Get the installer in the given extension installer subdirectory"""
+    old_path = sys.path
+    try:
+        # Inject the location of the installer directory into the path
+        sys.path.insert(0, extension_installer_dir)
+        # Now I can import the extension's 'install' module:
+        __import__('install')
+        install_module = sys.modules['install']
+        loader = getattr(install_module, 'loader')
+        installer = loader()
+    finally:
+        # Restore the path
+        sys.path = old_path
+        # Get rid of the module:
+        sys.modules.pop('install')
+
+    return (install_module.__file__, installer)

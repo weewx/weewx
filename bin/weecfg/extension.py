@@ -5,6 +5,13 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Utilities for installing and removing extensions"""
+
+# The names of some root directories. For the extension pmon,
+#    -user/                          # The USER_ROOT subdirectory
+#    -user/installer/                # The EXT_ROOT subdirectory
+#    -user/installer/pmon/           # The extension's installer subdirectory
+#    -user/installer/pmon/install.py # The copy of the installer for the extension
+
 import os
 import shutil
 import sys
@@ -96,20 +103,10 @@ class ExtensionEngine(object):
     def install_from_dir(self, extension_dir):
         """Install the extension that can be found in a given directory"""
         self.logger.log("Request to install extension found in directory %s" % extension_dir, level=2)
-        
-        old_path = sys.path
-        try:
-            # Inject the location of the extension into the path:
-            sys.path.insert(0, extension_dir)
-            # Now I can import the extension's 'install' module:
-            __import__('install')
-        finally:
-            # Restore the path
-            sys.path = old_path
-            
-        install_module = sys.modules['install']
-        loader = getattr(install_module, 'loader')
-        installer = loader()
+
+        # The "installer" is actually a dictionary containing what is to be installed and
+        # where. The "installer_path" is the path to the file containing that dictionary.        
+        installer_path, installer = weecfg.get_extension_installer(extension_dir)
         extension_name = installer.get('name', 'Unknown')
         self.logger.log("Found extension with name '%s'" % extension_name, level=2)
 
@@ -117,6 +114,8 @@ class ExtensionEngine(object):
         # like (bin, [user/myext.py, user/otherext.py]). The first element is the
         # directory the files go in, the second element is a list of files to be put
         # in that directory
+        self.logger.log("Copying new files.", level=2)
+        N = 0
         for source_tuple in installer['files']:
             # For each set of sources, check and see if it's a type we know about
             for directory in ExtensionEngine.target_dirs:
@@ -137,47 +136,115 @@ class ExtensionEngine(object):
                             except OSError:
                                 pass
                             shutil.copy(source_path, destination_path)
+                            N += 1
                     break
             else:
                 sys.exit("Unknown destination for file %s" % source_tuple)
-
+        self.logger.log("Copied %d files" % N, level=2)
+        
         save_config = False
         new_top_level = []
         # Look for options that have to be injected into the configuration file
         if 'config' in installer:
+            self.logger.log("Adding new sections to configuration file", level=2)
             # Remember any new top-level sections (so we can inject a major comment block):
             for top_level in installer['config']:
                 if top_level not in self.config_dict:
                     new_top_level.append(top_level)
-                    
-            # Inject any new config data into the configuration file
-            weecfg.conditional_merge(self.config_dict, installer['config'])
-            
-            # Now include the major comment block for any new top level sections
-            for new_section in new_top_level:
-                self.config_dict.comments[new_section] = weecfg.major_comment_block + \
-                            ["# Options for extension '%s'" % extension_name]
+
+            if not self.dry_run:
+                # Inject any new config data into the configuration file
+                weecfg.conditional_merge(self.config_dict, installer['config'])
                 
-            save_config = True
+                # Now include the major comment block for any new top level sections
+                for new_section in new_top_level:
+                    self.config_dict.comments[new_section] = weecfg.major_comment_block + \
+                                ["# Options for extension '%s'" % extension_name]
+                    
+                save_config = True
         
         # Go through all the possible service groups and see if the extension provides
         # a new one
+        self.logger.log("Adding new services.", level=2)
         for service_group in all_service_groups:
             if service_group in installer:
                 extension_svcs = weeutil.weeutil.option_as_list(installer[service_group])
                 for svc in extension_svcs:
                     # See if this service is already in the service group
                     if svc not in self.config_dict['Engine']['Services'][service_group]:
-                        # Add the new service into the appropriate service group
-                        self.config_dict['Engine']['Services'][service_group].append(svc)
-                        save_config = True
+                        if not self.dry_run:
+                            # Add the new service into the appropriate service group
+                            self.config_dict['Engine']['Services'][service_group].append(svc)
+                            save_config = True
+                        self.logger.log("Added new service %s to %s" %(svc, service_group))
 
-        # Save the extension's install.py file
-        try:
-            os.makedirs(self.root_dict['EXT_ROOT'])
-        except OSError:
-            pass
-        shutil.copy2(install_module.__file__, self.root_dict['EXT_ROOT'])
+        # Save the extension's install.py file in the extension's installer directory
+        extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'], extension_name)
+        self.logger.log("Saving installer file to %s" % extension_installer_dir)
+        if not self.dry_run:
+            try:
+                os.makedirs(os.path.join(extension_installer_dir))
+            except OSError:
+                pass
+            shutil.copy2(installer_path, extension_installer_dir)
                                 
         if save_config:
+            backup_path = weecfg.save_with_backup(self.config_dict, self.config_path)
+            self.logger.log("Saved configuration dictionary. Backup copy at %s" % backup_path)
+            
+    def uninstall_extension(self, extension_name):
+        """Uninstall the extension with name extension_name"""
+        
+        self.logger.log("Request to remove extension with name %s" % extension_name, level=2)
+        
+        # Find the subdirectory containing this extension's installer
+        extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'], extension_name)
+        # Retrieve it
+        _, installer = weecfg.get_extension_installer(extension_installer_dir)
+        
+        save_config = False
+
+        # First remove any bin files the extension might have added:
+        self.logger.log("Removing files.", level=2)
+        N = 0
+        for source_tuple in installer['files']:
+            # For each set of sources, check and see if it's a type we know about
+            for directory in ExtensionEngine.target_dirs:
+                # This will be something like 'bin', or 'skins':
+                source_type = os.path.commonprefix((source_tuple[0], directory))
+                # If there is a match, source_type will be something other than an empty string:
+                if source_type:
+                    # This will be something like 'BIN_ROOT' or 'SKIN_ROOT':
+                    root_type = ExtensionEngine.target_dirs[source_type]
+                    # Now go through all the files of the source tuple
+                    for install_file in source_tuple[1]:
+                        destination_path = os.path.abspath(os.path.join(self.root_dict[root_type], '..', install_file))
+                        self.logger.log("Removing'%s'" % destination_path, level=3)
+                        if not self.dry_run:
+                            os.remove(destination_path)
+                            N += 1
+                    break
+            else:
+                sys.exit("Unknown destination for file %s" % source_tuple)
+        self.logger.log("Removed %d files" % N, level=2)
+        
+        # Remove any services we added
+        for service_group in all_service_groups:
+            if service_group in installer:
+                new_list = filter(lambda x : x not in installer[service_group], 
+                                  self.config_dict['Engine']['Services'][service_group])
+                if not self.dry_run:
+                    self.config_dict['Engine']['Services'][service_group] = new_list
+                    save_config = True
+        
+        # Remove any sections we added
+        if 'config' in installer:
+            weecfg.remove_and_prune(self.config_dict, installer['config'])
+            save_config = True
+            
+        # Finally, remove the extension's installer subdirectory:
+        shutil.rmtree(extension_installer_dir)
+        
+        if save_config:
             weecfg.save_with_backup(self.config_dict, self.config_path)
+            
