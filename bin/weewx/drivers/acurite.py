@@ -635,7 +635,7 @@ class Station(object):
                 loginf("R1: bogus final byte (%02x): %s" % (raw[9], _fmt_bytes(raw)))
                 ok = False
             if raw[8] & 0x0f < 0 or raw[8] & 0x0f > 3:
-                loginf("R1: bogus signal strength (%02x): %s" % ((raw[8] & 0x0f), _fmt_bytes(raw)))
+                loginf("R1: bogus signal strength (%02x): %s" % (raw[8], _fmt_bytes(raw)))
                 ok = False
         return ok
 
