@@ -6,7 +6,6 @@
 """Test the configuration utilities."""
 from __future__ import with_statement
 
-import imp
 import StringIO
 import unittest
 import tempfile
@@ -381,6 +380,7 @@ class ExtensionInstallTest(unittest.TestCase):
         
         # ... and assert that it got installed correctly
         self.assertTrue(os.path.isfile(os.path.join(self.user_dir, 'pmon.py')))
+        self.assertTrue(os.path.isfile(os.path.join(self.user_dir, 'installer', 'install.py')))
         self.assertTrue(os.path.isdir(os.path.join(self.skin_dir, 'pmon')))
         self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon','index.html.tmpl')))
         self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon','skin.conf')))

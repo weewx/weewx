@@ -32,13 +32,13 @@ us_group = {'group_altitude': 'foot',
             'group_temperature': 'degree_F'}
 
 metric_group = {'group_altitude': 'meter',
-                  'group_degree_day': 'degree_C_day',
-                  'group_pressure': 'mbar',
-                  'group_rain': 'cm',
-                  'group_rainrate': 'cm_per_hour',
-                  'group_speed': 'km_per_hour',
-                  'group_speed2': 'km_per_hour2',
-                  'group_temperature': 'degree_C'}
+                'group_degree_day': 'degree_C_day',
+                'group_pressure': 'mbar',
+                'group_rain': 'cm',
+                'group_rainrate': 'cm_per_hour',
+                'group_speed': 'km_per_hour',
+                'group_speed2': 'km_per_hour2',
+                'group_temperature': 'degree_C'}
 
 metricwx_group = {'group_altitude': 'meter',
                   'group_degree_day': 'degree_C_day',
@@ -87,7 +87,7 @@ def find_file(file_path=None, args=None,
     locations: A list of directories to be searched. 
     Default is ['etc/weewx', '/home/weewx'].
 
-    file_name: The name of the file to be found. Default is 'weewx.conf'. This is used
+    file_name: The name of the file to be found. This is used
     only if the directories must be searched. Default is 'weewx.conf'.
 
     returns: full path to the file
@@ -113,33 +113,31 @@ def find_file(file_path=None, args=None,
 
 def read_config(config_path, args=None,
                 locations=['/etc/weewx', '/home/weewx'], file_name='weewx.conf'):
-    """Read the specified configuration file, return a dictionary of the
+    """Read the specified configuration file, return an instance of ConfigObj with the
     file contents. If no file is specified, look in the standard locations
-    for weewx.conf. Returns the filename of the actual configuration file
-    as well as dictionary of the elements from the configuration file.
+    for weewx.conf. Returns the filename of the actual configuration file,
+    as well as the ConfigObj.
 
     config_path: configuration filename
 
     args: command-line arguments
 
-    return: path-to-file, dictionary
+    return: path-to-file, instance-of-ConfigObj
+    
+    Raises:
+    
+    SyntaxError: If there is a syntax error in the file
+    
+    IOError: If the file cannot be found
     """
     # Find and open the config file:
-    try:
-        config_path = find_file(config_path, args, 
-                                locations=locations, file_name=file_name)
-        try:
-            # Now open it up and parse it.
-            config_dict = configobj.ConfigObj(config_path, file_error=True)
-        except SyntaxError, e:
-            sys.exit("Syntax error in file '%s': %s" % (config_path, e))
-    except IOError, e:
-        print >> sys.stdout, "Unable to find the configuration file."
-        print >> sys.stdout, "Reason: %s" % e
-        sys.exit(1)
+    config_path = find_file(config_path, args,
+                            locations=locations, file_name=file_name)
+    # Now open it up and parse it.
+    config_dict = configobj.ConfigObj(config_path, file_error=True)
     return config_path, config_dict
 
-def save_config(config_dict, config_path):
+def save_with_backup(config_dict, config_path):
     """Save the config file, backing up as necessary."""
     
     # Check to see if the file exists:

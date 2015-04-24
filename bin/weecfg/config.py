@@ -68,7 +68,12 @@ class ConfigEngine(object):
             config_dict = dist_config_dict
             config_path = options.output
         else:
-            config_path, config_dict = weecfg.read_config(options.config_path, args)
+            try:
+                config_path, config_dict = weecfg.read_config(options.config_path, args)
+            except SyntaxError, e:
+                sys.exit("Syntax error in configuration file: %s" % e)
+            except IOError, e:
+                sys.exit("Unable to open configuration file: %s" % e)
             print "Using configuration file found at", config_path
 
         if options.update or options.merge:
@@ -132,7 +137,7 @@ class ConfigEngine(object):
     def save_config(self, config_dict, config_path):
         """Save the config file, backing up as necessary."""
 
-        backup_path = weecfg.save_config(config_dict, config_path)
+        backup_path = weecfg.save_with_backup(config_dict, config_path)
         if backup_path:        
             print "Saved backup to %s" % backup_path
             

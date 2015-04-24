@@ -29,16 +29,13 @@ import weewx.station
 import weewx.reportengine
 import weeutil.weeutil
 from weeutil.weeutil import to_bool, to_int
+from weewx import all_service_groups
 
 class BreakLoop(Exception):
     """Exception raised when it's time to break the main loop."""
 
 class InitializationError(weewx.WeeWxIOError):
     """Exception raised when unable to initialize the console."""
-
-# All existent service groups:
-all_service_groups = ['prep_services', 'data_services', 'process_services',
-                      'archive_services', 'restful_services', 'report_services']
 
 #==============================================================================
 #                    Class StdEngine
@@ -116,8 +113,6 @@ class StdEngine(object):
         
     def loadServices(self, config_dict):
         """Set up the services to be run."""
-        global all_service_groups
-
         # This will hold the list of objects, after the services has been
         # instantiated:
         self.service_obj = []

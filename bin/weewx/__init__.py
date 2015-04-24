@@ -94,6 +94,14 @@ class POST_LOOP(object):
     access the console for things other than generating LOOP packet."""
 
 #===============================================================================
+#                       Service groups.
+#===============================================================================
+
+# All existent service groups:
+all_service_groups = ['prep_services', 'data_services', 'process_services',
+                      'archive_services', 'restful_services', 'report_services']
+
+#===============================================================================
 #                       Class Event
 #===============================================================================
 class Event(object):
