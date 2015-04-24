@@ -5,8 +5,6 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Utilities for installing and removing extensions"""
-from __future__ import with_statement
-
 import os
 import shutil
 import sys
@@ -35,9 +33,9 @@ class ExtensionEngine(object):
         
         config_path: Path to the configuration file. (Something like /home/weewx/weewx.conf)
 
-        config_dict: The configuration dictionary.
+        config_dict: The configuration dictionary (the contents of the file at config_path).
 
-        tmpdir: A temporary directory to be used for extracting tarballs and the like [Optional.]
+        tmpdir: A temporary directory to be used for extracting tarballs and the like [Optional]
 
         bin_root: A path to the root of the weewx binary files (Something like /home/weewx/bin).
         Optional. If not given, it will be determined from the location of this file.
@@ -98,51 +96,52 @@ class ExtensionEngine(object):
     def install_from_dir(self, extension_dir):
         """Install the extension that can be found in a given directory"""
         self.logger.log("Request to install extension found in directory %s" % extension_dir, level=2)
+        
         old_path = sys.path
         try:
-            # Inject both the location of the extension, and my parent directory (so the extension
-            # can find setup.py) into the path:
-            sys.path[0:0] = [extension_dir, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))]
+            # Inject the location of the extension into the path:
+            sys.path.insert(0, extension_dir)
+            # Now I can import the extension's 'install' module:
             __import__('install')
-            module = sys.modules['install']
-            loader = getattr(module, 'loader')
-            installer = loader()
-            extension_name = installer.get('name', 'Unknown')
-            self.logger.log("Found extension with name '%s'" % extension_name, level=2)
-
-            # Go through all the files used by the extension. A "source tuple" is something
-            # like (bin, [user/myext.py, user/otherext.py]). The first element is the
-            # directory the files go in, the second element is a list of files to be put
-            # in that directory
-            for source_tuple in installer['files']:
-                # For each set of sources, check and see if it's a type we know about
-                for directory in ExtensionEngine.target_dirs:
-                    # This will be something like 'bin', or 'skins':
-                    source_type = os.path.commonprefix((source_tuple[0], directory))
-                    # If there is a match, source_type will be something other than an empty string:
-                    if source_type:
-                        # This will be something like 'BIN_ROOT' or 'SKIN_ROOT':
-                        root_type = ExtensionEngine.target_dirs[source_type]
-                        # Now go through all the files of the source tuple
-                        for install_file in source_tuple[1]:
-                            source_path = os.path.join(extension_dir, install_file)
-                            destination_path = os.path.abspath(os.path.join(self.root_dict[root_type], '..', install_file))
-                            self.logger.log("Copying from '%s' to '%s'" % (source_path, destination_path), level=3)
-                            if not self.dry_run:
-                                try:
-                                    os.makedirs(os.path.dirname(destination_path))
-                                except OSError:
-                                    pass
-                                shutil.copy(source_path, destination_path)
-                        break
-                else:
-                    sys.exit("Unknown destination for file %s" % source_tuple)
         finally:
             # Restore the path
             sys.path = old_path
+            
+        install_module = sys.modules['install']
+        loader = getattr(install_module, 'loader')
+        installer = loader()
+        extension_name = installer.get('name', 'Unknown')
+        self.logger.log("Found extension with name '%s'" % extension_name, level=2)
 
-        needs_save = False
-        
+        # Go through all the files used by the extension. A "source tuple" is something
+        # like (bin, [user/myext.py, user/otherext.py]). The first element is the
+        # directory the files go in, the second element is a list of files to be put
+        # in that directory
+        for source_tuple in installer['files']:
+            # For each set of sources, check and see if it's a type we know about
+            for directory in ExtensionEngine.target_dirs:
+                # This will be something like 'bin', or 'skins':
+                source_type = os.path.commonprefix((source_tuple[0], directory))
+                # If there is a match, source_type will be something other than an empty string:
+                if source_type:
+                    # This will be something like 'BIN_ROOT' or 'SKIN_ROOT':
+                    root_type = ExtensionEngine.target_dirs[source_type]
+                    # Now go through all the files of the source tuple
+                    for install_file in source_tuple[1]:
+                        source_path = os.path.join(extension_dir, install_file)
+                        destination_path = os.path.abspath(os.path.join(self.root_dict[root_type], '..', install_file))
+                        self.logger.log("Copying from '%s' to '%s'" % (source_path, destination_path), level=3)
+                        if not self.dry_run:
+                            try:
+                                os.makedirs(os.path.dirname(destination_path))
+                            except OSError:
+                                pass
+                            shutil.copy(source_path, destination_path)
+                    break
+            else:
+                sys.exit("Unknown destination for file %s" % source_tuple)
+
+        save_config = False
         new_top_level = []
         # Look for options that have to be injected into the configuration file
         if 'config' in installer:
@@ -159,7 +158,7 @@ class ExtensionEngine(object):
                 self.config_dict.comments[new_section] = weecfg.major_comment_block + \
                             ["# Options for extension '%s'" % extension_name]
                 
-            needs_save = True
+            save_config = True
         
         # Go through all the possible service groups and see if the extension provides
         # a new one
@@ -171,7 +170,14 @@ class ExtensionEngine(object):
                     if svc not in self.config_dict['Engine']['Services'][service_group]:
                         # Add the new service into the appropriate service group
                         self.config_dict['Engine']['Services'][service_group].append(svc)
-                        needs_save = True
-                        
-        if needs_save:
+                        save_config = True
+
+        # Save the extension's install.py file
+        try:
+            os.makedirs(self.root_dict['EXT_ROOT'])
+        except OSError:
+            pass
+        shutil.copy2(install_module.__file__, self.root_dict['EXT_ROOT'])
+                                
+        if save_config:
             weecfg.save_with_backup(self.config_dict, self.config_path)

@@ -3,12 +3,8 @@ TODO: items for the next release; complete list is at github
 
 Need to do wee_extension --uninstall
 
-There are two read_configs. Refactor to use just one. Also, it should raise SyntaxError
-or IOError. Be prepared to catch them.
-
 wee_config should use Logger
 
-Save install.py in bin/user/installer
 
 
 
