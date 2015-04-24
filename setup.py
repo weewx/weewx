@@ -431,7 +431,7 @@ if __name__ == "__main__":
                     'weewx',
                     'weewx.drivers'],
           py_modules=['daemon'],
-          scripts=['bin/wee_config',
+          scripts=['bin/wee_config_config',
                    'bin/wee_config_database',
                    'bin/wee_config_device',
                    'bin/wee_extension',

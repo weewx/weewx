@@ -5,7 +5,7 @@ setup.cfg
 setup.py
 weewx.conf
 bin/daemon.py
-bin/wee_config
+bin/wee_config_config
 bin/wee_config_database
 bin/wee_config_device
 bin/wee_extension
