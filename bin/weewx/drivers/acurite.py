@@ -624,7 +624,7 @@ class Station(object):
     @staticmethod
     def check_R1(raw):
         ok = True
-        if raw[3] == 0xff and raw[2] == 0xcf:
+        if raw[2] & 0x0f == 0x0f and raw[2] == 0xff:
             loginf("R1: no sensors found: %s" % _fmt_bytes(raw))
             ok = False
         else:
