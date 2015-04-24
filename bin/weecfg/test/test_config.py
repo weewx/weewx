@@ -6,7 +6,6 @@
 """Test the configuration utilities."""
 from __future__ import with_statement
 
-import imp
 import StringIO
 import unittest
 import tempfile
