@@ -363,7 +363,6 @@ class ExtensionInstallTest(unittest.TestCase):
             pass
 
     def test_install(self):
-        print "testing install"
         # Find and read the test configuration
         config_path = os.path.join(self.weewx_root,'weewx31.conf')
         config_dict = configobj.ConfigObj(config_path)
@@ -377,11 +376,11 @@ class ExtensionInstallTest(unittest.TestCase):
                                                   logger= weecfg.Logger(verbosity=-1)) 
         
         # Make sure the root dictionary got calculated correctly:
-        self.assertEqual(engine.root_dict, {'WEEWX_ROOT': '/var/tmp/wee_test',
-                                            'BIN_ROOT': '/var/tmp/wee_test/bin',
-                                            'USER_ROOT': '/var/tmp/wee_test/bin/user',
-                                            'EXT_ROOT': '/var/tmp/wee_test/bin/user/installer',
-                                            'SKIN_ROOT': '/var/tmp/wee_test/skins',
+        self.assertEqual(engine.root_dict, {'WEEWX_ROOT' : '/var/tmp/wee_test',
+                                            'BIN_ROOT'   : '/var/tmp/wee_test/bin',
+                                            'USER_ROOT'  : '/var/tmp/wee_test/bin/user',
+                                            'EXT_ROOT'   : '/var/tmp/wee_test/bin/user/installer',
+                                            'SKIN_ROOT'  : '/var/tmp/wee_test/skins',
                                             'CONFIG_ROOT': '/var/tmp/wee_test'})
         
         # Now install the extension...
@@ -413,7 +412,6 @@ class ExtensionInstallTest(unittest.TestCase):
         self.assertTrue('user.pmon.ProcessMonitor' in test_dict['Engine']['Services']['process_services'])
         
     def test_uninstall(self):
-        print "testing uninstall"
         # Find and read the test configuration
         config_path = os.path.join(self.weewx_root,'weewx31.conf')
         config_dict = configobj.ConfigObj(config_path)
@@ -437,8 +435,9 @@ class ExtensionInstallTest(unittest.TestCase):
         self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon','index.html.tmpl')))
         self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon','skin.conf')))
         
-        # Get, then check the new config dict:
+        # Get the modified config dict, which had the extension removed from it
         test_dict = configobj.ConfigObj(config_path)
 
-        
+        # It should be the same as our original:
+        self.assertEqual(test_dict, config_dict)
 unittest.main()

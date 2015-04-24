@@ -201,8 +201,35 @@ class ExtensionEngine(object):
         extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'], extension_name)
         # Retrieve it
         _, installer = weecfg.get_extension_installer(extension_installer_dir)
-        
+
+        # Remove any files that were added:
+        self.uninstall_files(installer)
+                
         save_config = False
+
+        # Remove any services we added
+        for service_group in all_service_groups:
+            if service_group in installer:
+                new_list = filter(lambda x : x not in installer[service_group], 
+                                  self.config_dict['Engine']['Services'][service_group])
+                if not self.dry_run:
+                    self.config_dict['Engine']['Services'][service_group] = new_list
+                    save_config = True
+        
+        # Remove any sections we added
+        if 'config' in installer and not self.dry_run:
+            weecfg.remove_and_prune(self.config_dict, installer['config'])
+            save_config = True
+        
+        if not self.dry_run:
+            # Finally, remove the extension's installer subdirectory:
+            shutil.rmtree(extension_installer_dir)
+        
+        if save_config:
+            weecfg.save_with_backup(self.config_dict, self.config_path)
+            
+    def uninstall_files(self, installer):
+        """Delete files that were installed for this extension"""
 
         # First remove any bin files the extension might have added:
         self.logger.log("Removing files.", level=2)
@@ -219,32 +246,51 @@ class ExtensionEngine(object):
                     # Now go through all the files of the source tuple
                     for install_file in source_tuple[1]:
                         destination_path = os.path.abspath(os.path.join(self.root_dict[root_type], '..', install_file))
-                        self.logger.log("Removing'%s'" % destination_path, level=3)
-                        if not self.dry_run:
-                            os.remove(destination_path)
-                            N += 1
+                        N += self.delete_file(destination_path)
+                        N += self.delete_file(destination_path.replace('.py', 'pyc'), False)
+                        N += self.delete_file(destination_path.replace('.py', 'pyo'), False)
+                    # If the directory is empty, delete it
+                    directory = os.path.abspath(os.path.join(self.root_dict[root_type], '..', source_tuple[0]))
+                    self.delete_directory(directory)
                     break
             else:
                 sys.exit("Unknown destination for file %s" % source_tuple)
         self.logger.log("Removed %d files" % N, level=2)
         
-        # Remove any services we added
-        for service_group in all_service_groups:
-            if service_group in installer:
-                new_list = filter(lambda x : x not in installer[service_group], 
-                                  self.config_dict['Engine']['Services'][service_group])
+    def delete_file(self, filename, report_errors=True):
+        """Delete the given file from the file system.
+
+        filename: The path to the file to be deleted.
+        
+        report_errors: If true, report an error if the file is
+        missing or cannot be deleted. Otherwise don't. In
+        neither case will an exception be raised. """
+        try:
+            self.logger.log("Deleting file %s" % filename, level=2)
+            if not self.dry_run:
+                os.remove(filename)
+                return 1
+        except OSError, e:
+            if report_errors:
+                self.logger.log("Delete failed: %s" % e, level=4)
+        return 0
+
+    def delete_directory(self, directory, report_errors=True):
+        """Delete the given directory from the file system.
+
+        directory: The path to the directory to be deleted. If the
+        directory is not empty, nothing is done.
+        
+        report_errors; If true, report an error. Otherwise don't. In
+        neither case will an exception be raised. """
+        try:
+            if os.listdir(directory):
+                self.logger.log("Directory '%s' not empty" % directory, level=2)
+            else:
+                self.logger.log("Deleting directory %s" % directory, level=2)
                 if not self.dry_run:
-                    self.config_dict['Engine']['Services'][service_group] = new_list
-                    save_config = True
+                    shutil.rmtree(directory)
+        except OSError, e:
+            if report_errors:
+                self.logger.log("Delete failed on directory '%s': %s" % (directory, e), level=2)
         
-        # Remove any sections we added
-        if 'config' in installer:
-            weecfg.remove_and_prune(self.config_dict, installer['config'])
-            save_config = True
-            
-        # Finally, remove the extension's installer subdirectory:
-        shutil.rmtree(extension_installer_dir)
-        
-        if save_config:
-            weecfg.save_with_backup(self.config_dict, self.config_path)
-            
