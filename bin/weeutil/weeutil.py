@@ -1082,7 +1082,7 @@ def read_config(file_path, args=None, msg_to_stderr=True, exit_on_fail=True):
         else:
             syslog.syslog(syslog.LOG_CRIT, str(e))
         if exit_on_fail:
-            exit(1)
+            sys.exit(1)
         raise
 
     # Try to open up the configuration file. Declare an error if unable to.

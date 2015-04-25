@@ -81,8 +81,6 @@ def main():
                       help="Use new/template configuration file DIST_CONFIG.")
     parser.add_option("--output", metavar="OUT_CONFIG",
                       help="Save to configuration file OUT_CONFIG.")
-    parser.add_option("--no-prompt", action="store_true",
-                      help="Do not prompt. Use default or specified values.")
     parser.add_option("--driver", metavar="DRIVER",
                       help="Use the driver DRIVER."
                       " For example, weewx.driver.vantage")
@@ -98,6 +96,10 @@ def main():
                       """ For example, "Santa's workshop, North Pole" """)
     parser.add_option("--units", choices=["us", "metric"], metavar="(metric|us)",
                       help="Set display units to 'metric' or 'us'")
+    parser.add_option("--no-prompt", action="store_true",
+                      help="Do not prompt. Use default or specified values.")
+    parser.add_option("--no-backup", action="store_true", default=False,
+                      help="Do not save a backup of any existing files.")
     parser.add_option("--debug", action="store_true",
                       help="Show diagnostic information while running.")
 
@@ -105,8 +107,10 @@ def main():
     (options, args) = parser.parse_args()
     
     config_mgr = ConfigEngine()
-    
-    sys.exit(config_mgr.run(args, options))
+
+    config_mgr.run(args, options)
+
+    sys.exit(0)
 
 if __name__=="__main__" :
     main()

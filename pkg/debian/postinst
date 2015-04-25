@@ -131,7 +131,7 @@ merge_weewxconf() {
                 echo saving distribution config file as $cfgfile-$NEWVER
                 cp -p $cfgfile.dist $cfgfile-$NEWVER
                 echo merging previous and distribution into $cfgfile
-                $setupapp --merge --config=$cfgfile-$OLDVER --dist-config=$cfgfile-$NEWVER --output=$cfgfile
+                $setupapp --merge --config=$cfgfile-$OLDVER --dist-config=$cfgfile-$NEWVER --output=$cfgfile --no-backup
                 # give drivers a chance to update/warn with no prompts
                 configure_post driver
             else
@@ -199,7 +199,7 @@ configure_post() {
         uopt=" --units=$units"
     fi
 
-    $setupapp --modify --config=$cfgfile $dopt $uopt --no-prompt
+    $setupapp --modify --config=$cfgfile $dopt $uopt --no-prompt --no-backup
 }
 
 case "$1" in

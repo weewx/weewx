@@ -1,7 +1,7 @@
 #
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
-#    See the file LICENSE.txt for your full rights.
+#    See the file LICENSE.txt for your rights.
 #
 """Utilities used by the setup and configure programs"""
 
@@ -63,26 +63,27 @@ class Logger(object):
 #==============================================================================
 
 def find_file(file_path=None, args=None,
-                locations=['/etc/weewx', '/home/weewx'], file_name='weewx.conf'):
+              locations=['/etc/weewx', '/home/weewx'],
+              file_name='weewx.conf'):
     """Find and return a path to a file, looking in "the usual places."
     
     General strategy:
 
-    First, file_path is tried. If not found there, then the first element of args is
-    tried. 
+    First, file_path is tried. If not found there, then the first element of
+    args is tried. 
     
-    If those both fail, then the list of directory locations is searched, looking
-    for a file with file name file_name. 
+    If those both fail, then the list of directory locations is searched,
+    looking for a file with file name file_name. 
     
-    If after all that, the file still cannot be found, then an exception IOError
-    will be raised.
+    If after all that, the file still cannot be found, then ab IOError
+    exception will be raised.
     
     Parameters:
 
     file_path: A candidate path to the file.
 
-    args: command-line arguments. If the file cannot be found in file_path, then
-    the first element in args will be tried.
+    args: command-line arguments. If the file cannot be found in file_path,
+    then the first element in args will be tried.
     
     locations: A list of directories to be searched. 
     Default is ['etc/weewx', '/home/weewx'].
@@ -105,18 +106,20 @@ def find_file(file_path=None, args=None,
                 return candidate
 
     if file_path is None:
-        raise IOError("Unable to find file '%s'. Tried directories %s" % (file_name, locations))
+        raise IOError("Unable to find file '%s'. Tried directories %s" %
+                      (file_name, locations))
     elif not os.path.isfile(file_path):
         raise IOError("%s is not a file" % file_path)
 
     return file_path
 
 def read_config(config_path, args=None,
-                locations=['/etc/weewx', '/home/weewx'], file_name='weewx.conf'):
-    """Read the specified configuration file, return an instance of ConfigObj with the
-    file contents. If no file is specified, look in the standard locations
-    for weewx.conf. Returns the filename of the actual configuration file,
-    as well as the ConfigObj.
+                locations=['/etc/weewx', '/home/weewx'],
+                file_name='weewx.conf'):
+    """Read the specified configuration file, return an instance of ConfigObj
+    with the file contents. If no file is specified, look in the standard
+    locations for weewx.conf. Returns the filename of the actual configuration
+    file, as well as the ConfigObj.
 
     config_path: configuration filename
 
@@ -138,10 +141,13 @@ def read_config(config_path, args=None,
     return config_path, config_dict
 
 def save_with_backup(config_dict, config_path):
+    return save(config_dict, config_path, backup=True)
+
+def save(config_dict, config_path, backup=False):
     """Save the config file, backing up as necessary."""
     
-    # Check to see if the file exists:
-    if os.path.exists(config_path):
+    # Check to see if the file exists and we are supposed to make backup:
+    if os.path.exists(config_path) and backup:
         
         # Yes. We'll have to back it up.
         backup_path = weeutil.weeutil.move_with_timestamp(config_path)
@@ -153,13 +159,12 @@ def save_with_backup(config_dict, config_path):
         config_dict.write(tmpfile)
         tmpfile.flush()
     
-        # Now install the temporary file (holding the config data)
-        # into the proper place:
+        # Now move the temporary file into the proper place:
         shutil.copyfile(tmpfile.name, config_path)
 
     else:
         
-        # No existing file. Just write.
+        # No existing file or no backup required. Just write.
         with open(config_path, 'w') as fd:
             config_dict.write(fd)
         backup_path = None
@@ -173,17 +178,16 @@ def save_with_backup(config_dict, config_path):
 def modify_config(config_dict, stn_info, debug=False):
     # Get the driver editor, name, and version:
     driver = stn_info.get('driver')
-    try:
-        # Look up driver info:
-        driver_editor, driver_name, driver_version = \
-            load_driver_editor(driver)
-    except Exception, e:
-        exit("Driver %s failed to load: %s" % (driver, e))
-    stn_info['station_type'] = driver_name
-    print 'Using %s version %s (%s)' % (stn_info['station_type'], driver_version, driver)
-
-    if debug:
-        print "Station info:\n", weeutil.weeutil.print_dict(stn_info)
+    if driver:
+        try:
+            # Look up driver info:
+            driver_editor, driver_name, driver_version = \
+                load_driver_editor(driver)
+        except Exception, e:
+            sys.exit("Driver %s failed to load: %s" % (driver, e))
+        stn_info['station_type'] = driver_name
+        print 'Using %s version %s (%s)' % (stn_info['station_type'],
+                                            driver_version, driver)
 
     # Get a driver stanza, if possible
     stanza = None
@@ -206,21 +210,23 @@ def modify_config(config_dict, stn_info, debug=False):
         config_dict[driver_name] = stanza[driver_name]
         # Add a major comment deliminator:
         config_dict.comments[driver_name] = major_comment_block
-        # If we have a [Station] section, the move the new stanza to just after it
+        # If we have a [Station] section, the move the new stanza to just
+        # after it
         if 'Station' in config_dict:
             reorder_sections(config_dict, driver_name, 'Station', after=True)
             # make the stanza the station type
             config_dict['Station']['station_type'] = driver_name
 
     # Apply any overrides from the stn_info
-    if stn_info is not None:
+    if stn_info:
         # Update driver stanza with any overrides from stn_info
-        if driver_name in stn_info:
+        if driver_name is not None and driver_name in stn_info:
             for k in stn_info[driver_name]:
                 config_dict[driver_name][k] = stn_info[driver_name][k]
         # Update station information with stn_info overrides
         for p in ['location', 'latitude', 'longitude', 'altitude']:
             if stn_info.get(p) is not None:
+                print "Using %s for %s" % (stn_info[p], p)
                 config_dict['Station'][p] = stn_info[p]
         # Update units display with any stn_info overrides
         if stn_info.get('units') is not None:
@@ -323,9 +329,8 @@ def update_to_v27(config_dict):
     # The section name has changed from WMR-USB to WMR100
     if 'WMR-USB' in config_dict:
         if 'WMR100' in config_dict:
-            sys.stderr.write("\n*** Configuration file has both a 'WMR-USB' "
-                             "section and a 'WMR100' section. Aborting ***\n\n")
-            exit()
+            sys.exit("\n*** Configuration file has both a 'WMR-USB' "
+                     "section and a 'WMR100' section. Aborting ***\n\n")
         config_dict.rename('WMR-USB', 'WMR100')
     # If necessary, reflect the section name in the station type:
     try:
@@ -345,9 +350,8 @@ def update_to_v27(config_dict):
     # The section name has changed from WMR-918 to WMR9x8
     if 'WMR-918' in config_dict:
         if 'WMR9x8' in config_dict:
-            sys.stderr.write("\n*** Configuration file has both a 'WMR-918' "
-                             "section and a 'WMR9x8' section. Aborting ***\n\n")
-            exit()
+            sys.exit("\n*** Configuration file has both a 'WMR-918' "
+                     "section and a 'WMR9x8' section. Aborting ***\n\n")
         config_dict.rename('WMR-918', 'WMR9x8')
     # If necessary, reflect the section name in the station type:
     try:
@@ -601,8 +605,8 @@ def get_unit_info(config_dict):
 #             config.comments[k] = major_comment_block
 
 def reorder_sections(config_dict, src, dst, after=False):
-    """Move the section with key src to just before (after=False) or after (after=True)the
-    section with key dst. """
+    """Move the section with key src to just before (after=False) or after
+    (after=True) the section with key dst. """
     bump = 1 if after else 0
     # We need both keys to procede:
     if src not in config_dict.sections or dst not in config_dict.sections:
@@ -619,7 +623,8 @@ def reorder_sections(config_dict, src, dst, after=False):
                            config_dict.sections[dst_idx + bump:]
 
 def conditional_merge(a_dict, b_dict):
-    """Merge fields from b_dict into a_dict, but only if they do not yet exist in a_dict"""
+    """Merge fields from b_dict into a_dict, but only if they do not yet
+    exist in a_dict"""
     # Go through each key in b_dict
     for k in b_dict:
         if isinstance(b_dict[k], dict):
@@ -739,7 +744,6 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     print "Specify altitude, with units 'foot' or 'meter'.  For example:"
     print "35, foot"
     print "12, meter"
-    print "altitude is", altitude
     msg = "altitude [%s]: " % weeutil.weeutil.list_as_string(altitude) if altitude else "altitude: "
     alt = None
     while alt is None:
@@ -787,6 +791,7 @@ def prompt_for_driver(dflt_driver=None):
     infos = get_driver_infos()
     keys = sorted(infos)
     dflt_idx = None
+    print "Installed drivers include:"
     for i, d in enumerate(keys):
         print " %2d) %-15s (%s)" % (i, infos[d].get('name', '?'), d)
         if dflt_driver == d:

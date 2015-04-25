@@ -248,7 +248,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) < 2 :
         print """Usage: ftpupload.py path-to-configuration-file [path-to-be-ftp'd]"""
-        exit()
+        sys.exit(weewx.CMD_ERROR)
         
     try :
         config_dict = configobj.ConfigObj(sys.argv[1], file_error=True)
@@ -262,7 +262,7 @@ if __name__ == '__main__':
                                    config_dict['StdReport']['HTML_ROOT'])
         except KeyError:
             print "No HTML_ROOT in configuration dictionary."
-            exit()
+            sys.exit(1)
     else:
         ftp_dir = sys.argv[2]
 

@@ -41,13 +41,13 @@ def parseArgs():
     
     if options.version:
         print weewx.__version__
-        sys.exit()
+        sys.exit(0)
         
     if len(args) < 1:
         sys.stderr.write("Missing argument(s).\n")
         sys.stderr.write(parser.parse_args(["--help"]))
         sys.exit(weewx.CMD_ERROR)
-    
+
     return options, args
 
 #===============================================================================
