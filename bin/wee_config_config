@@ -2,7 +2,7 @@
 #
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
-#    See the file LICENSE.txt for your full rights.
+#    See the file LICENSE.txt for your rights.
 #
 """Configure the configuration file."""
 from __future__ import with_statement
@@ -12,8 +12,6 @@ import syslog
 import optparse
 
 from weecfg.config import ConfigEngine
-
-description = "Configure a weewx configuration file, nominally weewx.conf."
 
 usage = """wee_config --help
        wee_config --version
@@ -32,7 +30,9 @@ usage = """wee_config --help
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
            [--location="Home Sweet Home"] [--units=(us|metric)]
            [--output=OUT_CONFIG] [--no-prompt]
-           
+
+Configure a weewx configuration file, nominally weewx.conf.
+
 Commands:
 
 --help         Show this message then exit.
@@ -58,11 +58,11 @@ def main():
     syslog.openlog('wee_config', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
-    parser = optparse.OptionParser(description=description, usage=usage)
+    parser = optparse.OptionParser(usage=usage)
     
     # Add the various options:
     parser.add_option("--version", action="store_true",
-                      help="Show the weewx version.")
+                      help="Show the weewx version then exit.")
     parser.add_option("--list-drivers", action="store_true",
                       help="List the available device drivers.")
     parser.add_option("--install", action="store_true",
@@ -87,9 +87,9 @@ def main():
                       help="Use the driver DRIVER."
                       " For example, weewx.driver.vantage")
     parser.add_option("--latitude", metavar="yy.y",
-                      help="The station latitude")
+                      help="The station latitude in decimal degrees.")
     parser.add_option("--longitude", metavar="xx.x",
-                      help="The station longitude")
+                      help="The station longitude in decimal degrees.")
     parser.add_option("--altitude", metavar="zz,(foot|meter)",
                       help="The station altitude in either feet or meters."
                       " For example, '750,foot' or '320,meter'")
@@ -99,7 +99,7 @@ def main():
     parser.add_option("--units", choices=["us", "metric"], metavar="(metric|us)",
                       help="Set display units to 'metric' or 'us'")
     parser.add_option("--debug", action="store_true",
-                      help="Show diagnostic information while running")
+                      help="Show diagnostic information while running.")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()

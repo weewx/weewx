@@ -22,16 +22,13 @@ description = """Configure the weewx databases. Most of these functions are
 handled automatically by weewx, but they may be useful as a utility in special
 cases. In particular, the 'reconfigure' option can be useful if you decide to
 add or drop data types from the database schema or change unit systems."""
- 
-usage = """%prog: [config_path] 
-                            [--config=CONFIG_PATH] [--help]
+
+usage = """%prog: [CONFIG_FILE|--config=CONFIG_FILE] [--help]
                             [--create-archive] [--drop-daily] 
                             [--backfill-daily] [--reconfigure]
                             [--string-check] [--fix]
                             [--binding=BINDING_NAME]
-
-       The path to the config file can be specified as either a
-       command-line argument, or by using option --config. """
+"""
 
 epilog = """If you are using a MySQL database it is assumed that you have the
 appropriate permissions for the requested operation."""
@@ -46,8 +43,8 @@ def main():
     
     # Add the various options:
     parser.add_option("--config", dest="config_path", type=str,
-                      metavar="CONFIG_PATH",
-                      help="Use configuration file CONFIG_PATH.")
+                      metavar="CONFIG_FILE",
+                      help="Use configuration file CONFIG_FILE.")
     parser.add_option("--create-archive", dest="create_archive",
                       action='store_true',
                       help="Create the archive database.")
@@ -69,9 +66,9 @@ def main():
                       " see whether it contains embedded strings.")
     parser.add_option("--fix", dest="fix", action="store_true",
                       help="Fix any embedded strings in a sqlite database.")
-    parser.add_option("--binding", dest="binding", metavar="BINDING",
+    parser.add_option("--binding", dest="binding", metavar="BINDING_NAME",
                       default='wx_binding',
-                      help="The database binding. Default is 'wx_binding'.")
+                      help="The data binding. Default is 'wx_binding'.")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()

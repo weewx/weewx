@@ -2,7 +2,7 @@
 #
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
-#    See the file LICENSE.txt for your full rights.
+#    See the file LICENSE.txt for your rights.
 #
 """Entry point to the weewx weather system."""
 import sys
@@ -14,14 +14,14 @@ import user.extensions       #@UnusedImport
 import weewx.engine
 
 usagestr = """
-  %prog config_path [--daemon] [--pidfile=PIDFILE] [--exit] [--loop-on-init]
+  %prog config_file [--daemon] [--pidfile=PIDFILE] [--exit] [--loop-on-init]
                      [--version] [--help]
 
   Entry point to the weewx weather program. Can be run directly, or as a daemon
   by specifying the '--daemon' option.
 
 Arguments:
-    config_path: Path to the weewx configuration file to be used.
+    config_file: The weewx configuration file to be used.
 """
 
 #===============================================================================
@@ -36,7 +36,7 @@ def parseArgs():
     parser.add_option("-p", "--pidfile", type="string",       dest="pidfile", help="Path to process ID file", default="/var/run/weewx.pid")     
     parser.add_option("-v", "--version", action="store_true", dest="version", help="Display version number then exit")
     parser.add_option("-x", "--exit",    action="store_true", dest="exit"   , help="Exit on I/O and database errors instead of restarting")
-    parser.add_option("-r", "--loop-on-init", action="store_true", dest="loop_on_init"  , help="Loop if device is not ready on startup")
+    parser.add_option("-r", "--loop-on-init", action="store_true", dest="loop_on_init"  , help="Retry forever if device is not ready on startup")
     (options, args) = parser.parse_args()
     
     if options.version:
