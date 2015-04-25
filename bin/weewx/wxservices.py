@@ -6,6 +6,8 @@
 
 """Services specific to weather."""
 
+import syslog
+
 import weedb
 import weewx.units
 import weewx.engine
@@ -290,6 +292,9 @@ class StdWXCalculate(weewx.engine.StdService):
                     T_max, T_min, rad_avg, wind_avg,
                     self.wind_height, self.latitude,
                     data['dateTime'])
+        except ValueError, e:
+            weeutil.weeutil.log_traceback()
+            syslog.syslog(syslog.LOG_ERR, "wxservices: Calculation of evapotranspiration failed: %s" % e)
         except weedb.DatabaseError:
             pass
 
