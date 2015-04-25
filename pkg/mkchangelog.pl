@@ -65,6 +65,8 @@ my $action = 'app';               # what to do, can be app or stub
 my $fmt = '80col';                # format can be 80col, debian, or redhat
 my $rc = 0;
 my $MAXCOL = 75;
+my %MONTHS = ("jan",1,"feb",2,"mar",3,"apr",4,"may",5,"jun",6,
+              "jul",7,"aug",8,"sep",9,"oct",10,"nov",11,"dec",12);
 
 ($user,$email) = guessuser($user,$email);
 
@@ -181,6 +183,11 @@ sub doapp {
                 if ($line =~ /(\d+)\/(\d+)\/(\d\d)/) {
                     my($month,$day,$year) = ($1,$2,$3);
                     $ts = timelocal(0,0,0,$day,$month-1,$year);
+                } elsif ($line =~ /(\d+) (\S+) (\d+)/) {
+                    my($day,$mstr,$year) = ($1,$2,$3);
+                    $mstr = lc $mstr;
+                    my $month = $MONTHS{$mstr};
+                    $ts = timelocal(0,0,0,$day,$month-1,$year);
                 }
             } elsif ($line =~ /\S/) {
                 $cp .= $line;
@@ -211,8 +218,9 @@ sub dumpsection {
     my $postfix = q();
 
     if ($fmt eq '80col') {
-        my $tstr = strftime '%m/%d/%y', localtime $ts;
-        $prefix = "$version $tstr\n";
+#        my $tstr = strftime '%m/%d/%y', localtime $ts;
+        my $tstr = strftime '%d %b %Y', localtime $ts;
+        $prefix = "$version ($tstr)\n";
         $firstlinepfx = "\n";
         $postfix = "\n";
     } elsif ($fmt eq 'debian') {
