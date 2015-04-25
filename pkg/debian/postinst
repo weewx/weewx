@@ -18,7 +18,7 @@ set -e
 . /usr/share/debconf/confmodule
 
 cfgfile=/etc/weewx/weewx.conf
-setupapp=/usr/share/weewx/setup.py
+setupapp=/usr/share/weewx/wee_config_config
 
 # insert any configuration variables into the configuration file
 configure_weewxconf() {
@@ -131,7 +131,7 @@ merge_weewxconf() {
                 echo saving distribution config file as $cfgfile-$NEWVER
                 cp -p $cfgfile.dist $cfgfile-$NEWVER
                 echo merging previous and distribution into $cfgfile
-                $setupapp --merge-config --install-dir / --a $cfgfile-$NEWVER --b $cfgfile-$OLDVER --c $cfgfile
+                $setupapp --merge --config=$cfgfile-$OLDVER --dist-config=$cfgfile-$NEWVER --output=$cfgfile
                 # give drivers a chance to update/warn with no prompts
                 configure_post driver
             else
@@ -199,7 +199,7 @@ configure_post() {
         uopt=" --units=$units"
     fi
 
-    $setupapp configure --config=$cfgfile $dopt $uopt --quiet
+    $setupapp --modify --config=$cfgfile $dopt $uopt --no-prompt
 }
 
 case "$1" in
