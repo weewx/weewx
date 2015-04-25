@@ -18,12 +18,12 @@ import weewx.manager
 import weewx.units
 import weecfg
 
-description="""Configure the weewx databases. Most of these functions are
+description = """Configure the weewx databases. Most of these functions are
 handled automatically by weewx, but they may be useful as a utility in special
 cases. In particular, the 'reconfigure' option can be useful if you decide to
 add or drop data types from the database schema or change unit systems."""
  
-usage="""%prog: [config_path] 
+usage = """%prog: [config_path] 
                             [--config=CONFIG_PATH] [--help]
                             [--create-archive] [--drop-daily] 
                             [--backfill-daily] [--reconfigure]
@@ -33,7 +33,7 @@ usage="""%prog: [config_path]
        The path to the config file can be specified as either a
        command-line argument, or by using option --config. """
 
-epilog="""If you are using the MySQL database it is assumed that you have the
+epilog = """If you are using a MySQL database it is assumed that you have the
 appropriate permissions for the requested operation."""
 
 def main():
@@ -45,26 +45,33 @@ def main():
     parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
     
     # Add the various options:
-    parser.add_option("--config", dest="config_path", type=str, metavar="CONFIG_PATH",
-                      help="Use configuration file CONFIG_PATH. Default is /etc/weewx/weewx.conf or /home/weewx/weewx.conf.")
-    parser.add_option("--create-archive", dest="create_archive", action='store_true',
+    parser.add_option("--config", dest="config_path", type=str,
+                      metavar="CONFIG_PATH",
+                      help="Use configuration file CONFIG_PATH.")
+    parser.add_option("--create-archive", dest="create_archive",
+                      action='store_true',
                       help="Create the archive database.")
     parser.add_option("--drop-daily", dest="drop_daily", action='store_true',
                       help="Drop the daily summary tables from a database.")
-    parser.add_option("--backfill-daily", dest="backfill_daily", action='store_true',
+    parser.add_option("--backfill-daily", dest="backfill_daily",
+                      action='store_true',
                       help="Backfill a database with daily summaries.")
     parser.add_option("--reconfigure", action='store_true',
-                      help="""Create a new archive database using configuration information found """\
-                          """in the configuration file. In particular, the new database will use the """\
-                          """unit system found in option [StdConvert][target_unit]. """\
-                          """The new database will have the same name as the old database, with a '_new' on the end.""")
-    parser.add_option("--string-check", dest="string_check", action="store_true",
-                      help="Check a sqlite version of the archive database for embedded strings in it.")
+                      help="Create a new archive database using configuration"
+                      " information found in the configuration file. In"
+                      " particular, the new database will use the"
+                      " unit system found in option [StdConvert][target_unit]."
+                      " The new database will have the same name as the old"
+                      " database, with a '_new' on the end.")
+    parser.add_option("--string-check", dest="string_check",
+                      action="store_true",
+                      help="Check a sqlite version of the archive database to"
+                      " see whether it contains embedded strings.")
     parser.add_option("--fix", dest="fix", action="store_true",
-                      help="If a string is found, fix it.")
+                      help="Fix any embedded strings in a sqlite database.")
     parser.add_option("--binding", dest="binding", metavar="BINDING",
                       default='wx_binding',
-                      help="The database binding to be used. Default is 'wx_binding'.")
+                      help="The database binding. Default is 'wx_binding'.")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()

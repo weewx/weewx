@@ -13,7 +13,9 @@ import optparse
 
 from weecfg.config import ConfigEngine
 
-usage="""wee_config --help
+description = "Configure a weewx configuration file, nominally weewx.conf."
+
+usage = """wee_config --help
        wee_config --version
        wee_config --list-drivers
        wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
@@ -31,25 +33,23 @@ usage="""wee_config --help
            [--location="Home Sweet Home"] [--units=(us|metric)]
            [--output=OUT_CONFIG] [--no-prompt]
            
-COMMANDS:
+Commands:
 
---help         Print instructions, then exit.
---version      Print the version of weewx, then exit.
+--help         Show this message then exit.
+--version      Show the weewx version then exit.
 --list-drivers List the available weewx device drivers, then exit.
---install      Install DIST_CONFIG to OUT_CONFIG, prompting as necessary.
---update       Update the contents of configuration file CONFIG_FILE,
-               then merge the result into configuration file DIST_CONFIG.
-               Write the results to CONFIG_FILE unless an OUT_CONFIG
-               is specified.               
+--install      Install a new configuration file starting with the contents of
+               DIST_CONFIG, prompting as necessary, then save to OUT_CONFIG.
+--update       Update the contents of configuration file CONFIG_FILE to the
+               installed version of weewx, then merge the result with the
+               contents of configuration file DIST_CONFIG. Write the results
+               to CONFIG_FILE unless an OUT_CONFIG is specified.
 --merge        Update the contents of configuration file CONFIG_FILE,
                then merge the result into configuration file DIST_CONFIG.
-               Write the results to OUT_CONFIG. 
+               Write the results to OUT_CONFIG.
 --modify       Modify the configuration file, prompting as necessary.
-               Use this to add a driver.
-
-wee_config is used to configure your weewx configuration file (nominally,
-weewx.conf). Its location can be given as a command-line argument, 
-or it can be specified with option --config.
+               Use this to select a driver, specify the units for display,
+               or specify station information such as latitude and longitude.
 """
 
 def main():
@@ -58,46 +58,48 @@ def main():
     syslog.openlog('wee_config', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
-    parser = optparse.OptionParser(usage=usage)
+    parser = optparse.OptionParser(description=description, usage=usage)
     
     # Add the various options:
     parser.add_option("--version", action="store_true",
-                      help="Print the version of weewx and exit.")
+                      help="Show the weewx version.")
     parser.add_option("--list-drivers", action="store_true",
-                      help="List all the available weewx device drivers, then exit.")
+                      help="List the available device drivers.")
     parser.add_option("--install", action="store_true",
-                      help="Install DIST_CONFIG to OUT_FILE. Prompt as necessary.")
+                      help="Install a new configuration file, prompting"
+                      " as necessary.")
     parser.add_option("--update", action="store_true",
-                      help="Update an existing configuration file to the current version, then merge "
-                      "into DIST_CONFIG. Save results to CONFIG_FILE.")
+                      help="Update an existing configuration file.")
     parser.add_option("--merge", action="store_true",
-                      help="Update an existing configuration file to the current version, then merge "
-                      "into DIST_CONFIG. Save results to OUT_CONFIG.")
+                      help="Merge an existing configuration file.")
     parser.add_option("--modify", action="store_true",
-                      help="Modify the configuration file. Prompt as necessary.")
+                      help="Modify an existing configuration file, prompting"
+                      " as necessary.")
     parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
     parser.add_option("--dist-config",
-                      help="Path to the new, incoming configuration file. This is usually supplied "
-                      "by a distribution.")
+                      help="Use new/template configuration file DIST_CONFIG.")
     parser.add_option("--output", metavar="OUT_CONFIG",
-                      help="Where the results should be written.")
+                      help="Save to configuration file OUT_CONFIG.")
     parser.add_option("--no-prompt", action="store_true",
-                      help="Do not issue prompts. Use default values or specified options.")
+                      help="Do not prompt. Use default or specified values.")
     parser.add_option("--driver", metavar="DRIVER",
-                      help="Use the driver DRIVER, e.g., weewx.driver.vantage. ")
+                      help="Use the driver DRIVER."
+                      " For example, weewx.driver.vantage")
     parser.add_option("--latitude", metavar="yy.y",
                       help="The station latitude")
     parser.add_option("--longitude", metavar="xx.x",
                       help="The station longitude")
     parser.add_option("--altitude", metavar="zz,(foot|meter)",
-                      help="The station altitude in either feet or meters. E.g., '750,foot'")
+                      help="The station altitude in either feet or meters."
+                      " For example, '750,foot' or '320,meter'")
     parser.add_option("--location",
-                      help="""A text description of the station. For example, "Santa's workshop, North Pole" """)
+                      help="""A text description of the station."""
+                      """ For example, "Santa's workshop, North Pole" """)
     parser.add_option("--units", choices=["us", "metric"], metavar="(metric|us)",
                       help="Set display units to 'metric' or 'us'")
     parser.add_option("--debug", action="store_true",
-                      help="Print some intermediate data structures")
+                      help="Show diagnostic information while running")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()

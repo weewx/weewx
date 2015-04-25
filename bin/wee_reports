@@ -17,8 +17,9 @@ import weewx.reportengine
 import weecfg
 from weeutil.weeutil import timestamp_to_string
 
-description = """Runs all weewx reports. This is a useful debugging tool:
-you don't have to wait for the end of an archive interval to run the reports."""
+description = """Run all reports defined in the specified configuration file.
+Use this utility to run reports immediately instead of waiting for the end of
+an archive interval."""
 
 usage = """%prog: [config_file] [timestamp] [--config=CONFIG_FILE] [--help]"""
 

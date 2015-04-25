@@ -16,6 +16,8 @@ from weecfg.extension import ExtensionEngine
 # Redirect the import of setup:
 sys.modules['setup'] = weecfg.extension
 
+description = "Install, list, and uninstall extensions to weewx."
+
 usage = """wee_extension --help
        wee_extension --list
            [CONFIG_FILE|--config=CONFIG_FILE]
@@ -26,33 +28,33 @@ usage = """wee_extension --help
            [CONFIG_FILE|--config=CONFIG_FILE]
            [--verbosity=N]
            
-COMMANDS:
+Commands:
 
---list:      List all installed extensions
---install:   Install the extension that can be found in the
-             named file or directory.
---uninstall: Uninstall the given extension."""
-
-description = "This utility can install/remove/list extensions to weewx"
+--list:      Show installed extensions.
+--install:   Install the specified extension.
+--uninstall: Uninstall the specified extension."""
 
 def main():
     parser = optparse.OptionParser(description=description, usage=usage)
     parser.add_option('--list', action="store_true", dest="list_extensions", 
-                      help="List all installed extensions")
-    parser.add_option('--install', metavar="filename|directory",
-                      help="Install the driver found in filename or directory")
+                      help="Show installed extensions.")
+    parser.add_option('--install', metavar="FILENAME|DIRECTORY",
+                      help="Install the extension contained in FILENAME or"
+                      " DIRECTORY. FILENAME must be an archive that contains"
+                      " a packaged extension such as pmon.tar.gz.  DIRECTORY"
+                      " must be a packaged extension.")
     parser.add_option('--uninstall', metavar="EXTENSION",
-                      help="Uninstall the extension with name EXTENSION")
+                      help="Uninstall the extension with name EXTENSION.")
     parser.add_option("--config", metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
     parser.add_option('--tmpdir', default='/var/tmp',
-                      metavar="DIR", help='Use DIR as the temporary directory')
+                      metavar="DIR", help='Use temporary directory DIR.')
     parser.add_option('--bin-root', metavar="BIN_ROOT",
-                      help="Look in BIN_ROOT for Python executables (useful for debugging)")
+                      help="Look in BIN_ROOT for weewx executables.")
     parser.add_option('--dry-run', action='store_true',
-                      help='Print what would happen but do not do it')
+                      help='Print what would happen but do not do it.')
     parser.add_option('--verbosity', type=int, default=1,
-                      metavar="N", help='How much status to spew, 0-3')
+                      metavar="N", help='How much status to display, 0-3')
     
     # Now we are ready to parse the command line:
     (options, _args) = parser.parse_args()
