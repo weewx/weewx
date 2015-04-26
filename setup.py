@@ -193,6 +193,9 @@ class weewx_install_data(install_data):
                 if DEBUG:
                     print "Station info =", stn_info
             weecfg.modify_config(config_dict, stn_info, DEBUG)
+
+        # Set the WEEWX_ROOT
+        config_dict['WEEWX_ROOT'] = install_dir
     
         # Time to write it out. Get a temporary file:
         with tempfile.NamedTemporaryFile("w") as tmpfile:
