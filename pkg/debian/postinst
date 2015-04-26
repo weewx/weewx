@@ -18,7 +18,7 @@ set -e
 . /usr/share/debconf/confmodule
 
 cfgfile=/etc/weewx/weewx.conf
-setupapp=/usr/share/weewx/wee_config_config
+setupapp=/usr/share/weewx/wee_config
 
 # insert any configuration variables into the configuration file
 configure_weewxconf() {

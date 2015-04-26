@@ -12,7 +12,7 @@ import syslog
 import weecfg
 
 def main():
-    syslog.openlog('wee_config_device', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('wee_device', syslog.LOG_PID|syslog.LOG_CONS)
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
     # Load the configuration file

@@ -102,10 +102,10 @@ chmod 755 %{buildroot}%{initdir}/weewx
 
 # create symlinks to the code entry points
 ln -s ../share/weewx/weewxd %{buildroot}%{_bindir}/weewxd
+ln -s ../share/weewx/wee_config %{buildroot}%{_bindir}/wee_config
+ln -s ../share/weewx/wee_database %{buildroot}%{_bindir}/wee_database
+ln -s ../share/weewx/wee_device %{buildroot}%{_bindir}/wee_device
 ln -s ../share/weewx/wee_extension %{buildroot}%{_bindir}/wee_extension
-ln -s ../share/weewx/wee_config_config %{buildroot}%{_bindir}/wee_config_config
-ln -s ../share/weewx/wee_config_database %{buildroot}%{_bindir}/wee_config_database
-ln -s ../share/weewx/wee_config_device %{buildroot}%{_bindir}/wee_config_device
 ln -s ../share/weewx/wee_reports %{buildroot}%{_bindir}/wee_reports
 
 # pre-compile the python code
@@ -115,21 +115,21 @@ python -m compileall %{buildroot}%{dst_bin_dir}
 python -m compileall %{dst_bin_dir}
 if [ "$1" = "1" ]; then
   # this is a new installation
-  /usr/share/weewx/wee_config_config --modify --config=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --no-prompt --no-backup
+  /usr/share/weewx/wee_config --modify --config=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --no-prompt --no-backup
   chkconfig weewx on
   %{initdir}/weewx start
 elif [ "$1" = "2" ]; then
   # this is an upgrade
   # merge changes to weewx.conf
   if [ -f %{cfg_file}.dist ]; then
-    NEWVER=`/usr/share/weewx/wee_config_config --version`
+    NEWVER=`/usr/share/weewx/wee_config --version`
     OLDVER=`grep version %{cfg_file} | sed -e 's/\s*version\s*=\s*//'`
     echo saving previous config file as %{cfg_file}-$OLDVER
     mv %{cfg_file} %{cfg_file}-$OLDVER
     echo saving distribution config file as %{cfg_file}-$NEWVER
     cp -p %{cfg_file}.dist %{cfg_file}-$NEWVER
     echo merging previous and distribution into %{cfg_file}
-    /usr/share/weewx/wee_config_config --merge --config %{cfg_file}-$OLDVER --dist-config %{cfg_file}-$NEWVER --output %{cfg_file} --no-backup
+    /usr/share/weewx/wee_config --merge --config %{cfg_file}-$OLDVER --dist-config %{cfg_file}-$NEWVER --output %{cfg_file} --no-backup
   fi
   # do a full restart not just a HUP
   %{initdir}/weewx stop
@@ -152,10 +152,10 @@ rm -rf %{buildroot}
 %attr(755,root,root) %{initdir}/weewx
 %{dst_bin_dir}/
 %{_bindir}/weewxd
+%{_bindir}/wee_config
+%{_bindir}/wee_database
+%{_bindir}/wee_device
 %{_bindir}/wee_extension
-%{_bindir}/wee_config_config
-%{_bindir}/wee_config_database
-%{_bindir}/wee_config_device
 %{_bindir}/wee_reports
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
