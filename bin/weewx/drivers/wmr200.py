@@ -782,7 +782,7 @@ def decode_wind(pkt, pkt_data):
         return record
 
     except IndexError:
-        msg = ('%s decode index failure' % pkt.pkt_name())
+        msg = ('%s decode index failure' % pkt.pkt_name)
         raise WMR200ProtocolError(msg)
 
 class PacketWind(PacketLive):
@@ -832,7 +832,7 @@ def decode_rain(pkt, pkt_data):
         return record
 
     except IndexError:
-        msg = ('%s decode index failure' % pkt.pkt_name())
+        msg = ('%s decode index failure' % pkt.pkt_name)
         raise WMR200ProtocolError(msg)
 
 
@@ -903,7 +903,7 @@ def decode_uvi(pkt, pkt_data):
         return record
 
     except IndexError:
-        msg = ('%s index decode index failure' % pkt.pkt_name())
+        msg = ('%s index decode index failure' % pkt.pkt_name)
         raise WMR200ProtocolError(msg)
 
 
@@ -952,7 +952,7 @@ def decode_pressure(pkt, pkt_data):
         return record
 
     except IndexError:
-        msg = ('%s index decode index failure' % pkt.pkt_name())
+        msg = ('%s index decode index failure' % pkt.pkt_name)
         raise WMR200ProtocolError(msg)
 
 
@@ -1043,7 +1043,7 @@ def decode_temp(pkt, pkt_data):
         return record
 
     except IndexError:
-        msg = ('%s index decode index failure' % pkt.pkt_name())
+        msg = ('%s index decode index failure' % pkt.pkt_name)
         raise WMR200ProtocolError(msg)
 
 

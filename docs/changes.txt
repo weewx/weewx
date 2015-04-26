@@ -45,6 +45,9 @@ should the alarm expression include a variable not in the archive record.
 
 Fixed bug that shows itself if marker_size is not specified in skin.conf
 
+Fixed problem that could cause an exception in the WMR200 driver when
+formatting an error string.
+
 Added better recovery from USB failures in the ws28xx driver.
 
 Added data_format option to FineOffset driver.  Thanks to Darryl Dixon.
