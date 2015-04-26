@@ -62,16 +62,20 @@ class Logger(object):
 #              Utilities that find and save ConfigObj objects
 #==============================================================================
 
-def find_file(file_path=None, args=None, locations=None,
+DEFAULT_LOCATIONS = ['/etc/weewx', '/home/weewx']
+
+def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
               file_name='weewx.conf'):
     """Find and return a path to a file, looking in "the usual places."
     
     General strategy:
 
     First, file_path is tried. If not found there, then the first element of
-    args is tried. 
+    args is tried.
+
+    If those fail, try a path based on where the application is running.
     
-    If those both fail, then the list of directory locations is searched,
+    If that fails, then the list of directory locations is searched,
     looking for a file with file name file_name. 
     
     If after all that, the file still cannot be found, then an IOError
@@ -85,8 +89,7 @@ def find_file(file_path=None, args=None, locations=None,
     then the first element in args will be tried.
     
     locations: A list of directories to be searched. 
-    Default is [rundir, '/etc/weewx', '/home/weewx'], where rundir is the
-    WEEWX_ROOT based on the location from which this is running.
+    Default is ['/etc/weewx', '/home/weewx']
 
     file_name: The name of the file to be found. This is used
     only if the directories must be searched. Default is 'weewx.conf'.
@@ -101,24 +104,18 @@ def find_file(file_path=None, args=None, locations=None,
             del args[0]
 
     if file_path is None:
-        # Try a location based on the current run directory, but only if it
-        # looks like a setup.py installation (possibly to a non-standard
-        # location).
-        this_file = os.path.join(os.getcwd(), __file__)
-        rundir = os.path.abspath(os.path.dirname(this_file))
-        (rundir, _) = os.path.split(rundir) # peel off the weewxcfg dir
-        (rundir, subdir) = os.path.split(rundir) # next up is the bin dir
-        if subdir == 'bin':
-            # if it really is the bin directory, then look for the conf file
-            candidate = os.path.join(rundir, file_name)
-            if os.path.isfile(candidate):
-                return candidate
-
-    if file_path is None:
-        if locations is None:
-            # Use the standard locations if nothing was specified
-            locations = ['/etc/weewx', '/home/weewx']
-
+        if locations == DEFAULT_LOCATIONS:
+            # Try a location based on the current run directory, but only if it
+            # looks like a setup.py installation (possibly to a non-standard
+            # location).
+            this_file = os.path.join(os.getcwd(), __file__)
+            rundir = os.path.abspath(os.path.dirname(this_file))
+            (rundir, _) = os.path.split(rundir) # peel off the weewxcfg dir
+            (rundir, subdir) = os.path.split(rundir) # next up is the bin dir
+            if subdir == 'bin':
+                # if it really is a bin dir, then rundir is a proper weewx root
+                locations.insert(0, rundir)
+            
         for directory in locations:
             candidate = os.path.join(directory, file_name)
             if os.path.isfile(candidate):
@@ -132,7 +129,7 @@ def find_file(file_path=None, args=None, locations=None,
 
     return file_path
 
-def read_config(config_path, args=None, locations=None,
+def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
                 file_name='weewx.conf'):
     """Read the specified configuration file, return an instance of ConfigObj
     with the file contents. If no file is specified, look in the standard
@@ -300,9 +297,9 @@ def merge_config(config_dict, template_dict):
     """Merge the configuration dictionary into the template dictionary,
     overriding any options. Return the results.
     
-    config_dict: This is usually the existing, older configuration dictionary.
+    config_dict: An existing, older configuration dictionary.
     
-    template_dict: This is usually the newer dictionary supplied by the installer.
+    template_dict: A newer dictionary supplied by the installer.
     """
 
     config_dict.interpolate = False
@@ -498,7 +495,8 @@ def update_to_v30(config_dict):
         # The key "database" changed to "database_name"
         for stanza in config_dict['Databases']:
             if 'database' in config_dict['Databases'][stanza]:
-                config_dict['Databases'][stanza].rename('database', 'database_name')
+                config_dict['Databases'][stanza].rename('database',
+                                                        'database_name')
 
     if 'StdReport' in config_dict:
         # The key "data_binding" is now used instead of these:
@@ -522,8 +520,8 @@ def update_to_v30(config_dict):
             # each of the service lists, making the change
             for list_name in config_dict['Engine']['Services']:
                 service_list = config_dict['Engine']['Services'][list_name]
-                # If service_list is not already a list (it could be just a single name),
-                # then make it a list:
+                # If service_list is not already a list (it could be just a
+                # single name), then make it a list:
                 if not hasattr(service_list, '__iter__'):
                     service_list = [service_list]
                 config_dict['Engine']['Services'][list_name] = \
@@ -540,7 +538,7 @@ def update_to_v30(config_dict):
         c = configobj.ConfigObj(StringIO.StringIO(v3_additions))
         # Now merge it in:
         config_dict.merge(c)
-        # For some reason, ConfigObj strips any leading comments. Add them back in:
+        # For some reason, ConfigObj strips any leading comments. Put them back:
         config_dict.comments['DataBindings'] = major_comment_block
         # Move the new section to just before [Databases]
         reorder_sections(config_dict, 'DataBindings', 'Databases')
@@ -699,8 +697,8 @@ def remove_and_prune(a_dict, b_dict):
 #==============================================================================
 
 def get_driver_infos(driver_dir='weewx.drivers'):
-    """Scan the drivers folder, extracting information about each available driver.
-    Return as a dictionary, keyed by driver name."""
+    """Scan the drivers folder, extracting information about each available
+    driver. Return as a dictionary, keyed by driver name."""
 
     __import__(driver_dir)
     driver_package = sys.modules[driver_dir]
@@ -711,7 +709,8 @@ def get_driver_infos(driver_dir='weewx.drivers'):
     for driver_file in driver_list:
         if driver_file == '__init__.py':
             continue
-        # Get the driver module name. This will be something like 'weewx.drivers.fousb'
+        # Get the driver module name. This will be something like
+        # 'weewx.drivers.fousb'
         driver = os.path.splitext("weewx.drivers.%s" % driver_file)[0]
         # Create an entry for it
         driver_info_dict[driver] = dict()
@@ -774,8 +773,8 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
             parts = ans.split(',')
             if len(parts) == 2:
                 try:
-                    # Test whether the first token can be converted into a number.
-                    # If not, an exception will be raised.
+                    # Test whether the first token can be converted into a
+                    # number. If not, an exception will be raised.
                     float(parts[0])
                     if parts[1].strip() in ['foot', 'meter']:
                         alt = [parts[0].strip(), parts[1].strip()]
@@ -917,8 +916,9 @@ def extract_roots(config_path, config_dict):
     root_dict['EXT_ROOT'] = os.path.join(root_dict['BIN_ROOT'], 'user', 'installer')
     # Add SKIN_ROOT if it can be found:
     try:
-        root_dict['SKIN_ROOT'] = os.path.abspath(os.path.join(root_dict['WEEWX_ROOT'],
-                                                              config_dict['StdReport']['SKIN_ROOT']))
+        root_dict['SKIN_ROOT'] = os.path.abspath(os.path.join(
+                root_dict['WEEWX_ROOT'],
+                config_dict['StdReport']['SKIN_ROOT']))
     except KeyError:
         pass
     
