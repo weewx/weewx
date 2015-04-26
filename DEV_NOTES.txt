@@ -151,6 +151,10 @@ what to test when creating debian and redhat packages:
   install, modify files, remove
   install, modify files, upgrade
 
+to do debian builds you must first install:
+  python-imaging
+  python-configobj
+  debhelper
 
 
 how to install/remove using various approaches:
