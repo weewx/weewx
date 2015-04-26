@@ -1457,7 +1457,9 @@ class WMR200(weewx.drivers.AbstractDevice):
 
         # Locate the weather console device on the USB bus.
         if not self.usb_device.find_device(vendor_id, product_id):
-            logcrt('Unable to find device %x %x' % (vendor_id, product_id))
+            logcrt('Unable to find device with VendorID=%04x ProductID=%04x' %
+                   (vendor_id, product_id))
+            raise weewx.WeeWxIOError("Unable to find USB device")
 
         # Open the weather console USB device for read and writes.
         self.usb_device.open_device()
