@@ -186,8 +186,9 @@ def modify_config(config_dict, stn_info, debug=False):
         except Exception, e:
             sys.exit("Driver %s failed to load: %s" % (driver, e))
         stn_info['station_type'] = driver_name
-        print 'Using %s version %s (%s)' % (stn_info['station_type'],
-                                            driver_version, driver)
+        if debug:
+            print 'Using %s version %s (%s)' % (stn_info['station_type'],
+                                                driver_version, driver)
 
     # Get a driver stanza, if possible
     stanza = None
@@ -226,17 +227,20 @@ def modify_config(config_dict, stn_info, debug=False):
         # Update station information with stn_info overrides
         for p in ['location', 'latitude', 'longitude', 'altitude']:
             if stn_info.get(p) is not None:
-                print "Using %s for %s" % (stn_info[p], p)
+                if debug:
+                    print "Using %s for %s" % (stn_info[p], p)
                 config_dict['Station'][p] = stn_info[p]
         # Update units display with any stn_info overrides
         if stn_info.get('units') is not None:
             if stn_info.get('units') in ['metric', 'metricwx']:
-                print "Using Metric units for display"
+                if debug:
+                    print "Using Metric units for display"
                 config_dict['StdReport']['StandardReport'].update({
                         'Units': {
                             'Groups': metricwx_group}})
             elif stn_info.get('units') == 'us':
-                print "Using US units for display"
+                if debug:
+                    print "Using US units for display"
                 config_dict['StdReport']['StandardReport'].update({
                         'Units': {
                             'Groups': us_group}})

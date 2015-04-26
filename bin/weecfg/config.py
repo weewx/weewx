@@ -52,13 +52,6 @@ class ConfigEngine(object):
             sys.stderr.write("The install command does not require the config option")
             sys.exit(weewx.CMD_ERROR)
 
-        # If one or more station info options is specified, then assume
-        # no-prompt so that all of the other station info options are retained
-        # from existing config or use defaults.
-        if (options.driver or options.latitude or options.longitude or
-            options.altitude or options.location or options.units):
-            options.no_prompt = True
-        
         if options.install or options.update or options.merge:
             # These options require a distribution config file. 
             # Open it up and parse it:
@@ -84,7 +77,7 @@ class ConfigEngine(object):
             except IOError, e:
                 sys.exit("Unable to open configuration file: %s" % e)
             print "Using configuration file %s" % config_path
-    
+
         # Flag for whether the output needs to be saved:
         save_me = False
 
@@ -99,7 +92,7 @@ class ConfigEngine(object):
         if options.install or options.modify:
             self.modify_config(config_dict, options)
             save_me = True
-            
+
         if save_me:
             self.save_config(config_dict, config_path, not options.no_backup)
 
@@ -138,11 +131,9 @@ class ConfigEngine(object):
         # to change things:
         if not options.no_prompt:
             stn_info.update(weecfg.prompt_for_info(**stn_info))
-    
-            if not options.driver:
-                driver = weecfg.prompt_for_driver(stn_info.get('driver'))
-                stn_info['driver'] = driver
-                stn_info.update(weecfg.prompt_for_driver_settings(driver))
+            driver = weecfg.prompt_for_driver(stn_info.get('driver'))
+            stn_info['driver'] = driver
+            stn_info.update(weecfg.prompt_for_driver_settings(driver))
 
         return stn_info
 
@@ -153,4 +144,4 @@ class ConfigEngine(object):
         if backup_path:        
             print "Saved backup to %s" % backup_path
             
-        print "Saved configuration file to %s" % config_path
+        print "Saved configuration to %s" % config_path
