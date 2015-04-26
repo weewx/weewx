@@ -101,17 +101,23 @@ def find_file(file_path=None, args=None, locations=None,
             del args[0]
 
     if file_path is None:
+        # Try a location based on the current run directory, but only if it
+        # looks like a setup.py installation (possibly to a non-standard
+        # location).
+        this_file = os.path.join(os.getcwd(), __file__)
+        rundir = os.path.abspath(os.path.dirname(this_file))
+        (rundir, _) = os.path.split(rundir) # peel off the weewxcfg dir
+        (rundir, subdir) = os.path.split(rundir) # next up is the bin dir
+        if subdir == 'bin':
+            # if it really is the bin directory, then look for the conf file
+            candidate = os.path.join(rundir, file_name)
+            if os.path.isfile(candidate):
+                return candidate
+
+    if file_path is None:
         if locations is None:
-            # Start with the standard locations...
+            # Use the standard locations if nothing was specified
             locations = ['/etc/weewx', '/home/weewx']
-            # ... then consider the current path...
-            this_file = os.path.join(os.getcwd(), __file__)
-            rundir = os.path.abspath(os.path.dirname(this_file))
-            (rundir, _) = os.path.split(rundir)
-            (rundir, subdir) = os.path.split(rundir)
-            # ... but only if it looks like a setup.py install
-            if subdir == 'bin':
-                locations.insert(0, rundir)
 
         for directory in locations:
             candidate = os.path.join(directory, file_name)
