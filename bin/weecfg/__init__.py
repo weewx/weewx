@@ -62,8 +62,7 @@ class Logger(object):
 #              Utilities that find and save ConfigObj objects
 #==============================================================================
 
-def find_file(file_path=None, args=None,
-              locations=['/etc/weewx', '/home/weewx'],
+def find_file(file_path=None, args=None, locations=None,
               file_name='weewx.conf'):
     """Find and return a path to a file, looking in "the usual places."
     
@@ -75,7 +74,7 @@ def find_file(file_path=None, args=None,
     If those both fail, then the list of directory locations is searched,
     looking for a file with file name file_name. 
     
-    If after all that, the file still cannot be found, then ab IOError
+    If after all that, the file still cannot be found, then an IOError
     exception will be raised.
     
     Parameters:
@@ -86,7 +85,8 @@ def find_file(file_path=None, args=None,
     then the first element in args will be tried.
     
     locations: A list of directories to be searched. 
-    Default is ['etc/weewx', '/home/weewx'].
+    Default is [rundir, '/etc/weewx', '/home/weewx'], where rundir is the
+    WEEWX_ROOT based on the location from which this is running.
 
     file_name: The name of the file to be found. This is used
     only if the directories must be searched. Default is 'weewx.conf'.
@@ -99,7 +99,20 @@ def find_file(file_path=None, args=None,
             file_path = args[0]
             # Shift args to the left:
             del args[0]
+
     if file_path is None:
+        if locations is None:
+            # Start with the standard locations...
+            locations = ['/etc/weewx', '/home/weewx']
+            # ... then consider the current path...
+            this_file = os.path.join(os.getcwd(), __file__)
+            rundir = os.path.abspath(os.path.dirname(this_file))
+            (rundir, _) = os.path.split(rundir)
+            (rundir, subdir) = os.path.split(rundir)
+            # ... but only if it looks like a setup.py install
+            if subdir == 'bin':
+                locations.insert(0, rundir)
+
         for directory in locations:
             candidate = os.path.join(directory, file_name)
             if os.path.isfile(candidate):
@@ -113,8 +126,7 @@ def find_file(file_path=None, args=None,
 
     return file_path
 
-def read_config(config_path, args=None,
-                locations=['/etc/weewx', '/home/weewx'],
+def read_config(config_path, args=None, locations=None,
                 file_name='weewx.conf'):
     """Read the specified configuration file, return an instance of ConfigObj
     with the file contents. If no file is specified, look in the standard

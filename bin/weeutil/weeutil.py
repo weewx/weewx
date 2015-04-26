@@ -1049,63 +1049,6 @@ def max_with_none(x_seq):
         elif x is not None:
             xmax = max(x, xmax)
     return xmax
-        
-def read_config(file_path, args=None, msg_to_stderr=True, exit_on_fail=True):
-    """Read the specified configuration file, return a dictionary of the
-    file contents. If no file is specified, look in the standard locations
-    for weewx.conf. Returns the filename of the actual configuration file
-    as well as dictionary of the elements from the configuration file.
-    For backward compatibility, args may be specified, in which case the
-    first arg will be interpreted as the filename as long as it does not
-    start with a hyphen.
-
-    file_path: Possible path to the file
-
-    args: command-line arguments
-
-    msg_to_stderr: If this is true, send error messages to stderr, otherwise
-    messages go to syslog.
-
-    exit_on_fail: If this is true, exit when file not found or parsing fails.
-    Otherwise re-raise the exception that caused the error.
-
-    return: A tuple: (path-to-config-file, config_dict)
-    """
-    import weecfg
-    import configobj
-
-    try:
-        config_path = weecfg.find_file(file_path, args)
-    except IOError, e:
-        if msg_to_stderr:
-            print >>sys.stderr, str(e)
-        else:
-            syslog.syslog(syslog.LOG_CRIT, str(e))
-        if exit_on_fail:
-            sys.exit(1)
-        raise
-
-    # Try to open up the configuration file. Declare an error if unable to.
-    try :
-        config_dict = configobj.ConfigObj(config_path, file_error=True)
-    except IOError, e:
-        if msg_to_stderr:
-            print >>sys.stderr, str(e)
-        else:
-            syslog.syslog(syslog.LOG_CRIT, str(e))
-        if exit_on_fail:
-            sys.exit(str(e))
-        raise
-    except configobj.ConfigObjError, e:
-        if msg_to_stderr:
-            print >>sys.stderr, str(e)
-        else:
-            syslog.syslog(syslog.LOG_CRIT, str(e))
-        if exit_on_fail:
-            sys.exit(1)
-        raise
-
-    return config_path, config_dict
 
 def print_dict(d, margin=0, increment=4):
     """Pretty print a dictionary.

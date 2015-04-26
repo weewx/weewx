@@ -5,6 +5,7 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Utilities for managing the config file"""
+
 import sys
 
 import configobj
@@ -32,7 +33,9 @@ class ConfigEngine(object):
         #
 
         # Can have only one of install, update, and merge:
-        if sum(1 if x is True else 0 for x in [options.install, options.update, options.merge]) > 1:
+        if sum(1 if x is True else 0 for x in [options.install,
+                                               options.update,
+                                               options.merge]) > 1:
             sys.stderr.write("Only one of install, update, or merge may be specified")
             sys.exit(weewx.CMD_ERROR)
 
@@ -71,7 +74,8 @@ class ConfigEngine(object):
             config_path = options.output
         else:
             try:
-                config_path, config_dict = weecfg.read_config(options.config_path, args)
+                config_path, config_dict = weecfg.read_config(
+                    options.config_path, args)
             except SyntaxError, e:
                 sys.exit("Syntax error in configuration file: %s" % e)
             except IOError, e:

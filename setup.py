@@ -162,12 +162,12 @@ class weewx_install_data(install_data):
         except IOError, e:
             sys.exit(str(e))
         except SyntaxError, e:
-            sys.exit("Syntax error in distribution configuration file '%s': %s" % 
-                     (f, e))
-        
+            sys.exit("Syntax error in distribution configuration file '%s': %s"
+                     % (f, e))
+
         # The path where the weewx.conf configuration file will be installed
         install_path = os.path.join(install_dir, os.path.basename(f))
-        
+
         # Do we have an old config file?
         if os.path.isfile(install_path):
             # Yes. Read it
@@ -177,7 +177,7 @@ class weewx_install_data(install_data):
 
             # Update the old configuration file to the current version:
             weecfg.update_config(config_dict)
-            
+
             # Then merge it into the distribution file
             weecfg.merge_config(config_dict, dist_config_dict)
         else:
@@ -414,11 +414,11 @@ if __name__ == "__main__":
                     'weeplot',
                     'weeutil',
                     'weewx'],
-          cmdclass={"sdist"   : weewx_sdist,
-                    "install" : weewx_install,
+          cmdclass={"sdist": weewx_sdist,
+                    "install": weewx_install,
                     "install_scripts": weewx_install_scripts,
-                    "install_data"   : weewx_install_data,
-                    "install_lib"    : weewx_install_lib},
+                    "install_data": weewx_install_data,
+                    "install_lib": weewx_install_lib},
           platforms=['any'],
           package_dir={'': 'bin'},
           packages=['examples',
