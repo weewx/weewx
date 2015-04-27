@@ -44,7 +44,7 @@ class ConfigEngine(object):
             sys.stderr.write("The option --dist-config must be specified")
             sys.exit(weewx.CMD_ERROR)
 
-        # The install and merge options requires --output. Indeed,
+        # The install and merge commands require --output. Indeed,
         # this is the only difference between --update and --merge.
         if (options.install or options.merge) and not options.output:
             sys.stderr.write("The option --output must be specified")
@@ -67,11 +67,10 @@ class ConfigEngine(object):
                 sys.exit("Syntax error in distribution configuration file '%s': %s" %
                          (options.dist_config, e))
 
-        # The --install option uses the distribution config file as its config
-        # files. All others require an existing config file.
+        # The install command uses the distribution config file as its input.
+        # Other commands use an existing config file.
         if options.install:
             config_dict = dist_config_dict
-            config_path = options.output
         else:
             try:
                 config_path, config_dict = weecfg.read_config(
@@ -82,23 +81,27 @@ class ConfigEngine(object):
                 sys.exit("Unable to open configuration file: %s" % e)
             print "Using configuration file %s" % config_path
 
-        # Flag for whether the output needs to be saved:
-        save_me = False
+        output_path = None
 
         if options.update or options.merge:
-            # Update the old configuration file:
+            # Update the old configuration contents
             weecfg.update_config(config_dict)
             
-            # Then merge it into the distribution file
+            # Then merge it into the distribution contents
             weecfg.merge_config(config_dict, dist_config_dict)
-            save_me = True
+
+            # Save to the specified output
+            output_path = options.output
             
         if options.install or options.modify:
+            # Modify the configuration contents
             self.modify_config(config_dict, options)
-            save_me = True
 
-        if save_me:
-            self.save_config(config_dict, config_path, not options.no_backup)
+            # Save to the original location
+            output_path = config_path
+
+        if output_path is not None:
+            self.save_config(config_dict, output_path, not options.no_backup)
 
     def modify_config(self, config_dict, options):
         """Modify the configuration dictionary according to any command
