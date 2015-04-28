@@ -19,7 +19,7 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.17'
+DRIVER_VERSION = '0.18'
 
 
 def loader(config_dict, _):
@@ -136,9 +136,7 @@ class Station(object):
         if DEBUG_READ:
             logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
         buf = buf.strip()
-        if len(b) != 48:
-            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(b))
-        return b
+        return buf
 
     def get_readings_with_retry(self, max_tries=5, retry_wait=10):
         for ntries in range(0, max_tries):
