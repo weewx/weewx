@@ -52,6 +52,8 @@ Added better recovery from USB failures in the ws28xx driver.
 
 Added data_format option to FineOffset driver.  Thanks to Darryl Dixon.
 
+Decoding of data is now more robust in the WS1 driver.
+
 Changes to the AcuRite driver include:
  - The AcuRite driver now reports partial packets as soon as it gets them
      instead of retaining data until it can report a complete packet

@@ -19,7 +19,7 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.15'
+DRIVER_VERSION = '0.16'
 
 
 def loader(config_dict, _):
@@ -169,17 +169,11 @@ class Station(object):
             elif c == '!':
                 b = []
             else:
-                try:
-                    int(c, 16)
-                except ValueError:
-                    bad_byte = True
                 b.append(c)
         if DEBUG_READ:
             logdbg("bytes: '%s'" % _format(b))
         if len(b) != 48:
             raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(b))
-        if bad_byte:
-            raise weewx.WeeWxIOError("One or more bad bytes: %s" % _format(b))
         return ''.join(b)
 
     @staticmethod
@@ -208,20 +202,39 @@ class Station(object):
           RRRR - daily rain (0.01 in)
           WWWW - one minute wind average (0.1 kph)
         """
+        # FIXME: peetbros could be 40 bytes or 44 bytes, what about ws1?
+        # FIXME: peetbros uses two's complement for temp, what about ws1?
+        # FIXME: is the pressure reading 'pressure' or 'barometer'?
         data = dict()
-        data['windSpeed'] = int(b[0:4], 16) * 0.1 * MILE_PER_KM  # mph
-        data['windDir'] = int(b[6:8], 16) * 1.411764  # compass degrees
-        data['outTemp'] = int(b[8:12], 16) * 0.1  # degree_F
-        data['long_term_rain'] = int(b[12:16], 16) * 0.01  # inch
-        data['pressure'] = int(b[16:20], 16) * 0.1 * INHG_PER_MBAR  # inHg
-        data['inTemp'] = int(b[20:24], 16) * 0.1  # degree_F
-        data['outHumidity'] = int(b[24:28], 16) * 0.1  # percent
-        data['inHumidity'] = int(b[28:32], 16) * 0.1  # percent
-        data['day_of_year'] = int(b[32:36], 16)
-        data['minute_of_day'] = int(b[36:40], 16)
-        data['daily_rain'] = int(b[40:44], 16) * 0.01  # inch
-        data['wind_average'] = int(b[44:48], 16) * 0.1 * MILE_PER_KM  # mph
+        data['windSpeed'] = Station._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
+        data['windDir'] = Station._decode(buf[6:8], 1.411764)  # compass deg
+        data['outTemp'] = Station._decode(buf[8:12], 0.1)  # degree_F
+        data['long_term_rain'] = Station._decode(buf[12:16], 0.01)  # inch
+        data['pressure'] = Station._decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
+        data['inTemp'] = Station._decode(buf[20:24], 0.1)  # degree_F
+        data['outHumidity'] = Station._decode(buf[24:28], 0.1)  # percent
+        data['inHumidity'] = Station._decode(buf[28:32], 0.1)  # percent
+        data['day_of_year'] = Station._decode(buf[32:36])
+        data['minute_of_day'] = Station._decode(buf[36:40])
+        data['daily_rain'] = Station._decode(buf[40:44], 0.01)  # inch
+        data['wind_average'] = Station._decode(buf[44:48], 0.1 * MILE_PER_KM)  # mph
         return data
+
+    @staticmethod
+    def _decode(s, multiplier=None, neg=False):
+        v = None
+        try:
+            v = int(s, 16)
+            if neg:
+                bits = 4 * len(s)
+                if v & (1 << (bits - 1)) != 0:
+                    v -= (1 << bits)
+            if multiplier is not None:
+                v *= multiplier
+        except ValueError, e:
+            if s != '----':
+                logdbg("decode failed for '%s': %s" % (s, e))
+        return v
 
 
 class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
