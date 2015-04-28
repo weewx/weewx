@@ -23,11 +23,11 @@ handled automatically by weewx, but they may be useful as a utility in special
 cases. In particular, the 'reconfigure' option can be useful if you decide to
 add or drop data types from the database schema or change unit systems."""
 
-usage = """%prog: [CONFIG_FILE|--config=CONFIG_FILE] [--help]
-                            [--create-archive] [--drop-daily] 
-                            [--backfill-daily] [--reconfigure]
-                            [--string-check] [--fix]
-                            [--binding=BINDING_NAME]
+usage = """wee_database: [CONFIG_FILE|--config=CONFIG_FILE] [--help]
+                     [--create-archive] [--drop-daily] 
+                     [--backfill-daily] [--reconfigure]
+                     [--string-check] [--fix]
+                     [--binding=BINDING_NAME]
 """
 
 epilog = """If you are using a MySQL database it is assumed that you have the

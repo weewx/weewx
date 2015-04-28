@@ -3641,23 +3641,20 @@ class MyAlarm(StdService):
         Nevertheless, there may be occasions where you may want to add a SQL
         type to your database, or change its unit system. This section shows
         you how to do this, using the utility 
-        <span class="code">wee_config_database</span>.</p>
+        <span class="code">wee_database</span>.</p>
       <p>This utility also has the ability to check a SQLite version of the archive
         database for embedded strings (where a float is expected).</p>
       <p>Before starting, it's worth running the utility with the <span class="code">--help</span>
         flag to see how it is used:</p>
-      <pre class="tty">wee_config_database --help</pre>
+      <pre class="tty">wee_database --help</pre>
       <p>This will result in an output that looks something like this:</p>
       <pre class="tty">
-Usage: wee_config_database: [config_path] 
-                            [--config=CONFIG_PATH] [--help]
-                            [--create-archive] [--drop-daily] 
-                            [--backfill-daily] [--reconfigure]
-                            [--string-check] [--fix]
-                            [--binding=BINDING_NAME]
+Usage: wee_database: [CONFIG_FILE|--config=CONFIG_FILE] [--help]
+                     [--create-archive] [--drop-daily] 
+                     [--backfill-daily] [--reconfigure]
+                     [--string-check] [--fix]
+                     [--binding=BINDING_NAME]
 
-       The path to the config file can be specified as either a
-       command-line argument, or by using option --config. 
 
 Configure the weewx databases. Most of these functions are handled
 automatically by weewx, but they may be useful as a utility in special cases.
@@ -3666,8 +3663,7 @@ drop data types from the database schema or change unit systems.
 
 Options:
   -h, --help            show this help message and exit
-  --config=CONFIG_PATH  Use configuration file CONFIG_PATH. Default is
-                        /etc/weewx/weewx.conf or /home/weewx/weewx.conf.
+  --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
   --create-archive      Create the archive database.
   --drop-daily          Drop the daily summary tables from a database.
   --backfill-daily      Backfill a database with daily summaries.
@@ -3677,14 +3673,15 @@ Options:
                         found in option [StdConvert][target_unit]. The new
                         database will have the same name as the old database,
                         with a '_new' on the end.
-  --string-check        Check a sqlite version of the archive database for
-                        embedded strings in it.
-  --fix                 If a string is found, fix it.
-  --binding=BINDING     The database binding to be used. Default is
-                        'wx_binding'.
+  --string-check        Check a sqlite version of the archive database to see
+                        whether it contains embedded strings.
+  --fix                 Fix any embedded strings in a sqlite database.
+  --binding=BINDING_NAME
+                        The data binding. Default is 'wx_binding'.
 
-If you are using the MySQL database it is assumed that you have the
-appropriate permissions for the requested operation.</pre>
+If you are using a MySQL database it is assumed that you have the appropriate
+permissions for the requested operation.
+</pre>
 
       <h2>Adding a new observation type</h2>
       <p>Suppose you have installed an electric meter at your house and you wish
@@ -3760,7 +3757,7 @@ class AddElectricity(StdService):
       where to store it. How would you add such
       a type?
     </p>
-    <p>The utility <span class="code">wee_config_database</span> can be used to do this. It will
+    <p>The utility <span class="code">wee_database</span> can be used to do this. It will
     create a new database that is similar to the old database, except it has the new type in its
     schema.</p>
     <p>Here's our general strategy:</p>
@@ -3771,7 +3768,7 @@ class AddElectricity(StdService):
       </li>
       <li>Make sure you have the necessary permissions to create a new
         database.</li>
-      <li>Use the utility <span class="code">wee_config_database</span> to create the
+      <li>Use the utility <span class="code">wee_database</span> to create the
       new database and populate it with data from the old database.</li>
       <li>Shuffle databases around so <span class="code">weewx</span> will
         use the new database.
@@ -3803,7 +3800,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
       <li>
         <p>
           <strong>Modify <span class="code">wx_binding</span>.
-          </strong> When it creates the new, modified database, <span class="code">wee_config_database</span>
+          </strong> When it creates the new, modified database, <span class="code">wee_database</span>
           needs to know to use your new schema instead of the old, wview schema.
           You do this by changing the option <span class="code">schema</span> in
           section <span class="code">[DataBindings]</span> in <span class="code">weewx.conf</span>.
@@ -3819,7 +3816,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
 
       <li>
         <p>
-          <strong>Check permissions.</strong> <span class="code">wee_config_database</span> will
+          <strong>Check permissions.</strong> <span class="code">wee_database</span> will
           create a new database with the same name as the old, except with the
           suffix <span class="code">_new</span> attached to the end. Make sure
           you have the necessary permissions to create it. In particular, if you
@@ -3831,11 +3828,11 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
       <li>
         <p>
           <strong>Create and populate the new database.</strong>
-          Now run the utility <span class="code">wee_config_database</span>
+          Now run the utility <span class="code">wee_database</span>
           with the <span class="code">--reconfigure</span> option and the path
           to the configuration file:
         </p>
-        <p class="tty">wee_config_database weewx.conf --reconfigure</p>
+        <p class="tty">wee_database weewx.conf --reconfigure</p>
         <p>
           This will create a new database (nominally, <span class="code">weewx.sdb_new</span>
           if you are using SQLite, <span class="code">weewx_new</span> if you
@@ -3870,10 +3867,10 @@ mv weewx.sdb_new weewx.sdb</pre>
           recreating the daily summaries inside the new database. This will be
           done automatically by <span class="code">weewx</span> at the next
           startup. Alternatively, it can be done manually using the <span
-            class="code">wee_config_database</span> utility and the <span
+            class="code">wee_database</span> utility and the <span
             class="code">--backfill-daily</span> option:
         </p>
-        <pre class="tty">wee_config_database weewx.conf --backfill-daily</pre>
+        <pre class="tty">wee_database weewx.conf --backfill-daily</pre>
       </li>
     </ol>
 
@@ -3969,7 +3966,7 @@ weewx.units.obs_group_dict['electricity'] = 'group_power'</pre>
       </li>
       <li>Make sure you have the necessary permissions to create the new
         database.</li>
-      <li>Use the utility <span class='code'>wee_config_database</span> to
+      <li>Use the utility <span class='code'>wee_database</span> to
         create the new database and populate it with data from the old
         database.</li>
       <li>Shuffle databases around so <span class="code">weewx</span> will
@@ -4002,10 +3999,10 @@ weewx.units.obs_group_dict['electricity'] = 'group_power'</pre>
       <li>
         <p>
           <strong>Create and populate the new database.</strong>
-          Now run the utility <span class="code">wee_config_database</span>
+          Now run the utility <span class="code">wee_database</span>
           with the <span class="code">--reconfigure</span> option:
         </p>
-        <pre class="tty">wee_config_database weewx.conf --reconfigure</pre>
+        <pre class="tty">wee_database weewx.conf --reconfigure</pre>
         <p>
           This will create a new database (nominally,
           <span class="code">weewx.sdb_new</span>
@@ -4042,20 +4039,20 @@ mv weewx.sdb_new weewx.sdb</pre>
           recreating the daily summaries inside the new database. This will be
           done automatically by <span class="code">weewx</span> at the next
           startup. Alternatively, it can be done manually using the <span
-            class="code">wee_config_database</span> utility and the <span
+            class="code">wee_database</span> utility and the <span
             class="code">--backfill-daily</span> option:
         </p>
-        <pre class="tty">wee_config_database weewx.conf --backfill-daily</pre>
+        <pre class="tty">wee_database weewx.conf --backfill-daily</pre>
       </li>
     </ol>
 
 	<h2>Dropping and rebuilding the daily summaries</h2>
-	<p>The tool <span class="code">wee_config_database</span> can also be used to drop the daily
+	<p>The tool <span class="code">wee_database</span> can also be used to drop the daily
 	summaries:</p>
-	<pre class="tty">wee_config_database weewx.conf --drop-daily</pre>
+	<pre class="tty">wee_database weewx.conf --drop-daily</pre>
 	<p>The summaries will automatically be rebuilt the next time <span class="code">weewx</span> starts,
 	or they can be rebuilt with the tool:</p>
-	<pre class="tty">wee_config_database weewx.conf --backfill-daily</pre>
+	<pre class="tty">wee_database weewx.conf --backfill-daily</pre>
 
     <h1 id="porting">Porting to new hardware</h1>
       <p>Naturally, this is an advanced topic but, nevertheless, I'd

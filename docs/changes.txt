@@ -3,6 +3,14 @@ weewx change history
 
 3.2.0 XX/XX/XX
 
+There are now five command-line utilities, some new, some old
+ - wee_config:    (New) For configuring weewx.conf, in particular, 
+                  adding a new device driver
+ - wee_extension: (New) For adding and removing extensions.
+ - wee_database:  (Formerly called wee_config_database)
+ - wee_device:    (Formerly called wee_config_device)
+ - wee_reports:   No changes.
+ 
 Wunderfixer is now included with weewx --- no need to download it separately. 
 It now works with MySQL, as well as sqlite, databases. It also supports
 metric databases. Thanks to user Gary Roderick!
