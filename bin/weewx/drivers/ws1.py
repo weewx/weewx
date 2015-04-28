@@ -19,7 +19,7 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.16'
+DRIVER_VERSION = '0.17'
 
 
 def loader(config_dict, _):
@@ -49,17 +49,11 @@ def loginf(msg):
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
-def _format(buf):
-    return ' '.join(["%0.2X" % ord(c) for c in buf])
-
 class WS1Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an ADS-WS1 station
     
     port - serial port
     [Required. Default is /dev/ttyS0]
-
-    polling_interval - how often to query the serial interface, seconds
-    [Optional. Default is 1]
 
     max_tries - how often to retry serial communication before giving up
     [Optional. Default is 5]
@@ -69,45 +63,35 @@ class WS1Driver(weewx.drivers.AbstractDevice):
     """
     def __init__(self, **stn_dict):
         self.port = stn_dict.get('port', DEFAULT_PORT)
-        self.polling_interval = float(stn_dict.get('polling_interval', 1))
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 10))
         self.last_rain = None
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
-        loginf('polling interval is %s' % self.polling_interval)
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
+        self.station = Station.self.port)
+        self.station.open()
+
+    def closePort(self):
+        if self.station is not None:
+            self.station.close()
+            self.station = None
 
     @property
     def hardware_name(self):
         return "WS1"
 
     def genLoopPackets(self):
-        ntries = 0
-        while ntries < self.max_tries:
-            ntries += 1
-            try:
-                packet = {'dateTime': int(time.time() + 0.5),
-                          'usUnits': weewx.US}
-                # open a new connection to the station for each reading
-                with Station(self.port) as station:
-                    readings = station.get_readings()
-                data = Station.parse_readings(readings)
-                packet.update(data)
-                self._augment_packet(packet)
-                ntries = 0
-                yield packet
-                if self.polling_interval:
-                    time.sleep(self.polling_interval)
-            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
-                logerr("Failed attempt %d of %d to get LOOP data: %s" %
-                       (ntries, self.max_tries, e))
-                time.sleep(self.retry_wait)
-        else:
-            msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
-            logerr(msg)
-            raise weewx.RetriesExceeded(msg)
+        while True:
+            packet = {'dateTime': int(time.time() + 0.5),
+                      'usUnits': weewx.US}
+            readings = self.station.get_readings_with_retry(self.max_tries,
+                                                            self.retry_wait)
+            data = Station.parse_readings(readings)
+            packet.update(data)
+            self._augment_packet(packet)
+            yield packet
 
     def _augment_packet(self, packet):
         # calculate the rain delta from rain total
@@ -147,37 +131,40 @@ class Station(object):
             self.serial_port.close()
             self.serial_port = None
 
-    def read(self, nchar=1):
-        buf = self.serial_port.read(nchar)
-        n = len(buf)
-        if n != nchar:
-            if DEBUG_READ and n:
-                logdbg("partial buffer: '%s'" % _format(buf))
-            raise weewx.WeeWxIOError("Read expected %d chars, got %d" %
-                                     (nchar, n))
-        return buf
-
     def get_readings(self):
-        b = []
-        bad_byte = False
-        while True:
-            c = self.read(1)
-            if c == "\r":
-                break
-            elif c == '!' and len(b) > 0:
-                break
-            elif c == '!':
-                b = []
-            else:
-                b.append(c)
+        buf = self.serial_port.readline()
         if DEBUG_READ:
-            logdbg("bytes: '%s'" % _format(b))
+            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
+        buf = buf.strip()
         if len(b) != 48:
             raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(b))
-        return ''.join(b)
+        return b
+
+    def get_readings_with_retry(self, max_tries=5, retry_wait=10):
+        for ntries in range(0, max_tries):
+            try:
+                buf = self.get_readings()
+                Station.validate_string(buf)
+                return buf
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+                loginf("Failed attempt %d of %d to get readings: %s" %
+                       (ntries + 1, max_tries, e))
+                time.sleep(retry_wait)
+        else:
+            msg = "Max retries (%d) exceeded for readings" % max_tries
+            logerr(msg)
+            raise weewx.RetriesExceeded(msg)
 
     @staticmethod
-    def parse_readings(buf):
+    def validate_string(self, buf):
+        if len(buf) != 50:
+            raise weewx.WeeWxIOError("Unexpected buffer length %d" % len(buf))
+        if buf[0:2] != '!!':
+            raise weewx.WeeWxIOError("Unexpected header bytes '%s'" % buf[0:2])
+        return buf
+
+    @staticmethod
+    def parse_readings(raw):
         """WS1 station emits data in PeetBros format:
 
         http://www.peetbros.com/shop/custom.aspx?recid=29
@@ -205,6 +192,7 @@ class Station(object):
         # FIXME: peetbros could be 40 bytes or 44 bytes, what about ws1?
         # FIXME: peetbros uses two's complement for temp, what about ws1?
         # FIXME: is the pressure reading 'pressure' or 'barometer'?
+        buf = raw[2:]
         data = dict()
         data['windSpeed'] = Station._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
         data['windDir'] = Station._decode(buf[6:8], 1.411764)  # compass deg
