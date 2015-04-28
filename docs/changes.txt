@@ -18,6 +18,8 @@ theoretical solar radiation, beaufort, and cloudbase to StdWXCalculate.
 If StdWXCalculate cannot calculate a derived variable when asked to, it now
 sets the value to null. Fixes issue #10.
 
+$almanac.sunrise and $almanac.sunset now return ValueHelpers. Fixes issue #26.
+
 Added option to specify algorithm in StdWXCalculate.  So far this applies
 only to the altimeter calculation.
 

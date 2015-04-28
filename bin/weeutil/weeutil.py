@@ -842,6 +842,24 @@ def timestamp_to_gmtime(ts):
     else:
         return "******* N/A *******     (    N/A   )"
         
+def utc_to_ts(y, m, d, hrs_utc):
+    """Converts from a UTC tuple-time to unix epoch time.
+    
+    y,m,d: The year, month, day for which the conversion is desired.
+    
+    hrs_tc: Floating point number with the number of hours since midnight in UTC.
+    
+    Returns: The unix epoch time.
+    
+    >>> print utc_to_ts(2009, 3, 27, 14.5)
+    1238164200
+    """
+    # Construct a time tuple with the time at midnight, UTC:
+    daystart_utc_tt = (y,m,d,0,0,0,0,0,-1)
+    # Convert the time tuple to a time stamp and add on the number of seconds since midnight:
+    time_ts = int(calendar.timegm(daystart_utc_tt) + hrs_utc * 3600.0 + 0.5)
+    return time_ts
+
 def utc_to_local_tt(y, m, d,  hrs_utc):
     """Converts from a UTC time to a local time.
     
@@ -849,11 +867,15 @@ def utc_to_local_tt(y, m, d,  hrs_utc):
     
     hrs_tc: Floating point number with the number of hours since midnight in UTC.
     
-    Returns: A timetuple with the local time."""
-    # Construct a time tuple with the time at midnight, UTC:
-    daystart_utc_tt = (y,m,d,0,0,0,0,0,-1)
-    # Convert the time tuple to a time stamp and add on the number of seconds since midnight:
-    time_ts = int(calendar.timegm(daystart_utc_tt) + hrs_utc * 3600.0 + 0.5)
+    Returns: A timetuple with the local time.
+    
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> tt=utc_to_local_tt(2009, 3, 27, 14.5)
+    >>> print tt.tm_year, tt.tm_mon, tt.tm_mday, tt.tm_hour, tt.tm_min
+    2009 3 27 7 30
+    """
+    # Get the UTC time:
+    time_ts = utc_to_ts(y, m, d, hrs_utc)
     # Convert to local time:
     time_local_tt = time.localtime(time_ts)
     return time_local_tt
