@@ -19,7 +19,7 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.18'
+DRIVER_VERSION = '0.19'
 
 
 def loader(config_dict, _):
@@ -70,7 +70,7 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         loginf('using serial port %s' % self.port)
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
-        self.station = Station.self.port)
+        self.station = Station(self.port)
         self.station.open()
 
     def closePort(self):
@@ -154,7 +154,7 @@ class Station(object):
             raise weewx.RetriesExceeded(msg)
 
     @staticmethod
-    def validate_string(self, buf):
+    def validate_string(buf):
         if len(buf) != 50:
             raise weewx.WeeWxIOError("Unexpected buffer length %d" % len(buf))
         if buf[0:2] != '!!':
