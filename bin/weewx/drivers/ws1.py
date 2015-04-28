@@ -177,7 +177,7 @@ class Station(object):
         return ''.join(b)
 
     @staticmethod
-    def parse_readings(b):
+    def parse_readings(buf):
         """WS1 station emits data in PeetBros format:
 
         http://www.peetbros.com/shop/custom.aspx?recid=29
