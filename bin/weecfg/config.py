@@ -12,12 +12,16 @@ import configobj
 
 import weecfg
 import weewx
+from weecfg import Logger
 
 # The default station information:
 stn_info_defaults = {'station_type' : 'Simulator',
                      'driver'       : 'weewx.drivers.simulator'}
 
 class ConfigEngine(object):
+    
+    def __init__(self, logger=None):
+        self.logger = logger or Logger()
     
     def run(self, args, options):
         if options.version:
@@ -79,7 +83,7 @@ class ConfigEngine(object):
                 sys.exit("Syntax error in configuration file: %s" % e)
             except IOError, e:
                 sys.exit("Unable to open configuration file: %s" % e)
-            print "Using configuration file %s" % config_path
+            self.logger.log("Using configuration file %s" % config_path)
 
         output_path = None
 
@@ -111,7 +115,7 @@ class ConfigEngine(object):
         # Extract stn_info from the config_dict and command-line options:
         stn_info = self.get_stn_info(config_dict, options)
 
-        weecfg.modify_config(config_dict, stn_info, options.debug)
+        weecfg.modify_config(config_dict, stn_info, self.logger, options.debug)
     
     def get_stn_info(self, config_dict, options):
         """Build the stn_info structure. This generally contains stuff
@@ -149,6 +153,6 @@ class ConfigEngine(object):
 
         backup_path = weecfg.save(config_dict, config_path, backup)
         if backup_path:        
-            print "Saved backup to %s" % backup_path
+            self.logger.log("Saved backup to %s" % backup_path)
             
-        print "Saved configuration to %s" % config_path
+        self.logger.log("Saved configuration to %s" % config_path)

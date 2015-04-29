@@ -190,7 +190,7 @@ def save(config_dict, config_path, backup=False):
 #              Utilities that modify ConfigObj objects
 #==============================================================================
 
-def modify_config(config_dict, stn_info, debug=False):
+def modify_config(config_dict, stn_info, logger, debug=False):
     # Get the driver editor, name, and version:
     driver = stn_info.get('driver')
     if driver:
@@ -202,8 +202,8 @@ def modify_config(config_dict, stn_info, debug=False):
             sys.exit("Driver %s failed to load: %s" % (driver, e))
         stn_info['station_type'] = driver_name
         if debug:
-            print 'Using %s version %s (%s)' % (stn_info['station_type'],
-                                                driver_version, driver)
+            logger.log('Using %s version %s (%s)' % (stn_info['station_type'],
+                                                     driver_version, driver), level=1)
 
     # Get a driver stanza, if possible
     stanza = None
@@ -243,19 +243,19 @@ def modify_config(config_dict, stn_info, debug=False):
         for p in ['location', 'latitude', 'longitude', 'altitude']:
             if stn_info.get(p) is not None:
                 if debug:
-                    print "Using %s for %s" % (stn_info[p], p)
+                    logger.log("Using %s for %s" % (stn_info[p], p), level=2)
                 config_dict['Station'][p] = stn_info[p]
         # Update units display with any stn_info overrides
         if stn_info.get('units') is not None:
             if stn_info.get('units') in ['metric', 'metricwx']:
                 if debug:
-                    print "Using Metric units for display"
+                    logger.log("Using Metric units for display", level=2)
                 config_dict['StdReport']['StandardReport'].update({
                         'Units': {
                             'Groups': metricwx_group}})
             elif stn_info.get('units') == 'us':
                 if debug:
-                    print "Using US units for display"
+                    logger.log("Using US units for display", level=2)
                 config_dict['StdReport']['StandardReport'].update({
                         'Units': {
                             'Groups': us_group}})

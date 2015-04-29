@@ -11,8 +11,6 @@ Need to document:
   
 Need to do wee_extension --uninstall
 
-wee_config should use Logger
-
 test deb upgrades
 
 test wee_extension on deb system
