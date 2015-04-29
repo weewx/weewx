@@ -5,7 +5,7 @@ weewx change history
 
 There are now five command-line utilities, some new, some old
  - wee_config:    (New) For configuring weewx.conf, in particular, 
-                  adding a new device driver
+                  selecting a new device driver.
  - wee_extension: (New) For adding and removing extensions.
  - wee_database:  (Formerly called wee_config_database)
  - wee_device:    (Formerly called wee_config_device)
