@@ -1066,22 +1066,27 @@ Version: 3.1.0
       <a href='setup.htm'><span class="code">setup.py</span> instructions</a>.
     </p>
 
-	<h1 id="wee_config_utility">The utility <span class="code">wee_config</span></h1>
-		<p>
-			When you install <span class="code">weewx</span> for the first time,
-			the installation process will prompt you for the most essential
-			options, such as the type of hardware you are using, latitude,
-			longitude, or altitude. But, what if you want to change these later? You
-			could go into the definitive configuration file, <span class="code">weewx.conf</span>,
-			which is described in detail in the <a href="#configuring">next
-			section</a>, but it's a big file with lots of nuances. Alternatively, if
-			you're just changing something simple, you may be able to 
-			use the utility <span class="code">wee_config</span>.
-		</p>
-		<p>Before starting, it's worth running the utility with the <span class="code">--help</span> option to see how
-		it is used:</p>
-		<pre class="tty">wee_config --help</pre>
-		<p>This results in:</p>
+    <h1 id="wee_config_utility">The utility <span class="'code">wee_config</span></h1>
+
+    <p>
+      When you install <span class="code">weewx</span> for the first time,
+      the installation process will prompt you for the most essential
+      options, such as the type of hardware you are using, latitude,
+      longitude, or altitude. But, what if you want to change these later?
+      In particular, what if you want to change device drivers? You could
+      edit the definitive configuration file, <span class="code">weewx.conf</span>,
+      by hand &mdash; described in detail in the <a href="#configuring">next section</a>
+      &mdash; but it's a big file with lots of nuances. Alternatively, if
+      you're just changing something simple, you may be able to use the
+      utility <span class="code">wee_config</span>.
+    </p>
+
+    <p>
+      Before starting, it's worth running it with the <span
+            class="code">--help</span> option to see how it is used:
+    </p>
+    <pre class="tty">wee_config --help</pre>
+    <p>This results in:</p>
 		<pre class="tty">
 Usage: wee_config --help
        wee_config --version
@@ -1150,22 +1155,37 @@ Options:
   --no-backup           Do not save a backup of any existing files.
   --debug               Show diagnostic information while running.</pre>
 
-	<p>The utility is pretty good about "guessing" where your configuration
-	file <span class="code">weewx.conf</span> is, but if you've done an
-	unusual install, you may have to tell it explicitly. You can either put
-	the location directly in the command line like this:</p>
-	<pre class="tty">wee_config /home/weewx/weewx.conf </pre>
-	<p>or use option <span class="code">--config</span>:</p>
-	<pre class="tty">wee_config --config=/home/weewx/weewx.conf</pre>
-	<h2>Changing device drivers</h2>
-	<p>The most common use for <span class="code">wee_config</span> is to
-	change device drivers. Say that you originally installed <span class="code">weewx</span>
-	with the Simulator. Now you've bought a Davis Vantage and you want to switch
-	to that. Here's how you do it. First, if you don't know the name of the
-	driver, you can list what is available:</p>
-	<pre class="tty">wee_config --list-drivers</pre>
-	<p>This will result in something like this:</p>
-	<pre class="tty">
+    <p>
+      The utility is pretty good about "guessing" where your configuration
+      file <span class="code">weewx.conf</span> is, but if you've done an
+      unusual install, you may have to tell it explicitly. You can do this by
+      either putting the location directly in the command line:
+    </p>
+
+    <pre class="tty">wee_config /home/weewx/weewx.conf </pre>
+
+    <p>
+      or by using option <span class="code">--config</span>:
+    </p>
+
+    <pre class="tty">wee_config --config=/home/weewx/weewx.conf</pre>
+
+    <h2>Changing device drivers</h2>
+
+    <p>
+      The most common use for <span class="code">wee_config</span> is to
+      change device drivers. Say that you originally installed
+      <span class="code">weewx</span> with the Simulator. Now you've bought a
+      Davis Vantage and you want to switch to that. Here's how you do it.
+      First, if you don't know the name of the driver, you can list all the
+      drivers available in your weewx install:
+    </p>
+
+    <pre class="tty">wee_config --list-drivers</pre>
+
+    <p>This will result in something like this:</p>
+
+		<pre class="tty">
 weewx.drivers.acurite     AcuRite         0.16           
 weewx.drivers.cc3000      CC3000          0.8            
 weewx.drivers.fousb       FineOffsetUSB   1.7            
@@ -1180,30 +1200,75 @@ weewx.drivers.ws1         WS1             0.19
 weewx.drivers.ws23xx      WS23xx          0.22           
 weewx.drivers.ws28xx      WS28xx          0.34</pre>
 
-		<p>
-			From this, we can see that the name of the driver is <span
-			class="code">weewx.drivers.vantage</span>. Now run <span
-			class="code">wee_config</span>, with the <span class="code">--modify</span>
-			command, specifying that driver:
-		</p>
-		<pre class="tty">wee_config --modify --driver=weewx.drivers.vantage</pre>
+    <p>
+      From this list, we can see that the name of the driver is <span
+            class="code">weewx.drivers.vantage</span>. Now run <span
+            class="code">wee_config</span>, with the <span class="code">--modify</span>
+      command, specifying that driver:
+    </p>
+    <pre class="tty">wee_config --modify --driver=weewx.drivers.vantage</pre>
 
-		<p>
-			The utility will go through your previously selected options, such as
-			station description, latitude, longitude, altitude, <i>etc.</i>. Your
-			previously selected values, <em>including</em> the device driver,
-			will all be the defaults. So, all you have to do is keep hitting
-			enter.
-		</p>
-		<p>
-			If this is too much trouble, you can specify the <span class="code">--no-prompt</span>
-			option:
-		</p>
+    <p>
+      The utility will go through your previously selected options, such as
+      station description, latitude, longitude, altitude, <i>etc.</i>. Your
+      previously selected values, <em>including</em> the specified device driver,
+      will all be the defaults. So, all you have to do is keep hitting
+      enter. This is what it looked like when I switched from the simulator
+      to the Vantage driver:
+    </p>
+    <pre class="tty">
+<b>$ cd /home/weewx</b>
+<b>$ ./bin/wee_config --modify --driver=weewx.drivers.vantage </b>
+Using configuration file /home/weewx/weewx.conf
+Enter a brief description of the station, such as its location.  For example:
+Santa's Workshop, North Pole
+description [Hood River, Oregon]:
+Specify altitude, with units 'foot' or 'meter'.  For example:
+35, foot
+12, meter
+altitude [700, foot]:
+Specify latitude in decimal degrees, negative for south.
+latitude [45]:
+Specify longitude in decimal degrees, negative for west.
+longitude [-125]:
+Indicate the preferred units for display: 'metric' or 'us'
+units [metricwx]:
+Installed drivers include:
+  0) AcuRite         (weewx.drivers.acurite)
+  1) CC3000          (weewx.drivers.cc3000)
+  2) FineOffsetUSB   (weewx.drivers.fousb)
+  3) Simulator       (weewx.drivers.simulator)
+  4) TE923           (weewx.drivers.te923)
+  5) Ultimeter       (weewx.drivers.ultimeter)
+  6) Vantage         (weewx.drivers.vantage)
+  7) WMR100          (weewx.drivers.wmr100)
+  8) WMR200          (weewx.drivers.wmr200)
+  9) WMR9x8          (weewx.drivers.wmr9x8)
+ 10) WS1             (weewx.drivers.ws1)
+ 11) WS23xx          (weewx.drivers.ws23xx)
+ 12) WS28xx          (weewx.drivers.ws28xx)
+choose a driver [6]:
+Specify the hardware interface, either 'serial' or 'ethernet'.
+If the station is connected by serial, USB, or serial-to-USB
+adapter, specify serial.  Specify ethernet for stations with
+WeatherLinkIP interface.
+type [serial]:
+Specify a port for stations with a serial interface, for
+example /dev/ttyUSB0 or /dev/ttyS0.
+port [/dev/ttyUSB0]:
+Saved backup to /home/weewx/weewx.conf.20150430084525
+Saved configuration to /home/weewx/weewx.conf
+</pre>
 
-		<pre class="tty">wee_config --modify --driver=weewx.drivers.vantage --no-prompt</pre>
+    <p>
+      If this is too much trouble, you can specify the <span class="code">--no-prompt</span>
+      option:
+    </p>
 
-		<p>This will accept all the defaults, including your new device
-			driver, without asking for any input.</p>
+    <pre class="tty">wee_config --modify --driver=weewx.drivers.vantage --no-prompt</pre>
+
+    <p>This will accept all the defaults, including your new device
+      driver, without asking for any input.</p>
 
 	<h1 id="configuring">Configuring <span class="code">weewx</span></h1>
 
