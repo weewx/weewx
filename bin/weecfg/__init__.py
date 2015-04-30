@@ -196,8 +196,9 @@ def modify_config(config_dict, stn_info, logger, debug=False):
             sys.exit("Driver %s failed to load: %s" % (driver, e))
         stn_info['station_type'] = driver_name
         if debug:
-            logger.log('Using %s version %s (%s)' % (stn_info['station_type'],
-                                                     driver_version, driver), level=1)
+            logger.log('Using %s version %s (%s)' %
+                       (stn_info['station_type'], driver_version, driver),
+                       level=1)
 
     # Get a driver stanza, if possible
     stanza = None
@@ -216,12 +217,13 @@ def modify_config(config_dict, stn_info, logger, debug=False):
 
     # If we have a stanza, inject it into the configuration dictionary
     if stanza is not None:
+        # Ensure that the driver field matches the path to the actual driver
+        stanza[driver_name]['driver'] = driver
         # Insert the stanza in the configuration dictionary:
         config_dict[driver_name] = stanza[driver_name]
         # Add a major comment deliminator:
         config_dict.comments[driver_name] = major_comment_block
-        # If we have a [Station] section, the move the new stanza to just
-        # after it
+        # If we have a [Station] section, move the new stanza to just after it
         if 'Station' in config_dict:
             reorder_sections(config_dict, driver_name, 'Station', after=True)
             # make the stanza the station type
@@ -690,7 +692,17 @@ def remove_and_prune(a_dict, b_dict):
 #                Utilities that work on drivers
 #==============================================================================
 
-def get_driver_infos(driver_dir='weewx.drivers'):
+def get_all_driver_infos():
+    # first look in the drivers directory
+    infos = get_driver_infos()
+    # then add any drivers in the user directory
+    infos.update(get_driver_infos('user',
+                                  excludes=['__init__.py', 'extensions.py'],
+                                  show_failures=False))
+    return infos
+
+def get_driver_infos(driver_dir='weewx.drivers', excludes=['__init__.py'],
+                     show_failures=True):
     """Scan the drivers folder, extracting information about each available
     driver. Return as a dictionary, keyed by driver name."""
 
@@ -700,12 +712,12 @@ def get_driver_infos(driver_dir='weewx.drivers'):
     driver_list = [ os.path.basename(f) for f in glob.glob(os.path.join(driver_directory, "*.py"))]
 
     driver_info_dict = {}
-    for driver_file in driver_list:
-        if driver_file == '__init__.py':
+    for filename in driver_list:
+        if filename in excludes:
             continue
         # Get the driver module name. This will be something like
         # 'weewx.drivers.fousb'
-        driver = os.path.splitext("weewx.drivers.%s" % driver_file)[0]
+        driver = os.path.splitext("%s.%s" % (driver_dir, filename))[0]
         # Create an entry for it
         driver_info_dict[driver] = dict()
         try:
@@ -716,8 +728,9 @@ def get_driver_infos(driver_dir='weewx.drivers'):
             driver_info_dict[driver]['version'] = driver_module.DRIVER_VERSION
             del driver_module
         except Exception, e:
-            driver_info_dict[driver]['name'] = driver
-            driver_info_dict[driver]['fail'] = str(e)
+            if show_failures:
+                driver_info_dict[driver]['name'] = driver
+                driver_info_dict[driver]['fail'] = str(e)
 
     return driver_info_dict
 
@@ -731,7 +744,7 @@ def load_driver_editor(driver):
 
 def print_drivers():
     """Get information about all the available drivers, then print it out."""
-    driver_info_dict = get_driver_infos()
+    driver_info_dict = get_all_driver_infos()
     keys = sorted(driver_info_dict)
     for d in keys:
         msg = "%-25s" % d
@@ -803,7 +816,7 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
 
 def prompt_for_driver(dflt_driver=None):
     """Get the information about each driver, return as a dictionary."""
-    infos = get_driver_infos()
+    infos = get_all_driver_infos()
     keys = sorted(infos)
     dflt_idx = None
     print "Installed drivers include:"
