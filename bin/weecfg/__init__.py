@@ -62,7 +62,7 @@ class Logger(object):
 #              Utilities that find and save ConfigObj objects
 #==============================================================================
 
-DEFAULT_LOCATIONS = ['/etc/weewx', '/home/weewx']
+DEFAULT_LOCATIONS = ['../..', '/etc/weewx', '/home/weewx']
 
 def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
               file_name='weewx.conf'):
@@ -88,8 +88,10 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
     args: command-line arguments. If the file cannot be found in file_path,
     then the first element in args will be tried.
     
-    locations: A list of directories to be searched. 
-    Default is ['/etc/weewx', '/home/weewx']
+    locations: A list of directories to be searched. If they do not
+    start with a slash ('/'), then they will be treated as relative to
+    this file (bin/weecfg/__init__.py). 
+    Default is ['../..', '/etc/weewx', '/home/weewx'].
 
     file_name: The name of the file to be found. This is used
     only if the directories must be searched. Default is 'weewx.conf'.
@@ -104,20 +106,12 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
             del args[0]
 
     if file_path is None:
-        if locations == DEFAULT_LOCATIONS:
-            # Try a location based on the current run directory, but only if it
-            # looks like a setup.py installation (possibly to a non-standard
-            # location).
-            this_file = os.path.join(os.getcwd(), __file__)
-            rundir = os.path.abspath(os.path.dirname(this_file))
-            (rundir, _) = os.path.split(rundir) # peel off the weewxcfg dir
-            (rundir, subdir) = os.path.split(rundir) # next up is the bin dir
-            if subdir == 'bin':
-                # if it really is a bin dir, then rundir is a proper weewx root
-                locations.insert(0, rundir)
-            
         for directory in locations:
-            candidate = os.path.join(directory, file_name)
+            # If this is a relative path, then prepend with the
+            # directory this file is in:
+            if not directory.startswith('/'):
+                directory = os.path.join(os.path.dirname(__file__), directory)
+            candidate = os.path.abspath(os.path.join(directory, file_name))
             if os.path.isfile(candidate):
                 return candidate
 
