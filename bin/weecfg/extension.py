@@ -55,12 +55,9 @@ class ExtensionEngine(object):
         self.config_dict = config_dict
         self.logger = logger or Logger()
         self.tmpdir = tmpdir or '/var/tmp'
-        # BIN_ROOT does not normally appear in the configuration dictionary. Set a
-        # default (which could be 'None')
-        self.config_dict.setdefault('BIN_ROOT', bin_root)
         self.dry_run = dry_run
 
-        self.root_dict = weecfg.extract_roots(self.config_path, self.config_dict)
+        self.root_dict = weecfg.extract_roots(self.config_path, self.config_dict, bin_root)
         self.logger.log("root dictionary: %s" % self.root_dict, 4)
         
     def enumerate_extensions(self):

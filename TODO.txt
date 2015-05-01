@@ -3,8 +3,6 @@ TODO: items for the next release; complete list is at github
 
 Uninstalling a non-existent extension gives a useless error.
 
-The option BIN_ROOT is getting accidentally injected into the config file.
-
 Running wee_config without a command, for example, 
   wee_config --driver=something 
 should either return an error, or indicate that it did nothing.

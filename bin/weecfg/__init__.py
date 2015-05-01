@@ -907,16 +907,13 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
 #            Miscellaneous utilities
 #==============================================================================
 
-def extract_roots(config_path, config_dict):
+def extract_roots(config_path, config_dict, bin_root):
     """Get the location of the various root directories used by weewx."""
     
     root_dict = {'WEEWX_ROOT' : config_dict['WEEWX_ROOT'],
-                 'CONFIG_ROOT' : os.path.dirname(config_path),
-                 'BIN_ROOT' : config_dict.get('BIN_ROOT')}
-    # If there is no BIN_ROOT in the configuration dictionary, then set it
-    # to the location of this file:
-    if root_dict['BIN_ROOT'] is None:
-        root_dict['BIN_ROOT'] = os.path.dirname(__file__)
+                 'CONFIG_ROOT' : os.path.dirname(config_path)}
+    # If bin_root has not been defined, then set it to the location of this file:
+    root_dict['BIN_ROOT'] = bin_root if bin_root else os.path.dirname(__file__)
     # The user subdirectory:
     root_dict['USER_ROOT'] = os.path.join(root_dict['BIN_ROOT'], 'user')
     # The extensions directory can be found off of USER_ROOT:
