@@ -49,6 +49,9 @@ metricwx_group = {'group_altitude': 'meter',
                   'group_speed2': 'meter_per_second2',
                   'group_temperature': 'degree_C'}
 
+class ExtensionError(IOError):
+    """Errors when installing or uninstalling an extension"""
+    
 class Logger(object):
     def __init__(self, verbosity=0):
         self.verbosity = verbosity
@@ -950,15 +953,18 @@ def get_extension_installer(extension_installer_dir):
     try:
         # Inject the location of the installer directory into the path
         sys.path.insert(0, extension_installer_dir)
-        # Now I can import the extension's 'install' module:
-        __import__('install')
+        try:
+            # Now I can import the extension's 'install' module:
+            __import__('install')
+        except ImportError:
+            raise ExtensionError("Cannot find 'install' module in %s" % extension_installer_dir)
         install_module = sys.modules['install']
         loader = getattr(install_module, 'loader')
+        # Get rid of the module:
+        sys.modules.pop('install', None)
         installer = loader()
     finally:
         # Restore the path
         sys.path = old_path
-        # Get rid of the module:
-        sys.modules.pop('install')
 
     return (install_module.__file__, installer)

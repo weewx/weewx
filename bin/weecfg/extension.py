@@ -196,8 +196,11 @@ class ExtensionEngine(object):
         
         # Find the subdirectory containing this extension's installer
         extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'], extension_name)
-        # Retrieve it
-        _, installer = weecfg.get_extension_installer(extension_installer_dir)
+        try:
+            # Retrieve it
+            _, installer = weecfg.get_extension_installer(extension_installer_dir)
+        except weecfg.ExtensionError:
+            sys.exit("Unable to find extension %s" % extension_name)
 
         # Remove any files that were added:
         self.uninstall_files(installer)
