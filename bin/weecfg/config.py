@@ -36,28 +36,29 @@ class ConfigEngine(object):
         # Check for errors in the options.
         #
 
+        # Must have some command:
+        if not options.install and not options.update and \
+                not options.merge and not options.modify:
+            sys.exit("No command specified")
+
         # Can have only one of install, update, and merge:
         if sum(1 if x is True else 0 for x in [options.install,
                                                options.update,
                                                options.merge]) > 1:
-            sys.stderr.write("Only one of install, update, or merge may be specified")
-            sys.exit(weewx.CMD_ERROR)
+            sys.exit("Only one of install, update, or merge may be specified")
 
         # Check for missing --dist-config
         if (options.install or options.update or options.merge) and not options.dist_config:
-            sys.stderr.write("The option --dist-config must be specified")
-            sys.exit(weewx.CMD_ERROR)
+            sys.exit("The option --dist-config must be specified")
 
         # The install and merge commands require --output. Indeed,
         # this is the only difference between --update and --merge.
         if (options.install or options.merge) and not options.output:
-            sys.stderr.write("The option --output must be specified")
-            sys.exit(weewx.CMD_ERROR)
+            sys.exit("The option --output must be specified")
 
         # The install option does not take an old config file
         if options.install and (options.config_path or len(args)):
-            sys.stderr.write("The install command does not require the config option")
-            sys.exit(weewx.CMD_ERROR)
+            sys.exit("The install command does not require the config option")
 
         if options.install or options.update or options.merge:
             # These options require a distribution config file. 
