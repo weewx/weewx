@@ -251,9 +251,7 @@ import termios
 import tty
 
 import weeutil.weeutil
-import weewx
 import weewx.drivers
-import weewx.units
 import weewx.wxformulas
 
 DRIVER_NAME = 'WS23xx'
@@ -605,7 +603,7 @@ class WS23xx(object):
         logdbg('station enter')
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
         logdbg('station exit')
         self.ws = None
         self.close()
@@ -998,7 +996,7 @@ class Ws2300(object):
     def reset_06(self):
         self.log_enter("re")
         try:
-            for retry in range(self.__class__.MAX_RESETS):
+            for _ in range(self.__class__.MAX_RESETS):
                 self.clear_device()
                 self.write_byte('\x06')
                 #
@@ -1068,7 +1066,7 @@ class Ws2300(object):
     def write_safe(self,nybble_address,nybbles,encode_constant=None):
         self.log_enter("ws")
         try:
-            for retry in range(self.MAXRETRIES):
+            for _ in range(self.MAXRETRIES):
                 self.reset_06()
                 command_data = self.write_data(nybble_address,nybbles,encode_constant)
                 if command_data != None:
@@ -1103,16 +1101,16 @@ class Ws2300(object):
         try:
             if nybble_count < 1 or nybble_count > self.MAXBLOCK:
                 StandardError("Too many nybbles requested")
-            bytes = (nybble_count + 1) // 2
+            bytes_ = (nybble_count + 1) // 2
             if not self.write_address(nybble_address):
                 return None
             #
             # Write the number bytes we want to read.
             #
-            encoded_data = chr(0xC2 + bytes*4)
+            encoded_data = chr(0xC2 + bytes_*4)
             self.write_byte(encoded_data)
             answer = self.read_byte()
-            check = chr(0x30 + bytes)
+            check = chr(0x30 + bytes_)
             if answer != check:
                 self.log("??")
                 return None
@@ -1121,7 +1119,7 @@ class Ws2300(object):
             #
             self.log(", :")
             response = ""
-            for i in range(bytes):
+            for _ in range(bytes_):
                 answer = self.read_byte()
                 if answer == None:
                     return None
@@ -1155,9 +1153,9 @@ class Ws2300(object):
                 address = batch[0]
                 data = ()
                 for start_pos in range(0,batch[1],self.MAXBLOCK):
-                    for retry in range(self.MAXRETRIES):
-                        bytes = min(self.MAXBLOCK, batch[1]-start_pos)
-                        response = self.read_data(address + start_pos, bytes)
+                    for _ in range(self.MAXRETRIES):
+                        bytes_ = min(self.MAXBLOCK, batch[1]-start_pos)
+                        response = self.read_data(address + start_pos, bytes_)
                         if response != None:
                             break
                         self.reset_06()
@@ -1209,7 +1207,7 @@ def bcd2num(nybbles):
 
 def num2bcd(number, nybble_count):
     result = []
-    for i in range(nybble_count):
+    for _ in range(nybble_count):
         result.append(int(number % 10))
         number //= 10
     return tuple(result)
@@ -1222,7 +1220,7 @@ def bin2num(nybbles):
 def num2bin(number, nybble_count):
     result = []
     number = int(number)
-    for i in range(nybble_count):
+    for _ in range(nybble_count):
         result.append(number % 16)
         number //= 16
     return tuple(result)
@@ -1336,12 +1334,12 @@ class PressureConversion(BcdConversion):
 #
 class ConversionDate(Conversion):
     format = None
-    def __init__(self, nybble_count, format):
-        description =  format
+    def __init__(self, nybble_count, format_):
+        description =  format_
         for xlate in "%Y:yyyy,%m:mm,%d:dd,%H:hh,%M:mm,%S:ss".split(","):
             description = description.replace(*xlate.split(":"))
         Conversion.__init__(self, "", nybble_count, description)
-        self.format = format
+        self.format = format_
     def str(self, value):
         return time.strftime(self.format, time.localtime(value))
     def parse(self, s):
@@ -1704,14 +1702,14 @@ class Measure(object):
     id = None      # string, Short name
     name = None    # string, Long name
     reset = None   # string, Id of measure used to reset this one
-    def __init__(self, address, id, conv, name, reset=None):
+    def __init__(self, address, id_, conv, name, reset=None):
         self.address = address
         self.conv = conv
         self.reset = reset
-        if id != None:
-            self.id = id
-            assert not id in self.__class__.IDS
-            self.__class__.IDS[id] = self
+        if id_ != None:
+            self.id = id_
+            assert not id_ in self.__class__.IDS
+            self.__class__.IDS[id_] = self
         if name != None:
             self.name = name
             assert not name in self.__class__.NAMES
@@ -1750,7 +1748,7 @@ class HexConversion(Conversion):
 # The raw nybble measure.
 #
 class HexMeasure(Measure):
-    def __init__(self, address, id, conv, name):
+    def __init__(self, address, id_, conv, name):
         self.address = address
         self.name = name
         self.conv = conv
