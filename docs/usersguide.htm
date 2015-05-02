@@ -1066,7 +1066,9 @@ Version: 3.1.0
       <a href='setup.htm'><span class="code">setup.py</span> instructions</a>.
     </p>
 
-    <h1 id="wee_config_utility">The utility <span class="'code">wee_config</span></h1>
+    <h1 id="configuring">Configuring <span class="code">weewx</span></h1>
+
+    <h2 id="wee_config_utility">The utility <span class="'code">wee_config</span></h2>
 
     <p>
       When you install <span class="code">weewx</span> for the first time,
@@ -1075,7 +1077,7 @@ Version: 3.1.0
       longitude, or altitude. But, what if you want to change these later?
       In particular, what if you want to change device drivers? You could
       edit the definitive configuration file, <span class="code">weewx.conf</span>,
-      by hand &mdash; described in detail in the <a href="#configuring">next section</a>
+      by hand &mdash; described in detail in the <a href="#weewxconf">next section</a>
       &mdash; but it's a big file with lots of nuances. Alternatively, if
       you're just changing something simple, you may be able to use the
       utility <span class="code">wee_config</span>.
@@ -1216,9 +1218,8 @@ weewx.drivers.ws28xx      WS28xx          0.34</pre>
       enter. This is what it looked like when I switched from the simulator
       to the Vantage driver:
     </p>
-    <pre class="tty">
-<b>$ cd /home/weewx</b>
-<b>$ ./bin/wee_config --modify --driver=weewx.drivers.vantage </b>
+    <pre class="tty">$ <span class="cmd">cd /home/weewx</span>
+$ <span class="cmd">./bin/wee_config --modify --driver=weewx.drivers.vantage</span>
 Using configuration file /home/weewx/weewx.conf
 Enter a brief description of the station, such as its location.  For example:
 Santa's Workshop, North Pole
@@ -1270,10 +1271,10 @@ Saved configuration to /home/weewx/weewx.conf
     <p>This will accept all the defaults, including your new device
       driver, without asking for any input.</p>
 
-	<h1 id="configuring">Configuring <span class="code">weewx</span></h1>
+    <h2 id="weewxconf">The configuration file <span class="code">weewx.conf</span></h2>
 
-    <p>This section covers configuring <span class="code">weewx</span>,
-      in particular the configuration file
+    <p>The following sections describe the configuration parameters for
+      <span class="code">weewx</span>, in particular the configuration file
       <span class="code">weewx.conf</span>.</p>
 
       <p class='note'>The location of <span class="code">weewx.conf</span>
@@ -1291,9 +1292,9 @@ Saved configuration to /home/weewx/weewx.conf
       for presentation-specific options.  It is described in the
       <a href="customizing.htm">Customizing Guide</a>, under section <em>
       <a href="customizing.htm#standard_skin">The Standard <span class="code">skin.conf</span></a></em>.</p>
-    <p>This section is the definitive guide to the configuration options
-      available in <span class='code'>weewx.conf</span>. <em>It documents
-      way more options than you are likely to need!</em> &mdash; 
+    <p>These sections are the definitive guide to the configuration options
+      available in <span class='code'>weewx.conf</span>. <em>They contain many
+      more options than you are likely to need!</em> &mdash; 
       you can safely ignore most of them. The truly important ones, the ones 
       you are likely to have to customize for your station, are
       <span class="config_important">highlighted</span>.</p>

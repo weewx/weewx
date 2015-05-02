@@ -87,6 +87,9 @@ caption {
   margin-right: 80px;
   width: 500px;
 }
+.cmd {
+  background-color: #efefb0;
+}
 .tty {
   font-family: "Courier New", Courier, monospace;
   font-size: 90%;

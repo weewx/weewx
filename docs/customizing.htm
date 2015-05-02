@@ -4224,31 +4224,47 @@ mv weewx.sdb_new weewx.sdb</pre>
         high-level description. If you're game, give it a try — I'm happy to
         help you out!</p>
 
-		<h1 id="extensions">Extensions</h1>
-		<p>
-			A key feature of <span class="code">weewx</span> is its ability to be
-			extended by installing 3rd party <em>extensions</em>, using a simple
-			tool. Take a look at the <a
-			href="https://github.com/weewx/weewx/wiki"><span class="code">weewx</span>
-			wiki</a> for a sampling of some of the extensions that are available.
-		</p>
+      <h1 id="extensions">Extensions</h1>
+    <p>
+      A key feature of <span class="code">weewx</span> is its ability to be
+      extended by installing 3rd party <em>extensions</em>.
+      Extensions are a way to package one or more customizations so they
+      can be installed and distributed as a functional group.
+    </p>
 
-		<h2>
-			The utility <span class="code">wee_extension</span>
-		</h2>
-		<p>
-			The utility <span class="code">wee_extension</span> is used to add an
-			extension. It's worth running with the <span class="code">--help</span>
-			option to see how it is used:
-		</p>
+    <p>Customizations typically fall into one of these categories:</p>
+    <ul>
+      <li>search list extension</li>
+      <li>template</li>
+      <li>skin</li>
+      <li>service</li>
+      <li>generator</li>
+      <li>driver</li>
+    </ul>
 
-		<pre class="tty">
-<b>cd /home/weewx
-./bin/wee_extension --help</b></pre>
+    <p>Take a look at the
+      <a href="https://github.com/weewx/weewx/wiki">
+        <span class="code">weewx</span> wiki</a>
+      for a sampling of some of the extensions that are available.
+    </p>
+    
+    <h2>
+      The utility <span class="code">wee_extension</span>
+    </h2>
+    <p>
+      The utility <span class="code">wee_extension</span> is used to add and
+      remove extensions. It's worth running with the
+      <span class="code">--help</span>
+      option to see how it is used:
+    </p>
+    
+    <pre class="tty">
+cd /home/weewx
+./bin/wee_extension --help</pre>
 
-		<p>This results in:</p>
+    <p>This results in:</p>
 
-		<pre class="tty">
+    <pre class="tty">
 Usage: wee_extension --help
        wee_extension --list
            [CONFIG_FILE|--config=CONFIG_FILE]
@@ -4283,84 +4299,74 @@ Options:
   --dry-run             Print what would happen but do not do it.
   --verbosity=N         How much status to display, 0-3</pre>
 
-		<h3>Installing an extension</h3>
-		<p>
-			Let's try installing a simple extension, <a
-			href="https://github.com/weewx/weewx/wiki/cmon"><em>cmon</em></a>,
-			used to monitor your computer.
-		</p>
-		<p>
-			First download it. You can either do this from the link given in the
-			wiki, or by using <span class="code">wget</span> (which you may have
-			to install):
-		</p>
-		<pre class="tty">
-<b>wget -P /var/tmp http://lancet.mit.edu/mwall/projects/weather/releases/weewx-cmon-0.7.tgz</b></pre>
+    <h2>Installing an extension</h2>
+    <p>
+      Let's try installing a simple extension,
+      <a href="https://github.com/weewx/weewx/wiki/cmon"><em>cmon</em></a>,
+      used to monitor your computer.
+    </p>
+    <p>
+      First download it. You can either do this from the link given in the
+      wiki, or by using <span class="code">wget</span> (which you may have
+      to install):
+    </p>
+    <pre class="tty">wget -P /var/tmp http://lancet.mit.edu/mwall/projects/weather/releases/weewx-cmon-0.7.tgz</pre>
 
-		<p>
-			This will put the tarfile <span class="code">weewx-cmon-0.7.tgz</span>
-			in the directory <span class="code">/var/tmp</span>.
-		</p>
-		<p>Now install the extension:</p>
-		<pre class="tty">
-<b>cd /home/weewx</b>
-<b>./bin/wee_extension --install=/var/tmp/weewx-cmon-0.7.tgz</b>
+    <p>
+      This will put the tarfile <span class="code">weewx-cmon-0.7.tgz</span>
+      in the directory <span class="code">/var/tmp</span>.
+    </p>
+    <p>Now install the extension:</p>
+    <pre class="tty"><span class="cmd">cd /home/weewx
+./bin/wee_extension --install=/var/tmp/weewx-cmon-0.7.tgz</span>
 Request to install '/var/tmp/weewx-cmon-0.7.tgz'
 Extracting from tarball /var/tmp/weewx-cmon-0.7.tgz
 Added new service user.cmon.ComputerMonitor to process_services
 Saving installer file to /home/weewx/bin/weecfg/user/installer/cmon
 Saved configuration dictionary. Backup copy at /home/weewx/weewx.conf.20150430130322
 Finished installing extension '/var/tmp/weewx-cmon-0.7.tgz'</pre>
-		<p>The installer has done a number of things for you:</p>
-		<ol>
-			<li>It put a new skin, <span class="code">cmon</span>, in the <span
-				class="code">skins</span> subdirectory;
-			</li>
-			<li>It put a new service, <span class="code">user.cmon.ComputerMonitor</span>,
-				in the list of services to be run by <span class="code">weewx</span>;</li>
-			<li>It defined a new database, <span class="code">cmon_sqlite</span>,
-				and a binding, <span class="code">cmon_binding</span>, to that database;
-			</li>
-			<li>It added a top-level "stanza" <span class="code">[ComputerMonitor]</span>
-				to your configuration file <span
-				class="code">weewx.conf</span>, that specifies the data binding <span
-				class="code">cmon</span> is to use.
-			</li>
-			<li>And, finally, it saved the details of how the extension was installed so you can
-			remove it later, should you choose to do so;</li>
-		</ol>
+
+    <p>The installer has done a number of things for you:</p>
+    <ol>
+      <li>It put a new skin, <span class="code">cmon</span>, in the
+        <span class="code">skins</span> subdirectory;
+      </li>
+      <li>It put a new service,
+        <span class="code">user.cmon.ComputerMonitor</span>,
+	in the list of services to be run by
+        <span class="code">weewx</span>;</li>
+      <li>It defined a new database, <span class="code">cmon_sqlite</span>,
+	and a binding, <span class="code">cmon_binding</span>,
+        to that database;
+      </li>
+      <li>It added a top-level "stanza"
+        <span class="code">[ComputerMonitor]</span>
+	to your configuration file <span class="code">weewx.conf</span>,
+        that specifies the data binding <span class="code">cmon</span>
+        is to use.
+      </li>
+      <li>And, finally, it saved the details of how the extension was
+        installed so you can remove it later, should you choose to do so.</li>
+    </ol>
 		
-		<h3>Listing installed extensions</h3>
-		<p>The utility <span class="code">wee_extension</span> can tell you which extensions
-		you have installed:</p>
-		<pre class="tty"><b>./bin/wee_extension --list</b>
+    <h2>Listing installed extensions</h2>
+    <p>The utility <span class="code">wee_extension</span> can tell you which
+      extensions you have installed:</p>
+    <pre class="tty"><span class="cmd">./bin/wee_extension --list</span>
 cmon</pre>
-		<p>You can see it lists the extension we just installed, <span class="code">cmon</span>.</p>
-		
-		<h3>Removing extensions</h3>
-		<p>Finally, you can remove an extension using the same tool:</p>
-		<pre class="tty"><b>./bin/wee_extension --uninstall=cmon</b>
-<b>./bin/wee_extension --list</b>
+    <p>You can see it lists the extension we just installed, <span class="code">cmon</span>.</p>
+    
+    <h2>Removing extensions</h2>
+    <p>You can remove an extension using the same tool:</p>
+    <pre class="tty"><span class="cmd">./bin/wee_extension --uninstall=cmon
+./bin/wee_extension --list</span>
 No extensions installed</pre>
 		
-		<h2>Creating extensions</h2>
-		<p>Now that you have made some customizations, you might want to share
+      <h2>Creating an extension</h2>
+      <p>Now that you have made some customizations, you might want to share
         those changes with other <span class='code'>weewx</span> users.  Put
         your customizations into an extension to make installation, removal,
         and distribution easier.</p>
-      <p>Customizations typically fall into one of these categories:</p>
-      <ul>
-        <li>search list extension</li>
-        <li>template</li>
-        <li>skin</li>
-        <li>service</li>
-        <li>generator</li>
-        <li>driver</li>
-      </ul>
-      <p>Extensions are a way to package one or more customizations so they
-        can be installed and distributed as a functional group.</p>
-
-      <h2>Extension guidelines</h2>
       <p>Here are a few guidelines for creating extensions:</p>
       <ul>
         <li>Extensions should not modify or depend upon existing skins.
