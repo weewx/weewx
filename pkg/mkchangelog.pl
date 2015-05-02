@@ -249,7 +249,7 @@ sub dumpsection {
         foreach my $line (split /\n/,$p) {
             if ($line =~ /^\s+/) {
                 $line =~ s/\s/~/g;
-                while(length($line) < $MAXCOL) { $line .= q(_); }
+                while(length($line) < $MAXCOL) { $line .= q(\@); }
             }
             push @lines, $line;
         }
@@ -260,7 +260,7 @@ sub dumpsection {
         foreach my $line (split /\n/,$p) {
             if ($line =~ /~/) {
                 $line =~ s/~/ /g;
-                $line =~ s/_//g;
+                $line =~ s/\@//g;
             }
             push @lines, $line;
         }
