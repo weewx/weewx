@@ -192,7 +192,7 @@ class ExtensionEngine(object):
     def uninstall_extension(self, extension_name):
         """Uninstall the extension with name extension_name"""
         
-        self.logger.log("Request to remove extension with name %s" % extension_name, level=2)
+        self.logger.log("Request to remove extension '%s'" % extension_name)
         
         # Find the subdirectory containing this extension's installer
         extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'], extension_name)
@@ -228,6 +228,8 @@ class ExtensionEngine(object):
         if save_config:
             weecfg.save_with_backup(self.config_dict, self.config_path)
             
+        self.logger.log("Finished removing extension '%s'" % extension_name)
+
     def uninstall_files(self, installer):
         """Delete files that were installed for this extension"""
 
