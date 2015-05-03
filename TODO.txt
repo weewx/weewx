@@ -1,12 +1,6 @@
 TODO: items for the next release; complete list is at github
 -------------------------------------------------------------------------------
 
-Need to document:
-  wee_config
-  wee_extension
-  
-Need to do wee_extension --uninstall
-
 test deb upgrades
 
 test wee_extension on deb system

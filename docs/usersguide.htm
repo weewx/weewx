@@ -1066,9 +1066,7 @@ Version: 3.1.0
       <a href='setup.htm'><span class="code">setup.py</span> instructions</a>.
     </p>
 
-    <h1 id="configuring">Configuring <span class="code">weewx</span></h1>
-
-    <h2 id="wee_config_utility">The utility <span class="'code">wee_config</span></h2>
+    <h1 id="wee_config_utility">The utility <span class="code">wee_config</span></h1>
 
     <p>
       When you install <span class="code">weewx</span> for the first time,
@@ -1271,28 +1269,42 @@ Saved configuration to /home/weewx/weewx.conf
     <p>This will accept all the defaults, including your new device
       driver, without asking for any input.</p>
 
-    <h2 id="weewxconf">The configuration file <span class="code">weewx.conf</span></h2>
+    <h2>Other <span class="code">wee_config</span> commands.</h2>
 
-    <p>The following sections describe the configuration parameters for
-      <span class="code">weewx</span>, in particular the configuration file
-      <span class="code">weewx.conf</span>.</p>
+    <p>The other commands offered by <span class="code">wee_config</span>, such as
+      <span class="code">--install</span>, <span class="code">--update</span>,
+      or <span class="code">--merge</span>, are used by the various <span class="code">weewx</span>
+      installers and are not generally intended for the end user.</p>
 
-      <p class='note'>The location of <span class="code">weewx.conf</span>
-        will depend on your installation method and operating
-        system. For example, if you used the
-        <span class='code'>setup.py</span> method, then the nominal location is
-        <span class='code'>/home/weewx</span>, and so your
-        configuration file will be
-        <span class='code'>/home/weewx/weewx.conf</span>. For other
-        configurations, consult the
-        <a href="#dir-layout-table">application layout table</a> in the
-        'Installation methods' section.</p>
+    <h1 id="weewxconf">The configuration file <span class="code">weewx.conf</span></h1>
+
+    <p>The configuration file <span class="code">weewx.conf</span> is a big
+      text file that holds the configuration information about your
+      installation of <span class="code">weewx.</span> This includes things
+      such as:</p>
+    <ul>
+      <li>The type of hardware you have;</li>
+      <li>The name of your station;</li>
+      <li>What kind of database to use and where is it located;</li>
+      <li>How to recognize out-of-range observations, <i>etc</i>.</li>
+    </ul>
+
+    <p class='note'>The location of <span class="code">weewx.conf</span>
+      will depend on your installation method and operating
+      system. For example, if you used the
+      <span class='code'>setup.py</span> method, then the nominal location is
+      <span class='code'>/home/weewx</span>, and so your
+      configuration file will be
+      <span class='code'>/home/weewx/weewx.conf</span>. For other
+      configurations, consult the
+      <a href="#dir-layout-table">application layout table</a> in the
+      'Installation methods' section.</p>
 
     <p class='note'>There is another configuration file, <span class="code">skin.conf</span>,
       for presentation-specific options.  It is described in the
       <a href="customizing.htm">Customizing Guide</a>, under section <em>
       <a href="customizing.htm#standard_skin">The Standard <span class="code">skin.conf</span></a></em>.</p>
-    <p>These sections are the definitive guide to the configuration options
+    <p>The following sections are the definitive guide to the many configuration options
       available in <span class='code'>weewx.conf</span>. <em>They contain many
       more options than you are likely to need!</em> &mdash; 
       you can safely ignore most of them. The truly important ones, the ones 
