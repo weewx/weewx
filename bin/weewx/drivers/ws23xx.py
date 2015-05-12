@@ -255,7 +255,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.22'
+DRIVER_VERSION = '0.23'
 
 
 def loader(config_dict, _):
@@ -430,10 +430,25 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
         self.polling_interval = stn_dict.get('polling_interval', None)
         if self.polling_interval is not None:
             self.polling_interval = int(self.polling_interval)
+        self.enable_startup_records = stn_dict.get('enable_startup_records',
+                                                   True)
+        self.enable_archive_records = stn_dict.get('enable_archive_records',
+                                                   True)
+        self.mode = stn_dict.get('mode', 'single_open')
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('serial port is %s' % self.port)
         loginf('polling interval is %s' % self.polling_interval)
+
+        if self.mode == 'single_open':
+            self.station = WS23xx(self.port)
+        else:
+            self.station = None
+
+    def closePort(self):
+        if self.station is not None:
+            self.station.close()
+            self.station = None
 
     @property
     def hardware_name(self):
@@ -442,18 +457,20 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
     # weewx wants the archive interval in seconds, but the console uses minutes
     @property
     def archive_interval(self):
+        if not self.enable_startup_records and not self.enable_archive_records:
+            raise NotImplementedError            
         return self.getArchiveInterval() * 60
-
-#    def closePort(self):
-#        pass
 
     def genLoopPackets(self):
         ntries = 0
         while ntries < self.max_tries:
             ntries += 1
             try:
-                with WS23xx(self.port) as s:
-                    data = s.get_raw_data(SENSOR_IDS)
+                if self.station:
+                    data = self.station.get_raw_data(SENSOR_IDS)
+                else:
+                    with WS23xx(self.port) as s:
+                        data = s.get_raw_data(SENSOR_IDS)
                 packet = data_to_packet(data, int(time.time() + 0.5),
                                         last_rain=self._last_rain)
                 self._last_rain = packet['rainTotal']
@@ -483,14 +500,31 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
             logerr(msg)
             raise weewx.RetriesExceeded(msg)
 
+    def genStartupRecords(self, since_ts):
+        if not self.enable_startup_records:
+            raise NotImplementedError
+        if self.station:
+            return self.genRecords(self.station, since_ts)
+        else:
+            with WS23xx(self.port) as s:
+                return self.genRecords(s, since_ts)
+
     def genArchiveRecords(self, since_ts, count=0):
-        with WS23xx(self.port) as s:
-            last_rain = None
-            for ts, data in s.gen_records(since_ts=since_ts, count=count):
-                record = data_to_packet(data, ts, last_rain=last_rain)
-                record['interval'] = data['interval']
-                last_rain = record['rainTotal']
-                yield record
+        if not self.enable_archive_records:
+            raise NotImplementedError
+        if self.station:
+            return self.genRecords(self.station, since_ts, count)
+        else:
+            with WS23xx(self.port) as s:
+                return self.genRecords(s, since_ts, count)
+
+    def genRecords(self, s, since_ts, count=0):
+        last_rain = None
+        for ts, data in s.gen_records(since_ts=since_ts, count=count):
+            record = data_to_packet(data, ts, last_rain=last_rain)
+            record['interval'] = data['interval']
+            last_rain = record['rainTotal']
+            yield record
 
 #    def getTime(self) :
 #        with WS23xx(self.port) as s:
@@ -501,28 +535,43 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
 #            s.set_time()
 
     def getArchiveInterval(self):
-        with WS23xx(self.port) as s:
-            return s.get_archive_interval()
+        if self.station:
+            return self.station.get_archive_interval()
+        else:
+            with WS23xx(self.port) as s:
+                return s.get_archive_interval()
 
     def setArchiveInterval(self, interval):
-        with WS23xx(self.port) as s:
-            s.set_archive_interval(interval)
+        if self.station:
+            self.station.set_archive_interval(interval)
+        else:
+            with WS23xx(self.port) as s:
+                s.set_archive_interval(interval)
 
     def getConfig(self):
-        with WS23xx(self.port) as s:
-            data = s.get_raw_data(Measure.IDS.keys())
-            fdata = {}
-            for key in data:
-                fdata[Measure.IDS[key].name] = data[key]
-            return fdata
+        fdata = dict()
+        if self.station:
+            data = self.station.get_raw_data(Measure.IDS.keys())
+        else:
+            with WS23xx(self.port) as s:
+                data = s.get_raw_data(Measure.IDS.keys())
+        for key in data:
+            fdata[Measure.IDS[key].name] = data[key]
+        return fdata
 
     def getRecordCount(self):
-        with WS23xx(self.port) as s:
-            return s.get_record_count()
+        if self.station:
+            return self.station.get_record_count()
+        else:
+            with WS23xx(self.port) as s:
+                return s.get_record_count()
 
     def clearHistory(self):
-        with WS23xx(self.port) as s:
-            s.clear_memory()
+        if self.station:
+            self.station.clear_memory()
+        else:
+            with WS23xx(self.port) as s:
+                s.clear_memory()
 
 
 # ids for current weather conditions and connection type
@@ -926,9 +975,9 @@ class Ws2300(object):
     #
     # An exception for us.
     #
-    class Ws2300Exception(StandardError):
+    class Ws2300Exception(weewx.WeeWxIOError):
         def __init__(self, *args):
-            StandardError.__init__(self, *args)
+            weewx.WeeWxIOError.__init__(self, *args)
     #
     # Constants we use.
     #
