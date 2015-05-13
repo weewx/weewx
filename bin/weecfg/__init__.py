@@ -699,15 +699,15 @@ def get_all_driver_infos():
     # first look in the drivers directory
     infos = get_driver_infos()
     # then add any drivers in the user directory
-    infos.update(get_driver_infos('user',
-                                  excludes=['__init__.py', 'extensions.py'],
-                                  show_failures=False))
+    infos.update(get_driver_infos('user'))
     return infos
 
-def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py'],
-                     show_failures=True):
+def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
     """Scan the drivers folder, extracting information about each available
-    driver. Return as a dictionary, keyed by driver name."""
+    driver. Return as a dictionary, keyed by the driver module name.
+    
+    Valid drivers must be importable, and must have attribute "DRIVER_NAME" defined.
+    """
 
     __import__(driver_pkg_name)
     driver_package = sys.modules[driver_pkg_name]
@@ -720,41 +720,46 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py'],
             continue
         # Get the driver module name. This will be something like
         # 'weewx.drivers.fousb'
-        driver = os.path.splitext("%s.%s" % (driver_pkg_name, filename))[0]
-        # Create an entry for it
-        driver_info_dict[driver] = dict()
+        driver_module_name = os.path.splitext("%s.%s" % (driver_pkg_name, filename))[0]
+        
         try:
-            # Now import the driver, and extract info about it
-            __import__(driver)
-            driver_module = sys.modules[driver]
-            driver_info_dict[driver]['name'] = driver_module.DRIVER_NAME
-            driver_info_dict[driver]['version'] = driver_module.DRIVER_VERSION
-            del driver_module
-        except Exception, e:
-            if show_failures:
-                driver_info_dict[driver]['name'] = driver
-                driver_info_dict[driver]['fail'] = str(e)
-
+            # Try importing the module
+            __import__(driver_module_name)
+            driver_module = sys.modules[driver_module_name]
+        except (ImportError, KeyError):
+            continue
+        
+        # We can detect a valid driver by whether the attribute "DRIVER_NAME" has
+        # been defined
+        if not hasattr(driver_module, 'DRIVER_NAME'):
+            continue
+                
+        # Now we can create an entry for it, keyed by the driver module name:
+        driver_info_dict[driver_module_name] = \
+            {'module_name' : driver_module_name,
+             'driver_name' : driver_module.DRIVER_NAME,
+             'version'     : driver_module.DRIVER_VERSION if hasattr(driver_module, 
+                                                                     'DRIVER_VERSION') else '?'}
     return driver_info_dict
-
-def load_driver_editor(driver):
-    """Load the configuration editor from the driver file"""
-    __import__(driver)
-    driver_module = sys.modules[driver]
-    loader_function = getattr(driver_module, 'confeditor_loader')
-    editor = loader_function()
-    return editor, driver_module.DRIVER_NAME, driver_module.DRIVER_VERSION
 
 def print_drivers():
     """Get information about all the available drivers, then print it out."""
     driver_info_dict = get_all_driver_infos()
     keys = sorted(driver_info_dict)
+    print "%-25s%-25s%-25s" % ("Module name", "Driver name", "Version")
     for d in keys:
-        msg = "%-25s" % d
-        for x in ['name', 'version', 'fail']:
-            if x in driver_info_dict[d]:
-                msg += " %-15s" % driver_info_dict[d][x]
-        print msg
+        print "  %(module_name)-25s%(driver_name)-25s%(version)-25s" % driver_info_dict[d]
+
+def load_driver_editor(driver_module_name):
+    """Load the configuration editor from the driver file
+    
+    driver_module_name: A string holding the driver name. E.g., 'weewx.drivers.fousb'
+    """
+    __import__(driver_module_name)
+    driver_module = sys.modules[driver_module_name]
+    loader_function = getattr(driver_module, 'confeditor_loader')
+    editor = loader_function()
+    return editor, driver_module.DRIVER_NAME, driver_module.DRIVER_VERSION
 
 #==============================================================================
 #                Utilities that seek info from the command line
