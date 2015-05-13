@@ -704,15 +704,15 @@ def get_all_driver_infos():
                                   show_failures=False))
     return infos
 
-def get_driver_infos(driver_dir='weewx.drivers', excludes=['__init__.py'],
+def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py'],
                      show_failures=True):
     """Scan the drivers folder, extracting information about each available
     driver. Return as a dictionary, keyed by driver name."""
 
-    __import__(driver_dir)
-    driver_package = sys.modules[driver_dir]
-    driver_directory = os.path.dirname(os.path.abspath(driver_package.__file__))
-    driver_list = [ os.path.basename(f) for f in glob.glob(os.path.join(driver_directory, "*.py"))]
+    __import__(driver_pkg_name)
+    driver_package = sys.modules[driver_pkg_name]
+    driver_pkg_directory = os.path.dirname(os.path.abspath(driver_package.__file__))
+    driver_list = [os.path.basename(f) for f in glob.glob(os.path.join(driver_pkg_directory, "*.py"))]
 
     driver_info_dict = {}
     for filename in driver_list:
@@ -720,7 +720,7 @@ def get_driver_infos(driver_dir='weewx.drivers', excludes=['__init__.py'],
             continue
         # Get the driver module name. This will be something like
         # 'weewx.drivers.fousb'
-        driver = os.path.splitext("%s.%s" % (driver_dir, filename))[0]
+        driver = os.path.splitext("%s.%s" % (driver_pkg_name, filename))[0]
         # Create an entry for it
         driver_info_dict[driver] = dict()
         try:

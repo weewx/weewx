@@ -1050,8 +1050,13 @@ class CWOPThread(RESTThread):
         # a connection that works:
         for _serv_addr_str in self.server_list:
             
-            _server, _port_str = _serv_addr_str.split(":")
-            _port = int(_port_str)
+            try:
+                _server, _port_str = _serv_addr_str.split(":")
+                _port = int(_port_str)
+            except ValueError:
+                syslog.syslog(syslog.LOG_ALERT, 
+                              "restx: Bad CWOP server address: '%s'; ignoring..." % _serv_addr_str)
+                continue
             
             # Try each combination up to max_tries times:
             for _count in range(self.max_tries):

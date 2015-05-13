@@ -50,6 +50,8 @@ decimal point.
 
 Increased precision of barometer posts to WOW from 1 to 3 decimal points.
 
+A bad CWOP server address no longer crashes the CWOP thread.
+
 The "alarm" example now includes a try block to catch a NameError exception
 should the alarm expression include a variable not in the archive record.
 
