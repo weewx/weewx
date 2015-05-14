@@ -4076,7 +4076,7 @@ port = /dev/cuaU0</pre>
 	very nice guide</a> on how to install <span class='code'>
 	weewx</span> on Apple's Mavericks operating sytem.</p>
 
-    <h3>Funky symbols in plots</h3>
+    <h3 id="funky_symbols">Funky symbols in plots</h3>
     <p>If your plots have strange looking symbols for units, such as
       degrees Fahrenheit (&deg;F), that look something like this:</p>
       <img src='images/funky_degree.png'/>
@@ -4094,15 +4094,45 @@ port = /dev/cuaU0</pre>
       in this case) actually exists. If it does not, on Debian
       operating systems (such as Ubuntu), you may be able to install
       the necessary fonts:</p>
-    <pre class="tty">sudo apt-get install ttf-freefont
+    <pre class="tty">sudo apt-get install fonts-freefont-ttf
 sudo fc-cache -f -v</pre>
-    <p>The first command installs the "Truetype" fonts, the second rebuilds
+    <p>(On older systems, the package <span class="code">fonts-freefont-ttf</span>
+    may be called <span class="code">ttf-freefont</span>).
+    The first command installs the "Truetype" fonts, the second rebuilds
     the font cache. If your system does not have <span class="code">fc-cache</span>
     command, then install it from the <span class="code">fontconfig</span> package:</p>
     <pre class="tty">sudo apt-get install fontconfig</pre>
     <p>If none of this works, or if you are on a different operating
       system, then you will have to change the option <span class="code">unit_label_font_path</span>
       to point to something on your system which does support UTF-8 characters.</p>
+      
+    <h3><span class="code">UnicodeEncodeError</span></h3>
+	<p>This problem is closely related to the <a href="#funky_symbols">"Funky symbols"</a>
+	problem above. In this case, you may see errors in your log that look like:</p>
+	<pre class="tty">May 14 13:35:23 web weewx[5633]: cheetahgenerator: Generated 14 files for report StandardReport in 1.27 seconds
+May 14 13:35:23 web weewx[5633]: reportengine: Caught unrecoverable exception in generator weewx.imagegenerator.ImageGenerator
+May 14 13:35:23 web weewx[5633]:         ****  'ascii' codec can't encode character u'\xe8' in position 5: ordinal not in range(128)
+May 14 13:35:23 web weewx[5633]:         ****  Traceback (most recent call last):
+May 14 13:35:23 web weewx[5633]:         ****    File "/usr/share/weewx/weewx/reportengine.py", line 139, in run
+May 14 13:35:23 web weewx[5633]:         ****      obj.start()
+May 14 13:35:23 web weewx[5633]:         ****    File "/usr/share/weewx/weewx/reportengine.py", line 170, in start
+May 14 13:35:23 web weewx[5633]:         ****      self.run()
+May 14 13:35:23 web weewx[5633]:         ****    File "/usr/share/weewx/weewx/imagegenerator.py", line 36, in run
+May 14 13:35:23 web weewx[5633]:         ****      self.genImages(self.gen_ts)
+May 14 13:35:23 web weewx[5633]:         ****    File "/usr/share/weewx/weewx/imagegenerator.py", line 220, in genImages
+May 14 13:35:23 web weewx[5633]:         ****      image = plot.render()
+May 14 13:35:23 web weewx[5633]:         ****    File "/usr/share/weewx/weeplot/genplot.py", line 175, in render
+May 14 13:35:23 web weewx[5633]:         ****      self._renderTopBand(draw)
+May 14 13:35:23 web weewx[5633]:         ****    File "/usr/share/weewx/weeplot/genplot.py", line 390, in _renderTopBand
+May 14 13:35:23 web weewx[5633]:         ****      top_label_size = draw.textsize(top_label, font=top_label_font)
+May 14 13:35:23 web weewx[5633]:         ****    File "/usr/lib/python2.7/dist-packages/PIL/ImageDraw.py", line 278, in textsize
+May 14 13:35:23 web weewx[5633]:         ****      return font.getsize(text)
+May 14 13:35:23 web weewx[5633]:         <span class="highlight">****  UnicodeEncodeError: 'ascii' codec can't encode character u'\xe8' in position 5: ordinal not in range(128)</span>
+May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
+
+	<p>This is frequently caused by the necessary Truetype fonts not being installed on
+	your computer and, instead, a default font is being substituted, which only knows
+	how to plot ASCII characters. The cure is as before: install the font.</p>
 
     <h1 id="architecture">Architectural Notes</h1>
     <p>This section is not required to get started, but it should help you
