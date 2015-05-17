@@ -299,7 +299,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.16'
+DRIVER_VERSION = '0.17'
 DEBUG_RAW = 0
 
 # USB constants for HID
@@ -555,7 +555,7 @@ class Station(object):
         if self.handle is not None:
             try:
                 self.handle.releaseInterface()
-            except usb.USBError, e:
+            except (ValueError, usb.USBError), e:
                 logerr("release interface failed: %s" % e)
             self.handle = None
 
