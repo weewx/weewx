@@ -1,17 +1,10 @@
 TODO: items for the next release; complete list is at github
 -------------------------------------------------------------------------------
 
-Some inconsistencies on the "name" of a driver. In the User's Guide, it 
-tells you to set station_type to what is really the stanza name ---
-something like FineOffsetUSB. However, the utility wee_config requires
-you to specify the actual driver location, weewx.drivers.fousb.
+- test deb upgrades
+- test wee_extension on deb system
+- test rpm upgrades
+- test wee_extension on rpm system
+- part of the ftp section gets duplicated after wee_config.  why?
+- look for CR or LF (not just CRLF) in ws1 driver
 
-Similar problem with extension names.
-
-test deb upgrades
-
-test wee_extension on deb system
-
-test rpm upgrades
-
-test wee_extension on rpm system
