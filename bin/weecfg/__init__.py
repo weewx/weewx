@@ -22,12 +22,15 @@ from weewx.engine import all_service_groups
 minor_comment_block = [""]
 major_comment_block = ["", "##############################################################################", ""]
 
+#==============================================================================
+#                  Section tuples
 # Each ConfigObj section is recursively described by a "section tuple." This is
 # a 3-way tuple with elements:
 #
-# 0: The name of the section
-# 1: A list of any subsection tuples
-# 2: A list of any scalar names.
+#   0: The name of the section;
+#   1: A list of any subsection tuples;
+#   2: A list of any scalar names.
+
 canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'altitude', 'station_type', 'rain_year_start', 'week_start']), 
                         ('AcuRite', [], []),
                         ('CC3000', [], []),
@@ -58,6 +61,17 @@ canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'a
                         ('Databases', [('archive_sqlite', [], ['root', 'database_name', 'driver']), ('archive_mysql', [], ['host', 'user', 'password', 'database_name', 'driver'])], []), 
                         ('Engine', [('Services', [], ['prep_services', 'data_services', 'process_services', 'archive_services', 'restful_services', 'report_services'])], [])], 
                    ['debug', 'WEEWX_ROOT', 'socket_timeout', 'version'])
+
+def get_section_tuple(c_dict, section_name=''):
+    """ The above "canonical" ordering can be  generated from a config file
+    by using this function:
+    c = configobj.ConfigObj('weewx.conf')
+    print get_section_tuple(c)"""
+
+    subsections = [get_section_tuple(c_dict[ss], ss) for ss in c_dict.sections]
+    section_tuple = (section_name, subsections, c_dict.scalars)
+    return section_tuple
+#==============================================================================
 
 us_group = {'group_altitude': 'foot',
             'group_degree_day': 'degree_F_day',
