@@ -641,6 +641,77 @@ def reorder_sections(config_dict, src, dst, after=False):
     config_dict.sections = config_dict.sections[:dst_idx + bump] + [src] + \
                            config_dict.sections[dst_idx + bump:]
 
+# Each ConfigObj section is recursively described by a "section tuple." This is
+# a 3-way tuple with elements:
+#
+# 0: The name of the section
+# 1: A list of section tuples, describing any subsections of the section
+# 2: A list of any scalar names.
+# 
+
+canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'altitude', 'station_type', 'rain_year_start', 'week_start']), 
+                        ('AcuRite', [], []),
+                        ('CC3000', [], []),
+                        ('FineOffsetUSB', [], []),
+                        ('Simulator', [], []),
+                        ('TE923', [], []),
+                        ('Ultimeter', [], []),
+                        ('Vantage', [], []),
+                        ('WMR100', [], []),
+                        ('WMR200', [], []),
+                        ('WMR9x8', [], []),
+                        ('WS1', [], []),
+                        ('WS23xx', [], []),
+                        ('WS28xx', [], []),
+                        ('StdRESTful', [('StationRegistry', [], ['register_this_station']), 
+                                        ('AWEKAS', [], []), ('CWOP', [], []), 
+                                        ('PWSweather', [], []), ('WOW', [], []), 
+                                        ('Wunderground', [], ['station', 'password', 'rapidfire'])], []), 
+                        ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 'group_rain', 'group_rainrate', 'group_temperature', 'group_degree_day', 'group_speed'])], [])], ['skin']), 
+                                       ('FTP', [], ['skin', 'secure_ftp', 'port', 'passive']), 
+                                       ('RSYNC', [], ['skin', 'delete'])], 
+                         ['SKIN_ROOT', 'HTML_ROOT', 'data_binding']), 
+                        ('StdConvert', [], ['target_unit']), ('StdCalibrate', [('Corrections', [], [])], []), 
+                        ('StdQC', [('MinMax', [], ['barometer', 'outTemp', 'inTemp', 'outHumidity', 'inHumidity', 'windSpeed'])], []), 
+                        ('StdWXCalculate', [], ['pressure', 'barometer', 'altimeter', 'windchill', 'heatindex', 'dewpoint', 'inDewpoint', 'rainRate']), 
+                        ('StdTimeSynch', [], ['clock_check', 'max_drift']), ('StdArchive', [], ['archive_interval', 'archive_delay', 'record_generation', 'loop_hilo', 'data_binding']), 
+                        ('DataBindings', [('wx_binding', [], ['database', 'table_name', 'manager', 'schema'])], []), 
+                        ('Databases', [('archive_sqlite', [], ['root', 'database_name', 'driver']), ('archive_mysql', [], ['host', 'user', 'password', 'database_name', 'driver'])], []), 
+                        ('Engine', [('Services', [], ['prep_services', 'data_services', 'process_services', 'archive_services', 'restful_services', 'report_services'])], [])], 
+                   ['debug', 'WEEWX_ROOT', 'socket_timeout', 'version'])
+
+def reorder_to_ref(config_dict, section_tuple=canonical_order):
+    """Reorder any sections in concordance with a reference ordering."""
+    if not len(section_tuple):
+        return
+    # Get the names of any subsections. Put them in subsection_order
+    subsection_order = [x[0] for x in section_tuple[1]]
+    # Reorder the subsections, then the scalars
+    config_dict.sections = reorder(config_dict.sections, subsection_order)
+    config_dict.scalars  = reorder(config_dict.scalars, section_tuple[2])
+    
+    # Now recursively go through each of my subsections,
+    # allowing them to reorder their contents
+    for ss_tuple in section_tuple[1]:
+        ss_name = ss_tuple[0]
+        if ss_name in config_dict:
+            reorder_to_ref(config_dict[ss_name], ss_tuple)
+    
+def reorder(name_list, ref):
+    """Reorder the names in name_list, according to a reference list."""
+    result = []
+    # Use the ordering in ref, to reassemble the name list:
+    for name in ref:
+        if name in name_list:
+            result.append(name)
+    # For any that were not in the reference list and are left over, tack them on to the end:
+    for name in name_list:
+        if name not in ref:
+            result.append(name)
+    # Make sure I have the same number I started with
+    assert(len(name_list)==len(result))
+    return result
+    
 def conditional_merge(a_dict, b_dict):
     """Merge fields from b_dict into a_dict, but only if they do not yet
     exist in a_dict"""
@@ -829,7 +900,7 @@ def prompt_for_driver(dflt_driver=None):
     dflt_idx = None
     print "Installed drivers include:"
     for i, d in enumerate(keys):
-        print " %2d) %-15s (%s)" % (i, infos[d].get('name', '?'), d)
+        print " %2d) %-15s (%s)" % (i, infos[d].get('driver_name', '?'), d)
         if dflt_driver == d:
             dflt_idx = i
     msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
