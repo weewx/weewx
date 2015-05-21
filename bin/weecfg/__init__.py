@@ -22,6 +22,57 @@ from weewx.engine import all_service_groups
 minor_comment_block = [""]
 major_comment_block = ["", "##############################################################################", ""]
 
+#==============================================================================
+#                  Section tuples
+# Each ConfigObj section is recursively described by a "section tuple." This is
+# a 3-way tuple with elements:
+#
+#   0: The name of the section;
+#   1: A list of any subsection tuples;
+#   2: A list of any scalar names.
+
+canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'altitude', 'station_type', 'rain_year_start', 'week_start']), 
+                        ('AcuRite', [], []),
+                        ('CC3000', [], []),
+                        ('FineOffsetUSB', [], []),
+                        ('Simulator', [], []),
+                        ('TE923', [], []),
+                        ('Ultimeter', [], []),
+                        ('Vantage', [], []),
+                        ('WMR100', [], []),
+                        ('WMR200', [], []),
+                        ('WMR9x8', [], []),
+                        ('WS1', [], []),
+                        ('WS23xx', [], []),
+                        ('WS28xx', [], []),
+                        ('StdRESTful', [('StationRegistry', [], ['register_this_station']), 
+                                        ('AWEKAS', [], []), ('CWOP', [], []), 
+                                        ('PWSweather', [], []), ('WOW', [], []), 
+                                        ('Wunderground', [], ['station', 'password', 'rapidfire'])], []), 
+                        ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 'group_rain', 'group_rainrate', 'group_temperature', 'group_degree_day', 'group_speed'])], [])], ['skin']), 
+                                       ('FTP', [], ['skin', 'secure_ftp', 'port', 'passive']), 
+                                       ('RSYNC', [], ['skin', 'delete'])], 
+                         ['SKIN_ROOT', 'HTML_ROOT', 'data_binding']), 
+                        ('StdConvert', [], ['target_unit']), ('StdCalibrate', [('Corrections', [], [])], []), 
+                        ('StdQC', [('MinMax', [], ['barometer', 'outTemp', 'inTemp', 'outHumidity', 'inHumidity', 'windSpeed'])], []), 
+                        ('StdWXCalculate', [], ['pressure', 'barometer', 'altimeter', 'windchill', 'heatindex', 'dewpoint', 'inDewpoint', 'rainRate']), 
+                        ('StdTimeSynch', [], ['clock_check', 'max_drift']), ('StdArchive', [], ['archive_interval', 'archive_delay', 'record_generation', 'loop_hilo', 'data_binding']), 
+                        ('DataBindings', [('wx_binding', [], ['database', 'table_name', 'manager', 'schema'])], []), 
+                        ('Databases', [('archive_sqlite', [], ['root', 'database_name', 'driver']), ('archive_mysql', [], ['host', 'user', 'password', 'database_name', 'driver'])], []), 
+                        ('Engine', [('Services', [], ['prep_services', 'data_services', 'process_services', 'archive_services', 'restful_services', 'report_services'])], [])], 
+                   ['debug', 'WEEWX_ROOT', 'socket_timeout', 'version'])
+
+def get_section_tuple(c_dict, section_name=''):
+    """ The above "canonical" ordering can be  generated from a config file
+    by using this function:
+    c = configobj.ConfigObj('weewx.conf')
+    print get_section_tuple(c)"""
+
+    subsections = [get_section_tuple(c_dict[ss], ss) for ss in c_dict.sections]
+    section_tuple = (section_name, subsections, c_dict.scalars)
+    return section_tuple
+#==============================================================================
+
 us_group = {'group_altitude': 'foot',
             'group_degree_day': 'degree_F_day',
             'group_pressure': 'inHg',
@@ -602,27 +653,8 @@ def get_unit_info(config_dict):
 #                Utilities that manipulate ConfigObj objects
 #==============================================================================
 
-# def prettify(config, src):
-#     """clean up the config file:
-# 
-#     - put any global stanzas just before StdRESTful
-#     - prepend any global stanzas with a line of comment characters
-#     - put any StdReport stanzas before ftp and rsync
-#     - prepend any StdReport stanzas with a single empty line
-#     - prepend any database or databinding stanzas with a single empty line
-#     - prepend any restful stanzas with a single empty line
-#     """
-#     for k in src:
-#         if k in ['StdRESTful', 'DataBindings', 'Databases', 'StdReport']:
-#             for j in src[k]:
-#                 if k == 'StdReport':
-#                     reorder_sections(config[k], j, 'RSYNC')
-#                     reorder_sections(config[k], j, 'FTP')
-#                 config[k].comments[j] = minor_comment_block
-#         else:
-#             reorder_sections(config, k, 'StdRESTful')
-#             config.comments[k] = major_comment_block
-
+# The following utility is probably not necessary any longer. reorder_to_ref() should
+# be used instead:
 def reorder_sections(config_dict, src, dst, after=False):
     """Move the section with key src to just before (after=False) or after
     (after=True) the section with key dst. """
@@ -641,6 +673,42 @@ def reorder_sections(config_dict, src, dst, after=False):
     config_dict.sections = config_dict.sections[:dst_idx + bump] + [src] + \
                            config_dict.sections[dst_idx + bump:]
 
+def reorder_to_ref(config_dict, section_tuple=canonical_order):
+    """Reorder any sections in concordance with a reference ordering.
+    
+    See the definition for canonical_ordering for the details of the tuple
+    used to describe a section.
+    """
+    if not len(section_tuple):
+        return
+    # Get the names of any subsections in the order they should be in:
+    subsection_order = [x[0] for x in section_tuple[1]]
+    # Reorder the subsections, then the scalars
+    config_dict.sections = reorder(config_dict.sections, subsection_order)
+    config_dict.scalars  = reorder(config_dict.scalars, section_tuple[2])
+    
+    # Now recursively go through each of my subsections,
+    # allowing them to reorder their contents
+    for ss_tuple in section_tuple[1]:
+        ss_name = ss_tuple[0]
+        if ss_name in config_dict:
+            reorder_to_ref(config_dict[ss_name], ss_tuple)
+    
+def reorder(name_list, ref_list):
+    """Reorder the names in name_list, according to a reference list."""
+    result = []
+    # Use the ordering in ref_list, to reassemble the name list:
+    for name in ref_list:
+        if name in name_list:
+            result.append(name)
+    # For any that were not in the reference list and are left over, tack them on to the end:
+    for name in name_list:
+        if name not in ref_list:
+            result.append(name)
+    # Make sure I have the same number I started with
+    assert(len(name_list)==len(result))
+    return result
+    
 def conditional_merge(a_dict, b_dict):
     """Merge fields from b_dict into a_dict, but only if they do not yet
     exist in a_dict"""
@@ -829,7 +897,7 @@ def prompt_for_driver(dflt_driver=None):
     dflt_idx = None
     print "Installed drivers include:"
     for i, d in enumerate(keys):
-        print " %2d) %-15s (%s)" % (i, infos[d].get('name', '?'), d)
+        print " %2d) %-15s (%s)" % (i, infos[d].get('driver_name', '?'), d)
         if dflt_driver == d:
             dflt_idx = i
     msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
