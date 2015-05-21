@@ -131,6 +131,9 @@ class Station(object):
             self.serial_port.close()
             self.serial_port = None
 
+    # FIXME: use either CR or LF as line terminator.  apparently some ws1
+    # hardware occasionally ends a line with only CR instead of the standard
+    # CR-LF, resulting in a line that is too long.
     def get_readings(self):
         buf = self.serial_port.readline()
         if DEBUG_READ:
@@ -167,10 +170,9 @@ class Station(object):
 
         http://www.peetbros.com/shop/custom.aspx?recid=29
 
-        Each line has 51 characters - 2 header bytes, 48 data bytes, and a
-        carriage return:
+        Each line has 50 characters - 2 header bytes and 48 data bytes:
 
-        !!000000BE02EB000027700000023A023A0025005800000000\r
+        !!000000BE02EB000027700000023A023A0025005800000000
           SSSSXXDDTTTTLLLLPPPPttttHHHHhhhhddddmmmmRRRRWWWW
 
           SSSS - wind speed (0.1 kph)
@@ -189,7 +191,7 @@ class Station(object):
         """
         # FIXME: peetbros could be 40 bytes or 44 bytes, what about ws1?
         # FIXME: peetbros uses two's complement for temp, what about ws1?
-        # FIXME: is the pressure reading 'pressure' or 'barometer'?
+        # FIXME: for ws1 is the pressure reading 'pressure' or 'barometer'?
         buf = raw[2:]
         data = dict()
         data['windSpeed'] = Station._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
