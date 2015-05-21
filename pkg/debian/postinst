@@ -21,7 +21,7 @@ cfgfile=/etc/weewx/weewx.conf
 setupapp=/usr/share/weewx/wee_config
 
 # insert any configuration variables into the configuration file
-configure_weewxconf() {
+insert_debconf_variables() {
     if [ ! -f $cfgfile ]; then
         return
     fi
@@ -133,7 +133,7 @@ merge_weewxconf() {
                 echo merging previous and distribution into $cfgfile
                 $setupapp --merge --config=$cfgfile-$OLDVER --dist-config=$cfgfile-$NEWVER --output=$cfgfile --no-backup
                 # give drivers a chance to update/warn with no prompts
-                configure_post
+                configure_driver_and_units
             else
                 echo distribution config file is wrong version for merging
             fi
@@ -143,8 +143,8 @@ merge_weewxconf() {
     else
         # this is a new config, so just insert debconf values into it
         echo using debconf configuration values from previous install
-        configure_post
-        configure_weewxconf
+        configure_driver_and_units
+        insert_debconf_variables
     fi
 }
 
@@ -154,7 +154,7 @@ get_conf_version() {
 }
 
 # insert/update the driver and units stanzas
-configure_post() {
+configure_driver_and_units() {
     if [ ! -f $cfgfile ]; then
         return
     fi
@@ -205,8 +205,8 @@ configure)
             merge_weewxconf
         else
             # virgin install so insert debconf values into the config file
-            configure_post
-            configure_weewxconf
+            configure_driver_and_units
+            insert_debconf_variables
         fi
 
         # precompile the bytecode
