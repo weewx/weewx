@@ -1847,7 +1847,8 @@ longitude = -77.0366</pre>
         passcode = xxxxx    # Replace with your passcode (APRS stations only)
         post_interval = 600</pre>
     <p class="config_important">station </p>
-    <p>Set to your CWOP station ID (<em>e.g.</em>, <span class="code">CW1234</span>). Required.
+    <p>Set to your CWOP station ID (<em>e.g.</em>, <span class="code">CW1234</span>)
+      or amateur radio callsign (APRS). Required.
     </p>
     <p class="config_important">passcode </p>
     <p>This is used for APRS (amateur radio) stations only. Set to the
@@ -1858,7 +1859,7 @@ longitude = -77.0366</pre>
       operators discourage very frequent posts. Every 5 minutes (300 seconds)
       is fine, but they prefer every 10 minutes (600 s) or even longer. Setting
       this value to zero will cause every archive record to be posted. 
-      Optional. Default is zero.</p>
+      Optional. Default is 600 seconds.</p>
     <p class="config_option">stale</p>
     <p>How old a record can be before it will not be used for a catch up. CWOP
       does not use the timestamp on a posted record. Instead, they use the wall
