@@ -153,11 +153,13 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
     returns: full path to the file
     """
 
-    if file_path is None:
-        if args and not args[0].startswith('-'):
-            file_path = args[0]
-            # Shift args to the left:
-            del args[0]
+    # Start by searching args (if available)
+    if file_path is None and args:
+        for i in range(len(args)):
+            if not args[i].startswith('-'):
+                file_path = args[i]
+                del args[i]
+                break
 
     if file_path is None:
         for directory in locations:
