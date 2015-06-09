@@ -230,7 +230,8 @@ class SerialWrapper(BaseWrapper):
         import serial
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: Opened up serial port %s, baudrate %d" % (self.port, self.baudrate))
+        syslog.syslog(syslog.LOG_DEBUG, "vantage: Opened up serial port %s; baud %d; timeout %.2f" % 
+                      (self.port, self.baudrate, self.timeout))
 
     def closePort(self):
         try:
