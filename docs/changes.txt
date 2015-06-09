@@ -78,6 +78,10 @@ Changes to the AcuRite driver include:
  - Use only 12 bits for inside temperature in acurite driver when decoding
      for 02032 stations
 
+Changes to the TE923 driver include:
+ - consolidated retries
+ - improved error handling and reporting
+
 
 3.1.0 02/05/15
 
