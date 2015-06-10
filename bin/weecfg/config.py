@@ -44,7 +44,7 @@ class ConfigEngine(object):
 
         # Check for missing --dist-config
         if (options.install or options.upgrade) and not options.dist_config:
-            sys.exit("The commands --install or --upgrade require option --dist-config.")
+            sys.exit("The commands --install and --upgrade require option --dist-config.")
 
         if options.install and not options.output:
             sys.exit("The --install command requires option --output.")
