@@ -30,14 +30,14 @@ insert_debconf_variables() {
     sed -i "/\[Station\]/,/\[.*\]/ s%location =.*%location = \"$RET\"%" $cfgfile
 
     db_get weewx/latlon
-    lat=$(echo $RET | cut -d, -f1)
-    lon=$(echo $RET | cut -d, -f2)
+    lat=$(echo $RET | cut -d, -f1 | sed 's/^ //g' | sed 's/ $//g')
+    lon=$(echo $RET | cut -d, -f2 | sed 's/^ //g' | sed 's/ $//g')
     sed -i "/\[Station\]/,/\[.*\]/ s%latitude[ ]*=.*%latitude = $lat%" $cfgfile
     sed -i "/\[Station\]/,/\[.*\]/ s%longitude[ ]*=.*%longitude = $lon%" $cfgfile
 
     db_get weewx/altitude
-    a=$(echo $RET | cut -d, -f1)
-    u=$(echo $RET | cut -d, -f2)
+    a=$(echo $RET | cut -d, -f1 | sed 's/^ //g' | sed 's/ $//g')
+    u=$(echo $RET | cut -d, -f2 | sed 's/^ //g' | sed 's/ $//g')
     sed -i "/\[Station\]/,/\[.*\]/ s%altitude[ ]*=.*%altitude = $a, $u%" $cfgfile
 
     # FIXME: generalize this so it does not have to be modified every time a
