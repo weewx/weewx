@@ -9,7 +9,7 @@ After=ntp.service
 RequiresMountsFor=/home
 
 [Service]
-ExecStart=/home/weewx/bin/weewxd /home/weewx/weewx.conf
+ExecStart=/home/weewx/bin/weewxd --daemon --pidfile=/var/run/weewx.pid /home/weewx/weewx.conf
 ExecReload=/bin/kill -HUP $MAINPID
 Type=simple
 PIDFile=/var/run/weewx.pid
