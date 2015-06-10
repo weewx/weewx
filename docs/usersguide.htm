@@ -1087,26 +1087,22 @@ Version: 3.1.0
     </p>
     <pre class="tty">wee_config --help</pre>
     <p>This results in:</p>
-		<pre class="tty">
-Usage: wee_config --help
+    <pre class="tty">Usage: wee_config --help
        wee_config --version
        wee_config --list-drivers
        wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
-           [--driver=DRIVER]
+           [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
-           [--location="Home Sweet Home"] [--units=(us|metric)]
+           [--location="Home Sweet Home"]
            [--no-prompt]
-       wee_config --update CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG
-           [--output=OUT_CONFIG] [--no-prompt]
-       wee_config --merge  CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG 
-           --output=OUT_CONFIG
-       wee_config --modify CONFIG_FILE|--config=CONFIG_FILE
-           [--driver=DRIVER]
+       wee_config --upgrade CONFIG_FILE|--config=CONFIG_FILE
+           --dist-config=DIST_CONFIG
+           [--output=OUT_CONFIG] [--no-prompt] [--warn-on-error]
+       wee_config --reconfigure CONFIG_FILE|--config=CONFIG_FILE
+           [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
-           [--location="Home Sweet Home"] [--units=(us|metric)]
+           [--location="Home Sweet Home"]
            [--output=OUT_CONFIG] [--no-prompt]
-
-Configure a weewx configuration file, nominally weewx.conf.
 
 Commands:
 
@@ -1114,33 +1110,34 @@ Commands:
 --version      Show the weewx version then exit.
 --list-drivers List the available weewx device drivers, then exit.
 --install      Install a new configuration file starting with the contents of
-               DIST_CONFIG, prompting as necessary, then save to OUT_CONFIG.
---update       Update the contents of configuration file CONFIG_FILE to the
-               installed version of weewx, then merge the result with the
-               contents of configuration file DIST_CONFIG. Write the results
-               to CONFIG_FILE unless an OUT_CONFIG is specified.
---merge        Update the contents of configuration file CONFIG_FILE,
-               then merge the result into configuration file DIST_CONFIG.
-               Write the results to OUT_CONFIG.
---modify       Modify the configuration file, prompting as necessary.
-               Use this to select a driver, specify the units for display,
-               or specify station information such as latitude and longitude.
+               DIST_CONFIG, prompting as necessary. Can take command-line
+               station values, including a driver.
+--upgrade      Update the contents of configuration file CONFIG_FILE to the
+               installer version, then merge the result with the
+               contents of configuration file DIST_CONFIG. 
+--reconfigure  Modify an existing configuration file CONFIG_FILE. Can take command-line
+               station values, including a driver. Use this command to add a driver. 
+
+Command-line "station" values:
+  If given, the value will replace what's in CONFIG_FILE. 
+     --driver      --units
+     --latitude    --longitude
+     --altitude    --location
 
 
 Options:
   -h, --help            show this help message and exit
   --version             Show the weewx version then exit.
   --list-drivers        List the available device drivers.
-  --install             Install a new configuration file, prompting as
-                        necessary.
-  --update              Update an existing configuration file.
-  --merge               Merge an existing configuration file.
-  --modify              Modify an existing configuration file, prompting as
-                        necessary.
+  --install             Install a new configuration file.
+  --upgrade             Update an existing configuration file, then merge with
+                        a DIST_CONFIG.
+  --reconfigure         Reconfigure an existing configuration file.
   --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
   --dist-config=DIST_CONFIG
                         Use new/template configuration file DIST_CONFIG.
-  --output=OUT_CONFIG   Save to configuration file OUT_CONFIG.
+  --output=OUT_CONFIG   Save to configuration file OUT_CONFIG. If not given,
+                        then replace existing configuration file.
   --driver=DRIVER       Use the driver DRIVER. For example,
                         weewx.driver.vantage
   --latitude=yy.y       The station latitude in decimal degrees.
@@ -1150,9 +1147,13 @@ Options:
                         example, '750,foot' or '320,meter'
   --location=LOCATION   A text description of the station. For example,
                         "Santa's workshop, North Pole"
-  --units=(metric|us)   Set display units to 'metric' or 'us'
-  --no-prompt           Do not prompt. Use default or specified values.
-  --no-backup           Do not save a backup of any existing files.
+  --units=(metric|us)   Set display units to 'metric' or 'us'.
+  --no-prompt           Do not prompt. Use default or command-line station
+                        values only.
+  --no-backup           If replacing an existing configuration file, do not
+                        backup first.
+  --warn-on-error       Warn if an update is not possible. Otherwise, die (the
+                        default).
   --debug               Show diagnostic information while running.</pre>
 
     <p>
@@ -1162,7 +1163,7 @@ Options:
       either putting the location directly in the command line:
     </p>
 
-    <pre class="tty">wee_config /home/weewx/weewx.conf </pre>
+    <pre class="tty">wee_config /home/weewx/weewx.conf</pre>
 
     <p>
       or by using option <span class="code">--config</span>:
@@ -1201,12 +1202,13 @@ weewx.drivers.ws23xx      WS23xx          0.22
 weewx.drivers.ws28xx      WS28xx          0.34</pre>
 
     <p>
-      From this list, we can see that the name of the driver is <span
-            class="code">weewx.drivers.vantage</span>. Now run <span
-            class="code">wee_config</span>, with the <span class="code">--modify</span>
+      From this list, we can see that the name of the driver is
+      <span class="code">weewx.drivers.vantage</span>. Now run
+      <span class="code">wee_config</span>, with the
+      <span class="code">--reconfigure</span>
       command, specifying that driver:
     </p>
-    <pre class="tty">wee_config --modify --driver=weewx.drivers.vantage</pre>
+    <pre class="tty">wee_config --reconfigure --driver=weewx.drivers.vantage</pre>
 
     <p>
       The utility will go through your previously selected options, such as
@@ -1217,7 +1219,7 @@ weewx.drivers.ws28xx      WS28xx          0.34</pre>
       to the Vantage driver:
     </p>
     <pre class="tty">$ <span class="cmd">cd /home/weewx</span>
-$ <span class="cmd">./bin/wee_config --modify --driver=weewx.drivers.vantage</span>
+$ <span class="cmd">./bin/wee_config --reconfigure --driver=weewx.drivers.vantage</span>
 Using configuration file /home/weewx/weewx.conf
 Enter a brief description of the station, such as its location.  For example:
 Santa's Workshop, North Pole
@@ -1264,16 +1266,16 @@ Saved configuration to /home/weewx/weewx.conf
       option:
     </p>
 
-    <pre class="tty">wee_config --modify --driver=weewx.drivers.vantage --no-prompt</pre>
+    <pre class="tty">wee_config --reconfigure --driver=weewx.drivers.vantage --no-prompt</pre>
 
     <p>This will accept all the defaults, including your new device
       driver, without asking for any input.</p>
 
     <h2>Other <span class="code">wee_config</span> commands.</h2>
 
-    <p>The other commands offered by <span class="code">wee_config</span>, such as
-      <span class="code">--install</span>, <span class="code">--update</span>,
-      or <span class="code">--merge</span>, are used by the various <span class="code">weewx</span>
+    <p>The other commands offered by <span class="code">wee_config</span>,
+      such as <span class="code">--install</span> and
+      <span class="code">--upgrade</span>, are used by the various <span class="code">weewx</span>
       installers and are not generally intended for the end user.</p>
 
     <h1 id="weewxconf">The configuration file <span class="code">weewx.conf</span></h1>
