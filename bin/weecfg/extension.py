@@ -169,13 +169,6 @@ class ExtensionEngine(object):
             weecfg.prepend_path(cfg, 'HTML_ROOT',
                                 self.config_dict['StdReport']['HTML_ROOT'])
 
-            # if any variable begins with SKIN_DIR, replace with the effective
-            # skin directory (absolute or relative) as defined in the existing
-            # configuration.
-            skin_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                    self.config_dict['StdReport']['SKIN_ROOT'])
-            weecfg.replace_string(cfg, 'INST_SKIN_ROOT', skin_dir)
-
             # massage the database dictionaries for this extension
             # FIXME: use parameterized root if possible
             try:
