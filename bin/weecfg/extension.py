@@ -84,8 +84,7 @@ class ExtensionEngine(object):
             self.logger.log("No extensions installed", level=0)
             
     def install_extension(self, extension_path):
-        """Install the extension from extension_path, which may be a file or
-        directory"""
+        """Install the extension from the file or directory extension_path"""
         self.logger.log("Request to install '%s'" % extension_path)
         if os.path.isfile(extension_path):
             # It's a file, hopefully a tarball. Extract it, then install
@@ -118,7 +117,8 @@ class ExtensionEngine(object):
         # containing that dictionary.        
         installer_path, installer = weecfg.get_extension_installer(extension_dir)
         extension_name = installer.get('name', 'Unknown')
-        self.logger.log("Found extension with name '%s'" % extension_name, level=2)
+        self.logger.log("Found extension with name '%s'" % extension_name,
+                        level=2)
 
         # Go through all the files used by the extension. A "source tuple" is
         # something like (bin, [user/myext.py, user/otherext.py]). The first
@@ -141,7 +141,9 @@ class ExtensionEngine(object):
                         source_path = os.path.join(extension_dir, install_file)
                         dst_file = ExtensionEngine._strip_leading_dir(install_file)
                         destination_path = os.path.abspath(os.path.join(self.root_dict[root_type], dst_file))
-                        self.logger.log("Copying from '%s' to '%s'" % (source_path, destination_path), level=3)
+                        self.logger.log("Copying from '%s' to '%s'" %
+                                        (source_path, destination_path),
+                                        level=3)
                         if not self.dry_run:
                             try:
                                 os.makedirs(os.path.dirname(destination_path))
@@ -158,29 +160,64 @@ class ExtensionEngine(object):
         new_top_level = []
         # Look for options that have to be injected into the configuration file
         if 'config' in installer:
-            self.logger.log("Adding new sections to configuration file", level=2)
-            # Remember any new top-level sections (so we can inject a major
-            # comment block):
-            for top_level in installer['config']:
+            self.logger.log("Adding sections to configuration file", level=2)
+            # make a copy so we can modify the sections to fit the existing
+            # configuration
+            cfg = dict(installer['config'])
+
+            # prepend any html paths with HTML_ROOT from existing configuration
+            weecfg.prepend_path(cfg, 'HTML_ROOT',
+                                self.config_dict['StdReport']['HTML_ROOT'])
+
+            # if any variable begins with SKIN_DIR, replace with the effective
+            # skin directory (absolute or relative) as defined in the existing
+            # configuration.
+            skin_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                    self.config_dict['StdReport']['SKIN_ROOT'])
+            weecfg.replace_string(cfg, 'INST_SKIN_ROOT', skin_dir)
+
+            # massage the database dictionaries for this extension
+            # FIXME: use parameterized root if possible
+            try:
+                sqlitecfg = self.config_dict['Databases'].get('archive_sqlite',
+                                                              None)
+                mysqlcfg = self.config_dict['Databases'].get('archive_mysql',
+                                                             None)
+                for i in cfg['Databases']:
+                    db = cfg['Databases'][i]
+                    if db['driver'] == 'weedb.sqlite' and sqlitecfg:
+                        db['database_name'] = os.path.join(os.path.dirname(sqlitecfg['database_name']), db['database_name'])
+                        db['root'] = sqlitecfg['root']
+                    elif db['driver'] == 'weedb.mysql' and mysqlcfg:
+                        db['host'] = mysqlcfg['host']
+                        db['user'] = mysqlcfg['user']
+                        db['password'] = mysqlcfg['password']
+            except:
+                pass
+
+            # Remember any new top-level sections so we can inject a major
+            # comment block
+            for top_level in cfg:
                 if top_level not in self.config_dict:
                     new_top_level.append(top_level)
                     self.logger.log("Adding section %s" % top_level, level=3)
 
             if not self.dry_run:
                 # Inject any new config data into the configuration file
-                weecfg.conditional_merge(self.config_dict, installer['config'])
+                weecfg.conditional_merge(self.config_dict, cfg)
                 
-                # Now include the major comment block for any new top level
-                # sections
+                # Include the major comment block for any new top level sections
                 for new_section in new_top_level:
-                    self.config_dict.comments[new_section] = weecfg.major_comment_block + \
-                                ["# Options for extension '%s'" % extension_name]
+                    self.config_dict.comments[new_section] = \
+                        weecfg.major_comment_block + \
+                        ["# Options for extension '%s'" % extension_name]
                     
                 save_config = True
-            self.logger.log("Merged extension settings into configuration file", level=3)
+            self.logger.log("Merged extension settings into configuration file",
+                            level=3)
 
         # Go through all the possible service groups and see if the extension
-        # provides a new one
+        # includes any services that belong in any of them.
         self.logger.log("Adding services to service lists", level=2)
         for service_group in all_service_groups:
             if service_group in installer:
@@ -196,11 +233,13 @@ class ExtensionEngine(object):
                             svc_list.append(svc)
                             self.config_dict['Engine']['Services'][service_group] = svc_list
                             save_config = True
-                        self.logger.log("Added new service %s to %s" %(svc, service_group), level=3)
+                        self.logger.log("Added new service %s to %s" %
+                                        (svc, service_group), level=3)
 
         # Save the extension's install.py file in the extension's installer
         # directory for later use enumerating and uninstalling
-        extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'], extension_name)
+        extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'],
+                                               extension_name)
         self.logger.log("Saving installer file to %s" % extension_installer_dir)
         if not self.dry_run:
             try:
@@ -210,8 +249,10 @@ class ExtensionEngine(object):
             shutil.copy2(installer_path, extension_installer_dir)
                                 
         if save_config:
-            backup_path = weecfg.save_with_backup(self.config_dict, self.config_path)
-            self.logger.log("Saved configuration dictionary. Backup copy at %s" % backup_path)
+            backup_path = weecfg.save_with_backup(self.config_dict,
+                                                  self.config_path)
+            self.logger.log("Saved configuration dictionary. Backup copy at %s"
+                            % backup_path)
             
     def uninstall_extension(self, extension_name):
         """Uninstall the extension with name extension_name"""
@@ -219,7 +260,8 @@ class ExtensionEngine(object):
         self.logger.log("Request to remove extension '%s'" % extension_name)
         
         # Find the subdirectory containing this extension's installer
-        extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'], extension_name)
+        extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'],
+                                               extension_name)
         try:
             # Retrieve it
             _, installer = weecfg.get_extension_installer(extension_installer_dir)

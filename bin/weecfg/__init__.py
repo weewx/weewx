@@ -746,20 +746,20 @@ def remove_and_prune(a_dict, b_dict):
         elif k in a_dict:
             a_dict.pop(k)
 
-# def prepend_path(a_dict, label, value):
-#     """Prepend the value to every instance of the label in dict a_dict"""
-#     for k in a_dict:
-#         if isinstance(a_dict[k], dict):
-#             prepend_path(a_dict[k], label, value)
-#         elif k == label:
-#             a_dict[k] = os.path.join(value, a_dict[k])
+def prepend_path(a_dict, label, value):
+    """Prepend the value to every instance of the label in dict a_dict"""
+    for k in a_dict:
+        if isinstance(a_dict[k], dict):
+            prepend_path(a_dict[k], label, value)
+        elif k == label:
+            a_dict[k] = os.path.join(value, a_dict[k])
 
-# def replace_string(a_dict, label, value):
-#     for k in a_dict:
-#         if isinstance(a_dict[k], dict):
-#             replace_string(a_dict[k], label, value)
-#         else:
-#             a_dict[k] = a_dict[k].replace(label, value)
+def replace_string(a_dict, label, value):
+    for k in a_dict:
+        if isinstance(a_dict[k], dict):
+            replace_string(a_dict[k], label, value)
+        else:
+            a_dict[k] = a_dict[k].replace(label, value)
 
 #==============================================================================
 #                Utilities that work on drivers
