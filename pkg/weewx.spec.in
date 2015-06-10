@@ -115,7 +115,7 @@ python -m compileall %{buildroot}%{dst_bin_dir}
 python -m compileall %{dst_bin_dir}
 if [ "$1" = "1" ]; then
   # this is a new installation
-  /usr/share/weewx/wee_config --modify --config=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --no-prompt --no-backup
+  /usr/share/weewx/wee_config --install --dist-config=/etc/weewx/weewx.conf --output=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --no-prompt --no-backup
   chkconfig weewx on
   %{initdir}/weewx start
 elif [ "$1" = "2" ]; then
@@ -129,7 +129,7 @@ elif [ "$1" = "2" ]; then
     echo saving distribution config file as %{cfg_file}-$NEWVER
     cp -p %{cfg_file}.dist %{cfg_file}-$NEWVER
     echo merging previous and distribution into %{cfg_file}
-    /usr/share/weewx/wee_config --merge --config %{cfg_file}-$OLDVER --dist-config %{cfg_file}-$NEWVER --output %{cfg_file} --no-backup
+    /usr/share/weewx/wee_config --upgrade --config=%{cfg_file}-$OLDVER --dist-config=%{cfg_file}-$NEWVER --output=%{cfg_file} --no-prompt --no-backup
   fi
   # do a full restart not just a HUP
   %{initdir}/weewx stop
