@@ -898,13 +898,13 @@ def latlon_string(ll, hemi, which, format_list=None):
         format_list = ["%02d", "%03d", "%05.2f"]
     return ((format_list[0] if which == 'lat' else format_list[1]) % (deg,), format_list[2] % (minutes,), hemi[0] if ll >= 0 else hemi[1])
 
-def log_traceback(prefix=''):
+def log_traceback(prefix='', loglevel=syslog.LOG_INFO):
     """Log the stack traceback into syslog."""
     sfd = StringIO.StringIO()
     traceback.print_exc(file=sfd)
     sfd.seek(0)
     for line in sfd:
-        syslog.syslog(syslog.LOG_INFO, prefix + line)
+        syslog.syslog(loglevel, prefix + line)
     del sfd
     
 def _get_object(module_class):

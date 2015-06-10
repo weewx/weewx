@@ -873,6 +873,7 @@ def main(options, args, EngineClass=StdEngine) :
         except OSError, e:
             # Caught an OS error. Log it, wait 10 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "engine: Caught OSError: %s" % e)
+            weeutil.weeutil.log_traceback("    ****  ", syslog.LOG_DEBUG)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 10 seconds then retrying...")
             time.sleep(10)
             syslog.syslog(syslog.LOG_NOTICE,"engine: retrying...")
@@ -896,7 +897,7 @@ def main(options, args, EngineClass=StdEngine) :
             syslog.syslog(syslog.LOG_CRIT, "engine: Caught unrecoverable exception in engine:")
             syslog.syslog(syslog.LOG_CRIT, "    ****  %s" % ex)
             # Include a stack traceback in the log:
-            weeutil.weeutil.log_traceback("    ****  ")
+            weeutil.weeutil.log_traceback("    ****  ", syslog.LOG_CRIT)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
             # Reraise the exception (this should cause the program to exit)
             raise
