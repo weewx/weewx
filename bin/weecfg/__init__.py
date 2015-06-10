@@ -990,12 +990,17 @@ def extract_roots(config_path, config_dict, bin_root):
     
     root_dict = {'WEEWX_ROOT' : config_dict['WEEWX_ROOT'],
                  'CONFIG_ROOT' : os.path.dirname(config_path)}
-    # If bin_root has not been defined, then set it to the location of this file:
-    root_dict['BIN_ROOT'] = bin_root if bin_root else os.path.dirname(__file__)
+    # If bin_root has not been defined, then figure out where it is using
+    # the location of this file:
+    if bin_root:
+        root_dict['BIN_ROOT'] = bin_root
+    else:
+        root_dict['BIN_ROOT'] = os.path.abspath(os.path.join(
+                os.path.dirname(__file__), '..'))
     # The user subdirectory:
     root_dict['USER_ROOT'] = os.path.join(root_dict['BIN_ROOT'], 'user')
-    # The extensions directory can be found off of USER_ROOT:
-    root_dict['EXT_ROOT'] = os.path.join(root_dict['BIN_ROOT'], 'user', 'installer')
+    # The extensions directory is in the user directory:
+    root_dict['EXT_ROOT'] = os.path.join(root_dict['USER_ROOT'], 'installer')
     # Add SKIN_ROOT if it can be found:
     try:
         root_dict['SKIN_ROOT'] = os.path.abspath(os.path.join(

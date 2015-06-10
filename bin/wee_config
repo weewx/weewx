@@ -32,23 +32,21 @@ usage = """Usage: wee_config --help
 
 Commands:
 
---help         Show this message then exit.
---version      Show the weewx version then exit.
---list-drivers List the available weewx device drivers, then exit.
---install      Install a new configuration file starting with the contents of
-               DIST_CONFIG, prompting as necessary.
---upgrade      Update the contents of configuration file CONFIG_FILE to the
-               installer version, then merge the result with the contents of
-               configuration file DIST_CONFIG. 
---reconfigure  Modify an existing configuration file CONFIG_FILE with any
-               specified station parameters.  Use this command with the
-               driver option to change the device driver.
+--list-drivers  List the available weewx device drivers, then exit.
+--install       Install a new configuration file starting with the contents of
+                DIST_CONFIG, prompting for station parameters.
+--upgrade       Update the contents of configuration file CONFIG_FILE to the
+                installed version, then merge the result with the contents of
+                configuration file DIST_CONFIG. 
+--reconfigure   Modify an existing configuration file CONFIG_FILE with any
+                specified station parameters.  Use this command with the
+                driver option to change the device driver.
 
 Station parameters:
-  If specified, the value will replace what is in CONFIG_FILE. 
-     --driver      --units
-     --latitude    --longitude
-     --altitude    --location
+
+  --driver      --units
+  --latitude    --longitude
+  --altitude    --location
 """
 
 def main():

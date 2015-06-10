@@ -40,7 +40,7 @@ class ConfigEngine(object):
         if sum(1 if x is True else 0 for x in [options.install,
                                                options.upgrade,
                                                options.reconfigure]) != 1:
-            sys.exit("One, and only one, of --install, --upgrade, or --reconfigure must be specified.")
+            sys.exit("No command specified.")
 
         # Check for missing --dist-config
         if (options.install or options.upgrade) and not options.dist_config:
