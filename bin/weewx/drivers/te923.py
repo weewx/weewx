@@ -130,7 +130,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.13'
+DRIVER_VERSION = '0.14'
 
 def loader(config_dict, engine):
     return TE923Driver(**config_dict[DRIVER_NAME])
