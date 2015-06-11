@@ -63,8 +63,9 @@ It is possible to increase the rate of wireless updates:
 
 Sensors are connected by unshielded phone cables.  RF interference can cause
 random spikes in data, with one symptom being values of 25.5 m/s or 91.8 km/h
-for the wind speed.  To reduce the number of spikes in data, replace with
-shielded cables:
+for the wind speed.  Unfortunately those values are within the sensor limits
+of 0-113 mph (50.52 m/s or 181.9 km/h).  To reduce the number of spikes in
+data, replace with shielded cables:
 
   http://www.lavrsen.dk/sources/weather/windmod.htm
 
@@ -255,7 +256,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.23'
+DRIVER_VERSION = '0.24'
 
 
 def loader(config_dict, _):
@@ -782,7 +783,7 @@ class WS23xx(object):
                 'oh': value.humidity_outdoor,
                 'pa': value.pressure_absolute,
                 'rt': value.rain,
-                'wind': (value.wind_speed, value.wind_direction, 0, 0),
+                'wind': (value.wind_speed/10, value.wind_direction, 0, 0),
                 'rh': None,  # no rain rate in history
                 'dp': None,  # no dewpoint in history
                 'wc': None,  # no windchill in history
