@@ -38,15 +38,15 @@ def guard(fn):
     return guarded_fn
 
 
-def connect(database_name='', root='', driver='', **argv):
+def connect(database_name='', SQL_ROOT='', driver='', **argv):
     """Factory function, to keep things compatible with DBAPI. """
-    return Connection(database_name=database_name, root=root, **argv)
+    return Connection(database_name=database_name, SQL_ROOT=SQL_ROOT, **argv)
 
 
-def create(database_name='', root='', driver='', **argv):
+def create(database_name='', SQL_ROOT='', driver='', **argv):
     """Create the database specified by the db_dict. If it already exists,
     an exception of type DatabaseExists will be thrown."""
-    file_path = os.path.join(root, database_name)
+    file_path = os.path.join(SQL_ROOT, database_name)
     # Check whether the database file exists:
     if os.path.exists(file_path):
         raise weedb.DatabaseExists("Database %s already exists" % (file_path,))
@@ -61,8 +61,8 @@ def create(database_name='', root='', driver='', **argv):
         connection.close()
 
 
-def drop(database_name='', root='', driver='', **argv):
-    file_path = os.path.join(root, database_name)
+def drop(database_name='', SQL_ROOT='', driver='', **argv):
+    file_path = os.path.join(SQL_ROOT, database_name)
     try:
         os.remove(file_path)
     except OSError:
@@ -72,13 +72,13 @@ def drop(database_name='', root='', driver='', **argv):
 class Connection(weedb.Connection):
     """A wrapper around a sqlite3 connection object."""
 
-    def __init__(self, database_name='', root='', pragmas=None, **argv):
+    def __init__(self, database_name='', SQL_ROOT='', pragmas=None, **argv):
         """Initialize an instance of Connection.
 
         Parameters:
         
             database_name: The name of the Sqlite database. This is generally the file name
-            root: The path to the directory holding the database. Joining "root" with
+            SQL_ROOT: The path to the directory holding the database. Joining "SQL_ROOT" with
               "database_name" results in the full path to the sqlite file.
             pragmas: Any pragma statements, in the form of a dictionary.
             timeout: The amount of time, in seconds, to wait for a lock to be released. 
@@ -89,7 +89,7 @@ class Connection(weedb.Connection):
         If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
 
-        self.file_path = os.path.join(root, database_name)
+        self.file_path = os.path.join(SQL_ROOT, database_name)
         if not os.path.exists(self.file_path):
             raise weedb.OperationalError("Attempt to open a non-existent database %s" % self.file_path)
         timeout = to_int(argv.get('timeout', 5))

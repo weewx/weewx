@@ -31,7 +31,8 @@ major_comment_block = ["", "####################################################
 #   1: A list of any subsection tuples;
 #   2: A list of any scalar names.
 
-canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'altitude', 'station_type', 'rain_year_start', 'week_start']), 
+canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'altitude', 
+                                         'station_type', 'rain_year_start', 'week_start']), 
                         ('AcuRite', [], []),
                         ('CC3000', [], []),
                         ('FineOffsetUSB', [], []),
@@ -49,17 +50,24 @@ canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'a
                                         ('AWEKAS', [], []), ('CWOP', [], []), 
                                         ('PWSweather', [], []), ('WOW', [], []), 
                                         ('Wunderground', [], ['station', 'password', 'rapidfire'])], []), 
-                        ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 'group_rain', 'group_rainrate', 'group_temperature', 'group_degree_day', 'group_speed'])], [])], ['skin']), 
+                        ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 
+                                                                                      'group_rain', 'group_rainrate', 'group_temperature', 
+                                                                                      'group_degree_day', 'group_speed'])], [])], ['skin']), 
                                        ('FTP', [], ['skin', 'secure_ftp', 'port', 'passive']), 
                                        ('RSYNC', [], ['skin', 'delete'])], 
                          ['SKIN_ROOT', 'HTML_ROOT', 'data_binding']), 
                         ('StdConvert', [], ['target_unit']), ('StdCalibrate', [('Corrections', [], [])], []), 
                         ('StdQC', [('MinMax', [], ['barometer', 'outTemp', 'inTemp', 'outHumidity', 'inHumidity', 'windSpeed'])], []), 
                         ('StdWXCalculate', [], ['pressure', 'barometer', 'altimeter', 'windchill', 'heatindex', 'dewpoint', 'inDewpoint', 'rainRate']), 
-                        ('StdTimeSynch', [], ['clock_check', 'max_drift']), ('StdArchive', [], ['archive_interval', 'archive_delay', 'record_generation', 'loop_hilo', 'data_binding']), 
+                        ('StdTimeSynch', [], ['clock_check', 'max_drift']), 
+                        ('StdArchive', [], ['archive_interval', 'archive_delay', 'record_generation', 'loop_hilo', 'data_binding']), 
                         ('DataBindings', [('wx_binding', [], ['database', 'table_name', 'manager', 'schema'])], []), 
-                        ('Databases', [('archive_sqlite', [], ['root', 'database_name', 'driver']), ('archive_mysql', [], ['host', 'user', 'password', 'database_name', 'driver'])], []), 
-                        ('Engine', [('Services', [], ['prep_services', 'data_services', 'process_services', 'archive_services', 'restful_services', 'report_services'])], [])], 
+                        ('Databases', [('archive_sqlite', [], ['database_name', 'database_type']), 
+                                       ('archive_mysql',  [], ['database_name', 'database_type'])], []),
+                        ('SQLite', [], ['driver', 'SQL_ROOT']),
+                        ('MySQL', [], ['driver', 'host', 'user', 'password']),
+                        ('Engine', [('Services', [], ['prep_services', 'data_services', 'process_services', 
+                                                      'archive_services', 'restful_services', 'report_services'])], [])], 
                    ['debug', 'WEEWX_ROOT', 'socket_timeout', 'version'])
 
 def get_section_tuple(c_dict, section_name=''):
@@ -357,7 +365,7 @@ def merge_config(config_dict, template_dict):
     config_dict.interpolate = False
 
     # Merge new stuff from the template:
-    conditional_merge(config_dict, template_dict)
+    weeutil.weeutil.conditional_merge(config_dict, template_dict)
 
     # Finally, update the version number:
     config_dict['version'] = template_dict['version']
@@ -711,29 +719,29 @@ def reorder(name_list, ref_list):
     assert(len(name_list)==len(result))
     return result
     
-def conditional_merge(a_dict, b_dict):
-    """Merge fields from b_dict into a_dict, but only if they do not yet
-    exist in a_dict"""
-    # Go through each key in b_dict
-    for k in b_dict:
-        if isinstance(b_dict[k], dict):
-            if not k in a_dict:
-                # It's a new section. Initialize it...
-                a_dict[k] = {}
-                # ... and transfer over the section comments, if available
-                try:
-                    a_dict.comments[k] = b_dict.comments[k]
-                except AttributeError:
-                    pass
-            conditional_merge(a_dict[k], b_dict[k])
-        elif not k in a_dict:
-            # It's a scalar. Transfer over the value...
-            a_dict[k] = b_dict[k]
-            # ... then its comments, if available:
-            try:
-                a_dict.comments[k] = b_dict.comments[k]
-            except AttributeError:
-                pass
+# def conditional_merge(a_dict, b_dict):
+#     """Merge fields from b_dict into a_dict, but only if they do not yet
+#     exist in a_dict"""
+#     # Go through each key in b_dict
+#     for k in b_dict:
+#         if isinstance(b_dict[k], dict):
+#             if not k in a_dict:
+#                 # It's a new section. Initialize it...
+#                 a_dict[k] = {}
+#                 # ... and transfer over the section comments, if available
+#                 try:
+#                     a_dict.comments[k] = b_dict.comments[k]
+#                 except AttributeError:
+#                     pass
+#             conditional_merge(a_dict[k], b_dict[k])
+#         elif not k in a_dict:
+#             # It's a scalar. Transfer over the value...
+#             a_dict[k] = b_dict[k]
+#             # ... then its comments, if available:
+#             try:
+#                 a_dict.comments[k] = b_dict.comments[k]
+#             except AttributeError:
+#                 pass
 
 def remove_and_prune(a_dict, b_dict):
     """Remove fields from a_dict that are present in b_dict"""

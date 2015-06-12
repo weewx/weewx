@@ -17,6 +17,7 @@ import distutils.dir_util
 import configobj
 
 import weecfg.extension
+import weeutil.weeutil
 
 try:
     from mock import patch
@@ -100,7 +101,7 @@ class ConfigTest(unittest.TestCase):
         yio = StringIO.StringIO(y_str)
         x_dict = configobj.ConfigObj(xio)
         y_dict = configobj.ConfigObj(yio)
-        weecfg.conditional_merge(x_dict, y_dict)
+        weeutil.weeutil.conditional_merge(x_dict, y_dict)
         self.assertEqual("{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, 'section_c': {'c': '3'}, "
                          "'section_d': {'d': '4'}, 'section_e': {'c': '15'}}", str(x_dict))
 
