@@ -397,7 +397,7 @@ class ExtensionInstallTest(unittest.TestCase):
         # Get, then check the new config dict:
         test_dict = configobj.ConfigObj(config_path)
         self.assertEqual(test_dict['StdReport']['pmon'],
-                         {'HTML_ROOT': 'pmon', 'skin': 'pmon'})
+                         {'HTML_ROOT': 'public_html/pmon', 'skin': 'pmon'})
         self.assertEqual(test_dict['Databases']['pmon_sqlite'], 
                          {'database_name': 'pmon.sdb',
                           'driver': 'weedb.sqlite'})
