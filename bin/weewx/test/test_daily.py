@@ -155,8 +155,7 @@ class Common(unittest.TestCase):
     def testTags(self):
         """Test common tags."""
         global skin_dict
-        db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
-                                           self.config_dict['Databases'])
+        db_binder = weewx.manager.DBBinder(self.config_dict)
         db_lookup = db_binder.bind_default()
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
         
@@ -246,8 +245,7 @@ class Common(unittest.TestCase):
 
     def test_agg_intervals(self):
         """Test aggregation spans that do not span a day"""
-        db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
-                                           self.config_dict['Databases'])
+        db_binder = weewx.manager.DBBinder(self.config_dict)
         db_lookup = db_binder.bind_default()
 
         # note that this spans the spring DST boundary:
@@ -282,8 +280,7 @@ class Common(unittest.TestCase):
                                      msg="aggregation=%s; %s vs %s" % (aggregation, table_answer, daily_answer))
             
     def test_rainYear(self):
-        db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
-                                           self.config_dict['Databases'])
+        db_binder = weewx.manager.DBBinder(self.config_dict)
         db_lookup = db_binder.bind_default()
 
         stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
@@ -300,8 +297,7 @@ class Common(unittest.TestCase):
 
 
     def test_heatcool(self):
-        db_binder = weewx.manager.DBBinder(self.config_dict['DataBindings'], 
-                                           self.config_dict['Databases'])
+        db_binder = weewx.manager.DBBinder(self.config_dict)
         db_lookup = db_binder.bind_default()
         #Test heating and cooling degree days:
         stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
