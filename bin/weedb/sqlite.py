@@ -46,7 +46,7 @@ def connect(database_name='', SQL_ROOT='', driver='', **argv):
 def create(database_name='', SQL_ROOT='', driver='', **argv):
     """Create the database specified by the db_dict. If it already exists,
     an exception of type DatabaseExists will be thrown."""
-    file_path = os.path.join(SQL_ROOT, database_name)
+    file_path = get_filepath(SQL_ROOT, database_name, **argv)
     # Check whether the database file exists:
     if os.path.exists(file_path):
         raise weedb.DatabaseExists("Database %s already exists" % (file_path,))
@@ -60,9 +60,14 @@ def create(database_name='', SQL_ROOT='', driver='', **argv):
         connection = sqlite3.connect(file_path, timeout=timeout, isolation_level=isolation_level)
         connection.close()
 
-
+def get_filepath(SQL_ROOT, database_name, **argv):
+    # For backwards compatibility, allow the keyword 'root', if 'SQL_ROOT' is
+    # not defined:
+    root_dir = SQL_ROOT or argv.get('root', '')
+    return os.path.join(root_dir, database_name)
+    
 def drop(database_name='', SQL_ROOT='', driver='', **argv):
-    file_path = os.path.join(SQL_ROOT, database_name)
+    file_path = get_filepath(SQL_ROOT, database_name, **argv)
     try:
         os.remove(file_path)
     except OSError:
@@ -89,7 +94,7 @@ class Connection(weedb.Connection):
         If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
 
-        self.file_path = os.path.join(SQL_ROOT, database_name)
+        self.file_path = get_filepath(SQL_ROOT, database_name, **argv)
         if not os.path.exists(self.file_path):
             raise weedb.OperationalError("Attempt to open a non-existent database %s" % self.file_path)
         timeout = to_int(argv.get('timeout', 5))

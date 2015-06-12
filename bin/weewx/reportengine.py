@@ -161,8 +161,7 @@ class ReportGenerator(object):
         self.gen_ts      = gen_ts
         self.first_run   = first_run
         self.stn_info    = stn_info
-        self.db_binder   = weewx.manager.DBBinder(self.config_dict['DataBindings'],
-                                                  self.config_dict['Databases'])
+        self.db_binder   = weewx.manager.DBBinder(self.config_dict)
         
     def start(self):
         self.run()

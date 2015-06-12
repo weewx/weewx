@@ -921,7 +921,7 @@ def get_manager_dict_from_config(config_dict, data_binding,
     # Start with a copy of the bindings in the config dictionary (we
     # will be adding to it):
     try:
-        manager_dict = dict(config_dict[data_binding])
+        manager_dict = dict(config_dict['DataBindings'][data_binding])
     except KeyError, e:
         raise weewx.UnknownBinding("Unknown data binding '%s'" % e)
 
