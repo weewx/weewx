@@ -788,7 +788,7 @@ class DBBinder(object):
         bindings_dict: Typically, this is [DataBindings] section of a
         weewx.conf configuration dictionary. 
         It should look something like:
-          {'wx_bindings' : {'database_name': 'archive_sqlite',
+          {'wx_bindings' : {'database': 'archive_sqlite',
                             'manager': 'weewx.wxmanager.WXDaySummaryManager'}
 
         databases_dict: Typically, this is the [Databases] section of a
@@ -855,8 +855,8 @@ default_binding_dict = {'database' : 'archive_sqlite',
                         'schema' : 'schemas.wview.schema'}
 #
 # A "manager dict" is everything needed to open up a manager. It is basically
-# the same as a binding dictionary, except that the database has been replaced
-# with a database dictionary.
+# the same as a binding dictionary, except that the key 'database' has been replaced
+# with a key 'database_dict', whose value is the database dictionary.
 #
 # As such, it includes keys:
 #
@@ -868,7 +868,26 @@ default_binding_dict = {'database' : 'archive_sqlite',
 #
 def get_manager_dict(bindings_dict, databases_dict, data_binding,
                      default_binding_dict=default_binding_dict):
-    """Return a manager dict for the given data binding."""
+    """Return a manager dict for the given data binding.
+    
+        bindings_dict: Typically, this is [DataBindings] section of a
+        weewx.conf configuration dictionary. 
+        It should look something like:
+          {'wx_bindings' : {'database': 'archive_sqlite',
+                            'manager': 'weewx.wxmanager.WXDaySummaryManager'}
+
+        databases_dict: Typically, this is the [Databases] section of a
+        weewx.conf configuration dictionary. 
+        It should look something like:
+          {'archive_sqlite' : {'root': '/home/weewx',
+                               'database_name': 'archive/archive.sdb',
+                               'driver': 'weedb.sqlite'}
+        
+        data_binding: Which binding to be retrieved. Example: 'wx_binding'.
+        
+        default_binding_dict: If a needed key is missing in bindings_dict,
+        then the corresponding value in default_binding_dict will be used.
+    """
 
     # Start with a copy of the given defaults:
     manager_dict = dict(default_binding_dict)
