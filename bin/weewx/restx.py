@@ -582,7 +582,8 @@ class StdWOW(StdRESTful):
             _ambient_dict['station']
             _ambient_dict['password']
         except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: WOW: Data will not be posted: "
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "restx: WOW: Data will not be posted: "
                           "Missing option %s" % e)
             return
 
@@ -733,6 +734,10 @@ class AmbientThread(RESTThread):
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
         _url = "%s?%s" % (self.server_url, _urlquery)
+        # show the url in the logs for debug, but mask any password
+        if weewx.debug:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: Ambient: url: %s" %
+                          re.sub(r"PASSWORD=[^\&]*", "PASSWORD=XXX", _url))
         return _url
                 
     def check_response(self, response):
@@ -796,6 +801,11 @@ class WOWThread(AmbientThread):
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
         _url = "%s?%s" % (self.server_url, _urlquery)
+        # show the url in the logs for debug, but mask any password
+        if weewx.debug:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: WOW: url: %s" % 
+                          re.sub(r"siteAuthenticationKey=[^\&]*",
+                                 "siteAuthenticationKey=XXX", _url)))
         return _url
 
     def post_request(self, request):
@@ -1606,7 +1616,10 @@ class AWEKASThread(RESTThread):
 
         valstr = ';'.join(values)
         url = self.server_url + '?val=' + valstr
-        syslog.syslog(syslog.LOG_DEBUG, 'restx: AWEKAS: url: %s' % url)
+        # show the url in the logs for debug, but mask any credentials
+        if weewx.debug:
+            syslog.syslog(syslog.LOG_DEBUG, 'restx: AWEKAS: url: %s' %
+                          re.sub(m.hexdigest(), "XXX", url))
         return url
 
     def _format(self, record, label):

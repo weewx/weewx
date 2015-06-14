@@ -57,6 +57,8 @@ should the alarm expression include a variable not in the archive record.
 
 Fixed bug that shows itself if marker_size is not specified in skin.conf
 
+Show URLs in the log for restful uploaders when debug=1
+
 Fixed problem that could cause an exception in the WMR200 driver when
 formatting an error string.
 
