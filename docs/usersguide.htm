@@ -2429,10 +2429,15 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
     <h2 id="wee_device_acurite">AcuRite</h2>
     <p>The <span class='code'>wee_device</span> utility cannot
       configure AcuRite stations.</p>
-    <p>The AcuRite console must be set to USB mode 3 or 4.</p>
+    <p>The AcuRite console must be set to USB mode 3 or 4.  Communication
+      via USB is disabled in modes 1 and 2.  Mode 4 is more reliable than
+      mode 3; mode 3 enables logging of data, mode 4 does not.  When the
+      console is logging it frequently causes USB communication problems.</p>
     <p>The wind speed updates every 18 seconds.  The wind direction updates
       every 30 seconds.  Other sensors update every 60 seconds.</p>
     <p>The AcuRite stations do not record wind gusts.</p>
+    <p>The station emits partial packets, which may confuse some online
+      services</p>
 
 
     <h2 id="wee_device_cc3000">CC3000</h2>
