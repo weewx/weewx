@@ -735,7 +735,7 @@ class AmbientThread(RESTThread):
         # This will be the complete URL for the HTTP GET:
         _url = "%s?%s" % (self.server_url, _urlquery)
         # show the url in the logs for debug, but mask any password
-        if weewx.debug:
+        if weewx.debug >= 2:
             syslog.syslog(syslog.LOG_DEBUG, "restx: Ambient: url: %s" %
                           re.sub(r"PASSWORD=[^\&]*", "PASSWORD=XXX", _url))
         return _url
@@ -802,7 +802,7 @@ class WOWThread(AmbientThread):
         # This will be the complete URL for the HTTP GET:
         _url = "%s?%s" % (self.server_url, _urlquery)
         # show the url in the logs for debug, but mask any password
-        if weewx.debug:
+        if weewx.debug >= 2:
             syslog.syslog(syslog.LOG_DEBUG, "restx: WOW: url: %s" % 
                           re.sub(r"siteAuthenticationKey=[^\&]*",
                                  "siteAuthenticationKey=XXX", _url)))
@@ -1617,7 +1617,7 @@ class AWEKASThread(RESTThread):
         valstr = ';'.join(values)
         url = self.server_url + '?val=' + valstr
         # show the url in the logs for debug, but mask any credentials
-        if weewx.debug:
+        if weewx.debug >= 2:
             syslog.syslog(syslog.LOG_DEBUG, 'restx: AWEKAS: url: %s' %
                           re.sub(m.hexdigest(), "XXX", url))
         return url
