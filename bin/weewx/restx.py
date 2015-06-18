@@ -805,7 +805,7 @@ class WOWThread(AmbientThread):
         if weewx.debug >= 2:
             syslog.syslog(syslog.LOG_DEBUG, "restx: WOW: url: %s" % 
                           re.sub(r"siteAuthenticationKey=[^\&]*",
-                                 "siteAuthenticationKey=XXX", _url)))
+                                 "siteAuthenticationKey=XXX", _url))
         return _url
 
     def post_request(self, request):
@@ -1073,7 +1073,8 @@ class CWOPThread(RESTThread):
                 try:
                     # Get a socket connection:
                     _sock = self._get_connect(_server, _port)
-                    syslog.syslog(syslog.LOG_DEBUG, "restx: %s: Connected to server %s:%d" % 
+                    syslog.syslog(syslog.LOG_DEBUG,
+                                  "restx: %s: Connected to server %s:%d" % 
                                   (self.protocol_name, _server, _port))
             
                     try:
@@ -1082,8 +1083,9 @@ class CWOPThread(RESTThread):
                         # ... and then the packet
                         self._send(_sock, tnc_packet, 'packet')
                         if weewx.debug >= 2:
-                            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: APRS Packet: %s" %
-                            (self.protocol_name, tnc_packet))
+                            syslog.syslog(syslog.LOG_DEBUG,
+                                          "restx: %s: APRS Packet: %s" %
+                                          (self.protocol_name, tnc_packet))
                         return
                         
                     finally:
