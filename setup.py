@@ -283,13 +283,15 @@ class weewx_sdist(sdist):
 
             try:
                 password = config['StdRESTful']['Wunderground']['password']
-                sys.exit("\n*** Wunderground password found in configuration file. Aborting ***\n\n")
+                if password != 'replace_me':
+                    sys.exit("\n*** Wunderground password found in configuration file. Aborting ***\n\n")
             except KeyError:
                 pass
 
             try:
-                password = config['StdRESTful']['Wunderground']['password']
-                sys.exit("\n*** PWSweather password found in configuration file. Aborting ***\n\n")
+                password = config['StdRESTful']['PWSweather']['password']
+                if password != 'replace_me':
+                    sys.exit("\n*** PWSweather password found in configuration file. Aborting ***\n\n")
             except KeyError:
                 pass
 
