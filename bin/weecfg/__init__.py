@@ -723,18 +723,20 @@ def update_to_v32(config_dict):
         
 def transfer_comments(config_dict, template_dict):
     
+    # If this is the top-level, transfer the initial comments
     if config_dict.parent is config_dict:
         config_dict.initial_comment = template_dict.initial_comment
     
+    # Now go through each section, transferring its comments
     for section in config_dict.sections:
         try:
             config_dict.comments[section] = template_dict.comments[section]
-        except KeyError:
-            pass
-        try:
+            # Recursively transfer the subsection comments:
             transfer_comments(config_dict[section], template_dict[section])
         except KeyError:
             pass
+
+    # Finally, do the section's scalars:
     for scalar in config_dict.scalars:
         try:
             config_dict.comments[scalar] = template_dict.comments[scalar]
