@@ -90,11 +90,9 @@ class ConfigEngine(object):
         output_path = None
 
         if options.upgrade:
-            # Update the old configuration contents
-            weecfg.update_config(config_dict)
-            
-            # Then merge it into the distribution contents
-            weecfg.merge_config(config_dict, dist_config_dict)
+            # Update the config dictionary, then merge it with the distribution
+            # dictionary
+            weecfg.update_and_merge(config_dict, dist_config_dict)
 
             # Save to the specified output
             output_path = options.output

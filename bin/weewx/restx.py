@@ -451,18 +451,10 @@ class StdWunderground(StdRESTful):
         
         super(StdWunderground, self).__init__(engine, config_dict)
         
-        # Extract the required parameters. If one of them is missing,
-        # a KeyError exception will occur. Be prepared to catch it.
-        try:
-            # Extract a copy of the dictionary with the WU options:
-            _ambient_dict = accumulateLeaves(config_dict['StdRESTful']['Wunderground'], max_level=1)
-            # A convenient way to check for missing required key words.
-            _ambient_dict['station']
-            _ambient_dict['password']
-        except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, 
-                          "restx: Wunderground: Data will not be posted: Missing option %s" % e)
-            return
+        _ambient_dict = check_enable(config_dict, 'Wunderground', 'station', 'password')
+
+        if _ambient_dict is None:
+            return        
 
         # Get the manager dictionary:
         _manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
@@ -520,18 +512,8 @@ class StdPWSWeather(StdRESTful):
         
         super(StdPWSWeather, self).__init__(engine, config_dict)
         
-        # Extract the required parameters. If one of them is missing,
-        # a KeyError exception will occur. Be prepared to catch it.
-        try:
-            # Extract a copy of the dictionary with the PWS options:
-            _ambient_dict = accumulateLeaves(config_dict['StdRESTful']['PWSweather'], max_level=1)
-            # A convenient way to check for missing required key words.
-            _ambient_dict['station']
-            _ambient_dict['password']
-        except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, 
-                          "restx: PWSWeather: Data will not be posted: "
-                          "Missing option %s" % e)
+        _ambient_dict = check_enable(config_dict, 'PWSweather', 'station', 'password')
+        if _ambient_dict is None:
             return
 
         # Get the manager dictionary:
@@ -569,17 +551,8 @@ class StdWOW(StdRESTful):
         
         super(StdWOW, self).__init__(engine, config_dict)
         
-        # Extract the required parameters. If one of them is missing,
-        # a KeyError exception will occur. Be prepared to catch it.
-        try:
-            # Extract a copy of the dictionary with the WOW options:
-            _ambient_dict = accumulateLeaves(config_dict['StdRESTful']['WOW'], max_level=1)
-            # A convenient way to check for missing required key words.
-            _ambient_dict['station']
-            _ambient_dict['password']
-        except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: WOW: Data will not be posted: "
-                          "Missing option %s" % e)
+        _ambient_dict = check_enable(config_dict, 'WOW', 'station', 'password')
+        if _ambient_dict is None:
             return
 
         # Get the manager dictionary:
@@ -829,24 +802,22 @@ class StdCWOP(StdRESTful):
         
         super(StdCWOP, self).__init__(engine, config_dict)
         
-        # Extract the required parameters. If one of them is missing,
-        # a KeyError exception will occur. Be prepared to catch it.
-        try:
-            # Extract a copy of the dictionary with the CWOP options:
-            _cwop_dict = accumulateLeaves(config_dict['StdRESTful']['CWOP'], max_level=1)
-            _cwop_dict['station'] = _cwop_dict['station'].upper()
-            
-            # See if this station requires a passcode:
-            if re.match(StdCWOP.valid_prefix_re, _cwop_dict['station']):
-                _cwop_dict.setdefault('passcode', '-1')
-            elif not _cwop_dict.has_key('passcode'):
-                raise KeyError('passcode')
-        except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: CWOP: Data will not be posted. "
-                          "Missing option: %s" % e)
+        _cwop_dict = check_enable(config_dict, 'CWOP', 'station')
+        if _cwop_dict is None:
+            return
+        
+        _cwop_dict['station'] = _cwop_dict['station'].upper()
+        
+        # See if this station requires a passcode:
+        if re.match(StdCWOP.valid_prefix_re, _cwop_dict['station']):
+            # It does not. 
+            _cwop_dict.setdefault('passcode', '-1')
+        elif not _cwop_dict.has_key('passcode'):
+            syslog.syslog(syslog.LOG_NOTICE, 
+                          "APRS station %s requires passcode" % _cwop_dict['station'])
             return
 
-        # Get the manager dictionary:
+        # Get the database manager dictionary:
         _manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
                                                                    'wx_binding')
         
@@ -1397,15 +1368,11 @@ class StdAWEKAS(StdRESTful):
 
     def __init__(self, engine, config_dict):
         super(StdAWEKAS, self).__init__(engine, config_dict)
-        try:
-            site_dict = accumulateLeaves(config_dict['StdRESTful']['AWEKAS'],
-                                         max_level=1)
-            site_dict['username']
-            site_dict['password']
-        except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: AWEKAS: "
-                          "Data will not be posted: Missing option %s" % e)
+        
+        site_dict = check_enable(config_dict, 'AWEKAS', 'username', 'password')
+        if site_dict is None:
             return
+
         site_dict.setdefault('latitude', engine.stn_info.latitude_f)
         site_dict.setdefault('longitude', engine.stn_info.longitude_f)
         site_dict.setdefault('language', 'de')
@@ -1605,3 +1572,37 @@ class AWEKASThread(RESTThread):
                 return self._FORMATS[label] % record[label]
             return str(record[label])
         return ''
+
+####################################################################################
+
+def check_enable(config_dict, service, *args):
+
+    try:
+        site_dict = accumulateLeaves(config_dict['StdRESTful'][service],
+                                     max_level=1)
+    except KeyError:
+        return None
+
+    # If site_dict has the key 'enable' and it is False, then
+    # the service is not enabled.
+    try:
+        if not to_bool(site_dict['enable']):
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
+                          "Data will not be posted" % service)
+            return None
+    except KeyError:
+        pass
+        
+    # At this point, either the key 'enable' does not exist, or
+    # it is set to True. Check to see whether all the needed
+    # options exist, and none of them have been set to 'replace_me':
+    try:
+        for option in args:
+            if site_dict[option] == 'replace_me':
+                raise option
+    except KeyError, e:
+        syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
+                      "Data will not be posted: Missing option %s" % (service, e))
+        return None
+
+    return site_dict

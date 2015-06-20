@@ -264,32 +264,6 @@ class ConfigTest(unittest.TestCase):
         more = out_str.readline()
         self.assertEqual(more, '', "Unexpected additional lines")
 
-    def test_upgrade_32(self):
-
-        # Start with the Version 3.1 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx31.conf')
-
-        # Upgrade to V3.2
-        weecfg.update_to_v32(config_dict)
-        # Reorder to make the comparison easier
-        weecfg.reorder_to_ref(config_dict)
-
-        # Write it out to a StringIO, then start checking it against the expected
-        out_str = StringIO.StringIO()
-        config_dict.write(out_str)
-        
-        out_str.seek(0)
-        fd_expected = open('expected/weewx32_expected.conf')
-        N = 0
-        for expected in fd_expected:
-            actual = out_str.readline()
-            N += 1
-            self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
-
-        # Make sure there are no extra lines in the updated config:
-        more = out_str.readline()
-        self.assertEqual(more, '', "Unexpected additional lines")
-
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""
         driver_info_dict = weecfg.get_driver_infos()
@@ -304,13 +278,15 @@ class ConfigTest(unittest.TestCase):
         # Start with a typical V2.0 user file:
         config_dict = configobj.ConfigObj('weewx_user.conf')
 
-        # The V3.1 config file becomes the template:
-        template = configobj.ConfigObj('weewx31.conf')
+        # The current config file becomes the template:
+        template = configobj.ConfigObj('../../../weewx.conf')
 
         # First update, then merge:
-        weecfg.update_config(config_dict)
-        weecfg.merge_config(config_dict, template)
-
+        weecfg.update_and_merge(config_dict, template)
+        
+        # Reorder to make the comparisons more predictable:
+        weecfg.reorder_to_ref(config_dict)
+        
         # Write it out to a StringIO, then start checking it against the expected
         out_str = StringIO.StringIO()
         config_dict.write(out_str)

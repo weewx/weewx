@@ -47,9 +47,11 @@ canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'a
                         ('WS23xx', [], []),
                         ('WS28xx', [], []),
                         ('StdRESTful', [('StationRegistry', [], ['register_this_station']), 
-                                        ('AWEKAS', [], []), ('CWOP', [], []), 
-                                        ('PWSweather', [], []), ('WOW', [], []), 
-                                        ('Wunderground', [], ['station', 'password', 'rapidfire'])], []), 
+                                        ('AWEKAS', [], ['enable', 'username', 'password']), 
+                                        ('CWOP', [], ['enable', 'station']), 
+                                        ('PWSweather', [], ['enable', 'station', 'password']), 
+                                        ('WOW', [], ['enable', 'station', 'password']), 
+                                        ('Wunderground', [], ['enable', 'station', 'password', 'rapidfire'])], []), 
                         ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 
                                                                                       'group_rain', 'group_rainrate', 'group_temperature', 
                                                                                       'group_degree_day', 'group_speed'])], [])], ['skin']), 
@@ -321,9 +323,19 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                             'Groups': us_group}})
 
 #==============================================================================
-#              Utilities that update ConfigObj objects
+#              Utilities that update and merge ConfigObj objects
 #==============================================================================
 
+def update_and_merge(config_dict, template_dict):
+    
+    update_config(config_dict)
+    merge_config(config_dict, template_dict)
+    
+    # We use the number of comment lines for the 'Station' section as a heuristic
+    # of whether the config dict has been updated to the new comment structure
+    if len(config_dict.comments['Station']) <= 3:
+        transfer_comments(config_dict, template_dict)
+    
 def update_config(config_dict):
     """Update a (possibly old) configuration dictionary to the latest format.
 
@@ -637,8 +649,8 @@ def update_to_v32(config_dict):
         # Set the default [SQLite] section:
         config_dict['SQLite'] = {'driver' : 'weedb.sqlite',
                                  'SQLITE_ROOT' : '%(WEEWX_ROOT)s/archive'}
-        config_dict.comments['SQLite'] = minor_comment_block
-        config_dict['SQLite'].comments['driver'] = ["    Default values for a SQLite database"]
+#         config_dict.comments['SQLite'] = minor_comment_block
+#         config_dict['SQLite'].comments['driver'] = ["    Default values for a SQLite database"]
         try:
             root = config_dict['Databases']['archive_sqlite']['root']
             database_name = config_dict['Databases']['archive_sqlite']['database_name']
@@ -665,8 +677,8 @@ def update_to_v32(config_dict):
                                 'host'  : 'localhost',
                                 'user'  : 'weewx',
                                 'password' : 'weewx'}
-        config_dict.comments['MySQL'] = minor_comment_block
-        config_dict['MySQL'].comments['driver'] = ["    Default values for a MySQL database"]
+#         config_dict.comments['MySQL'] = minor_comment_block
+#         config_dict['MySQL'].comments['driver'] = ["    Default values for a MySQL database"]
         try:
             config_dict['MySQL']['host'] = config_dict['Databases']['archive_mysql']['host']
             config_dict['MySQL']['user'] = config_dict['Databases']['archive_mysql']['user']
@@ -679,6 +691,56 @@ def update_to_v32(config_dict):
         except KeyError:
             pass
             
+    # Version 3.2 introduces the 'enable' keyword for RESTful protocols. Set
+    # it appropriately
+    def set_enable(c, service, keyword):
+        # Check to see whether this config file has the service listed
+        try:
+            c['StdRESTful'][service]
+        except KeyError:
+            # It does not. Nothing to do.
+            return
+
+        # Now check to see whether it already has the option 'enable':
+        if c['StdRESTful'][service].has_key('enable'):
+            # It does. No need to proceed
+            return
+
+        # The option 'enable' is not present. Add it,
+        # and set based on whether the keyword is present:
+        if c['StdRESTful'][service].has_key(keyword):
+            c['StdRESTful'][service]['enable'] = 'true'
+        else:
+            c['StdRESTful'][service]['enable'] = 'false'
+
+    set_enable(config_dict, 'AWEKAS', 'username')
+    set_enable(config_dict, 'CWOP', 'station')
+    set_enable(config_dict, 'PWSweather', 'station')
+    set_enable(config_dict, 'WOW', 'station')
+    set_enable(config_dict, 'Wunderground', 'station')
+    
+    config_dict['version'] = '3.2.0'
+        
+def transfer_comments(config_dict, template_dict):
+    
+    if config_dict.parent is config_dict:
+        config_dict.initial_comment = template_dict.initial_comment
+    
+    for section in config_dict.sections:
+        try:
+            config_dict.comments[section] = template_dict.comments[section]
+        except KeyError:
+            pass
+        try:
+            transfer_comments(config_dict[section], template_dict[section])
+        except KeyError:
+            pass
+    for scalar in config_dict.scalars:
+        try:
+            config_dict.comments[scalar] = template_dict.comments[scalar]
+        except KeyError:
+            pass
+
 #==============================================================================
 #              Utilities that extract from ConfigObj objects
 #==============================================================================
