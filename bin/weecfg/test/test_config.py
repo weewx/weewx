@@ -54,6 +54,8 @@ y_str = """
         [section_e]
           c = 15"""
 
+current_config_dict_path = "../../../weewx.conf"
+
 class ConfigTest(unittest.TestCase):
 
     def test_find_file(self):
@@ -267,9 +269,12 @@ class ConfigTest(unittest.TestCase):
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""
         driver_info_dict = weecfg.get_driver_infos()
-        # Cannot really test for version numbers of all drivers. Pick one.
+        self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['module_name'], 'weewx.drivers.wmr100')
+        # Test for the driver name
         self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['driver_name'], 'WMR100')
+        # Cannot really test for version numbers of all drivers. Pick one. Import it...
         import weewx.drivers.wmr100
+        # ... and see if the version number matches
         self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['version'], weewx.drivers.wmr100.DRIVER_VERSION)
         del weewx.drivers.wmr100
         
@@ -279,7 +284,7 @@ class ConfigTest(unittest.TestCase):
         config_dict = configobj.ConfigObj('weewx_user.conf')
 
         # The current config file becomes the template:
-        template = configobj.ConfigObj('../../../weewx.conf')
+        template = configobj.ConfigObj(current_config_dict_path)
 
         # First update, then merge:
         weecfg.update_and_merge(config_dict, template)
@@ -356,7 +361,7 @@ class ExtensionInstallTest(unittest.TestCase):
         self.bin_dir  = os.path.join(self.weewx_root, 'bin')
         distutils.dir_util.copy_tree('../../../bin/user', self.user_dir)
         distutils.dir_util.copy_tree('../../../skins/Standard', os.path.join(self.skin_dir, 'Standard'))
-        shutil.copy('weewx31.conf', self.weewx_root)
+        shutil.copy(current_config_dict_path, self.weewx_root)
         
     def tearDown(self):
         "Remove any installed test configuration"
@@ -367,7 +372,7 @@ class ExtensionInstallTest(unittest.TestCase):
 
     def test_install(self):
         # Find and read the test configuration
-        config_path = os.path.join(self.weewx_root,'weewx31.conf')
+        config_path = os.path.join(self.weewx_root,'weewx.conf')
         config_dict = configobj.ConfigObj(config_path)
         
         # Note that the actual location of the "mini-weewx" is over in /var/tmp
@@ -416,7 +421,7 @@ class ExtensionInstallTest(unittest.TestCase):
         
     def test_uninstall(self):
         # Find and read the test configuration
-        config_path = os.path.join(self.weewx_root,'weewx31.conf')
+        config_path = os.path.join(self.weewx_root,'weewx.conf')
         config_dict = configobj.ConfigObj(config_path)
         
         # Note that the actual location of the "mini-weewx" is over in /var/tmp
