@@ -197,7 +197,7 @@ class ExtensionEngine(object):
 
             if not self.dry_run:
                 # Inject any new config data into the configuration file
-                weecfg.conditional_merge(self.config_dict, cfg)
+                weeutil.weeutil.conditional_merge(self.config_dict, cfg)
                 
                 # Include the major comment block for any new top level sections
                 for new_section in new_top_level:

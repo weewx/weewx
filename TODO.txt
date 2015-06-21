@@ -1,10 +1,11 @@
 TODO: items for the next release; complete list is at github
 -------------------------------------------------------------------------------
 
+Need to write version of get_manager_dict() that works for V3.1 extensions.
+
 - test deb upgrades
 - test wee_extension on deb system
 - test rpm upgrades
 - test wee_extension on rpm system
-- part of the ftp section gets duplicated after wee_config.  why?
 - look for CR or LF (not just CRLF) in ws1 driver
 

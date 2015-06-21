@@ -108,8 +108,7 @@ class StdEngine(object):
     def preLoadServices(self, config_dict):
         
         self.stn_info = weewx.station.StationInfo(self.console, **config_dict['Station'])
-        self.db_binder = weewx.manager.DBBinder(config_dict['DataBindings'],
-                                                config_dict['Databases'])
+        self.db_binder = weewx.manager.DBBinder(config_dict)
         
     def loadServices(self, config_dict):
         """Set up the services to be run."""

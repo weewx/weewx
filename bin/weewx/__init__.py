@@ -63,6 +63,9 @@ class UninitializedDatabase(StandardError):
 class UnknownDatabase(StandardError):
     """Exception thrown when attempting to use an unknown database."""
 
+class UnknownDatabaseType(StandardError):
+    """Exception thrown when attempting to use an unknown database type."""
+
 class UnknownBinding(StandardError):
     """Exception thrown when attempting to use an unknown data binding."""
 

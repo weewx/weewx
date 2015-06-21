@@ -38,15 +38,15 @@ def guard(fn):
     return guarded_fn
 
 
-def connect(database_name='', root='', driver='', **argv):
+def connect(database_name='', SQLITE_ROOT='', driver='', **argv):
     """Factory function, to keep things compatible with DBAPI. """
-    return Connection(database_name=database_name, root=root, **argv)
+    return Connection(database_name=database_name, SQLITE_ROOT=SQLITE_ROOT, **argv)
 
 
-def create(database_name='', root='', driver='', **argv):
+def create(database_name='', SQLITE_ROOT='', driver='', **argv):
     """Create the database specified by the db_dict. If it already exists,
     an exception of type DatabaseExists will be thrown."""
-    file_path = os.path.join(root, database_name)
+    file_path = get_filepath(SQLITE_ROOT, database_name, **argv)
     # Check whether the database file exists:
     if os.path.exists(file_path):
         raise weedb.DatabaseExists("Database %s already exists" % (file_path,))
@@ -60,9 +60,14 @@ def create(database_name='', root='', driver='', **argv):
         connection = sqlite3.connect(file_path, timeout=timeout, isolation_level=isolation_level)
         connection.close()
 
-
-def drop(database_name='', root='', driver='', **argv):
-    file_path = os.path.join(root, database_name)
+def get_filepath(SQLITE_ROOT, database_name, **argv):
+    # For backwards compatibility, allow the keyword 'root', if 'SQLITE_ROOT' is
+    # not defined:
+    root_dir = SQLITE_ROOT or argv.get('root', '')
+    return os.path.join(root_dir, database_name)
+    
+def drop(database_name='', SQLITE_ROOT='', driver='', **argv):
+    file_path = get_filepath(SQLITE_ROOT, database_name, **argv)
     try:
         os.remove(file_path)
     except OSError:
@@ -72,13 +77,13 @@ def drop(database_name='', root='', driver='', **argv):
 class Connection(weedb.Connection):
     """A wrapper around a sqlite3 connection object."""
 
-    def __init__(self, database_name='', root='', pragmas=None, **argv):
+    def __init__(self, database_name='', SQLITE_ROOT='', pragmas=None, **argv):
         """Initialize an instance of Connection.
 
         Parameters:
         
             database_name: The name of the Sqlite database. This is generally the file name
-            root: The path to the directory holding the database. Joining "root" with
+            SQLITE_ROOT: The path to the directory holding the database. Joining "SQLITE_ROOT" with
               "database_name" results in the full path to the sqlite file.
             pragmas: Any pragma statements, in the form of a dictionary.
             timeout: The amount of time, in seconds, to wait for a lock to be released. 
@@ -89,7 +94,7 @@ class Connection(weedb.Connection):
         If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
 
-        self.file_path = os.path.join(root, database_name)
+        self.file_path = get_filepath(SQLITE_ROOT, database_name, **argv)
         if not os.path.exists(self.file_path):
             raise weedb.OperationalError("Attempt to open a non-existent database %s" % self.file_path)
         timeout = to_int(argv.get('timeout', 5))

@@ -31,7 +31,8 @@ major_comment_block = ["", "####################################################
 #   1: A list of any subsection tuples;
 #   2: A list of any scalar names.
 
-canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'altitude', 'station_type', 'rain_year_start', 'week_start']), 
+canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'altitude', 
+                                         'station_type', 'rain_year_start', 'week_start']), 
                         ('AcuRite', [], []),
                         ('CC3000', [], []),
                         ('FineOffsetUSB', [], []),
@@ -46,20 +47,29 @@ canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'a
                         ('WS23xx', [], []),
                         ('WS28xx', [], []),
                         ('StdRESTful', [('StationRegistry', [], ['register_this_station']), 
-                                        ('AWEKAS', [], []), ('CWOP', [], []), 
-                                        ('PWSweather', [], []), ('WOW', [], []), 
-                                        ('Wunderground', [], ['station', 'password', 'rapidfire'])], []), 
-                        ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 'group_rain', 'group_rainrate', 'group_temperature', 'group_degree_day', 'group_speed'])], [])], ['skin']), 
+                                        ('AWEKAS', [], ['enable', 'username', 'password']), 
+                                        ('CWOP', [], ['enable', 'station']), 
+                                        ('PWSweather', [], ['enable', 'station', 'password']), 
+                                        ('WOW', [], ['enable', 'station', 'password']), 
+                                        ('Wunderground', [], ['enable', 'station', 'password', 'rapidfire'])], []), 
+                        ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 
+                                                                                      'group_rain', 'group_rainrate', 'group_temperature', 
+                                                                                      'group_degree_day', 'group_speed'])], [])], ['skin']), 
                                        ('FTP', [], ['skin', 'secure_ftp', 'port', 'passive']), 
                                        ('RSYNC', [], ['skin', 'delete'])], 
                          ['SKIN_ROOT', 'HTML_ROOT', 'data_binding']), 
                         ('StdConvert', [], ['target_unit']), ('StdCalibrate', [('Corrections', [], [])], []), 
                         ('StdQC', [('MinMax', [], ['barometer', 'outTemp', 'inTemp', 'outHumidity', 'inHumidity', 'windSpeed'])], []), 
                         ('StdWXCalculate', [], ['pressure', 'barometer', 'altimeter', 'windchill', 'heatindex', 'dewpoint', 'inDewpoint', 'rainRate']), 
-                        ('StdTimeSynch', [], ['clock_check', 'max_drift']), ('StdArchive', [], ['archive_interval', 'archive_delay', 'record_generation', 'loop_hilo', 'data_binding']), 
+                        ('StdTimeSynch', [], ['clock_check', 'max_drift']), 
+                        ('StdArchive', [], ['archive_interval', 'archive_delay', 'record_generation', 'loop_hilo', 'data_binding']), 
                         ('DataBindings', [('wx_binding', [], ['database', 'table_name', 'manager', 'schema'])], []), 
-                        ('Databases', [('archive_sqlite', [], ['root', 'database_name', 'driver']), ('archive_mysql', [], ['host', 'user', 'password', 'database_name', 'driver'])], []), 
-                        ('Engine', [('Services', [], ['prep_services', 'data_services', 'process_services', 'archive_services', 'restful_services', 'report_services'])], [])], 
+                        ('Databases', [('archive_sqlite', [], ['database_type', 'database_name']), 
+                                       ('archive_mysql',  [], ['database_type', 'database_name'])], []),
+                        ('SQLite', [], ['driver', 'SQLITE_ROOT']),
+                        ('MySQL', [], ['driver', 'host', 'user', 'password']),
+                        ('Engine', [('Services', [], ['prep_services', 'data_services', 'process_services', 
+                                                      'archive_services', 'restful_services', 'report_services'])], [])], 
                    ['debug', 'WEEWX_ROOT', 'socket_timeout', 'version'])
 
 def get_section_tuple(c_dict, section_name=''):
@@ -313,9 +323,19 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                             'Groups': us_group}})
 
 #==============================================================================
-#              Utilities that update ConfigObj objects
+#              Utilities that update and merge ConfigObj objects
 #==============================================================================
 
+def update_and_merge(config_dict, template_dict):
+    
+    update_config(config_dict)
+    merge_config(config_dict, template_dict)
+    
+    # We use the number of comment lines for the 'Station' section as a heuristic
+    # of whether the config dict has been updated to the new comment structure
+    if len(config_dict.comments['Station']) <= 3:
+        transfer_comments(config_dict, template_dict)
+    
 def update_config(config_dict):
     """Update a (possibly old) configuration dictionary to the latest format.
 
@@ -357,7 +377,7 @@ def merge_config(config_dict, template_dict):
     config_dict.interpolate = False
 
     # Merge new stuff from the template:
-    conditional_merge(config_dict, template_dict)
+    weeutil.weeutil.conditional_merge(config_dict, template_dict)
 
     # Finally, update the version number:
     config_dict['version'] = template_dict['version']
@@ -609,11 +629,119 @@ def update_to_v30(config_dict):
 
 def update_to_v32(config_dict):
     """Update a configuration file to V3.2"""
-    # The only difference is that we are no longer using SVN, so get rid
-    # of its ident
+    # We are no longer using SVN, so get rid of its ident
     for i in range(len(config_dict.initial_comment)):
         if config_dict.initial_comment[i].find("$Id") >= 0:
-            config_dict.initial_comment[i] = "#                                                                            #"
+            config_dict.initial_comment.pop(i)
+            break
+    
+    # For interpolation to work, it's critical that WEEWX_ROOT not end
+    # with a trailing slash ('/'). Convert it to the normative form:
+    config_dict['WEEWX_ROOT'] = os.path.normpath(config_dict['WEEWX_ROOT'])
+    
+    # Add a default database-specific top-level stanzas if necessary
+    if 'SQLite' not in config_dict:
+        # Sanity check:
+        try:
+            assert(config_dict['Databases']['archive_sqlite']['driver'] == 'weedb.sqlite')
+        except KeyError:
+            pass
+        # Set the default [SQLite] section:
+        config_dict['SQLite'] = {'driver' : 'weedb.sqlite',
+                                 'SQLITE_ROOT' : '%(WEEWX_ROOT)s/archive'}
+#         config_dict.comments['SQLite'] = minor_comment_block
+#         config_dict['SQLite'].comments['driver'] = ["    Default values for a SQLite database"]
+        try:
+            root = config_dict['Databases']['archive_sqlite']['root']
+            database_name = config_dict['Databases']['archive_sqlite']['database_name']
+            fullpath = os.path.join(root, database_name)
+            dirname = os.path.dirname(fullpath)
+            # By testing to see if they end up resolving to the same thing, we can keep
+            # the interpolation used to specify SQLITE_ROOT above:
+            if dirname != config_dict['SQLite']['SQLITE_ROOT']:
+                config_dict['SQLite']['SQLITE_ROOT'] = dirname
+            config_dict['Databases']['archive_sqlite']['database_name'] = os.path.basename(fullpath)
+            config_dict['Databases']['archive_sqlite']['database_type'] = 'SQLite'
+            config_dict['Databases']['archive_sqlite'].pop('root', None)
+            config_dict['Databases']['archive_sqlite'].pop('driver', None)
+        except KeyError:
+            pass
+
+    if 'MySQL' not in config_dict:
+        # Sanity check:
+        try:
+            assert(config_dict['Databases']['archive_mysql']['driver'] == 'weedb.mysql')
+        except KeyError:
+            pass
+        config_dict['MySQL'] = {'driver': 'weedb.mysql',
+                                'host'  : 'localhost',
+                                'user'  : 'weewx',
+                                'password' : 'weewx'}
+#         config_dict.comments['MySQL'] = minor_comment_block
+#         config_dict['MySQL'].comments['driver'] = ["    Default values for a MySQL database"]
+        try:
+            config_dict['MySQL']['host'] = config_dict['Databases']['archive_mysql']['host']
+            config_dict['MySQL']['user'] = config_dict['Databases']['archive_mysql']['user']
+            config_dict['MySQL']['password'] = config_dict['Databases']['archive_mysql']['password']
+            config_dict['Databases']['archive_mysql'].pop('host', None)
+            config_dict['Databases']['archive_mysql'].pop('user', None)
+            config_dict['Databases']['archive_mysql'].pop('password', None)
+            config_dict['Databases']['archive_mysql'].pop('driver', None)
+            config_dict['Databases']['archive_mysql']['database_type'] = 'MySQL'
+        except KeyError:
+            pass
+            
+    # Version 3.2 introduces the 'enable' keyword for RESTful protocols. Set
+    # it appropriately
+    def set_enable(c, service, keyword):
+        # Check to see whether this config file has the service listed
+        try:
+            c['StdRESTful'][service]
+        except KeyError:
+            # It does not. Nothing to do.
+            return
+
+        # Now check to see whether it already has the option 'enable':
+        if c['StdRESTful'][service].has_key('enable'):
+            # It does. No need to proceed
+            return
+
+        # The option 'enable' is not present. Add it,
+        # and set based on whether the keyword is present:
+        if c['StdRESTful'][service].has_key(keyword):
+            c['StdRESTful'][service]['enable'] = 'true'
+        else:
+            c['StdRESTful'][service]['enable'] = 'false'
+
+    set_enable(config_dict, 'AWEKAS', 'username')
+    set_enable(config_dict, 'CWOP', 'station')
+    set_enable(config_dict, 'PWSweather', 'station')
+    set_enable(config_dict, 'WOW', 'station')
+    set_enable(config_dict, 'Wunderground', 'station')
+    
+    config_dict['version'] = '3.2.0'
+        
+def transfer_comments(config_dict, template_dict):
+    
+    # If this is the top-level, transfer the initial comments
+    if config_dict.parent is config_dict:
+        config_dict.initial_comment = template_dict.initial_comment
+    
+    # Now go through each section, transferring its comments
+    for section in config_dict.sections:
+        try:
+            config_dict.comments[section] = template_dict.comments[section]
+            # Recursively transfer the subsection comments:
+            transfer_comments(config_dict[section], template_dict[section])
+        except KeyError:
+            pass
+
+    # Finally, do the section's scalars:
+    for scalar in config_dict.scalars:
+        try:
+            config_dict.comments[scalar] = template_dict.comments[scalar]
+        except KeyError:
+            pass
 
 #==============================================================================
 #              Utilities that extract from ConfigObj objects
@@ -711,29 +839,29 @@ def reorder(name_list, ref_list):
     assert(len(name_list)==len(result))
     return result
     
-def conditional_merge(a_dict, b_dict):
-    """Merge fields from b_dict into a_dict, but only if they do not yet
-    exist in a_dict"""
-    # Go through each key in b_dict
-    for k in b_dict:
-        if isinstance(b_dict[k], dict):
-            if not k in a_dict:
-                # It's a new section. Initialize it...
-                a_dict[k] = {}
-                # ... and transfer over the section comments, if available
-                try:
-                    a_dict.comments[k] = b_dict.comments[k]
-                except AttributeError:
-                    pass
-            conditional_merge(a_dict[k], b_dict[k])
-        elif not k in a_dict:
-            # It's a scalar. Transfer over the value...
-            a_dict[k] = b_dict[k]
-            # ... then its comments, if available:
-            try:
-                a_dict.comments[k] = b_dict.comments[k]
-            except AttributeError:
-                pass
+# def conditional_merge(a_dict, b_dict):
+#     """Merge fields from b_dict into a_dict, but only if they do not yet
+#     exist in a_dict"""
+#     # Go through each key in b_dict
+#     for k in b_dict:
+#         if isinstance(b_dict[k], dict):
+#             if not k in a_dict:
+#                 # It's a new section. Initialize it...
+#                 a_dict[k] = {}
+#                 # ... and transfer over the section comments, if available
+#                 try:
+#                     a_dict.comments[k] = b_dict.comments[k]
+#                 except AttributeError:
+#                     pass
+#             conditional_merge(a_dict[k], b_dict[k])
+#         elif not k in a_dict:
+#             # It's a scalar. Transfer over the value...
+#             a_dict[k] = b_dict[k]
+#             # ... then its comments, if available:
+#             try:
+#                 a_dict.comments[k] = b_dict.comments[k]
+#             except AttributeError:
+#                 pass
 
 def remove_and_prune(a_dict, b_dict):
     """Remove fields from a_dict that are present in b_dict"""
