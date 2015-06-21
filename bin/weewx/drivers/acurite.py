@@ -59,9 +59,22 @@ According to AcuRite specs, the update frequencies are as follows:
   pc connect csv data logging: 12 minute intervals
   pc connect to acurite software: 18 second updates
 
+In fact, because of the message structure and the data logging design, these
+are the actual update frequencies:
+
+  wind speed: 18 seconds
+  outdoor temperature, outdoor humidity: 36 seconds
+  wind direction, rain total: 36 seconds
+  indoor temperature, pressure: 60 seconds
+  indoor humidity: 12 minutes (only when in USB mode 3)
+
+These are the frequencies possible when reading data via USB.
+
 There is no known way to change the archive interval of 12 minutes.
 
 There is no known way to clear the console memory via software.
+
+The AcuRite stations have no notion of wind gust.
 
 The pressure sensor in the console reports a station pressure, but the
 firmware does some kind of averaging to it so the console displays a pressure
