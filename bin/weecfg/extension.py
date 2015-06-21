@@ -19,6 +19,7 @@ import sys
 
 import weecfg
 from weecfg import Logger
+import weewx
 from weewx import all_service_groups
 import weeutil.weeutil
 
@@ -169,24 +170,25 @@ class ExtensionEngine(object):
             weecfg.prepend_path(cfg, 'HTML_ROOT',
                                 self.config_dict['StdReport']['HTML_ROOT'])
 
-            # massage the database dictionaries for this extension
-            # FIXME: use parameterized root if possible
-            try:
-                sqlitecfg = self.config_dict['Databases'].get('archive_sqlite',
-                                                              None)
-                mysqlcfg = self.config_dict['Databases'].get('archive_mysql',
-                                                             None)
-                for i in cfg['Databases']:
-                    db = cfg['Databases'][i]
-                    if db['driver'] == 'weedb.sqlite' and sqlitecfg:
-                        db['database_name'] = os.path.join(os.path.dirname(sqlitecfg['database_name']), db['database_name'])
-                        db['root'] = sqlitecfg['root']
-                    elif db['driver'] == 'weedb.mysql' and mysqlcfg:
-                        db['host'] = mysqlcfg['host']
-                        db['user'] = mysqlcfg['user']
-                        db['password'] = mysqlcfg['password']
-            except:
-                pass
+            # If the extension uses a database, massage it so it's compatible
+            # with the new V3.2 way of specifying database options
+            if 'Databases' in cfg:
+                for db in cfg['Databases']:
+                    db_dict = cfg['Databases'][db]
+                    # Does this extension use the V3.2+ 'database_type' option?
+                    if 'database_type' not in db_dict:
+                        # There is no database type specified. In this
+                        # case, the driver type better appear. Fail hard, with
+                        # a KeyError, if it does not. Also, if the driver is not
+                        # for sqlite or MySQL, then we don't know anything about it.
+                        # Assume the extension author knows what s/he is doing, and
+                        # leave it be. 
+                        if db_dict['driver'] == 'weedb.sqlite':
+                            db_dict['database_type'] = 'SQLite'
+                            db_dict.pop('driver')
+                        elif db_dict['driver'] == 'weedb.mysql':
+                            db_dict['database_type'] = 'MySQL'
+                            db_dict.pop('driver')
 
             # Remember any new top-level sections so we can inject a major
             # comment block

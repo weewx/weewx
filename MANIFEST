@@ -196,3 +196,5 @@ util/logwatch/conf/services/weewx.conf
 util/logwatch/scripts/services/weewx
 util/rsyslog.d/weewx.conf
 util/systemd/weewx.service
+util/udev/rules.d/cc3000.rules
+util/udev/rules.d/vantage.rules
