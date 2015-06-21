@@ -629,11 +629,6 @@ def update_to_v30(config_dict):
 
 def update_to_v32(config_dict):
     """Update a configuration file to V3.2"""
-    # We are no longer using SVN, so get rid of its ident
-    for i in range(len(config_dict.initial_comment)):
-        if config_dict.initial_comment[i].find("$Id") >= 0:
-            config_dict.initial_comment.pop(i)
-            break
     
     # For interpolation to work, it's critical that WEEWX_ROOT not end
     # with a trailing slash ('/'). Convert it to the normative form:
@@ -649,8 +644,6 @@ def update_to_v32(config_dict):
         # Set the default [SQLite] section:
         config_dict['SQLite'] = {'driver' : 'weedb.sqlite',
                                  'SQLITE_ROOT' : '%(WEEWX_ROOT)s/archive'}
-#         config_dict.comments['SQLite'] = minor_comment_block
-#         config_dict['SQLite'].comments['driver'] = ["    Default values for a SQLite database"]
         try:
             root = config_dict['Databases']['archive_sqlite']['root']
             database_name = config_dict['Databases']['archive_sqlite']['database_name']
@@ -677,8 +670,6 @@ def update_to_v32(config_dict):
                                 'host'  : 'localhost',
                                 'user'  : 'weewx',
                                 'password' : 'weewx'}
-#         config_dict.comments['MySQL'] = minor_comment_block
-#         config_dict['MySQL'].comments['driver'] = ["    Default values for a MySQL database"]
         try:
             config_dict['MySQL']['host'] = config_dict['Databases']['archive_mysql']['host']
             config_dict['MySQL']['user'] = config_dict['Databases']['archive_mysql']['user']
@@ -839,30 +830,6 @@ def reorder(name_list, ref_list):
     assert(len(name_list)==len(result))
     return result
     
-# def conditional_merge(a_dict, b_dict):
-#     """Merge fields from b_dict into a_dict, but only if they do not yet
-#     exist in a_dict"""
-#     # Go through each key in b_dict
-#     for k in b_dict:
-#         if isinstance(b_dict[k], dict):
-#             if not k in a_dict:
-#                 # It's a new section. Initialize it...
-#                 a_dict[k] = {}
-#                 # ... and transfer over the section comments, if available
-#                 try:
-#                     a_dict.comments[k] = b_dict.comments[k]
-#                 except AttributeError:
-#                     pass
-#             conditional_merge(a_dict[k], b_dict[k])
-#         elif not k in a_dict:
-#             # It's a scalar. Transfer over the value...
-#             a_dict[k] = b_dict[k]
-#             # ... then its comments, if available:
-#             try:
-#                 a_dict.comments[k] = b_dict.comments[k]
-#             except AttributeError:
-#                 pass
-
 def remove_and_prune(a_dict, b_dict):
     """Remove fields from a_dict that are present in b_dict"""
     for k in b_dict:
