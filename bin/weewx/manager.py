@@ -952,7 +952,16 @@ def get_manager_dict_from_config(config_dict, data_binding,
         manager_dict['schema'] = [(col_name, manager_dict['schema'][col_name]) for col_name in manager_dict['schema']]
     
     return manager_dict
-        
+
+# The following is for backwards compatibility:        
+def get_manager_dict(bindings_dict, databases_dict, data_binding,
+                     default_binding_dict=default_binding_dict):
+    if bindings_dict.parent != databases_dict.parent:
+        raise weewx.UnsupportedFeature("Database and binding dictionaries"
+                                       " require common parent")
+    return get_manager_dict_from_config(bindings_dict.parent, data_binding, 
+                                        default_binding_dict)
+    
 def open_manager(manager_dict, initialize=False):
     
     manager_cls = weeutil.weeutil._get_object(manager_dict['manager'])
