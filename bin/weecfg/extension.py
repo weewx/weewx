@@ -4,6 +4,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
+from doctest import REPORT_CDIFF
 """Utilities for installing and removing extensions"""
 
 # As an example, here are the names of some reference directories for the
@@ -257,12 +258,40 @@ class ExtensionEngine(object):
                     weecfg.major_comment_block + \
                     ["# Options for extension '%s'" % extension_name]
                 
+            self._reorder(cfg)
             save_config = True
             
         self.logger.log("Merged extension settings into configuration file",
                         level=3)        
         return save_config
-    
+
+    def _reorder(self, cfg):
+        """Reorder the resultant config_dict"""
+        # Patch up the location of any reports so they appear before FTP or RSYNC
+
+        # First, find the FTP or RSYNC reports. This has to be done on the basis
+        # of the skin type, rather than the report name, in case there are
+        # multiple FTP or RSYNC reports to be run.
+        try:
+            for report in self.config_dict['StdReport'].sections:
+                if self.config_dict['StdReport'][report]['skin'] in ['Ftp', 'Rsync']:
+                    target_name = report
+                    break
+            else:
+                # No FTP or RSYNC. Nothing to do.
+                return
+        except KeyError:
+            return
+
+        # Now shuffle things so any reports that appear in the extension appear
+        # just before FTP (or RSYNC) and in the same order they appear in the extension
+        # manifest.        
+        try:
+            for report in cfg['StdReport']:
+                weecfg.reorder_sections(self.config_dict['StdReport'], report, target_name)
+        except KeyError:
+            pass
+            
     def uninstall_extension(self, extension_name):
         """Uninstall the extension with name extension_name"""
         
