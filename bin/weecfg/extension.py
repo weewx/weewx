@@ -158,58 +158,10 @@ class ExtensionEngine(object):
         self.logger.log("Copied %d files" % N, level=2)
         
         save_config = False
-        new_top_level = []
+
         # Look for options that have to be injected into the configuration file
         if 'config' in installer:
-            self.logger.log("Adding sections to configuration file", level=2)
-            # make a copy so we can modify the sections to fit the existing
-            # configuration
-            cfg = dict(installer['config'])
-
-            # prepend any html paths with HTML_ROOT from existing configuration
-            weecfg.prepend_path(cfg, 'HTML_ROOT',
-                                self.config_dict['StdReport']['HTML_ROOT'])
-
-            # If the extension uses a database, massage it so it's compatible
-            # with the new V3.2 way of specifying database options
-            if 'Databases' in cfg:
-                for db in cfg['Databases']:
-                    db_dict = cfg['Databases'][db]
-                    # Does this extension use the V3.2+ 'database_type' option?
-                    if 'database_type' not in db_dict:
-                        # There is no database type specified. In this
-                        # case, the driver type better appear. Fail hard, with
-                        # a KeyError, if it does not. Also, if the driver is not
-                        # for sqlite or MySQL, then we don't know anything about it.
-                        # Assume the extension author knows what s/he is doing, and
-                        # leave it be. 
-                        if db_dict['driver'] == 'weedb.sqlite':
-                            db_dict['database_type'] = 'SQLite'
-                            db_dict.pop('driver')
-                        elif db_dict['driver'] == 'weedb.mysql':
-                            db_dict['database_type'] = 'MySQL'
-                            db_dict.pop('driver')
-
-            # Remember any new top-level sections so we can inject a major
-            # comment block
-            for top_level in cfg:
-                if top_level not in self.config_dict:
-                    new_top_level.append(top_level)
-                    self.logger.log("Adding section %s" % top_level, level=3)
-
-            if not self.dry_run:
-                # Inject any new config data into the configuration file
-                weeutil.weeutil.conditional_merge(self.config_dict, cfg)
-                
-                # Include the major comment block for any new top level sections
-                for new_section in new_top_level:
-                    self.config_dict.comments[new_section] = \
-                        weecfg.major_comment_block + \
-                        ["# Options for extension '%s'" % extension_name]
-                    
-                save_config = True
-            self.logger.log("Merged extension settings into configuration file",
-                            level=3)
+            save_config |= self._inject_config(installer['config'], extension_name)
 
         # Go through all the possible service groups and see if the extension
         # includes any services that belong in any of them.
@@ -249,6 +201,68 @@ class ExtensionEngine(object):
             self.logger.log("Saved configuration dictionary. Backup copy at %s"
                             % backup_path)
             
+    def _inject_config(self, extension_config, extension_name):
+        """Injects any additions to the configuration file that
+        the extension might have.
+        
+        Returns True if it modified the config file, False otherwise.
+        """
+        self.logger.log("Adding sections to configuration file", level=2)
+        # make a copy so we can modify the sections to fit the existing
+        # configuration
+        cfg = dict(extension_config)
+
+        save_config = False
+
+        # prepend any html paths with HTML_ROOT from existing configuration
+        weecfg.prepend_path(cfg, 'HTML_ROOT',
+                            self.config_dict['StdReport']['HTML_ROOT'])
+
+        # If the extension uses a database, massage it so it's compatible
+        # with the new V3.2 way of specifying database options
+        if 'Databases' in cfg:
+            for db in cfg['Databases']:
+                db_dict = cfg['Databases'][db]
+                # Does this extension use the V3.2+ 'database_type' option?
+                if 'database_type' not in db_dict:
+                    # There is no database type specified. In this
+                    # case, the driver type better appear. Fail hard, with
+                    # a KeyError, if it does not. Also, if the driver is not
+                    # for sqlite or MySQL, then we don't know anything about it.
+                    # Assume the extension author knows what s/he is doing, and
+                    # leave it be. 
+                    if db_dict['driver'] == 'weedb.sqlite':
+                        db_dict['database_type'] = 'SQLite'
+                        db_dict.pop('driver')
+                    elif db_dict['driver'] == 'weedb.mysql':
+                        db_dict['database_type'] = 'MySQL'
+                        db_dict.pop('driver')
+
+
+        new_top_level = []
+        # Remember any new top-level sections so we can inject a major
+        # comment block
+        for top_level in cfg:
+            if top_level not in self.config_dict:
+                new_top_level.append(top_level)
+                self.logger.log("Adding section %s" % top_level, level=3)
+
+        if not self.dry_run:
+            # Inject any new config data into the configuration file
+            weeutil.weeutil.conditional_merge(self.config_dict, cfg)
+            
+            # Include the major comment block for any new top level sections
+            for new_section in new_top_level:
+                self.config_dict.comments[new_section] = \
+                    weecfg.major_comment_block + \
+                    ["# Options for extension '%s'" % extension_name]
+                
+            save_config = True
+            
+        self.logger.log("Merged extension settings into configuration file",
+                        level=3)        
+        return save_config
+    
     def uninstall_extension(self, extension_name):
         """Uninstall the extension with name extension_name"""
         
