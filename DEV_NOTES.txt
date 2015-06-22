@@ -8,45 +8,42 @@ checklist for doing a release:
      1. weewx.__init__.py
      2. weewx.conf
      3. docs/customizing.htm docs/upgrading.htm docs/usersguide.htm
-3. Make sure all changes have been logged in docs/changes.txt
+3. Make sure all changes have been logged
+     1. docs/changes.txt
+     2. pkg/debian/changelog.rpm
+     3. pkg/changelog
 4. Make sure the upgrading guide has been updated if necessary.
-5. If working off a branch, do a merge:
-     1. commit all changes
-     2. switch to trunk
-     3. Right click on the top level weewx, select Team | Merge. Select
-        "Reintegrate" and enter the branch as the URL. 
-6. After looking things over, commit changes to the trunk.
-7. Tag it.  Right click top level weewx, select Team | Tag and create a new
-     tag with a name similar to tags/v1.3.1.  Comment should read something
-     like "Version 1.3.1 release"
-8. Create the tarball.  Run "./setup.py sdist"
-9. As a final sanity check, go to the production machine, unpack the
+5. If working off a branch, do a merge to master.
+6. Create the tarball:  ./setup.py sdist
+7. As a final sanity check, go to the production machine, unpack the
      tarball, install, run.
-10. Upload to SourceForge:
+8. Tag it:  git tag -a v1.3.1 -m "Version 1.3.1 release"
+9. Upload to SourceForge:
      1. make upload-src
      2. make upload-readme
      3. Select the new tarball as the Mac, Linux, and BSD distribution
-11. Update docs on the web site:
+10. Update docs on the web site:
      1. make upload-docs
-12. Update the web site:
+11. Update the web site:
      1. Add to the news page.
      2. Upload news.htm to the web server.
-13. Run a backup on condor
-14. Announce the release to the weewx user's group.
+12. Run a backup on condor
+13. Announce the release to the weewx user's group.
 
 
 
 release process by command: ---------------------------------------------------
 
 # on any host, do a fresh checkout, set the version and update changelogs
-svn checkout https://.../trunk weewx
+git clone https://github.com/weewx/weewx.git
 vi bin/weewx/__init__.py
 make version
 make deb-changelog
 make rpm-changelog
 vi docs/changes.txt        # as needed
 vi docs/upgrading.htm      # as needed
-svn commit -m "release x.y.z"
+git commit -a -m "release x.y.z"
+git push
 
 # generate the readme then upload it to development_versions
 make readme upload-readme
@@ -63,14 +60,11 @@ make rpm-package upload-rpm
 rm -rf build dist
 make rpm-package upload-rpm
 
-# do final install test with each package on a virgin system
-# do final upgrade test with each package
-
 # tag the release
-svn copy https://.../trunk https://.../tags/vX.Y.Z
+git tag -a vX.Y.Z -m "tag release X.Y.Z"
 
 # upload the docs
-svn checkout https://.../website website
+git clone https://github.com/weewx/website.git
 make upload-docs
 
 # at sourceforge, move the new files into position
@@ -174,3 +168,62 @@ redhat install/remove:
   yum remove weewx                                # remove with yum
   rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
   rpm -e weewx                                    # remove with rpm
+
+
+testing:
+
+any linux:
+- new install using setup.py to /home/weewx
+  setup.py install
+
+- upgrade using setup.py to /home/weewx
+  setup.py install
+  modify /home/weewx/weewx.conf
+  setup.py install
+
+- new install using setup.py to /opt/weewx
+  setup.py install home=/opt/weewx
+
+- upgrade using setup.py to /opt/weewx
+  setup.py install home=/opt/weewx
+  modify /opt/weewx/weewx.conf
+  setup.py install home=/opt/weewx
+
+on centos and suse:
+- new install using rpm
+  rpm -i weewx_x.y.z.rpm
+
+- installation and removal of extensions
+  rpm -i weewx_x.y.z.rpm
+  wee_extension --install cmon
+  wee_extension --install pmon
+  wee_extension --remove cmon
+
+- upgrade using rpm
+  rpm -i weewx_r.s.t.rpm
+  rpm -U weewx_x.y.z.rpm
+
+- upgrade using rpm with extensions installed
+  rpm -i weewx_r.s.t.rpm
+  wee_extension --install cmon
+  rpm -U weewx_x.y.z.rpm
+
+debian:
+- new install usinb dpkg
+  dpkg -i weewx_x.y.z.deb
+
+- new install using dpkg, install cmon, install pmon, remove cmon
+  dpkg -i weewx_x.y.z.deb
+  wee_extension --install cmon
+  wee_extension --install pmon
+  wee_extension --remove cmon
+
+- upgrade using dpkg take maintainer's version of weewx.conf
+  dpkg -i weewx_r.s.t.deb
+  modify /etc/weewx/weewx.conf
+  dpkg -i weewx_x.y.z.deb
+
+- upgrade using dpkg use old version of weewx.conf
+  dpkg -i weewx_r.s.t.deb
+  modify /etc/weewx/weewx.conf
+  dpkg -i weewx_x.y.z.deb
