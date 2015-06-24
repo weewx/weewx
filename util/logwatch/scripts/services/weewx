@@ -44,6 +44,9 @@ my $ACURITE_DODGEY_DATA = 'acurite: R1: ignoring dodgey data';
 my $ACURITE_BAD_R1_LENGTH = 'acurite: R1: bad length';
 my $ACURITE_BAD_R2_LENGTH = 'acurite: R2: bad length';
 my $ACURITE_FAILED_USB_CONNECT = 'acurite: Failed attempt';
+my $ACURITE_STALE_DATA = 'acurite: R1: ignoring stale data';
+my $ACURITE_NO_SENSORS = 'acurite: R1: no sensors found';
+my $ACURITE_BOGUS_STRENGTH = 'acurite: R1: bogus signal strength';
 
 # any lines that do not match the patterns we define
 my @unmatched = ();
@@ -88,6 +91,9 @@ my @acurite_dodgey_data = ();
 my @acurite_r1_length = ();
 my @acurite_r2_length = ();
 my @acurite_failed_usb = ();
+my @acurite_stale_data = ();
+my @acurite_no_sensors = ();
+my @acurite_bogus_strength = ();
 
 my %itemized = (
     'upload errors', \@upload_errors,
@@ -102,6 +108,9 @@ my %itemized = (
     'acurite bad R1 length', \@acurite_r1_length,
     'acurite bad R2 length', \@acurite_r2_length,
     'acurite failed usb connect', \@acurite_failed_usb,
+    'acurite stale_data', \@acurite_stale_data,
+    'acurite no sensors', \@acurite_no_sensors,
+    'acurite bogus signal strength', \@acurite_bogus_strength,
     );
 
 my $clocksum = 0;
@@ -205,6 +214,15 @@ while(defined($_ = <STDIN>)) {
     } elsif (/acurite: Failed attempt/) {
         push @acurite_failed_usb, $_;
         $counts{$ACURITE_FAILED_USB_CONNECT} += 1;
+    } elsif (/acurite: R1: ignoring stale data/) {
+        push @acurite_stale_data, $_;
+        $counts{$ACURITE_STALE_DATA} += 1;
+    } elsif (/acurite: R1: no sensors found/) {
+        push @acurite_no_sensors, $_;
+        $counts{$ACURITE_NO_SENSORS} += 1;
+    } elsif (/acurite: R1: bogus signal strength/) {
+        push @acurite_bogus_strength, $_;
+        $counts{$ACURITE_BOGUS_STRENGTH} += 1;
     } elsif (/forecast: .*Thread: ([^:]+): generated 1 forecast record/) {
         $forecast_records{$1} += 1;
         $counts{$FORECAST_RECORDS} += 1;
@@ -254,6 +272,7 @@ while(defined($_ = <STDIN>)) {
              /engine: Starting main packet loop/ ||
              /engine: Shut down StdReport thread/ ||
              /engine: Shut down StdRESTful thread/ ||
+             /engine: Shutting down StdReport thread/ ||
              /engine: Loading service/ ||
              /engine: Finished loading service/ ||
              /engine: Using archive interval of/ ||
@@ -294,6 +313,7 @@ while(defined($_ = <STDIN>)) {
              /owfss: interface is/ ||
              /owfss: sensor map is/ ||
              /owfss: sensor type map is/ ||
+             /acurite: driver version is/ ||
              /fousb: driver version is/ ||
              /fousb: found station on USB/ ||
              /fousb: altitude is/ ||
@@ -509,7 +529,8 @@ while(defined($_ = <STDIN>)) {
              /wbug: code/ ||
              /wbug: read/ ||
              /wbug: url/ ||
-             /wbug: data/) {
+             /wbug: data/ ||
+             /GaugeGenerator:/) {
         # ignore
     } elsif (! /weewx/) {
         # ignore
