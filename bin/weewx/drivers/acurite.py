@@ -313,7 +313,7 @@ import weewx.wxformulas
 from weeutil.weeutil import to_bool
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.18'
+DRIVER_VERSION = '0.19'
 DEBUG_RAW = 0
 
 # USB constants for HID
@@ -562,7 +562,7 @@ class Station(object):
         try:
             self.handle.setConfiguration(dev.configurations[0])
         except (AttributeError, usb.USBError), e:
-            loginf("Set configuration failed: %s" % e)
+            pass
 
         # attempt to claim the interface
         try:
@@ -576,7 +576,7 @@ class Station(object):
         try:
             self.handle.setAltInterface(interface)
         except (AttributeError, usb.USBError), e:
-            loginf("Set alt interface failed: %s" % e)
+            pass
 
     def close(self):
         if self.handle is not None:
@@ -784,15 +784,15 @@ class Station(object):
               0x1000 <= c5 <= 0xffff and
               0x0 <= c6 <= 0x4000 and
               0x960 <= c7 <= 0xa28 and
-              0x01 <= a <= 0x3f and 0x01 <= b <= 0x3f and
-              0x01 <= c <= 0x0f and 0x01 <= d <= 0x0f):
-            # this is a HP038 sensor, all constants within specified bounds
+              (0x01 <= a <= 0x3f and 0x01 <= b <= 0x3f and
+               0x01 <= c <= 0x0f and 0x01 <= d <= 0x0f) or ignore_bounds):
+            # this is a HP038 sensor.  some consoles return values outside the
+            # specified limits, but their data still seem to be ok.  if the
+            # ignore_bounds flag is set, then permit values for A, B, C, or D
+            # that are out of bounds, but enforce constraints on the other
+            # constants C1-C7.
             d2 = (data[21] << 8) + data[22]
             d1 = (data[23] << 8) + data[24]
-            return Station.decode_pt_HP03S(c1,c2,c3,c4,c5,c6,c7,a,b,c,d,d1,d2)
-        elif (ignore_bounds):
-            # some consoles return values outside the specified limits, but
-            # their data still seem to be ok.
             return Station.decode_pt_HP03S(c1,c2,c3,c4,c5,c6,c7,a,b,c,d,d1,d2)
         logerr("R2: unknown calibration constants: %s" % _fmt_bytes(data))
         return None, None
