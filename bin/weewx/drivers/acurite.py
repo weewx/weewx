@@ -312,7 +312,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.17'
+DRIVER_VERSION = '0.18'
 DEBUG_RAW = 0
 
 # USB constants for HID
@@ -547,7 +547,7 @@ class Station(object):
         # FIXME: is it necessary to set the configuration?
         try:
             self.handle.setConfiguration(dev.configurations[0])
-        except usb.USBError, e:
+        except (AttributeError, usb.USBError), e:
             loginf("Set configuration failed: %s" % e)
 
         # attempt to claim the interface
@@ -561,7 +561,7 @@ class Station(object):
         # FIXME: is it necessary to set the alt interface?
         try:
             self.handle.setAltInterface(interface)
-        except usb.USBError, e:
+        except (AttributeError, usb.USBError), e:
             loginf("Set alt interface failed: %s" % e)
 
     def close(self):
