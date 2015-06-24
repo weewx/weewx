@@ -310,6 +310,7 @@ import usb
 
 import weewx.drivers
 import weewx.wxformulas
+from weeutil.weeutil import to_bool
 
 DRIVER_NAME = 'AcuRite'
 DRIVER_VERSION = '0.18'
@@ -355,6 +356,16 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
 
     max_tries - How often to retry communication before giving up.
     [Optional. Default is 10]
+
+    ignore_bounds - Indicates how to treat calibration constants from the
+    pressure/temperature sensor.  Some consoles report constants that are
+    outside the limits specified by the sensor manufacturer.  Typically this
+    would indicate bogus data - perhaps a bad transmission or noisy USB.
+    But in some cases, the apparently bogus constants actually work, and
+    no amount of power cycling or resetting of the console changes the values
+    that the console emits.  Use this flag to indicate that this is one of
+    those quirky consoles.
+    [Optional.  Default is False]
     """
     _R1_INTERVAL = 18    # 5-in-1 sensor updates every 18 seconds
     _R2_INTERVAL = 60    # console sensor updates every 60 seconds
@@ -366,6 +377,9 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         self.max_tries = int(stn_dict.get('max_tries', 10))
         self.retry_wait = int(stn_dict.get('retry_wait', 30))
         self.polling_interval = int(stn_dict.get('polling_interval', 6))
+        self.ignore_bounds = to_bool(stn_dict.get('ignore_bounds', False))
+        if self.ignore_bounds:
+            loginf('R2 bounds on constants will be ignored')
         self.enable_r3 = int(stn_dict.get('enable_r3', 0))
         if self.enable_r3:
             loginf('R3 data will be attempted')
@@ -412,7 +426,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 if raw2:
                     Station.check_pt_constants(last_raw2, raw2)
                     last_raw2 = raw2
-                    packet.update(Station.decode_R2(raw2))
+                    packet.update(Station.decode_R2(raw2, self.ignore_bounds))
                 self._augment_packet(packet)
                 ntries = 0
                 yield packet
@@ -653,10 +667,10 @@ class Station(object):
         return ok
 
     @staticmethod
-    def decode_R2(raw):
+    def decode_R2(raw, ignore_bounds=False):
         data = dict()
         if len(raw) == 25 and raw[0] == 0x02:
-            data['pressure'], data['inTemp'] = Station.decode_pt(raw)
+            data['pressure'], data['inTemp'] = Station.decode_pt(raw, ignore_bounds)
         elif len(raw) != 25:
             logerr("R2: bad length: %s" % _fmt_bytes(raw))
         else:
@@ -750,13 +764,14 @@ class Station(object):
         return (((data[6] & 0x3f) << 7) | (data[7] & 0x7f)) * 0.0254
 
     @staticmethod
-    def decode_pt(data):
+    def decode_pt(data, ignore_bounds=False):
         # decode pressure and temperature from the R2 message
         # decoded pressure is mbar, decoded temperature is degree C
         c1,c2,c3,c4,c5,c6,c7,a,b,c,d = Station.get_pt_constants(data)
 
         if (c1 == 0x8000 and c2 == c3 == 0x0 and c4 == 0x0400 and c5 == 0x1000
             and c6 == 0x0 and c7 == 0x0960 and a == b == c == d == 0x1):
+            # this is a MS5607 sensor, typical in 02032 consoles
             d2 = ((data[21] & 0x0f) << 8) + data[22]
             if d2 >= 0x0800:
                 d2 -= 0x1000
@@ -771,8 +786,13 @@ class Station(object):
               0x960 <= c7 <= 0xa28 and
               0x01 <= a <= 0x3f and 0x01 <= b <= 0x3f and
               0x01 <= c <= 0x0f and 0x01 <= d <= 0x0f):
+            # this is a HP038 sensor, all constants within specified bounds
             d2 = (data[21] << 8) + data[22]
             d1 = (data[23] << 8) + data[24]
+            return Station.decode_pt_HP03S(c1,c2,c3,c4,c5,c6,c7,a,b,c,d,d1,d2)
+        elif (ignore_bounds):
+            # some consoles return values outside the specified limits, but
+            # their data still seem to be ok.
             return Station.decode_pt_HP03S(c1,c2,c3,c4,c5,c6,c7,a,b,c,d,d1,d2)
         logerr("R2: unknown calibration constants: %s" % _fmt_bytes(data))
         return None, None
