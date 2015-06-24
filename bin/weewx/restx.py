@@ -1305,6 +1305,7 @@ class StdAWEKAS(StdRESTful):
 
     [StdRESTful]
         [[AWEKAS]]
+            enable   = True
             username = AWEKAS_USERNAME
             password = AWEKAS_PASSWORD
     
@@ -1617,4 +1618,7 @@ def check_enable(config_dict, service, *args):
                       "Data will not be posted: Missing option %s" % (service, e))
         return None
 
+    # Get rid of the no longer needed key 'enable':
+    site_dict.pop('enable', None)
+    
     return site_dict

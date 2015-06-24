@@ -4,7 +4,6 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-from doctest import REPORT_CDIFF
 """Utilities for installing and removing extensions"""
 
 # As an example, here are the names of some reference directories for the
@@ -20,7 +19,6 @@ import sys
 
 import weecfg
 from weecfg import Logger
-import weewx
 from weewx import all_service_groups
 import weeutil.weeutil
 
