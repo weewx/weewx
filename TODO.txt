@@ -1,9 +1,6 @@
 TODO: items for the next release; complete list is at github
 -------------------------------------------------------------------------------
 
-If an extension specifies a new report, it gets tacked on as the
-last subsection in [StdReport], so it gets run _after_ the FTP session.
-
 Update documentation to reflect new way of specifying databases.
  - In particular, how to specify MySQL host, username, and password
 
