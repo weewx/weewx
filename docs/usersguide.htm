@@ -2312,7 +2312,9 @@ longitude = -77.0366</pre>
       The actual database to be used &mdash; it should match one of the
       sections in <a href="#Databases"><span class="code">[Databases]</span></a>.
       Should you decide to use a MySQL database, instead of the default
-      SQLite database, this is the place to change it. Required.
+      SQLite database, this is the place to change it. See the 
+      section <a href="#configuring_mysql"><em>Configuring MySQL</em></a>
+      for details. Required.
     </p>
     <p class="config_option">table_name</p>
     <p>
@@ -2348,54 +2350,88 @@ longitude = -77.0366</pre>
     <p>This definition uses the <a href="http://sqlite.org/">SQLite</a> database 
       engine to store data. SQLite is open-source, simple, lightweight, highly 
       portable, and memory efficient. For most purposes it serves nicely.</p>
-    <p class="config_option">root</p>
-      <p>The root directory from which relative paths descend. Default is
-        the <span class="symcode">WEEWX_ROOT</span> directory.</p>
+    <p class="config_option">database_type</p>
+    <p>Set to <span class="code">SQLite</span> to signal that this is a
+    SQLite database.</p>
     <p class="config_option">database_name</p>
-    <p>The name of the SQLite file. A path can also be specified with the name.
-      A relative path is relative to the <span class="code">root</span>
-      parameter. Default is <span class="code">archive/weewx.sdb</span> for
-      <span class="code">setup.py</span> installations or
-      <span class="code">/var/lib/weewx/weewx.sdb</span> for DEB or RPM
-          installations.</p>
-    <p class="config_option" id='archive_timeout'>timeout</p>
-    <p>When the database is accessed by multiple threads and one of those threads
-      modifies the database, the SQLite database is locked until that transaction
-      is completed. The <span class='code'>timeout</span> option specifies how long
-      other threads should wait for the lock to go away before raising an exception.
-      The default is 5 seconds.</p>
-    <p class='config_option'>isolation_level</p>
-    <p>Set the current isolation level. See the pysqlite documentation on
-      <a href="http://docs.python.org/2.7/library/sqlite3.html#sqlite3.Connection.isolation_level">
-      isolation levels</a> for more information. There is no reason 
-      to change this, but it is here for completeness. Default is <span class='code'>None</span>
-      (autocommit).</p>
+    <p>The path to the SQLite file relative to the <span class="code">SQLITE_ROOT</span>
+      option. Default is <span class="code">weewx.sdb</span>.</p>
 
     <h3 class="config_section">[[archive_mysql]]</h3>
     <p>This definition uses the MySQL database engine to store data.
       It is free, highly-scalable, but more complicated to administer. </p>
-    <p>Note that if you choose the <a href="http://www.mysql.com/">MySQL</a>
-      database it is assumed that you know how to administer it. In particular,
-      you will have to set up a user with appropriate create and modify
-      privileges.</p>
-    <p class="config_option">host</p>
-    <p>The name of the server on which the database is located. Default is <span class="code">localhost</span>.</p>
-    <p class="config_option">user</p>
-    <p>The user name to be used to log into the server. Required.</p>
-    <p class="config_option">password</p>
-    <p>The password. Required.</p>
+    <p class="config_option">database_type</p>
+    <p>Set to <span class="code">MySQL</span> to signal that this is a
+    MySQL database.</p>
     <p class="config_option">database_name</p>
-    <p>The name of the database. Required.</p>
+    <p>The name of the database. Default is <span class="weewx">weewx</span>. 
+    Required.</p>
 
-    <h2 class="config_section">[Engines]</h2>
-    <p>This section is used to configure the internal service engine in
-      <span class="code">weewx</span>. It is for advanced customization. Details on 
-      how to do this can be found in the section <em>
-	<a href="customizing.htm#service_engine">Customizing the 
-	  weewx service engine</a></em> of the <a href="customizing.htm">Customizing Guide</a>. </p>
+		<h2 class="config_section">[SQLite]</h2>
+		<p>This section defines default values for SQLite databases.
+			They can be overridden by individual databases.</p>
+
+		<p class="config_option">driver</p>
+		<p>
+			The sqlite driver name. Required.
+		</p>
+		<p class="config_option">SQLITE_ROOT</p>
+		<p>
+			The location of the directory holding the SQLite databases. For <span
+				class="code">setup.py</span> installations, the default is the <span
+				class="symcode">WEEWX_ROOT</span><span class="code">/archive</span>
+			directory. For DEB or RPM installations, it is <span class="code">/var/lib/weewx</span>.
+		</p>
+		<p class="config_option" id='archive_timeout'>timeout</p>
+		<p>
+			When the database is accessed by multiple threads and one of those
+			threads modifies the database, the SQLite database is locked until
+			that transaction is completed. The <span class='code'>timeout</span>
+			option specifies how long other threads should wait for the lock to
+			go away before raising an exception. The default is 5 seconds.
+		</p>
+		<p class='config_option'>isolation_level</p>
+		<p>
+			Set the current isolation level. See the pysqlite documentation on <a
+				href="http://docs.python.org/2.7/library/sqlite3.html#sqlite3.Connection.isolation_level">
+				isolation levels</a> for more information. There is no reason to change
+			this, but it is here for completeness. Default is <span class='code'>None</span>
+			(autocommit).
+		</p>
+
+		<h2 class="config_section">[MySQL]</h2>
+		<p>This section defines default values for MySQL databases. They
+			can be overridden by individual databases.</p>
+		<p>
+			Note that if you choose the <a href="http://www.mysql.com/">MySQL</a>
+			database, it is assumed that you know how to administer it. In
+			particular, you will have to set up a user with appropriate create
+			and modify privileges.
+		</p>
+		<p class="config_option">driver</p>
+		<p>The MySQL driver name. Required.</p>
+		<p class="config_important">host</p>
+		<p>
+			The name of the server on which the database is located. Default is <span
+				class="code">localhost</span>.
+		</p>
+		<p class="config_important">user</p>
+		<p>The user name to be used to log into the server. Required.</p>
+		<p class="config_important">password</p>
+		<p>The password. Required.</p>
+
+		<h2 class="config_section">[Engines]</h2>
+		<p>
+			This section is used to configure the internal service engine in <span
+				class="code">weewx</span>. It is for advanced customization. Details
+			on how to do this can be found in the section <em> <a
+				href="customizing.htm#service_engine">Customizing the weewx
+					service engine</a></em> of the <a href="customizing.htm">Customizing
+				Guide</a>.
+		</p>
 
 
-    <h3 class="config_section">[[Services]]</h3>
+		<h3 class="config_section">[[Services]]</h3>
     <p>
       Internally, <span class="code">weewx</span> consists of many <em>services</em>,
       each responsible for some aspect of the program's functionality.
@@ -3189,7 +3225,9 @@ wind_gust_max_time: None</p>
       database, instead of the default SQLite database.</p>
     <p>
       First, you should change your <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a>
-      section to point to MySQL, instead of SQLite. After the change, it
+      section to point to the MySQL database, <span class="code">archive_mysql</span>,
+      instead of the SQLite database <span class="code">archive_sqlite</span>. After the 
+      change, it
       will look something like this (change <span class="highlight">highlighted</span>):
     </p>
     <pre class="tty">
@@ -3204,16 +3242,13 @@ wind_gust_max_time: None</p>
         schema = schemas.wview.schema</pre>
 
     <p>Assuming that you want to use the default database configuration, your
-      <span class="code"><a href="#Databases">[Databases]</a></span> section 
-      should 
-      look something like this:</p>
-    <pre class="tty">[Databases]
-  [[archive_mysql]]
-      host = localhost
-      user = weewx
-      password = weewx
-      database_name = weewx
-      driver = weedb.mysql
+      <span class="code"><a href="#Databases">[MySQL]</a></span> section 
+      should look something like this:</p>
+    <pre class="tty">[MySQL]
+    driver = weedb.mysql
+    host = localhost
+    user = weewx
+    password = weewx
 </pre>
     <p>This assumes user <span class="code">weewx</span> would have password <span class="code">weewx</span>. 
       Adjust as necessary.</p>
