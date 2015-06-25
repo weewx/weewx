@@ -59,7 +59,7 @@ function showtab(tab,id) {
   </a>
   <h1 class="title">User's Guide to the weewx Weather System<br />
     <span class='version'>
-Version: 3.1.0
+Version: 3.2.0a2
     </span>
   </h1>
 
@@ -1094,35 +1094,33 @@ Version: 3.1.0
            [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
            [--location="Home Sweet Home"]
-           [--no-prompt]
+           [--no-prompt] [--no-backup]
        wee_config --upgrade CONFIG_FILE|--config=CONFIG_FILE
            --dist-config=DIST_CONFIG
-           [--output=OUT_CONFIG] [--no-prompt] [--warn-on-error]
+           [--output=OUT_CONFIG] [--no-prompt] [--no-backup] [--warn-on-error]
        wee_config --reconfigure CONFIG_FILE|--config=CONFIG_FILE
            [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
            [--location="Home Sweet Home"]
-           [--output=OUT_CONFIG] [--no-prompt]
+           [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
 
 Commands:
 
---help         Show this message then exit.
---version      Show the weewx version then exit.
---list-drivers List the available weewx device drivers, then exit.
---install      Install a new configuration file starting with the contents of
-               DIST_CONFIG, prompting as necessary. Can take command-line
-               station values, including a driver.
---upgrade      Update the contents of configuration file CONFIG_FILE to the
-               installer version, then merge the result with the
-               contents of configuration file DIST_CONFIG. 
---reconfigure  Modify an existing configuration file CONFIG_FILE. Can take command-line
-               station values, including a driver. Use this command to add a driver. 
+--list-drivers  List the available weewx device drivers, then exit.
+--install       Install a new configuration file starting with the contents of
+                DIST_CONFIG, prompting for station parameters.
+--upgrade       Update the contents of configuration file CONFIG_FILE to the
+                installed version, then merge the result with the contents of
+                configuration file DIST_CONFIG. 
+--reconfigure   Modify an existing configuration file CONFIG_FILE with any
+                specified station parameters.  Use this command with the
+                driver option to change the device driver.
 
-Command-line "station" values:
-  If given, the value will replace what's in CONFIG_FILE. 
-     --driver      --units
-     --latitude    --longitude
-     --altitude    --location
+Station parameters:
+
+  --driver      --units
+  --latitude    --longitude
+  --altitude    --location
 
 
 Options:
@@ -1131,13 +1129,13 @@ Options:
   --list-drivers        List the available device drivers.
   --install             Install a new configuration file.
   --upgrade             Update an existing configuration file, then merge with
-                        a DIST_CONFIG.
+                        contents of DIST_CONFIG.
   --reconfigure         Reconfigure an existing configuration file.
   --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
   --dist-config=DIST_CONFIG
-                        Use new/template configuration file DIST_CONFIG.
-  --output=OUT_CONFIG   Save to configuration file OUT_CONFIG. If not given,
-                        then replace existing configuration file.
+                        Use template configuration file DIST_CONFIG.
+  --output=OUT_CONFIG   Save to configuration file OUT_CONFIG.  If not
+                        specified then replace existing configuration file.
   --driver=DRIVER       Use the driver DRIVER. For example,
                         weewx.driver.vantage
   --latitude=yy.y       The station latitude in decimal degrees.
@@ -1148,13 +1146,13 @@ Options:
   --location=LOCATION   A text description of the station. For example,
                         "Santa's workshop, North Pole"
   --units=(metric|us)   Set display units to 'metric' or 'us'.
-  --no-prompt           Do not prompt. Use default or command-line station
-                        values only.
-  --no-backup           If replacing an existing configuration file, do not
-                        backup first.
-  --warn-on-error       Warn if an update is not possible. Otherwise, die (the
-                        default).
-  --debug               Show diagnostic information while running.</pre>
+  --no-prompt           Do not prompt. Use default or specified values.
+  --no-backup           When replacing an existing configuration file, do not
+                        create a backup copy.
+  --warn-on-error       Only warn if an update is not possible.  Default
+                        behavior is to warn then exit.
+  --debug               Show diagnostic information while running.
+</pre>
 
     <p>
       The utility is pretty good about "guessing" where your configuration
@@ -1772,22 +1770,164 @@ longitude = -77.0366</pre>
     <p class='config_option'>log_failure</p>
     <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
 
+    <h3 class="config_section">[[AWEKAS]]</h3>
+    <p class="config_section"><span class="code">Weewx</span> can send your 
+      current data to the <a href="http://www.awekas.at/">Automatisches
+        Wetterkarten System</a> (AWEKAS).  If you wish
+      to do this, set the option <span class='code'>enable</span> to 
+      <span class="code">true</span>, then set options <span class='code'>username</span>
+      and <span class='code'>password</span> appropriately. When you are done, it will
+      look something like</p>
+    <pre class="tty">[StdRestful]
+    [[AWEKAS]]
+        enable = true
+        username = joeuser
+        password = XXX </pre>
+    <p class="config_important">enable</p>
+    <p>
+      Set to <span class="code">true</span> to enable posting to
+      AWEKAS. Optional. Default is <span class="code">false</span>.
+    </p>
+    <p class="config_important">username</p>
+    <p>Set to your AWEKAS username (<i>e.g.</i>, <span class="code">joeuser</span>). Required.</p>
+    <p class="config_important">password</p>
+    <p>Set to your AWEKAS password. Required.</p>
+    <p class="config_option">language</p>
+    <p>Set to your preferred language. Default is <span class='code'>en</span>.</p>
+    <p class='config_option'>log_success</p>
+    <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
+    <p class='config_option'>log_failure</p>
+    <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
+
+    <h3 class="config_section">[[CWOP]]</h3>
+    <p><span class="code">Weewx </span>can send your current data to the
+      <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If you
+      wish to do this, set the option
+      <span class='code'>enable</span> to <span class='code'>true</span>,
+      then set the option <span class='code'>station</span> to your
+      CWOP station code. If your station is an amateur radio APRS station,
+      you will have to set <span class="code">passcode</span> as well.
+      When you are done, it will look something like</p>
+    <pre class="tty">[StdRestful]
+    [[CWOP]]
+        enable = true
+        station = CW1234
+        passcode = XXX    # Replace with your passcode (APRS stations only)
+        post_interval = 600</pre>
+    <p class="config_important">enable</p>
+    <p>
+      Set to <span class="code">true</span> to enable posting to the
+      CWOP. Optional. Default is <span class="code">false</span>.
+    </p>
+    <p class="config_important">station</p>
+    <p>Set to your CWOP station ID (<em>e.g.</em>, <span class="code">CW1234</span>)
+      or amateur radio callsign (APRS). Required.
+    </p>
+    <p class="config_important">passcode</p>
+    <p>This is used for APRS (amateur radio) stations only. Set to the
+      passcode given to you by the CWOP operators. Required for APRS stations, 
+      ignored for others.</p>
+    <p class="config_option">post_interval </p>
+    <p>The interval in seconds between posts. Because CWOP is heavily used, the
+      operators discourage very frequent posts. Every 5 minutes (300 seconds)
+      is fine, but they prefer every 10 minutes (600 s) or even longer. Setting
+      this value to zero will cause every archive record to be posted. 
+      Optional. Default is 600 seconds.</p>
+    <p class="config_option">stale</p>
+    <p>How old a record can be before it will not be used for a catch up. CWOP
+      does not use the timestamp on a posted record. Instead, they use the wall
+      clock time that it came in. This means that if your station is off the
+      air for a long period of time, then when <span class="code">weewx</span>
+      attempts a catch up, old data could be interpreted as the current
+      conditions. Optional. Default is 1800 seconds.</p>
+    <p class="config_option">server_list</p>
+    <p>A comma-delimited list of the servers that should be tried for
+      uploading data.
+      Optional.  Default is: cwop.aprs.net:14580, cwop.aprs.net:23</p>
+    <p class='config_option'>log_success</p>
+    <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
+    <p class='config_option'>log_failure</p>
+    <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
+
+    <h3 class="config_section">[[PWSweather]]</h3>
+    <p><span class="code">Weewx </span>can send your current data to the
+      <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you
+      wish to do this, set the option
+      <span class='code'>enable</span> to <span class='code'>true</span>,
+      then set the options <span class='code'>station</span> and
+      <span class='code'>password</span> appropriately. When you are done,
+      it will look something like</p>
+    <pre class="tty">[StdRestful]
+    [[PWSweather]]
+        enable = true
+        station = BOISE
+        password = XXX</pre>
+    <p class="config_important">enable</p>
+    <p>
+      Set to <span class="code">true</span> to enable posting to the
+      PWSweather. Optional. Default is <span class="code">false</span>.
+    </p>
+    <p class="config_important">station </p>
+    <p>Set to your PWSweather station ID (<i>e.g.</i>, <span class='code'>BOISE</span>). Required. </p>
+    <p class="config_important">password </p>
+    <p>Set to your PWSweather password. Required. </p>
+    <p class='config_option'>log_success</p>
+    <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
+    <p class='config_option'>log_failure</p>
+    <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
+
+
+    <h3 class="config_section">[[WOW]]</h3>
+    <p class="config_section"><span class="code">Weewx</span> can send your 
+      current data to the <a href="http://wow.metoffice.gov.uk/">British
+      Weather Observations Website (WOW)</a> service. If you wish
+      to do this, set the option <span class='code'>enable</span> to
+      <span class="code">true</span>, then set options <span class="code">station</span>
+      and <span class="code">password</span> appropriately. When you are done,
+      it will look something like</p>
+    <pre class="tty">[StdRestful]
+    [[WOW]]
+        enable = true
+        station = 12345678
+        password = XXX</pre>
+    <p class="config_important">enable</p>
+    <p>
+      Set to <span class="code">true</span> to enable posting to
+      WOW. Optional. Default is <span class="code">false</span>.
+    </p>
+    <p class="config_important">station</p>
+    <p>Set to your WOW station ID (<i>e.g.</i>, <span class="code">12345678</span>). Required.</p>
+    <p class="config_important">password</p>
+    <p>Set to your WOW password. Required.</p>
+    <p class='config_option'>log_success</p>
+    <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
+    <p class='config_option'>log_failure</p>
+    <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
+
     <h3 class="config_section">[[Wunderground]]</h3>
     <p>
       <span class="code">Weewx</span> can send your current data to the
       <a href="http://www.wunderground.com/">Weather Underground</a>. If
-      you do not wish to do this, leave the option
-      <span class='code'>station</span> commented.
+      you wish to do this, set the option <span class="code">enable</span> to
+      <span class="code">true</span>, then set the options
+      <span class='code'>station</span> and <span class="code">password</span> appropriately.
+      When you are done, it will look something like
     </p>
     <pre class="tty">[StdRestful]
     [[Wunderground]]
-        station = 12345678  # Replace with your station number
-        password = xxxxx    # Replace with your password
+        enable = true
+        station = KCASANFRA11
+        password = XXX
         rapidfire = False</pre>
+    <p class="config_important">enable</p>
+    <p>
+      Set to <span class="code">true</span> to enable posting to the
+      Weather Underground. Optional. Default is <span class="code">false</span>.
+    </p>
     <p class="config_important">station</p>
     <p>
       Set to your Weather Underground station ID (<em>e.g.</em>, <span
-        class="code">KORHOODR3</span>). Required.
+        class="code">KCASANFRA11</span>). Required.
     </p>
     <p class="config_important">password</p>
     <p>Set to your Weather Underground password. Required.</p>
@@ -1820,103 +1960,6 @@ longitude = -77.0366</pre>
       <span class='code'>False</span> for Rapidfire mode,
       <span class='code'>True</span> for PWS mode.</p>
 
-    <h3 class="config_section">[[PWSweather]]</h3>
-    <p><span class="code">Weewx </span>can send your current data to the
-      <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you
-      do not wish to do this, leave the option
-      <span class='code'>station</span> commented.</p>
-    <pre class="tty">[StdRestful]
-    [[PWSweather]]
-        station = 12345678  # Replace with your station number
-        password = xxxxx    # Replace with your password</pre>
-    <p class="config_important">station </p>
-    <p>Set to your PWSweather station ID. Required. </p>
-    <p class="config_important">password </p>
-    <p>Set to your PWSweather password. Required. </p>
-    <p class='config_option'>log_success</p>
-    <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
-    <p class='config_option'>log_failure</p>
-    <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
-
-    <h3 class="config_section">[[CWOP]]</h3>
-    <p><span class="code">Weewx</span> can send your data to the
-      <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If
-      you do not wish to do this, leave the <span class="code">station</span>
-      commented. </p>
-    <pre class="tty">[StdRestful]
-    [[CWOP]]
-        station = 12345678  # Replace with your station number
-        passcode = xxxxx    # Replace with your passcode (APRS stations only)
-        post_interval = 600</pre>
-    <p class="config_important">station </p>
-    <p>Set to your CWOP station ID (<em>e.g.</em>, <span class="code">CW1234</span>)
-      or amateur radio callsign (APRS). Required.
-    </p>
-    <p class="config_important">passcode </p>
-    <p>This is used for APRS (amateur radio) stations only. Set to the
-      passcode given to you by the CWOP operators. Otherwise, leave this
-      option commented. Required for APRS stations, ignored for others.</p>
-    <p class="config_option">post_interval </p>
-    <p>The interval in seconds between posts. Because CWOP is heavily used, the
-      operators discourage very frequent posts. Every 5 minutes (300 seconds)
-      is fine, but they prefer every 10 minutes (600 s) or even longer. Setting
-      this value to zero will cause every archive record to be posted. 
-      Optional. Default is 600 seconds.</p>
-    <p class="config_option">stale</p>
-    <p>How old a record can be before it will not be used for a catch up. CWOP
-      does not use the timestamp on a posted record. Instead, they use the wall
-      clock time that it came in. This means that if your station is off the
-      air for a long period of time, then when <span class="code">weewx</span>
-      attempts a catch up, old data could be interpreted as the current
-      conditions. Optional. Default is 1800 seconds.</p>
-    <p class="config_option">server_list</p>
-    <p>A comma-delimited list of the servers that should be tried for
-      uploading data.
-      Optional.  Default is: cwop.aprs.net:14580, cwop.aprs.net:23</p>
-    <p class='config_option'>log_success</p>
-    <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
-    <p class='config_option'>log_failure</p>
-    <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
-
-    <h3 class="config_section">[[WOW]]</h3>
-    <p class="config_section"><span class="code">Weewx</span> can send your 
-      current data to the <a href="http://wow.metoffice.gov.uk/">British
-        Weather Observations Website (WOW)</a> service. If you do not wish
-      to do this, leave the <span class='code'>station</span> option
-      commented.</p>
-    <pre class="tty">[StdRestful]
-    [[WOW]]
-        station = 12345678  # Replace with your site ID
-        password = xxxxx    # Replace with your site authentication key</pre>
-    <p class="config_important">station</p>
-    <p>Set to your WOW station ID. Required.</p>
-    <p class="config_important">password</p>
-    <p>Set to your WOW password. Required.</p>
-    <p class='config_option'>log_success</p>
-    <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
-    <p class='config_option'>log_failure</p>
-    <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
-
-    <h3 class="config_section">[[AWEKAS]]</h3>
-    <p class="config_section"><span class="code">Weewx</span> can send your 
-      current data to the <a href="http://www.awekas.at/">Automatisches
-        Wetterkarten System</a> (AWEKAS).  If you do not wish
-      to do this, leave the <span class='code'>username</span> option
-      commented.</p>
-    <pre class="tty">[StdRestful]
-    [[AWEKAS]]
-        username = joeuser  # Replace with your awekas username
-        password = xxxxx    # Replace with your awekas password</pre>
-    <p class="config_important">username</p>
-    <p>Set to your AWEKAS username. Required.</p>
-    <p class="config_important">password</p>
-    <p>Set to your AWEKAS password. Required.</p>
-    <p class="config_option">language</p>
-    <p>Set to your preferred language. Default is <span class='code'>en</span>.</p>
-    <p class='config_option'>log_success</p>
-    <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
-    <p class='config_option'>log_failure</p>
-    <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
 
 
     <h2 class="config_section">[StdReport]</h2>
