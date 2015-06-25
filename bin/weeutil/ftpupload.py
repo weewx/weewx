@@ -8,6 +8,7 @@
 from __future__ import with_statement
 import os
 import sys
+import socket
 import ftplib
 import cPickle
 import time
@@ -81,23 +82,26 @@ class FtpUpload(object):
         try:
             if self.secure:
                 syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Attempting secure connection to %s" % self.server)
-                ftp_server = FTPClass()
             else:
                 syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Attempting connection to %s" % self.server)
+            try:
                 ftp_server = FTPClass()
-            ftp_server.connect(self.server, self.port)
-
-            # Uncommenting the following line will send lots of debug information to stdout:
-            #ftp_server.set_debuglevel(1)
-
-            ftp_server.login(self.user, self.password)
-            ftp_server.set_pasv(self.passive)
-            if self.secure:
-                ftp_server.prot_p()
-                syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Secure connection to %s" % self.server)
-            else:
-                syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Connected to %s" % self.server)
-                
+                ftp_server.connect(self.server, self.port)
+    
+                # Uncommenting the following line will send lots of debug information to stdout:
+                #ftp_server.set_debuglevel(1)
+    
+                ftp_server.login(self.user, self.password)
+                ftp_server.set_pasv(self.passive)
+                if self.secure:
+                    ftp_server.prot_p()
+                    syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Secure connection to %s" % self.server)
+                else:
+                    syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Connected to %s" % self.server)
+            except ftplib.all_errors, e:
+                syslog.syslog(syslog.LOG_CRIT, "ftpupload: Unable to connect or log into server")
+                syslog.syslog(syslog.LOG_CRIT, "****       reason: %s" % e)
+                return
             
             # Walk the local directory structure
             for (dirpath, unused_dirnames, filenames) in os.walk(self.local_root):
