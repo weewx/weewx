@@ -8,7 +8,6 @@
 from __future__ import with_statement
 import os
 import sys
-import socket
 import ftplib
 import cPickle
 import time
@@ -27,7 +26,8 @@ class FtpUpload(object):
                  name      = "FTP", 
                  passive   = True, 
                  max_tries = 3,
-                 secure    = False):
+                 secure    = False,
+                 debug     = 0):
         """Initialize an instance of FtpUpload.
         
         After initializing, call method run() to perform the upload.
@@ -48,6 +48,8 @@ class FtpUpload(object):
         a file before giving up [Optional. Default is 3]
         
         secure: Set to True to attempt a secure FTP (SFTP) session.
+        
+        debug: Set to 1 for extra debug information, 0 otherwise.
         """
         self.server      = server
         self.user        = user
@@ -59,6 +61,7 @@ class FtpUpload(object):
         self.passive     = passive
         self.max_tries   = max_tries
         self.secure      = secure
+        self.debug       = debug
 
     def run(self):
         """Perform the actual upload.
@@ -88,8 +91,8 @@ class FtpUpload(object):
                 ftp_server = FTPClass()
                 ftp_server.connect(self.server, self.port)
     
-                # Uncommenting the following line will send lots of debug information to stdout:
-                #ftp_server.set_debuglevel(1)
+                if self.debug:
+                    ftp_server.set_debuglevel(self.debug)
     
                 ftp_server.login(self.user, self.password)
                 ftp_server.set_pasv(self.passive)
@@ -99,8 +102,7 @@ class FtpUpload(object):
                 else:
                     syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Connected to %s" % self.server)
             except ftplib.all_errors, e:
-                syslog.syslog(syslog.LOG_CRIT, "ftpupload: Unable to connect or log into server")
-                syslog.syslog(syslog.LOG_CRIT, "****       reason: %s" % e)
+                syslog.syslog(syslog.LOG_CRIT, "ftpupload: Unable to connect or log into server : %s" % e)
                 return
             
             # Walk the local directory structure
