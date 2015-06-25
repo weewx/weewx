@@ -407,7 +407,7 @@ class ExtensionInstallTest(unittest.TestCase):
                          {'HTML_ROOT': 'public_html/pmon', 'skin': 'pmon'})
         self.assertEqual(test_dict['Databases']['pmon_sqlite'], 
                          {'database_name': 'pmon.sdb',
-                          'driver': 'weedb.sqlite'})
+                          'database_type': 'SQLite'})
         self.assertEqual(test_dict['DataBindings']['pmon_binding'], 
                          {'manager': 'weewx.manager.DaySummaryManager',
                           'schema': 'user.pmon.schema',
