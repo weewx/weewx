@@ -1594,6 +1594,8 @@ def check_enable(config_dict, service, *args):
         site_dict = accumulateLeaves(config_dict['StdRESTful'][service],
                                      max_level=1)
     except KeyError:
+        syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
+                      "No config info. Skipped." % service)
         return None
 
     # If site_dict has the key 'enable' and it is False, then
@@ -1601,7 +1603,7 @@ def check_enable(config_dict, service, *args):
     try:
         if not to_bool(site_dict['enable']):
             syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
-                          "Data will not be posted" % service)
+                          "Posting not enabled." % service)
             return None
     except KeyError:
         pass
@@ -1612,7 +1614,7 @@ def check_enable(config_dict, service, *args):
     try:
         for option in args:
             if site_dict[option] == 'replace_me':
-                raise option
+                raise KeyError(option)
     except KeyError, e:
         syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
                       "Data will not be posted: Missing option %s" % (service, e))
