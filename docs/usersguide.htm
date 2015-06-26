@@ -77,10 +77,11 @@ Version: 3.2.0a2
       <a href="http://wxqa.com">CWOP</a>, or
       <a href="http://www.pwsweather.com/">PWSweather.com</a>.</p>
     <p>Initial development began in the winter of 2008-2009, with the first
-      release in 2009.  The SourceForge project was registered in October of
-      2009.</p>
+      release in 2009.</p>
+    <p>The source code is hosted on <a href="https://github.com/weewx/weewx">GitHub</a>, while
+    downloads are hosted on <a href="http://sourceforge.net/projects/weewx/files/">SourceForge</a>.</p>
     <p><span class="code">weewx</span> is about 8,000 lines of code, plus
-      another 8,000 for the many drivers used by the supported hardware. </p>
+      another 11,000 for the many drivers used by the supported hardware. </p>
 
     <h1 id="hardware">Supported hardware</h1>
     <p>
@@ -1800,7 +1801,7 @@ longitude = -77.0366</pre>
     <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
 
     <h3 class="config_section">[[CWOP]]</h3>
-    <p><span class="code">Weewx </span>can send your current data to the
+    <p><span class="code">Weewx</span> can send your current data to the
       <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If you
       wish to do this, set the option
       <span class='code'>enable</span> to <span class='code'>true</span>,
@@ -1843,7 +1844,7 @@ longitude = -77.0366</pre>
     <p class="config_option">server_list</p>
     <p>A comma-delimited list of the servers that should be tried for
       uploading data.
-      Optional.  Default is: cwop.aprs.net:14580, cwop.aprs.net:23</p>
+      Optional.  Default is: <span class="code">cwop.aprs.net:14580, cwop.aprs.net:23</span></p>
     <p class='config_option'>log_success</p>
     <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
     <p class='config_option'>log_failure</p>
@@ -3443,9 +3444,8 @@ sudo /etc/init.d/weewx start</p>
       <span class="code">weewx.conf</span>, replace the name of the database 
       with whatever your installation of wview used <span class="code"><em>your-wview-archive-name</em></span>:</p>
     <pre class="tty">[[archive_mysql]]
-&nbsp; host = ...
-&nbsp; user = ...
-&nbsp; database_name = <em>your-wview-archive-name</em></pre>
+&nbsp; database_type = MySQL
+&nbsp; database_name = <span class="highlight"><em>your-wview-archive-name</em></span></pre>
 
 
     <h1 id="integrating_with_webserver">Integrating with a web server</h1>
