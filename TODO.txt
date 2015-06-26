@@ -1,8 +1,8 @@
 TODO: items for the next release; complete list is at github
 -------------------------------------------------------------------------------
 
-Update documentation to reflect new way of specifying databases.
- - In particular, how to specify MySQL host, username, and password
+When using the Deb or RPM installer, will SQLITE_ROOT point
+to / or to /var/lib/weewx? Should be latter.
 
 - test deb upgrades
 - test wee_extension on deb system

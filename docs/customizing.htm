@@ -45,7 +45,7 @@
     </a>
     <h1 class="title">Customizing weewx<br />
       <span class="version">
-Version: 3.1.0
+Version: 3.2.0a2
       </span>
     </h1>
 
@@ -337,10 +337,6 @@ Version: 3.1.0
       <a href="http://www.mysql.com/"> MySQL</a>, an open-source,
       full-featured database server.
     </p>
-    <p>
-      If you are familiar with the old, Version 2.X data architecture, you may find this white paper <a
-        href="https://docs.google.com/document/d/1CzuCPu7MsV3Rc3J6GbaMVxtrQ6z5F-xz0glvg3sUWjA/edit?usp=sharing"><i>V3 Database architecture</i></a> useful.
-    </p>
 
     <h3>Structure</h3>
     <p>
@@ -510,20 +506,26 @@ Version: 3.1.0
 # Sample query:
 db_manager.getSql("SELECT SUM(rain) FROM %s "\
     "WHERE dateTime&gt;? AND dateTime&lt;=?" % db_manager.table_name, (start_ts, stop_ts))</pre>
-    <p>If you are opening a database from within a weewx search list extension:</p>
-    <pre class='tty'>db_manager = self.generator.db_binder.get_manager(data_binding='name_of_binding')
+    <p>If you are opening a database from within a weewx search list extension, you
+    will be passed in a function <span class="code">db_lookup()</span> as a parameter, which can
+    be used to bind to a database. By default, it returns a manager
+    bound to <span class="code">wx_binding</span>:</p>
+    <pre class='tty'>wx_manager    = db_lookup()                                    # Get default binding
+other_manager = db_lookup(data_binding='some_other_binding')   # Get an explicit binding
 
-# Sample query:
-db_manager.getSql("SELECT SUM(rain) FROM %s "\
-    "WHERE dateTime&gt;? AND dateTime&lt;=?" % db_manager.table_name, (start_ts, stop_ts))</pre>
+# Sample queries:
+wx_manager.getSql("SELECT SUM(rain) FROM %s "\
+    "WHERE dateTime&gt;? AND dateTime&lt;=?" % wx_manager.table_name, (start_ts, stop_ts))
+other_manager.getSql("SELECT SUM(power) FROM %s"\
+    "WHERE dateTime&gt;? AND dateTime&lt;=?" % other_manager.table_name, (start_ts, stop_ts))</pre>
     <p>If opening a database from somewhere other than a service, and there
-      is no DBBinder available:</p>
-    <pre class='tty'>db_manager = weewx.manager.open_manager_with_config(config_dict, data_binding='name_of_binding', initialize=)
+      is no <span class="code">DBBinder</span> available:</p>
+    <pre class='tty'>db_manager = weewx.manager.open_manager_with_config(config_dict, data_binding='name_of_binding')
 
 # Sample query:
 db_manager.getSql("SELECT SUM(rain) FROM %s "\
     "WHERE dateTime&gt;? AND dateTime&lt;=?" % db_manager.table_name, (start_ts, stop_ts))</pre>
-    <p>The DBBinder caches managers, and thus database connections. It cannot
+    <p>The <span class="code">DBBinder</span> caches managers, and thus database connections. It cannot
     be shared between threads.</p>
 
     <h2>Units</h2>
@@ -1808,20 +1810,23 @@ $station.altitude</pre>
         class="code">TimeBinder</span>, class <span class="code">TimespanBinder</span> adds the desired time
       period, that is, the time span from midnight to the current time.
     </p>
-    <p>
-      Cheetah then continues on down the chain and tries to find the next
-      attribute, <span class="code">outTemp</span>. There is no such hard coded
-      attribute (hard coding all the different observation types would be
-      impossible!). Instead, class <span class="code">TimespanBinder</span>
-      defines the method <span class="code">
-        <a style="text-decoration: none"
-           href="https://docs.python.org/2/reference/datamodel.html#object.__getattr__">__getattr__</a></span>. Any unknown attribute is passed to this
-      special method. It returns an instance of the next class in the chain, <span
-        class="code">weewx.tags.ObservationBinder</span>, which not only
-      remembers all the previous stuff, but also adds the observation type, <span
-        class="code">outTemp</span>.
-    </p>
-    <p>
+	<p>
+		Cheetah then continues on down the chain and tries to find the next
+		attribute, <span class="code">outTemp</span>. There is no such hard
+		coded attribute (hard coding all the conceivable different
+		observation types would be impossible!). Instead, class <span
+			class="code">TimespanBinder</span> defines the Python special method
+		<span class="code"> <a style="text-decoration: none"
+			href="https://docs.python.org/2/reference/datamodel.html#object.__getattr__">__getattr__</a></span>.
+		If Python cannot find a hard coded version of an attribute, and the
+		method <span class="code">__getattr__</span> exists, it will try it.
+		The definition provided by <span class="code">TimespanBinder</span>
+		returns an instance of the next class in the chain, <span
+			class="code">weewx.tags.ObservationBinder</span>, which not only
+		remembers all the previous stuff, but also adds the observation type,
+		<span class="code">outTemp</span>.
+	</p>
+		<p>
         Cheetah then tries to evaluate an attribute <span class="code">max</span>
         of this class. Now, finally, the chain ends. The attribute <span
           class="code">max</span> triggers the actual calculation of the
@@ -2367,25 +2372,41 @@ class MyXSearch(SearchList):                                                 # 1
     # This section binds to the actual database to be used
     
     [[archive_sqlite]]
-        root = %(WEEWX_ROOT)s
-        database_name = archive/weewx.sdb
-        driver = weedb.sqlite
+        database_type = SQLite
+        database_name = weewx.sdb
     
 <span class="highlight">    [[rpi_mysql]]
-        host = rpi-bug
-        user = weewx
-        password = weewx
+        database_type = MySQL
         database_name = weewx
-        driver = weedb.mysql</span>
+        host = rpi-bug</span>
+
+[SQLite]
+    driver = weedb.sqlite
+    # Directory in which the database files are located
+    SQLITE_ROOT = %(WEEWX_ROOT)s/archive
+
+[MySQL]
+    driver = weedb.mysql
+    host = localhost
+    user = weewx
+    password = weewx
+
     </pre>
 
     <p>
       The two additions have been <span class="highlight">highlighted</span>.
-      The first, in section <span class="code">[DataBindings]</span>, adds a new
+      The first, <span class="code">[[wmr100_binding]]</span>, adds a new
       binding called <span class="code">wmr10_binding</span>. It links ("binds")
       to the new database, called <span class="code">rpi_mysql</span>, through
-      the option <span class="code">database</span>. The new database is a MySQL
-      database, running on the remote host <span class="code">rpi-bug</span>,
+      the option <span class="code">database</span>. It also defines some characteristics
+      of the binding, such as which manager is to be used and what its schema looks like.</p>
+      
+      <p>The second addition, <span class="code">[[rpi-mysql]]</span> defines the new database.
+      Option <span class="code">database_type</span> is set to <span class="code">MySQL</span>,
+      indicating that it is a MySQL database. 
+      Defaults for MySQL databases are defined in the section <span class="code">[MySQL]</span>.
+      The new database accepts all of them, except for <span class="code">host</span>,
+      which as been set to the remote host <span class="code">rpi-bug</span>,
       the name of my Raspberry Pi.
     </p>
 
@@ -2464,7 +2485,8 @@ class MyXSearch(SearchList):                                                 # 1
       kept getting <span class="code">N/A</span>. To avoid this, I introduced
       the tag <span class="code">$latest</span>, which uses the last available
       timestamp in the binding, which may or may not be the same as what <span
-        class="code">$current</span> uses.
+        class="code">$current</span> uses. That's why the example above uses
+      <span class="code">$latest</span> instead of <span class="code">$current</span>.
     </p>
 
 
@@ -4044,13 +4066,13 @@ mv weewx.sdb_new weewx.sdb</pre>
       </li>
     </ol>
 
-	<h2>Dropping and rebuilding the daily summaries</h2>
-	<p>The tool <span class="code">wee_database</span> can also be used to drop the daily
-	summaries:</p>
-	<pre class="tty">wee_database weewx.conf --drop-daily</pre>
-	<p>The summaries will automatically be rebuilt the next time <span class="code">weewx</span> starts,
-	or they can be rebuilt with the tool:</p>
-	<pre class="tty">wee_database weewx.conf --backfill-daily</pre>
+        <h2>Dropping and rebuilding the daily summaries</h2>
+        <p>The tool <span class="code">wee_database</span> can also be used to drop the daily
+        summaries:</p>
+        <pre class="tty">wee_database weewx.conf --drop-daily</pre>
+        <p>The summaries will automatically be rebuilt the next time <span class="code">weewx</span> starts,
+        or they can be rebuilt with the tool:</p>
+        <pre class="tty">wee_database weewx.conf --backfill-daily</pre>
 
     <h1 id="porting">Porting to new hardware</h1>
       <p>Naturally, this is an advanced topic but, nevertheless, I'd
@@ -4352,22 +4374,22 @@ Finished installing extension '/var/tmp/weewx-cmon-0.7.tgz'</pre>
       </li>
       <li>It put a new service,
         <span class="code">user.cmon.ComputerMonitor</span>,
-	in the list of services to be run by
+        in the list of services to be run by
         <span class="code">weewx</span>;</li>
       <li>It defined a new database, <span class="code">cmon_sqlite</span>,
-	and a binding, <span class="code">cmon_binding</span>,
+        and a binding, <span class="code">cmon_binding</span>,
         to that database;
       </li>
       <li>It added a top-level "stanza"
         <span class="code">[ComputerMonitor]</span>
-	to your configuration file <span class="code">weewx.conf</span>,
+        to your configuration file <span class="code">weewx.conf</span>,
         that specifies the data binding <span class="code">cmon</span>
         is to use.
       </li>
       <li>And, finally, it saved the details of how the extension was
         installed so you can remove it later, should you choose to do so.</li>
     </ol>
-		
+                
     <h2>Listing installed extensions</h2>
     <p>The utility <span class="code">wee_extension</span> can tell you which
       extensions you have installed:</p>
@@ -4380,7 +4402,7 @@ cmon</pre>
     <pre class="tty"><span class="cmd">./bin/wee_extension --uninstall=cmon
 ./bin/wee_extension --list</span>
 No extensions installed</pre>
-		
+                
       <h2>Creating an extension</h2>
       <p>Now that you have made some customizations, you might want to share
         those changes with other <span class='code'>weewx</span> users.  Put
