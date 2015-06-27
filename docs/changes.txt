@@ -11,6 +11,9 @@ There are now five command-line utilities, some new, some old
  - wee_device:    (Formerly called wee_config_device)
  - wee_reports:   No changes.
  
+The script setup.py is no longer used to install or uninstall extensions.
+Instead, use the new utility wee_extension.
+
 Wunderfixer is now included with weewx --- no need to download it separately. 
 It now works with MySQL, as well as sqlite, databases. It also supports
 metric databases. Thanks to user Gary Roderick!
@@ -26,8 +29,6 @@ theoretical solar radiation, beaufort, and cloudbase to StdWXCalculate.
 If StdWXCalculate cannot calculate a derived variable when asked to, it now
 sets the value to null. Fixes issue #10.
 
-$almanac.sunrise and $almanac.sunset now return ValueHelpers. Fixes issue #26.
-
 Added option to specify algorithm in StdWXCalculate.  So far this applies
 only to the altimeter calculation.
 
@@ -35,6 +36,8 @@ Added option max_delta_12h in StdWXCalculate, a window in which a record will
 be accepted as being "12 hours ago." Default is 1800 seconds.
 
 Fixed bug in debian install script - 'Acurite' was not in the list of stations.
+
+$almanac.sunrise and $almanac.sunset now return ValueHelpers. Fixes issue #26.
 
 Added group_distance with units mile and km.
 
@@ -57,7 +60,7 @@ should the alarm expression include a variable not in the archive record.
 
 Fixed bug that shows itself if marker_size is not specified in skin.conf
 
-Show URLs in the log for restful uploaders when debug=1
+Show URLs in the log for restful uploaders when debug=2 or greater.
 
 Fixed problem that could cause an exception in the WMR200 driver when
 formatting an error string.
@@ -89,6 +92,14 @@ Changes to the AcuRite driver include:
 Changes to the TE923 driver include:
  - consolidated retries
  - improved error handling and reporting
+
+Default values for databases are now defined in sections [SQLite] or [MySQL]. 
+New option "database_type" links databases to database type. Installer will
+automatically update old weewx.conf files.
+
+The RESTful services that come with weewx are now turned on and off by
+option "enable". Installer will automatically update old weewx.conf files. 
+Other RESTful services that don't use this method will continue to work.
 
 
 3.1.0 02/05/15
