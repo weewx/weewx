@@ -95,7 +95,7 @@ Changes to the TE923 driver include:
 
 The Vantage driver now catches undocumented termios exceptions and converts
 them to weewx exceptions. This allows retries if flushing input or output
-buffers fail.
+buffers fail. Fixes issue #34.
 
 Default values for databases are now defined in sections [SQLite] or [MySQL]. 
 New option "database_type" links databases to database type. Installer will
