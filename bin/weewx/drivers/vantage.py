@@ -188,6 +188,22 @@ class BaseWrapper(object):
 #                           class Serial Wrapper
 #===============================================================================
 
+def guard_termios(fn):
+    """Decorator function that converts termios exceptions into weewx exceptions."""
+    # Some functions in the module 'serial' can raise undocumented termios
+    # exceptions. This catches them and converts them to weewx exceptions. 
+    try:
+        import termios
+        def guarded_fn(*args, **kwargs):
+            try:
+                return fn(*args, **kwargs)
+            except termios.error, e:
+                raise weewx.WeeWxIOError(e)
+    except ImportError:
+        def guarded_fn(*args, **kwargs):
+            return fn(*args, **kwargs)
+    return guarded_fn
+
 class SerialWrapper(BaseWrapper):
     """Wraps a serial connection returned from package serial"""
     
@@ -196,12 +212,15 @@ class SerialWrapper(BaseWrapper):
         self.baudrate = baudrate
         self.timeout  = timeout
 
+    @guard_termios
     def flush_input(self):
         self.serial_port.flushInput()
 
+    @guard_termios
     def flush_output(self):
         self.serial_port.flushOutput()
 
+    @guard_termios
     def queued_bytes(self):
         return self.serial_port.inWaiting()
  
