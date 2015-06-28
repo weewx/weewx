@@ -19,9 +19,13 @@ def main():
     config_fn, config_dict = weecfg.read_config(None, sys.argv[1:])
     print 'Using configuration file %s' % config_fn
 
-    # Find the device type
-    device_type = config_dict['Station']['station_type']
-    driver = config_dict[device_type]['driver']
+    try:
+        # Find the device type
+        device_type = config_dict['Station']['station_type']
+        driver = config_dict[device_type]['driver']
+    except KeyError, e:
+        sys.exit("No configuration for device %s" % e)
+            
 
     # Try to load the driver
     try:
