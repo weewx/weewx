@@ -105,6 +105,9 @@ The RESTful services that come with weewx are now turned on and off by
 option "enable". Installer will automatically update old weewx.conf files. 
 Other RESTful services that don't use this method will continue to work.
 
+Option bar_gap_fraction is now ignored. Bar plot widths are rendered explicitly
+since V3.0, making the option unnecessary. Fixes issue #25.
+
 
 3.1.0 02/05/15
 

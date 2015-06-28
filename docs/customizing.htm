@@ -2180,20 +2180,18 @@ class MyXSearch(SearchList):                                                 # 1
     </p>
 
     <h3 id="line_gaps">Line gaps</h3>    
-      <p id="line_gap_fraction">If there is a time gap in the data, the options <span class="code">line_gap_fraction</span>
-        and <span class="code">bar_gap_fraction</span> control how it will be
-        drawn. The former, <span class="code">line_gap_fraction</span>, is used
-        for line graphs, the latter, <span class="code">bar_gap_fraction</span>,
-        for bar graphs. Here's what the resultant plots look like without and
+      <p id="line_gap_fraction">If there is a time gap in the data, the option <span class="code">line_gap_fraction</span>
+        controls how line plots will be
+        drawn. Here's what a plot looks like without and
         with this option being specified:</p>
       <div class="center" style="width:80%;margin:0;">
         <div style="float:left">
           <img src="images/day-gap-not-shown.png" alt="Gap not shown" />
-          <p class="image_caption"> No <span class="code">line_gap_fraction</span> specified</p>
+          <div class="image_caption"> No <span class="code">line_gap_fraction</span> specified</div>
         </div>
         <div>
           <img src="images/day-gap-showing.png" alt="Gap showing" />
-          <p class="image_caption"> With <span class="code">line_gap_fraction=0.01</span></p>
+          <div class="image_caption"> With <span class="code">line_gap_fraction=0.01</span></div>
         </div>
       </div>
       <div style="clear:both"></div>
@@ -3238,13 +3236,6 @@ UV      = UV Index</pre>
       of the x-axis, then a gap will be drawn, rather than a connecting line.
       See Section <em><a href="#line_gaps">Line gaps</a></em>. Optional. The
       default is to always draw the line.
-    </p>
-    <p class="config_option">bar_gap_fraction</p>
-    <p>
-      If there is a gap between bar graphs bigger than this fractional amount of
-      the x-axis, then a gap will be drawn, rather than a fat bar. See Section
-      <em><a href="#line_gaps">Line gaps</a></em>. Optional. The default is to
-      always draw the bar.
     </p>
 
     <p class="config_option">width</p>
