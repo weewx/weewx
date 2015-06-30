@@ -187,7 +187,9 @@ class StdEngine(object):
                         # Allow services to break the loop by throwing
                         # an exception:
                         self.dispatchEvent(weewx.Event(weewx.CHECK_LOOP, packet=packet))
-    
+
+                    syslog.syslog(syslog.LOG_CRIT, "engine: Internal error. Packet loop has exited.")
+                    
                 except BreakLoop:
                     
                     # Send out an event saying the packet LOOP is done:
@@ -195,6 +197,7 @@ class StdEngine(object):
 
         finally:
             # The main loop has exited. Shut the engine down.
+            syslog.syslog(syslog.LOG_DEBUG, "engine: Main loop exiting. Shutting engine down.")
             self.shutDown()
 
     def bind(self, event_type, callback):
@@ -233,7 +236,7 @@ class StdEngine(object):
             
         try:
             del self.callbacks
-        except:
+        except AttributeError:
             pass
 
         try:
@@ -832,8 +835,10 @@ def main(options, args, EngineClass=StdEngine) :
     
             syslog.syslog(syslog.LOG_INFO, "engine: Starting up weewx version %s" % weewx.__version__)
 
-            # Start the engine
+            # Start the engine. It should run forever unless an exception occurs. Log it
+            # if the function returns.
             engine.run()
+            syslog.syslog(syslog.LOG_CRIT, "engine: Unexpected exit from main loop. Program exiting.")
     
         # Catch any console initialization error:
         except InitializationError, e:
