@@ -214,9 +214,12 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()
                 
-                # Now save the image
-                image.save(img_file)
-                ngen += 1
+                try:
+                    # Now save the image
+                    image.save(img_file)
+                    ngen += 1
+                except IOError, e:
+                    syslog.syslog(syslog.LOG_CRIT, "genimages: Unable to save to file '%s' %s:" % (img_file, e))
         t2 = time.time()
         
         syslog.syslog(syslog.LOG_INFO, "genimages: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
