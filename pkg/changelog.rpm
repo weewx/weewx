@@ -1,3 +1,5 @@
+* Sun Jul 05 2015 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 3.2.0a4-1
+- new upstream release
 * Sat Apr 25 2015 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 3.2.0a1-1
 - new upstream release
 - use unified wee_X utilities
