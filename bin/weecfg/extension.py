@@ -74,15 +74,24 @@ class ExtensionEngine(object):
         try:
             exts = os.listdir(ext_root)
             if exts:
+                msg = "%-18s%-10s%s" % ("Name", "Version", "Description")
+                self.logger.log(msg, level=0)
                 for f in exts:
-                    self.logger.log(f, level=0)
+                    info = self.get_extension_info(f)
+                    msg = "%(name)-18s%(version)-10s%(description)s" % info
+                    self.logger.log(msg, level=0)
             else:
                 self.logger.log("Extension cache is '%s'" % ext_root, level=2)
                 self.logger.log("No extensions installed", level=0)
         except OSError:
             self.logger.log("No extension cache '%s'" % ext_root, level=2)
             self.logger.log("No extensions installed", level=0)
-            
+
+    def get_extension_info(self, ext_name):
+        ext_cache_dir = os.path.join(self.root_dict['EXT_ROOT'], ext_name)
+        _, installer = weecfg.get_extension_installer(ext_cache_dir)
+        return installer
+
     def install_extension(self, extension_path):
         """Install the extension from the file or directory extension_path"""
         self.logger.log("Request to install '%s'" % extension_path)
