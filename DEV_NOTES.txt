@@ -190,14 +190,9 @@ any linux:
   setup.py install home=/opt/weewx
 
 on centos and suse:
+
 - new install using rpm
   rpm -i weewx_x.y.z.rpm
-
-- installation and removal of extensions
-  rpm -i weewx_x.y.z.rpm
-  wee_extension --install cmon
-  wee_extension --install pmon
-  wee_extension --remove cmon
 
 - upgrade using rpm
   rpm -i weewx_r.s.t.rpm
@@ -209,14 +204,9 @@ on centos and suse:
   rpm -U weewx_x.y.z.rpm
 
 debian:
+
 - new install usinb dpkg
   dpkg -i weewx_x.y.z.deb
-
-- new install using dpkg, install cmon, install pmon, remove cmon
-  dpkg -i weewx_x.y.z.deb
-  wee_extension --install cmon
-  wee_extension --install pmon
-  wee_extension --remove cmon
 
 - upgrade using dpkg take maintainer's version of weewx.conf
   dpkg -i weewx_r.s.t.deb
@@ -227,3 +217,20 @@ debian:
   dpkg -i weewx_r.s.t.deb
   modify /etc/weewx/weewx.conf
   dpkg -i weewx_x.y.z.deb
+
+- reconfigure using dpkg
+  dpkg-reconfigure weewx
+
+all platforms:
+
+- installation and removal of extensions
+  wee_extension --install cmon
+  wee_extension --install pmon
+  wee_extension --remove cmon
+
+- reconfigure using wee_config
+  wee_config --reconfigure
+  wee_config --reconfigure --driver=weewx.drivers.vantage
+
+- list drivers
+  wee_config --list-drivers
