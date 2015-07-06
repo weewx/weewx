@@ -870,7 +870,8 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
     """Scan the drivers folder, extracting information about each available
     driver. Return as a dictionary, keyed by the driver module name.
     
-    Valid drivers must be importable, and must have attribute "DRIVER_NAME" defined.
+    Valid drivers must be importable, and must have attribute "DRIVER_NAME"
+    defined.
     """
 
     __import__(driver_pkg_name)
@@ -882,37 +883,48 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
     for filename in driver_list:
         if filename in excludes:
             continue
+
         # Get the driver module name. This will be something like
         # 'weewx.drivers.fousb'
-        driver_module_name = os.path.splitext("%s.%s" % (driver_pkg_name, filename))[0]
+        driver_module_name = os.path.splitext("%s.%s" % (driver_pkg_name,
+                                                         filename))[0]
         
         try:
             # Try importing the module
             __import__(driver_module_name)
             driver_module = sys.modules[driver_module_name]
-        except (ImportError, KeyError):
-            continue
-        
-        # We can detect a valid driver by whether the attribute "DRIVER_NAME" has
-        # been defined
-        if not hasattr(driver_module, 'DRIVER_NAME'):
-            continue
-                
-        # Now we can create an entry for it, keyed by the driver module name:
-        driver_info_dict[driver_module_name] = \
-            {'module_name' : driver_module_name,
-             'driver_name' : driver_module.DRIVER_NAME,
-             'version'     : driver_module.DRIVER_VERSION if hasattr(driver_module, 
-                                                                     'DRIVER_VERSION') else '?'}
+
+            # A valid driver will define the attribute "DRIVER_NAME"
+            if hasattr(driver_module, 'DRIVER_NAME'):
+                # A driver might define the attribute DRIVER_VERSION
+                driver_module_version = driver_module.DRIVER_VERSION \
+                    if hasattr(driver_module, 'DRIVER_VERSION') else '?'
+                # Create an entry for it, keyed by the driver module name
+                driver_info_dict[driver_module_name] = {
+                    'module_name' : driver_module_name,
+                    'driver_name' : driver_module.DRIVER_NAME,
+                    'version'     : driver_module_version,
+                    'status'      : ''}
+        except ImportError, e:
+            # If the import fails, report it in the status
+            driver_info_dict[driver_module_name] = {
+                'module_name' : driver_module_name,
+                'driver_name' : '?',
+                'version'     : '?',
+                'status'      : e}
+        except KeyError:
+            pass
+
     return driver_info_dict
 
 def print_drivers():
     """Get information about all the available drivers, then print it out."""
     driver_info_dict = get_all_driver_infos()
     keys = sorted(driver_info_dict)
-    print "%-25s%-25s%-25s" % ("Module name", "Driver name", "Version")
+    print "%-25s%-15s%-9s%-25s" % (
+        "Module name", "Driver name", "Version", "Status")
     for d in keys:
-        print "  %(module_name)-25s%(driver_name)-25s%(version)-25s" % driver_info_dict[d]
+        print "  %(module_name)-25s%(driver_name)-15s%(version)-9s%(status)-25s" % driver_info_dict[d]
 
 def load_driver_editor(driver_module_name):
     """Load the configuration editor from the driver file
