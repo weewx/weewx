@@ -97,7 +97,7 @@ The Vantage driver now catches undocumented termios exceptions and converts
 them to weewx exceptions. This allows retries if flushing input or output
 buffers fail. Fixes issue #34.
 
-Default values for databases are now defined in sections [SQLite] or [MySQL]. 
+Default values for databases are now defined in a new section [DatabaseTypes]. 
 New option "database_type" links databases to database type. Installer will
 automatically update old weewx.conf files.
 

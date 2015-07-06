@@ -862,7 +862,8 @@ def get_database_dict_from_config(config_dict, database):
     
     >>> import configobj, StringIO
     >>> config_snippet = '''
-    ... [MySQL]
+    ... [DatabaseTypes]
+    ...   [[MySQL]]
     ...     driver = weedb.mysql
     ...     host = localhost
     ...     user = weewx
@@ -895,8 +896,8 @@ def get_database_dict_from_config(config_dict, database):
     
         # Augment any missing information in the database dictionary with
         # the top-level stanza
-        if database_type in config_dict:
-            weeutil.weeutil.conditional_merge(database_dict, config_dict[database_type])
+        if database_type in config_dict['DatabaseTypes']:
+            weeutil.weeutil.conditional_merge(database_dict, config_dict['DatabaseTypes'][database_type])
         else:
             raise weewx.UnknownDatabaseType('database_type')
     

@@ -45,7 +45,7 @@
     </a>
     <h1 class="title">Customizing weewx<br />
       <span class="version">
-Version: 3.2.0a3
+Version: 3.2.0a4
       </span>
     </h1>
 
@@ -2378,17 +2378,22 @@ class MyXSearch(SearchList):                                                 # 1
         database_name = weewx
         host = rpi-bug</span>
 
-[SQLite]
-    driver = weedb.sqlite
-    # Directory in which the database files are located
-    SQLITE_ROOT = %(WEEWX_ROOT)s/archive
+[DatabaseTypes]
+    #   This section defines defaults for the different types of databases.
 
-[MySQL]
-    driver = weedb.mysql
-    host = localhost
-    user = weewx
-    password = weewx
-
+    [[SQLite]]
+        driver = weedb.sqlite
+        # Directory in which the database files are located
+        SQLITE_ROOT = %(WEEWX_ROOT)s/archive
+    
+    [[MySQL]]
+        driver = weedb.mysql
+        # The host where the database is located
+        host = localhost
+        # The user name for logging in to the host
+        user = weewx
+        # The password for the user name
+        password = weewx
     </pre>
 
     <p>
@@ -2402,7 +2407,7 @@ class MyXSearch(SearchList):                                                 # 1
       <p>The second addition, <span class="code">[[rpi-mysql]]</span> defines the new database.
       Option <span class="code">database_type</span> is set to <span class="code">MySQL</span>,
       indicating that it is a MySQL database. 
-      Defaults for MySQL databases are defined in the section <span class="code">[MySQL]</span>.
+      Defaults for MySQL databases are defined in the section <span class="code">[[MySQL]]</span>.
       The new database accepts all of them, except for <span class="code">host</span>,
       which as been set to the remote host <span class="code">rpi-bug</span>,
       the name of my Raspberry Pi.

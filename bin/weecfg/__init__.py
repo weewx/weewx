@@ -66,8 +66,8 @@ canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'a
                         ('DataBindings', [('wx_binding', [], ['database', 'table_name', 'manager', 'schema'])], []), 
                         ('Databases', [('archive_sqlite', [], ['database_type', 'database_name']), 
                                        ('archive_mysql',  [], ['database_type', 'database_name'])], []),
-                        ('SQLite', [], ['driver', 'SQLITE_ROOT']),
-                        ('MySQL', [], ['driver', 'host', 'user', 'password']),
+                        ('DatabaseTypes', [('SQLite', [], ['driver', 'SQLITE_ROOT']),
+                                           ('MySQL',  [], ['driver', 'host', 'user', 'password'])], []),
                         ('Engine', [('Services', [], ['prep_services', 'data_services', 'process_services', 
                                                       'archive_services', 'restful_services', 'report_services'])], [])], 
                    ['debug', 'WEEWX_ROOT', 'socket_timeout', 'version'])
@@ -635,15 +635,15 @@ def update_to_v32(config_dict):
     config_dict['WEEWX_ROOT'] = os.path.normpath(config_dict['WEEWX_ROOT'])
     
     # Add a default database-specific top-level stanzas if necessary
-    if 'SQLite' not in config_dict:
-        # Sanity check:
+    if 'DatabaseTypes' not in config_dict:
+        # Do SQLite first. Start with a sanity check:
         try:
             assert(config_dict['Databases']['archive_sqlite']['driver'] == 'weedb.sqlite')
         except KeyError:
             pass
-        # Set the default [SQLite] section:
-        config_dict['SQLite'] = {'driver' : 'weedb.sqlite',
-                                 'SQLITE_ROOT' : '%(WEEWX_ROOT)s/archive'}
+        # Set the default [[SQLite]] section:
+        config_dict['DatabaseTypes'] = {'SQLite' : {'driver' : 'weedb.sqlite',
+                                                    'SQLITE_ROOT' : '%(WEEWX_ROOT)s/archive'}}
         try:
             root = config_dict['Databases']['archive_sqlite']['root']
             database_name = config_dict['Databases']['archive_sqlite']['database_name']
@@ -651,29 +651,28 @@ def update_to_v32(config_dict):
             dirname = os.path.dirname(fullpath)
             # By testing to see if they end up resolving to the same thing, we can keep
             # the interpolation used to specify SQLITE_ROOT above:
-            if dirname != config_dict['SQLite']['SQLITE_ROOT']:
-                config_dict['SQLite']['SQLITE_ROOT'] = dirname
+            if dirname != config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT']:
+                config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'] = dirname
             config_dict['Databases']['archive_sqlite']['database_name'] = os.path.basename(fullpath)
             config_dict['Databases']['archive_sqlite']['database_type'] = 'SQLite'
             config_dict['Databases']['archive_sqlite'].pop('root', None)
             config_dict['Databases']['archive_sqlite'].pop('driver', None)
         except KeyError:
             pass
-
-    if 'MySQL' not in config_dict:
-        # Sanity check:
+    
+        # Now do MySQL. Start with a sanity check:
         try:
             assert(config_dict['Databases']['archive_mysql']['driver'] == 'weedb.mysql')
         except KeyError:
             pass
-        config_dict['MySQL'] = {'driver': 'weedb.mysql',
-                                'host'  : 'localhost',
-                                'user'  : 'weewx',
-                                'password' : 'weewx'}
+        config_dict['DatabaseTypes'] = {'MySQL' : {'driver': 'weedb.mysql',
+                                                   'host'  : 'localhost',
+                                                   'user'  : 'weewx',
+                                                   'password' : 'weewx'}}
         try:
-            config_dict['MySQL']['host'] = config_dict['Databases']['archive_mysql']['host']
-            config_dict['MySQL']['user'] = config_dict['Databases']['archive_mysql']['user']
-            config_dict['MySQL']['password'] = config_dict['Databases']['archive_mysql']['password']
+            config_dict['DatabaseTypes']['MySQL']['host'] = config_dict['Databases']['archive_mysql']['host']
+            config_dict['DatabaseTypes']['MySQL']['user'] = config_dict['Databases']['archive_mysql']['user']
+            config_dict['DatabaseTypes']['MySQL']['password'] = config_dict['Databases']['archive_mysql']['password']
             config_dict['Databases']['archive_mysql'].pop('host', None)
             config_dict['Databases']['archive_mysql'].pop('user', None)
             config_dict['Databases']['archive_mysql'].pop('password', None)

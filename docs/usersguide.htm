@@ -59,7 +59,7 @@ function showtab(tab,id) {
   </a>
   <h1 class="title">User's Guide to the weewx Weather System<br />
     <span class='version'>
-Version: 3.2.0a3
+Version: 3.2.0a4
     </span>
   </h1>
 
@@ -2368,7 +2368,10 @@ longitude = -77.0366</pre>
     <p>The name of the database. Default is <span class="weewx">weewx</span>. 
     Required.</p>
 
-		<h2 class="config_section">[SQLite]</h2>
+    <h2 class="config_section">[DatabaseTypes]</h2>
+    <p>This section defines defaults for the various kinds of databases.</p>
+    
+		<h3 class="config_section">[[SQLite]]</h3>
 		<p>This section defines default values for SQLite databases.
 			They can be overridden by individual databases.</p>
 
@@ -2400,7 +2403,7 @@ longitude = -77.0366</pre>
 			(autocommit).
 		</p>
 
-		<h2 class="config_section">[MySQL]</h2>
+		<h3 class="config_section">[[MySQL]]</h3>
 		<p>This section defines default values for MySQL databases. They
 			can be overridden by individual databases.</p>
 		<p>
@@ -3244,9 +3247,9 @@ wind_gust_max_time: None</p>
         schema = schemas.wview.schema</pre>
 
     <p>Assuming that you want to use the default database configuration, your
-      <span class="code"><a href="#Databases">[MySQL]</a></span> section 
+      <span class="code"><a href="#Databases">[[MySQL]]</a></span> section 
       should look something like this:</p>
-    <pre class="tty">[MySQL]
+    <pre class="tty">[[MySQL]]
     driver = weedb.mysql
     host = localhost
     user = weewx

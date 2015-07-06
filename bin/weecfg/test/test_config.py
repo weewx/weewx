@@ -295,6 +295,10 @@ class ConfigTest(unittest.TestCase):
         # Write it out to a StringIO, then start checking it against the expected
         out_str = StringIO.StringIO()
         config_dict.write(out_str)
+        
+        fd = open('/home/tkeffer/tmp/merged.conf', 'w')
+        config_dict.write(fd)
+        fd.close()
 
         out_str.seek(0)
         fd_expected = open('expected/weewx_user_expected.conf')
