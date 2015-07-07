@@ -1,12 +1,2 @@
 TODO: items for the next release; complete list is at github
 -------------------------------------------------------------------------------
-
-When using the Deb or RPM installer, will SQLITE_ROOT point
-to / or to /var/lib/weewx? Should be latter.
-
-- test deb upgrades
-- test wee_extension on deb system
-- test rpm upgrades
-- test wee_extension on rpm system
-- look for CR or LF (not just CRLF) in ws1 driver
-
