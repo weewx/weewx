@@ -1,45 +1,45 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <meta content="en-us" http-equiv="Content-Language" />
-  <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-  <title>weewx: User's Guide</title>
-  <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet" />
-  <link href="css/jquery.tocify.css" rel="stylesheet" />
-  <link href="css/weewx_docs.css" rel="stylesheet" />
-  <script src="js/jquery-1.11.1.min.js" type="text/javascript"></script>
-  <script src="js/jquery-ui-1.10.4.custom.min.js"></script>
-  <script src="js/jquery.tocify-1.9.0.min.js"></script>
-  <script src="js/weewx.js"></script>
-  <script>
-    $(function() {
-      var level = get_default_level();
-      create_toc_control(level);
-      generate_toc(level);
-    })
+    <meta content="en-us" http-equiv="Content-Language"/>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+    <title>weewx: User's Guide</title>
+    <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>
+    <link href="css/jquery.tocify.css" rel="stylesheet"/>
+    <link href="css/weewx_docs.css" rel="stylesheet"/>
+    <script src="js/jquery-1.11.1.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
+    <script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
+    <script type="text/javascript" src="js/weewx.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var level = get_default_level();
+            create_toc_control(level);
+            generate_toc(level);
+        });
 
-    $(window).scroll(function(){
-      $('#toc_controls').css({
-        'left': 8 - $(this).scrollLeft()
-      });
-      $('#toc').css({
-        'left': 8 - $(this).scrollLeft()
-      });
-    });
-  </script>
-  <script>
-function showtab(tab,id) {
-  document.getElementById(tab+'-deb').style.display = 'none';
-  document.getElementById(tab+'-rpm').style.display = 'none';
-  document.getElementById(tab+'-setup').style.display = 'none';
-  document.getElementById(tab+'-'+id).style.display = 'block';
+        $(window).scroll(function () {
+            $('#toc_controls').css({
+                'left': 8 - $(this).scrollLeft()
+            });
+            $('#toc').css({
+                'left': 8 - $(this).scrollLeft()
+            });
+        });
+    </script>
+    <script type="text/javascript">
+        function showtab(tab, id) {
+            document.getElementById(tab + '-deb').style.display = 'none';
+            document.getElementById(tab + '-rpm').style.display = 'none';
+            document.getElementById(tab + '-setup').style.display = 'none';
+            document.getElementById(tab + '-' + id).style.display = 'block';
 
-  document.getElementById(tab+'-tab-deb').className = 'tab';
-  document.getElementById(tab+'-tab-rpm').className = 'tab';
-  document.getElementById(tab+'-tab-setup').className = 'tab';
-  document.getElementById(tab+'-tab-'+id).className = 'tab selected';
-}
-  </script>
+            document.getElementById(tab + '-tab-deb').className = 'tab';
+            document.getElementById(tab + '-tab-rpm').className = 'tab';
+            document.getElementById(tab + '-tab-setup').className = 'tab';
+            document.getElementById(tab + '-tab-' + id).className = 'tab selected';
+        }
+    </script>
 </head>
 
 <body>
@@ -846,226 +846,240 @@ Version: 3.2.0b1
       help, but, please, try to solve the problem yourself before posting.
     </p>
 
-    <h2>Installation methods</h2>
-    <p>
-      <span class='code'>weewx</span> can be installed using the standard
-      Python utility <span class='code'>setup.py</span> or it can be installed
-      from a DEB or RPM package.
-    </p>
-    <p>
-      Installation using <span class="code">setup.py</span> is the recommended
-      method for those who plan to write custom services and reports for
-      <span class='code'>weewx</span>.
-      It will put everything in a single directory, making it easier to modify.
-      If the user installing <span class='code'>weewx</span> has permission
-      to write to the directory, root privileges will not be required to
-      install, run, or modify <span class='code'>weewx</span>.</p>
-    <p>
-      By contrast, the package approach is somewhat simpler, but it requires 
-      root privileges, and will install the bits and pieces of 
-      <span class="code">weewx</span> in standard operating system
-      locations across the file system instead of in a single directory.
-      The net effect is that configuration files, templates, and code will
-      all be installed in separate locations, most of which will require
-      root privileges to modify.</p>
-    <p>
-      When installing using <span class='code'>setup.py</span>, the
-      installation location is specified by the <span class='code'>home</span>
-      parameter in the <span class='code'>setup.cfg</span> file.  This file is
-      not used by the other installation methods.</p>
-    <p>
-      Here is a summary of the layout for the different install methods, along 
-      with the symbolic names used for each role. These names are used 
-      throughout the documentation. </p>
+      <h2>Installation methods</h2>
 
-    <div id='dir-layout-table' class='tabs' style='padding-top:1em'>
-      <div id='layout-tab-deb' class='tab selected' onclick="showtab('layout','deb')">Debian <img src='images/logo-debian.png' class='thumbnail' /> <img src='images/logo-ubuntu.png' class='thumbnail' /> <img src='images/logo-mint.png' class='thumbnail' /></div>
-      <div id='layout-tab-rpm' class='tab' onclick="showtab('layout','rpm')">Redhat <img src='images/logo-redhat.png' class='thumbnail' /> <img src='images/logo-centos.png' class='thumbnail' /> <img src='images/logo-fedora.png' class='thumbnail' /></div>
-      <div id='layout-tab-setup' class='tab' onclick="showtab('layout','setup')">setup.py</div>
-    </div>
+      <p>
+          <span class='code'>Weewx</span> can be installed from a DEB or RPM
+          package, or it can be installed using the standard Python utility <span
+              class='code'>setup.py</span>.
+      </p>
 
-    <div id='layout' style='clear:both; width: 60%;'>
-      <div id='layout-deb'>
-        <table class='locations' width='100%'>
-          <tr class='selected'>
-            <td colspan='3' class='locations_banner'>Application layout for install using DEB package</td>
-          </tr>
-          <tr class="first_row" style="background-color: inherit">
-            <td>Role</td>
-            <td>Symbolic Name</td>
-            <td>Nominal Location</td>
-          </tr>
-          <tr>
-            <td>Executables</td>
-            <td class="symcode">BIN_ROOT</td>
-            <td class='tty'>/usr/share/weewx/</td>
-          </tr>
-          <tr>
-            <td>Configuration directory</td>
-            <td class="symcode">CONFIG_ROOT</td>
-            <td class='tty'>/etc/weewx/</td>
-          </tr>
-          <tr>
-            <td>Skins and templates</td>
-            <td class="symcode">SKIN_ROOT</td>
-            <td class='tty'>/etc/weewx/skins/</td>
-          </tr>
-          <tr>
-            <td>SQLite databases</td>
-            <td class="symcode">SQLITE_ROOT</td>
-            <td class='tty'>/var/lib/weewx/</td>
-          </tr>
-          <tr>
-            <td>Web pages and images</td>
-            <td class="symcode">HTML_ROOT</td>
-            <td class='tty'>/var/www/weewx/</td>
-          </tr>
-          <tr>
-            <td>Documentation</td>
-            <td class="symcode">DOC_ROOT</td>
-            <td class='tty'>/usr/share/doc/weewx/</td>
-          </tr>
-          <tr>
-            <td>PID file</td>
-            <td class="symcode"></td>
-            <td class='tty'>/var/run/weewx.pid</td>
-          </tr>
-          <tr>
-            <td>Log file</td>
-            <td class="symcode"></td>
-            <td class='tty'>/var/log/syslog</td>
-          </tr>
-        </table>
+      <p>
+          The DEB or RPM package approach is simpler and is the recommended method for
+          beginners. However, it requires root privileges, and will install the
+          bits and pieces of <span class="code">weewx</span> in standard
+          operating system locations across the file system instead of in a
+          single directory. The net effect is that configuration files,
+          templates, and code will all be installed in separate locations, most
+          of which will require root privileges to modify.
+      </p>
+
+      <p>
+          Installation using <span class="code">setup.py</span> is the
+          recommended method for those who plan to write custom services and
+          reports for <span class='code'>weewx</span>. It will put everything
+          in a single directory, specified by the parameter <span class='code'>home</span>
+          in the <span class='code'>setup.cfg</span> file, making it
+          easier to modify <span class="code">weewx</span>. This file is not
+          used by the other installation methods. If the user installing <span
+              class='code'>weewx</span> has permission to write to the directory,
+          root privileges will not be required to install, run, or modify <span
+              class='code'>weewx</span>.
+      </p>
+
+      <h2><a href='debian.htm'>Installing from DEB package</a></h2>
+
+      <p>For Debian, Ubuntu, Mint, and Raspian operating systems, follow the
+          <a href='debian.htm'>instructions for Debian-based systems</a>.</p>
+
+      <h2><a href='redhat.htm'>Installing from Redhat RPM package</a></h2>
+
+      <p>For Redhat, CentOS, Fedora operating systems, follow the
+          the <a href='redhat.htm'>instructions for Redhat-based systems</a>.</p>
+
+      <h2><a href='suse.htm'>Installing from SuSE RPM package</a></h2>
+
+      <p>For SuSE and OpenSUSE, follow the
+          <a href='suse.htm'>instructions for SuSE-based systems</a>.</p>
+
+      <h2><a href='setup.htm'>Installing using the Python tool setup.py</a></h2>
+
+      <p>For all operating systems, follow the
+          <a href='setup.htm'><span class="code">setup.py</span> instructions</a>.
+      </p>
+
+      <h2>Where to find things</h2>
+
+      <p>
+          Here is a summary of the layout for the different install methods, along
+          with the symbolic names used for each role. These names are used
+          throughout the documentation. </p>
+
+      <div id='dir-layout-table' class='tabs' style='padding-top:1em'>
+          <div id='layout-tab-deb' class='tab selected' onclick="showtab('layout','deb')">Debian <img
+                  src='images/logo-debian.png' class='thumbnail' alt="Debian logo"/> <img src='images/logo-ubuntu.png' class='thumbnail' alt="Ubuntu logo"/>
+              <img src='images/logo-mint.png' class='thumbnail' alt="Mint logo"/></div>
+          <div id='layout-tab-rpm' class='tab' onclick="showtab('layout','rpm')">Redhat <img src='images/logo-redhat.png'
+                                                                                             class='thumbnail' alt="Redhat logo"/> <img
+                  src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/> <img src='images/logo-fedora.png' class='thumbnail' alt="Fedora logo"/>
+          </div>
+          <div id='layout-tab-setup' class='tab' onclick="showtab('layout','setup')">setup.py</div>
       </div>
-      <div id='layout-rpm' style='display:none'>
-        <table class='locations' width='100%'>
-          <tr class='selected'>
-            <td colspan='3' class='locations_banner'>Application layout for install using RPM package</td>
-          </tr>
-          <tr class="first_row" style="background-color: inherit">
-            <td>Role</td>
-            <td>Symbolic Name</td>
-            <td>Nominal Location</td>
-          </tr>
-          <tr>
-            <td>Executables</td>
-            <td class="symcode">BIN_ROOT</td>
-            <td class='tty'>/usr/share/weewx/</td>
-          </tr>
-          <tr>
-            <td>Configuration directory</td>
-            <td class="symcode">CONFIG_ROOT</td>
-            <td class='tty'>/etc/weewx</td>
-          </tr>
-          <tr>
-            <td>Skins and templates</td>
-            <td class="symcode">SKIN_ROOT</td>
-            <td class='tty'>/etc/weewx/skins/</td>
-          </tr>
-          <tr>
-            <td>SQLite databases</td>
-            <td class="symcode">SQLITE_ROOT</td>
-            <td class='tty'>/var/lib/weewx/</td>
-          </tr>
-          <tr>
-            <td>Web pages and images</td>
-            <td class="symcode">HTML_ROOT</td>
-            <td class='tty'>/var/www/html/weewx/</td>
-          </tr>
-          <tr>
-            <td>Documentation</td>
-            <td class="symcode">DOC_ROOT</td>
-            <td class='tty'>/usr/share/doc/weewx-x.y.z/</td>
-          </tr>
-          <tr>
-            <td>PID file</td>
-            <td class="symcode"></td>
-            <td class='tty'>/var/run/weewx.pid</td>
-          </tr>
-          <tr>
-            <td>Log file</td>
-            <td class="symcode"></td>
-            <td class='tty'>/var/log/messages</td>
-          </tr>
-        </table>
+
+      <div id='layout' style='clear:both; width: 60%;'>
+          <div id='layout-deb'>
+              <table class='locations' width='100%'>
+                  <tr class='selected'>
+                      <td colspan='3' class='locations_banner'>Application layout for install using DEB package</td>
+                  </tr>
+                  <tr class="first_row" style="background-color: inherit">
+                      <td>Role</td>
+                      <td>Symbolic Name</td>
+                      <td>Nominal Location</td>
+                  </tr>
+                  <tr>
+                      <td>Executables</td>
+                      <td class="symcode">BIN_ROOT</td>
+                      <td class='tty'>/usr/share/weewx/</td>
+                  </tr>
+                  <tr>
+                      <td>Configuration directory</td>
+                      <td class="symcode">CONFIG_ROOT</td>
+                      <td class='tty'>/etc/weewx/</td>
+                  </tr>
+                  <tr>
+                      <td>Skins and templates</td>
+                      <td class="symcode">SKIN_ROOT</td>
+                      <td class='tty'>/etc/weewx/skins/</td>
+                  </tr>
+                  <tr>
+                      <td>SQLite databases</td>
+                      <td class="symcode">SQLITE_ROOT</td>
+                      <td class='tty'>/var/lib/weewx/</td>
+                  </tr>
+                  <tr>
+                      <td>Web pages and images</td>
+                      <td class="symcode">HTML_ROOT</td>
+                      <td class='tty'>/var/www/weewx/</td>
+                  </tr>
+                  <tr>
+                      <td>Documentation</td>
+                      <td class="symcode">DOC_ROOT</td>
+                      <td class='tty'>/usr/share/doc/weewx/</td>
+                  </tr>
+                  <tr>
+                      <td>PID file</td>
+                      <td class="symcode"></td>
+                      <td class='tty'>/var/run/weewx.pid</td>
+                  </tr>
+                  <tr>
+                      <td>Log file</td>
+                      <td class="symcode"></td>
+                      <td class='tty'>/var/log/syslog</td>
+                  </tr>
+              </table>
+          </div>
+          <div id='layout-rpm' style='display:none'>
+              <table class='locations' width='100%'>
+                  <tr class='selected'>
+                      <td colspan='3' class='locations_banner'>Application layout for install using RPM package</td>
+                  </tr>
+                  <tr class="first_row" style="background-color: inherit">
+                      <td>Role</td>
+                      <td>Symbolic Name</td>
+                      <td>Nominal Location</td>
+                  </tr>
+                  <tr>
+                      <td>Executables</td>
+                      <td class="symcode">BIN_ROOT</td>
+                      <td class='tty'>/usr/share/weewx/</td>
+                  </tr>
+                  <tr>
+                      <td>Configuration directory</td>
+                      <td class="symcode">CONFIG_ROOT</td>
+                      <td class='tty'>/etc/weewx</td>
+                  </tr>
+                  <tr>
+                      <td>Skins and templates</td>
+                      <td class="symcode">SKIN_ROOT</td>
+                      <td class='tty'>/etc/weewx/skins/</td>
+                  </tr>
+                  <tr>
+                      <td>SQLite databases</td>
+                      <td class="symcode">SQLITE_ROOT</td>
+                      <td class='tty'>/var/lib/weewx/</td>
+                  </tr>
+                  <tr>
+                      <td>Web pages and images</td>
+                      <td class="symcode">HTML_ROOT</td>
+                      <td class='tty'>/var/www/html/weewx/</td>
+                  </tr>
+                  <tr>
+                      <td>Documentation</td>
+                      <td class="symcode">DOC_ROOT</td>
+                      <td class='tty'>/usr/share/doc/weewx-x.y.z/</td>
+                  </tr>
+                  <tr>
+                      <td>PID file</td>
+                      <td class="symcode"></td>
+                      <td class='tty'>/var/run/weewx.pid</td>
+                  </tr>
+                  <tr>
+                      <td>Log file</td>
+                      <td class="symcode"></td>
+                      <td class='tty'>/var/log/messages</td>
+                  </tr>
+              </table>
+          </div>
+          <div id='layout-setup' style='display:none'>
+              <table class='locations' width='100%'>
+                  <tr class='selected'>
+                      <td colspan='3' class='locations_banner'>Application layout for install using <span class='code'>setup.py</span>
+                      </td>
+                  </tr>
+                  <tr class="first_row" style="background-color: inherit">
+                      <td>Role</td>
+                      <td>Symbolic Name</td>
+                      <td>Nominal Location</td>
+                  </tr>
+                  <tr>
+                      <td><span class='code'>weewx</span> root directory</td>
+                      <td class="symcode">WEEWX_ROOT</td>
+                      <td class="tty">/home/weewx</td>
+                  </tr>
+                  <tr>
+                      <td>Executables</td>
+                      <td class="symcode">BIN_ROOT</td>
+                      <td class='tty'>/home/weewx/bin/</td>
+                  </tr>
+                  <tr>
+                      <td>Configuration directory</td>
+                      <td class="symcode">CONFIG_ROOT</td>
+                      <td class='tty'>/home/weewx/</td>
+                  </tr>
+                  <tr>
+                      <td>Skins and templates</td>
+                      <td class="symcode">SKIN_ROOT</td>
+                      <td class='tty'>/home/weewx/skins/</td>
+                  </tr>
+                  <tr>
+                      <td>SQLite databases</td>
+                      <td class="symcode">SQLITE_ROOT</td>
+                      <td class='tty'>/home/weewx/archive</td>
+                  </tr>
+                  <tr>
+                      <td>Web pages and images</td>
+                      <td class="symcode">HTML_ROOT</td>
+                      <td class='tty'>/home/weewx/public_html/</td>
+                  </tr>
+                  <tr>
+                      <td>Documentation</td>
+                      <td class="symcode">DOC_ROOT</td>
+                      <td class='tty'>/home/weewx/docs/</td>
+                  </tr>
+                  <tr>
+                      <td>PID file</td>
+                      <td class="symcode"></td>
+                      <td class='tty'>/var/run/weewx.pid</td>
+                  </tr>
+                  <tr>
+                      <td>Log file</td>
+                      <td class="symcode"></td>
+                      <td class='tty'>/var/log/syslog</td>
+                  </tr>
+              </table>
+          </div>
       </div>
-      <div id='layout-setup' style='display:none'>
-        <table class='locations' width='100%'>
-          <tr class='selected'>
-            <td colspan='3' class='locations_banner'>Application layout for install using <span class='code'>setup.py</span></td>
-          </tr>
-          <tr class="first_row" style="background-color: inherit">
-            <td>Role</td>
-            <td>Symbolic Name</td>
-            <td>Nominal Location</td>
-          </tr>
-          <tr>
-            <td><span class='code'>weewx</span> root directory</td>
-            <td class="symcode">WEEWX_ROOT</td>
-            <td class="tty">/home/weewx</td>
-          </tr>
-          <tr>
-            <td>Executables</td>
-            <td class="symcode">BIN_ROOT</td>
-            <td class='tty'>/home/weewx/bin/</td>
-          </tr>
-          <tr>
-            <td>Configuration directory</td>
-            <td class="symcode">CONFIG_ROOT</td>
-            <td class='tty'>/home/weewx/</td>
-          </tr>
-          <tr>
-            <td>Skins and templates</td>
-            <td class="symcode">SKIN_ROOT</td>
-            <td class='tty'>/home/weewx/skins/</td>
-          </tr>
-          <tr>
-            <td>SQLite databases</td>
-            <td class="symcode">SQLITE_ROOT</td>
-            <td class='tty'>/home/weewx/archive</td>
-          </tr>
-          <tr>
-            <td>Web pages and images</td>
-            <td class="symcode">HTML_ROOT</td>
-            <td class='tty'>/home/weewx/public_html/</td>
-          </tr>
-          <tr>
-            <td>Documentation</td>
-            <td class="symcode">DOC_ROOT</td>
-            <td class='tty'>/home/weewx/docs/</td>
-          </tr>
-          <tr>
-            <td>PID file</td>
-            <td class="symcode"></td>
-            <td class='tty'>/var/run/weewx.pid</td>
-          </tr>
-          <tr>
-            <td>Log file</td>
-            <td class="symcode"></td>
-            <td class='tty'>/var/log/syslog</td>
-          </tr>
-        </table>
-      </div>
-    </div>
-
-    <br/>
-    
-    <h2><a href='debian.htm'>Installing from DEB package</a></h2>
-    <p>For Debian, Ubuntu, Mint, and Raspian operating systems, follow the
-      <a href='debian.htm'>instructions for Debian-based systems</a>.</p>
-
-    <h2><a href='redhat.htm'>Installing from Redhat RPM package</a></h2>
-    <p>For Redhat, CentOS, Fedora operating systems, follow the
-      the <a href='redhat.htm'>instructions for Redhat-based systems</a>.</p>
-
-    <h2><a href='suse.htm'>Installing from SuSE RPM package</a></h2>
-    <p>For SuSE and OpenSUSE, follow the
-      <a href='suse.htm'>instructions for SuSE-based systems</a>.</p>
-
-    <h2><a href='setup.htm'>Installing using the Python tool setup.py</a></h2>
-    <p>For all operating systems, follow the
-      <a href='setup.htm'><span class="code">setup.py</span> instructions</a>.
-    </p>
 
     <h1 id="wee_config_utility">The utility <span class="code">wee_config</span></h1>
 
