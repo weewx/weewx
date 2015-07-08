@@ -42,7 +42,7 @@ def main():
                       help="Install the extension contained in FILENAME or"
                       " DIRECTORY. FILENAME must be an archive that contains"
                       " a packaged extension such as pmon.tar.gz.  DIRECTORY"
-                      " must be a packaged extension.")
+                      " is the result of extracting that archive.")
     parser.add_option('--uninstall', metavar="EXTENSION",
                       help="Uninstall the extension with name EXTENSION.")
     parser.add_option("--config", metavar="CONFIG_FILE",
