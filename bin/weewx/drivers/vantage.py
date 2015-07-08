@@ -59,10 +59,14 @@ class BaseWrapper(object):
                 self.flush_output()
                 self.flush_input()
                 # It can be hard to get the console's attention, particularly
-                # when in the middle of a LOOP command. Send a whole bunch of line feeds,
-                # then flush everything, then look for the \n\r acknowledgment
-                self.write('\n\n\n')
+                # when in the middle of a LOOP command. Send a whole bunch of line feeds.
+                # Use separate calls, as this forces the WLIP implementation to invoke the
+                # tcp_send_delay between each one.
+                self.write('\n')
+                self.write('\n')
+                self.write('\n')
                 time.sleep(0.5)
+                # Now flush everything, do it again, then look for the \n\r acknowledgment
                 self.flush_input()
                 self.write('\n')
                 _resp = self.read(2)
