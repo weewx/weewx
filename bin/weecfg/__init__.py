@@ -31,46 +31,50 @@ major_comment_block = ["", "####################################################
 #   1: A list of any subsection tuples;
 #   2: A list of any scalar names.
 
-canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'altitude', 
-                                         'station_type', 'rain_year_start', 'week_start']), 
-                        ('AcuRite', [], []),
-                        ('CC3000', [], []),
-                        ('FineOffsetUSB', [], []),
-                        ('Simulator', [], []),
-                        ('TE923', [], []),
-                        ('Ultimeter', [], []),
-                        ('Vantage', [], []),
-                        ('WMR100', [], []),
-                        ('WMR200', [], []),
-                        ('WMR9x8', [], []),
-                        ('WS1', [], []),
-                        ('WS23xx', [], []),
-                        ('WS28xx', [], []),
-                        ('StdRESTful', [('StationRegistry', [], ['register_this_station']), 
-                                        ('AWEKAS', [], ['enable', 'username', 'password']), 
-                                        ('CWOP', [], ['enable', 'station']), 
-                                        ('PWSweather', [], ['enable', 'station', 'password']), 
-                                        ('WOW', [], ['enable', 'station', 'password']), 
-                                        ('Wunderground', [], ['enable', 'station', 'password', 'rapidfire'])], []), 
-                        ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 
-                                                                                      'group_rain', 'group_rainrate', 'group_temperature', 
-                                                                                      'group_degree_day', 'group_speed'])], [])], ['skin']), 
-                                       ('FTP', [], ['skin', 'secure_ftp', 'port', 'passive']), 
-                                       ('RSYNC', [], ['skin', 'delete'])], 
-                         ['SKIN_ROOT', 'HTML_ROOT', 'data_binding']), 
-                        ('StdConvert', [], ['target_unit']), ('StdCalibrate', [('Corrections', [], [])], []), 
-                        ('StdQC', [('MinMax', [], ['barometer', 'outTemp', 'inTemp', 'outHumidity', 'inHumidity', 'windSpeed'])], []), 
-                        ('StdWXCalculate', [], ['pressure', 'barometer', 'altimeter', 'windchill', 'heatindex', 'dewpoint', 'inDewpoint', 'rainRate']), 
-                        ('StdTimeSynch', [], ['clock_check', 'max_drift']), 
-                        ('StdArchive', [], ['archive_interval', 'archive_delay', 'record_generation', 'loop_hilo', 'data_binding']), 
-                        ('DataBindings', [('wx_binding', [], ['database', 'table_name', 'manager', 'schema'])], []), 
-                        ('Databases', [('archive_sqlite', [], ['database_type', 'database_name']), 
-                                       ('archive_mysql',  [], ['database_type', 'database_name'])], []),
-                        ('DatabaseTypes', [('SQLite', [], ['driver', 'SQLITE_ROOT']),
-                                           ('MySQL',  [], ['driver', 'host', 'user', 'password'])], []),
-                        ('Engine', [('Services', [], ['prep_services', 'data_services', 'process_services', 
-                                                      'archive_services', 'restful_services', 'report_services'])], [])], 
-                   ['debug', 'WEEWX_ROOT', 'socket_timeout', 'version'])
+canonical_order = ('',
+[('Station', [], ['location', 'latitude', 'longitude', 'altitude',
+                  'station_type', 'rain_year_start', 'week_start']), 
+ ('AcuRite', [], []),
+ ('CC3000', [], []),
+ ('FineOffsetUSB', [], []),
+ ('Simulator', [], []),
+ ('TE923', [], []),
+ ('Ultimeter', [], []),
+ ('Vantage', [], []),
+ ('WMR100', [], []),
+ ('WMR200', [], []),
+ ('WMR9x8', [], []),
+ ('WS1', [], []),
+ ('WS23xx', [], []),
+ ('WS28xx', [], []),
+ ('StdRESTful', [('StationRegistry', [], ['register_this_station']), 
+                 ('AWEKAS', [], ['enable', 'username', 'password']), 
+                 ('CWOP', [], ['enable', 'station']), 
+                 ('PWSweather', [], ['enable', 'station', 'password']), 
+                 ('WOW', [], ['enable', 'station', 'password']), 
+                 ('Wunderground', [], ['enable', 'station', 'password', 'rapidfire'])], []), 
+ ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 'group_rain', 'group_rainrate', 'group_temperature', 'group_degree_day', 'group_speed'])], [])], ['skin']), 
+                ('FTP', [], ['skin', 'secure_ftp', 'port', 'passive']), 
+                ('RSYNC', [], ['skin', 'delete'])], 
+  ['SKIN_ROOT', 'HTML_ROOT', 'data_binding']), 
+ ('StdConvert', [], ['target_unit']), ('StdCalibrate', [('Corrections', [], [])], []), 
+ ('StdQC', [('MinMax', [], ['barometer', 'outTemp', 'inTemp',
+                            'outHumidity', 'inHumidity', 'windSpeed'])], []),
+ ('StdWXCalculate', [], ['pressure', 'barometer', 'altimeter', 'windchill',
+                         'heatindex', 'dewpoint', 'inDewpoint', 'rainRate']), 
+ ('StdTimeSynch', [], ['clock_check', 'max_drift']), 
+ ('StdArchive', [], ['archive_interval', 'archive_delay', 'record_generation',
+                     'loop_hilo', 'data_binding']), 
+ ('DataBindings', [('wx_binding', [], ['database', 'table_name', 'manager',
+                                       'schema'])], []), 
+ ('Databases', [('archive_sqlite', [], ['database_type', 'database_name']), 
+                ('archive_mysql',  [], ['database_type', 'database_name'])], []),
+ ('DatabaseTypes', [('SQLite', [], ['driver', 'SQLITE_ROOT']),
+                    ('MySQL',  [], ['driver', 'host', 'user', 'password'])], []),
+ ('Engine', [('Services', [], ['prep_services', 'data_services',
+                               'process_services', 'archive_services',
+                               'restful_services', 'report_services'])], [])], 
+['debug', 'WEEWX_ROOT', 'socket_timeout', 'version'])
 
 def get_section_tuple(c_dict, section_name=''):
     """ The above "canonical" ordering can be  generated from a config file
@@ -331,8 +335,9 @@ def update_and_merge(config_dict, template_dict):
     update_config(config_dict)
     merge_config(config_dict, template_dict)
     
-    # We use the number of comment lines for the 'Station' section as a heuristic
-    # of whether the config dict has been updated to the new comment structure
+    # We use the number of comment lines for the 'Station' section as a
+    # heuristic of whether the config dict has been updated to the new
+    # comment structure
     if len(config_dict.comments['Station']) <= 3:
         transfer_comments(config_dict, template_dict)
     
@@ -525,7 +530,8 @@ def update_to_v27(config_dict):
     if 'StdRESTful' in config_dict and 'CWOP' in config_dict['StdRESTful']:
         # Option "interval" has changed to "post_interval"
         if 'interval' in config_dict['StdRESTful']['CWOP']:
-            config_dict['StdRESTful']['CWOP']['post_interval'] = config_dict['StdRESTful']['CWOP']['interval']
+            config_dict['StdRESTful']['CWOP']['post_interval'] = \
+                config_dict['StdRESTful']['CWOP']['interval']
             config_dict['StdRESTful']['CWOP'].pop('interval')
         # Option "server" has become "server_list". It is also no longer
         # included in the default weewx.conf, so just pop it.
@@ -642,15 +648,16 @@ def update_to_v32(config_dict):
         except KeyError:
             pass
         # Set the default [[SQLite]] section:
-        config_dict['DatabaseTypes'] = {'SQLite' : {'driver' : 'weedb.sqlite',
-                                                    'SQLITE_ROOT' : '%(WEEWX_ROOT)s/archive'}}
+        config_dict['DatabaseTypes'] = {
+            'SQLite' : {'driver': 'weedb.sqlite',
+                        'SQLITE_ROOT': '%(WEEWX_ROOT)s/archive'}}
         try:
             root = config_dict['Databases']['archive_sqlite']['root']
             database_name = config_dict['Databases']['archive_sqlite']['database_name']
             fullpath = os.path.join(root, database_name)
             dirname = os.path.dirname(fullpath)
-            # By testing to see if they end up resolving to the same thing, we can keep
-            # the interpolation used to specify SQLITE_ROOT above:
+            # By testing to see if they end up resolving to the same thing,
+            # we can keep the interpolation used to specify SQLITE_ROOT above.
             if dirname != config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT']:
                 config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'] = dirname
             config_dict['Databases']['archive_sqlite']['database_name'] = os.path.basename(fullpath)
@@ -666,9 +673,9 @@ def update_to_v32(config_dict):
         except KeyError:
             pass
         config_dict['DatabaseTypes'] = {'MySQL' : {'driver': 'weedb.mysql',
-                                                   'host'  : 'localhost',
-                                                   'user'  : 'weewx',
-                                                   'password' : 'weewx'}}
+                                                   'host': 'localhost',
+                                                   'user': 'weewx',
+                                                   'password': 'weewx'}}
         try:
             config_dict['DatabaseTypes']['MySQL']['host'] = config_dict['Databases']['archive_mysql']['host']
             config_dict['DatabaseTypes']['MySQL']['user'] = config_dict['Databases']['archive_mysql']['user']
@@ -773,8 +780,8 @@ def get_unit_info(config_dict):
 #                Utilities that manipulate ConfigObj objects
 #==============================================================================
 
-# The following utility is probably not necessary any longer. reorder_to_ref() should
-# be used instead:
+# The following utility is probably not necessary any longer.
+# reorder_to_ref() should be used instead.
 def reorder_sections(config_dict, src, dst, after=False):
     """Move the section with key src to just before (after=False) or after
     (after=True) the section with key dst. """
@@ -821,7 +828,8 @@ def reorder(name_list, ref_list):
     for name in ref_list:
         if name in name_list:
             result.append(name)
-    # For any that were not in the reference list and are left over, tack them on to the end:
+    # For any that were not in the reference list and are left over, tack
+    # them on to the end:
     for name in name_list:
         if name not in ref_list:
             result.append(name)
@@ -870,7 +878,8 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
     """Scan the drivers folder, extracting information about each available
     driver. Return as a dictionary, keyed by the driver module name.
     
-    Valid drivers must be importable, and must have attribute "DRIVER_NAME" defined.
+    Valid drivers must be importable, and must have attribute "DRIVER_NAME"
+    defined.
     """
 
     __import__(driver_pkg_name)
@@ -882,42 +891,54 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
     for filename in driver_list:
         if filename in excludes:
             continue
+
         # Get the driver module name. This will be something like
         # 'weewx.drivers.fousb'
-        driver_module_name = os.path.splitext("%s.%s" % (driver_pkg_name, filename))[0]
+        driver_module_name = os.path.splitext("%s.%s" % (driver_pkg_name,
+                                                         filename))[0]
         
         try:
             # Try importing the module
             __import__(driver_module_name)
             driver_module = sys.modules[driver_module_name]
-        except (ImportError, KeyError):
-            continue
-        
-        # We can detect a valid driver by whether the attribute "DRIVER_NAME" has
-        # been defined
-        if not hasattr(driver_module, 'DRIVER_NAME'):
-            continue
-                
-        # Now we can create an entry for it, keyed by the driver module name:
-        driver_info_dict[driver_module_name] = \
-            {'module_name' : driver_module_name,
-             'driver_name' : driver_module.DRIVER_NAME,
-             'version'     : driver_module.DRIVER_VERSION if hasattr(driver_module, 
-                                                                     'DRIVER_VERSION') else '?'}
+
+            # A valid driver will define the attribute "DRIVER_NAME"
+            if hasattr(driver_module, 'DRIVER_NAME'):
+                # A driver might define the attribute DRIVER_VERSION
+                driver_module_version = driver_module.DRIVER_VERSION \
+                    if hasattr(driver_module, 'DRIVER_VERSION') else '?'
+                # Create an entry for it, keyed by the driver module name
+                driver_info_dict[driver_module_name] = {
+                    'module_name' : driver_module_name,
+                    'driver_name' : driver_module.DRIVER_NAME,
+                    'version'     : driver_module_version,
+                    'status'      : ''}
+        except ImportError, e:
+            # If the import fails, report it in the status
+            driver_info_dict[driver_module_name] = {
+                'module_name' : driver_module_name,
+                'driver_name' : '?',
+                'version'     : '?',
+                'status'      : e}
+        except KeyError:
+            pass
+
     return driver_info_dict
 
 def print_drivers():
     """Get information about all the available drivers, then print it out."""
     driver_info_dict = get_all_driver_infos()
     keys = sorted(driver_info_dict)
-    print "%-25s%-25s%-25s" % ("Module name", "Driver name", "Version")
+    print "%-25s%-15s%-9s%-25s" % (
+        "Module name", "Driver name", "Version", "Status")
     for d in keys:
-        print "  %(module_name)-25s%(driver_name)-25s%(version)-25s" % driver_info_dict[d]
+        print "  %(module_name)-25s%(driver_name)-15s%(version)-9s%(status)-25s" % driver_info_dict[d]
 
 def load_driver_editor(driver_module_name):
     """Load the configuration editor from the driver file
     
-    driver_module_name: A string holding the driver name. E.g., 'weewx.drivers.fousb'
+    driver_module_name: A string holding the driver name.
+                        E.g., 'weewx.drivers.fousb'
     """
     __import__(driver_module_name)
     driver_module = sys.modules[driver_module_name]

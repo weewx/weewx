@@ -74,15 +74,25 @@ class ExtensionEngine(object):
         try:
             exts = os.listdir(ext_root)
             if exts:
+                self.logger.log("%-18s%-10s%s" %
+                                ("Extension Name", "Version", "Description"),
+                                level=0)
                 for f in exts:
-                    self.logger.log(f, level=0)
+                    info = self.get_extension_info(f)
+                    msg = "%(name)-18s%(version)-10s%(description)s" % info
+                    self.logger.log(msg, level=0)
             else:
                 self.logger.log("Extension cache is '%s'" % ext_root, level=2)
                 self.logger.log("No extensions installed", level=0)
         except OSError:
             self.logger.log("No extension cache '%s'" % ext_root, level=2)
             self.logger.log("No extensions installed", level=0)
-            
+
+    def get_extension_info(self, ext_name):
+        ext_cache_dir = os.path.join(self.root_dict['EXT_ROOT'], ext_name)
+        _, installer = weecfg.get_extension_installer(ext_cache_dir)
+        return installer
+
     def install_extension(self, extension_path):
         """Install the extension from the file or directory extension_path"""
         self.logger.log("Request to install '%s'" % extension_path)
@@ -115,7 +125,8 @@ class ExtensionEngine(object):
         # The "installer" is actually a dictionary containing what is to be
         # installed and where. The "installer_path" is the path to the file
         # containing that dictionary.        
-        installer_path, installer = weecfg.get_extension_installer(extension_dir)
+        installer_path, installer = weecfg.get_extension_installer(
+            extension_dir)
         extension_name = installer.get('name', 'Unknown')
         self.logger.log("Found extension with name '%s'" % extension_name,
                         level=2)
@@ -139,8 +150,10 @@ class ExtensionEngine(object):
                     # Now go through all the files of the source tuple
                     for install_file in source_tuple[1]:
                         source_path = os.path.join(extension_dir, install_file)
-                        dst_file = ExtensionEngine._strip_leading_dir(install_file)
-                        destination_path = os.path.abspath(os.path.join(self.root_dict[root_type], dst_file))
+                        dst_file = ExtensionEngine._strip_leading_dir(
+                            install_file)
+                        destination_path = os.path.abspath(
+                            os.path.join(self.root_dict[root_type], dst_file))
                         self.logger.log("Copying from '%s' to '%s'" %
                                         (source_path, destination_path),
                                         level=3)
@@ -160,7 +173,8 @@ class ExtensionEngine(object):
 
         # Look for options that have to be injected into the configuration file
         if 'config' in installer:
-            save_config |= self._inject_config(installer['config'], extension_name)
+            save_config |= self._inject_config(installer['config'],
+                                               extension_name)
 
         # Go through all the possible service groups and see if the extension
         # includes any services that belong in any of them.
@@ -224,12 +238,12 @@ class ExtensionEngine(object):
                 db_dict = cfg['Databases'][db]
                 # Does this extension use the V3.2+ 'database_type' option?
                 if 'database_type' not in db_dict:
-                    # There is no database type specified. In this
-                    # case, the driver type better appear. Fail hard, with
-                    # a KeyError, if it does not. Also, if the driver is not
-                    # for sqlite or MySQL, then we don't know anything about it.
-                    # Assume the extension author knows what s/he is doing, and
-                    # leave it be. 
+                    # There is no database type specified. In this case, the
+                    # driver type better appear. Fail hard, with a KeyError,
+                    # if it does not. Also, if the driver is not for sqlite
+                    # or MySQL, then we don't know anything about it.
+                    # Assume the extension author knows what s/he is doing,
+                    # and leave it be. 
                     if db_dict['driver'] == 'weedb.sqlite':
                         db_dict['database_type'] = 'SQLite'
                         db_dict.pop('driver')
@@ -265,11 +279,11 @@ class ExtensionEngine(object):
 
     def _reorder(self, cfg):
         """Reorder the resultant config_dict"""
-        # Patch up the location of any reports so they appear before FTP or RSYNC
+        # Patch up the location of any reports so they appear before FTP/RSYNC
 
-        # First, find the FTP or RSYNC reports. This has to be done on the basis
-        # of the skin type, rather than the report name, in case there are
-        # multiple FTP or RSYNC reports to be run.
+        # First, find the FTP or RSYNC reports. This has to be done on the
+        # basis of the skin type, rather than the report name, in case there
+        # are multiple FTP or RSYNC reports to be run.
         try:
             for report in self.config_dict['StdReport'].sections:
                 if self.config_dict['StdReport'][report]['skin'] in ['Ftp', 'Rsync']:
@@ -282,11 +296,12 @@ class ExtensionEngine(object):
             return
 
         # Now shuffle things so any reports that appear in the extension appear
-        # just before FTP (or RSYNC) and in the same order they appear in the extension
-        # manifest.        
+        # just before FTP (or RSYNC) and in the same order they appear in the
+        # extension manifest.        
         try:
             for report in cfg['StdReport']:
-                weecfg.reorder_sections(self.config_dict['StdReport'], report, target_name)
+                weecfg.reorder_sections(self.config_dict['StdReport'],
+                                        report, target_name)
         except KeyError:
             pass
             
@@ -350,8 +365,10 @@ class ExtensionEngine(object):
                     root_type = ExtensionEngine.target_dirs[source_type]
                     # Now go through all the files of the source tuple
                     for install_file in source_tuple[1]:
-                        dst_file = ExtensionEngine._strip_leading_dir(install_file)                     
-                        destination_path = os.path.abspath(os.path.join(self.root_dict[root_type], dst_file))
+                        dst_file = ExtensionEngine._strip_leading_dir(
+                            install_file)                     
+                        destination_path = os.path.abspath(
+                            os.path.join(self.root_dict[root_type], dst_file))
                         N += self.delete_file(destination_path)
                         if destination_path.endswith('.py'):
                             N += self.delete_file(
@@ -362,7 +379,8 @@ class ExtensionEngine(object):
                     # delete it.  This applies only to extension-specific
                     # sub-directories.
                     if root_type == 'SKIN_ROOT':
-                        dst_dir = ExtensionEngine._strip_leading_dir(source_tuple[0])
+                        dst_dir = ExtensionEngine._strip_leading_dir(
+                            source_tuple[0])
                         directory = os.path.abspath(os.path.join(
                                 self. root_dict[root_type], dst_dir))
                         self.delete_directory(directory)
