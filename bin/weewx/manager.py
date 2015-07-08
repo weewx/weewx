@@ -824,6 +824,9 @@ class DBBinder(object):
 
         return self.manager_cache[data_binding]
     
+    # For backwards compatibility with early V3.1 alphas:
+    get_database = get_manager
+    
     def bind_default(self, default_binding='wx_binding'):
         """Returns a function that holds a default database binding."""
         
