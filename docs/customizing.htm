@@ -3815,7 +3815,7 @@ UV      = UV Index</pre>
     <p>See the table <a href="#default_services">Default services</a> above for a list
         of the services that are normally run.</p>
 
-    <h2>Customizing a service</h2>
+    <h2 id="Customizing_a_service">Customizing a service</h2>
 
     <p>The service <span class="code">weewx.engine.StdPrint</span> prints
         out new LOOP and archive packets to the console when they arrive. By
@@ -3858,7 +3858,7 @@ class MyPrint(StdPrint):
         one line. Unfortunately, the parser <span class="code">ConfigObj</span>
         does not allow options to be continued on to following lines.</p>
 
-    <h2>Adding a service</h2>
+    <h2 id="Adding_a_service">Adding a service</h2>
 
     <p>Suppose there is no service that can be easily customized for your
         needs. In this case, a new one can easily be created by subclassing off
