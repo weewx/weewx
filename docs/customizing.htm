@@ -366,7 +366,7 @@ Version: 3.2.0b1
         report will use that as the "Current" time; otherwise, the time of the
         last record in the archive database will be used. Here is an example,
         using 1 May 2014 00:00 PDT as the "Current" time.</p>
-    <pre class="tty">wee_reports weewx.conf 1398927600</pre>
+    <pre class="tty"><span class="cmd">wee_reports weewx.conf 1398927600</span></pre>
 
     <h2>The database</h2>
 
@@ -4079,7 +4079,7 @@ class MyAlarm(StdService):
 
     <p>Before starting, it's worth running the utility with the <span class="code">--help</span>
         flag to see how it is used:</p>
-    <pre class="tty">wee_database --help</pre>
+    <pre class="tty"><span class="cmd">wee_database --help</span></pre>
     <p>This will result in an output that looks something like this:</p>
       <pre class="tty">
 Usage: wee_database: [CONFIG_FILE|--config=CONFIG_FILE] [--help]
@@ -4252,12 +4252,12 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
                 It will look like this when you're done:
             </p>
 
-            <p class="tty">[DataBindings]
-                [[wx_binding]]
-                database = archive_sqlite
-                table_name = archive
-                manager = weewx.wxmanager.WXDaySummaryManager
-                <span class="highlight">schema = user.electricity.schema_with_electricity</span></p>
+            <pre class="tty">[DataBindings]
+    [[wx_binding]]
+        database = archive_sqlite
+        table_name = archive
+        manager = weewx.wxmanager.WXDaySummaryManager
+        <span class="highlight">schema = user.electricity.schema_with_electricity</span></pre>
         </li>
 
         <li>
@@ -4269,7 +4269,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
                 are using MySQL, you will need <span class="code">CREATE</span>
                 privileges:
             </p>
-            <pre class="tty">mysql&gt; GRANT select, update, create, delete, insert ON weewx_new.* TO weewx@localhost;</pre>
+            <pre class="tty">mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert ON weewx_new.* TO weewx@localhost;</span></pre>
         </li>
         <li>
             <p>
@@ -4279,7 +4279,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
                 to the configuration file:
             </p>
 
-            <p class="tty">wee_database weewx.conf --reconfigure</p>
+            <p class="tty"><span class="cmd">wee_database weewx.conf --reconfigure</span></p>
 
             <p>
                 This will create a new database (nominally, <span class="code">weewx.sdb_new</span>
@@ -4305,12 +4305,14 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
                 to use the new database name. To do the former:
             </p>
 
-            <p>For SQLite:</p> <pre class="tty">cd <span class="symcode">SQLITE_ROOT</span>
-mv weewx.sdb_new weewx.sdb</pre>
-            <p>For MySQL:</p> <pre class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
-<span class="prompt">mysql&gt;</span> DROP DATABASE weewx;   # Delete the old database
-<span class="prompt">mysql&gt;</span> CREATE DATABASE weewx; # Create a new one with the same name
-<span class="prompt">mysql&gt;</span> RENAME TABLE weewx_new.archive TO weewx.archive; # Rename to the nominal name</pre>
+            <p>For SQLite:</p>
+            <pre class="tty"><span class="cmd">cd <span class="symcode">SQLITE_ROOT</span>
+mv weewx.sdb_new weewx.sdb</span></pre>
+            <p>For MySQL:</p>
+            <pre class="tty"><span class="cmd">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;</span>
+mysql&gt; <span class="cmd">DROP DATABASE weewx;</span>   # Delete the old database
+mysql&gt; <span class="cmd">CREATE DATABASE weewx;</span> # Create a new one with the same name
+mysql&gt; <span class="cmd">RENAME TABLE weewx_new.archive TO weewx.archive;</span> # Rename to the nominal name</pre>
         </li>
         <li>
             <p>
@@ -4321,7 +4323,7 @@ mv weewx.sdb_new weewx.sdb</pre>
                     class="code">wee_database</span> utility and the <span
                     class="code">--backfill-daily</span> option:
             </p>
-            <pre class="tty">wee_database weewx.conf --backfill-daily</pre>
+            <pre class="tty"><span class="cmd">wee_database weewx.conf --backfill-daily</span></pre>
         </li>
     </ol>
 
@@ -4464,7 +4466,7 @@ weewx.units.obs_group_dict['electricity'] = 'group_power'</pre>
                 Now run the utility <span class="code">wee_database</span>
                 with the <span class="code">--reconfigure</span> option:
             </p>
-            <pre class="tty">wee_database weewx.conf --reconfigure</pre>
+            <pre class="tty"><span class="cmd">wee_database weewx.conf --reconfigure</span></pre>
             <p>
                 This will create a new database (nominally,
                 <span class="code">weewx.sdb_new</span>
@@ -4491,12 +4493,13 @@ weewx.units.obs_group_dict['electricity'] = 'group_power'</pre>
                 to use the new database name. To do the former:
             </p>
 
-            <p>For SQLite:</p> <pre class="tty">cd <span class="symcode">SQLITE_ROOT</span>
-mv weewx.sdb_new weewx.sdb</pre>
-            <p>For MySQL:</p> <pre class="tty">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;
-<span class="prompt">mysql&gt;</span> DROP DATABASE weewx;   # Delete the old database
-<span class="prompt">mysql&gt;</span> CREATE DATABASE weewx; # Create a new one with the same name
-<span class="prompt">mysql&gt;</span> RENAME TABLE weewx_new.archive TO weewx.archive; # Rename to the nominal name</pre>
+            <p>For SQLite:</p> <pre class="tty"><span class="cmd">cd <span class="symcode">SQLITE_ROOT</span>
+mv weewx.sdb_new weewx.sdb</span></pre>
+            <p>For MySQL:</p>
+            <pre class="tty"><span class="cmd">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;</span>
+mysql&gt; <span class="cmd">DROP DATABASE weewx;</span>   # Delete the old database
+mysql&gt; <span class="cmd">CREATE DATABASE weewx;</span> # Create a new one with the same name
+mysql&gt; <span class="cmd">RENAME TABLE weewx_new.archive TO weewx.archive;</span> # Rename to the nominal name</pre>
         </li>
         <li>
             <p>
@@ -4507,7 +4510,7 @@ mv weewx.sdb_new weewx.sdb</pre>
                     class="code">wee_database</span> utility and the <span
                     class="code">--backfill-daily</span> option:
             </p>
-            <pre class="tty">wee_database weewx.conf --backfill-daily</pre>
+            <pre class="tty"><span class="cmd">wee_database weewx.conf --backfill-daily</span></pre>
         </li>
     </ol>
 
@@ -4515,10 +4518,10 @@ mv weewx.sdb_new weewx.sdb</pre>
 
     <p>The tool <span class="code">wee_database</span> can also be used to drop the daily
         summaries:</p>
-    <pre class="tty">wee_database weewx.conf --drop-daily</pre>
+    <pre class="tty"><span class="cmd">wee_database weewx.conf --drop-daily</span></pre>
     <p>The summaries will automatically be rebuilt the next time <span class="code">weewx</span> starts,
         or they can be rebuilt with the tool:</p>
-    <pre class="tty">wee_database weewx.conf --backfill-daily</pre>
+    <pre class="tty"><span class="cmd">wee_database weewx.conf --backfill-daily</span></pre>
 
     <h1 id="porting">Porting to new hardware</h1>
 
@@ -4755,9 +4758,8 @@ mv weewx.sdb_new weewx.sdb</pre>
         option to see how it is used:
     </p>
     
-    <pre class="tty">
-cd /home/weewx
-./bin/wee_extension --help</pre>
+    <pre class="tty"><span class="cmd">cd /home/weewx
+./bin/wee_extension --help</span></pre>
 
     <p>This results in:</p>
 
@@ -4798,16 +4800,15 @@ Options:
 
     <p>To install an extension:</p>
 
-    <p class='tty'>wee_extension --install extensions/basic
-        wee_extension --install basic.tar.gz</p>
+    <pre class='tty'><span class="cmd">wee_extension --install extensions/basic wee_extension --install basic.tar.gz</span></pre>
 
     <p>To uninstall an extension:</p>
 
-    <p class='tty'>wee_extension --uninstall basic</p>
+    <pre class='tty'><span class="cmd">wee_extension --uninstall basic</span></pre>
 
     <p>To list installed extensions:</p>
 
-    <p class='tty'>wee_extension --list</p>
+    <pre class='tty'><span class="cmd">wee_extension --list</span></pre>
 
     <p>The utility will make only the following changes:</p>
     <ul>
@@ -4835,7 +4836,7 @@ Options:
         wiki, or by using <span class="code">wget</span> (which you may have
         to install):
     </p>
-    <pre class="tty">wget -P /var/tmp http://lancet.mit.edu/mwall/projects/weather/releases/weewx-cmon-0.7.tgz</pre>
+    <pre class="tty"><span class="cmd">wget -P /var/tmp http://lancet.mit.edu/mwall/projects/weather/releases/weewx-cmon-0.7.tgz</span></pre>
 
     <p>
         This will put the tarfile <span class="code">weewx-cmon-0.7.tgz</span>
@@ -4882,7 +4883,8 @@ Finished installing extension '/var/tmp/weewx-cmon-0.7.tgz'</pre>
     <p>The utility <span class="code">wee_extension</span> can tell you which
         extensions you have installed:</p>
     <pre class="tty"><span class="cmd">./bin/wee_extension --list</span>
-cmon</pre>
+Extension Name   Version  Description
+cmon             0.7      Collect and display computer health indicators</pre>
     <p>You can see it lists the extension we just installed, <span class="code">cmon</span>.</p>
 
     <h2>Removing extensions</h2>
@@ -4936,29 +4938,29 @@ No extensions installed</pre>
     <p>For example, here is the structure of a skin called
         <span class='code'>basic</span>:</p>
 
-    <p class='tty'>basic/
-        basic/changelog
-        basic/install.py
-        basic/readme.txt
-        basic/skins/
-        basic/skins/basic/
-        basic/skins/basic/basic.css
-        basic/skins/basic/current.inc
-        basic/skins/basic/favicon.ico
-        basic/skins/basic/hilo.inc
-        basic/skins/basic/index.html.tmpl
-        basic/skins/basic/skin.conf</p>
+    <pre class='tty'>basic/
+basic/changelog
+basic/install.py
+basic/readme.txt
+basic/skins/
+basic/skins/basic/
+basic/skins/basic/basic.css
+basic/skins/basic/current.inc
+basic/skins/basic/favicon.ico
+basic/skins/basic/hilo.inc
+basic/skins/basic/index.html.tmpl
+basic/skins/basic/skin.conf</pre>
 
     <p>Here is the structure of a search list extension called
         <span class='code'>xstats</span>:</p>
 
-    <p class='tty'>xstats/
-        xstats/changelog
-        xstats/install.py
-        xstats/readme.txt
-        xstats/bin/
-        xstats/bin/user/
-        xstats/bin/user/xstats.py</p>
+    <pre class='tty'>xstats/
+xstats/changelog
+xstats/install.py
+xstats/readme.txt
+xstats/bin/
+xstats/bin/user/
+xstats/bin/user/xstats.py</pre>
 
     <p>See the <span class='code'>extensions</span> directory of the
         <span class='code'>weewx</span> source for examples.</p>
@@ -4969,7 +4971,7 @@ No extensions installed</pre>
     <p>For example, create the compressed archive for the
         <span class='code'>basic</span> skin like this:</p>
 
-    <p class='tty'>tar cvfz basic.tar.gz basic</p>
+    <p class='tty'><span class="cmd">tar cvfz basic.tar.gz basic</span></p>
 
     <h1 id="archive_types">Appendix: Archive Types</h1>
 

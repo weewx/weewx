@@ -944,7 +944,7 @@ Version: 3.2.0b1
         <div id='layout-tab-setup' class='tab' onclick="showtab('layout','setup')">setup.py</div>
     </div>
 
-    <div id='layout' style='clear:both; width: 60%;'>
+    <div id='layout' style='clear:both; width: 80%;'>
         <div id='layout-deb'>
             <table class='locations' width='100%'>
                 <tr class='selected'>
@@ -2511,15 +2511,15 @@ longitude = -77.0366</pre>
         they have not already been provided by the hardware or driver. This is
         the default configuration:</p>
 
-    <p class="tty">[StdWXCalculate]
-        pressure = prefer_hardware
-        barometer = prefer_hardware
-        altimeter = prefer_hardware
-        windchill = prefer_hardware
-        heatindex = prefer_hardware
-        dewpoint = prefer_hardware
-        inDewpoint = prefer_hardware
-        rainRate = prefer_hardware</p>
+    <pre class="tty">[StdWXCalculate]
+    pressure = prefer_hardware
+    barometer = prefer_hardware
+    altimeter = prefer_hardware
+    windchill = prefer_hardware
+    heatindex = prefer_hardware
+    dewpoint = prefer_hardware
+    inDewpoint = prefer_hardware
+    rainRate = prefer_hardware</pre>
 
     <p>The options for each quantity are <span class='code'>hardware</span>,
         <span class='code'>software</span>, or
@@ -2543,9 +2543,9 @@ longitude = -77.0366</pre>
         <span class='code'>weewx</span> calculate it using a current algorithm,
         specify the following:</p>
 
-    <p class="tty">[StdWXCalculate]
-        ...
-        windchill = software</p>
+    <pre class="tty">[StdWXCalculate]
+    ...
+    windchill = software</pre>
 
     <h2 class="config_section" id="StdArchive">[StdArchive]</h2>
 
@@ -2629,11 +2629,11 @@ longitude = -77.0366</pre>
         this:
     </p>
     <pre class="tty">
-    [[wx_binding]]
-        database = archive_sqlite
-        table_name = archive
-        manager = weewx.wxmanager.WXDaySummaryManager
-        schema = schemas.wview.schema</pre>
+[[wx_binding]]
+    database = archive_sqlite
+    table_name = archive
+    manager = weewx.wxmanager.WXDaySummaryManager
+    schema = schemas.wview.schema</pre>
     <p>What follows is more detailed information about each of the
         binding options.</p>
 
@@ -3803,15 +3803,15 @@ mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert ON weew
     <table class="locations" style="width:90%">
         <tr>
             <td style='width:30%'>Debian/Ubuntu/Mint:</td>
-            <td class='tty'><span class="code">util/init.d/weewx.debian</span></td>
+            <td class='tty'><span class="cmd">util/init.d/weewx.debian</span></td>
         </tr>
         <tr>
             <td>Redhat/CentOS/Mint:</td>
-            <td class='tty'><span class="code">util/init.d/weewx.redhat</span></td>
+            <td class='tty'><span class="cmd">util/init.d/weewx.redhat</span></td>
         </tr>
         <tr>
             <td>SuSE:</td>
-            <td class='tty'><span class="code">util/init.d/weewx.suse</span></td>
+            <td class='tty'><span class="cmd">util/init.d/weewx.suse</span></td>
         </tr>
     </table>
     <p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span>
@@ -3823,45 +3823,45 @@ mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert ON weew
     <table class="locations" style="width:90%">
         <tr>
             <td style="width: 30%">Debian/Ubuntu/Mint:</td>
-            <td class='tty'>cp <span class="code">util/init.d/weewx.debian /etc/init.d/weewx</span></td>
+            <td class='tty'><span class="cmd">cp util/init.d/weewx.debian /etc/init.d/weewx</span></td>
         </tr>
         <tr>
             <td>Redhat/CentOS/Fedora:</td>
-            <td class='tty'>cp <span class="code">util/init.d/weewx.redhat /etc/rc.d/init.d/weewx</span></td>
+            <td class='tty'><span class="cmd">cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx</span></td>
         </tr>
         <tr>
             <td>SuSE:</td>
-            <td class='tty'>cp <span class="code">util/init.d/weewx.suse /etc/init.d/weewx</span></td>
+            <td class='tty'><span class="cmd">cp util/init.d/weewx.suse /etc/init.d/weewx</span></td>
         </tr>
     </table>
     <p>Make sure the script is executable: </p>
     <table class="locations" style="width:90%">
         <tr>
             <td style="width: 30%">Debian/Ubuntu/Mint:</td>
-            <td class='tty'>chmod +x /etc/init.d/weewx</td>
+            <td class='tty'><span class="cmd">chmod +x /etc/init.d/weewx</span></td>
         </tr>
         <tr>
             <td>Redhat/CentOS/Fedora:</td>
-            <td class='tty'>chmod +x /etc/init.d/rc.d/weewx</td>
+            <td class='tty'><span class="cmd">chmod +x /etc/init.d/rc.d/weewx</span></td>
         </tr>
         <tr>
             <td>SuSE:</td>
-            <td class='tty'>chmod +x /etc/init.d/weewx</td>
+            <td class='tty'><span class="cmd">chmod +x /etc/init.d/weewx</span></td>
         </tr>
     </table>
     <p>Create symbolic links in the run level directories: </p>
     <table class="locations" style="width:90%">
         <tr>
             <td style="width: 30%">Debian/Ubuntu/Mint:</td>
-            <td class='tty'>update-rc.d weewx defaults 98</td>
+            <td class='tty'><span class="cmd">update-rc.d weewx defaults 98</span></td>
         </tr>
         <tr>
             <td>Redhat/CentOS/Fedora:</td>
-            <td class='tty'>chkconfig weewx on</td>
+            <td class='tty'><span class="cmd">chkconfig weewx on</span></td>
         </tr>
         <tr>
             <td>SuSE:</td>
-            <td class='tty'>/usr/lib/lsb/install_initd /etc/init.d/weewx</td>
+            <td class='tty'><span class="cmd">/usr/lib/lsb/install_initd /etc/init.d/weewx</span></td>
         </tr>
     </table>
     <p><span class="code">Weewx</span> will now start automatically whenever your
@@ -3958,8 +3958,8 @@ sudo /etc/init.d/weewx start</pre>
         <span class="code">weewx.conf</span>, replace the name of the database
         with whatever your installation of wview used <span class="code"><em>your-wview-archive-name</em></span>:</p>
     <pre class="tty">[[archive_mysql]]
-&nbsp; database_type = MySQL
-&nbsp; database_name = <span class="highlight"><em>your-wview-archive-name</em></span></pre>
+    database_type = MySQL
+    database_name = <span class="highlight"><em>your-wview-archive-name</em></span></pre>
 
 
     <h1 id="integrating_with_webserver">Integrating with a web server</h1>
@@ -4490,7 +4490,7 @@ Apr 24 12:09:15 raven weewx[11480]: **** Exiting. </pre>
         For example: </p>
 
     <p class='tty'>[Reports]
-        [[FTP]]]
+    [[FTP]]]
         ... (details elided)</p>
 
     <p>Note the extra closing bracket on the subsection <span class="code">FTP</span>.
@@ -4649,16 +4649,16 @@ sqlite&gt; <span class="cmd">update archive set outTemp=NULL where outTemp &gt; 
         There is no analogous problem with MySQL databases. You will see errors in the system log that
         looks like this:</p>
     <pre class='tty'>
-Feb 12 07:11:06 rpi weewx[20930]:         ****    File "/usr/share/weewx/weewx/archive.py", line 118, in lastGoodStamp
-Feb 12 07:11:06 rpi weewx[20930]:         ****      _row = self.getSql("SELECT MAX(dateTime) FROM %s" % self.table)
-Feb 12 07:11:06 rpi weewx[20930]:         ****    File "/usr/share/weewx/weewx/archive.py", line 250, in getSql
-Feb 12 07:11:06 rpi weewx[20930]:         ****    File "/usr/share/weewx/weedb/sqlite.py", line 120, in execute
-Feb 12 07:11:06 rpi weewx[20930]:         ****      raise weedb.OperationalError(e)
-Feb 12 07:11:06 rpi weewx[20930]:         ****  OperationalError: database is locked
-Feb 12 07:11:06 rpi weewx[20930]:         ****      _cursor.execute(sql, sqlargs)
-Feb 12 07:11:06 rpi weewx[20930]:         ****    File "/usr/share/weewx/weedb/sqlite.py", line 120, in execute
-Feb 12 07:11:06 rpi weewx[20930]:         ****      raise weedb.OperationalError(e)
-<span class='highlight'>Feb 12 07:11:06 rpi weewx[20930]:         ****  OperationalError: database is locked</span></pre>
+Feb 12 07:11:06 rpi weewx[20930]: ****    File "/usr/share/weewx/weewx/archive.py", line 118, in lastGoodStamp
+Feb 12 07:11:06 rpi weewx[20930]: ****      _row = self.getSql("SELECT MAX(dateTime) FROM %s" % self.table)
+Feb 12 07:11:06 rpi weewx[20930]: ****    File "/usr/share/weewx/weewx/archive.py", line 250, in getSql
+Feb 12 07:11:06 rpi weewx[20930]: ****    File "/usr/share/weewx/weedb/sqlite.py", line 120, in execute
+Feb 12 07:11:06 rpi weewx[20930]: ****      raise weedb.OperationalError(e)
+Feb 12 07:11:06 rpi weewx[20930]: ****  OperationalError: database is locked
+Feb 12 07:11:06 rpi weewx[20930]: ****      _cursor.execute(sql, sqlargs)
+Feb 12 07:11:06 rpi weewx[20930]: ****    File "/usr/share/weewx/weedb/sqlite.py", line 120, in execute
+Feb 12 07:11:06 rpi weewx[20930]: ****      raise weedb.OperationalError(e)
+<span class='highlight'>Feb 12 07:11:06 rpi weewx[20930]: ****  OperationalError: database is locked</span></pre>
     <p>We are still trying to decipher exactly what the problem is, but it seems that
         (many? most? all?) implementations of the SQLite 'C' access libraries on the RPi
         sleep for a full second if they find the database locked. This gives them only
