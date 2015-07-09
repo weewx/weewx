@@ -1228,22 +1228,25 @@ Options:
     <p>This will result in something like this:</p>
 
     <pre class="tty">
-weewx.drivers.acurite     AcuRite         0.16           
-weewx.drivers.cc3000      CC3000          0.8            
-weewx.drivers.fousb       FineOffsetUSB   1.7            
-weewx.drivers.simulator   Simulator       3.0            
-weewx.drivers.te923       TE923           0.12           
-weewx.drivers.ultimeter   Ultimeter       0.13           
-weewx.drivers.vantage     Vantage         3.0            
-weewx.drivers.wmr100      WMR100          3.0            
-weewx.drivers.wmr200      WMR200          3.0            
-weewx.drivers.wmr9x8      WMR9x8          3.0            
-weewx.drivers.ws1         WS1             0.19           
-weewx.drivers.ws23xx      WS23xx          0.22           
-weewx.drivers.ws28xx      WS28xx          0.34</pre>
+Module name              Driver name    Version  Status
+  weewx.drivers.acurite    AcuRite        0.19     No module named usb
+  weewx.drivers.cc3000     CC3000         0.8
+  weewx.drivers.fousb      FineOffsetUSB  1.7      No module named usb
+  weewx.drivers.simulator  Simulator      3.0
+  weewx.drivers.te923      TE923          0.14     No module named usb
+  weewx.drivers.ultimeter  Ultimeter      0.13
+  weewx.drivers.vantage    Vantage        3.0
+  weewx.drivers.wmr100     WMR100         3.0      No module named usb
+  weewx.drivers.wmr200     WMR200         3.0      No module named usb
+  weewx.drivers.wmr9x8     WMR9x8         3.0
+  weewx.drivers.ws1        WS1            0.19
+  weewx.drivers.ws23xx     WS23xx         0.24
+  weewx.drivers.ws28xx     WS28xx         0.34     No module named usb      </pre>
 
+    <p>The column <span class="code">Status</span> can give you some indication of whether you are missing
+    any modules to use this driver. It's not completely accurate, but works for most drivers.</p>
     <p>
-        From this list, we can see that the name of the driver is
+        From this list, we can see that the name of the driver for the Vantage is
         <span class="code">weewx.drivers.vantage</span>. Now run
         <span class="code">wee_config</span>, with the
         <span class="code">--reconfigure</span>
