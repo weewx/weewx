@@ -101,7 +101,7 @@ def createMainDatabase(config_dict, db_binding):
     # exists and is initialized. Otherwise, an exception will be thrown.
     try:
         with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
-            print "Database '%s' already exists. Nothing done." % (dbmanager.database,)
+            print "Database '%s' already exists. Nothing done." % (dbmanager.database_name,)
     except weedb.OperationalError:
         # Database does not exist. Try again, but allow initialization:
         with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
