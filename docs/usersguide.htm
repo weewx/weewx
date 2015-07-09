@@ -1128,7 +1128,7 @@ Version: 3.2.0b1
         Before starting, it's worth running it with the <span
             class="code">--help</span> option to see how it is used:
     </p>
-    <pre class="tty">wee_config --help</pre>
+    <pre class="tty cmd">wee_config --help</pre>
     <p>This results in:</p>
     <pre class="tty">Usage: wee_config --help
        wee_config --version
@@ -1204,13 +1204,13 @@ Options:
         either putting the location directly in the command line:
     </p>
 
-    <pre class="tty">wee_config /home/weewx/weewx.conf</pre>
+    <pre class="tty cmd">wee_config /home/weewx/weewx.conf</pre>
 
     <p>
         or by using option <span class="code">--config</span>:
     </p>
 
-    <pre class="tty">wee_config --config=/home/weewx/weewx.conf</pre>
+    <pre class="tty cmd">wee_config --config=/home/weewx/weewx.conf</pre>
 
     <h2>Changing device drivers</h2>
 
@@ -1223,7 +1223,7 @@ Options:
         drivers available in your weewx install:
     </p>
 
-    <pre class="tty">wee_config --list-drivers</pre>
+    <pre class="tty cmd">wee_config --list-drivers</pre>
 
     <p>This will result in something like this:</p>
 
@@ -1249,7 +1249,7 @@ weewx.drivers.ws28xx      WS28xx          0.34</pre>
         <span class="code">--reconfigure</span>
         command, specifying that driver:
     </p>
-    <pre class="tty">wee_config --reconfigure --driver=weewx.drivers.vantage</pre>
+    <pre class="tty cmd">wee_config --reconfigure --driver=weewx.drivers.vantage</pre>
 
     <p>
         The utility will go through your previously selected options, such as
@@ -1307,7 +1307,7 @@ Saved configuration to /home/weewx/weewx.conf
         option:
     </p>
 
-    <pre class="tty">wee_config --reconfigure --driver=weewx.drivers.vantage --no-prompt</pre>
+    <pre class="tty cmd">wee_config --reconfigure --driver=weewx.drivers.vantage --no-prompt</pre>
 
     <p>This will accept all the defaults, including your new device
         driver, without asking for any input.</p>
@@ -2882,7 +2882,7 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
     <p>Run the utility with the <span class='code'>--help</span> option
         to see which options are available.</p>
 
-    <p class="tty">wee_device --help</p>
+    <p class="tty cmd">wee_device --help</p>
 
     <p>The utility requires a <span class='code'>weewx.conf</span> file.
         If no file is specified, it will look for
@@ -2890,7 +2890,7 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
         your configuration file is in a non-standard location, specify the
         path to the configuration file as the first argument. For example,</p>
 
-    <p class="tty">wee_device /path/to/weewx.conf --help</p>
+    <p class="tty cmd">wee_device /path/to/weewx.conf --help</p>
 
 
     <h2 id="wee_device_acurite">AcuRite</h2>
@@ -2930,31 +2930,31 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
         the <span class='code'>--help</span> option will produce output
         something like this:</p>
 
-    <p class="tty">CC3000 driver version 0.8
-        Usage: wee_device [config_file] [options] [--debug] [--help]
+    <pre class="tty">CC3000 driver version 0.8
+Usage: wee_device [config_file] [options] [--debug] [--help]
 
-        Configuration utility for weewx devices.
+Configuration utility for weewx devices.
 
-        Options:
-        -h, --help show this help message and exit
-        --debug display diagnostic information while running
-        -y answer yes to every prompt
-        --info display weather station configuration
-        --current display current weather readings
-        --history=N display N records (0 for all records)
-        --history-since=N display records since N minutes ago
-        --clear-memory clear station memory
-        --set-clock set station clock to computer time
-        --set-interval=N set logging interval to N minutes
-        --set-units=UNITS set units to METRIC or ENGLISH
+Options:
+-h, --help         show this help message and exit
+--debug            display diagnostic information while running
+-y                 answer yes to every prompt
+--info             display weather station configuration
+--current          display current weather readings
+--history=N        display N records (0 for all records)
+--history-since=N  display records since N minutes ago
+--clear-memory     clear station memory
+--set-clock        set station clock to computer time
+--set-interval=N   set logging interval to N minutes
+--set-units=UNITS  set units to METRIC or ENGLISH
 
-        Mutating actions will request confirmation before proceeding.</p>
+Mutating actions will request confirmation before proceeding.</pre>
 
     <h3>Station information</h3>
 
     <p>Display the station settings with the <span class='code'>--info</span>
         option.</p>
-    <pre class="tty">wee_device --info</pre>
+    <pre class="tty cmd">wee_device --info</pre>
     <p>This will result in something like this:</p>
     <pre class='tty'>firmware: Rainwise CC-3000 Version: 1.3 Build 006 Sep 04 2013
 time: 2014/06/02 08:22:17
@@ -2968,7 +2968,7 @@ interval: 1</pre>
         of 1 minutes (60 seconds). To change the station's
         interval to 5 minutes, do the following:</p>
 
-    <p class="tty">wee_device --set-interval=5</p>
+    <p class="tty cmd">wee_device --set-interval=5</p>
 
 
     <h2 id="wee_device_fousb">FineOffsetUSB</h2>
@@ -2995,36 +2995,35 @@ interval: 1</pre>
         the <span class='code'>--help</span> option will produce output
         something like this:</p>
 
-    <p class="tty">FineOffsetUSB driver version 1.7
-        Usage: wee_device [config_file] [options] [--debug] [--help]
+    <pre class="tty">FineOffsetUSB driver version 1.7
+Usage: wee_device [config_file] [options] [--debug] [--help]
 
-        Configuration utility for weewx devices.
+Configuration utility for weewx devices.
 
-        Options:
-        -h, --help show this help message and exit
-        --debug display diagnostic information while running
-        -y answer yes to every prompt
-        --info display weather station configuration
-        --current get the current weather conditions
-        --history=N display N records
-        --history-since=N display records since N minutes ago
-        --clear-memory clear station memory
-        --set-time set station clock to computer time
-        --set-interval=N set logging interval to N minutes
-        --live display live readings from the station
-        --logged display logged readings from the station
-        --fixed-block display the contents of the fixed block
-        --check-usb test the quality of the USB connection
-        --check-fixed-block monitor the contents of the fixed block
-        --format=FORMAT format for output, one of raw, table, or dict
+Options:
+-h, --help           show this help message and exit
+--debug              display diagnostic information while running
+-y                   answer yes to every prompt
+--info               display weather station configuration
+--current            get the current weather conditions
+--history=N          display N records
+--history-since=N    display records since N minutes ago
+--clear-memory       clear station memory
+--set-time           set station clock to computer time
+--set-interval=N     set logging interval to N minutes
+--live               display live readings from the station
+--logged             display logged readings from the station
+--fixed-block        display the contents of the fixed block
+--check-usb          test the quality of the USB connection
+--check-fixed-block  monitor the contents of the fixed block
+--format=FORMAT      format for output, one of raw, table, or dict
 
-        Mutating actions will request confirmation before proceeding.</p>
-
+Mutating actions will request confirmation before proceeding.</pre>
     <h3>Station information</h3>
 
     <p>Display the station settings with the <span class='code'>--info</span>
         option.</p>
-    <pre class="tty">wee_device --info</pre>
+    <pre class="tty cmd">wee_device --info</pre>
     <p>This will result in something like this:</p>
     <pre class='tty'>Fine Offset station settings:
                     local time: 2013.02.11 18:34:28 CET
@@ -3062,7 +3061,7 @@ interval: 1</pre>
         (read_period) of 30 minutes (1800 seconds). To change the station's
         interval to 5 minutes, do the following:</p>
 
-    <p class="tty">wee_device --set-interval=5</p>
+    <p class="tty cmd">wee_device --set-interval=5</p>
 
     <h3 id="fo_dumping_the_console_memory">Dumping the console memory</h3>
 
@@ -3073,9 +3072,9 @@ interval: 1</pre>
         can display these records in space-delimited, raw bytes, or dictionary format.</p>
 
     <p>For example, to display the most recent 30 records from the console memory:</p>
-    <pre class="tty">wee_device --history=30</pre>
+    <pre class="tty cmd">wee_device --history=30</pre>
     <p>To clear the console memory:</p>
-    <pre class="tty">wee_device --clear-memory</pre>
+    <pre class="tty cmd">wee_device --clear-memory</pre>
 
     <h3>Checking the USB quality</h3>
 
@@ -3084,7 +3083,7 @@ interval: 1</pre>
         communication.</p>
 
     <p>To test the quality of the USB connection to the console:</p>
-    <pre class="tty">wee_device --check-usb</pre>
+    <pre class="tty cmd">wee_device --check-usb</pre>
     <p>Let the utility run for at least a few minutes, or possibly an hour or two. It is not unusual to see a few bad
         reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable, USB hub,
         or removing other devices from the bus.</p>
@@ -3104,8 +3103,8 @@ interval: 1</pre>
         <tr>
             <td class="first_col">ADAPTIVE</td>
             <td>
-                <p class='tty' style='margin:0'>[FineOffsetUSB]
-                    polling_mode = ADAPTIVE</p>
+                <pre class='tty' style='margin:0'>[FineOffsetUSB]
+    polling_mode = ADAPTIVE</pre>
             </td>
             <td>
                 <p>In this mode, <span class='code'>weewx</span> reads data from the station as often as possible, but
@@ -3116,9 +3115,9 @@ interval: 1</pre>
         <tr>
             <td class="first_col">PERIODIC</td>
             <td>
-                <p class='tty' style='margin:0'>[FineOffsetUSB]
-                    polling_mode = PERIODIC
-                    polling_interval = 60</p>
+                <pre class='tty' style='margin:0'>[FineOffsetUSB]
+    polling_mode = PERIODIC
+    polling_interval = 60</pre>
             </td>
             <td>
                 <p>In this mode, <span class='code'>weewx</span> reads data from the station every <span class='code'>polling_interval</span>
@@ -3172,73 +3171,75 @@ interval: 1</pre>
         the <span class='code'>--help</span> option will produce output
         something like this:</p>
 
-    <p class="tty">Vantage driver version 3.0
-        Usage: wee_device [config_file] [--help] [--info] [--clear]
-        [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg]
-        [--set-bucket=CODE] [--set-rain-year-start=MM]
-        [--set-offset=VARIABLE,OFFSET]
-        [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
-        [--set-time] [--set-dst=[AUTO|ON|OFF]]
-        [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
-        [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE]
-        [--start | --stop]
+    <pre class="tty">Using configuration file /home/weewx/weewx.conf
+Using Vantage driver version 3.0 (weewx.drivers.vantage)
+Usage: wee_device [config_file] [--help] [--info] [--clear]
+    [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg]
+    [--set-bucket=CODE] [--set-rain-year-start=MM]
+    [--set-offset=VARIABLE,OFFSET]
+    [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
+    [--set-time] [--set-dst=[AUTO|ON|OFF]]
+    [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
+    [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE]
+    [--start | --stop]
 
-        Configures the Davis Vantage weather station.
+Configures the Davis Vantage weather station.
 
-        Options:
-        -h, --help show this help message and exit
-        --debug display diagnostic information while running
-        -y answer yes to every prompt
-        --info To print configuration, reception, and barometer
-        calibration information about your weather station.
-        --clear To clear the memory of your weather station.
-        --set-interval=SECONDS
-        Sets the archive interval to the specified number of
-        seconds. Valid values are 60, 300, 600, 900, 1800,
-        3600, or 7200.
-        --set-altitude=FEET Sets the altitude of the station to the specified
-        number of feet.
-        --set-barometer=inHg Sets the barometer reading of the station to a known
-        correct value in inches of mercury. Specify 0 (zero)
-        to have the console pick a sensible value.
-        --set-bucket=CODE Set the type of rain bucket. Specify '0' for 0.01
-        inches; '1' for 0.2 MM; '2' for 0.1 MM
-        --set-rain-year-start=MM
-        Set the rain year start (1=Jan, 2=Feb, etc.).
-        --set-offset=VARIABLE,OFFSET
-        Set the onboard offset for VARIABLE inTemp, outTemp,
-        extraTemp[1-7], inHumid, outHumid, extraHumid[1-7],
-        soilTemp[1-4], leafTemp[1-4], windDir) to OFFSET
-        (Fahrenheit, %, degrees)
-        --set-transmitter-type=CHANNEL,TYPE,TEMP,HUM
-        Set the transmitter type for CHANNEL (1-8), TYPE
-        (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain,
-        6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none),
-        as extra TEMP station and extra HUM station (both 1-7,
-        if applicable)
-        --set-time Set the onboard clock to the current time.
-        --set-dst=AUTO|ON|OFF
-        Set DST to 'ON', 'OFF', or 'AUTO'
-        --set-tz-code=TZCODE Set timezone code to TZCODE. See your Vantage manual
-        for valid codes.
-        --set-tz-offset=HHMM Set timezone offset to HHMM. E.g. '-0800' for U.S.
-        Pacific Time.
-        --set-lamp=ON|OFF Turn the console lamp 'ON' or 'OFF'.
-        --start Start the logger.
-        --stop Stop the logger.
-        --dump Dump all data to the archive. NB: This may result in
-        many duplicate primary key errors.
-        --logger-summary=FILE
-        Save diagnostic summary to FILE (for debugging the
-        logger).
+Options:
+  -h, --help            show this help message and exit
+  --debug               display diagnostic information while running
+  -y                    answer yes to every prompt
+  --info                To print configuration, reception, and barometer
+                        calibration information about your weather station.
+  --clear               To clear the memory of your weather station.
+  --set-interval=SECONDS
+                        Sets the archive interval to the specified number of
+                        seconds. Valid values are 60, 300, 600, 900, 1800,
+                        3600, or 7200.
+  --set-altitude=FEET   Sets the altitude of the station to the specified
+                        number of feet.
+  --set-barometer=inHg  Sets the barometer reading of the station to a known
+                        correct value in inches of mercury. Specify 0 (zero)
+                        to have the console pick a sensible value.
+  --set-bucket=CODE     Set the type of rain bucket. Specify '0' for 0.01
+                        inches; '1' for 0.2 MM; '2' for 0.1 MM
+  --set-rain-year-start=MM
+                        Set the rain year start (1=Jan, 2=Feb, etc.).
+  --set-offset=VARIABLE,OFFSET
+                        Set the onboard offset for VARIABLE inTemp, outTemp,
+                        extraTemp[1-7], inHumid, outHumid, extraHumid[1-7],
+                        soilTemp[1-4], leafTemp[1-4], windDir) to OFFSET
+                        (Fahrenheit, %, degrees)
+  --set-transmitter-type=CHANNEL,TYPE,TEMP,HUM
+                        Set the transmitter type for CHANNEL (1-8), TYPE
+                        (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain,
+                        6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none),
+                        as extra TEMP station and extra HUM station (both 1-7,
+                        if applicable)
+  --set-time            Set the onboard clock to the current time.
+  --set-dst=AUTO|ON|OFF
+                        Set DST to 'ON', 'OFF', or 'AUTO'
+  --set-tz-code=TZCODE  Set timezone code to TZCODE. See your Vantage manual
+                        for valid codes.
+  --set-tz-offset=HHMM  Set timezone offset to HHMM. E.g. '-0800' for U.S.
+                        Pacific Time.
+  --set-lamp=ON|OFF     Turn the console lamp 'ON' or 'OFF'.
+  --start               Start the logger.
+  --stop                Stop the logger.
+  --dump                Dump all data to the archive. NB: This may result in
+                        many duplicate primary key errors.
+  --logger-summary=FILE
+                        Save diagnostic summary to FILE (for debugging the
+                        logger).
 
-        Mutating actions will request confirmation before proceeding.</p>
+Be sure to stop weewx first before using. Mutating actions will request
+confirmation before proceeding.</pre>
 
     <h3>Station information</h3>
 
     <p>Use the <span class="code">--info</span> option to display the
         current EEPROM settings: </p>
-    <pre class="tty">wee_device --info</pre>
+    <pre class="tty cmd">wee_device --info</pre>
     <p>This will print out something like: </p>
     <pre class="tty">Davis Vantage EEPROM settings:
     
@@ -3314,7 +3315,7 @@ interval: 1</pre>
     <h3 id="vantage_time_zone">Time zone</h3>
 
     <p>To set the time zone code to Central European Time (code 20):</p>
-    <pre class="tty">wee_device --set-tz-code=20</pre>
+    <pre class="tty cmd">wee_device --set-tz-code=20</pre>
     <p class="warning">You can set either the time zone code <em>or</em> the
         time zone offset, but not both. </p>
 
@@ -3329,7 +3330,7 @@ interval: 1</pre>
         files you are using.</p>
 
     <p>To change the archive interval to 10 minutes (600 seconds):</p>
-    <pre class="tty">wee_device --set-interval=600</pre>
+    <pre class="tty cmd">wee_device --set-interval=600</pre>
     <p>I have found that a five minute (300 seconds) archive interval works
         well for the Vantage stations. Because of the large amount of onboard
         memory they carry, going to a larger interval does not have any real
@@ -3341,7 +3342,7 @@ interval: 1</pre>
         with a different kind, you might want to reconfigure. For example, to
         change to a 0.1 mm bucket (bucket code &quot;2&quot;), use the
         following:</p>
-    <pre class="tty">wee_device --set-bucket=2</pre>
+    <pre class="tty cmd">wee_device --set-bucket=2</pre>
 
     <h3 id="vantage_configuring_additional_sensors">Additional sensors</h3>
 
@@ -3354,11 +3355,11 @@ interval: 1</pre>
         you do this from the command line.</p>
 
     <p>For example, to add an extra temperature sensor to channel 3, do the following:</p>
-    <pre class="tty">wee_device --set-transmitter-type=3,1,2</pre>
+    <pre class="tty cmd">wee_device --set-transmitter-type=3,1,2</pre>
     <p>This says to turn on channel 3, set its type to 1 ("Temperature only"), and have it show up in the
         database as <span class="code">extraTemp2</span>. Here's another example, this time for a combined
         temperature / humidity sensor:</p>
-    <pre class="tty">wee_device --set-transmitter-type=5,3,2,4</pre>
+    <pre class="tty cmd">wee_device --set-transmitter-type=5,3,2,4</pre>
     <p>This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"),
         and it will show up in the database
         as <span class="code">extraTemp2</span> and <span class="code">extraHumid4</span>.</p>
@@ -3378,7 +3379,7 @@ interval: 1</pre>
         180&deg; offset correction. You can do this with the following
         command:</p>
 
-    <pre class="tty">wee_device --set-offset=windDir,180</pre>
+    <pre class="tty cmd">wee_device --set-offset=windDir,180</pre>
 
     <h3 id="vantage_dumping_the_logger_memory">Dumping the logger memory</h3>
 
@@ -3392,7 +3393,7 @@ interval: 1</pre>
         yet downloaded. By using the <span class="code">--dump</span> command
         before clearing the memory, you might be able to save these data.
         Stop <span class="code">weewx</span> first, then</p>
-    <pre class="tty">wee_device --dump</pre>
+    <pre class="tty cmd">wee_device --dump</pre>
     <p>This will dump all data archived in the Vantage memory directly to the
         database, without regard to whether or not they have been seen before.
         Because the command dumps <em>all</em> data, it may result in many
@@ -3466,30 +3467,30 @@ interval: 1</pre>
         the <span class='code'>--help</span> option will produce output
         something like this:</p>
 
-    <p class="tty">WS23xx driver version 0.21
-        Usage: wee_device [config_file] [options] [--debug] [--help]
+    <pre class="tty">WS23xx driver version 0.21
+Usage: wee_device [config_file] [options] [--debug] [--help]
 
-        Configuration utility for weewx devices.
+Configuration utility for weewx devices.
 
-        Options:
-        -h, --help show this help message and exit
-        --debug display diagnostic information while running
-        -y answer yes to every prompt
-        --info display weather station configuration
-        --current get the current weather conditions
-        --history=N display N history records
-        --history-since=N display history records since N minutes ago
-        --clear-memory clear station memory
-        --set-time set the station clock to the current time
-        --set-interval=N set the station archive interval to N minutes
+Options:
+  -h, --help         show this help message and exit
+  --debug            display diagnostic information while running
+  -y                 answer yes to every prompt
+  --info             display weather station configuration
+  --current          get the current weather conditions
+  --history=N        display N history records
+  --history-since=N  display history records since N minutes ago
+  --clear-memory     clear station memory
+  --set-time         set the station clock to the current time
+  --set-interval=N   set the station archive interval to N minutes
 
-        Mutating actions will request confirmation before proceeding.</p>
+Mutating actions will request confirmation before proceeding.</pre>
 
     <h3>Station information</h3>
 
     <p>Display the station settings with the <span class='code'>--info</span>
         option.</p>
-    <pre class="tty">wee_device --info </pre>
+    <pre class="tty cmd">wee_device --info </pre>
     <p>This will result in something like this:</p>
     <pre class='tty'>buzzer: 0
 connection time till connect: 1.5
@@ -3521,7 +3522,7 @@ in humidity: 48.0
         minutes (3600 seconds). To change the station's interval to 5 minutes,
         do the following:</p>
 
-    <p class="tty">wee_device --set-interval=5</p>
+    <p class="tty cmd">wee_device --set-interval=5</p>
 
     <p class="warning"><strong>Warning!</strong><br/>
         Changing the recording interval will clear the station memory.</p>
@@ -3537,9 +3538,9 @@ in humidity: 48.0
         minutes between records.</p>
 
     <p>For example, to display the latest 30 records from the console memory:</p>
-    <pre class="tty">wee_device --history=30</pre>
+    <pre class="tty cmd">wee_device --history=30</pre>
     <p>To clear the console memory:</p>
-    <pre class="tty">wee_device --clear-memory</pre>
+    <pre class="tty cmd">wee_device --clear-memory</pre>
 
 
     <h2 id="wee_device_ws28xx">WS28xx</h2>
@@ -3568,25 +3569,25 @@ in humidity: 48.0
         the <span class='code'>--help</span> option will produce output
         something like this:</p>
 
-    <p class="tty">WS28xx driver version 0.33
-        Usage: wee_device [config_file] [options] [--debug] [--help]
+    <pre class="tty">WS28xx driver version 0.33
+Usage: wee_device [config_file] [options] [--debug] [--help]
 
-        Configuration utility for weewx devices.
+Configuration utility for weewx devices.
 
-        Options:
-        -h, --help show this help message and exit
-        --debug display diagnostic information while running
-        -y answer yes to every prompt
-        --check-transceiver check USB transceiver
-        --pair pair the USB transceiver with station console
-        --info display weather station configuration
-        --set-interval=N set logging interval to N minutes
-        --current get the current weather conditions
-        --history=N display N history records
-        --history-since=N display history records since N minutes ago
-        --maxtries=MAXTRIES maximum number of retries, 0 indicates no max
+Options:
+  -h, --help           show this help message and exit
+  --debug              display diagnostic information while running
+  -y                   answer yes to every prompt
+  --check-transceiver  check USB transceiver
+  --pair               pair the USB transceiver with station console
+  --info               display weather station configuration
+  --set-interval=N     set logging interval to N minutes
+  --current            get the current weather conditions
+  --history=N          display N history records
+  --history-since=N    display history records since N minutes ago
+  --maxtries=MAXTRIES  maximum number of retries, 0 indicates no max
 
-        Mutating actions will request confirmation before proceeding.</p>
+Mutating actions will request confirmation before proceeding.</pre>
 
     <h3>Pairing</h3>
 
@@ -3604,11 +3605,11 @@ in humidity: 48.0
             press and hold the [v] button on the console until you see
             'PC' in the display, then release the button. If the console pairs
             with the transceiver, 'PC' will go away within a second or two.
-            <p class='tty'>wee_device --pair
+            <pre class='tty'><span class="cmd">wee_device --pair</span>
 
-                Pairing transceiver with console...
-                Press and hold the [v] key until "PC" appears (attempt 1 of 3)
-                Transceiver is paired to console</p>
+Pairing transceiver with console...
+Press and hold the [v] key until "PC" appears (attempt 1 of 3)
+Transceiver is paired to console</pre>
         </li>
         <li><strong>The HeavyWeather way.</strong> Follow the pairing
             instructions that came with the station. You will have to run
@@ -3658,48 +3659,48 @@ in humidity: 48.0
     <p>Display the station settings with the <span class='code'>--info</span>
         option.</p>
 
-    <p class="tty">wee_device --info</p>
+    <p class="tty cmd">wee_device --info</p>
 
     <p>This will result in something like this:</p>
 
-    <p class='tty'>alarm_flags_other: 0
-        alarm_flags_wind_dir: 0
-        checksum_in: 1327
-        checksum_out: 1327
-        format_clock: 1
-        format_pressure: 0
-        format_rain: 1
-        format_temperature: 0
-        format_windspeed: 4
-        history_interval: 1
-        indoor_humidity_max: 70
-        indoor_humidity_max_time: None
-        indoor_humidity_min: 45
-        indoor_humidity_min_time: None
-        indoor_temp_max: 40.0
-        indoor_temp_max_time: None
-        indoor_temp_min: 0.0
-        indoor_temp_min_time: None
-        lcd_contrast: 4
-        low_battery_flags: 0
-        outdoor_humidity_max: 70
-        outdoor_humidity_max_time: None
-        outdoor_humidity_min: 45
-        outdoor_humidity_min_time: None
-        outdoor_temp_max: 40.0
-        outdoor_temp_max_time: None
-        outdoor_temp_min: 0.0
-        outdoor_temp_min_time: None
-        pressure_max: 1040.0
-        pressure_max_time: None
-        pressure_min: 960.0
-        pressure_min_time: None
-        rain_24h_max: 50.0
-        rain_24h_max_time: None
-        threshold_storm: 5
-        threshold_weather: 3
-        wind_gust_max: 12.874765625
-        wind_gust_max_time: None</p>
+    <pre class='tty'>alarm_flags_other: 0
+alarm_flags_wind_dir: 0
+checksum_in: 1327
+checksum_out: 1327
+format_clock: 1
+format_pressure: 0
+format_rain: 1
+format_temperature: 0
+format_windspeed: 4
+history_interval: 1
+indoor_humidity_max: 70
+indoor_humidity_max_time: None
+indoor_humidity_min: 45
+indoor_humidity_min_time: None
+indoor_temp_max: 40.0
+indoor_temp_max_time: None
+indoor_temp_min: 0.0
+indoor_temp_min_time: None
+lcd_contrast: 4
+low_battery_flags: 0
+outdoor_humidity_max: 70
+outdoor_humidity_max_time: None
+outdoor_humidity_min: 45
+outdoor_humidity_min_time: None
+outdoor_temp_max: 40.0
+outdoor_temp_max_time: None
+outdoor_temp_min: 0.0
+outdoor_temp_min_time: None
+pressure_max: 1040.0
+pressure_max_time: None
+pressure_min: 960.0
+pressure_min_time: None
+rain_24h_max: 50.0
+rain_24h_max_time: None
+threshold_storm: 5
+threshold_weather: 3
+wind_gust_max: 12.874765625
+wind_gust_max_time: None</pre>
 
     <h3>Alarms</h3>
 
@@ -3748,8 +3749,8 @@ in humidity: 48.0
         to whatever MySQL user you choose, by
         default, user <span class="code">weewx</span>. Here are the necessary minimum
         permissions:</p>
-    <pre class="tty">mysql&gt; CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
-mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;</pre>
+    <pre class="tty">mysql&gt; <span class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
+mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;</span></pre>
 
     <h1 id="running">Running <span class="code">weewx</span></h1>
 
@@ -3765,7 +3766,7 @@ mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@local
     <p>To run <span class="code">weewx</span> directly, invoke
         the main program, <span class="code">weewxd</span>, giving
         the configuration file as its only parameter: </p>
-    <pre class="tty">sudo weewxd weewx.conf</pre>
+    <pre class="tty cmd">sudo weewxd weewx.conf</pre>
     <p>It should start by downloading any data stored in your weather station
         (if the station has a data logger) into the archive database. For some
         stations, such as the Davis Vantage with a couple thousand records, this
@@ -3783,8 +3784,8 @@ mysql&gt; GRANT select, update, create, delete, insert ON weewx.* TO weewx@local
         <span class="code">HUP</span> signal.
         First run <span class="code">ps</span> to find out the Process ID (PID)
         number of the instance, then send it the <span class="code">HUP</span> signal: </p>
-    <pre class="tty">ps -a          # Note the PID of the weewxd process
-kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
+    <pre class="tty"><span class="cmd">ps -a</span>          # Note the PID of the weewxd process
+<span class="cmd">kill -HUP <em>pid</em></span>  # Send it a HUP signal</pre>
     <p>Note that this <em>only</em> rereads the configuration file. It will
         not reload any code.</p>
 
@@ -3866,7 +3867,7 @@ kill -HUP <em>pid</em>  # Send it a HUP signal</pre>
     <p><span class="code">Weewx</span> will now start automatically whenever your
         system is booted. You can also manually start, stop, and restart the
         <span class="code">weewx</span> daemon: </p>
-    <pre class="tty">sudo /etc/init.d/weewx start
+    <pre class="tty cmd">sudo /etc/init.d/weewx start
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx restart</pre>
     <p>By default, the scripts are designed to have <span class="code">weewx</span>
@@ -3880,7 +3881,7 @@ sudo /etc/init.d/weewx restart</pre>
 
     <p>You can also tell <span class="code">weewx</span> to reread its configuration
         file without stopping by using the &#39;reload&#39; option: </p>
-    <pre class="tty">sudo /etc/init.d/weewx reload </pre>
+    <pre class="tty cmd">sudo /etc/init.d/weewx reload </pre>
 
     <h1 id="monitoring">Monitoring <span class="code">weewx</span></h1>
 
@@ -3890,7 +3891,7 @@ sudo /etc/init.d/weewx restart</pre>
         use yet another place. When troubleshooting the system, be sure to check
         it! </p>
 
-    <p class='tty'>tail -f /var/log/syslog</p>
+    <p class='tty cmd'>tail -f /var/log/syslog</p>
 
     <p>Set the debug option in <span class='code'>weewx.conf</span> to
         generate many more checks and output more information. This can be
@@ -3916,11 +3917,11 @@ sudo /etc/init.d/weewx restart</pre>
         data are in file
         <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
 
-    <p class='tty'>sudo /etc/init.d/weewx stop
-        cd <span class="symcode">SQLITE_ROOT</span>
-        mv weewx.sdb weewx.sdb.bak
-        cp /var/wview/archive/wview-archive.sdb weewx.sdb
-        sudo /etc/init.d/weewx start</p>
+    <pre class='tty cmd'>sudo /etc/init.d/weewx stop
+cd <span class="symcode">SQLITE_ROOT</span>
+mv weewx.sdb weewx.sdb.bak
+cp /var/wview/archive/wview-archive.sdb weewx.sdb
+sudo /etc/init.d/weewx start</pre>
 
     <p>
         Internally, within the <span class="code">weewx.sdb</span> database,
@@ -3948,7 +3949,7 @@ sudo /etc/init.d/weewx restart</pre>
 
     <p>To change the column name to what <span class="code">weewx</span> uses, namely <span class="code">interval</span>,
         use the utility <span class="code">mysql</span> and issue the command:</p>
-    <pre class="tty">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt `interval` INTEGER NOT NULL; </pre>
+    <pre class="tty">mysql> <span class="cmd">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt `interval` INTEGER NOT NULL;</span> </pre>
     <p>where <span class="code"><em>your-wview-archive-name</em></span> is the
         name of your wview archive database. Note that the word <span class="code">
         interval</span> is surrounded by backquotes.</p>
@@ -3973,7 +3974,7 @@ sudo /etc/init.d/weewx restart</pre>
         <span class='code'>weewx</span> is running. For example, on Debian
         systems:</p>
 
-    <p class='tty'>sudo apt-get install apache2</p>
+    <p class='tty cmd'>sudo apt-get install apache2</p>
 
     <p>Then, if <span class='code'>weewx</span> was installed from DEB or RPM
         package, simply enter the <span class='code'>weewx</span> URL in a web
@@ -3986,20 +3987,20 @@ sudo /etc/init.d/weewx restart</pre>
         snippet that comes with <span class="code">weewx</span> to the apache configuration directory, then restart
         Apache:</p>
 
-    <p class='tty'>sudo cp util/apache/conf.d/weewx.conf /etc/apache2/conf.d
-        sudo /etc/init.d/apache2 restart</p>
+    <pre class='tty cmd'>sudo cp util/apache/conf.d/weewx.conf /etc/apache2/conf.d
+sudo /etc/init.d/apache2 restart</pre>
 
     <p>Be sure that the path in the Apache configuration snippet matches the
         <span class='code'>HTML_ROOT</span> defined in the
         <span class='code'>weewx</span> configuration file.</p>
 
-    <p class='tty'>Alias /weewx <strong>/home/weewx/public_html</strong>
-        &lt;Directory <strong>/home/weewx/public_html</strong>&gt;
-        Options FollowSymlinks
-        AllowOverride None
-        Order allow,deny
-        Allow from all
-        &lt;/Directory&gt;</p>
+    <pre class='tty'>Alias /weewx <span class="highlight">/home/weewx/public_html</span>
+&lt;Directory <span class="highlight">/home/weewx/public_html</span>&gt;
+    Options FollowSymlinks
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+&lt;/Directory&gt;</pre>
 
     <p>Then open the <span class='code'>weewx</span> URL in a web browser:</p>
 
@@ -4116,12 +4117,12 @@ sudo /etc/init.d/weewx restart</pre>
                 class='code'>weewx.conf</span>. This will put much more
             information in the log file, which can be very useful for
             troubleshooting and debugging!
-            <p class='tty' style="margin-top: 1em">debug = 1</p>
+            <p class='tty'>debug = 1</p>
         </li>
         <li style="margin-bottom: 1em">Look at the <a href="#monitoring">log file</a>. I am
             always happy to take questions, but the first thing I will ask
             is, &quot;Did you look at the log file?&quot;
-            <p class='tty' style="margin-top: 1em">sudo tail -f /var/log/syslog</p>
+            <p class='tty cmd'>sudo tail -f /var/log/syslog</p>
         </li>
         <li style="margin-bottom: 1em">Run <span class="code">weewxd</span>
             directly from the command line, rather than as a
@@ -4129,7 +4130,7 @@ sudo /etc/init.d/weewx restart</pre>
             and log any unrecoverable exceptions. But if you are getting
             strange results, it is worth running directly and looking for
             any clues.
-            <p class='tty' style="margin-top: 1em">sudo weewxd weewx.conf</p>
+            <p class='tty cmd'>sudo weewxd weewx.conf</p>
         </li>
     </ul>
 
@@ -4186,9 +4187,9 @@ sudo /etc/init.d/weewx restart</pre>
         like <span class="code">minicom</span> because it can be run from
         through a simple TTY connection. The utility
         <span class="code">screen</span> also works well. For example:</p>
-    <pre class="tty">minicom -b 19200 -D /dev/ttyUSB0</pre>
+    <pre class="tty cmd">minicom -b 19200 -D /dev/ttyUSB0</pre>
     <p>or, using <span class='code'>screen</span>:</p>
-    <pre class="tty">screen /dev/ttyUSB0 19200</pre>
+    <pre class="tty cmd">screen /dev/ttyUSB0 19200</pre>
     <p>Then type in <span class="code">TEST</span>, all in capital letters. It
         will not echo the characters. Then hit the
         <span class="code">&lt;enter&gt;</span>
@@ -4205,16 +4206,14 @@ sudo /etc/init.d/weewx restart</pre>
         port, where <span class="code">weewx</span> cannot find it. Here is a
         typical log output: </p>
 
-    <p class='tty'>Nov 29 10:40:21 hummingbird kernel: [6661624.786792] hub 2-0:1.0: port 3 disabled by hub (EMI?),
-        re-enabling...
-        Nov 29 10:40:21 hummingbird kernel: [6661624.786871] usb 2-3: USB disconnect, address 2
-        Nov 29 10:40:21 hummingbird kernel: [6661624.795778] cp2101 2-3:1.0: device disconnected
-        Nov 29 10:40:21 hummingbird weewx[25808]: VantagePro: Max retries exceeded while getting LOOP packets
-        ... (messages elided)
-        Nov 29 10:40:22 hummingbird kernel: [6661625.352340] cp2101 2-3:1.0: cp2101 converter detected
-        Nov 29 10:40:22 hummingbird kernel: [6661625.528107] usb 2-3: reset full speed USB device using ohci_hcd and
-        address 3
-        Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter now attached to ttyUSB1</p>
+    <pre class='tty'>Nov 29 10:40:21 hummingbird kernel: [6661624.786792] hub 2-0:1.0: port 3 disabled by hub (EMI?) re-enabling...
+Nov 29 10:40:21 hummingbird kernel: [6661624.786871] usb 2-3: USB disconnect, address 2
+Nov 29 10:40:21 hummingbird kernel: [6661624.795778] cp2101 2-3:1.0: device disconnected
+Nov 29 10:40:21 hummingbird weewx[25808]: VantagePro: Max retries exceeded while getting LOOP packets
+... (messages elided)
+Nov 29 10:40:22 hummingbird kernel: [6661625.352340] cp2101 2-3:1.0: cp2101 converter detected
+Nov 29 10:40:22 hummingbird kernel: [6661625.528107] usb 2-3: reset full speed USB device using ohci_hcd and address 3
+Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter now attached to ttyUSB1</pre>
 
     <p>In this example, the VantagePro was connected to <span class="code">/dev/ttyUSB0</span>,
         but then reconnected to <span class="code">/dev/ttyUSB1</span>. </p>
@@ -4241,10 +4240,10 @@ sudo /etc/init.d/weewx restart</pre>
         <span class="code">/etc/udev/rules.d/vpro.rules</span>
         on my fit-PC that looks like this: </p>
 
-    <p class='tty'># Automount the VantagePro2 to port /dev/vpro.
-        # Install in /etc/udev/rules.d/vpro.rules
-        #
-        ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</p>
+    <pre class='tty'># Automount the VantagePro2 to port /dev/vpro.
+# Install in /etc/udev/rules.d/vpro.rules
+#
+ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
 
     <p>This rule says that when the USB port is plugged in (action
         <span class="code">add</span>), and it has an attribute with name
@@ -4269,7 +4268,7 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
         than the newer <span class="code">udevadm</span> command.) In particular, run
         the command </p>
 
-    <p class='tty'># udevadm info --attribute-walk --path $(udevadm info --query=path --name=/dev/ttyUSB0) </p>
+    <p class='tty cmd'>udevadm info --attribute-walk --path $(udevadm info --query=path --name=/dev/ttyUSB0) </p>
 
     <p>where<span class="code"> /dev/ttyUSB0</span> is the port (substitute
         your real USB port) the weather station is attached to. It will print
@@ -4323,7 +4322,7 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
             usually works. Adjust paths as necessary:
         </li>
     </ol>
-    <pre class="tty">wee_device --clear</pre>
+    <pre class="tty cmd">wee_device --clear</pre>
     <p>See also the section <em><a href="#vantage_dumping_the_logger_memory">Dumping
         the logger memory</a></em>, which may help you avoid data loss.</p>
 
@@ -4467,24 +4466,24 @@ Jan  1 09:46:32 saga weewx[15292]: wxengine: pid file is /var/run/weewx.pid</pre
         your FTP server twice:
     </p>
 
-    <p class='tty'>[Reports]
-        [[FTP]]
+    <pre class='tty'>[Reports]
+    [[FTP]]
         ... (details elided)
         user = fred
         server = ftp.myhost.com
         password = mypassword
         server = ftp.myhost.com # OOPS! Listed it twice!
         path = /weather
-        ... </p>
+... </pre>
 
     <p>Generally, if you encounter this error, the log file will give you the
         line number it happened in: </p>
 
-    <p class='tty'>Apr 24 12:09:15 raven weewx[11480]: wxengine: Error while parsing configuration file
-        /home/weewx/weewx.conf
-        Apr 24 12:09:15 raven weewx[11480]: wxengine: Unable to initialize main loop:
-        Apr 24 12:09:15 raven weewx[11480]: **** Duplicate keyword name at line 254.
-        Apr 24 12:09:15 raven weewx[11480]: **** Exiting. </p>
+    <pre class='tty'>Apr 24 12:09:15 raven weewx[11480]: wxengine: Error while parsing configuration file /home/weewx/weewx.conf
+Apr 24 12:09:15 raven weewx[11480]: wxengine: Unable to initialize main loop:
+Apr 24 12:09:15 raven weewx[11480]: **** Duplicate keyword name at line 254.
+Apr 24 12:09:15 raven weewx[11480]: **** Exiting. </pre>
+
     <h4><span class="code">configobj.NestingError</span> exception</h4>
 
     <p>This is a very similar error, and is caused by a misformed section nesting.
@@ -4530,10 +4529,9 @@ Jan  1 09:46:32 saga weewx[15292]: wxengine: pid file is /var/run/weewx.pid</pre
 
     <p>If you get errors of the sort: </p>
 
-    <p class='tty'>Apr 12 05:12:32 raven reportengine[3074]: filegenerator: Caught exception &quot;&lt;class &#39;NameMapper.NotFound&#39;&gt;&quot;
-        Apr 12 05:12:32 raven reportengine[3074]: **** Message: &quot;cannot find &#39;fubar&#39; in template
-        /home/weewx/skins/Standard/index.html.tmpl&quot;
-        Apr 12 05:12:32 raven reportengine[3074]: **** Ignoring template and continuing.</p>
+    <pre class='tty'>Apr 12 05:12:32 raven reportengine[3074]: filegenerator: Caught exception &quot;&lt;class &#39;NameMapper.NotFound&#39;&gt;&quot;
+Apr 12 05:12:32 raven reportengine[3074]: **** Message: &quot;cannot find &#39;fubar&#39; in template /home/weewx/skins/Standard/index.html.tmpl&quot;
+Apr 12 05:12:32 raven reportengine[3074]: **** Ignoring template and continuing.</pre>
 
     <p>you have a tag in your template that <span class="code">weewx</span>
         does not recognize. In this example, it is the tag
@@ -4588,9 +4586,8 @@ Jan 18 20:39:14 rpi weewx[5977]:       ****  Expected to read 99 chars; got 2 in
     <p>As for the archive interval, check the log file for an entry like this
         soon after <span class='code'>weewx</span> starts up:</p>
 
-    <p class='tty'>Dec 30 10:54:17 saga weewx[10035]: wxengine: The archive interval in the configuration file (300)
-        does not match the station hardware interval (1800).
-        Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</p>
+    <pre class='tty'>Dec 30 10:54:17 saga weewx[10035]: wxengine: The archive interval in the configuration file (300) does not match the station hardware interval (1800).
+Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</pre>
 
     <p>In this example, interval in <span class="code">weewx.conf</span> is 5
         minutes, but the station interval is 30 minutes. When the interval
@@ -4627,18 +4624,18 @@ Jan 18 20:39:14 rpi weewx[5977]:       ****  Expected to read 99 chars; got 2 in
     <ol>
         <li>stop <span class='code'>weewx</span></li>
         <li>Make a copy of the archive database
-            <pre class='tty'>cp weewx.sdb weewx-YYMMDD.sdb</pre>
+            <pre class='tty cmd'>cp weewx.sdb weewx-YYMMDD.sdb</pre>
         </li>
         <li>Verify the bad data exist where you think they exist
-      <pre class='tty'>sqlite3 weewx.sdb
-sqlite&gt; select dateTime,outTemp from archive where outTemp &gt; 1000;</pre>
+      <pre class='tty'><span class="cmd">sqlite3 weewx.sdb</span>
+sqlite&gt; <span class="cmd">select dateTime,outTemp from archive where outTemp &gt; 1000;</span></pre>
         </li>
         <li>See whether the bad temperature and wind data happened at the same time
-            <pre class='tty'>sqlite&gt; select dateTime,outTemp,windSpeed from archive where outTemp &gt; 1000;</pre>
+            <pre class='tty'>sqlite&gt; <span class="cmd">select dateTime,outTemp,windSpeed from archive where outTemp &gt; 1000;</span></pre>
         </li>
         <li>Remove the bad data by setting to NULL
-      <pre class='tty'>sqlite&gt; update archive set windSpeed=NULL where outTemp &gt; 1000;
-sqlite&gt; update archive set outTemp=NULL where outTemp &gt; 1000;</pre>
+      <pre class='tty'>sqlite&gt; <span class="cmd">update archive set windSpeed=NULL where outTemp &gt; 1000;</span>
+sqlite&gt; <span class="cmd">update archive set outTemp=NULL where outTemp &gt; 1000;</span></pre>
         </li>
         <li>Delete the statistics database so that <span class='code'>weewx</span> can regenerate it without the
             anomalies
@@ -4709,7 +4706,7 @@ Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
         Run it with the option <span class='code'>--string-check</span> to
         search for these embedded strings. Add the option
         <span class='code'>--fix</span> to have the utility fix them:</p>
-    <pre class="tty">wee_database weewx.conf --string-check --fix</pre>
+    <pre class="tty cmd">wee_database weewx.conf --string-check --fix</pre>
 
     <h3>Python 2.5</h3>
 
@@ -4720,14 +4717,14 @@ Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
             <span class='code'>easy_install</span></a>, but you may be
         able to use <span class='code'>apt-get</span> or other tools, depending on
         your operating system.</p>
-    <pre class="tty">
+    <pre class="tty cmd">
 sudo easy_install pysqlite
 sudo easy_install PIL</pre>
     <p>Various possible complications:</p>
     <ul>
         <li>You may have to install the development environment of SQLite in
             order to get <span class='code'>pysqlite</span> to install. This worked on my system:
-<pre class="tty">
+<pre class="tty cmd">
 apt-get install libsqlite3-dev</pre>
             Then rerun the installation of <span class='code'>pysqlite</span>.
         </li>
@@ -4747,21 +4744,21 @@ ImportError: The _imagingft C module is not installed</pre>
             the freetype library, you may be missing others as well. This is what worked on my system. YMMV.
 <pre class="tty">
 # Install the Freetype library:
-sudo apt-get install libfreetype6-dev
+<span class="cmd">sudo apt-get install libfreetype6-dev</span>
 # Make sure it, and the zlib library, are visible to easy_install
-sudo ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so /usr/lib
-sudo ln -s /usr/lib/x86_64-linux-gnu/libz.so /usr/lib
+<span class="cmd">sudo ln -s /usr/lib/x86_64-linux-gnu/libfreetype.so /usr/lib</span>
+<span class="cmd">sudo ln -s /usr/lib/x86_64-linux-gnu/libz.so /usr/lib</span>
 # Remove the PIL paths
-sudo easy_install -m PIL
+<span class="cmd">sudo easy_install -m PIL</span>
 # Remove PIL itself:
-sudo rm -r /usr/lib/python2.5/site-packages/PIL*
+<span class="cmd">sudo rm -r /usr/lib/python2.5/site-packages/PIL*</span>
 # Now rebuild PIL, this time with the right libraries
-sudo easy_install PIL
+<span class="cmd">sudo easy_install PIL</span>
 </pre>
             You may have to fiddle with the exact path used in the symbolic link. A helpful tool
             is the Unix tool <span class='code'>find</span>. For example, the following
             uncovered where my freetype library was hiding:
-<pre class="tty">
+<pre class="tty cmd">
 find /usr/lib -name "libfreetype*" -print</pre>
         </li>
     </ul>
@@ -4805,14 +4802,14 @@ port = /dev/cuaU0</pre>
         in this case) actually exists. If it does not, on Debian
         operating systems (such as Ubuntu), you may be able to install
         the necessary fonts:</p>
-    <pre class="tty">sudo apt-get install fonts-freefont-ttf
+    <pre class="tty cmd">sudo apt-get install fonts-freefont-ttf
 sudo fc-cache -f -v</pre>
     <p>(On older systems, the package <span class="code">fonts-freefont-ttf</span>
         may be called <span class="code">ttf-freefont</span>).
         The first command installs the "Truetype" fonts, the second rebuilds
         the font cache. If your system does not have <span class="code">fc-cache</span>
         command, then install it from the <span class="code">fontconfig</span> package:</p>
-    <pre class="tty">sudo apt-get install fontconfig</pre>
+    <pre class="tty cmd">sudo apt-get install fontconfig</pre>
     <p>If none of this works, or if you are on a different operating
         system, then you will have to change the option <span class="code">unit_label_font_path</span>
         to point to something on your system which does support UTF-8 characters.</p>
