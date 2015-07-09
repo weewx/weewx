@@ -1506,17 +1506,17 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
 
     <p>Here is an example template:</p>
 
-    <p class="tty">Current time is $current.dateTime
-        #if $almanac.hasExtras
-        Sunrise, transit, sunset: $almanac.sun.rise $almanac.sun.transit $almanac.sun.set
-        Moonrise, transit, moonset: $almanac.moon.rise $almanac.moon.transit $almanac.moon.set
-        Mars rise, transit, set: $almanac.mars.rise $almanac.mars.transit $almanac.mars.set
-        Azimuth, altitude of mars: $almanac.mars.az $almanac.mars.alt
-        Next new, full moon: $almanac.next_new_moon $almanac.next_full_moon
-        Next summer, winter solstice: $almanac.next_summer_solstice $almanac.next_winter_solstice
-        #else
-        Sunrise, sunset: $almanac.sunrise $almanac.sunset
-        #end if</p>
+    <pre class="tty">Current time is $current.dateTime
+#if $almanac.hasExtras
+Sunrise, transit, sunset: $almanac.sun.rise $almanac.sun.transit $almanac.sun.set
+Moonrise, transit, moonset: $almanac.moon.rise $almanac.moon.transit $almanac.moon.set
+Mars rise, transit, set: $almanac.mars.rise $almanac.mars.transit $almanac.mars.set
+Azimuth, altitude of mars: $almanac.mars.az $almanac.mars.alt
+Next new, full moon: $almanac.next_new_moon $almanac.next_full_moon
+Next summer, winter solstice: $almanac.next_summer_solstice $almanac.next_winter_solstice
+#else
+Sunrise, sunset: $almanac.sunrise $almanac.sunset
+#end if</pre>
 
     <p>If pyephem is installed this would result in: </p>
 
@@ -4079,7 +4079,7 @@ class MyAlarm(StdService):
 
     <p>Before starting, it's worth running the utility with the <span class="code">--help</span>
         flag to see how it is used:</p>
-    <pre class="tty"><span class="cmd">wee_database --help</span></pre>
+    <pre class="tty cmd">wee_database --help</pre>
     <p>This will result in an output that looks something like this:</p>
       <pre class="tty">
 Usage: wee_database: [CONFIG_FILE|--config=CONFIG_FILE] [--help]
@@ -4279,7 +4279,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
                 to the configuration file:
             </p>
 
-            <p class="tty"><span class="cmd">wee_database weewx.conf --reconfigure</span></p>
+            <p class="tty cmd">wee_database weewx.conf --reconfigure</p>
 
             <p>
                 This will create a new database (nominally, <span class="code">weewx.sdb_new</span>
@@ -4305,14 +4305,12 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
                 to use the new database name. To do the former:
             </p>
 
-            <p>For SQLite:</p>
-            <pre class="tty"><span class="cmd">cd <span class="symcode">SQLITE_ROOT</span>
-mv weewx.sdb_new weewx.sdb</span></pre>
-            <p>For MySQL:</p>
-            <pre class="tty"><span class="cmd">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;</span>
-mysql&gt; <span class="cmd">DROP DATABASE weewx;</span>   # Delete the old database
-mysql&gt; <span class="cmd">CREATE DATABASE weewx;</span> # Create a new one with the same name
-mysql&gt; <span class="cmd">RENAME TABLE weewx_new.archive TO weewx.archive;</span> # Rename to the nominal name</pre>
+            <p>For SQLite:</p> <pre class="tty cmd">cd <span class="symcode">SQLITE_ROOT</span>
+mv weewx.sdb_new weewx.sdb</pre>
+            <p>For MySQL:</p> <pre class="tty"><span class="cmd">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;</span>
+mysql&gt;<span class="cmd"> DROP DATABASE weewx;</span>                             # Delete the old database
+mysql&gt;<span class="cmd"> CREATE DATABASE weewx;</span>                           # Create a new one with the same name
+mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</span> # Rename to the nominal name</pre>
         </li>
         <li>
             <p>
@@ -4323,7 +4321,7 @@ mysql&gt; <span class="cmd">RENAME TABLE weewx_new.archive TO weewx.archive;</sp
                     class="code">wee_database</span> utility and the <span
                     class="code">--backfill-daily</span> option:
             </p>
-            <pre class="tty"><span class="cmd">wee_database weewx.conf --backfill-daily</span></pre>
+            <pre class="tty cmd">wee_database weewx.conf --backfill-daily</pre>
         </li>
     </ol>
 
@@ -4466,7 +4464,7 @@ weewx.units.obs_group_dict['electricity'] = 'group_power'</pre>
                 Now run the utility <span class="code">wee_database</span>
                 with the <span class="code">--reconfigure</span> option:
             </p>
-            <pre class="tty"><span class="cmd">wee_database weewx.conf --reconfigure</span></pre>
+            <pre class="tty cmd">wee_database weewx.conf --reconfigure</pre>
             <p>
                 This will create a new database (nominally,
                 <span class="code">weewx.sdb_new</span>
@@ -4493,13 +4491,12 @@ weewx.units.obs_group_dict['electricity'] = 'group_power'</pre>
                 to use the new database name. To do the former:
             </p>
 
-            <p>For SQLite:</p> <pre class="tty"><span class="cmd">cd <span class="symcode">SQLITE_ROOT</span>
-mv weewx.sdb_new weewx.sdb</span></pre>
-            <p>For MySQL:</p>
-            <pre class="tty"><span class="cmd">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;</span>
-mysql&gt; <span class="cmd">DROP DATABASE weewx;</span>   # Delete the old database
-mysql&gt; <span class="cmd">CREATE DATABASE weewx;</span> # Create a new one with the same name
-mysql&gt; <span class="cmd">RENAME TABLE weewx_new.archive TO weewx.archive;</span> # Rename to the nominal name</pre>
+            <p>For SQLite:</p> <pre class="tty cmd">cd <span class="symcode">SQLITE_ROOT</span>
+mv weewx.sdb_new weewx.sdb</pre>
+            <p>For MySQL:</p> <pre class="tty"><span class="cmd">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;</span>
+mysql&gt;<span class="cmd"> DROP DATABASE weewx;</span>                             # Delete the old database
+mysql&gt;<span class="cmd"> CREATE DATABASE weewx;</span>                           # Create a new one with the same name
+mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</span> # Rename to the nominal name</pre>
         </li>
         <li>
             <p>
@@ -4510,7 +4507,7 @@ mysql&gt; <span class="cmd">RENAME TABLE weewx_new.archive TO weewx.archive;</sp
                     class="code">wee_database</span> utility and the <span
                     class="code">--backfill-daily</span> option:
             </p>
-            <pre class="tty"><span class="cmd">wee_database weewx.conf --backfill-daily</span></pre>
+            <pre class="tty cmd">wee_database weewx.conf --backfill-daily</pre>
         </li>
     </ol>
 
@@ -4518,10 +4515,10 @@ mysql&gt; <span class="cmd">RENAME TABLE weewx_new.archive TO weewx.archive;</sp
 
     <p>The tool <span class="code">wee_database</span> can also be used to drop the daily
         summaries:</p>
-    <pre class="tty"><span class="cmd">wee_database weewx.conf --drop-daily</span></pre>
+    <pre class="tty cmd">wee_database weewx.conf --drop-daily</pre>
     <p>The summaries will automatically be rebuilt the next time <span class="code">weewx</span> starts,
         or they can be rebuilt with the tool:</p>
-    <pre class="tty"><span class="cmd">wee_database weewx.conf --backfill-daily</span></pre>
+    <pre class="tty cmd">wee_database weewx.conf --backfill-daily</pre>
 
     <h1 id="porting">Porting to new hardware</h1>
 
@@ -4758,8 +4755,8 @@ mysql&gt; <span class="cmd">RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         option to see how it is used:
     </p>
     
-    <pre class="tty"><span class="cmd">cd /home/weewx
-./bin/wee_extension --help</span></pre>
+    <pre class="tty cmd">cd /home/weewx
+./bin/wee_extension --help</pre>
 
     <p>This results in:</p>
 
@@ -4800,15 +4797,16 @@ Options:
 
     <p>To install an extension:</p>
 
-    <pre class='tty'><span class="cmd">wee_extension --install extensions/basic wee_extension --install basic.tar.gz</span></pre>
+    <pre class='tty cmd'>wee_extension --install extensions/basic
+wee_extension --install basic.tar.gz</pre>
 
     <p>To uninstall an extension:</p>
 
-    <pre class='tty'><span class="cmd">wee_extension --uninstall basic</span></pre>
+    <p class='tty cmd'>wee_extension --uninstall basic</p>
 
     <p>To list installed extensions:</p>
 
-    <pre class='tty'><span class="cmd">wee_extension --list</span></pre>
+    <p class='tty cmd'>wee_extension --list</p>
 
     <p>The utility will make only the following changes:</p>
     <ul>
@@ -4836,7 +4834,7 @@ Options:
         wiki, or by using <span class="code">wget</span> (which you may have
         to install):
     </p>
-    <pre class="tty"><span class="cmd">wget -P /var/tmp http://lancet.mit.edu/mwall/projects/weather/releases/weewx-cmon-0.7.tgz</span></pre>
+    <pre class="tty cmd">wget -P /var/tmp http://lancet.mit.edu/mwall/projects/weather/releases/weewx-cmon-0.7.tgz</pre>
 
     <p>
         This will put the tarfile <span class="code">weewx-cmon-0.7.tgz</span>
@@ -4971,7 +4969,7 @@ xstats/bin/user/xstats.py</pre>
     <p>For example, create the compressed archive for the
         <span class='code'>basic</span> skin like this:</p>
 
-    <p class='tty'><span class="cmd">tar cvfz basic.tar.gz basic</span></p>
+    <p class='tty cmd'>tar cvfz basic.tar.gz basic</p>
 
     <h1 id="archive_types">Appendix: Archive Types</h1>
 
