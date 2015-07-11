@@ -1324,27 +1324,35 @@ or in foobar units: $day.barometer.min.foobar
     <h3>Type <span class="code">dateTime</span></h3>
 
     <p>While not an observation type, in many ways the time of an observation,
-        <span class="code">dateTime</span>, can be treated as one. A tag such as
-        <span class="code">$current.dateTime</span> represents the <em>current
-            time</em> (more properly, the time as of the end of the last archive
-        interval). Similarly, a tag such as <span class="code">$month.dateTime</span>
+        <span class="code">dateTime</span>, can be treated as one. A tag such as</p>
+    <pre class="tty">$current.dateTime</pre>
+    <p>represents the <em>current time</em> (more properly, the time as of the end of the last archive
+        interval) and would produce something like</p>
+    <pre class="example_output">09-Jan-2010 12:50</pre>
+    <p> Similarly, a tag such as <span class="code">$month.dateTime</span>
         represents the start time of the month. Like true observation types,
         explicit formats can be specified, except that they require a <a
                 href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior">
-            strftime() <em>time format</em></a>, rather than a <em>string
-            format</em>.</p>
+            strftime() <em>time format</em></a>, rather than a <em>string format</em>.</p>
 
     <p> For example, </p>
+    <pre class="tty">$month.dateTime</pre>
+    <p>produces</p>
+
+    <pre class="example_output">09-Jan-2010</pre>
+    <p>while</p>
     <pre class="tty">$month.dateTime.format("%B %Y")</pre>
-    <p>produces </p>
+    <p>produces</p>
 
     <p class="example_output">January 2010</p>
 
-    <p>The returned string value will always be in <em>local time</em>. </p>
+    <p>The returned string value will always be in <em>local time</em>. However, if you ask
+    for the raw value</p>
+    <pre class="tty">$current.dateTime.raw</pre>
 
-    <p>The raw value of <span class="code">dateTime</span> is Unix Epoch Time
+    <p>the returned value will be in Unix Epoch Time
         (number of seconds since 00:00:00 UTC 1 Jan 1970, <em>i.e.</em>, a
-        large number), which you must convert yourself to local time. It is
+        large number), which you must convert yourself. It is
         guaranteed to never be <span class="code">None</span>, so you don't
         worry have to worry about handling a <span class="code">None</span>
         value. </p>
