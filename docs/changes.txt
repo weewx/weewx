@@ -110,6 +110,9 @@ since V3.0, making the option unnecessary. Fixes issue #25.
 
 Added additional debug logging to main engine loop.
 
+FTP uploader now retries several times to connect to a server, instead of 
+giving up after one try. Thanks to user Craig Hunter!
+
 
 3.1.0 02/05/15
 

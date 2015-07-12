@@ -82,28 +82,38 @@ class FtpUpload(object):
         (timestamp, fileset) = self.getLastUpload()
 
         n_uploaded = 0
+        # Try to connect to the ftp server up to max_tries times:
+        
         try:
             if self.secure:
                 syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Attempting secure connection to %s" % self.server)
             else:
                 syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Attempting connection to %s" % self.server)
-            try:
-                ftp_server = FTPClass()
-                ftp_server.connect(self.server, self.port)
-    
-                if self.debug:
-                    ftp_server.set_debuglevel(self.debug)
-    
-                ftp_server.login(self.user, self.password)
-                ftp_server.set_pasv(self.passive)
-                if self.secure:
-                    ftp_server.prot_p()
-                    syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Secure connection to %s" % self.server)
+            for count in range(self.max_tries):
+                try:
+                    ftp_server = FTPClass()
+                    ftp_server.connect(self.server, self.port)
+        
+                    if self.debug:
+                        ftp_server.set_debuglevel(self.debug)
+        
+                    ftp_server.login(self.user, self.password)
+                    ftp_server.set_pasv(self.passive)
+                    if self.secure:
+                        ftp_server.prot_p()
+                        syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Secure connection to %s" % self.server)
+                    else:
+                        syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Connected to %s" % self.server)
+                    break
+                except ftplib.all_errors, e:
+                    syslog.syslog(syslog.LOG_NOTICE, "ftpupload: Unable to connect or log into server : %s" % e)
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Connected to %s" % self.server)
-            except ftplib.all_errors, e:
-                syslog.syslog(syslog.LOG_CRIT, "ftpupload: Unable to connect or log into server : %s" % e)
-                return
+                    # This is executed only if the loop terminates naturally (without a break statement),
+                    # meaning the ftp connection failed max_tries times. Abandon ftp upload
+                    syslog.syslog(syslog.LOG_CRIT, 
+                                  "ftpupload: Attempted %d times to connect to server %s. Giving up." % 
+                                  (self.max_tries, self.server))
+                    return n_uploaded
             
             # Walk the local directory structure
             for (dirpath, unused_dirnames, filenames) in os.walk(self.local_root):
