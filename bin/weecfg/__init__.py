@@ -1016,7 +1016,8 @@ def prompt_for_driver(dflt_driver=None):
     dflt_idx = None
     print "Installed drivers include:"
     for i, d in enumerate(keys):
-        print " %2d) %-15s (%s)" % (i, infos[d].get('driver_name', '?'), d)
+        print " %2d) %-15s %-25s %s" % (i, infos[d].get('driver_name', '?'),
+                                        "(%s)" % d, infos[d].get('status', ''))
         if dflt_driver == d:
             dflt_idx = i
     msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
