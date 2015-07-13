@@ -920,7 +920,9 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
                 'driver_name' : '?',
                 'version'     : '?',
                 'status'      : e}
-        except KeyError:
+        except Exception, e:
+            # Ignore anything else.  This might be a python file that is not
+            # a driver, a python file with errors, or who knows what.
             pass
 
     return driver_info_dict
