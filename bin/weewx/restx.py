@@ -320,6 +320,7 @@ class RESTThread(threading.Thread):
                 # problem. Exit.
                 syslog.syslog(syslog.LOG_CRIT, "restx: %s: Unexpected exception of type %s" % 
                               (self.protocol_name, type(e)))
+                weeutil.weeutil.log_traceback('*** ', syslog.LOG_DEBUG)
                 syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting. Reason: %s" % 
                               (self.protocol_name, e))
                 return
