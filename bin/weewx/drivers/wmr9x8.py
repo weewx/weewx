@@ -250,7 +250,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         """Decode a wind packet. Wind speed will be in kph"""
         null, status, dir1, dir10, dir100, gust10th, gust1, gust10, avg10th, avg1, avg10, chillstatus, chill1, chill10 = self._get_nibble_data(packet[1:]) # @UnusedVariable
 
-        battery = bool(status & 0x04)
+        battery = (status & 0x04) >> 2
 
         # The console returns wind speeds in m/s. Our metric system requires kph,
         # so the result needs to be multiplied by 3.6
@@ -282,14 +282,14 @@ class WMR9x8(weewx.drivers.AbstractDevice):
     @wmr9x8_registerpackettype(typecode=0x01, size=16)
     def _wmr9x8_rain_packet(self, packet):
         null, status, cur1, cur10, cur100, tot10th, tot1, tot10, tot100, tot1000, yest1, yest10, yest100, yest1000, totstartmin1, totstartmin10, totstarthr1, totstarthr10, totstartday1, totstartday10, totstartmonth1, totstartmonth10, totstartyear1, totstartyear10 = self._get_nibble_data(packet[1:]) # @UnusedVariable
-        battery = bool(status & 0x04)
+        battery = (status & 0x04) >> 2
 
         # station units are mm and mm/hr while the internal metric units are cm and cm/hr
         # It is reported that total rainfall is biased by +0.5 mm
         _record = {
             'rainBatteryStatus' : battery,
             'rainRate'          : (cur1 + (cur10 * 10) + (cur100 * 100)) / 10.0,
-            'dayRain'           : (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000)) / 10.0,
+            'yesterdayRain'     : (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000)) / 10.0,
             'totalRain'         : (tot10th / 10.0 + tot1 + 10.0 * tot10 + 100.0 * tot100 + 1000.0 * tot1000) / 10.0,
             'dateTime'          : int(time.time() + 0.5),
             'usUnits'           : weewx.METRIC
@@ -307,7 +307,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
         chan = channel_decoder(chan)
 
-        battery = bool(status & 0x04)
+        battery = (status & 0x04) >> 2
         _record = {
             'dateTime' : int(time.time() + 0.5),
             'usUnits'  : weewx.METRIC,
@@ -336,7 +336,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
     def _wmr9x8_mushroom_packet(self, packet):
         _, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10 = self._get_nibble_data(packet[1:])
 
-        battery = bool(status & 0x04)
+        battery = (status & 0x04) >> 2
         _record = {
             'dateTime'             : int(time.time() + 0.5),
             'usUnits'              : weewx.METRIC,
@@ -365,7 +365,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         chan, status, temp10th, temp1, temp10, temp100etc = self._get_nibble_data(packet[1:])
 
         chan = channel_decoder(chan)
-        battery = bool(status & 0x04)
+        battery = (status & 0x04) >> 2
 
         _record = {'dateTime' : int(time.time() + 0.5),
                    'usUnits'  : weewx.METRIC,
@@ -383,7 +383,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
     def _wmr9x8_in_thermohygrobaro_packet(self, packet):
         null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, wstatus, null2, slpoff10th, slpoff1, slpoff10, slpoff100 = self._get_nibble_data(packet[1:]) # @UnusedVariable
 
-        battery = bool(status&0x04)
+        battery = (status & 0x04) >> 2
         hum = hum1 + (hum10 * 10)
 
         tempoverunder = bool(temp100etc & 0x04)
@@ -422,7 +422,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
     def _wmr9x8_in_ext_thermohygrobaro_packet(self, packet):
         null, status, temp10th, temp1, temp10, temp100etc, hum1, hum10, dew1, dew10, baro1, baro10, baro100, wstatus, null2, slpoff10th, slpoff1, slpoff10, slpoff100, slpoff1000 = self._get_nibble_data(packet[1:]) # @UnusedVariable
 
-        battery = bool(status & 0x04)
+        battery = (status & 0x04) >> 2
         hum = hum1 + (hum10 * 10)
 
         tempoverunder = bool(temp100etc & 0x04)
