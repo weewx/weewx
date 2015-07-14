@@ -93,6 +93,11 @@ Changes to the TE923 driver include:
  - consolidated retries
  - improved error handling and reporting
 
+Changes to the WMR9x8 driver include:
+ - Correct bug that caused yesterday's rain to be decoded as dayRain
+ - LOOP packet type 'battery' is now an int, instead of a bool
+ - The driver can now be run standalone for debugging purposes.
+ 
 The Vantage driver now catches undocumented termios exceptions and converts
 them to weewx exceptions. This allows retries if flushing input or output
 buffers fail. Fixes issue #34.
