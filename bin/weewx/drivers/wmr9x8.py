@@ -35,6 +35,7 @@ def loader(config_dict, engine):
 def confeditor_loader():
     return WMR9x8ConfEditor()
 
+DEFAULT_PORT = '/dev/ttyS0'
 
 class WMR9x8ProtocolError(weewx.WeeWxIOError):
     """Used to signal a protocol error condition"""
@@ -174,6 +175,8 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                 psize = wmr9x8_packet_type_size_map[ptype]
                 # Capture only the data belonging to this packet
                 pdata = buf[0:psize]
+                if weewx.debug >= 2:
+                    self.log_packet(pdata)
                 # Validate the checksum
                 sent_checksum = pdata[-1]
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
@@ -237,6 +240,10 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         for byte in packet:
             nibbles.extend([(byte & 0x0F), (byte & 0xF0) >> 4])
         return nibbles
+
+    def log_packet(self, packet):
+        packet_str = ','.join(["x%x" % v for v in packet])
+        print "%d, %s, %s" % (int(time.time()+0.5), time.asctime(), packet_str)
 
     @wmr9x8_registerpackettype(typecode=0x00, size=11)
     def _wmr9x8_wind_packet(self, packet):
@@ -615,3 +622,42 @@ class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
         print "example /dev/ttyUSB0 or /dev/ttyS0."
         port = self._prompt('port', '/dev/ttyUSB0')
         return {'port': port}
+
+# Define a main entry point for basic testing without the weewx engine.
+# Invoke this as follows from the weewx root dir:
+#
+# PYTHONPATH=bin python bin/weewx/drivers/wmr9x8.py
+
+if __name__ == '__main__':
+    import optparse
+
+    usage = """Usage: %prog --help
+       %prog --version
+       %prog --gen-packets [--port=PORT]"""
+
+    syslog.openlog('wmr9x8', syslog.LOG_PID | syslog.LOG_CONS)
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    weewx.debug = 2
+    
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option('--version', dest='version', action='store_true',
+                      help='Display driver version')
+    parser.add_option('--port', dest='port', metavar='PORT',
+                      help='The port to use. Default is %s' % DEFAULT_PORT,
+                      default=DEFAULT_PORT)
+    parser.add_option('--gen-packets', dest='gen_packets', action='store_true',
+                      help="Generate packets indefinitely")
+    
+    (options, args) = parser.parse_args()
+
+    if options.version:
+        print "WMR9x8 driver version %s" % DRIVER_VERSION
+        exit(0)
+
+    if options.gen_packets:
+        syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Running genLoopPackets()")
+        stn_dict={'port': options.port}
+        stn = WMR9x8(**stn_dict)
+        
+        for packet in stn.genLoopPackets():
+            print packet
