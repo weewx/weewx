@@ -56,6 +56,7 @@ info:
 	@echo "        USER: $(USER)"
 
 realclean:
+	rm -f MANIFEST
 	rm -rf build
 	rm -rf dist
 
