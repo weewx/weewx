@@ -240,7 +240,7 @@ sub dumpsection {
 
     # lines that beging with two or more spaces will be considered fixed space
     # and will not be subjected to word wrap.  we do this by replacing spaces
-    # in those lines with the ~ character then padding them with the _
+    # in those lines with the ~ character then padding them with the !
     # character, then replacing both after word wrap has been applied.
     print $prefix;
     foreach my $p (@paragraphs) {
@@ -249,7 +249,7 @@ sub dumpsection {
         foreach my $line (split /\n/,$p) {
             if ($line =~ /^\s+/) {
                 $line =~ s/\s/~/g;
-                while(length($line) < $MAXCOL) { $line .= q(\@); }
+                while(length($line) < $MAXCOL) { $line .= q(!); }
             }
             push @lines, $line;
         }
@@ -260,7 +260,7 @@ sub dumpsection {
         foreach my $line (split /\n/,$p) {
             if ($line =~ /~/) {
                 $line =~ s/~/ /g;
-                $line =~ s/\@//g;
+                $line =~ s/!//g;
             }
             push @lines, $line;
         }
