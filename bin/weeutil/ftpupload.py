@@ -107,13 +107,13 @@ class FtpUpload(object):
                     break
                 except ftplib.all_errors, e:
                     syslog.syslog(syslog.LOG_NOTICE, "ftpupload: Unable to connect or log into server : %s" % e)
-                else:
-                    # This is executed only if the loop terminates naturally (without a break statement),
-                    # meaning the ftp connection failed max_tries times. Abandon ftp upload
-                    syslog.syslog(syslog.LOG_CRIT, 
+            else:
+                # This is executed only if the loop terminates naturally (without a break statement),
+                # meaning the ftp connection failed max_tries times. Abandon ftp upload
+                syslog.syslog(syslog.LOG_CRIT, 
                                   "ftpupload: Attempted %d times to connect to server %s. Giving up." % 
                                   (self.max_tries, self.server))
-                    return n_uploaded
+                return n_uploaded
             
             # Walk the local directory structure
             for (dirpath, unused_dirnames, filenames) in os.walk(self.local_root):
