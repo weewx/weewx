@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.2.0 XX/XX/XX
+3.2.0 07/15/15
 
 There are now five command-line utilities, some new, some old
  - wee_config:    (New) For configuring weewx.conf, in particular, 
