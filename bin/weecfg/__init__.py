@@ -31,36 +31,50 @@ major_comment_block = ["", "####################################################
 #   1: A list of any subsection tuples;
 #   2: A list of any scalar names.
 
-canonical_order = ('', [('Station', [], ['location', 'latitude', 'longitude', 'altitude', 'station_type', 'rain_year_start', 'week_start']), 
-                        ('AcuRite', [], []),
-                        ('CC3000', [], []),
-                        ('FineOffsetUSB', [], []),
-                        ('Simulator', [], []),
-                        ('TE923', [], []),
-                        ('Ultimeter', [], []),
-                        ('Vantage', [], []),
-                        ('WMR100', [], []),
-                        ('WMR200', [], []),
-                        ('WMR9x8', [], []),
-                        ('WS1', [], []),
-                        ('WS23xx', [], []),
-                        ('WS28xx', [], []),
-                        ('StdRESTful', [('StationRegistry', [], ['register_this_station']), 
-                                        ('AWEKAS', [], []), ('CWOP', [], []), 
-                                        ('PWSweather', [], []), ('WOW', [], []), 
-                                        ('Wunderground', [], ['station', 'password', 'rapidfire'])], []), 
-                        ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 'group_rain', 'group_rainrate', 'group_temperature', 'group_degree_day', 'group_speed'])], [])], ['skin']), 
-                                       ('FTP', [], ['skin', 'secure_ftp', 'port', 'passive']), 
-                                       ('RSYNC', [], ['skin', 'delete'])], 
-                         ['SKIN_ROOT', 'HTML_ROOT', 'data_binding']), 
-                        ('StdConvert', [], ['target_unit']), ('StdCalibrate', [('Corrections', [], [])], []), 
-                        ('StdQC', [('MinMax', [], ['barometer', 'outTemp', 'inTemp', 'outHumidity', 'inHumidity', 'windSpeed'])], []), 
-                        ('StdWXCalculate', [], ['pressure', 'barometer', 'altimeter', 'windchill', 'heatindex', 'dewpoint', 'inDewpoint', 'rainRate']), 
-                        ('StdTimeSynch', [], ['clock_check', 'max_drift']), ('StdArchive', [], ['archive_interval', 'archive_delay', 'record_generation', 'loop_hilo', 'data_binding']), 
-                        ('DataBindings', [('wx_binding', [], ['database', 'table_name', 'manager', 'schema'])], []), 
-                        ('Databases', [('archive_sqlite', [], ['root', 'database_name', 'driver']), ('archive_mysql', [], ['host', 'user', 'password', 'database_name', 'driver'])], []), 
-                        ('Engine', [('Services', [], ['prep_services', 'data_services', 'process_services', 'archive_services', 'restful_services', 'report_services'])], [])], 
-                   ['debug', 'WEEWX_ROOT', 'socket_timeout', 'version'])
+canonical_order = ('',
+[('Station', [], ['location', 'latitude', 'longitude', 'altitude',
+                  'station_type', 'rain_year_start', 'week_start']), 
+ ('AcuRite', [], []),
+ ('CC3000', [], []),
+ ('FineOffsetUSB', [], []),
+ ('Simulator', [], []),
+ ('TE923', [], []),
+ ('Ultimeter', [], []),
+ ('Vantage', [], []),
+ ('WMR100', [], []),
+ ('WMR200', [], []),
+ ('WMR9x8', [], []),
+ ('WS1', [], []),
+ ('WS23xx', [], []),
+ ('WS28xx', [], []),
+ ('StdRESTful', [('StationRegistry', [], ['register_this_station']), 
+                 ('AWEKAS', [], ['enable', 'username', 'password']), 
+                 ('CWOP', [], ['enable', 'station']), 
+                 ('PWSweather', [], ['enable', 'station', 'password']), 
+                 ('WOW', [], ['enable', 'station', 'password']), 
+                 ('Wunderground', [], ['enable', 'station', 'password', 'rapidfire'])], []), 
+ ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 'group_rain', 'group_rainrate', 'group_temperature', 'group_degree_day', 'group_speed'])], [])], ['skin']), 
+                ('FTP', [], ['skin', 'secure_ftp', 'port', 'passive']), 
+                ('RSYNC', [], ['skin', 'delete'])], 
+  ['SKIN_ROOT', 'HTML_ROOT', 'data_binding']), 
+ ('StdConvert', [], ['target_unit']), ('StdCalibrate', [('Corrections', [], [])], []), 
+ ('StdQC', [('MinMax', [], ['barometer', 'outTemp', 'inTemp',
+                            'outHumidity', 'inHumidity', 'windSpeed'])], []),
+ ('StdWXCalculate', [], ['pressure', 'barometer', 'altimeter', 'windchill',
+                         'heatindex', 'dewpoint', 'inDewpoint', 'rainRate']), 
+ ('StdTimeSynch', [], ['clock_check', 'max_drift']), 
+ ('StdArchive', [], ['archive_interval', 'archive_delay', 'record_generation',
+                     'loop_hilo', 'data_binding']), 
+ ('DataBindings', [('wx_binding', [], ['database', 'table_name', 'manager',
+                                       'schema'])], []), 
+ ('Databases', [('archive_sqlite', [], ['database_type', 'database_name']), 
+                ('archive_mysql',  [], ['database_type', 'database_name'])], []),
+ ('DatabaseTypes', [('SQLite', [], ['driver', 'SQLITE_ROOT']),
+                    ('MySQL',  [], ['driver', 'host', 'user', 'password'])], []),
+ ('Engine', [('Services', [], ['prep_services', 'data_services',
+                               'process_services', 'archive_services',
+                               'restful_services', 'report_services'])], [])], 
+['debug', 'WEEWX_ROOT', 'socket_timeout', 'version'])
 
 def get_section_tuple(c_dict, section_name=''):
     """ The above "canonical" ordering can be  generated from a config file
@@ -153,11 +167,13 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
     returns: full path to the file
     """
 
-    if file_path is None:
-        if args and not args[0].startswith('-'):
-            file_path = args[0]
-            # Shift args to the left:
-            del args[0]
+    # Start by searching args (if available)
+    if file_path is None and args:
+        for i in range(len(args)):
+            if not args[i].startswith('-'):
+                file_path = args[i]
+                del args[i]
+                break
 
     if file_path is None:
         for directory in locations:
@@ -311,9 +327,20 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                             'Groups': us_group}})
 
 #==============================================================================
-#              Utilities that update ConfigObj objects
+#              Utilities that update and merge ConfigObj objects
 #==============================================================================
 
+def update_and_merge(config_dict, template_dict):
+    
+    update_config(config_dict)
+    merge_config(config_dict, template_dict)
+    
+    # We use the number of comment lines for the 'Station' section as a
+    # heuristic of whether the config dict has been updated to the new
+    # comment structure
+    if len(config_dict.comments['Station']) <= 3:
+        transfer_comments(config_dict, template_dict)
+    
 def update_config(config_dict):
     """Update a (possibly old) configuration dictionary to the latest format.
 
@@ -355,7 +382,7 @@ def merge_config(config_dict, template_dict):
     config_dict.interpolate = False
 
     # Merge new stuff from the template:
-    conditional_merge(config_dict, template_dict)
+    weeutil.weeutil.conditional_merge(config_dict, template_dict)
 
     # Finally, update the version number:
     config_dict['version'] = template_dict['version']
@@ -503,7 +530,8 @@ def update_to_v27(config_dict):
     if 'StdRESTful' in config_dict and 'CWOP' in config_dict['StdRESTful']:
         # Option "interval" has changed to "post_interval"
         if 'interval' in config_dict['StdRESTful']['CWOP']:
-            config_dict['StdRESTful']['CWOP']['post_interval'] = config_dict['StdRESTful']['CWOP']['interval']
+            config_dict['StdRESTful']['CWOP']['post_interval'] = \
+                config_dict['StdRESTful']['CWOP']['interval']
             config_dict['StdRESTful']['CWOP'].pop('interval')
         # Option "server" has become "server_list". It is also no longer
         # included in the default weewx.conf, so just pop it.
@@ -607,11 +635,110 @@ def update_to_v30(config_dict):
 
 def update_to_v32(config_dict):
     """Update a configuration file to V3.2"""
-    # The only difference is that we are no longer using SVN, so get rid
-    # of its ident
-    for i in range(len(config_dict.initial_comment)):
-        if config_dict.initial_comment[i].find("$Id") >= 0:
-            config_dict.initial_comment[i] = "#                                                                            #"
+    
+    # For interpolation to work, it's critical that WEEWX_ROOT not end
+    # with a trailing slash ('/'). Convert it to the normative form:
+    config_dict['WEEWX_ROOT'] = os.path.normpath(config_dict['WEEWX_ROOT'])
+    
+    # Add a default database-specific top-level stanzas if necessary
+    if 'DatabaseTypes' not in config_dict:
+        # Do SQLite first. Start with a sanity check:
+        try:
+            assert(config_dict['Databases']['archive_sqlite']['driver'] == 'weedb.sqlite')
+        except KeyError:
+            pass
+        # Set the default [[SQLite]] section:
+        config_dict['DatabaseTypes'] = {
+            'SQLite' : {'driver': 'weedb.sqlite',
+                        'SQLITE_ROOT': '%(WEEWX_ROOT)s/archive'}}
+        try:
+            root = config_dict['Databases']['archive_sqlite']['root']
+            database_name = config_dict['Databases']['archive_sqlite']['database_name']
+            fullpath = os.path.join(root, database_name)
+            dirname = os.path.dirname(fullpath)
+            # By testing to see if they end up resolving to the same thing,
+            # we can keep the interpolation used to specify SQLITE_ROOT above.
+            if dirname != config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT']:
+                config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'] = dirname
+            config_dict['Databases']['archive_sqlite']['database_name'] = os.path.basename(fullpath)
+            config_dict['Databases']['archive_sqlite']['database_type'] = 'SQLite'
+            config_dict['Databases']['archive_sqlite'].pop('root', None)
+            config_dict['Databases']['archive_sqlite'].pop('driver', None)
+        except KeyError:
+            pass
+    
+        # Now do MySQL. Start with a sanity check:
+        try:
+            assert(config_dict['Databases']['archive_mysql']['driver'] == 'weedb.mysql')
+        except KeyError:
+            pass
+        config_dict['DatabaseTypes'] = {'MySQL' : {'driver': 'weedb.mysql',
+                                                   'host': 'localhost',
+                                                   'user': 'weewx',
+                                                   'password': 'weewx'}}
+        try:
+            config_dict['DatabaseTypes']['MySQL']['host'] = config_dict['Databases']['archive_mysql']['host']
+            config_dict['DatabaseTypes']['MySQL']['user'] = config_dict['Databases']['archive_mysql']['user']
+            config_dict['DatabaseTypes']['MySQL']['password'] = config_dict['Databases']['archive_mysql']['password']
+            config_dict['Databases']['archive_mysql'].pop('host', None)
+            config_dict['Databases']['archive_mysql'].pop('user', None)
+            config_dict['Databases']['archive_mysql'].pop('password', None)
+            config_dict['Databases']['archive_mysql'].pop('driver', None)
+            config_dict['Databases']['archive_mysql']['database_type'] = 'MySQL'
+        except KeyError:
+            pass
+            
+    # Version 3.2 introduces the 'enable' keyword for RESTful protocols. Set
+    # it appropriately
+    def set_enable(c, service, keyword):
+        # Check to see whether this config file has the service listed
+        try:
+            c['StdRESTful'][service]
+        except KeyError:
+            # It does not. Nothing to do.
+            return
+
+        # Now check to see whether it already has the option 'enable':
+        if c['StdRESTful'][service].has_key('enable'):
+            # It does. No need to proceed
+            return
+
+        # The option 'enable' is not present. Add it,
+        # and set based on whether the keyword is present:
+        if c['StdRESTful'][service].has_key(keyword):
+            c['StdRESTful'][service]['enable'] = 'true'
+        else:
+            c['StdRESTful'][service]['enable'] = 'false'
+
+    set_enable(config_dict, 'AWEKAS', 'username')
+    set_enable(config_dict, 'CWOP', 'station')
+    set_enable(config_dict, 'PWSweather', 'station')
+    set_enable(config_dict, 'WOW', 'station')
+    set_enable(config_dict, 'Wunderground', 'station')
+    
+    config_dict['version'] = '3.2.0'
+        
+def transfer_comments(config_dict, template_dict):
+    
+    # If this is the top-level, transfer the initial comments
+    if config_dict.parent is config_dict:
+        config_dict.initial_comment = template_dict.initial_comment
+    
+    # Now go through each section, transferring its comments
+    for section in config_dict.sections:
+        try:
+            config_dict.comments[section] = template_dict.comments[section]
+            # Recursively transfer the subsection comments:
+            transfer_comments(config_dict[section], template_dict[section])
+        except KeyError:
+            pass
+
+    # Finally, do the section's scalars:
+    for scalar in config_dict.scalars:
+        try:
+            config_dict.comments[scalar] = template_dict.comments[scalar]
+        except KeyError:
+            pass
 
 #==============================================================================
 #              Utilities that extract from ConfigObj objects
@@ -653,8 +780,8 @@ def get_unit_info(config_dict):
 #                Utilities that manipulate ConfigObj objects
 #==============================================================================
 
-# The following utility is probably not necessary any longer. reorder_to_ref() should
-# be used instead:
+# The following utility is probably not necessary any longer.
+# reorder_to_ref() should be used instead.
 def reorder_sections(config_dict, src, dst, after=False):
     """Move the section with key src to just before (after=False) or after
     (after=True) the section with key dst. """
@@ -701,7 +828,8 @@ def reorder(name_list, ref_list):
     for name in ref_list:
         if name in name_list:
             result.append(name)
-    # For any that were not in the reference list and are left over, tack them on to the end:
+    # For any that were not in the reference list and are left over, tack
+    # them on to the end:
     for name in name_list:
         if name not in ref_list:
             result.append(name)
@@ -709,30 +837,6 @@ def reorder(name_list, ref_list):
     assert(len(name_list)==len(result))
     return result
     
-def conditional_merge(a_dict, b_dict):
-    """Merge fields from b_dict into a_dict, but only if they do not yet
-    exist in a_dict"""
-    # Go through each key in b_dict
-    for k in b_dict:
-        if isinstance(b_dict[k], dict):
-            if not k in a_dict:
-                # It's a new section. Initialize it...
-                a_dict[k] = {}
-                # ... and transfer over the section comments, if available
-                try:
-                    a_dict.comments[k] = b_dict.comments[k]
-                except AttributeError:
-                    pass
-            conditional_merge(a_dict[k], b_dict[k])
-        elif not k in a_dict:
-            # It's a scalar. Transfer over the value...
-            a_dict[k] = b_dict[k]
-            # ... then its comments, if available:
-            try:
-                a_dict.comments[k] = b_dict.comments[k]
-            except AttributeError:
-                pass
-
 def remove_and_prune(a_dict, b_dict):
     """Remove fields from a_dict that are present in b_dict"""
     for k in b_dict:
@@ -744,20 +848,20 @@ def remove_and_prune(a_dict, b_dict):
         elif k in a_dict:
             a_dict.pop(k)
 
-# def prepend_path(a_dict, label, value):
-#     """Prepend the value to every instance of the label in dict a_dict"""
-#     for k in a_dict:
-#         if isinstance(a_dict[k], dict):
-#             prepend_path(a_dict[k], label, value)
-#         elif k == label:
-#             a_dict[k] = os.path.join(value, a_dict[k])
+def prepend_path(a_dict, label, value):
+    """Prepend the value to every instance of the label in dict a_dict"""
+    for k in a_dict:
+        if isinstance(a_dict[k], dict):
+            prepend_path(a_dict[k], label, value)
+        elif k == label:
+            a_dict[k] = os.path.join(value, a_dict[k])
 
-# def replace_string(a_dict, label, value):
-#     for k in a_dict:
-#         if isinstance(a_dict[k], dict):
-#             replace_string(a_dict[k], label, value)
-#         else:
-#             a_dict[k] = a_dict[k].replace(label, value)
+#def replace_string(a_dict, label, value):
+#    for k in a_dict:
+#        if isinstance(a_dict[k], dict):
+#            replace_string(a_dict[k], label, value)
+#        else:
+#            a_dict[k] = a_dict[k].replace(label, value)
 
 #==============================================================================
 #                Utilities that work on drivers
@@ -774,7 +878,8 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
     """Scan the drivers folder, extracting information about each available
     driver. Return as a dictionary, keyed by the driver module name.
     
-    Valid drivers must be importable, and must have attribute "DRIVER_NAME" defined.
+    Valid drivers must be importable, and must have attribute "DRIVER_NAME"
+    defined.
     """
 
     __import__(driver_pkg_name)
@@ -786,42 +891,56 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
     for filename in driver_list:
         if filename in excludes:
             continue
+
         # Get the driver module name. This will be something like
         # 'weewx.drivers.fousb'
-        driver_module_name = os.path.splitext("%s.%s" % (driver_pkg_name, filename))[0]
+        driver_module_name = os.path.splitext("%s.%s" % (driver_pkg_name,
+                                                         filename))[0]
         
         try:
             # Try importing the module
             __import__(driver_module_name)
             driver_module = sys.modules[driver_module_name]
-        except (ImportError, KeyError):
-            continue
-        
-        # We can detect a valid driver by whether the attribute "DRIVER_NAME" has
-        # been defined
-        if not hasattr(driver_module, 'DRIVER_NAME'):
-            continue
-                
-        # Now we can create an entry for it, keyed by the driver module name:
-        driver_info_dict[driver_module_name] = \
-            {'module_name' : driver_module_name,
-             'driver_name' : driver_module.DRIVER_NAME,
-             'version'     : driver_module.DRIVER_VERSION if hasattr(driver_module, 
-                                                                     'DRIVER_VERSION') else '?'}
+
+            # A valid driver will define the attribute "DRIVER_NAME"
+            if hasattr(driver_module, 'DRIVER_NAME'):
+                # A driver might define the attribute DRIVER_VERSION
+                driver_module_version = driver_module.DRIVER_VERSION \
+                    if hasattr(driver_module, 'DRIVER_VERSION') else '?'
+                # Create an entry for it, keyed by the driver module name
+                driver_info_dict[driver_module_name] = {
+                    'module_name' : driver_module_name,
+                    'driver_name' : driver_module.DRIVER_NAME,
+                    'version'     : driver_module_version,
+                    'status'      : ''}
+        except ImportError, e:
+            # If the import fails, report it in the status
+            driver_info_dict[driver_module_name] = {
+                'module_name' : driver_module_name,
+                'driver_name' : '?',
+                'version'     : '?',
+                'status'      : e}
+        except Exception, e:
+            # Ignore anything else.  This might be a python file that is not
+            # a driver, a python file with errors, or who knows what.
+            pass
+
     return driver_info_dict
 
 def print_drivers():
     """Get information about all the available drivers, then print it out."""
     driver_info_dict = get_all_driver_infos()
     keys = sorted(driver_info_dict)
-    print "%-25s%-25s%-25s" % ("Module name", "Driver name", "Version")
+    print "%-25s%-15s%-9s%-25s" % (
+        "Module name", "Driver name", "Version", "Status")
     for d in keys:
-        print "  %(module_name)-25s%(driver_name)-25s%(version)-25s" % driver_info_dict[d]
+        print "  %(module_name)-25s%(driver_name)-15s%(version)-9s%(status)-25s" % driver_info_dict[d]
 
 def load_driver_editor(driver_module_name):
     """Load the configuration editor from the driver file
     
-    driver_module_name: A string holding the driver name. E.g., 'weewx.drivers.fousb'
+    driver_module_name: A string holding the driver name.
+                        E.g., 'weewx.drivers.fousb'
     """
     __import__(driver_module_name)
     driver_module = sys.modules[driver_module_name]
@@ -897,7 +1016,8 @@ def prompt_for_driver(dflt_driver=None):
     dflt_idx = None
     print "Installed drivers include:"
     for i, d in enumerate(keys):
-        print " %2d) %-15s (%s)" % (i, infos[d].get('driver_name', '?'), d)
+        print " %2d) %-15s %-25s %s" % (i, infos[d].get('driver_name', '?'),
+                                        "(%s)" % d, infos[d].get('status', ''))
         if dflt_driver == d:
             dflt_idx = i
     msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
@@ -988,12 +1108,17 @@ def extract_roots(config_path, config_dict, bin_root):
     
     root_dict = {'WEEWX_ROOT' : config_dict['WEEWX_ROOT'],
                  'CONFIG_ROOT' : os.path.dirname(config_path)}
-    # If bin_root has not been defined, then set it to the location of this file:
-    root_dict['BIN_ROOT'] = bin_root if bin_root else os.path.dirname(__file__)
+    # If bin_root has not been defined, then figure out where it is using
+    # the location of this file:
+    if bin_root:
+        root_dict['BIN_ROOT'] = bin_root
+    else:
+        root_dict['BIN_ROOT'] = os.path.abspath(os.path.join(
+                os.path.dirname(__file__), '..'))
     # The user subdirectory:
     root_dict['USER_ROOT'] = os.path.join(root_dict['BIN_ROOT'], 'user')
-    # The extensions directory can be found off of USER_ROOT:
-    root_dict['EXT_ROOT'] = os.path.join(root_dict['BIN_ROOT'], 'user', 'installer')
+    # The extensions directory is in the user directory:
+    root_dict['EXT_ROOT'] = os.path.join(root_dict['USER_ROOT'], 'installer')
     # Add SKIN_ROOT if it can be found:
     try:
         root_dict['SKIN_ROOT'] = os.path.abspath(os.path.join(

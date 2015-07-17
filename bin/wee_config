@@ -13,43 +13,40 @@ import optparse
 
 from weecfg.config import ConfigEngine
 
-usage = """wee_config --help
+usage = """Usage: wee_config --help
        wee_config --version
        wee_config --list-drivers
        wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
-           [--driver=DRIVER]
+           [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
-           [--location="Home Sweet Home"] [--units=(us|metric)]
-           [--no-prompt]
-       wee_config --update CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG
-           [--output=OUT_CONFIG] [--no-prompt]
-       wee_config --merge  CONFIG_FILE|--config=CONFIG_FILE --dist-config=DIST_CONFIG 
-           --output=OUT_CONFIG
-       wee_config --modify CONFIG_FILE|--config=CONFIG_FILE
-           [--driver=DRIVER]
+           [--location="Home Sweet Home"]
+           [--no-prompt] [--no-backup]
+       wee_config --upgrade CONFIG_FILE|--config=CONFIG_FILE
+           --dist-config=DIST_CONFIG
+           [--output=OUT_CONFIG] [--no-prompt] [--no-backup] [--warn-on-error]
+       wee_config --reconfigure CONFIG_FILE|--config=CONFIG_FILE
+           [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
-           [--location="Home Sweet Home"] [--units=(us|metric)]
-           [--output=OUT_CONFIG] [--no-prompt]
-
-Configure a weewx configuration file, nominally weewx.conf.
+           [--location="Home Sweet Home"]
+           [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
 
 Commands:
 
---help         Show this message then exit.
---version      Show the weewx version then exit.
---list-drivers List the available weewx device drivers, then exit.
---install      Install a new configuration file starting with the contents of
-               DIST_CONFIG, prompting as necessary, then save to OUT_CONFIG.
---update       Update the contents of configuration file CONFIG_FILE to the
-               installed version of weewx, then merge the result with the
-               contents of configuration file DIST_CONFIG. Write the results
-               to CONFIG_FILE unless an OUT_CONFIG is specified.
---merge        Update the contents of configuration file CONFIG_FILE,
-               then merge the result into configuration file DIST_CONFIG.
-               Write the results to OUT_CONFIG.
---modify       Modify the configuration file, prompting as necessary.
-               Use this to select a driver, specify the units for display,
-               or specify station information such as latitude and longitude.
+--list-drivers  List the available weewx device drivers, then exit.
+--install       Install a new configuration file starting with the contents of
+                DIST_CONFIG, prompting for station parameters.
+--upgrade       Update the contents of configuration file CONFIG_FILE to the
+                installed version, then merge the result with the contents of
+                configuration file DIST_CONFIG. 
+--reconfigure   Modify an existing configuration file CONFIG_FILE with any
+                specified station parameters.  Use this command with the
+                driver option to change the device driver.
+
+Station parameters:
+
+  --driver      --units
+  --latitude    --longitude
+  --altitude    --location
 """
 
 def main():
@@ -66,24 +63,22 @@ def main():
     parser.add_option("--list-drivers", action="store_true",
                       help="List the available device drivers.")
     parser.add_option("--install", action="store_true",
-                      help="Install a new configuration file, prompting"
-                      " as necessary.")
-    parser.add_option("--update", action="store_true",
-                      help="Update an existing configuration file.")
-    parser.add_option("--merge", action="store_true",
-                      help="Merge an existing configuration file.")
-    parser.add_option("--modify", action="store_true",
-                      help="Modify an existing configuration file, prompting"
-                      " as necessary.")
+                      help="Install a new configuration file.")
+    parser.add_option("--upgrade", action="store_true",
+                      help="Update an existing configuration file, then merge "
+                      "with contents of DIST_CONFIG.")
+    parser.add_option("--reconfigure", action="store_true",
+                      help="Reconfigure an existing configuration file.")
     parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
     parser.add_option("--dist-config",
-                      help="Use new/template configuration file DIST_CONFIG.")
+                      help="Use template configuration file DIST_CONFIG.")
     parser.add_option("--output", metavar="OUT_CONFIG",
-                      help="Save to configuration file OUT_CONFIG.")
+                      help="Save to configuration file OUT_CONFIG.  If not "
+                      "specified then replace existing configuration file.")
     parser.add_option("--driver", metavar="DRIVER",
-                      help="Use the driver DRIVER."
-                      " For example, weewx.driver.vantage")
+                      help="Use the driver DRIVER. "
+                      "For example, weewx.driver.vantage")
     parser.add_option("--latitude", metavar="yy.y",
                       help="The station latitude in decimal degrees.")
     parser.add_option("--longitude", metavar="xx.x",
@@ -95,11 +90,15 @@ def main():
                       help="""A text description of the station."""
                       """ For example, "Santa's workshop, North Pole" """)
     parser.add_option("--units", choices=["us", "metric"], metavar="(metric|us)",
-                      help="Set display units to 'metric' or 'us'")
+                      help="Set display units to 'metric' or 'us'.")
     parser.add_option("--no-prompt", action="store_true",
                       help="Do not prompt. Use default or specified values.")
     parser.add_option("--no-backup", action="store_true", default=False,
-                      help="Do not save a backup of any existing files.")
+                      help="When replacing an existing configuration file, "
+                      "do not create a backup copy.")
+    parser.add_option("--warn-on-error", action="store_true", default=False,
+                      help="Only warn if an update is not possible.  Default "
+                      "behavior is to warn then exit.")
     parser.add_option("--debug", action="store_true",
                       help="Show diagnostic information while running.")
 

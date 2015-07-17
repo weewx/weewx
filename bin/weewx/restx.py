@@ -320,6 +320,7 @@ class RESTThread(threading.Thread):
                 # problem. Exit.
                 syslog.syslog(syslog.LOG_CRIT, "restx: %s: Unexpected exception of type %s" % 
                               (self.protocol_name, type(e)))
+                weeutil.weeutil.log_traceback('*** ', syslog.LOG_DEBUG)
                 syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting. Reason: %s" % 
                               (self.protocol_name, e))
                 return
@@ -451,24 +452,14 @@ class StdWunderground(StdRESTful):
         
         super(StdWunderground, self).__init__(engine, config_dict)
         
-        # Extract the required parameters. If one of them is missing,
-        # a KeyError exception will occur. Be prepared to catch it.
-        try:
-            # Extract a copy of the dictionary with the WU options:
-            _ambient_dict = accumulateLeaves(config_dict['StdRESTful']['Wunderground'], max_level=1)
-            # A convenient way to check for missing required key words.
-            _ambient_dict['station']
-            _ambient_dict['password']
-        except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, 
-                          "restx: Wunderground: Data will not be posted: Missing option %s" % e)
-            return
+        _ambient_dict = check_enable(config_dict, 'Wunderground', 'station', 'password')
+
+        if _ambient_dict is None:
+            return        
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict(
-            config_dict['DataBindings'],
-            config_dict['Databases'],
-            'wx_binding')
+        _manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                                   'wx_binding')
         
         # The default is to not do an archive post if a rapidfire post
         # has been specified, but this can be overridden
@@ -522,25 +513,13 @@ class StdPWSWeather(StdRESTful):
         
         super(StdPWSWeather, self).__init__(engine, config_dict)
         
-        # Extract the required parameters. If one of them is missing,
-        # a KeyError exception will occur. Be prepared to catch it.
-        try:
-            # Extract a copy of the dictionary with the PWS options:
-            _ambient_dict = accumulateLeaves(config_dict['StdRESTful']['PWSweather'], max_level=1)
-            # A convenient way to check for missing required key words.
-            _ambient_dict['station']
-            _ambient_dict['password']
-        except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, 
-                          "restx: PWSWeather: Data will not be posted: "
-                          "Missing option %s" % e)
+        _ambient_dict = check_enable(config_dict, 'PWSweather', 'station', 'password')
+        if _ambient_dict is None:
             return
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict(
-            config_dict['DataBindings'],
-            config_dict['Databases'],
-            'wx_binding')
+        _manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                                   'wx_binding')
                 
         _ambient_dict.setdefault('server_url', StdPWSWeather.archive_url)
         self.archive_queue = Queue.Queue()
@@ -573,24 +552,13 @@ class StdWOW(StdRESTful):
         
         super(StdWOW, self).__init__(engine, config_dict)
         
-        # Extract the required parameters. If one of them is missing,
-        # a KeyError exception will occur. Be prepared to catch it.
-        try:
-            # Extract a copy of the dictionary with the WOW options:
-            _ambient_dict = accumulateLeaves(config_dict['StdRESTful']['WOW'], max_level=1)
-            # A convenient way to check for missing required key words.
-            _ambient_dict['station']
-            _ambient_dict['password']
-        except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: WOW: Data will not be posted: "
-                          "Missing option %s" % e)
+        _ambient_dict = check_enable(config_dict, 'WOW', 'station', 'password')
+        if _ambient_dict is None:
             return
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict(
-            config_dict['DataBindings'],
-            config_dict['Databases'],
-            'wx_binding')
+        _manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                                   'wx_binding')
                 
         _ambient_dict.setdefault('server_url', StdWOW.archive_url)
         self.archive_queue = Queue.Queue()
@@ -733,6 +701,10 @@ class AmbientThread(RESTThread):
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
         _url = "%s?%s" % (self.server_url, _urlquery)
+        # show the url in the logs for debug, but mask any password
+        if weewx.debug >= 2:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: Ambient: url: %s" %
+                          re.sub(r"PASSWORD=[^\&]*", "PASSWORD=XXX", _url))
         return _url
                 
     def check_response(self, response):
@@ -796,6 +768,11 @@ class WOWThread(AmbientThread):
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
         _url = "%s?%s" % (self.server_url, _urlquery)
+        # show the url in the logs for debug, but mask any password
+        if weewx.debug >= 2:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: WOW: url: %s" % 
+                          re.sub(r"siteAuthenticationKey=[^\&]*",
+                                 "siteAuthenticationKey=XXX", _url))
         return _url
 
     def post_request(self, request):
@@ -835,28 +812,24 @@ class StdCWOP(StdRESTful):
         
         super(StdCWOP, self).__init__(engine, config_dict)
         
-        # Extract the required parameters. If one of them is missing,
-        # a KeyError exception will occur. Be prepared to catch it.
-        try:
-            # Extract a copy of the dictionary with the CWOP options:
-            _cwop_dict = accumulateLeaves(config_dict['StdRESTful']['CWOP'], max_level=1)
-            _cwop_dict['station'] = _cwop_dict['station'].upper()
-            
-            # See if this station requires a passcode:
-            if re.match(StdCWOP.valid_prefix_re, _cwop_dict['station']):
-                _cwop_dict.setdefault('passcode', '-1')
-            elif not _cwop_dict.has_key('passcode'):
-                raise KeyError('passcode')
-        except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: CWOP: Data will not be posted. "
-                          "Missing option: %s" % e)
+        _cwop_dict = check_enable(config_dict, 'CWOP', 'station')
+        if _cwop_dict is None:
+            return
+        
+        _cwop_dict['station'] = _cwop_dict['station'].upper()
+        
+        # See if this station requires a passcode:
+        if re.match(StdCWOP.valid_prefix_re, _cwop_dict['station']):
+            # It does not. 
+            _cwop_dict.setdefault('passcode', '-1')
+        elif not _cwop_dict.has_key('passcode'):
+            syslog.syslog(syslog.LOG_NOTICE, 
+                          "APRS station %s requires passcode" % _cwop_dict['station'])
             return
 
-        # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict(
-            config_dict['DataBindings'],
-            config_dict['Databases'],
-            'wx_binding')
+        # Get the database manager dictionary:
+        _manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                                   'wx_binding')
         
         _cwop_dict.setdefault('latitude',  self.engine.stn_info.latitude_f)
         _cwop_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
@@ -1333,6 +1306,7 @@ class StdAWEKAS(StdRESTful):
 
     [StdRESTful]
         [[AWEKAS]]
+            enable   = True
             username = AWEKAS_USERNAME
             password = AWEKAS_PASSWORD
     
@@ -1405,23 +1379,17 @@ class StdAWEKAS(StdRESTful):
 
     def __init__(self, engine, config_dict):
         super(StdAWEKAS, self).__init__(engine, config_dict)
-        try:
-            site_dict = accumulateLeaves(config_dict['StdRESTful']['AWEKAS'],
-                                         max_level=1)
-            site_dict['username']
-            site_dict['password']
-        except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: AWEKAS: "
-                          "Data will not be posted: Missing option %s" % e)
+        
+        site_dict = check_enable(config_dict, 'AWEKAS', 'username', 'password')
+        if site_dict is None:
             return
+
         site_dict.setdefault('latitude', engine.stn_info.latitude_f)
         site_dict.setdefault('longitude', engine.stn_info.longitude_f)
         site_dict.setdefault('language', 'de')
 
-        site_dict['manager_dict'] = weewx.manager.get_manager_dict(
-            config_dict['DataBindings'],
-            config_dict['Databases'],
-            'wx_binding')
+        site_dict['manager_dict'] = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                                               'wx_binding')
         
         self.archive_queue = Queue.Queue()
         self.archive_thread = AWEKASThread(self.archive_queue, **site_dict)
@@ -1606,7 +1574,10 @@ class AWEKASThread(RESTThread):
 
         valstr = ';'.join(values)
         url = self.server_url + '?val=' + valstr
-        syslog.syslog(syslog.LOG_DEBUG, 'restx: AWEKAS: url: %s' % url)
+        # show the url in the logs for debug, but mask any credentials
+        if weewx.debug >= 2:
+            syslog.syslog(syslog.LOG_DEBUG, 'restx: AWEKAS: url: %s' %
+                          re.sub(m.hexdigest(), "XXX", url))
         return url
 
     def _format(self, record, label):
@@ -1615,3 +1586,42 @@ class AWEKASThread(RESTThread):
                 return self._FORMATS[label] % record[label]
             return str(record[label])
         return ''
+
+####################################################################################
+
+def check_enable(config_dict, service, *args):
+
+    try:
+        site_dict = accumulateLeaves(config_dict['StdRESTful'][service],
+                                     max_level=1)
+    except KeyError:
+        syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
+                      "No config info. Skipped." % service)
+        return None
+
+    # If site_dict has the key 'enable' and it is False, then
+    # the service is not enabled.
+    try:
+        if not to_bool(site_dict['enable']):
+            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
+                          "Posting not enabled." % service)
+            return None
+    except KeyError:
+        pass
+        
+    # At this point, either the key 'enable' does not exist, or
+    # it is set to True. Check to see whether all the needed
+    # options exist, and none of them have been set to 'replace_me':
+    try:
+        for option in args:
+            if site_dict[option] == 'replace_me':
+                raise KeyError(option)
+    except KeyError, e:
+        syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
+                      "Data will not be posted: Missing option %s" % (service, e))
+        return None
+
+    # Get rid of the no longer needed key 'enable':
+    site_dict.pop('enable', None)
+    
+    return site_dict

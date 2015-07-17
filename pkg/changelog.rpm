@@ -1,3 +1,14 @@
+* Wed Jul 15 2015 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 3.2.0-1
+- new upstream release
+* Wed Jul 15 2015 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 3.2.0-1
+- new upstream release
+* Wed Jul 15 2015 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 3.2.0b3-1
+- new upstream release
+* Tue Jul 07 2015 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 3.2.0b1-1
+- new upstream release
+- fixes to rpm pre/post scripts in weewx.spec
+* Sun Jul 05 2015 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 3.2.0a4-1
+- new upstream release
 * Sat Apr 25 2015 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 3.2.0a1-1
 - new upstream release
 - use unified wee_X utilities

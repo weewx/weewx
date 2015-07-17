@@ -92,7 +92,7 @@ cat weewx.conf | sed \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's%HTML_ROOT =.*%HTML_ROOT = /var/www/html/weewx%' \
- -e 's%archive/weewx.sdb%/var/lib/weewx/weewx.sdb%' \
+ -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
 cat util/init.d/weewx.%{platform} | sed \
  -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
@@ -111,25 +111,32 @@ ln -s ../share/weewx/wee_reports %{buildroot}%{_bindir}/wee_reports
 # pre-compile the python code
 python -m compileall %{buildroot}%{dst_bin_dir}
 
+%pre
+if [ "$1" = "2" ]; then
+  # this is an upgrade
+  if [ -f %{cfg_file} ]; then
+    echo saving previous config as %{cfg_file}.prev
+    cp -p %{cfg_file} %{cfg_file}.prev
+  fi
+fi
+
 %post
 python -m compileall %{dst_bin_dir}
 if [ "$1" = "1" ]; then
   # this is a new installation
-  /usr/share/weewx/wee_config --modify --config=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --no-prompt --no-backup
+  # create a sane configuration file with simulator as the station type
+  /usr/share/weewx/wee_config --install --dist-config=/etc/weewx/weewx.conf.dist --output=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --no-prompt --no-backup
   chkconfig weewx on
   %{initdir}/weewx start
 elif [ "$1" = "2" ]; then
   # this is an upgrade
-  # merge changes to weewx.conf
-  if [ -f %{cfg_file}.dist ]; then
-    NEWVER=`/usr/share/weewx/wee_config --version`
-    OLDVER=`grep version %{cfg_file} | sed -e 's/\s*version\s*=\s*//'`
-    echo saving previous config file as %{cfg_file}-$OLDVER
-    mv %{cfg_file} %{cfg_file}-$OLDVER
-    echo saving distribution config file as %{cfg_file}-$NEWVER
-    cp -p %{cfg_file}.dist %{cfg_file}-$NEWVER
-    echo merging previous and distribution into %{cfg_file}
-    /usr/share/weewx/wee_config --merge --config %{cfg_file}-$OLDVER --dist-config %{cfg_file}-$NEWVER --output %{cfg_file} --no-backup
+  # update previous config and merge with dist into to weewx.conf
+  if [ -f %{cfg_file}.dist -a -f %{cfg_file}.prev ]; then
+    OLDVER=`grep version %{cfg_file}.prev | sed -e 's/\s*version\s*=\s*//'`
+    echo saving previous config as %{cfg_file}-$OLDVER
+    mv %{cfg_file}.prev %{cfg_file}-$OLDVER
+    echo merging configs into %{cfg_file}
+    /usr/share/weewx/wee_config --upgrade --config=%{cfg_file}-$OLDVER --dist-config=%{cfg_file}.dist --output=%{cfg_file} --no-prompt --no-backup
   fi
   # do a full restart not just a HUP
   %{initdir}/weewx stop

@@ -31,36 +31,37 @@ class ConfigEngine(object):
         if options.list_drivers:
             weecfg.print_drivers()
             sys.exit(0)
-    
+
         #
         # Check for errors in the options.
         #
 
-        # Must have some command:
-        if not options.install and not options.update and \
-                not options.merge and not options.modify:
-            sys.exit("No command specified")
-
-        # Can have only one of install, update, and merge:
+        # Must have one, and only one, of install, upgrade, and reconfigure:
         if sum(1 if x is True else 0 for x in [options.install,
-                                               options.update,
-                                               options.merge]) > 1:
-            sys.exit("Only one of install, update, or merge may be specified")
+                                               options.upgrade,
+                                               options.reconfigure]) != 1:
+            sys.exit("No command specified.")
 
         # Check for missing --dist-config
-        if (options.install or options.update or options.merge) and not options.dist_config:
-            sys.exit("The option --dist-config must be specified")
+        if (options.install or options.upgrade) and not options.dist_config:
+            sys.exit("The commands --install and --upgrade require option --dist-config.")
 
-        # The install and merge commands require --output. Indeed,
-        # this is the only difference between --update and --merge.
-        if (options.install or options.merge) and not options.output:
-            sys.exit("The option --output must be specified")
+        if options.install and not options.output:
+            sys.exit("The --install command requires option --output.")
 
         # The install option does not take an old config file
         if options.install and (options.config_path or len(args)):
-            sys.exit("The install command does not require the config option")
+            sys.exit("The --install command does not require the config option.")
+            
+        #
+        # Error checking done. Now run the commands.
+        #
+        
+        # First, fiddle with option --altitude to convert it into a list:
+        if options.altitude:
+            options.altitude = options.altitude.split(",")
 
-        if options.install or options.update or options.merge:
+        if options.install or options.upgrade:
             # These options require a distribution config file. 
             # Open it up and parse it:
             try:        
@@ -88,21 +89,19 @@ class ConfigEngine(object):
 
         output_path = None
 
-        if options.update or options.merge:
-            # Update the old configuration contents
-            weecfg.update_config(config_dict)
-            
-            # Then merge it into the distribution contents
-            weecfg.merge_config(config_dict, dist_config_dict)
+        if options.upgrade:
+            # Update the config dictionary, then merge it with the distribution
+            # dictionary
+            weecfg.update_and_merge(config_dict, dist_config_dict)
 
             # Save to the specified output
             output_path = options.output
             
-        if options.install or options.modify:
+        if options.install or options.reconfigure:
             # Modify the configuration contents
             self.modify_config(config_dict, options)
 
-            # Save to the specified output, or the original location if not specified
+            # Save to the specified output, or the original location, if not specified
             output_path = options.output if options.output else config_path
 
         if output_path is not None:

@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.2.0 XX/XX/XX
+3.2.0 07/15/15
 
 There are now five command-line utilities, some new, some old
  - wee_config:    (New) For configuring weewx.conf, in particular, 
@@ -11,6 +11,9 @@ There are now five command-line utilities, some new, some old
  - wee_device:    (Formerly called wee_config_device)
  - wee_reports:   No changes.
  
+The script setup.py is no longer used to install or uninstall extensions.
+Instead, use the new utility wee_extension.
+
 Wunderfixer is now included with weewx --- no need to download it separately. 
 It now works with MySQL, as well as sqlite, databases. It also supports
 metric databases. Thanks to user Gary Roderick!
@@ -26,8 +29,6 @@ theoretical solar radiation, beaufort, and cloudbase to StdWXCalculate.
 If StdWXCalculate cannot calculate a derived variable when asked to, it now
 sets the value to null. Fixes issue #10.
 
-$almanac.sunrise and $almanac.sunset now return ValueHelpers. Fixes issue #26.
-
 Added option to specify algorithm in StdWXCalculate.  So far this applies
 only to the altimeter calculation.
 
@@ -35,6 +36,8 @@ Added option max_delta_12h in StdWXCalculate, a window in which a record will
 be accepted as being "12 hours ago." Default is 1800 seconds.
 
 Fixed bug in debian install script - 'Acurite' was not in the list of stations.
+
+$almanac.sunrise and $almanac.sunset now return ValueHelpers. Fixes issue #26.
 
 Added group_distance with units mile and km.
 
@@ -57,6 +60,8 @@ should the alarm expression include a variable not in the archive record.
 
 Fixed bug that shows itself if marker_size is not specified in skin.conf
 
+Show URLs in the log for restful uploaders when debug=2 or greater.
+
 Fixed problem that could cause an exception in the WMR200 driver when
 formatting an error string.
 
@@ -66,6 +71,12 @@ Added data_format option to FineOffset driver.  Thanks to Darryl Dixon.
 
 Decoding of data is now more robust in the WS1 driver.  Get data from the
 station as fast as the station can spit it out.  Thanks to Michael Walker.
+
+Changes to the WS23xx driver include:
+  - Fixed wind speed values when reading from logger.  Values were too
+    high by a factor of 10.
+  - wrapped non-fatal errors in WeeWXIO exceptions to improve error
+    handling and failure recovery
 
 Changes to the AcuRite driver include:
  - The AcuRite driver now reports partial packets as soon as it gets them
@@ -77,6 +88,35 @@ Changes to the AcuRite driver include:
  - Use 13 bits for rain counter instead of 12 bits
  - Use only 12 bits for inside temperature in acurite driver when decoding
      for 02032 stations
+
+Changes to the TE923 driver include:
+ - consolidated retries
+ - improved error handling and reporting
+
+Changes to the WMR9x8 driver include:
+ - Correct bug that caused yesterday's rain to be decoded as dayRain
+ - LOOP packet type 'battery' is now an int, instead of a bool
+ - The driver can now be run standalone for debugging purposes.
+ 
+The Vantage driver now catches undocumented termios exceptions and converts
+them to weewx exceptions. This allows retries if flushing input or output
+buffers fail. Fixes issue #34.
+
+Default values for databases are now defined in a new section [DatabaseTypes]. 
+New option "database_type" links databases to database type. Installer will
+automatically update old weewx.conf files.
+
+The RESTful services that come with weewx are now turned on and off by
+option "enable". Installer will automatically update old weewx.conf files. 
+Other RESTful services that don't use this method will continue to work.
+
+Option bar_gap_fraction is now ignored. Bar plot widths are rendered explicitly
+since V3.0, making the option unnecessary. Fixes issue #25.
+
+Added additional debug logging to main engine loop.
+
+FTP uploader now retries several times to connect to a server, instead of 
+giving up after one try. Thanks to user Craig Hunter!
 
 
 3.1.0 02/05/15
@@ -191,7 +231,7 @@ Alternate times can also be specified:
   $current($timestamp=$othertime).outTemp
 
 Explicit time differences for trends can now be specified:
-$trend($time_delta=3600).barometer
+  $trend($time_delta=3600).barometer
 
 Introduced a new tag $latest, which uses the last available timestamp
 in a data binding (which may or may not be the same as the "current"

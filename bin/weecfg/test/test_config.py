@@ -17,6 +17,7 @@ import distutils.dir_util
 import configobj
 
 import weecfg.extension
+import weeutil.weeutil
 
 try:
     from mock import patch
@@ -52,6 +53,8 @@ y_str = """
           b = 12
         [section_e]
           c = 15"""
+
+current_config_dict_path = "../../../weewx.conf"
 
 class ConfigTest(unittest.TestCase):
 
@@ -100,7 +103,7 @@ class ConfigTest(unittest.TestCase):
         yio = StringIO.StringIO(y_str)
         x_dict = configobj.ConfigObj(xio)
         y_dict = configobj.ConfigObj(yio)
-        weecfg.conditional_merge(x_dict, y_dict)
+        weeutil.weeutil.conditional_merge(x_dict, y_dict)
         self.assertEqual("{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, 'section_c': {'c': '3'}, "
                          "'section_d': {'d': '4'}, 'section_e': {'c': '15'}}", str(x_dict))
 
@@ -266,9 +269,12 @@ class ConfigTest(unittest.TestCase):
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""
         driver_info_dict = weecfg.get_driver_infos()
-        # Cannot really test for version numbers of all drivers. Pick one.
-        self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['name'], 'WMR100')
+        self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['module_name'], 'weewx.drivers.wmr100')
+        # Test for the driver name
+        self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['driver_name'], 'WMR100')
+        # Cannot really test for version numbers of all drivers. Pick one. Import it...
         import weewx.drivers.wmr100
+        # ... and see if the version number matches
         self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['version'], weewx.drivers.wmr100.DRIVER_VERSION)
         del weewx.drivers.wmr100
         
@@ -277,16 +283,22 @@ class ConfigTest(unittest.TestCase):
         # Start with a typical V2.0 user file:
         config_dict = configobj.ConfigObj('weewx_user.conf')
 
-        # The V3.1 config file becomes the template:
-        template = configobj.ConfigObj('weewx31.conf')
+        # The current config file becomes the template:
+        template = configobj.ConfigObj(current_config_dict_path)
 
         # First update, then merge:
-        weecfg.update_config(config_dict)
-        weecfg.merge_config(config_dict, template)
-
+        weecfg.update_and_merge(config_dict, template)
+        
+        # Reorder to make the comparisons more predictable:
+        weecfg.reorder_to_ref(config_dict)
+        
         # Write it out to a StringIO, then start checking it against the expected
         out_str = StringIO.StringIO()
         config_dict.write(out_str)
+        
+        fd = open('/home/tkeffer/tmp/merged.conf', 'w')
+        config_dict.write(fd)
+        fd.close()
 
         out_str.seek(0)
         fd_expected = open('expected/weewx_user_expected.conf')
@@ -294,7 +306,11 @@ class ConfigTest(unittest.TestCase):
         for expected in fd_expected:
             actual = out_str.readline()
             N += 1
-            self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
+            if actual.startswith('version ='):
+                actual = actual[:10]
+                expected = expected[:10]
+            else:
+                self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
 
         # Make sure there are no extra lines in the updated config:
         more = out_str.readline()
@@ -353,7 +369,7 @@ class ExtensionInstallTest(unittest.TestCase):
         self.bin_dir  = os.path.join(self.weewx_root, 'bin')
         distutils.dir_util.copy_tree('../../../bin/user', self.user_dir)
         distutils.dir_util.copy_tree('../../../skins/Standard', os.path.join(self.skin_dir, 'Standard'))
-        shutil.copy('weewx31.conf', self.weewx_root)
+        shutil.copy(current_config_dict_path, self.weewx_root)
         
     def tearDown(self):
         "Remove any installed test configuration"
@@ -364,7 +380,7 @@ class ExtensionInstallTest(unittest.TestCase):
 
     def test_install(self):
         # Find and read the test configuration
-        config_path = os.path.join(self.weewx_root,'weewx31.conf')
+        config_path = os.path.join(self.weewx_root,'weewx.conf')
         config_dict = configobj.ConfigObj(config_path)
         
         # Note that the actual location of the "mini-weewx" is over in /var/tmp
@@ -396,10 +412,10 @@ class ExtensionInstallTest(unittest.TestCase):
         # Get, then check the new config dict:
         test_dict = configobj.ConfigObj(config_path)
         self.assertEqual(test_dict['StdReport']['pmon'],
-                         {'HTML_ROOT': 'pmon', 'skin': 'pmon'})
+                         {'HTML_ROOT': 'public_html/pmon', 'skin': 'pmon'})
         self.assertEqual(test_dict['Databases']['pmon_sqlite'], 
                          {'database_name': 'pmon.sdb',
-                          'driver': 'weedb.sqlite'})
+                          'database_type': 'SQLite'})
         self.assertEqual(test_dict['DataBindings']['pmon_binding'], 
                          {'manager': 'weewx.manager.DaySummaryManager',
                           'schema': 'user.pmon.schema',
@@ -413,7 +429,7 @@ class ExtensionInstallTest(unittest.TestCase):
         
     def test_uninstall(self):
         # Find and read the test configuration
-        config_path = os.path.join(self.weewx_root,'weewx31.conf')
+        config_path = os.path.join(self.weewx_root,'weewx.conf')
         config_dict = configobj.ConfigObj(config_path)
         
         # Note that the actual location of the "mini-weewx" is over in /var/tmp

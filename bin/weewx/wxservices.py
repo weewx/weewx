@@ -40,10 +40,10 @@ class StdWXCalculate(weewx.engine.StdService):
         'dewpoint',
         'inDewpoint',
         'rainRate',
-        'maxsolarrad',
+        'maxSolarRad',
         'cloudbase',
         'humidex',
-        'apptemp',
+        'appTemp',
 #        'beaufort',
         'ET',
         'windrun',
@@ -53,11 +53,12 @@ class StdWXCalculate(weewx.engine.StdService):
         """Initialize the calculation service.  Sample configuration:
 
         [StdWXCalculate]
-            rain_period = 900
-            et_period = 3600
             ignore_zero_wind = True
-            atc = 0.8
-            wind_height = 2.0
+            rain_period = 900           # for rain rate
+            et_period = 3600            # for evapotranspiration
+            wind_height = 2.0           # for evapotranspiration
+            atc = 0.8                   # for solar radiation RS
+            nfac = 2                    # for solar radiation Bras
             max_delta_12h = 1800
             [[Calculations]]
                 windchill = hardware
@@ -65,6 +66,7 @@ class StdWXCalculate(weewx.engine.StdService):
                 dewpoint = software
             [[Algorithms]]
                 altimeter = aaASOS
+                maxSolarRad = RS
         """
         super(StdWXCalculate, self).__init__(engine, config_dict)
 
@@ -228,10 +230,16 @@ class StdWXCalculate(weewx.engine.StdService):
         # ...then divide by the period and scale to an hour
         data['rainRate'] = 3600 * rainsum / self.rain_period
 
-    def calc_maxsolarrad(self, data, data_type):
-        data['maxsolarrad'] = weewx.wxformulas.solar_rad_RS(
-            self.latitude, self.longitude, self.altitude_m, data['dateTime'],
-            self.atc)
+    def calc_maxSolarRad(self, data, data_type):
+        algo = self.algorithms.get('maxSolarRad', 'RS')
+        if algo == 'Bras':
+            data['maxSolarRad'] = weewx.wxformulas.solar_rad_Bras(
+                self.latitude, self.longitude, self.altitude_m,
+                data['dateTime'], self.nfac)
+        else:
+            data['maxSolarRad'] = weewx.wxformulas.solar_rad_RS(
+                self.latitude, self.longitude, self.altitude_m,
+                data['dateTime'], self.atc)
 
     def calc_cloudbase(self, data, data_type):
         if 'outTemp' in data and 'outHumidity' in data:        
@@ -247,9 +255,9 @@ class StdWXCalculate(weewx.engine.StdService):
         else:
             data['humidex'] = None
 
-    def calc_apptemp(self, data, data_type):
+    def calc_appTemp(self, data, data_type):
         if 'outTemp' in data and 'outHumidity' in data and 'windSpeed' in data:
-            data['apptemp'] = weewx.wxformulas.apptempF(
+            data['appTemp'] = weewx.wxformulas.apptempF(
                 data['outTemp'], data['outHumidity'], data['windSpeed'])
         else:
             data['apptemp'] = None
@@ -343,7 +351,7 @@ class StdWXCalculate(weewx.engine.StdService):
         if ts12 != self.ts_12h_ago:
             # We're in a new interval. Hit the database to get the temperature
             dbmanager = self.engine.db_binder.get_manager('wx_binding')
-            record = dbmanager.getRecord(ts12, max_delta = self.max_delta_12h)
+            record = dbmanager.getRecord(ts12, max_delta=self.max_delta_12h)
             if record is None:
                 # Nothing in the database. Set temperature to None.
                 self.temperature_12h_ago = None

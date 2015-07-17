@@ -95,24 +95,6 @@ Memory Map
 - 1
 
 0x0000fb - records
-
-Random Notes
-
-Here are some tidbits for usb putzing.  The documentation for reading/writing
-USB in python is scarce.  Apparently there are (at least) two ways of reading
-from USB - one using interruptRead, the other doing bulk reads.  Which you use
-may depend on the device itself.
-
-There are at least two Python interfaces, e.g. claim_interface vs
-claimInterface.
-
-  usb_control_msg(0x21,    # request type
-                  0x09,    # request
-                  0x0200,  # value
-                  0x0000,  # index
-                  buf,     # buffer
-                  0x08,    # size
-                  timeout) # timeout
 """
 
 # TODO: figure out how to set station time, if possible
@@ -131,7 +113,7 @@ claimInterface.
 #       do the other 4 bytes represent?
 
 # FIXME: speed up transfers: 
-# date;PYTHONPATH=bin python bin/weewx/drivers/te923.py --records 0 > b; date
+# date; PYTHONPATH=bin python bin/weewx/drivers/te923.py --records 0 > b; date
 # Tue Nov 26 10:37:36 EST 2013
 # Tue Nov 26 10:46:27 EST 2013
 # date; /home/mwall/src/te923tool-0.6.1/te923con -d > a; date
@@ -148,7 +130,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.12'
+DRIVER_VERSION = '0.14'
 
 def loader(config_dict, engine):
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -162,7 +144,6 @@ def confeditor_loader():
 
 DEBUG_READ = 0
 DEBUG_DECODE = 0
-DEBUG_PRESSURE = 0
 
 # map the 5 remote sensors to columns in the database schema
 DEFAULT_SENSOR_MAP = {
@@ -350,26 +331,24 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         model: Which station model is this?
         [Optional. Default is 'TE923']
         """
-        self._last_rain        = None
+        self._last_rain = None
 
         global DEBUG_READ
-        DEBUG_READ             = int(stn_dict.get('debug_read', 0))
+        DEBUG_READ = int(stn_dict.get('debug_read', 0))
         global DEBUG_DECODE
-        DEBUG_DECODE           = int(stn_dict.get('debug_decode', 0))
-        global DEBUG_PRESSURE
-        DEBUG_PRESSURE         = int(stn_dict.get('debug_pressure', 0))
+        DEBUG_DECODE = int(stn_dict.get('debug_decode', 0))
 
-        self.model             = stn_dict.get('model', 'TE923')
-        self.max_tries         = int(stn_dict.get('max_tries', 5))
-        self.retry_wait        = int(stn_dict.get('retry_wait', 30))
-        self.polling_interval  = int(stn_dict.get('polling_interval', 10))
-        self.sensor_map    = stn_dict.get('sensor_map', DEFAULT_SENSOR_MAP)
-        self.battery_map   = stn_dict.get('battery_map', DEFAULT_BATTERY_MAP)
-        self.memory_size       = stn_dict.get('memory_size', 'small')
+        self.model = stn_dict.get('model', 'TE923')
+        self.max_tries = int(stn_dict.get('max_tries', 5))
+        self.retry_wait = int(stn_dict.get('retry_wait', 3))
+        self.polling_interval = int(stn_dict.get('polling_interval', 10))
+        self.sensor_map = stn_dict.get('sensor_map', DEFAULT_SENSOR_MAP)
+        self.battery_map = stn_dict.get('battery_map', DEFAULT_BATTERY_MAP)
+        self.memory_size = stn_dict.get('memory_size', 'small')
 
-        vendor_id              = int(stn_dict.get('vendor_id',  '0x1130'), 0)
-        product_id             = int(stn_dict.get('product_id', '0x6801'), 0)
-        device_id              = stn_dict.get('device_id', None)
+        vendor_id = int(stn_dict.get('vendor_id', '0x1130'), 0)
+        product_id = int(stn_dict.get('product_id', '0x6801'), 0)
+        device_id = stn_dict.get('device_id', None)
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('polling interval is %s' % str(self.polling_interval))
@@ -385,42 +364,27 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         return self.model
 
     def closePort(self):
-        self.station.close()
-        self.station = None
+        if self.station is not None:
+            self.station.close()
+            self.station = None
 
     def genLoopPackets(self):
-        ntries = 0
-        while ntries < self.max_tries:
-            ntries += 1
-            try:
-                data = self.station.get_readings()
-                status = self.station.get_status()
-                packet = data_to_packet(data, status=status,
-                                        last_rain=self._last_rain,
-                                        sensor_map=self.sensor_map,
-                                        battery_map=self.battery_map)
-                self._last_rain = packet['rainTotal']
-                ntries = 0
-                yield packet
-                time.sleep(self.polling_interval)
-            except usb.USBError, e:
-                # FIXME: if 'No such device' we should bail out immediately.
-                # unfortunately there is no reliable way (?) to get the type
-                # of USBError.  so retry on every type.
-                logerr("Failed attempt %d of %d to get LOOP data: %s" %
-                       (ntries, self.max_tries, e))
-                logdbg("Waiting %d seconds before retry" % self.retry_wait)
-                time.sleep(self.retry_wait)
-        else:
-            msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
-            logerr(msg)
-            raise weewx.RetriesExceeded(msg)
+        while True:
+            data = self.station.get_readings(self.max_tries, self.retry_wait)
+            status = self.station.get_status(self.max_tries, self.retry_wait)
+            packet = data_to_packet(data, status=status,
+                                    last_rain=self._last_rain,
+                                    sensor_map=self.sensor_map,
+                                    battery_map=self.battery_map)
+            self._last_rain = packet['rainTotal']
+            yield packet
+            time.sleep(self.polling_interval)
 
 #    def genArchiveRecords(self, since_ts):
 #        pass
 
     def getConfig(self):
-        data = self.station.get_status()
+        data = self.station.get_status(self.max_tries, self.retry_wait)
         return data
 
 def data_to_packet(data, status=None, last_rain=None,
@@ -753,6 +717,7 @@ class BadRead(weewx.WeeWxIOError):
 class TE923(object):
     ENDPOINT_IN = 0x81
     READ_LENGTH = 0x8
+    TIMEOUT = 1000
 
     def __init__(self, vendor_id=0x1130, product_id=0x6801,
                  dev_id=None, memory_size='small'):
@@ -782,11 +747,12 @@ class TE923(object):
         self.devh = dev.open()
         if not self.devh:
             raise weewx.WeeWxIOError('Open USB device failed')
+        self.devh.reset()
 
         # be sure kernel does not claim the interface
         try:
             self.devh.detachKernelDriver(interface)
-        except Exception:
+        except (AttributeError, usb.USBError):
             pass
 
         # attempt to claim the interface
@@ -811,7 +777,8 @@ class TE923(object):
     # properly received.
     #
     # FIXME: must be a better way to know when there are no more data
-    def _raw_read(self, addr, timeout=50):
+    # NB: the timeout matters.  values less than 50 result in timeouts.
+    def _raw_read(self, addr):
         reqbuf = [0x05, 0xAF, 0x00, 0x00, 0x00, 0x00, 0xAF, 0xFE]
         reqbuf[4] = addr / 0x10000
         reqbuf[3] = (addr - (reqbuf[4] * 0x10000)) / 0x100
@@ -822,30 +789,41 @@ class TE923(object):
                                    value=0x0200,
                                    index=0x0000,
                                    buffer=reqbuf,
-                                   timeout=timeout)
+                                   timeout=self.TIMEOUT)
         if ret != 8:
             raise BadRead('Unexpected response to data request: %s != 8' % ret)
 
         time.sleep(0.1)  # te923tool is 0.3
         start_ts = time.time()
         rbuf = []
-        try:
-            while time.time() - start_ts < 5:
+        while time.time() - start_ts < 5:
+            try:
                 buf = self.devh.interruptRead(self.ENDPOINT_IN,
-                                              self.READ_LENGTH, timeout)
+                                              self.READ_LENGTH, self.TIMEOUT)
                 if buf:
                     nbytes = buf[0]
                     if nbytes > 7 or nbytes > len(buf)-1:
                         raise BadRead("Bogus length during read: %d" % nbytes)
                     rbuf.extend(buf[1:1+nbytes])
-                else:
+                if len(rbuf) >= 34:
                     break
-                time.sleep(0.009)  # te923tool is 0.15
-        except usb.USBError, e:
-            logdbg('usb error while reading: %s' % e)
+            except usb.USBError, e:
+                # FIXME: if 'No such device' we should bail out immediately.
+                # unfortunately there is no reliable way (?) to get the type
+                # of USBError.  we often get an exception of "could not detach
+                # kernel driver from interface 0: No data available" or
+                # "No error", but this seems to indicate no more data, or a
+                # usb timing/comm failure, not an actual error condition.
+#                logdbg('usb error while reading: %s' % e)
+                pass
+            time.sleep(0.009) # te923tool is 0.15
+        else:
+            raise BadRead("Timeout after %d bytes" % len(rbuf))
 
         if len(rbuf) < 34:
             raise BadRead("Not enough bytes: %d < 34" % len(rbuf))
+        elif len(rbuf) != 34:
+            loginf("Wrong number of bytes: %d != 34" % len(rbuf))
         if rbuf[0] != 0x5a:
             raise BadRead("Bad header byte: %02x != %02x" % (rbuf[0], 0x5a))
 
@@ -856,7 +834,7 @@ class TE923(object):
             raise BadRead("Bad crc: %02x != %02x" % (crc, rbuf[33]))
         return rbuf
 
-    def _read(self, addr, max_tries=100):
+    def _read(self, addr, max_tries=10, retry_wait=5):
         if DEBUG_READ:
             logdbg("reading station at address 0x%06x" % addr)
         for cnt in range(max_tries):
@@ -865,10 +843,13 @@ class TE923(object):
                 if DEBUG_READ:
                     logdbg("BUF  " + ' '.join(["%02x" % x for x in buf]))
                 return buf
-            except BadRead, e:
-                logdbg("Bad read (attempt %d of %d): %s" % (cnt+1,max_tries,e))
+            except (BadRead, usb.USBError), e:
+                logerr("Failed attempt %d of %d to read data: %s" %
+                       (cnt+1, max_tries, e))
+                logdbg("Waiting %d seconds before retry" % retry_wait)
+                time.sleep(retry_wait)
         else:
-            raise BadRead("No data after %d read attempts" % max_tries)
+            raise weewx.RetriesExceeded("No data after %d tries" % max_tries)
 
     def gen_blocks(self, count=None):
         """generator that returns consecutive blocks of station memory"""
@@ -878,18 +859,18 @@ class TE923(object):
             buf = self._read(x)
             yield x, buf
 
-    def get_status(self):
+    def get_status(self, max_tries=10, retry_wait=5):
         """get station status"""
         status = {}
 
-        buf = self._read(0x98)
+        buf = self._read(0x98, max_tries, retry_wait)
         status['barVer']  = buf[1]
         status['uvVer']   = buf[2]
         status['rccVer']  = buf[3]
         status['windVer'] = buf[4]
         status['sysVer']  = buf[5]
 
-        buf = self._read(0x4c)
+        buf = self._read(0x4c, max_tries, retry_wait)
         status['batteryRain'] = buf[1] & 0x80 == 0x80
         status['batteryWind'] = buf[1] & 0x40 == 0x40
         status['batteryUV']   = buf[1] & 0x20 == 0x20
@@ -901,9 +882,9 @@ class TE923(object):
         
         return status
 
-    def get_readings(self):
+    def get_readings(self, max_tries=10, retry_wait=5):
         """get sensor readings from the station, return as dictionary"""
-        buf = self._read(0x020001)
+        buf = self._read(0x020001, max_tries, retry_wait)
         data = decode(buf[1:])
         return data
 

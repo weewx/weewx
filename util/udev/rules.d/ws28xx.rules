@@ -1,0 +1,2 @@
+# make any ws28xx transceiver connected via usb accessible to non-root
+SUBSYSTEM=="usb", ATTRS{idVendor}=="6666", ATTRS{idProduct}=="5555", MODE="0666"

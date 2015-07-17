@@ -6,7 +6,7 @@
 """Package weewx, containing modules specific to the weewx runtime engine."""
 import time
 
-__version__="3.2.0a1"
+__version__="3.2.0"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -62,6 +62,9 @@ class UninitializedDatabase(StandardError):
     
 class UnknownDatabase(StandardError):
     """Exception thrown when attempting to use an unknown database."""
+
+class UnknownDatabaseType(StandardError):
+    """Exception thrown when attempting to use an unknown database type."""
 
 class UnknownBinding(StandardError):
     """Exception thrown when attempting to use an unknown data binding."""
