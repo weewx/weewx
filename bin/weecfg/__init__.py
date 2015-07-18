@@ -379,10 +379,16 @@ def merge_config(config_dict, template_dict):
     template_dict: A newer dictionary supplied by the installer.
     """
 
-    config_dict.interpolate = False
+    # Turn off interpolation so what gets merged is the symbolic name
+    # (such as WEEWX_ROOT), and not its interpolated value. 
+    csave, config_dict.interpolation = config_dict.interpolation, False
+    tsave, template_dict.interpolation = template_dict.interpolation, False
 
     # Merge new stuff from the template:
     weeutil.weeutil.conditional_merge(config_dict, template_dict)
+    
+    config_dict.interpolation = csave
+    template_dict.interpolation = tsave
 
     # Finally, update the version number:
     config_dict['version'] = template_dict['version']
@@ -647,10 +653,13 @@ def update_to_v32(config_dict):
             assert(config_dict['Databases']['archive_sqlite']['driver'] == 'weedb.sqlite')
         except KeyError:
             pass
-        # Set the default [[SQLite]] section:
+        # Set the default [[SQLite]] section. Turn off interpolation first, so the
+        # symbol for WEEWX_ROOT does not get lost.
+        save, config_dict.interpolation = config_dict.interpolation, False
         config_dict['DatabaseTypes'] = {
             'SQLite' : {'driver': 'weedb.sqlite',
                         'SQLITE_ROOT': '%(WEEWX_ROOT)s/archive'}}
+        config_dict.interpolation = save
         try:
             root = config_dict['Databases']['archive_sqlite']['root']
             database_name = config_dict['Databases']['archive_sqlite']['database_name']
@@ -672,10 +681,10 @@ def update_to_v32(config_dict):
             assert(config_dict['Databases']['archive_mysql']['driver'] == 'weedb.mysql')
         except KeyError:
             pass
-        config_dict['DatabaseTypes'] = {'MySQL' : {'driver': 'weedb.mysql',
-                                                   'host': 'localhost',
-                                                   'user': 'weewx',
-                                                   'password': 'weewx'}}
+        config_dict['DatabaseTypes']['MySQL'] = {'driver': 'weedb.mysql',
+                                                 'host': 'localhost',
+                                                 'user': 'weewx',
+                                                 'password': 'weewx'}
         try:
             config_dict['DatabaseTypes']['MySQL']['host'] = config_dict['Databases']['archive_mysql']['host']
             config_dict['DatabaseTypes']['MySQL']['user'] = config_dict['Databases']['archive_mysql']['user']
