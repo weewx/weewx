@@ -723,6 +723,32 @@ class StdPrint(StdService):
     def new_archive_record(self, event):
         """Print out the new archive record."""
         print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), event.record
+
+#==============================================================================
+#                    Class StdBroadcast
+#==============================================================================
+
+import sys, json
+import socket as sck
+
+class StdBroadcast(StdService):
+    """Service that broadcast meteo data information when a LOOP
+    packet is received."""
+
+    def __init__(self,engine, config_dict):
+        # Pass the initialization information on to my superclass:
+        super(StdBroadcast, self).__init__(engine, config_dict)
+        self.s = sck.socket(sck.AF_INET, sck.SOCK_DGRAM)
+        self.s.bind(('', 0))
+        self.s.setsockopt(sck.SOL_SOCKET, sck.SO_BROADCAST, 1)
+        self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
+
+    def newLoopPacket(self, event):
+        """Send the new LOOP packet to the broadcast socket"""
+        data = json.dumps(event.packet) 
+        self.s.sendto(data, ('localhost', 50000))
+
+
         
 #==============================================================================
 #                    Class StdReport
