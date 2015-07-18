@@ -738,15 +738,14 @@ class StdBroadcast(StdService):
     def __init__(self,engine, config_dict):
         # Pass the initialization information on to my superclass:
         super(StdBroadcast, self).__init__(engine, config_dict)
-        self.s = sck.socket(sck.AF_INET, sck.SOCK_DGRAM)
-        self.s.bind(('', 0))
-        self.s.setsockopt(sck.SOL_SOCKET, sck.SO_BROADCAST, 1)
+        self.s = sck.socket(sck.AF_INET, sck.SOCK_DGRAM, sck.IPPROTO_UDP)
+        self.s.setsockopt(sck.IPPROTO_IP, sck.IP_MULTICAST_TTL, 2)
         self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
 
     def newLoopPacket(self, event):
         """Send the new LOOP packet to the broadcast socket"""
         data = json.dumps(event.packet) 
-        self.s.sendto(data, ('localhost', 50000))
+        self.s.sendto(data, ('224.1.1.1', 50000))
 
 
         
