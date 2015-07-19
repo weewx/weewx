@@ -13,6 +13,7 @@ sys.path.append('../bin/')
 
 import weewx
 import weewx.units
+import weeutil.weeutil
 import textwrap
 import errno
 
@@ -36,7 +37,9 @@ class MyTestApp(npyscreen.NPSAppManaged):
 
 class MainForm(npyscreen.SplitForm):
 
-    BAROMETER      = 'Barometer'
+    BAROMETER      = 'Barometer'        ## description of pressure types is on http://www.weewx.com/docs/customizing.htm#Implement_the_driver
+    PRESSURE      = 'Raw Pressure'
+    ALTIMETER   = 'QNH'
     DEWPOINT      = 'Dew Point'
     outHumidity    = 'Outside Humidity'
     outTemp        = 'Outside Temperature'
@@ -53,7 +56,11 @@ class MainForm(npyscreen.SplitForm):
     winddir        = 'Wind Direction'
 
     def create(self):
+
+        self.clock = self.add(npyscreen.TitleText, name = 'Time:', value="--", editable=False)
+        self.pressure = self.add(npyscreen.TitleText, name = self.PRESSURE +':', value="--", editable=False)
         self.barometer = self.add(npyscreen.TitleText, name = self.BAROMETER +':', value="--", editable=False)
+        self.altimeter = self.add(npyscreen.TitleText, name = self.ALTIMETER +':', value="--", editable=False)
         self.dewpoint = self.add(npyscreen.TitleText, name = self.DEWPOINT +':', value="--", editable=False)
         self.windspeed = self.add(npyscreen.TitleText, name = self.windSpeed +':', value="--", editable=False)
         self.winddir = self.add(npyscreen.TitleText, name = self.winddir +':', value="--", editable=False)
@@ -72,14 +79,24 @@ class MainForm(npyscreen.SplitForm):
                 raise
 
         self.data = json.loads(packet)
+
+        if 'pressure' in self.data:
+            pressure_data = (self.data['pressure'], 'inHg', 'group_pressure')
+            pressure_data = weewx.units.ValueHelper(pressure_data)
+            self.pressure.value = pressure_data.hPa
      
         if 'barometer' in self.data:
             barometer_data = (self.data['barometer'], 'inHg', 'group_pressure')
             barometer_data = weewx.units.ValueHelper(barometer_data)
             self.barometer.value = barometer_data.hPa
 
+        if 'altimeter' in self.data:
+            altimeter_data = (self.data['altimeter'], 'inHg', 'group_pressure')
+            altimeter_data = weewx.units.ValueHelper(altimeter_data)
+            self.altimeter.value = altimeter_data.hPa
+
         if 'dewpoint' in self.data:
-            dewpoint_data = (self.data['dewpoint'], "degree_C",  "group_temperature")
+            dewpoint_data = (self.data['dewpoint'], "degree_F",  "group_temperature")
             dewpoint_data = weewx.units.ValueHelper(dewpoint_data)
             self.dewpoint.value = dewpoint_data.degree_C
 
@@ -94,9 +111,13 @@ class MainForm(npyscreen.SplitForm):
             self.winddir.value = windspeed_data.degree_compass
 
         if 'outTemp' in self.data:
-            outtemp_data = (self.data['outTemp'], "degree_C",  "group_temperature")
+            outtemp_data = (self.data['outTemp'], "degree_F",  "group_temperature")
             outtemp_data = weewx.units.ValueHelper(outtemp_data)
             self.outtemp.value = outtemp_data.degree_C
+
+        if 'dateTime' in self.data:
+            self.clock.value = weeutil.weeutil.timestamp_to_string(self.data['dateTime'])
+
 
         self.messages.buffer(textwrap.wrap(str(packet), self.messages.width), scroll_end=True, scroll_if_editing=False)
 
