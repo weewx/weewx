@@ -13,6 +13,8 @@ sys.path.append('../bin/')
 
 import weewx
 import weewx.units
+import textwrap
+import errno
 
 
 class MyTestApp(npyscreen.NPSAppManaged):
@@ -21,7 +23,7 @@ class MyTestApp(npyscreen.NPSAppManaged):
 
     # socket code
     def onStart(self):
-        self.addForm("MAIN", MainForm, name="Screen 1", color="IMPORTANT",)
+        self.addForm("MAIN", MainForm, name="WeeView", color="IMPORTANT",)
         self.s = sck.socket(sck.AF_INET, sck.SOCK_DGRAM, sck.IPPROTO_UDP)
         self.s.setsockopt(sck.SOL_SOCKET, sck.SO_REUSEADDR, 1)
         self.s.bind(('', MYPORT))
@@ -32,7 +34,7 @@ class MyTestApp(npyscreen.NPSAppManaged):
         npyscreen.notify_wait("Goodbye!")        
         self.s.close()
 
-class MainForm(npyscreen.Form):
+class MainForm(npyscreen.SplitForm):
 
     BAROMETER      = 'Barometer'
     DEWPOINT      = 'Dew Point'
@@ -56,9 +58,19 @@ class MainForm(npyscreen.Form):
         self.windspeed = self.add(npyscreen.TitleText, name = self.windSpeed +':', value="--", editable=False)
         self.winddir = self.add(npyscreen.TitleText, name = self.winddir +':', value="--", editable=False)
         self.outtemp = self.add(npyscreen.TitleText, name = self.outTemp +':', value="--", editable=False)
+        self.nextrely = self.get_half_way() +1
+        self.messages = self.add(npyscreen.BufferPager, name ='Raw Data',maxlen= 10000, editable=False)
+                
 
     def while_waiting(self):
-        packet, wherefrom = self.parentApp.s.recvfrom(4096)
+
+        packet = '{}'
+        try:
+            packet, wherefrom = self.parentApp.s.recvfrom(4096)
+        except sck.error as (code, msg):
+            if code != errno.EINTR:
+                raise
+
         self.data = json.loads(packet)
      
         if 'barometer' in self.data:
@@ -85,6 +97,8 @@ class MainForm(npyscreen.Form):
             outtemp_data = (self.data['outTemp'], "degree_C",  "group_temperature")
             outtemp_data = weewx.units.ValueHelper(outtemp_data)
             self.outtemp.value = outtemp_data.degree_C
+
+        self.messages.buffer(textwrap.wrap(str(packet), self.messages.width), scroll_end=True, scroll_if_editing=False)
 
         self.display()
 
