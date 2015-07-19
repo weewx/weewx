@@ -61,25 +61,31 @@ class MainForm(npyscreen.Form):
         packet, wherefrom = self.parentApp.s.recvfrom(4096)
         self.data = json.loads(packet)
      
-#        barometer_data = weewx.units.convert((self.data['barometer'], 'inHg', 'group_pressure'),'mbar')
-        barometer_data = (self.data['barometer'], 'inHg', 'group_pressure')
-        barometer_data = weewx.units.ValueHelper(barometer_data)
-        self.barometer.value = barometer_data.hPa
-        dewpoint_data = (self.data['dewpoint'], "degree_C",  "group_temperature")
-        dewpoint_data = weewx.units.ValueHelper(dewpoint_data)
-        self.dewpoint.value = dewpoint_data.degree_C
+        if 'barometer' in self.data:
+            barometer_data = (self.data['barometer'], 'inHg', 'group_pressure')
+            barometer_data = weewx.units.ValueHelper(barometer_data)
+            self.barometer.value = barometer_data.hPa
 
-        windspeed_data = (self.data['windSpeed'], "mile_per_hour",  "group_speed")
-        windspeed_data = weewx.units.ValueHelper(windspeed_data)
-        self.windspeed.value = windspeed_data.knot
+        if 'dewpoint' in self.data:
+            dewpoint_data = (self.data['dewpoint'], "degree_C",  "group_temperature")
+            dewpoint_data = weewx.units.ValueHelper(dewpoint_data)
+            self.dewpoint.value = dewpoint_data.degree_C
 
-        windspeed_data = (self.data['windDir'], "degree_compass", "group_direction")
-        windspeed_data = weewx.units.ValueHelper(windspeed_data)
-        self.winddir.value = windspeed_data.degree_compass
+        if 'windSpeed' in self.data:
+            windspeed_data = (self.data['windSpeed'], "mile_per_hour",  "group_speed")
+            windspeed_data = weewx.units.ValueHelper(windspeed_data)
+            self.windspeed.value = windspeed_data.knot
 
-        outtemp_data = (self.data['outTemp'], "degree_C",  "group_temperature")
-        outtemp_data = weewx.units.ValueHelper(outtemp_data)
-        self.outtemp.value = outtemp_data.degree_C
+        if 'windDir' in self.data:
+            windspeed_data = (self.data['windDir'], "degree_compass", "group_direction")
+            windspeed_data = weewx.units.ValueHelper(windspeed_data)
+            self.winddir.value = windspeed_data.degree_compass
+
+        if 'outTemp' in self.data:
+            outtemp_data = (self.data['outTemp'], "degree_C",  "group_temperature")
+            outtemp_data = weewx.units.ValueHelper(outtemp_data)
+            self.outtemp.value = outtemp_data.degree_C
+
         self.display()
 
     def on_ok(self):
