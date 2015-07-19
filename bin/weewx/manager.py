@@ -865,26 +865,23 @@ def get_database_dict_from_config(config_dict, database):
     
     >>> import configobj, StringIO
     >>> config_snippet = '''
+    ... WEEWX_ROOT = /home/weewx
     ... [DatabaseTypes]
-    ...   [[MySQL]]
-    ...     driver = weedb.mysql
-    ...     host = localhost
-    ...     user = weewx
-    ...     password = weewx
+    ...   [[SQLite]]
+    ...     driver = weedb.sqlite
+    ...     SQLITE_ROOT = %(WEEWX_ROOT)s/archive
     ... [Databases]
-    ...     [[archive_mysql]]
-    ...        database_name = weewx
-    ...        database_type = MySQL'''
+    ...     [[archive_sqlite]]
+    ...        database_name = weewx.sdb
+    ...        database_type = SQLite'''
     >>> config_dict = configobj.ConfigObj(StringIO.StringIO(config_snippet))
-    >>> database_dict = get_database_dict_from_config(config_dict, 'archive_mysql')
+    >>> database_dict = get_database_dict_from_config(config_dict, 'archive_sqlite')
     >>> keys = sorted(database_dict.keys())
     >>> for k in keys:
     ...     print "%15s: %12s" % (k, database_dict[k])
-      database_name:        weewx
-             driver:  weedb.mysql
-               host:    localhost
-           password:        weewx
-               user:        weewx
+        SQLITE_ROOT: /home/weewx/archive
+      database_name:    weewx.sdb
+             driver: weedb.sqlite
     """
     try:
         database_dict = dict(config_dict['Databases'][database])
