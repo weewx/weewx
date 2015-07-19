@@ -74,8 +74,7 @@ class WS981Driver(weewx.drivers.AbstractDevice):
 
     def genLoopPackets(self):
         while True:
-            readings = self.station.get_readings_with_retry(self.max_tries,
-                                                            self.retry_wait)
+	    readings = self.station.get_readings_with_retry(self.max_tries, self.retry_wait)
             packet = {'dateTime': int(time.time() + 0.5),
                       'usUnits':  weewx.METRICWX}
             data = Station.parse_readings(readings)
@@ -116,9 +115,11 @@ class Station(object):
 
     def get_readings(self):
         msg = None
-        byte = self.serial_port.read(1)
-        if ord(byte) == 0x1E:
-            msg = self.serial_port.read(9)
+	while True:
+    	    byte = self.serial_port.read(1)
+	    if ord(byte) == 0x1E:
+		break
+        msg = self.serial_port.read(9)
         if DEBUG_READ:
             logdbg("bytes: '%s'" % msg)
         return msg
