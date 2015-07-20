@@ -59,11 +59,12 @@
 </ul>
 
 <h2>Downloads</h2>
+
 <p>
-For the latest WeeWX release see:
+For the latest WeeWX release:
 </p>
-<p style='padding-left: 50px'>
-  <a href="https://sourceforge.net/projects/weewx/files/">https://sourceforge.net/projects/weewx/files/</a>
+<p>
+<a href='https://bintray.com/tkeffer/weewx/Releases/_latestVersion'><img src='https://api.bintray.com/packages/tkeffer/weewx/Releases/images/download.svg'></a>
 </p>
 
 <h2>Documentation and Support</h2>
