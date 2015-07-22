@@ -1,0 +1,2 @@
+# make the oregon scientific wmr100 connected via usb accessible to non-root
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0FDE", ATTRS{idProduct}=="CA01", MODE="0666"

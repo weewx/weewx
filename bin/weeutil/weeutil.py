@@ -5,11 +5,14 @@
 #
 """Various handy utilities that don't belong anywhere else."""
 
+from __future__ import with_statement
+
 import StringIO
 import calendar
 import datetime
 import math
 import os
+import shutil
 import sys
 import syslog
 import time
@@ -69,6 +72,9 @@ def accumulateLeaves(d, max_level=99):
     
     d: instance of a configobj.Section (i.e., a section of a ConfigObj)
     
+    Returns: a dictionary with all the accumulated scalars, up to max_level deep, 
+    going upwards
+    
     Example: Supply a default color=blue, size=10. The section "dayimage" overrides the former:
     
     >>> import configobj
@@ -103,6 +109,30 @@ def accumulateLeaves(d, max_level=99):
     cum_dict.merge(merge_dict)
     return cum_dict
 
+def conditional_merge(a_dict, b_dict):
+    """Merge fields from b_dict into a_dict, but only if they do not yet
+    exist in a_dict"""
+    # Go through each key in b_dict
+    for k in b_dict:
+        if isinstance(b_dict[k], dict):
+            if not k in a_dict:
+                # It's a new section. Initialize it...
+                a_dict[k] = {}
+                # ... and transfer over the section comments, if available
+                try:
+                    a_dict.comments[k] = b_dict.comments[k]
+                except AttributeError:
+                    pass
+            conditional_merge(a_dict[k], b_dict[k])
+        elif not k in a_dict:
+            # It's a scalar. Transfer over the value...
+            a_dict[k] = b_dict[k]
+            # ... then its comments, if available:
+            try:
+                a_dict.comments[k] = b_dict.comments[k]
+            except AttributeError:
+                pass
+
 def option_as_list(option):
     if option is None: return None
     if hasattr(option, '__iter__'):
@@ -120,12 +150,12 @@ def list_as_string(option):
     a string
     >>> print list_as_string(['a', 'string'])
     a, string
+    >>> print list_as_string('Reno, NV')
+    Reno, NV
     """
-    if option is None: return None
-    if hasattr(option, '__iter__'):
+    if option is not None and hasattr(option, '__iter__'):
         return ', '.join(option)
-    else:
-        return option
+    return option
 
 def stampgen(startstamp, stopstamp, interval):
     """Generator function yielding a sequence of timestamps, spaced interval apart.
@@ -839,6 +869,24 @@ def timestamp_to_gmtime(ts):
     else:
         return "******* N/A *******     (    N/A   )"
         
+def utc_to_ts(y, m, d, hrs_utc):
+    """Converts from a UTC tuple-time to unix epoch time.
+    
+    y,m,d: The year, month, day for which the conversion is desired.
+    
+    hrs_tc: Floating point number with the number of hours since midnight in UTC.
+    
+    Returns: The unix epoch time.
+    
+    >>> print utc_to_ts(2009, 3, 27, 14.5)
+    1238164200
+    """
+    # Construct a time tuple with the time at midnight, UTC:
+    daystart_utc_tt = (y,m,d,0,0,0,0,0,-1)
+    # Convert the time tuple to a time stamp and add on the number of seconds since midnight:
+    time_ts = int(calendar.timegm(daystart_utc_tt) + hrs_utc * 3600.0 + 0.5)
+    return time_ts
+
 def utc_to_local_tt(y, m, d,  hrs_utc):
     """Converts from a UTC time to a local time.
     
@@ -846,11 +894,15 @@ def utc_to_local_tt(y, m, d,  hrs_utc):
     
     hrs_tc: Floating point number with the number of hours since midnight in UTC.
     
-    Returns: A timetuple with the local time."""
-    # Construct a time tuple with the time at midnight, UTC:
-    daystart_utc_tt = (y,m,d,0,0,0,0,0,-1)
-    # Convert the time tuple to a time stamp and add on the number of seconds since midnight:
-    time_ts = int(calendar.timegm(daystart_utc_tt) + hrs_utc * 3600.0 + 0.5)
+    Returns: A timetuple with the local time.
+    
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> tt=utc_to_local_tt(2009, 3, 27, 14.5)
+    >>> print tt.tm_year, tt.tm_mon, tt.tm_mday, tt.tm_hour, tt.tm_min
+    2009 3 27 7 30
+    """
+    # Get the UTC time:
+    time_ts = utc_to_ts(y, m, d, hrs_utc)
     # Convert to local time:
     time_local_tt = time.localtime(time_ts)
     return time_local_tt
@@ -873,13 +925,13 @@ def latlon_string(ll, hemi, which, format_list=None):
         format_list = ["%02d", "%03d", "%05.2f"]
     return ((format_list[0] if which == 'lat' else format_list[1]) % (deg,), format_list[2] % (minutes,), hemi[0] if ll >= 0 else hemi[1])
 
-def log_traceback(prefix=''):
+def log_traceback(prefix='', loglevel=syslog.LOG_INFO):
     """Log the stack traceback into syslog."""
     sfd = StringIO.StringIO()
     traceback.print_exc(file=sfd)
     sfd.seek(0)
     for line in sfd:
-        syslog.syslog(syslog.LOG_INFO, prefix + line)
+        syslog.syslog(loglevel, prefix + line)
     del sfd
     
 def _get_object(module_class):
@@ -1046,76 +1098,40 @@ def max_with_none(x_seq):
         elif x is not None:
             xmax = max(x, xmax)
     return xmax
-        
-def read_config(config_fn, args=None, msg_to_stderr=True, exit_on_fail=True):
-    """Read the specified configuration file, return a dictionary of the
-    file contents. If no file is specified, look in the standard locations
-    for weewx.conf. Returns the filename of the actual configuration file
-    as well as dictionary of the elements from the configuration file.
-    For backward compatibility, args may be specified, in which case the
-    first arg will be interpreted as the filename as long as it does not
-    start with a hyphen.
 
-    config_fn: configuration filename
-
-    args: command-line arguments
-
-    msg_to_stderr: If this is true, send error messages to stderr, otherwise
-    messages go to syslog.
-
-    exit_on_fail: If this is true, exit when file not found or parsing fails.
-    Otherwise re-throw the exception that caused the error.
-
-    return: filename, dictionary
+def print_dict(d, margin=0, increment=4):
+    """Pretty print a dictionary.
+    
+    Example:
+    >>> print_dict({'sec1' : {'a':1, 'b':2, 'sec2': {'f':9}}, 'e':3})
+     sec1
+         a = 1
+         b = 2
+         sec2
+             f = 9
+     e = 3
     """
-    import configobj
-    locations = ['/etc/weewx', '/home/weewx']
-
-    # Figure out the config file
-    if config_fn is None:
-        if args is not None and len(args) > 0 and not args[0].startswith('-'):
-            config_fn = args[0]
-            # Shift args to the left:
-            del args[0]
-    if config_fn is None:
-        for f in locations:
-            fn = f + '/weewx.conf'
-            if os.path.isfile(fn):
-                config_fn = fn
-                break
-    if config_fn is None:
-        msg = 'No configuration file specified, and none found in any of:\n  %s' % ', '.join(locations)
-        if msg_to_stderr:
-            print >>sys.stderr, msg
+    for k in d:
+        if type(d[k]) is dict:
+            print margin * ' ', k
+            print_dict(d[k], margin + increment, increment)
         else:
-            syslog.syslog(syslog.LOG_CRIT, msg)
-        if exit_on_fail:
-            exit(1)
-        return None, None
+            print margin * ' ', k, '=', d[k]
 
-    # Try to open up the configuration file. Declare an error if unable to.
-    try :
-        config_dict = configobj.ConfigObj(config_fn, file_error=True)
-    except IOError:
-        msg = "Unable to open configuration file %s" % config_fn
-        if msg_to_stderr:
-            print >>sys.stderr, msg
-        else:
-            syslog.syslog(syslog.LOG_CRIT, msg)
-        if exit_on_fail:
-            exit(1)
-        raise
-    except configobj.ConfigObjError:
-        msg = "Error wile parsing configuration file %s" % config_fn
-        if msg_to_stderr:
-            print >>sys.stderr, msg
-        else:
-            syslog.syslog(syslog.LOG_CRIT, msg)
-        if exit_on_fail:
-            exit(1)
-        raise
-
-    return config_fn, config_dict
+def move_with_timestamp(filepath):
+    """Save a file to a path with a timestamp."""
+    # Sometimes the target has a trailing '/'. This will take care of it:
+    filepath = os.path.normpath(filepath)
+    newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
+    # Check to see if this name already exists
+    if os.path.exists(newpath):
+        # It already exists. Stick a version number on it:
+        version = 1
+        while os.path.exists(newpath + '-' + str(version)):
+            version += 1
+        newpath = newpath + '-' + str(version)
+    shutil.move(filepath, newpath)
+    return newpath
 
 class ListOfDicts(dict):
     """A list of dictionaries, that are searched in order.

@@ -59,10 +59,14 @@ class BaseWrapper(object):
                 self.flush_output()
                 self.flush_input()
                 # It can be hard to get the console's attention, particularly
-                # when in the middle of a LOOP command. Send a whole bunch of line feeds,
-                # then flush everything, then look for the \n\r acknowledgment
-                self.write('\n\n\n')
+                # when in the middle of a LOOP command. Send a whole bunch of line feeds.
+                # Use separate calls, as this forces the WLIP implementation to invoke the
+                # tcp_send_delay between each one.
+                self.write('\n')
+                self.write('\n')
+                self.write('\n')
                 time.sleep(0.5)
+                # Now flush everything, do it again, then look for the \n\r acknowledgment
                 self.flush_input()
                 self.write('\n')
                 _resp = self.read(2)
@@ -188,6 +192,22 @@ class BaseWrapper(object):
 #                           class Serial Wrapper
 #===============================================================================
 
+def guard_termios(fn):
+    """Decorator function that converts termios exceptions into weewx exceptions."""
+    # Some functions in the module 'serial' can raise undocumented termios
+    # exceptions. This catches them and converts them to weewx exceptions. 
+    try:
+        import termios
+        def guarded_fn(*args, **kwargs):
+            try:
+                return fn(*args, **kwargs)
+            except termios.error, e:
+                raise weewx.WeeWxIOError(e)
+    except ImportError:
+        def guarded_fn(*args, **kwargs):
+            return fn(*args, **kwargs)
+    return guarded_fn
+
 class SerialWrapper(BaseWrapper):
     """Wraps a serial connection returned from package serial"""
     
@@ -196,12 +216,15 @@ class SerialWrapper(BaseWrapper):
         self.baudrate = baudrate
         self.timeout  = timeout
 
+    @guard_termios
     def flush_input(self):
         self.serial_port.flushInput()
 
+    @guard_termios
     def flush_output(self):
         self.serial_port.flushOutput()
 
+    @guard_termios
     def queued_bytes(self):
         return self.serial_port.inWaiting()
  
@@ -230,7 +253,8 @@ class SerialWrapper(BaseWrapper):
         import serial
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: Opened up serial port %s, baudrate %d" % (self.port, self.baudrate))
+        syslog.syslog(syslog.LOG_DEBUG, "vantage: Opened up serial port %s; baud %d; timeout %.2f" % 
+                      (self.port, self.baudrate, self.timeout))
 
     def closePort(self):
         try:

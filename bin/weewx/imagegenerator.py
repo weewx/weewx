@@ -17,7 +17,7 @@ import weeplot.utilities
 import weeutil.weeutil
 import weewx.reportengine
 import weewx.units
-from weeutil.weeutil import to_bool, to_int
+from weeutil.weeutil import to_bool, to_int, to_float
 
 #===============================================================================
 #                    Class ImageGenerator
@@ -180,17 +180,14 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     else:
                         vector_rotate = None
 
+                        gap_fraction = None
                         if plot_type == 'bar':
-                            gap_fraction = line_options.get('bar_gap_fraction')
                             interval_vec = [x[1] - x[0]for x in zip(new_start_vec_t.value, new_stop_vec_t.value)]
                         elif plot_type == 'line':
-                            gap_fraction = line_options.get('line_gap_fraction')
-                        else:
-                            gap_fraction = None
+                            gap_fraction = to_float(line_options.get('line_gap_fraction'))
                         if gap_fraction is not None:
-                            gap_fraction = float(gap_fraction)
                             if not 0 < gap_fraction < 1:
-                                syslog.syslog(syslog.LOG_ERR, "genimages: gap fraction must be greater than zero and less than one. Ignored.")
+                                syslog.syslog(syslog.LOG_ERR, "genimages: Gap fraction %5.3f outside range 0 to 1. Ignored." % gap_fraction)
                                 gap_fraction = None
 
                     # Get the type of line ('solid' or 'none' is all that's offered now)
@@ -217,9 +214,12 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()
                 
-                # Now save the image
-                image.save(img_file)
-                ngen += 1
+                try:
+                    # Now save the image
+                    image.save(img_file)
+                    ngen += 1
+                except IOError, e:
+                    syslog.syslog(syslog.LOG_CRIT, "genimages: Unable to save to file '%s' %s:" % (img_file, e))
         t2 = time.time()
         
         syslog.syslog(syslog.LOG_INFO, "genimages: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))

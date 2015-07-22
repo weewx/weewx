@@ -77,9 +77,8 @@ cp -r util/logwatch %{buildroot}%{dst_cfg_dir}
 cp -r util/rsyslog.d %{buildroot}%{dst_cfg_dir}
 cp -r extensions %{buildroot}%{dst_bin_dir}
 
-# copy the setup script so we can do config file merges if necessary
+# make a copy of the generic configuration file
 cp weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.dist
-cp setup.py %{buildroot}%{dst_bin_dir}
 
 # remove stuff that should not go out
 rm %{buildroot}%{dst_cfg_dir}/skins/Standard/backgrounds/butterfly.jpg
@@ -93,7 +92,7 @@ cat weewx.conf | sed \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's%HTML_ROOT =.*%HTML_ROOT = /var/www/html/weewx%' \
- -e 's%archive/weewx.sdb%/var/lib/weewx/weewx.sdb%' \
+ -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
 cat util/init.d/weewx.%{platform} | sed \
  -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
@@ -102,34 +101,42 @@ cat util/init.d/weewx.%{platform} | sed \
 chmod 755 %{buildroot}%{initdir}/weewx
 
 # create symlinks to the code entry points
-ln -s ../share/weewx/setup.py %{buildroot}%{_bindir}/wee_setup
 ln -s ../share/weewx/weewxd %{buildroot}%{_bindir}/weewxd
+ln -s ../share/weewx/wee_config %{buildroot}%{_bindir}/wee_config
+ln -s ../share/weewx/wee_database %{buildroot}%{_bindir}/wee_database
+ln -s ../share/weewx/wee_device %{buildroot}%{_bindir}/wee_device
+ln -s ../share/weewx/wee_extension %{buildroot}%{_bindir}/wee_extension
 ln -s ../share/weewx/wee_reports %{buildroot}%{_bindir}/wee_reports
-ln -s ../share/weewx/wee_config_database %{buildroot}%{_bindir}/wee_config_database
-ln -s ../share/weewx/wee_config_device %{buildroot}%{_bindir}/wee_config_device
 
 # pre-compile the python code
 python -m compileall %{buildroot}%{dst_bin_dir}
+
+%pre
+if [ "$1" = "2" ]; then
+  # this is an upgrade
+  if [ -f %{cfg_file} ]; then
+    echo saving previous config as %{cfg_file}.prev
+    cp -p %{cfg_file} %{cfg_file}.prev
+  fi
+fi
 
 %post
 python -m compileall %{dst_bin_dir}
 if [ "$1" = "1" ]; then
   # this is a new installation
-  /usr/share/weewx/setup.py configure --config=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --quiet
+  # create a sane configuration file with simulator as the station type
+  /usr/share/weewx/wee_config --install --dist-config=/etc/weewx/weewx.conf.dist --output=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --no-prompt --no-backup
   chkconfig weewx on
   %{initdir}/weewx start
 elif [ "$1" = "2" ]; then
   # this is an upgrade
-  # merge changes to weewx.conf
-  if [ -f %{cfg_file}.dist ]; then
-    NEWVER=`/usr/share/weewx/setup.py --version`
-    OLDVER=`grep version %{cfg_file} | sed -e 's/\s*version\s*=\s*//'`
-    echo saving previous config file as %{cfg_file}-$OLDVER
-    mv %{cfg_file} %{cfg_file}-$OLDVER
-    echo saving distribution config file as %{cfg_file}-$NEWVER
-    cp -p %{cfg_file}.dist %{cfg_file}-$NEWVER
-    echo merging previous and distribution into %{cfg_file}
-    /usr/share/weewx/setup.py --merge-config --install-dir / --a %{cfg_file}-$NEWVER --b %{cfg_file}-$OLDVER --c %{cfg_file}
+  # update previous config and merge with dist into to weewx.conf
+  if [ -f %{cfg_file}.dist -a -f %{cfg_file}.prev ]; then
+    OLDVER=`grep version %{cfg_file}.prev | sed -e 's/\s*version\s*=\s*//'`
+    echo saving previous config as %{cfg_file}-$OLDVER
+    mv %{cfg_file}.prev %{cfg_file}-$OLDVER
+    echo merging configs into %{cfg_file}
+    /usr/share/weewx/wee_config --upgrade --config=%{cfg_file}-$OLDVER --dist-config=%{cfg_file}.dist --output=%{cfg_file} --no-prompt --no-backup
   fi
   # do a full restart not just a HUP
   %{initdir}/weewx stop
@@ -152,10 +159,11 @@ rm -rf %{buildroot}
 %attr(755,root,root) %{initdir}/weewx
 %{dst_bin_dir}/
 %{_bindir}/weewxd
-%{_bindir}/wee_setup
+%{_bindir}/wee_config
+%{_bindir}/wee_database
+%{_bindir}/wee_device
+%{_bindir}/wee_extension
 %{_bindir}/wee_reports
-%{_bindir}/wee_config_database
-%{_bindir}/wee_config_device
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
 %changelog

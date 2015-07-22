@@ -5,8 +5,10 @@ setup.cfg
 setup.py
 weewx.conf
 bin/daemon.py
-bin/wee_config_database
-bin/wee_config_device
+bin/wee_config
+bin/wee_database
+bin/wee_device
+bin/wee_extension
 bin/wee_reports
 bin/weewxd
 bin/examples/__init__.py
@@ -17,6 +19,9 @@ bin/schemas/__init__.py
 bin/schemas/wview.py
 bin/user/__init__.py
 bin/user/extensions.py
+bin/weecfg/__init__.py
+bin/weecfg/config.py
+bin/weecfg/extension.py
 bin/weedb/__init__.py
 bin/weedb/mysql.py
 bin/weedb/sqlite.py
@@ -76,6 +81,7 @@ docs/css/jquery.tocify.css
 docs/css/weewx_docs.css
 docs/css/ui-lightness/jquery-ui-1.10.4.custom.css
 docs/css/ui-lightness/jquery-ui-1.10.4.custom.min.css
+docs/css/ui-lightness/images/animated-overlay.gif
 docs/css/ui-lightness/images/ui-bg_diagonals-thick_18_b81900_40x40.png
 docs/css/ui-lightness/images/ui-bg_diagonals-thick_20_666666_40x40.png
 docs/css/ui-lightness/images/ui-bg_flat_10_000000_40x100.png
@@ -98,6 +104,7 @@ docs/images/daywindvec.png
 docs/images/ferrites.jpg
 docs/images/funky_degree.png
 docs/images/image_parts.png
+docs/images/image_parts.xcf
 docs/images/logo-apple.png
 docs/images/logo-centos.png
 docs/images/logo-debian.png
@@ -142,8 +149,8 @@ extensions/xstats/changelog
 extensions/xstats/install.py
 extensions/xstats/readme.txt
 extensions/xstats/bin/user/xstats.py
-extensions/xstats/skins/xstats/index.html.tmpl
 extensions/xstats/skins/xstats/skin.conf
+extensions/xstats/skins/xstats/xstats.html.tmpl
 skins/Ftp/skin.conf
 skins/Rsync/skin.conf
 skins/Standard/favicon.ico
@@ -189,3 +196,12 @@ util/logwatch/conf/services/weewx.conf
 util/logwatch/scripts/services/weewx
 util/rsyslog.d/weewx.conf
 util/systemd/weewx.service
+util/udev/rules.d/acurite.rules
+util/udev/rules.d/cc3000.rules
+util/udev/rules.d/fousb.rules
+util/udev/rules.d/te923.rules
+util/udev/rules.d/vantage.rules
+util/udev/rules.d/wmr100.rules
+util/udev/rules.d/wmr200.rules
+util/udev/rules.d/wmr300.rules
+util/udev/rules.d/ws28xx.rules

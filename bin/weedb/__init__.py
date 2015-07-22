@@ -121,6 +121,16 @@ class Connection(object):
         should raise an exception of type weedb.ProgrammingError if the table does not exist."""
         raise NotImplementedError
 
+    def get_variable(self, var_name):
+        """Return a database specific operational variable. Generally, things like 
+        pragmas, or optimization-related variables.
+        
+        It returns a 2-way tuple:
+        (variable-name, variable-value)
+        If the variable does not exist, it returns None.
+        """
+        raise NotImplemented
+    
     def begin(self):
         raise NotImplementedError
 

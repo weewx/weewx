@@ -161,8 +161,7 @@ class ReportGenerator(object):
         self.gen_ts      = gen_ts
         self.first_run   = first_run
         self.stn_info    = stn_info
-        self.db_binder   = weewx.manager.DBBinder(self.config_dict['DataBindings'],
-                                                  self.config_dict['Databases'])
+        self.db_binder   = weewx.manager.DBBinder(self.config_dict)
         
     def start(self):
         self.run()
@@ -203,7 +202,8 @@ class FtpGenerator(ReportGenerator):
                                                   name        = self.skin_dict['REPORT_NAME'],
                                                   passive     = to_bool(self.skin_dict.get('passive', True)),
                                                   max_tries   = int(self.skin_dict.get('max_tries', 3)),
-                                                  secure      = to_bool(self.skin_dict.get('secure_ftp', False)))
+                                                  secure      = to_bool(self.skin_dict.get('secure_ftp', False)),
+                                                  debug       = int(self.skin_dict.get('debug', 0)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: FTP upload not requested. Skipped.")
             return

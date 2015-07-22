@@ -5,11 +5,11 @@
 # if you do not want to sign the packages, set SIGN to 0
 SIGN=1
 
+# destination for uploading releases
+RELDIR=frs.sourceforge.net:/home/frs/project/weewx/development_versions
+
 # destination for uploading docs
 DOCDST=weewx.com:/
-
-# destination for releases
-RELDIR=../weewx-release
 
 # extract version to be used in package controls and labels
 VERSION=$(shell grep __version__ bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
@@ -39,10 +39,10 @@ help: info
 	@echo "     check-rpm  check the rpm package"
 	@echo "    check-docs  run weblint on the docs"
 	@echo ""
-	@echo "   release-src  release the src package"
-	@echo "   release-deb  release the deb package"
-	@echo "   release-rpm  release the rpm package"
-	@echo "release-readme  release the README.txt"
+	@echo "    upload-src  upload the src package"
+	@echo "    upload-deb  upload the deb package"
+	@echo "    upload-rpm  upload the rpm package"
+	@echo " upload-readme  upload the README.txt"
 	@echo ""
 	@echo "   upload-docs  upload docs to weewx.com"
 	@echo ""
@@ -56,6 +56,7 @@ info:
 	@echo "        USER: $(USER)"
 
 realclean:
+	rm -f MANIFEST
 	rm -rf build
 	rm -rf dist
 
@@ -72,7 +73,7 @@ test:
 	@for f in $(SUITE); do \
   echo running $$f; \
   echo $$f >> $(BLDDIR)/test-results; \
-  PYTHONPATH=bin python $$f 2>> $(BLDDIR)/test-results; \
+  PYTHONPATH=bin python $$f >> $(BLDDIR)/test-results 2>&1; \
   echo >> $(BLDDIR)/test-results; \
 done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
@@ -97,8 +98,8 @@ src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
 	rm -f MANIFEST
 	./setup.py sdist
 
-release-src:
-	cp $(DSTDIR)/$(SRCPKG) $(RELDIR)
+upload-src:
+	scp $(DSTDIR)/$(SRCPKG) $(USER)@$(RELDIR)
 
 # upload docs to the weewx web site
 upload-docs:
@@ -132,8 +133,8 @@ readme: docs/changes.txt
 	echo $(README_HEADER) > $(DSTDIR)/README.txt
 	pkg/mkchangelog.pl --ifile docs/changes.txt >> $(DSTDIR)/README.txt
 
-release-readme: readme
-	cp $(DSTDIR)/README.txt $(RELDIR)
+upload-readme: readme
+	scp $(DSTDIR)/README.txt $(USER)@$(RELDIR)
 
 # update the version in all relevant places
 VDOCS=customizing.htm usersguide.htm upgrading.htm
@@ -189,8 +190,8 @@ deb-package: $(DSTDIR)/$(SRCPKG)
 check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
-release-deb:
-	cp $(DSTDIR)/$(DEBPKG) $(RELDIR)
+upload-deb:
+	scp $(DSTDIR)/$(DEBPKG) $(USER)@$(RELDIR)
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
@@ -231,8 +232,8 @@ endif
 check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
 
-release-rpm:
-	cp $(DSTDIR)/$(RPMPKG) $(RELDIR)
+upload-rpm:
+	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(RELDIR)
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]

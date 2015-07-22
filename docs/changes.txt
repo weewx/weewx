@@ -1,7 +1,25 @@
 weewx change history
 --------------------
 
-3.2.0 XX/XX/XX
+3.2.1 07/18/15
+
+Fixed problem when using setup.py to install into a non-standard location.
+Weewx would start a new database in the "standard" location, ignoring the
+old one in the non-standard location.
+
+
+3.2.0 07/15/15
+
+There are now five command-line utilities, some new, some old
+ - wee_config:    (New) For configuring weewx.conf, in particular, 
+                  selecting a new device driver.
+ - wee_extension: (New) For adding and removing extensions.
+ - wee_database:  (Formerly called wee_config_database)
+ - wee_device:    (Formerly called wee_config_device)
+ - wee_reports:   No changes.
+ 
+The script setup.py is no longer used to install or uninstall extensions.
+Instead, use the new utility wee_extension.
 
 Wunderfixer is now included with weewx --- no need to download it separately. 
 It now works with MySQL, as well as sqlite, databases. It also supports
@@ -15,7 +33,7 @@ Added guards for bogus values in various wxformula functions.
 Added windrun, evapotranspiration, humidex, apparent temperature, maximum
 theoretical solar radiation, beaufort, and cloudbase to StdWXCalculate.
 
-If StdWXCalculate cannot calculate a derived varible when asked to, it now
+If StdWXCalculate cannot calculate a derived variable when asked to, it now
 sets the value to null. Fixes issue #10.
 
 Added option to specify algorithm in StdWXCalculate.  So far this applies
@@ -26,19 +44,86 @@ be accepted as being "12 hours ago." Default is 1800 seconds.
 
 Fixed bug in debian install script - 'Acurite' was not in the list of stations.
 
+$almanac.sunrise and $almanac.sunset now return ValueHelpers. Fixes issue #26.
+
 Added group_distance with units mile and km.
+
+Added group_length with units inch and cm.
+
+Failure to launch a report thread no longer crashes program.
+
+The WU uploader now publishes soil temperature and moisture, as well as
+leaf wetness.
 
 Increased precision of wind and wind gust posts to WU from 0 to 1 
 decimal point.
 
 Increased precision of barometer posts to WOW from 1 to 3 decimal points.
 
+A bad CWOP server address no longer crashes the CWOP thread.
+
 The "alarm" example now includes a try block to catch a NameError exception
 should the alarm expression include a variable not in the archive record.
 
+Fixed bug that shows itself if marker_size is not specified in skin.conf
+
+Show URLs in the log for restful uploaders when debug=2 or greater.
+
+Fixed problem that could cause an exception in the WMR200 driver when
+formatting an error string.
+
 Added better recovery from USB failures in the ws28xx driver.
 
-Improved timing algorithm for AcuRite data.  Thanks to Brett Warden.
+Added data_format option to FineOffset driver.  Thanks to Darryl Dixon.
+
+Decoding of data is now more robust in the WS1 driver.  Get data from the
+station as fast as the station can spit it out.  Thanks to Michael Walker.
+
+Changes to the WS23xx driver include:
+  - Fixed wind speed values when reading from logger.  Values were too
+    high by a factor of 10.
+  - wrapped non-fatal errors in WeeWXIO exceptions to improve error
+    handling and failure recovery
+
+Changes to the AcuRite driver include:
+ - The AcuRite driver now reports partial packets as soon as it gets them
+     instead of retaining data until it can report a complete packet
+ - Improved timing algorithm for AcuRite data.  Thanks to Brett Warden.
+ - Added acurite log entries to logwatch script.  Thanks to Andy.
+ - Prevent negative rainfall amounts in acurite driver by detecting
+     counter wraparound
+ - Use 13 bits for rain counter instead of 12 bits
+ - Use only 12 bits for inside temperature in acurite driver when decoding
+     for 02032 stations
+
+Changes to the TE923 driver include:
+ - consolidated retries
+ - improved error handling and reporting
+
+Changes to the WMR9x8 driver include:
+ - Correct bug that caused yesterday's rain to be decoded as dayRain
+ - LOOP packet type 'battery' is now an int, instead of a bool
+ - The driver can now be run standalone for debugging purposes.
+ 
+The Vantage driver now catches undocumented termios exceptions and converts
+them to weewx exceptions. This allows retries if flushing input or output
+buffers fail. Fixes issue #34.
+
+Default values for databases are now defined in a new section [DatabaseTypes]. 
+New option "database_type" links databases to database type. Installer will
+automatically update old weewx.conf files.
+
+The RESTful services that come with weewx are now turned on and off by
+option "enable". Installer will automatically update old weewx.conf files. 
+Other RESTful services that don't use this method will continue to work.
+
+Option bar_gap_fraction is now ignored. Bar plot widths are rendered explicitly
+since V3.0, making the option unnecessary. Fixes issue #25.
+
+Added additional debug logging to main engine loop.
+
+FTP uploader now retries several times to connect to a server, instead of 
+giving up after one try. Thanks to user Craig Hunter!
 
 
 3.1.0 02/05/15
@@ -153,7 +238,7 @@ Alternate times can also be specified:
   $current($timestamp=$othertime).outTemp
 
 Explicit time differences for trends can now be specified:
-$trend($time_delta=3600).barometer
+  $trend($time_delta=3600).barometer
 
 Introduced a new tag $latest, which uses the last available timestamp
 in a data binding (which may or may not be the same as the "current"

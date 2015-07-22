@@ -395,7 +395,8 @@
             self.before($("<div/>", {
 
                 // Sets a name attribute on the anchor tag to the text of the currently traversed HTML element (also making sure that all whitespace is replaced with an underscore)
-                "name": hashValue,
+            	// The following was modified from "name" to "id" by tkeffer 6/26/2015:
+                "id": hashValue,
 
                 "data-unique": hashValue
 

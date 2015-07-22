@@ -45,9 +45,8 @@ install: build
 	cp -r $(SRC)/util/rsyslog.d $(DST_CFGDIR)
 	cp -r $(SRC)/extensions $(DST_BINDIR)
 
-# copy the setup script so we can do config file merges if necessary
+# make a virgin copy of the configuration file
 	cp $(SRC)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
-	cp $(SRC)/setup.py $(DST_BINDIR)
 
 # remove stuff that should not go out
 	rm $(DST_CFGDIR)/skins/Standard/backgrounds/butterfly.jpg
@@ -61,7 +60,7 @@ install: build
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's%HTML_ROOT =.*%HTML_ROOT = /var/www/weewx%' \
- -e 's%archive/weewx.sdb%/var/lib/weewx/weewx.sdb%' \
+ -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
  > $(DST_CFGDIR)/weewx.conf
 	cat $(SRC)/util/init.d/weewx.debian | sed \
  -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
@@ -70,11 +69,12 @@ install: build
 	chmod 755 $(DST_INITDIR)/weewx
 
 # create symlinks to the code entry points
-	ln -s ../share/weewx/setup.py $(DST)/usr/bin/wee_setup
 	ln -s ../share/weewx/weewxd $(DST)/usr/bin/weewxd
+	ln -s ../share/weewx/wee_config $(DST)/usr/bin/wee_config
+	ln -s ../share/weewx/wee_database $(DST)/usr/bin/wee_database
+	ln -s ../share/weewx/wee_device $(DST)/usr/bin/wee_device
+	ln -s ../share/weewx/wee_extension $(DST)/usr/bin/wee_extension
 	ln -s ../share/weewx/wee_reports $(DST)/usr/bin/wee_reports
-	ln -s ../share/weewx/wee_config_database $(DST)/usr/bin/wee_config_database
-	ln -s ../share/weewx/wee_config_device $(DST)/usr/bin/wee_config_device
 
 # keep lintian happy
 	cp $(SRC)/debian/copyright $(DST_DOCDIR)

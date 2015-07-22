@@ -1,138 +1,153 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta content="en-us" http-equiv="Content-Language" />
-    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<head>
+    <meta content="en-us" http-equiv="Content-Language"/>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <title>Installation on Debian systems</title>
-    <link href="css/weewx_docs.css" rel="stylesheet" />
+    <link href="css/weewx_docs.css" rel="stylesheet"/>
     <style type="text/css">
-.os-icons {
-  float: right;
-  margin-left: 100px;
-}
-.logo {
-  width: 60px;
-}
-.tty {
-  white-space: pre-line;
-}
+        .os-icons {
+            float: right;
+            margin-left: 100px;
+        }
+
+        .logo {
+            width: 60px;
+        }
+
+        .tty {
+            white-space: pre-line;
+        }
     </style>
-  </head>
+</head>
 <body>
-  <h1 class="title">weewx: Installation on Debian-based systems</h1>
-  <p class='os-icons'>
-    <img class='logo' src='images/logo-debian.png' /> <img class='logo'
-      src='images/logo-ubuntu.png' /> <img class='logo'
-      src='images/logo-mint.png' />
-  </p>
-  <p>
+<h1 class="title">weewx: Installation on Debian-based systems</h1>
+
+<p class='os-icons'>
+    <img class='logo' src='images/logo-debian.png' alt=""/>
+    <img class='logo' src='images/logo-ubuntu.png' alt=""/>
+    <img class='logo' src='images/logo-mint.png' alt=""/>
+</p>
+
+<p>
     This is a guide to installing <span class='code'>weewx</span>
     from a DEB package on Debian-based systems, including Ubuntu and Mint.
-  </p>
+</p>
 
-  <h2>Download</h2>
-  <p>
+<h2>Download</h2>
+
+<p>
     Download the package <span class='symcode'>weewx_X.Y.Z-R_all.deb</span> from
     <a href="http://sourceforge.net/projects/weewx/files">Sourceforge</a>.
-  </p>
+</p>
 
-  <h2>Install</h2>
-  <p>Install by double-clicking the .deb file, or via command line:</p>
-  <pre class='tty'>sudo dpkg -i <span class="symcode">weewx_X.Y.Z-R_all.deb</span>
+<h2>Install</h2>
+
+<p>Install by double-clicking the .deb file, or via command line:</p>
+  <pre class='tty cmd'>sudo dpkg -i <span class="symcode">weewx_X.Y.Z-R_all.deb</span>
   </pre>
-  <p>
-    If dpkg complains about dependency problems, use <span class="code">apt-get</span>
-    to resolve the dependencies and complete the installation:
-  </p>
-  <pre class='tty'>sudo apt-get update
-sudo apt-get -f install</pre>
-  <p>The installer will prompt for a location, latitude/longitude, altitude,
+<p>The installer will prompt for a location, latitude/longitude, altitude,
     station type, and parameters specific to your station hardware.</p>
 
-  <h2>Status</h2>
-  <p>
-    Look in the system log for messages from <span class='code'>weewx</span>.
-  </p>
-  <p class='tty'>sudo tail -f /var/log/syslog</p>
+<p>
+    If dpkg complains about dependency problems, use <span class="code">apt-get</span>
+    to resolve the dependencies and complete the installation:
+</p>
+  <pre class='tty cmd'>sudo apt-get update
+sudo apt-get -f install</pre>
 
-  <h2>Verify</h2>
-  <p>
+<h2>Status</h2>
+
+<p>
+    Look in the system log for messages from <span class='code'>weewx</span>.
+</p>
+<pre class='tty cmd'>sudo tail -f /var/log/syslog</pre>
+
+<h2>Verify</h2>
+
+<p>
     After about 5 minutes, open the station web page in a web browser. You
     should see your station information and data.
-  </p>
-  <pre class='tty'><a href="file:///var/www/weewx/index.html">file:///var/www/weewx/index.html</a></pre>
-  <p>If your hardware supports hardware archiving, then how long you wait
+</p>
+<pre class='tty'><a href="file:///var/www/weewx/index.html">file:///var/www/weewx/index.html</a></pre>
+<p>If your hardware supports hardware archiving, then how long you wait
     will depend on the
     <a href="usersguide.htm#archive_interval">archive interval</a>
     set in your hardware.
-  </p>
+</p>
 
-  <h2>Customize</h2>
-  <p>
+<h2>Customize</h2>
+
+<p>
     To enable uploads such as Weather Underground or to customize reports,
     modify the configuration file <span class='code'>/etc/weewx/weewx.conf</span>.
     See the <a href="usersguide.htm">User Guide</a> and <a
-      href="customizing.htm">Customization Guide</a> for details.
-  </p>
-  <p>
+        href="customizing.htm">Customization Guide</a> for details.
+</p>
+
+<p>
     <span class='code'>weewx</span> must be restarted for configuration file
     changes to take effect.
-  </p>
+</p>
 
-  <h2>Start/Stop</h2>
-  <p>
+<h2>Start/Stop</h2>
+
+<p>
     To start/stop <span class='code'>weewx</span>:
-  </p>
-  <p class='tty'>sudo /etc/init.d/weewx start
-sudo /etc/init.d/weewx stop</p>
+</p>
+  <pre class='tty cmd'>sudo /etc/init.d/weewx start
+sudo /etc/init.d/weewx stop</pre>
 
-  <h2>Uninstall</h2>
-  <p>
+<h2>Uninstall</h2>
+
+<p>
     To uninstall <span class='code'>weewx</span> but retain configuration files
     and data:
-  </p>
-  <p class='tty'>sudo dpkg -r weewx</p>
-  <p>
+</p>
+<pre class='tty cmd'>sudo dpkg -r weewx</pre>
+<p>
     To uninstall <span class='code'>weewx</span>, removing configuration files
     but retaining data:
-  </p>
-  <p class='tty'>sudo dpkg --purge weewx</p>
-  <p>To remove data:</p>
-  <p class='tty'>sudo rm -r /var/lib/weewx
-sudo rm -r /var/www/weewx</p>
+</p>
+<pre class='tty cmd'>sudo dpkg --purge weewx</pre>
+<p>To remove data:</p>
+  <pre class='tty cmd'>sudo rm -r /var/lib/weewx
+sudo rm -r /var/www/weewx</pre>
 
-  <h2>Layout</h2>
-  <p>If you followed the installation guide above, then it will result in
+<h2>Layout</h2>
+
+<p>If you followed the installation guide above, then it will result in
     the following layout:</p>
-  <table class='locations' style="width: 40%; font-size: 90%">
+<table class='locations' style="width: 40%; font-size: 90%">
     <tr>
-      <td align='right'>executable:</td>
-      <td class='tty'>/usr/bin/weewxd</td>
+        <td align='right'>executable:</td>
+        <td class='tty'>/usr/bin/weewxd</td>
     </tr>
     <tr>
-      <td align='right'>configuration file:</td>
-      <td class='tty'>/etc/weewx/weewx.conf</td>
+        <td align='right'>configuration file:</td>
+        <td class='tty'>/etc/weewx/weewx.conf</td>
     </tr>
     <tr>
-      <td align='right'>skins and templates:</td>
-      <td class='tty'>/etc/weewx/skins</td>
+        <td align='right'>skins and templates:</td>
+        <td class='tty'>/etc/weewx/skins</td>
     </tr>
     <tr>
-      <td align='right'>sqlite databases:</td>
-      <td class='tty'>/var/lib/weewx/</td>
+        <td align='right'>sqlite databases:</td>
+        <td class='tty'>/var/lib/weewx/</td>
     </tr>
     <tr>
-      <td align='right'>generated web pages and images:</td>
-      <td class='tty'>/var/www/weewx/</td>
+        <td align='right'>generated web pages and images:</td>
+        <td class='tty'>/var/www/weewx/</td>
     </tr>
     <tr>
-      <td align='right'>documentation:</td>
-      <td class='tty'>/usr/share/doc/weewx/</td>
+        <td align='right'>documentation:</td>
+        <td class='tty'>/usr/share/doc/weewx/</td>
     </tr>
-  </table>
-  <p class='copyright'>
+</table>
+<p class='copyright'>
     &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
-  </p>
+</p>
 
 </body>
 </html>

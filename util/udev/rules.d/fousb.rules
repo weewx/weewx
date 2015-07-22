@@ -1,0 +1,2 @@
+# make any fine offset station connected via usb accessible to non-root
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1941", ATTRS{idProduct}=="8021", MODE="0666"

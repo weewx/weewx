@@ -782,7 +782,7 @@ def decode_wind(pkt, pkt_data):
         return record
 
     except IndexError:
-        msg = ('%s decode index failure' % pkt.pkt_name())
+        msg = ('%s decode index failure' % pkt.pkt_name)
         raise WMR200ProtocolError(msg)
 
 class PacketWind(PacketLive):
@@ -832,7 +832,7 @@ def decode_rain(pkt, pkt_data):
         return record
 
     except IndexError:
-        msg = ('%s decode index failure' % pkt.pkt_name())
+        msg = ('%s decode index failure' % pkt.pkt_name)
         raise WMR200ProtocolError(msg)
 
 
@@ -903,7 +903,7 @@ def decode_uvi(pkt, pkt_data):
         return record
 
     except IndexError:
-        msg = ('%s index decode index failure' % pkt.pkt_name())
+        msg = ('%s index decode index failure' % pkt.pkt_name)
         raise WMR200ProtocolError(msg)
 
 
@@ -952,7 +952,7 @@ def decode_pressure(pkt, pkt_data):
         return record
 
     except IndexError:
-        msg = ('%s index decode index failure' % pkt.pkt_name())
+        msg = ('%s index decode index failure' % pkt.pkt_name)
         raise WMR200ProtocolError(msg)
 
 
@@ -1043,7 +1043,7 @@ def decode_temp(pkt, pkt_data):
         return record
 
     except IndexError:
-        msg = ('%s index decode index failure' % pkt.pkt_name())
+        msg = ('%s index decode index failure' % pkt.pkt_name)
         raise WMR200ProtocolError(msg)
 
 
@@ -1457,7 +1457,9 @@ class WMR200(weewx.drivers.AbstractDevice):
 
         # Locate the weather console device on the USB bus.
         if not self.usb_device.find_device(vendor_id, product_id):
-            logcrt('Unable to find device %x %x' % (vendor_id, product_id))
+            logcrt('Unable to find device with VendorID=%04x ProductID=%04x' %
+                   (vendor_id, product_id))
+            raise weewx.WeeWxIOError("Unable to find USB device")
 
         # Open the weather console USB device for read and writes.
         self.usb_device.open_device()

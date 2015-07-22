@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Copyright 2014 Matthew Wall
-# See the file LICENSE.txt for your full rights.
+# See the file LICENSE.txt for your rights.
 #
 # Credits:
 # Thanks to Rich of Modern Toil (2012)
@@ -15,7 +15,10 @@
 # Thanks to Brett Warden
 #  figured out a linear function for the pressure sensor in the 02032
 #
-# Slow-clap thanks to Michael Walsh
+# Thanks to Weather Guy and Andrew Daviel (2015)
+#  decoding of the R3 messages
+#
+# golf clap to Michael Walsh
 #  http://forum1.valleyinfosys.com/index.php
 #
 # No thanks to AcuRite or Chaney instruments.  They refused to provide any
@@ -25,11 +28,11 @@
 
 There are many variants of the AcuRite weather stations and sensors.  This
 driver is known to work with the consoles that have a USB interface such as
-models 01025 and 01035.  It should also work with the 02032C.
+models 01025, 01035, and 02032C.
 
 The AcuRite stations were introduced in 2011.  The 02032 model was introduced
-in 2013 or 2014.  It appears to be a low-end model - it has fewer buttons,
-and a different pressure sensor.
+in 2013 or 2014.  The 02032 appears to be a low-end model - it has fewer
+buttons, and a different pressure sensor.
 
 AcuRite publishes the following specifications:
 
@@ -56,13 +59,29 @@ According to AcuRite specs, the update frequencies are as follows:
   pc connect csv data logging: 12 minute intervals
   pc connect to acurite software: 18 second updates
 
+In fact, because of the message structure and the data logging design, these
+are the actual update frequencies:
+
+  wind speed: 18 seconds
+  outdoor temperature, outdoor humidity: 36 seconds
+  wind direction, rain total: 36 seconds
+  indoor temperature, pressure: 60 seconds
+  indoor humidity: 12 minutes (only when in USB mode 3)
+
+These are the frequencies possible when reading data via USB.
+
+There is no known way to change the archive interval of 12 minutes.
+
+There is no known way to clear the console memory via software.
+
+The AcuRite stations have no notion of wind gust.
+
 The pressure sensor in the console reports a station pressure, but the
 firmware does some kind of averaging to it so the console displays a pressure
 that is usually nothing close to the station pressure.
 
 According to AcuRite they use a 'patented, self-adjusting altitude pressure
-compensation' algorithm.  Not helpful, and in practice not accurate.  So we
-try to get the raw data.
+compensation' algorithm.  Not helpful, and in practice not accurate.
 
 Apparently the AcuRite bridge uses the HP03S integrated pressure sensor:
 
@@ -74,7 +93,9 @@ consoles (01035, 01036, others?).  However, some AcuRite consoles (only the
 
   http://www.meas-spec.com/downloads/MS5607-02BA03.pdf
 
-The AcuRite station has 4 USB modes:
+Communication
+
+The AcuRite station has 4 modes:
 
       show data   store data   stream data
   1   x           x
@@ -84,29 +105,40 @@ The AcuRite station has 4 USB modes:
 
 The console does not respond to USB requests when in mode 1 or mode 2.
 
-There is no known way to change the USB mode via software.
+There is no known way to change the mode via software.
+
+The acurite stations are probably a poor choice for remote operation.  If
+the power cycles on the console, communication might not be possible.  Some
+consoles (but not all?) default to mode 2, which means no USB communication.
 
 The console shows up as a USB device even if it is turned off.  If the console
 is powered on and communication has been established, then power is removed,
 the communication will continue.  So the console appears to draw some power
 from the bus.
 
-Apparently some stations have issues when the history buffer fills up.
-
-Some reports say that the station stops recording data.  Some reports say that
+Apparently some stations have issues when the history buffer fills up.  Some
+reports say that the station stops recording data.  Some reports say that
 the 02032 (and possibly other stations) should not use history mode at all
 because the data are written to flash memory, which wears out, sometimes
 quickly.  Some reports say this 'bricks' the station, however those reports
 mis-use the term 'brick', because the station still works and communication
-can sometimes be re-established.
+can be re-established by power cycling and/or resetting the USB.
 
-There may be firmware timing issues that affect USB communication.
+There may be firmware timing issues that affect USB communication.  Reading
+R3 messages too frequently can cause the station to stop responding via USB.
+Putting the station in mode 3 sometimes interferes with the collection of
+data from the sensors; it can cause the station to report bad values for R1
+messages (this was observed on a 01036 console, but not consistantly).
 
-The acurite stations are probably a poor choice for remote operation.  If
-the power cycles on the console, communication might not be possible.  Some
-consoles (but not all?) default to mode 2, which means no USB communication.
+Testing with a 01036 showed no difference between opening the USB port once
+during driver initialization and opening the USB port for each read.  However,
+tests with a 02032 showed that opening for each read was much more robust.
 
-Communication Formats
+Message Types
+
+The AcuRite stations show up as USB Human Interface Device (HID).  This driver
+uses the lower-level, raw USB API.  However, the communication is standard
+requests for data from a HID.
 
 The AcuRite station emits three different data strings, R1, R2 and R3.  The R1
 string is 10 bytes long, contains readings from the remote sensors, and comes
@@ -117,6 +149,13 @@ from the console, plus a whole bunch of calibration constants required to
 figure out the actual pressure and temperature.  The R3 string is 33 bytes
 and contains historical data and (apparently) the humidity readings from the
 console sensors.
+
+The contents of the R2 message depends on the pressure sensor.  For stations
+that use the HP03S sensor (e.g., 01035, 01036) the R2 message contains
+factory-set constants for calculating temperature and pressure.  For stations
+that use the MS5607-02BA03 sensor (e.g., 02032) the R2 message contents are
+unknown.  In both cases, the last 4 bytes appear to contain raw temperature
+and pressure readings, while the rest of the message bytes are constant.
 
 Message Maps
 
@@ -138,14 +177,14 @@ R1 - 10 bytes
 1: channel         x & 0xf0        observed values: 0xC=A, 0x8=B, 0x0=C
 1: sensor_id hi    x & 0x0f
 2: sensor_id lo
-3: ?sensor type    x & 0xf0        7 is 5-in-1?
+3: ?status         x & 0xf0        7 is 5-in-1?  7 is battery ok?
 3: message flavor  x & 0x0f        type 1 is windSpeed, windDir, rain
 4: wind speed     (x & 0x1f) << 3
 5: wind speed     (x & 0x70) >> 4
 5: wind dir       (x & 0x0f)
 6: ?                               always seems to be 0
 7: rain           (x & 0x7f)
-8: ?battery       (x & 0xf0)       0 is normal?
+8: ?
 8: rssi           (x & 0x0f)       observed values: 0,1,2,3
 9: ?                               observed values: 0x00, 0xff
 
@@ -153,14 +192,14 @@ R1 - 10 bytes
 1: channel         x & 0xf0        observed values: 0xC=A, 0x8=B, 0x0=C
 1: sensor_id hi    x & 0x0f
 2: sensor_id lo
-3: ?sensor type    x & 0xf0        7 is 5-in-1?
+3: ?status         x & 0xf0        7 is 5-in-1?  7 is battery ok?
 3: message flavor  x & 0x0f        type 8 is windSpeed, outTemp, outHumidity
 4: wind speed     (x & 0x1f) << 3
 5: wind speed     (x & 0x70) >> 4
 5: temp           (x & 0x0f) << 7
 6: temp           (x & 0x7f)
 7: humidity       (x & 0x7f)
-8: ?battery       (x & 0xf0)       0 is normal?
+8: ?
 8: rssi           (x & 0x0f)       observed values: 0,1,2,3
 9: ?                               observed values: 0x00, 0xff
 
@@ -171,6 +210,8 @@ R2 - 25 bytes
 
 02 00 00 4C BE 0D EC 01 52 03 62 7E 38 18 EE 09 C4 08 22 06 07 7B A4 8A 46
 02 00 00 80 00 00 00 00 00 04 00 10 00 00 00 09 60 01 01 01 01 8F C7 4C D3
+
+for HP03S sensor:
 
  0: identifier                                     02 indicates R2 messages
  1: ?                                              always seems to be 0
@@ -189,10 +230,56 @@ R2 - 25 bytes
  21-22: TR measured temperature                    0x00 - 0xffff
  23-24: PR measured pressure                       0x00 - 0xffff
 
+for MS5607-02BA03 sensor:
+
+ 0: identifier                                     02 indicates R2 messages
+ 1: ?                                              always seems to be 0
+ 2: ?                                              always seems to be 0
+ 3-4:   C1 sensitivity coefficient                 0x800
+ 5-6:   C2 offset coefficient                      0x00
+ 7-8:   C3 temperature coefficient of sensitivity  0x00
+ 9-10:  C4 temperature coefficient of offset       0x0400
+ 11-12: C5 reference temperature                   0x1000
+ 13-14: C6 temperature coefficient of temperature  0x00
+ 15-16: C7 offset fine tuning                      0x0960
+ 17:    A sensor-specific parameter                0x01
+ 18:    B sensor-specific parameter                0x01
+ 19:    C sensor-specific parameter                0x01
+ 20:    D sensor-specific parameter                0x01
+ 21-22: TR measured temperature                    0x00 - 0xffff
+ 23-24: PR measured pressure                       0x00 - 0xffff
+
 
 R3 - 33 bytes
  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 ...
 03 aa 55 01 00 00 00 20 20 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ...
+
+The 'aa 55' marks each block.  The sequence 'aa 55 05' or 'aa 55 06' marks the
+last block.  Blocks have the following meaning:
+
+1: 256 bytes: ?
+2: 256 bytes: ?
+3: time stamp
+4: 6 bytes: history data
+5: time stamp
+6: ?
+
+Byte 4 of block 4 is the number of 32-byte history records that follow
+
+History Records
+   0-1: indoor temperature        (r[0]*256 + r[1])/18 - 100    C
+   2-3: heatindex                 (r[2]*256 + r[3])/18 - 100    C
+     5: indoor humidity           r[5]                          percent
+     7: outdoor humidity          r[7]                          percent
+   8-9: windchill                 (r[8]*256 + r[9])/18 - 100    C
+ 10-11: outdoor temperature       (r[10]*256 + r[11])/18 - 100  C
+ 12-13: dewpoint                  (r[12]*256 + r[13])/18 - 100  C
+ 14-15: barometer                 (r[14]*256 + r[15])/10        kPa
+    17: wind direction            dirmap(r[17])
+ 18-19: wind speed                (r[18]*256 + r[19])/16        kph
+ 20-21: wind max                  (r[20]*256 + r[21])/16        kph
+ 22-23: wind average              (r[22]*256 + r[23])/16        kph
+ 25: rain                         r[25] * 0.254                 mm
 
 
 X1 - 2 bytes
@@ -205,17 +292,16 @@ X1 - 2 bytes
 """
 
 # FIXME: how to detect mode via software?
-# FIXME: how to download stored data?
-# FIXME: can the archive interval be changed?
-# FIXME: how to clear station memory?
+# FIXME: what happens when memory fills up?  overwrite oldest?
 # FIXME: how to detect console type?
+# FIXME: how to set station time?
+# FIXME: how to get station time?
 # FIXME: decode console battery level
 # FIXME: decode sensor type - hi byte of byte 3 in R1 message?
 
 # FIXME: decode inside humidity
 # FIXME: decode historical records
-
-# FIXME: is it better to open device for each read, or maintain open device?
+# FIXME: perhaps retry read when dodgey data or short read?
 
 from __future__ import with_statement
 import syslog
@@ -223,11 +309,18 @@ import time
 import usb
 
 import weewx.drivers
+import weewx.wxformulas
+from weeutil.weeutil import to_bool
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.14'
+DRIVER_VERSION = '0.19'
 DEBUG_RAW = 0
 
+# USB constants for HID
+USB_HID_GET_REPORT = 0x01
+USB_HID_SET_REPORT = 0x09
+USB_HID_INPUT_REPORT = 0x0100
+USB_HID_OUTPUT_REPORT = 0x0200
 
 def loader(config_dict, engine):
     return AcuRiteDriver(**config_dict[DRIVER_NAME])
@@ -263,6 +356,16 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
 
     max_tries - How often to retry communication before giving up.
     [Optional. Default is 10]
+
+    ignore_bounds - Indicates how to treat calibration constants from the
+    pressure/temperature sensor.  Some consoles report constants that are
+    outside the limits specified by the sensor manufacturer.  Typically this
+    would indicate bogus data - perhaps a bad transmission or noisy USB.
+    But in some cases, the apparently bogus constants actually work, and
+    no amount of power cycling or resetting of the console changes the values
+    that the console emits.  Use this flag to indicate that this is one of
+    those quirky consoles.
+    [Optional.  Default is False]
     """
     _R1_INTERVAL = 18    # 5-in-1 sensor updates every 18 seconds
     _R2_INTERVAL = 60    # console sensor updates every 60 seconds
@@ -274,6 +377,9 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         self.max_tries = int(stn_dict.get('max_tries', 10))
         self.retry_wait = int(stn_dict.get('retry_wait', 30))
         self.polling_interval = int(stn_dict.get('polling_interval', 6))
+        self.ignore_bounds = to_bool(stn_dict.get('ignore_bounds', False))
+        if self.ignore_bounds:
+            loginf('R2 bounds on constants will be ignored')
         self.enable_r3 = int(stn_dict.get('enable_r3', 0))
         if self.enable_r3:
             loginf('R3 data will be attempted')
@@ -320,12 +426,13 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 if raw2:
                     Station.check_pt_constants(last_raw2, raw2)
                     last_raw2 = raw2
-                    packet.update(Station.decode_R2(raw2))
+                    packet.update(Station.decode_R2(raw2, self.ignore_bounds))
                 self._augment_packet(packet)
                 ntries = 0
                 yield packet
                 next_read = min(self.r1_next_read, self.r2_next_read)
-                delay = max(next_read - time.time(), self.polling_interval)
+                delay = max(int(next_read - time.time() + 1),
+                            self.polling_interval)
                 logdbg("next read in %s seconds" % delay)
                 time.sleep(delay)
             except (usb.USBError, weewx.WeeWxIOError), e:
@@ -340,11 +447,13 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
     def _augment_packet(self, packet):
         # calculate the rain delta from the total
         if 'rain_total' in packet:
-            if self.last_rain is not None:
-                packet['rain'] = packet['rain_total'] - self.last_rain
-            else:
-                packet['rain'] = None
-            self.last_rain = packet['rain_total']
+            total = packet['rain_total']
+            if (total is not None and self.last_rain is not None and
+                total < self.last_rain):
+                loginf("rain counter decrement ignored:"
+                       " new: %s old: %s" % (total, self.last_rain))
+            packet['rain'] = weewx.wxformulas.calculate_rain(total, self.last_rain)
+            self.last_rain = total
 
         # no wind direction when wind speed is zero
         if 'windSpeed' in packet and not packet['windSpeed']:
@@ -452,8 +561,8 @@ class Station(object):
         # FIXME: is it necessary to set the configuration?
         try:
             self.handle.setConfiguration(dev.configurations[0])
-        except usb.USBError, e:
-            loginf("Set configuration failed: %s" % e)
+        except (AttributeError, usb.USBError), e:
+            pass
 
         # attempt to claim the interface
         try:
@@ -466,26 +575,26 @@ class Station(object):
         # FIXME: is it necessary to set the alt interface?
         try:
             self.handle.setAltInterface(interface)
-        except usb.USBError, e:
-            loginf("Set alt interface failed: %s" % e)
+        except (AttributeError, usb.USBError), e:
+            pass
 
     def close(self):
         if self.handle is not None:
             try:
                 self.handle.releaseInterface()
-            except usb.USBError, e:
+            except (ValueError, usb.USBError), e:
                 logerr("release interface failed: %s" % e)
             self.handle = None
 
     def reset(self):
         self.handle.reset()
 
-    def read(self, msgtype, nbytes):
+    def read(self, report_number, nbytes):
         return self.handle.controlMsg(
             requestType=usb.RECIP_INTERFACE + usb.TYPE_CLASS + usb.ENDPOINT_IN,
-            request=usb.REQ_CLEAR_FEATURE,
+            request=USB_HID_GET_REPORT,
             buffer=nbytes,
-            value=0x0100 + msgtype,
+            value=USB_HID_INPUT_REPORT + report_number,
             index=0x0,
             timeout=self.timeout)
 
@@ -496,16 +605,15 @@ class Station(object):
         return self.read(2, 25)
 
     def read_R3(self):
-        # FIXME: how many times can we do this read before timeout?
         return self.read(3, 33)
 
     def read_x(self):
         # FIXME: what do the two bytes mean?
         return self.handle.controlMsg(
             requestType=usb.RECIP_INTERFACE + usb.TYPE_CLASS,
-            request=usb.REQ_SET_CONFIGURATION,
+            request=USB_HID_SET_REPORT,
             buffer=2,
-            value=0x0201,
+            value=USB_HID_OUTPUT_REPORT + 0x01,
             index=0x0,
             timeout=self.timeout)
 
@@ -513,34 +621,27 @@ class Station(object):
     def decode_R1(raw):
         data = dict()
         if len(raw) == 10 and raw[0] == 0x01:
-            if raw[3] == 0xff and raw[2] == 0xcf:
-                loginf("R1: no sensors found: %s" % _fmt_bytes(raw))
+            if Station.check_R1(raw):
+                data['channel'] = Station.decode_channel(raw)
+                data['sensor_id'] = Station.decode_sensor_id(raw)
+                data['rssi'] = Station.decode_rssi(raw)
+                if data['rssi'] == 0:
+                    data['sensor_battery'] = None
+                    loginf("R1: ignoring stale data: %s" % _fmt_bytes(raw))
+                else:
+                    data['sensor_battery'] = Station.decode_sensor_battery(raw)
+                    data['windSpeed'] = Station.decode_windspeed(raw)
+                    if raw[3] & 0x0f == 1:
+                        data['windDir'] = Station.decode_winddir(raw)
+                        data['rain_total'] = Station.decode_rain(raw)
+                    else:
+                        data['outTemp'] = Station.decode_outtemp(raw)
+                        data['outHumidity'] = Station.decode_outhumid(raw)
+            else:
                 data['channel'] = None
                 data['sensor_id'] = None
                 data['rssi'] = None
                 data['sensor_battery'] = None
-            elif raw[9] != 0xff:
-                loginf("R1: ignoring dodgey data: %s" % _fmt_bytes(raw))
-                data['channel'] = Station.decode_channel(raw)
-                data['sensor_id'] = Station.decode_sensor_id(raw)
-                data['rssi'] = Station.decode_rssi(raw)
-                data['sensor_battery'] = None
-            elif raw[3] & 0x0f == 1 or raw[3] & 0x0f == 8:
-                if raw[3] & 0xf0 != 0x70:
-                    loginf("R1: unexpected sensor type: %s" % _fmt_bytes(raw))
-                data['channel'] = Station.decode_channel(raw)
-                data['sensor_id'] = Station.decode_sensor_id(raw)
-                data['rssi'] = Station.decode_rssi(raw)
-                data['sensor_battery'] = Station.decode_sensor_battery(raw)
-                data['windSpeed'] = Station.decode_windspeed(raw)
-                if raw[3] & 0x0f == 1:
-                    data['windDir'] = Station.decode_winddir(raw)
-                    data['rain_total'] = Station.decode_rain(raw)
-                else:
-                    data['outTemp'] = Station.decode_outtemp(raw)
-                    data['outHumidity'] = Station.decode_outhumid(raw)
-            else:
-                logerr("R1: unknown format: %s" % _fmt_bytes(raw))
         elif len(raw) != 10:
             logerr("R1: bad length: %s" % _fmt_bytes(raw))
         else:
@@ -548,10 +649,28 @@ class Station(object):
         return data
 
     @staticmethod
-    def decode_R2(raw):
+    def check_R1(raw):
+        ok = True
+        if raw[2] & 0x0f == 0x0f and raw[2] == 0xff:
+            loginf("R1: no sensors found: %s" % _fmt_bytes(raw))
+            ok = False
+        else:
+            if raw[3] & 0x0f != 1 and raw[3] & 0x0f != 8:
+                loginf("R1: bogus message flavor (%02x): %s" % (raw[3], _fmt_bytes(raw)))
+                ok = False
+            if raw[9] != 0xff and raw[9] != 0x00:
+                loginf("R1: bogus final byte (%02x): %s" % (raw[9], _fmt_bytes(raw)))
+                ok = False
+            if raw[8] & 0x0f < 0 or raw[8] & 0x0f > 3:
+                loginf("R1: bogus signal strength (%02x): %s" % (raw[8], _fmt_bytes(raw)))
+                ok = False
+        return ok
+
+    @staticmethod
+    def decode_R2(raw, ignore_bounds=False):
         data = dict()
         if len(raw) == 25 and raw[0] == 0x02:
-            data['pressure'], data['inTemp'] = Station.decode_pt(raw)
+            data['pressure'], data['inTemp'] = Station.decode_pt(raw, ignore_bounds)
         elif len(raw) != 25:
             logerr("R2: bad length: %s" % _fmt_bytes(raw))
         else:
@@ -597,13 +716,15 @@ class Station(object):
     @staticmethod
     def decode_rssi(data):
         # signal strength goes from 0 to 3, inclusive
+        # according to nincehelser, this is a measure of the number of failed
+        # sensor queries, not the actual RF signal strength
         return data[8] & 0x0f
 
     @staticmethod
     def decode_sensor_battery(data):
-        # battery level is 0xf or 0x0?
-        # FIXME: need to verify this
-        return data[8] & 0xf0
+        # 0x7 indicates battery ok, 0xb indicates low battery?
+        a = (data[3] & 0xf0) >> 4
+        return 0 if a == 0x7 else 1
 
     @staticmethod
     def decode_windspeed(data):
@@ -625,8 +746,6 @@ class Station(object):
     @staticmethod
     def decode_outtemp(data):
         # extract the temperature from an R1 message
-#        t_F = 0.1 * ((((data[5] & 0x0f) << 7) | (data[6] & 0x7f)) - 400)
-#        return (t_F - 32) * 5 / 9
         # return value is degree C
         a = (data[5] & 0x0f) << 7
         b = (data[6] & 0x7f)
@@ -642,18 +761,21 @@ class Station(object):
     def decode_rain(data):
         # decoded value is a count of bucket tips
         # each tip is 0.01 inch, return value is cm
-        return (data[7] & 0x7f) * 0.0254
+        return (((data[6] & 0x3f) << 7) | (data[7] & 0x7f)) * 0.0254
 
     @staticmethod
-    def decode_pt(data):
+    def decode_pt(data, ignore_bounds=False):
         # decode pressure and temperature from the R2 message
         # decoded pressure is mbar, decoded temperature is degree C
         c1,c2,c3,c4,c5,c6,c7,a,b,c,d = Station.get_pt_constants(data)
-        d2 = (data[21] << 8) + data[22]
-        d1 = (data[23] << 8) + data[24]
 
         if (c1 == 0x8000 and c2 == c3 == 0x0 and c4 == 0x0400 and c5 == 0x1000
             and c6 == 0x0 and c7 == 0x0960 and a == b == c == d == 0x1):
+            # this is a MS5607 sensor, typical in 02032 consoles
+            d2 = ((data[21] & 0x0f) << 8) + data[22]
+            if d2 >= 0x0800:
+                d2 -= 0x1000
+            d1 = (data[23] << 8) + data[24]
             return Station.decode_pt_MS5607(d1, d2)
         elif (0x100 <= c1 <= 0xffff and
               0x0 <= c2 <= 0x1fff and
@@ -662,8 +784,15 @@ class Station(object):
               0x1000 <= c5 <= 0xffff and
               0x0 <= c6 <= 0x4000 and
               0x960 <= c7 <= 0xa28 and
-              0x01 <= a <= 0x3f and 0x01 <= b <= 0x3f and
-              0x01 <= c <= 0x0f and 0x01 <= d <= 0x0f):
+              (0x01 <= a <= 0x3f and 0x01 <= b <= 0x3f and
+               0x01 <= c <= 0x0f and 0x01 <= d <= 0x0f) or ignore_bounds):
+            # this is a HP038 sensor.  some consoles return values outside the
+            # specified limits, but their data still seem to be ok.  if the
+            # ignore_bounds flag is set, then permit values for A, B, C, or D
+            # that are out of bounds, but enforce constraints on the other
+            # constants C1-C7.
+            d2 = (data[21] << 8) + data[22]
+            d1 = (data[23] << 8) + data[24]
             return Station.decode_pt_HP03S(c1,c2,c3,c4,c5,c6,c7,a,b,c,d,d1,d2)
         logerr("R2: unknown calibration constants: %s" % _fmt_bytes(data))
         return None, None
@@ -685,8 +814,8 @@ class Station(object):
     @staticmethod
     def decode_pt_MS5607(d1, d2):
         # for devices with the MS5607 sensor, do a linear scaling
-        p = 0.062424282478109 * d1 - 206.48350164881
-        t = 0.049538214503151 * d2 - 1801.189704931
+        p = 0.062585727 * d1 - 209.6211
+        t = 25.0 + 0.05 * d2
         return p, t
 
     @staticmethod

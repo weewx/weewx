@@ -180,16 +180,15 @@ class Almanac():
         else:
             
             # No ephem package. Use the weeutil algorithms, which supply a minimum of functionality
-            (sunrise_utc, sunset_utc) = weeutil.Sun.sunRiseSet(y, m, d, self.lon, self.lat)
-            # The above function returns its results in UTC hours. Convert
-            # to a local time tuple
-            sunrise_tt = weeutil.weeutil.utc_to_local_tt(y, m, d, sunrise_utc)
-            sunset_tt  = weeutil.weeutil.utc_to_local_tt(y, m, d, sunset_utc)
-            self._sunrise = time.strftime("%H:%M", sunrise_tt)
-            self._sunset  = time.strftime("%H:%M", sunset_tt)
-
+            (sunrise_utc_h, sunset_utc_h) = weeutil.Sun.sunRiseSet(y, m, d, self.lon, self.lat)
+            sunrise_ts = weeutil.weeutil.utc_to_ts(y, m, d, sunrise_utc_h)
+            sunset_ts  = weeutil.weeutil.utc_to_ts(y, m, d, sunset_utc_h)
+            self._sunrise = weewx.units.ValueHelper((sunrise_ts, "unix_epoch", "group_time"), 
+                                                    context="ephem_day", formatter=self.formatter)
+            self._sunset  = weewx.units.ValueHelper((sunset_ts,  "unix_epoch", "group_time"), 
+                                                    context="ephem_day", formatter=self.formatter)
             self.hasExtras = False            
-    
+
     # Shortcuts, used for backwards compatibility
     @property
     def sunrise(self):
@@ -381,6 +380,25 @@ def timestamp_to_djd(time_ts):
 def djd_to_timestamp(djd):
     """Convert from number of days since 12/31/1899 12:00 UTC ("Dublin Julian Days") to unix time stamp"""
     return (djd-25567.5) * 86400.0
+
+def dummy():
+    """Final test that does not use ephem.
+    
+    First, get rid of 'ephem':
+    >>> p = sys.modules.pop('ephem')
+    
+    Now do the rest as before:
+    >>> import os
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> t = 1238180400
+    >>> print timestamp_to_string(t)
+    2009-03-27 12:00:00 PDT (1238180400)
+    >>> almanac = Almanac(t, 46.0, -122.0)
+    
+    Use "_sunrise" to make sure we're getting the results from weeutil (not ephem):
+    >>> print "Sunrise, sunset:", almanac._sunrise, almanac._sunset
+    Sunrise, sunset: 06:56 19:30"""
+    
     
 if __name__ == '__main__':
     import doctest

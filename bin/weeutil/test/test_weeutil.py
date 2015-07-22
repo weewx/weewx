@@ -5,14 +5,11 @@
 #
 """Test routines for weeutil.weeutil."""
 
-import unittest
-import calendar
-import os
-import time
+from __future__ import with_statement
 
-from weeutil.weeutil import startOfInterval, option_as_list, TimeSpan, genYearSpans, genMonthSpans, genDaySpans
-from weeutil.weeutil import archiveDaySpan, archiveWeekSpan, archiveMonthSpan, archiveYearSpan, archiveRainYearSpan
-from weeutil.weeutil import startOfDay, startOfArchiveDay, intervalgen, stampgen
+import unittest
+
+from weeutil.weeutil import *  # @UnusedWildImport
 
 os.environ['TZ'] = 'America/Los_Angeles'
 
@@ -28,7 +25,12 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(option_as_list(['a', 'b']), ['a', 'b'])
         self.assertEqual(option_as_list(None), None)
         self.assertEqual(option_as_list(''), [''])
-        
+
+    def test_list_as_string(self):
+        self.assertEqual(list_as_string('a string'), "a string")
+        self.assertEqual(list_as_string(['a', 'string']), "a, string")
+        self.assertEqual(list_as_string('Reno, NV'), "Reno, NV")
+                
     def test_stampgen(self):
         
         os.environ['TZ'] = 'America/Los_Angeles'
@@ -107,7 +109,24 @@ class WeeutilTest(unittest.TestCase):
                                                                (1383487200, 1383498000),(1383498000, 1383508800)]):
             self.assertEqual(s, TimeSpan(check_s[0], check_s[1]))
     
+    def test_archiveHoursAgoSpan(self):
+        os.environ['TZ'] = 'America/Los_Angeles'
+        time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+        self.assertEqual(str(archiveHoursAgoSpan(time_ts, hours_ago=0)),
+                         "[2013-07-04 01:00:00 PDT (1372924800) -> 2013-07-04 02:00:00 PDT (1372928400)]")
+        self.assertEqual(str(archiveHoursAgoSpan(time_ts, hours_ago=2)),
+                         "[2013-07-03 23:00:00 PDT (1372917600) -> 2013-07-04 00:00:00 PDT (1372921200)]")
+        time_ts = time.mktime(datetime.date(2013,07,04).timetuple())
+        self.assertEqual(str(archiveHoursAgoSpan(time_ts, hours_ago=0)),
+                         "[2013-07-03 23:00:00 PDT (1372917600) -> 2013-07-04 00:00:00 PDT (1372921200)]")
+        self.assertEqual(str(archiveHoursAgoSpan(time_ts, hours_ago=24)),
+                         "[2013-07-02 23:00:00 PDT (1372831200) -> 2013-07-03 00:00:00 PDT (1372834800)]")
 
+    def test_isMidnight(self):
+        os.environ['TZ'] = 'America/Los_Angeles'
+        self.assertFalse(isMidnight(time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))))
+        self.assertTrue(isMidnight(time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))))
+        
     def test_startOfInterval(self):
     
         os.environ['TZ'] = 'America/Los_Angeles'
@@ -541,6 +560,54 @@ class WeeutilTest(unittest.TestCase):
                 self.assertEqual("%s %s" % (timestamp_to_gmtime(t[1]),
                                             timestamp_to_local(t[1])),
                                  expected[i][j][4])
+
+    def test_utc_conversions(self):
+        self.assertEqual(utc_to_ts(2009, 3, 27, 14.5), 1238164200)
+        os.environ['TZ'] = 'America/Los_Angeles'
+        tt=utc_to_local_tt(2009, 3, 27, 14.5)
+        self.assertEqual(tt[0:5], (2009, 3, 27, 7, 30))
+
+    def test_genWithPeek(self):
+        # Define a generator function:
+        def genfunc(N):
+            for i in range(N):
+                yield i
+
+        # Now wrap it with the GenWithPeek object:
+        g_with_peek = GenWithPeek(genfunc(5))
+        
+        # Define a generator function to test it
+        def tester(g):
+            for i in g:
+                yield str(i)
+                # Every second object, let's take a peek ahead
+                if i%2:
+                    # We can get a peek at the next object without disturbing the wrapped generator:
+                    yield "peek: %d" % g.peek()
+
+        seq = [x for x in tester(g_with_peek)]
+        self.assertEqual(seq, ["0", "1", "peek: 2", "2", "3", "peek: 4", "4"])
+
+    def test_ListOfDicts(self):
+        # Try an empty dictionary:
+        lod = ListOfDicts()
+        with self.assertRaises(KeyError):
+            lod['b']
+        # Now initialize with a starting dictionary:
+        lod = ListOfDicts({'a':1, 'b':2, 'c':3})
+        # Look up a key known to be in there:
+        self.assertEqual(lod['b'], 2)
+        # Look for a non-existent key
+        with self.assertRaises(KeyError):
+            lod['d']
+        # Now extend the dictionary:
+        lod.extend({'d':4, 'e':5})
+        # And try the lookup:
+        self.assertEqual(lod['d'], 4)
+        # Explicitly add a new key to the dictionary:
+        lod['f'] = 6
+        # Try it:
+        self.assertEqual(lod['f'], 6)        
 
 if __name__ == '__main__':
     unittest.main()

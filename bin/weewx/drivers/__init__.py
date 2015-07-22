@@ -54,7 +54,9 @@ class AbstractConfigurator(object):
 
     @property
     def epilog(self):
-        return "Mutating actions will request confirmation before proceeding."
+        return "Be sure to stop weewx first before using. Mutating actions will"\
+            " request confirmation before proceeding.\n"
+                
 
     def configure(self, config_dict):
         parser = self.get_parser()
@@ -94,7 +96,20 @@ class AbstractConfEditor(object):
 
     @property
     def default_stanza(self):
-        """Return a plain text stanza"""
+        """Return a plain text stanza. This will look something like:
+        
+[Acme]
+    # This section is for the Acme weather station 
+
+    # The station model
+    model = acme100
+
+    # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
+    port = /dev/ttyUSB0
+
+    # The driver to use:
+    driver = weewx.drivers.acme
+        """
         raise NotImplementedError("property 'default_stanza' is not defined")
 
     def get_conf(self, orig_stanza=None):
@@ -102,12 +117,13 @@ class AbstractConfEditor(object):
         that will work with the current version of the device driver.
 
         The default behavior is to return the original stanza, unmodified.
-
+        
         Derived classes should override this if they need to modify previous
-        configuration options or warn about deprecated or harmful options."""
-        if orig_stanza is not None:
-            return orig_stanza
-        return self.default_stanza
+        configuration options or warn about deprecated or harmful options.
+        
+        The return value should be a long string. See default_stanza above
+        for an example string stanza."""
+        return self.default_stanza if orig_stanza is None else orig_stanza
 
     def prompt_for_settings(self):
         """Prompt for settings required for proper operation of this driver.
@@ -115,19 +131,7 @@ class AbstractConfEditor(object):
         return dict()
 
     def _prompt(self, label, dflt=None, opts=None):
-        value = None
-        msg = "%s: " % label
-        if dflt is not None:
-            msg = "%s [%s]: " % (label, dflt)
-        while value is None:
-            ans = raw_input(msg)
-            x = ans.strip()
-            if len(x) == 0:
-                if dflt is not None:
-                    value = dflt
-            elif opts is not None:
-                if x in opts:
-                    value = x
-            else:
-                value = x
-        return value
+        import weecfg
+        val = weecfg.prompt_with_options(label, dflt, opts)
+        del weecfg
+        return val

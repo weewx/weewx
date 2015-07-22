@@ -30,6 +30,7 @@ import syslog
 import usb
 
 import weewx.drivers
+import weewx.wxformulas
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR100'
@@ -253,7 +254,7 @@ class WMR100(weewx.drivers.AbstractDevice):
         # Because the WMR does not offer anything like bucket tips, we must
         # calculate it by looking for the change in total rain. Of course, this
         # won't work for the very first rain packet.
-        _record['rain'] = (_record['totalRain']-self.last_totalRain) if self.last_totalRain is not None else None
+        _record['rain'] = weewx.wxformulas.calculate_rain(_record['totalRain'], self.last_totalRain)
         self.last_totalRain = _record['totalRain']
         return _record
 

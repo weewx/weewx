@@ -170,6 +170,18 @@ class Connection(weedb.Connection):
         return column_list
 
     @guard
+    def get_variable(self, var_name):
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute("SHOW VARIABLES LIKE '%s';" % var_name)
+            row = cursor.fetchone()
+            # This is actually a 2-way tuple (variable-name, variable-value),
+            # or None, if the variable does not exist.
+            return row
+        finally:
+            cursor.close()
+
+    @guard
     def begin(self):
         """Begin a transaction."""
         self.connection.query("START TRANSACTION")
@@ -181,7 +193,6 @@ class Connection(weedb.Connection):
     @guard
     def rollback(self):
         self.connection.rollback()
-
 
 class Cursor(object):
     """A wrapper around the MySQLdb cursor object"""

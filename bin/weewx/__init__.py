@@ -6,7 +6,7 @@
 """Package weewx, containing modules specific to the weewx runtime engine."""
 import time
 
-__version__="3.1.0"
+__version__="3.2.1"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -63,6 +63,9 @@ class UninitializedDatabase(StandardError):
 class UnknownDatabase(StandardError):
     """Exception thrown when attempting to use an unknown database."""
 
+class UnknownDatabaseType(StandardError):
+    """Exception thrown when attempting to use an unknown database type."""
+
 class UnknownBinding(StandardError):
     """Exception thrown when attempting to use an unknown data binding."""
 
@@ -92,6 +95,14 @@ class NEW_ARCHIVE_RECORD(object):
 class POST_LOOP(object):
     """Event issued right after the main loop has been broken. Services hook into this to
     access the console for things other than generating LOOP packet."""
+
+#===============================================================================
+#                       Service groups.
+#===============================================================================
+
+# All existent service groups:
+all_service_groups = ['prep_services', 'data_services', 'process_services',
+                      'archive_services', 'restful_services', 'report_services']
 
 #===============================================================================
 #                       Class Event

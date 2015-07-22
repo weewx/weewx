@@ -22,9 +22,8 @@ Add the following to weewx.conf:
 
 [Databases]
     [[pmon_sqlite]]
-        root = %(WEEWX_ROOT)s
         database_name = archive/pmon.sdb
-        driver = weedb.sqlite
+        database_type = SQLite
 
 [Engine]
     [[Services]]
@@ -81,8 +80,7 @@ class ProcessMonitor(StdService):
 
         # be sure database matches the schema we have
         dbcol = self.dbm.connection.columnsOf(self.dbm.table_name)
-        dbm_dict = weewx.manager.get_manager_dict(
-            config_dict['DataBindings'], config_dict['Databases'], binding)
+        dbm_dict = weewx.manager.get_manager_dict_from_config(config_dict, binding)
         memcol = [x[0] for x in dbm_dict['schema']]
         if dbcol != memcol:
             raise Exception('pmon schema mismatch: %s != %s' % (dbcol, memcol))
@@ -173,9 +171,8 @@ if __name__=="__main__":
                 'schema': 'user.pmon.schema'}},
         'Databases': {
             'pmon_sqlite': {
-                'root': '/tmp',
                 'database_name': 'pmon.sdb',
-                'driver': 'weedb.sqlite'}},
+                'database_type': 'SQLite'}},
         'Engines': {
             'Services': {
                 'process_services': 'user.pmon.ProcessMonitor'}}}

@@ -2,16 +2,16 @@
 
 [Unit]
 Description=weewx weather system
-Requires=syslog.target
-Requires=ntpd.target
-After=syslog.target
-After=ntpd.target
+Requires=syslog.service
+Requires=ntp.service
+After=syslog.service
+After=ntp.service
 RequiresMountsFor=/home
 
 [Service]
-ExecStart=/home/weewx/bin/weewxd /home/weewx/weewx.conf
+ExecStart=/home/weewx/bin/weewxd --daemon --pidfile=/var/run/weewx.pid /home/weewx/weewx.conf
 ExecReload=/bin/kill -HUP $MAINPID
-Type=forking
+Type=simple
 PIDFile=/var/run/weewx.pid
 #User=weewx
 #Group=weewx

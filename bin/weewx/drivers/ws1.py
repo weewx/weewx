@@ -19,7 +19,7 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.15'
+DRIVER_VERSION = '0.19'
 
 
 def loader(config_dict, _):
@@ -49,17 +49,11 @@ def loginf(msg):
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
-def _format(buf):
-    return ' '.join(["%0.2X" % ord(c) for c in buf])
-
 class WS1Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an ADS-WS1 station
     
     port - serial port
     [Required. Default is /dev/ttyS0]
-
-    polling_interval - how often to query the serial interface, seconds
-    [Optional. Default is 1]
 
     max_tries - how often to retry serial communication before giving up
     [Optional. Default is 5]
@@ -69,45 +63,35 @@ class WS1Driver(weewx.drivers.AbstractDevice):
     """
     def __init__(self, **stn_dict):
         self.port = stn_dict.get('port', DEFAULT_PORT)
-        self.polling_interval = float(stn_dict.get('polling_interval', 1))
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 10))
         self.last_rain = None
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
-        loginf('polling interval is %s' % self.polling_interval)
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
+        self.station = Station(self.port)
+        self.station.open()
+
+    def closePort(self):
+        if self.station is not None:
+            self.station.close()
+            self.station = None
 
     @property
     def hardware_name(self):
         return "WS1"
 
     def genLoopPackets(self):
-        ntries = 0
-        while ntries < self.max_tries:
-            ntries += 1
-            try:
-                packet = {'dateTime': int(time.time() + 0.5),
-                          'usUnits': weewx.US}
-                # open a new connection to the station for each reading
-                with Station(self.port) as station:
-                    readings = station.get_readings()
-                data = Station.parse_readings(readings)
-                packet.update(data)
-                self._augment_packet(packet)
-                ntries = 0
-                yield packet
-                if self.polling_interval:
-                    time.sleep(self.polling_interval)
-            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
-                logerr("Failed attempt %d of %d to get LOOP data: %s" %
-                       (ntries, self.max_tries, e))
-                time.sleep(self.retry_wait)
-        else:
-            msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
-            logerr(msg)
-            raise weewx.RetriesExceeded(msg)
+        while True:
+            packet = {'dateTime': int(time.time() + 0.5),
+                      'usUnits': weewx.US}
+            readings = self.station.get_readings_with_retry(self.max_tries,
+                                                            self.retry_wait)
+            data = Station.parse_readings(readings)
+            packet.update(data)
+            self._augment_packet(packet)
+            yield packet
 
     def _augment_packet(self, packet):
         # calculate the rain delta from rain total
@@ -147,51 +131,48 @@ class Station(object):
             self.serial_port.close()
             self.serial_port = None
 
-    def read(self, nchar=1):
-        buf = self.serial_port.read(nchar)
-        n = len(buf)
-        if n != nchar:
-            if DEBUG_READ and n:
-                logdbg("partial buffer: '%s'" % _format(buf))
-            raise weewx.WeeWxIOError("Read expected %d chars, got %d" %
-                                     (nchar, n))
+    # FIXME: use either CR or LF as line terminator.  apparently some ws1
+    # hardware occasionally ends a line with only CR instead of the standard
+    # CR-LF, resulting in a line that is too long.
+    def get_readings(self):
+        buf = self.serial_port.readline()
+        if DEBUG_READ:
+            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
+        buf = buf.strip()
         return buf
 
-    def get_readings(self):
-        b = []
-        bad_byte = False
-        while True:
-            c = self.read(1)
-            if c == "\r":
-                break
-            elif c == '!' and len(b) > 0:
-                break
-            elif c == '!':
-                b = []
-            else:
-                try:
-                    int(c, 16)
-                except ValueError:
-                    bad_byte = True
-                b.append(c)
-        if DEBUG_READ:
-            logdbg("bytes: '%s'" % _format(b))
-        if len(b) != 48:
-            raise weewx.WeeWxIOError("Got %d bytes, expected 48" % len(b))
-        if bad_byte:
-            raise weewx.WeeWxIOError("One or more bad bytes: %s" % _format(b))
-        return ''.join(b)
+    def get_readings_with_retry(self, max_tries=5, retry_wait=10):
+        for ntries in range(0, max_tries):
+            try:
+                buf = self.get_readings()
+                Station.validate_string(buf)
+                return buf
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+                loginf("Failed attempt %d of %d to get readings: %s" %
+                       (ntries + 1, max_tries, e))
+                time.sleep(retry_wait)
+        else:
+            msg = "Max retries (%d) exceeded for readings" % max_tries
+            logerr(msg)
+            raise weewx.RetriesExceeded(msg)
 
     @staticmethod
-    def parse_readings(b):
+    def validate_string(buf):
+        if len(buf) != 50:
+            raise weewx.WeeWxIOError("Unexpected buffer length %d" % len(buf))
+        if buf[0:2] != '!!':
+            raise weewx.WeeWxIOError("Unexpected header bytes '%s'" % buf[0:2])
+        return buf
+
+    @staticmethod
+    def parse_readings(raw):
         """WS1 station emits data in PeetBros format:
 
         http://www.peetbros.com/shop/custom.aspx?recid=29
 
-        Each line has 51 characters - 2 header bytes, 48 data bytes, and a
-        carriage return:
+        Each line has 50 characters - 2 header bytes and 48 data bytes:
 
-        !!000000BE02EB000027700000023A023A0025005800000000\r
+        !!000000BE02EB000027700000023A023A0025005800000000
           SSSSXXDDTTTTLLLLPPPPttttHHHHhhhhddddmmmmRRRRWWWW
 
           SSSS - wind speed (0.1 kph)
@@ -208,20 +189,40 @@ class Station(object):
           RRRR - daily rain (0.01 in)
           WWWW - one minute wind average (0.1 kph)
         """
+        # FIXME: peetbros could be 40 bytes or 44 bytes, what about ws1?
+        # FIXME: peetbros uses two's complement for temp, what about ws1?
+        # FIXME: for ws1 is the pressure reading 'pressure' or 'barometer'?
+        buf = raw[2:]
         data = dict()
-        data['windSpeed'] = int(b[0:4], 16) * 0.1 * MILE_PER_KM  # mph
-        data['windDir'] = int(b[6:8], 16) * 1.411764  # compass degrees
-        data['outTemp'] = int(b[8:12], 16) * 0.1  # degree_F
-        data['long_term_rain'] = int(b[12:16], 16) * 0.01  # inch
-        data['pressure'] = int(b[16:20], 16) * 0.1 * INHG_PER_MBAR  # inHg
-        data['inTemp'] = int(b[20:24], 16) * 0.1  # degree_F
-        data['outHumidity'] = int(b[24:28], 16) * 0.1  # percent
-        data['inHumidity'] = int(b[28:32], 16) * 0.1  # percent
-        data['day_of_year'] = int(b[32:36], 16)
-        data['minute_of_day'] = int(b[36:40], 16)
-        data['daily_rain'] = int(b[40:44], 16) * 0.01  # inch
-        data['wind_average'] = int(b[44:48], 16) * 0.1 * MILE_PER_KM  # mph
+        data['windSpeed'] = Station._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
+        data['windDir'] = Station._decode(buf[6:8], 1.411764)  # compass deg
+        data['outTemp'] = Station._decode(buf[8:12], 0.1)  # degree_F
+        data['long_term_rain'] = Station._decode(buf[12:16], 0.01)  # inch
+        data['pressure'] = Station._decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
+        data['inTemp'] = Station._decode(buf[20:24], 0.1)  # degree_F
+        data['outHumidity'] = Station._decode(buf[24:28], 0.1)  # percent
+        data['inHumidity'] = Station._decode(buf[28:32], 0.1)  # percent
+        data['day_of_year'] = Station._decode(buf[32:36])
+        data['minute_of_day'] = Station._decode(buf[36:40])
+        data['daily_rain'] = Station._decode(buf[40:44], 0.01)  # inch
+        data['wind_average'] = Station._decode(buf[44:48], 0.1 * MILE_PER_KM)  # mph
         return data
+
+    @staticmethod
+    def _decode(s, multiplier=None, neg=False):
+        v = None
+        try:
+            v = int(s, 16)
+            if neg:
+                bits = 4 * len(s)
+                if v & (1 << (bits - 1)) != 0:
+                    v -= (1 << bits)
+            if multiplier is not None:
+                v *= multiplier
+        except ValueError, e:
+            if s != '----':
+                logdbg("decode failed for '%s': %s" % (s, e))
+        return v
 
 
 class WS1ConfEditor(weewx.drivers.AbstractConfEditor):

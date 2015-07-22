@@ -21,9 +21,9 @@
   <body>
     <h1 class="title">weewx: Installation on Redhat-based systems</h1>
     <p class='os-icons'>      
-      <img class='logo' src='images/logo-redhat.png'/>
-      <img class='logo' src='images/logo-centos.png'/>
-      <img class='logo' src='images/logo-fedora.png'/>
+      <img class='logo' src='images/logo-redhat.png' alt=""/>
+      <img class='logo' src='images/logo-centos.png' alt=""/>
+      <img class='logo' src='images/logo-fedora.png' alt=""/>
     </p>
     <p>
       This is a guide to installing <span class='code'>weewx</span>
@@ -38,50 +38,50 @@
     <p>
       Install pre-requisites:
     </p>
-    <p class='tty'>sudo yum install python-configobj
+    <pre class='tty cmd'>sudo yum install python-configobj
       sudo yum install python-cheetah
       sudo yum install python-imaging
       sudo yum install python-setuptools
       sudo easy_install pyserial
       sudo easy_install pyusb
-    </p>
+    </pre>
     <p>
       Install by double-clicking the .rpm file, or via command line:
     </p>
-    <p class='tty'>sudo rpm -i weewx-X.Y.Z-R.rpm</p>
+    <pre class='tty cmd'>sudo rpm -i weewx-X.Y.Z-R.rpm</pre>
     <p>
       If you see errors about untrusted signature, or MISSING KEYS, you can
       either install the <a href="http://weewx.com/keys.html">weewx GPG keys</a>:
     </p>
-    <p class='tty'>sudo rpm --import http://weewx.com/keys.html</p>
+    <pre class='tty cmd'>sudo rpm --import http://weewx.com/keys.html</pre>
     <p>or tell rpm to ignore the signature:</p>
-    <p class='tty'>sudo rpm -i --nosignature weewx-X.Y.Z-R.rpm</p>
+    <pre class='tty cmd'>sudo rpm -i --nosignature weewx-X.Y.Z-R.rpm</pre>
 
     <h2>Status</h2>
     <p>
       Look in the system log for messages from <span class='code'>weewx</span>.
     </p>
-    <p class='tty'>sudo tail -f /var/log/messages</p>
+    <pre class='tty cmd'>sudo tail -f /var/log/messages</pre>
 
     <h2>Verify</h2>
     <p>
       After 5 minutes, open the station web page in a web browser.  You should see generic station information and data.
     </p>
-    <p class='tty'><a href="file:///var/www/html/weewx/index.html">file:///var/www/html/weewx/index.html</a></p>
+    <pre class='tty'><a href="file:///var/www/html/weewx/index.html">file:///var/www/html/weewx/index.html</a></pre>
 
     <h2>Configure</h2>
     <p>
       The default installation uses Simulator as the <span class='code'>station_type</span>.  To use real hardware, stop <span class='code'>weewx</span>, change to the actual station type and station parameters, delete the simulation data, then restart <span class='code'>weewx</span>:</p>
-    <p class='tty'>sudo /etc/init.d/weewx stop
-sudo wee_setup configure
+    <pre class='tty cmd'>sudo /etc/init.d/weewx stop
+sudo wee_config --reconfigure
 sudo rm /var/lib/weewx/weewx.sdb
-sudo /etc/init.d/weewx start</p>
+sudo /etc/init.d/weewx start</pre>
 
     <h2>Start/Stop</h2>
     <p>To start/stop <span class='code'>weewx</span>:</p>
-    <p class='tty'>sudo /etc/init.d/weewx start
+    <pre class='tty cmd'>sudo /etc/init.d/weewx start
       sudo /etc/init.d/weewx stop
-    </p>
+    </pre>
 
     <h2>Customize</h2>
     <p>
@@ -94,10 +94,10 @@ sudo /etc/init.d/weewx start</p>
 
     <h2>Uninstall</h2>
     <p>To uninstall <span class='code'>weewx</span>, removing configuration files but retaining data:</p>
-    <p class='tty'>sudo rpm -e weewx</p>
+    <pre class='tty cmd'>sudo rpm -e weewx</pre>
     <p>To remove data:</p>
-    <p class='tty'>sudo rm -r /var/lib/weewx
-sudo rm -r /var/www/html/weewx</p>
+    <pre class='tty cmd'>sudo rm -r /var/lib/weewx
+sudo rm -r /var/www/html/weewx</pre>
 
     <h2>Layout</h2>
     <p>The installation will result in the following layout:</p>

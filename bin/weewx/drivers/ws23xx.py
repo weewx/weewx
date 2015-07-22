@@ -63,8 +63,9 @@ It is possible to increase the rate of wireless updates:
 
 Sensors are connected by unshielded phone cables.  RF interference can cause
 random spikes in data, with one symptom being values of 25.5 m/s or 91.8 km/h
-for the wind speed.  To reduce the number of spikes in data, replace with
-shielded cables:
+for the wind speed.  Unfortunately those values are within the sensor limits
+of 0-113 mph (50.52 m/s or 181.9 km/h).  To reduce the number of spikes in
+data, replace with shielded cables:
 
   http://www.lavrsen.dk/sources/weather/windmod.htm
 
@@ -251,13 +252,11 @@ import termios
 import tty
 
 import weeutil.weeutil
-import weewx
 import weewx.drivers
-import weewx.units
 import weewx.wxformulas
 
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.22'
+DRIVER_VERSION = '0.24'
 
 
 def loader(config_dict, _):
@@ -432,10 +431,25 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
         self.polling_interval = stn_dict.get('polling_interval', None)
         if self.polling_interval is not None:
             self.polling_interval = int(self.polling_interval)
+        self.enable_startup_records = stn_dict.get('enable_startup_records',
+                                                   True)
+        self.enable_archive_records = stn_dict.get('enable_archive_records',
+                                                   True)
+        self.mode = stn_dict.get('mode', 'single_open')
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('serial port is %s' % self.port)
         loginf('polling interval is %s' % self.polling_interval)
+
+        if self.mode == 'single_open':
+            self.station = WS23xx(self.port)
+        else:
+            self.station = None
+
+    def closePort(self):
+        if self.station is not None:
+            self.station.close()
+            self.station = None
 
     @property
     def hardware_name(self):
@@ -444,18 +458,20 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
     # weewx wants the archive interval in seconds, but the console uses minutes
     @property
     def archive_interval(self):
+        if not self.enable_startup_records and not self.enable_archive_records:
+            raise NotImplementedError            
         return self.getArchiveInterval() * 60
-
-#    def closePort(self):
-#        pass
 
     def genLoopPackets(self):
         ntries = 0
         while ntries < self.max_tries:
             ntries += 1
             try:
-                with WS23xx(self.port) as s:
-                    data = s.get_raw_data(SENSOR_IDS)
+                if self.station:
+                    data = self.station.get_raw_data(SENSOR_IDS)
+                else:
+                    with WS23xx(self.port) as s:
+                        data = s.get_raw_data(SENSOR_IDS)
                 packet = data_to_packet(data, int(time.time() + 0.5),
                                         last_rain=self._last_rain)
                 self._last_rain = packet['rainTotal']
@@ -485,14 +501,31 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
             logerr(msg)
             raise weewx.RetriesExceeded(msg)
 
+    def genStartupRecords(self, since_ts):
+        if not self.enable_startup_records:
+            raise NotImplementedError
+        if self.station:
+            return self.genRecords(self.station, since_ts)
+        else:
+            with WS23xx(self.port) as s:
+                return self.genRecords(s, since_ts)
+
     def genArchiveRecords(self, since_ts, count=0):
-        with WS23xx(self.port) as s:
-            last_rain = None
-            for ts, data in s.gen_records(since_ts=since_ts, count=count):
-                record = data_to_packet(data, ts, last_rain=last_rain)
-                record['interval'] = data['interval']
-                last_rain = record['rainTotal']
-                yield record
+        if not self.enable_archive_records:
+            raise NotImplementedError
+        if self.station:
+            return self.genRecords(self.station, since_ts, count)
+        else:
+            with WS23xx(self.port) as s:
+                return self.genRecords(s, since_ts, count)
+
+    def genRecords(self, s, since_ts, count=0):
+        last_rain = None
+        for ts, data in s.gen_records(since_ts=since_ts, count=count):
+            record = data_to_packet(data, ts, last_rain=last_rain)
+            record['interval'] = data['interval']
+            last_rain = record['rainTotal']
+            yield record
 
 #    def getTime(self) :
 #        with WS23xx(self.port) as s:
@@ -503,28 +536,43 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
 #            s.set_time()
 
     def getArchiveInterval(self):
-        with WS23xx(self.port) as s:
-            return s.get_archive_interval()
+        if self.station:
+            return self.station.get_archive_interval()
+        else:
+            with WS23xx(self.port) as s:
+                return s.get_archive_interval()
 
     def setArchiveInterval(self, interval):
-        with WS23xx(self.port) as s:
-            s.set_archive_interval(interval)
+        if self.station:
+            self.station.set_archive_interval(interval)
+        else:
+            with WS23xx(self.port) as s:
+                s.set_archive_interval(interval)
 
     def getConfig(self):
-        with WS23xx(self.port) as s:
-            data = s.get_raw_data(Measure.IDS.keys())
-            fdata = {}
-            for key in data:
-                fdata[Measure.IDS[key].name] = data[key]
-            return fdata
+        fdata = dict()
+        if self.station:
+            data = self.station.get_raw_data(Measure.IDS.keys())
+        else:
+            with WS23xx(self.port) as s:
+                data = s.get_raw_data(Measure.IDS.keys())
+        for key in data:
+            fdata[Measure.IDS[key].name] = data[key]
+        return fdata
 
     def getRecordCount(self):
-        with WS23xx(self.port) as s:
-            return s.get_record_count()
+        if self.station:
+            return self.station.get_record_count()
+        else:
+            with WS23xx(self.port) as s:
+                return s.get_record_count()
 
     def clearHistory(self):
-        with WS23xx(self.port) as s:
-            s.clear_memory()
+        if self.station:
+            self.station.clear_memory()
+        else:
+            with WS23xx(self.port) as s:
+                s.clear_memory()
 
 
 # ids for current weather conditions and connection type
@@ -605,7 +653,7 @@ class WS23xx(object):
         logdbg('station enter')
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
         logdbg('station exit')
         self.ws = None
         self.close()
@@ -735,7 +783,7 @@ class WS23xx(object):
                 'oh': value.humidity_outdoor,
                 'pa': value.pressure_absolute,
                 'rt': value.rain,
-                'wind': (value.wind_speed, value.wind_direction, 0, 0),
+                'wind': (value.wind_speed/10, value.wind_direction, 0, 0),
                 'rh': None,  # no rain rate in history
                 'dp': None,  # no dewpoint in history
                 'wc': None,  # no windchill in history
@@ -928,9 +976,9 @@ class Ws2300(object):
     #
     # An exception for us.
     #
-    class Ws2300Exception(StandardError):
+    class Ws2300Exception(weewx.WeeWxIOError):
         def __init__(self, *args):
-            StandardError.__init__(self, *args)
+            weewx.WeeWxIOError.__init__(self, *args)
     #
     # Constants we use.
     #
@@ -998,7 +1046,7 @@ class Ws2300(object):
     def reset_06(self):
         self.log_enter("re")
         try:
-            for retry in range(self.__class__.MAX_RESETS):
+            for _ in range(self.__class__.MAX_RESETS):
                 self.clear_device()
                 self.write_byte('\x06')
                 #
@@ -1068,7 +1116,7 @@ class Ws2300(object):
     def write_safe(self,nybble_address,nybbles,encode_constant=None):
         self.log_enter("ws")
         try:
-            for retry in range(self.MAXRETRIES):
+            for _ in range(self.MAXRETRIES):
                 self.reset_06()
                 command_data = self.write_data(nybble_address,nybbles,encode_constant)
                 if command_data != None:
@@ -1103,16 +1151,16 @@ class Ws2300(object):
         try:
             if nybble_count < 1 or nybble_count > self.MAXBLOCK:
                 StandardError("Too many nybbles requested")
-            bytes = (nybble_count + 1) // 2
+            bytes_ = (nybble_count + 1) // 2
             if not self.write_address(nybble_address):
                 return None
             #
             # Write the number bytes we want to read.
             #
-            encoded_data = chr(0xC2 + bytes*4)
+            encoded_data = chr(0xC2 + bytes_*4)
             self.write_byte(encoded_data)
             answer = self.read_byte()
-            check = chr(0x30 + bytes)
+            check = chr(0x30 + bytes_)
             if answer != check:
                 self.log("??")
                 return None
@@ -1121,7 +1169,7 @@ class Ws2300(object):
             #
             self.log(", :")
             response = ""
-            for i in range(bytes):
+            for _ in range(bytes_):
                 answer = self.read_byte()
                 if answer == None:
                     return None
@@ -1155,9 +1203,9 @@ class Ws2300(object):
                 address = batch[0]
                 data = ()
                 for start_pos in range(0,batch[1],self.MAXBLOCK):
-                    for retry in range(self.MAXRETRIES):
-                        bytes = min(self.MAXBLOCK, batch[1]-start_pos)
-                        response = self.read_data(address + start_pos, bytes)
+                    for _ in range(self.MAXRETRIES):
+                        bytes_ = min(self.MAXBLOCK, batch[1]-start_pos)
+                        response = self.read_data(address + start_pos, bytes_)
                         if response != None:
                             break
                         self.reset_06()
@@ -1209,7 +1257,7 @@ def bcd2num(nybbles):
 
 def num2bcd(number, nybble_count):
     result = []
-    for i in range(nybble_count):
+    for _ in range(nybble_count):
         result.append(int(number % 10))
         number //= 10
     return tuple(result)
@@ -1222,7 +1270,7 @@ def bin2num(nybbles):
 def num2bin(number, nybble_count):
     result = []
     number = int(number)
-    for i in range(nybble_count):
+    for _ in range(nybble_count):
         result.append(number % 16)
         number //= 16
     return tuple(result)
@@ -1336,12 +1384,12 @@ class PressureConversion(BcdConversion):
 #
 class ConversionDate(Conversion):
     format = None
-    def __init__(self, nybble_count, format):
-        description =  format
+    def __init__(self, nybble_count, format_):
+        description =  format_
         for xlate in "%Y:yyyy,%m:mm,%d:dd,%H:hh,%M:mm,%S:ss".split(","):
             description = description.replace(*xlate.split(":"))
         Conversion.__init__(self, "", nybble_count, description)
-        self.format = format
+        self.format = format_
     def str(self, value):
         return time.strftime(self.format, time.localtime(value))
     def parse(self, s):
@@ -1704,14 +1752,14 @@ class Measure(object):
     id = None      # string, Short name
     name = None    # string, Long name
     reset = None   # string, Id of measure used to reset this one
-    def __init__(self, address, id, conv, name, reset=None):
+    def __init__(self, address, id_, conv, name, reset=None):
         self.address = address
         self.conv = conv
         self.reset = reset
-        if id != None:
-            self.id = id
-            assert not id in self.__class__.IDS
-            self.__class__.IDS[id] = self
+        if id_ != None:
+            self.id = id_
+            assert not id_ in self.__class__.IDS
+            self.__class__.IDS[id_] = self
         if name != None:
             self.name = name
             assert not name in self.__class__.NAMES
@@ -1750,7 +1798,7 @@ class HexConversion(Conversion):
 # The raw nybble measure.
 #
 class HexMeasure(Measure):
-    def __init__(self, address, id, conv, name):
+    def __init__(self, address, id_, conv, name):
         self.address = address
         self.name = name
         self.conv = conv

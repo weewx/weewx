@@ -81,7 +81,7 @@ def dewpointC(T, R):
 
 def windchillF(T_F, V_mph):
     """Calculate wind chill.
-    http://www.nws.noaa.gov/om/windchill
+    http://www.nws.noaa.gov/om/winter/windchill.shtml
     
     T_F: Temperature in Fahrenheit
     

@@ -15,6 +15,7 @@ import socket
 import sys
 import syslog
 import time
+import thread
 
 # 3rd party imports:
 import configobj
@@ -28,16 +29,13 @@ import weewx.station
 import weewx.reportengine
 import weeutil.weeutil
 from weeutil.weeutil import to_bool, to_int
+from weewx import all_service_groups
 
 class BreakLoop(Exception):
     """Exception raised when it's time to break the main loop."""
 
 class InitializationError(weewx.WeeWxIOError):
     """Exception raised when unable to initialize the console."""
-
-# All existent service groups:
-all_service_groups = ['prep_services', 'data_services', 'process_services',
-                      'archive_services', 'restful_services', 'report_services']
 
 #==============================================================================
 #                    Class StdEngine
@@ -110,13 +108,10 @@ class StdEngine(object):
     def preLoadServices(self, config_dict):
         
         self.stn_info = weewx.station.StationInfo(self.console, **config_dict['Station'])
-        self.db_binder = weewx.manager.DBBinder(config_dict['DataBindings'],
-                                                config_dict['Databases'])
+        self.db_binder = weewx.manager.DBBinder(config_dict)
         
     def loadServices(self, config_dict):
         """Set up the services to be run."""
-        global all_service_groups
-
         # This will hold the list of objects, after the services has been
         # instantiated:
         self.service_obj = []
@@ -192,7 +187,9 @@ class StdEngine(object):
                         # Allow services to break the loop by throwing
                         # an exception:
                         self.dispatchEvent(weewx.Event(weewx.CHECK_LOOP, packet=packet))
-    
+
+                    syslog.syslog(syslog.LOG_CRIT, "engine: Internal error. Packet loop has exited.")
+                    
                 except BreakLoop:
                     
                     # Send out an event saying the packet LOOP is done:
@@ -200,6 +197,7 @@ class StdEngine(object):
 
         finally:
             # The main loop has exited. Shut the engine down.
+            syslog.syslog(syslog.LOG_DEBUG, "engine: Main loop exiting. Shutting engine down.")
             self.shutDown()
 
     def bind(self, event_type, callback):
@@ -238,7 +236,7 @@ class StdEngine(object):
             
         try:
             del self.callbacks
-        except:
+        except AttributeError:
             pass
 
         try:
@@ -430,8 +428,9 @@ class StdQC(StdService):
         for obs_type in self.min_max_dict:
             if event.packet.has_key(obs_type) and event.packet[obs_type] is not None:
                 if not self.min_max_dict[obs_type][0] <= event.packet[obs_type] <= self.min_max_dict[obs_type][1]:
-                    syslog.syslog(syslog.LOG_NOTICE, "engine: ignoring %s value of %s, limits are (%s, %s)" % 
-                                  (obs_type, event.packet[obs_type], 
+                    syslog.syslog(syslog.LOG_NOTICE, "engine: %s LOOP value '%s' %s outside limits (%s, %s)" % 
+                                  (weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), 
+                                   obs_type, event.packet[obs_type], 
                                    self.min_max_dict[obs_type][0], self.min_max_dict[obs_type][1]))
                     event.packet[obs_type] = None
 
@@ -440,8 +439,9 @@ class StdQC(StdService):
         for obs_type in self.min_max_dict:
             if event.record.has_key(obs_type) and event.record[obs_type] is not None:
                 if not self.min_max_dict[obs_type][0] <= event.record[obs_type] <= self.min_max_dict[obs_type][1]:
-                    syslog.syslog(syslog.LOG_NOTICE, "engine: ignoring %s value of %s, limits are (%s, %s)" % 
-                                  (obs_type, event.record[obs_type], 
+                    syslog.syslog(syslog.LOG_NOTICE, "engine: %s Archive value '%s' %s outside limits (%s, %s)" % 
+                                  (weeutil.weeutil.timestamp_to_string(event.record['dateTime']),
+                                   obs_type, event.record[obs_type], 
                                    self.min_max_dict[obs_type][0], self.min_max_dict[obs_type][1]))
                     event.record[obs_type] = None
 
@@ -747,11 +747,15 @@ class StdReport(StdService):
         if self.thread and self.thread.isAlive() and time.time()-self.launch_time < self.max_wait:
             return
             
-        self.thread = weewx.reportengine.StdReportEngine(self.config_dict,
-                                                         self.engine.stn_info,
-                                                         first_run= not self.launch_time) 
-        self.thread.start()
-        self.launch_time = time.time()
+        try:
+            self.thread = weewx.reportengine.StdReportEngine(self.config_dict,
+                                                             self.engine.stn_info,
+                                                             first_run= not self.launch_time) 
+            self.thread.start()
+            self.launch_time = time.time()
+        except thread.error:
+            syslog.syslog(syslog.LOG_ERR, "Unable to launch report thread.")
+            self.thread = None
 
     def shutDown(self):
         if self.thread:
@@ -833,8 +837,10 @@ def main(options, args, EngineClass=StdEngine) :
     
             syslog.syslog(syslog.LOG_INFO, "engine: Starting up weewx version %s" % weewx.__version__)
 
-            # Start the engine
+            # Start the engine. It should run forever unless an exception occurs. Log it
+            # if the function returns.
             engine.run()
+            syslog.syslog(syslog.LOG_CRIT, "engine: Unexpected exit from main loop. Program exiting.")
     
         # Catch any console initialization error:
         except InitializationError, e:
@@ -873,6 +879,7 @@ def main(options, args, EngineClass=StdEngine) :
         except OSError, e:
             # Caught an OS error. Log it, wait 10 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "engine: Caught OSError: %s" % e)
+            weeutil.weeutil.log_traceback("    ****  ", syslog.LOG_DEBUG)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 10 seconds then retrying...")
             time.sleep(10)
             syslog.syslog(syslog.LOG_NOTICE,"engine: retrying...")
@@ -896,7 +903,7 @@ def main(options, args, EngineClass=StdEngine) :
             syslog.syslog(syslog.LOG_CRIT, "engine: Caught unrecoverable exception in engine:")
             syslog.syslog(syslog.LOG_CRIT, "    ****  %s" % ex)
             # Include a stack traceback in the log:
-            weeutil.weeutil.log_traceback("    ****  ")
+            weeutil.weeutil.log_traceback("    ****  ", syslog.LOG_CRIT)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting.")
             # Reraise the exception (this should cause the program to exit)
             raise

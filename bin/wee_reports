@@ -2,7 +2,7 @@
 #
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
-#    See the file LICENSE.txt for your full rights.
+#    See the file LICENSE.txt for your rights.
 #
 """Executable that can run all reports."""
 
@@ -14,11 +14,12 @@ import optparse
 import user.extensions #@UnusedImport
 import weewx.station
 import weewx.reportengine
-import weeutil.weeutil
+import weecfg
 from weeutil.weeutil import timestamp_to_string
 
-description = """Runs all weewx reports. This is a useful debugging tool:
-you don't have to wait for the end of an archive interval to run the reports."""
+description = """Run all reports defined in the specified configuration file.
+Use this utility to run reports immediately instead of waiting for the end of
+an archive interval."""
 
 usage = """%prog: [config_file] [timestamp] [--config=CONFIG_FILE] [--help]"""
 
@@ -36,12 +37,12 @@ def main():
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    config_path, config_dict = weeutil.weeutil.read_config(options.config_path, args)
+    config_path, config_dict = weecfg.read_config(options.config_path, args)
     
     # If the user specified a time, retrieve it. Otherwise, set to None
-    gen_ts = None if len(args) < 1 else int(args[0])
+    gen_ts = int(args[0]) if args else None
     
-    print "Using configuration file %s." % config_path
+    print "Using configuration file %s" % config_path
 
     if gen_ts is None:
         print "Generating for all time"
