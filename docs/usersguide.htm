@@ -4296,16 +4296,42 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
 
     <h3 id="html_generated_but_not_updated">Weewx generates HTML pages, but it does not update them</h3>
 
-    <p>If you are getting a symptom that everything appears normal, that is HTML
-        is getting generated and getting FTP&#39;d to your webserver <em>(look in the
-            log to be sure</em>!), but your web pages are not being updated, it could be
-        because the data on board your console has gotten garbled. The way the Davis
-        Vantage series works is that the software (<span class="code">weewx</span> in
-        this case) asks the console for all archive data &quot;since&quot; some time.
-        The console then downloads the records one at a time. After it gets to the very
-        last one, the memory wraps around, and the timestamp will suddenly jump backwards
-        in time a couple weeks &mdash; this how the software knows it has downloaded the last
-        record and so it stops.</p>
+    <p>If you are getting a symptom that everything appears normal, that is
+      image and HTML files are generated (<em>(look in the log to be sure</em>)
+      and sent to your webserver (if you have configured FTP or rsync), but
+      the values in the web pages are not being updated, it could be due to 
+      clock skew or corrupt station memory.</p>
+
+    <h4>Clock skew</h4>
+    <p>If the database contains a record with time stamp (the dateTime field)
+      in the future, then records from the station that are older than that
+      future date will be ignored.  How can the database contain records from
+      the future?  Sometimes the computer clock is not set correctly.  For
+      example, the raspberry pi has no clock, so if weewx saves data before
+      the pi has synchronized its clock with internet time servers, the
+      records will have incorrect time stamps, some of which might be in the
+      future.</p>
+
+    <p>The solution is to delete any records with time stamp in the future.
+      For a sqlite database, the procedure looks like this:</p>
+
+    <pre class="tty"><span class="cmd">cp /home/weewx/archive/weewx.sdb /home/weewx/archive/weewx.sdb.backup
+sqlite3 /home/weewx/archive/weewx.sdb</span>
+sqlite> <span class="cmd">delete from archive where dateTime > X;</span>
+sqlite> <span class="cmd">.exit</span></pre>
+
+    <p>The timestamp X is the current time as unix epoch (number of seconds
+      since 1 January 1970), or a time a minute or two in the future.</p>
+
+    <h4>Corrupt station memory</h4>
+    <p>If you have a Vantage station, the problem might be because the data on
+      board your console has gotten garbled. The way the Davis Vantage series
+      works is that the software (<span class="code">weewx</span> in this case)
+      asks the console for all archive data &quot;since&quot; some time. The
+      console then downloads the records one at a time. After it gets to the
+      very last one, the memory wraps around, and the timestamp will suddenly
+      jump backwards in time a couple weeks &mdash; this how the software
+      knows it has downloaded the last record and so it stops.</p>
 
     <p>However, if the internal memory gets garbled, the console will immediately
         return archives in the past, and so it looks like the timestamps have decreased
