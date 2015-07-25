@@ -214,7 +214,7 @@
     #end if
     </tr> 
     <tr>
-      <td>Test for a bad attribute on a tag: \$current.foobar</td>
+      <td>Test for a bad observation type on a \$current tag: \$current.foobar</td>
       <td>$current.foobar</td>
     </tr>
   </table>
@@ -400,6 +400,10 @@
       #else
       <td>FAIL</td>
       #end if
+    </tr>
+      <tr>
+      <td>Test for a bad observation type on a \$day tag: \$day.foobar.min</td>
+      <td>$day.foobar.min</td>
     </tr>
   </table>
 
