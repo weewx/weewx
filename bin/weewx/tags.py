@@ -78,8 +78,17 @@ class TimeBinder(object):
                               self.db_lookup, data_binding=data_binding, 
                               context='day', formatter=self.formatter, converter=self.converter,
                               **self.option_dict)
+
     def hour(self, data_binding=None):
         return self.hours_ago(data_binding)
+
+    def span(self, data_binding=None, time_delta=0, hour_delta=0, day_delta=0, week_delta=0):
+        return TimespanBinder(weeutil.weeutil.archiveSpanSpan(self.report_time, time_delta=time_delta, 
+                              hour_delta=hour_delta, day_delta=day_delta, week_delta=week_delta), 
+                              self.db_lookup, data_binding=data_binding, 
+                              context='day', formatter=self.formatter, converter=self.converter,
+                              **self.option_dict)
+
     def day(self, data_binding=None):
         return TimespanBinder(weeutil.weeutil.archiveDaySpan(self.report_time), 
                               self.db_lookup, data_binding=data_binding, 
