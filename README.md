@@ -61,7 +61,7 @@
 <h2>Downloads</h2>
 
 <p>
-For the latest WeeWX release:
+For current and previous releases:
 </p>
 <p>
 <a href='http://weewx.com/downloads'>http://weewx.com/downloads</a>
