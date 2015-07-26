@@ -64,7 +64,7 @@
 For the latest WeeWX release:
 </p>
 <p>
-<a href='https://bintray.com/tkeffer/weewx/Releases/_latestVersion#files'><img src='https://api.bintray.com/packages/tkeffer/weewx/Releases/images/download.svg'></a>
+<a href='http://weewx.com/downloads'>http://weewx.com/downloads</a>
 </p>
 
 <h2>Documentation and Support</h2>
