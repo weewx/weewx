@@ -1404,6 +1404,87 @@ or in foobar units: $day.barometer.min.foobar
 
     <p class="example_output">The barometer trend over 3 hrs is +.03 inHg.</p>
 
+    <h3>Tag <span class="code">$span</span></h3>
+
+    <p>The tag <span class="code">$span</span> allows aggregation over a user defined
+    period up to and including the current time. The most general dot code for a <span class="code">$span</span> tag looks like:</p>
+    
+    <pre class="tty">$<em>span</em>([$data_binding=<em>binding_name</em>][,$optional_delta=<em>delta</em>]).<em>obstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
+    
+    <p>Where:</p>
+    <p class="indent">
+        <span class="code">binding_name</span> is a <em>binding name</em>
+        to a database. An example would be <span class="code">wx_binding</span>.
+        See the section <em><a href="#binding_names">Binding names</a></em>
+        for more details.
+    </p>
+
+    <p class="indent">
+        <span class="code">$optional_delta=<em>delta</em></span> is one or more comma separated delta settings from the table below. If more than one delta setting is included then the period used for the aggregate is the sum of the individual delta settings. If no delta setting is included, or all included delta settings are zero, the returned aggregate is based on the current <span class="code">obstype</span> only.
+    </p>
+    
+    <p class="indent">
+        <span class="code">obstype</span> is a observation type, such as <span class="code">outTemp</span>, that is supported by the <span class="code">$current</span> tag. See
+        <em><a href="#archive_types">Appendix: Archive Types</a></em> for a table of observation types
+        supported by the <span class="code">$current</span> tag.
+    </p>
+
+    <p class="indent">
+        <span class="code">aggregation</span> is an <em>aggregation type</em>.
+        Possible aggregation types are given in <em><a href="#aggregation_types">
+        Appendix: Aggregation types</a></em>.
+    </p>
+
+    <p class="indent">
+        <span class="code">optional_unit_conversion</span> is an optional unit
+        conversion tag. See the section <em><a href="#unit_conversion_options">
+        Unit Conversion Options</a></em>.
+    </p>
+
+    <p class="indent">
+        <span class="code">optional_formatting</span> is an optional
+        formatting tag that controls how the value will appear. See the section
+        <em><a href="#formatting_options">Formatting Options</a></em>.
+    </p>
+    <p>There are several different delta settings that can be used:</p>
+    <table class="indent" style="width:80%">
+        <tbody>
+        <tr class="first_row">
+            <td><em>Delta Setting</em></td>
+            <td>Example</td>
+            <td>Meaning</td>
+        </tr>
+        <tr>
+            <td class="first_col code">$time_delta=<i>seconds</i></td>
+            <td class="code">$span($time_delta=1800).outTemp.avg</td>
+            <td>The average temperature over the last immediate 30 minutes (1800 seconds).</td>
+        </tr>
+        <tr>
+            <td class="first_col code">$hour_delta=<i>hours</i></td>
+            <td class="code">$span($hour_delta=6).outTemp.avg</td>
+            <td>The average temperature over the last immediate 6 hours.</td>
+        </tr>
+        <tr>
+            <td class="first_col code">$day_delta=<i>days</i></td>
+            <td class="code">$span($day_delta=1).rain.sum</td>
+            <td>The total rainfall over the last immediate 24 hours.</td>
+        </tr>
+        <tr>
+            <td class="first_col code">$week_delta=<i>weeks</i></td>
+            <td class="code">$span($week_delta=2).barometer.max</td>
+            <td>The maximum barometric pressure over the last immediate 2 weeks.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p>For example, the template expressions</p>
+    <pre class="tty">The total rainfall over the last 30 hours is $span($hour_delta=30).rain.sum</pre>
+    <p>and</p>
+    <pre class="tty">The total rainfall over the last 30 hours is $span($hour_delta=6, $day_delta=1).rain.sum</pre>
+    <p>would both result in</p>
+
+    <p class="example_output">The total rainfall over the last 30 hours is  1.24 in</p>
+    
     <h3>Tag <span class="code">$unit</span></h3>
 
     <p>The type, label, and string formats for all units are also available, allowing
