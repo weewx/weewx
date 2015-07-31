@@ -6,6 +6,9 @@ weewx change history
 Now really includes wunderfixer. It was inadvertently left out of the install
 script.
 
+Uninstalling an extension with a skin now deletes all empty directories. This
+fixes issue #43.
+
 
 3.2.1 07/18/15
 
