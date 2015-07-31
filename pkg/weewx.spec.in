@@ -107,6 +107,7 @@ ln -s ../share/weewx/wee_database %{buildroot}%{_bindir}/wee_database
 ln -s ../share/weewx/wee_device %{buildroot}%{_bindir}/wee_device
 ln -s ../share/weewx/wee_extension %{buildroot}%{_bindir}/wee_extension
 ln -s ../share/weewx/wee_reports %{buildroot}%{_bindir}/wee_reports
+ln -s ../share/weewx/wunderfixer %{buildroot}%{_bindir}/wunderfixer
 
 # pre-compile the python code
 python -m compileall %{buildroot}%{dst_bin_dir}
@@ -164,6 +165,7 @@ rm -rf %{buildroot}
 %{_bindir}/wee_device
 %{_bindir}/wee_extension
 %{_bindir}/wee_reports
+%{_bindir}/wunderfixer
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
 %changelog

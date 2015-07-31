@@ -52,6 +52,7 @@ import time
 import urllib
 import urllib2
 
+import weecfg
 import weeutil.weeutil
 from weeutil.weeutil import timestamp_to_string
 import weewx.manager
@@ -136,7 +137,7 @@ def main() :
     wlog = WunderLog(options.logging, options.verbose)
     
     # get our config file
-    config_fn, config_dict = weeutil.weeutil.read_config(options.config, args)
+    config_fn, config_dict = weecfg.read_config(options.config, args)
     print "Using configuration file %s." % config_fn
     wlog.slog(syslog.LOG_INFO, "Using weewx configuration file %s." % config_fn)
 

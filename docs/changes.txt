@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+3.2.2 YY/YY/YY
+
+Now really includes wunderfixer. It was inadvertently left out of the install
+script.
+
+
 3.2.1 07/18/15
 
 Fixed problem when using setup.py to install into a non-standard location.

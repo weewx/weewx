@@ -441,7 +441,8 @@ if __name__ == "__main__":
                    'bin/wee_device',
                    'bin/wee_extension',
                    'bin/wee_reports',
-                   'bin/weewxd'],
+                   'bin/weewxd',
+                   'bin/wunderfixer'],
           data_files=[
                       ('',
                        ['LICENSE.txt',

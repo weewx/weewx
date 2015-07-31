@@ -11,6 +11,7 @@ bin/wee_device
 bin/wee_extension
 bin/wee_reports
 bin/weewxd
+bin/wunderfixer
 bin/examples/__init__.py
 bin/examples/alarm.py
 bin/examples/lowBattery.py
