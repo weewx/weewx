@@ -18,7 +18,8 @@ class RsyncUpload(object):
     Keeps track of what files have changed, and only updates changed files."""
 
     def __init__(self, local_root, remote_root,
-                 server, user=None, delete=False, port=None):
+                 server, user=None, delete=False, port=None,
+                 ssh_options=None, compress=False):
         """Initialize an instance of RsyncUpload.
         
         After initializing, call method run() to perform the upload.
@@ -36,6 +37,8 @@ class RsyncUpload(object):
         self.user        = user
         self.delete      = delete
         self.port        = port
+        self.ssh_options = ssh_options
+        self.compress    = compress
 
     def run(self):
         """Perform the actual upload."""
@@ -61,6 +64,9 @@ class RsyncUpload(object):
         else:
             rsyncsshstring = "ssh"
 
+        if self.ssh_options is not None and len(self.ssh_options.strip()) > 0:
+            rsyncsshstring = rsyncsshstring + " " + self.ssh_options
+
         cmd = ['rsync']
         # archive means:
         #    recursive, copy symlinks as symlinks, preserve permissions,
@@ -73,6 +79,8 @@ class RsyncUpload(object):
         # Remove files remotely when they're removed locally
         if self.delete:
             cmd.extend(["--delete"])
+        if self.compress:
+            cmd.extend(["--compress"])
         cmd.extend(["-e %s" % rsyncsshstring])
         cmd.extend([rsynclocalspec])
         cmd.extend([rsyncremotespec])
@@ -157,6 +165,8 @@ if __name__ == '__main__':
                            config_dict['StdReport']['RSYNC']['path'],
                            config_dict['StdReport']['RSYNC']['server'],
                            config_dict['StdReport']['RSYNC']['user'],
-                           config_dict['StdReport']['RSYNC']['port'])
+                           config_dict['StdReport']['RSYNC']['port'],
+                           config_dict['StdReport']['RSYNC']['ssh_options'],
+                           config_dict['StdReport']['RSYNC'].as_bool('compress'))
     rsync_upload.run()
     
