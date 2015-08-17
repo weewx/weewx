@@ -9,6 +9,10 @@ script.
 Uninstalling an extension with a skin now deletes all empty directories. This
 fixes issue #43.
 
+Fixed bug in WMR200 driver that caused it to emit dayRain, when what it was
+really emitting was the "rain in the last 24h, excluding current hour."
+Fixes issue #62.
+
 
 3.2.1 07/18/15
 
