@@ -14,20 +14,42 @@ import time
 
 import user.extensions      #@UnusedImport
 import weedb
+import weeutil.weeutil
 import weewx.manager
 import weewx.units
 import weecfg
+import weewx
+
+from weeutil.weeutil import TimeSpan
+from weewx.manager import get_database_dict_from_config
 
 description = """Configure the weewx databases. Most of these functions are
 handled automatically by weewx, but they may be useful as a utility in special
 cases. In particular, the 'reconfigure' option can be useful if you decide to
-add or drop data types from the database schema or change unit systems."""
+add or drop data types from the database schema or change unit systems and the
+'transfer' option is useful if converting from one database type to another."""
 
-usage = """wee_database: [CONFIG_FILE|--config=CONFIG_FILE] [--help]
-                     [--create-archive] [--drop-daily] 
-                     [--backfill-daily] [--reconfigure]
-                     [--string-check] [--fix]
-                     [--binding=BINDING_NAME]
+usage = """wee_database --help
+       wee_database --create-archive
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+       wee_database --drop-daily
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+       wee_database --backfill-daily
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+       wee_database --reconfigure
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+       wee_database --string-check
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME] [--fix]
+       wee_database --transfer
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+            --dest-binding=BINDING_NAME
+            [--dry-run]
 """
 
 epilog = """If you are using a MySQL database it is assumed that you have the
@@ -40,7 +62,7 @@ def main():
 
     # Create a command line parser:
     parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
-    
+
     # Add the various options:
     parser.add_option("--config", dest="config_path", type=str,
                       metavar="CONFIG_FILE",
@@ -66,33 +88,44 @@ def main():
                       " see whether it contains embedded strings.")
     parser.add_option("--fix", dest="fix", action="store_true",
                       help="Fix any embedded strings in a sqlite database.")
+    parser.add_option("--transfer", dest="transfer", action='store_true',
+                      help="Transfer the weewx archive from source database to"
+                      " destination database.")
     parser.add_option("--binding", dest="binding", metavar="BINDING_NAME",
                       default='wx_binding',
                       help="The data binding. Default is 'wx_binding'.")
+    parser.add_option("--dest-binding", dest="dest_binding",
+                      metavar="BINDING_NAME",
+                      help="The destination data binding.")
+    parser.add_option('--dry-run', action='store_true',
+                      help='Print what would happen but do not do it.')
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
     config_path, config_dict = weecfg.read_config(options.config_path, args)
     print "Using configuration file %s" % config_path
-    
+
     db_binding = options.binding
     database = config_dict['DataBindings'][db_binding]['database']
     print "Using database binding '%s', which is bound to database '%s'" % (db_binding, database)
-    
+
     if options.create_archive:
         createMainDatabase(config_dict, db_binding)
-    
+
     if options.drop_daily:
         dropDaily(config_dict, db_binding)
-        
+
     if options.backfill_daily:
         backfillDaily(config_dict, db_binding)
-        
+
     if options.reconfigure:
         reconfigMainDatabase(config_dict, db_binding)
 
     if options.string_check:
         string_check(config_dict, db_binding, options.fix)
+
+    if options.transfer:
+        transferDatabase(config_dict, db_binding, options)
 
 def createMainDatabase(config_dict, db_binding):
     """Create a weewx archive database"""
@@ -109,8 +142,8 @@ def createMainDatabase(config_dict, db_binding):
 
 def dropDaily(config_dict, db_binding):
     """Drop the daily summaries from a weewx database"""
-    
-    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, 
+
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
                                                               db_binding)
     database_name = manager_dict['database_dict']['database_name']
 
@@ -119,7 +152,7 @@ def dropDaily(config_dict, db_binding):
         print "Proceeding will delete all your daily summaries from database '%s'" % database_name
         ans = raw_input("Are you sure you want to proceed (y/n)? ")
         if ans == 'y' :
-            
+
             print "Dropping daily summary tables from '%s' ... " % database_name
             try:
                 with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
@@ -132,11 +165,11 @@ def dropDaily(config_dict, db_binding):
             except weedb.OperationalError:
                 # No daily summaries. Nothing to be done.
                 print "No daily summaries found in database '%s'. Nothing done." % (database_name,)
-    
+
 def backfillDaily(config_dict, db_binding):
     """Backfill the daily summaries"""
 
-    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, 
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
                                                               db_binding)
     database_name = manager_dict['database_dict']['database_name']
 
@@ -148,20 +181,20 @@ def backfillDaily(config_dict, db_binding):
     with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
         nrecs, ndays = dbmanager.backfill_day_summary()
     tdiff = time.time() - t1
-    
+
     if nrecs:
         print "Backfilled '%s' with %d records over %d days in %.2f seconds" % (database_name, nrecs, ndays, tdiff)
     else:
         print "Daily summaries up to date in '%s'." % database_name
-    
+
 def reconfigMainDatabase(config_dict, db_binding):
     """Create a new database, then populate it with the contents of an old database"""
 
-    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, 
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
                                                               db_binding)
     # Make a copy for the new database (we will be modifying it)
     new_database_dict = dict(manager_dict['database_dict'])
-    
+
     # Now modify the database name
     new_database_dict['database_name'] = manager_dict['database_dict']['database_name']+'_new'
 
@@ -182,11 +215,11 @@ def reconfigMainDatabase(config_dict, db_binding):
     # Get the unit system of the old archive:
     with weewx.manager.Manager.open(manager_dict['database_dict']) as old_dbmanager:
         old_unit_system = old_dbmanager.std_unit_system
-        
+
     if old_unit_system is None:
         print "Old database has not been initialized. Nothing to be done."
         return
-    
+
     # Get the unit system of the new archive:
     try:
         target_unit_nickname = config_dict['StdConvert']['target_unit']
@@ -194,8 +227,8 @@ def reconfigMainDatabase(config_dict, db_binding):
         target_unit_system = None
     else:
         target_unit_system = weewx.units.unit_constants[target_unit_nickname.upper()]
-        
-        
+
+
     ans = None
     while ans not in ['y', 'n']:
         print "Copying archive database '%s' to '%s'" % (manager_dict['database_dict']['database_name'], new_database_dict['database_name'])
@@ -207,7 +240,7 @@ def reconfigMainDatabase(config_dict, db_binding):
         ans = raw_input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
             weewx.manager.reconfig(manager_dict['database_dict'],
-                                   new_database_dict, 
+                                   new_database_dict,
                                    new_unit_system=target_unit_system,
                                    new_schema=manager_dict['schema'])
             print "Done."
@@ -215,15 +248,15 @@ def reconfigMainDatabase(config_dict, db_binding):
             print "Nothing done."
 
 def string_check(config_dict, db_binding, fix=False):
-    
+
     print "Checking archive database for strings..."
 
     # Open up the main database archive
     with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
-        
+
         obs_pytype_list = []
         obs_list = []
-        
+
         # Get the schema and extract the Python type each observation type should be
         for column in dbmanager.connection.genSchemaOf('archive'):
             schema_type = column[2]
@@ -237,7 +270,7 @@ def string_check(config_dict, db_binding, fix=False):
             obs_list.append(column[1])
             # Save the Python type for this column (eg, 'int'):
             obs_pytype_list.append(schema_type)
-        
+
         # Cycle through each row in the database
         for record in dbmanager.genBatchRows():
             # Now examine each column
@@ -246,7 +279,7 @@ def string_check(config_dict, db_binding, fix=False):
                 if record[icol] is not None and not isinstance(record[icol], obs_pytype_list[icol]):
                     # Oops. Found a bad one. Print it out
                     sys.stdout.write("Timestamp = %s; record['%s']= %r; ... " % (record[0], obs_list[icol], record[icol]))
-                    
+
                     if fix:
                         # Cooerce to the correct type. If it can't be done, then set it to None
                         try:
@@ -259,6 +292,115 @@ def string_check(config_dict, db_binding, fix=False):
                         sys.stdout.write("changed to %r\n" % corrected_value)
                     else:
                         sys.stdout.write("ignored.\n")
-                    
+
+def transferDatabase(config_dict, db_binding, options):
+    """Transfer 'archive' data from one database to another"""
+
+    # do we have enough to go on, must have a dest binding
+    if options.dest_binding is None:
+        print "Destination binding not specified. Nothing Done. Aborting."
+        return
+    # get manager dict for our source binding
+    src_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                                  db_binding)
+    # get manager dict for our dest binding
+    try:
+        dest_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                                       options.dest_binding)
+    except weewx.UnknownBinding:
+        # if we can't find the binding display a message then return
+        print ("Unknown destination binding '%s', confirm destination binding." %
+               (options.dest_binding, ))
+        print "Nothing Done. Aborting."
+        return
+    except weewx.UnknownDatabase:
+        # if we can't find the database display a message then return
+        print "Error accessing destination database, confirm destination binding and/or database."
+        print "Nothing Done. Aborting."
+        return
+    except (ValueError, AttributeError):
+        # maybe a schema issue
+        print "Error accessing destination database."
+        print ("Maybe the destination schema is incorrectly specified in binding '%s' in weewx.conf?" %
+               (options.dest_binding, ))
+        print "Nothing Done. Aborting."
+        return
+    except (weewx.UnknownDatabaseType):
+        # maybe a [Databases] issue
+        print "Error accessing destination database."
+        print "Maybe the destination database is incorrectly defined in weewx.conf?"
+        print "Nothing Done. Aborting."
+        return
+    # get a manager for our source
+    with weewx.manager.Manager.open(src_manager_dict['database_dict']) as src_manager:
+        # get first and last timestamps from the source so we can count the
+        # records to transfer and display an appropriate message
+        first_ts = src_manager.firstGoodStamp()
+        last_ts = src_manager.lastGoodStamp()
+        if first_ts is not None and last_ts is not None:
+            # we have source records
+            num_recs = src_manager.getAggregate(TimeSpan(first_ts, last_ts),
+                                                'dateTime', 'count')[0]
+        else:
+            # we have no source records to transfer so abort with a message
+            print ("No records found in source database '%s' for transfer." %
+                   (src_manager.database_name, ))
+            print "Nothing done. Aborting."
+            exit()
+        ans = None
+        if not options.dry_run: # is it a dry run ?
+            # not a dry run, actually do the transfer
+            while ans not in ['y', 'n']:
+                ans = raw_input("Transfer %s records from source database '%s' to destination database '%s' (y/n)? " %
+                                (num_recs, src_manager.database_name, dest_manager_dict['database_dict']['database_name']))
+                if ans == 'y':
+                    # wrap in a try..except in case we have an error
+                    try:
+                        with weewx.manager.Manager.open_with_create(dest_manager_dict['database_dict'],
+                                                                    table_name=dest_manager_dict['table_name'],
+                                                                    schema=dest_manager_dict['schema']) as dest_manager:
+                            sys.stdout.write("transferring, this may take a while.... ")
+                            sys.stdout.flush()
+                            # do the transfer, should be quick as it's done as a
+                            # single transaction
+                            dest_manager.addRecord(src_manager.genBatchRecords())
+                            print "complete"
+                            # get first and last timestamps from the dest so we can
+                            # count the records transferred and display a message
+                            first_ts = dest_manager.firstGoodStamp()
+                            last_ts = dest_manager.lastGoodStamp()
+                            if first_ts is not None and last_ts is not None:
+                                num_recs = dest_manager.getAggregate(TimeSpan(first_ts, last_ts),
+                                                                     'dateTime', 'count')[0]
+                                print ("%s records transferred from source database '%s' to destination database '%s'." %
+                                       (num_recs, src_manager.database_name, dest_manager.database_name))
+                            else:
+                                print ("Error. No records were transferred from source database '%s' to destination database '%s'." %
+                                       (src_manager.database_name, dest_manager.database_name))
+                    except ImportError:
+                        # probaly when trying to load db driver
+                        print ("Error accessing destination database '%s'." %
+                               (dest_manager_dict['database_dict']['database_name'], ))
+                        print "Maybe the database driver is incorrectly specified in weewx.conf?"
+                        print "Nothing done. Aborting."
+                        return
+                    except (OSError, weedb.OperationalError):
+                        # probably a weewx.conf typo or MySQL db not created
+                        print ("Error accessing destination database '%s'." %
+                               (dest_manager_dict['database_dict']['database_name'], ))
+                        print "Maybe it does not exist (MySQL) or is incorrectly defined in weewx.conf?"
+                        print "Nothing done. Aborting."
+                        return
+       
+                elif ans == 'n':
+                    # we decided not to do the transfer
+                    print "Nothing done."
+                    return
+        else:
+            # it's a dry run so say what we would have done then return
+            print ("Transfer %s records from source database '%s' to destination database '%s'." %
+                   (num_recs, src_manager.database_name, dest_manager.database_name))
+            print "Dry run, nothing done."
+
 if __name__=="__main__" :
     main()
