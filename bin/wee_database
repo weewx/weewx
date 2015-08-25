@@ -55,6 +55,11 @@ usage = """wee_database --help
 epilog = """If you are using a MySQL database it is assumed that you have the
 appropriate permissions for the requested operation."""
 
+# List of 'dest' settings used by our 'verbs', note 'dest' may be explicit or 
+# implicit. If adding more 'verbs' need to add corresponding 'dest' here.
+dest_list = ['create_archive', 'drop_daily', 'backfill_daily',
+             'reconfigure', 'string_check', 'transfer']
+         
 def main():
 
     # Set defaults for the system logger:
@@ -102,6 +107,31 @@ def main():
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
+    
+    # Do a check to see if the user used more than 1 'verb' . More than 1 verb 
+    # should be avoided - what did the user really want to do?
+    # first get a list of options actually used
+    options_list = [opt for opt, val in options.__dict__.items() if val is not None]
+    # now a list of the 'dest' settings used
+    dest_used = [opt for opt in options_list if opt in dest_list]
+    # If we have more than 1 entry in dest_used then we have more than 1 'verb' 
+    # used. Then inform the user and exit. If only 1 'verb' then carry on.
+    if len(dest_used) > 1:
+        # generate the message but we need to speak 'options' (aka verbs)
+        # not 'dest'
+        # get a dict of {option.dest: option.str} from our universe of options
+        opt_dict = dict((x.dest, x.get_opt_string()) for x in parser.option_list[1:])
+        # now get a list of 'verbs' used
+        verbs_used = [opt_dict[x] for x in dest_used]
+        # get rid of the [ and ]
+        verbs_str = ', '.join(verbs_used)
+        # our exit message
+        exit_str = ("Multiple verbs found in command line %s. Only one verb permitted.\nNothing done. Aborting." % 
+                    (verbs_str, ))
+        # now exit with our message
+        sys.exit(exit_str)
+    
+    # get config_dict to use
     config_path, config_dict = weecfg.read_config(options.config_path, args)
     print "Using configuration file %s" % config_path
 
