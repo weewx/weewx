@@ -17,6 +17,9 @@ Fixed bug that caused wind direction to be calculated incorrectly, depending
 on the ordering of a dictionary. Thanks to user Chris Matteri for not only
 spotting this subtle bug, but offering a solution. 
 
+StdPrint now prints packets and records in (case-insensitive) alphabetical
+order.
+
 
 3.2.1 07/18/15
 
