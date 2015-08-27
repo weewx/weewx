@@ -13,6 +13,10 @@ Fixed bug in WMR200 driver that caused it to emit dayRain, when what it was
 really emitting was the "rain in the last 24h, excluding current hour."
 Fixes issue #62.
 
+Fixed bug that caused wind direction to be calculated incorrectly, depending
+on the ordering of a dictionary. Thanks to user Chris Matteri for not only
+spotting this subtle bug, but offering a solution. 
+
 
 3.2.1 07/18/15
 
