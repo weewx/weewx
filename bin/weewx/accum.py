@@ -334,7 +334,7 @@ class Accum(dict):
             assert(obs_type == 'usUnits')
         self._check_units(record['usUnits'])
 
-    def noop(self, record, obs_type, add_hilo):
+    def noop(self, record, obs_type, add_hilo=True):
         pass
 
     def _check_units(self, new_unit_system):
@@ -358,6 +358,10 @@ add_record_dict = ListOfDicts({'windSpeed' : Accum.add_wind_value,
                                'dateTime'  : Accum.noop})
 
 extract_dict = ListOfDicts({'wind'      : Accum.wind_extract,
+                            'windSpeed' : Accum.noop,   # Extracted as part of 'wind'
+                            'windDir'   : Accum.noop,   # Extracted as part of 'wind'
+                            'windGust'  : Accum.noop,   # Extracted as part of 'wind'
+                            'windGustDir':Accum.noop,   # Extracted as part of 'wind'
                             'rain'      : Accum.sum_extract,
                             'ET'        : Accum.sum_extract,
                             'dayET'     : Accum.last_extract,
