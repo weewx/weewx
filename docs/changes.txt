@@ -20,6 +20,8 @@ spotting this subtle bug, but offering a solution.
 StdPrint now prints packets and records in (case-insensitive) alphabetical
 order.
 
+Fixed wind speed decoding in the acurite driver.  Thanks to aweatherguy.
+
 
 3.2.1 07/18/15
 
