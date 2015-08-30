@@ -17,6 +17,7 @@
 #
 # Thanks to Weather Guy and Andrew Daviel (2015)
 #  decoding of the R3 messages
+#  decoding of the windspeed
 #
 # golf clap to Michael Walsh
 #  http://forum1.valleyinfosys.com/index.php
@@ -313,7 +314,7 @@ import weewx.wxformulas
 from weeutil.weeutil import to_bool
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.19'
+DRIVER_VERSION = '0.20'
 DEBUG_RAW = 0
 
 # USB constants for HID
@@ -729,12 +730,13 @@ class Station(object):
     @staticmethod
     def decode_windspeed(data):
         # extract the wind speed from an R1 message
-        # decoded value is mph
         # return value is kph
-        # FIXME: the speed decoding is not correct
-        a = (data[4] & 0x1f) << 3
-        b = (data[5] & 0x70) >> 4
-        return 0.5 * (a | b) * 1.60934
+        # for details see http://www.wxforum.net/index.php?topic=27244.0
+        # minimum measurable speed is 1.83 kph
+        n = ((data[4] & 0x1f) << 3) | ((data[5] & 0x70) >> 4)
+        if n == 0:
+            return 0.0
+        return 0.8278 * n + 1.0
 
     @staticmethod
     def decode_winddir(data):

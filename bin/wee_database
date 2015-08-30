@@ -429,7 +429,7 @@ def transferDatabase(config_dict, db_binding, options):
         else:
             # it's a dry run so say what we would have done then return
             print ("Transfer %s records from source database '%s' to destination database '%s'." %
-                   (num_recs, src_manager.database_name, dest_manager.database_name))
+                   (num_recs, src_manager.database_name, dest_manager_dict['database_dict']['database_name']))
             print "Dry run, nothing done."
 
 if __name__=="__main__" :
