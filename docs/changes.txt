@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.2.2 YY/YY/YY
+3.3.0 YY/YY/YY
 
 Now really includes wunderfixer. It was inadvertently left out of the install
 script.
@@ -19,6 +19,8 @@ spotting this subtle bug, but offering a solution.
 
 StdPrint now prints packets and records in (case-insensitive) alphabetical
 order.
+
+The StdRESTful service now supports POSTs, as well as GETs.
 
 
 3.2.1 07/18/15
