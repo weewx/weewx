@@ -4171,17 +4171,34 @@ class MyAlarm(StdService):
     <pre class="tty cmd">wee_database --help</pre>
     <p>This will result in an output that looks something like this:</p>
       <pre class="tty">
-Usage: wee_database: [CONFIG_FILE|--config=CONFIG_FILE] [--help]
-                     [--create-archive] [--drop-daily] 
-                     [--backfill-daily] [--reconfigure]
-                     [--string-check] [--fix]
-                     [--binding=BINDING_NAME]
+Usage: wee_database --help
+       wee_database --create-archive
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+       wee_database --drop-daily
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+       wee_database --backfill-daily
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+       wee_database --reconfigure
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+       wee_database --string-check
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME] [--fix]
+       wee_database --transfer
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+            --dest-binding=BINDING_NAME
+            [--dry-run]
 
 
 Configure the weewx databases. Most of these functions are handled
 automatically by weewx, but they may be useful as a utility in special cases.
 In particular, the 'reconfigure' option can be useful if you decide to add or
-drop data types from the database schema or change unit systems.
+drop data types from the database schema or change unit systems and the
+'transfer' option is useful if converting from one database type to another.
 
 Options:
   -h, --help            show this help message and exit
@@ -4198,8 +4215,13 @@ Options:
   --string-check        Check a sqlite version of the archive database to see
                         whether it contains embedded strings.
   --fix                 Fix any embedded strings in a sqlite database.
+  --transfer            Transfer the weewx archive from source database to
+                        destination database.
   --binding=BINDING_NAME
                         The data binding. Default is 'wx_binding'.
+  --dest-binding=BINDING_NAME
+                        The destination data binding.
+  --dry-run             Print what would happen but do not do it.
 
 If you are using a MySQL database it is assumed that you have the appropriate
 permissions for the requested operation.
