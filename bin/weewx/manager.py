@@ -634,9 +634,10 @@ class Manager(object):
 
         if self.std_unit_system is not None:
             if unit_system != self.std_unit_system:
-                raise weewx.UnitError("Unit system of incoming record (0x%x) "\
-                                      "differs from the archive database (0x%x)" % 
-                                      (unit_system, self.std_unit_system))
+                raise weewx.UnitError("Unit system of incoming record (0x%02x) "\
+                                      "differs from '%s' table in '%s' database (0x%02x)" % 
+                                      (unit_system, self.table_name, self.database_name,
+                                       self.std_unit_system))
         else:
             # This is the first record. Remember the unit system to
             # check against subsequent records:
