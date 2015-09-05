@@ -16,6 +16,7 @@ import weewx.units
 import weeutil.weeutil
 import textwrap
 import errno
+import math
 
 
 class MyTestApp(npyscreen.NPSAppManaged):
@@ -84,7 +85,7 @@ class MainForm(npyscreen.SplitForm):
             pressure_data = (self.data['pressure'], 'inHg', 'group_pressure')
             pressure_data = weewx.units.ValueHelper(pressure_data)
             self.pressure.value = pressure_data.hPa
-     
+
         if 'barometer' in self.data:
             barometer_data = (self.data['barometer'], 'inHg', 'group_pressure')
             barometer_data = weewx.units.ValueHelper(barometer_data)
@@ -93,7 +94,7 @@ class MainForm(npyscreen.SplitForm):
         if 'altimeter' in self.data:
             altimeter_data = (self.data['altimeter'], 'inHg', 'group_pressure')
             altimeter_data = weewx.units.ValueHelper(altimeter_data)
-            self.altimeter.value = altimeter_data.hPa
+            self.altimeter.value = str(int(altimeter_data.hPa.raw)) + " knots"		## QNH value is rounded down deliberatery.
 
         if 'dewpoint' in self.data:
             dewpoint_data = (self.data['dewpoint'], "degree_F",  "group_temperature")
