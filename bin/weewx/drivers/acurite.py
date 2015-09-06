@@ -16,7 +16,7 @@
 #  figured out a linear function for the pressure sensor in the 02032
 #
 # Thanks to Weather Guy and Andrew Daviel (2015)
-#  decoding of the R3 messages
+#  decoding of the R3 messages and R3 reports
 #  decoding of the windspeed
 #
 # golf clap to Michael Walsh
@@ -255,32 +255,85 @@ R3 - 33 bytes
  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 ...
 03 aa 55 01 00 00 00 20 20 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ...
 
-The 'aa 55' marks each block.  The sequence 'aa 55 05' or 'aa 55 06' marks the
-last block.  Blocks have the following meaning:
+An R3 report consists of multiple R3 messages.  Each R3 report contains records
+that are delimited by the sequence 0xaa 0x55.  There is a separator sequence
+prior to the first record, but not after the last record.
 
-1: 256 bytes: ?
-2: 256 bytes: ?
-3: time stamp
-4: 6 bytes: history data
-5: time stamp
-6: ?
+There are 6 types of records, each type identified by number:
 
-Byte 4 of block 4 is the number of 32-byte history records that follow
+   1,2  8-byte chunks of historical min/max data.  Each 8-byte chunk
+          appears to contain two data bytes plus a 5-byte timestamp
+          indicating when the event occurred.
+   3    Timestamp indicating when the most recent history record was
+          stored, based on the console clock.
+   4    History data
+   5    Timestamp indicating when the request for history data was
+          received, based on the console clock.
+   6    End marker indicating that no more data follows in the report.
 
-History Records
-   0-1: indoor temperature        (r[0]*256 + r[1])/18 - 100    C
-   2-3: heatindex                 (r[2]*256 + r[3])/18 - 100    C
-     5: indoor humidity           r[5]                          percent
-     7: outdoor humidity          r[7]                          percent
-   8-9: windchill                 (r[8]*256 + r[9])/18 - 100    C
- 10-11: outdoor temperature       (r[10]*256 + r[11])/18 - 100  C
- 12-13: dewpoint                  (r[12]*256 + r[13])/18 - 100  C
- 14-15: barometer                 (r[14]*256 + r[15])/10        kPa
-    17: wind direction            dirmap(r[17])
- 18-19: wind speed                (r[18]*256 + r[19])/16        kph
- 20-21: wind max                  (r[20]*256 + r[21])/16        kph
- 22-23: wind average              (r[22]*256 + r[23])/16        kph
- 25: rain                         r[25] * 0.254                 mm
+Each record has the following header:
+
+   0: record id            possible values are 1-6
+ 1,2: unknown              always seems to be 0
+ 3,4: size                 size of record, in 'chunks'
+   5: checksum             total of bytes 0..4 minus one
+
+  where the size of a 'chunk' depends on the record id:
+
+   id         chunk size
+
+   1,2,3,5    8 bytes
+   4          32 bytes
+   6          n/a
+
+For all but ID6, the total record size should be equal to 6 + chunk_size * size
+ID6 never contains data, but a size of 4 is always declared.
+
+Timestamp records (ID3 and ID5):
+
+ 0-1: for ID3, the number of history records when request was received
+ 0-1: for ID5, unknown
+   2: year
+   3: month
+   4: day
+   5: hour
+   6: minute
+   7: for ID3, checksum - sum of bytes 0..6 (do not subtract 1)
+   7: for ID5, unknown (always 0xff)
+
+History Records (ID4):
+
+Bytes 3,4 contain the number of history records that follow, say N.  After
+stripping off the 6-byte record header there should be N*32 bytes of history
+data.  If not, then the data are corrupt or there was an incomplete transfer.
+
+The most recent history record is first, so the timestamp on record ID applies
+to the first 32-byte chunk, and each record is 12 minutes into the past from
+the previous.  Each 32-byte chunk has the following decoding:
+
+   0-1: indoor temperature    (r[0]*256 + r[1])/18 - 100         C
+   2-3: outdoor temperature   (r[2]*256 + r[3])/18 - 100         C
+     4: unknown
+     5: indoor humidity       r[5]                               percent
+     6: unknown
+     7: outdoor humidity      r[7]                               percent
+   8-9: windchill             (r[8]*256 + r[9])/18 - 100         C
+ 10-11: heat index            (r[10]*256 + r[11])/18 - 100       C
+ 12-13: dewpoint              (r[12]*256 + r[13])/18 - 100       C
+ 14-15: barometer             ((r[14]*256 + r[15]) & 0x07ff)/10  kPa
+    16: unknown
+    17: unknown               0xf0
+    17: wind direction        dirmap(r[17] & 0x0f)
+ 18-19: wind speed            (r[18]*256 + r[19])/16             kph
+ 20-21: wind max              (r[20]*256 + r[21])/16             kph
+ 22-23: wind average          (r[22]*256 + r[23])/16             kph
+ 24-25: rain                  (r[24]*256 + r[25]) * 0.254        mm
+ 26-30: rain timestamp        0xff if no rain event
+    31: unknown
+
+bytes 4 and 6 always seem to be 0
+byte 16 is always zero on 02032 console, but is a copy of byte 21 on 01035.
+byte 31 is always zero on 02032 console, but is a copy of byte 30 on 01035.
 
 
 X1 - 2 bytes
