@@ -29,11 +29,12 @@
 
 There are many variants of the AcuRite weather stations and sensors.  This
 driver is known to work with the consoles that have a USB interface such as
-models 01025, 01035, and 02032C.
+models 01025, 01035, 02032C, and 02064C.
 
 The AcuRite stations were introduced in 2011.  The 02032 model was introduced
 in 2013 or 2014.  The 02032 appears to be a low-end model - it has fewer
-buttons, and a different pressure sensor.
+buttons, and a different pressure sensor.  The 02064 model was introduced in
+2015 and appears to be an attempt to fix problems in the 02032.
 
 AcuRite publishes the following specifications:
 
@@ -367,7 +368,7 @@ import weewx.wxformulas
 from weeutil.weeutil import to_bool
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.20'
+DRIVER_VERSION = '0.21'
 DEBUG_RAW = 0
 
 # USB constants for HID
@@ -411,6 +412,13 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
     max_tries - How often to retry communication before giving up.
     [Optional. Default is 10]
 
+    use_constants - Indicates whether to use calibration constants when
+    decoding pressure and temperature.  For consoles that use the HP03 sensor,
+    use the constants reported  by the sensor.  Otherwise, use a linear
+    approximation to derive pressure and temperature values from the sensor
+    readings.
+    [Optional.  Default is False]
+
     ignore_bounds - Indicates how to treat calibration constants from the
     pressure/temperature sensor.  Some consoles report constants that are
     outside the limits specified by the sensor manufacturer.  Typically this
@@ -431,9 +439,12 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         self.max_tries = int(stn_dict.get('max_tries', 10))
         self.retry_wait = int(stn_dict.get('retry_wait', 30))
         self.polling_interval = int(stn_dict.get('polling_interval', 6))
+        self.use_constants = to_bool(stn_dict.get('use_constants', False))
         self.ignore_bounds = to_bool(stn_dict.get('ignore_bounds', False))
-        if self.ignore_bounds:
-            loginf('R2 bounds on constants will be ignored')
+        if self.use_constants:
+            loginf('R2 will be decoded using sensor constants')
+            if self.ignore_bounds:
+                loginf('R2 bounds on constants will be ignored')
         self.enable_r3 = int(stn_dict.get('enable_r3', 0))
         if self.enable_r3:
             loginf('R3 data will be attempted')
@@ -480,7 +491,8 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 if raw2:
                     Station.check_pt_constants(last_raw2, raw2)
                     last_raw2 = raw2
-                    packet.update(Station.decode_R2(raw2, self.ignore_bounds))
+                    packet.update(Station.decode_R2(
+                            raw2, self.use_constants, self.ignore_bounds))
                 self._augment_packet(packet)
                 ntries = 0
                 yield packet
@@ -721,10 +733,11 @@ class Station(object):
         return ok
 
     @staticmethod
-    def decode_R2(raw, ignore_bounds=False):
+    def decode_R2(raw, use_constants=False, ignore_bounds=False):
         data = dict()
         if len(raw) == 25 and raw[0] == 0x02:
-            data['pressure'], data['inTemp'] = Station.decode_pt(raw, ignore_bounds)
+            data['pressure'], data['inTemp'] = Station.decode_pt(
+                raw, use_constants, ignore_bounds)
         elif len(raw) != 25:
             logerr("R2: bad length: %s" % _fmt_bytes(raw))
         else:
@@ -819,13 +832,16 @@ class Station(object):
         return (((data[6] & 0x3f) << 7) | (data[7] & 0x7f)) * 0.0254
 
     @staticmethod
-    def decode_pt(data, ignore_bounds=False):
+    def decode_pt(data, use_constants=False, ignore_bounds=False):
         # decode pressure and temperature from the R2 message
         # decoded pressure is mbar, decoded temperature is degree C
         c1,c2,c3,c4,c5,c6,c7,a,b,c,d = Station.get_pt_constants(data)
 
-        if (c1 == 0x8000 and c2 == c3 == 0x0 and c4 == 0x0400 and c5 == 0x1000
-            and c6 == 0x0 and c7 == 0x0960 and a == b == c == d == 0x1):
+        if not use_constants:
+            return Station.decode_pt_acurite(d1, d2)
+        elif (c1 == 0x8000 and c2 == c3 == 0x0 and c4 == 0x0400
+              and c5 == 0x1000 and c6 == 0x0 and c7 == 0x0960
+              and a == b == c == d == 0x1):
             # this is a MS5607 sensor, typical in 02032 consoles
             d2 = ((data[21] & 0x0f) << 8) + data[22]
             if d2 >= 0x0800:
@@ -869,7 +885,15 @@ class Station(object):
     @staticmethod
     def decode_pt_MS5607(d1, d2):
         # for devices with the MS5607 sensor, do a linear scaling
-        p = 0.062585727 * d1 - 209.6211
+        return Station.decode_pt_acurite(d1, d2)
+
+    @staticmethod
+    def decode_pt_acurite(d1, d2):
+        # apparently the new (2015) acurite software uses this function, which
+        # is quite close to andrew daviel's reverse engineered function of:
+        #    p = 0.062585727 * d1 - 209.6211
+        #    t = 25.0 + 0.05 * d2
+        p = d1 / 16.0 - 208
         t = 25.0 + 0.05 * d2
         return p, t
 
