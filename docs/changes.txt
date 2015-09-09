@@ -26,6 +26,8 @@ The StdRESTful service now supports POSTs, as well as GETs.
 
 The FTP utility now catches PickleError exceptions, then does a retry.
 
+Added unit 'minute' to the conversion dictionary.
+
 
 3.2.1 07/18/15
 

@@ -60,6 +60,12 @@ class ConverterTest(unittest.TestCase):
         # Do a formatted comparison to compensate for small rounding errors: 
         self.assertEqual(("%.2f" % converted[0],)+converted[1:3], ("1013.25", "mbar", "group_pressure"))
         
+        # Test second/minute/hour/day
+        value_t = (1440.0, "minute", "group_deltatime")
+        self.assertEqual(weewx.units.convert(value_t, "second"), (86400.0, 'second', 'group_deltatime'))
+        self.assertEqual(weewx.units.convert(value_t, "hour"),   (24.0, 'hour', 'group_deltatime'))
+        self.assertEqual(weewx.units.convert(value_t, "day"),    (1.0, 'day', 'group_deltatime'))
+        
     def testConvertDict(self):
         d_m =  {'outTemp'   : 20.01,
                 'barometer' : 1002.3,
