@@ -3180,9 +3180,10 @@ UV      = UV Index</pre>
         template = filename.xml.tmpl</pre>
     <p>There can be only one <span class="config_option">template</span> in
         each block. In most cases, the block name does not matter &mdash; it is
-        used only to isolate each template. However, there are two block names
-        that have special meaning: <span class='code'>SummaryByMonth</span> and
-        <span class='code'>SummaryByYear</span>. They are described below.</p>
+        used only to isolate each template. However, there are three block names
+        that have special meaning: <span class='code'>SummaryByMonth</span>,
+        <span class='code'>SummaryByYear</span>, and <span class='code'>ToDate</span>.
+        They are described below.</p>
 
     <p>The file generator runs on each new archive record. In a default
         weewx installation, that would be every 5 minutes.</p>
@@ -3361,13 +3362,13 @@ UV      = UV Index</pre>
             summaries.
         </li>
     </ol>
-    <p>The encoding for text files is <span class="code">strict_ansii</span>,
+    <p>The encoding for text files is <span class="code">strict_ascii</span>,
         whereas the encoding for html files is
         <span class="code">html_entities</span>. In the Standard skin this is
         specified by declaring
         <span class="code">encoding = html_entities</span> at the top level
         of <span class="code">[CheetahGenerator]</span> then
-        <span class="code">encoding = strict_ansii</span> for each text file.
+        <span class="code">encoding = strict_ascii</span> for each text file.
     </p>
 
     <p>Other than <span class="code">SummaryByMonth</span> and
