@@ -113,7 +113,7 @@ weewx packages      \n\
 --------------------\n\
 \n\
 $(DEBPKG)\n\
-   for Debian, Ubuntu, Mint\n\
+   for Debian, Ubuntu, Mint, including Raspberry Pi\n\
 \n\
 weewx-$(RPMVER).rhel.$(RPMARCH).rpm\n\
    for Redhat, CentOS, Fedora\n\
