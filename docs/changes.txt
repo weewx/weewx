@@ -31,6 +31,8 @@ Added unit 'minute' to the conversion dictionary.
 The vertical position of the bottom label in the plots can now be
 set in skin.conf with option bottom_label_offset.
 
+An optional port number can now be specified with the MySQL database.
+
 
 3.2.1 07/18/15
 
