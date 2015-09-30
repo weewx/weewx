@@ -4047,18 +4047,20 @@ sudo /etc/init.d/apache2 restart</pre>
     <h1 id="backup">Making backups</h1>
 
     <p>
-        To backup a <span class='code'>weewx</span> installation, make a copy of
-        the weewx configuration, weather data, skins/templates, and custom code.
-        In most cases these can be copied while weewx is running. The location
-        of these files depends on which method was used to install
-        <span class='code'>weewx</span>.
+        To backup a <span class='code'>weewx</span> installation, you will need to make a copy
+        of</p>
+    <ul>
+        <li>configuration information;</li>
+        <li>skins and templates;</li>
+        <li>any custom code or extensions you have installed;</li>
+        <li>the weewx database.</li>
+    </ul>
+    <p>
+        It is not necessary to backup the generated images, HTML files, or NOAA reports since weewx will easily
+        create these again.
     </p>
 
-    <p>
-        It is not necessary to backup the images and HTML files generated from
-        templates, since weewx will easily create those again. This includes
-        the NOAA reports in some skins.
-    </p>
+    <p>Individual instructions follow</p>
 
     <h2>Configuration</h2>
 
@@ -4075,24 +4077,7 @@ sudo /etc/init.d/apache2 restart</pre>
             <td class='tty'>/etc/weewx/weewx.conf</td>
         </tr>
     </table>
-    <h2>Weather data</h2>
 
-    <p>
-        Meteorological data are saved in the
-        archive database. For a SQLite
-        configuration, simply save the <span class='code'>weewx.sdb</span>
-        file. For a MySQL configuration, save a dump of the archive database.
-    </p>
-    <table class="locations" style="width:70%">
-        <tr>
-            <td style="width: 30%">setup.py:</td>
-            <td class='tty'>/home/weewx/archive/weewx.sdb</td>
-        </tr>
-        <tr>
-            <td>DEB/RPM:</td>
-            <td class='tty'>/var/lib/weewx/weewx.sdb</td>
-        </tr>
-    </table>
     <h2>Skins and templates</h2>
 
     <p>
@@ -4109,7 +4094,8 @@ sudo /etc/init.d/apache2 restart</pre>
             <td class='tty'>/etc/weewx/skins</td>
         </tr>
     </table>
-    <h2>Other customizations</h2>
+
+    <h2>Custom code or extensions</h2>
 
     <p>
         Save the contents of the
@@ -4127,6 +4113,36 @@ sudo /etc/init.d/apache2 restart</pre>
             <td class='tty'>/usr/share/weewx/user</td>
         </tr>
     </table>
+
+    <h2>Weewx database</h2>
+
+    <p>
+        Finally, you will need to backup the database.
+    </p>
+    <p>
+        For a SQLite configuration, you will need to backup the <span class='code'>weewx.sdb</span> file.
+    </p>
+    <p class="note">
+        Do not make the copy of the SQLite database while in the middle of a
+        transaction! Schedule the
+        backup for immediately after an archive record is written, and then make sure
+        the backup completes before the next archive record arrives.
+        Alternatively, stop weewx, perform the backup, then restart weewx.
+    </p>
+
+    <table class="locations" style="width:70%">
+        <tr>
+            <td style="width: 30%">setup.py:</td>
+            <td class='tty'>/home/weewx/archive/weewx.sdb</td>
+        </tr>
+        <tr>
+            <td>DEB/RPM:</td>
+            <td class='tty'>/var/lib/weewx/weewx.sdb</td>
+        </tr>
+    </table>
+    <p>
+        For a MySQL configuration, save a dump of the archive database.
+    </p>
 
     <h2>Restoring from backup</h2>
 
