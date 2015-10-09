@@ -94,7 +94,7 @@ class MainForm(npyscreen.SplitForm):
         if 'altimeter' in self.data:
             altimeter_data = (self.data['altimeter'], 'inHg', 'group_pressure')
             altimeter_data = weewx.units.ValueHelper(altimeter_data)
-            self.altimeter.value = str(int(altimeter_data.hPa.raw)) + " knots"		## QNH value is rounded down deliberatery.
+            self.altimeter.value = str(int(altimeter_data.hPa.raw)) + " hPa"		## QNH value is rounded down deliberatery.
 
         if 'dewpoint' in self.data:
             dewpoint_data = (self.data['dewpoint'], "degree_F",  "group_temperature")
@@ -117,7 +117,7 @@ class MainForm(npyscreen.SplitForm):
             self.outtemp.value = outtemp_data.degree_C
 
         if 'dateTime' in self.data:
-            self.clock.value = weeutil.weeutil.timestamp_to_string(self.data['dateTime'])
+            self.clock.value = weeutil.weeutil.timestamp_to_gmtime(self.data['dateTime'])
 
 
         self.messages.buffer(textwrap.wrap(str(packet), self.messages.width), scroll_end=True, scroll_if_editing=False)
