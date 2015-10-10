@@ -14,6 +14,7 @@ class FileParseInstaller(ExtensionInstaller):
             description='Data publishing on local network',
             author="Jakub Kakona",
             author_email="kaklik@mlab.cz",
+            report_services = 'user.broadcastservice.BroadcastService',
             config={
                 },
             files=[('bin/user', ['bin/user/broadcastservice.py'])]

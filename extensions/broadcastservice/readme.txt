@@ -1,16 +1,11 @@
-fileparse - simple driver that reads data from a file
-Copyright 2014 Matthew Wall
-
-This example illustrates how to implement a driver and package it so that it
-can be installed by the extension installer.  The fileparse driver reads data
-from a file of name=value pairs.
-
+BroadcastService - simple local network meteo data broadcaster.
+Copyright 2015 Jakub Kakona
 
 Installation instructions:
 
 1) run the installer:
 
-setup.py install --extension extensions/fileparse
+sudo ./wee_extension --install ./weewx/extensions/broadcastservice
 
 2) start weewx:
 
@@ -21,17 +16,11 @@ Manual installation instructions:
 
 1) copy files to the weewx user directory:
 
-cp bin/user/fileparse.py /home/weewx/bin/user
+cp bin/user/broadcastservice.py /home/weewx/bin/user
 
-2) modify weewx.conf:
+2) modify weewx.conf, register new service: 
 
-[Station]
-    station_type = FileParse
-
-[FileParse]
-    poll_interval = 60         # number of seconds
-    path = /var/tmp/datafile   # location of data file
-    driver = user.fileparse
+user.broadcastservice.BroadcastService
 
 3) start weewx
 
