@@ -32,6 +32,9 @@ class BroadcastService(StdService):
 
     def newLoopPacket(self, event):
         """Send the new LOOP packet to the broadcast socket"""
-        data = json.dumps(event.packet) 
-        self.s.sendto(data, ('224.1.1.1', 50000))
+        data = json.dumps(event.packet)
+        try:
+            self.s.sendto(data, ('224.1.1.1', 50000))
+        except: 
+            pass
 
