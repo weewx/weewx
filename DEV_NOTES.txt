@@ -18,7 +18,7 @@ checklist for doing a release:
 7. As a final sanity check, go to the production machine, unpack the
      tarball, install, run.
 8. Tag it:  git tag -a v1.3.1 -m "Version 1.3.1 release"
-9. Upload to SourceForge:
+9. Upload to weewx.com:
      1. make upload-src
      2. make upload-readme
      3. Select the new tarball as the Mac, Linux, and BSD distribution

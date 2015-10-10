@@ -75,6 +75,7 @@ install: build
 	ln -s ../share/weewx/wee_device $(DST)/usr/bin/wee_device
 	ln -s ../share/weewx/wee_extension $(DST)/usr/bin/wee_extension
 	ln -s ../share/weewx/wee_reports $(DST)/usr/bin/wee_reports
+	ln -s ../share/weewx/wunderfixer $(DST)/usr/bin/wunderfixer
 
 # keep lintian happy
 	cp $(SRC)/debian/copyright $(DST_DOCDIR)

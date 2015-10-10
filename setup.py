@@ -193,7 +193,7 @@ class weewx_install_data(install_data):
             weecfg.modify_config(config_dict, stn_info, DEBUG)
 
         # Set the WEEWX_ROOT
-        config_dict['WEEWX_ROOT'] = install_dir
+        config_dict['WEEWX_ROOT'] = os.path.normpath(install_dir)
         # Finally, reorder it to the canonical form
         weecfg.reorder_to_ref(config_dict)
     
@@ -441,7 +441,8 @@ if __name__ == "__main__":
                    'bin/wee_device',
                    'bin/wee_extension',
                    'bin/wee_reports',
-                   'bin/weewxd'],
+                   'bin/weewxd',
+                   'bin/wunderfixer'],
           data_files=[
                       ('',
                        ['LICENSE.txt',

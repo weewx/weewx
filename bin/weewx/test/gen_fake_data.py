@@ -46,7 +46,7 @@ def configDatabases(config_dict, database_type):
     config_dict['DataBindings']['alt_binding']['database'] = "alt_" + database_type
     configDatabase(config_dict, 'alt_binding', amplitude=0.5)
 
-def configDatabase(config_dict, binding, amplitude=1.0, 
+def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, interval=interval,amplitude=1.0, 
                    day_phase_offset=0.0, annual_phase_offset=0.0,
                    weather_phase_offset=0.0):
     """Configures the archive databases."""
@@ -84,7 +84,9 @@ def configDatabase(config_dict, binding, amplitude=1.0,
         
         # Now generate and add the fake records to populate the database:
         t1= time.time()
-        archive.addRecord(genFakeRecords(amplitude=amplitude, 
+        archive.addRecord(genFakeRecords(start_ts=start_ts, stop_ts=stop_ts,
+                                         interval=interval,
+                                         amplitude=amplitude, 
                                          day_phase_offset=day_phase_offset, 
                                          annual_phase_offset=annual_phase_offset,
                                          weather_phase_offset=weather_phase_offset))

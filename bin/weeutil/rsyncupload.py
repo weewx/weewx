@@ -98,7 +98,11 @@ class RsyncUpload(object):
             # get number of files and bytes transferred and produce an
             # appropriate message
             try:
-                N = rsyncinfo['Number of files transferred']
+                if 'Number of regular files transferred' in rsyncinfo:
+                    N = rsyncinfo['Number of regular files transferred']
+                else:
+                    N = rsyncinfo['Number of files transferred']
+
                 Nbytes = rsyncinfo['Total transferred file size']
                 if N is not None and Nbytes is not None:
                     rsync_message = "rsync'd %d files (%s) in %%0.2f seconds" % (int(N), Nbytes)

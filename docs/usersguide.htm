@@ -61,7 +61,7 @@
 
     <h1 class="title">User's Guide to the weewx Weather System<br/>
     <span class='version'>
-Version: 3.2.0
+Version: 3.3.0b1
     </span>
     </h1>
 
@@ -84,7 +84,8 @@ Version: 3.2.0
         release in 2009.</p>
 
     <p>The source code is hosted on <a href="https://github.com/weewx/weewx">GitHub</a>, while
-        downloads are hosted on <a href="http://sourceforge.net/projects/weewx/files/">SourceForge</a>.</p>
+        downloads are available at
+    <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.</p>
 
     <p><span class="code">weewx</span> is about 8,000 lines of code, plus
         another 11,000 for the many drivers used by the supported hardware. </p>
@@ -128,7 +129,7 @@ Version: 3.2.0
             <td>Maturity</td>
         </tr>
         <tr>
-            <td class="text_highlight" rowspan="5">AcuRite</td>
+            <td class="text_highlight" rowspan="6">AcuRite</td>
             <td>01025</td>
             <td>USB</td>
             <td class="code">pyusb</td>
@@ -158,6 +159,13 @@ Version: 3.2.0
         </tr>
         <tr>
             <td>02032</td>
+            <td>USB</td>
+            <td class="code">pyusb</td>
+            <td>AcuRite<sup><a href='#acurite'>12</a></sup></td>
+            <td>Experimental</td>
+        </tr>
+        <tr>
+            <td>02064</td>
             <td>USB</td>
             <td class="code">pyusb</td>
             <td>AcuRite<sup><a href='#acurite'>12</a></sup></td>
@@ -361,7 +369,7 @@ Version: 3.2.0
             <td>Experimental</td>
         </tr>
         <tr>
-            <td class="text_highlight" rowspan="5">Hideki</td>
+            <td class="text_highlight" rowspan="6">Hideki</td>
             <td>DV928</td>
             <td>USB</td>
             <td class="code">pyusb</td>
@@ -384,6 +392,13 @@ Version: 3.2.0
         </tr>
         <tr>
             <td>TE831</td>
+            <td>USB</td>
+            <td class="code">pyusb</td>
+            <td>TE923<sup><a href='#te923'>8</a></sup></td>
+            <td>Experimental</td>
+        </tr>
+        <tr>
+            <td>TE838</td>
             <td>USB</td>
             <td class="code">pyusb</td>
             <td>TE923<sup><a href='#te923'>8</a></sup></td>
@@ -413,11 +428,18 @@ Version: 3.2.0
             <td>Experimental</td>
         </tr>
         <tr>
-            <td class="text_highlight" rowspan="3">La Crosse</td>
+            <td class="text_highlight" rowspan="4">La Crosse</td>
             <td>C86234</td>
             <td>USB</td>
             <td class="code">pyusb</td>
             <td>WS28xx<sup><a href='#ws28xx'>7</a></sup></td>
+            <td>Experimental</td>
+        </tr>
+        <tr>
+            <td>WS-1640</td>
+            <td>USB</td>
+            <td class="code">pyusb</td>
+            <td>TE923<sup><a href='#te923'>8</a></sup></td>
             <td>Experimental</td>
         </tr>
         <tr>
@@ -795,7 +817,7 @@ Version: 3.2.0
             <a href="http://www.peetbros.com/">Ultimeter 2000</a>.
         </li>
         <li><a id="rainwise">RainWise Mark III Stations.</a> Tested on the
-            <a href="http://www.rainwise.com/">CC3000 Data Logger</a>.
+            <a href="http://www.rainwise.com/">CC3000</a>.
         </li>
         <li><a id="acurite">AcuRite Weather Stations.</a> Tested on the
             <a href="http://www.acurite.com/8-pro-digital-weather-station-with-pc-connect-01036.html">01036RX</a>.
@@ -872,9 +894,9 @@ Version: 3.2.0
     <h2>Installation methods</h2>
 
     <p>
-        <span class='code'>Weewx</span> can be installed from a DEB or RPM
-        package, or it can be installed using the standard Python utility <span
-            class='code'>setup.py</span>.
+        <span class='code'>Weewx</span> can be installed from a DEB (Debian) or RPM
+        (Redhat) package, or it can be installed using the standard Python utility
+        <span class='code'>setup.py</span>.
     </p>
 
     <p>
@@ -900,10 +922,10 @@ Version: 3.2.0
             class='code'>weewx</span>.
     </p>
 
-    <h2><a href='debian.htm'>Installing from DEB package</a></h2>
+    <h2><a href='debian.htm'>Installing from DEB package (Quick Start)</a></h2>
 
     <p>For Debian, Ubuntu, Mint, and Raspian operating systems, follow the
-        <a href='debian.htm'>instructions for Debian-based systems</a>.</p>
+        <a href='debian.htm'>"Quick Start" instructions for Debian-based systems</a>.</p>
 
     <h2><a href='redhat.htm'>Installing from Redhat RPM package</a></h2>
 
@@ -917,8 +939,10 @@ Version: 3.2.0
 
     <h2><a href='setup.htm'>Installing using the Python tool setup.py</a></h2>
 
-    <p>For all operating systems, follow the
-        <a href='setup.htm'><span class="code">setup.py</span> instructions</a>.
+    <p>For all other operating systems, follow the
+        <a href='setup.htm'><span class="code">setup.py</span> instructions</a>. This method
+        can also be used on Debian-, Redhat-, and SUSE-based operating systems as well,
+        and may be a better choice if you intend to heavily customize Weewx.
     </p>
 
     <h2>Where to find things</h2>
@@ -2790,6 +2814,10 @@ longitude = -77.0366</pre>
 
     <p>The password. Required.</p>
 
+    <p class="config_option">port</p>
+
+    <p>The port number to be used. Optional. Default is 3306.</p>
+
     <h2 class="config_section">[Engines]</h2>
 
     <p>
@@ -4019,18 +4047,20 @@ sudo /etc/init.d/apache2 restart</pre>
     <h1 id="backup">Making backups</h1>
 
     <p>
-        To backup a <span class='code'>weewx</span> installation, make a copy of
-        the weewx configuration, weather data, skins/templates, and custom code.
-        In most cases these can be copied while weewx is running. The location
-        of these files depends on which method was used to install
-        <span class='code'>weewx</span>.
+        To backup a <span class='code'>weewx</span> installation, you will need to make a copy
+        of</p>
+    <ul>
+        <li>configuration information;</li>
+        <li>skins and templates;</li>
+        <li>any custom code or extensions you have installed;</li>
+        <li>the weewx database.</li>
+    </ul>
+    <p>
+        It is not necessary to backup the generated images, HTML files, or NOAA reports since weewx will easily
+        create these again.
     </p>
 
-    <p>
-        It is not necessary to backup the images and HTML files generated from
-        templates, since weewx will easily create those again. This includes
-        the NOAA reports in some skins.
-    </p>
+    <p>Individual instructions follow</p>
 
     <h2>Configuration</h2>
 
@@ -4047,24 +4077,7 @@ sudo /etc/init.d/apache2 restart</pre>
             <td class='tty'>/etc/weewx/weewx.conf</td>
         </tr>
     </table>
-    <h2>Weather data</h2>
 
-    <p>
-        Meteorological data are saved in the
-        archive database. For a SQLite
-        configuration, simply save the <span class='code'>weewx.sdb</span>
-        file. For a MySQL configuration, save a dump of the archive database.
-    </p>
-    <table class="locations" style="width:70%">
-        <tr>
-            <td style="width: 30%">setup.py:</td>
-            <td class='tty'>/home/weewx/archive/weewx.sdb</td>
-        </tr>
-        <tr>
-            <td>DEB/RPM:</td>
-            <td class='tty'>/var/lib/weewx/weewx.sdb</td>
-        </tr>
-    </table>
     <h2>Skins and templates</h2>
 
     <p>
@@ -4081,7 +4094,8 @@ sudo /etc/init.d/apache2 restart</pre>
             <td class='tty'>/etc/weewx/skins</td>
         </tr>
     </table>
-    <h2>Other customizations</h2>
+
+    <h2>Custom code or extensions</h2>
 
     <p>
         Save the contents of the
@@ -4099,6 +4113,36 @@ sudo /etc/init.d/apache2 restart</pre>
             <td class='tty'>/usr/share/weewx/user</td>
         </tr>
     </table>
+
+    <h2>Weewx database</h2>
+
+    <p>
+        Finally, you will need to backup the database.
+    </p>
+    <p>
+        For a SQLite configuration, you will need to backup the <span class='code'>weewx.sdb</span> file.
+    </p>
+    <p class="note">
+        Do not make the copy of the SQLite database while in the middle of a
+        transaction! Schedule the
+        backup for immediately after an archive record is written, and then make sure
+        the backup completes before the next archive record arrives.
+        Alternatively, stop weewx, perform the backup, then restart weewx.
+    </p>
+
+    <table class="locations" style="width:70%">
+        <tr>
+            <td style="width: 30%">setup.py:</td>
+            <td class='tty'>/home/weewx/archive/weewx.sdb</td>
+        </tr>
+        <tr>
+            <td>DEB/RPM:</td>
+            <td class='tty'>/var/lib/weewx/weewx.sdb</td>
+        </tr>
+    </table>
+    <p>
+        For a MySQL configuration, save a dump of the archive database.
+    </p>
 
     <h2>Restoring from backup</h2>
 
@@ -4296,16 +4340,42 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
 
     <h3 id="html_generated_but_not_updated">Weewx generates HTML pages, but it does not update them</h3>
 
-    <p>If you are getting a symptom that everything appears normal, that is HTML
-        is getting generated and getting FTP&#39;d to your webserver <em>(look in the
-            log to be sure</em>!), but your web pages are not being updated, it could be
-        because the data on board your console has gotten garbled. The way the Davis
-        Vantage series works is that the software (<span class="code">weewx</span> in
-        this case) asks the console for all archive data &quot;since&quot; some time.
-        The console then downloads the records one at a time. After it gets to the very
-        last one, the memory wraps around, and the timestamp will suddenly jump backwards
-        in time a couple weeks &mdash; this how the software knows it has downloaded the last
-        record and so it stops.</p>
+    <p>If you are getting a symptom that everything appears normal, that is
+      image and HTML files are generated (<em>(look in the log to be sure</em>)
+      and sent to your webserver (if you have configured FTP or rsync), but
+      the values in the web pages are not being updated, it could be due to 
+      clock skew or corrupt station memory.</p>
+
+    <h4>Clock skew</h4>
+    <p>If the database contains a record with time stamp (the dateTime field)
+      in the future, then records from the station that are older than that
+      future date will be ignored.  How can the database contain records from
+      the future?  Sometimes the computer clock is not set correctly.  For
+      example, the raspberry pi has no clock, so if weewx saves data before
+      the pi has synchronized its clock with internet time servers, the
+      records will have incorrect time stamps, some of which might be in the
+      future.</p>
+
+    <p>The solution is to delete any records with time stamp in the future.
+      For a sqlite database, the procedure looks like this:</p>
+
+    <pre class="tty"><span class="cmd">cp /home/weewx/archive/weewx.sdb /home/weewx/archive/weewx.sdb.backup
+sqlite3 /home/weewx/archive/weewx.sdb</span>
+sqlite> <span class="cmd">delete from archive where dateTime > X;</span>
+sqlite> <span class="cmd">.exit</span></pre>
+
+    <p>The timestamp X is the current time as unix epoch (number of seconds
+      since 1 January 1970), or a time a minute or two in the future.</p>
+
+    <h4>Corrupt station memory</h4>
+    <p>If you have a Vantage station, the problem might be because the data on
+      board your console has gotten garbled. The way the Davis Vantage series
+      works is that the software (<span class="code">weewx</span> in this case)
+      asks the console for all archive data &quot;since&quot; some time. The
+      console then downloads the records one at a time. After it gets to the
+      very last one, the memory wraps around, and the timestamp will suddenly
+      jump backwards in time a couple weeks &mdash; this how the software
+      knows it has downloaded the last record and so it stops.</p>
 
     <p>However, if the internal memory gets garbled, the console will immediately
         return archives in the past, and so it looks like the timestamps have decreased
@@ -4366,9 +4436,9 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
     <h3>Raspberry Pi</h3>
 
     <p>
-        See the <a href="https://sourceforge.net/p/weewx/wiki/"><span
+        See the <a href="https://github.com/weewx/weewx/wiki"><span
             class="code">weewx</span> wiki</a> for up-to-date information on <a
-            href="https://sourceforge.net/p/weewx/wiki/Raspberry%20Pi/"><i>Running
+            href="https://github.com/weewx/weewx/wiki/Raspberry%20Pi"><i>Running
         weewx on a Raspberry Pi</i></a>.
     </p>
 

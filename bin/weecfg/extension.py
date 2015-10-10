@@ -349,8 +349,9 @@ class ExtensionEngine(object):
 
     def uninstall_files(self, installer):
         """Delete files that were installed for this extension"""
-
-        # First remove any bin files the extension might have added:
+         
+        directory_list = []
+ 
         self.logger.log("Removing files.", level=2)
         N = 0
         for source_tuple in installer['files']:
@@ -375,20 +376,26 @@ class ExtensionEngine(object):
                                 destination_path.replace('.py', '.pyc'), False)
                             N += self.delete_file(
                                 destination_path.replace('.py', '.pyo'), False)
-                    # For skin subdirectories, if the directory is empty then
-                    # delete it.  This applies only to extension-specific
-                    # sub-directories.
+                    # Accumulate all directories under 'skins'
                     if root_type == 'SKIN_ROOT':
                         dst_dir = ExtensionEngine._strip_leading_dir(
                             source_tuple[0])
                         directory = os.path.abspath(os.path.join(
                                 self. root_dict[root_type], dst_dir))
-                        self.delete_directory(directory)
+                        directory_list.append(directory)
                     break
             else:
                 sys.exit("Unknown destination for file %s" % source_tuple)
         self.logger.log("Removed %d files" % N, level=2)
-        
+         
+        # Now delete all the empty skin directories. 
+        # Start by finding the directory closest to root
+        most_root = os.path.commonprefix(directory_list)
+        # Now delete the directories under it, from the bottom up.
+        for dirpath, _, _ in os.walk(most_root, topdown=False):
+            if dirpath in directory_list:
+                self.delete_directory(dirpath)
+         
     def delete_file(self, filename, report_errors=True):
         """Delete the given file from the file system.
 

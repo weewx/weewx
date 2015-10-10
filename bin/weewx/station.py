@@ -37,7 +37,7 @@ class StationInfo(object):
             self.altitude_vt = console.altitude_vt
         else:
             altitude_t       = weeutil.weeutil.option_as_list(stn_dict.get('altitude', (None, None)))
-            self.altitude_vt = (float(altitude_t[0]), altitude_t[1], "group_altitude")
+            self.altitude_vt = weewx.units.ValueTuple(float(altitude_t[0]), altitude_t[1], "group_altitude")
 
         if console and hasattr(console, 'hardware_name'):
             self.hardware = console.hardware_name

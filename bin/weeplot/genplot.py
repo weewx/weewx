@@ -61,6 +61,7 @@ class GeneralPlot(object):
         self.bottom_label_font_path = config_dict.get('bottom_label_font_path')
         self.bottom_label_font_color= weeplot.utilities.tobgr(config_dict.get('bottom_label_font_color', '0x000000'))
         self.bottom_label_font_size = int(config_dict.get('bottom_label_font_size', 10)) * self.anti_alias
+        self.bottom_label_offset    = int(config_dict.get('bottom_label_offset', 3))
 
         self.axis_label_font_path   = config_dict.get('axis_label_font_path')
         self.axis_label_font_color  = weeplot.utilities.tobgr(config_dict.get('axis_label_font_color', '0x000000'))
@@ -354,7 +355,8 @@ class GeneralPlot(object):
         bottom_label_font = weeplot.utilities.get_font_handle(self.bottom_label_font_path, self.bottom_label_font_size)
         bottom_label_size = draw.textsize(self.bottom_label, font=bottom_label_font)
         
-        draw.text(((self.image_width - bottom_label_size[0])/2, self.image_height - bottom_label_size[1] - 3),
+        draw.text(((self.image_width - bottom_label_size[0])/2, 
+                   self.image_height - bottom_label_size[1] - self.bottom_label_offset),
                   self.bottom_label, 
                   fill=self.bottom_label_font_color,
                   font=bottom_label_font)

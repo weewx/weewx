@@ -283,13 +283,14 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
             searchList = self._getSearchList(encoding, timespan,
                                              default_binding)
-            
-            text = Cheetah.Template.Template(file=template,
-                                             searchList=searchList,
-                                             filter=encoding,
-                                             filtersLib=weewx.cheetahgenerator)
             tmpname = _fullname + '.tmp'
+            
             try:
+                text = Cheetah.Template.Template(file=template,
+                                                 searchList=searchList,
+                                                 filter=encoding,
+                                                 filtersLib=weewx.cheetahgenerator)
+                
                 with open(tmpname, mode='w') as _file:
                     print >> _file, text
                 os.rename(tmpname, _fullname)

@@ -16,7 +16,8 @@
 #  figured out a linear function for the pressure sensor in the 02032
 #
 # Thanks to Weather Guy and Andrew Daviel (2015)
-#  decoding of the R3 messages
+#  decoding of the R3 messages and R3 reports
+#  decoding of the windspeed
 #
 # golf clap to Michael Walsh
 #  http://forum1.valleyinfosys.com/index.php
@@ -28,11 +29,12 @@
 
 There are many variants of the AcuRite weather stations and sensors.  This
 driver is known to work with the consoles that have a USB interface such as
-models 01025, 01035, and 02032C.
+models 01025, 01035, 02032C, and 02064C.
 
 The AcuRite stations were introduced in 2011.  The 02032 model was introduced
 in 2013 or 2014.  The 02032 appears to be a low-end model - it has fewer
-buttons, and a different pressure sensor.
+buttons, and a different pressure sensor.  The 02064 model was introduced in
+2015 and appears to be an attempt to fix problems in the 02032.
 
 AcuRite publishes the following specifications:
 
@@ -254,32 +256,85 @@ R3 - 33 bytes
  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 ...
 03 aa 55 01 00 00 00 20 20 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ...
 
-The 'aa 55' marks each block.  The sequence 'aa 55 05' or 'aa 55 06' marks the
-last block.  Blocks have the following meaning:
+An R3 report consists of multiple R3 messages.  Each R3 report contains records
+that are delimited by the sequence 0xaa 0x55.  There is a separator sequence
+prior to the first record, but not after the last record.
 
-1: 256 bytes: ?
-2: 256 bytes: ?
-3: time stamp
-4: 6 bytes: history data
-5: time stamp
-6: ?
+There are 6 types of records, each type identified by number:
 
-Byte 4 of block 4 is the number of 32-byte history records that follow
+   1,2  8-byte chunks of historical min/max data.  Each 8-byte chunk
+          appears to contain two data bytes plus a 5-byte timestamp
+          indicating when the event occurred.
+   3    Timestamp indicating when the most recent history record was
+          stored, based on the console clock.
+   4    History data
+   5    Timestamp indicating when the request for history data was
+          received, based on the console clock.
+   6    End marker indicating that no more data follows in the report.
 
-History Records
-   0-1: indoor temperature        (r[0]*256 + r[1])/18 - 100    C
-   2-3: heatindex                 (r[2]*256 + r[3])/18 - 100    C
-     5: indoor humidity           r[5]                          percent
-     7: outdoor humidity          r[7]                          percent
-   8-9: windchill                 (r[8]*256 + r[9])/18 - 100    C
- 10-11: outdoor temperature       (r[10]*256 + r[11])/18 - 100  C
- 12-13: dewpoint                  (r[12]*256 + r[13])/18 - 100  C
- 14-15: barometer                 (r[14]*256 + r[15])/10        kPa
-    17: wind direction            dirmap(r[17])
- 18-19: wind speed                (r[18]*256 + r[19])/16        kph
- 20-21: wind max                  (r[20]*256 + r[21])/16        kph
- 22-23: wind average              (r[22]*256 + r[23])/16        kph
- 25: rain                         r[25] * 0.254                 mm
+Each record has the following header:
+
+   0: record id            possible values are 1-6
+ 1,2: unknown              always seems to be 0
+ 3,4: size                 size of record, in 'chunks'
+   5: checksum             total of bytes 0..4 minus one
+
+  where the size of a 'chunk' depends on the record id:
+
+   id         chunk size
+
+   1,2,3,5    8 bytes
+   4          32 bytes
+   6          n/a
+
+For all but ID6, the total record size should be equal to 6 + chunk_size * size
+ID6 never contains data, but a size of 4 is always declared.
+
+Timestamp records (ID3 and ID5):
+
+ 0-1: for ID3, the number of history records when request was received
+ 0-1: for ID5, unknown
+   2: year
+   3: month
+   4: day
+   5: hour
+   6: minute
+   7: for ID3, checksum - sum of bytes 0..6 (do not subtract 1)
+   7: for ID5, unknown (always 0xff)
+
+History Records (ID4):
+
+Bytes 3,4 contain the number of history records that follow, say N.  After
+stripping off the 6-byte record header there should be N*32 bytes of history
+data.  If not, then the data are corrupt or there was an incomplete transfer.
+
+The most recent history record is first, so the timestamp on record ID applies
+to the first 32-byte chunk, and each record is 12 minutes into the past from
+the previous.  Each 32-byte chunk has the following decoding:
+
+   0-1: indoor temperature    (r[0]*256 + r[1])/18 - 100         C
+   2-3: outdoor temperature   (r[2]*256 + r[3])/18 - 100         C
+     4: unknown
+     5: indoor humidity       r[5]                               percent
+     6: unknown
+     7: outdoor humidity      r[7]                               percent
+   8-9: windchill             (r[8]*256 + r[9])/18 - 100         C
+ 10-11: heat index            (r[10]*256 + r[11])/18 - 100       C
+ 12-13: dewpoint              (r[12]*256 + r[13])/18 - 100       C
+ 14-15: barometer             ((r[14]*256 + r[15]) & 0x07ff)/10  kPa
+    16: unknown
+    17: unknown               0xf0
+    17: wind direction        dirmap(r[17] & 0x0f)
+ 18-19: wind speed            (r[18]*256 + r[19])/16             kph
+ 20-21: wind max              (r[20]*256 + r[21])/16             kph
+ 22-23: wind average          (r[22]*256 + r[23])/16             kph
+ 24-25: rain                  (r[24]*256 + r[25]) * 0.254        mm
+ 26-30: rain timestamp        0xff if no rain event
+    31: unknown
+
+bytes 4 and 6 always seem to be 0
+byte 16 is always zero on 02032 console, but is a copy of byte 21 on 01035.
+byte 31 is always zero on 02032 console, but is a copy of byte 30 on 01035.
 
 
 X1 - 2 bytes
@@ -313,7 +368,7 @@ import weewx.wxformulas
 from weeutil.weeutil import to_bool
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.19'
+DRIVER_VERSION = '0.21'
 DEBUG_RAW = 0
 
 # USB constants for HID
@@ -357,6 +412,13 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
     max_tries - How often to retry communication before giving up.
     [Optional. Default is 10]
 
+    use_constants - Indicates whether to use calibration constants when
+    decoding pressure and temperature.  For consoles that use the HP03 sensor,
+    use the constants reported  by the sensor.  Otherwise, use a linear
+    approximation to derive pressure and temperature values from the sensor
+    readings.
+    [Optional.  Default is False]
+
     ignore_bounds - Indicates how to treat calibration constants from the
     pressure/temperature sensor.  Some consoles report constants that are
     outside the limits specified by the sensor manufacturer.  Typically this
@@ -377,9 +439,12 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         self.max_tries = int(stn_dict.get('max_tries', 10))
         self.retry_wait = int(stn_dict.get('retry_wait', 30))
         self.polling_interval = int(stn_dict.get('polling_interval', 6))
+        self.use_constants = to_bool(stn_dict.get('use_constants', False))
         self.ignore_bounds = to_bool(stn_dict.get('ignore_bounds', False))
-        if self.ignore_bounds:
-            loginf('R2 bounds on constants will be ignored')
+        if self.use_constants:
+            loginf('R2 will be decoded using sensor constants')
+            if self.ignore_bounds:
+                loginf('R2 bounds on constants will be ignored')
         self.enable_r3 = int(stn_dict.get('enable_r3', 0))
         if self.enable_r3:
             loginf('R3 data will be attempted')
@@ -426,7 +491,8 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 if raw2:
                     Station.check_pt_constants(last_raw2, raw2)
                     last_raw2 = raw2
-                    packet.update(Station.decode_R2(raw2, self.ignore_bounds))
+                    packet.update(Station.decode_R2(
+                            raw2, self.use_constants, self.ignore_bounds))
                 self._augment_packet(packet)
                 ntries = 0
                 yield packet
@@ -667,10 +733,11 @@ class Station(object):
         return ok
 
     @staticmethod
-    def decode_R2(raw, ignore_bounds=False):
+    def decode_R2(raw, use_constants=False, ignore_bounds=False):
         data = dict()
         if len(raw) == 25 and raw[0] == 0x02:
-            data['pressure'], data['inTemp'] = Station.decode_pt(raw, ignore_bounds)
+            data['pressure'], data['inTemp'] = Station.decode_pt(
+                raw, use_constants, ignore_bounds)
         elif len(raw) != 25:
             logerr("R2: bad length: %s" % _fmt_bytes(raw))
         else:
@@ -729,12 +796,13 @@ class Station(object):
     @staticmethod
     def decode_windspeed(data):
         # extract the wind speed from an R1 message
-        # decoded value is mph
         # return value is kph
-        # FIXME: the speed decoding is not correct
-        a = (data[4] & 0x1f) << 3
-        b = (data[5] & 0x70) >> 4
-        return 0.5 * (a | b) * 1.60934
+        # for details see http://www.wxforum.net/index.php?topic=27244.0
+        # minimum measurable speed is 1.83 kph
+        n = ((data[4] & 0x1f) << 3) | ((data[5] & 0x70) >> 4)
+        if n == 0:
+            return 0.0
+        return 0.8278 * n + 1.0
 
     @staticmethod
     def decode_winddir(data):
@@ -764,13 +832,16 @@ class Station(object):
         return (((data[6] & 0x3f) << 7) | (data[7] & 0x7f)) * 0.0254
 
     @staticmethod
-    def decode_pt(data, ignore_bounds=False):
+    def decode_pt(data, use_constants=False, ignore_bounds=False):
         # decode pressure and temperature from the R2 message
         # decoded pressure is mbar, decoded temperature is degree C
         c1,c2,c3,c4,c5,c6,c7,a,b,c,d = Station.get_pt_constants(data)
 
-        if (c1 == 0x8000 and c2 == c3 == 0x0 and c4 == 0x0400 and c5 == 0x1000
-            and c6 == 0x0 and c7 == 0x0960 and a == b == c == d == 0x1):
+        if not use_constants:
+            return Station.decode_pt_acurite(d1, d2)
+        elif (c1 == 0x8000 and c2 == c3 == 0x0 and c4 == 0x0400
+              and c5 == 0x1000 and c6 == 0x0 and c7 == 0x0960
+              and a == b == c == d == 0x1):
             # this is a MS5607 sensor, typical in 02032 consoles
             d2 = ((data[21] & 0x0f) << 8) + data[22]
             if d2 >= 0x0800:
@@ -814,7 +885,15 @@ class Station(object):
     @staticmethod
     def decode_pt_MS5607(d1, d2):
         # for devices with the MS5607 sensor, do a linear scaling
-        p = 0.062585727 * d1 - 209.6211
+        return Station.decode_pt_acurite(d1, d2)
+
+    @staticmethod
+    def decode_pt_acurite(d1, d2):
+        # apparently the new (2015) acurite software uses this function, which
+        # is quite close to andrew daviel's reverse engineered function of:
+        #    p = 0.062585727 * d1 - 209.6211
+        #    t = 25.0 + 0.05 * d2
+        p = d1 / 16.0 - 208
         t = 25.0 + 0.05 * d2
         return p, t
 

@@ -1,6 +1,46 @@
 weewx change history
 --------------------
 
+3.3.0 YY/YY/YY
+
+Now really includes wunderfixer. It was inadvertently left out of the install
+script.
+
+Uninstalling an extension with a skin now deletes all empty directories. This
+fixes issue #43.
+
+Fixed bug in WMR200 driver that caused it to emit dayRain, when what it was
+really emitting was the "rain in the last 24h, excluding current hour."
+Fixes issue #62.
+
+Fixed bug that caused wind direction to be calculated incorrectly, depending
+on the ordering of a dictionary. Thanks to user Chris Matteri for not only
+spotting this subtle bug, but offering a solution. 
+
+StdPrint now prints packets and records in (case-insensitive) alphabetical
+order.
+
+Fixed wind speed decoding in the acurite driver.  Thanks to aweatherguy.
+
+The StdRESTful service now supports POSTs, as well as GETs.
+
+The FTP utility now catches PickleError exceptions, then does a retry.
+
+Added unit 'minute' to the conversion dictionary.
+
+The vertical position of the bottom label in the plots can now be
+set in skin.conf with option bottom_label_offset.
+
+An optional port number can now be specified with the MySQL database.
+
+
+3.2.1 07/18/15
+
+Fixed problem when using setup.py to install into a non-standard location.
+Weewx would start a new database in the "standard" location, ignoring the
+old one in the non-standard location.
+
+
 3.2.0 07/15/15
 
 There are now five command-line utilities, some new, some old

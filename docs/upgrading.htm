@@ -92,7 +92,7 @@
 
     <h1 class="title">Upgrading <span class="code">weewx</span><br/>
       <span class='version'>
-Version: 3.2.0
+Version: 3.3.0b1
       </span>
     </h1>
 
@@ -273,6 +273,18 @@ Version: 3.2.0
             <td>Run reports</td>
         </tr>
     </table>
+
+    <h3>Changes to weewx.conf</h3>
+
+    <p>Release 3.2 introduces a new section
+      <span class='code'>[DatabaseTypes]</span>.  This section defines the
+      default settings for each type of database.  For example, the host,
+      user, and password for MySQL databases can be specified once in the
+      <span class='code'>DatabaseTypes</span> section instead of repeating
+      in each <span class='code'>Database</span> section.  The defaults in
+      <span class='code'>DatabaseTypes</span> can be overridden in each
+      <span class='code'>Database</span> section as needed.
+    </p>
 
     <h2>From V2.7 or earlier</h2>
 

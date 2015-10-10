@@ -348,13 +348,16 @@ class RESTThread(threading.Thread):
         # ... then, finally, post it
         self.post_with_retries(_request)
 
-    def post_with_retries(self, request):
+    def post_with_retries(self, request, payload=None):
         """Post a request, retrying if necessary
         
         Attempts to post the request object up to max_tries times. 
         Catches a set of generic exceptions.
         
         request: An instance of urllib2.Request
+        
+        payload: If given, the request will be done as a POST. Otherwise, 
+        as a GET. [optional]
         """
 
         # Retry up to max_tries times:
@@ -363,7 +366,7 @@ class RESTThread(threading.Thread):
                 # Do a single post. The function post_request() can be
                 # specialized by a RESTful service to catch any unusual
                 # exceptions.
-                _response = self.post_request(request)
+                _response = self.post_request(request, payload)
                 if _response.code == 200:
                     # No exception thrown and we got a good response code, but
                     # we're still not done.  Some protocols encode a bad
@@ -390,21 +393,26 @@ class RESTThread(threading.Thread):
             # can decide what to do with it.
             raise FailedPost("Failed upload after %d tries" % (self.max_tries,))
 
-    def post_request(self, request):
+    def post_request(self, request, payload=None):
         """Post a request object. This version does not catch any HTTP
         exceptions.
         
         Specializing versions can can catch any unusual exceptions that might
         get raised by their protocol.
+        
+        request: An instance of urllib2.Request
+        
+        payload: If given, the request will be done as a POST. Otherwise, 
+        as a GET. [optional]
         """
         try:
             # Python 2.5 and earlier do not have a "timeout" parameter.
             # Including one could cause a TypeError exception. Be prepared
             # to catch it.
-            _response = urllib2.urlopen(request, timeout=self.timeout)
+            _response = urllib2.urlopen(request, data=payload, timeout=self.timeout)
         except TypeError:
             # Must be Python 2.5 or early. Use a simple, unadorned request
-            _response = urllib2.urlopen(request)
+            _response = urllib2.urlopen(request, data=payload)
         return _response
 
     def check_response(self, response):

@@ -30,19 +30,21 @@ def guard(fn):
     return guarded_fn
 
 
-def connect(host='localhost', user='', password='', database_name='', driver='', **kwargs):
+def connect(host='localhost', user='', password='', database_name='', driver='', port=3306, **kwargs):
     """Connect to the specified database"""
-    return Connection(host=host, user=user, password=password, database_name=database_name, **kwargs)
+    return Connection(host=host, user=user, password=password, 
+                      database_name=database_name, port=int(port), **kwargs)
 
 
-def create(host='localhost', user='', password='', database_name='', driver='', **kwargs):
+def create(host='localhost', user='', password='', database_name='', driver='', port=3306, **kwargs):
     """Create the specified database. If it already exists,
     an exception of type weedb.DatabaseExists will be thrown."""
     # Open up a connection w/o specifying the database.
     try:
         connect = MySQLdb.connect(host=host,
                                   user=user,
-                                  passwd=password, **kwargs)
+                                  passwd=password, 
+                                  port=int(port), **kwargs)
         cursor = connect.cursor()
         # An exception will get thrown if the database already exists.
         try:
@@ -57,13 +59,14 @@ def create(host='localhost', user='', password='', database_name='', driver='', 
         raise weedb.OperationalError(e)
 
 
-def drop(host='localhost', user='', password='', database_name='', driver='', **kwargs):
+def drop(host='localhost', user='', password='', database_name='', driver='', port=3306, **kwargs):
     """Drop (delete) the specified database."""
     # Open up a connection
     try:
         connect = MySQLdb.connect(host=host,
                                   user=user,
-                                  passwd=password, **kwargs)
+                                  passwd=password, 
+                                  port=int(port), **kwargs)
         cursor = connect.cursor()
         try:
             cursor.execute("DROP DATABASE %s" % database_name)
@@ -78,7 +81,7 @@ def drop(host='localhost', user='', password='', database_name='', driver='', **
 class Connection(weedb.Connection):
     """A wrapper around a MySQL connection object."""
 
-    def __init__(self, host='localhost', user='', password='', database_name='', **kwargs):
+    def __init__(self, host='localhost', user='', password='', database_name='', port=3306, **kwargs):
         """Initialize an instance of Connection.
 
         Parameters:
@@ -86,13 +89,14 @@ class Connection(weedb.Connection):
             host: IP or hostname with the mysql database (required)
             user: User name (required)
             password: The password for the username (required)
-            database: The database to be used. (required)
+            database_name: The database to be used. (required)
+            port: Its port number (optional; default is 3306)
             kwargs:   Any extra arguments you may wish to pass on to MySQL (optional)
             
         If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
         try:
-            connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database_name, **kwargs)
+            connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database_name, port=int(port), **kwargs)
         except _mysql_exceptions.OperationalError, e:
             # The MySQL driver does not include the database in the
             # exception information. Tack it on, in case it might be useful.

@@ -634,9 +634,10 @@ class Manager(object):
 
         if self.std_unit_system is not None:
             if unit_system != self.std_unit_system:
-                raise weewx.UnitError("Unit system of incoming record (0x%x) "\
-                                      "differs from the archive database (0x%x)" % 
-                                      (unit_system, self.std_unit_system))
+                raise weewx.UnitError("Unit system of incoming record (0x%02x) "\
+                                      "differs from '%s' table in '%s' database (0x%02x)" % 
+                                      (unit_system, self.table_name, self.database_name,
+                                       self.std_unit_system))
         else:
             # This is the first record. Remember the unit system to
             # check against subsequent records:
@@ -865,26 +866,23 @@ def get_database_dict_from_config(config_dict, database):
     
     >>> import configobj, StringIO
     >>> config_snippet = '''
+    ... WEEWX_ROOT = /home/weewx
     ... [DatabaseTypes]
-    ...   [[MySQL]]
-    ...     driver = weedb.mysql
-    ...     host = localhost
-    ...     user = weewx
-    ...     password = weewx
+    ...   [[SQLite]]
+    ...     driver = weedb.sqlite
+    ...     SQLITE_ROOT = %(WEEWX_ROOT)s/archive
     ... [Databases]
-    ...     [[archive_mysql]]
-    ...        database_name = weewx
-    ...        database_type = MySQL'''
+    ...     [[archive_sqlite]]
+    ...        database_name = weewx.sdb
+    ...        database_type = SQLite'''
     >>> config_dict = configobj.ConfigObj(StringIO.StringIO(config_snippet))
-    >>> database_dict = get_database_dict_from_config(config_dict, 'archive_mysql')
+    >>> database_dict = get_database_dict_from_config(config_dict, 'archive_sqlite')
     >>> keys = sorted(database_dict.keys())
     >>> for k in keys:
     ...     print "%15s: %12s" % (k, database_dict[k])
-      database_name:        weewx
-             driver:  weedb.mysql
-               host:    localhost
-           password:        weewx
-               user:        weewx
+        SQLITE_ROOT: /home/weewx/archive
+      database_name:    weewx.sdb
+             driver: weedb.sqlite
     """
     try:
         database_dict = dict(config_dict['Databases'][database])

@@ -17,6 +17,9 @@ Weather Underground with the missing data.
 
 CHANGE HISTORY
 --------------------------------
+1.0.0 8/16/15
+Published version.
+
 1.0.0a1   2/28/15
 Now uses weewx API allowing use with any database supported by weewx.
 Now supports weewx databases using any weewx supported unit system (eg US, 
@@ -52,6 +55,7 @@ import time
 import urllib
 import urllib2
 
+import weecfg
 import weeutil.weeutil
 from weeutil.weeutil import timestamp_to_string
 import weewx.manager
@@ -83,7 +87,7 @@ proposes !!
        -->>      or corruption of your data !       <<-- 
 """
 
-__version__ = "1.0.0a1"
+__version__ = "1.0.0"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
@@ -136,7 +140,7 @@ def main() :
     wlog = WunderLog(options.logging, options.verbose)
     
     # get our config file
-    config_fn, config_dict = weeutil.weeutil.read_config(options.config, args)
+    config_fn, config_dict = weecfg.read_config(options.config, args)
     print "Using configuration file %s." % config_fn
     wlog.slog(syslog.LOG_INFO, "Using weewx configuration file %s." % config_fn)
 

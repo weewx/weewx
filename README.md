@@ -20,7 +20,7 @@
   <li>AWEKAS</li>
 </ul>
 
-<p>Support for over 30 types of hardware including, but not limited to:</p>
+<p>Support for over 50 types of hardware including, but not limited to:</p>
 <ul>
   <li>Davis Vantage;</li>
   <li>Oregon Scientific WMR100, WMR200, WMR9x8, and other variants;</li>
@@ -30,7 +30,7 @@
   <li>Hideki TE923 (including TFA, Cresta, Honeywell, and others);</li>
   <li>PeetBros Ultimeter;</li>
   <li>RainWise CC3000 and MKIII;</li>
-  <li>AcuRite 5-in-1;</li>
+  <li>AcuRite 5-in-1 via USB console or bridge;</li>
   <li>KlimaLogg Pro;</li>
   <li>One-wire (including Inspeed, ADS, AAG, Hobby-Boards).</li>
 </ul>
@@ -59,11 +59,12 @@
 </ul>
 
 <h2>Downloads</h2>
+
 <p>
-For the latest WeeWX release see:
+For current and previous releases:
 </p>
-<p style='padding-left: 50px'>
-  <a href="https://sourceforge.net/projects/weewx/files/">https://sourceforge.net/projects/weewx/files/</a>
+<p>
+<a href='http://weewx.com/downloads'>http://weewx.com/downloads</a>
 </p>
 
 <h2>Documentation and Support</h2>

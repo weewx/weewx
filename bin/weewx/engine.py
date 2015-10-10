@@ -718,36 +718,17 @@ class StdPrint(StdService):
         
     def new_loop_packet(self, event):
         """Print out the new LOOP packet"""
-        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), event.packet
+        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), StdPrint.sort(event.packet)
     
     def new_archive_record(self, event):
         """Print out the new archive record."""
-        print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), event.record
-
-#==============================================================================
-#                    Class StdBroadcast
-#==============================================================================
-
-import sys, json
-import socket as sck
-
-class StdBroadcast(StdService):
-    """Service that broadcast meteo data information when a LOOP
-    packet is received."""
-
-    def __init__(self,engine, config_dict):
-        # Pass the initialization information on to my superclass:
-        super(StdBroadcast, self).__init__(engine, config_dict)
-        self.s = sck.socket(sck.AF_INET, sck.SOCK_DGRAM, sck.IPPROTO_UDP)
-        self.s.setsockopt(sck.IPPROTO_IP, sck.IP_MULTICAST_TTL, 2)
-        self.bind(weewx.NEW_LOOP_PACKET, self.newLoopPacket)
-
-    def newLoopPacket(self, event):
-        """Send the new LOOP packet to the broadcast socket"""
-        data = json.dumps(event.packet) 
-        self.s.sendto(data, ('224.1.1.1', 50000))
-
-
+        print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), StdPrint.sort(event.record)
+       
+    @staticmethod 
+    def sort(rec):
+        return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
+            
+        
         
 #==============================================================================
 #                    Class StdReport

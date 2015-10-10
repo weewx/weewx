@@ -214,7 +214,7 @@
     #end if
     </tr> 
     <tr>
-      <td>Test for a bad attribute on a tag: \$current.foobar</td>
+      <td>Test for a bad observation type on a \$current tag: \$current.foobar</td>
       <td>$current.foobar</td>
     </tr>
   </table>
@@ -265,7 +265,77 @@
     #end for
   </table>
   
+  <hr/>
   
+  <h1>Tests for tag \$span</h1>
+  <table>
+    <tr>
+      <td>Current dateTime:</td>
+      <td>$current.dateTime</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last hour (via \$span(\$time_delta=3600)):</td>
+      <td>$span($time_delta=3600).outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last hour (via \$span(\$hour_delta=1)):</td>
+      <td>$span($hour_delta=1).outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last 90 min (via \$span(\$time_delta=5400)):</td>
+      <td>$span($time_delta=5400).outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last 90 min (via \$span(\$hour_delta=1.5)):</td>
+      <td>$span($hour_delta=1.5).outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Max Temperature in last 24 hours (via \$span(\$time_delta=86400)):</td>
+      <td>$span($time_delta=86400).outTemp.max</td>
+    </tr>
+    <tr>
+      <td>Max Temperature in last 24 hours (via \$span(\$hour_delta=24)):</td>
+      <td>$span($hour_delta=24).outTemp.max</td>
+    </tr>
+    <tr>
+      <td>Max Temperature in last 24 hours (via \$span(\$day_delta=1)):</td>
+      <td>$span($day_delta=1).outTemp.max</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last 7 days (via \$span(\$time_delta=604800)):</td>
+      <td>$span($time_delta=86400).outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last 7 days (via \$span(\$hour_delta=168)):</td>
+      <td>$span($hour_delta=24).outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last 7 days (via \$span(\$day_delta=7)):</td>
+      <td>$span($day_delta=1).outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last 7 days (via \$span(\$week_delta=1)):</td>
+      <td>$span($week_delta=1).outTemp.min</td>
+    </tr>
+    <tr>
+      <td>Rainfall in last 24 hours (via \$span(\$time_delta=86400)):</td>
+      <td>$span($time_delta=86400).rain.sum</td>
+    </tr>
+    <tr>
+      <td>Rainfall in last 24 hours (via \$span(\$hour_delta=24)):</td>
+      <td>$span($hour_delta=24).rain.sum</td>
+    </tr>
+    <tr>
+      <td>Rainfall in last 24 hours (via \$span(\$day_delta=1)):</td>
+      <td>$span($day_delta=1).rain.sum</td>
+    </tr>
+    <tr>
+      <td>Max Windchill in last hour (existing obs type that is None):</td>
+      <td>$span($time_delta=3600).windchill.max</td>
+    </tr>
+  </table>
+  
+  <hr/>
   
   <h1>Tests for tag \$day</h1>
   <table>
@@ -400,6 +470,10 @@
       #else
       <td>FAIL</td>
       #end if
+    </tr>
+      <tr>
+      <td>Test for a bad observation type on a \$day tag: \$day.foobar.min</td>
+      <td>$day.foobar.min</td>
     </tr>
   </table>
 
