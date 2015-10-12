@@ -19,7 +19,7 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.19'
+DRIVER_VERSION = '0.20'
 
 
 def loader(config_dict, _):
@@ -100,10 +100,6 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         else:
             packet['rain'] = None
         self.last_rain = packet['long_term_rain']
-
-        # no wind direction when wind speed is zero
-        if 'windSpeed' in packet and not packet['windSpeed']:
-            packet['windDir'] = None
 
 
 class Station(object):

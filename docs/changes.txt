@@ -39,6 +39,11 @@ all types of consoles.  Specify use_constants for 01035/01036 consoles to
 calculate using the constants.  The 02032/02064 consoles always use the
 linear approximation.
 
+The policy of "wind direction is undefined when no wind speed" is enforced
+by the StdWXCalculate service.  There were a few drivers that were still
+applying the policy: acurite, cc3000, fousb, ws1, wmr100, wmr200, ultimeter.
+These have been fixed.
+
 
 3.2.1 07/18/15
 
