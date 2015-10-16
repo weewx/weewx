@@ -98,6 +98,7 @@ class ExtensionEngine(object):
         self.logger.log("Request to install '%s'" % extension_path)
         if os.path.isfile(extension_path):
             # It's a file, hopefully a tarball. Extract it, then install
+            extension_dir = None
             try:
                 member_names = weecfg.extract_tarball(extension_path,
                                                       self.tmpdir, self.logger)
@@ -107,7 +108,8 @@ class ExtensionEngine(object):
                 extension_dir = os.path.join(self.tmpdir, extension_reldir)
                 self.install_from_dir(extension_dir)
             finally:
-                shutil.rmtree(extension_dir, ignore_errors=True)
+                if extension_dir:
+                    shutil.rmtree(extension_dir, ignore_errors=True)
         elif os.path.isdir(extension_path):
             # It's a directory, presumably containing the extension components.
             # Install directly
