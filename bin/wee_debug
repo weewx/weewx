@@ -8,6 +8,7 @@
 """ Generate weewx debug info """
 from __future__ import with_statement
 
+import copy
 import optparse
 import os
 import os.path
@@ -17,34 +18,26 @@ import syslog
 
 from configobj import ConfigObj
 
-# Find the install bin subdirectory:
-this_file = os.path.join(os.getcwd(), __file__)
-this_dir = os.path.abspath(os.path.dirname(this_file))
-bin_dir = os.path.abspath(os.path.join(this_dir, os.pardir))
-
-# Now that we've found the bin subdirectory, inject it into the path:
-sys.path.insert(0, bin_dir)
-
-# Now we can import some weewx modules
-import weewx
+# weewx imports
 import weecfg
+import weewx
 
-from weeutil.weeutil import TimeSpan, timestamp_to_string
-from weewx.units import unit_nicknames
 from weecfg.extension import ExtensionEngine
+from weeutil.weeutil import TimeSpan, timestamp_to_string
+from weewx.manager import DaySummaryManager
+from weewx.units import unit_nicknames
 
 VERSION = weewx.__version__
-WEE_DEBUG_VERSION = '0.2'
+WEE_DEBUG_VERSION = '0.3'
 
 # keys/setting names to obfuscate in weewx.conf. Can add additional string
 # elements to list if required
 KEYS_TO_OBFUSCATE = ["password", "user", "username", "apiKey"]
 
-# weewx archive field to use as the basis of counting number of archive records.
-# Can be any field that is supported by manager.getAggregate() count aggregate
-# ie must be an obs_type, cannot be 'dateTime', 'usUnits'. 'outTemp' chosen as
-# it is almost always used/available.
-COUNT_FIELD = 'outTemp'
+# weewx archive field to use as the basis of counting number of archive records
+# Can be any field but dateTime is preferred as it should be in every weewx 
+# archive
+COUNT_FIELD = 'dateTime'
 
 # Redirect the import of setup (needed to get extension info)
 sys.modules['setup'] = weecfg.extension
@@ -113,7 +106,7 @@ def main():
         if options.verbosity == 0:
             print "Using verbosity=0, displaying minimal info"
         elif options.verbosity == 1:
-            print "Using verbosity=2, displaying most info"
+            print "Using verbosity=1, displaying most info"
         else:
             print "Using verbosity=2, displaying all info"
         print
@@ -156,7 +149,9 @@ def main():
             # revert stdout
             sys.stdout = old_stdout
             print "wee_debug output successfully written to %s" % options.debug_file
-        print
+        else:
+            print
+            print "wee_debug report successfully generated"
         exit(1)
 
     # if we have a compatible weewx version but did not use --version or --info
@@ -291,12 +286,13 @@ def generateLinuxSysInfo(verbosity):
         print "  5 minute load average:  %s" % load5
         print "  15 minute load average: %s" % load15
 
-def obfuscateKey(dictt, key_list):
+def obfuscateKey(src_dict, key_list):
     """ Obfuscate any dictionary items whose key is contained in passed list.
         Uses recursion to obfuscate any nested keys.
     """
 
-    _dict = dictt
+    # make a copy of our source dict as we may need to alter some entries
+    _dict = copy.deepcopy(src_dict)
     for k, v in _dict.items():
         if isinstance(v, dict):
             obfuscateKey(v, key_list)
@@ -304,7 +300,6 @@ def obfuscateKey(dictt, key_list):
             if key in _dict:
                 _dict[key] = "XXX debug obfuscated XXX"
     return _dict
-
 
 def get_binding(config_dict):
     """ Get db_binding for the weewx database """
@@ -329,9 +324,13 @@ def getManagerInfo(config_dict, db_binding_wx):
         units = dbmanager_wx.std_unit_system
         first_ts = dbmanager_wx.first_timestamp
         last_ts = dbmanager_wx.last_timestamp
-        ts_count = dbmanager_wx.getAggregate(TimeSpan(first_ts, last_ts),
-                                             COUNT_FIELD,
-                                             'count')
+        # since we are (more than likely) using archive field 'dateTime' for 
+        # our record count we need to call the getAggregate() method from our 
+        # parent class. Note that if we change to some other field the 'count' 
+        # might take a while longer depending on the archive size.
+        ts_count = super(DaySummaryManager, dbmanager_wx).getAggregate(TimeSpan(first_ts, last_ts),
+                                                          COUNT_FIELD,
+                                                          'count')
         sqlkeys = dbmanager_wx.sqlkeys
         obskeys = dbmanager_wx.obskeys
     return {'db_name': db_name,
