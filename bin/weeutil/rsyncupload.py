@@ -1,7 +1,10 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2012 Will Page <compenguy@gmail.com>
+#    Derivative of ftpupload.py, credit to Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
+#
+#    $Id: rsyncupload.py 2766 2014-12-02 02:45:36Z tkeffer $
 #
 """For uploading files to a remove server via Rsync"""
 
@@ -117,7 +120,7 @@ class RsyncUpload(object):
                 else:
                     rsync_message = "rsync executed in %0.2f seconds"
             except:
-                rsync_message = "rsync executed in %0.2f seconds"
+                    rsync_message = "rsync executed in %0.2f seconds"
         else:
             # suspect we have an rsync error so tidy stroutput
             # and display a message
@@ -159,14 +162,7 @@ if __name__ == '__main__':
     else:
         rsync_dir = sys.argv[2]
 
-        
     rsync_upload = RsyncUpload(
                            rsync_dir,
-                           config_dict['StdReport']['RSYNC']['path'],
-                           config_dict['StdReport']['RSYNC']['server'],
-                           config_dict['StdReport']['RSYNC']['user'],
-                           config_dict['StdReport']['RSYNC']['port'],
-                           config_dict['StdReport']['RSYNC']['ssh_options'],
-                           config_dict['StdReport']['RSYNC'].as_bool('compress'))
+                           **config_dict['StdReport']['RSYNC'])
     rsync_upload.run()
-    
