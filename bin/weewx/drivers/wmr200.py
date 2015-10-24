@@ -44,7 +44,7 @@ import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR200'
-DRIVER_VERSION = "3.0"
+DRIVER_VERSION = "3.1"
 
 
 def loader(config_dict, engine):
@@ -767,12 +767,6 @@ def decode_wind(pkt, pkt_data):
         else:
             # use the regular wind direction for the gust direction
             record['windGustDir'] = record['windDir']
-
-        # Wind direction is undefined if wind speed is zero:
-        if record['windSpeed'] == 0:
-            record['windDir'] = None
-        if record['windGust'] == 0:
-            record['windGustDir'] = None
 
         if DEBUG_PACKETS_WIND:
             logdbg('  Wind Dir: %s' % (WIND_DIR_MAP[pkt_data[0] & 0x0f]))

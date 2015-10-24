@@ -220,7 +220,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'FineOffsetUSB'
-DRIVER_VERSION = '1.7'
+DRIVER_VERSION = '1.8'
 
 def loader(config_dict, engine):
     return FineOffsetUSB(**config_dict[DRIVER_NAME])
@@ -666,12 +666,6 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
         packet['status'] = int(packet['status'])
         packet['rxCheckPercent'] = 0 if get_status(lost_connection, packet['status']) else 100
         packet['outTempBatteryStatus'] = get_status(rain_overflow, packet['status'])
-
-    # if windspeed is zero there is no wind direction
-    if packet['windSpeed'] is None or packet['windSpeed'] == 0:
-        packet['windDir'] = None
-    if packet['windGust'] is None or packet['windGust'] == 0:
-        packet['windGustDir'] = None
 
     # calculate the rain increment from the rain total
     # watch for spurious rain counter decrement.  if decrement is significant

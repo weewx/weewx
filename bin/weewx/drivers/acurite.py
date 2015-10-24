@@ -368,7 +368,7 @@ import weewx.wxformulas
 from weeutil.weeutil import to_bool
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.21'
+DRIVER_VERSION = '0.23'
 DEBUG_RAW = 0
 
 # USB constants for HID
@@ -520,10 +520,6 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                        " new: %s old: %s" % (total, self.last_rain))
             packet['rain'] = weewx.wxformulas.calculate_rain(total, self.last_rain)
             self.last_rain = total
-
-        # no wind direction when wind speed is zero
-        if 'windSpeed' in packet and not packet['windSpeed']:
-            packet['windDir'] = None
 
         # if there is no connection to sensors, clear the readings
         if 'rssi' in packet and  packet['rssi'] == 0:
@@ -838,6 +834,10 @@ class Station(object):
         c1,c2,c3,c4,c5,c6,c7,a,b,c,d = Station.get_pt_constants(data)
 
         if not use_constants:
+            d2 = ((data[21] & 0x0f) << 8) + data[22]
+            if d2 >= 0x0800:
+                d2 -= 0x1000
+            d1 = (data[23] << 8) + data[24]
             return Station.decode_pt_acurite(d1, d2)
         elif (c1 == 0x8000 and c2 == c3 == 0x0 and c4 == 0x0400
               and c5 == 0x1000 and c6 == 0x0 and c7 == 0x0960

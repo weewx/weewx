@@ -33,6 +33,17 @@ set in skin.conf with option bottom_label_offset.
 
 An optional port number can now be specified with the MySQL database.
 
+Added option use_constants in the Acurate driver.  Default is false; the
+calibration constants are ignored, and a linear approximation is used for
+all types of consoles.  Specify use_constants for 01035/01036 consoles to
+calculate using the constants.  The 02032/02064 consoles always use the
+linear approximation.
+
+The policy of "wind direction is undefined when no wind speed" is enforced
+by the StdWXCalculate service.  There were a few drivers that were still
+applying the policy: acurite, cc3000, fousb, ws1, wmr100, wmr200, ultimeter.
+These have been fixed.
+
 
 3.2.1 07/18/15
 

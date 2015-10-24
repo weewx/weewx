@@ -34,7 +34,7 @@ import weewx.wxformulas
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR100'
-DRIVER_VERSION = "3.0"
+DRIVER_VERSION = "3.1"
 
 def loader(config_dict, engine):
     return WMR100(**config_dict[DRIVER_NAME])    
@@ -373,12 +373,6 @@ class WMR100(weewx.drivers.AbstractDevice):
         else:
             # Otherwise, use the regular wind direction for the gust direction
             _record['windGustDir'] =_record['windDir']
-
-        # Wind direction is undefined if wind speed is zero:
-        if _record['windSpeed'] == 0:
-            _record['windDir'] = None
-        if _record['windGust'] == 0:
-            _record['windGustDir'] = None
 
         # Save the wind record to be used for windchill and heat index
         self.last_wind_record = _record

@@ -32,7 +32,7 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'CC3000'
-DRIVER_VERSION = '0.8'
+DRIVER_VERSION = '0.9'
 
 def loader(config_dict, engine):
     return CC3000Driver(**config_dict[DRIVER_NAME])
@@ -407,10 +407,6 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         else:
             packet['rain'] = None
         self.last_rain = packet['day_rain_total']
-
-        # no wind direction when wind speed is zero
-        if not packet['windSpeed']:
-            packet['windDir'] = None
 
     def _parse_current(self, values):
         return self._parse_values(values, "%Y/%m/%d %H:%M:%S")
