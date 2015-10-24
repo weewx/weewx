@@ -244,6 +244,8 @@ class RsyncGenerator(ReportGenerator):
                 server      = self.skin_dict['server'],
                 user        = self.skin_dict.get('user'),
                 port        = self.skin_dict.get('port'),
+                ssh_options = self.skin_dict.get('ssh_options'),
+                compress    = to_bool(self.skin_dict.get('compress', False)),
                 delete      = to_bool(self.skin_dict.get('delete', False)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: rsync upload not requested. Skipped.")
