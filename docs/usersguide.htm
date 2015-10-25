@@ -4241,6 +4241,9 @@ before posting the information publicly.
     <p>A debug report can be generated using the <span class="code">--info</span> 
     option as follows:</p>
     
+    <p class="warning"><strong>Warning!</strong><br/>
+        The <span class="code">wee_debug</span> output includes a copy of the in use <span class="code">weewx</span> config file (usually <span class="code">weewx.conf</span>) and whilst <span class="code">wee_debug</span> attempts to obfuscate any personal or sensitive information in <span class="code">weewx.conf</span>, the user should carefully check the <span class="code">wee_debug</span> output for any remaining personal or sensitive information before emailing or posting the output publicly.</p>
+    
     <pre class="tty cmd">wee_debug --info</pre>
     
     <p>This results in:</p>
