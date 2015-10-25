@@ -4180,6 +4180,267 @@ sudo /etc/init.d/apache2 restart</pre>
         </li>
     </ul>
 
+    <h2>The utility <span class="code">wee_debug</span></h2>
+
+    <p>Troubleshooting problems when running <span class="code">weewx</span> 
+    often involves analysis of a number of pieces of seemingly disparate system
+    and <span class="code">weewx</span> related information. To enable users to gather a standard set of 
+    troubleshooting information in a single report the 
+    <span class="code">wee_debug</span> utility has been developed. The 
+    <span class="code">wee_debug</span> utility is particularly useful for new 
+    users as the <span class="code">wee_debug</span> output may be redirected to 
+    file and emailed or posted to a forum to assist in remote troubleshooting.</p>
+    
+    <p>Before using <span class="code">wee_debug</span>, it's worth running it 
+    with the <span class="code">--help</span> option to see how it is used:</p>
+    
+    <pre class="tty cmd">wee_debug --help</pre>
+    
+    <p>This results in:</p>
+    
+    <pre class="tty">Usage: wee_debug --help
+       wee_debug --info
+            [--output|--output DEBUG_PATH]
+            [--verbosity=0|1|2]
+       wee_debug --version
+
+
+Generate a standard suite of system/weewx information to aid in remote
+debugging. The wee_debug output consists of two parts, the first part
+containing a snapshot of relevant system/weewx information and the second part
+a parsed and obfuscated copy of weewx.conf. This output can be redirected to
+file and posted when seeking assistance via forums or email.
+
+Options:
+  -h, --help     show this help message and exit
+  --info         Generate weewx debug output.
+  --output       Write wee_debug output to DEBUG_PATH. DEBUG_PATH includes
+                 path and file name. Default is /var/tmp/weewx.debug.
+  --verbosity=N  How much detail to display, 0-2, default=1.
+  --version      Display wee_debug version number.
+
+wee_debug will attempt to obfuscate obvious personal/private information in
+weewx.conf such as user names, passwords and API keys; however, the user
+should thoroughly check the generated output for personal/private information
+before posting the information publicly.
+</pre>
+
+    <h3><span class="code">wee_debug</span> version number</h3>
+    
+    <p>To display the <span class="code">wee_debug</span> version number:</p>
+
+    <pre class="tty cmd">wee_debug --version</pre>
+
+    <p>This displays a short message indicating the 
+    <span class="code">wee_debug</span> version number:</p>
+
+    <pre class="tty cmd">wee_debug version: 0.2</pre>
+
+    <h3>Generating a debug report</h3>
+    
+    <p>A debug report can be generated using the <span class="code">--info</span> 
+    option as follows:</p>
+    
+    <p class="warning"><strong>Warning!</strong><br/>
+        The <span class="code">wee_debug</span> output includes a copy of the in use <span class="code">weewx</span> config file (usually <span class="code">weewx.conf</span>) and whilst <span class="code">wee_debug</span> attempts to obfuscate any personal or sensitive information in <span class="code">weewx.conf</span>, the user should carefully check the <span class="code">wee_debug</span> output for any remaining personal or sensitive information before emailing or posting the output publicly.</p>
+    
+    <pre class="tty cmd">wee_debug --info</pre>
+    
+    <p>This results in:</p>
+    <pre class="tty">Using verbosity=1, displaying most info
+
+wee_debug output will be sent to stdout(console)
+
+Using configuration file /home/weewx/weewx.conf
+Using database binding 'wx_binding', which is bound to database 'archive_mysql'
+
+System info
+  CPU implementer:        0x41
+  Features:               half thumb fastmult vfp edsp java tls
+  CPU architecture:       7
+  BogoMIPS:               2.00
+  Hardware:               BCM2708
+  CPU revision:           7
+  CPU part:               0xb76
+  model name:             ARMv6-compatible processor rev 7 (v6l)
+  Serial:                 000000009581b554
+  processor:              0
+  CPU variant:            0x0
+  Revision:               000e
+
+  Operating system:       debian 7.8
+                          Linux rosella 4.1.6+ #810 PREEMPT Tue Aug 18 15:19:58 BST 2015 armv6l
+  1 minute load average:  0.19
+  5 minute load average:  0.15
+  15 minute load average: 0.12
+
+General weewx info
+  Weewx version 3.2.1 detected.
+
+Station info
+  Station type: Simulator
+  Driver:       weewx.drivers.simulator
+
+Driver info
+[Simulator]
+    # This section is for the weewx weather station simulator
+
+    # The time (in seconds) between LOOP packets.
+    loop_interval = 2.5
+
+    # The simulator mode can be either 'simulator' or 'generator'.
+    # Real-time simulator. Sleep between each LOOP packet.
+    mode = simulator
+    # Generator.  Emit LOOP packets as fast as possible (useful for testing).
+    #mode = generator
+
+    # The start time. If not specified, the default is to use the present time.
+    #start = 2011-01-01 00:00
+
+    # The driver to use:
+    driver = weewx.drivers.simulator
+
+Currently installed extensions
+Extension Name    Version   Description
+Weewx-WD          1.2.0b1   Weewx support for Weather Display Live, SteelSeries Gauges and Carter Lake/Saratoga weather web site templates.
+
+Archive info
+  Database name:        weewx
+  Table name:           archive
+  Unit system:          16(METRIC)
+  First good timestamp: 2013-01-01 00:00:00 AEST (1356962400)
+  Last good timestamp:  2015-09-06 02:15:00 AEST (1441469700)
+  Number of records:    281178
+  weewx (weewx.conf) is set to use an archive interval of 300 seconds.
+  The station hardware was not interrogated in determining archive interval.
+
+Databases configured in weewx.conf
+  Database name:        weewx
+  Database driver:      weedb.mysql
+  Database host:        localhost
+
+  Database name:        wdsupp
+  Database driver:      weedb.mysql
+  Database host:        localhost
+
+  Database name:        weewxwd
+  Database driver:      weedb.mysql
+  Database host:        localhost
+
+
+Parsed and obfuscated weewx.conf
+# WEEWX CONFIGURATION FILE
+#
+# Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+# See the file LICENSE.txt for your rights.
+
+##############################################################################
+
+# This section is for general configuration information.
+
+... content removed for conciseness ...
+
+#   This section configures the internal weewx engine.
+
+[Engine]
+
+    [[Services]]
+        # This section specifies the services that should be run. They are
+        # grouped by type, and the order of services within each group
+        # determines the order in which the services will be run.
+        prep_services = weewx.engine.StdTimeSynch
+        data_services = ,
+        process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.wxservices.StdWXCalculate, user.weewxwd3.WdWXCalculate
+        archive_services = weewx.engine.StdArchive, user.weewxwd3.WdArchive, user.weewxwd3.WdSuppArchive
+        restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW, weewx.restx.StdAWEKAS, user.sync.SyncService
+        report_services = weewx.engine.StdPrint, weewx.engine.StdReport
+
+################################################################################
+
+wee_debug report successfully generated
+</pre>
+    
+    <h4>Redirecting <span class="code">wee_debug</span> output</h4>
+    
+    <p><span class="code">wee_debug</span> output is sent by default to 
+    <span class="code">stdout</span> unless the optional <span class="code">--output</span> 
+    option is used. <span class="code">--output</span> with no parameter will 
+    send the <span class="code">wee_debug</span> output to the default file 
+    <span class="code">/var/tmp/weewx.debug</span>. Usage is as follows:</p>
+    
+    <pre class="tty cmd">wee_debug --info --output</pre>
+    
+    <p>output can be sent to a file other than the default by including the 
+    path and file name as a parameter after <span class="code">--output</span>:</p>
+    
+    <pre class="tty cmd">wee_debug --info --output /home/weewx/another.debug</pre>
+    
+    <h4><span class="code">wee_debug</span> verbosity</h4>
+    
+    <p>The depth of information included in the <span class="code">wee_debug</span> 
+    output can be changed using the <span class="code">--verbosity</span> option. 
+    The <span class="code">--verbosity</span> option can be set to 0, 1 or 2 with 
+    each higher level successively displaying more information. The default level 
+    is 1. The information displayed for each level is:</p>
+    
+    <table class="indent">
+        <tr class="first_row">
+            <td>Level</td>
+            <td>Included Information</td>
+        </tr>
+        <tr>
+            <td class="text_highlight" rowspan=8><span class="code">--verbosity 0</span></td>
+            <td>path and name of <span class="code">weewx</span> config file used (usually <span class="code">weewx.conf</span>)</td>
+        </tr>
+        <tr>
+            <td>name of <span class="code">weewx</span> database binding used</td>
+        </tr>
+        <tr>
+            <td>operating system version</td>
+        </tr>
+        <tr>
+            <td><span class="code">weewx</span> version number</td>
+        </tr>
+        <tr>
+            <td><span class="code">weewx</span> station type and driver name</td>
+        </tr>
+        <tr>
+            <td>summary of currently installed extensions</td>
+        </tr>
+        <tr>
+            <td>summary of <span class="code">weewx</span> archive</td>
+        </tr>
+        <tr>
+            <td>parsed and obfusated <span class="code">weewx</span> config file (usually <span class="code">weewx.conf</span>)</td>
+        </tr>
+        <tr>
+            <td class="text_highlight" rowspan=5><span class="code">--verbosity 1</span></td>
+            <td>as per <span class="code">--verbosity 0</span></td>
+        </tr>
+        <tr>
+            <td>cpu info summary</td>
+        </tr>
+        <tr>
+            <td>system load averages</td>
+        </tr>
+        <tr>
+            <td>driver config extract from <span class="code">weewx</span> config file (usually <span class="code">weewx.conf</span>)</td>
+        </tr>
+        <tr>
+            <td>summary of databases configured in <span class="code">weewx</span> config file (usually <span class="code">weewx.conf</span>)</td>
+        </tr>
+        <tr>
+            <td class="text_highlight" rowspan=3><span class="code">--verbosity 2</span></td>
+            <td>as per <span class="code">--verbosity 1</span></td>
+        </tr>
+        <tr>
+            <td>list of supported SQL keys</td>
+        </tr>
+        <tr>
+            <td>list of supported observation types</td>            
+        </tr>
+    </table>
+    
     <h2>Hardware problems</h2>
 
     <h3>Tips on making a system reliable</h3>

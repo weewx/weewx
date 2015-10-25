@@ -44,6 +44,9 @@ by the StdWXCalculate service.  There were a few drivers that were still
 applying the policy: acurite, cc3000, fousb, ws1, wmr100, wmr200, ultimeter.
 These have been fixed.
 
+Added new command-line utility wee_debug, for generating a troubleshooting 
+information report.
+
 
 3.2.1 07/18/15
 
