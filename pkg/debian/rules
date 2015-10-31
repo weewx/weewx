@@ -7,7 +7,7 @@
 #export DH_VERBOSE=1
 
 SRC=$(CURDIR)
-DST=$(CURDIR)/debian/tmp
+DST=$(CURDIR)/debian/weewx
 DST_EXECDIR=$(DST)/usr/bin
 DST_BINDIR =$(DST)/usr/share/weewx
 DST_DOCDIR =$(DST)/usr/share/doc/weewx

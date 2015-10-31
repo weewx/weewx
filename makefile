@@ -172,6 +172,7 @@ deb-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -m 0755 $(DEBBLDDIR)/debian
 	mkdir -m 0755 $(DEBBLDDIR)/debian/source
 	cp pkg/debian/changelog $(DEBBLDDIR)/debian
+	cp pkg/debian/compat $(DEBBLDDIR)/debian
 	cp pkg/debian/conffiles $(DEBBLDDIR)/debian
 	cp pkg/debian/config $(DEBBLDDIR)/debian
 	cp pkg/debian/control $(DEBBLDDIR)/debian
