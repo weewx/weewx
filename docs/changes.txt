@@ -47,6 +47,10 @@ These have been fixed.
 Added new command-line utility wee_debug, for generating a troubleshooting 
 information report.
 
+Added option --log-label to specify the label that appears in syslog entries.
+This makes it possible to organize output from multiple weewx instances
+running on a single system.
+
 
 3.2.1 07/18/15
 

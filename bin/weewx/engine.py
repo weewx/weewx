@@ -803,7 +803,7 @@ def main(options, args, EngineClass=StdEngine) :
     by try blocks in the case of an exception."""
 
     # Set the logging facility.
-    syslog.openlog('weewx', syslog.LOG_PID | syslog.LOG_CONS)
+    syslog.openlog(options.log_label, syslog.LOG_PID | syslog.LOG_CONS)
 
     # Set up the signal handlers.
     signal.signal(signal.SIGHUP, sigHUPhandler)

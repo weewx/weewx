@@ -37,6 +37,7 @@ def parseArgs():
     parser.add_option("-v", "--version", action="store_true", dest="version", help="Display version number then exit")
     parser.add_option("-x", "--exit",    action="store_true", dest="exit"   , help="Exit on I/O and database errors instead of restarting")
     parser.add_option("-r", "--loop-on-init", action="store_true", dest="loop_on_init"  , help="Retry forever if device is not ready on startup")
+    parser.add_option("-n", "--log-label", type="string", dest="log_label", help="Label to use in syslog entries", default="weewx")
     (options, args) = parser.parse_args()
     
     if options.version:
