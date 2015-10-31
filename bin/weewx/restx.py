@@ -367,7 +367,7 @@ class RESTThread(threading.Thread):
                 # specialized by a RESTful service to catch any unusual
                 # exceptions.
                 _response = self.post_request(request, payload)
-                if _response.code == 200:
+                if 200 <= _response.code <= 299:
                     # No exception thrown and we got a good response code, but
                     # we're still not done.  Some protocols encode a bad
                     # station ID or password in the return message.
