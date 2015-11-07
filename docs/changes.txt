@@ -51,6 +51,9 @@ Added option --log-label to specify the label that appears in syslog entries.
 This makes it possible to organize output from multiple weewx instances
 running on a single system.
 
+Fixed problem with the Vantage driver that caused it to decode the console
+display units incorrectly. Thanks to Luc Heijst!
+
 
 3.2.1 07/18/15
 

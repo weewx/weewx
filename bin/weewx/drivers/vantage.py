@@ -1117,7 +1117,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.altitude_vt       = weewx.units.ValueTuple(self.altitude, "foot", "group_altitude") 
 
         barometer_unit_code   =  unit_bits & 0x03
-        temperature_unit_code = (unit_bits & 0x0C) >> 3
+        temperature_unit_code = (unit_bits & 0x0C) >> 2
         altitude_unit_code    = (unit_bits & 0x10) >> 4
         rain_unit_code        = (unit_bits & 0x20) >> 5
         wind_unit_code        = (unit_bits & 0xC0) >> 6
