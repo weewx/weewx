@@ -2332,7 +2332,8 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
     # TCP send delay (when using the WeatherLinkIP):
     tcp_send_delay = 1
 
-    # The id of your ISS station (usually 1)
+    # The id of your ISS station (usually 1). If you use a wind meter connected
+    # to a anemometer transmitter kit, use its id
     iss_id = 1
 
     # How long to wait for a response from the station before giving up (in
