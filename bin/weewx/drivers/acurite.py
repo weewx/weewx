@@ -174,6 +174,8 @@ R1 - 10 bytes
 01 8b fa 71 00 06 00 02 03 ff      flavor 1
 01 C0 5C 78 00 08 1F 53 03 FF      flavor 8
 01 C0 5C 71 00 05 00 0C 03 FF      flavor 1
+01 cd ff 71 00 6c 39 71 03 ff
+01 cd ff 78 00 67 3e 59 03 ff
 
 0: identifier                      01 indicates R1 messages
 1: channel         x & 0xf0        observed values: 0xC=A, 0x8=B, 0x0=C
@@ -713,7 +715,7 @@ class Station(object):
     @staticmethod
     def check_R1(raw):
         ok = True
-        if raw[2] & 0x0f == 0x0f and raw[2] == 0xff:
+        if raw[1] & 0x0f == 0x0f and raw[3] == 0xff:
             loginf("R1: no sensors found: %s" % _fmt_bytes(raw))
             ok = False
         else:
