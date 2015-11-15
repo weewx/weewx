@@ -176,6 +176,8 @@ R1 - 10 bytes
 01 C0 5C 71 00 05 00 0C 03 FF      flavor 1
 01 cd ff 71 00 6c 39 71 03 ff
 01 cd ff 78 00 67 3e 59 03 ff
+01 cd ff 71 01 39 39 71 03 ff
+01 cd ff 78 01 58 1b 4c 03 ff
 
 0: identifier                      01 indicates R1 messages
 1: channel         x & 0xf0        observed values: 0xC=A, 0x8=B, 0x0=C
@@ -370,7 +372,7 @@ import weewx.wxformulas
 from weeutil.weeutil import to_bool
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.23'
+DRIVER_VERSION = '0.24'
 DEBUG_RAW = 0
 
 # USB constants for HID
