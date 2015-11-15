@@ -249,12 +249,6 @@ class weewx_install_scripts(install_scripts):
         # Run the superclass's version:
         install_scripts.run(self)
 
-        try:
-            # Put in a symbolic link for weewxd.py
-            os.symlink('./weewxd', os.path.join(self.install_dir, 'weewxd.py'))
-        except OSError:
-            pass
-
 #==============================================================================
 # sdist
 #==============================================================================
