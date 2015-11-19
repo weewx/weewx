@@ -922,19 +922,19 @@ def decode_pressure(pkt, pkt_data):
         # High nibble is forecast
         # Low nibble is high byte of pressure.
         # Unfortunately, we do not know if this is MSLP corrected pressure,
-        # or "gauge" pressure. We will assume the former.
+        # or "gauge" pressure. We will assume the latter.
         pressure = float(((pkt_data[1] & 0x0f) << 8) | pkt_data[0])
         forecast = (pkt_data[1] >> 4) & 0x7
 
         # Similar to bytes 0 and 1, but altitude corrected
         # pressure. Upper nibble of byte 3 is still unknown. Seems to
         # be always 3.
-        alt_pressure_console = float(((pkt_data[3] & 0x0f) << 8)
+        altimeter = float(((pkt_data[3] & 0x0f) << 8)
                                      | pkt_data[2])
         unknown_nibble = (pkt_data[3] >> 4)
 
-        record = {'barometer'   : alt_pressure_console,
-                  'altimeter'   : pressure,
+        record = {'pressure'    : pressure,
+                  'altimeter'   : altimeter,
                   'forecastIcon': forecast}
 
         if DEBUG_PACKETS_PRESSURE:
@@ -943,7 +943,7 @@ def decode_pressure(pkt, pkt_data):
             if unknown_nibble != 3:
                 logdbg('  Pressure unknown nibble: 0x%x' % unknown_nibble)
             logdbg('  Altitude corrected pressure: %.02f hPa console' %
-                   alt_pressure_console)
+                   altimeter)
         return record
 
     except IndexError:

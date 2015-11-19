@@ -13,6 +13,9 @@ Fixed bug in WMR200 driver that caused it to emit dayRain, when what it was
 really emitting was the "rain in the last 24h, excluding current hour."
 Fixes issue #62.
 
+Fixed bug in WMR200 driver that caused it to emit gauge pressure for altimeter
+pressure. Thanks to user Mark Jenks for nagging me that something was wrong.
+
 Fixed bug that caused wind direction to be calculated incorrectly, depending
 on the ordering of a dictionary. Thanks to user Chris Matteri for not only
 spotting this subtle bug, but offering a solution. 
