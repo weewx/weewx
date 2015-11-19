@@ -945,13 +945,13 @@ def get_manager_dict_from_config(config_dict, data_binding,
     schema_name = manager_dict.get('schema')
     if schema_name is None:
         manager_dict['schema'] = None
-    elif isinstance(schema_name, str):
-        # Schema is a string, with the name of the schema object
-        manager_dict['schema'] = weeutil.weeutil._get_object(schema_name)
-    else:
+    elif isinstance(schema_name, dict):
         # Schema is a ConfigObj section (that is, a dictionary). Retrieve the
         # elements of the schema in order:
         manager_dict['schema'] = [(col_name, manager_dict['schema'][col_name]) for col_name in manager_dict['schema']]
+    else:
+        # Schema is a string, with the name of the schema object
+        manager_dict['schema'] = weeutil.weeutil._get_object(schema_name)
     
     return manager_dict
 

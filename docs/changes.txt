@@ -36,16 +36,21 @@ set in skin.conf with option bottom_label_offset.
 
 An optional port number can now be specified with the MySQL database.
 
-Added option use_constants in the Acurate driver.  Default is false; the
+Added option use_constants in the Acurite driver.  Default is false; the
 calibration constants are ignored, and a linear approximation is used for
 all types of consoles.  Specify use_constants for 01035/01036 consoles to
 calculate using the constants.  The 02032/02064 consoles always use the
 linear approximation.
 
+Fixed test for basic sensor connectivity in the Acurite driver.
+
 The policy of "wind direction is undefined when no wind speed" is enforced
 by the StdWXCalculate service.  There were a few drivers that were still
 applying the policy: acurite, cc3000, fousb, ws1, wmr100, wmr200, ultimeter.
 These have been fixed.
+
+Changed logic that decides whether the configuration file includes a custom
+schema, or the name of an existing schema.
 
 Added new command-line utility wee_debug, for generating a troubleshooting 
 information report.
@@ -56,8 +61,6 @@ running on a single system.
 
 Fixed problem with the Vantage driver that caused it to decode the console
 display units incorrectly. Thanks to Luc Heijst!
-
-Fixed test for basic sensor connectivity in the Acurite driver.
 
 
 3.2.1 07/18/15
