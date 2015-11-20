@@ -146,7 +146,13 @@ class Almanac(object):
     >>> print timestamp_to_gmtime(atlanta(horizon=-6).sun(use_center=1).next_setting.raw)
     2009-09-07 00:21:22 UTC (1252282882)
     
-    Try a nonsense tag
+    Try a nonsense body:
+    >>> x = almanac.bar.rise
+    Traceback (most recent call last):
+        ...
+    KeyError: 'Bar'
+    
+    Try a nonsense tag:
     >>> x = almanac.sun.foo
     Traceback (most recent call last):
         ...
