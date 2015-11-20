@@ -146,6 +146,20 @@ class Almanac(object):
     >>> print timestamp_to_gmtime(atlanta(horizon=-6).sun(use_center=1).next_setting.raw)
     2009-09-07 00:21:22 UTC (1252282882)
     
+    Try an attribute that does not explicitly appear in the class Almanac
+    >>> print "%.3f" % almanac.mars.sun_distance
+    1.494
+
+    Try a specialized attribute for Jupiter
+    >>> print almanac.jupiter.cmlI
+    191:16:58.0
+
+    Should fail if applied to a different body
+    >>> print almanac.venus.cmlI
+    Traceback (most recent call last):
+        ...
+    AttributeError: 'Venus' object has no attribute 'cmlI'
+    
     Try a nonsense body:
     >>> x = almanac.bar.rise
     Traceback (most recent call last):
@@ -411,26 +425,26 @@ def djd_to_timestamp(djd):
     """Convert from number of days since 12/31/1899 12:00 UTC ("Dublin Julian Days") to unix time stamp"""
     return (djd-25567.5) * 86400.0
 
-def dummy_no_ephem():
-    """Final test that does not use ephem.
-    
-    First, get rid of 'ephem':
-    >>> p = sys.modules.pop('ephem')
-    
-    Now do the rest as before:
-    >>> import os
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> t = 1238180400
-    >>> print timestamp_to_string(t)
-    2009-03-27 12:00:00 PDT (1238180400)
-    >>> almanac = Almanac(t, 46.0, -122.0)
-    
-    Use "_sunrise" to make sure we're getting the results from weeutil (not ephem):
-    >>> print "Sunrise, sunset:", almanac._sunrise, almanac._sunset
-    Sunrise, sunset: 06:56 19:30"""
-    
-    
 if __name__ == '__main__':
+    
+    def dummy_no_ephem():
+        """Final test that does not use ephem.
+        
+        First, get rid of 'ephem':
+        >>> p = sys.modules.pop('ephem')
+        
+        Now do the rest as before:
+        >>> import os
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> t = 1238180400
+        >>> print timestamp_to_string(t)
+        2009-03-27 12:00:00 PDT (1238180400)
+        >>> almanac = Almanac(t, 46.0, -122.0)
+        
+        Use "_sunrise" to make sure we're getting the results from weeutil (not ephem):
+        >>> print "Sunrise, sunset:", almanac._sunrise, almanac._sunset
+        Sunrise, sunset: 06:56 19:30"""
+    
     import doctest
     from weeutil.weeutil import timestamp_to_string, timestamp_to_gmtime  #@UnusedImport
 
