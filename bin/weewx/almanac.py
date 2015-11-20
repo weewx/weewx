@@ -145,6 +145,12 @@ class Almanac(object):
     2009-09-06 10:49:40 UTC (1252234180)
     >>> print timestamp_to_gmtime(atlanta(horizon=-6).sun(use_center=1).next_setting.raw)
     2009-09-07 00:21:22 UTC (1252282882)
+    
+    Try a nonsense tag
+    >>> x = almanac.sun.foo
+    Traceback (most recent call last):
+        ...
+    AttributeError: 'Sun' object has no attribute 'foo'
     """
     
     def __init__(self, time_ts, lat, lon,
@@ -356,8 +362,9 @@ class AlmanacBinder(object):
                 # Return the result in percent.
                 return 100.0 * ephem_body.moon_phase
             else:
-                # Just return the result unchanged.
-                return getattr(self.body, attr)
+                # Just return the result unchanged. This will raise an AttributeError exception
+                # if the attribute does not exist.
+                return getattr(ephem_body, attr)
         
     def _get_observer(self, time_ts):
         # Build an ephem Observer object
