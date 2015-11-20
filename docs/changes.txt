@@ -6,6 +6,9 @@ weewx change history
 Now really includes wunderfixer. It was inadvertently left out of the install
 script.
 
+Rewrote the almanac so it now supports star ephemeris. For example,
+$almanac.rigel.next_rising. Fixes issue #79.
+
 Uninstalling an extension with a skin now deletes all empty directories. This
 fixes issue #43.
 

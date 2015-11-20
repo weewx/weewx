@@ -21,9 +21,8 @@ try:
 except ImportError:
     import weeutil.Sun
 
-# NB: In order to avoid an 'autocall' bug in Cheetah versions before 2.1,
-# this class must not be a "new-style" class. However, that version seems
-# to be long gone, so we use 'object'
+# NB: Have Almanac inherit from 'object'. However, this will cause 
+# an 'autocall' bug in Cheetah versions before 2.1.
 class Almanac(object):
     """Almanac data.
     
@@ -160,7 +159,7 @@ class Almanac(object):
         time_ts: A unix epoch timestamp with the time of the almanac. If None, the
         present time will be used.
         
-        lat, lon: Observer's location
+        lat, lon: Observer's location in degrees.
         
         altitude: Observer's elevation in **meters**. [Optional. Default is 0 (sea level)]
         
@@ -178,12 +177,12 @@ class Almanac(object):
         """
         self.time_ts      = time_ts if time_ts else time.time()
         self.time_djd     = timestamp_to_djd(self.time_ts)
-        self.lat          = math.radians(lat)
-        self.lon          = math.radians(lon)
+        self.lat          = lat
+        self.lon          = lon
         self.altitude     = altitude if altitude is not None else 0.0
         self.temperature  = temperature if temperature is not None else 15.0
         self.pressure     = pressure if pressure is not None else 1010.0
-        self.horizon      = math.radians(horizon) if horizon is not None else 0.0
+        self.horizon      = horizon if horizon is not None else 0.0
         self.moon_phases  = moon_phases
         self.formatter    = formatter
 
@@ -234,22 +233,13 @@ class Almanac(object):
             pressure: The observer's pressure (used to calculate refraction) 
         """
         # Set a new value for any named arguments. If not named, then the value
-        # should stay unchanged
-        if 'almanac_time' in kwargs:
-            self.time_ts = kwargs['almanac_time']
-            self.time_djd = timestamp_to_djd(self.time_ts)
-        if 'lat' in kwargs:
-            self.lat = math.radians(kwargs['lat'])
-        if 'lon' in kwargs:
-            self.lon = math.radians(kwargs['lon'])
-        if 'altitude' in kwargs:
-            self.altitude = kwargs['altitude']
-        if 'horizon' in kwargs:
-            self.horizon = math.radians(kwargs['horizon'])
-        if 'temperature' in kwargs:
-            self.temperature = kwargs['temperature']
-        if 'pressure' in kwargs:
-            self.pressure = kwargs['pressure']
+        # should remain unchanged
+        for key in kwargs:
+            if 'almanac_time' in kwargs:
+                self.time_ts = kwargs['almanac_time']
+                self.time_djd = timestamp_to_djd(self.time_ts)
+            else:
+                setattr(self, key, kwargs[key])
 
         return self
         
@@ -323,7 +313,9 @@ class AlmanacBinder(object):
         # being examined. So, create a temporary body and then throw it away
         ephem_body = _get_ephem_body(self.heavenly_body)
         
-        if self.heavenly_body == 'sun' and attr in ['rise', 'set', 'transit']:
+        if attr in ['rise', 'set', 'transit']:
+            # These verbs refer to the time the event occurs anytime in the day, which
+            # is not necessarily the *next* sunrise.
             attr = fn_map[attr]
             # These functions require the time at the start of day
             observer = self._get_observer(self.sod_djd)
@@ -337,11 +329,9 @@ class AlmanacBinder(object):
                 time_djd = None
             return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="ephem_day", formatter=self.formatter)
         
-        elif attr in fn_map or attr in ['next_rising', 'next_setting', 'next_transit', 'next_antitransit',
-                          'previous_rising', 'previous_setting', 'previous_transit', 'previous_antitransit']:
-            if attr in fn_map:
-                attr = fn_map[attr]
-            # These functions require the time
+        elif attr in ['next_rising', 'next_setting', 'next_transit', 'next_antitransit',
+                      'previous_rising', 'previous_setting', 'previous_transit', 'previous_antitransit']:
+            # These functions require the time of the observation
             observer = self._get_observer(self.time_djd)
             # Call the function. Be prepared to catch an exception if the body is always up.
             try:
@@ -357,13 +347,13 @@ class AlmanacBinder(object):
             observer = self._get_observer(self.time_djd)
             ephem_body.compute(observer)
             if attr in ['az', 'alt', 'a_ra', 'a_dec', 'g_ra', 'ra', 'g_dec', 'dec', 
-                         'elong', 'radius', 'hlong', 'hlat', 'sublat', 'sublong']:
+                        'elong', 'radius', 'hlong', 'hlat', 'sublat', 'sublong']:
                 # Return the results in degrees rather than radians
                 return math.degrees(getattr(ephem_body, attr))
             elif attr=='moon_fullness':
                 # The attribute "moon_fullness" is the percentage of the moon surface that is illuminated.
-                # Unfortunately, phephem calls it "moon_phase"
-                # Return the result in percent
+                # Unfortunately, phephem calls it "moon_phase", so call ephem with that name.
+                # Return the result in percent.
                 return 100.0 * ephem_body.moon_phase
             else:
                 # Just return the result unchanged.
@@ -372,10 +362,10 @@ class AlmanacBinder(object):
     def _get_observer(self, time_ts):
         # Build an ephem Observer object
         observer           = ephem.Observer()
-        observer.lat       = self.lat
-        observer.long      = self.lon
+        observer.lat       = math.radians(self.lat)
+        observer.long      = math.radians(self.lon)
         observer.elevation = self.altitude
-        observer.horizon   = self.horizon
+        observer.horizon   = math.radians(self.horizon)
         observer.temp      = self.temperature
         observer.pressure  = self.pressure
         observer.date      = time_ts
@@ -408,49 +398,6 @@ def djd_to_timestamp(djd):
     """Convert from number of days since 12/31/1899 12:00 UTC ("Dublin Julian Days") to unix time stamp"""
     return (djd-25567.5) * 86400.0
 
-def dummy_test_ephem():
-    """
-    #
-    # Ephem can be used in various ways. This DOCTEST illustrates and exercises
-    # these patterns.
-    #
-    # First, query a heavenly body based on a time, observer position not needed
-    >>> jupiter = ephem.Jupiter()
-    >>> jupiter.compute(t_djd)
-    >>> print jupiter.ra
-    21:23:40.13
-    >>> print "%.2f" % jupiter.phase
-    99.45
-    
-    # Similar, but for the moon.
-    >>> moon = ephem.Moon()
-    >>> moon.compute(t_djd)
-    >>> print "%.2f" % moon.phase
-    1.68
-    
-    # Now try some queries that require not only time, but the position of an observer
-    >>> seattle = ephem.city('Seattle')
-    >>> seattle.date = t_djd
-    >>> jupiter.compute(seattle)
-    >>> print jupiter.alt
-    22:04:25.9
-
-    # These require the start of day for the observer, because they are asking
-    # for the "next" episode
-    # Calculate the local start of day, Dublin time
-    >>> (y,m,d) = time.localtime(t)[0:3]
-    >>> sod_djd = timestamp_to_djd(time.mktime((y,m,d,0,0,0,0,0,-1)))
-    >>> seattle.date = sod_djd
-    >>> print "%.3f" % seattle.next_transit(jupiter)
-    39898.217
-       
-    >>> sun = ephem.Sun()
-    >>> sun.compute(seattle)
-    >>> print seattle.next_rising(sun)
-    2009/3/27 13:57:08
-
-    """
-
 def dummy_no_ephem():
     """Final test that does not use ephem.
     
@@ -474,15 +421,5 @@ if __name__ == '__main__':
     import doctest
     from weeutil.weeutil import timestamp_to_string, timestamp_to_gmtime  #@UnusedImport
 
-#     t = 1252256400
-#     print timestamp_to_gmtime(t)
-#     atlanta = Almanac(t, 33.8, -84.4, pressure=0, horizon=-34.0/60.0)
-#     # Print it in GMT, so it can easily be compared to the example:
-#     print timestamp_to_gmtime(atlanta.sun.previous_rising.raw) 
-#     print timestamp_to_gmtime(atlanta.moon.next_setting.raw)
-#     print timestamp_to_gmtime(atlanta(horizon=-6).sun(use_center=1).previous_rising.raw)
-#     print timestamp_to_gmtime(atlanta(horizon=-6).sun(use_center=1).next_setting.raw)
-#     exit()
-    
     if not doctest.testmod().failed:
         print("PASSED")
