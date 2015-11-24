@@ -32,7 +32,8 @@ WEE_DEBUG_VERSION = '0.3'
 
 # keys/setting names to obfuscate in weewx.conf. Can add additional string
 # elements to list if required
-KEYS_TO_OBFUSCATE = ["password", "user", "username", "apiKey"]
+KEYS_TO_OBFUSCATE = ["password", "user", "username", "station", "apiKey", 
+                     "api_key"]
 
 # weewx archive field to use as the basis of counting number of archive records
 # Can be any field but dateTime is preferred as it should be in every weewx 
@@ -293,12 +294,17 @@ def obfuscateKey(src_dict, key_list):
 
     # make a copy of our source dict as we may need to alter some entries
     _dict = copy.deepcopy(src_dict)
-    for k, v in _dict.items():
+    # step through each key and value pair
+    for k, v in src_dict.items():
+        # if its a dict then recurse
         if isinstance(v, dict):
-            obfuscateKey(v, key_list)
-        for key in key_list:
-            if key in _dict:
-                _dict[key] = "XXX debug obfuscated XXX"
+            _dict[k] = obfuscateKey(v, key_list)
+        # must be a value so obfuscate if in our list or leave it if its not
+        else:
+            if k in key_list:
+                _dict[k] = "XXX debug obfuscated XXX"
+            else:
+                _dict[k] = v
     return _dict
 
 def get_binding(config_dict):
