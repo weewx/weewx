@@ -28,12 +28,14 @@ from weewx.manager import DaySummaryManager
 from weewx.units import unit_nicknames
 
 VERSION = weewx.__version__
-WEE_DEBUG_VERSION = '0.3'
+WEE_DEBUG_VERSION = '0.4'
 
-# keys/setting names to obfuscate in weewx.conf. Can add additional string
-# elements to list if required
-KEYS_TO_OBFUSCATE = ["password", "user", "username", "station", "apiKey", 
-                     "api_key"]
+# keys/setting names to obfuscate in weewx.conf, key value will be obfuscated if
+# the key starts any element in the list. Can add additional string elements to 
+# list if required
+KEYS_TO_OBFUSCATE = ["apiKey", "api_key", "app_key", "archive_security_key", 
+                     "id", "key", "oauth_token", "password", "raw_security_key",
+                     "server_url", "station", "token", "user"]
 
 # weewx archive field to use as the basis of counting number of archive records
 # Can be any field but dateTime is preferred as it should be in every weewx 
@@ -301,8 +303,8 @@ def obfuscateKey(src_dict, key_list):
             _dict[k] = obfuscateKey(v, key_list)
         # must be a value so obfuscate if in our list or leave it if its not
         else:
-            if k in key_list:
-                _dict[k] = "XXX debug obfuscated XXX"
+            if any(k.startswith(key) for key in key_list):
+                _dict[k] = "XXX obfuscated by wee_debug XXX"
             else:
                 _dict[k] = v
     return _dict
