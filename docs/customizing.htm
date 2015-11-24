@@ -4996,7 +4996,7 @@ Finished installing extension '/var/tmp/weewx-cmon-0.7.tgz'</pre>
 
     <p>The utility <span class="code">wee_extension</span> can tell you which
         extensions you have installed:</p>
-    <pre class="tty"><span class="cmd">./bin/wee_extension --list</span>
+    <pre class="tty"><span class="cmd">wee_extension --list</span>
 Extension Name   Version  Description
 cmon             0.7      Collect and display computer health indicators</pre>
     <p>You can see it lists the extension we just installed, <span class="code">cmon</span>.</p>
@@ -5004,8 +5004,8 @@ cmon             0.7      Collect and display computer health indicators</pre>
     <h2>Removing extensions</h2>
 
     <p>You can remove an extension using the same tool:</p>
-    <pre class="tty"><span class="cmd">./bin/wee_extension --uninstall=cmon
-./bin/wee_extension --list</span>
+    <pre class="tty"><span class="cmd">wee_extension --uninstall=cmon
+wee_extension --list</span>
 No extensions installed</pre>
 
     <h2>Creating an extension</h2>
