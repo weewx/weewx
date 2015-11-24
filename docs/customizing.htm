@@ -6016,12 +6016,12 @@ xstats/bin/user/xstats.py</pre>
             <td>S</td>
         </tr>
         <tr>
-            <td class='first_col'>radiation</td>
+            <td class='first_col'>radiation<sup>1</sup></td>
             <td>H</td>
             <td>H</td>
         </tr>
         <tr>
-            <td class='first_col'>UV</td>
+            <td class='first_col'>UV<sup>1</sup></td>
             <td>H</td>
             <td>H</td>
         </tr>
@@ -6038,8 +6038,9 @@ xstats/bin/user/xstats.py</pre>
         </tbody>
     </table>
     <p class='station_data_key'>
-        The <span class='code'>radiation</span> and <span class='code'>UV</span>
-        data are available only with the optional solar radiation sensor.
+      <sup>1</sup> The <span class='code'>radiation</span> and
+      <span class='code'>UV</span>
+      data are available only with the optional solar radiation sensor.
     </p>
 
     <h2 id="fo_station_data">Fine Offset</h2>
@@ -6132,12 +6133,7 @@ xstats/bin/user/xstats.py</pre>
             <td>S</td>
         </tr>
         <tr>
-            <td class='first_col'>radiation</td>
-            <td>H</td>
-            <td>H</td>
-        </tr>
-        <tr>
-            <td class='first_col'>UV</td>
+            <td class='first_col'>radiation<sup>1</sup></td>
             <td>H</td>
             <td>H</td>
         </tr>
@@ -6154,8 +6150,10 @@ xstats/bin/user/xstats.py</pre>
         </tbody>
     </table>
     <p class='station_data_key'>
-        The <span class='code'>radiation</span> and <span class='code'>UV</span>
-        data are available only from 30xx stations.
+      <sup>1</sup> The <span class='code'>radiation</span> data are available
+      only from 30xx stations.
+      These stations include a luminosity sensor, from which the radiation is
+      approximated.
     </p>
 
     <h2 id="te923_station_data">TE923</h2>
@@ -6248,7 +6246,7 @@ xstats/bin/user/xstats.py</pre>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>UV</td>
+            <td class='first_col'>UV<sup>1</sup></td>
             <td>H</td>
             <td></td>
         </tr>
@@ -6335,9 +6333,11 @@ xstats/bin/user/xstats.py</pre>
         </tbody>
     </table>
     <p class='station_data_key'>
-        Some stations support up to 5 remote temperature/humidity sensors. The
-        <span class='code'>UV</span> data are available only with the optional
-        solar radiation sensor.
+      Some stations support up to 5 remote temperature/humidity sensors.
+    </p>
+    <p class='station_data_key'>
+      <sup>1</sup> The <span class='code'>UV</span> data are available only
+      with the optional solar radiation sensor.
     </p>
 
     <h2 id="ultimeter_station_data">Ultimeter</h2>
@@ -6350,22 +6350,22 @@ xstats/bin/user/xstats.py</pre>
             <td>Archive</td>
         </tr>
         <tr>
-            <td class='first_col'>barometer</td>
+            <td class='first_col'>barometer<sup>2</sup></td>
             <td>H</td>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>pressure</td>
+            <td class='first_col'>pressure<sup>2</sup></td>
             <td>S</td>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>altimeter</td>
+            <td class='first_col'>altimeter<sup>2</sup></td>
             <td>S</td>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>inTemp</td>
+            <td class='first_col'>inTemp<sup>2</sup></td>
             <td>H</td>
             <td></td>
         </tr>
@@ -6375,7 +6375,7 @@ xstats/bin/user/xstats.py</pre>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>inHumidity</td>
+            <td class='first_col'>inHumidity<sup>2</sup></td>
             <td>H</td>
             <td></td>
         </tr>
@@ -6395,12 +6395,12 @@ xstats/bin/user/xstats.py</pre>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>rain</td>
+            <td class='first_col'>rain<sup>1</sup></td>
             <td>H</td>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>rainRate</td>
+            <td class='first_col'>rainRate<sup>1</sup></td>
             <td>S</td>
             <td></td>
         </tr>
@@ -6422,13 +6422,14 @@ xstats/bin/user/xstats.py</pre>
         </tbody>
     </table>
     <p class='station_data_key'>
-        The <span class='code'>rain</span> and <span class='code'>rainRate</span> are
-        available only on stations with the optional rain sensor.
+      <sup>1</sup> The <span class='code'>rain</span> and
+      <span class='code'>rainRate</span> are
+      available only on stations with the optional rain sensor.
     </p>
 
     <p class='station_data_key'>
-        Pressure, inside temperature, and inside humidity data are not available on
-        all types of Ultimeter stations.
+      <sup>2</sup> Pressure, inside temperature, and inside humidity data are
+      not available on all types of Ultimeter stations.
     </p>
 
     <h2 id="vantage_station_data">Vantage</h2>
