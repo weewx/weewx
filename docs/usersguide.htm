@@ -3780,7 +3780,7 @@ wind_gust_max_time: None</pre>
         default, user <span class="code">weewx</span>. Here are the necessary minimum
         permissions:</p>
     <pre class="tty">mysql&gt; <span class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
-mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert ON weewx.* TO weewx@localhost;</span></pre>
+mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop ON weewx.* TO weewx@localhost;</span></pre>
 
     <h1 id="running">Running <span class="code">weewx</span></h1>
 
