@@ -1521,6 +1521,8 @@ class WMR200(weewx.drivers.AbstractDevice):
         DEBUG_PACKETS_ARCHIVE = int(stn_dict.get('debug_packets_archive', 0))
         global DEBUG_PACKETS_TEMP
         DEBUG_PACKETS_TEMP = int(stn_dict.get('debug_packets_temp', 0))
+        global DEBUG_PACKETS_RAIN
+        DEBUG_PACKETS_RAIN = int(stn_dict.get('debug_packets_rain', 0))
         global DEBUG_PACKETS_WIND
         DEBUG_PACKETS_WIND = int(stn_dict.get('debug_packets_wind', 0))
         global DEBUG_PACKETS_STATUS
