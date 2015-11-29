@@ -65,6 +65,8 @@ running on a single system.
 Fixed problem with the Vantage driver that caused it to decode the console
 display units incorrectly. Thanks to Luc Heijst!
 
+The WMR300 driver is now part of the weewx distribution.
+
 
 3.2.1 07/18/15
 

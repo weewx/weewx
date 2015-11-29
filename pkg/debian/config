@@ -75,6 +75,10 @@ while [ "$STATE" != 0 -a "$STATE" != 7 ]; do
                 db_input high weewx/wmr200_model || true
             fi
 
+            if [ "$RET" = "WMR300" ]; then
+                db_input high weewx/wmr300_model || true
+            fi
+
             if [ "$RET" = "WMR9x8" ]; then
                 db_input high weewx/wmr9x8_model || true
                 db_input high weewx/wmr9x8_port || true
