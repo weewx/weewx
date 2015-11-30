@@ -817,12 +817,17 @@ def decode_rain(pkt, pkt_data):
                   'totalRain'         : rain_total}
 
         if DEBUG_PACKETS_RAIN:
-            logdbg('  Rain rate:%.02f hour_rain:%.02f day_rain:%.02f' %
-                   (rain_rate, rain_hour, rain_day))
-            logdbg('  Total rain_total:%.02f' % (rain_total))
-            logdbg('Last rain %s' %
-                   weeutil.weeutil.timestamp_to_string\
-                   (pkt.timestamp_last_rain()))
+            try:
+                formatted = ["0x%02x" % x for x in pkt_data]
+                logdbg('  Rain packets:' + ', '.join(formatted))
+                logdbg('  Rain rate:%.02f; hour_rain:%.02f; day_rain:%.02f' %
+                       (rain_rate, rain_hour, rain_day))
+                logdbg('  Total rain_total:%.02f' % (rain_total))
+                logdbg('  Last rain %s' %
+                       weeutil.weeutil.timestamp_to_string\
+                       (pkt.timestamp_last_rain()))
+            except Exception:
+                pass
 
         return record
 
