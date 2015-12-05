@@ -64,6 +64,7 @@ bin/weewx/drivers/ultimeter.py
 bin/weewx/drivers/vantage.py
 bin/weewx/drivers/wmr100.py
 bin/weewx/drivers/wmr200.py
+bin/weewx/drivers/wmr300.py
 bin/weewx/drivers/wmr9x8.py
 bin/weewx/drivers/ws1.py
 bin/weewx/drivers/ws23xx.py
