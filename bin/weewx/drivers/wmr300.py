@@ -1281,9 +1281,9 @@ class Station(object):
         pkt = dict()
         pkt['ts'] = Station._extract_ts(buf[2:7])
         pkt['channel'] = buf[7]
-        pkt['wind_gust'] = Station._extract_value(buf[8:10], 0.36) # km/hr
+        pkt['wind_gust'] = Station._extract_value(buf[8:10], 0.1) # m/s
         pkt['wind_gust_dir'] = Station._extract_value(buf[10:12], 1.0) # degree
-        pkt['wind_avg'] = Station._extract_value(buf[12:14], 0.36) # km/hr
+        pkt['wind_avg'] = Station._extract_value(buf[12:14], 0.1) # m/s
         pkt['wind_avg_dir'] = Station._extract_value(buf[14:16], 1.0) # degree
         pkt['wind_dir'] = Station._extract_heading(buf[16:18])
         return pkt
