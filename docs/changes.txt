@@ -1,6 +1,11 @@
 weewx change history
 --------------------
 
+3.3.1 12/06/2015
+
+Fixed bug when posting to WOW.
+
+
 3.3.0 12/05/2015
 
 Now really includes wunderfixer. It was inadvertently left out of the install

@@ -783,7 +783,7 @@ class WOWThread(AmbientThread):
                                  "siteAuthenticationKey=XXX", _url))
         return _url
 
-    def post_request(self, request):
+    def post_request(self, request, payload=None):
         """Version of post_request() for the WOW protocol, which
         uses a response error code to signal a bad login."""
         try:
