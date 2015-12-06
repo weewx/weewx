@@ -835,6 +835,9 @@ def reorder(name_list, ref_list):
     result = []
     # Use the ordering in ref_list, to reassemble the name list:
     for name in ref_list:
+        # These always come at the end
+        if name in ['FTP', 'RSYNC']:
+            continue
         if name in name_list:
             result.append(name)
     # For any that were not in the reference list and are left over, tack
@@ -842,6 +845,12 @@ def reorder(name_list, ref_list):
     for name in name_list:
         if name not in ref_list:
             result.append(name)
+            
+    # Finally, add these, so they are at the very end
+    for name in ref_list:
+        if name in ['FTP', 'RSYNC']:
+            result.append(name)
+            
     # Make sure I have the same number I started with
     assert(len(name_list)==len(result))
     return result

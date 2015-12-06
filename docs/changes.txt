@@ -5,6 +5,10 @@ weewx change history
 
 Fixed bug when posting to WOW.
 
+Fixed bug where the subsection for a custom report gets moved to the very
+end of the [StdReport] section of a configuration file on upgrade. 
+Fixes issue #81.
+
 
 3.3.0 12/05/2015
 

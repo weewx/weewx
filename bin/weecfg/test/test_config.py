@@ -115,6 +115,48 @@ class ConfigTest(unittest.TestCase):
         weecfg.remove_and_prune(x_dict, y_dict)
         self.assertEqual("{'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
 
+    report_start_str = """[StdReport]
+        SKIN_ROOT = skins
+        HTML_ROOT = public_html
+        data_binding = wx_binding
+        [[XtraReport]]
+            skin = Foo
+            
+        [[StandardReport]]
+            skin = Standard
+    
+        [[FTP]]
+            skin = Ftp
+    
+        [[RSYNC]]
+            skin = Rsync"""
+            
+    report_expected_str = """[StdReport]
+        SKIN_ROOT = skins
+        HTML_ROOT = public_html
+        data_binding = wx_binding
+        
+        [[StandardReport]]
+                skin = Standard
+        [[XtraReport]]
+                skin = Foo
+        
+        [[FTP]]
+                skin = Ftp
+        
+        [[RSYNC]]
+                skin = Rsync
+""" 
+     
+    def test_reorder(self):
+        """Test the utility reorder_to_ref"""
+        xio = StringIO.StringIO(ConfigTest.report_start_str)
+        x_dict = configobj.ConfigObj(xio)
+        weecfg.reorder_to_ref(x_dict)
+        x_result = StringIO.StringIO()
+        x_dict.write(x_result)
+        self.assertEqual(ConfigTest.report_expected_str, x_result.getvalue())
+
     if have_mock:
 
         def test_prompt_for_info(self):
