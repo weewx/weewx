@@ -15,7 +15,7 @@
 #
 # input format:
 #
-# x.y[.z] [mm/dd/yy]
+# x.y[.z] [mm/dd/(yy|YYYY)]
 #
 # Added README file (#42)
 #
@@ -180,7 +180,7 @@ sub doapp {
                 @paragraphs = (); # ignore anything before first valid version
                 $version = $v;
                 $ts = time;
-                if ($line =~ /(\d+)\/(\d+)\/(\d\d)/) {
+                if ($line =~ /(\d+)\/(\d+)\/(\d+)/) {
                     my($month,$day,$year) = ($1,$2,$3);
                     $ts = timelocal(0,0,0,$day,$month-1,$year);
                 } elsif ($line =~ /(\d+) (\S+) (\d+)/) {
