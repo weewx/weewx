@@ -1489,7 +1489,6 @@ class TE923Station(object):
         self.max_tries = max_tries
         self.retry_wait = retry_wait
 
-        self._memory_size = None
         self._num_rec = None
         self._num_blk = None
 
@@ -1712,12 +1711,10 @@ class TE923Station(object):
     def read_memory_size(self):
         buf = self._read(0xfc)
         if buf[1] == 0:
-            self._memory_size = 'small'
             self._num_rec = 208
             self._num_blk = 256
             loginf("detected small memory size")
         elif buf[1] == 2:
-            self._memory_size = 'large'
             self._num_rec = 3442
             self._num_blk = 4096
             loginf("detected large memory size")
