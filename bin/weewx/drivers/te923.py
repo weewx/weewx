@@ -2261,11 +2261,7 @@ if __name__ == '__main__':
         if fmt.lower() == FMT_TABLE:
             print_table(data)
         else:
-            print_dict(data)
-
-    def print_dict(data):
-        """output entire dictionary contents"""
-        print data
+            print data
 
     def print_hex(ptr, data):
         print "0x%06x %s" % (ptr, ' '.join(["%02x" % x for x in data]))
