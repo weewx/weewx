@@ -756,11 +756,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
             options.format.lower() != 'dict'):
             parser.error("Unknown format '%s'.  Known formats include 'table' and 'dict'." % options.format)
 
-        stn_dict = config_dict.get(DRIVER_NAME, {})
-        vendor_id = int(stn_dict.get('vendor_id', '0x1130'), 0)
-        product_id = int(stn_dict.get('product_id', '0x6801'), 0)
-
-        with TE923Station(vendor_id, product_id) as station:
+        with TE923Station() as station:
             if options.info is not None:
                 self.show_info(station, fmt=options.format)
             elif options.current is not None:
@@ -1124,15 +1120,12 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         self.retry_wait = int(stn_dict.get('retry_wait', 3))
         self.polling_interval = int(stn_dict.get('polling_interval', 10))
         self.obs_map = stn_dict.get('map', DEFAULT_OBSERVATION_MAP)
-        vendor_id = int(stn_dict.get('vendor_id', '0x1130'), 0)
-        product_id = int(stn_dict.get('product_id', '0x6801'), 0)
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('polling interval is %s' % str(self.polling_interval))
         loginf('observation map is %s' % self.obs_map)
 
-        self.station = TE923Station(vendor_id, product_id,
-                                    max_tries=self.max_tries,
+        self.station = TE923Station(max_tries=self.max_tries,
                                     retry_wait=self.retry_wait)
         self.station.open()
 
