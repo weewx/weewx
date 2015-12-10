@@ -1,6 +1,15 @@
 weewx change history
 --------------------
 
+X.X.X XX/XX/XX
+
+Complete overhaul of the te923 driver.  Thanks to user Andrew Miles.  The
+driver now supports the data logger and automatically detects small or large
+memory models.  Added ability to set/get the altitude, lat/lon, and other
+station parameters.  Significant speedup to reading station memory, from 531s
+to 91s, which is much closer to the 53s for the te923tool written in C (all for
+a station with the small memory model).
+
 3.3.1 12/06/2015
 
 Fixed bug when posting to WOW.
