@@ -518,36 +518,8 @@ class TE923ConfEditor(weewx.drivers.AbstractConfEditor):
     # and outHumidity.  To change this, or to associate other channels with
     # specific columns in the database schema, use the following map.
     [[map]]
-        link_wind = windLinkStatus
-        bat_wind = windBatteryStatus
-        link_rain = rainLinkStatus
-        bat_rain = rainBatteryStatus
-        link_uv = uvLinkStatus
-        bat_uv = uvBatteryStatus
-        uv = UV
-        t_in = inTemp
-        h_in = inHumidity
-        t_1 = outTemp
-        h_1 = outHumidity
-        bat_1 = outBatteryStatus
-        link_1 = outLinkStatus
-        t_2 = extraTemp1
-        h_2 = extraHumid1
-        bat_2 = extraBatteryStatus1
-        link_2 = extraLinkStatus1
-        t_3 = extraTemp2
-        h_3 = extraHumid3
-        bat_3 = extraBatteryStatus2
-        link_3 = extraLinkStatus2
-        t_4 = extraTemp3
-        h_4 = extraHumid3
-        bat_4 = extraBatteryStatus3
-        link_4 = extraLinkStatus3
-        t_5 = extraTemp4
-        h_5 = extraHumid4
-        bat_5 = extraBatteryStatus4
-        link_5 = extraLinkStatus4
-"""
+%s
+""" % "\n".join(["        %s = %s" % (x, DEFAULT_OBSERVATION_MAP[x]) for x in DEFAULT_OBSERVATION_MAP])
 
 
 class TE923Configurator(weewx.drivers.AbstractConfigurator):
