@@ -72,6 +72,7 @@ install: build
 	ln -s ../share/weewx/weewxd $(DST)/usr/bin/weewxd
 	ln -s ../share/weewx/wee_config $(DST)/usr/bin/wee_config
 	ln -s ../share/weewx/wee_database $(DST)/usr/bin/wee_database
+	ln -s ../share/weewx/wee_debug $(DST)/usr/bin/wee_debug
 	ln -s ../share/weewx/wee_device $(DST)/usr/bin/wee_device
 	ln -s ../share/weewx/wee_extension $(DST)/usr/bin/wee_extension
 	ln -s ../share/weewx/wee_reports $(DST)/usr/bin/wee_reports

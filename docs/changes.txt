@@ -10,6 +10,8 @@ station parameters.  Significant speedup to reading station memory, from 531s
 to 91s, which is much closer to the 53s for the te923tool written in C (all for
 a station with the small memory model).
 
+The wee_debug utility is now properly installed, not just distributed.
+
 3.3.1 12/06/2015
 
 Fixed bug when posting to WOW.

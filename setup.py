@@ -432,6 +432,7 @@ if __name__ == "__main__":
           py_modules=['daemon'],
           scripts=['bin/wee_config',
                    'bin/wee_database',
+                   'bin/wee_debug',
                    'bin/wee_device',
                    'bin/wee_extension',
                    'bin/wee_reports',

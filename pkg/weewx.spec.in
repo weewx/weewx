@@ -104,6 +104,7 @@ chmod 755 %{buildroot}%{initdir}/weewx
 ln -s ../share/weewx/weewxd %{buildroot}%{_bindir}/weewxd
 ln -s ../share/weewx/wee_config %{buildroot}%{_bindir}/wee_config
 ln -s ../share/weewx/wee_database %{buildroot}%{_bindir}/wee_database
+ln -s ../share/weewx/wee_debug %{buildroot}%{_bindir}/wee_debug
 ln -s ../share/weewx/wee_device %{buildroot}%{_bindir}/wee_device
 ln -s ../share/weewx/wee_extension %{buildroot}%{_bindir}/wee_extension
 ln -s ../share/weewx/wee_reports %{buildroot}%{_bindir}/wee_reports
