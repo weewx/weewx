@@ -11,6 +11,7 @@ astronomical calculations. See http://rhodesmill.org/pyephem. """
 import time
 import sys
 import math
+import copy
 
 import weeutil.Moon
 import weewx.units
@@ -145,7 +146,11 @@ class Almanac(object):
     2009-09-06 10:49:40 UTC (1252234180)
     >>> print timestamp_to_gmtime(atlanta(horizon=-6).sun(use_center=1).next_setting.raw)
     2009-09-07 00:21:22 UTC (1252282882)
-    
+
+    Try sun rise again, to make sure the horizon value cleared:
+    >>> print timestamp_to_gmtime(atlanta.sun.previous_rising.raw) 
+    2009-09-06 11:14:56 UTC (1252235696)
+
     Try an attribute that does not explicitly appear in the class Almanac
     >>> print "%.3f" % almanac.mars.sun_distance
     1.494
@@ -258,18 +263,21 @@ class Almanac(object):
             temperature: The observer's temperature (used to calculate refraction)
             pressure: The observer's pressure (used to calculate refraction) 
         """
-        # Set a new value for any named arguments. If not named, then the value
-        # should remain unchanged
+        # Make a copy of myself.       
+        almanac = copy.copy(self)
+        # Now set a new value for any named arguments.
         for key in kwargs:
             if 'almanac_time' in kwargs:
-                self.time_ts = kwargs['almanac_time']
-                self.time_djd = timestamp_to_djd(self.time_ts)
+                almanac.time_ts = kwargs['almanac_time']
+                almanac.time_djd = timestamp_to_djd(self.time_ts)
             else:
-                setattr(self, key, kwargs[key])
+                setattr(almanac, key, kwargs[key])
 
-        return self
+        return almanac
         
     def __getattr__(self, attr):
+        if attr.startswith('__'):
+            raise AttributeError(attr)
         
         if not self.hasExtras:
             # If the Almanac does not have extended capabilities, we can't
@@ -335,6 +343,9 @@ class AlmanacBinder(object):
     def __getattr__(self, attr):
         """Get the requested observation, such as when the body will rise."""
 
+        if attr.startswith('__'):
+            raise AttributeError(attr)
+        
         # Many of these functions have the unfortunate side effect of changing the state of the body
         # being examined. So, create a temporary body and then throw it away
         ephem_body = _get_ephem_body(self.heavenly_body)
