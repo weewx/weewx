@@ -7,7 +7,6 @@
 
 from __future__ import with_statement
 import math
-import random
 import time
 
 import weedb
@@ -15,7 +14,7 @@ import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'Simulator'
-DRIVER_VERSION = "3.1"
+DRIVER_VERSION = "3.0"
 
 def loader(config_dict, engine):
 
@@ -28,8 +27,6 @@ def loader(config_dict, engine):
         # A start has been specified. Extract the time stamp.
         start_tt = time.strptime(config_dict[DRIVER_NAME]['start'], "%Y-%m-%d %H:%M")
         start_ts = time.mktime(start_tt)
-        # Use the start time to seed the noise generator (so results are reproducible).
-        random.seed(start_ts)
         # If the 'resume' keyword is present and True, then get the last
         # archive record out of the database and resume with that.
         if weeutil.weeutil.to_bool(config_dict[DRIVER_NAME].get('resume', True)):
@@ -105,10 +102,10 @@ class Simulator(weewx.drivers.AbstractDevice):
             'inTemp'     : Observation(magnitude=5.0,   average= 68.0, period=24.0, phase_lag=12.0, start=start_ts),
             'barometer'  : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
             'pressure'   : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
-            'windSpeed'  : Observation(magnitude=5.0,   average=  5.0, period=48.0, phase_lag=24.0, start=start_ts, sigma=0.1),
-            'windDir'    : Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts, sigma=0.1),
-            'windGust'   : Observation(magnitude=6.0,   average=  6.0, period=48.0, phase_lag=24.0, start=start_ts, sigma=0.1),
-            'windGustDir': Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts, sigma=0.1),
+            'windSpeed'  : Observation(magnitude=5.0,   average=  5.0, period=48.0, phase_lag=24.0, start=start_ts),
+            'windDir'    : Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
+            'windGust'   : Observation(magnitude=6.0,   average=  6.0, period=48.0, phase_lag=24.0, start=start_ts),
+            'windGustDir': Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
             'outHumidity': Observation(magnitude=30.0,  average= 50.0, period=48.0, phase_lag= 0.0, start=start_ts),
             'inHumidity' : Observation(magnitude=10.0,  average= 20.0, period=24.0, phase_lag= 0.0, start=start_ts),
             'radiation'  : Solar(magnitude=1000, solar_start=6, solar_length=12),
@@ -154,15 +151,6 @@ class Simulator(weewx.drivers.AbstractDevice):
                        'usUnits' : weewx.US }
             for obs_type in self.observations:
                 _packet[obs_type] = self.observations[obs_type].value_at(avg_time)
-            if 'windSpeed' in _packet:
-                if _packet['windSpeed'] < 0:
-                    _packet['windSpeed'] = 0
-                if 'windGust' in _packet:
-                    _packet['windGust'] = max(_packet['windGust'], _packet['windSpeed'])
-            if 'windDir' in _packet:
-                _packet['windDir'] = _packet['windDir'] % 360.0
-            if 'windGustDir' in _packet:
-                _packet['windGustDir'] = _packet['windGustDir'] % 360.0
             yield _packet
 
     def getTime(self):
@@ -174,16 +162,14 @@ class Simulator(weewx.drivers.AbstractDevice):
         
 class Observation(object):
     
-    def __init__(self, magnitude=1.0, average=0.0, period=96.0, phase_lag=0.0, sigma=None, start=None):
+    def __init__(self, magnitude=1.0, average=0.0, period=96.0, phase_lag=0.0, start=None):
         """Initialize an observation function.
         
         magnitude: The value at max. The range will be twice this value
         average: The average value, averaged over a full cycle.
         period: The cycle period in hours.
         phase_lag: The number of hours after the start time when the
-            observation hits its max
-        sigma: Stanard deviation of random noise to be added to value, 
-            expressed as a fraction of the magnitude
+                     observation hits its max
         start: Time zero for the observation in unix epoch time."""
          
         if not start:
@@ -192,7 +178,6 @@ class Observation(object):
         self.average   = average
         self.period    = period * 3600.0
         self.phase_lag = phase_lag * 3600.0
-        self.sigma     = sigma
         self.start     = start
         
     def value_at(self, time_ts):
@@ -201,8 +186,7 @@ class Observation(object):
         time_ts: The time in unix epoch time."""
 
         phase = 2.0 * math.pi * (time_ts - self.start - self.phase_lag) / self.period
-        noise = random.gauss(0.0, self.sigma * self.magnitude) if self.sigma is not None else 0.0
-        return self.magnitude * math.cos(phase) + self.average + noise
+        return self.magnitude * math.cos(phase) + self.average
         
 
 class Rain(object):
