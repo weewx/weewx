@@ -35,7 +35,8 @@ METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
 DEFAULT_SER_PORT = '/dev/ttyS0'
-DEFAULT_TCP_PORT = '192.168.36.25:30'
+DEFAULT_TCP_ADDR = '192.168.36.25'
+DEFAULT_TCP_PORT = 3000
 DEBUG_READ = 0
 
 
@@ -68,7 +69,8 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         if con_mode == 'serial':
             self.port = stn_dict.get('port', DEFAULT_SER_PORT)
         elif con_mode == 'tcp':
-            self.port = stn_dict.get('port', DEFAULT_TCP_PORT)
+            self.port = stn_dict.get(
+                'port', DEFAULT_TCP_ADDR + ':' + DEFAULT_TCP_PORT)
         else:
             # exit(3)
             pass
@@ -255,7 +257,19 @@ class StationSerial(object):
 
 class StationTCP(object):
     def __init__(self, addr):
-        self.conn_info = socket.getnameinfo(addr)
+        ip_addr = None
+        ip_port = None
+        if addr.find(':') != -1:
+            self.conn_info = addr.split(':')
+            try:
+                self.conn_info[1] = int(self.conn_info[1], 10)
+            except TypeError, e:
+                self.conn_info[1] = DEFAULT_TCP_PORT
+            self.conn_info = tuple(self.conn_info)
+        else:
+            ip_addr = addr
+            ip_port = DEFAULT_TCP_PORT
+            self.conn_info = (ip_addr, ip_port)
         self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tcp_bufsiz = 128
 
@@ -306,7 +320,7 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
 
     # If serial, specify the serial port device. (ex. /dev/ttyS0, /dev/ttyUSB0,
     # or /dev/cuaU0)
-    # If TCP, specify the IP address and port number. (ex. 192.168.36.25:30)
+    # If TCP, specify the IP address and port number. (ex. 192.168.36.25:3000)
     port = /dev/ttyUSB0
 
     # The driver to use:
