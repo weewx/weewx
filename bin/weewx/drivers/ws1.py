@@ -13,13 +13,14 @@ Thanks to Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
 
 from __future__ import with_statement
 import serial
+import socket  # For those users with a serial->TCP adapter
 import syslog
 import time
 
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.20'
+DRIVER_VERSION = '0.21'
 
 
 def loader(config_dict, _):
@@ -33,7 +34,8 @@ INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
-DEFAULT_PORT = '/dev/ttyS0'
+DEFAULT_SER_PORT = '/dev/ttyS0'
+DEFAULT_TCP_PORT = '192.168.36.25:30'
 DEBUG_READ = 0
 
 
@@ -51,9 +53,9 @@ def logerr(msg):
 
 class WS1Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an ADS-WS1 station
-    
-    port - serial port
-    [Required. Default is /dev/ttyS0]
+
+    port - serial port or TCP address
+    [Required. Default for serial is /dev/ttyS0, and 192.168.36.25:30 for TCP]
 
     max_tries - how often to retry serial communication before giving up
     [Optional. Default is 5]
@@ -62,15 +64,25 @@ class WS1Driver(weewx.drivers.AbstractDevice):
     [Optional. Default is 10]
     """
     def __init__(self, **stn_dict):
-        self.port = stn_dict.get('port', DEFAULT_PORT)
+        con_mode = stn_dict.get('mode', 'serial').lower()
+        if con_mode == 'serial':
+            self.port = stn_dict.get('port', DEFAULT_SER_PORT)
+        elif con_mode == 'tcp':
+            self.port = stn_dict.get('port', DEFAULT_TCP_PORT)
+        else:
+            # exit(3)
+            pass
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 10))
         self.last_rain = None
         loginf('driver version is %s' % DRIVER_VERSION)
-        loginf('using serial port %s' % self.port)
+        loginf('using %s port %s' % con_mode, self.port)
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
-        self.station = Station(self.port)
+        if con_mode == 'serial':
+            self.station = StationSerial(self.port)
+        elif con_mode == 'tcp':
+            self.station = StationTCP(self.port)
         self.station.open()
 
     def closePort(self):
@@ -88,7 +100,7 @@ class WS1Driver(weewx.drivers.AbstractDevice):
                       'usUnits': weewx.US}
             readings = self.station.get_readings_with_retry(self.max_tries,
                                                             self.retry_wait)
-            data = Station.parse_readings(readings)
+            data = StationData.parse_readings(readings)
             packet.update(data)
             self._augment_packet(packet)
             yield packet
@@ -102,55 +114,14 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         self.last_rain = packet['long_term_rain']
 
 
-class Station(object):
-    def __init__(self, port):
-        self.port = port
-        self.baudrate = 2400
-        self.timeout = 3
-        self.serial_port = None
+# =========================================================================== #
+#       Station data class - parses and validates data from the device        #
+# =========================================================================== #
 
-    def __enter__(self):
-        self.open()
-        return self
 
-    def __exit__(self, _, value, traceback):
-        self.close()
-
-    def open(self):
-        logdbg("open serial port %s" % self.port)
-        self.serial_port = serial.Serial(self.port, self.baudrate,
-                                         timeout=self.timeout)
-
-    def close(self):
-        if self.serial_port is not None:
-            logdbg("close serial port %s" % self.port)
-            self.serial_port.close()
-            self.serial_port = None
-
-    # FIXME: use either CR or LF as line terminator.  apparently some ws1
-    # hardware occasionally ends a line with only CR instead of the standard
-    # CR-LF, resulting in a line that is too long.
-    def get_readings(self):
-        buf = self.serial_port.readline()
-        if DEBUG_READ:
-            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
-        buf = buf.strip()
-        return buf
-
-    def get_readings_with_retry(self, max_tries=5, retry_wait=10):
-        for ntries in range(0, max_tries):
-            try:
-                buf = self.get_readings()
-                Station.validate_string(buf)
-                return buf
-            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
-                loginf("Failed attempt %d of %d to get readings: %s" %
-                       (ntries + 1, max_tries, e))
-                time.sleep(retry_wait)
-        else:
-            msg = "Max retries (%d) exceeded for readings" % max_tries
-            logerr(msg)
-            raise weewx.RetriesExceeded(msg)
+class StationData(object):
+    def __init__(self):
+        pass
 
     @staticmethod
     def validate_string(buf):
@@ -190,18 +161,18 @@ class Station(object):
         # FIXME: for ws1 is the pressure reading 'pressure' or 'barometer'?
         buf = raw[2:]
         data = dict()
-        data['windSpeed'] = Station._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
-        data['windDir'] = Station._decode(buf[6:8], 1.411764)  # compass deg
-        data['outTemp'] = Station._decode(buf[8:12], 0.1)  # degree_F
-        data['long_term_rain'] = Station._decode(buf[12:16], 0.01)  # inch
-        data['pressure'] = Station._decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
-        data['inTemp'] = Station._decode(buf[20:24], 0.1)  # degree_F
-        data['outHumidity'] = Station._decode(buf[24:28], 0.1)  # percent
-        data['inHumidity'] = Station._decode(buf[28:32], 0.1)  # percent
-        data['day_of_year'] = Station._decode(buf[32:36])
-        data['minute_of_day'] = Station._decode(buf[36:40])
-        data['daily_rain'] = Station._decode(buf[40:44], 0.01)  # inch
-        data['wind_average'] = Station._decode(buf[44:48], 0.1 * MILE_PER_KM)  # mph
+        data['windSpeed'] = StationData._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
+        data['windDir'] = StationData._decode(buf[6:8], 1.411764)  # compass deg
+        data['outTemp'] = StationData._decode(buf[8:12], 0.1)  # degree_F
+        data['long_term_rain'] = StationData._decode(buf[12:16], 0.01)  # inch
+        data['pressure'] = StationData._decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
+        data['inTemp'] = StationData._decode(buf[20:24], 0.1)  # degree_F
+        data['outHumidity'] = StationData._decode(buf[24:28], 0.1)  # percent
+        data['inHumidity'] = StationData._decode(buf[28:32], 0.1)  # percent
+        data['day_of_year'] = StationData._decode(buf[32:36])
+        data['minute_of_day'] = StationData._decode(buf[36:40])
+        data['daily_rain'] = StationData._decode(buf[40:44], 0.01)  # inch
+        data['wind_average'] = StationData._decode(buf[44:48], 0.1 * MILE_PER_KM)  # mph
         return data
 
     @staticmethod
@@ -221,6 +192,108 @@ class Station(object):
         return v
 
 
+# =========================================================================== #
+#          Station Serial class - Gets data through a serial port             #
+# =========================================================================== #
+
+
+class StationSerial(object):
+    def __init__(self, port):
+        self.port = port
+        self.baudrate = 2400
+        self.timeout = 3
+        self.serial_port = None
+
+    def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, _, value, traceback):
+        self.close()
+
+    def open(self):
+        logdbg("open serial port %s" % self.port)
+        self.serial_port = serial.Serial(self.port, self.baudrate,
+                                         timeout=self.timeout)
+
+    def close(self):
+        if self.serial_port is not None:
+            logdbg("close serial port %s" % self.port)
+            self.serial_port.close()
+            self.serial_port = None
+
+    # FIXME: use either CR or LF as line terminator.  apparently some ws1
+    # hardware occasionally ends a line with only CR instead of the standard
+    # CR-LF, resulting in a line that is too long.
+    def get_readings(self):
+        buf = self.serial_port.readline()
+        if DEBUG_READ:
+            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
+        buf = buf.strip()
+        return buf
+
+    def get_readings_with_retry(self, max_tries=5, retry_wait=10):
+        for ntries in range(0, max_tries):
+            try:
+                buf = self.get_readings()
+                StationData.validate_string(buf)
+                return buf
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+                loginf("Failed attempt %d of %d to get readings: %s" %
+                       (ntries + 1, max_tries, e))
+                time.sleep(retry_wait)
+        else:
+            msg = "Max retries (%d) exceeded for readings" % max_tries
+            logerr(msg)
+            raise weewx.RetriesExceeded(msg)
+
+
+# =========================================================================== #
+#          Station TCP class - Gets data through a TCP/IP connection          #
+# =========================================================================== #
+
+
+class StationTCP(object):
+    def __init__(self, addr):
+        self.conn_info = socket.getnameinfo(addr)
+        self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.tcp_bufsiz = 128
+
+    def open(self):
+        logdbg("Connected to %s:%d" % self.conn_info[0], self.conn_info[1])
+        self.tcp_socket.connect(self.conn_info)
+
+    def close(self):
+        logdbg("Closing connection to %s:%d" %
+               self.conn_info[0], self.conn_info[1])
+        self.tcp_socket.close()
+
+    def get_readings(self):
+        buf = self.tcp_socket.recv(self.tcp_bufsiz)
+        if DEBUG_READ:
+            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
+        oldbuf = buf
+        buf = buf[0:buf.find('\n')]
+        if len(oldbuf) != len(buf):
+            logmsg("oldbuf length and buf length not the same!")
+        buf.strip()
+        return buf
+
+    def get_readings_with_retry(self, max_tries=5, retry_wait=10):
+        for ntries in range(0, max_tries):
+            try:
+                buf = self.get_readings()
+                StationData.validate_string(buf)
+                return buf
+            except (weewx.WeeWxIOError), e:
+                loginf("Failed to get data for some reason: %s" % e)
+                time.sleep(retry_wait)
+        else:
+            msg = "Max retries (%d) exceeded for readings" % max_tries
+            logerr(msg)
+            raise weewx.RetriesExceeded(msg)
+
+
 class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
     @property
     def default_stanza(self):
@@ -228,7 +301,12 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
 [WS1]
     # This section is for the ADS WS1 series of weather stations.
 
-    # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
+    # Driver mode - TCP or serial
+    mode = serial
+
+    # If serial, specify the serial port device. (ex. /dev/ttyS0, /dev/ttyUSB0,
+    # or /dev/cuaU0)
+    # If TCP, specify the IP address and port number. (ex. 192.168.36.25:30)
     port = /dev/ttyUSB0
 
     # The driver to use:
