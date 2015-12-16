@@ -20,7 +20,7 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.21'
+DRIVER_VERSION = '0.22'
 
 
 def loader(config_dict, _):
@@ -55,6 +55,9 @@ def logerr(msg):
 class WS1Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an ADS-WS1 station
 
+    mode - Communication mode - TCP, UDP, or Serial
+    [Required. Default is serial]
+
     port - serial port or TCP address
     [Required. Default for serial is /dev/ttyS0, and 192.168.36.25:30 for TCP]
 
@@ -68,7 +71,7 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         con_mode = stn_dict.get('mode', 'serial').lower()
         if con_mode == 'serial':
             self.port = stn_dict.get('port', DEFAULT_SER_PORT)
-        elif con_mode == 'tcp':
+        elif con_mode == 'tcp' or con_mode == 'udp':
             self.port = stn_dict.get(
                 'port', DEFAULT_TCP_ADDR + ':' + DEFAULT_TCP_PORT)
         else:
@@ -83,8 +86,8 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
         if con_mode == 'serial':
             self.station = StationSerial(self.port)
-        elif con_mode == 'tcp':
-            self.station = StationTCP(self.port)
+        elif con_mode == 'tcp' or con_mode == 'udp':
+            self.station = StationInet(self.port, con_mode)
         self.station.open()
 
     def closePort(self):
@@ -255,8 +258,8 @@ class StationSerial(object):
 # =========================================================================== #
 
 
-class StationTCP(object):
-    def __init__(self, addr):
+class StationInet(object):
+    def __init__(self, addr, protocol='tcp'):
         ip_addr = None
         ip_port = None
         if addr.find(':') != -1:
@@ -270,15 +273,18 @@ class StationTCP(object):
             ip_addr = addr
             ip_port = DEFAULT_TCP_PORT
             self.conn_info = (ip_addr, ip_port)
-        self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.tcp_bufsiz = 128
+        if protocol == 'tcp':
+            self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        elif protocol == 'udp':
+            self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.tcp_bufsiz = 64
 
     def open(self):
-        logdbg("Connected to %s:%d" % self.conn_info[0], self.conn_info[1])
+        logdbg("Connecting to %s:%d." % self.conn_info[0], self.conn_info[1])
         self.tcp_socket.connect(self.conn_info)
 
     def close(self):
-        logdbg("Closing connection to %s:%d" %
+        logdbg("Closing connection to %s:%d." %
                self.conn_info[0], self.conn_info[1])
         self.tcp_socket.close()
 
@@ -289,7 +295,9 @@ class StationTCP(object):
         oldbuf = buf
         buf = buf[0:buf.find('\n')]
         if len(oldbuf) != len(buf):
-            logmsg("oldbuf length and buf length not the same!")
+            loginf("oldbuf length and buf length not the same!")
+            logdbg("Bytes after the newline: '%s'" % ' '.join(
+                ["%0.2X" % ord(c) for c in buf[buf.find('\n'):]]))
         buf.strip()
         return buf
 
@@ -315,7 +323,7 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
 [WS1]
     # This section is for the ADS WS1 series of weather stations.
 
-    # Driver mode - TCP or serial
+    # Driver mode - tcp, udp, or serial
     mode = serial
 
     # If serial, specify the serial port device. (ex. /dev/ttyS0, /dev/ttyUSB0,
@@ -328,9 +336,17 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def prompt_for_settings(self):
-        print "Specify the serial port on which the station is connected, for"
-        print "example /dev/ttyUSB0 or /dev/ttyS0."
-        port = self._prompt('port', '/dev/ttyUSB0')
+        print "How is the station connected? tcp, udp, or serial."
+        con_mode = self._prompt('mode', 'serial')
+
+        if con_mode == 'serial':
+            print "Specify the serial port on which the station is connected, for"
+            print "example /dev/ttyUSB0 or /dev/ttyS0."
+            port = self._prompt('port', '/dev/ttyUSB0')
+        elif con_mode == 'tcp' or con_mode == 'udp':
+            print "Specify the IP address and port of the station. For example,"
+            print "192.168.36.40:3000"
+            port = self._prompt('port', '192.168.36.40:3000')
         return {'port': port}
 
 
