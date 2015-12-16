@@ -168,7 +168,8 @@ class ExtensionEngine(object):
                             N += 1
                     break
             else:
-                sys.exit("Unknown destination for file %s" % source_tuple)
+                sys.exit("Skipped file %s: Unknown destination directory %s" %
+                         (source_tuple[1], source_tuple[0]))
         self.logger.log("Copied %d files" % N, level=2)
         
         save_config = False
@@ -387,7 +388,8 @@ class ExtensionEngine(object):
                         directory_list.append(directory)
                     break
             else:
-                sys.exit("Unknown destination for file %s" % source_tuple)
+                sys.exit("Skipped file %s: Unknown destination directory %s" %
+                         (source_tuple[1], source_tuple[0]))
         self.logger.log("Removed %d files" % N, level=2)
          
         # Now delete all the empty skin directories. 
