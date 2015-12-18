@@ -28,7 +28,7 @@ from weewx.manager import DaySummaryManager
 from weewx.units import unit_nicknames
 
 VERSION = weewx.__version__
-WEE_DEBUG_VERSION = '0.4'
+WEE_DEBUG_VERSION = '0.5'
 
 # keys/setting names to obfuscate in weewx.conf, key value will be obfuscated if
 # the key starts any element in the list. Can add additional string elements to 
@@ -94,7 +94,8 @@ def main():
     # check weewx version number for compatibility
     if VERSION[0] < 3:
         # incompatible version of weewx
-        print "Incompatible version of weewx detected (%s). Weewx v3.0.0 or greater required." % VERSION
+        print "Incompatible version of weewx detected (%s). Weewx v3.0.0 or greater required." % \
+            VERSION
         print "Nothing done, exiting."
         exit(1)
 
@@ -228,12 +229,25 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
     print "Archive info"
     print "  Database name:        %s" % manager_info_dict['db_name']
     print "  Table name:           %s" % manager_info_dict['table_name']
-    print "  Unit system:          %s(%s)" % (manager_info_dict['units'],
+    print "  Unit system:          %s (%s)" % (manager_info_dict['units'],
                                               units_nickname)
     print "  First good timestamp: %s" % timestamp_to_string(manager_info_dict['first_ts'])
     print "  Last good timestamp:  %s" % timestamp_to_string(manager_info_dict['last_ts'])
-    print "  Number of records:    %s" % manager_info_dict['ts_count'].value
-    print "  weewx (weewx.conf) is set to use an archive interval of %s seconds." % config_dict['StdArchive']['archive_interval']
+    if manager_info_dict['ts_count']:
+        print "  Number of records:    %s" % manager_info_dict['ts_count'].value
+    else:
+        print "  Number of records:    %s (no archive records found)" % \
+            manager_info_dict['ts_count']
+    # if we have a database and a table but no start or stop ts and no records
+    # inform the user that the database/table exists but appears empty
+    if (manager_info_dict['db_name'] and manager_info_dict['table_name']) and \
+    not (manager_info_dict['ts_count'] or manager_info_dict['units'] or \
+    manager_info_dict['first_ts'] or manager_info_dict['last_ts']):
+        print "                        It is likely that the database (%s) archive table (%s)" % \
+            (manager_info_dict['db_name'], manager_info_dict['table_name'])
+        print "                        exists but contains no data."
+    print "  weewx (weewx.conf) is set to use an archive interval of %s seconds." % \
+        config_dict['StdArchive']['archive_interval']
     print "  The station hardware was not interrogated in determining archive interval."
     print
 
@@ -332,13 +346,18 @@ def getManagerInfo(config_dict, db_binding_wx):
         units = dbmanager_wx.std_unit_system
         first_ts = dbmanager_wx.first_timestamp
         last_ts = dbmanager_wx.last_timestamp
-        # since we are (more than likely) using archive field 'dateTime' for 
-        # our record count we need to call the getAggregate() method from our 
-        # parent class. Note that if we change to some other field the 'count' 
-        # might take a while longer depending on the archive size.
-        ts_count = super(DaySummaryManager, dbmanager_wx).getAggregate(TimeSpan(first_ts, last_ts),
-                                                          COUNT_FIELD,
-                                                          'count')
+        # do we have any records in our archive?
+        if first_ts and last_ts:
+            # We have some records so proceed to count them.
+            # Since we are (more than likely) using archive field 'dateTime' for 
+            # our record count we need to call the getAggregate() method from our 
+            # parent class. Note that if we change to some other field the 'count' 
+            # might take a while longer depending on the archive size.
+            ts_count = super(DaySummaryManager, dbmanager_wx).getAggregate(TimeSpan(first_ts, last_ts),
+                                                              COUNT_FIELD,
+                                                              'count')
+        else:
+            ts_count = None
         sqlkeys = dbmanager_wx.sqlkeys
         obskeys = dbmanager_wx.obskeys
     return {'db_name': db_name,
