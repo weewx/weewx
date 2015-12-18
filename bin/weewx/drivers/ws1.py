@@ -37,7 +37,7 @@ MILE_PER_KM = 0.621371
 DEFAULT_SER_PORT = '/dev/ttyS0'
 DEFAULT_TCP_ADDR = '192.168.36.25'
 DEFAULT_TCP_PORT = 3000
-DEBUG_READ = 0
+DEBUG_READ = True
 
 
 def logmsg(level, msg):
@@ -73,7 +73,7 @@ class WS1Driver(weewx.drivers.AbstractDevice):
             self.port = stn_dict.get('port', DEFAULT_SER_PORT)
         elif con_mode == 'tcp' or con_mode == 'udp':
             self.port = stn_dict.get(
-                'port', DEFAULT_TCP_ADDR + ':' + DEFAULT_TCP_PORT)
+                'port', '%s:%d' % (DEFAULT_TCP_ADDR, DEFAULT_TCP_PORT))
         else:
             # exit(3)
             pass
@@ -81,7 +81,7 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         self.retry_wait = int(stn_dict.get('retry_wait', 10))
         self.last_rain = None
         loginf('driver version is %s' % DRIVER_VERSION)
-        loginf('using %s port %s' % con_mode, self.port)
+        loginf('using %s port %s' % (con_mode, self.port))
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
         if con_mode == 'serial':
@@ -274,22 +274,22 @@ class StationInet(object):
             ip_port = DEFAULT_TCP_PORT
             self.conn_info = (ip_addr, ip_port)
         if protocol == 'tcp':
-            self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.net_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         elif protocol == 'udp':
-            self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.net_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.tcp_bufsiz = 64
 
     def open(self):
-        logdbg("Connecting to %s:%d." % self.conn_info[0], self.conn_info[1])
-        self.tcp_socket.connect(self.conn_info)
+        logdbg("Connecting to %s:%d." % (self.conn_info[0], self.conn_info[1]))
+        self.net_socket.connect(self.conn_info)
 
     def close(self):
         logdbg("Closing connection to %s:%d." %
-               self.conn_info[0], self.conn_info[1])
-        self.tcp_socket.close()
+               (self.conn_info[0], self.conn_info[1]))
+        self.net_socket.close()
 
     def get_readings(self):
-        buf = self.tcp_socket.recv(self.tcp_bufsiz)
+        buf = self.net_socket.recv(self.tcp_bufsiz)
         if DEBUG_READ:
             logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
         oldbuf = buf
