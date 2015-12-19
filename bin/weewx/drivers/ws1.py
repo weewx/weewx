@@ -37,6 +37,7 @@ MILE_PER_KM = 0.621371
 DEFAULT_SER_PORT = '/dev/ttyS0'
 DEFAULT_TCP_ADDR = '192.168.36.25'
 DEFAULT_TCP_PORT = 3000
+PACKET_SIZE = 50
 DEBUG_READ = 0
 
 
@@ -130,7 +131,7 @@ class StationData(object):
 
     @staticmethod
     def validate_string(buf):
-        if len(buf) != 50:
+        if len(buf) != PACKET_SIZE:
             raise weewx.WeeWxIOError("Unexpected buffer length %d" % len(buf))
         if buf[0:2] != '!!':
             raise weewx.WeeWxIOError("Unexpected header bytes '%s'" % buf[0:2])
@@ -276,12 +277,9 @@ class StationInet(object):
             self.conn_info = (ip_addr, ip_port)
         if protocol == 'tcp':
             self.net_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            # Needs to be larger than the total record size so a complete
-            # record can be parsed
-            self.net_bufsiz = 128
         elif protocol == 'udp':
             self.net_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.net_bufsiz = 64
+        self.rec_start = False
 
     def open(self):
         logdbg("Connecting to %s:%d." % (self.conn_info[0], self.conn_info[1]))
@@ -293,28 +291,22 @@ class StationInet(object):
         self.net_socket.close()
 
     def get_readings(self):
-        half_bufsiz = self.net_bufsiz / 2
-        buf = self.net_socket.recv(self.net_bufsiz)
-        if DEBUG_READ:
-            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
-        old_buf = buf
-        if self.protocol == 'tcp':
-            eol_pos = buf.find("\x0D\x0A")
-            if eol_pos <= half_bufsiz:
-                # Get the bytes after the end-of-line
-                rec_start_pos = old_buf.find("!!", eol_pos)
-                buf = old_buf[rec_start_pos:rec_start_pos+50]
-            elif eol_pos > half_bufsiz:
-                # Get the bytes before the end-of-line
-                rec_start_pos = old_buf.rfind("!!", 0, eol_pos)
-                buf = old_buf[rec_start_pos:rec_start_pos+50]
-            # loginf("buf: %s" % buf)
-        elif self.protocol == 'udp':
-            buf = old_buf[:old_buf.find("\x0D\x0A")]
-        # if len(old_buf) != len(buf):
-        #     loginf("old_buf length and buf length not the same!")
-        #     logdbg("Bytes after the newline: '%s'" % ' '.join(
-        #         ["%0.2X" % ord(c) for c in buf[buf.find('\n'):]]))
+        if not self.rec_start:
+            # Find the record start
+            buf = ''
+            while True:
+                buf += self.net_socket.recv(8)
+                if '!!' in buf:
+                    self.rec_start = True
+                    # Cut to the record start
+                    buf = buf[buf.find('!!'):]
+                    break
+            # Add the rest of the record
+            buf += self.net_socket.recv(PACKET_SIZE - len(buf))
+        else:
+            buf = self.net_socket.recv(PACKET_SIZE)
+        # loginf("buf: %s" % buf)
+        self.net_socket.recv(4)  # CRLF and some other two bytes
         buf.strip()
         return buf
 
