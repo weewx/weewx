@@ -20,7 +20,7 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.22'
+DRIVER_VERSION = '0.23'
 
 
 def loader(config_dict, _):
@@ -318,6 +318,7 @@ class StationInet(object):
                 return buf
             except (weewx.WeeWxIOError), e:
                 loginf("Failed to get data for some reason: %s" % e)
+                self.rec_start = False
                 time.sleep(retry_wait)
         else:
             msg = "Max retries (%d) exceeded for readings" % max_tries
