@@ -260,7 +260,7 @@ class StdWXCalculate(weewx.engine.StdService):
             data['appTemp'] = weewx.wxformulas.apptempF(
                 data['outTemp'], data['outHumidity'], data['windSpeed'])
         else:
-            data['apptemp'] = None
+            data['appTemp'] = None
 
     def calc_beaufort(self, data, data_type):
         if 'windSpeed' in data:
