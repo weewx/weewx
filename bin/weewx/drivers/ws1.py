@@ -291,7 +291,7 @@ class StationInet(object):
         self.net_socket.close()
 
     def get_readings(self):
-        if not self.rec_start:
+        if self.rec_start is not True:
             # Find the record start
             buf = ''
             while True:
@@ -319,6 +319,9 @@ class StationInet(object):
             except (weewx.WeeWxIOError), e:
                 loginf("Failed to get data for some reason: %s" % e)
                 self.rec_start = False
+                loginf(
+                    "buf: %s (%d bytes), rec_start: %r" %
+                    (buf, len(buf), self.rec_start))
                 time.sleep(retry_wait)
         else:
             msg = "Max retries (%d) exceeded for readings" % max_tries
