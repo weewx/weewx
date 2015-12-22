@@ -1330,7 +1330,7 @@ class StdAWEKAS(StdRESTful):
     Pos4: time (hh:mm) (varchar)
     Pos5: temperature (C) (float)
     Pos6: humidity (%) (int)
-    Pos7: air pressure (hPa) (float)
+    Pos7: air pressure (hPa) (float) [12/22/15. This should be SLP. -tk personal communications]
     Pos8: precipitation (rain at this day) (float)
     Pos9: wind speed (km/h) float)
     Pos10: wind direction (degree) (int)
