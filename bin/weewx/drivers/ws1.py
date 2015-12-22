@@ -38,7 +38,7 @@ DEFAULT_SER_PORT = '/dev/ttyS0'
 DEFAULT_TCP_ADDR = '192.168.36.25'
 DEFAULT_TCP_PORT = 3000
 PACKET_SIZE = 50
-DEBUG_READ = 0
+DEBUG_READ = True
 
 
 def logmsg(level, msg):
@@ -294,19 +294,25 @@ class StationInet(object):
         if self.rec_start is not True:
             # Find the record start
             buf = ''
+            if DEBUG_READ: loginf("Attempting to find record start..")
             while True:
-                buf += self.net_socket.recv(8)
+                buf += self.net_socket.recv(8, socket.MSG_WAITALL)
+                if DEBUG_READ: loginf("(searching...) buf: %s" % buf)
                 if '!!' in buf:
                     self.rec_start = True
+                    if DEBUG_READ: loginf("Record start found!")
                     # Cut to the record start
                     buf = buf[buf.find('!!'):]
+                    if DEBUG_READ: loginf("(found!) buf: %s" % buf)
                     break
             # Add the rest of the record
-            buf += self.net_socket.recv(PACKET_SIZE - len(buf))
+            buf += self.net_socket.recv(
+                PACKET_SIZE - len(buf), socket.MSG_WAITALL)
         else:
-            buf = self.net_socket.recv(PACKET_SIZE)
-        # loginf("buf: %s" % buf)
-        self.net_socket.recv(4)  # CRLF and some other two bytes
+            buf = self.net_socket.recv(
+                PACKET_SIZE, socket.MSG_WAITALL)
+        # if DEBUG_READ: loginf("buf: %s" % buf)
+        self.net_socket.recv(4, socket.MSG_WAITALL)  # CRLF and some other two bytes
         buf.strip()
         return buf
 
