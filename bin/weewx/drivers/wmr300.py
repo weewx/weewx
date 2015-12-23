@@ -701,7 +701,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.8'
+DRIVER_VERSION = '0.9'
 
 DEBUG_COMM = 0
 DEBUG_LOOP = 0
@@ -835,8 +835,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     sent = self.station.write(cmd)
                     self.last_7x = time.time()
             except usb.USBError, e:
-                if not e.args[0].find('No data available'):
-                    raise weewx.WeeWxIOError(e)
+                raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
             time.sleep(0.001)
@@ -900,8 +899,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     sent = self.station.write(cmd)
                     self.last_65 = time.time()
             except usb.USBError, e:
-                if not e.args[0].find('No data available'):
-                    raise weewx.WeeWxIOError(e)
+                raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
             time.sleep(0.001)        
@@ -1043,8 +1041,9 @@ class Station(object):
             if DEBUG_COUNTS and count:
                 self.update_count(buf, self.recv_counts)
         except usb.USBError, e:
-            if not e.args[0].find('No data available'):
-                raise
+            if e.args[0] and e.args[0].find('No data available'):
+                pass
+            raise
         return buf
 
     def write(self, buf):
