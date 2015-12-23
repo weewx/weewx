@@ -293,8 +293,8 @@ class StationInet(object):
     def get_readings(self):
         if self.rec_start is not True:
             # Find the record start
-            buf = ''
             if DEBUG_READ: loginf("Attempting to find record start..")
+            buf = ''
             while True:
                 buf += self.net_socket.recv(8, socket.MSG_WAITALL)
                 if DEBUG_READ: loginf("(searching...) buf: %s" % buf)
@@ -309,10 +309,29 @@ class StationInet(object):
             buf += self.net_socket.recv(
                 PACKET_SIZE - len(buf), socket.MSG_WAITALL)
         else:
-            buf = self.net_socket.recv(
-                PACKET_SIZE, socket.MSG_WAITALL)
-        # if DEBUG_READ: loginf("buf: %s" % buf)
-        self.net_socket.recv(4, socket.MSG_WAITALL)  # CRLF and some other two bytes
+            # Keep receiving data until we find an exclamation point or two
+            buf = self.net_socket.recv(2, socket.MSG_WAITALL)  # Possibly CRLF
+            while True:
+                if buf == '\r\n':
+                    # CRLF is expected
+                    if DEBUG_READ: loginf("buf is CRLF")
+                    buf = ''
+                    break
+                elif '!' in buf:
+                    excmks = buf.count('!')
+                    # Assuming exclamation points are at the end of the buffer
+                    buf = buf[len(buf) - excmks:]
+                    if DEBUG_READ: loginf("buf has %d exclamation points." % (
+                        excmks))
+                    break
+                else:
+                    buf = self.net_socket.recv(2, socket.MSG_WAITALL)
+                    if DEBUG_READ: loginf("buf: %s" % ' '.join(
+                        ['%02X' % ord(bc) for bc in buf]))
+            buf += self.net_socket.recv(
+                PACKET_SIZE - len(buf), socket.MSG_WAITALL)
+        if DEBUG_READ: loginf("buf: %s" % buf)
+        self.net_socket.recv(2, socket.MSG_WAITALL)  # Some other two bytes
         buf.strip()
         return buf
 
