@@ -126,7 +126,7 @@ class RsyncUpload(object):
             # and display a message
             stroutput = stroutput.replace("\n", ". ")
             stroutput = stroutput.replace("\r", "")
-            syslog.syslog(syslog.LOG_INFO, "rsyncupload: rsync reported errors: %s" % stroutput)
+            syslog.syslog(syslog.LOG_INFO, "rsyncupload: [%s] reported errors: %s" % (cmd, stroutput))
             rsync_message = "rsync executed in %0.2f seconds"
         
         t2= time.time()
