@@ -362,6 +362,37 @@ class WeeutilTest(unittest.TestCase):
         for got, expect in zip(daylist, expected):
             self.assertEqual(str(got), expect)
 
+    def test_genHourSpans(self):
+
+        os.environ['TZ'] = 'America/Los_Angeles'
+
+        # Should generate throught 2007-12-23 20:00:00 throught 2007-12-24 4:00:00
+        start_ts = time.mktime((2007, 12, 23, 20, 15, 0, 0, 0, -1))
+        stop_ts  = time.mktime((2007, 12, 24, 03, 45, 0, 0, 0, -1))
+
+        hourlist = [span for span in genHourSpans(start_ts, stop_ts)]
+
+        expected = ["[2007-12-23 20:00:00 PST (1198468800) -> 2007-12-23 21:00:00 PST (1198472400)]",
+                    "[2007-12-23 21:00:00 PST (1198472400) -> 2007-12-23 22:00:00 PST (1198476000)]",
+                    "[2007-12-23 22:00:00 PST (1198476000) -> 2007-12-23 23:00:00 PST (1198479600)]",
+                    "[2007-12-23 23:00:00 PST (1198479600) -> 2007-12-24 00:00:00 PST (1198483200)]",
+                    "[2007-12-24 00:00:00 PST (1198483200) -> 2007-12-24 01:00:00 PST (1198486800)]",
+                    "[2007-12-24 01:00:00 PST (1198486800) -> 2007-12-24 02:00:00 PST (1198490400)]",
+                    "[2007-12-24 02:00:00 PST (1198490400) -> 2007-12-24 03:00:00 PST (1198494000)]",
+                    "[2007-12-24 03:00:00 PST (1198494000) -> 2007-12-24 04:00:00 PST (1198497600)]",]
+
+        for got, expect in zip(hourlist, expected):
+            self.assertEqual(str(got), expect)
+
+        # Should generate the single hour 2007-12-1 03:00:00
+        hourlist = [span for span in genHourSpans(time.mktime((2007,12,1,3,0,0,0,0,-1)),
+                                                  time.mktime((2007,12,1,4,0,0,0,0,-1)))]
+
+        expected = ["[2007-12-01 03:00:00 PST (1196506800) -> 2007-12-01 04:00:00 PST (1196510400)]"]
+
+        for got, expect in zip(hourlist,expected):
+            self.assertEqual(str(got), expect)
+
     def test_daySpan(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
