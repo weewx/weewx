@@ -1550,11 +1550,33 @@ or in foobar units: $day.barometer.min.foobar
 
     <h3>Iteration</h3>
 
-    <p>For dot codes using an aggregation <em>e.g.</em>,
-        <span class="code">$day</span>, <span class="code">$week</span>,
-        <span class="code">$month</span>, <span class="code">$year</span>,
-        <span class="code">$rainyear</span>, then
-        the aggregation period can be iterated over. </p>
+    <p>It is possible to iterate over the following time periods:</p>
+
+    <table class="indent" style="Width: 50%"
+           summary="Iteration periods">
+        <tbody>
+        <tr class="first_row">
+            <td>Tag suffix</td>
+            <td>Results</td>
+        </tr>
+        <tr>
+            <td class="code first_col">.hours</td>
+            <td>Iterate by hours</td>
+        </tr>
+        <tr>
+            <td class="code first_col">.days</td>
+            <td>Iterate by days</td>
+        </tr>
+        <tr>
+            <td class="code first_col">.months</td>
+            <td>Iterate by months</td>
+        </tr>
+        <tr>
+            <td class="code first_col">.years</td>
+            <td>Iterate by years</td>
+        </tr>
+        </tbody>
+    </table>
 
     <p>For example, the following template uses a Cheetah
         <span class="code">for</span> loop to iterate over all months in
