@@ -38,7 +38,7 @@ DEFAULT_SER_PORT = '/dev/ttyS0'
 DEFAULT_TCP_ADDR = '192.168.36.25'
 DEFAULT_TCP_PORT = 3000
 PACKET_SIZE = 50
-DEBUG_READ = True
+DEBUG_READ = False
 
 
 def logmsg(level, msg):
@@ -344,6 +344,7 @@ class StationInet(object):
             except (weewx.WeeWxIOError), e:
                 loginf("Failed to get data for some reason: %s" % e)
                 self.rec_start = False
+                DEBUG_READ = True
                 loginf(
                     "buf: %s (%d bytes), rec_start: %r" %
                     (buf, len(buf), self.rec_start))
