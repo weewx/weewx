@@ -441,7 +441,7 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
         print "Specify how long to wait for a response, in seconds."
         timeout = self._prompt('timeout', 3)
 
-        return {'mode': con_mode, 'port': port, 'timeout', timeout}
+        return {'mode': con_mode, 'port': port, 'timeout': timeout}
 
 
 # define a main entry point for basic testing of the station without weewx
