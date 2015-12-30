@@ -368,10 +368,15 @@ class StationInet(object):
             except (socket.error, socket.timeout), ex:
                 raise weewx.WeeWxIOError(ex)
         if DEBUG_READ: loginf("buf: %s" % buf)
-        try:
-            self.net_socket.recv(2, socket.MSG_WAITALL)  # CRLF
-        except (socket.error, socket.timeout), ex:
-            raise weewx.WeeWxIOError(ex)
+        # This code assumes CRLF will be transmitted at the end of each record,
+        # which may not always be the case. See Matthew Wall's comment on
+        # GitHub here:
+        # https://github.com/weewx/weewx/pull/86#issuecomment-166716509
+
+        # try:
+        #     self.net_socket.recv(2, socket.MSG_WAITALL)  # CRLF
+        # except (socket.error, socket.timeout), ex:
+        #     raise weewx.WeeWxIOError(ex)
         buf.strip()
         return buf
 
