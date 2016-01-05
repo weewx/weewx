@@ -174,10 +174,10 @@ class StationData(object):
         data = dict()
         data['windSpeed'] = StationData._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
         data['windDir'] = StationData._decode(buf[6:8], 1.411764)  # compass deg
-        data['outTemp'] = StationData._decode(buf[8:12], 0.1)  # degree_F
+        data['outTemp'] = StationData._decode(buf[8:12], 0.1, True)  # degree_F
         data['long_term_rain'] = StationData._decode(buf[12:16], 0.01)  # inch
         data['pressure'] = StationData._decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
-        data['inTemp'] = StationData._decode(buf[20:24], 0.1)  # degree_F
+        data['inTemp'] = StationData._decode(buf[20:24], 0.1, True)  # degree_F
         data['outHumidity'] = StationData._decode(buf[24:28], 0.1)  # percent
         data['inHumidity'] = StationData._decode(buf[28:32], 0.1)  # percent
         data['day_of_year'] = StationData._decode(buf[32:36])
