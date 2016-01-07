@@ -3,6 +3,9 @@ weewx change history
 
 X.X.X XX/XX/XX
 
+The tag $hour has now been added. It's now possible to iterate over hours.
+Thanks to user Julen!
+
 Complete overhaul of the te923 driver.  Thanks to user Andrew Miles.  The
 driver now supports the data logger and automatically detects small or large
 memory models.  Added ability to set/get the altitude, lat/lon, and other
