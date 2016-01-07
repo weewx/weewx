@@ -324,20 +324,24 @@ class StationInet(object):
         import socket
         if self.rec_start is not True:
             # Find the record start
-            if DEBUG_READ >= 1: loginf("Attempting to find record start..")
+            if DEBUG_READ >= 1:
+                logdbg("Attempting to find record start..")
             buf = ''
             while True:
                 try:
                     buf += self.net_socket.recv(8, socket.MSG_WAITALL)
                 except (socket.error, socket.timeout), ex:
                     raise weewx.WeeWxIOError(ex)
-                if DEBUG_READ >= 1: loginf("(searching...) buf: %s" % buf)
+                if DEBUG_READ >= 1:
+                    logdbg("(searching...) buf: %s" % buf)
                 if '!!' in buf:
                     self.rec_start = True
-                    if DEBUG_READ >= 1: loginf("Record start found!")
+                    if DEBUG_READ >= 1:
+                        logdbg("Record start found!")
                     # Cut to the record start
                     buf = buf[buf.find('!!'):]
-                    if DEBUG_READ >= 1: loginf("(found!) buf: %s" % buf)
+                    if DEBUG_READ >= 1:
+                        logdbg("(found!) buf: %s" % buf)
                     break
             # Add the rest of the record
             try:
@@ -354,29 +358,32 @@ class StationInet(object):
             while True:
                 if buf == '\r\n':
                     # CRLF is expected
-                    if DEBUG_READ >= 2: loginf("buf is CRLF")
+                    if DEBUG_READ >= 2:
+                        logdbg("buf is CRLF")
                     buf = ''
                     break
                 elif '!' in buf:
                     excmks = buf.count('!')
                     # Assuming exclamation points are at the end of the buffer
                     buf = buf[len(buf) - excmks:]
-                    if DEBUG_READ >= 2: loginf("buf has %d exclamation points." % (
-                        excmks))
+                    if DEBUG_READ >= 2:
+                        logdbg("buf has %d exclamation points." % (excmks))
                     break
                 else:
                     try:
                         buf = self.net_socket.recv(2, socket.MSG_WAITALL)
                     except (socket.error, socket.timeout), ex:
                         raise weewx.WeeWxIOError(ex)
-                    if DEBUG_READ >= 2: loginf("buf: %s" % ' '.join(
-                        ['%02X' % ord(bc) for bc in buf]))
+                    if DEBUG_READ >= 2:
+                            logdbg("buf: %s" % ' '.join(
+                                   ['%02X' % ord(bc) for bc in buf]))
             try:
                 buf += self.net_socket.recv(
                     PACKET_SIZE - len(buf), socket.MSG_WAITALL)
             except (socket.error, socket.timeout), ex:
                 raise weewx.WeeWxIOError(ex)
-        if DEBUG_READ >= 2: loginf("buf: %s" % buf)
+        if DEBUG_READ >= 2:
+            logdbg("buf: %s" % buf)
         # This code assumes CRLF will be transmitted at the end of each record,
         # which may not always be the case. See Matthew Wall's comment on
         # GitHub here:
@@ -405,7 +412,7 @@ class StationInet(object):
                 # errors and timeouts.
 
                 if DEBUG_READ >= 1:
-                    loginf("buf: %s (%d bytes), rec_start: %r" %
+                    logdbg("buf: %s (%d bytes), rec_start: %r" %
                            (buf, len(buf), self.rec_start))
 
                 time.sleep(retry_wait)
