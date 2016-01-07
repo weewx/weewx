@@ -5,6 +5,8 @@
 
 """Driver for ADS WS1 weather stations.
 
+Thanks to Kevin and Paul Caccamo for adding the serial-to-tcp capability.
+
 Thanks to Steve (sesykes71) for the testing that made this driver possible.
 
 Thanks to Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
@@ -398,7 +400,7 @@ class StationInet(object):
 
     def get_readings_with_retry(self, max_tries=5, retry_wait=10):
         for ntries in range(0, max_tries):
-            buf = None
+            buf = ''
             try:
                 buf = self.get_readings()
                 StationData.validate_string(buf)
