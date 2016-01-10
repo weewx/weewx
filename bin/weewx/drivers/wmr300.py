@@ -14,26 +14,6 @@
 # No thanks to oregon scientific - repeated requests for hardware and/or
 # specifications resulted in no response at all.
 
-# FIXME: we still do not have command of the usb:
-#
-# 1) there are times when the driver fails, but restarting weewx makes
-# everything work.  this seems to be an issue with getting the wmr300 into the
-# proper state for communication. however, doing a usb reset is not a reliable
-# way to make that happen.
-#
-# 2) there are cases where we get usb timeouts.  if these happen while reading
-# data then the standard weewx failure recovery will handle it.
-#
-# 3) more disturbing is when the driver tries to read historical data and gets
-# stuck reading.  it tries to write the request for more records, but more
-# records never show up, so it continually waits for more records.  restarting
-# weewx 'fixes' it, but not always.
-
-# FIXME: what the is 'could not detach kernel driver from interface 0: No
-# data available' and does it even matter?  is there something running in the
-# operating system that continually makes the kernel try to re-aquire the
-# device?
-
 # TODO: battery level for each sensor
 # TODO: signal strength for each sensor
 # TODO: altitude
@@ -721,7 +701,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.9rc2'
+DRIVER_VERSION = '0.9'
 
 DEBUG_COMM = 0
 DEBUG_LOOP = 0
@@ -838,7 +818,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                         self.cached.update(packet)
                         yield self.cached
                 if time.time() - self.last_a6 > self.heartbeat:
-                    logdbg("request station status: last_index=%s (%02x)" %
+                    logdbg("request station status: %s (%02x)" %
                            (self.last_record, _lo(self.last_record)))
                     cmd = [0xa6, 0x91, 0xca, 0x45, 0x52, _lo(self.last_record)]
                     sent = self.station.write(cmd)
@@ -854,6 +834,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
 #                    cmd = [0x73, 0xe5, 0x0a, 0x26, 0x0e, 0xc1]
                     sent = self.station.write(cmd)
                     self.last_7x = time.time()
+            except usb.USBError, e:
+                if not e.args[0].find('No data available'):
+                    raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
             time.sleep(0.001)
@@ -900,7 +883,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     cmd = [0xcd, 0x18, 0x30, 0x62, _hi(nxtrec), _lo(nxtrec)]
                     sent = self.station.write(cmd)
                 if time.time() - self.last_a6 > self.heartbeat:
-                    logdbg("request station status: last_index=%s (%02x)" %
+                    logdbg("request station status: %s (%02x)" %
                            (self.last_record, _lo(self.last_record)))
                     cmd = [0xa6, 0x91, 0xca, 0x45, 0x52, _lo(self.last_record)]
                     sent = self.station.write(cmd)
@@ -911,11 +894,14 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     sent = self.station.write(cmd)
                     self.last_7x = time.time()
                 if time.time() - self.last_65 > self.history_retry:
-                    logdbg("initiate record request: last_index=%s (%02x)" %
+                    logdbg("initiate record request: %s (%02x)" %
                            (self.last_record, _lo(self.last_record)))
                     cmd = [0x65, 0x19, 0xe5, 0x04, 0x52, _lo(self.last_record)]
                     sent = self.station.write(cmd)
                     self.last_65 = time.time()
+            except usb.USBError, e:
+                if not e.args[0].find('No data available'):
+                    raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
             time.sleep(0.001)        
@@ -1020,17 +1006,13 @@ class Station(object):
         if not self.handle:
             raise WMR300Error('Open USB device failed')
 
-        # FIXME: if this reset fails, then weewx fails to start up.  the reset
-        # is not always necessary, so leave it out for now.
-#        self.handle.reset()
+        self.handle.reset()
 
         # for HID devices on linux, be sure kernel does not claim the interface
         try:
             self.handle.detachKernelDriver(self.interface)
-        except (AttributeError, usb.USBError), e:
-            # doing the detach seems to always result in a usb error, but its
-            # the (pointless?) 'No data available' error so ignore it.
-            loginf('detach failed: %s' % e)
+        except (AttributeError, usb.USBError):
+            pass
 
         # attempt to claim the interface
         try:
@@ -1061,27 +1043,19 @@ class Station(object):
             if DEBUG_COUNTS and count:
                 self.update_count(buf, self.recv_counts)
         except usb.USBError, e:
-            estr = str(e)
-            if estr.find('could not detach kernel driver') < 0:
-                raise WMR300Error("read failed: %s" % e)
+            if not e.args[0].find('No data available'):
+                raise
         return buf
 
     def write(self, buf):
-        sent = None
-        try:
-            if DEBUG_COMM:
-                logdbg("write: %s" % _fmt_bytes(buf))
-            # pad with zeros up to the standard message length
-            while len(buf) < self.MESSAGE_LENGTH:
-                buf.append(0x00)
-            sent = self.handle.interruptWrite(
-                Station.EP_OUT, buf, self.timeout)
-            if DEBUG_COUNTS:
-                self.update_count(buf, self.send_counts)
-        except usb.USBError, e:
-            estr = str(e)
-            if estr.find('could not detach kernel driver') < 0:
-                raise WMR300Error("write failed: %s" % e)
+        if DEBUG_COMM:
+            logdbg("write: %s" % _fmt_bytes(buf))
+        # pad with zeros up to the standard message length
+        while len(buf) < self.MESSAGE_LENGTH:
+            buf.append(0x00)
+        sent = self.handle.interruptWrite(Station.EP_OUT, buf, self.timeout)
+        if DEBUG_COUNTS:
+            self.update_count(buf, self.send_counts)
         return sent
 
     # keep track of the message types for debugging purposes
