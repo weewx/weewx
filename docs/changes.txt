@@ -18,6 +18,12 @@ The wee_debug utility is now properly installed, not just distributed.
 Fixed bug in almanac code that caused an incorrect sunrise or sunset to be
 calculated if it followed a calculation with an explicit horizon value.
 
+In the acurite driver, default to use_constants=True.
+
+Fixed bug in the rhel and suse rpm packaging that resulted in a configuration
+file with html, database, and web pages in the setup.py locations instead of
+the rpm locations.
+
 
 3.3.1 12/06/2015
 
