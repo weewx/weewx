@@ -441,6 +441,12 @@ class Formatter(object):
     20.0°C
     >>> print f.toString((83.2, "degree_F", "group_temperature"))
     83.2°F
+    >>> # Try the Spanish locale, which will use comma decimal separators
+    >>> x = locale.setlocale(locale.LC_NUMERIC, 'es_ES.utf-8')
+    >>> print f.toString((83.2, "degree_F", "group_temperature"), localize=False)
+    83.2°F
+    >>> # Set locale back to default
+    >>> x = locale.setlocale(locale.LC_NUMERIC, '')
     >>> print f.toString((123456789,  "unix_epoch", "group_time"))
     29-Nov-1973 13:33
     >>> print f.to_ordinal_compass((5.0, "degree_compass", "group_direction"))
@@ -554,7 +560,9 @@ class Formatter(object):
             # Return the singular, or plural, version as requested.
             return label[plural]
 
-    def toString(self, val_t, context='current', addLabel=True, useThisFormat=None, NONE_string=None):
+    def toString(self, val_t, context='current', addLabel=True, 
+                 useThisFormat=None, NONE_string=None, 
+                 localize=True):
         """Format the value as a string.
         
         val_t: The value to be formatted as a value tuple. 
@@ -572,6 +580,8 @@ class Formatter(object):
         NONE_string: A string to be used if the value val is None.
         [Optional. If not given, the string given unit_format_dict['NONE']
         will be used.]
+        
+        localize: True to localize the results. False otherwise
         """
         if val_t is None or val_t[0] is None:
             if NONE_string is not None: 
@@ -604,8 +614,12 @@ class Formatter(object):
             else:
                 # User has specified a string. Use it.
                 format_string = useThisFormat
-            # Now use the format string to format the value:
-            val_str = locale.format_string(format_string, val_t[0])
+            if localize:
+                # Localization requested. Use locale with the supplied format:
+                val_str = locale.format_string(format_string, val_t[0])
+            else:
+                # No localization. Just format the string.
+                val_str = format_string % val_t[0]
 
         # Add a label, if requested:
         if addLabel:
@@ -841,7 +855,7 @@ class ValueHelper(object):
         self.formatter = formatter
         self.converter = converter
             
-    def toString(self, addLabel=True, useThisFormat=None, NONE_string=None):
+    def toString(self, addLabel=True, useThisFormat=None, NONE_string=None, localize=True):
         """Convert my internally held ValueTuple to a string, using the supplied
         converter and formatter."""
         # If the type is unknown, then just return an error string: 
@@ -850,7 +864,9 @@ class ValueHelper(object):
         # Get the value tuple in the target units:
         vtx = self._raw_value_tuple
         # Then do the format conversion:
-        s = self.formatter.toString(vtx, self.context, addLabel=addLabel, useThisFormat=useThisFormat, NONE_string=NONE_string)
+        s = self.formatter.toString(vtx, self.context, addLabel=addLabel, 
+                                    useThisFormat=useThisFormat, NONE_string=NONE_string, 
+                                    localize=True)
         return s
         
     def __str__(self):

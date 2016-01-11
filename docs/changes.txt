@@ -18,6 +18,11 @@ The wee_debug utility is now properly installed, not just distributed.
 Fixed bug in almanac code that caused an incorrect sunrise or sunset to be
 calculated if it followed a calculation with an explicit horizon value.
 
+Localization of tags is now optional. Use function toString() with
+argument localize set to False. Example: 
+$current.outTemp.toString($localize=False)
+Fixes issue #88.
+
 In the acurite driver, default to use_constants=True.
 
 Fixed bug in the rhel and suse rpm packaging that resulted in a configuration
