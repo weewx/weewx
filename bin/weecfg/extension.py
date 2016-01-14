@@ -97,10 +97,16 @@ class ExtensionEngine(object):
         """Install the extension from the file or directory extension_path"""
         self.logger.log("Request to install '%s'" % extension_path)
         if os.path.isfile(extension_path):
-            # It's a file, hopefully a tarball. Extract it, then install
+            # it is a file.  if it ends with .zip, assume it is a zip archive.
+            # otherwise assume it is a tarball.
             extension_dir = None
+            member_names = []
             try:
-                member_names = weecfg.extract_tarball(extension_path,
+                if extension_path[-4:] == '.zip':
+                    member_names = weecfg.extract_zip(extension_path,
+                                                      self.tmpdir, self.logger)
+                else:
+                    member_names = weecfg.extract_tar(extension_path,
                                                       self.tmpdir, self.logger)
                 extension_reldir = os.path.commonprefix(member_names)
                 if extension_reldir == '':

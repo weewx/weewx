@@ -360,7 +360,14 @@ class ConfigTest(unittest.TestCase):
 
 class ExtensionUtilityTest(unittest.TestCase):
     """Tests of utility functions used by the extension installer."""
-    
+
+    INSTALLED_NAMES = ['/var/tmp/pmon/bin/user/pmon.py', 
+                       '/var/tmp/pmon/changelog', 
+                       '/var/tmp/pmon/install.py', 
+                       '/var/tmp/pmon/readme.txt', 
+                       '/var/tmp/pmon/skins/pmon/index.html.tmpl', 
+                       '/var/tmp/pmon/skins/pmon/skin.conf']
+
     def setUp(self):
         shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
 
@@ -368,7 +375,8 @@ class ExtensionUtilityTest(unittest.TestCase):
         shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
 
     def test_tar_extract(self):
-        member_names = weecfg.extract_tarball('./pmon.tgz', '/var/tmp')
+        shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
+        member_names = weecfg.extract_tar('./pmon.tar', '/var/tmp')
         self.assertEqual(member_names, ['pmon', 
                                         'pmon/readme.txt', 
                                         'pmon/skins', 
@@ -384,13 +392,48 @@ class ExtensionUtilityTest(unittest.TestCase):
         for direc in os.walk('/var/tmp/pmon'):
             for filename in direc[2]:
                 actual_files.append(os.path.join(direc[0], filename))
-        self.assertEqual(sorted(actual_files),
-                         ['/var/tmp/pmon/bin/user/pmon.py', 
-                          '/var/tmp/pmon/changelog', 
-                          '/var/tmp/pmon/install.py', 
-                          '/var/tmp/pmon/readme.txt', 
-                          '/var/tmp/pmon/skins/pmon/index.html.tmpl', 
-                          '/var/tmp/pmon/skins/pmon/skin.conf'])
+        self.assertEqual(sorted(actual_files), self.INSTALLED_NAMES)
+
+    def test_tgz_extract(self):
+        shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
+        member_names = weecfg.extract_tar('./pmon.tgz', '/var/tmp')
+        self.assertEqual(member_names, ['pmon',
+                                        'pmon/bin', 
+                                        'pmon/bin/user', 
+                                        'pmon/bin/user/pmon.py',
+                                        'pmon/changelog',
+                                        'pmon/install.py',
+                                        'pmon/readme.txt',
+                                        'pmon/skins',
+                                        'pmon/skins/pmon',
+                                        'pmon/skins/pmon/index.html.tmpl',
+                                        'pmon/skins/pmon/skin.conf'])
+        actual_files = []
+        for direc in os.walk('/var/tmp/pmon'):
+            for filename in direc[2]:
+                actual_files.append(os.path.join(direc[0], filename))
+        self.assertEqual(sorted(actual_files), self.INSTALLED_NAMES)
+
+    def test_zip_extract(self):
+        shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
+        member_names = weecfg.extract_zip('./pmon.zip', '/var/tmp')
+        self.assertEqual(member_names, ['pmon/', 
+                                        'pmon/bin/', 
+                                        'pmon/bin/user/', 
+                                        'pmon/bin/user/pmon.py',
+                                        'pmon/changelog', 
+                                        'pmon/install.py', 
+                                        'pmon/readme.txt', 
+                                        'pmon/skins/', 
+                                        'pmon/skins/pmon/', 
+                                        'pmon/skins/pmon/index.html.tmpl', 
+                                        'pmon/skins/pmon/skin.conf'])
+        actual_files = []
+        for direc in os.walk('/var/tmp/pmon'):
+            for filename in direc[2]:
+                actual_files.append(os.path.join(direc[0], filename))
+        self.assertEqual(sorted(actual_files), self.INSTALLED_NAMES)
+
         
 class ExtensionInstallTest(unittest.TestCase):
     """Tests of the extension installer."""

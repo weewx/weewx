@@ -1148,22 +1148,42 @@ def extract_roots(config_path, config_dict, bin_root):
     
     return root_dict
 
-def extract_tarball(filename, target_dir, logger=None):
-    """Extract a tarball into a given directory
+def extract_tar(filename, target_dir, logger=None):
+    """Extract files from a tar archive into a given directory
     
-    Returns: A list containing the member files
+    Returns: A list of the extracted files
     """
     logger = logger or Logger()
     import tarfile
-    logger.log("Extracting from tarball %s" % filename, level=1)
-    tar_archive = tarfile.open(filename, mode='r')
+    logger.log("Extracting from tar archive %s" % filename, level=1)
+    tar_archive = None
     try:
+        tar_archive = tarfile.open(filename, mode='r')
         tar_archive.extractall(target_dir)
         member_names = [x.name for x in tar_archive.getmembers()]
         return member_names
     finally:
-        tar_archive.close()
-        
+        if tar_archive is not None:
+            tar_archive.close()
+
+def extract_zip(filename, target_dir, logger=None):
+    """Extract files from a zip archive into the specified directory.
+
+    Returns: a list of the extracted files
+    """
+    logger = logger or Logger()
+    import zipfile
+    logger.log("Extracting from zip archive %s" % filename, level=1)
+    zip_archive = None
+    try:
+        zip_archive = zipfile.ZipFile(open(filename, mode='r'))
+        zip_archive.extractall(target_dir)
+        member_names = zip_archive.namelist()
+        return member_names
+    finally:
+        if zip_archive is not None:
+            zip_archive.close()
+
 def get_extension_installer(extension_installer_dir):
     """Get the installer in the given extension installer subdirectory"""
     old_path = sys.path
