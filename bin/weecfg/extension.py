@@ -110,7 +110,7 @@ class ExtensionEngine(object):
                                                       self.tmpdir, self.logger)
                 extension_reldir = os.path.commonprefix(member_names)
                 if extension_reldir == '':
-                    raise InstallError("No common path in tarfile '%s'. Unable to install." % extension_path)
+                    raise InstallError("Unable to install from '%s': no common path (the extension has the wrong structure)" % extension_path)
                 extension_dir = os.path.join(self.tmpdir, extension_reldir)
                 self.install_from_dir(extension_dir)
             finally:
