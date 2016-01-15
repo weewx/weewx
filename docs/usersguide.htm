@@ -1595,6 +1595,21 @@ longitude = -77.0366</pre>
     <p>Set to the station model. For example, "AcuRite 01035", "AcuRite 01036",
         or "02032C"</p>
 
+    <p class="config_option">use_constants</p>
+
+    <p>Some stations (01035, 01036) use the HP038 sensor, which contains
+      constants that define how the pressure and temperature should be
+      interpreted.  Other stations (02032, 02064) use the MS5607 sensor,
+      which requires a different calculation to determine the pressure
+      and temperature from the sensor.  When
+      <span class='code'>use_constants</span> is
+      <span class='code'>True</span>, the driver will use the constants to
+      determine which type of sensor is in the station and will adjust the
+      calculation accordingly.  A value of False causes the driver to use
+      a linear approximation, regardless of the type of sensors.
+      The default is True.
+    </p>
+
     <h3 class="config_section">[CC3000]</h3>
 
     <p>This section is for options relating to the RainWise Mark III weather
