@@ -68,7 +68,7 @@ import weewx.reportengine
 import weewx.station
 import weewx.units
 import weewx.tags
-from weeutil.weeutil import to_int, timestamp_to_string
+from weeutil.weeutil import to_bool, to_int, timestamp_to_string
 
 # Default search list:
 default_search_list = [
@@ -133,6 +133,10 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         # The default summary time span is 'None'.
         gen_dict[option_section_name]['summarize_by'] = 'None'
 
+        # determine how much logging is desired
+        self.log_success = to_bool(gen_dict[option_section_name].get('log_success', True))
+
+        # configure the search list extensions
         self.initExtensions(gen_dict[option_section_name])
 
         # Generate any templates in the given dictionary:
@@ -141,8 +145,9 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         self.teardown()
 
         elapsed_time = time.time() - t1
-        loginf("Generated %d files for report %s in %.2f seconds" %
-               (ngen, self.skin_dict['REPORT_NAME'], elapsed_time))
+        if self.log_success:
+            loginf("Generated %d files for report %s in %.2f seconds" %
+                   (ngen, self.skin_dict['REPORT_NAME'], elapsed_time))
 
     def setup(self):
         self.outputted_dict = {'SummaryByMonth' : [], 'SummaryByYear'  : [] }

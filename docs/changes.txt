@@ -35,6 +35,8 @@ tar and compressed tar archives.
 Check for a sane system time when starting up.  If time is not reasonable,
 wait for it.  Log the time status while waiting.
 
+Added log_success option to cheetah, copy, image, rsync, and ftp generators.
+
 
 3.3.1 12/06/2015
 

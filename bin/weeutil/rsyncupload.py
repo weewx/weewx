@@ -22,7 +22,7 @@ class RsyncUpload(object):
 
     def __init__(self, local_root, remote_root,
                  server, user=None, delete=False, port=None,
-                 ssh_options=None, compress=False):
+                 ssh_options=None, compress=False, log_success=True):
         """Initialize an instance of RsyncUpload.
         
         After initializing, call method run() to perform the upload.
@@ -126,11 +126,12 @@ class RsyncUpload(object):
             # and display a message
             stroutput = stroutput.replace("\n", ". ")
             stroutput = stroutput.replace("\r", "")
-            syslog.syslog(syslog.LOG_INFO, "rsyncupload: [%s] reported errors: %s" % (cmd, stroutput))
+            syslog.syslog(syslog.LOG_ERR, "rsyncupload: [%s] reported errors: %s" % (cmd, stroutput))
             rsync_message = "rsync executed in %0.2f seconds"
         
         t2= time.time()
-        syslog.syslog(syslog.LOG_INFO, "rsyncupload: "  + rsync_message % (t2-t1))
+        if log_success:
+            syslog.syslog(syslog.LOG_INFO, "rsyncupload: "  + rsync_message % (t2-t1))
         
         
 if __name__ == '__main__':
