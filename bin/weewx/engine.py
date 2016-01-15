@@ -821,6 +821,19 @@ def main(options, args, EngineClass=StdEngine) :
         syslog.syslog(syslog.LOG_INFO, "engine: pid file is %s" % options.pidfile)
         daemon.daemonize(pidfile=options.pidfile)
 
+    # be sure that the system has a reasonable time (at least 1 jan 2000).
+    # log any problems every minute.
+    ts = time.time()
+    n = 0
+    while ts < 946684800:
+        if n % 120 == 0:
+            syslog.syslog(syslog.LOG_INFO,
+                          "engine: waiting for sane time.  current time is %s"
+                          % weeutil.weeutil.timestamp_to_string(ts))
+        n += 1
+        time.sleep(0.5)
+        ts = time.time()
+
     while True:
 
         os.chdir(cwd)

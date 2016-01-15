@@ -32,6 +32,9 @@ the rpm locations.
 The extension utility wee_extension now recognizes zip archives as well as
 tar and compressed tar archives.
 
+Check for a sane system time when starting up.  If time is not reasonable,
+wait for it.  Log the time status while waiting.
+
 
 3.3.1 12/06/2015
 
