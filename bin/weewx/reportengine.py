@@ -104,6 +104,9 @@ class StdReportEngine(threading.Thread):
             # Add the default database binding:
             skin_dict.setdefault('data_binding', 'wx_binding')
 
+            # If not already specified, default to logging each successful run
+            skin_dict.setdefault('log_success', True)
+
             # Inject any overrides the user may have specified in the
             # weewx.conf configuration file for all reports:
             for scalar in self.config_dict['StdReport'].scalars:
