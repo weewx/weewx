@@ -338,7 +338,7 @@ class ConfigTest(unittest.TestCase):
         out_str = StringIO.StringIO()
         config_dict.write(out_str)
         
-        fd = open('/home/tkeffer/tmp/merged.conf', 'w')
+        fd = open('/var/tmp/weewx_test/merged.conf', 'w')
         config_dict.write(fd)
         fd.close()
 

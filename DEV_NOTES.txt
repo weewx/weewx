@@ -67,7 +67,7 @@ git tag -a vX.Y.Z -m "tag release X.Y.Z"
 git clone https://github.com/weewx/website.git
 make upload-docs
 
-# at sourceforge, move the new files into position
+# move the new files into position
 mv development_versions/weewx-x.y.z* .
 mv development_versions/README.txt .
 
@@ -76,7 +76,7 @@ mv development_versions/README.txt .
 
 notes -------------------------------------------------------------------------
 
-create README.txt for sourceforge:
+create README.txt:
   make readme
 
 how to update the version number:
@@ -124,10 +124,14 @@ there are multiple changelogs:
   docs/changes.txt - definitive changelog for the application
   pkg/debian/changelog - changes to the debian packaging
   pkg/changelog.rpm - changes to the redhat packaging
-  README.txt - copy of changes.txt uploaded to sourceforge files directory
+  README.txt - copy of changes.txt uploaded to download area
 
 when signing, gpg info must match the name and email in the latest package
 changelog entry.
+
+unit tests should put transient files in /var/tmp/weewx_test
+
+unit tests require python 2.7 and a recent version of mock.
 
 the debian changelog *must* have a version number that matches the app version.
 the redhat package will build if the version numbers do not match.  use the
@@ -234,3 +238,14 @@ all platforms:
 
 - list drivers
   wee_config --list-drivers
+
+to run all unit tests:
+
+make test
+
+this requires that mysql server is running with permissions granted to a weewx
+user to create and modify databases:
+
+mysql -u root -p
+mysql> create user 'weewx'@'localhost' identified by 'weewx';
+mysql> grant all on *.* to 'weewx'@'localhost';
