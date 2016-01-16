@@ -72,9 +72,7 @@ mv development_versions/weewx-x.y.z* .
 mv development_versions/README.txt .
 
 
-
-
-notes -------------------------------------------------------------------------
+howto -------------------------------------------------------------------------
 
 create README.txt:
   make readme
@@ -117,46 +115,6 @@ to generate gpg key used for signing packages:
 to export the text version of a public key:
   gpg --export -a "Matthew Wall" > mwall.gpg.key
 
-
-notes:
-
-there are multiple changelogs:
-  docs/changes.txt - definitive changelog for the application
-  pkg/debian/changelog - changes to the debian packaging
-  pkg/changelog.rpm - changes to the redhat packaging
-  README.txt - copy of changes.txt uploaded to download area
-
-when signing, gpg info must match the name and email in the latest package
-changelog entry.
-
-unit tests should put transient files in /var/tmp/weewx_test
-
-unit tests require python 2.7 and a recent version of mock.
-
-the debian changelog *must* have a version number that matches the app version.
-the redhat package will build if the version numbers do not match.  use the
-rpm-changelog and deb-changelog targets to ensure that changelog versions match
-the application version for a release.
-
-there are many ways to build a debian package.  first tried dpkg (uses DEBIAN
-dir and is fairly low-level) but that does not create changes and source diffs.
-then dried dpkg-buildpackage (uses debian dir and is higher level) but misses
-the config and templates.  ended up using dpkg-buildpackage with some manual
-(scripted) file manipulation.
-
-what to test when creating debian and redhat packages:
-  install, upgrade, remove, purge
-  install, modify files, remove
-  install, modify files, upgrade
-
-to do debian builds you must first install:
-  python-imaging
-  python-configobj
-  debhelper
-
-
-how to install/remove using various approaches:
-
 source install:
   setup.py install
   setup.py install home=/opt/weewx-x.y.z
@@ -174,7 +132,62 @@ redhat install/remove:
   rpm -e weewx                                    # remove with rpm
 
 
-testing:
+notes -------------------------------------------------------------------------
+
+there are multiple changelogs:
+  docs/changes.txt - definitive changelog for the application
+  pkg/debian/changelog - changes to the debian packaging
+  pkg/changelog.rpm - changes to the redhat packaging
+  README.txt - copy of changes.txt uploaded to download area
+
+when signing, gpg info must match the name and email in the latest package
+changelog entry.
+
+the debian changelog *must* have a version number that matches the app version.
+the redhat package will build if the version numbers do not match.  use the
+rpm-changelog and deb-changelog targets to ensure that changelog versions match
+the application version for a release.
+
+there are many ways to build a debian package.  first tried dpkg (uses DEBIAN
+dir and is fairly low-level) but that does not create changes and source diffs.
+then dried dpkg-buildpackage (uses debian dir and is higher level) but misses
+the config and templates.  ended up using dpkg-buildpackage with some manual
+(scripted) file manipulation.
+
+to do debian builds you must first install:
+  python-imaging
+  python-configobj
+  debhelper
+
+
+unit tests --------------------------------------------------------------------
+
+prerequisites:
+
+python 2.7 and a recent version of mock
+
+mysql server is running with permissions granted to a weewx user to create and
+modify databases:
+
+mysql -u root -p
+mysql> create user 'weewx'@'localhost' identified by 'weewx';
+mysql> grant all on *.* to 'weewx'@'localhost';
+
+to run all unit tests:
+
+make test
+
+guidelines:
+
+unit tests should put transient files in /var/tmp/weewx_test
+
+
+testing -----------------------------------------------------------------------
+
+what to test when creating debian and redhat packages:
+  install, upgrade, remove, purge
+  install, modify files, remove
+  install, modify files, upgrade
 
 any linux:
 - new install using setup.py to /home/weewx
@@ -238,14 +251,3 @@ all platforms:
 
 - list drivers
   wee_config --list-drivers
-
-to run all unit tests:
-
-make test
-
-this requires that mysql server is running with permissions granted to a weewx
-user to create and modify databases:
-
-mysql -u root -p
-mysql> create user 'weewx'@'localhost' identified by 'weewx';
-mysql> grant all on *.* to 'weewx'@'localhost';
