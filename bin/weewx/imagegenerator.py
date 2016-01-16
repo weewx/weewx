@@ -36,7 +36,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
         # determine how much logging is desired
-        self.log_success = to_bool(image_dict.get('log_success', True))
+        self.log_success = to_bool(self.image_dict.get('log_success', True))
 
     def genImages(self, gen_ts):
         """Generate the images.
