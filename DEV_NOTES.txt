@@ -10,8 +10,8 @@ checklist for doing a release:
      3. docs/customizing.htm docs/upgrading.htm docs/usersguide.htm
 3. Make sure all changes have been logged
      1. docs/changes.txt
-     2. pkg/debian/changelog.rpm
-     3. pkg/changelog
+     2. pkg/debian/changelog
+     3. pkg/changelog.rpm
 4. Make sure the upgrading guide has been updated if necessary.
 5. If working off a branch, do a merge to master.
 6. Create the tarball:  ./setup.py sdist
@@ -21,7 +21,6 @@ checklist for doing a release:
 9. Upload to weewx.com:
      1. make upload-src
      2. make upload-readme
-     3. Select the new tarball as the Mac, Linux, and BSD distribution
 10. Update docs on the web site:
      1. make upload-docs
 11. Update the web site:
@@ -48,9 +47,13 @@ git push
 # generate the readme then upload it to development_versions
 make readme upload-readme
 
-# on debian host, build src and deb, upload to development_versions
+# build src, upload to development_versions
 rm -rf build dist
-make src-package deb-package upload-src deb-package
+make src-package upload-src
+
+# on debian host, build deb package, upload to development_versions
+rm -rf build dist
+make deb-package upload-deb
 
 # on redhat host, build the redhat rpm package, upload to development_versions
 rm -rf build dist
@@ -164,10 +167,10 @@ unit tests --------------------------------------------------------------------
 
 prerequisites:
 
-python 2.7 and a recent version of mock
+python 2.7
+python-mock 0.6
 
-mysql server is running with permissions granted to a weewx user to create and
-modify databases:
+mysql server with permissions granted to a weewx test user:
 
 mysql -u root -p
 mysql> create user 'weewx'@'localhost' identified by 'weewx';
