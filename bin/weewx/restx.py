@@ -658,6 +658,8 @@ class AmbientThread(RESTThread):
                 'barometer'   : 'baromin=%.3f',
                 'outTemp'     : 'tempf=%.1f',
                 'outHumidity' : 'humidity=%03.0f',
+                'inTemp'      : 'indoortempf=%.1f',
+                'inHumidity'  : 'indoorhumidity=%2.0f',
                 'windSpeed'   : 'windspeedmph=%03.1f',
                 'windDir'     : 'winddir=%03.0f',
                 'windGust'    : 'windgustmph=%03.1f',
