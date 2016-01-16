@@ -134,7 +134,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         gen_dict[option_section_name]['summarize_by'] = 'None'
 
         # determine how much logging is desired
-        self.log_success = to_bool(gen_dict[option_section_name].get('log_success', True))
+        log_success = to_bool(gen_dict[option_section_name].get('log_success', True))
 
         # configure the search list extensions
         self.initExtensions(gen_dict[option_section_name])
@@ -145,7 +145,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         self.teardown()
 
         elapsed_time = time.time() - t1
-        if self.log_success:
+        if log_success:
             loginf("Generated %d files for report %s in %.2f seconds" %
                    (ngen, self.skin_dict['REPORT_NAME'], elapsed_time))
 

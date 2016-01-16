@@ -188,7 +188,7 @@ class FtpGenerator(ReportGenerator):
         import weeutil.ftpupload
 
         # determine how much logging is desired
-        log_success = to_bool(skin_dict.get('log_success', True))
+        log_success = to_bool(self.skin_dict.get('log_success', True))
 
         t1 = time.time()
         if self.skin_dict.has_key('HTML_ROOT'):
@@ -254,7 +254,7 @@ class RsyncGenerator(ReportGenerator):
                 ssh_options = self.skin_dict.get('ssh_options'),
                 compress    = to_bool(self.skin_dict.get('compress', False)),
                 delete      = to_bool(self.skin_dict.get('delete', False)),
-                log_success = to_bool(self.skin_dict.get('log_success', True))))
+                log_success = to_bool(self.skin_dict.get('log_success', True)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: rsync upload not requested. Skipped.")
             return
