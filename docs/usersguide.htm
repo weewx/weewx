@@ -874,8 +874,8 @@ Version: 3.4.0
 
     <h2>Python</h2>
 
-    <p>Python 2.6 or 2.7 is required. <a href="#python2_5">Python 2.5</a> may work with some fiddling,
-        but has not been tested. Python 3 definitely will not work.</p>
+    <p>Python 2.5, 2.6, or 2.7 is required. Python 3 will not work. For Python 2.5, see
+    <a href="#python2_5">the special instructions below</a>.</p>
 
     <h1 id="installing">Installing <span class="code">weewx</span></h1>
 
@@ -5105,16 +5105,16 @@ Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
 
     <h3 id="python2_5">Python 2.5</h3>
 
-    <p>Weewx is no longer tested on Python version 2.5. What follows are some clues on how
-        to get it to work. You might get lucky.</p>
-    <p>You may have to install pysqlite and PIL. Here is
-        how to do it with <a href="https://pypi.python.org/pypi/setuptools#python-2-4-and-python-2-5-support">
-            <span class='code'>easy_install</span></a>, but you may be
-        able to use <span class='code'>apt-get</span> or other tools, depending on
-        your operating system.</p>
-    <pre class="tty cmd">
-sudo easy_install pysqlite
-sudo easy_install PIL</pre>
+    <p>Weewx should work with Python version 2.5, but it will take some fiddling.</p>
+    <p>The version of pysqlite that comes with Python 2.5 does not support the "with"
+    statement, which is required by weewx. Unfortunately, the most modern version
+    of pysqlite no longer supports Python 2.5, so you will have to install an
+    "intermediate" version. I found that <a href="https://pypi.python.org/pypi/pysqlite/2.5.6">version 2.5.6</a>,
+    which can be downloaded from PyPI, works well. Download it, unpack the tarball, then use the included
+    <span class="code">setup.py</span> file to install</p>
+    <p>You will probably have to install PIL, which can be done using <span class="code">apt-get</span>,
+    or <span class="code">easy_install</span></p>
+
     <p>Various possible complications:</p>
     <ul>
         <li>You may have to install the development environment of SQLite in

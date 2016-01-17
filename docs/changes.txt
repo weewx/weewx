@@ -3,9 +3,6 @@ weewx change history
 
 3.4.0 01/16/2016
 
-Python 2.5 is no longer supported. You may be able to get it to work, but it
-is no longer tested.
-
 The tag $hour has now been added. It's now possible to iterate over hours.
 Thanks to user Julen!
 
@@ -39,6 +36,8 @@ Check for a sane system time when starting up.  If time is not reasonable,
 wait for it.  Log the time status while waiting.
 
 Added log_success option to cheetah, copy, image, rsync, and ftp generators.
+
+Older versions of MySQL (v5.0 and later) are now supported.
 
 
 3.3.1 12/06/2015
