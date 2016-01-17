@@ -73,7 +73,7 @@ class Common(unittest.TestCase):
     def test_create(self):
         self.populate_db()
         _connect = weedb.connect(self.db_dict)
-        self.assertItemsEqual(_connect.tables(), ['test1', 'test2'])
+        self.assertEqual(sorted(_connect.tables()), ['test1', 'test2'])
         self.assertEqual(_connect.columnsOf('test1'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'descript'])
         self.assertEqual(_connect.columnsOf('test2'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'descript'])
         for icol, col in enumerate(_connect.genSchemaOf('test1')):
@@ -125,12 +125,10 @@ class Common(unittest.TestCase):
         _cursor = _connect.cursor()
         
         # Test SELECT on a bad table name
-        with self.assertRaises(weedb.ProgrammingError):
-            _cursor.execute("SELECT dateTime, min FROM foo")
+        self.assertRaises(weedb.ProgrammingError, _cursor.execute, "SELECT dateTime, min FROM foo")
 
         # Test SELECT on a bad column name
-        with self.assertRaises(weedb.OperationalError): 
-            _cursor.execute("SELECT dateTime, foo FROM test1")
+        self.assertRaises(weedb.OperationalError, _cursor.execute, "SELECT dateTime, foo FROM test1")
         
         _cursor.close()
         _connect.close()
@@ -158,7 +156,7 @@ class Common(unittest.TestCase):
         _row = _cursor.fetchone()
         _cursor.close()
         _connect.close()
-        self.assertIsNone(_row, msg="Rollback")
+        self.assertEqual(_row, None, msg="Rollback")
 
     def test_transaction(self):
         # Create the database and schema
@@ -187,7 +185,7 @@ class Common(unittest.TestCase):
         _row = _cursor.fetchone()
         _cursor.close()
         _connect.close()
-        self.assertIsNone(_row, msg="Transaction")
+        self.assertEqual(_row, None, msg="Transaction")
 
 
 
