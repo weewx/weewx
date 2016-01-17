@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-X.X.X XX/XX/XX
+3.4.0 01/16/2016
 
 Python 2.5 is no longer supported. You may be able to get it to work, but it
 is no longer tested.
