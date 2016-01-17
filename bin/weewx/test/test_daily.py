@@ -82,7 +82,7 @@ class Common(unittest.TestCase):
     def test_create_stats(self):
         global day_keys
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
-            self.assertItemsEqual(sorted(manager.daykeys), sorted(day_keys))
+            self.assertEqual(sorted(manager.daykeys), sorted(day_keys))
             self.assertEqual(manager.connection.columnsOf('archive_day_barometer'),
                              ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'wsum', 'sumtime'])
             self.assertEqual(manager.connection.columnsOf('archive_day_wind'), 

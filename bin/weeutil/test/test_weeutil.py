@@ -622,15 +622,13 @@ class WeeutilTest(unittest.TestCase):
     def test_ListOfDicts(self):
         # Try an empty dictionary:
         lod = ListOfDicts()
-        with self.assertRaises(KeyError):
-            lod['b']
+        self.assertEqual(lod.get('b'), None)
         # Now initialize with a starting dictionary:
         lod = ListOfDicts({'a':1, 'b':2, 'c':3})
         # Look up a key known to be in there:
         self.assertEqual(lod['b'], 2)
         # Look for a non-existent key
-        with self.assertRaises(KeyError):
-            lod['d']
+        self.assertEqual(lod.get('d'), None)
         # Now extend the dictionary:
         lod.extend({'d':4, 'e':5})
         # And try the lookup:
