@@ -1177,12 +1177,32 @@ def extract_zip(filename, target_dir, logger=None):
     zip_archive = None
     try:
         zip_archive = zipfile.ZipFile(open(filename, mode='r'))
-        zip_archive.extractall(target_dir)
         member_names = zip_archive.namelist()
+        # manually extract files since extractall is only in python 2.6+
+#        zip_archive.extractall(target_dir)
+        for f in member_names:
+            if f.endswith('/'):
+                dst = "%s/%s" % (target_dir, f)
+                mkdir_p(dst)
+        for f in member_names:
+            if not f.endswith('/'):
+                path = "%s/%s" % (target_dir, f)
+                with open(path, 'wb') as dest_file:
+                    dest_file.write(zip_archive.read(f))
         return member_names
     finally:
         if zip_archive is not None:
             zip_archive.close()
+
+def mkdir_p(path):
+    """equivalent to 'mkdir -p'"""
+    try:
+        os.makedirs(path)
+    except OSError, e:
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 def get_extension_installer(extension_installer_dir):
     """Get the installer in the given extension installer subdirectory"""
