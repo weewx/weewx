@@ -82,15 +82,17 @@ done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
 	@echo "see $(BLDDIR)/test-results"
 
-TESTDIR=/var/tmp/weewx_test
+MYSQLSETUP="create user 'weewx'@'localhost' identified by 'weewx';\n\
+grant all on *.* to 'weewx'@'localhost';\n"
+test-setup:
+	echo $(MYSQLSETUP) | mysql --user=root -p
 
+TESTDIR=/var/tmp/weewx_test
 MYSQLCLEAN="drop database test_weewx;\n\
 drop database test_alt_weewx;\n\
 drop database test_sim;\n"
 test-clean:
-	rm -f $(TESTDIR)/test.sdb
-	rm -f $(TESTDIR)/test_alt.sdb
-	rm -f $(TESTDIR)/sim.sdb
+	rm -f $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
 
 install:
