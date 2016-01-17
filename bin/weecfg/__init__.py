@@ -8,7 +8,7 @@
 from __future__ import with_statement
 
 import glob
-import os
+import os.path
 import shutil
 import sys
 import StringIO
@@ -1160,7 +1160,7 @@ def extract_tar(filename, target_dir, logger=None):
     try:
         tar_archive = tarfile.open(filename, mode='r')
         tar_archive.extractall(target_dir)
-        member_names = [x.name for x in tar_archive.getmembers()]
+        member_names = [os.path.normpath(x.name) for x in tar_archive.getmembers()]
         return member_names
     finally:
         if tar_archive is not None:
