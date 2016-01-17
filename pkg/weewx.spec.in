@@ -163,6 +163,7 @@ rm -rf %{buildroot}
 %{_bindir}/weewxd
 %{_bindir}/wee_config
 %{_bindir}/wee_database
+%{_bindir}/wee_debug
 %{_bindir}/wee_device
 %{_bindir}/wee_extension
 %{_bindir}/wee_reports
