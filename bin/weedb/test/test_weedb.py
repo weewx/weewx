@@ -157,7 +157,7 @@ class Common(unittest.TestCase):
         _row = _cursor.fetchone()
         _cursor.close()
         _connect.close()
-        self.assertEqual(_row, None, msg="Rollback")
+        self.assertEqual(_row, None)
 
     def test_transaction(self):
         # Create the database and schema
@@ -186,7 +186,7 @@ class Common(unittest.TestCase):
         _row = _cursor.fetchone()
         _cursor.close()
         _connect.close()
-        self.assertEqual(_row, None, msg="Transaction")
+        self.assertEqual(_row, None)
 
 
 

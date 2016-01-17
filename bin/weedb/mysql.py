@@ -104,6 +104,9 @@ class Connection(weedb.Connection):
 
         weedb.Connection.__init__(self, connection, database_name, 'mysql')
 
+        # Only the InnoDB engine supports transactions. 
+        # However, it's the default only for later versions of MySQL. Explicitly require it.
+        self.connection.query("SET storage_engine=INNODB;")
         # Allowing threads other than the main thread to see any transactions
         # seems to require an isolation level of READ UNCOMMITTED.
         self.connection.query("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED")
