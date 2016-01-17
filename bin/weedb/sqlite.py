@@ -16,9 +16,10 @@ if not hasattr(sqlite3.Connection, "__exit__"):  # @UndefinedVariable
     del sqlite3
     from pysqlite2 import dbapi2 as sqlite3  #@Reimport @UnresolvedImport
 
+sqlite_version = sqlite3.sqlite_version
+
 import weedb
 from weeutil.weeutil import to_int, to_bool
-
 
 def guard(fn):
     """Decorator function that converts sqlite exceptions into weedb exceptions."""

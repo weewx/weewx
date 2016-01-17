@@ -9,6 +9,7 @@ from __future__ import with_statement
 import unittest
 
 import weedb
+import weedb.sqlite
 
 sqlite_db_dict = {'database_name': '/tmp/test.sdb', 'driver':'weedb.sqlite', 'timeout': '2'}
 mysql_db_dict  = {'database_name': 'test', 'user':'weewx', 'password':'weewx', 'driver':'weedb.mysql'}
@@ -198,8 +199,11 @@ class TestSqlite(Common):
     def test_variable(self):
         weedb.create(self.db_dict)
         _connect = weedb.connect(self.db_dict)
-        _v = _connect.get_variable('journal_mode')
-        self.assertEqual(_v[1].lower(), 'delete')
+        if weedb.sqlite.sqlite_version > '3.4.2':
+            # Early versions of sqlite did not support journal modes. Not sure exactly when it started,
+            # but I know that v3.4.2 did not have it.
+            _v = _connect.get_variable('journal_mode')
+            self.assertEqual(_v[1].lower(), 'delete')
         _v = _connect.get_variable('foo')
         self.assertEqual(_v, None)
         _connect.close()
