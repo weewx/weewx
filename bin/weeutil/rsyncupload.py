@@ -42,6 +42,7 @@ class RsyncUpload(object):
         self.port        = port
         self.ssh_options = ssh_options
         self.compress    = compress
+        self.log_success = log_success
 
     def run(self):
         """Perform the actual upload."""
@@ -130,7 +131,7 @@ class RsyncUpload(object):
             rsync_message = "rsync executed in %0.2f seconds"
         
         t2= time.time()
-        if log_success:
+        if self.log_success:
             syslog.syslog(syslog.LOG_INFO, "rsyncupload: "  + rsync_message % (t2-t1))
         
         

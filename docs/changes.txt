@@ -1,6 +1,11 @@
 weewx change history
 --------------------
 
+3.4.1 XX/YY/2016
+
+Fixed bug that prevented rsync uploader from working.
+
+
 3.4.0 01/16/2016
 
 The tag $hour has now been added. It's now possible to iterate over hours.
