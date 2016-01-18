@@ -806,7 +806,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         while True:
             try:
                 buf = self.station.read()
-                if buf is not None:
+                if buf:
                     pkt = Station.decode(buf)
                     if buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
                         # send ack for most data packets
@@ -849,7 +849,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         while True:
             try:
                 buf = self.station.read()
-                if buf is not None:
+                if buf:
                     if buf[0] == 0xd2:
                         hbuf = buf
                         buf = None
@@ -857,7 +857,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                         # FIXME: need better indicator of second half history
                         buf = hbuf + buf
                         hbuf = None
-                if buf is not None and buf[0] == 0xd2:
+                if buf and buf[0] == 0xd2:
                     self.last_record = Station.get_record_index(buf)
                     ts = Station._extract_ts(buf[4:9])
                     if ts is not None and ts > since_ts:
@@ -869,7 +869,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                             logdbg("historical record: %s" % packet)
                             cnt += 1
                             yield packet
-                if buf is not None and buf[0] == 0x57:
+                if buf and buf[0] == 0x57:
                     idx = Station.get_latest_index(buf)
                     msg = "count=%s last_index=%s latest_index=%s" % (
                         cnt, self.last_record, idx)
@@ -877,7 +877,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                         loginf("catchup complete: %s" % msg)
                         break
                     loginf("catchup in progress: %s" % msg)
-                if buf is not None and buf[0] == 0x41 and buf[3] == 0x65:
+                if buf and buf[0] == 0x41 and buf[3] == 0x65:
                     nxtrec = Station.get_next_index(self.last_record)
                     logdbg("request records starting with %s" % nxtrec)
                     cmd = [0xcd, 0x18, 0x30, 0x62, _hi(nxtrec), _lo(nxtrec)]

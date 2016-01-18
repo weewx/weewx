@@ -5,6 +5,8 @@ weewx change history
 
 Fixed bug that prevented rsync uploader from working.
 
+Fixed bug in wmr300 driver when receiving empty buffers from the station.
+
 
 3.4.0 01/16/2016
 
