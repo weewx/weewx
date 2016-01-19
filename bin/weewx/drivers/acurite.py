@@ -693,7 +693,7 @@ class Station(object):
                 data['rssi'] = Station.decode_rssi(raw)
                 if data['rssi'] == 0:
                     data['sensor_battery'] = None
-                    loginf("R1: ignoring stale data: %s" % _fmt_bytes(raw))
+                    loginf("R1: ignoring stale data (rssi indicates no communication from sensors): %s" % _fmt_bytes(raw))
                 else:
                     data['sensor_battery'] = Station.decode_sensor_battery(raw)
                     data['windSpeed'] = Station.decode_windspeed(raw)
