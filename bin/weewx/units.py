@@ -441,8 +441,14 @@ class Formatter(object):
     20.0°C
     >>> print f.toString((83.2, "degree_F", "group_temperature"))
     83.2°F
-    >>> # Try the Spanish locale, which will use comma decimal separators
+    >>> # Try the Spanish locale, which will use comma decimal separators.
+    >>> # For this to work, the Spanish locale must have been installed.
+    >>> # You can do this with the command:
+    >>> #     sudo locale-gen es_ES.UTF-8 && sudo update-locale
     >>> x = locale.setlocale(locale.LC_NUMERIC, 'es_ES.utf-8')
+    >>> print f.toString((83.2, "degree_F", "group_temperature"), localize=True)
+    83,2°F
+    >>> # Try it again, but overriding the localization:
     >>> print f.toString((83.2, "degree_F", "group_temperature"), localize=False)
     83.2°F
     >>> # Set locale back to default
@@ -1134,6 +1140,13 @@ class GenWithConvert(object):
     ...            'outTemp' : 68.0 + i * 9.0/5.0,
     ...            'usUnits' : weewx.US}
     ...        yield _rec
+    >>> # First, try the raw generator function. Output should be in US
+    >>> for _out in genfunc():
+    ...    print "Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits'])
+    Timestamp: 194758100; Temperature: 68.00; Unit system: 1
+    Timestamp: 194758400; Temperature: 69.80; Unit system: 1
+    Timestamp: 194758700; Temperature: 71.60; Unit system: 1
+    >>> # Now do it again, but with the generator function wrapped by GenWithConvert:
     >>> for _out in GenWithConvert(genfunc(), weewx.METRIC):
     ...    print "Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits'])
     Timestamp: 194758100; Temperature: 20.00; Unit system: 16
