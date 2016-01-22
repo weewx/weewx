@@ -46,7 +46,7 @@ def create(host='localhost', user='', password='', database_name='', driver='', 
                                   user=user,
                                   passwd=password, 
                                   port=int(port), **kwargs)
-        connect.query("SET storage_engine=%s;" % engine)
+        set_engine(connect, engine)
         cursor = connect.cursor()
         # An exception will get thrown if the database already exists.
         try:
@@ -107,9 +107,9 @@ class Connection(weedb.Connection):
 
         weedb.Connection.__init__(self, connection, database_name, 'mysql')
 
-        # Only the InnoDB engine supports transactions. 
-        # However, it's the default only for later versions of MySQL. Explicitly require it.
-        self.connection.query("SET storage_engine=%s;" % engine)
+        # Set the storage engine to be used
+        set_engine(self.connection, engine)
+
         # Allowing threads other than the main thread to see any transactions
         # seems to require an isolation level of READ UNCOMMITTED.
         self.connection.query("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED")
@@ -267,3 +267,10 @@ def massage(seq):
     # Return the massaged sequence if it exists, otherwise, return None
     if seq is not None:
         return [int(i) if isinstance(i, long) or isinstance(i, decimal.Decimal) else i for i in seq]
+
+def set_engine(connect, engine):
+    """Set the default MySQL storage engine."""
+    if connect._server_version >= (5, 5):
+        connect.query("SET default_storage_engine=%s" % engine)
+    else:
+        connect.query("SET storage_engine=%s;" % engine)
