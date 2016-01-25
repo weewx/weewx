@@ -1670,7 +1670,7 @@ longitude = -77.0366</pre>
     <p>Set to the station model. For example, Meade TE923W or TFA Nexus.
         Default is "TE923".</p>
 
-    <p class="config_option">sensor_map</p>
+    <p class="config_option">map</p>
 
     <p>This option defines the mapping between temperature/humidity values in
         the database and the remote sensors. Up to 5 remote sensors are
@@ -1682,31 +1682,36 @@ longitude = -77.0366</pre>
 
     <p>The default mapping is:
     </p>
-    <pre class="tty">[[sensor_map]]
-    outTemp =     t_1
-    outHumidity = h_1
-    extraTemp1 =  t_2
-    extraHumid1 = h_2
-    extraTemp2 =  t_3
-    extraHumid2 = h_3
-    extraTemp3 =  t_4
-    extraHumid3 = h_4
-    extraTemp4 =  t_5
-    extraHumid4 = h_5</pre>
-    <p class="config_option">battery_map</p>
-
-    <p>This option defines the mapping between battery status values in
-        the database and the remote sensors. The default mapping is:
-    </p>
-    <pre class="tty">[[battery_map]]
-    txBatteryStatus =      batteryUV
-    windBatteryStatus =    batteryWind
-    rainBatteryStatus =    batteryRain
-    outTempBatteryStatus = battery1
-    extraBatteryStatus1 =  battery2
-    extraBatteryStatus2 =  battery3
-    extraBatteryStatus3 =  battery4
-    extraBatteryStatus4 =  battery5</pre>
+    <pre class="tty">[[map]]
+    link_wind = windLinkStatus
+    bat_wind = windBatteryStatus
+    link_rain = rainLinkStatus
+    bat_rain = rainBatteryStatus
+    link_uv = uvLinkStatus
+    bat_uv = uvBatteryStatus
+    uv = UV
+    t_in = inTemp
+    h_in = inHumidity
+    t_1 = outTemp
+    h_1 = outHumidity
+    bat_1 = outBatteryStatus
+    link_1 = outLinkStatus
+    t_2 = extraTemp1
+    h_2 = extraHumid1
+    bat_2 = extraBatteryStatus1
+    link_2 = extraLinkStatus1
+    t_3 = extraTemp2
+    h_3 = extraHumid3
+    bat_3 = extraBatteryStatus2
+    link_3 = extraLinkStatus2
+    t_4 = extraTemp3
+    h_4 = extraHumid3
+    bat_4 = extraBatteryStatus3
+    link_4 = extraLinkStatus3
+    t_5 = extraTemp4
+    h_5 = extraHumid4
+    bat_5 = extraBatteryStatus4
+    link_5 = extraLinkStatus4</pre>
 
     <h3 class="config_section">[Ultimeter]</h3>
 
@@ -3210,23 +3215,20 @@ Mutating actions will request confirmation before proceeding.</pre>
 
     <h2 id="wee_device_te923">TE923</h2>
 
-    <p>The <span class='code'>wee_device</span> utility cannot
-        configure TE923 stations.</p>
-
     <p>Some station models will recognize up to 5 remote
         temperature/humidity sensor units. Use the hardware switch in each
         sensor unit to identify sensors. Use the
-        <span class='code'>sensor_map</span> in
-        <span class='code'>weewx.conf</span> to map each sensor to a database
-        field.
+        <span class='code'>map</span> in
+        <span class='code'>weewx.conf</span> to associate each sensor with a
+        database field.
     </p>
 
     <p>The station has either 200 or 3300 history records, depending on
         the model. That is just over a day (200 records) or about 23 days
         (3300 records) with an archive interval of 5 minutes.</p>
 
-    <p>The TE923 driver is not capable of reading archive records from
-        the station.</p>
+    <p>The TE923 driver will read history records from the station when weewx
+      starts up, but it does not support hardware record generation.</p>
 
 
     <h2 id="wee_device_ultimeter">Ultimeter</h2>
