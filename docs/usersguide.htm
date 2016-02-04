@@ -2481,6 +2481,11 @@ longitude = -77.0366</pre>
         <span class="code">StdArchive</span>, so that it is the corrected data that
         are stored. </p>
 
+    <p>In a default configuration, calibrations are applied to
+        observations from the hardware.  They are not applied to derived
+        calculations since the <span class="code">StdWXCalculate</span>
+        service runs after <span class="code">StdCalibrate</span>.</p>
+
     <h3 class="config_section">[[Corrections]]</h3>
 
     <p>In this section you list all <em>correction expressions</em>. For example,
@@ -2519,6 +2524,11 @@ longitude = -77.0366</pre>
         important that it be run after the calibration service, <span class="code">StdCalibrate
       </span>and before the archiving service <span class="code">StdArchive</span>,
         so that it is the calibrated and corrected data that are stored. </p>
+
+    <p>In a default configuration, quality control checks are applied to
+        observations from the hardware.  They are not applied to derived
+        calculations since the <span class="code">StdWXCalculate</span>
+        service runs after the quality control.</p>
 
     <h3 class="config_section">[[MinMax]]</h3>
 
