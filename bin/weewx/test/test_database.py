@@ -84,13 +84,13 @@ class Common(unittest.TestCase):
         
     def test_create_archive(self):
         archive = weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema)
-        self.assertItemsEqual(archive.connection.tables(), ['archive'])
+        self.assertEqual(archive.connection.tables(), ['archive'])
         self.assertEqual(archive.connection.columnsOf('archive'), ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
         archive.close()
         
         # Now that the database exists, these should also succeed:
         archive = weewx.manager.Manager.open(self.archive_db_dict)
-        self.assertItemsEqual(archive.connection.tables(), ['archive'])
+        self.assertEqual(archive.connection.tables(), ['archive'])
         self.assertEqual(archive.connection.columnsOf('archive'), ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
         self.assertEqual(archive.sqlkeys, ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
         self.assertEqual(archive.std_unit_system, None)

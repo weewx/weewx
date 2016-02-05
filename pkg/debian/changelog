@@ -1,3 +1,15 @@
+weewx (3.4.0-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 16 Jan 2016 18:02:00 -0500
+weewx (3.3.1-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sun, 06 Dec 2015 18:25:17 -0500
+weewx (3.3.0-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 05 Dec 2015 16:21:48 -0500
+weewx (3.3.0b1-1) unstable; urgency=low
+  * new upstream release
+ -- mwall <mwall@picodeb8>  Mon, 26 Oct 2015 19:15:51 -0400
 weewx (3.2.2-1) unstable; urgency=low
   * new upstream release
  -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Thu, 30 Jul 2015 19:06:09 -0700

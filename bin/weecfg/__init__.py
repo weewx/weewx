@@ -8,7 +8,7 @@
 from __future__ import with_statement
 
 import glob
-import os
+import os.path
 import shutil
 import sys
 import StringIO
@@ -43,6 +43,7 @@ canonical_order = ('',
  ('Vantage', [], []),
  ('WMR100', [], []),
  ('WMR200', [], []),
+ ('WMR300', [], []),
  ('WMR9x8', [], []),
  ('WS1', [], []),
  ('WS23xx', [], []),
@@ -835,6 +836,9 @@ def reorder(name_list, ref_list):
     result = []
     # Use the ordering in ref_list, to reassemble the name list:
     for name in ref_list:
+        # These always come at the end
+        if name in ['FTP', 'RSYNC']:
+            continue
         if name in name_list:
             result.append(name)
     # For any that were not in the reference list and are left over, tack
@@ -842,6 +846,12 @@ def reorder(name_list, ref_list):
     for name in name_list:
         if name not in ref_list:
             result.append(name)
+            
+    # Finally, add these, so they are at the very end
+    for name in ref_list:
+        if name in ['FTP', 'RSYNC']:
+            result.append(name)
+            
     # Make sure I have the same number I started with
     assert(len(name_list)==len(result))
     return result
@@ -1138,22 +1148,62 @@ def extract_roots(config_path, config_dict, bin_root):
     
     return root_dict
 
-def extract_tarball(filename, target_dir, logger=None):
-    """Extract a tarball into a given directory
+def extract_tar(filename, target_dir, logger=None):
+    """Extract files from a tar archive into a given directory
     
-    Returns: A list containing the member files
+    Returns: A list of the extracted files
     """
     logger = logger or Logger()
     import tarfile
-    logger.log("Extracting from tarball %s" % filename, level=1)
-    tar_archive = tarfile.open(filename, mode='r')
+    logger.log("Extracting from tar archive %s" % filename, level=1)
+    tar_archive = None
     try:
+        tar_archive = tarfile.open(filename, mode='r')
         tar_archive.extractall(target_dir)
-        member_names = [x.name for x in tar_archive.getmembers()]
+        member_names = [os.path.normpath(x.name) for x in tar_archive.getmembers()]
         return member_names
     finally:
-        tar_archive.close()
-        
+        if tar_archive is not None:
+            tar_archive.close()
+
+def extract_zip(filename, target_dir, logger=None):
+    """Extract files from a zip archive into the specified directory.
+
+    Returns: a list of the extracted files
+    """
+    logger = logger or Logger()
+    import zipfile
+    logger.log("Extracting from zip archive %s" % filename, level=1)
+    zip_archive = None
+    try:
+        zip_archive = zipfile.ZipFile(open(filename, mode='r'))
+        member_names = zip_archive.namelist()
+        # manually extract files since extractall is only in python 2.6+
+#        zip_archive.extractall(target_dir)
+        for f in member_names:
+            if f.endswith('/'):
+                dst = "%s/%s" % (target_dir, f)
+                mkdir_p(dst)
+        for f in member_names:
+            if not f.endswith('/'):
+                path = "%s/%s" % (target_dir, f)
+                with open(path, 'wb') as dest_file:
+                    dest_file.write(zip_archive.read(f))
+        return member_names
+    finally:
+        if zip_archive is not None:
+            zip_archive.close()
+
+def mkdir_p(path):
+    """equivalent to 'mkdir -p'"""
+    try:
+        os.makedirs(path)
+    except OSError, e:
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
 def get_extension_installer(extension_installer_dir):
     """Get the installer in the given extension installer subdirectory"""
     old_path = sys.path

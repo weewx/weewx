@@ -97,14 +97,20 @@ class ExtensionEngine(object):
         """Install the extension from the file or directory extension_path"""
         self.logger.log("Request to install '%s'" % extension_path)
         if os.path.isfile(extension_path):
-            # It's a file, hopefully a tarball. Extract it, then install
+            # it is a file.  if it ends with .zip, assume it is a zip archive.
+            # otherwise assume it is a tarball.
             extension_dir = None
+            member_names = []
             try:
-                member_names = weecfg.extract_tarball(extension_path,
+                if extension_path[-4:] == '.zip':
+                    member_names = weecfg.extract_zip(extension_path,
+                                                      self.tmpdir, self.logger)
+                else:
+                    member_names = weecfg.extract_tar(extension_path,
                                                       self.tmpdir, self.logger)
                 extension_reldir = os.path.commonprefix(member_names)
                 if extension_reldir == '':
-                    raise InstallError("No common path in tarfile '%s'. Unable to install." % extension_path)
+                    raise InstallError("Unable to install from '%s': no common path (the extension archive contains more than a single root directory)" % extension_path)
                 extension_dir = os.path.join(self.tmpdir, extension_reldir)
                 self.install_from_dir(extension_dir)
             finally:
@@ -168,7 +174,8 @@ class ExtensionEngine(object):
                             N += 1
                     break
             else:
-                sys.exit("Unknown destination for file %s" % source_tuple)
+                sys.exit("Skipped file %s: Unknown destination directory %s" %
+                         (source_tuple[1], source_tuple[0]))
         self.logger.log("Copied %d files" % N, level=2)
         
         save_config = False
@@ -387,7 +394,8 @@ class ExtensionEngine(object):
                         directory_list.append(directory)
                     break
             else:
-                sys.exit("Unknown destination for file %s" % source_tuple)
+                sys.exit("Skipped file %s: Unknown destination directory %s" %
+                         (source_tuple[1], source_tuple[0]))
         self.logger.log("Removed %d files" % N, level=2)
          
         # Now delete all the empty skin directories. 

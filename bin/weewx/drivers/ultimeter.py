@@ -55,9 +55,10 @@ import syslog
 import time
 
 import weewx.drivers
+from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'Ultimeter'
-DRIVER_VERSION = '0.13'
+DRIVER_VERSION = '0.15'
 
 INHG_PER_MBAR = 0.0295333727
 METER_PER_FOOT = 0.3048
@@ -107,7 +108,7 @@ class Ultimeter(weewx.drivers.AbstractDevice):
         self.last_rain = None
 
         global DEBUG_SERIAL
-        DEBUG_SERIAL = int(stn_dict.get('debug_serial', 0))
+        DEBUG_SERIAL = int(stn_dict.get('debug_serial', DEBUG_SERIAL))
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
@@ -149,10 +150,6 @@ class Ultimeter(weewx.drivers.AbstractDevice):
             packet['rain'] = None
         self.last_rain = packet['long_term_rain']
 
-        # no wind direction when wind speed is zero
-        if 'windSpeed' in packet and not packet['windSpeed']:
-            packet['windDir'] = None
-
 
 class Station(object):
     def __init__(self, port):
@@ -191,11 +188,12 @@ class Station(object):
             data = Station.parse_readings(buf)
             d = data['day_of_year']  # seems to start at 0
             m = data['minute_of_day']  # 0 is midnight before start of day
-            tstr = time.localtime()
-            y = tstr.tm_year
-            s = tstr.tm_sec
-            ts = time.mktime((y,1,1,0,0,s,0,0,0)) + d * 86400 + m * 60
-            logdbg("station time: day:%s min:%s (%s)" % (d, m, ts)) 
+            tt = time.localtime()
+            y = tt.tm_year
+            s = tt.tm_sec
+            ts = time.mktime((y,1,1,0,0,s,0,0,-1)) + d * 86400 + m * 60
+            logdbg("station time: day:%s min:%s (%s)" %
+                   (d, m, timestamp_to_string(ts)))
             return ts
         except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
             logerr("get_time failed: %s" % e)
@@ -206,18 +204,17 @@ class Station(object):
         self.set_modem_mode()
 
         # set time should work on all models
-        tstr = time.localtime(ts)
-        tcmd = ">A%04d%04d\r" % (
-            tstr.tm_yday - 1, tstr.tm_min + tstr.tm_hour * 60)
-        logdbg("set station time to %d (%s)" % (ts, tcmd))
-        self.serial_port.write(tcmd)
+        tt = time.localtime(ts)
+        cmd = ">A%04d%04d" % (
+            tt.tm_yday - 1, tt.tm_min + tt.tm_hour * 60)
+        logdbg("set station time to %s (%s)" % (timestamp_to_string(ts), cmd))
+        self.serial_port.write("%s\r" % cmd)
 
         # year works only for models 2004 and later
         if self.can_set_year:
-            y = tstr.tm_year
-            ycmd = ">U%s" % y
-            logdbg("set station year to %s (%s)" % (y, ycmd))
-            self.serial_port.write(ycmd)
+            cmd = ">U%s" % tt.tm_year
+            logdbg("set station year to %s (%s)" % (tt.tm_year, cmd))
+            self.serial_port.write("%s\r" % cmd)
 
     def set_logger_mode(self):
         # in logger mode, station sends logger mode records continuously

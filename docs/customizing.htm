@@ -46,7 +46,7 @@
 
     <h1 class="title">Customizing weewx<br/>
       <span class="version">
-Version: 3.3.0b1
+Version: 3.4.0
       </span>
     </h1>
 
@@ -1550,11 +1550,33 @@ or in foobar units: $day.barometer.min.foobar
 
     <h3>Iteration</h3>
 
-    <p>For dot codes using an aggregation <em>e.g.</em>,
-        <span class="code">$day</span>, <span class="code">$week</span>,
-        <span class="code">$month</span>, <span class="code">$year</span>,
-        <span class="code">$rainyear</span>, then
-        the aggregation period can be iterated over. </p>
+    <p>It is possible to iterate over the following time periods:</p>
+
+    <table class="indent" style="Width: 50%"
+           summary="Iteration periods">
+        <tbody>
+        <tr class="first_row">
+            <td>Tag suffix</td>
+            <td>Results</td>
+        </tr>
+        <tr>
+            <td class="code first_col">.hours</td>
+            <td>Iterate by hours</td>
+        </tr>
+        <tr>
+            <td class="code first_col">.days</td>
+            <td>Iterate by days</td>
+        </tr>
+        <tr>
+            <td class="code first_col">.months</td>
+            <td>Iterate by months</td>
+        </tr>
+        <tr>
+            <td class="code first_col">.years</td>
+            <td>Iterate by years</td>
+        </tr>
+        </tbody>
+    </table>
 
     <p>For example, the following template uses a Cheetah
         <span class="code">for</span> loop to iterate over all months in
@@ -4996,7 +5018,7 @@ Finished installing extension '/var/tmp/weewx-cmon-0.7.tgz'</pre>
 
     <p>The utility <span class="code">wee_extension</span> can tell you which
         extensions you have installed:</p>
-    <pre class="tty"><span class="cmd">./bin/wee_extension --list</span>
+    <pre class="tty"><span class="cmd">wee_extension --list</span>
 Extension Name   Version  Description
 cmon             0.7      Collect and display computer health indicators</pre>
     <p>You can see it lists the extension we just installed, <span class="code">cmon</span>.</p>
@@ -5004,8 +5026,8 @@ cmon             0.7      Collect and display computer health indicators</pre>
     <h2>Removing extensions</h2>
 
     <p>You can remove an extension using the same tool:</p>
-    <pre class="tty"><span class="cmd">./bin/wee_extension --uninstall=cmon
-./bin/wee_extension --list</span>
+    <pre class="tty"><span class="cmd">wee_extension --uninstall=cmon
+wee_extension --list</span>
 No extensions installed</pre>
 
     <h2>Creating an extension</h2>
@@ -6016,12 +6038,12 @@ xstats/bin/user/xstats.py</pre>
             <td>S</td>
         </tr>
         <tr>
-            <td class='first_col'>radiation</td>
+            <td class='first_col'>radiation<sup>1</sup></td>
             <td>H</td>
             <td>H</td>
         </tr>
         <tr>
-            <td class='first_col'>UV</td>
+            <td class='first_col'>UV<sup>1</sup></td>
             <td>H</td>
             <td>H</td>
         </tr>
@@ -6038,8 +6060,9 @@ xstats/bin/user/xstats.py</pre>
         </tbody>
     </table>
     <p class='station_data_key'>
-        The <span class='code'>radiation</span> and <span class='code'>UV</span>
-        data are available only with the optional solar radiation sensor.
+      <sup>1</sup> The <span class='code'>radiation</span> and
+      <span class='code'>UV</span>
+      data are available only with the optional solar radiation sensor.
     </p>
 
     <h2 id="fo_station_data">Fine Offset</h2>
@@ -6132,12 +6155,7 @@ xstats/bin/user/xstats.py</pre>
             <td>S</td>
         </tr>
         <tr>
-            <td class='first_col'>radiation</td>
-            <td>H</td>
-            <td>H</td>
-        </tr>
-        <tr>
-            <td class='first_col'>UV</td>
+            <td class='first_col'>radiation<sup>1</sup></td>
             <td>H</td>
             <td>H</td>
         </tr>
@@ -6154,8 +6172,10 @@ xstats/bin/user/xstats.py</pre>
         </tbody>
     </table>
     <p class='station_data_key'>
-        The <span class='code'>radiation</span> and <span class='code'>UV</span>
-        data are available only from 30xx stations.
+      <sup>1</sup> The <span class='code'>radiation</span> data are available
+      only from 30xx stations.
+      These stations include a luminosity sensor, from which the radiation is
+      approximated.
     </p>
 
     <h2 id="te923_station_data">TE923</h2>
@@ -6170,127 +6190,127 @@ xstats/bin/user/xstats.py</pre>
         <tr>
             <td class='first_col'>barometer</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>pressure</td>
             <td>S</td>
-            <td></td>
+            <td>S</td>
         </tr>
         <tr>
             <td class='first_col'>altimeter</td>
             <td>S</td>
-            <td></td>
+            <td>S</td>
         </tr>
         <tr>
             <td class='first_col'>inTemp</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>outTemp</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>inHumidity</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>outHumidity</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>windSpeed</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>windDir</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>windGust</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>windGustDir</td>
             <td>D</td>
-            <td></td>
+            <td>D</td>
         </tr>
         <tr>
             <td class='first_col'>rain</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>rainRate</td>
             <td>S</td>
-            <td></td>
+            <td>S</td>
         </tr>
         <tr>
             <td class='first_col'>dewpoint</td>
             <td>S</td>
-            <td></td>
+            <td>S</td>
         </tr>
         <tr>
             <td class='first_col'>windchill</td>
             <td>H/S</td>
-            <td></td>
+            <td>H/S</td>
         </tr>
         <tr>
             <td class='first_col'>heatindex</td>
             <td>S</td>
-            <td></td>
+            <td>S</td>
         </tr>
         <tr>
-            <td class='first_col'>UV</td>
+            <td class='first_col'>UV<sup>1</sup></td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraTemp1</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraTemp2</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraTemp3</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraTemp4</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraHumid1</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraHumid2</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraHumid3</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraHumid4</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>txBatteryStatus</td>
@@ -6335,9 +6355,11 @@ xstats/bin/user/xstats.py</pre>
         </tbody>
     </table>
     <p class='station_data_key'>
-        Some stations support up to 5 remote temperature/humidity sensors. The
-        <span class='code'>UV</span> data are available only with the optional
-        solar radiation sensor.
+      Some stations support up to 5 remote temperature/humidity sensors.
+    </p>
+    <p class='station_data_key'>
+      <sup>1</sup> The <span class='code'>UV</span> data are available only
+      with the optional solar radiation sensor.
     </p>
 
     <h2 id="ultimeter_station_data">Ultimeter</h2>
@@ -6350,22 +6372,22 @@ xstats/bin/user/xstats.py</pre>
             <td>Archive</td>
         </tr>
         <tr>
-            <td class='first_col'>barometer</td>
+            <td class='first_col'>barometer<sup>2</sup></td>
             <td>H</td>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>pressure</td>
+            <td class='first_col'>pressure<sup>2</sup></td>
             <td>S</td>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>altimeter</td>
+            <td class='first_col'>altimeter<sup>2</sup></td>
             <td>S</td>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>inTemp</td>
+            <td class='first_col'>inTemp<sup>2</sup></td>
             <td>H</td>
             <td></td>
         </tr>
@@ -6375,7 +6397,7 @@ xstats/bin/user/xstats.py</pre>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>inHumidity</td>
+            <td class='first_col'>inHumidity<sup>2</sup></td>
             <td>H</td>
             <td></td>
         </tr>
@@ -6395,12 +6417,12 @@ xstats/bin/user/xstats.py</pre>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>rain</td>
+            <td class='first_col'>rain<sup>1</sup></td>
             <td>H</td>
             <td></td>
         </tr>
         <tr>
-            <td class='first_col'>rainRate</td>
+            <td class='first_col'>rainRate<sup>1</sup></td>
             <td>S</td>
             <td></td>
         </tr>
@@ -6422,13 +6444,14 @@ xstats/bin/user/xstats.py</pre>
         </tbody>
     </table>
     <p class='station_data_key'>
-        The <span class='code'>rain</span> and <span class='code'>rainRate</span> are
-        available only on stations with the optional rain sensor.
+      <sup>1</sup> The <span class='code'>rain</span> and
+      <span class='code'>rainRate</span> are
+      available only on stations with the optional rain sensor.
     </p>
 
     <p class='station_data_key'>
-        Pressure, inside temperature, and inside humidity data are not available on
-        all types of Ultimeter stations.
+      <sup>2</sup> Pressure, inside temperature, and inside humidity data are
+      not available on all types of Ultimeter stations.
     </p>
 
     <h2 id="vantage_station_data">Vantage</h2>
@@ -6975,6 +6998,126 @@ xstats/bin/user/xstats.py</pre>
         Each packet contains a subset of all possible readings. For example, a temperature packet contains <span
             class='code'>extraTempN</span> and <span class='code'>batteryStatusN</span>, a rain packet contains <span
             class='code'>totalRain</span> and <span class='code'>rainRate</span>.
+    </p>
+
+    <h2 id="wmr300_station_data">WMR300</h2>
+    <table class='station_data'>
+        <caption>WMR300 station data</caption>
+        <tbody class='code'>
+        <tr class="first_row">
+            <td style='width:200px'>Observation</td>
+            <td>Loop</td>
+            <td>Archive</td>
+        </tr>
+        <tr>
+            <td class='first_col'>barometer</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>pressure</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>altimeter</td>
+            <td>S</td>
+            <td>S</td>
+        </tr>
+        <tr>
+            <td class='first_col'>inTemp</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>outTemp</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>inHumidity</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>outHumidity</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>windSpeed</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>windDir</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>windGust</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>rain</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>rainRate</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>dewpoint</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>windchill</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>heatindex</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>extraTemp1</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>extraTemp2</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>extraTemp3</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>extraHumid1</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>extraHumid2</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        <tr>
+            <td class='first_col'>extraHumid3</td>
+            <td>H</td>
+            <td>H</td>
+        </tr>
+        </tbody>
+    </table>
+    <p class='station_data_key'>
+        Each packet contains a subset of all possible readings.
     </p>
 
     <h2 id="wmr9x8_station_data">WMR9x8</h2>

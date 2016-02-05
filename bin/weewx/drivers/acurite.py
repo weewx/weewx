@@ -174,6 +174,10 @@ R1 - 10 bytes
 01 8b fa 71 00 06 00 02 03 ff      flavor 1
 01 C0 5C 78 00 08 1F 53 03 FF      flavor 8
 01 C0 5C 71 00 05 00 0C 03 FF      flavor 1
+01 cd ff 71 00 6c 39 71 03 ff
+01 cd ff 78 00 67 3e 59 03 ff
+01 cd ff 71 01 39 39 71 03 ff
+01 cd ff 78 01 58 1b 4c 03 ff
 
 0: identifier                      01 indicates R1 messages
 1: channel         x & 0xf0        observed values: 0xC=A, 0x8=B, 0x0=C
@@ -368,7 +372,7 @@ import weewx.wxformulas
 from weeutil.weeutil import to_bool
 
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.23'
+DRIVER_VERSION = '0.24'
 DEBUG_RAW = 0
 
 # USB constants for HID
@@ -417,7 +421,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
     use the constants reported  by the sensor.  Otherwise, use a linear
     approximation to derive pressure and temperature values from the sensor
     readings.
-    [Optional.  Default is False]
+    [Optional.  Default is True]
 
     ignore_bounds - Indicates how to treat calibration constants from the
     pressure/temperature sensor.  Some consoles report constants that are
@@ -439,7 +443,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         self.max_tries = int(stn_dict.get('max_tries', 10))
         self.retry_wait = int(stn_dict.get('retry_wait', 30))
         self.polling_interval = int(stn_dict.get('polling_interval', 6))
-        self.use_constants = to_bool(stn_dict.get('use_constants', False))
+        self.use_constants = to_bool(stn_dict.get('use_constants', True))
         self.ignore_bounds = to_bool(stn_dict.get('ignore_bounds', False))
         if self.use_constants:
             loginf('R2 will be decoded using sensor constants')
@@ -689,7 +693,7 @@ class Station(object):
                 data['rssi'] = Station.decode_rssi(raw)
                 if data['rssi'] == 0:
                     data['sensor_battery'] = None
-                    loginf("R1: ignoring stale data: %s" % _fmt_bytes(raw))
+                    loginf("R1: ignoring stale data (rssi indicates no communication from sensors): %s" % _fmt_bytes(raw))
                 else:
                     data['sensor_battery'] = Station.decode_sensor_battery(raw)
                     data['windSpeed'] = Station.decode_windspeed(raw)
@@ -713,7 +717,7 @@ class Station(object):
     @staticmethod
     def check_R1(raw):
         ok = True
-        if raw[2] & 0x0f == 0x0f and raw[2] == 0xff:
+        if raw[1] & 0x0f == 0x0f and raw[3] == 0xff:
             loginf("R1: no sensors found: %s" % _fmt_bytes(raw))
             ok = False
         else:
@@ -729,7 +733,7 @@ class Station(object):
         return ok
 
     @staticmethod
-    def decode_R2(raw, use_constants=False, ignore_bounds=False):
+    def decode_R2(raw, use_constants=True, ignore_bounds=False):
         data = dict()
         if len(raw) == 25 and raw[0] == 0x02:
             data['pressure'], data['inTemp'] = Station.decode_pt(
@@ -828,12 +832,13 @@ class Station(object):
         return (((data[6] & 0x3f) << 7) | (data[7] & 0x7f)) * 0.0254
 
     @staticmethod
-    def decode_pt(data, use_constants=False, ignore_bounds=False):
+    def decode_pt(data, use_constants=True, ignore_bounds=False):
         # decode pressure and temperature from the R2 message
         # decoded pressure is mbar, decoded temperature is degree C
         c1,c2,c3,c4,c5,c6,c7,a,b,c,d = Station.get_pt_constants(data)
 
         if not use_constants:
+            # use a linear approximation for pressure and temperature
             d2 = ((data[21] & 0x0f) << 8) + data[22]
             if d2 >= 0x0800:
                 d2 -= 0x1000

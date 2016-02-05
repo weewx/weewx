@@ -88,6 +88,10 @@ insert_debconf_variables() {
             db_get weewx/wmr200_model
             sed -i "/\[WMR200\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
         fi
+        if [ "$RET" = "WMR300" ]; then
+            db_get weewx/wmr300_model
+            sed -i "/\[WMR300\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
+        fi
         if [ "$RET" = "WMR9x8" ]; then
             db_get weewx/wmr9x8_model
             sed -i "/\[WMR9x8\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
@@ -136,6 +140,8 @@ install_weewxconf() {
         driver=weewx.drivers.wmr100
     elif [ "$RET" = "WMR200" ]; then
         driver=weewx.drivers.wmr200
+    elif [ "$RET" = "WMR300" ]; then
+        driver=weewx.drivers.wmr300
     elif [ "$RET" = "WMR9x8" ]; then
         driver=weewx.drivers.wmr9x8
     elif [ "$RET" = "WS1" ]; then

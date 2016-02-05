@@ -9,6 +9,7 @@ from __future__ import with_statement
 import unittest
 
 import weedb
+import weedb.sqlite
 
 sqlite_db_dict = {'database_name': '/tmp/test.sdb', 'driver':'weedb.sqlite', 'timeout': '2'}
 mysql_db_dict  = {'database_name': 'test', 'user':'weewx', 'password':'weewx', 'driver':'weedb.mysql'}
@@ -73,7 +74,7 @@ class Common(unittest.TestCase):
     def test_create(self):
         self.populate_db()
         _connect = weedb.connect(self.db_dict)
-        self.assertItemsEqual(_connect.tables(), ['test1', 'test2'])
+        self.assertEqual(sorted(_connect.tables()), ['test1', 'test2'])
         self.assertEqual(_connect.columnsOf('test1'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'descript'])
         self.assertEqual(_connect.columnsOf('test2'), ['dateTime', 'min', 'mintime', 'max', 'maxtime', 'sum', 'count', 'descript'])
         for icol, col in enumerate(_connect.genSchemaOf('test1')):
@@ -125,12 +126,10 @@ class Common(unittest.TestCase):
         _cursor = _connect.cursor()
         
         # Test SELECT on a bad table name
-        with self.assertRaises(weedb.ProgrammingError):
-            _cursor.execute("SELECT dateTime, min FROM foo")
+        self.assertRaises(weedb.ProgrammingError, _cursor.execute, "SELECT dateTime, min FROM foo")
 
         # Test SELECT on a bad column name
-        with self.assertRaises(weedb.OperationalError): 
-            _cursor.execute("SELECT dateTime, foo FROM test1")
+        self.assertRaises(weedb.OperationalError, _cursor.execute, "SELECT dateTime, foo FROM test1")
         
         _cursor.close()
         _connect.close()
@@ -158,7 +157,7 @@ class Common(unittest.TestCase):
         _row = _cursor.fetchone()
         _cursor.close()
         _connect.close()
-        self.assertIsNone(_row, msg="Rollback")
+        self.assertEqual(_row, None)
 
     def test_transaction(self):
         # Create the database and schema
@@ -187,7 +186,7 @@ class Common(unittest.TestCase):
         _row = _cursor.fetchone()
         _cursor.close()
         _connect.close()
-        self.assertIsNone(_row, msg="Transaction")
+        self.assertEqual(_row, None)
 
 
 
@@ -200,8 +199,11 @@ class TestSqlite(Common):
     def test_variable(self):
         weedb.create(self.db_dict)
         _connect = weedb.connect(self.db_dict)
-        _v = _connect.get_variable('journal_mode')
-        self.assertEqual(_v[1].lower(), 'delete')
+        if weedb.sqlite.sqlite_version > '3.4.2':
+            # Early versions of sqlite did not support journal modes. Not sure exactly when it started,
+            # but I know that v3.4.2 did not have it.
+            _v = _connect.get_variable('journal_mode')
+            self.assertEqual(_v[1].lower(), 'delete')
         _v = _connect.get_variable('foo')
         self.assertEqual(_v, None)
         _connect.close()

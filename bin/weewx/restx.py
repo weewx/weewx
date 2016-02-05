@@ -367,7 +367,7 @@ class RESTThread(threading.Thread):
                 # specialized by a RESTful service to catch any unusual
                 # exceptions.
                 _response = self.post_request(request, payload)
-                if _response.code == 200:
+                if 200 <= _response.code <= 299:
                     # No exception thrown and we got a good response code, but
                     # we're still not done.  Some protocols encode a bad
                     # station ID or password in the return message.
@@ -783,7 +783,7 @@ class WOWThread(AmbientThread):
                                  "siteAuthenticationKey=XXX", _url))
         return _url
 
-    def post_request(self, request):
+    def post_request(self, request, payload=None):
         """Version of post_request() for the WOW protocol, which
         uses a response error code to signal a bad login."""
         try:
@@ -1330,7 +1330,7 @@ class StdAWEKAS(StdRESTful):
     Pos4: time (hh:mm) (varchar)
     Pos5: temperature (C) (float)
     Pos6: humidity (%) (int)
-    Pos7: air pressure (hPa) (float)
+    Pos7: air pressure (hPa) (float) [12/22/15. This should be SLP. -tk personal communications]
     Pos8: precipitation (rain at this day) (float)
     Pos9: wind speed (km/h) float)
     Pos10: wind direction (degree) (int)

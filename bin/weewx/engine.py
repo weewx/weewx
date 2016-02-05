@@ -803,7 +803,7 @@ def main(options, args, EngineClass=StdEngine) :
     by try blocks in the case of an exception."""
 
     # Set the logging facility.
-    syslog.openlog('weewx', syslog.LOG_PID | syslog.LOG_CONS)
+    syslog.openlog(options.log_label, syslog.LOG_PID | syslog.LOG_CONS)
 
     # Set up the signal handlers.
     signal.signal(signal.SIGHUP, sigHUPhandler)
@@ -820,6 +820,19 @@ def main(options, args, EngineClass=StdEngine) :
     if options.daemon:
         syslog.syslog(syslog.LOG_INFO, "engine: pid file is %s" % options.pidfile)
         daemon.daemonize(pidfile=options.pidfile)
+
+    # be sure that the system has a reasonable time (at least 1 jan 2000).
+    # log any problems every minute.
+    ts = time.time()
+    n = 0
+    while ts < 946684800:
+        if n % 120 == 0:
+            syslog.syslog(syslog.LOG_INFO,
+                          "engine: waiting for sane time.  current time is %s"
+                          % weeutil.weeutil.timestamp_to_string(ts))
+        n += 1
+        time.sleep(0.5)
+        ts = time.time()
 
     while True:
 

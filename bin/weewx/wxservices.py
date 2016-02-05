@@ -64,6 +64,7 @@ class StdWXCalculate(weewx.engine.StdService):
                 windchill = hardware
                 heatindex = prefer_hardware
                 dewpoint = software
+                humidex = None
             [[Algorithms]]
                 altimeter = aaASOS
                 maxSolarRad = RS
@@ -90,28 +91,37 @@ class StdWXCalculate(weewx.engine.StdService):
         self.max_delta_12h = int(svc_dict.get('max_delta_12h', 1800))
 
         # find out which calculations should be performed
-        # we recognize only the names in our dispatch list; others are ignored
         self.calculations = dict()
-        calc_dict = svc_dict.get('Calculations', {})
+        # look in the 'Calculations' stanza. if no 'Calculations' stanza, then
+        # look directly in the service stanza.
+        where_to_look = svc_dict.get('Calculations', svc_dict)
+        # we recognize only the names in our dispatch list; others are ignored
         for v in self._dispatch_list:
-            if v in calc_dict:
-                self.calculations[v] = calc_dict[v]
-            else:
-                # fallback to 3.0/3.1 behavior of no 'Calculations' stanza
-                self.calculations[v] = svc_dict.get(v, 'prefer_hardware')
+            x = where_to_look.get(v, 'prefer_hardware')
+            if x in ('hardware', 'software', 'prefer_hardware'):
+                self.calculations[v] = x
 
-        # get any custom algorithms
+        # determine which algorithms to use for the calculations
         self.algorithms = svc_dict.get('Algorithms', {})
+        self.algorithms.setdefault('altimeter', 'aaNOAA')
+        self.algorithms.setdefault('maxSolarRad', 'RS')
 
         # various bits we need for internal housekeeping
-        self.altitude_ft = weewx.units.convert(engine.stn_info.altitude_vt, "foot")[0]
-        self.altitude_m = weewx.units.convert(engine.stn_info.altitude_vt, "meter")[0]
+        self.altitude_ft = weewx.units.convert(
+            engine.stn_info.altitude_vt, "foot")[0]
+        self.altitude_m = weewx.units.convert(
+            engine.stn_info.altitude_vt, "meter")[0]
         self.latitude = engine.stn_info.latitude_f
         self.longitude = engine.stn_info.longitude_f
         self.temperature_12h_ago = None
         self.ts_12h_ago = None
         self.archive_interval = None
         self.rain_events = []
+
+        # report about which values will be calculated...
+        syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following values will be calculated: %s" % ','.join(["%s=%s" % (k, self.calculations[k]) for k in self.calculations]))
+        # ...and which algorithms will be used.
+        syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following algorithms will be used for calculations: %s" % ','.join(["%s=%s" % (k, self.algorithms[k]) for k in self.algorithms]))
 
         # we will process both loop and archive events
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
@@ -260,7 +270,7 @@ class StdWXCalculate(weewx.engine.StdService):
             data['appTemp'] = weewx.wxformulas.apptempF(
                 data['outTemp'], data['outHumidity'], data['windSpeed'])
         else:
-            data['apptemp'] = None
+            data['appTemp'] = None
 
     def calc_beaufort(self, data, data_type):
         if 'windSpeed' in data:

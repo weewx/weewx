@@ -27,19 +27,17 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
     """Class for managing the image generator."""
 
     def run(self):
-        
         self.setup()
-        
-        # Generate any images
         self.genImages(self.gen_ts)
         
-    def setup(self):
-        
+    def setup(self):        
         self.image_dict = self.skin_dict['ImageGenerator']
         self.title_dict = self.skin_dict.get('Labels', {}).get('Generic', {})
         self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
-        
+        # determine how much logging is desired
+        self.log_success = to_bool(self.image_dict.get('log_success', True))
+
     def genImages(self, gen_ts):
         """Generate the images.
         
@@ -221,8 +219,9 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 except IOError, e:
                     syslog.syslog(syslog.LOG_CRIT, "genimages: Unable to save to file '%s' %s:" % (img_file, e))
         t2 = time.time()
-        
-        syslog.syslog(syslog.LOG_INFO, "genimages: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
+
+        if self.log_success:
+            syslog.syslog(syslog.LOG_INFO, "genimages: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
 
 def skipThisPlot(time_ts, aggregate_interval, img_file):
     """A plot can be skipped if it was generated recently and has not changed.

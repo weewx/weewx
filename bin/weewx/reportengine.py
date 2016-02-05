@@ -104,6 +104,9 @@ class StdReportEngine(threading.Thread):
             # Add the default database binding:
             skin_dict.setdefault('data_binding', 'wx_binding')
 
+            # If not already specified, default to logging each successful run
+            skin_dict.setdefault('log_success', True)
+
             # Inject any overrides the user may have specified in the
             # weewx.conf configuration file for all reports:
             for scalar in self.config_dict['StdReport'].scalars:
@@ -184,6 +187,9 @@ class FtpGenerator(ReportGenerator):
     def run(self):
         import weeutil.ftpupload
 
+        # determine how much logging is desired
+        log_success = to_bool(self.skin_dict.get('log_success', True))
+
         t1 = time.time()
         if self.skin_dict.has_key('HTML_ROOT'):
             local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
@@ -217,7 +223,8 @@ class FtpGenerator(ReportGenerator):
             return
         
         t2= time.time()
-        syslog.syslog(syslog.LOG_INFO, """reportengine: ftp'd %d files in %0.2f seconds""" % (N, (t2-t1)))
+        if log_success:
+            syslog.syslog(syslog.LOG_INFO, """reportengine: ftp'd %d files in %0.2f seconds""" % (N, (t2-t1)))
             
                 
 #===============================================================================
@@ -246,7 +253,8 @@ class RsyncGenerator(ReportGenerator):
                 port        = self.skin_dict.get('port'),
                 ssh_options = self.skin_dict.get('ssh_options'),
                 compress    = to_bool(self.skin_dict.get('compress', False)),
-                delete      = to_bool(self.skin_dict.get('delete', False)))
+                delete      = to_bool(self.skin_dict.get('delete', False)),
+                log_success = to_bool(self.skin_dict.get('log_success', True)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: rsync upload not requested. Skipped.")
             return
@@ -269,6 +277,9 @@ class CopyGenerator(ReportGenerator):
     subdirectory."""
     
     def run(self):
+        copy_dict = self.skin_dict['CopyGenerator']
+        # determine how much logging is desired
+        log_success = to_bool(copy_dict.get('log_success', True))
         
         copy_list = []
 
@@ -276,13 +287,13 @@ class CopyGenerator(ReportGenerator):
             # Get the list of files to be copied only once, at the first invocation of
             # the generator. Wrap in a try block in case the list does not exist.
             try:
-                copy_list += weeutil.weeutil.option_as_list(self.skin_dict['CopyGenerator']['copy_once'])
+                copy_list += weeutil.weeutil.option_as_list(copy_dict['copy_once'])
             except KeyError:
                 pass
 
         # Get the list of files to be copied everytime. Again, wrap in a try block.
         try:
-            copy_list += weeutil.weeutil.option_as_list(self.skin_dict['CopyGenerator']['copy_always'])
+            copy_list += weeutil.weeutil.option_as_list(copy_dict['copy_always'])
         except KeyError:
             pass
 
@@ -314,5 +325,6 @@ class CopyGenerator(ReportGenerator):
                 # ftp'd to the server:
                 shutil.copy(_file, dest_dir)
                 ncopy += 1
-        
-        syslog.syslog(syslog.LOG_DEBUG, "reportengine: copied %d files to %s" % (ncopy, html_dest_dir))
+
+        if log_success:
+            syslog.syslog(syslog.LOG_INFO, "reportengine: copied %d files to %s" % (ncopy, html_dest_dir))

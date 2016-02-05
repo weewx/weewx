@@ -30,6 +30,15 @@ except ImportError:
 # Redirect the import of setup:
 sys.modules['setup'] = weecfg.extension
 
+def check_fileend(out_str):
+    """Early versions of ConfigObj did not terminate files with a newline.
+    This function will add one if it's missing"""
+    if configobj.__version__ <= '4.4.0':
+        out_str.seek(-1, os.SEEK_END)
+        x = out_str.read(1)
+        if x != '\n':
+            out_str.write('\n')
+
 # Change directory so we can find things dependent on the location of
 # this file, such as config files and expected values:
 this_file = os.path.join(os.getcwd(), __file__)
@@ -114,6 +123,50 @@ class ConfigTest(unittest.TestCase):
         y_dict = configobj.ConfigObj(yio)
         weecfg.remove_and_prune(x_dict, y_dict)
         self.assertEqual("{'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
+
+    report_start_str = """[StdReport]
+        SKIN_ROOT = skins
+        HTML_ROOT = public_html
+        data_binding = wx_binding
+        [[XtraReport]]
+            skin = Foo
+            
+        [[StandardReport]]
+            skin = Standard
+    
+        [[FTP]]
+            skin = Ftp
+    
+        [[RSYNC]]
+            skin = Rsync
+"""
+            
+    report_expected_str = """[StdReport]
+        SKIN_ROOT = skins
+        HTML_ROOT = public_html
+        data_binding = wx_binding
+        
+        [[StandardReport]]
+                skin = Standard
+        [[XtraReport]]
+                skin = Foo
+        
+        [[FTP]]
+                skin = Ftp
+        
+        [[RSYNC]]
+                skin = Rsync
+""" 
+     
+    def test_reorder(self):
+        """Test the utility reorder_to_ref"""
+        xio = StringIO.StringIO(ConfigTest.report_start_str)
+        x_dict = configobj.ConfigObj(xio)
+        weecfg.reorder_to_ref(x_dict)
+        x_result = StringIO.StringIO()
+        x_dict.write(x_result)
+        check_fileend(x_result)
+        self.assertEqual(ConfigTest.report_expected_str, x_result.getvalue())
 
     if have_mock:
 
@@ -229,8 +282,9 @@ class ConfigTest(unittest.TestCase):
         # Write it out to a StringIO, then start checking it against the expected
         out_str = StringIO.StringIO()
         config_dict.write(out_str)
-
+        check_fileend(out_str)
         out_str.seek(0)
+
         fd_expected = open('expected/weewx27_expected.conf')
         N = 0
         for expected in fd_expected:
@@ -253,8 +307,9 @@ class ConfigTest(unittest.TestCase):
         # Write it out to a StringIO, then start checking it against the expected
         out_str = StringIO.StringIO()
         config_dict.write(out_str)
-
+        check_fileend(out_str)
         out_str.seek(0)
+
         fd_expected = open('expected/weewx30_expected.conf')
         N = 0
         for expected in fd_expected:
@@ -295,12 +350,9 @@ class ConfigTest(unittest.TestCase):
         # Write it out to a StringIO, then start checking it against the expected
         out_str = StringIO.StringIO()
         config_dict.write(out_str)
-        
-        fd = open('/home/tkeffer/tmp/merged.conf', 'w')
-        config_dict.write(fd)
-        fd.close()
-
+        check_fileend(out_str)
         out_str.seek(0)
+
         fd_expected = open('expected/weewx_user_expected.conf')
         N = 0
         for expected in fd_expected:
@@ -318,7 +370,14 @@ class ConfigTest(unittest.TestCase):
 
 class ExtensionUtilityTest(unittest.TestCase):
     """Tests of utility functions used by the extension installer."""
-    
+
+    INSTALLED_NAMES = ['/var/tmp/pmon/bin/user/pmon.py', 
+                       '/var/tmp/pmon/changelog', 
+                       '/var/tmp/pmon/install.py', 
+                       '/var/tmp/pmon/readme.txt', 
+                       '/var/tmp/pmon/skins/pmon/index.html.tmpl', 
+                       '/var/tmp/pmon/skins/pmon/skin.conf']
+
     def setUp(self):
         shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
 
@@ -326,7 +385,8 @@ class ExtensionUtilityTest(unittest.TestCase):
         shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
 
     def test_tar_extract(self):
-        member_names = weecfg.extract_tarball('./pmon.tgz', '/var/tmp')
+        shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
+        member_names = weecfg.extract_tar('./pmon.tar', '/var/tmp')
         self.assertEqual(member_names, ['pmon', 
                                         'pmon/readme.txt', 
                                         'pmon/skins', 
@@ -342,13 +402,48 @@ class ExtensionUtilityTest(unittest.TestCase):
         for direc in os.walk('/var/tmp/pmon'):
             for filename in direc[2]:
                 actual_files.append(os.path.join(direc[0], filename))
-        self.assertEqual(sorted(actual_files),
-                         ['/var/tmp/pmon/bin/user/pmon.py', 
-                          '/var/tmp/pmon/changelog', 
-                          '/var/tmp/pmon/install.py', 
-                          '/var/tmp/pmon/readme.txt', 
-                          '/var/tmp/pmon/skins/pmon/index.html.tmpl', 
-                          '/var/tmp/pmon/skins/pmon/skin.conf'])
+        self.assertEqual(sorted(actual_files), self.INSTALLED_NAMES)
+
+    def test_tgz_extract(self):
+        shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
+        member_names = weecfg.extract_tar('./pmon.tgz', '/var/tmp')
+        self.assertEqual(member_names, ['pmon',
+                                        'pmon/bin', 
+                                        'pmon/bin/user', 
+                                        'pmon/bin/user/pmon.py',
+                                        'pmon/changelog',
+                                        'pmon/install.py',
+                                        'pmon/readme.txt',
+                                        'pmon/skins',
+                                        'pmon/skins/pmon',
+                                        'pmon/skins/pmon/index.html.tmpl',
+                                        'pmon/skins/pmon/skin.conf'])
+        actual_files = []
+        for direc in os.walk('/var/tmp/pmon'):
+            for filename in direc[2]:
+                actual_files.append(os.path.join(direc[0], filename))
+        self.assertEqual(sorted(actual_files), self.INSTALLED_NAMES)
+
+    def test_zip_extract(self):
+        shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
+        member_names = weecfg.extract_zip('./pmon.zip', '/var/tmp')
+        self.assertEqual(member_names, ['pmon/', 
+                                        'pmon/bin/', 
+                                        'pmon/bin/user/', 
+                                        'pmon/bin/user/pmon.py',
+                                        'pmon/changelog', 
+                                        'pmon/install.py', 
+                                        'pmon/readme.txt', 
+                                        'pmon/skins/', 
+                                        'pmon/skins/pmon/', 
+                                        'pmon/skins/pmon/index.html.tmpl', 
+                                        'pmon/skins/pmon/skin.conf'])
+        actual_files = []
+        for direc in os.walk('/var/tmp/pmon'):
+            for filename in direc[2]:
+                actual_files.append(os.path.join(direc[0], filename))
+        self.assertEqual(sorted(actual_files), self.INSTALLED_NAMES)
+
         
 class ExtensionInstallTest(unittest.TestCase):
     """Tests of the extension installer."""

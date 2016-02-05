@@ -1,10 +1,72 @@
 weewx change history
 --------------------
 
-3.3.0 YY/YY/YY
+3.4.1 XX/YY/2016
+
+Fixed bug that prevented rsync uploader from working.
+
+Fixed bug in wmr300 driver when receiving empty buffers from the station.
+
+The type of MySQL database engine can now be specified. Default is 'INNODB'.
+
+Updated userguide with capabilities of the TE923 driver added in 3.4.0.
+
+
+3.4.0 01/16/2016
+
+The tag $hour has now been added. It's now possible to iterate over hours.
+Thanks to user Julen!
+
+Complete overhaul of the te923 driver.  Thanks to user Andrew Miles.  The
+driver now supports the data logger and automatically detects small or large
+memory models.  Added ability to set/get the altitude, lat/lon, and other
+station parameters.  Significant speedup to reading station memory, from 531s
+to 91s, which is much closer to the 53s for the te923tool written in C (all for
+a station with the small memory model).
+
+The wee_debug utility is now properly installed, not just distributed.
+
+Fixed bug in almanac code that caused an incorrect sunrise or sunset to be
+calculated if it followed a calculation with an explicit horizon value.
+
+Localization of tags is now optional. Use function toString() with
+argument localize set to False. Example: 
+$current.outTemp.toString($localize=False)
+Fixes issue #88.
+
+In the acurite driver, default to use_constants=True.
+
+Fixed bug in the rhel and suse rpm packaging that resulted in a configuration
+file with html, database, and web pages in the setup.py locations instead of
+the rpm locations.
+
+The extension utility wee_extension now recognizes zip archives as well as
+tar and compressed tar archives.
+
+Check for a sane system time when starting up.  If time is not reasonable,
+wait for it.  Log the time status while waiting.
+
+Added log_success option to cheetah, copy, image, rsync, and ftp generators.
+
+Older versions of MySQL (v5.0 and later) are now supported.
+
+
+3.3.1 12/06/2015
+
+Fixed bug when posting to WOW.
+
+Fixed bug where the subsection for a custom report gets moved to the very
+end of the [StdReport] section of a configuration file on upgrade. 
+Fixes issue #81.
+
+
+3.3.0 12/05/2015
 
 Now really includes wunderfixer. It was inadvertently left out of the install
 script.
+
+Rewrote the almanac so it now supports star ephemeris. For example,
+$almanac.rigel.next_rising. Fixes issue #79.
 
 Uninstalling an extension with a skin now deletes all empty directories. This
 fixes issue #43.
@@ -12,6 +74,9 @@ fixes issue #43.
 Fixed bug in WMR200 driver that caused it to emit dayRain, when what it was
 really emitting was the "rain in the last 24h, excluding current hour."
 Fixes issue #62.
+
+Fixed bug in WMR200 driver that caused it to emit gauge pressure for altimeter
+pressure. Thanks to user Mark Jenks for nagging me that something was wrong.
 
 Fixed bug that caused wind direction to be calculated incorrectly, depending
 on the ordering of a dictionary. Thanks to user Chris Matteri for not only
@@ -33,16 +98,33 @@ set in skin.conf with option bottom_label_offset.
 
 An optional port number can now be specified with the MySQL database.
 
-Added option use_constants in the Acurate driver.  Default is false; the
+Added option use_constants in the Acurite driver.  Default is false; the
 calibration constants are ignored, and a linear approximation is used for
 all types of consoles.  Specify use_constants for 01035/01036 consoles to
 calculate using the constants.  The 02032/02064 consoles always use the
 linear approximation.
 
+Fixed test for basic sensor connectivity in the Acurite driver.
+
 The policy of "wind direction is undefined when no wind speed" is enforced
 by the StdWXCalculate service.  There were a few drivers that were still
 applying the policy: acurite, cc3000, fousb, ws1, wmr100, wmr200, ultimeter.
 These have been fixed.
+
+Changed logic that decides whether the configuration file includes a custom
+schema, or the name of an existing schema.
+
+Added new command-line utility wee_debug, for generating a troubleshooting 
+information report.
+
+Added option --log-label to specify the label that appears in syslog entries.
+This makes it possible to organize output from multiple weewx instances
+running on a single system.
+
+Fixed problem with the Vantage driver that caused it to decode the console
+display units incorrectly. Thanks to Luc Heijst!
+
+The WMR300 driver is now part of the weewx distribution.
 
 
 3.2.1 07/18/15
