@@ -9,6 +9,8 @@ Fixed bug in wmr300 driver when receiving empty buffers from the station.
 
 The type of MySQL database engine can now be specified. Default is 'INNODB'.
 
+Updated userguide with capabilities of the TE923 driver added in 3.4.0.
+
 
 3.4.0 01/16/2016
 
