@@ -25,12 +25,12 @@ from weeutil.weeutil import to_bool, to_int, to_float
 
 class ImageGenerator(weewx.reportengine.ReportGenerator):
     """Class for managing the image generator."""
-
+    
     def run(self):
         self.setup()
         self.genImages(self.gen_ts)
         
-    def setup(self):        
+    def setup(self):
         self.image_dict = self.skin_dict['ImageGenerator']
         self.title_dict = self.skin_dict.get('Labels', {}).get('Generic', {})
         self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)

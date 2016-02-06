@@ -537,15 +537,18 @@ class TimePlot(GeneralPlot) :
         """Specialized version for time plots."""
         if self.x_label_format is None:
             (xmin, xmax) = self._calcXMinMax()
-            delta = xmax - xmin
-            if delta > 30*24*3600:
-                self.x_label_format = "%x"
-            elif delta > 24*3600:
-                self.x_label_format = '%x %X'
-            else:
-                self.x_label_format = '%X'
+            if xmin is not None and xmax is not None:
+                delta = xmax - xmin
+                if delta > 30*24*3600:
+                    self.x_label_format = "%x"
+                elif delta > 24*3600:
+                    self.x_label_format = '%x %X'
+                else:
+                    self.x_label_format = '%X'
         
     def _genXLabel(self, x):
+        if self.x_label_format is None:
+            return ''
         time_tuple = time.localtime(x)
         xlabel = time.strftime(self.x_label_format, time_tuple)
         return xlabel
