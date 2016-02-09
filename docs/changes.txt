@@ -13,6 +13,8 @@ Updated userguide with capabilities of the TE923 driver added in 3.4.0.
 
 Added aggregation type min_ge(val).
 
+Provide better feedback when a driver does not implement a configurator.
+
 
 3.4.0 01/16/2016
 
