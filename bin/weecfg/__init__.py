@@ -256,6 +256,11 @@ def save(config_dict, config_path, backup=False):
 #==============================================================================
 
 def modify_config(config_dict, stn_info, logger, debug=False):
+    """If a driver has a configuration editor, then use that to insert the
+    stanza for the driver in the config_dict.  If there is no configuration
+    editor, then inject a generic configuration, i.e., just the driver name
+    with a single 'driver' element that points to the driver file.
+    """
     driver_editor = None
     driver_name = None
     driver_version = None
@@ -276,18 +281,25 @@ def modify_config(config_dict, stn_info, logger, debug=False):
 
     # Get a driver stanza, if possible
     stanza = None
-    if driver_editor is not None:
-        orig_stanza_text = None
+    if driver_name is not None:
+        if driver_editor is not None:
+            orig_stanza_text = None
 
-        # if a previous stanza exists for this driver, grab it
-        if driver_name in config_dict:
-            orig_stanza = configobj.ConfigObj(interpolation=False)
-            orig_stanza[driver_name] = config_dict[driver_name]
-            orig_stanza_text = '\n'.join(orig_stanza.write())
+            # if a previous stanza exists for this driver, grab it
+            if driver_name in config_dict:
+                orig_stanza = configobj.ConfigObj(interpolation=False)
+                orig_stanza[driver_name] = config_dict[driver_name]
+                orig_stanza_text = '\n'.join(orig_stanza.write())
 
-        # let the driver process the stanza or give us a new one
-        stanza_text = driver_editor.get_conf(orig_stanza_text)
-        stanza = configobj.ConfigObj(stanza_text.splitlines())
+            # let the driver process the stanza or give us a new one
+                stanza_text = driver_editor.get_conf(orig_stanza_text)
+                stanza = configobj.ConfigObj(stanza_text.splitlines())
+        else:
+            stanza = configobj.ConfigObj(interpolation=False)
+            if driver_name in config_dict:
+                stanza[driver_name] = config_dict[driver_name]
+            else:
+                stanza[driver_name] = {}
 
     # If we have a stanza, inject it into the configuration dictionary
     if stanza is not None and driver_name is not None:
@@ -963,17 +975,19 @@ def load_driver_editor(driver_module_name):
     
     driver_module_name: A string holding the driver name.
                         E.g., 'weewx.drivers.fousb'
-
-    The editor and driver name must be defined, otherwise exception.  Version
-    does not have to be specified (but it is highly recommended).
     """
     __import__(driver_module_name)
     driver_module = sys.modules[driver_module_name]
-    loader_function = getattr(driver_module, 'confeditor_loader')
-    editor = loader_function()
-    driver_name = driver_module.DRIVER_NAME
-    driver_version = driver_module.DRIVER_VERSION \
-        if hasattr(driver_module, 'DRIVER_VERSION') else 'undefined'
+    editor = None
+    driver_name = None
+    driver_version = 'undefined'
+    if hasattr(driver_module, 'confeditor_loader'):
+        loader_function = getattr(driver_module, 'confeditor_loader')
+        editor = loader_function()
+    if hasattr(driver_module, 'DRIVER_NAME'):
+        driver_name = driver_module.DRIVER_NAME
+    if hasattr(driver_module, 'DRIVER_VERSION'):
+        driver_version = driver_module.DRIVER_VERSION
     return editor, driver_name, driver_version
 
 
