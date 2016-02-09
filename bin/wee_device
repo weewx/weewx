@@ -12,7 +12,7 @@ import syslog
 import weecfg
 
 def main():
-    syslog.openlog('wee_device', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('wee_device', syslog.LOG_PID | syslog.LOG_CONS)
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
     # Load the configuration file
@@ -27,6 +27,7 @@ def main():
         sys.exit("No configuration for device %s" % e)
 
     # Try to load the driver
+    device = None
     try:
         __import__(driver)
         driver_module = sys.modules[driver]
@@ -49,5 +50,5 @@ def main():
 
     device.configure(config_dict)
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()

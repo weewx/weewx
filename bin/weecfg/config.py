@@ -15,8 +15,8 @@ import weewx
 from weecfg import Logger
 
 # The default station information:
-stn_info_defaults = {'station_type' : 'Simulator',
-                     'driver'       : 'weewx.drivers.simulator'}
+stn_info_defaults = {'station_type': 'Simulator',
+                     'driver': 'weewx.drivers.simulator'}
 
 class ConfigEngine(object):
     
@@ -68,7 +68,7 @@ class ConfigEngine(object):
                 dist_config_dict = configobj.ConfigObj(options.dist_config,
                                                        file_error=True)
             except IOError, e:
-                sys.exit("Unable to open distribution configuration file: %s", e)
+                sys.exit("Unable to open distribution configuration file: %s" % e)
             except SyntaxError, e:
                 sys.exit("Syntax error in distribution configuration file '%s': %s" %
                          (options.dist_config, e))

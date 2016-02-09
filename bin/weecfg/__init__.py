@@ -673,8 +673,8 @@ def update_to_v32(config_dict):
         # symbol for WEEWX_ROOT does not get lost.
         save, config_dict.interpolation = config_dict.interpolation, False
         config_dict['DatabaseTypes'] = {
-            'SQLite' : {'driver': 'weedb.sqlite',
-                        'SQLITE_ROOT': '%(WEEWX_ROOT)s/archive'}}
+            'SQLite': {'driver': 'weedb.sqlite',
+                       'SQLITE_ROOT': '%(WEEWX_ROOT)s/archive'}}
         config_dict.interpolation = save
         try:
             root = config_dict['Databases']['archive_sqlite']['root']
@@ -724,13 +724,13 @@ def update_to_v32(config_dict):
             return
 
         # Now check to see whether it already has the option 'enable':
-        if c['StdRESTful'][service].has_key('enable'):
+        if 'enable' in c['StdRESTful'][service]:
             # It does. No need to proceed
             return
 
         # The option 'enable' is not present. Add it,
         # and set based on whether the keyword is present:
-        if c['StdRESTful'][service].has_key(keyword):
+        if keyword in c['StdRESTful'][service]:
             c['StdRESTful'][service]['enable'] = 'true'
         else:
             c['StdRESTful'][service]['enable'] = 'false'
@@ -837,7 +837,7 @@ def reorder_to_ref(config_dict, section_tuple=canonical_order):
     subsection_order = [x[0] for x in section_tuple[1]]
     # Reorder the subsections, then the scalars
     config_dict.sections = reorder(config_dict.sections, subsection_order)
-    config_dict.scalars  = reorder(config_dict.scalars, section_tuple[2])
+    config_dict.scalars = reorder(config_dict.scalars, section_tuple[2])
     
     # Now recursively go through each of my subsections,
     # allowing them to reorder their contents
@@ -868,7 +868,7 @@ def reorder(name_list, ref_list):
             result.append(name)
             
     # Make sure I have the same number I started with
-    assert(len(name_list)==len(result))
+    assert(len(name_list) == len(result))
     return result
     
 def remove_and_prune(a_dict, b_dict):
@@ -943,17 +943,17 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
                     if hasattr(driver_module, 'DRIVER_VERSION') else '?'
                 # Create an entry for it, keyed by the driver module name
                 driver_info_dict[driver_module_name] = {
-                    'module_name' : driver_module_name,
-                    'driver_name' : driver_module.DRIVER_NAME,
-                    'version'     : driver_module_version,
-                    'status'      : ''}
+                    'module_name': driver_module_name,
+                    'driver_name': driver_module.DRIVER_NAME,
+                    'version': driver_module_version,
+                    'status': ''}
         except ImportError, e:
             # If the import fails, report it in the status
             driver_info_dict[driver_module_name] = {
-                'module_name' : driver_module_name,
-                'driver_name' : '?',
-                'version'     : '?',
-                'status'      : e}
+                'module_name': driver_module_name,
+                'driver_name': '?',
+                'version': '?',
+                'status': e}
         except Exception, e:
             # Ignore anything else.  This might be a python file that is not
             # a driver, a python file with errors, or who knows what.
@@ -1045,11 +1045,11 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     print "Indicate the preferred units for display: 'metric' or 'us'"
     uni = prompt_with_options("units", units, ['us', 'metric'])
 
-    return {'location' : loc,
-            'altitude' : alt,
-            'latitude' : lat,
+    return {'location': loc,
+            'altitude': alt,
+            'latitude': lat,
             'longitude': lon,
-            'units'    : uni}
+            'units': uni}
 
 
 def prompt_for_driver(dflt_driver=None):
@@ -1064,6 +1064,7 @@ def prompt_for_driver(dflt_driver=None):
         if dflt_driver == d:
             dflt_idx = i
     msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
+    idx = 0
     ans = None
     while ans is None:
         ans = raw_input(msg).strip()
@@ -1153,8 +1154,8 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
 def extract_roots(config_path, config_dict, bin_root):
     """Get the location of the various root directories used by weewx."""
     
-    root_dict = {'WEEWX_ROOT' : config_dict['WEEWX_ROOT'],
-                 'CONFIG_ROOT' : os.path.dirname(config_path)}
+    root_dict = {'WEEWX_ROOT': config_dict['WEEWX_ROOT'],
+                 'CONFIG_ROOT': os.path.dirname(config_path)}
     # If bin_root has not been defined, then figure out where it is using
     # the location of this file:
     if bin_root:
