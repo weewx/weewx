@@ -256,6 +256,10 @@ def save(config_dict, config_path, backup=False):
 #==============================================================================
 
 def modify_config(config_dict, stn_info, logger, debug=False):
+    driver_editor = None
+    driver_name = None
+    driver_version = None
+
     # Get the driver editor, name, and version:
     driver = stn_info.get('driver')
     if driver:
@@ -268,8 +272,7 @@ def modify_config(config_dict, stn_info, logger, debug=False):
         stn_info['station_type'] = driver_name
         if debug:
             logger.log('Using %s version %s (%s)' %
-                       (stn_info['station_type'], driver_version, driver),
-                       level=1)
+                       (driver_name, driver_version, driver), level=1)
 
     # Get a driver stanza, if possible
     stanza = None
@@ -287,7 +290,7 @@ def modify_config(config_dict, stn_info, logger, debug=False):
         stanza = configobj.ConfigObj(stanza_text.splitlines())
 
     # If we have a stanza, inject it into the configuration dictionary
-    if stanza is not None:
+    if stanza is not None and driver_name is not None:
         # Ensure that the driver field matches the path to the actual driver
         stanza[driver_name]['driver'] = driver
         # Insert the stanza in the configuration dictionary:
@@ -960,12 +963,19 @@ def load_driver_editor(driver_module_name):
     
     driver_module_name: A string holding the driver name.
                         E.g., 'weewx.drivers.fousb'
+
+    The editor and driver name must be defined, otherwise exception.  Version
+    does not have to be specified (but it is highly recommended).
     """
     __import__(driver_module_name)
     driver_module = sys.modules[driver_module_name]
     loader_function = getattr(driver_module, 'confeditor_loader')
     editor = loader_function()
-    return editor, driver_module.DRIVER_NAME, driver_module.DRIVER_VERSION
+    driver_name = driver_module.DRIVER_NAME
+    driver_version = driver_module.DRIVER_VERSION \
+        if hasattr(driver_module, 'DRIVER_VERSION') else 'undefined'
+    return editor, driver_name, driver_version
+
 
 #==============================================================================
 #                Utilities that seek info from the command line
