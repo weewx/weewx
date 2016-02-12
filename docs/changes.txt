@@ -15,6 +15,8 @@ Added aggregation type min_ge(val).
 
 Provide better feedback when a driver does not implement a configurator.
 
+Added humidex and appTemp to group_temperature. Fixed issue #96.
+
 
 3.4.0 01/16/2016
 
