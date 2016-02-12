@@ -293,8 +293,8 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                 orig_stanza_text = '\n'.join(orig_stanza.write())
 
             # let the driver process the stanza or give us a new one
-                stanza_text = driver_editor.get_conf(orig_stanza_text)
-                stanza = configobj.ConfigObj(stanza_text.splitlines())
+            stanza_text = driver_editor.get_conf(orig_stanza_text)
+            stanza = configobj.ConfigObj(stanza_text.splitlines())
         else:
             stanza = configobj.ConfigObj(interpolation=False)
             if driver_name in config_dict:
