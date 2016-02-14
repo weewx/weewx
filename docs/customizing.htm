@@ -46,7 +46,7 @@
 
     <h1 class="title">Customizing weewx<br/>
       <span class="version">
-Version: 3.3.1
+Version: 3.4.0
       </span>
     </h1>
 
@@ -1550,11 +1550,33 @@ or in foobar units: $day.barometer.min.foobar
 
     <h3>Iteration</h3>
 
-    <p>For dot codes using an aggregation <em>e.g.</em>,
-        <span class="code">$day</span>, <span class="code">$week</span>,
-        <span class="code">$month</span>, <span class="code">$year</span>,
-        <span class="code">$rainyear</span>, then
-        the aggregation period can be iterated over. </p>
+    <p>It is possible to iterate over the following time periods:</p>
+
+    <table class="indent" style="Width: 50%"
+           summary="Iteration periods">
+        <tbody>
+        <tr class="first_row">
+            <td>Tag suffix</td>
+            <td>Results</td>
+        </tr>
+        <tr>
+            <td class="code first_col">.hours</td>
+            <td>Iterate by hours</td>
+        </tr>
+        <tr>
+            <td class="code first_col">.days</td>
+            <td>Iterate by days</td>
+        </tr>
+        <tr>
+            <td class="code first_col">.months</td>
+            <td>Iterate by months</td>
+        </tr>
+        <tr>
+            <td class="code first_col">.years</td>
+            <td>Iterate by years</td>
+        </tr>
+        </tbody>
+    </table>
 
     <p>For example, the following template uses a Cheetah
         <span class="code">for</span> loop to iterate over all months in
@@ -5537,6 +5559,12 @@ xstats/bin/user/xstats.py</pre>
             </td>
         </tr>
         <tr>
+            <td class="first_col code">min_ge(val)</td>
+            <td>The number of days where the minimum value is greater than or
+                equal to <em>val</em>. Aggregation period must be one day or longer.
+            </td>
+        </tr>
+        <tr>
             <td class="first_col code">min_le(val)</td>
             <td>The number of days where the minimum value is less than or
                 equal to <em>val</em>. Aggregation period must be one day or longer.
@@ -5613,13 +5641,31 @@ xstats/bin/user/xstats.py</pre>
         </tr>
         <tr>
             <td class="first_col">group_altitude</td>
-            <td>altitude</td>
+            <td>altitude<br/>
+                cloudbase</td>
             <td>foot <br/>
                 meter
             </td>
             <td>foot</td>
             <td>meter</td>
             <td>meter</td>
+        </tr>
+        <tr>
+            <td class="first_col">group_amp</td>
+            <td></td>
+            <td>amp</td>
+            <td>amp</td>
+            <td>amp</td>
+            <td>amp</td>
+        </tr>
+        <tr>
+            <td class="first_col">group_data</td>
+            <td></td>
+            <td>byte<br/>
+                bit</td>
+            <td>byte</td>
+            <td>byte</td>
+            <td>byte</td>
         </tr>
         <tr>
             <td class="first_col">group_degree_day</td>
@@ -5646,12 +5692,38 @@ xstats/bin/user/xstats.py</pre>
             <td>degree_compass</td>
         </tr>
         <tr>
+            <td class="first_col">group_distance</td>
+            <td>windrun</td>
+            <td>mile<br/>
+                km</td>
+            <td>mile</td>
+            <td>km</td>
+            <td>km</td>
+        </tr>
+        <tr>
+            <td class="first_col">group_energy</td>
+            <td></td>
+            <td>watt_hour</td>
+            <td>watt_hour</td>
+            <td>watt_hour</td>
+            <td>watt_hour</td>
+        </tr>
+        <tr>
             <td class="first_col">group_interval</td>
             <td>interval</td>
             <td>minute</td>
             <td>minute</td>
             <td>minute</td>
             <td>minute</td>
+        </tr>
+        <tr>
+            <td class="first_col">group_length</td>
+            <td></td>
+            <td>inch<br/>
+                cm</td>
+            <td>inch</td>
+            <td>cm</td>
+            <td>cm</td>
         </tr>
         <tr>
             <td class="first_col">group_moisture</td>
@@ -5677,6 +5749,14 @@ xstats/bin/user/xstats.py</pre>
             <td>percent</td>
             <td>percent</td>
             <td>percent</td>
+        </tr>
+        <tr>
+            <td class="first_col">group_power</td>
+            <td></td>
+            <td>watt</td>
+            <td>watt</td>
+            <td>watt</td>
+            <td>watt</td>
         </tr>
         <tr>
             <td class="first_col">group_pressure</td>
@@ -5762,12 +5842,14 @@ xstats/bin/user/xstats.py</pre>
         </tr>
         <tr>
             <td class="first_col">group_temperature</td>
-            <td>dewpoint <br/>
+            <td>appTemp <br/>
+                dewpoint <br/>
                 extraTemp1 <br/>
                 extraTemp2 <br/>
                 extraTemp3 <br/>
                 heatindex <br/>
                 heatingTemp <br/>
+                humidex <br/>
                 inTemp <br/>
                 leafTemp1 <br/>
                 leafTemp2 <br/>
@@ -5814,6 +5896,16 @@ xstats/bin/user/xstats.py</pre>
             <td>volt</td>
             <td>volt</td>
             <td>volt</td>
+        </tr>
+        <tr>
+            <td class="first_col">group_volume</td>
+            <td></td>
+            <td>cubic_foot<br/>
+                gallon<br/>
+                litre</td>
+            <td>gallon</td>
+            <td>litre</td>
+            <td>litre</td>
         </tr>
         <tr>
             <td class="first_col">group_NONE</td>
@@ -6168,127 +6260,127 @@ xstats/bin/user/xstats.py</pre>
         <tr>
             <td class='first_col'>barometer</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>pressure</td>
             <td>S</td>
-            <td></td>
+            <td>S</td>
         </tr>
         <tr>
             <td class='first_col'>altimeter</td>
             <td>S</td>
-            <td></td>
+            <td>S</td>
         </tr>
         <tr>
             <td class='first_col'>inTemp</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>outTemp</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>inHumidity</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>outHumidity</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>windSpeed</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>windDir</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>windGust</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>windGustDir</td>
             <td>D</td>
-            <td></td>
+            <td>D</td>
         </tr>
         <tr>
             <td class='first_col'>rain</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>rainRate</td>
             <td>S</td>
-            <td></td>
+            <td>S</td>
         </tr>
         <tr>
             <td class='first_col'>dewpoint</td>
             <td>S</td>
-            <td></td>
+            <td>S</td>
         </tr>
         <tr>
             <td class='first_col'>windchill</td>
             <td>H/S</td>
-            <td></td>
+            <td>H/S</td>
         </tr>
         <tr>
             <td class='first_col'>heatindex</td>
             <td>S</td>
-            <td></td>
+            <td>S</td>
         </tr>
         <tr>
             <td class='first_col'>UV<sup>1</sup></td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraTemp1</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraTemp2</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraTemp3</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraTemp4</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraHumid1</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraHumid2</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraHumid3</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>extraHumid4</td>
             <td>H</td>
-            <td></td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>txBatteryStatus</td>

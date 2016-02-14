@@ -186,6 +186,12 @@ class TimespanBinder(object):
         self.converter   = converter
         self.option_dict = option_dict
 
+    # Iterate over hours in the time period:
+    def hours(self, data_binding=None):
+        return TimespanBinder._seqGenerator(weeutil.weeutil.genHourSpans, self.timespan,
+                                            self.db_lookup, data_binding,
+                                            'hour', self.formatter, self.converter, **self.option_dict)
+
     # Iterate over days in the time period:
     def days(self, data_binding=None):
         return TimespanBinder._seqGenerator(weeutil.weeutil.genDaySpans, self.timespan,

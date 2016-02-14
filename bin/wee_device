@@ -12,7 +12,7 @@ import syslog
 import weecfg
 
 def main():
-    syslog.openlog('wee_device', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('wee_device', syslog.LOG_PID | syslog.LOG_CONS)
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
     # Load the configuration file
@@ -25,25 +25,30 @@ def main():
         driver = config_dict[device_type]['driver']
     except KeyError, e:
         sys.exit("No configuration for device %s" % e)
-            
 
     # Try to load the driver
+    device = None
     try:
         __import__(driver)
         driver_module = sys.modules[driver]
         loader_function = getattr(driver_module, 'configurator_loader')
         device = loader_function(config_dict)
         driver_name = driver_module.DRIVER_NAME
-        driver_vers = driver_module.DRIVER_VERSION
+        driver_vers = driver_module.DRIVER_VERSION \
+            if hasattr(driver_module, 'DRIVER_VERSION') else '?'
         print 'Using %s driver version %s (%s)' % (
             driver_name, driver_vers, driver)
+    except AttributeError, e:
+        msg = "The driver %s does not include a configuration tool" % driver
+        syslog.syslog(syslog.LOG_INFO, "%s: %s" % (msg, e))
+        exit(0)
     except Exception, e:
         msg = "Cannot load configurator for %s" % device_type
         syslog.syslog(syslog.LOG_ERR, "%s: %s" % (msg, e))
         print msg
-        exit(0)
+        exit(1)
 
     device.configure(config_dict)
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()

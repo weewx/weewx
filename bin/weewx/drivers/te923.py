@@ -55,6 +55,10 @@ a value of 0.02589 in (0.6578 mm) per bucket tip.
 
 The station has altitude, latitude, longitude, and time.
 
+Setting the time does not persist.  If you set the station time using weewx,
+the station initially indicates that it is set to the new time, but then it
+reverts.
+
 Notes From/About Other Implementations
 
 Apparently te923tool came first, then wview copied a bit from it.  te923tool
@@ -422,11 +426,12 @@ schema, these are the additional fields that must be added to the schema:
           ('storm',                'REAL'),
 """
 
-# FIXME: flush the usb buffer at startup so we do not fail
 # TODO: figure out how to read station pressure from station
 # TODO: figure out how to clear station memory
 # TODO: clear rain total
 
+# FIXME: set-date and sync-date do not work - something reverts the clock
+# FIXME: is there any way to get rid of the bad header byte on first read?
 
 from __future__ import with_statement
 import syslog
@@ -437,7 +442,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.16'
+DRIVER_VERSION = '0.17'
 
 def loader(config_dict, engine):
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -722,6 +727,8 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--set-date", dest="setdate",
                           type=str, metavar="YEAR,MONTH,DAY",
                           help="set station date")
+        parser.add_option("--sync-date", dest="syncdate", action="store_true",
+                          help="set station date using system clock")
         parser.add_option("--get-location-local", dest="loc_local",
                           action="store_true",
                           help="display local location and timezone")
@@ -737,7 +744,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--get-altitude", dest="getalt", action="store_true",
                           help="display altitude")
         parser.add_option("--set-altitude", dest="setalt", type=int,
-                          metavar="ALT", help="set altitude")
+                          metavar="ALT", help="set altitude (meters)")
         parser.add_option("--get-alarms", dest="getalarms",
                           action="store_true", help="display alarms")
         parser.add_option("--set-alarms", dest="setalarms", type=str,
@@ -746,7 +753,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
                           action="store_true", help="display archive interval")
         parser.add_option("--set-interval", dest="setinterval",
                           type=str, metavar="INTERVAL",
-                          help="set archive interval")
+                          help="set archive interval (seconds)")
         parser.add_option("--format", dest="format",
                           type=str, metavar="FORMAT", default='table',
                           help="formats include: table, dict")
@@ -773,6 +780,8 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
                 self.show_date(station)
             elif options.setdate is not None:
                 self.set_date(station, options.setdate)
+            elif options.syncdate:
+                self.set_date(station, None)
             elif options.loc_local is not None:
                 self.show_location(station, 0)
             elif options.setloc_local is not None:
@@ -830,7 +839,6 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
         print "Rain yesterday  : %s" % data['rain_yesterday']
         print "Rain this week  : %s" % data['rain_week']
         print "Rain this month : %s" % data['rain_month']
-        # FIXME: verify date format and local/gm time here
         print "Last Barometer reading : %s" % time.strftime(
             "%Y %b %d %H:%M", time.localtime(data['barometer_ts']))
         for i in range(25):
@@ -845,22 +853,25 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
 
     @staticmethod
     def set_date(station, datestr):
-        date_list = datestr.split(',')
-        if len(date_list) != 3:
-            print "Bad date '%s', format is YEAR,MONTH,DAY" % datestr
-            return
-        if int(date_list[0]) < 2000 or int(date_list[0]) > 2099:
-            print "Year must be between 2000 and 2099 inclusive"
-            return
-        if int(date_list[1]) < 1 or int(date_list[1]) > 12:
-            print "Month must be between 1 and 12 inclusive"
-            return
-        if int(date_list[2]) < 1 or int(date_list[2]) > 31:
-            print "Day must be between 1 and 31 inclusive"
-            return
-        tt = time.localtime()
-        offset = 1 if tt[3] < 12 else 0
-        ts = time.mktime((int(date_list[0]), int(date_list[1]), int(date_list[2]) - offset, 0, 0, 0, 0, 0, 0))
+        if datestr is not None:
+            date_list = datestr.split(',')
+            if len(date_list) != 3:
+                print "Bad date '%s', format is YEAR,MONTH,DAY" % datestr
+                return
+            if int(date_list[0]) < 2000 or int(date_list[0]) > 2099:
+                print "Year must be between 2000 and 2099 inclusive"
+                return
+            if int(date_list[1]) < 1 or int(date_list[1]) > 12:
+                print "Month must be between 1 and 12 inclusive"
+                return
+            if int(date_list[2]) < 1 or int(date_list[2]) > 31:
+                print "Day must be between 1 and 31 inclusive"
+                return
+            tt = time.localtime()
+            offset = 1 if tt[3] < 12 else 0
+            ts = time.mktime((int(date_list[0]), int(date_list[1]), int(date_list[2]) - offset, 0, 0, 0, 0, 0, 0))
+        else:
+            ts = time.time()
         station.set_date(ts)
         TE923Configurator.print_alignment()
 
@@ -1088,8 +1099,8 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
 
     @staticmethod
     def print_alignment():
-        print "NB: If computer time is not aligned to station time then"
-        print "    date may be incorrect by 1 day"
+        print "  If computer time is not aligned to station time then date"
+        print "  may be incorrect by 1 day"
 
 
 class TE923Driver(weewx.drivers.AbstractDevice):
@@ -1128,6 +1139,7 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         self.station = TE923Station(max_tries=self.max_tries,
                                     retry_wait=self.retry_wait)
         self.station.open()
+        loginf('logger capacity %s records' % self.station.get_memory_size())
 
     def closePort(self):
         if self.station is not None:
@@ -1260,6 +1272,11 @@ class TE923Driver(weewx.drivers.AbstractDevice):
 STATE_OK = 'ok'
 STATE_INVALID = 'invalid'
 STATE_NO_LINK = 'no_link'
+
+def _fmt(buf):
+    if buf:
+        return ' '.join(["%02x" % x for x in buf])
+    return ''
 
 def bcd2int(bcd):
     return int(((bcd & 0xf0) >> 4) * 10) + int(bcd & 0x0f)
@@ -1472,6 +1489,9 @@ class BadRead(weewx.WeeWxIOError):
 class BadWrite(weewx.WeeWxIOError):
     """Bogus data length, header block, or other write failure"""
 
+class BadHeader(weewx.WeeWxIOError):
+    """Bad header byte"""
+
 class TE923Station(object):
     ENDPOINT_IN = 0x81
     READ_LENGTH = 0x8
@@ -1564,10 +1584,10 @@ class TE923Station(object):
         time.sleep(0.1)  # te923tool is 0.3
         start_ts = time.time()
         rbuf = []
-        while time.time() - start_ts < 5:
+        while time.time() - start_ts < 1:
             try:
-                buf = self.devh.interruptRead(self.ENDPOINT_IN,
-                                              self.READ_LENGTH, self.TIMEOUT)
+                buf = self.devh.interruptRead(
+                    self.ENDPOINT_IN, self.READ_LENGTH, self.TIMEOUT)
                 if buf:
                     nbytes = buf[0]
                     if nbytes > 7 or nbytes > len(buf) - 1:
@@ -1581,6 +1601,7 @@ class TE923Station(object):
                     raise weewx.WeeWxIOError(e)
             time.sleep(0.009) # te923tool is 0.15
         else:
+            logdbg("timeout while reading: ignoring bytes: %s" % _fmt(rbuf))
             raise BadRead("Timeout after %d bytes" % len(rbuf))
 
         if len(rbuf) < 34:
@@ -1588,7 +1609,7 @@ class TE923Station(object):
         elif len(rbuf) != 34:
             loginf("read: wrong number of bytes: %d != 34" % len(rbuf))
         if rbuf[0] != 0x5a:
-            raise BadRead("Bad header byte: %02x != %02x" % (rbuf[0], 0x5a))
+            raise BadHeader("Bad header byte: %02x != %02x" % (rbuf[0], 0x5a))
 
         crc = 0x00
         for x in rbuf[:33]:
@@ -1632,7 +1653,7 @@ class TE923Station(object):
                           wbuf[3 + i * 7], wbuf[4 + i * 7], wbuf[5 + i * 7],
                           wbuf[6 + i * 7]]
             if DEBUG_WRITE:
-                logdbg("write: %s" % ' '.join(["%02x" % x for x in reqbuf]))
+                logdbg("write: %s" % _fmt(reqbuf))
             ret = self.devh.controlMsg(requestType=0x21,
                                        request=usb.REQ_SET_CONFIGURATION,
                                        value=0x0200,
@@ -1648,9 +1669,8 @@ class TE923Station(object):
         rbuf = []
         while time.time() - start_ts < 5:
             try:
-                tmpbuf = self.devh.interruptRead(self.ENDPOINT_IN,
-                                                 self.READ_LENGTH,
-                                                 self.TIMEOUT)
+                tmpbuf = self.devh.interruptRead(
+                    self.ENDPOINT_IN, self.READ_LENGTH, self.TIMEOUT)
                 if tmpbuf:
                     nbytes = tmpbuf[0]
                     if nbytes > 7 or nbytes > len(tmpbuf) - 1:
@@ -1671,7 +1691,7 @@ class TE923Station(object):
         if len(rbuf) == 0:
             raise BadWrite("Bad ack: zero length response")
         elif rbuf[0] != 0x5a:
-            raise BadWrite("Bad header byte: %02x != %02x" % (rbuf[0], 0x5a))
+            raise BadHeader("Bad header byte: %02x != %02x" % (rbuf[0], 0x5a))
 
     def _read(self, addr):
         if DEBUG_READ:
@@ -1680,9 +1700,9 @@ class TE923Station(object):
             try:
                 buf = self._raw_read(addr)
                 if DEBUG_READ:
-                    logdbg("read: %s" % ' '.join(["%02x" % x for x in buf]))
+                    logdbg("read: %s" % _fmt(buf))
                 return buf
-            except (BadRead, usb.USBError), e:
+            except (BadRead, BadHeader, usb.USBError), e:
                 logerr("Failed attempt %d of %d to read data: %s" %
                        (cnt + 1, self.max_tries, e))
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)
@@ -1693,13 +1713,12 @@ class TE923Station(object):
 
     def _write(self, addr, buf):
         if DEBUG_WRITE:
-            logdbg("write: address 0x%06x: %s" %
-                   (addr, ' '.join(["%02x" % x for x in buf])))
+            logdbg("write: address 0x%06x: %s" % (addr, _fmt(buf)))
         for cnt in range(self.max_tries):
             try:
                 self._raw_write(addr, buf)
                 return
-            except (BadWrite, usb.USBError), e:
+            except (BadWrite, BadHeader, usb.USBError), e:
                 logerr("Failed attempt %d of %d to write data: %s" %
                        (cnt + 1, self.max_tries, e))
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)
@@ -1713,15 +1732,18 @@ class TE923Station(object):
         if buf[1] == 0:
             self._num_rec = 208
             self._num_blk = 256
-            loginf("detected small memory size")
+            logdbg("detected small memory size")
         elif buf[1] == 2:
             self._num_rec = 3442
             self._num_blk = 4096
-            loginf("detected large memory size")
+            logdbg("detected large memory size")
         else:
             msg = "Unrecognised memory size '%s'" % buf[1]
             logerr(msg)
             raise weewx.WeeWxIOError(msg)
+
+    def get_memory_size(self):
+        return self._num_rec
 
     def gen_blocks(self, count=None):
         """generator that returns consecutive blocks of station memory"""
@@ -1911,7 +1933,6 @@ class TE923Station(object):
         data['rain_yesterday'] = (buf[42] * 0x100 + buf[41]) * 0.6578
         data['rain_week'] = (buf[44] * 0x100 + buf[43]) * 0.6578
         data['rain_month'] = (buf[46] * 0x100 + buf[45]) * 0.6578
-        # FIXME: verify the date calculation
         tt = time.localtime()
         offset = 1 if tt[3] < 12 else 0
         month = bcd2int(buf[47] & 0xf)
@@ -2261,7 +2282,7 @@ if __name__ == '__main__':
             print data
 
     def print_hex(ptr, data):
-        print "0x%06x %s" % (ptr, ' '.join(["%02x" % x for x in data]))
+        print "0x%06x %s" % (ptr, _fmt(data))
 
     def print_table(data):
         """output entire dictionary contents in two columns"""

@@ -45,9 +45,6 @@ install: build
 	cp -r $(SRC)/util/rsyslog.d $(DST_CFGDIR)
 	cp -r $(SRC)/extensions $(DST_BINDIR)
 
-# make a virgin copy of the configuration file
-	cp $(SRC)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
-
 # remove stuff that should not go out
 	rm $(DST_CFGDIR)/skins/Standard/backgrounds/butterfly.jpg
 	rm $(DST_CFGDIR)/skins/Standard/backgrounds/drops.gif
@@ -67,6 +64,9 @@ install: build
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
  > $(DST_INITDIR)/weewx
 	chmod 755 $(DST_INITDIR)/weewx
+
+# make a virgin copy of the configuration file
+	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
 
 # create symlinks to the code entry points
 	ln -s ../share/weewx/weewxd $(DST)/usr/bin/weewxd

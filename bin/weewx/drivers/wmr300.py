@@ -701,7 +701,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.8'
+DRIVER_VERSION = '0.9'
 
 DEBUG_COMM = 0
 DEBUG_LOOP = 0
@@ -806,7 +806,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         while True:
             try:
                 buf = self.station.read()
-                if buf is not None:
+                if buf:
                     pkt = Station.decode(buf)
                     if buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
                         # send ack for most data packets
@@ -821,7 +821,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     logdbg("request station status: %s (%02x)" %
                            (self.last_record, _lo(self.last_record)))
                     cmd = [0xa6, 0x91, 0xca, 0x45, 0x52, _lo(self.last_record)]
-                    sent = self.station.write(cmd)
+                    self.station.write(cmd)
                     self.last_a6 = time.time()
                 if self.last_7x == 0:
                     # FIXME: what are the 72/73 messages?
@@ -832,7 +832,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
 #                    cmd = [0x72, 0xa9, 0xc1, 0x60, 0x52, 0x00]
                     cmd = [0x73, 0xe5, 0x0a, 0x26, 0x88, 0x8b]
 #                    cmd = [0x73, 0xe5, 0x0a, 0x26, 0x0e, 0xc1]
-                    sent = self.station.write(cmd)
+                    self.station.write(cmd)
                     self.last_7x = time.time()
             except usb.USBError, e:
                 if not e.args[0].find('No data available'):
@@ -849,7 +849,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         while True:
             try:
                 buf = self.station.read()
-                if buf is not None:
+                if buf:
                     if buf[0] == 0xd2:
                         hbuf = buf
                         buf = None
@@ -857,7 +857,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                         # FIXME: need better indicator of second half history
                         buf = hbuf + buf
                         hbuf = None
-                if buf is not None and buf[0] == 0xd2:
+                if buf and buf[0] == 0xd2:
                     self.last_record = Station.get_record_index(buf)
                     ts = Station._extract_ts(buf[4:9])
                     if ts is not None and ts > since_ts:
@@ -869,7 +869,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                             logdbg("historical record: %s" % packet)
                             cnt += 1
                             yield packet
-                if buf is not None and buf[0] == 0x57:
+                if buf and buf[0] == 0x57:
                     idx = Station.get_latest_index(buf)
                     msg = "count=%s last_index=%s latest_index=%s" % (
                         cnt, self.last_record, idx)
@@ -877,27 +877,27 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                         loginf("catchup complete: %s" % msg)
                         break
                     loginf("catchup in progress: %s" % msg)
-                if buf is not None and buf[0] == 0x41 and buf[3] == 0x65:
+                if buf and buf[0] == 0x41 and buf[3] == 0x65:
                     nxtrec = Station.get_next_index(self.last_record)
                     logdbg("request records starting with %s" % nxtrec)
                     cmd = [0xcd, 0x18, 0x30, 0x62, _hi(nxtrec), _lo(nxtrec)]
-                    sent = self.station.write(cmd)
+                    self.station.write(cmd)
                 if time.time() - self.last_a6 > self.heartbeat:
                     logdbg("request station status: %s (%02x)" %
                            (self.last_record, _lo(self.last_record)))
                     cmd = [0xa6, 0x91, 0xca, 0x45, 0x52, _lo(self.last_record)]
-                    sent = self.station.write(cmd)
+                    self.station.write(cmd)
                     self.last_a6 = time.time()
                 if self.last_7x == 0:
                     # FIXME: what does 72/73 do?
                     cmd = [0x73, 0xe5, 0x0a, 0x26, 0x88, 0x8b]
-                    sent = self.station.write(cmd)
+                    self.station.write(cmd)
                     self.last_7x = time.time()
                 if time.time() - self.last_65 > self.history_retry:
                     logdbg("initiate record request: %s (%02x)" %
                            (self.last_record, _lo(self.last_record)))
                     cmd = [0x65, 0x19, 0xe5, 0x04, 0x52, _lo(self.last_record)]
-                    sent = self.station.write(cmd)
+                    self.station.write(cmd)
                     self.last_65 = time.time()
             except usb.USBError, e:
                 if not e.args[0].find('No data available'):
@@ -1059,7 +1059,8 @@ class Station(object):
         return sent
 
     # keep track of the message types for debugging purposes
-    def update_count(self, buf, count_dict):
+    @staticmethod
+    def update_count(buf, count_dict):
         label = 'empty'
         if buf and len(buf) > 0:
             if buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
@@ -1205,7 +1206,7 @@ class Station(object):
             if DEBUG_DECODE:
                 logdbg('%s %s' % (_fmt_bytes(buf), pkt))
             return pkt
-        except AttributeError, e:
+        except AttributeError:
             raise WMR300Error("unknown packet type %02x: %s" %
                               (buf[0], _fmt_bytes(buf)))
 
@@ -1221,7 +1222,7 @@ class Station(object):
         return pkt
 
     @staticmethod
-    def _decode_41(buf):
+    def _decode_41(_):
         """41 43 4b is ACK"""
         pkt = dict()
         return pkt
@@ -1235,14 +1236,14 @@ class Station(object):
         pkt['ts'] = Station._extract_ts(buf[4:9])
         for i in range(0, 9):
             pkt['temperature_%d' % i] = Station._extract_signed(
-                buf[9+2*i], buf[10+2*i], 0.1) # C
+                buf[9 + 2 * i], buf[10 + 2 * i], 0.1) # C
             pkt['humidity_%d' % i] = Station._extract_value(
-                buf[27+i:28+i], 1.0) # %
-        for i in range(1,9):
+                buf[27 + i:28 + i], 1.0) # %
+        for i in range(1, 9):
             pkt['dewpoint_%d' % i] = Station._extract_signed(
-                buf[36+2*i], buf[37+2*i], 0.1) # C
+                buf[36 + 2 * i], buf[37 + 2 * i], 0.1) # C
             pkt['heatindex_%d' % i] = Station._extract_signed(
-                buf[52+2*i], buf[53+2*i], 0.1) # C
+                buf[52 + 2 * i], buf[53 + 2 * i], 0.1) # C
         pkt['windchill'] = Station._extract_signed(buf[68], buf[69], 0.1) # C
         pkt['wind_gust'] = Station._extract_value(buf[72:74], 0.1) # m/s
         pkt['wind_avg'] = Station._extract_value(buf[74:76], 0.1) # m/s

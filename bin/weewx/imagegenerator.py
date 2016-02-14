@@ -25,30 +25,28 @@ from weeutil.weeutil import to_bool, to_int, to_float
 
 class ImageGenerator(weewx.reportengine.ReportGenerator):
     """Class for managing the image generator."""
-
+    
     def run(self):
-        
         self.setup()
-        
-        # Generate any images
         self.genImages(self.gen_ts)
         
     def setup(self):
-        
         self.image_dict = self.skin_dict['ImageGenerator']
         self.title_dict = self.skin_dict.get('Labels', {}).get('Generic', {})
         self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
-        
+        # determine how much logging is desired
+        self.log_success = to_bool(self.image_dict.get('log_success', True))
+
     def genImages(self, gen_ts):
         """Generate the images.
         
-        The time scales will be chosen to include the given timestamp, with nice beginning
-        and ending times.
+        The time scales will be chosen to include the given timestamp, with
+        nice beginning and ending times.
     
-        gen_ts: The time around which plots are to be generated. This will also be used as
-        the bottom label in the plots. [optional. Default is to use the time of the last record
-        in the database.]
+        gen_ts: The time around which plots are to be generated. This will
+        also be used as the bottom label in the plots. [optional. Default is
+        to use the time of the last record in the database.]
         """
         t1 = time.time()
         ngen = 0
@@ -60,7 +58,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
             for plotname in self.image_dict[timespan].sections :
                 
                 # Accumulate all options from parent nodes:
-                plot_options = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname])
+                plot_options = weeutil.weeutil.accumulateLeaves(
+                    self.image_dict[timespan][plotname])
 
                 plotgen_ts = gen_ts
                 if not plotgen_ts:
@@ -70,8 +69,9 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     if not plotgen_ts:
                         plotgen_ts = time.time()
 
-                image_root = os.path.join(self.config_dict['WEEWX_ROOT'], plot_options['HTML_ROOT'])
-                # Get the path of the file that the image is going to be saved to:
+                image_root = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                          plot_options['HTML_ROOT'])
+                # Get the path that the image is going to be saved to:
                 img_file = os.path.join(image_root, '%s.png' % plotname)
                 
                 # Check whether this plot needs to be done at all:
@@ -89,7 +89,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 # Create a new instance of a time plot and start adding to it
                 plot = weeplot.genplot.TimePlot(plot_options)
                 
-                # Calculate a suitable min, max time for the requested time span and set it
+                # Calculate a suitable min, max time for the requested time
+                # span and set it
                 (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(plotgen_ts - int(plot_options.get('time_length', 86400)), plotgen_ts)
                 plot.setXScaling((minstamp, maxstamp, timeinc))
                 
@@ -114,8 +115,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Accumulate options from parent nodes. 
                     line_options = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname][line_name])
                     
-                    # See what SQL variable type to use for this line. By default,
-                    # use the section name.
+                    # See what SQL variable type to use for this line. By
+                    # default, use the section name.
                     var_type = line_options.get('data_type', line_name)
 
                     # Look for aggregation type:
@@ -132,7 +133,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                             syslog.syslog(syslog.LOG_ERR, "genimages: line type %s skipped" % var_type)
                             continue
 
-                    # Now we have everything we need to find and hit the database:
+                    # Now its time to find and hit the database:
                     binding = line_options['data_binding']
                     archive = self.db_binder.get_manager(binding)
                     (start_vec_t, stop_vec_t, data_vec_t) = \
@@ -147,11 +148,12 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     new_stop_vec_t  = self.converter.convert(stop_vec_t)
                     new_data_vec_t = self.converter.convert(data_vec_t)
 
-                    # Add a unit label. NB: all will get overwritten except the last.
-                    # Get the label from the configuration dictionary. 
+                    # Add a unit label. NB: all will get overwritten except the
+                    # last. Get the label from the configuration dictionary. 
                     # TODO: Allow multiple unit labels, one for each plot line?
                     unit_label = line_options.get('y_label', weewx.units.get_label_string(self.formatter, self.converter, var_type))
-                    # Strip off any leading and trailing whitespace so it's easy to center
+                    # Strip off any leading and trailing whitespace so it's
+                    # easy to center
                     plot.setUnitLabel(unit_label.strip())
                     
                     # See if a line label has been explicitly requested:
@@ -173,7 +175,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
 
                     interval_vec = None                        
 
-                    # Some plot types require special treatments:                    
+                    # Some plot types require special treatments:
                     if plot_type == 'vector':
                         vector_rotate_str = line_options.get('vector_rotate')
                         vector_rotate = -float(vector_rotate_str) if vector_rotate_str is not None else None
@@ -190,7 +192,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                                 syslog.syslog(syslog.LOG_ERR, "genimages: Gap fraction %5.3f outside range 0 to 1. Ignored." % gap_fraction)
                                 gap_fraction = None
 
-                    # Get the type of line ('solid' or 'none' is all that's offered now)
+                    # Get the type of line (only 'solid' or 'none' for now)
                     line_type = line_options.get('line_type', 'solid')
                     if line_type.strip().lower() in ['', 'none']:
                         line_type = None
@@ -199,18 +201,19 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     marker_size = to_int(line_options.get('marker_size', 8))
                     
                     # Add the line to the emerging plot:
-                    plot.addLine(weeplot.genplot.PlotLine(new_stop_vec_t[0], new_data_vec_t[0],
-                                                          label         = label, 
-                                                          color         = color,
-                                                          width         = width,
-                                                          plot_type     = plot_type,
-                                                          line_type     = line_type,
-                                                          marker_type   = marker_type,
-                                                          marker_size   = marker_size,
-                                                          bar_width     = interval_vec,
-                                                          vector_rotate = vector_rotate,
-                                                          gap_fraction  = gap_fraction))
-                    
+                    plot.addLine(weeplot.genplot.PlotLine(
+                        new_stop_vec_t[0], new_data_vec_t[0],
+                        label         = label, 
+                        color         = color,
+                        width         = width,
+                        plot_type     = plot_type,
+                        line_type     = line_type,
+                        marker_type   = marker_type,
+                        marker_size   = marker_size,
+                        bar_width     = interval_vec,
+                        vector_rotate = vector_rotate,
+                        gap_fraction  = gap_fraction))
+
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()
                 
@@ -221,8 +224,9 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 except IOError, e:
                     syslog.syslog(syslog.LOG_CRIT, "genimages: Unable to save to file '%s' %s:" % (img_file, e))
         t2 = time.time()
-        
-        syslog.syslog(syslog.LOG_INFO, "genimages: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
+
+        if self.log_success:
+            syslog.syslog(syslog.LOG_INFO, "genimages: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
 
 def skipThisPlot(time_ts, aggregate_interval, img_file):
     """A plot can be skipped if it was generated recently and has not changed.
@@ -242,4 +246,3 @@ def skipThisPlot(time_ts, aggregate_interval, img_file):
     time_dt = datetime.datetime.fromtimestamp(time_ts)
     tdiff = time_dt -  time_dt.replace(hour=0, minute=0, second=0, microsecond=0)
     return abs(tdiff.seconds % aggregate_interval) > 1
-

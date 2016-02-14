@@ -7,8 +7,9 @@
 
 from __future__ import with_statement
 
+import errno
 import glob
-import os
+import os.path
 import shutil
 import sys
 import StringIO
@@ -43,6 +44,7 @@ canonical_order = ('',
  ('Vantage', [], []),
  ('WMR100', [], []),
  ('WMR200', [], []),
+ ('WMR300', [], []),
  ('WMR9x8', [], []),
  ('WS1', [], []),
  ('WS23xx', [], []),
@@ -255,6 +257,15 @@ def save(config_dict, config_path, backup=False):
 #==============================================================================
 
 def modify_config(config_dict, stn_info, logger, debug=False):
+    """If a driver has a configuration editor, then use that to insert the
+    stanza for the driver in the config_dict.  If there is no configuration
+    editor, then inject a generic configuration, i.e., just the driver name
+    with a single 'driver' element that points to the driver file.
+    """
+    driver_editor = None
+    driver_name = None
+    driver_version = None
+
     # Get the driver editor, name, and version:
     driver = stn_info.get('driver')
     if driver:
@@ -267,26 +278,32 @@ def modify_config(config_dict, stn_info, logger, debug=False):
         stn_info['station_type'] = driver_name
         if debug:
             logger.log('Using %s version %s (%s)' %
-                       (stn_info['station_type'], driver_version, driver),
-                       level=1)
+                       (driver_name, driver_version, driver), level=1)
 
     # Get a driver stanza, if possible
     stanza = None
-    if driver_editor is not None:
-        orig_stanza_text = None
+    if driver_name is not None:
+        if driver_editor is not None:
+            orig_stanza_text = None
 
-        # if a previous stanza exists for this driver, grab it
-        if driver_name in config_dict:
-            orig_stanza = configobj.ConfigObj(interpolation=False)
-            orig_stanza[driver_name] = config_dict[driver_name]
-            orig_stanza_text = '\n'.join(orig_stanza.write())
+            # if a previous stanza exists for this driver, grab it
+            if driver_name in config_dict:
+                orig_stanza = configobj.ConfigObj(interpolation=False)
+                orig_stanza[driver_name] = config_dict[driver_name]
+                orig_stanza_text = '\n'.join(orig_stanza.write())
 
-        # let the driver process the stanza or give us a new one
-        stanza_text = driver_editor.get_conf(orig_stanza_text)
-        stanza = configobj.ConfigObj(stanza_text.splitlines())
+            # let the driver process the stanza or give us a new one
+            stanza_text = driver_editor.get_conf(orig_stanza_text)
+            stanza = configobj.ConfigObj(stanza_text.splitlines())
+        else:
+            stanza = configobj.ConfigObj(interpolation=False)
+            if driver_name in config_dict:
+                stanza[driver_name] = config_dict[driver_name]
+            else:
+                stanza[driver_name] = {}
 
     # If we have a stanza, inject it into the configuration dictionary
-    if stanza is not None:
+    if stanza is not None and driver_name is not None:
         # Ensure that the driver field matches the path to the actual driver
         stanza[driver_name]['driver'] = driver
         # Insert the stanza in the configuration dictionary:
@@ -657,8 +674,8 @@ def update_to_v32(config_dict):
         # symbol for WEEWX_ROOT does not get lost.
         save, config_dict.interpolation = config_dict.interpolation, False
         config_dict['DatabaseTypes'] = {
-            'SQLite' : {'driver': 'weedb.sqlite',
-                        'SQLITE_ROOT': '%(WEEWX_ROOT)s/archive'}}
+            'SQLite': {'driver': 'weedb.sqlite',
+                       'SQLITE_ROOT': '%(WEEWX_ROOT)s/archive'}}
         config_dict.interpolation = save
         try:
             root = config_dict['Databases']['archive_sqlite']['root']
@@ -708,13 +725,13 @@ def update_to_v32(config_dict):
             return
 
         # Now check to see whether it already has the option 'enable':
-        if c['StdRESTful'][service].has_key('enable'):
+        if 'enable' in c['StdRESTful'][service]:
             # It does. No need to proceed
             return
 
         # The option 'enable' is not present. Add it,
         # and set based on whether the keyword is present:
-        if c['StdRESTful'][service].has_key(keyword):
+        if keyword in c['StdRESTful'][service]:
             c['StdRESTful'][service]['enable'] = 'true'
         else:
             c['StdRESTful'][service]['enable'] = 'false'
@@ -821,7 +838,7 @@ def reorder_to_ref(config_dict, section_tuple=canonical_order):
     subsection_order = [x[0] for x in section_tuple[1]]
     # Reorder the subsections, then the scalars
     config_dict.sections = reorder(config_dict.sections, subsection_order)
-    config_dict.scalars  = reorder(config_dict.scalars, section_tuple[2])
+    config_dict.scalars = reorder(config_dict.scalars, section_tuple[2])
     
     # Now recursively go through each of my subsections,
     # allowing them to reorder their contents
@@ -852,7 +869,7 @@ def reorder(name_list, ref_list):
             result.append(name)
             
     # Make sure I have the same number I started with
-    assert(len(name_list)==len(result))
+    assert(len(name_list) == len(result))
     return result
     
 def remove_and_prune(a_dict, b_dict):
@@ -927,17 +944,17 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
                     if hasattr(driver_module, 'DRIVER_VERSION') else '?'
                 # Create an entry for it, keyed by the driver module name
                 driver_info_dict[driver_module_name] = {
-                    'module_name' : driver_module_name,
-                    'driver_name' : driver_module.DRIVER_NAME,
-                    'version'     : driver_module_version,
-                    'status'      : ''}
+                    'module_name': driver_module_name,
+                    'driver_name': driver_module.DRIVER_NAME,
+                    'version': driver_module_version,
+                    'status': ''}
         except ImportError, e:
             # If the import fails, report it in the status
             driver_info_dict[driver_module_name] = {
-                'module_name' : driver_module_name,
-                'driver_name' : '?',
-                'version'     : '?',
-                'status'      : e}
+                'module_name': driver_module_name,
+                'driver_name': '?',
+                'version': '?',
+                'status': e}
         except Exception, e:
             # Ignore anything else.  This might be a python file that is not
             # a driver, a python file with errors, or who knows what.
@@ -962,9 +979,18 @@ def load_driver_editor(driver_module_name):
     """
     __import__(driver_module_name)
     driver_module = sys.modules[driver_module_name]
-    loader_function = getattr(driver_module, 'confeditor_loader')
-    editor = loader_function()
-    return editor, driver_module.DRIVER_NAME, driver_module.DRIVER_VERSION
+    editor = None
+    driver_name = None
+    driver_version = 'undefined'
+    if hasattr(driver_module, 'confeditor_loader'):
+        loader_function = getattr(driver_module, 'confeditor_loader')
+        editor = loader_function()
+    if hasattr(driver_module, 'DRIVER_NAME'):
+        driver_name = driver_module.DRIVER_NAME
+    if hasattr(driver_module, 'DRIVER_VERSION'):
+        driver_version = driver_module.DRIVER_VERSION
+    return editor, driver_name, driver_version
+
 
 #==============================================================================
 #                Utilities that seek info from the command line
@@ -1020,11 +1046,11 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     print "Indicate the preferred units for display: 'metric' or 'us'"
     uni = prompt_with_options("units", units, ['us', 'metric'])
 
-    return {'location' : loc,
-            'altitude' : alt,
-            'latitude' : lat,
+    return {'location': loc,
+            'altitude': alt,
+            'latitude': lat,
             'longitude': lon,
-            'units'    : uni}
+            'units': uni}
 
 
 def prompt_for_driver(dflt_driver=None):
@@ -1039,6 +1065,7 @@ def prompt_for_driver(dflt_driver=None):
         if dflt_driver == d:
             dflt_idx = i
     msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
+    idx = 0
     ans = None
     while ans is None:
         ans = raw_input(msg).strip()
@@ -1053,13 +1080,17 @@ def prompt_for_driver(dflt_driver=None):
     return keys[idx]
 
 def prompt_for_driver_settings(driver):
-    """Let the driver prompt for any required settings."""
+    """Let the driver prompt for any required settings.  If the driver does
+    not define a method for prompting, return an empty dictionary."""
     settings = dict()
-    __import__(driver)
-    driver_module = sys.modules[driver]
-    loader_function = getattr(driver_module, 'confeditor_loader')
-    editor = loader_function()
-    settings[driver_module.DRIVER_NAME] = editor.prompt_for_settings()
+    try:
+        __import__(driver)
+        driver_module = sys.modules[driver]
+        loader_function = getattr(driver_module, 'confeditor_loader')
+        editor = loader_function()
+        settings[driver_module.DRIVER_NAME] = editor.prompt_for_settings()
+    except AttributeError:
+        pass
     return settings
 
 def prompt_with_options(prompt, default=None, options=None):
@@ -1124,8 +1155,8 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
 def extract_roots(config_path, config_dict, bin_root):
     """Get the location of the various root directories used by weewx."""
     
-    root_dict = {'WEEWX_ROOT' : config_dict['WEEWX_ROOT'],
-                 'CONFIG_ROOT' : os.path.dirname(config_path)}
+    root_dict = {'WEEWX_ROOT': config_dict['WEEWX_ROOT'],
+                 'CONFIG_ROOT': os.path.dirname(config_path)}
     # If bin_root has not been defined, then figure out where it is using
     # the location of this file:
     if bin_root:
@@ -1147,22 +1178,62 @@ def extract_roots(config_path, config_dict, bin_root):
     
     return root_dict
 
-def extract_tarball(filename, target_dir, logger=None):
-    """Extract a tarball into a given directory
+def extract_tar(filename, target_dir, logger=None):
+    """Extract files from a tar archive into a given directory
     
-    Returns: A list containing the member files
+    Returns: A list of the extracted files
     """
     logger = logger or Logger()
     import tarfile
-    logger.log("Extracting from tarball %s" % filename, level=1)
-    tar_archive = tarfile.open(filename, mode='r')
+    logger.log("Extracting from tar archive %s" % filename, level=1)
+    tar_archive = None
     try:
+        tar_archive = tarfile.open(filename, mode='r')
         tar_archive.extractall(target_dir)
-        member_names = [x.name for x in tar_archive.getmembers()]
+        member_names = [os.path.normpath(x.name) for x in tar_archive.getmembers()]
         return member_names
     finally:
-        tar_archive.close()
-        
+        if tar_archive is not None:
+            tar_archive.close()
+
+def extract_zip(filename, target_dir, logger=None):
+    """Extract files from a zip archive into the specified directory.
+
+    Returns: a list of the extracted files
+    """
+    logger = logger or Logger()
+    import zipfile
+    logger.log("Extracting from zip archive %s" % filename, level=1)
+    zip_archive = None
+    try:
+        zip_archive = zipfile.ZipFile(open(filename, mode='r'))
+        member_names = zip_archive.namelist()
+        # manually extract files since extractall is only in python 2.6+
+#        zip_archive.extractall(target_dir)
+        for f in member_names:
+            if f.endswith('/'):
+                dst = "%s/%s" % (target_dir, f)
+                mkdir_p(dst)
+        for f in member_names:
+            if not f.endswith('/'):
+                path = "%s/%s" % (target_dir, f)
+                with open(path, 'wb') as dest_file:
+                    dest_file.write(zip_archive.read(f))
+        return member_names
+    finally:
+        if zip_archive is not None:
+            zip_archive.close()
+
+def mkdir_p(path):
+    """equivalent to 'mkdir -p'"""
+    try:
+        os.makedirs(path)
+    except OSError, e:
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
 def get_extension_installer(extension_installer_dir):
     """Get the installer in the given extension installer subdirectory"""
     old_path = sys.path

@@ -10,8 +10,8 @@ checklist for doing a release:
      3. docs/customizing.htm docs/upgrading.htm docs/usersguide.htm
 3. Make sure all changes have been logged
      1. docs/changes.txt
-     2. pkg/debian/changelog.rpm
-     3. pkg/changelog
+     2. pkg/debian/changelog
+     3. pkg/changelog.rpm
 4. Make sure the upgrading guide has been updated if necessary.
 5. If working off a branch, do a merge to master.
 6. Create the tarball:  ./setup.py sdist
@@ -21,7 +21,6 @@ checklist for doing a release:
 9. Upload to weewx.com:
      1. make upload-src
      2. make upload-readme
-     3. Select the new tarball as the Mac, Linux, and BSD distribution
 10. Update docs on the web site:
      1. make upload-docs
 11. Update the web site:
@@ -48,9 +47,13 @@ git push
 # generate the readme then upload it to development_versions
 make readme upload-readme
 
-# on debian host, build src and deb, upload to development_versions
+# build src, upload to development_versions
 rm -rf build dist
-make src-package deb-package upload-src deb-package
+make src-package upload-src
+
+# on debian host, build deb package, upload to development_versions
+rm -rf build dist
+make deb-package upload-deb
 
 # on redhat host, build the redhat rpm package, upload to development_versions
 rm -rf build dist
@@ -67,16 +70,14 @@ git tag -a vX.Y.Z -m "tag release X.Y.Z"
 git clone https://github.com/weewx/website.git
 make upload-docs
 
-# at sourceforge, move the new files into position
+# move the new files into position
 mv development_versions/weewx-x.y.z* .
 mv development_versions/README.txt .
 
 
+howto -------------------------------------------------------------------------
 
-
-notes -------------------------------------------------------------------------
-
-create README.txt for sourceforge:
+create README.txt:
   make readme
 
 how to update the version number:
@@ -117,42 +118,6 @@ to generate gpg key used for signing packages:
 to export the text version of a public key:
   gpg --export -a "Matthew Wall" > mwall.gpg.key
 
-
-notes:
-
-there are multiple changelogs:
-  docs/changes.txt - definitive changelog for the application
-  pkg/debian/changelog - changes to the debian packaging
-  pkg/changelog.rpm - changes to the redhat packaging
-  README.txt - copy of changes.txt uploaded to sourceforge files directory
-
-when signing, gpg info must match the name and email in the latest package
-changelog entry.
-
-the debian changelog *must* have a version number that matches the app version.
-the redhat package will build if the version numbers do not match.  use the
-rpm-changelog and deb-changelog targets to ensure that changelog versions match
-the application version for a release.
-
-there are many ways to build a debian package.  first tried dpkg (uses DEBIAN
-dir and is fairly low-level) but that does not create changes and source diffs.
-then dried dpkg-buildpackage (uses debian dir and is higher level) but misses
-the config and templates.  ended up using dpkg-buildpackage with some manual
-(scripted) file manipulation.
-
-what to test when creating debian and redhat packages:
-  install, upgrade, remove, purge
-  install, modify files, remove
-  install, modify files, upgrade
-
-to do debian builds you must first install:
-  python-imaging
-  python-configobj
-  debhelper
-
-
-how to install/remove using various approaches:
-
 source install:
   setup.py install
   setup.py install home=/opt/weewx-x.y.z
@@ -170,7 +135,64 @@ redhat install/remove:
   rpm -e weewx                                    # remove with rpm
 
 
-testing:
+notes -------------------------------------------------------------------------
+
+there are multiple changelogs:
+  docs/changes.txt - definitive changelog for the application
+  pkg/debian/changelog - changes to the debian packaging
+  pkg/changelog.rpm - changes to the redhat packaging
+  README.txt - copy of changes.txt uploaded to download area
+
+when signing, gpg info must match the name and email in the latest package
+changelog entry.
+
+the debian changelog *must* have a version number that matches the app version.
+the redhat package will build if the version numbers do not match.  use the
+rpm-changelog and deb-changelog targets to ensure that changelog versions match
+the application version for a release.
+
+there are many ways to build a debian package.  first tried dpkg (uses DEBIAN
+dir and is fairly low-level) but that does not create changes and source diffs.
+then dried dpkg-buildpackage (uses debian dir and is higher level) but misses
+the config and templates.  ended up using dpkg-buildpackage with some manual
+(scripted) file manipulation.
+
+to do debian builds you must first install:
+  python-imaging
+  python-configobj
+  debhelper
+
+
+unit tests --------------------------------------------------------------------
+
+prerequisites:
+
+python 2.7
+python-mock 0.6
+
+to set up mysql server with user and permissions for testing:
+
+make test-setup
+
+to run all unit tests:
+
+make test
+
+to clean up after running tests:
+
+make test-clean
+
+guidelines:
+
+unit tests should put transient files in /var/tmp/weewx_test
+
+
+testing -----------------------------------------------------------------------
+
+what to test when creating debian and redhat packages:
+  install, upgrade, remove, purge
+  install, modify files, remove
+  install, modify files, upgrade
 
 any linux:
 - new install using setup.py to /home/weewx

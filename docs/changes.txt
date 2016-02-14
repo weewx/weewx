@@ -1,7 +1,27 @@
 weewx change history
 --------------------
 
-X.X.X XX/XX/XX
+3.4.1 XX/YY/2016
+
+Fixed bug that prevented rsync uploader from working.
+
+Fixed bug in wmr300 driver when receiving empty buffers from the station.
+
+The type of MySQL database engine can now be specified. Default is 'INNODB'.
+
+Updated userguide with capabilities of the TE923 driver added in 3.4.0.
+
+Added aggregation type min_ge(val).
+
+Provide better feedback when a driver does not implement a configurator.
+
+Added humidex and appTemp to group_temperature. Fixed issue #96.
+
+
+3.4.0 01/16/2016
+
+The tag $hour has now been added. It's now possible to iterate over hours.
+Thanks to user Julen!
 
 Complete overhaul of the te923 driver.  Thanks to user Andrew Miles.  The
 driver now supports the data logger and automatically detects small or large
@@ -14,6 +34,27 @@ The wee_debug utility is now properly installed, not just distributed.
 
 Fixed bug in almanac code that caused an incorrect sunrise or sunset to be
 calculated if it followed a calculation with an explicit horizon value.
+
+Localization of tags is now optional. Use function toString() with
+argument localize set to False. Example: 
+$current.outTemp.toString($localize=False)
+Fixes issue #88.
+
+In the acurite driver, default to use_constants=True.
+
+Fixed bug in the rhel and suse rpm packaging that resulted in a configuration
+file with html, database, and web pages in the setup.py locations instead of
+the rpm locations.
+
+The extension utility wee_extension now recognizes zip archives as well as
+tar and compressed tar archives.
+
+Check for a sane system time when starting up.  If time is not reasonable,
+wait for it.  Log the time status while waiting.
+
+Added log_success option to cheetah, copy, image, rsync, and ftp generators.
+
+Older versions of MySQL (v5.0 and later) are now supported.
 
 
 3.3.1 12/06/2015

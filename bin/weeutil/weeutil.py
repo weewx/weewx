@@ -668,6 +668,48 @@ def archiveRainYearSpan(time_ts, sory_mon, grace=1):
     return TimeSpan(int(time.mktime((_year, sory_mon, 1, 0, 0, 0, 0, 0, -1))),
                              int(time.mktime((_year + 1, sory_mon, 1, 0, 0, 0, 0, 0, -1))))
 
+def genHourSpans(start_ts, stop_ts):
+    """Generator function that generates start/stop of hours in an inclusive range.
+
+    Example:
+
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> start_ts = 1204796460
+    >>> stop_ts  = 1204818360
+
+    >>> print timestamp_to_string(start_ts)
+    2008-03-06 01:41:00 PST (1204796460)
+    >>> print timestamp_to_string(stop_ts)
+    2008-03-06 07:46:00 PST (1204818360)
+
+    >>> for span in genDaySpans(start_ts, stop_ts):
+    ...   print span
+    [2008-03-06 01:00:00 PST (1204794000) -> 2008-03-06 02:00:00 PST (1204797600)]
+    [2008-03-06 02:00:00 PST (1204797600) -> 2008-03-06 03:00:00 PST (1204801200)]
+    [2008-03-06 03:00:00 PST (1204801200) -> 2008-03-06 04:00:00 PST (1204804800)]
+    [2008-03-06 04:00:00 PST (1204804800) -> 2008-03-06 05:00:00 PST (1204808400)]
+    [2008-03-06 05:00:00 PST (1204808400) -> 2008-03-06 06:00:00 PST (1204812000)]
+    [2008-03-06 06:00:00 PST (1204812000) -> 2008-03-06 07:00:00 PST (1204815600)]
+    [2008-03-06 07:00:00 PST (1204815600) -> 2008-03-06 08:00:00 PST (1204819200)]
+
+    start_ts: A time stamp somewhere in the first day.
+
+    stop_ts: A time stamp somewhere in the last day.
+
+    yields: Instance of TimeSpan, where the start is the time stamp
+    of the start of the day, the stop is the time stamp of the start
+    of the next day.
+
+    """
+    _stop_dt = datetime.datetime.fromtimestamp(stop_ts)
+    _start_hour = int(start_ts / 3600)
+    _stop_hour = int(stop_ts / 3600)
+    if (_stop_dt.minute, _stop_dt.second) == (0, 0):
+        _stop_hour -= 1
+
+    for _hour in range(_start_hour, _stop_hour+1):
+        yield TimeSpan(_hour*3600, (_hour+1)*3600)
+
 def genDaySpans(start_ts, stop_ts):
     """Generator function that generates start/stop of days in an inclusive range.
     

@@ -117,8 +117,8 @@ class Common(unittest.TestCase):
         test_html_dir = os.path.join(t.config_dict['WEEWX_ROOT'], t.config_dict['StdReport']['HTML_ROOT'])
         expected_dir  = os.path.join(test_dir, 'expected')
         
-        for file_name in ['index.html', 'bymonth.txt', 'byyear.txt', 
-                     'metric/index.html', 'metric/bymonth.txt', 'metric/byyear.txt']:
+        for file_name in ['index.html', 'byhour.txt', 'bymonth.txt', 'byyear.txt',
+                     'metric/index.html', 'metric/byhour.txt', 'metric/bymonth.txt', 'metric/byyear.txt']:
             actual_file   = os.path.join(test_html_dir, file_name)
             expected_file = os.path.join(expected_dir, file_name)
 #             print "Checking file: ", actual_file
