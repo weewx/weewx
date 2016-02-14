@@ -39,6 +39,7 @@ usage = """wee_database --help
        wee_database --backfill-daily
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
+            [--trans-days=DAYS]
        wee_database --reconfigure
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
@@ -104,6 +105,12 @@ def main():
                       help="The destination data binding.")
     parser.add_option('--dry-run', action='store_true',
                       help='Print what would happen but do not do it.')
+    parser.add_option('--trans-days', dest='trans_days', default=5,
+                      metavar="DAYS", 
+                      help="Limit backfill transactions to no more than"
+                      " DAYS days of archive data at a time. Default value is 5."
+                      " May be increased for a slight speed increase or reduced"
+                      " to reduce memory usage.")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
@@ -146,7 +153,7 @@ def main():
         dropDaily(config_dict, db_binding)
 
     if options.backfill_daily:
-        backfillDaily(config_dict, db_binding)
+        backfillDaily(config_dict, db_binding, int(options.trans_days))
 
     if options.reconfigure:
         reconfigMainDatabase(config_dict, db_binding)
@@ -196,26 +203,30 @@ def dropDaily(config_dict, db_binding):
                 # No daily summaries. Nothing to be done.
                 print "No daily summaries found in database '%s'. Nothing done." % (database_name,)
 
-def backfillDaily(config_dict, db_binding):
+def backfillDaily(config_dict, db_binding, trans_days):
     """Backfill the daily summaries"""
 
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
                                                               db_binding)
     database_name = manager_dict['database_dict']['database_name']
 
-    print "Backfilling daily summaries in database '%s'" % database_name
+    syslog.syslog(syslog.LOG_INFO, "Backfilling daily summaries in database '%s' ..." % database_name)
+    print "Backfilling daily summaries in database '%s' ..." % database_name
 
     t1 = time.time()
     # Open up the archive. This will create the tables necessary for the daily summaries if they
     # don't already exist:
     with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
-        nrecs, ndays = dbmanager.backfill_day_summary()
+        nrecs, ndays = dbmanager.backfill_day_summary(trans_days=trans_days)
     tdiff = time.time() - t1
 
+    syslog.syslog(syslog.LOG_INFO, "Backfill of daily summaries in database '%s' complete" % database_name)
     if nrecs:
-        print "Backfilled '%s' with %d records over %d days in %.2f seconds" % (database_name, nrecs, ndays, tdiff)
+        sys.stdout.flush()
+        print "Processed %d records to backfill %d day summaries in %.2f seconds      " % (nrecs, ndays, tdiff)
+        print "Backfill of daily summaries in database '%s' complete" % database_name
     else:
-        print "Daily summaries up to date in '%s'." % database_name
+        print "Daily summaries up to date in '%s'" % database_name
 
 def reconfigMainDatabase(config_dict, db_binding):
     """Create a new database, then populate it with the contents of an old database"""
