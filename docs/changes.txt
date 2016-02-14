@@ -17,6 +17,9 @@ Provide better feedback when a driver does not implement a configurator.
 
 Added humidex and appTemp to group_temperature. Fixed issue #96.
 
+Backfill of the daily summary is now done in "tranches," reducing the memory
+requirements of MySQL. Thanks to über-user Gary Roderick! Fixes issue #83.
+
 
 3.4.0 01/16/2016
 

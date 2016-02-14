@@ -4210,6 +4210,7 @@ Usage: wee_database --help
        wee_database --backfill-daily
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
+            [--trans-days=DAYS]
        wee_database --reconfigure
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
@@ -4251,6 +4252,10 @@ Options:
   --dest-binding=BINDING_NAME
                         The destination data binding.
   --dry-run             Print what would happen but do not do it.
+  --trans-days=DAYS     Limit backfill transactions to no more than DAYS days
+                        of archive data at a time. Default value is 5. May be
+                        increased for a slight speed increase or reduced to
+                        reduce memory usage.
 
 If you are using a MySQL database it is assumed that you have the appropriate
 permissions for the requested operation.
