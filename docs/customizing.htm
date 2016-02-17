@@ -2519,21 +2519,22 @@ class MyXSearch(SearchList):                                                 # 1
         will override the default action that the logical line name is used for
         the SQL type. So, our example would look like this: </p>
       <pre class="tty">[[[daytemp_with_avg]]]
-    [[[[a_logical_name]]]]
+    [[[[avgTemp]]]]
         data_type = outTemp
         aggregate_type = avg
         aggregate_interval = 3600
         label = Avg. Temp.
     [[[[outTemp]]]]</pre>
-    <p>Here, the first logical line has been given the name <span class="code">a_logical_name</span>
+    <p>Here, the first plot line has been given the name <span class="code">avgTemp</span>
         to distinguish it from the second line <span class="code">outTemp</span>.
+        Any name will do &mdash; it just has to be different.
         We have specified that the first line will use data type <span class="code">
           outTemp</span> and that it will use averaging over a one hour period.
         The second also uses <span class="code">outTemp</span>, but will not
         use averaging. </p>
 
     <p>The result is a nice plot of the day's temperature, overlaid with a
-        3-hour smoothed average: </p>
+        one hour smoothed average: </p>
 
     <p>
         <img alt="Daytime temperature with running average" src="images/daytemp_with_avg.png"/>
