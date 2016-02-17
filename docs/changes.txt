@@ -20,6 +20,9 @@ Added humidex and appTemp to group_temperature. Fixed issue #96.
 Backfill of the daily summary is now done in "tranches," reducing the memory
 requirements of MySQL. Thanks to über-user Gary Roderick! Fixes issue #83.
 
+The Vantage driver now uses a more gentle wakeup, less likely to result
+in <ACK> errors. Thanks to user Luc Heijst for figuring this out!
+
 
 3.4.0 01/16/2016
 

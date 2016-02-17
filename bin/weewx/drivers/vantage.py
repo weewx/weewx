@@ -25,7 +25,7 @@ DRIVER_VERSION = '3.0'
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
 
-def configurator_loader(config_dict):
+def configurator_loader(config_dict):  # @UnusedVariable
     return VantageConfigurator()
 
 def confeditor_loader():
@@ -52,8 +52,17 @@ class BaseWrapper(object):
         
         If unsuccessful, an exception of type weewx.WakeupError is thrown"""
     
-        # Wake up the console. Try up to max_tries times
-        for unused_count in xrange(max_tries):
+        # First try a gentle wake up
+        try:
+            self.write('\n')
+            _resp = self.read(2)
+            if _resp == '\n\r':
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: gentle wake up successful")
+                return
+        except weewx.WeeWxIOError:
+            pass
+        # That didn't work. Try a more "rude" awakening. Try up to max_tries times
+        for count in xrange(max_tries):
             try:
                 # Clear out any pending input or output characters:
                 self.flush_output()
@@ -71,13 +80,14 @@ class BaseWrapper(object):
                 self.write('\n')
                 _resp = self.read(2)
                 if _resp == '\n\r':
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: successfully woke up console")
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: rude wake up successful")
                     return
                 print "Unable to wake up console... sleeping"
                 time.sleep(wait_before_retry)
                 print "Unable to wake up console... retrying"
             except weewx.WeeWxIOError:
                 pass
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: retry  #%d failed" % count)
 
         syslog.syslog(syslog.LOG_ERR, "vantage: Unable to wake up console")
         raise weewx.WakeupError("Unable to wake up Vantage console")
