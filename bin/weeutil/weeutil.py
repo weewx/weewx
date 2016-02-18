@@ -13,7 +13,6 @@ import datetime
 import math
 import os
 import shutil
-import sys
 import syslog
 import time
 import traceback
@@ -682,7 +681,7 @@ def genHourSpans(start_ts, stop_ts):
     >>> print timestamp_to_string(stop_ts)
     2008-03-06 07:46:00 PST (1204818360)
 
-    >>> for span in genDaySpans(start_ts, stop_ts):
+    >>> for span in genHourSpans(start_ts, stop_ts):
     ...   print span
     [2008-03-06 01:00:00 PST (1204794000) -> 2008-03-06 02:00:00 PST (1204797600)]
     [2008-03-06 02:00:00 PST (1204797600) -> 2008-03-06 03:00:00 PST (1204801200)]
