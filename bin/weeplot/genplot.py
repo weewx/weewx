@@ -540,7 +540,9 @@ class TimePlot(GeneralPlot) :
         if self.x_label_format is None:
             return ''
         time_tuple = time.localtime(x)
-        xlabel = time.strftime(self.x_label_format, time_tuple)
+        # The function time.strftime() still does not support Unicode, so we have to explicitly
+        # convert it to UTF8, then back again:
+        xlabel = to_unicode(time.strftime(self.x_label_format.encode('utf8'), time_tuple))
         return xlabel
     
 class PlotLine(object):
@@ -552,7 +554,7 @@ class PlotLine(object):
                  bar_width=None, vector_rotate = None, gap_fraction=None):
         self.x           = x
         self.y           = y
-        self.label       = label
+        self.label       = to_unicode(label)
         self.plot_type   = plot_type
         self.line_type   = line_type
         self.marker_type = marker_type

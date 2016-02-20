@@ -6,6 +6,7 @@
 #
 """Test tag notation for template generation."""
 from __future__ import with_statement
+import locale
 import os.path
 import shutil
 import sys
@@ -15,6 +16,12 @@ import unittest
 import configobj
 
 os.environ['TZ'] = 'America/Los_Angeles'
+
+# This will use the locale specified by the environment variable 'LANG'
+# Other options are possible. See:
+# http://docs.python.org/2/library/locale.html#locale.setlocale
+locale.setlocale(locale.LC_ALL, '')
+
 
 import weewx.reportengine
 import weewx.station
