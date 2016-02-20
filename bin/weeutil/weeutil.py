@@ -1,3 +1,4 @@
+# This Python file uses the following encoding: utf-8
 #
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
@@ -1130,7 +1131,7 @@ def to_int(x):
     >>> print to_int(None)
     None
     """
-    if isinstance(x, str) and x.lower() == 'none':
+    if isinstance(x, basestring) and x.lower() == 'none':
         x = None
     return int(x) if x is not None else None
 
@@ -1145,9 +1146,26 @@ def to_float(x):
     >>> print to_float(None)
     None
     """
-    if isinstance(x, str) and x.lower() == 'none':
+    if isinstance(x, basestring) and x.lower() == 'none':
         x = None
     return float(x) if x is not None else None
+
+def to_unicode(string, encoding='utf8'):
+    """Convert to Unicode, unless string is None
+    
+    Example:
+    >>> print to_unicode("degree sign from UTF8: \xc2\xb0")
+    degree sign from UTF8: °
+    >>> print to_unicode(u"degree sign from Unicode: \u00b0")
+    degree sign from Unicode: °
+    >>> print to_unicode(None)
+    None
+    """
+    try:
+        return unicode(string, encoding) if string is not None else None
+    except TypeError:
+        # The string is already in Unicode. Just return it.
+        return string
 
 def min_with_none(x_seq):
     """Find the minimum in a (possibly empty) sequence, ignoring Nones"""
@@ -1284,6 +1302,9 @@ except AttributeError:
         return join(*rel_list)
 
 if __name__ == '__main__':
+    import sys
+    reload(sys)
+    sys.setdefaultencoding("UTF-8")  # @UndefinedVariable
     import doctest
 
     if not doctest.testmod().failed:
