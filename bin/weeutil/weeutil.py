@@ -1257,6 +1257,32 @@ class ListOfDicts(dict):
     def extend(self, new_dict):
         self.dict_list.append(new_dict)
 
+# Supply an implementation of os.path.relpath, but it was not introduced
+# until Python v2.5
+try:
+    os.path.relpath
+    # We can use the Python library version.
+    relpath = os.path.relpath
+except AttributeError:
+    # No Python library version.
+    # Substitute a version from James Gardner's BareNecessities
+    # https://jimmyg.org/work/code/barenecessities/index.html
+    import posixpath
+    from posixpath import curdir, sep, pardir, join
+    
+    def relpath(path, start=curdir):
+        """Return a relative version of a path"""
+        if not path:
+            raise ValueError("no path specified")
+        start_list = posixpath.abspath(start).split(sep)
+        path_list = posixpath.abspath(path).split(sep)
+        # Work out how much of the filepath is shared by start and path.
+        i = len(posixpath.commonprefix([start_list, path_list]))
+        rel_list = [pardir] * (len(start_list)-i) + path_list[i:]
+        if not rel_list:
+            return curdir
+        return join(*rel_list)
+
 if __name__ == '__main__':
     import doctest
 

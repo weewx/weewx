@@ -20,7 +20,7 @@ import weewx.reportengine
 import weewx.station
 import weeutil.weeutil
 
-import gen_fake_data
+import gen_fake_data  # @UnresolvedImport
 
 # Find the configuration file. It's assumed to be in the same directory as me:
 config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
@@ -84,9 +84,9 @@ class Common(unittest.TestCase):
             shutil.rmtree(test_html_dir)
         except OSError, e:
             if os.path.exists(test_html_dir):
-                print >>sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
-                print >>sys.stderr, "Reason:", e
-                print >>sys.stderr, "Aborting"
+                print >> sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
+                print >> sys.stderr, "Reason:", e
+                print >> sys.stderr, "Aborting"
                 exit(1)
 
         # This will generate the test databases if necessary:
@@ -116,26 +116,32 @@ class Common(unittest.TestCase):
         
         test_html_dir = os.path.join(t.config_dict['WEEWX_ROOT'], t.config_dict['StdReport']['HTML_ROOT'])
         expected_dir  = os.path.join(test_dir, 'expected')
-        
-        for file_name in ['index.html', 'byhour.txt', 'bymonth.txt', 'byyear.txt',
-                     'metric/index.html', 'metric/byhour.txt', 'metric/bymonth.txt', 'metric/byyear.txt']:
-            actual_file   = os.path.join(test_html_dir, file_name)
-            expected_file = os.path.join(expected_dir, file_name)
-#             print "Checking file: ", actual_file
-#             print "  against file:", expected_file
-            actual   = open(actual_file)
-            expected = open(expected_file)
 
-            n = 0
-            while True:
-                n += 1
-                actual_line   = actual.readline()
-                expected_line = expected.readline()
-                if actual_line == '' or expected_line == '':
-                    break
-                self.assertEqual(actual_line, expected_line, msg="%s[%d]:\n%r vs\n%r" % (actual_file, n, actual_line, expected_line))
-            
-            print "Checked %d lines" % (n,)
+        # Walk the directory of expected results to discover all the generated files we should
+        # be checking
+        for dirpath, _, dirfilenames in os.walk(expected_dir):
+            for dirfilename in dirfilenames:
+                expected_filename_abs = os.path.join(dirpath, dirfilename)
+                # Get the file path relative to the directory of expected results
+                filename_rel = weeutil.weeutil.relpath(expected_filename_abs, expected_dir)
+                # Use that to figure out where the actual results ended up
+                actual_filename_abs = os.path.join(test_html_dir, filename_rel)
+#                 print "Checking file: ", actual_filename_abs
+#                 print "  against file:", expected_filename_abs
+                actual = open(actual_filename_abs)
+                expected = open(expected_filename_abs)
+    
+                n = 0
+                while True:
+                    actual_line = actual.readline()
+                    expected_line = expected.readline()
+                    if actual_line == '' or expected_line == '':
+                        break
+                    self.assertEqual(actual_line, expected_line, msg="%s[%d]:\n%r vs\n%r" % 
+                                     (actual_filename_abs, n, actual_line, expected_line))
+                    n += 1
+                
+                print "Checked %d lines" % (n,)
 
 class TestSqlite(Common):
 

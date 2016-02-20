@@ -1,19 +1,19 @@
                    TEST MONTHLY CLIMATOLOGICAL SUMMARY for Sep 2010
 
 
-NAME: TEST TEST TEST                  
-ELEV: 100 meters    LAT: 45-41.16 N    LONG: 121-33.96 W
+NAME:  with UTF8 characters                  
+ELEV: 328 feet    LAT: 45-41.16 N    LONG: 121-33.96 W
 
 
-                   TEMPERATURE (C), RAIN (mm), WIND SPEED (kph)
+                   TEMPERATURE (F), RAIN (in), WIND SPEED (mph)
 
                                          HEAT   COOL         AVG
       MEAN                               DEG    DEG          WIND                   DOM
 DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME    DIR
 ---------------------------------------------------------------------------------------
- 01   15.5   26.5  19:00    4.5  07:00    2.8    0.0    0.0    5.2   18.0  00:00    334
- 02   15.2   26.2  19:00    4.1  07:00    3.2    0.0    9.4   25.7   38.6  00:00     47
- 03    7.9   17.4  00:10    3.8  07:00   10.4    0.0   14.7   31.1   38.6  01:00    107
+ 01   59.9   79.8  19:00   40.0  07:00    5.1    0.0   0.00    3.2   11.2  00:00    334
+ 02   59.3   79.1  19:00   39.5  07:00    5.7    0.0   0.37   15.9   24.0  00:00     47
+ 03   46.2   63.3  00:10   38.8  07:00   18.8    0.0   0.58   19.3   24.0  01:00    107
  04
  05
  06
@@ -42,5 +42,5 @@ DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME
  29
  30
 ---------------------------------------------------------------------------------------
-      13.9   26.5     01    3.8     03   16.4    0.0   24.1   18.4   38.6     03     60
+      57.1   79.8     01   38.8     03   29.5    0.0   0.95   11.4   24.0     03     60
     

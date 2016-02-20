@@ -398,7 +398,7 @@ class SearchList(object):
         """
         self.generator = generator
 
-    def get_extension_list(self, timespan, db_lookup):
+    def get_extension_list(self, timespan, db_lookup):  # @UnusedVariable
         """For weewx V3.x extensions. Should return a list
         of objects whose attributes or keys define the extension.
         

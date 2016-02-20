@@ -1,7 +1,7 @@
                      TEST CLIMATOLOGICAL SUMMARY for year 2010
 
 
-NAME: TEST TEST TEST                  
+NAME:  with UTF8 characters                  
 ELEV: 100 meters    LAT: 45-41.16 N    LONG: 121-33.96 W
 
 
