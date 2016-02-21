@@ -8,52 +8,19 @@
     <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>
     <link href="css/jquery.tocify.css" rel="stylesheet"/>
     <link href="css/weewx_docs.css" rel="stylesheet"/>
-    <script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
-    <script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
-    <script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
-    <script type="text/javascript" src="js/weewx.js"></script>
-    <script type="text/javascript">
-        $(function () {
-            var level = get_default_level();
-            create_toc_control(level);
-            generate_toc(level);
-        });
-
-        $(window).scroll(function () {
-            $('#toc_controls').css({
-                'left': 8 - $(this).scrollLeft()
-            });
-            $('#toc').css({
-                'left': 8 - $(this).scrollLeft()
-            });
-        });
-    </script>
-    <script type="text/javascript">
-        function showtab(tab, id) {
-            document.getElementById(tab + '-deb').style.display = 'none';
-            document.getElementById(tab + '-rpm').style.display = 'none';
-            document.getElementById(tab + '-setup').style.display = 'none';
-            document.getElementById(tab + '-' + id).style.display = 'block';
-
-            document.getElementById(tab + '-tab-deb').className = 'tab';
-            document.getElementById(tab + '-tab-rpm').className = 'tab';
-            document.getElementById(tab + '-tab-setup').className = 'tab';
-            document.getElementById(tab + '-tab-' + id).className = 'tab selected';
-        }
-    </script>
 </head>
 
-<body>
 
-<div id="toc_parent">
-    <div id="toc_controls">
-    </div>
-    <div id="toc">
-      <!-- The table of contents will get injected here -->
+<body><div id="page">
+
+<div id="toc_parent" class="sidebar">
+	<div id="toc_controls" class="fixed"></div>
+	<div id="toc" class="scrollable">
+		<!-- The table of contents will get injected here -->
     </div>
 </div>
 
-<div id="technical_content">
+<div id="technical_content" class="main">
 
     <a href='http://weewx.com'>
         <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
@@ -5712,6 +5679,36 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
     <p class="copyright"> &copy; <a href="copyright.htm">Copyright</a> Tom Keffer </p>
 </div>
 <!-- #technical_content -->
+
+</div><!-- End of Page -->
+
+<!-- Our scripts load last so the content can load first -->
+<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
+<script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
+<script type="text/javascript" src="js/weewx.js"></script>
+<script type="text/javascript" >
+    $(function () {
+        var level = get_default_level();
+        create_toc_control(level);
+        generate_toc(level);
+    });
+</script>
+
+<script type="text/javascript">
+    function showtab(tab, id) {
+        document.getElementById(tab + '-deb').style.display = 'none';
+        document.getElementById(tab + '-rpm').style.display = 'none';
+        document.getElementById(tab + '-setup').style.display = 'none';
+        document.getElementById(tab + '-' + id).style.display = 'block';
+
+        document.getElementById(tab + '-tab-deb').className = 'tab';
+        document.getElementById(tab + '-tab-rpm').className = 'tab';
+        document.getElementById(tab + '-tab-setup').className = 'tab';
+        document.getElementById(tab + '-tab-' + id).className = 'tab selected';
+    }
+</script>
+
 
 </body>
 </html>

@@ -6,55 +6,10 @@
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <title>Installation using setup.py</title>
     <link href="css/weewx_docs.css" rel="stylesheet"/>
-    <style type="text/css">
-        .os-icons {
-            float: right;
-            margin-left: 100px;
-        }
-
-        .logo {
-            width: 60px;
-        }
-
-        .tty {
-            white-space: pre-line;
-        }
-
-        .selected {
-            background-color: #ffffe0;
-        }
-    </style>
-    <script type="text/javascript">
-        function showprereq(id) {
-            document.getElementById('prereq-debian').style.display = 'none';
-            document.getElementById('prereq-redhat').style.display = 'none';
-            document.getElementById('prereq-suse').style.display = 'none';
-            document.getElementById('prereq-pip').style.display = 'none';
-
-            document.getElementById('prereq-tab-debian').className = 'tab';
-            document.getElementById('prereq-tab-redhat').className = 'tab';
-            document.getElementById('prereq-tab-suse').className = 'tab';
-            document.getElementById('prereq-tab-pip').className = 'tab';
-
-            document.getElementById('prereq-' + id).style.display = 'block';
-            document.getElementById('prereq-tab-' + id).className = 'tab selected';
-        }
-
-        function showstartup(id) {
-            document.getElementById('startup-debian').style.display = 'none';
-            document.getElementById('startup-redhat').style.display = 'none';
-            document.getElementById('startup-suse').style.display = 'none';
-
-            document.getElementById('startup-tab-debian').className = 'tab';
-            document.getElementById('startup-tab-redhat').className = 'tab';
-            document.getElementById('startup-tab-suse').className = 'tab';
-
-            document.getElementById('startup-' + id).style.display = 'block';
-            document.getElementById('startup-tab-' + id).className = 'tab selected';
-        }
-    </script>
 </head>
-<body>
+
+<body><div id="page">
+
 <h1 class="title">weewx: Installation using setup.py</h1>
 
 <p class='os-icons'>
@@ -337,6 +292,38 @@
 <p class='copyright'>
     &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
 </p>
+
+</div><!-- End of Page -->
+
+<script type="text/javascript">
+    function showprereq(id) {
+        document.getElementById('prereq-debian').style.display = 'none';
+        document.getElementById('prereq-redhat').style.display = 'none';
+        document.getElementById('prereq-suse').style.display = 'none';
+        document.getElementById('prereq-pip').style.display = 'none';
+
+        document.getElementById('prereq-tab-debian').className = 'tab';
+        document.getElementById('prereq-tab-redhat').className = 'tab';
+        document.getElementById('prereq-tab-suse').className = 'tab';
+        document.getElementById('prereq-tab-pip').className = 'tab';
+
+        document.getElementById('prereq-' + id).style.display = 'block';
+        document.getElementById('prereq-tab-' + id).className = 'tab selected';
+    }
+
+    function showstartup(id) {
+        document.getElementById('startup-debian').style.display = 'none';
+        document.getElementById('startup-redhat').style.display = 'none';
+        document.getElementById('startup-suse').style.display = 'none';
+
+        document.getElementById('startup-tab-debian').className = 'tab';
+        document.getElementById('startup-tab-redhat').className = 'tab';
+        document.getElementById('startup-tab-suse').className = 'tab';
+
+        document.getElementById('startup-' + id).style.display = 'block';
+        document.getElementById('startup-tab-' + id).className = 'tab selected';
+    }
+</script>
 
 </body>
 </html>
