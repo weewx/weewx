@@ -23,6 +23,9 @@ requirements of MySQL. Thanks to über-user Gary Roderick! Fixes issue #83.
 The Vantage driver now uses a more gentle wakeup, less likely to result
 in <ACK> errors. Thanks to user Luc Heijst for figuring this out!
 
+Plotting routines now use Unicode internally, but convert to UTF-8 if a font
+does not support it. Fixes issue #101.
+
 
 3.4.0 01/16/2016
 

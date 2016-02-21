@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -15,7 +15,11 @@ except ImportError:
 
 import weeplot.utilities
 import weeutil.weeutil
-        
+from weeutil.weeutil import to_unicode
+
+# NB: All labels passed in should be in UTF-8. They are then converted to Unicode, which
+# some fonts support, others don't. If the chosen font does not support Unicode, then the label
+# will be changed back to UTF-8, then tried again.        
 
 class GeneralPlot(object):
     """Holds various parameters necessary for a plot. It should be specialized by the type of plot.
@@ -67,8 +71,8 @@ class GeneralPlot(object):
         self.axis_label_font_color  = weeplot.utilities.tobgr(config_dict.get('axis_label_font_color', '0x000000'))
         self.axis_label_font_size   = int(config_dict.get('axis_label_font_size', 10)) * self.anti_alias
 
-        self.x_label_format         = config_dict.get('x_label_format')
-        self.y_label_format         = config_dict.get('y_label_format')
+        self.x_label_format         = to_unicode(config_dict.get('x_label_format'))
+        self.y_label_format         = to_unicode(config_dict.get('y_label_format'))
         
         # Calculate sensible margins for the given image and font sizes.
         self.lmargin = int(4.0 * self.axis_label_font_size)
@@ -84,7 +88,7 @@ class GeneralPlot(object):
         self.rose_diameter          = int(config_dict.get('rose_diameter', 10))
         self.rose_position          = (self.lmargin + self.padding + 5, self.image_height - self.bmargin - self.padding - self.rose_height)
         self.rose_rotation          = None
-        self.rose_label             = config_dict.get('rose_label', 'N')
+        self.rose_label             = to_unicode(config_dict.get('rose_label', 'N'))
         self.rose_label_font_path   = config_dict.get('rose_label_font_path', self.bottom_label_font_path)
         self.rose_label_font_size   = int(config_dict.get('rose_label_font_size', 10))  
         self.rose_label_font_color  = weeplot.utilities.tobgr(config_dict.get('rose_label_font_color', '0x000000'))
@@ -103,13 +107,13 @@ class GeneralPlot(object):
         """Set the label to be put at the bottom of the plot.
         
         """
-        self.bottom_label = unicode(bottom_label, 'utf8')
+        self.bottom_label = to_unicode(bottom_label)
         
     def setUnitLabel(self, unit_label):
         """Set the label to be used to show the units of the plot.
         
         """
-        self.unit_label = unicode(unit_label, 'utf8')
+        self.unit_label = to_unicode(unit_label)
         
     def setXScaling(self, xscale):
         """Set the X scaling.
@@ -194,7 +198,7 @@ class GeneralPlot(object):
     
     def _getImageDraw(self, image):
         """Returns an instance of ImageDraw with the proper dimensions and background color"""
-        draw = ImageDraw.Draw(image)
+        draw = UniDraw(image)
         return draw
     
     def _getScaledDraw(self, draw):
@@ -260,7 +264,7 @@ class GeneralPlot(object):
         """
 
         axis_label_font = weeplot.utilities.get_font_handle(self.axis_label_font_path,
-                                                          self.axis_label_font_size)
+                                                            self.axis_label_font_size)
 
         drawlabel = False
         for x in weeutil.weeutil.stampgen(self.xscale[0], self.xscale[1], self.xscale[2]) :
@@ -373,16 +377,10 @@ class GeneralPlot(object):
         # Put the units in the upper left corner
         unit_label_font = weeplot.utilities.get_font_handle(self.unit_label_font_path, self.unit_label_font_size)
         if self.unit_label:
-            try:
-                draw.text(self.unit_label_position,
-                          self.unit_label,
-                          fill=self.unit_label_font_color,
-                          font=unit_label_font)
-            except UnicodeEncodeError:
-                draw.text(self.unit_label_position,
-                          self.unit_label.encode("utf-8"),
-                          fill=self.unit_label_font_color,
-                          font=unit_label_font)
+            draw.text(self.unit_label_position,
+                      self.unit_label,
+                      fill=self.unit_label_font_color,
+                      font=unit_label_font)
 
         top_label_font = weeplot.utilities.get_font_handle(self.top_label_font_path, self.top_label_font_size)
         
@@ -407,14 +405,6 @@ class GeneralPlot(object):
     def _renderRose(self, image, draw):
         """Draw a compass rose."""
         
-        # Internal function used to add an opaque alpha channel to an integer RGB value
-        def add_alpha(i):
-            r = i & 0xff
-            g = (i >> 8)  & 0xff
-            b = (i >> 16) & 0xff
-            a = 0xff    # Opaque alpha
-            return (r,g,b,a)
-
         rose_center_x = self.rose_width/2  + 1
         rose_center_y = self.rose_height/2 + 1
         barb_width  = 3
@@ -540,17 +530,19 @@ class TimePlot(GeneralPlot) :
             if xmin is not None and xmax is not None:
                 delta = xmax - xmin
                 if delta > 30*24*3600:
-                    self.x_label_format = "%x"
+                    self.x_label_format = u"%x"
                 elif delta > 24*3600:
-                    self.x_label_format = '%x %X'
+                    self.x_label_format = u"%x %X"
                 else:
-                    self.x_label_format = '%X'
+                    self.x_label_format = u"%X"
         
     def _genXLabel(self, x):
         if self.x_label_format is None:
             return ''
         time_tuple = time.localtime(x)
-        xlabel = time.strftime(self.x_label_format, time_tuple)
+        # The function time.strftime() still does not support Unicode, so we have to explicitly
+        # convert it to UTF8, then back again:
+        xlabel = to_unicode(time.strftime(self.x_label_format.encode('utf8'), time_tuple))
         return xlabel
     
 class PlotLine(object):
@@ -562,7 +554,7 @@ class PlotLine(object):
                  bar_width=None, vector_rotate = None, gap_fraction=None):
         self.x           = x
         self.y           = y
-        self.label       = unicode(label, 'utf8')
+        self.label       = to_unicode(label)
         self.plot_type   = plot_type
         self.line_type   = line_type
         self.marker_type = marker_type
@@ -574,6 +566,26 @@ class PlotLine(object):
         self.vector_rotate = vector_rotate
         self.gap_fraction = gap_fraction
 
+class UniDraw(ImageDraw.ImageDraw):
+    """Supports non-Unicode fonts
+    
+    Not all fonts support Unicode characters. These will raise a UnicodeEncodeError exception.
+    This class subclasses the regular ImageDraw.Draw class, adding overridden functions to
+    catch these exceptions. It then tries drawing the string again, this time as a UTF8 string"""
+    
+    def text(self, position, string, **options):
+        try:
+            return ImageDraw.ImageDraw.text(self, position, string, **options)
+        except UnicodeEncodeError:
+            return ImageDraw.ImageDraw.text(self, position, string.encode('utf8'), **options)
+        
+    def textsize(self, string, **options):
+        try:
+            return ImageDraw.ImageDraw.textsize(self, string, **options)
+        except UnicodeEncodeError:
+            return ImageDraw.ImageDraw.textsize(self, string.encode('utf8'), **options)
+            
+            
 def blend_hls(c, bg, alpha):
     """Fade from c to bg using alpha channel where 1 is solid and 0 is
     transparent.  This fades across the hue, saturation, and lightness."""
@@ -611,3 +623,12 @@ def int2rgbstr(x):
 
 def rgb2int(r,g,b):
     return r + g*256 + b*256*256
+
+def add_alpha(i):
+    """Add an opaque alpha channel to an integer RGB value"""
+    r = i & 0xff
+    g = (i >> 8)  & 0xff
+    b = (i >> 16) & 0xff
+    a = 0xff    # Opaque alpha
+    return (r,g,b,a)
+

@@ -561,12 +561,12 @@ class Formatter(object):
             return ''
 
         # Is the label a simple string? If so, return it
-        if isinstance(label, str):
+        if isinstance(label, basestring):
             return label
         else:
             # It is not a simple string. Assume it is a tuple or list
             # Return the singular, or plural, version as requested.
-            return label[plural]
+            return label[1] if plural else label[0]
 
     def toString(self, val_t, context='current', addLabel=True, 
                  useThisFormat=None, NONE_string=None, 
