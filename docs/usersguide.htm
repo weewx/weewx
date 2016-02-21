@@ -8,52 +8,18 @@
     <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>
     <link href="css/jquery.tocify.css" rel="stylesheet"/>
     <link href="css/weewx_docs.css" rel="stylesheet"/>
-    <script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
-    <script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
-    <script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
-    <script type="text/javascript" src="js/weewx.js"></script>
-    <script type="text/javascript">
-        $(function () {
-            var level = get_default_level();
-            create_toc_control(level);
-            generate_toc(level);
-        });
-
-        $(window).scroll(function () {
-            $('#toc_controls').css({
-                'left': 8 - $(this).scrollLeft()
-            });
-            $('#toc').css({
-                'left': 8 - $(this).scrollLeft()
-            });
-        });
-    </script>
-    <script type="text/javascript">
-        function showtab(tab, id) {
-            document.getElementById(tab + '-deb').style.display = 'none';
-            document.getElementById(tab + '-rpm').style.display = 'none';
-            document.getElementById(tab + '-setup').style.display = 'none';
-            document.getElementById(tab + '-' + id).style.display = 'block';
-
-            document.getElementById(tab + '-tab-deb').className = 'tab';
-            document.getElementById(tab + '-tab-rpm').className = 'tab';
-            document.getElementById(tab + '-tab-setup').className = 'tab';
-            document.getElementById(tab + '-tab-' + id).className = 'tab selected';
-        }
-    </script>
 </head>
 
-<body>
+<body><div id="page">
 
-<div id="toc_parent">
-    <div id="toc_controls">
-    </div>
-    <div id="toc">
-      <!-- The table of contents will get injected here -->
+<div id="toc_parent" class="sidebar">
+	<div id="toc_controls" class="fixed"></div>
+	<div id="toc" class="scrollable">
+		<!-- The table of contents will get injected here -->
     </div>
 </div>
 
-<div id="technical_content">
+<div id="technical_content" class="main">
 
     <a href='http://weewx.com'>
         <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
@@ -1269,7 +1235,7 @@ Options:
 
     <pre class="tty cmd">wee_config --list-drivers</pre>
 
-    <p>This will result in something like:</p>
+    <p>This will result in something like this:</p>
 
     <pre class="tty">
 Module name              Driver name    Version  Status
@@ -1635,18 +1601,6 @@ longitude = -77.0366</pre>
     <p>This section is for options relating to the Fine Offset series of
         weather stations with USB connectors.</p>
 
-    <p class="warning">The following settings are <strong>highly</strong>
-        recommended for Fine Offset stations. Using hardware record generation
-        or adaptive polling is more likely to cause USB communication failure.
-        Using hardware record generation will cause delays in report
-        generation.</p>
-    <pre class='tty'>
-[FineOffsetUSB]
-    polling_mode = PERIODIC
-    polling_interval = 60
-[StdArchive]
-    record_generation = software</pre>
-
     <p class="config_important">model</p>
 
     <p>Set to the station model. For example, WH1080, WS2080, WH3081, etc. </p>
@@ -1682,7 +1636,7 @@ longitude = -77.0366</pre>
     <p>Set to the station model. For example, Meade TE923W or TFA Nexus.
         Default is "TE923".</p>
 
-    <p class="config_option">map</p>
+    <p class="config_option">sensor_map</p>
 
     <p>This option defines the mapping between temperature/humidity values in
         the database and the remote sensors. Up to 5 remote sensors are
@@ -1694,36 +1648,31 @@ longitude = -77.0366</pre>
 
     <p>The default mapping is:
     </p>
-    <pre class="tty">[[map]]
-    link_wind = windLinkStatus
-    bat_wind = windBatteryStatus
-    link_rain = rainLinkStatus
-    bat_rain = rainBatteryStatus
-    link_uv = uvLinkStatus
-    bat_uv = uvBatteryStatus
-    uv = UV
-    t_in = inTemp
-    h_in = inHumidity
-    t_1 = outTemp
-    h_1 = outHumidity
-    bat_1 = outBatteryStatus
-    link_1 = outLinkStatus
-    t_2 = extraTemp1
-    h_2 = extraHumid1
-    bat_2 = extraBatteryStatus1
-    link_2 = extraLinkStatus1
-    t_3 = extraTemp2
-    h_3 = extraHumid3
-    bat_3 = extraBatteryStatus2
-    link_3 = extraLinkStatus2
-    t_4 = extraTemp3
-    h_4 = extraHumid3
-    bat_4 = extraBatteryStatus3
-    link_4 = extraLinkStatus3
-    t_5 = extraTemp4
-    h_5 = extraHumid4
-    bat_5 = extraBatteryStatus4
-    link_5 = extraLinkStatus4</pre>
+    <pre class="tty">[[sensor_map]]
+    outTemp =     t_1
+    outHumidity = h_1
+    extraTemp1 =  t_2
+    extraHumid1 = h_2
+    extraTemp2 =  t_3
+    extraHumid2 = h_3
+    extraTemp3 =  t_4
+    extraHumid3 = h_4
+    extraTemp4 =  t_5
+    extraHumid4 = h_5</pre>
+    <p class="config_option">battery_map</p>
+
+    <p>This option defines the mapping between battery status values in
+        the database and the remote sensors. The default mapping is:
+    </p>
+    <pre class="tty">[[battery_map]]
+    txBatteryStatus =      batteryUV
+    windBatteryStatus =    batteryWind
+    rainBatteryStatus =    batteryRain
+    outTempBatteryStatus = battery1
+    extraBatteryStatus1 =  battery2
+    extraBatteryStatus2 =  battery3
+    extraBatteryStatus3 =  battery4
+    extraBatteryStatus4 =  battery5</pre>
 
     <h3 class="config_section">[Ultimeter]</h3>
 
@@ -2493,11 +2442,6 @@ longitude = -77.0366</pre>
         <span class="code">StdArchive</span>, so that it is the corrected data that
         are stored. </p>
 
-    <p>In a default configuration, calibrations are applied to
-        observations from the hardware.  They are not applied to derived
-        calculations since the <span class="code">StdWXCalculate</span>
-        service runs after <span class="code">StdCalibrate</span>.</p>
-
     <h3 class="config_section">[[Corrections]]</h3>
 
     <p>In this section you list all <em>correction expressions</em>. For example,
@@ -2536,11 +2480,6 @@ longitude = -77.0366</pre>
         important that it be run after the calibration service, <span class="code">StdCalibrate
       </span>and before the archiving service <span class="code">StdArchive</span>,
         so that it is the calibrated and corrected data that are stored. </p>
-
-    <p>In a default configuration, quality control checks are applied to
-        observations from the hardware.  They are not applied to derived
-        calculations since the <span class="code">StdWXCalculate</span>
-        service runs after the quality control.</p>
 
     <h3 class="config_section">[[MinMax]]</h3>
 
@@ -2606,12 +2545,6 @@ longitude = -77.0366</pre>
         <li>dewpoint</li>
         <li>inDewpoint</li>
         <li>rainRate</li>
-        <li>maxSolarRad</li>
-        <li>cloudbase</li>
-        <li>humidex</li>
-        <li>appTemp</li>
-        <li>ET</li>
-        <li>windrun</li>
     </ul>
     <p>In its default configuration, the service calculates values only if
         they have not already been provided by the hardware or driver. This is
@@ -2898,12 +2831,6 @@ longitude = -77.0366</pre>
 
     <p>The port number to be used. Optional. Default is 3306.</p>
 
-    <p class="config_option">engine</p>
-
-    <p>The type of MySQL database storage engine to be used. This should not
-       be changed without a good reason. Default is <span class="code">INNODB</span>.
-    </p>
-
     <h2 class="config_section">[Engines]</h2>
 
     <p>
@@ -3041,9 +2968,7 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
     <p>The CC3000 driver supports catchup on startup, but it does not
         support hardware record generation.</p>
 
-    <p>The <span class='code'>wee_device</span> utility can be used to
-        configure the station hardware.  When the
-        <span class='code'>station_type</span> is
+    <p>When the <span class='code'>station_type</span> is
         <span class='code'>CC3000</span>,
         the <span class='code'>--help</span> option will produce output
         something like this:</p>
@@ -3073,7 +2998,7 @@ Mutating actions will request confirmation before proceeding.</pre>
     <p>Display the station settings with the <span class='code'>--info</span>
         option.</p>
     <pre class="tty cmd">wee_device --info</pre>
-    <p>This will result in something like:</p>
+    <p>This will result in something like this:</p>
     <pre class='tty'>firmware: Rainwise CC-3000 Version: 1.3 Build 006 Sep 04 2013
 time: 2014/06/02 08:22:17
 units: ENGLISH
@@ -3108,9 +3033,7 @@ interval: 1</pre>
         to download all records from the console since the last record in
         the archive database.</p>
 
-    <p>The <span class='code'>wee_device</span> utility can be used to
-        configure the station hardware.  When the
-        <span class='code'>station_type</span> is
+    <p>When the <span class='code'>station_type</span> is
         <span class='code'>FineOffsetUSB</span>,
         the <span class='code'>--help</span> option will produce output
         something like this:</p>
@@ -3144,7 +3067,7 @@ Mutating actions will request confirmation before proceeding.</pre>
     <p>Display the station settings with the <span class='code'>--info</span>
         option.</p>
     <pre class="tty cmd">wee_device --info</pre>
-    <p>This will result in something like:</p>
+    <p>This will result in something like this:</p>
     <pre class='tty'>Fine Offset station settings:
                     local time: 2013.02.11 18:34:28 CET
                   polling_mode: ADAPTIVE
@@ -3253,153 +3176,23 @@ Mutating actions will request confirmation before proceeding.</pre>
 
     <h2 id="wee_device_te923">TE923</h2>
 
+    <p>The <span class='code'>wee_device</span> utility cannot
+        configure TE923 stations.</p>
+
     <p>Some station models will recognize up to 5 remote
         temperature/humidity sensor units. Use the hardware switch in each
         sensor unit to identify sensors. Use the
-        <span class='code'>map</span> in
-        <span class='code'>weewx.conf</span> to associate each sensor with a
-        database field.
+        <span class='code'>sensor_map</span> in
+        <span class='code'>weewx.conf</span> to map each sensor to a database
+        field.
     </p>
 
-    <p>The station has either 208 or 3442 history records, depending on
-        the model. That is just over a day (208 records) or about 23 days
-        (3442 records) with an archive interval of 5 minutes.</p>
+    <p>The station has either 200 or 3300 history records, depending on
+        the model. That is just over a day (200 records) or about 23 days
+        (3300 records) with an archive interval of 5 minutes.</p>
 
-    <p>The TE923 driver will read history records from the station when weewx
-      starts up, but it does not support hardware record generation.</p>
-
-    <p>The <span class='code'>wee_device</span> utility can be used to
-        configure the station hardware.  When the
-        <span class='code'>station_type</span> is
-        <span class='code'>TE932</span>,
-        the <span class='code'>--help</span> option will produce output
-        something like this:</p>
-
-    <pre class='tty'>Using configuration file /home/weewx/weewx.conf
-Using TE923 driver version 0.16 (weewx.drivers.te923)
-Usage: wee_device [config_file] [options] [--debug] [--help]
-
-Configuration utility for weewx devices.
-
-Options:
-  -h, --help            show this help message and exit
-  --debug               display diagnostic information while running
-  -y                    answer yes to every prompt
-  --info                display weather station configuration
-  --current             get the current weather conditions
-  --history=N           display N history records
-  --history-since=N     display history records since N minutes ago
-  --minmax              display historical min/max data
-  --get-date            display station date
-  --set-date=YEAR,MONTH,DAY
-                        set station date
-  --get-location-local  display local location and timezone
-  --set-location-local=CITY|USR,LONG_DEG,LONG_MIN,E|W,LAT_DEG,LAT_MIN,N|S,TZ,DST
-                        set local location and timezone
-  --get-location-alt    display alternate location and timezone
-  --set-location-alt=CITY|USR,LONG_DEG,LONG_MIN,E|W,LAT_DEG,LAT_MIN,N|S,TZ,DST
-                        set alternate location and timezone
-  --get-altitude        display altitude
-  --set-altitude=ALT    set altitude
-  --get-alarms          display alarms
-  --set-alarms=WEEKDAY,SINGLE,PRE_ALARM,SNOOZE,MAXTEMP,MINTEMP,RAIN,WIND,GUST
-                        set alarm state
-  --get-interval        display archive interval
-  --set-interval=INTERVAL
-                        set archive interval
-  --format=FORMAT       formats include: table, dict
-
-Be sure to stop weewx first before using. Mutating actions will request
-confirmation before proceeding.</pre>
-
-    <h3>Station information</h3>
-
-    <p>Use the <span class="code">--info</span> option to display the
-        station configuration:</p>
-    <pre class="tty cmd">wee_device --info</pre>
-    <p>This will result in something like:</p>
-    <pre class="tty">Querying the station for the configuration...
-        altitude: 16
-           bat_1: True
-           bat_2: True
-           bat_3: True
-           bat_4: True
-           bat_5: True
-        bat_rain: True
-          bat_uv: False
-        bat_wind: True
-        latitude: 43.35
-       longitude: -72.0
-     version_bar: 23
-     version_rcc: 16
-     version_sys: 41
-      version_uv: 20
-    version_wind: 38</pre>
-
-    <h3>Display sensor status</h3>
-
-    <p>Use the <span class="code">--current</span> option to display the
-        current status of each sensor:</p>
-    <pre class="tty cmd">wee_device --current</pre>
-    <p>This will result in something like:</p>
-    <pre class="tty">Querying the station for current weather data...
-        dateTime: 1454615168
-        forecast: 5
-             h_1: 41
-       h_1_state: ok
-             h_2: 48
-       h_2_state: ok
-             h_3: None
-       h_3_state: no_link
-             h_4: None
-       h_4_state: no_link
-             h_5: None
-       h_5_state: no_link
-            h_in: 44
-      h_in_state: ok
-            rain: 2723
-      rain_state: ok
-             slp: 1012.4375
-       slp_state: ok
-           storm: 0
-             t_1: 13.9
-       t_1_state: ok
-             t_2: 21.5
-       t_2_state: ok
-             t_3: None
-       t_3_state: no_link
-             t_4: None
-       t_4_state: no_link
-             t_5: None
-       t_5_state: no_link
-            t_in: 22.85
-      t_in_state: ok
-              uv: None
-        uv_state: no_link
-       windchill: None
- windchill_state: invalid
-         winddir: 12
-   winddir_state: invalid
-        windgust: None
-  windgust_state: invalid
-       windspeed: None
- windspeed_state: invalid</pre>
-
-    <h3 id="te923_changing_the_archive_interval">Changing the archive interval</h3>
-
-    <p>TE923 stations ship from the factory with an archive interval of 1
-        hour (3600 seconds). To change the station's
-        interval to 5 minutes (300 seconds), do the following:</p>
-
-    <p class="tty cmd">wee_device --set-interval=300</p>
-
-    <h3 id="te923_dumping_the_logger_memory">Dumping the logger memory</h3>
-
-    <p><span class='code'>wee_device</span> can display the records from the
-        logger in tabular or dictionary format.</p>
-
-    <p>For example, to display the most recent 30 records:</p>
-    <pre class="tty cmd">wee_device --history=30 --format dict</pre>
+    <p>The TE923 driver is not capable of reading archive records from
+        the station.</p>
 
 
     <h2 id="wee_device_ultimeter">Ultimeter</h2>
@@ -3490,7 +3283,7 @@ confirmation before proceeding.</pre>
     <p>Use the <span class="code">--info</span> option to display the
         current EEPROM settings: </p>
     <pre class="tty cmd">wee_device --info</pre>
-    <p>This will result in something like:</p>
+    <p>This will print out something like: </p>
     <pre class="tty">Davis Vantage EEPROM settings:
     
     CONSOLE TYPE:                   VantagePro2
@@ -3756,7 +3549,7 @@ Mutating actions will request confirmation before proceeding.</pre>
     <p>Display the station settings with the <span class='code'>--info</span>
         option.</p>
     <pre class="tty cmd">wee_device --info </pre>
-    <p>This will result in something like:</p>
+    <p>This will result in something like this:</p>
     <pre class='tty'>buzzer: 0
 connection time till connect: 1.5
 connection type: 15
@@ -3926,7 +3719,7 @@ Transceiver is paired to console</pre>
 
     <p class="tty cmd">wee_device --info</p>
 
-    <p>This will result in something like:</p>
+    <p>This will result in something like this:</p>
 
     <pre class='tty'>alarm_flags_other: 0
 alarm_flags_wind_dir: 0
@@ -5712,6 +5505,30 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
     <p class="copyright"> &copy; <a href="copyright.htm">Copyright</a> Tom Keffer </p>
 </div>
 <!-- #technical_content -->
+
+</div><!-- End Page -->
+
+<!-- Put our scripts here so they load last -->
+<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
+<script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
+<script type="text/javascript" src="js/weewx.js"></script>
+<script type="text/javascript" >
+    $(function () {
+        var level = get_default_level();
+        create_toc_control(level);
+        generate_toc(level);
+    });
+
+   /* $(window).scroll(function () {
+        $('#toc_controls').css({
+            'right': 8 - $(this).scrollLeft()
+        });
+        $('#toc').css({
+            'right': 8 - $(this).scrollLeft()
+        });
+    });*/
+</script>
 
 </body>
 </html>

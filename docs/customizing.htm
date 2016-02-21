@@ -7,47 +7,28 @@
     <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>
     <link href="css/jquery.tocify.css" rel="stylesheet"/>
     <link href="css/weewx_docs.css" rel="stylesheet"/>
-    <script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
-    <script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
-    <script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
-    <script type="text/javascript" src="js/weewx.js"></script>
-    <script type="text/javascript" >
-        $(function () {
-            var level = get_default_level();
-            create_toc_control(level);
-            generate_toc(level);
-        });
+    <style type="text/css">
 
-        $(window).scroll(function () {
-            $('#toc_controls').css({
-                'left': 8 - $(this).scrollLeft()
-            });
-            $('#toc').css({
-                'left': 8 - $(this).scrollLeft()
-            });
-        });
-    </script>
+	</style>
 </head>
-<body>
 
-<div id="toc_parent">
-    <div id="toc_controls">
-    </div>
-    <div id="toc">
-      <!-- The table of contents will get injected here -->
+<body><div id="page">
+
+<div id="toc_parent" class="sidebar">
+	<div id="toc_controls" class="fixed"></div>
+	<div id="toc" class="scrollable">
+		<!-- The table of contents will get injected here -->
     </div>
 </div>
 
-<div id="technical_content">
+<div id="technical_content" class="main">
 
     <a href='http://weewx.com'>
         <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
     </a>
 
     <h1 class="title">Customizing weewx<br/>
-      <span class="version">
-Version: 3.4.0
-      </span>
+      <span class="version">Version: 3.4.0</span>
     </h1>
 
     <h1 id="introduction">Introduction</h1>
@@ -2519,22 +2500,21 @@ class MyXSearch(SearchList):                                                 # 1
         will override the default action that the logical line name is used for
         the SQL type. So, our example would look like this: </p>
       <pre class="tty">[[[daytemp_with_avg]]]
-    [[[[avgTemp]]]]
+    [[[[a_logical_name]]]]
         data_type = outTemp
         aggregate_type = avg
         aggregate_interval = 3600
         label = Avg. Temp.
     [[[[outTemp]]]]</pre>
-    <p>Here, the first plot line has been given the name <span class="code">avgTemp</span>
+    <p>Here, the first logical line has been given the name <span class="code">a_logical_name</span>
         to distinguish it from the second line <span class="code">outTemp</span>.
-        Any name will do &mdash; it just has to be different.
         We have specified that the first line will use data type <span class="code">
           outTemp</span> and that it will use averaging over a one hour period.
         The second also uses <span class="code">outTemp</span>, but will not
         use averaging. </p>
 
     <p>The result is a nice plot of the day's temperature, overlaid with a
-        one hour smoothed average: </p>
+        3-hour smoothed average: </p>
 
     <p>
         <img alt="Daytime temperature with running average" src="images/daytemp_with_avg.png"/>
@@ -4211,7 +4191,6 @@ Usage: wee_database --help
        wee_database --backfill-daily
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
-            [--trans-days=DAYS]
        wee_database --reconfigure
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
@@ -4253,10 +4232,6 @@ Options:
   --dest-binding=BINDING_NAME
                         The destination data binding.
   --dry-run             Print what would happen but do not do it.
-  --trans-days=DAYS     Limit backfill transactions to no more than DAYS days
-                        of archive data at a time. Default value is 5. May be
-                        increased for a slight speed increase or reduced to
-                        reduce memory usage.
 
 If you are using a MySQL database it is assumed that you have the appropriate
 permissions for the requested operation.
@@ -5565,12 +5540,6 @@ xstats/bin/user/xstats.py</pre>
             </td>
         </tr>
         <tr>
-            <td class="first_col code">min_ge(val)</td>
-            <td>The number of days where the minimum value is greater than or
-                equal to <em>val</em>. Aggregation period must be one day or longer.
-            </td>
-        </tr>
-        <tr>
             <td class="first_col code">min_le(val)</td>
             <td>The number of days where the minimum value is less than or
                 equal to <em>val</em>. Aggregation period must be one day or longer.
@@ -5647,31 +5616,13 @@ xstats/bin/user/xstats.py</pre>
         </tr>
         <tr>
             <td class="first_col">group_altitude</td>
-            <td>altitude<br/>
-                cloudbase</td>
+            <td>altitude</td>
             <td>foot <br/>
                 meter
             </td>
             <td>foot</td>
             <td>meter</td>
             <td>meter</td>
-        </tr>
-        <tr>
-            <td class="first_col">group_amp</td>
-            <td></td>
-            <td>amp</td>
-            <td>amp</td>
-            <td>amp</td>
-            <td>amp</td>
-        </tr>
-        <tr>
-            <td class="first_col">group_data</td>
-            <td></td>
-            <td>byte<br/>
-                bit</td>
-            <td>byte</td>
-            <td>byte</td>
-            <td>byte</td>
         </tr>
         <tr>
             <td class="first_col">group_degree_day</td>
@@ -5698,38 +5649,12 @@ xstats/bin/user/xstats.py</pre>
             <td>degree_compass</td>
         </tr>
         <tr>
-            <td class="first_col">group_distance</td>
-            <td>windrun</td>
-            <td>mile<br/>
-                km</td>
-            <td>mile</td>
-            <td>km</td>
-            <td>km</td>
-        </tr>
-        <tr>
-            <td class="first_col">group_energy</td>
-            <td></td>
-            <td>watt_hour</td>
-            <td>watt_hour</td>
-            <td>watt_hour</td>
-            <td>watt_hour</td>
-        </tr>
-        <tr>
             <td class="first_col">group_interval</td>
             <td>interval</td>
             <td>minute</td>
             <td>minute</td>
             <td>minute</td>
             <td>minute</td>
-        </tr>
-        <tr>
-            <td class="first_col">group_length</td>
-            <td></td>
-            <td>inch<br/>
-                cm</td>
-            <td>inch</td>
-            <td>cm</td>
-            <td>cm</td>
         </tr>
         <tr>
             <td class="first_col">group_moisture</td>
@@ -5755,14 +5680,6 @@ xstats/bin/user/xstats.py</pre>
             <td>percent</td>
             <td>percent</td>
             <td>percent</td>
-        </tr>
-        <tr>
-            <td class="first_col">group_power</td>
-            <td></td>
-            <td>watt</td>
-            <td>watt</td>
-            <td>watt</td>
-            <td>watt</td>
         </tr>
         <tr>
             <td class="first_col">group_pressure</td>
@@ -5848,14 +5765,12 @@ xstats/bin/user/xstats.py</pre>
         </tr>
         <tr>
             <td class="first_col">group_temperature</td>
-            <td>appTemp <br/>
-                dewpoint <br/>
+            <td>dewpoint <br/>
                 extraTemp1 <br/>
                 extraTemp2 <br/>
                 extraTemp3 <br/>
                 heatindex <br/>
                 heatingTemp <br/>
-                humidex <br/>
                 inTemp <br/>
                 leafTemp1 <br/>
                 leafTemp2 <br/>
@@ -5902,16 +5817,6 @@ xstats/bin/user/xstats.py</pre>
             <td>volt</td>
             <td>volt</td>
             <td>volt</td>
-        </tr>
-        <tr>
-            <td class="first_col">group_volume</td>
-            <td></td>
-            <td>cubic_foot<br/>
-                gallon<br/>
-                litre</td>
-            <td>gallon</td>
-            <td>litre</td>
-            <td>litre</td>
         </tr>
         <tr>
             <td class="first_col">group_NONE</td>
@@ -6266,127 +6171,127 @@ xstats/bin/user/xstats.py</pre>
         <tr>
             <td class='first_col'>barometer</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>pressure</td>
             <td>S</td>
-            <td>S</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>altimeter</td>
             <td>S</td>
-            <td>S</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>inTemp</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>outTemp</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>inHumidity</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>outHumidity</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>windSpeed</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>windDir</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>windGust</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>windGustDir</td>
             <td>D</td>
-            <td>D</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>rain</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>rainRate</td>
             <td>S</td>
-            <td>S</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>dewpoint</td>
             <td>S</td>
-            <td>S</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>windchill</td>
             <td>H/S</td>
-            <td>H/S</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>heatindex</td>
             <td>S</td>
-            <td>S</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>UV<sup>1</sup></td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>extraTemp1</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>extraTemp2</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>extraTemp3</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>extraTemp4</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>extraHumid1</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>extraHumid2</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>extraHumid3</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>extraHumid4</td>
             <td>H</td>
-            <td>H</td>
+            <td></td>
         </tr>
         <tr>
             <td class='first_col'>txBatteryStatus</td>
@@ -6940,13 +6845,13 @@ xstats/bin/user/xstats.py</pre>
         </tr>
         <tr>
             <td class='first_col'>barometer</td>
-            <td>S</td>
-            <td>S</td>
+            <td>H</td>
+            <td>H</td>
         </tr>
         <tr>
             <td class='first_col'>pressure</td>
-            <td>H</td>
-            <td>H</td>
+            <td>S</td>
+            <td>S</td>
         </tr>
         <tr>
             <td class='first_col'>altimeter</td>
@@ -7672,6 +7577,30 @@ xstats/bin/user/xstats.py</pre>
     <p class="copyright"> &copy; <a href="copyright.htm">Copyright</a> Tom Keffer </p>
 </div>
 <!-- #technical_content -->
+
+</div><!-- End Page -->
+
+<!-- Put our scripts here so they load last -->
+<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
+<script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
+<script type="text/javascript" src="js/weewx.js"></script>
+<script type="text/javascript" >
+    $(function () {
+        var level = get_default_level();
+        create_toc_control(level);
+        generate_toc(level);
+    });
+
+   /* $(window).scroll(function () {
+        $('#toc_controls').css({
+            'right': 8 - $(this).scrollLeft()
+        });
+        $('#toc').css({
+            'right': 8 - $(this).scrollLeft()
+        });
+    });*/
+</script>
 
 </body>
 </html>

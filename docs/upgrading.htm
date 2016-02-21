@@ -9,44 +9,14 @@
     <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>
     <link href="css/jquery.tocify.css" rel="stylesheet"/>
     <link href="css/weewx_docs.css" rel="stylesheet"/>
-    <script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
-    <script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
-    <script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
-    <script type="text/javascript" src="js/weewx.js"></script>
-    <script type="text/javascript">
-        $(function () {
-            var level = get_default_level();
-            create_toc_control(level);
-            generate_toc(level);
-        });
-
-        $(window).scroll(function () {
-            $('#toc_controls').css({
-                'left': 8 - $(this).scrollLeft()
-            });
-            $('#toc').css({
-                'left': 8 - $(this).scrollLeft()
-            });
-            $('#legend').css({
-                'left': -$(this).scrollLeft()
-            });
-        });
-    </script>
     <style type="text/css">
         table .tty {
             margin: 0;
         }
 
-        #legend {
-            position: fixed;
-            top: 400px;
-            left: 0;
-            width: 10%;
-            margin: 15px;
-        }
+        #legend {}
 
         #legend p {
-            width: 100%;
             font-size: 80%;
             border: 1px solid #888888;
             padding-left: 5px;
@@ -64,32 +34,36 @@
         .added {
             background: #ccffcc;
         }
+        
+        .legend.scrollable {
+        	height: 80%;
+        }
     </style>
 </head>
 
-<body>
+<body><div id="page">
 
-<div id="toc_parent">
-    <div id="toc_controls">
-    </div>
-    <div id="toc">
+<div id="toc_parent" class="sidebar">
+	<div class="fixed">
+		<div id="toc_controls"></div>
+		<div id='legend'>
+	    	<p class='removed'>removed</p>
+	    	<p class='changed' style='text-align: center'>changed</p>
+	    	<p class='added' style='text-align: right'>added</p>
+		</div>
+	</div>
+	<div id="toc" class="legend scrollable">
+		<!-- The table of contents will get injected here -->
     </div>
 </div>
 
-<div id='legend'>
-    <p class='removed'>removed</p>
-
-    <p class='changed' style='text-align: center'>changed</p>
-
-    <p class='added' style='text-align: right'>added</p>
-</div>
-
-<div id="technical_content">
+<div id="technical_content" class="main">
 
     <a href='http://weewx.com'>
         <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
     </a>
-
+    
+    
     <h1 class="title">Upgrading <span class="code">weewx</span><br/>
       <span class='version'>
 Version: 3.4.0
@@ -1251,6 +1225,31 @@ rm bin/weewx/mainloop.py</pre>
 </div>
 <!-- #technical_content -->
 
+</div><!-- End Page -->
+    <script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
+    <script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
+    <script type="text/javascript" src="js/weewx.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var level = get_default_level();
+            create_toc_control(level);
+            generate_toc(level);
+        });
+
+        /*$(window).scroll(function () {
+            $('#toc_controls').css({
+                'left': 8 - $(this).scrollLeft()
+            });
+            $('#toc').css({
+                'left': 8 - $(this).scrollLeft()
+            });
+            $('#legend').css({
+                'left': -$(this).scrollLeft()
+            });
+        });*/
+    </script>
+    
 </body>
 
 </html>
