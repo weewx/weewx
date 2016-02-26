@@ -38,7 +38,7 @@
 
 /* Makes the font smaller for all subheader elements. */
 .tocify-subheader li {
-    font-size: 12px;
+    font-size: 80%;
 }
 
 /* Further indents second level subheader elements. */

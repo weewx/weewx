@@ -4,7 +4,7 @@
     <meta content="en-us" http-equiv="Content-Language"/>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <title>weewx: Customization Guide</title>
-    <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>
+	<link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>    
     <link href="css/jquery.tocify.css" rel="stylesheet"/>
     <link href="css/weewx_docs.css" rel="stylesheet"/>
 </head>
@@ -12,7 +12,10 @@
 <body><div id="page">
 
 <div id="toc_parent" class="sidebar">
-	<div id="toc_controls" class="fixed"></div>
+	<div class="fixed">
+		<p><a href="index.html">Docs Index</a></p>
+		<div id="toc_controls"></div>
+	</div>
 	<div id="toc" class="scrollable">
 		<!-- The table of contents will get injected here -->
     </div>
@@ -20,15 +23,16 @@
 
 <div id="technical_content" class="main">
 
-    <a href='http://weewx.com'>
-        <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
-    </a>
+			<div class="header">
+		<a href='http://weewx.com'>
+	        <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
+	    </a>
+	
+	    <h1 class="title">Customizing <span class="code">weewx</span><br/>
+	      <span class='version'>Version: 3.4.0</span>
+	    </h1>
+	</div><!-- End Header -->
 
-    <h1 class="title">Customizing weewx<br/>
-      <span class="version">
-Version: 3.4.0
-      </span>
-    </h1>
 
     <h1 id="introduction">Introduction</h1>
 
@@ -367,7 +371,8 @@ Version: 3.4.0
         archive interval, keyed by <span class="code">dateTime</span>, the
         time at the end of the archive interval. It looks something like this:
     </p>
-    <table class="indent" style="text-align:right">
+
+    <table class="indent fixed_width">
         <caption>Structure of the <span class="code">archive</span> database table</caption>
         <tr class="code first_row">
             <td>dateTime</td>
@@ -380,11 +385,6 @@ Version: 3.4.0
             <td>outTemp</td>
             <td>inHumidity</td>
             <td>outHumidity</td>
-            <td>windSpeed</td>
-            <td>windDir</td>
-            <td>windGust</td>
-            <td>windGustDir</td>
-            <td>rainRate</td>
             <td>...</td>
         </tr>
 
@@ -398,11 +398,6 @@ Version: 3.4.0
             <td>71.2</td>
             <td>56.0</td>
             <td>54.0</td>
-            <td>78.0</td>
-            <td>3.0</td>
-            <td>270.0</td>
-            <td>9.0</td>
-            <td>270.0</td>
             <td>0.0</td>
         </tr>
         <tr class="code">
@@ -415,11 +410,6 @@ Version: 3.4.0
             <td>71.2</td>
             <td>55.9</td>
             <td>54.0</td>
-            <td>78.0</td>
-            <td>2.0</td>
-            <td>247.5</td>
-            <td>5.0</td>
-            <td>225.0</td>
             <td>0.0</td>
         </tr>
         <tr class="code">
@@ -433,7 +423,38 @@ Version: 3.4.0
             <td></td>
             <td></td>
             <td></td>
-            <td></td>
+        </tr>
+    </table>
+
+    <table class="indent fixed_width">
+        <tr class="code first_row">
+            <td>windSpeed</td>
+            <td>windDir</td>
+            <td>windGust</td>
+            <td>windGustDir</td>
+            <td>rainRate</td>
+            <td>...</td>
+        </tr>
+
+        <tr class="code">
+            <td>78.0</td>
+            <td>3.0</td>
+            <td>270.0</td>
+            <td>9.0</td>
+            <td>270.0</td>
+            <td>0.0</td>
+        </tr>
+        <tr class="code">
+            <td>78.0</td>
+            <td>2.0</td>
+            <td>247.5</td>
+            <td>5.0</td>
+            <td>225.0</td>
+            <td>0.0</td>
+        </tr>
+        <tr class="code">
+            <td>...</td>
+			<td></td>
             <td></td>
             <td></td>
             <td></td>
@@ -7648,10 +7669,10 @@ xstats/bin/user/xstats.py</pre>
         </tr>
         </tbody>
     </table>
-
+	
     <p class="copyright"> &copy; <a href="copyright.htm">Copyright</a> Tom Keffer </p>
-</div>
-<!-- #technical_content -->
+
+</div><!-- #technical_content -->
 
 </div><!-- End of Page -->
 
