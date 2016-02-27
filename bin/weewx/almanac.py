@@ -276,7 +276,8 @@ class Almanac(object):
         return almanac
         
     def __getattr__(self, attr):
-        if attr.startswith('__'):
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if attr.startswith('__') or attr == 'has_key':
             raise AttributeError(attr)
         
         if not self.hasExtras:
