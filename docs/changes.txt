@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.4.1 XX/YY/2016
+3.X.Y MM/DD/2016
 
 Fixed bug that prevented rsync uploader from working.
 
@@ -25,6 +25,9 @@ in <ACK> errors. Thanks to user Luc Heijst for figuring this out!
 
 Plotting routines now use Unicode internally, but convert to UTF-8 if a font
 does not support it. Fixes issue #101.
+
+Improved readability of documents on mobile devices. Thank you Chris
+Davies-Barnard!
 
 
 3.4.0 01/16/2016
