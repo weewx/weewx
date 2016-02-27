@@ -1,14 +1,158 @@
-﻿/* Styles for the weewx documentatio
+﻿/* Styles for the weewx documentation
  *
  *  Copyright (c) 2015 Tom Keffer <tkeffer@gmail.com>
+ *  Modified 02-2016 Chris Davies-Barnard <weewx@davies-barnard.co.uk>
  * 
  *  See the file LICENSE.txt for your rights.
- */
-
-html, body{
+ */ 
+ 
+/**** MAIN LAYOUT ****/ 
+body{
   font-family: Verdana,arial,sans-serif;
-  font-size: 11pt;
+  font-size: 90%;
 }
+  
+/**** GRID SYSTEM ****/
+* { box-sizing: border-box; }
+
+#page {
+  width:100%;
+  margin-left: auto;
+  margin-right: auto;
+  height: auto;
+  overflow: hidden;
+}
+
+.row:after {
+    content: "";
+    clear: both;
+    display: block;
+}
+
+div.main { overflow-x: scroll; }
+
+@media (min-width:320px) { /* smartphones, iPhone, portrait 480x320 phones */ 
+	.sidebar { display: none; }
+	.main { width:100%; }
+	.tr { font-size: 80%; }
+}
+@media (min-width:641px) { /* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */ 
+	.sidebar { display: block; width:190px; }
+	.main { margin-left: 210px; width:auto; }
+	.tr { font-size: 80%; }
+}
+@media (min-width:961px) { /* tablet, landscape iPad, lo-res laptops ands desktops */ 
+	.sidebar { display: block; width:190px; }
+	.main { margin-left: 210px; }
+}
+@media (min-width:1025px) { /* big landscape tablets, laptops, and desktops */ 
+	.sidebar { display: block; width:220px; }
+	.main { margin-left: 230px;  width:auto; }
+}
+@media (min-width:1281px) { /* hi-res laptops and desktops */ 
+	.sidebar { display: block; width:250px; }
+	.main { margin-left: 270px; }
+}
+
+
+
+div.full_main { width:100% }
+ 
+
+
+
+/****  SIDEBAR ****/     
+div.sidebar {
+    padding: 5px;
+    background: #fff;
+    position: fixed;
+    top: 0px;
+    left: 10px;
+    bottom: 10px;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+div.fixed {}
+
+div.scrollable {
+    overflow-y: scroll;
+    height: 100%;
+}
+
+/**** TOC STYLES ****/
+#toc_controls {}
+
+/* Overrides for tocify Table-of-Contents */
+.tocify {
+  position: relative;
+  margin-top: 10px;
+  margin-left: 0;
+  width:auto;
+  border: 0;
+  webkit-border-radius: 0px;
+  moz-border-radius: 0px;
+  border-radius: 0px; 
+  overflow-y: scroll;
+  overflow-x: hidden;  
+}
+.tocify ul, .tocify li {
+  line-height: 1.2;
+}
+.tocify-header ul, .tocify-header li{
+  padding-left: 10px;
+  text-indent: -10px;
+}
+.tocify-subheader {
+  display: inherit;
+}
+/* prevent dancing toc by eliminating the default bold during mouseover */
+#toc .ui-state-hover {
+  background: #ddefef;
+}
+#toc .ui-state-hover a{
+  font-weight: normal;
+  color: black;
+}
+#toc .ui-state-default {
+  font-weight: normal;
+  background: #aacccc;
+}
+#toc .ui-state-default a{
+  color: black;
+}
+#toc_controls {}
+
+
+/****  LEGEND ****/
+#legend {}
+
+#legend p {
+    border: 1px solid #888888;
+    padding-left: 5px;
+    padding-right: 5px;
+    font-size: 80%;
+    margin-bottom: 1px;
+}
+
+#legend .removed {
+    background: #ffdddd;
+}
+
+#legend .changed {
+    background: #ffe0b0;
+}
+
+#legend .added {
+    background: #ccffcc;
+}
+
+.legend.scrollable {
+	height: 80%;
+}
+
+
+/****  GENERAL STYLES ****/
 li {
   margin-right: 10%;
   margin-top: 10px;
@@ -27,13 +171,12 @@ h1 {
   background-color: #008080;
   padding-left: .5em;
   padding-right: .5em;
-  margin-top: 30pt;
 }
 h2 {
   font-size: 140%;
   font-weight: bold;
   color: teal;
-  margin-top: 20pt;
+  margin-top: 10px;
 }
 h3 {
   font-size: 120%;
@@ -45,35 +188,15 @@ h4 {
   font-weight: bold;
   color: teal;
 }
-table {
-  border-collapse: collapse;
-  border: 1px solid #cccccc;
-}
-tr {
-  vertical-align: top;
-}
-td {
-  border: 1px solid #cccccc;
-  padding: 5px;
-}
-caption {
-  background-color: #aacccc;
-  margin: 0;
-  margin-bottom: 8px;
-  border: 1px solid #888888;
-  padding: 6px 16px;
-  font-weight: bold;
-}
+
+
+/****  MISC STYLES ****/
 .code {
   font-family: "Courier New", Courier, monospace;
 }
 .symcode {
   font-family: "Courier New", Courier, monospace;
   font-style: italic;
-}
-.indent {
-  margin-left: 40px;
-  margin-right: 40px;
 }
 .station_data {
   margin-left: 40px;
@@ -97,15 +220,14 @@ caption {
   border: 1px solid #ddddaa;
   padding: 3px 8px 3px 8px;
   margin: 5px 15px 5px 15px;
-  white-space: pre;
+  white-space: pre-wrap;
   line-height: normal;
 }
 .title {
   margin-top: 0px;
   text-align: center;
 }
-.config_section {
-}
+.config_section {}
 .config_option, .config_important {
   font-family: "Courier New", Courier, monospace;
   font-weight: bold;
@@ -122,12 +244,6 @@ caption {
 .text_highlight, .first_col {
   font-weight: bold;
   background-color: #eef0f0;
-  padding-left: 10px;
-  padding-right: 10px;
-}
-table .first_row {
-  font-weight: bold;
-  background-color: #ddefef;
   padding-left: 10px;
   padding-right: 10px;
 }
@@ -202,6 +318,61 @@ table .first_row {
   font-weight: bold;
   border: 1px solid #447777;
 }
+.version {
+  font-size: 60%;
+}
+.logo {
+  width: 48px;
+  padding-right: 10px;
+  padding-top: 5px;
+}
+.popup-note {
+  font-size: 80%;
+}
+.os-icons {
+  float: right;
+  margin-left: 100px;
+}
+
+
+/****  TABLE STYLES  ****/
+table {
+  border-collapse: collapse;
+  border: 1px solid #cccccc;
+  width: 98%;
+  margin:1%;
+}
+table .tty {
+    margin: 0;
+}
+tr {
+  vertical-align: top;
+  font-size: 100%;
+}
+td {
+  border: 1px solid #cccccc;
+  padding: 2px;
+}
+table .first_row {
+  font-weight: bold;
+  background-color: #ddefef;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+table.fixed_width td {
+  width:10%;
+}
+caption {
+  background-color: #aacccc;
+  margin: 0;
+  margin-bottom: 8px;
+  border: 1px solid #888888;
+  padding: 6px 16px;
+  font-weight: bold;
+}
+
+
+/****  TABS  ****/
 .tabs {
   float: left;
   margin-left: 20px;
@@ -229,28 +400,15 @@ table .first_row {
   border-right: 1px solid #cccccc;
 }
 .selected {
-  background-color: #aacccc;
+  background-color: #ffffe0;
   color: black;
   border-top: 1px solid #447777;
   border-left: 1px solid #447777;
   border-right: 1px solid #447777;
 }
-.version {
-  font-size: 60%;
-}
-.logo {
-  width: 48px;
-  padding-right: 10px;
-}
-.popup-note {
-  font-size: 80%;
-}
 
-#technical_content{
-  float: right;
-  width: 82%;
-}
 
+/**** REPORT STYLES ****/
 /*
  * This section mimics the style that
  * the reporting engine produces, so the docs
@@ -275,6 +433,8 @@ table .first_row {
     color: red;
 }
 
+
+/****  JQUERY UI  ****/
 /* Overrides for the jQuery UI widgets */
 div .ui-widget-header {
   border: 1px solid black;
@@ -284,45 +444,4 @@ div .ui-widget-header {
 /* no spurious background images please */
 .ui-widget-content {
   background: white;
-}
-
-/* Overrides for tocify Table-of-Contents */
-.tocify {
-  width: 15%;
-  margin-left: 5px;
-  padding-left: 5px;
-  border: 0;
-  webkit-border-radius: 0px;
-  moz-border-radius: 0px;
-  border-radius: 0px;
-  top: 40px;
-}
-.tocify ul, .tocify li {
-  line-height: 1.2;
-}
-.tocify-header ul, .tocify-header li{
-  padding-left: 10px;
-  text-indent: -10px;
-}
-.tocify-subheader {
-  display: inherit;
-}
-/* prevent dancing toc by eliminating the default bold during mouseover */
-#toc .ui-state-hover {
-  background: #ddefef;
-}
-#toc .ui-state-hover a{
-  font-weight: normal;
-  color: black;
-}
-#toc .ui-state-default {
-  font-weight: normal;
-  background: #aacccc;
-}
-#toc .ui-state-default a{
-  color: black;
-}
-#toc_controls {
-  position: fixed;
-  padding: 5px;
 }
