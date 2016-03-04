@@ -20,7 +20,7 @@ import weewx.units
 import weewx.engine
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.0'
+DRIVER_VERSION = '3.0.3'
 
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
@@ -35,6 +35,7 @@ def confeditor_loader():
 # A few handy constants:
 _ack    = chr(0x06)
 _resend = chr(0x15) # NB: The Davis documentation gives this code as 0x21, but it's actually decimal 21
+_escape = chr(0x1B)
 
 #===============================================================================
 #                           class BaseWrapper
@@ -64,18 +65,7 @@ class BaseWrapper(object):
         # That didn't work. Try a more "rude" awakening. Try up to max_tries times
         for count in xrange(max_tries):
             try:
-                # Clear out any pending input or output characters:
-                self.flush_output()
-                self.flush_input()
-                # It can be hard to get the console's attention, particularly
-                # when in the middle of a LOOP command. Send a whole bunch of line feeds.
-                # Use separate calls, as this forces the WLIP implementation to invoke the
-                # tcp_send_delay between each one.
-                self.write('\n')
-                self.write('\n')
-                self.write('\n')
-                time.sleep(0.5)
-                # Now flush everything, do it again, then look for the \n\r acknowledgment
+                # Now flush input, then look for the \n\r acknowledgment
                 self.flush_input()
                 self.write('\n')
                 _resp = self.read(2)
@@ -104,7 +94,9 @@ class BaseWrapper(object):
     
         # Look for the acknowledging ACK character
         _resp = self.read()
-        if _resp != _ack: 
+        if _resp != _ack:
+            syslog.syslog(syslog.LOG_ERR, "vantage: send_data; no ACK reveived but %x after write %d chars %s" %
+                          (ord(_resp), len(data), data))
             syslog.syslog(syslog.LOG_ERR, "vantage: No <ACK> received from console")
             raise weewx.WeeWxIOError("No <ACK> received from Vantage console")
     
@@ -130,6 +122,7 @@ class BaseWrapper(object):
                     return
             except weewx.WeeWxIOError:
                 pass
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: send_data_with_crc16; retry %s" % unused_count)
 
         syslog.syslog(syslog.LOG_ERR, "vantage: Unable to pass CRC16 check while sending data")
         raise weewx.CRCError("Unable to pass CRC16 check while sending data to Vantage console")
@@ -160,6 +153,7 @@ class BaseWrapper(object):
             except weewx.WeeWxIOError:
                 # Caught an error. Keep trying...
                 continue
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: send_command; retry %s" % unused_count)
         
         syslog.syslog(syslog.LOG_ERR, "vantage: Max retries exceeded while sending command %s" % command)
         raise weewx.RetriesExceeded("Max retries exceeded while sending command %s" % command)
@@ -193,6 +187,7 @@ class BaseWrapper(object):
                     return _buffer
             except weewx.WeeWxIOError:
                 pass
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16; retry %s" % unused_count)
             first_time = False
 
         syslog.syslog(syslog.LOG_ERR, "vantage: Unable to pass CRC16 check while getting data")
@@ -212,6 +207,7 @@ def guard_termios(fn):
             try:
                 return fn(*args, **kwargs)
             except termios.error, e:
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: guard_termios; raise WeeWxIOError %s" % e)
                 raise weewx.WeeWxIOError(e)
     except ImportError:
         def guarded_fn(*args, **kwargs):
@@ -250,10 +246,23 @@ class SerialWrapper(BaseWrapper):
             raise weewx.WeeWxIOError(e)
         N = len(_buffer)
         if N != chars:
-            raise weewx.WeeWxIOError("Expected to read %d chars; got %d instead" % (chars, N))
+            if N == 0 and (chars == 267 or chars == 99):
+                # DMPAFT or LOOP call timed out
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: read of %s chars timed out" % chars)
+            else:
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: read; expected %s chars, received %s, raise WeeWxIOError" %
+                              (chars, N))
+                raise weewx.WeeWxIOError("Expected to read %d chars; got %d instead" % (chars, N))
         return _buffer
     
     def write(self, data):
+        if len(data) > 2:
+            try:
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: write %s chars %s" % (len(data), data))
+            except:
+                # data contain NUL char
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: write %s chars" % len(data))
+                pass
         N = self.serial_port.write(data)
         # Python version 2.5 and earlier returns 'None', so it cannot be used to test for completion.
         if N is not None and N != len(data):
@@ -307,7 +316,7 @@ class EthernetWrapper(BaseWrapper):
         import socket
         try:
             # This will cancel any pending loop:
-            self.wakeup_console(max_tries=1)
+            self.wakeup_console(max_tries=3)
         except:
             pass
         self.socket.shutdown(socket.SHUT_RDWR)
@@ -318,7 +327,7 @@ class EthernetWrapper(BaseWrapper):
         try:
             # This is a bit of a hack, but there is no analogue to pyserial's flushInput()
             self.socket.settimeout(0)
-            self.read(4096)
+            self.read(4096, True)
         except:
             pass
         finally:
@@ -344,33 +353,62 @@ class EthernetWrapper(BaseWrapper):
             self.socket.settimeout(self.timeout)
         return length
 
-    def read(self, chars=1):
+    def read(self, chars=1, flush=False):
         """Read bytes from WeatherLinkIP"""
         import socket
         _buffer = ''
+        _recv = ''
         _remaining = chars
         while _remaining:
             _N = min(4096, _remaining)
             try:
                 _recv = self.socket.recv(_N)
-            except (socket.timeout, socket.error), ex:
+            except socket.timeout:
+                N = len(_buffer) + len(_recv)
+                if N == 0 and (chars == 267 or chars == 99):
+                    # DMPAFT or LOOP call timed out
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: ip-read %s chars timed out" % chars)
+                    break  # leave while loop
+                elif N != chars:
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: ip-read; read chars %s received %s, raise WeeWxIOError" %
+                                  (chars, N))
+                    raise weewx.WeeWxIOError("Expected to ip-read %d chars; got %d instead" % (chars, N))
+                else:
+                    # we should not come here!
+                    syslog.syslog(syslog.LOG_ERR, "vantage: READ TIMED OUT, NUMBER CHARS (%s) MATCH!" % N)
+            except socket.error, ex:
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: remaining: %d, ip-read; raise WeeWxIOError (socket.error %s)"
+                              % (_remaining, ex))
                 # Reraise as a weewx I/O error:
                 raise weewx.WeeWxIOError(ex)
+            # read next buffer
             _nread = len(_recv)
-            if _nread==0:
-                raise weewx.WeeWxIOError("vantage: Expected %d characters; got zero instead" % (_N,))
             _buffer += _recv
-            _remaining -= _nread
+            if flush:
+                _remaining = 0  # leave while loop
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: ip-read; input buffer flushed; read: %s chars" % _nread)
+            else:
+                _remaining -= _nread
+                if _remaining != 0:
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: ip-read: %s, remaining: %s" % (_nread, _remaining))
         return _buffer
     
     def write(self, data):
         """Write to a WeatherLinkIP"""
+        if len(data) > 2:
+            try:
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: ip-write %s chars %s" % (len(data), data))
+            except:
+                # data contain NUL char
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: ip-write %s chars" % len(data))
+                pass
         import socket
         try:
             self.socket.sendall(data)
             time.sleep(self.tcp_send_delay)
         except (socket.timeout, socket.error), ex:
-            syslog.syslog(syslog.LOG_ERR, "vantage: Socket write error.")
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: ip-write; raise WeeWxIOError (socket.error %s)" % ex)
+            syslog.syslog(syslog.LOG_ERR, "vantage: Socket write error")
             # Reraise as a weewx I/O error:
             raise weewx.WeeWxIOError(ex)
 
@@ -426,6 +464,8 @@ class Vantage(weewx.drivers.AbstractDevice):
         iss_id: The station number of the ISS [Optional. Default is 1]
         """
 
+        syslog.syslog(syslog.LOG_DEBUG, 'vantage: driver version is %s' % DRIVER_VERSION)
+
         # TODO: These values should really be retrieved dynamically from the VP:
         self.model_type       = 2 # = 1 for original VantagePro, = 2 for VP2
 
@@ -478,120 +518,182 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         self.port.wakeup_console(self.max_tries, self.wait_before_retry)
         
-        # Request N packets:
-        self.port.send_data("LOOP %d\n" % N)
-        
-        ntries = 1
-        
-        for loop in range(N):
-            
-            if ntries > self.max_tries:
-                syslog.syslog(syslog.LOG_ERR, "vantage: Max retries (%d) exceeded." % self.max_tries)
-                raise weewx.RetriesExceeded("Max retries exceeded while getting LOOP data.")
+        _readloop = True
+        while _readloop:
+            # Request N packets:
+            self.port.send_data("LOOP %d\n" % N)
 
-            try:
-                # Fetch a packet
-                _buffer = self.port.read(99)
-            except weewx.WeeWxIOError, e:
-                syslog.syslog(syslog.LOG_ERR, "vantage: LOOP #%d; read error. Try #%d" % (loop, ntries))
-                syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
-                ntries += 1
-                continue
-
-            if crc16(_buffer):
-                syslog.syslog(syslog.LOG_ERR,
-                              "vantage: LOOP #%d; CRC error. Try #%d" % (loop, ntries))
-                ntries += 1
-                continue
-            # ... decode it
-            loop_packet = self._unpackLoopPacket(_buffer[:95])
-            # Yield it
-            yield loop_packet
             ntries = 1
+
+            for loop in range(N):
+
+                if ntries > self.max_tries:
+                    syslog.syslog(syslog.LOG_ERR, "vantage: genDavisLoopPackets; max retries (%d) exceeded." %
+                                  self.max_tries)
+                    raise weewx.RetriesExceeded("Max retries exceeded while getting LOOP data.")
+
+                try:
+                    # Fetch a packet
+                    _buffer = self.port.read(99)
+                except weewx.WeeWxIOError, e:
+                    syslog.syslog(syslog.LOG_ERR, "vantage: genDavisLoopPackets; LOOP #%d; read error. Try #%d" %
+                                  (loop, ntries))
+                    syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
+                    ntries += 1
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: genDavisLoopPackets; retry %s in loop %s error %s" %
+                                  (ntries, loop, e))
+                    continue
+                if len(_buffer) == 99:
+                    if crc16(_buffer):
+                        syslog.syslog(syslog.LOG_ERR, "vantage: genDavisLoopPackets; LOOP #%d; CRC error. Try #%d" %
+                                      (loop, ntries))
+                        ntries += 1
+                        continue
+                    # skip loop packet 0; packets 0 and 1 allways have the same time stamp
+                    if loop > 0:
+                        # ... decode it
+                        loop_packet = self._unpackLoopPacket(_buffer[:95])
+                        # Yield it
+                        yield loop_packet
+
+                    if loop == N:
+                        syslog.syslog(syslog.LOG_DEBUG, "vantage: genDavisLoopPackets; readloop complete!!!")
+                        _readloop = False
+                    else:
+                        ntries = 1
+                else:
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: genDavisLoopPackets; length loop_packet %s; expcted 99" %
+                                  len(_buffer))
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: genDavisLoopPackets; restart LOOP 200")
+                    self.port.closePort()
+                    self.port.openPort()
+                    break
 
     def genArchiveRecords(self, since_ts):
         """A generator function to return archive packets from a Davis Vantage station.
-        
+
         since_ts: A timestamp. All data since (but not including) this time will be returned.
         Pass in None for all data
-        
+
         yields: a sequence of dictionaries containing the data
         """
-        
-        if since_ts:
-            since_tt = time.localtime(since_ts)
-            # NB: note that some of the Davis documentation gives the year offset as 1900.
-            # From experimentation, 2000 seems to be right, at least for the newer models:
-            _vantageDateStamp = since_tt[2] + (since_tt[1]<<5) + ((since_tt[0]-2000)<<9)
-            _vantageTimeStamp = since_tt[3] *100 + since_tt[4]
-            syslog.syslog(syslog.LOG_DEBUG, 'vantage: Getting archive packets since %s' % weeutil.weeutil.timestamp_to_string(since_ts))
-        else:
-            _vantageDateStamp = _vantageTimeStamp = 0
-            syslog.syslog(syslog.LOG_DEBUG, 'vantage: Getting all archive packets')
-     
-        #Pack the date and time into a string, little-endian order
-        _datestr = struct.pack("<HH", _vantageDateStamp, _vantageTimeStamp)
-        
-        # Save the last good time:
-        _last_good_ts = since_ts if since_ts else 0
-        
-        # Try to retrieve the starting page and index:
-        for n in range(self.max_tries):
-            try:
-                # Wake up the console...
-                self.port.wakeup_console(self.max_tries, self.wait_before_retry)
-                # ... request a dump...
-                self.port.send_data('DMPAFT\n')
-                # ... from the designated date (allow only one try because that's all the console allows):
-                self.port.send_data_with_crc16(_datestr, max_tries=1)
-                
-                # Get the response with how many pages and starting index and decode it. Again, allow only one try:
-                _buffer = self.port.get_data_with_crc16(6, max_tries=1)
+        _catchup = True
+        _records_read = 0
+        _time_outs = 0
+        while _catchup:
+            _restart = False
+            if since_ts:
+                since_tt = time.localtime(since_ts)
+                # NB: note that some of the Davis documentation gives the year offset as 1900.
+                # From experimentation, 2000 seems to be right, at least for the newer models:
+                _vantageDateStamp = since_tt[2] + (since_tt[1] << 5) + ((since_tt[0]-2000) << 9)
+                _vantageTimeStamp = since_tt[3] * 100 + since_tt[4]
+                syslog.syslog(syslog.LOG_DEBUG, 'vantage: genArchiveRecords; getting archive packets since %s' %
+                              weeutil.weeutil.timestamp_to_string(since_ts))
+            else:
+                _vantageDateStamp = _vantageTimeStamp = 0
+                syslog.syslog(syslog.LOG_DEBUG, 'vantage: genArchiveRecords; getting all archive packets')
+
+            # Pack the date and time into a string, little-endian order
+            _datestr = struct.pack("<HH", _vantageDateStamp, _vantageTimeStamp)
+
+            # Save the last good time:
+            _last_good_ts = since_ts if since_ts else 0
+
+            # Try to retrieve the starting page and index:
+            for n in range(self.max_tries):
+                try:
+                    # Wake up the console...
+                    self.port.wakeup_console(self.max_tries, self.wait_before_retry)
+                    # ... request a dump...
+                    self.port.send_data('DMPAFT\n')
+                    # ... from the designated date (allow only one try because that's all the console allows):
+                    self.port.send_data_with_crc16(_datestr, max_tries=1)
+                    # Get the response with how many pages and starting index and decode it. Again, allow only one try:
+                    _buffer = self.port.get_data_with_crc16(6, max_tries=1)
+                    break
+                except weewx.WeeWxIOError, e:
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: genArchiveRecords; failed attempt %d receiving starting "
+                                                    "page. Error %s" % (n+1, e))
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: genArchiveRecords; retry %s error %s" % (n, e))
+                    if n >= self.max_tries-1:
+                        syslog.syslog(syslog.LOG_ERR, "vantage: genArchiveRecords; unable to retrieve starting page")
+                        raise
+
+            (_npages, _start_index) = struct.unpack("<HH", _buffer[:4])
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: genArchiveRecords; retrieving %d page(s); starting index= %d" %
+                          (_npages, _start_index))
+            if _npages == 0:
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: genArchiveRecord; DMPAFT complete: no pages to read")
+                _catchup = False
                 break
-            except weewx.WeeWxIOError, e:
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: Failed attempt %d receiving starting page. Error %s" % (n+1, e))
-                if n >= self.max_tries-1:
-                    syslog.syslog(syslog.LOG_ERR, "vantage: Unable to retrieve starting page")
-                    raise
-      
-        (_npages, _start_index) = struct.unpack("<HH", _buffer[:4])
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: Retrieving %d page(s); starting index= %d" % (_npages, _start_index))
-        
-        # Cycle through the pages...
-        for unused_ipage in xrange(_npages):
-            # ... get a page of archive data
-            _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
-            # Now extract each record from the page
-            for _index in xrange(_start_index, 5):
-                # Get the record string buffer for this index:
-                _record_string = _page[1+52*_index:53+52*_index]
-                # If the console has been recently initialized, there will
-                # be unused records, which are filled with 0xff. Detect this
-                # by looking at the first 4 bytes (the date and time):
-                if _record_string[0:4] == 4*chr(0xff) or _record_string[0:4] == 4*chr(0x00):
-                    # This record has never been used. We're done.
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: empty record page %d; index %d" \
-                                  % (unused_ipage, _index))
-                    return
-                
-                # Unpack the archive packet from the string buffer:
-                _record = self._unpackArchivePacket(_record_string)
+            # Cycle through the pages...
+            for unused_ipage in xrange(_npages):
+                # ... get a page of archive data
+                _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
+                if len(_page) != 0:
+                    # Now extract each record from the page
+                    for _index in xrange(_start_index, 5):
+                        # Get the record string buffer for this index:
+                        _record_string = _page[1+52*_index:53+52*_index]
+                        # If the console has been recently initialized, there will
+                        # be unused records, which are filled with 0xff. Detect this
+                        # by looking at the first 4 bytes (the date and time):
+                        if _record_string[0:4] == 4*chr(0xff) or _record_string[0:4] == 4*chr(0x00):
+                            # This record has never been used. We're done.
+                            syslog.syslog(syslog.LOG_DEBUG, "vantage: genArchiveRecords; DMPAFT complete: empty record "
+                                                            "page %d; index %d" % (unused_ipage, _index))
+                            _catchup = False
+                            return
 
-                # Check to see if the time stamps are declining, which would
-                # signal that we are done. 
-                if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts - self.max_dst_jump:
-                    # The time stamp is declining. We're done.
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: DMPAFT complete: page timestamp %s less than final timestamp %s"\
-                                  % (weeutil.weeutil.timestamp_to_string(_record['dateTime']),
-                                     weeutil.weeutil.timestamp_to_string(_last_good_ts)))
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Catch up complete.")
-                    return
-                # Set the last time to the current time, and yield the packet
-                _last_good_ts = _record['dateTime']
-                yield _record
+                        # Unpack the archive packet from the string buffer:
+                        _record = self._unpackArchivePacket(_record_string)
+                        syslog.syslog(syslog.LOG_DEBUG, "vantage: genArchiveRecords; received record in page %d; "
+                                                        "index %d; dateTime %s" %
+                                      (unused_ipage, _index, weeutil.weeutil.timestamp_to_string(_record['dateTime'])))
+                        # Check to see if the time stamps are declining, which would
+                        # signal that we are done.
+                        if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts - self.max_dst_jump:
+                            # The time stamp is declining. We're done.
+                            syslog.syslog(syslog.LOG_DEBUG, "vantage: genArchiveRecords; DMPAFT complete: "
+                                                            "page timestamp %s less than final timestamp %s"
+                                          % (weeutil.weeutil.timestamp_to_string(_record['dateTime']),
+                                             weeutil.weeutil.timestamp_to_string(_last_good_ts)))
+                            _catchup = False
+                            return
+                        # Set the last time to the current time, and yield the packet
+                        _last_good_ts = _record['dateTime']
+                        _records_read += 1
+                        syslog.syslog(syslog.LOG_DEBUG, "vantage: genArchiveRecords; yield archive record no %d; "
+                                                        "time_outs: %d" % (_records_read, _time_outs))
+                        yield _record
+                        if _records_read % 50 == 0:
+                            _restart = True
+                            self.port.write(_escape)  # stop DMPAFT to let the console communicate with the sensors
+                            syslog.syslog(syslog.LOG_DEBUG, "vantage: genArchiveRecords; restart DMPAFT after %d "
+                                                            "read records" % _records_read)
+                            time.sleep(2.5)  # give the console some time to read sensor data
+                            since_ts = _last_good_ts
+                            break
+                    if _restart:
+                        break
 
-            # The starting index for pages other than the first is always zero
-            _start_index = 0
+                else:
+                    #lh Restart DMPAFT
+                    _time_outs += 1
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: genArchiveRecords; restart DMPAFT; time_outs: %d" %
+                                  _time_outs)
+                    self.port.closePort()
+                    self.port.openPort()
+                    since_ts = _last_good_ts
+                    break
+
+                # The starting index for pages other than the first is always zero
+                _start_index = 0
+
+            if not _restart and len(_page) != 0:
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: genArchiveRecords; DMPAFT complete: no more pages to read")
+                _catchup = False
 
     def genArchiveDump(self):
         """A generator function to return all archive packets in the memory of a Davis Vantage station.
@@ -1110,14 +1212,27 @@ class Vantage(weewx.drivers.AbstractDevice):
     def archive_interval(self):
         return self.archive_interval_
     
-    def _setup(self):
-        """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
-        
-        self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
-        
+    def determine_hardware(self):
         # Determine the type of hardware:
-        self.port.send_data("WRD" + chr(0x12) + chr(0x4d) + "\n")
-        self.hardware_type = ord(self.port.read())
+        for unused_count in xrange(self.max_tries):
+            try:
+                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+                self.port.send_data("WRD" + chr(0x12) + chr(0x4d) + "\n")
+                self.hardware_type = ord(self.port.read())
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: _setup; hardware type is %s" % self.hardware_type)
+                # lh 16 = Pro, Pro2, 17 = Vue
+                return self.hardware_type
+            except weewx.WeeWxIOError:
+                pass
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: _setup; retry %s" % unused_count)
+
+        syslog.syslog(syslog.LOG_ERR, "vantage: _setup; unable to read hardware type; raise WeeWxIOError")
+        raise weewx.WeeWxIOError("Unable to read hardware type")
+
+    def _setup(self):
+        self.hardware_type = self.determine_hardware()
+
+        """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
 
         unit_bits              = self._getEEPROM_value(0x29)[0]
         setup_bits             = self._getEEPROM_value(0x2B)[0]
@@ -1328,6 +1443,8 @@ class Vantage(weewx.drivers.AbstractDevice):
         archive_packet['interval']   = int(self.archive_interval / 60) 
         archive_packet['rxCheckPercent'] = _rxcheck(self.model_type, archive_packet['interval'], 
                                                     self.iss_id, raw_archive_packet['number_of_wind_samples'])
+        syslog.syslog(syslog.LOG_DEBUG, "vantage: _unpackArchivePacket; number_of_wind_samples: %d; rxCheckPercent: %s"
+                      % (raw_archive_packet['number_of_wind_samples'], archive_packet['rxCheckPercent']))
         return archive_packet
     
 #===============================================================================
