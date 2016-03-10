@@ -258,6 +258,72 @@ Version: 3.4.0
         <span class='code'>DatabaseTypes</span> can be overridden in each
         <span class='code'>Database</span> section as needed.
     </p>
+
+    <table>
+        <tr class="first_row">
+            <td style='width:50%'>3.1</td>
+            <td>3.2</td>
+        </tr>
+        <tr>
+            <td>
+                <pre class='tty'>[DataBindings]
+    [[wx_binding]]
+        database = archive_sqlite
+        manager = weewx.wxmanager.WXDaySummaryManager
+        table_name = archive
+        schema = schemas.wview.schema
+[Databases]
+    [[archive_sqlite]]
+<span class='changed'>        root = %(WEEWX_ROOT)s
+        database = archive/weewx.sdb
+        driver = weedb.sqlite</span>
+    [[archive_mysql]]
+<span class='changed'>        host = localhost
+        user = weewx
+        password = weewx
+        database = weewx
+        driver = weedb.mysql</span>
+
+
+
+
+
+
+
+
+
+</pre>
+            </td>
+            <td>
+                <pre class='tty'>[DataBindings]
+    [[wx_binding]]
+        database = archive_sqlite
+        manager = weewx.wxmanager.WXDaySummaryManager
+        table_name = archive
+        schema = schemas.wview.schema
+[Databases]
+    [[archive_sqlite]]
+<span class='changed'>        database_name = weewx.sdb
+        database_type = SQLite</span>
+
+    [[archive_mysql]]
+<span class='changed'>        database_name = weewx
+        database_type = MySQL</span>
+
+
+
+<span class='added'>[DatabaseTypes]
+    [[SQLite]]
+        driver = weedb.sqlite
+        SQLITE_ROOT = %(WEEWX_ROOT)s/archive
+    [[MySQL]]
+        driver = weedb.mysql
+        host = localhost
+        user = weewx
+        password = weewx</span></pre>
+            </td>
+        </tr>
+    </table>
     
     <h2>From V2.7 or earlier</h2>
     
