@@ -107,6 +107,8 @@ div.main {
   webkit-border-radius: 0px;
   moz-border-radius: 0px;
   border-radius: 0px; 
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 .tocify ul, .tocify li {
   line-height: 1.2;
