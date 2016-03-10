@@ -770,7 +770,7 @@ with weewx.archive.Archive.open(self.database_dict) as archive:
             <td><pre class="tty">with self.engine.db_binder.get_manager('wx_binding') as mgr:
     val = mgr.getSql("SELECT AVG(windSpeed) FROM %s"
                      " WHERE dateTime&gt;? AND dateTime&lt;=?" %
-                     (mgr.table_name, start_ts, end_ts))</pre>
+                     mgr.table_name, (start_ts, end_ts))</pre>
             </td>
         </tr>
     </table>
