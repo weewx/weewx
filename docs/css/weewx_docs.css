@@ -34,44 +34,80 @@ body{
 }
 
 div.sidebar {
-  padding: 5px;
   position: fixed;
-  top: 0px;
-  left: 10px;
-  bottom: 10px;
-  overflow-x: hidden;
-  overflow-y: hidden;
+  top: 4px;
+  left: 4px;
+  bottom: 4px;
 }
-div.fixed {}
 div.main {
   overflow-x: hidden;
 }
 
 .header {
+  margin-top: 0px;
   padding-left: 4px;
+  padding-bottom: 32px;
+  border: 1px solid #999999;
+  background-color: #aacccc;
+  webkit-border-radius: 3px;
+  moz-border-radius: 3px;
+  border-radius: 3px;
 }
 .content {
   padding-left: 4px;
 }
 .footer {
-  padding-left: 4px;
+  margin-top: 50px;
 }
 .doclist {
-  padding-bottom: 20px;
+  padding: 4px;
+  margin-bottom: 16px;
+  border: 1px solid #999999;
+  webkit-border-radius: 3px;
+  moz-border-radius: 3px;
+  border-radius: 3px;
+}
+.title {
+  font-size: 180%;
+  font-weight: bold;
+  clear: left;
 }
 
+#toc_parent {
+  padding: 4px;
+  border: 1px solid #aaaaaa;
+  webkit-border-radius: 3px;
+  moz-border-radius: 3px;
+  border-radius: 3px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  max-height: 80%;
+}
 #toc_controls {}
+/* prevent dancing toc by eliminating the default bold during mouseover */
+#toc .ui-state-hover {
+  background: #ddefef;
+}
+#toc .ui-state-hover a {
+  font-weight: normal;
+  color: black;
+}
+#toc .ui-state-default {
+  font-weight: normal;
+  background: #aacccc;
+}
+#toc .ui-state-default a {
+  color: black;
+}
 .tocify {
   position: relative;
   margin-top: 10px;
   margin-left: 0;
-  width:auto;
+  width: auto;
   border: 0;
   webkit-border-radius: 0px;
   moz-border-radius: 0px;
   border-radius: 0px; 
-  overflow-y: scroll;
-  overflow-x: hidden;  
 }
 .tocify ul, .tocify li {
   line-height: 1.2;
@@ -83,25 +119,6 @@ div.main {
 .tocify-subheader {
   display: inherit;
 }
-/* prevent dancing toc by eliminating the default bold during mouseover */
-#toc .ui-state-hover {
-  background: #ddefef;
-}
-#toc .ui-state-hover a{
-  font-weight: normal;
-  color: black;
-}
-#toc .ui-state-default {
-  font-weight: normal;
-  background: #aacccc;
-}
-#toc .ui-state-default a{
-  color: black;
-}
-#toc {
-  max-height: 75%;
-}
-
 
 li {
   margin-right: 10%;
@@ -210,10 +227,6 @@ caption {
   margin: 5px 15px 5px 15px;
   white-space: pre;
   line-height: normal;
-}
-.title {
-  margin-top: 0px;
-  padding-bottom: 35px;
 }
 .config_section {}
 .config_option, .config_important {

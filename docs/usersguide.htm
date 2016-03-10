@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta content="en-us" http-equiv="Content-Language"/>
@@ -14,15 +14,15 @@
 
 <div class="sidebar">
     <div class="doclist">
-        <a href="index.htm">Documentation</a><br/>
-        <a href="usersguide.htm">User Guide</a><br/>
+        <a href="usersguide.htm">User's Guide</a><br/>
         <a href="customizing.htm">Customization Guide</a><br/>
-        <a href="upgrading.htm">Upgrade Guide</a><br/>
-        <a href="changes.txt">Changes</a><br/>
+        <a href="upgrading.htm">Upgrade Guide</a>
     </div>
-    <div id="toc_controls"></div>
-    <div id="toc">
-	<!-- The table of contents will be injected here -->
+    <div id="toc_parent">
+        <div id="toc_controls"></div>
+        <div id="toc">
+	    <!-- The table of contents will be injected here -->
+        </div>
     </div>
 </div>
 
@@ -37,15 +37,16 @@
 Version: 3.4.0
         </span>
     </div>
-    <h1 class="title">User's Guide to the <span class="code">weewx</span> Weather System
-    </h1>
+    <div class="title">
+        User's Guide to the <span class="code">weewx</span> Weather System
+    </div>
 </div>
 
 <div id="technical_content" class="content">
 
     <p>
-        This is the complete guide to installing and configuring
-        <span class="code">weewx</span>.
+        This is the complete guide to installing, configuring, and
+        troubleshooting <span class="code">weewx</span>.
     </p>
 
     <h1 id="about">About <span class="code">weewx</span></h1>
@@ -2949,9 +2950,12 @@ longitude = -77.0366</pre>
         run with the default distribution.</p>
     <pre class="tty">
 prep_services    = weewx.engine.StdTimeSynch
-process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.wxservices.StdWXCalculate
+process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate,\
+  weewx.engine.StdQC, weewx.wxservices.StdWXCalculate
 archive_services = weewx.engine.StdArchive
-restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW, weewx.restx.StdAWEKAS
+restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground,\
+  weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW,\
+  weewx.restx.StdAWEKAS
 report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
 </pre>
     <p>If you're the type who likes to clean out your car trunk after every
@@ -5710,17 +5714,17 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
 </script>
 
 <script type="text/javascript">
-    function showtab(tab, id) {
-        document.getElementById(tab + '-deb').style.display = 'none';
-        document.getElementById(tab + '-rpm').style.display = 'none';
-        document.getElementById(tab + '-setup').style.display = 'none';
-        document.getElementById(tab + '-' + id).style.display = 'block';
+function showtab(tab, id) {
+    document.getElementById(tab + '-deb').style.display = 'none';
+    document.getElementById(tab + '-rpm').style.display = 'none';
+    document.getElementById(tab + '-setup').style.display = 'none';
+    document.getElementById(tab + '-' + id).style.display = 'block';
 
-        document.getElementById(tab + '-tab-deb').className = 'tab';
-        document.getElementById(tab + '-tab-rpm').className = 'tab';
-        document.getElementById(tab + '-tab-setup').className = 'tab';
-        document.getElementById(tab + '-tab-' + id).className = 'tab selected';
-    }
+    document.getElementById(tab + '-tab-deb').className = 'tab';
+    document.getElementById(tab + '-tab-rpm').className = 'tab';
+    document.getElementById(tab + '-tab-setup').className = 'tab';
+    document.getElementById(tab + '-tab-' + id).className = 'tab selected';
+}
 </script>
 
 </body>

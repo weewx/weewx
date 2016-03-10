@@ -1,17 +1,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Language" content="en-us"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>weewx: Upgrade Guide</title>
-  <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>    
+    <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>    
     <link href="css/jquery.tocify.css" rel="stylesheet"/>
     <link href="css/weewx_docs.css" rel="stylesheet"/>
-    <link rel="icon" type="image/png" href="/docs/images/favicon.png">    
 <style>
-#toc {
+#toc_parent {
   overflow-y: hidden;
 }
 #legend {
@@ -42,19 +41,20 @@
 
 <div class="sidebar">
     <div class="doclist">
-        <a href="index.htm">Documentation</a><br/>
-        <a href="usersguide.htm">User Guide</a><br/>
+        <a href="usersguide.htm">User's Guide</a><br/>
         <a href="customizing.htm">Customization Guide</a><br/>
-        <a href="upgrading.htm">Upgrade Guide</a><br/>
-        <a href="changes.txt">Changes</a><br/>
+        <a href="upgrading.htm">Upgrade Guide</a>
     </div>
-    <div id="toc">
-  <!-- The table of contents will be injected here -->
+    <div id="toc_parent">
+        <div id="toc_controls"></div>
+        <div id="toc">
+	    <!-- The table of contents will be injected here -->
+        </div>
     </div>
     <div id='legend'>
-  <p class='removed'>removed</p>
-  <p class='changed' style='text-align: center'>changed</p>
-  <p class='added' style='text-align: right'>added</p>
+        <p class='removed'>removed</p>
+        <p class='changed' style='text-align: center'>changed</p>
+        <p class='added' style='text-align: right'>added</p>
     </div>
 </div>
 
@@ -69,8 +69,7 @@
 Version: 3.4.0
         </span>
     </div>
-    <h1 class="title">Upgrading <span class="code">weewx</span>
-    </h1>
+    <div class="title"><span class="code">weewx</span> Upgrade Guide</div>
 </div>
 
 <div id="technical_content" class="content">
