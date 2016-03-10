@@ -18,8 +18,8 @@
         <a href="customizing.htm">Customization Guide</a><br/>
         <a href="upgrading.htm">Upgrade Guide</a>
     </div>
+    <div id="toc_controls"></div>
     <div id="toc_parent">
-        <div id="toc_controls"></div>
         <div id="toc">
 	    <!-- The table of contents will be injected here -->
         </div>
@@ -4452,7 +4452,7 @@ before posting the information publicly.
     <p>This displays a short message indicating the 
     <span class="code">wee_debug</span> version number:</p>
 
-    <pre class="tty cmd">wee_debug version: 0.2</pre>
+    <pre class="tty">wee_debug version: 0.2</pre>
 
     <h3>Generating a debug report</h3>
     
@@ -5393,6 +5393,104 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
     <p>This is frequently caused by the necessary Truetype fonts not being installed on
         your computer and, instead, a default font is being substituted, which only knows
         how to plot ASCII characters. The cure is as before: install the font.</p>
+
+    <h2>Meteorological problems</h2>
+
+    <h3 id='pressure_mismatch'>The pressure reported by <span class='code'>weewx</span> does not match the pressure on the console</h3>
+
+    <p>
+        Be sure that you are comparing the right values. There are three different types of pressure:
+    </p>
+    <dl>
+        <dt>Station Pressure</dt>
+        <dd>
+            The <em>Station Pressure</em> (SP), which is the raw, absolute
+            pressure measured by the station.
+            This is <span class='code'>pressure</span> in
+            <span class='code'>weewx</span> packets and archive records.</dd>
+        <dt>Sea Level Pressure</dt>
+        <dd>
+            The <em>Sea Level Pressure</em> (SLP) is obtained by correcting
+            the <em>Station Pressure</em> for altitude and local temperature.
+            This is <span class='code'>barometer</span> in
+            <span class='code'>weewx</span> packets and archive records.
+        </dd>
+        <dt>Altimeter</dt>
+        <dd>
+            The <em>Altimeter Setting</em> (AS) is obtained by correcting the
+            <em>Station Pressure</em> for altitude.
+            This is <span class='code'>altimeter</span> in
+            <span class='code'>weewx</span> packets and archive records.
+        </dd>
+    </dl>
+
+    <p>
+        Any station might require calibration.  For some hardware, this can
+        be done at the weather station console.  Alternatively, use the
+        <span class='code'>StdCalibrate</span> section to apply an offset.
+    </p>
+
+    <p>
+        If your station is significantly above (or below) sea level, be sure
+        that the station altitude is specified properly.  Also, be sure that
+        any calibration results in a station pressure and/or barometric
+        pressure that matches those reported by other stations in your area.
+    </p>
+
+    <h3 id='rain_mismatch'>The rainfall and/or rain rate reported by <span class='code'>weewx</span> do not match the console</h3>
+
+    <p>
+        First of all, be sure that you are comparing the right quantities.  The value <span class='code'>rain</span> is the amount of rainfall observed in a period of time.  The period of time might be a LOOP interval, in which case the <span class='code'>rain</span> is the amount of rain since the last LOOP packet.  Or the period of time might be an archive interval, in which case the <span class='code'>rain</span> is the total of rain reported in each LOOP packet since the last archive record.
+    </p>
+
+    <p>
+        Some consoles report the amount of rain in the past hour, or the amount of rain since midnight.
+    </p>
+
+    <p>
+        The rain rate is a derived quantity.  Some stations report a rain rate, but for those that do not, <span class='code'>weewx</span> will calculate the rain rate.
+    </p>
+
+    <p>
+        Be sure that the units are correct.
+    </p>
+
+    <p>
+        Finally, beware of calibration factors specific to the hardware.  For example, the bucket type on a Vantage station must be specified when you set up the weather station.  If you modify the rain bucket with a larger collection area, then you will have to add a multiplier in the <span class='code'>StdCalibrate</span> section.
+    </p>
+
+    <p>
+        To diagnose rain issues, run <span class='code'>weewx</span> directly so that you can see each LOOP packet and REC archive record.  Tip the bucket to verify that each bucket tip is detected and reported by <span class='code'>weewx</span>.  Verify that each bucket tip is converted to the correct rainfall amount.  Then check the database to verify that the values are properly added and recorded.
+    </p>
+
+    <h3 id='pressure_calibration'>Calibrating <span class='code'>barometer</span> does not change the pressure displayed by <span class='code'>weewx</span></h3>
+
+    <p>
+        Be sure that the calibration is applied to the correct quantity.
+    </p>
+
+    <p>
+        The corrections in the <span class='code'>StdCalibrate</span> section
+        apply only to raw values from the hardware; corrections are not applied
+        to derived quantities.
+    </p>
+
+    <p>
+        The station hardware matters.  Some stations report gauge pressure
+        (<span class='code'>pressure</span>) while other stations report
+        sea-level pressure (<span class='code'>barometer</span>).  For example,
+        if the hardware is a Vantage station, the correction must be applied
+        to <span class='code'>barometer</span> since the Vantage station
+        reports <span class='code'>barometer</span> and
+        <span class='code'>weewx</span> calculates
+        <span class='code'>pressure</span>.  However, if the hardware
+        is a FineOffset station, the correction must be applied to
+        <span class='code'>pressure</span> since the FineOffset stations
+        report <span class='code'>pressure</span> and
+        <span class='code'>weewx</span> calculates
+        <span class='code'>barometer</span>.
+    </p>        
+
 
     <h1 id="architecture">Architectural Notes</h1>
 
