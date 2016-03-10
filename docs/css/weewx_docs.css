@@ -8,6 +8,7 @@
 body{
   font-family: Verdana,arial,sans-serif;
   font-size: 90%;
+  margin-top: 4px;
 }
 
 @media (min-width:320px) {
@@ -46,7 +47,7 @@ div.main {
 .header {
   margin-top: 0px;
   padding-left: 4px;
-  padding-bottom: 32px;
+  padding-bottom: 24px;
   border: 1px solid #999999;
   background-color: #aacccc;
   webkit-border-radius: 3px;
@@ -317,8 +318,8 @@ caption {
   font-size: 60%;
 }
 .logo {
-  width: 48px;
-  padding-right: 10px;
+  width: 32px;
+  padding-right: 0px;
   padding-top: 5px;
 }
 .logoref {
