@@ -3910,6 +3910,69 @@ UV      = UV Index</pre>
         names for days of the week and months of the year will be used. The
         decimal point for numbers will also be modified appropriately.</p>
 
+
+    <h1 id="customizing_units">Customizing the Units</h1>
+
+    <h2>Defining new units and unit groups</h2>
+    <p>
+      To define new units and unit groups, extend the units dictionary.  This
+      is typically done by adding Python code to the file
+      <span class='code'>user/extensions.py</span>
+    </p>
+    <p>
+      For example, to add the unit group <span class='code'>group_depth</span>
+      with unit <span class='code'>inch</span> in US unit system and unit
+      <span class='code'>cm</span> in Metric and MetricWX unit systems:
+    </p>
+    <pre class='tty'>import weewx.units
+weewx.units.USUnits['group_depth'] = 'inch'
+weewx.units.MetricUnits['group_depth'] = 'cm'
+weewx.units.MetricWXUnits['group_depth'] = 'cm'</pre>
+    <p>
+      In this case, it is not necessary to specify the conversions for inch,
+      cm, and mm since those are already defined and used by the unit groups
+      <span class='code'>group_rain</span> and
+      <span class='code'>group_length</span>.  But if the new units do not
+      yet exist in weewx.units, this is how they would be defined:
+    </p>
+    <pre class='tty'>import weewx.units
+weewx.units.default_unit_format_dict['inch'] = '%.2f'
+weewx.units.default_unit_format_dict['cm'] = '%.2f'
+weewx.units.default_unit_format_dict['mm'] = '%.2f'
+weewx.units.default_unit_label_dict['inch'] = ' in'
+weewx.units.default_unit_label_dict['cm'] = ' cm'
+weewx.units.default_unit_label_dict['mm'] = ' mm'
+weewx.units.conversionDict['inch'] = {'cm': lambda x : x * 2.54,
+                                      'mm': lambda x : x * 25.4}
+weewx.units.conversionDict['cm'] = {'inch': lambda x : x * 0.393700787,
+                                    'mm': lambda x : x * 10.0}
+weewx.units.conversionDict['mm'] = {'inch': lambda x : x * .0393700787,
+                                    'cm': lambda x : x * 0.10}</pre>
+    <p>
+      Each unit requires a default format, a default label, and possibly a
+      conversion function that specifies how the units are converted between
+      unit systems.
+    </p>
+
+    <h2>Assigning units to an observation</h2>
+    <p>
+      To associate an observation with a unit group, extend the units
+      observation group dictionary.  This is typically done by adding Python
+      code to the file <span class='code'>user/extensions.py</span>
+    </p>
+    <p>
+      For example, to associate the observation
+      <span class='code'>snow_depth</span> with the group
+      <span class='code'>group_depth</span>:
+    </p>
+    <pre class='tty'>import weewx.units
+weewx.units.obs_group_dict['snow_depth'] = 'group_depth'</pre>
+    <p>
+      Once the observation has been associated with a unit group, the unit
+      labels and other dot-code syntax will work for that observation.
+    </p>
+
+
     <h1 id="service_engine">Customizing the engine</h1>
 
     <p>This is an advanced topic intended for those who wish to try their hand
