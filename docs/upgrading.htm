@@ -575,35 +575,40 @@ Version: 3.4.0
             <tr>
                 <td><pre class="tty">def <span class="changed">get_extension</span>(self, timespan, <span class="changed">archivedb, statsdb</span>):
 
-    all_stats = <span class="changed">TimeSpanStats</span>(timespan,
-                              <span class="changed">statsdb</span>,
-                              formatter=self.generator.formatter,
-                              converter=self.generator.converter)
-    week_dt = datetime.date.fromtimestamp(timespan.stop) - datetime.timedelta(weeks=1)
+    all_stats = <span class="changed">TimeSpanStats</span>(
+        timespan,
+        <span class="changed">statsdb</span>,
+        formatter=self.generator.formatter,
+        converter=self.generator.converter)
+    week_dt = datetime.date.fromtimestamp(timespan.stop) - \
+              datetime.timedelta(weeks=1)
     week_ts = time.mktime(week_dt.timetuple())
-    seven_day_stats = <span class="changed">TimeSpanStats</span>(TimeSpan(week_ts, timespan.stop),
-                                    <span class="changed">statsdb</span>,
-                                    formatter=self.generator.formatter,
-                                    converter=self.generator.converter)
+    seven_day_stats = <span class="changed">TimeSpanStats</span>(
+        TimeSpan(week_ts, timespan.stop),
+        <span class="changed">statsdb</span>,
+        formatter=self.generator.formatter,
+        converter=self.generator.converter)
     
     search_list_extension = {'alltime'   : all_stats,
                              'seven_day' : seven_day_stats}
             
     return search_list_extension</pre>
                 </td>
-                <td><pre class="tty">def <span class="changed">get_extension_list</span>(self, timespan, <span
-                    class="changed">db_lookup</span>):
+                <td><pre class="tty">def <span class="changed">get_extension_list</span>(self, timespan, <span class="changed">db_lookup</span>):
     
-    all_stats = <span class="changed">TimespanBinder</span>(timespan, 
-                               <span class="changed">db_lookup</span>,
-                               formatter=self.generator.formatter,
-                               converter=self.generator.converter)
-    week_dt = datetime.date.fromtimestamp(timespan.stop) - datetime.timedelta(weeks=1)
+    all_stats = <span class="changed">TimespanBinder</span>(
+        timespan, 
+        <span class="changed">db_lookup</span>,
+        formatter=self.generator.formatter,
+        converter=self.generator.converter)
+    week_dt = datetime.date.fromtimestamp(timespan.stop) - \
+        datetime.timedelta(weeks=1)
     week_ts = time.mktime(week_dt.timetuple())
-    seven_day_stats = <span class="changed">TimespanBinder</span>(TimeSpan(week_ts, timespan.stop),
-                                     <span class="changed">db_lookup</span>,
-                                     formatter=self.generator.formatter,
-                                     converter=self.generator.converter)
+    seven_day_stats = <span class="changed">TimespanBinder</span>(
+        TimeSpan(week_ts, timespan.stop),
+        <span class="changed">db_lookup</span>,
+        formatter=self.generator.formatter,
+        converter=self.generator.converter)
     
     search_list_extension = {'alltime'   : all_stats,
                              'seven_day' : seven_day_stats}
@@ -717,7 +722,8 @@ site_dict.setdefault('database_dict', db_dict)</pre>
             </td>
             <td><pre class="tty">site_dict = config_dict['StdRESTful']['Uploader']
 site_dict = accumulateLeaves(site_dict, max_level=1)
-manager_dict = weewx.manager.open_manager_with_config(config_dict, 'wx_binding')</pre>
+manager_dict = weewx.manager.open_manager_with_config(
+    config_dict, 'wx_binding')</pre>
             </td>
         </tr>
     </table>
@@ -757,12 +763,14 @@ manager_dict = weewx.manager.open_manager_with_config(config_dict, 'wx_binding')
             <td><pre class="tty">db = config_dict['StdArchive']['archive_database']
 self.database_dict = config_dict['Databases'][db]
 with weewx.archive.Archive.open(self.database_dict) as archive:
-    val = archive.getSql("SELECT AVG(windSpeed) FROM archive WHERE dateTime&gt;? AND dateTime&lt;=?",
-                (start_ts, end_ts))</pre>
+    val = archive.getSql("SELECT AVG(windSpeed) FROM archive"
+                         " WHERE dateTime&gt;? AND dateTime&lt;=?",
+                         (start_ts, end_ts))</pre>
             </td>
-            <td><pre class="tty">with self.engine.db_binder.get_manager('wx_binding') as db_manager:
-    val = db_manager.getSql("SELECT AVG(windSpeed) FROM %s WHERE dateTime&gt;? AND dateTime&lt;=?" %
-        db_manager.table_name, (start_ts, end_ts))</pre>
+            <td><pre class="tty">with self.engine.db_binder.get_manager('wx_binding') as mgr:
+    val = mgr.getSql("SELECT AVG(windSpeed) FROM %s"
+                     " WHERE dateTime&gt;? AND dateTime&lt;=?" %
+                     (mgr.table_name, start_ts, end_ts))</pre>
             </td>
         </tr>
     </table>
@@ -793,8 +801,8 @@ with weewx.archive.Archive.open(self.database_dict) as archive:
             </td>
             <td><pre class="tty">class GaugeGenerator(weewx.reportengine.<span class='changed'>ReportGenerator</span>)
     def run(self):
-        db_manager = self.generator.db_binder.get_manager()
-        results = db_manager.getSql(...)</pre>
+        mgr = self.generator.db_binder.get_manager()
+        results = mgr.getSql(...)</pre>
             </td>
         </tr>
     </table>
