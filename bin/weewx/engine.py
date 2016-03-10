@@ -811,6 +811,9 @@ def main(options, args, EngineClass=StdEngine) :
         syslog.syslog(syslog.LOG_INFO, "engine: pid file is %s" % options.pidfile)
         daemon.daemonize(pidfile=options.pidfile)
 
+    # for backward compatibility, recognize loop_on_init from command-line
+    loop_on_init = options.loop_on_init
+
     # be sure that the system has a reasonable time (at least 1 jan 2000).
     # log any problems every minute.
     ts = time.time()
@@ -838,6 +841,11 @@ def main(options, args, EngineClass=StdEngine) :
         else:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
+        # See if there is a loop_on_init directive in the configuration, but
+        # use it only if nothing was specified via command-line.
+        if loop_on_init is None:
+            loop_on_init = to_bool(config_dict.get('loop_on_init', False))
+
         try:
             syslog.syslog(syslog.LOG_DEBUG, "engine: Initializing engine")
 
@@ -846,8 +854,8 @@ def main(options, args, EngineClass=StdEngine) :
     
             syslog.syslog(syslog.LOG_INFO, "engine: Starting up weewx version %s" % weewx.__version__)
 
-            # Start the engine. It should run forever unless an exception occurs. Log it
-            # if the function returns.
+            # Start the engine. It should run forever unless an exception
+            # occurs. Log it if the function returns.
             engine.run()
             syslog.syslog(syslog.LOG_CRIT, "engine: Unexpected exit from main loop. Program exiting.")
     
@@ -855,8 +863,9 @@ def main(options, args, EngineClass=StdEngine) :
         except InitializationError, e:
             # Log it:
             syslog.syslog(syslog.LOG_CRIT, "engine: Unable to load driver: %s" % e)
-            # See if we should loop, waiting for the console to be ready, or exit:
-            if options.loop_on_init:
+            # See if we should loop, waiting for the console to be ready.
+            # Otherwise, just exit.
+            if loop_on_init:
                 syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 60 seconds then retrying...")
                 time.sleep(60)
                 syslog.syslog(syslog.LOG_NOTICE, "engine: retrying...")

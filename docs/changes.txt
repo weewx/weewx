@@ -29,6 +29,8 @@ does not support it. Fixes issue #101.
 Improved readability of documents on mobile devices. Thank you Chris
 Davies-Barnard!
 
+The loop_on_init option can now be specified in weewx.conf
+
 
 3.4.0 01/16/2016
 
