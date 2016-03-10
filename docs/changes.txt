@@ -31,6 +31,9 @@ Davies-Barnard!
 
 The loop_on_init option can now be specified in weewx.conf
 
+When uploading data to CWOP, skip records older than 60 seconds.  Fixes
+issue #106.
+
 
 3.4.0 01/16/2016
 

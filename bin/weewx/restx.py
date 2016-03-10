@@ -860,7 +860,7 @@ class CWOPThread(RESTThread):
     def __init__(self, queue, manager_dict, 
                  station, passcode, latitude, longitude, station_type,
                  server_list=StdCWOP.default_servers,
-                 post_interval=600, max_backlog=sys.maxint, stale=1800,
+                 post_interval=600, max_backlog=sys.maxint, stale=60,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5):
 
@@ -899,7 +899,7 @@ class CWOPThread(RESTThread):
           Default is sys.maxint (essentially, allow any number).
           
           stale: How old a record can be and still considered useful.
-          Default is 1800 (a half hour).
+          Default is 60 (one minute).
           
           log_success: If True, log a successful post in the system log.
           Default is True.
@@ -940,7 +940,7 @@ class CWOPThread(RESTThread):
 
     def process_record(self, record, dbmanager):
         """Process a record in accordance with the CWOP protocol."""
-        
+
         # Get the full record by querying the database ...
         _full_record = self.get_record(record, dbmanager)
         # ... convert to US if necessary ...
