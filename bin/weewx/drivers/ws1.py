@@ -223,7 +223,7 @@ class StationSerial(object):
         self.open()
         return self
 
-    def __exit__(self, _, value, traceback):
+    def __exit__(self, _, value, traceback):  # @UnusedVariable
         self.close()
 
     def open(self):
@@ -281,7 +281,7 @@ class StationInet(object):
             self.conn_info = addr.split(':')
             try:
                 self.conn_info[1] = int(self.conn_info[1], 10)
-            except TypeError, e:
+            except TypeError:
                 self.conn_info[1] = DEFAULT_TCP_PORT
             self.conn_info = tuple(self.conn_info)
         else:
@@ -399,7 +399,7 @@ class StationInet(object):
         return buf
 
     def get_readings_with_retry(self, max_tries=5, retry_wait=10):
-        for ntries in range(0, max_tries):
+        for _ in range(0, max_tries):
             buf = ''
             try:
                 buf = self.get_readings()
@@ -484,13 +484,13 @@ if __name__ == '__main__':
                       help='display driver version')
     parser.add_option('--port', dest='port', metavar='PORT',
                       help='serial port to which the station is connected',
-                      default=DEFAULT_PORT)
+                      default=DEFAULT_SER_PORT)
     (options, args) = parser.parse_args()
 
     if options.version:
         print "ADS WS1 driver version %s" % DRIVER_VERSION
         exit(0)
 
-    with Station(options.port) as s:
+    with StationSerial(options.port) as s:
         while True:
             print time.time(), s.get_readings()
