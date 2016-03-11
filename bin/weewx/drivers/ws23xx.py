@@ -2068,6 +2068,11 @@ class WS23xxConfEditor(weewx.drivers.AbstractConfEditor):
         port = self._prompt('port', '/dev/ttyUSB0')
         return {'port': port}
 
+    def modify_config(self, config_dict):
+        print """
+Setting record_generation to software."""
+        config_dict['StdArchive']['record_generation'] = 'software'
+
 
 # define a main entry point for basic testing of the station without weewx
 # engine and service overhead.  invoke this as follows from the weewx root dir:
