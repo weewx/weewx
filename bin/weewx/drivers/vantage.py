@@ -1661,7 +1661,7 @@ class VantageService(Vantage, weewx.engine.StdService):
         self.bind(weewx.END_ARCHIVE_PERIOD, self.end_archive_period)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
-    def startup(self, event):        
+    def startup(self, event):  # @UnusedVariable
         self.max_loop_gust = 0.0
         self.max_loop_gustdir = None
         self.loop_data = {'txBatteryStatus': None,
@@ -1688,7 +1688,7 @@ class VantageService(Vantage, weewx.engine.StdService):
         for k in self.loop_data:
             self.loop_data[k] = event.packet[k]
         
-    def end_archive_period(self, event):
+    def end_archive_period(self, event):  # @UnusedVariable
         """Zero out the max gust seen since the start of the record"""
         self.max_loop_gust = 0.0
         self.max_loop_gustdir = None
@@ -1771,7 +1771,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                           dest="logger_summary", metavar="FILE",
                           help="Save diagnostic summary to FILE (for debugging the logger).")
 
-    def do_options(self, options, parser, config_dict, prompt):        
+    def do_options(self, options, parser, config_dict, prompt):  # @UnusedVariable        
         if options.start and options.stop:
             parser.error("Cannot specify both --start and --stop")
         if options.set_tz_code and options.set_tz_offset:

@@ -127,7 +127,7 @@ class BatteryAlarm(StdService):
                     # Record when the message went out:
                     self.last_msg_ts = time.time()
         
-    def newArchiveRecord(self, event):
+    def newArchiveRecord(self, event):  # @UnusedVariable
         """This function is called with the arrival of every new archive record."""
         
         # Reset the alarm counter

@@ -695,7 +695,6 @@ import syslog
 import time
 import usb
 
-import weewx
 import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
@@ -991,7 +990,7 @@ class Station(object):
         self.open()
         return self
 
-    def __exit__(self, _, value, traceback):
+    def __exit__(self, _, value, traceback):  # @UnusedVariable
         self.close()
 
     def open(self):

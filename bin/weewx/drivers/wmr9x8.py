@@ -29,7 +29,7 @@ DRIVER_NAME = 'WMR9x8'
 DRIVER_VERSION = "3.0"
 
 
-def loader(config_dict, engine):
+def loader(config_dict, engine):  # @UnusedVariable
     return WMR9x8(**config_dict[DRIVER_NAME])
 
 def confeditor_loader():

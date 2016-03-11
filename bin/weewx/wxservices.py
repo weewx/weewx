@@ -159,35 +159,35 @@ class StdWXCalculate(weewx.engine.StdService):
         if 'windGust' in data and not data['windGust']:
             data['windGustDir'] = None
 
-    def calc_dewpoint(self, data, data_type):
+    def calc_dewpoint(self, data, data_type):  # @UnusedVariable
         if 'outTemp' in data and 'outHumidity' in data:
             data['dewpoint'] = weewx.wxformulas.dewpointF(
                 data['outTemp'], data['outHumidity'])
         else:
             data['dewpoint'] = None
 
-    def calc_inDewpoint(self, data, data_type):
+    def calc_inDewpoint(self, data, data_type):  # @UnusedVariable
         if 'inTemp' in data and 'inHumidity' in data:
             data['inDewpoint'] = weewx.wxformulas.dewpointF(
                 data['inTemp'], data['inHumidity'])
         else:
             data['inDewpoint'] = None
 
-    def calc_windchill(self, data, data_type):
+    def calc_windchill(self, data, data_type):  # @UnusedVariable
         if 'outTemp' in data and 'windSpeed' in data:
             data['windchill'] = weewx.wxformulas.windchillF(
                 data['outTemp'], data['windSpeed'])
         else:
             data['windchill'] = None
 
-    def calc_heatindex(self, data, data_type):
+    def calc_heatindex(self, data, data_type):  # @UnusedVariable
         if 'outTemp' in data and 'outHumidity' in data:
             data['heatindex'] = weewx.wxformulas.heatindexF(
                 data['outTemp'], data['outHumidity'])
         else:
             data['heatindex'] = None
 
-    def calc_pressure(self, data, data_type):
+    def calc_pressure(self, data, data_type):  # @UnusedVariable
         self._get_archive_interval(data)
         if (self.archive_interval is not None and 'barometer' in data and
             'outTemp' in data and 'outHumidity' in data):
@@ -202,14 +202,14 @@ class StdWXCalculate(weewx.engine.StdService):
             else:
                 data['pressure'] = None
 
-    def calc_barometer(self, data, data_type):
+    def calc_barometer(self, data, data_type):  # @UnusedVariable
         if 'pressure' in data and 'outTemp' in data:
             data['barometer'] = weewx.wxformulas.sealevel_pressure_US(
                 data['pressure'], self.altitude_ft, data['outTemp'])
         else:
             data['barometer'] = None
 
-    def calc_altimeter(self, data, data_type):
+    def calc_altimeter(self, data, data_type):  # @UnusedVariable
         if 'pressure' in data:
             algo = self.algorithms.get('altimeter', 'aaNOAA')
             if not algo.startswith('aa'):
@@ -240,7 +240,7 @@ class StdWXCalculate(weewx.engine.StdService):
         # ...then divide by the period and scale to an hour
         data['rainRate'] = 3600 * rainsum / self.rain_period
 
-    def calc_maxSolarRad(self, data, data_type):
+    def calc_maxSolarRad(self, data, data_type):  # @UnusedVariable
         algo = self.algorithms.get('maxSolarRad', 'RS')
         if algo == 'Bras':
             data['maxSolarRad'] = weewx.wxformulas.solar_rad_Bras(
@@ -251,28 +251,28 @@ class StdWXCalculate(weewx.engine.StdService):
                 self.latitude, self.longitude, self.altitude_m,
                 data['dateTime'], self.atc)
 
-    def calc_cloudbase(self, data, data_type):
+    def calc_cloudbase(self, data, data_type):  # @UnusedVariable
         if 'outTemp' in data and 'outHumidity' in data:        
             data['cloudbase'] = weewx.wxformulas.cloudbase_US(
                 data['outTemp'], data['outHumidity'], self.altitude_ft)
         else:
             data['cloudbase'] = None
 
-    def calc_humidex(self, data, data_type):
+    def calc_humidex(self, data, data_type):  # @UnusedVariable
         if 'outTemp' in data and 'outHumidity' in data:
             data['humidex'] = weewx.wxformulas.humidexF(
                 data['outTemp'], data['outHumidity'])
         else:
             data['humidex'] = None
 
-    def calc_appTemp(self, data, data_type):
+    def calc_appTemp(self, data, data_type):  # @UnusedVariable
         if 'outTemp' in data and 'outHumidity' in data and 'windSpeed' in data:
             data['appTemp'] = weewx.wxformulas.apptempF(
                 data['outTemp'], data['outHumidity'], data['windSpeed'])
         else:
             data['appTemp'] = None
 
-    def calc_beaufort(self, data, data_type):
+    def calc_beaufort(self, data, data_type):  # @UnusedVariable
         if 'windSpeed' in data:
             vt = (data['windSpeed'], "mile_per_hour", "group_speed")
             ws_kts = weewx.units.convert(vt, "knot")[0]

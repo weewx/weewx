@@ -31,13 +31,15 @@ def guard(fn):
     return guarded_fn
 
 
-def connect(host='localhost', user='', password='', database_name='', driver='', port=3306, engine=DEFAULT_ENGINE, **kwargs):
+def connect(host='localhost', user='', password='', database_name='', 
+            driver='', port=3306, engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
     """Connect to the specified database"""
     return Connection(host=host, user=user, password=password, 
                       database_name=database_name, port=int(port), engine=engine, **kwargs)
 
 
-def create(host='localhost', user='', password='', database_name='', driver='', port=3306, engine=DEFAULT_ENGINE, **kwargs):
+def create(host='localhost', user='', password='', database_name='', 
+           driver='', port=3306, engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
     """Create the specified database. If it already exists,
     an exception of type weedb.DatabaseExists will be thrown."""
     # Open up a connection w/o specifying the database.
@@ -61,7 +63,8 @@ def create(host='localhost', user='', password='', database_name='', driver='', 
         raise weedb.OperationalError(e)
 
 
-def drop(host='localhost', user='', password='', database_name='', driver='', port=3306, engine=DEFAULT_ENGINE, **kwargs):
+def drop(host='localhost', user='', password='', database_name='', 
+         driver='', port=3306, engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
     """Drop (delete) the specified database."""
     # Open up a connection
     try:

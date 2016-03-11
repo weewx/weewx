@@ -11,7 +11,6 @@ from __future__ import with_statement
 import copy
 import optparse
 import os
-import os.path
 import platform
 import sys
 import syslog
@@ -20,12 +19,12 @@ from configobj import ConfigObj
 
 # weewx imports
 import weecfg
-import weewx
+import weewx.manager
+import weewx.units
 
 from weecfg.extension import ExtensionEngine
 from weeutil.weeutil import TimeSpan, timestamp_to_string
 from weewx.manager import DaySummaryManager
-from weewx.units import unit_nicknames
 
 VERSION = weewx.__version__
 WEE_DEBUG_VERSION = '0.5'
@@ -89,7 +88,7 @@ def main():
                       help='Display wee_debug version number.')
 
     # Now we are ready to parse the command line:
-    (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args()  # @UnusedVariable
 
     # check weewx version number for compatibility
     if VERSION[0] < 3:
@@ -169,7 +168,7 @@ def optional_arg(arg_default):
         http://stackoverflow.com/questions/1229146/parsing-empty-options-in-python
     """
 
-    def func(option, opt_str, value, parser):
+    def func(option, opt_str, value, parser):  # @UnusedVariable
         if parser.rargs and not parser.rargs[0].startswith('-'):
             val = parser.rargs[0]
             parser.rargs.pop(0)
@@ -257,7 +256,7 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
         for db_keys in config_dict['Databases']:
             database_dict = weewx.manager.get_database_dict_from_config(config_dict,
                                                                         db_keys)
-            keys = sorted(database_dict.keys())
+            _ = sorted(database_dict.keys())
             print "  Database name:        %s" % database_dict['database_name']
             print "  Database driver:      %s" % database_dict['driver']
             if 'host' in database_dict:
@@ -298,7 +297,7 @@ def generateLinuxSysInfo(verbosity):
     # load info
     if verbosity > 0:
         loadstr = _readproc_line('/proc/loadavg')
-        (load1, load5, load15, nproc) = loadstr.split()[0:4]
+        (load1, load5, load15, nproc) = loadstr.split()[0:4]  # @UnusedVariable
         print "  1 minute load average:  %s" % load1
         print "  5 minute load average:  %s" % load5
         print "  15 minute load average: %s" % load15
@@ -384,7 +383,6 @@ def _readproc_dict(filename):
 def _readproc_line(filename):
     """ Read single line proc file, return the string """
 
-    info = ''
     with open(filename) as fp:
         info = fp.read()
     return info

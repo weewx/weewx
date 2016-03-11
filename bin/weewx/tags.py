@@ -348,7 +348,8 @@ class CurrentObj(object):
       $current.barometer
     """
         
-    def __init__(self, db_lookup, data_binding, current_time, formatter, converter, max_delta=None, **option_dict):
+    def __init__(self, db_lookup, data_binding, current_time, 
+                 formatter, converter, max_delta=None, **option_dict):  # @UnusedVariable
         self.db_lookup    = db_lookup
         self.data_binding = data_binding
         self.current_time = current_time
@@ -388,7 +389,8 @@ class TrendObj(object):
       $trend.barometer
     """
 
-    def __init__(self, time_delta, time_grace, db_lookup, data_binding, nowtime, formatter, converter, **option_dict):
+    def __init__(self, time_delta, time_grace, db_lookup, data_binding, 
+                 nowtime, formatter, converter, **option_dict):  # @UnusedVariable
         """Initialize a Trend object
         
         time_delta: The time difference over which the trend is to be calculated
