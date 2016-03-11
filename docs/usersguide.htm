@@ -2637,9 +2637,17 @@ longitude = -77.0366</pre>
 
     <p>
         Indicates whether the wind direction should be undefined when the wind
-        speed is zero.  The default value is False; by default, the wind
+        speed is zero.  The default value is True; by default, the wind
         direction will be undefined when wind speed is zero.
     </p>
+
+    <p>
+        To report the wind vane direction even when there is no wind speed,
+        change this to False:
+    </p>
+    <pre class="tty">[StdWXCalculate]
+    ...
+    ignore_zero_wind = False</pre>
 
     <h2 class="config_section" id="StdArchive">[StdArchive]</h2>
 
