@@ -412,3 +412,8 @@ class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.wmr100
 """
+
+    def modify_config(self, config_dict):
+        print """
+Setting rainRate calculation to hardware."""
+        config_dict['StdWXCalculate']['rainRate'] = 'hardware'

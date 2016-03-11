@@ -1348,6 +1348,14 @@ class WMR300ConfEditor(weewx.drivers.AbstractConfEditor):
     driver = weewx.drivers.wmr300
 """
 
+    def modify_config(self, config_dict):
+        print """
+Setting rainRate, windchill, heatindex, and dewpoint calculations to hardware."""
+        config_dict['StdWXCalculate']['rainRate'] = 'hardware'
+        config_dict['StdWXCalculate']['windchill'] = 'hardware'
+        config_dict['StdWXCalculate']['heatindex'] = 'hardware'
+        config_dict['StdWXCalculate']['dewpoint'] = 'hardware'
+
 
 # define a main entry point for basic testing of the station without weewx
 # engine and service overhead.  invoke this as follows from the weewx root dir:

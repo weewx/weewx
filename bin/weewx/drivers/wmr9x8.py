@@ -623,6 +623,13 @@ class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
         port = self._prompt('port', '/dev/ttyUSB0')
         return {'port': port}
 
+    def modify_config(self, config_dict):
+        print """
+Setting rainRate, windchill, and dewpoint calculations to hardware."""
+        config_dict['StdWXCalculate']['rainRate'] = 'hardware'
+        config_dict['StdWXCalculate']['windchill'] = 'hardware'
+        config_dict['StdWXCalculate']['dewpoint'] = 'hardware'
+
 # Define a main entry point for basic testing without the weewx engine.
 # Invoke this as follows from the weewx root dir:
 #

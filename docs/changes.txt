@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.4.1 MM/DD/2016
+3.5.0 MM/DD/2016
 
 Fixed bug that prevented rsync uploader from working.
 
@@ -35,8 +35,15 @@ When uploading data to CWOP, skip records older than 60 seconds.  Fixes
 issue #106.
 
 Added modify_config method to the driver's configuration editor so that drivers
-can modify the configuration during installation, if necessary.  This addresses
-issue #84.
+can modify the configuration during installation, if necessary.
+
+The fousb and ws23xx drivers use modify_config to set record_generation to
+software.  This addresses issue #84.
+
+The wmr100, wmr200, wmr9x8, and wmr300 drivers use modify_config to set
+rainRate, heatindex, windchill, and dewpoint calculations to hardware instead
+of prefer_hardware since each of these stations has partial packets.  This
+addresses issue #7 (SF #46).
 
 
 3.4.0 01/16/2016
