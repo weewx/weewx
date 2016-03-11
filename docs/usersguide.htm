@@ -2633,6 +2633,14 @@ longitude = -77.0366</pre>
     ...
     windchill = software</pre>
 
+    <p class="config_option">ignore_zero_wind</p>
+
+    <p>
+        Indicates whether the wind direction should be undefined when the wind
+        speed is zero.  The default value is False; by default, the wind
+        direction will be undefined when wind speed is zero.
+    </p>
+
     <h2 class="config_section" id="StdArchive">[StdArchive]</h2>
 
     <p>This section is for configuring <span class="code">StdArchive</span>, the
@@ -5492,6 +5500,15 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
         <span class='code'>weewx</span> calculates
         <span class='code'>barometer</span>.
     </p>        
+
+    <h3 id="zero_windspeed">There is no wind direction when wind speed is zero</h3>
+
+    <p>
+        This is by design - if there is no wind, then the wind direction is undefined.  An undefined value is represented by a NULL in the database or a None in Python.  This policy is enforced by the <span class='code'>StdWXCalculate</span> service.  If necessary, it can be overridden.  See the <a href="#StdWXCalculate"><span class='code'>StdWXCalculate</span></a> section for instructions.
+    </p>
+    <p>
+        <span class='code'>weewx</span> distinguishes between a value of zero and no value (NULL or None).  However, some services do not make this distinction and replace a NULL or None with a clearly invalid value such as -999.
+    </p>
 
 
     <h1 id="architecture">Architectural Notes</h1>
