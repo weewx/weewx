@@ -14,13 +14,14 @@ import syslog
 import time
 
 from weewx.crc16 import crc16
+from weeutil.weeutil import to_int
 import weeutil.weeutil
 import weewx.drivers
 import weewx.units
 import weewx.engine
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.0.5'
+DRIVER_VERSION = '3.0.6'
 
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
@@ -43,17 +44,22 @@ _resend = chr(0x15) # NB: The Davis documentation gives this code as 0x21, but i
 class BaseWrapper(object):
     """Base class for (Serial|Ethernet)Wrapper"""
 
+    def __init__(self, wait_before_retry, command_delay):
+        
+        self.wait_before_retry = wait_before_retry
+        self.command_delay = command_delay
+        
     #===============================================================================
     #          Primitives for working with the Davis Console
     #===============================================================================
 
-    def wakeup_console(self, max_tries=3, wait_before_retry=1.2):
+    def wakeup_console(self, max_tries=3):
         """Wake up a Davis Vantage console.
 
         This call has three purposes:
-        1. wake up a sleeping console
-        2. cancel pending LOOP data (if any)
-        3. flush the input buffer
+        1. Wake up a sleeping console;
+        2. Cancel pending LOOP data (if any);
+        3. Flush the input buffer
            Note: a flushed buffer is important before sending a command; we want to make sure
            the next received character is the expected ACK.
         
@@ -61,38 +67,31 @@ class BaseWrapper(object):
 
         for count in xrange(max_tries):
             try:
-                # wake up console and cancel pending LOOP data
+                # Wake up console and cancel pending LOOP data.
+                # First try a gentle wake up
                 self.write('\n')
                 _resp = self.read(2)
                 if _resp == '\n\r':  # LF, CR = 0x0a, 0x0d
                     # We're done; the console accepted our cancel LOOP command; nothing to flush
-                    # Use the old debug terms: gentle wake up and rude wake up :-)
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: gentle wake up console succesful")
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: gentle wake up of console successful")
                     return
-                # If no LF, CR received, flush one or more LOOP messages
-                _chars_flushed = self.flush_input()
-                # first read the aknowledge of the sent '\n' before we delay the process by printing a debug message
+                # That didn't work. Try a rude wake up.
+                # Flush any pending LOOP packets
+                self.flush_input()
+                # Look for the acknowledgment of the sent '\n'
                 _resp = self.read(2)
-                # only ip-flush_input returns the number of chars flushed
-                if _chars_flushed is not None:
-                    _loop_message_flushed = (_chars_flushed + 2) / 99
-                    # report #chars and #loops flushed
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: flushed input: %s bytes (%.1f LOOP message(s) flushed)" %
-                                  (_chars_flushed, _loop_message_flushed))
-                # now check the acknowledge of the sent '\n'
-                if _resp == '\n\r':  # LF, CR = 0x0a, 0x0d
-                    # We're done; the console accepted our cancel LOOP command and the input buffer is flushed
-                    # Use the old debug terms: gentle wake up and rude wake up :-)
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: rude wake up console succesful")
+                if _resp == '\n\r':
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: rude wake up of console successful")
                     return
-                # The answer is not what we expected; try again
-                time.sleep(wait_before_retry)
-                print "Unable to wake up console ... retrying"
-            except weewx.WeeWxIOError, e:
-                syslog.syslog(syslog.LOG_ERR, "vantage: Wakeup_console failed (%s); #retry %d" % (e, count))
+                print "Unable to wake up console... sleeping"
+                time.sleep(self.wait_before_retry)
+                print "Unable to wake up console... retrying"
+            except weewx.WeeWxIOError:
+                pass
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: retry  #%d failed" % count)
 
         syslog.syslog(syslog.LOG_ERR, "vantage: Unable to wake up console")
-        raise weewx.WakeupError("Unable to wake up console")
+        raise weewx.WakeupError("Unable to wake up Vantage console")
 
     def send_data(self, data):
         """Send data to the Davis console, waiting for an acknowledging <ACK>
@@ -106,9 +105,8 @@ class BaseWrapper(object):
     
         # Look for the acknowledging ACK character
         _resp = self.read()
-        if _resp != _ack:
-            syslog.syslog(syslog.LOG_ERR, "vantage: send_data; no ACK reveived but %02x after write %d chars %s" %
-                          (ord(_resp), len(data), data))
+        if _resp != _ack: 
+            syslog.syslog(syslog.LOG_ERR, "vantage: No <ACK> received from console")
             raise weewx.WeeWxIOError("No <ACK> received from Vantage console")
     
     def send_data_with_crc16(self, data, max_tries=3):
@@ -124,7 +122,7 @@ class BaseWrapper(object):
         _data_with_crc = data + struct.pack(">H", _crc)
         
         # Retry up to max_tries times:
-        for unused_count in xrange(max_tries):
+        for count in xrange(max_tries):
             try:
                 self.write(_data_with_crc)
                 # Look for the acknowledgment.
@@ -133,25 +131,23 @@ class BaseWrapper(object):
                     return
             except weewx.WeeWxIOError:
                 pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: send_data_with_crc16; retry %s" % unused_count)
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: send_data_with_crc16; try #%d" % (count + 1,))
 
         syslog.syslog(syslog.LOG_ERR, "vantage: Unable to pass CRC16 check while sending data")
         raise weewx.CRCError("Unable to pass CRC16 check while sending data to Vantage console")
 
-    def send_command(self, command, max_tries=3, wait_before_retry=1.2):
+    def send_command(self, command, max_tries=3):
         """Send a command to the console, then look for the string 'OK' in the response.
         
         Any response from the console is split on \n\r characters and returned as a list."""
-
-        for unused_count in xrange(max_tries):
+        
+        for count in xrange(max_tries):
             try:
-                self.wakeup_console(max_tries=max_tries, wait_before_retry=wait_before_retry)
+                self.wakeup_console(max_tries=max_tries)
 
                 self.write(command)
-                # Takes a bit for the VP to react and fill up the buffer. Sleep for a half sec:
-                # Without this delay wee_device calls will give errors for the ip data logger
-                # Note: the ip-write command itself waits also tcp_send_delay; both delays are needed, don't combine!
-                time.sleep(self.tcp_send_delay)
+                # Takes some time for the Vantage to react and fill up the buffer. Sleep for a bit:
+                time.sleep(self.command_delay)
                 # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
                 # So, instead find how many bytes are waiting and fetch them all
                 nc = self.queued_bytes()
@@ -165,8 +161,8 @@ class BaseWrapper(object):
 
             except weewx.WeeWxIOError:
                 # Caught an error. Keep trying...
-                continue
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: send_command; retry %s" % unused_count)
+                pass
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: send_command; try #%d failed" % (count + 1,))
         
         syslog.syslog(syslog.LOG_ERR, "vantage: Max retries exceeded while sending command %s" % command)
         raise weewx.RetriesExceeded("Max retries exceeded while sending command %s" % command)
@@ -187,13 +183,12 @@ class BaseWrapper(object):
         
         returns: the packet data as a string. The last 2 bytes will be the CRC"""
         if prompt:
-            # prompt is None or ACK
             self.write(prompt)
             
         first_time = True
         _buffer = ''
 
-        for unused_count in xrange(max_tries):
+        for count in xrange(max_tries):
             try:
                 if not first_time: 
                     self.write(_resend)
@@ -202,14 +197,15 @@ class BaseWrapper(object):
                     return _buffer
             except weewx.WeeWxIOError:
                 pass
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16; try #%d failed" % (count + 1,))
             first_time = False
 
-        # No debug line when 0 bytes received (time out)
-        if len(_buffer) == 0:
-            raise weewx.WeeWxIOError("Getting data timed out")
-        else:
+        if _buffer:
             syslog.syslog(syslog.LOG_ERR, "vantage: Unable to pass CRC16 check while getting data")
             raise weewx.CRCError("Unable to pass CRC16 check while getting data")
+        else:
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16 time out")
+            raise weewx.WeeWxIOError("Time out in get_data_with_crc16")
 
 #===============================================================================
 #                           class Serial Wrapper
@@ -225,7 +221,6 @@ def guard_termios(fn):
             try:
                 return fn(*args, **kwargs)
             except termios.error, e:
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: guard_termios; raise WeeWxIOError %s" % e)
                 raise weewx.WeeWxIOError(e)
     except ImportError:
         def guarded_fn(*args, **kwargs):
@@ -235,7 +230,9 @@ def guard_termios(fn):
 class SerialWrapper(BaseWrapper):
     """Wraps a serial connection returned from package serial"""
     
-    def __init__(self, port, baudrate, timeout):
+    def __init__(self, port, baudrate, timeout, wait_before_retry, command_delay):
+        super(SerialWrapper, self).__init__(wait_before_retry=wait_before_retry, 
+                                            command_delay=command_delay)
         self.port     = port
         self.baudrate = baudrate
         self.timeout  = timeout
@@ -243,9 +240,6 @@ class SerialWrapper(BaseWrapper):
     @guard_termios
     def flush_input(self):
         self.serial_port.flushInput()
-        # note: in version 3.0 the name of the call is changed to reset_input_buffer()
-        # we don't know the number of chars flushed; return None
-        return None
 
     @guard_termios
     def flush_output(self):
@@ -266,18 +260,15 @@ class SerialWrapper(BaseWrapper):
             # Reraise as a Weewx error I/O error:
             raise weewx.WeeWxIOError(e)
         N = len(_buffer)
-        if N == 0:
-            raise weewx.WeeWxIOError("vantage: read; timeout during read of %d chars" % chars)
-        elif N != chars:
-            syslog.syslog(syslog.LOG_ERR, "vantage: read; Expected to read %d chars; got %d instead" % (chars, N))
-            raise weewx.WeeWxIOError("vantage: read; Expected to read %d chars; got %d instead" % (chars, N))
+        if N != chars:
+            raise weewx.WeeWxIOError("Expected to read %d chars; got %d instead" % (chars, N))
         return _buffer
     
     def write(self, data):
         N = self.serial_port.write(data)
         # Python version 2.5 and earlier returns 'None', so it cannot be used to test for completion.
         if N is not None and N != len(data):
-            raise weewx.WeeWxIOError("vantage: Expected to write %d chars; sent %d instead" % (len(data), N))
+            raise weewx.WeeWxIOError("Expected to write %d chars; sent %d instead" % (len(data), N))
 
     def openPort(self):
         import serial
@@ -301,7 +292,10 @@ class SerialWrapper(BaseWrapper):
 class EthernetWrapper(BaseWrapper):
     """Wrap a socket"""
 
-    def __init__(self, host, port, timeout, tcp_send_delay):
+    def __init__(self, host, port, timeout, tcp_send_delay, wait_before_retry, command_delay):
+        
+        super(EthernetWrapper, self).__init__(wait_before_retry=wait_before_retry, 
+                                              command_delay=command_delay)
 
         self.host           = host
         self.port           = port
@@ -337,21 +331,16 @@ class EthernetWrapper(BaseWrapper):
     def flush_input(self):
         """Flush the input buffer from WeatherLinkIP"""
         import socket
-        _recv = ''
         try:
             # This is a bit of a hack, but there is no analogue to pyserial's flushInput()
             # Set socket timeout to 0 to get immediate result
             self.socket.settimeout(0)
-            _recv = self.socket.recv(4096)
-        except (socket.timeout, socket.error), ex:
-            # Ignore socket error when buffer is empty
+            self.socket.recv(4096)
+        except (socket.timeout, socket.error):
             pass
         finally:
             # set socket timeout back to original value
             self.socket.settimeout(self.timeout)
-        # return number of chars flushed
-        return len(_recv)
-
 
     def flush_output(self):
         """Flush the output buffer to WeatherLinkIP
@@ -377,32 +366,20 @@ class EthernetWrapper(BaseWrapper):
         """Read bytes from WeatherLinkIP"""
         import socket
         _buffer = ''
-        _recv = ''
         _remaining = chars
         while _remaining:
             _N = min(4096, _remaining)
             try:
                 _recv = self.socket.recv(_N)
-            except socket.timeout:
-                N = len(_buffer) + len(_recv)
-                if N == 0:
-                    raise weewx.WeeWxIOError("vantage: ip-read; timeout during read of %d chars" % chars)
-                elif N != chars:
-                    syslog.syslog(syslog.LOG_ERR, "Vantage: ip-read; Expected to read %d chars; got %d instead" % (chars, N))
-                    raise weewx.WeeWxIOError("vantage: ip-read; Expected to read %d chars; got %d instead" % (chars, N))
-                else:
-                    # It is very rare when we come here, but it happens now and then!
-                    pass
-            except socket.error, ex:
-                syslog.syslog(syslog.LOG_ERR, "vantage: ip-read; raise WeeWxIOError (socket.error %s)" % ex)
+            except (socket.timeout, socket.error), ex:
+                syslog.syslog(syslog.LOG_ERR, "vantage: ip-read error: %s" % ex)
                 # Reraise as a weewx I/O error:
                 raise weewx.WeeWxIOError(ex)
-            # read next buffer
             _nread = len(_recv)
+            if _nread==0:
+                raise weewx.WeeWxIOError("vantage: Expected %d characters; got zero instead" % (_N,))
             _buffer += _recv
             _remaining -= _nread
-            if _remaining != 0:
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: ip-read: read %s chars, remaining: %s" % (_nread, _remaining))
         return _buffer
     
     def write(self, data):
@@ -414,7 +391,7 @@ class EthernetWrapper(BaseWrapper):
             # Note: a delay of 0.5 s is required for wee_device --logger=logger_info
             time.sleep(self.tcp_send_delay)
         except (socket.timeout, socket.error), ex:
-            syslog.syslog(syslog.LOG_ERR, "vantage: ip-write SOCKET ERROR; (socket.error %s)" % ex)
+            syslog.syslog(syslog.LOG_ERR, "vantage: ip-write error: %s" % ex)
             # Reraise as a weewx I/O error:
             raise weewx.WeeWxIOError(ex)
 
@@ -459,10 +436,13 @@ class Vantage(weewx.drivers.AbstractDevice):
         to process the command [Optional. Default is 0.5]
 
         timeout: How long to wait before giving up on a response from the
-        serial port. [Optional. Default is 5]
+        serial port. [Optional. Default is 4]
         
         wait_before_retry: How long to wait before retrying. [Optional.
         Default is 1.2 seconds]
+        
+        command_delay: How long to wait after sending a command before looking
+        for acknowledgement. [Optional. Default is 0.5 seconds]
 
         max_tries: How many times to try again before giving up. [Optional.
         Default is 4]
@@ -476,10 +456,8 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.model_type       = 2 # = 1 for original VantagePro, = 2 for VP2
 
         # These come from the configuration dictionary:
-        self.wait_before_retry= float(vp_dict.get('wait_before_retry', 1.2))
-        self.max_tries        = int(vp_dict.get('max_tries'    , 4))
-        self.iss_id           = vp_dict.get('iss_id')
-        if self.iss_id is not None: self.iss_id           = int(self.iss_id) 
+        self.max_tries = int(vp_dict.get('max_tries', 4))
+        self.iss_id    = to_int(vp_dict.get('iss_id'))
         
         self.save_monthRain = None
         self.max_dst_jump = 7200
@@ -513,25 +491,24 @@ class Vantage(weewx.drivers.AbstractDevice):
 
     def genDavisLoopPackets(self, N=1):
         """Generator function to return N loop packets from a Vantage console
-
+        
         N: The number of packets to generate [default is 1]
-
-
-        yields: up to N loop packets (could be less in the event of a
+        
+        yields: up to N loop packets (could be less in the event of a 
         read or CRC error).
         """
 
         syslog.syslog(syslog.LOG_DEBUG, "vantage: Requesting %d LOOP packets." % N)
-
-        self.port.wakeup_console(self.max_tries, self.wait_before_retry)
-
+        
+        self.port.wakeup_console(self.max_tries)
+        
         # Request N packets:
         self.port.send_data("LOOP %d\n" % N)
-
+        
         ntries = 1
-
+        
         for loop in range(N):
-
+            
             if ntries > self.max_tries:
                 syslog.syslog(syslog.LOG_ERR, "vantage: Max retries (%d) exceeded." % self.max_tries)
                 raise weewx.RetriesExceeded("Max retries exceeded while getting LOOP data.")
@@ -555,104 +532,87 @@ class Vantage(weewx.drivers.AbstractDevice):
 
     def genArchiveRecords(self, since_ts):
         """A generator function to return archive packets from a Davis Vantage station.
-
+        
         since_ts: A timestamp. All data since (but not including) this time will be returned.
         Pass in None for all data
-
+        
         yields: a sequence of dictionaries containing the data
         """
-
-        _ntries = 1
-        _timeouts = 0
-
-        while True:
-            if since_ts:
-                since_tt = time.localtime(since_ts)
-                # NB: note that some of the Davis documentation gives the year offset as 1900.
-                # From experimentation, 2000 seems to be right, at least for the newer models:
-                _vantageDateStamp = since_tt[2] + (since_tt[1]<<5) + ((since_tt[0]-2000)<<9)
-                _vantageTimeStamp = since_tt[3] *100 + since_tt[4]
-                syslog.syslog(syslog.LOG_DEBUG, 'vantage: Getting archive packets since %s' % weeutil.weeutil.timestamp_to_string(since_ts))
-            else:
-                _vantageDateStamp = _vantageTimeStamp = 0
-                syslog.syslog(syslog.LOG_DEBUG, 'vantage: Getting all archive packets')
-
-            #Pack the date and time into a string, little-endian order
-            _datestr = struct.pack("<HH", _vantageDateStamp, _vantageTimeStamp)
-
-            # Save the last good time:
-            _last_good_ts = since_ts if since_ts else 0
-
-            # Try to retrieve the starting page and index:
-            for n in range(self.max_tries):
-                try:
-                    # Wake up the console...
-                    self.port.wakeup_console(self.max_tries, self.wait_before_retry)
-                    # ... request a dump...
-                    self.port.send_data('DMPAFT\n')
-                    # ... from the designated date (allow only one try because that's all the console allows):
-                    self.port.send_data_with_crc16(_datestr, max_tries=1)
-
-                    # Get the response with how many pages and starting index and decode it. Again, allow only one try:
-                    _buffer = self.port.get_data_with_crc16(6, max_tries=1)
-                    break
-                except weewx.WeeWxIOError, e:
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Failed attempt %d receiving starting page. Error %s" % (n+1, e))
-                    if n >= self.max_tries-1:
-                        syslog.syslog(syslog.LOG_ERR, "vantage: Unable to retrieve starting page")
-                        raise
-
-            (_npages, _start_index) = struct.unpack("<HH", _buffer[:4])
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: Retrieving %d page(s); starting index= %d" % (_npages, _start_index))
-            if _npages == 0:
-                return
-
+        
+        if since_ts:
+            since_tt = time.localtime(since_ts)
+            # NB: note that some of the Davis documentation gives the year offset as 1900.
+            # From experimentation, 2000 seems to be right, at least for the newer models:
+            _vantageDateStamp = since_tt[2] + (since_tt[1]<<5) + ((since_tt[0]-2000)<<9)
+            _vantageTimeStamp = since_tt[3] *100 + since_tt[4]
+            syslog.syslog(syslog.LOG_DEBUG, 'vantage: Getting archive packets since %s' % weeutil.weeutil.timestamp_to_string(since_ts))
+        else:
+            _vantageDateStamp = _vantageTimeStamp = 0
+            syslog.syslog(syslog.LOG_DEBUG, 'vantage: Getting all archive packets')
+     
+        #Pack the date and time into a string, little-endian order
+        _datestr = struct.pack("<HH", _vantageDateStamp, _vantageTimeStamp)
+        
+        # Save the last good time:
+        _last_good_ts = since_ts if since_ts else 0
+        
+        # Try to retrieve the starting page and index:
+        for n in range(self.max_tries):
             try:
-                # Cycle through the pages...
-                for unused_ipage in xrange(_npages):
-                    # ... get a page of archive data
-                    _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
-                    # Now extract each record from the page
-                    for _index in xrange(_start_index, 5):
-                        # Get the record string buffer for this index:
-                        _record_string = _page[1+52*_index:53+52*_index]
-                        # If the console has been recently initialized, there will
-                        # be unused records, which are filled with 0xff. Detect this
-                        # by looking at the first 4 bytes (the date and time):
-                        if _record_string[0:4] == 4*chr(0xff) or _record_string[0:4] == 4*chr(0x00):
-                            # This record has never been used. We're done.
-                            syslog.syslog(syslog.LOG_DEBUG, "vantage: empty record page %d; index %d" % (unused_ipage, _index))
-                            return
-
-                        # Unpack the archive packet from the string buffer:
-                        _record = self._unpackArchivePacket(_record_string)
-
-                        # Check to see if the time stamps are declining, which would
-                        # signal that we are done.
-                        if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts - self.max_dst_jump:
-                            # The time stamp is declining. We're done.
-                            syslog.syslog(syslog.LOG_DEBUG, "vantage: DMPAFT complete: page timestamp %s less than final timestamp %s"\
-                                          % (weeutil.weeutil.timestamp_to_string(_record['dateTime']),
-                                             weeutil.weeutil.timestamp_to_string(_last_good_ts)))
-                            return
-                        # Set the last time to the record time, and yield the packet
-                        _last_good_ts = _record['dateTime']
-                        yield _record
-
-                    # The starting index for pages other than the first is always zero
-                    _start_index = 0
-
-                # We are done: all pages and records are read
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: Catchup complete. No more pages")
-                return
-
+                # Wake up the console...
+                self.port.wakeup_console(self.max_tries)
+                # ... request a dump...
+                self.port.send_data('DMPAFT\n')
+                # ... from the designated date (allow only one try because that's all the console allows):
+                self.port.send_data_with_crc16(_datestr, max_tries=1)
+                
+                # Get the response with how many pages and starting index and decode it. Again, allow only one try:
+                _buffer = self.port.get_data_with_crc16(6, max_tries=1)
+                break
             except weewx.WeeWxIOError, e:
-                _timeouts += 1  # Timeout is raised as WeeWxIOError
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: Catchup error: %s, #timeouts=%s; #ntries=%s" %
-                              (e, _timeouts, _ntries))
-                # Preset new start timestamp to the timestamp of the last good record
-                since_ts = _last_good_ts
-                pass
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: Failed attempt %d receiving starting page. Error %s" % (n+1, e))
+                if n >= self.max_tries-1:
+                    syslog.syslog(syslog.LOG_ERR, "vantage: Unable to retrieve starting page")
+                    raise
+      
+        (_npages, _start_index) = struct.unpack("<HH", _buffer[:4])
+        syslog.syslog(syslog.LOG_DEBUG, "vantage: Retrieving %d page(s); starting index= %d" % (_npages, _start_index))
+        
+        # Cycle through the pages...
+        for ipage in xrange(_npages):
+            # ... get a page of archive data
+            _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
+            # Now extract each record from the page
+            for _index in xrange(_start_index, 5):
+                # Get the record string buffer for this index:
+                _record_string = _page[1+52*_index:53+52*_index]
+                # If the console has been recently initialized, there will
+                # be unused records, which are filled with 0xff. Detect this
+                # by looking at the first 4 bytes (the date and time):
+                if _record_string[0:4] == 4*chr(0xff) or _record_string[0:4] == 4*chr(0x00):
+                    # This record has never been used. We're done.
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: empty record page %d; index %d" \
+                                  % (ipage, _index))
+                    return
+                
+                # Unpack the archive packet from the string buffer:
+                _record = self._unpackArchivePacket(_record_string)
+
+                # Check to see if the time stamps are declining, which would
+                # signal that we are done. 
+                if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts - self.max_dst_jump:
+                    # The time stamp is declining. We're done.
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: DMPAFT complete: page timestamp %s less than final timestamp %s"\
+                                  % (weeutil.weeutil.timestamp_to_string(_record['dateTime']),
+                                     weeutil.weeutil.timestamp_to_string(_last_good_ts)))
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Catch up complete.")
+                    return
+                # Set the last time to the current time, and yield the packet
+                _last_good_ts = _record['dateTime']
+                yield _record
+
+            # The starting index for pages other than the first is always zero
+            _start_index = 0
 
     def genArchiveDump(self):
         """A generator function to return all archive packets in the memory of a Davis Vantage station.
@@ -662,14 +622,14 @@ class Vantage(weewx.drivers.AbstractDevice):
         import weewx.wxformulas
         
         # Wake up the console...
-        self.port.wakeup_console(self.max_tries, self.wait_before_retry)
+        self.port.wakeup_console(self.max_tries)
         # ... request a dump...
         self.port.send_data('DMP\n')
 
         syslog.syslog(syslog.LOG_DEBUG, "vantage: Dumping all records.")
         
         # Cycle through the pages...
-        for unused_ipage in xrange(512):
+        for ipage in xrange(512):
             # ... get a page of archive data
             _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
             # Now extract each record from the page
@@ -682,7 +642,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 if _record_string[0:4] == 4*chr(0xff) or _record_string[0:4] == 4*chr(0x00):
                     # This record has never been used. Skip it
                     syslog.syslog(syslog.LOG_DEBUG, "vantage: empty record page %d; index %d" \
-                                  % (unused_ipage, _index))
+                                  % (ipage, _index))
                     continue
                 # Unpack the raw archive packet:
                 _record = self._unpackArchivePacket(_record_string)
@@ -710,7 +670,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         """
         
         # Wake up the console...
-        self.port.wakeup_console(self.max_tries, self.wait_before_retry)
+        self.port.wakeup_console(self.max_tries)
         # ... request a dump...
         self.port.send_data('DMP\n')
 
@@ -755,7 +715,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         for unused_count in xrange(self.max_tries):
             try:
                 # Wake up the console...
-                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+                self.port.wakeup_console(max_tries=self.max_tries)
                 # ... request the time...
                 self.port.send_data('GETTIME\n')
                 # ... get the binary data. No prompt, only one try:
@@ -776,7 +736,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         for unused_count in xrange(self.max_tries):
             try:
                 # Wake the console and begin the setTime command
-                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+                self.port.wakeup_console(max_tries=self.max_tries)
                 self.port.send_data('SETTIME\n')
 
                 # Unfortunately, clock resolution is only 1 second, and transmission takes a
@@ -1020,7 +980,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         """Clear the internal archive memory in the Vantage."""
         for unused_count in xrange(self.max_tries):
             try:
-                self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+                self.port.wakeup_console(max_tries=self.max_tries)
                 self.port.send_data("CLRLOG\n")
                 syslog.syslog(syslog.LOG_NOTICE, "vantage: Archive memory cleared.")
                 return
@@ -1173,7 +1133,7 @@ class Vantage(weewx.drivers.AbstractDevice):
     
     def determine_hardware(self):
         # Determine the type of hardware:
-        for unused_count in xrange(self.max_tries):
+        for count in xrange(self.max_tries):
             try:
                 self.port.send_data("WRD" + chr(0x12) + chr(0x4d) + "\n")
                 self.hardware_type = ord(self.port.read())
@@ -1182,16 +1142,15 @@ class Vantage(weewx.drivers.AbstractDevice):
                 return self.hardware_type
             except weewx.WeeWxIOError:
                 pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: _setup; retry %s" % unused_count)
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: determin_hardware; retry #%d" % (count, ))
 
         syslog.syslog(syslog.LOG_ERR, "vantage: _setup; unable to read hardware type; raise WeeWxIOError")
         raise weewx.WeeWxIOError("Unable to read hardware type")
 
     def _setup(self):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
-
-        # Wake up console
-        self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+        
+        self.port.wakeup_console(max_tries=self.max_tries)
         self.hardware_type = self.determine_hardware()
 
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
@@ -1270,7 +1229,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         for unused_count in xrange(self.max_tries):
             try:
                 if not firsttime:
-                    self.port.wakeup_console(max_tries=self.max_tries, wait_before_retry=self.wait_before_retry)
+                    self.port.wakeup_console(max_tries=self.max_tries)
                     firsttime = False
                 self.port.send_data(command)
                 _buffer = self.port.get_data_with_crc16(nbytes+2, max_tries=1)
@@ -1286,7 +1245,9 @@ class Vantage(weewx.drivers.AbstractDevice):
     def _port_factory(vp_dict):
         """Produce a serial or ethernet port object"""
         
-        timeout = float(vp_dict.get('timeout', 4.0))
+        timeout           = float(vp_dict.get('timeout', 4.0))
+        wait_before_retry = float(vp_dict.get('wait_before_retry', 1.2))
+        command_delay     = float(vp_dict.get('command_delay', 0.5))
         
         # Get the connection type. If it is not specified, assume 'serial':
         connection_type = vp_dict.get('type', 'serial').lower()
@@ -1294,12 +1255,14 @@ class Vantage(weewx.drivers.AbstractDevice):
         if connection_type == "serial":
             port = vp_dict['port']
             baudrate = int(vp_dict.get('baudrate', 19200))
-            return SerialWrapper(port, baudrate, timeout)
+            return SerialWrapper(port, baudrate, timeout,
+                                 wait_before_retry, command_delay)
         elif connection_type == "ethernet":
             hostname = vp_dict['host']
             tcp_port = int(vp_dict.get('tcp_port', 22222))
             tcp_send_delay = float(vp_dict.get('tcp_send_delay', 0.5))
-            return EthernetWrapper(hostname, tcp_port, timeout, tcp_send_delay)
+            return EthernetWrapper(hostname, tcp_port, timeout, tcp_send_delay,
+                                   wait_before_retry, command_delay)
         raise weewx.UnsupportedFeature(vp_dict['type'])
 
     def _unpackLoopPacket(self, raw_loop_string):
@@ -1738,7 +1701,7 @@ class VantageService(Vantage, weewx.engine.StdService):
         self.bind(weewx.END_ARCHIVE_PERIOD, self.end_archive_period)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
-    def startup(self, event):        
+    def startup(self, event):  # @UnusedVariable
         self.max_loop_gust = 0.0
         self.max_loop_gustdir = None
         self.loop_data = {'txBatteryStatus': None,
@@ -1765,7 +1728,7 @@ class VantageService(Vantage, weewx.engine.StdService):
         for k in self.loop_data:
             self.loop_data[k] = event.packet[k]
         
-    def end_archive_period(self, event):
+    def end_archive_period(self, event):  # @UnusedVariable
         """Zero out the max gust seen since the start of the record"""
         self.max_loop_gust = 0.0
         self.max_loop_gustdir = None
@@ -1848,7 +1811,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                           dest="logger_summary", metavar="FILE",
                           help="Save diagnostic summary to FILE (for debugging the logger).")
 
-    def do_options(self, options, parser, config_dict, prompt):        
+    def do_options(self, options, parser, config_dict, prompt):  # @UnusedVariable        
         if options.start and options.stop:
             parser.error("Cannot specify both --start and --stop")
         if options.set_tz_code and options.set_tz_offset:
