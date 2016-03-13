@@ -482,12 +482,20 @@ class Vantage(weewx.drivers.AbstractDevice):
     def genLoopPackets(self):
         """Generator function that returns loop packets"""
         
-        while True:
-            # Get LOOP packets in big batches This is necessary because there is
-            # an undocumented limit to how many LOOP records you can request
-            # on the VP (somewhere around 220).
-            for _loop_packet in self.genDavisLoopPackets(200):
-                yield _loop_packet
+        for count in range(self.max_tries):
+            while True:
+                try:
+                    # Get LOOP packets in big batches This is necessary because there is
+                    # an undocumented limit to how many LOOP records you can request
+                    # on the VP (somewhere around 220).
+                    for _loop_packet in self.genDavisLoopPackets(200):
+                        yield _loop_packet
+                except weewx.WeeWxIOError, e:
+                    syslog.syslog(syslog.LOG_ERR, "vantage: LOOP try #%d; error: %s" % (count+1, e))
+                    break
+
+        syslog.syslog(syslog.LOG_ERR, "vantage: LOOP max tries (%d) exceeded." % self.max_tries)
+        raise weewx.RetriesExceeded("Max tries exceeded while getting LOOP data.")
 
     def genDavisLoopPackets(self, N=1):
         """Generator function to return N loop packets from a Vantage console
@@ -504,31 +512,17 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         # Request N packets:
         self.port.send_data("LOOP %d\n" % N)
-        
-        ntries = 1
-        
-        for loop in range(N):
-            
-            if ntries > self.max_tries:
-                syslog.syslog(syslog.LOG_ERR, "vantage: Max retries (%d) exceeded." % self.max_tries)
-                raise weewx.RetriesExceeded("Max retries exceeded while getting LOOP data.")
 
-            try:
-                # Fetch a packet
-                _buffer = self.port.read(99)
-                if crc16(_buffer):
-                    syslog.syslog(syslog.LOG_ERR, "vantage: LOOP #%d; CRC error. Try #%d" % (loop, ntries))
-                    ntries += 1
-                    continue
-                # ... decode it
-                loop_packet = self._unpackLoopPacket(_buffer[:95])
-                # Yield it
-                yield loop_packet
-                ntries = 1
-            except weewx.WeeWxIOError, e:
-                syslog.syslog(syslog.LOG_ERR, "vantage: LOOP #%d; read error (%s). Try #%d" % (loop, e, ntries))
-                ntries += 1
-                continue
+        for loop in range(N):  # @UnusedVariable
+            # Fetch a packet...
+            _buffer = self.port.read(99)
+            # ... see if it passes the CRC test ...
+            if crc16(_buffer):
+                raise weewx.CRCError("LOOP buffer failed CRC check")
+            # ... decode it ...
+            loop_packet = self._unpackLoopPacket(_buffer[:95])
+            # .. then yield it
+            yield loop_packet
 
     def genArchiveRecords(self, since_ts):
         """A generator function to return archive packets from a Davis Vantage station.
@@ -539,8 +533,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         yields: a sequence of dictionaries containing the data
         """
 
-        count = 0
-        while True:
+        for count in range(self.max_tries):
             try:            
                 for _record in self.genDavisArchiveRecords(since_ts):
                     since_ts = _record['dateTime']
@@ -548,11 +541,10 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # The generator loop exited. We're done.
                 return
             except weewx.WeeWxIOError, e:
-                count += 1
-                syslog.syslog(syslog.LOG_ERR, "vantage: Try #%d; error: %s" (count, e))
-                if count > self.max_tries:
-                    syslog.syslog.LOG_ERR("vantage: Max errors (%d) exceeded" (self.max_tries,))
-                    raise        
+                syslog.syslog(syslog.LOG_ERR, "vantage: DMPAFT try #%d; error: %s" % (count + 1, e))
+
+        syslog.syslog(syslog.LOG_ERR, "vantage: DMPAFT max tries (%d) exceeded." % self.max_tries)
+        raise weewx.RetriesExceeded("Max tries exceeded while getting archive data.")
 
     def genDavisArchiveRecords(self, since_ts):
         """A generator function to return archive records from a Davis Vantage station.
@@ -588,7 +580,7 @@ class Vantage(weewx.drivers.AbstractDevice):
       
         (_npages, _start_index) = struct.unpack("<HH", _buffer[:4])
         syslog.syslog(syslog.LOG_DEBUG, "vantage: Retrieving %d page(s); starting index= %d" % (_npages, _start_index))
-        
+
         # Cycle through the pages...
         for ipage in xrange(_npages):
             # ... get a page of archive data
