@@ -533,15 +533,20 @@ class Vantage(weewx.drivers.AbstractDevice):
         yields: a sequence of dictionaries containing the data
         """
 
-        for count in range(self.max_tries):
+        count = 0
+        while count < self.max_tries:
             try:            
                 for _record in self.genDavisArchiveRecords(since_ts):
+                    # Successfully retrieved record. Set count back to zero.
+                    count = 0
                     since_ts = _record['dateTime']
                     yield _record
                 # The generator loop exited. We're done.
                 return
             except weewx.WeeWxIOError, e:
-                syslog.syslog(syslog.LOG_ERR, "vantage: DMPAFT try #%d; error: %s" % (count + 1, e))
+                # Problem. Increment retry count
+                count += 1
+                syslog.syslog(syslog.LOG_ERR, "vantage: DMPAFT try #%d; error: %s" % (count, e))
 
         syslog.syslog(syslog.LOG_ERR, "vantage: DMPAFT max tries (%d) exceeded." % self.max_tries)
         raise weewx.RetriesExceeded("Max tries exceeded while getting archive data.")
