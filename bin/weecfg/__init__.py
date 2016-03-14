@@ -999,7 +999,7 @@ def load_driver_editor(driver_module_name):
 #                Utilities that seek info from the command line
 #==============================================================================
 
-def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
+def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
                     altitude=['0', 'meter'], units='metric', **kwargs):
     #
     #  Description
