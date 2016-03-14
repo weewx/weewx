@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.5.0 MM/DD/2016
+3.5.0 03/13/2016
 
 Fixed bug that prevented rsync uploader from working.
 
