@@ -171,5 +171,5 @@ rm -rf %{buildroot}
 %{_bindir}/wunderfixer
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
-%config(noreplace) %{dst_user_dir}/
+%config(noreplace) %{dst_user_dir}/extensions.py
 %changelog
