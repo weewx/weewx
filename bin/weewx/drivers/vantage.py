@@ -589,7 +589,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Cycle through the pages...
         for ipage in xrange(_npages):
             # ... get a page of archive data
-            _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
+            _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=1)
             # Now extract each record from the page
             for _index in xrange(_start_index, 5):
                 # Get the record string buffer for this index:
