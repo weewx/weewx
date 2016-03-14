@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+X.X.X MM/DD/YYYY
+
+Fixed rpm package so that it will retain any changes to the user directory.
+Thanks to user Pat OBrien.
+
+
 3.5.0 03/13/2016
 
 Fixed bug that prevented rsync uploader from working.
