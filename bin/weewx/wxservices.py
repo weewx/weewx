@@ -98,7 +98,7 @@ class StdWXCalculate(weewx.engine.StdService):
         # we recognize only the names in our dispatch list; others are ignored
         for v in self._dispatch_list:
             x = where_to_look.get(v, 'prefer_hardware')
-            if x in ('hardware', 'software', 'prefer_hardware'):
+            if x.lower() in ('hardware', 'software', 'prefer_hardware', 'none'):
                 self.calculations[v] = x
 
         # determine which algorithms to use for the calculations
