@@ -8,6 +8,8 @@ Thanks to user Pat OBrien.
 
 No ET when beyond the reach of the sun.
 
+Fix wee_config to handle config files that have no FTP or RSYNC.
+
 
 3.5.0 03/13/2016
 

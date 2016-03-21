@@ -865,10 +865,9 @@ def reorder(name_list, ref_list):
     for name in name_list:
         if name not in ref_list:
             result.append(name)
-            
     # Finally, add these, so they are at the very end
     for name in ref_list:
-        if name in ['FTP', 'RSYNC']:
+        if name in name_list and name in ['FTP', 'RSYNC']:
             result.append(name)
             
     # Make sure I have the same number I started with
