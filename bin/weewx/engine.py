@@ -480,6 +480,7 @@ class StdArchive(StdService):
 
         # If the station supports a hardware archive interval, use that.
         # Warn if it is different than what is in config.
+        ival_msg = ''
         try:
             if software_interval != self.engine.console.archive_interval:
                 syslog.syslog(syslog.LOG_ERR,
@@ -489,10 +490,11 @@ class StdArchive(StdService):
                               (software_interval,
                                self.engine.console.archive_interval))
             self.archive_interval = self.engine.console.archive_interval
+            ival_msg = "(specified by hardware)"
         except NotImplementedError:
             self.archive_interval = software_interval
-        syslog.syslog(syslog.LOG_INFO, "engine: Using archive interval of %d seconds" % 
-                      self.archive_interval)
+            ival_msg = "(specified in weewx configuration)"
+        syslog.syslog(syslog.LOG_INFO, "engine: Using archive interval of %d seconds %s" % (self.archive_interval, ival_msg))
 
         if self.archive_delay <= 0:
             raise weewx.ViolatedPrecondition("Archive delay (%.1f) must be greater than zero." % 
