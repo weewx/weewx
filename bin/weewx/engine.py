@@ -821,7 +821,7 @@ def main(options, args, EngineClass=StdEngine) :
         if n % 120 == 0:
             syslog.syslog(syslog.LOG_INFO,
                           "engine: waiting for sane time.  current time is %s"
-                          % weeutil.weeutil.timestamp_to_string(ts))
+                          % weeutil.weeutil.timestamp_to_string(weewx.launchtime_ts))
         n += 1
         time.sleep(0.5)
         weewx.launchtime_ts = time.time()
