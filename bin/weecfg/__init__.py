@@ -332,7 +332,9 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                     logger.log("Using %s for %s" % (stn_info[p], p), level=2)
                 config_dict['Station'][p] = stn_info[p]
         # Update units display with any stn_info overrides
-        if stn_info.get('units') is not None:
+        if (stn_info.get('units') is not None and
+            'StdReport' in config_dict and
+            'StandardReport' in config_dict['StdReport']):
             if stn_info.get('units') in ['metric', 'metricwx']:
                 if debug:
                     logger.log("Using Metric units for display", level=2)
