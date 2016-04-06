@@ -16,15 +16,17 @@ Thanks to Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
 from __future__ import with_statement
 import syslog
 import time
+import socket
 
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.24'
+DRIVER_VERSION = '0.25'
 
 
 def loader(config_dict, _):
     return WS1Driver(**config_dict[DRIVER_NAME])
+
 
 def confeditor_loader():
     return WS1ConfEditor()
@@ -44,14 +46,18 @@ DEBUG_READ = 0
 def logmsg(level, msg):
     syslog.syslog(level, 'ws1: %s' % msg)
 
+
 def logdbg(msg):
     logmsg(syslog.LOG_DEBUG, msg)
+
 
 def loginf(msg):
     logmsg(syslog.LOG_INFO, msg)
 
+
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
+
 
 class WS1Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an ADS-WS1 station
@@ -60,7 +66,7 @@ class WS1Driver(weewx.drivers.AbstractDevice):
     [Required. Default is serial]
 
     port - Serial port or network address.
-    [Required. Default is /dev/ttyS0 for serial, and 192.168.36.25:3000 for TCP]
+    [Required. Default is /dev/ttyS0 for serial, and 192.168.36.25:3000 for TCP/IP]
 
     max_tries - how often to retry serial communication before giving up.
     [Optional. Default is 5]
@@ -95,7 +101,8 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
 
         if con_mode == 'tcp' or con_mode == 'udp':
-            self.station = StationInet(self.port, con_mode, timeout=timeout)
+            self.station = StationInet(self.port, con_mode, timeout, max_tries,
+                                       retry_wait)
         else:
             self.station = StationSerial(self.port, timeout=timeout)
         self.station.open()
@@ -176,7 +183,7 @@ class StationData(object):
         # FIXME: for ws1 is the pressure reading 'pressure' or 'barometer'?
         buf = raw[2:]
         data = dict()
-        data['windSpeed'] = StationData._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
+        data['windSpeed'] = StationData._decode(buf[0:4], 0.1 * MILE_PER_KM)  # mph
         data['windDir'] = StationData._decode(buf[6:8], 1.411764)  # compass deg
         data['outTemp'] = StationData._decode(buf[8:12], 0.1, True)  # degree_F
         data['long_term_rain'] = StationData._decode(buf[12:16], 0.01)  # inch
@@ -272,11 +279,22 @@ class StationSerial(object):
 
 
 class StationInet(object):
-    def __init__(self, addr, protocol='tcp', timeout=3):
-        import socket
+    def __init__(self, addr, protocol='tcp', timeout=3, max_retries=5,
+                 retry_interval=10):
         ip_addr = None
         ip_port = None
-        self.protocol = protocol
+
+        if protocol in ['tcp', 'udp']: self.protocol = protocol
+        else: self.protocol = 'tcp'
+
+        if isinstance(max_retries, int): self.max_retries = max_retries
+        else: self.max_retries = 5
+
+        if isinstance(retry_interval, int):
+            self.retry_interval = retry_interval
+        else:
+            self.retry_interval = 10
+
         if addr.find(':') != -1:
             self.conn_info = addr.split(':')
             try:
@@ -288,6 +306,7 @@ class StationInet(object):
             ip_addr = addr
             ip_port = DEFAULT_TCP_PORT
             self.conn_info = (ip_addr, ip_port)
+
         try:
             if self.protocol == 'tcp':
                 self.net_socket = socket.socket(
@@ -298,21 +317,32 @@ class StationInet(object):
         except (socket.error, socket.herror), ex:
             logerr("Cannot create socket for some reason: %s" % ex)
             raise weewx.WeeWxIOError(ex)
-        self.net_socket.settimeout(timeout)
+
+        if isinstance(timeout, int): self.net_socket.settimeout(timeout)
+        else: self.net_socket.settimeout(3)
         self.rec_start = False
 
     def open(self):
-        import socket
         logdbg("Connecting to %s:%d." % (self.conn_info[0], self.conn_info[1]))
-        try:
-            self.net_socket.connect(self.conn_info)
-        except (socket.error, socket.timeout, socket.herror), ex:
-            logerr("Cannot connect to %s:%d for some reason: %s" % (
-                self.conn_info[0], self.conn_info[1], ex))
-            raise weewx.WeeWxIOError(ex)
+        exstr = ''
+
+        for conn_attempt in range(self.max_retries):
+            try:
+                if conn_attempt > 1:
+                    logerr("Retrying connection...")
+                self.net_socket.connect(self.conn_info)
+                break
+            except (socket.error, socket.timeout, socket.herror), ex:
+                logerr("Cannot connect to %s:%d for some reason: %s." % (
+                    self.conn_info[0], self.conn_info[1], ex))
+                logerr("Will retry in %d seconds..." % self.retry_interval)
+                exstr = '%s' % ex
+                time.sleep(self.retry_interval)
+        else:
+            logerr("Max retries (%d) exceeded for connection." % self.max_retries)
+            raise weewx.WeeWxIOError(exstr)
 
     def close(self):
-        import socket
         logdbg("Closing connection to %s:%d." %
                (self.conn_info[0], self.conn_info[1]))
         try:
@@ -323,7 +353,6 @@ class StationInet(object):
             raise weewx.WeeWxIOError(ex)
 
     def get_readings(self):
-        import socket
         if self.rec_start is not True:
             # Find the record start
             if DEBUG_READ >= 1:
