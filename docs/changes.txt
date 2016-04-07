@@ -19,6 +19,9 @@ Fixed anti-alias bug in genplot.  Issue #111.
 
 Corrected the conversion factor between inHg and mbar. Thanks to user Olivier.
 
+Plots longer than two years now use an x-axis increment of one year. Thanks to
+user Olivier!
+
 
 3.5.0 03/13/2016
 
