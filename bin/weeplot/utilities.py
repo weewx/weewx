@@ -241,8 +241,8 @@ def scaletime(tmin_ts, tmax_ts) :
             stop_dt += datetime.timedelta(days=1)
             
         interval = 24 * 3600
-    else :
-        # The time scale is more than a month. A time increment of a month is appropriate
+    elif tdelta < 2 * 365.25 * 24 * 3600 :
+        # The time scale is between a month and 2 years. A time increment of a month is appropriate
         start_dt = tmin_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
         (year , mon, day) = tmax_dt.timetuple()[0:3]
@@ -254,6 +254,19 @@ def scaletime(tmin_ts, tmax_ts) :
         stop_dt = datetime.datetime(year, mon, 1)
         # Average month length:
         interval = 365.25/12 * 24 * 3600
+    else :
+        # The time scale is between a month and 2 years. A time increment of a year is appropriate
+        start_dt = tmin_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        (year , mon, day) = tmax_dt.timetuple()[0:3]
+        if day != 1 or mon !=1 :
+            day = 1
+            mon = 1
+            year += 1
+        stop_dt = datetime.datetime(year, mon, 1)
+        # Average year length
+        interval = 365.25 * 24 * 3600
+
     # Convert to epoch time stamps
     start_ts = int(time.mktime(start_dt.timetuple()))
     stop_ts  = int(time.mktime(stop_dt.timetuple()))
