@@ -66,7 +66,8 @@ class WS1Driver(weewx.drivers.AbstractDevice):
     [Required. Default is serial]
 
     port - Serial port or network address.
-    [Required. Default is /dev/ttyS0 for serial, and 192.168.36.25:3000 for TCP/IP]
+    [Required. Default is /dev/ttyS0 for serial,
+     and 192.168.36.25:3000 for TCP/IP]
 
     max_tries - how often to retry serial communication before giving up.
     [Optional. Default is 5]
@@ -101,8 +102,8 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
 
         if con_mode == 'tcp' or con_mode == 'udp':
-            self.station = StationInet(self.port, con_mode, timeout, max_tries,
-                                       retry_wait)
+            self.station = StationInet(self.port, con_mode, timeout,
+                                       self.max_tries, self.retry_wait)
         else:
             self.station = StationSerial(self.port, timeout=timeout)
         self.station.open()
@@ -284,6 +285,9 @@ class StationInet(object):
         ip_addr = None
         ip_port = None
 
+        self.max_retries = max_retries
+        self.retry_interval = retry_interval
+
         if addr.find(':') != -1:
             self.conn_info = addr.split(':')
             try:
@@ -297,10 +301,10 @@ class StationInet(object):
             self.conn_info = (ip_addr, ip_port)
 
         try:
-            if self.protocol == 'tcp':
+            if protocol == 'tcp':
                 self.net_socket = socket.socket(
                     socket.AF_INET, socket.SOCK_STREAM)
-            elif self.protocol == 'udp':
+            elif protocol == 'udp':
                 self.net_socket = socket.socket(
                     socket.AF_INET, socket.SOCK_DGRAM)
         except (socket.error, socket.herror), ex:
