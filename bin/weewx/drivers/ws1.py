@@ -284,17 +284,6 @@ class StationInet(object):
         ip_addr = None
         ip_port = None
 
-        if protocol in ['tcp', 'udp']: self.protocol = protocol
-        else: self.protocol = 'tcp'
-
-        if isinstance(max_retries, int): self.max_retries = max_retries
-        else: self.max_retries = 5
-
-        if isinstance(retry_interval, int):
-            self.retry_interval = retry_interval
-        else:
-            self.retry_interval = 10
-
         if addr.find(':') != -1:
             self.conn_info = addr.split(':')
             try:
