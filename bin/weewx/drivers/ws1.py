@@ -83,22 +83,55 @@ class WS1Driver(weewx.drivers.AbstractDevice):
     [Optional. Default is 0]
     """
     def __init__(self, **stn_dict):
+        import re
+
+        REGEX_IP_ADDR = re.compile(r'^(?:\d{1,3}\.){3}\d{1,3}:\d{2,5}$')
+        REGEX_SER_PORT = re.compile(r'^(?:COM\d+|CNC\w\d+|/dev/ttyS\d+)$')
+
+        valerrstr = 'Invalid value for %s! Using %s instead.'
         loginf('driver version is %s' % DRIVER_VERSION)
 
         con_mode = stn_dict.get('mode', 'serial').lower()
         if con_mode == 'tcp' or con_mode == 'udp':
-            self.port = stn_dict.get(
+            port = stn_dict.get(
                 'port', '%s:%d' % (DEFAULT_TCP_ADDR, DEFAULT_TCP_PORT))
+            if REGEX_IP_ADDR.match(port):
+                self.port = port
+            else:
+                # self.port = '%s:%d' % (DEFAULT_TCP_ADDR, DEFAULT_TCP_PORT)
+                # logdbg(valerrstr % ('port', self.port))
+                raise ValueError("Invalid IP:Port address!" % con_mode)
         else:
-            self.port = stn_dict.get('port', DEFAULT_SER_PORT)
+            port = stn_dict.get('port', DEFAULT_SER_PORT)
+            if REGEX_SER_PORT.match(port):
+                self.port = port
+            else:
+                raise ValueError("Invalid serial port!")
 
-        self.max_tries = int(stn_dict.get('max_tries', 5))
-        self.retry_wait = int(stn_dict.get('retry_wait', 10))
+        try:
+            self.max_tries = int(stn_dict.get('max_tries', 5))
+        except ValueError, ex:
+            logdbg(valerrstr % ('max_tries', 5))
+
+        try:
+            self.retry_wait = int(stn_dict.get('retry_wait', 10))
+        except ValueError, ex:
+            logdbg(valerrstr % ('retry_wait', 10))
+
+        try:
+            timeout = int(stn_dict.get('timeout', 3))
+        except ValueError, ex:
+            logdbg(valerrstr % ('timeout', 3))
+
         self.last_rain = None
-        timeout = int(stn_dict.get('timeout', 3))
+
         loginf('using %s port %s' % (con_mode, self.port))
+
         global DEBUG_READ
-        DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
+        try:
+            DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
+        except ValueError, ex:
+            logdbg(valerrstr % ('debug_read', DEBUG_READ))
 
         if con_mode == 'tcp' or con_mode == 'udp':
             self.station = StationSocket(self.port, con_mode, timeout,
