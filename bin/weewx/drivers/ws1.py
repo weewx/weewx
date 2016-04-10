@@ -111,17 +111,17 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         try:
             self.max_tries = int(stn_dict.get('max_tries', 5))
         except ValueError, ex:
-            logdbg(valerrstr % ('max_tries', 5))
+            loginf(valerrstr % ('max_tries', 5))
 
         try:
             self.retry_wait = int(stn_dict.get('retry_wait', 10))
         except ValueError, ex:
-            logdbg(valerrstr % ('retry_wait', 10))
+            loginf(valerrstr % ('retry_wait', 10))
 
         try:
             timeout = int(stn_dict.get('timeout', 3))
         except ValueError, ex:
-            logdbg(valerrstr % ('timeout', 3))
+            loginf(valerrstr % ('timeout', 3))
 
         self.last_rain = None
 
@@ -131,7 +131,7 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         try:
             DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
         except ValueError, ex:
-            logdbg(valerrstr % ('debug_read', DEBUG_READ))
+            loginf(valerrstr % ('debug_read', DEBUG_READ))
 
         if con_mode == 'tcp' or con_mode == 'udp':
             self.station = StationSocket(self.port, con_mode, timeout,
@@ -352,7 +352,6 @@ class StationSocket(object):
         import socket
 
         logdbg("Connecting to %s:%d." % (self.conn_info[0], self.conn_info[1]))
-        exstr = ''
 
         for conn_attempt in range(self.max_retries):
             try:
@@ -363,14 +362,14 @@ class StationSocket(object):
             except (socket.error, socket.timeout, socket.herror), ex:
                 logerr("Cannot connect to %s:%d for some reason: %s. "
                        "%d tries left." % (
-                           self.conn_info[0], self.conn_info[1], ex))
+                           self.conn_info[0], self.conn_info[1], ex,
+                           self.max_retries - (conn_attempt + 1)))
                 logdbg("Will retry in %d seconds..." % self.retry_interval)
-                exstr = '%s' % ex
                 time.sleep(self.retry_interval)
         else:
             logerr("Max retries (%d) exceeded for connection." %
                    self.max_retries)
-            raise weewx.WeeWxIOError(exstr)
+            raise weewx.WeeWxIOError()
 
     def close(self):
         import socket
