@@ -16,7 +16,6 @@ Thanks to Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
 from __future__ import with_statement
 import syslog
 import time
-import socket
 
 import weewx.drivers
 
@@ -102,8 +101,8 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
 
         if con_mode == 'tcp' or con_mode == 'udp':
-            self.station = StationInet(self.port, con_mode, timeout,
-                                       self.max_tries, self.retry_wait)
+            self.station = StationSocket(self.port, con_mode, timeout,
+                                         self.max_tries, self.retry_wait)
         else:
             self.station = StationSerial(self.port, timeout=timeout)
         self.station.open()
@@ -279,9 +278,11 @@ class StationSerial(object):
 # =========================================================================== #
 
 
-class StationInet(object):
+class StationSocket(object):
     def __init__(self, addr, protocol='tcp', timeout=3, max_retries=5,
                  retry_interval=10):
+        import socket
+
         ip_addr = None
         ip_port = None
 
@@ -316,26 +317,32 @@ class StationInet(object):
         self.rec_start = False
 
     def open(self):
+        import socket
+
         logdbg("Connecting to %s:%d." % (self.conn_info[0], self.conn_info[1]))
         exstr = ''
 
         for conn_attempt in range(self.max_retries):
             try:
                 if conn_attempt > 1:
-                    logerr("Retrying connection...")
+                    logdbg("Retrying connection...")
                 self.net_socket.connect(self.conn_info)
                 break
             except (socket.error, socket.timeout, socket.herror), ex:
-                logerr("Cannot connect to %s:%d for some reason: %s." % (
-                    self.conn_info[0], self.conn_info[1], ex))
-                logerr("Will retry in %d seconds..." % self.retry_interval)
+                logerr("Cannot connect to %s:%d for some reason: %s. "
+                       "%d tries left." % (
+                           self.conn_info[0], self.conn_info[1], ex))
+                logdbg("Will retry in %d seconds..." % self.retry_interval)
                 exstr = '%s' % ex
                 time.sleep(self.retry_interval)
         else:
-            logerr("Max retries (%d) exceeded for connection." % self.max_retries)
+            logerr("Max retries (%d) exceeded for connection." %
+                   self.max_retries)
             raise weewx.WeeWxIOError(exstr)
 
     def close(self):
+        import socket
+
         logdbg("Closing connection to %s:%d." %
                (self.conn_info[0], self.conn_info[1]))
         try:
@@ -346,6 +353,7 @@ class StationInet(object):
             raise weewx.WeeWxIOError(ex)
 
     def get_readings(self):
+        import socket
         if self.rec_start is not True:
             # Find the record start
             if DEBUG_READ >= 1:
@@ -408,15 +416,7 @@ class StationInet(object):
                 raise weewx.WeeWxIOError(ex)
         if DEBUG_READ >= 2:
             logdbg("buf: %s" % buf)
-        # This code assumes CRLF will be transmitted at the end of each record,
-        # which may not always be the case. See Matthew Wall's comment on
-        # GitHub here:
-        # https://github.com/weewx/weewx/pull/86#issuecomment-166716509
 
-        # try:
-        #     self.net_socket.recv(2, socket.MSG_WAITALL)  # CRLF
-        # except (socket.error, socket.timeout), ex:
-        #     raise weewx.WeeWxIOError(ex)
         buf.strip()
         return buf
 
@@ -428,7 +428,7 @@ class StationInet(object):
                 StationData.validate_string(buf)
                 return buf
             except (weewx.WeeWxIOError), e:
-                loginf("Failed to get data for some reason: %s" % e)
+                logdbg("Failed to get data for some reason: %s" % e)
                 self.rec_start = False
 
                 # NOTE: WeeWx IO Errors may not always occur because of
