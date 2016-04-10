@@ -312,8 +312,7 @@ class StationSocket(object):
             logerr("Cannot create socket for some reason: %s" % ex)
             raise weewx.WeeWxIOError(ex)
 
-        if isinstance(timeout, int): self.net_socket.settimeout(timeout)
-        else: self.net_socket.settimeout(3)
+        self.net_socket.settimeout(timeout)
         self.rec_start = False
 
     def open(self):
