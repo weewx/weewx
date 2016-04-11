@@ -85,7 +85,9 @@ class WS1Driver(weewx.drivers.AbstractDevice):
     def __init__(self, **stn_dict):
         import re
 
-        REGEX_IP_ADDR = re.compile(r'^(?:\d{1,3}\.){3}\d{1,3}:\d{2,5}$')
+        REGEX_IP_ADDR = re.compile(
+            r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(:\d{1,5})?$')
+
         REGEX_SER_PORT = re.compile(r'^(?:COM\d+|CNC\w\d+|/dev/ttyS\d+)$')
 
         valerrstr = 'Invalid value for %s! Using %s instead.'
@@ -95,7 +97,14 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         if con_mode == 'tcp' or con_mode == 'udp':
             port = stn_dict.get(
                 'port', '%s:%d' % (DEFAULT_TCP_ADDR, DEFAULT_TCP_PORT))
-            if REGEX_IP_ADDR.match(port):
+            port_match = REGEX_IP_ADDR.match(port)
+            if port_match:
+                ip_addr = port_match.groups()
+                if not all([0 <= int(x) <= 255 for x in ip_addr[:4]]):
+                    raise ValueError("Invalid byte in IP:Port address!")
+                if not 1 <= int(ip_addr[4][1:]) <= 65535:
+                    raise ValueError("Invalid port number in IP:Port address!")
+
                 self.port = port
             else:
                 # self.port = '%s:%d' % (DEFAULT_TCP_ADDR, DEFAULT_TCP_PORT)
