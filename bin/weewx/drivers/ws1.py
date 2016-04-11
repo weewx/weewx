@@ -100,12 +100,17 @@ class WS1Driver(weewx.drivers.AbstractDevice):
             port_match = REGEX_IP_ADDR.match(port)
             if port_match:
                 ip_addr = port_match.groups()
+
                 if not all([0 <= int(x) <= 255 for x in ip_addr[:4]]):
                     raise ValueError("Invalid byte in IP:Port address!")
-                if not 1 <= int(ip_addr[4][1:]) <= 65535:
-                    raise ValueError("Invalid port number in IP:Port address!")
+                if ip_addr[4] is not None:
+                    if not 1 <= int(ip_addr[4][1:]) <= 65535:
+                        raise ValueError(
+                            "Invalid port number in IP:Port address!")
+                    self.port = port
+                else:
+                    self.port = "%s:%d" % (port, DEFAULT_TCP_PORT)
 
-                self.port = port
             else:
                 # self.port = '%s:%d' % (DEFAULT_TCP_ADDR, DEFAULT_TCP_PORT)
                 # logdbg(valerrstr % ('port', self.port))
