@@ -81,9 +81,9 @@ create README.txt:
   make readme
 
 how to update the version number:
-  modify __version__ in bin/weewx/__init__.py     # canonical version location
+  perl -pi -e 's/__version__=".*"/__version__="x.y.z"/' bin/weewx/__init__.py
   make version                  # this propagates the version number everywhere
-  svn commit -m "..."           # commit the change to the repository
+  git commit -a -m "bump to version x.y.z"
 
 how to build source package:
   make src-package
@@ -91,13 +91,13 @@ how to build source package:
 how to build debian package:
   make deb-changelog
   emacs pkg/debian/changelog    # add any package-specific changes, if any
-  svn commit -m "update deb changelog"
+  git commit -m "update deb changelog" pkg/debian/changelog
   make deb-package
 
 how to build redhat package:
   make rpm-changelog
   emacs pkg/changelog.rpm       # add any package-specific changes, if any
-  svn commit -m "update rpm changelog"
+  git commit -m "update rpm changelog" pkg/changelog.rpm
   make rpm-package
 
 to display debconf variables:
