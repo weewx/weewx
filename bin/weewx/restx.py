@@ -91,6 +91,9 @@ import weewx.units
 class FailedPost(IOError):
     """Raised when a post fails after trying the max number of allowed times"""
 
+class AbortedPost(StandardError):
+    """Raised when a post is aborted by the client."""
+
 class BadLogin(StandardError):
     """Raised when login information is bad or missing."""
 
@@ -99,9 +102,6 @@ class ConnectError(IOError):
     
 class SendError(IOError):
     """Raised when unable to send through a socket."""
-
-class PostAborted(StandardError):
-    """Raised when a post is aborted by the client."""
 
 #==============================================================================
 #                    Abstract base classes
@@ -309,7 +309,7 @@ class RESTThread(threading.Thread):
                 # Process the record, using whatever method the specializing
                 # class provides
                 self.process_record(_record, dbmanager)
-            except PostAborted, e:
+            except AbortedPost, e:
                 if self.log_success:
                     _time_str = timestamp_to_string(_record['dateTime'])
                     syslog.syslog(syslog.LOG_INFO,
@@ -1546,7 +1546,7 @@ class AWEKASThread(RESTThread):
         r = self.get_record(record, dbmanager)
         url = self.get_url(r)
         if self.skip_upload:
-            raise PostAborted()
+            raise AbortedPost()
         req = urllib2.Request(url)
         req.add_header("User-Agent", "weewx/%s" % weewx.__version__)
         self.post_with_retries(req)
