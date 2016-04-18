@@ -460,7 +460,8 @@ class StdWunderground(StdRESTful):
         
         super(StdWunderground, self).__init__(engine, config_dict)
         
-        _ambient_dict = check_enable(config_dict, 'Wunderground', 'station', 'password')
+        _ambient_dict = get_site_dict(
+            config_dict, 'Wunderground', 'station', 'password')
 
         if _ambient_dict is None:
             return        
@@ -521,7 +522,8 @@ class StdPWSWeather(StdRESTful):
         
         super(StdPWSWeather, self).__init__(engine, config_dict)
         
-        _ambient_dict = check_enable(config_dict, 'PWSweather', 'station', 'password')
+        _ambient_dict = get_site_dict(
+            config_dict, 'PWSweather', 'station', 'password')
         if _ambient_dict is None:
             return
 
@@ -560,7 +562,8 @@ class StdWOW(StdRESTful):
         
         super(StdWOW, self).__init__(engine, config_dict)
         
-        _ambient_dict = check_enable(config_dict, 'WOW', 'station', 'password')
+        _ambient_dict = get_site_dict(
+            config_dict, 'WOW', 'station', 'password')
         if _ambient_dict is None:
             return
 
@@ -820,7 +823,7 @@ class StdCWOP(StdRESTful):
         
         super(StdCWOP, self).__init__(engine, config_dict)
         
-        _cwop_dict = check_enable(config_dict, 'CWOP', 'station')
+        _cwop_dict = get_site_dict(config_dict, 'CWOP', 'station')
         if _cwop_dict is None:
             return
         
@@ -1388,7 +1391,8 @@ class StdAWEKAS(StdRESTful):
     def __init__(self, engine, config_dict):
         super(StdAWEKAS, self).__init__(engine, config_dict)
         
-        site_dict = check_enable(config_dict, 'AWEKAS', 'username', 'password')
+        site_dict = get_site_dict(
+            config_dict, 'AWEKAS', 'username', 'password')
         if site_dict is None:
             return
 
@@ -1595,9 +1599,12 @@ class AWEKASThread(RESTThread):
             return str(record[label])
         return ''
 
-####################################################################################
+###############################################################################
 
-def check_enable(config_dict, service, *args):
+def get_site_dict(config_dict, service, *args):
+    """Obtain the site options, with defaults from the StdRESTful section.
+    If the service is not enabled, or if one or more required parameters is
+    not specified, then return None."""
 
     try:
         site_dict = accumulateLeaves(config_dict['StdRESTful'][service],
@@ -1626,8 +1633,13 @@ def check_enable(config_dict, service, *args):
                 raise KeyError(option)
     except KeyError, e:
         syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
-                      "Data will not be posted: Missing option %s" % (service, e))
+                      "Data will not be posted: Missing option %s" %
+                      (service, e))
         return None
+
+    # Get logging preferences from the root level
+    site_dict.setdefault('log_success', config_dict.get('log_success', True))
+    site_dict.setdefault('log_failure', config_dict.get('log_failure', True))
 
     # Get rid of the no longer needed key 'enable':
     site_dict.pop('enable', None)
