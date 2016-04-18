@@ -131,21 +131,23 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         # Make a copy of the skin dictionary (we will be modifying it):
         gen_dict = configobj.ConfigObj(self.skin_dict.dict())
         
-        # Look for options in [CheetahGenerator], but accept options from
-        # [FileGenerator] for backward compatibility.  
-        option_section_name = "CheetahGenerator" if gen_dict.has_key('CheetahGenerator') else "FileGenerator"
+        # Look for options in [CheetahGenerator],
+        section_name = "CheetahGenerator"
+        # but accept options from [FileGenerator] for backward compatibility.
+        if "FileGenerator" in gen_dict and "CheetahGenerator" not in gen_dict:
+            section_name = "FileGenerator"
         
         # The default summary time span is 'None'.
-        gen_dict[option_section_name]['summarize_by'] = 'None'
+        gen_dict[section_name]['summarize_by'] = 'None'
 
         # determine how much logging is desired
-        log_success = to_bool(gen_dict[option_section_name].get('log_success', True))
+        log_success = to_bool(gen_dict[section_name].get('log_success', True))
 
         # configure the search list extensions
-        self.initExtensions(gen_dict[option_section_name])
+        self.initExtensions(gen_dict[section_name])
 
         # Generate any templates in the given dictionary:
-        ngen = self.generate(gen_dict[option_section_name], self.gen_ts)
+        ngen = self.generate(gen_dict[section_name], self.gen_ts)
 
         self.teardown()
 
