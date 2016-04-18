@@ -99,7 +99,10 @@ class ConnectError(IOError):
     
 class SendError(IOError):
     """Raised when unable to send through a socket."""
-    
+
+class PostAborted(StandardError):
+    """Raised when a post is aborted by the client."""
+
 #==============================================================================
 #                    Abstract base classes
 #==============================================================================
@@ -306,28 +309,39 @@ class RESTThread(threading.Thread):
                 # Process the record, using whatever method the specializing
                 # class provides
                 self.process_record(_record, dbmanager)
+            except PostAborted, e:
+                if self.log_success:
+                    _time_str = timestamp_to_string(_record['dateTime'])
+                    syslog.syslog(syslog.LOG_INFO,
+                                  "restx: %s: Skipped record %s" %
+                                  self.protocol_name, _time_str)
             except BadLogin, e:
                 syslog.syslog(syslog.LOG_ERR, "restx: %s: bad login; "
-                              "waiting 60 minutes then retrying" % self.protocol_name)
+                              "waiting 60 minutes then retrying" %
+                              self.protocol_name)
                 time.sleep(3600)
             except FailedPost, e:
                 if self.log_failure:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    syslog.syslog(syslog.LOG_ERR, "restx: %s: Failed to publish record %s: %s" 
+                    syslog.syslog(syslog.LOG_ERR,
+                                  "restx: %s: Failed to publish record %s: %s" 
                                   % (self.protocol_name, _time_str, e))
             except Exception, e:
                 # Some unknown exception occurred. This is probably a serious
                 # problem. Exit.
-                syslog.syslog(syslog.LOG_CRIT, "restx: %s: Unexpected exception of type %s" % 
+                syslog.syslog(syslog.LOG_CRIT,
+                              "restx: %s: Unexpected exception of type %s" % 
                               (self.protocol_name, type(e)))
                 weeutil.weeutil.log_traceback('*** ', syslog.LOG_DEBUG)
-                syslog.syslog(syslog.LOG_CRIT, "restx: %s: Thread exiting. Reason: %s" % 
+                syslog.syslog(syslog.LOG_CRIT,
+                              "restx: %s: Thread exiting. Reason: %s" % 
                               (self.protocol_name, e))
                 return
             else:
                 if self.log_success:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    syslog.syslog(syslog.LOG_INFO, "restx: %s: Published record %s" % 
+                    syslog.syslog(syslog.LOG_INFO,
+                                  "restx: %s: Published record %s" % 
                                   (self.protocol_name, _time_str))
 
     def process_record(self, record, dbmanager):
@@ -1532,8 +1546,7 @@ class AWEKASThread(RESTThread):
         r = self.get_record(record, dbmanager)
         url = self.get_url(r)
         if self.skip_upload:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: AWEKAS: skipping upload")
-            return
+            raise PostAborted()
         req = urllib2.Request(url)
         req.add_header("User-Agent", "weewx/%s" % weewx.__version__)
         self.post_with_retries(req)
