@@ -1658,3 +1658,6 @@ def get_site_dict(config_dict, service, *args):
     site_dict.pop('enable', None)
     
     return site_dict
+
+# For backward compatibility
+check_enable = get_site_dict
