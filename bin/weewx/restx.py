@@ -1059,6 +1059,7 @@ class CWOPThread(RESTThread):
     def _get_connect(self, server, port):
         """Get a socket connection to a specific server and port."""
 
+        _sock = None
         try:
             _sock = socket.socket()
             _sock.connect((server, port))
@@ -1066,7 +1067,7 @@ class CWOPThread(RESTThread):
             # Unsuccessful. Close it in case it was open:
             try:
                 _sock.close()
-            except:
+            except socket.error:
                 pass
             raise ConnectError(e)
         
