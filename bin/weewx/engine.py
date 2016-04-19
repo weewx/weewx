@@ -734,9 +734,15 @@ class StdReport(StdService):
         self.max_wait    = int(config_dict['StdReport'].get('max_wait', 60))
         self.thread      = None
         self.launch_time = None
+        self.record      = None
         
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         self.bind(weewx.POST_LOOP, self.launch_report_thread)
         
+    def new_archive_record(self, event):
+        """Cache the archive record to pass to the report thread."""
+        self.record = event.record
+    
     def launch_report_thread(self, event):  # @UnusedVariable
         """Called after the packet LOOP. Processes any new data."""
         # Do not launch the reporting thread if an old one is still alive.
@@ -748,6 +754,7 @@ class StdReport(StdService):
         try:
             self.thread = weewx.reportengine.StdReportEngine(self.config_dict,
                                                              self.engine.stn_info,
+                                                             self.record,
                                                              first_run= not self.launch_time) 
             self.thread.start()
             self.launch_time = time.time()
