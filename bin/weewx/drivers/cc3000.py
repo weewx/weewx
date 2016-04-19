@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Copyright 2014 Matthew Wall
-# See the file LICENSE.txt for your full rights.
+# See the file LICENSE.txt for your rights.
 
 """Driver for CC3000 data logger
 
@@ -32,7 +32,7 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'CC3000'
-DRIVER_VERSION = '0.9'
+DRIVER_VERSION = '0.10'
 
 def loader(config_dict, engine):
     return CC3000Driver(**config_dict[DRIVER_NAME])
@@ -43,8 +43,6 @@ def configurator_loader(config_dict):
 def confeditor_loader():
     return CC3000ConfEditor()
 
-
-DEFAULT_PORT = '/dev/ttyS0'
 DEBUG_READ = 0
 DEBUG_CHECKSUM = 0
 DEBUG_OPENCLOSE = 0
@@ -190,29 +188,30 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with a RainWise CC3000 data logger."""
 
     # map rainwise names to weewx names
-    DEFAULT_LABEL_MAP = { 'TIMESTAMP': 'TIMESTAMP',
-                          'TEMP OUT': 'outTemp',
-                          'HUMIDITY': 'outHumidity',
-                          'WIND DIRECTION': 'windDir',
-                          'WIND SPEED': 'windSpeed',
-                          'WIND GUST': 'windGust',
-                          'PRESSURE': 'pressure',
-                          'TEMP IN': 'inTemp',
-                          'RAIN': 'day_rain_total',
-                          'STATION BATTERY': 'consBatteryVoltage',
-                          'BATTERY BACKUP': 'bkupBatteryVoltage',
-                          'SOLAR RADIATION': 'radiation',
-                          'UV INDEX': 'UV',
-                          }
+    DEFAULT_SENSOR_MAP = {
+        'TIMESTAMP': 'TIMESTAMP',
+        'TEMP OUT': 'outTemp',
+        'HUMIDITY': 'outHumidity',
+        'WIND DIRECTION': 'windDir',
+        'WIND SPEED': 'windSpeed',
+        'WIND GUST': 'windGust',
+        'PRESSURE': 'pressure',
+        'TEMP IN': 'inTemp',
+        'RAIN': 'day_rain_total',
+        'STATION BATTERY': 'consBatteryVoltage',
+        'BATTERY BACKUP': 'bkupBatteryVoltage',
+        'SOLAR RADIATION': 'radiation',
+        'UV INDEX': 'UV',
+    }
 
     def __init__(self, **stn_dict):
-        self.port = stn_dict.get('port', DEFAULT_PORT)
+        self.port = stn_dict.get('port', CC3000.DEFAULT_PORT)
         self.polling_interval = float(stn_dict.get('polling_interval', 1))
         self.model = stn_dict.get('model', 'CC3000')
         self.use_station_time = stn_dict.get('use_station_time', True)
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 60))
-        self.label_map = stn_dict.get('label_map', self.DEFAULT_LABEL_MAP)
+        self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_SENSOR_MAP)
 
         self._archive_interval = None
         self.header = None
@@ -419,7 +418,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         for i, v in enumerate(values):
             if i >= len(self.header):
                 continue
-            label = self.label_map.get(self.header[i])
+            label = self.sensor_map.get(self.header[i])
             if label is None:
                 continue
             if label == 'TIMESTAMP':
@@ -478,6 +477,8 @@ def _check_crc(buf):
         raise ChecksumMismatch(a, b, buf)
 
 class CC3000(object):
+    DEFAULT_PORT = '/dev/ttyUSB0'
+
     def __init__(self, port):
         self.port = port
         self.baudrate = 115200
@@ -720,7 +721,7 @@ if __name__ == '__main__':
                       help='test crc')
     parser.add_option('--port', dest='port', metavar='PORT',
                       help='port to which the station is connected',
-                      default=DEFAULT_PORT)
+                      default=CC3000.DEFAULT_PORT)
     parser.add_option('--get-version', dest='getver', action='store_true',
                       help='display firmware version')
     parser.add_option('--get-status', dest='status', action='store_true',
