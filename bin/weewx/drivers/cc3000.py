@@ -29,6 +29,7 @@ import string
 import syslog
 import time
 
+from weeutil import to_bool
 import weewx.drivers
 
 DRIVER_NAME = 'CC3000'
@@ -208,7 +209,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         self.port = stn_dict.get('port', CC3000.DEFAULT_PORT)
         self.polling_interval = float(stn_dict.get('polling_interval', 1))
         self.model = stn_dict.get('model', 'CC3000')
-        self.use_station_time = stn_dict.get('use_station_time', True)
+        self.use_station_time = to_bool(stn_dict.get('use_station_time', True))
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 60))
         self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_SENSOR_MAP)
@@ -686,19 +687,19 @@ class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
     # This section is for RainWise MarkIII weather stations and CC3000 logger.
 
     # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
-    port = /dev/ttyUSB0
+    port = %s
 
     # The station model, e.g., CC3000 or CC3000R
     model = CC3000
 
     # The driver to use:
     driver = weewx.drivers.cc3000
-"""
+""" % (CC3000.DEFAULT_PORT,)
 
     def prompt_for_settings(self):
         print "Specify the serial port on which the station is connected, for"
         print "example /dev/ttyUSB0 or /dev/ttyS0."
-        port = self._prompt('port', '/dev/ttyUSB0')
+        port = self._prompt('port', CC3000.DEFAULT_PORT)
         return {'port': port}
 
 
