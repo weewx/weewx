@@ -119,9 +119,9 @@ class StdWXCalculate(weewx.engine.StdService):
         self.rain_events = []
 
         # report about which values will be calculated...
-        syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following values will be calculated: %s" % ','.join(["%s=%s" % (k, self.calculations[k]) for k in self.calculations]))
+        syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following values will be calculated: %s" % ', '.join(["%s=%s" % (k, self.calculations[k]) for k in self.calculations]))
         # ...and which algorithms will be used.
-        syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following algorithms will be used for calculations: %s" % ','.join(["%s=%s" % (k, self.algorithms[k]) for k in self.algorithms]))
+        syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following algorithms will be used for calculations: %s" % ', '.join(["%s=%s" % (k, self.algorithms[k]) for k in self.algorithms]))
 
         # we will process both loop and archive events
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)

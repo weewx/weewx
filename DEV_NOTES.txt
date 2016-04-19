@@ -81,9 +81,9 @@ create README.txt:
   make readme
 
 how to update the version number:
-  modify __version__ in bin/weewx/__init__.py     # canonical version location
+  perl -pi -e 's/__version__=".*"/__version__="x.y.z"/' bin/weewx/__init__.py
   make version                  # this propagates the version number everywhere
-  svn commit -m "..."           # commit the change to the repository
+  git commit -a -m "bump to version x.y.z"
 
 how to build source package:
   make src-package
@@ -91,13 +91,13 @@ how to build source package:
 how to build debian package:
   make deb-changelog
   emacs pkg/debian/changelog    # add any package-specific changes, if any
-  svn commit -m "update deb changelog"
+  git commit -m "update deb changelog" pkg/debian/changelog
   make deb-package
 
 how to build redhat package:
   make rpm-changelog
   emacs pkg/changelog.rpm       # add any package-specific changes, if any
-  svn commit -m "update rpm changelog"
+  git commit -m "update rpm changelog" pkg/changelog.rpm
   make rpm-package
 
 to display debconf variables:
@@ -134,6 +134,21 @@ redhat install/remove:
   rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
   rpm -e weewx                                    # remove with rpm
 
+create debian repo using aptly:
+  aptly repo create -distribution=squeeze -component=main weewx
+  aptly repo add weewx dist/weewx_3.0.0-1_all.deb
+  aptly snapshot create weewx-3.0.0 from repo weewx
+  aptly -architectures="all" publish snapshot weewx-3.0.0
+
+update debian repo using aptly:
+  aptly repo add weewx dist/weewx_3.0.1-1_all.deb
+  aptly snapshot create weewx-3.0.1 from repo weewx
+  aptly -architectures="all" publish switch squeeze weewx-3.0.1
+
+for clients to use an apt repo at weewx.com:
+  sudo echo "deb [arch=all] http://weewx.com/apt/ squeeze main" > /etc/apt/sources.list.d/weewx.list
+  curl -s http://weewx.com/keys/mwall.gpg.key | sudo apt-key add -
+
 
 notes -------------------------------------------------------------------------
 
@@ -161,6 +176,14 @@ to do debian builds you must first install:
   python-imaging
   python-configobj
   debhelper
+
+to do repo updates you must first install aptly:
+  https://www.aptly.info/download/
+for example, on debian:
+  echo "deb http://repo.aptly.info/ squeeze main" > /etc/apt/sources.list
+  wget -qO - https://www.aptly.info/pubkey.txt | sudo apt-key add -
+  apt-get update
+  apt-get install aptly
 
 
 unit tests --------------------------------------------------------------------

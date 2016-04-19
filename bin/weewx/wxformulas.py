@@ -10,7 +10,7 @@ import math
 import time
 import weewx.uwxutils
 
-INHG_PER_MBAR = 0.0295333727
+INHG_PER_MBAR = 0.0295299830714
 METER_PER_FOOT = 0.3048
 METER_PER_MILE = 1609.34
 MM_PER_INCH = 25.4

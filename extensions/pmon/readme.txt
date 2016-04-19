@@ -11,7 +11,7 @@ Installation instructions:
 
 1) run the installer:
 
-setup.py install --extension extensions/pmon
+wee_extension --install extensions/pmon
 
 2) restart weewx:
 
