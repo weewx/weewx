@@ -89,8 +89,10 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         if con_mode == 'tcp' or con_mode == 'udp':
             port = stn_dict.get(
                 'port', '%s:%d' % (DEFAULT_TCP_ADDR, DEFAULT_TCP_PORT))
-        else:
+        elif con_mode == 'serial':
             port = stn_dict.get('port', DEFAULT_SER_PORT)
+        else:
+            raise ValueError("Invalid driver connection mode %s!" % con_mode)
 
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 10))
