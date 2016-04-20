@@ -1067,7 +1067,7 @@ class CWOPThread(RESTThread):
             # Unsuccessful. Close it in case it was open:
             try:
                 _sock.close()
-            except socket.error:
+            except AttributeError, socket.error:
                 pass
             raise ConnectError(e)
         
