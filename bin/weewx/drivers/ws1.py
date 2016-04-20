@@ -20,11 +20,12 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.24'
+DRIVER_VERSION = '0.25'
 
 
 def loader(config_dict, _):
     return WS1Driver(**config_dict[DRIVER_NAME])
+
 
 def confeditor_loader():
     return WS1ConfEditor()
@@ -44,14 +45,18 @@ DEBUG_READ = 0
 def logmsg(level, msg):
     syslog.syslog(level, 'ws1: %s' % msg)
 
+
 def logdbg(msg):
     logmsg(syslog.LOG_DEBUG, msg)
+
 
 def loginf(msg):
     logmsg(syslog.LOG_INFO, msg)
 
+
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
+
 
 class WS1Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an ADS-WS1 station
@@ -60,7 +65,8 @@ class WS1Driver(weewx.drivers.AbstractDevice):
     [Required. Default is serial]
 
     port - Serial port or network address.
-    [Required. Default is /dev/ttyS0 for serial, and 192.168.36.25:3000 for TCP]
+    [Required. Default is /dev/ttyS0 for serial,
+     and 192.168.36.25:3000 for TCP/IP]
 
     max_tries - how often to retry serial communication before giving up.
     [Optional. Default is 5]
@@ -81,23 +87,29 @@ class WS1Driver(weewx.drivers.AbstractDevice):
 
         con_mode = stn_dict.get('mode', 'serial').lower()
         if con_mode == 'tcp' or con_mode == 'udp':
-            self.port = stn_dict.get(
+            port = stn_dict.get(
                 'port', '%s:%d' % (DEFAULT_TCP_ADDR, DEFAULT_TCP_PORT))
+        elif con_mode == 'serial':
+            port = stn_dict.get('port', DEFAULT_SER_PORT)
         else:
-            self.port = stn_dict.get('port', DEFAULT_SER_PORT)
+            raise ValueError("Invalid driver connection mode %s!" % con_mode)
 
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 10))
-        self.last_rain = None
         timeout = int(stn_dict.get('timeout', 3))
-        loginf('using %s port %s' % (con_mode, self.port))
+
+        self.last_rain = None
+
+        loginf('using %s port %s' % (con_mode, port))
+
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
 
         if con_mode == 'tcp' or con_mode == 'udp':
-            self.station = StationInet(self.port, con_mode, timeout=timeout)
+            self.station = StationSocket(port, con_mode, timeout,
+                                         self.max_tries, self.retry_wait)
         else:
-            self.station = StationSerial(self.port, timeout=timeout)
+            self.station = StationSerial(port, timeout=timeout)
         self.station.open()
 
     def closePort(self):
@@ -176,7 +188,7 @@ class StationData(object):
         # FIXME: for ws1 is the pressure reading 'pressure' or 'barometer'?
         buf = raw[2:]
         data = dict()
-        data['windSpeed'] = StationData._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
+        data['windSpeed'] = StationData._decode(buf[0:4], 0.1 * MILE_PER_KM)  # mph
         data['windDir'] = StationData._decode(buf[6:8], 1.411764)  # compass deg
         data['outTemp'] = StationData._decode(buf[8:12], 0.1, True)  # degree_F
         data['long_term_rain'] = StationData._decode(buf[12:16], 0.01)  # inch
@@ -271,48 +283,66 @@ class StationSerial(object):
 # =========================================================================== #
 
 
-class StationInet(object):
-    def __init__(self, addr, protocol='tcp', timeout=3):
+class StationSocket(object):
+    def __init__(self, addr, protocol='tcp', timeout=3, max_retries=5,
+                 retry_interval=10):
         import socket
+
         ip_addr = None
         ip_port = None
-        self.protocol = protocol
+
+        self.max_retries = max_retries
+        self.retry_interval = retry_interval
+
         if addr.find(':') != -1:
             self.conn_info = addr.split(':')
-            try:
-                self.conn_info[1] = int(self.conn_info[1], 10)
-            except TypeError:
-                self.conn_info[1] = DEFAULT_TCP_PORT
+            self.conn_info[1] = int(self.conn_info[1], 10)
             self.conn_info = tuple(self.conn_info)
         else:
             ip_addr = addr
             ip_port = DEFAULT_TCP_PORT
             self.conn_info = (ip_addr, ip_port)
+
         try:
-            if self.protocol == 'tcp':
+            if protocol == 'tcp':
                 self.net_socket = socket.socket(
                     socket.AF_INET, socket.SOCK_STREAM)
-            elif self.protocol == 'udp':
+            elif protocol == 'udp':
                 self.net_socket = socket.socket(
                     socket.AF_INET, socket.SOCK_DGRAM)
         except (socket.error, socket.herror), ex:
             logerr("Cannot create socket for some reason: %s" % ex)
             raise weewx.WeeWxIOError(ex)
+
         self.net_socket.settimeout(timeout)
         self.rec_start = False
 
     def open(self):
         import socket
+
         logdbg("Connecting to %s:%d." % (self.conn_info[0], self.conn_info[1]))
-        try:
-            self.net_socket.connect(self.conn_info)
-        except (socket.error, socket.timeout, socket.herror), ex:
-            logerr("Cannot connect to %s:%d for some reason: %s" % (
-                self.conn_info[0], self.conn_info[1], ex))
-            raise weewx.WeeWxIOError(ex)
+
+        for conn_attempt in range(self.max_retries):
+            try:
+                if conn_attempt > 1:
+                    logdbg("Retrying connection...")
+                self.net_socket.connect(self.conn_info)
+                break
+            except (socket.error, socket.timeout, socket.herror), ex:
+                logerr("Cannot connect to %s:%d for some reason: %s. "
+                       "%d tries left." % (
+                           self.conn_info[0], self.conn_info[1], ex,
+                           self.max_retries - (conn_attempt + 1)))
+                logdbg("Will retry in %d seconds..." % self.retry_interval)
+                time.sleep(self.retry_interval)
+        else:
+            logerr("Max retries (%d) exceeded for connection." %
+                   self.max_retries)
+            raise weewx.WeeWxIOError()
 
     def close(self):
         import socket
+
         logdbg("Closing connection to %s:%d." %
                (self.conn_info[0], self.conn_info[1]))
         try:
@@ -386,15 +416,7 @@ class StationInet(object):
                 raise weewx.WeeWxIOError(ex)
         if DEBUG_READ >= 2:
             logdbg("buf: %s" % buf)
-        # This code assumes CRLF will be transmitted at the end of each record,
-        # which may not always be the case. See Matthew Wall's comment on
-        # GitHub here:
-        # https://github.com/weewx/weewx/pull/86#issuecomment-166716509
 
-        # try:
-        #     self.net_socket.recv(2, socket.MSG_WAITALL)  # CRLF
-        # except (socket.error, socket.timeout), ex:
-        #     raise weewx.WeeWxIOError(ex)
         buf.strip()
         return buf
 
@@ -406,7 +428,7 @@ class StationInet(object):
                 StationData.validate_string(buf)
                 return buf
             except (weewx.WeeWxIOError), e:
-                loginf("Failed to get data for some reason: %s" % e)
+                logdbg("Failed to get data for some reason: %s" % e)
                 self.rec_start = False
 
                 # NOTE: WeeWx IO Errors may not always occur because of
