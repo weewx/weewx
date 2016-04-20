@@ -26,7 +26,6 @@ DRIVER_VERSION = '0.25'
 def loader(config_dict, _):
     return WS1Driver(**config_dict[DRIVER_NAME])
 
-
 def confeditor_loader():
     return WS1ConfEditor()
 
@@ -45,18 +44,14 @@ DEBUG_READ = 0
 def logmsg(level, msg):
     syslog.syslog(level, 'ws1: %s' % msg)
 
-
 def logdbg(msg):
     logmsg(syslog.LOG_DEBUG, msg)
-
 
 def loginf(msg):
     logmsg(syslog.LOG_INFO, msg)
 
-
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
-
 
 class WS1Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an ADS-WS1 station
@@ -71,7 +66,7 @@ class WS1Driver(weewx.drivers.AbstractDevice):
     max_tries - how often to retry serial communication before giving up.
     [Optional. Default is 5]
 
-    retry_wait - how long to wait, in seconds, before retrying after a failure.
+    wait_before_retry - how long to wait, in seconds, before retrying after a failure.
     [Optional. Default is 10]
 
     timeout - The amount of time, in seconds, before the connection fails if
@@ -92,10 +87,10 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         elif con_mode == 'serial':
             port = stn_dict.get('port', DEFAULT_SER_PORT)
         else:
-            raise ValueError("Invalid driver connection mode %s!" % con_mode)
+            raise ValueError("Invalid driver connection mode %s" % con_mode)
 
         self.max_tries = int(stn_dict.get('max_tries', 5))
-        self.retry_wait = int(stn_dict.get('retry_wait', 10))
+        self.wait_before_retry = float(stn_dict.get('wait_before_retry', 10))
         timeout = int(stn_dict.get('timeout', 3))
 
         self.last_rain = None
@@ -106,8 +101,10 @@ class WS1Driver(weewx.drivers.AbstractDevice):
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
 
         if con_mode == 'tcp' or con_mode == 'udp':
-            self.station = StationSocket(port, con_mode, timeout,
-                                         self.max_tries, self.retry_wait)
+            self.station = StationSocket(port, protocol=con_mode, 
+                                         timeout=timeout,
+                                         max_tries=self.max_tries, 
+                                         wait_before_retry=self.wait_before_retry)
         else:
             self.station = StationSerial(port, timeout=timeout)
         self.station.open()
@@ -126,7 +123,7 @@ class WS1Driver(weewx.drivers.AbstractDevice):
             packet = {'dateTime': int(time.time() + 0.5),
                       'usUnits': weewx.US}
             readings = self.station.get_readings_with_retry(self.max_tries,
-                                                            self.retry_wait)
+                                                            self.wait_before_retry)
             data = StationData.parse_readings(readings)
             packet.update(data)
             self._augment_packet(packet)
@@ -188,7 +185,7 @@ class StationData(object):
         # FIXME: for ws1 is the pressure reading 'pressure' or 'barometer'?
         buf = raw[2:]
         data = dict()
-        data['windSpeed'] = StationData._decode(buf[0:4], 0.1 * MILE_PER_KM)  # mph
+        data['windSpeed'] = StationData._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
         data['windDir'] = StationData._decode(buf[6:8], 1.411764)  # compass deg
         data['outTemp'] = StationData._decode(buf[8:12], 0.1, True)  # degree_F
         data['long_term_rain'] = StationData._decode(buf[12:16], 0.01)  # inch
@@ -260,7 +257,7 @@ class StationSerial(object):
         buf = buf.strip()
         return buf
 
-    def get_readings_with_retry(self, max_tries=5, retry_wait=10):
+    def get_readings_with_retry(self, max_tries=5, wait_before_retry=10):
         import serial
         for ntries in range(0, max_tries):
             try:
@@ -270,7 +267,7 @@ class StationSerial(object):
             except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
                 loginf("Failed attempt %d of %d to get readings: %s" %
                        (ntries + 1, max_tries, e))
-                time.sleep(retry_wait)
+                time.sleep(wait_before_retry)
         else:
             msg = "Max retries (%d) exceeded for readings" % max_tries
             logerr(msg)
@@ -284,15 +281,15 @@ class StationSerial(object):
 
 
 class StationSocket(object):
-    def __init__(self, addr, protocol='tcp', timeout=3, max_retries=5,
-                 retry_interval=10):
+    def __init__(self, addr, protocol='tcp', timeout=3, max_tries=5,
+                 wait_before_retry=10):
         import socket
 
         ip_addr = None
         ip_port = None
 
-        self.max_retries = max_retries
-        self.retry_interval = retry_interval
+        self.max_tries = max_tries
+        self.wait_before_retry = wait_before_retry
 
         if addr.find(':') != -1:
             self.conn_info = addr.split(':')
@@ -322,7 +319,7 @@ class StationSocket(object):
 
         logdbg("Connecting to %s:%d." % (self.conn_info[0], self.conn_info[1]))
 
-        for conn_attempt in range(self.max_retries):
+        for conn_attempt in range(self.max_tries):
             try:
                 if conn_attempt > 1:
                     logdbg("Retrying connection...")
@@ -332,13 +329,13 @@ class StationSocket(object):
                 logerr("Cannot connect to %s:%d for some reason: %s. "
                        "%d tries left." % (
                            self.conn_info[0], self.conn_info[1], ex,
-                           self.max_retries - (conn_attempt + 1)))
-                logdbg("Will retry in %d seconds..." % self.retry_interval)
-                time.sleep(self.retry_interval)
+                           self.max_tries - (conn_attempt + 1)))
+                logdbg("Will retry in %.2f seconds..." % self.wait_before_retry)
+                time.sleep(self.wait_before_retry)
         else:
-            logerr("Max retries (%d) exceeded for connection." %
-                   self.max_retries)
-            raise weewx.WeeWxIOError()
+            logerr("Max tries (%d) exceeded for connection." %
+                   self.max_tries)
+            raise weewx.RetriesExceeded("Max tries exceeding while attempting connection")
 
     def close(self):
         import socket
@@ -348,7 +345,7 @@ class StationSocket(object):
         try:
             self.net_socket.close()
         except (socket.error, socket.herror, socket.timeout), ex:
-            logerr("Cannot close connection to %s:%d for some reason: %s" % (
+            logerr("Cannot close connection to %s:%d. Reason: %s" % (
                 self.conn_info[0], self.conn_info[1], ex))
             raise weewx.WeeWxIOError(ex)
 
@@ -420,7 +417,7 @@ class StationSocket(object):
         buf.strip()
         return buf
 
-    def get_readings_with_retry(self, max_tries=5, retry_wait=10):
+    def get_readings_with_retry(self, max_tries=5, wait_before_retry=10):
         for _ in range(0, max_tries):
             buf = ''
             try:
@@ -428,7 +425,7 @@ class StationSocket(object):
                 StationData.validate_string(buf)
                 return buf
             except (weewx.WeeWxIOError), e:
-                logdbg("Failed to get data for some reason: %s" % e)
+                logdbg("Failed to get data. Reason: %s" % e)
                 self.rec_start = False
 
                 # NOTE: WeeWx IO Errors may not always occur because of
@@ -439,7 +436,7 @@ class StationSocket(object):
                     logdbg("buf: %s (%d bytes), rec_start: %r" %
                            (buf, len(buf), self.rec_start))
 
-                time.sleep(retry_wait)
+                time.sleep(wait_before_retry)
         else:
             msg = "Max retries (%d) exceeded for readings" % max_tries
             logerr(msg)

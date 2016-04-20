@@ -24,6 +24,9 @@ Corrected conversion factor for inHg and mbar in ultimeter driver.
 Plots longer than two years now use an x-axis increment of one year. Thanks to
 user Olivier!
 
+The WS1 driver now retries connection if it fails. Thanks to user 
+Kevin Caccamo! PR #112.
+
 
 3.5.0 03/13/2016
 
