@@ -30,7 +30,7 @@ def confeditor_loader():
     return WS1ConfEditor()
 
 
-INHG_PER_MBAR = 0.0295333727
+INHG_PER_MBAR = 0.0295299830714
 METER_PER_FOOT = 0.3048
 MILE_PER_KM = 0.621371
 
