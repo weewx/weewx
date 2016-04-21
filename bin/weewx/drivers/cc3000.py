@@ -43,6 +43,17 @@ If you request many history records then interrupt the receive, the logger will
 continue to send history records until it sends all that were requested.  As a
 result, any queries made while the logger is still sending will fail.
 
+The rainwise rain bucket measures 0.01 inches per tip.  The logger firmware
+automatically converts the bucket tip count to the measure of rain in ENGLISH
+or METRIC units.
+
+Logger uses the following units:
+               ENGLISH  METRIC
+  wind         mph      m/s
+  rain         inch     mm
+  pressure     inHg     mbar
+  temperature  F        C
+
 This driver was tested with a CC3000 with firmware: 1.3 Build 006 Sep 04 2013
 """
 
@@ -104,11 +115,12 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                           help="display current weather readings")
         parser.add_option("--history", dest="nrecords", type=int, metavar="N",
                           help="display N records (0 for all records)")
-        parser.add_option("--history-since", dest="nminutes",
-                          type=int, metavar="N",
-                          help="display records since N minutes ago")
+        parser.add_option("--history-since", dest="nminutes", metavar="N",
+                          type=int, help="display records since N minutes ago")
         parser.add_option("--clear-memory", dest="clear", action="store_true",
                           help="clear station memory")
+        parser.add_option("--reset-rain", dest="reset", action="store_true",
+                          help="reset the rain counter")
         parser.add_option("--get-clock", dest="getclock", action="store_true",
                           help="display station clock")
         parser.add_option("--set-clock", dest="setclock", action="store_true",
@@ -137,6 +149,8 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                 print r
         elif options.clear:
             self.clear_memory(prompt)
+        elif options.reset:
+            self.reset_rain(prompt)
         elif options.getclock:
             print self.driver.station.get_time()
         elif options.setclock:
@@ -160,6 +174,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             print "interval:", self.driver.station.get_interval()
             print "channel:", self.driver.station.get_channel()
             print "charger:", self.driver.station.get_charger()
+            print "baro:", self.driver.station.get_baro()
         self.driver.closePort()
 
     def clear_memory(self, prompt):
@@ -176,6 +191,21 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                 print self.driver.station.get_memory_status()
             elif ans == 'n':
                 print "Clear memory cancelled."
+
+    def reset_rain(self, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            print self.driver.station.get_rain()
+            if prompt:
+                ans = raw_input("Reset rain counter (y/n)? ")
+            else:
+                print 'Reseting rain counter'
+                ans = 'y'
+            if ans == 'y':
+                self.driver.station.reset_rain()
+                print self.driver.station.get_rain()
+            elif ans == 'n':
+                print "Reset rain cancelled."
 
     def set_interval(self, interval, prompt):
         if interval < 0 or 60 < interval:
@@ -251,7 +281,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
 
     # map rainwise names to database schema names
     DEFAULT_SENSOR_MAP = {
-        'TIMESTAMP': 'TIMESTAMP',
+        'TIMESTAMP': 'dateTime',
         'TEMP OUT': 'outTemp',
         'HUMIDITY': 'outHumidity',
         'WIND DIRECTION': 'windDir',
@@ -259,8 +289,8 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         'WIND GUST': 'windGust',
         'PRESSURE': 'pressure',
         'TEMP IN': 'inTemp',
-        'T1': 'extraTemp1',
-        'T2': 'extraTemp2',
+        'TEMP 1': 'extraTemp1',
+        'TEMP 2': 'extraTemp2',
         'RAIN': 'day_rain_total',
         'STATION BATTERY': 'consBatteryVoltage',
         'BATTERY BACKUP': 'bkupBatteryVoltage',
@@ -281,7 +311,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
         loginf('polling interval is %s seconds' % self.polling_interval)
-        loginf('using %s time' %
+        loginf('using %s time for loop packets' %
                ('station' if self.use_station_time else 'computer'))
 
         self.station = CC3000(self.port)
@@ -317,17 +347,18 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
             try:
                 values = self.station.get_current_data(cmd_mode)
                 ntries = 0
-                data = self._parse_current(
+                logdbg("values: %s" % values)
+                packet = self._parse_current(
                     values, self.header, self.sensor_map)
-                ts = data.get('TIMESTAMP')
-                if ts is not None:
+                logdbg("parsed: %s" % packet)
+                if packet and 'dateTime' in packet:
                     if not self.use_station_time:
-                        ts = int(time.time() + 0.5)
-                    packet = {'dateTime': ts, 'usUnits': self.units}
-                    packet.update(data)
+                        packet['dateTime'] = int(time.time() + 0.5)
+                    packet['usUnits'] = self.units
                     packet['rain'] = self._rain_total_to_delta(
-                        data['day_rain_total'], self.last_rain)
-                    self.last_rain = data['day_rain_total']
+                        packet['day_rain_total'], self.last_rain)
+                    self.last_rain = packet['day_rain_total']
+                    logdbg("packet: %s" % packet)
                     yield packet
                 if self.polling_interval:
                     time.sleep(self.polling_interval)
@@ -373,17 +404,17 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
             if r[0] != 'REC':
                 logdbg("non REC item: %s" % r[0])
                 continue
-            data = self._parse_historical(r[1:], self.header, self.sensor_map)
-            if data['TIMESTAMP'] > since_ts:
-                packet = {'dateTime': data['TIMESTAMP'],
-                          'usUnits': self.units,
-                          'interval': self.arcint}
-                packet.update(data)
+            pkt = self._parse_historical(r[1:], self.header, self.sensor_map)
+            logdbg("parsed: %s" % pkt)
+            if 'dateTime' in pkt and pkt['dateTime'] > since_ts:
+                pkt['usUnits'] = self.units
+                pkt['interval'] = self.arcint
                 # FIXME: is archive rain delta or total?
-                packet['rain'] = self._rain_total_to_delta(
-                    data['day_rain_total'], last_rain)
-                last_rain = data['day_rain_total']
-                yield packet
+                pkt['rain'] = self._rain_total_to_delta(
+                    pkt['day_rain_total'], last_rain)
+                last_rain = pkt['day_rain_total']
+                logdbg("packet: %s" % pkt)
+                yield pkt
 
     @property
     def hardware_name(self):
@@ -415,10 +446,10 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
 
     @staticmethod
     def _init_station(station):
-        settings = dict()
         station.flush()
         station.wakeup()
         station.set_echo()
+        settings = dict()
         settings['arcint'] = 60 * station.get_interval() # arcint is in seconds
         settings['header'] = CC3000Driver._parse_header(station.get_header())
         settings['units'] = station.get_units()
@@ -444,26 +475,37 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
 
     @staticmethod
     def _parse_current(values, header, sensor_map):
-        return CC3000Driver._parse_values(values, "%Y/%m/%d %H:%M:%S")
+        return CC3000Driver._parse_values(values, header, sensor_map,
+                                          "%Y/%m/%d %H:%M:%S")
 
     @staticmethod
     def _parse_historical(values, header, sensor_map):
-        return CC3000Driver._parse_values(values, "%Y/%m/%d %H:%M")
+        return CC3000Driver._parse_values(values, header, sensor_map,
+                                          "%Y/%m/%d %H:%M")
 
     @staticmethod
     def _parse_values(values, header, sensor_map, fmt):
-        data = dict()
-        for i, v in enumerate(values):
-            if i >= len(header):
-                continue
-            label = sensor_map.get(header[i])
-            if label is None:
-                continue
-            if label == 'TIMESTAMP':
-                data[label] = _to_ts(v, fmt)
-            else:
-                data[label] = float(v)
-        return data
+        """parse the values and map them into the schema names.  if there is
+        a failure for any one value, then the entire record fails."""
+        label = ''
+        hdr = ''
+        try:
+            pkt = dict()
+            for i, v in enumerate(values):
+                if i >= len(header):
+                    continue
+                hdr = header[i]
+                label = sensor_map.get(header[i])
+                if label is None:
+                    continue
+                if header[i] == 'TIMESTAMP':
+                    pkt[label] = _to_ts(v, fmt)
+                else:
+                    pkt[label] = float(v)
+            return pkt
+        except ValueError, e:
+            logerr("parse failed for %s (%s): %s" % (hdr, label, e))
+        return dict()
 
     @staticmethod
     def _parse_header(header):
@@ -473,8 +515,6 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                 continue
             h.append(v.replace('"', ''))
         return h
-
-    # accessor methods for the configurator.  these are mostly pass-through.
 
     def get_current(self):
         data = self.station.get_current_data()
@@ -719,6 +759,22 @@ class CC3000(object):
         logdbg("get charger")
         return self.command("CHARGER")
 
+    def get_baro(self):
+        logdbg("get baro")
+        return self.command("BARO")
+
+    def set_baro(self, offset):
+        logdbg("set barometer offset to %d" % offset)
+        if offset != '0':
+            parts = offset.split('.')
+            if (len(parts) != 2 or
+                (not (len(parts[0]) == 2 and len(parts[1]) == 2) and
+                 not (len(parts[0]) == 3 and len(parts[1]) == 1))):
+                raise ValueError("Offset must be 0, XX.XX (inHg), or XXXX.X (mbar)")
+        data = self.command("BARO=%d" % offset)
+        if data != 'OK':
+            raise weewx.WeeWxIOError("Failed to set baro: %s" % _fmt(data))
+
     def get_memory_status(self):
         logdbg("get memory status")
         return self.command("MEM=?")
@@ -728,6 +784,16 @@ class CC3000(object):
         data = self.command("MEM=CLEAR")
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to clear memory: %s" % _fmt(data))
+
+    def get_rain(self):
+        logdbg("get rain total")
+        return self.command("RAIN")
+
+    def reset_rain(self):
+        logdbg("reset rain counter")
+        data = self.command("RAIN=RESET")
+        if data != 'OK':
+            raise weewx.WeeWxIOError("Failed to reset rain: %s" % _fmt(data))
 
     def gen_records(self, nrec=0):
         """generator function for getting nrec records from the device"""
@@ -744,7 +810,7 @@ class CC3000(object):
                     break
                 cmd_cnt += 1
                 qty = nrec - n if nrec else 0 # FIXME
-                logdbg("download attempt %s of %s" % (cmd_cnt, cmd_max))
+                loginf("download attempt %s of %s" % (cmd_cnt, cmd_max))
                 cmd = "DOWNLOAD=%d" % qty if qty else "DOWNLOAD"
                 self.send_cmd(cmd)
                 need_cmd = False
@@ -764,13 +830,13 @@ class CC3000(object):
                     pass
                 elif values[0] == '':
                     # FIXME: this causes 'input overrun' on rpi2 with debian 7
-                    logdbg("download hung, initiate another download")
+                    loginf("download hung, initiate another download")
                     need_cmd = True
                 else:
                     logerr("bad record %s '%s' (%s)" %
                            (n, _fmt(values[0]), _fmt(data)))
             except ChecksumMismatch, e:
-                logerr("record failed: %s" % e)
+                logerr("download failed for record %s: %s" % (n, e))
 
 
 class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
@@ -855,6 +921,8 @@ if __name__ == '__main__':
                       help='set logging interval, in seconds')
     parser.add_option('--clear-memory', dest='clear', action='store_true',
                       help='clear logger memory')
+    parser.add_option('--reset-rain', dest='reset', action='store_true',
+                      help='reset rain counter')
     parser.add_option('--poll', dest='poll', metavar='POLL_INTERVAL', type=int,
                       help='poll interval in seconds')
     (options, args) = parser.parse_args()
@@ -890,6 +958,7 @@ if __name__ == '__main__':
             print "interval:", s.get_interval()
             print "channel:", s.get_channel()
             print "charger:", s.get_charger()
+            print "baro:", s.get_baro()
         if options.getch:
             print s.get_channel()
         if options.getbat:
@@ -923,6 +992,8 @@ if __name__ == '__main__':
             s.set_interval(int(options.setint))
         if options.clear:
             s.clear_memory()
+        if options.reset:
+            s.rest_rain()
         if options.poll is not None:
             poll = int(options.poll)
             cmd_mode = True
