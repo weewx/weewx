@@ -277,7 +277,6 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         self.retry_wait = int(stn_dict.get('retry_wait', 60))
         self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_SENSOR_MAP)
         self.last_rain = None
-        self.last_rain_archive = None
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
@@ -362,6 +361,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         totrec = int(self.station.get_memory_status().split(',')[1].split()[0])
         loginf("download %d of %d records" % (nrec, totrec))
         i = 0
+        last_rain = None
         for r in self.station.gen_records(nrec):
             i += 1
             if i % 100 == 0:
@@ -377,8 +377,8 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                 packet.update(data)
                 # FIXME: is archive rain delta or total?
                 packet['rain'] = self._rain_total_to_delta(
-                    data['day_rain_total'], self.last_rain_archive)
-                self.last_rain_archive = data['day_rain_total']
+                    data['day_rain_total'], last_rain)
+                last_rain = data['day_rain_total']
                 yield packet
 
     @property
