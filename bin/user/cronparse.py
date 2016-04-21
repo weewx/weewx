@@ -8,8 +8,12 @@ HOURS = (0, 23)
 DOM = (1, 31)
 MONTHS = (1, 12)
 DOW = (0, 6)
-# field names
+# field spans
 FIELDS = (MINUTES, HOURS, DOM, MONTHS, DOW)
+# day names
+DAY_NAMES = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
+MONTH_NAMES = ('jan', 'feb', 'mar', 'apr', 'may', 'jun',
+               'jul', 'aug', 'sep', 'oct', 'nov', 'dec')
 # map month names to CRON month number
 MONTH_NAME_MAP = zip(('jan', 'feb', 'mar', 'apr',
                       'may', 'jun', 'jul', 'aug',
@@ -38,8 +42,10 @@ class ReportCron(object):
     - first-last, *. Matches all possible values for the field concerned.
     - step, /x. Matches every xth minute/hour/day etc. May be bounded by a list
       or range.
-    - range, lo-hi. Matches all values from lo to hi inclusive.
+    - range, lo-hi. Matches all values from lo to hi inclusive. Ranges using 
+      month and day names are not supported.
     - lists, x,y,z. Matches those items in the list. List items may be a range.
+      Lists using month and day names are not supported.
     - month names. Months may be specified by number 1..12 or first 3 (case
       insensitive) letters of the English month name jan..dec.
     - weekday names. Weekday names may be specified by number 0..7
@@ -68,6 +74,8 @@ class ReportCron(object):
 
         Processes raw CRON line to produce 5 field CRON line suitable for
         further processing.
+        
+        line:  The raw CRON line to be processed.
         """
 
         self.is_valid = None
@@ -98,19 +106,87 @@ class ReportCron(object):
         # Python code for parsing CRON lines replace all 7's with 0 in dow
         # field
         dow = dow.replace('7', '0')
-        # CRON represents dow as Mon..Sun (case insensitive) or 0..7
-        # where 0 and 7 = Sunday. Need to check for any dow names in dow and
-        # substitute with corresponding dow number.
+        # CRON accepts dow as Mon..Sun (case insensitive) but they cannot be 
+        # used in a range or a list. Check our dom field for ranges or lists 
+        # with day names.
+        if not self.validate_named_field(dow, DOW, DAY_NAMES):
+            self.is_valid = False
+            self.validation_error = "Invalid DOW field '%s' found in CRON line '%s'." % (dow,
+                                                                                         line)
+            return
+        # Now we have a valid dow field simply processing by chnaging any day 
+        # names to the corresponding dow number.
         for dow_name, dow_ord in DAY_NAME_MAP:
             dow = dow.replace(dow_name, str(dow_ord))
-        # CRON represents month as jan..dec (case insensitive) or 1..12
-        # where 1=Jan and 12=Dec. Need to check for any month names in months
-        # and substitute with corresponding month number.
+
+        # CRON accepts abbreviated month names (jan..dec)(case insensitive) in 
+        # the months field but they cannot be used in a range or a list. Check 
+        # the months field for ranges or lists with month names.
+        if not self.validate_named_field(months, MONTHS, MONTH_NAMES):
+            self.is_valid = False
+            self.validation_error = "Invalid month field '%s' found in CRON line '%s'." % (months,
+                                                                                           line)
+            return
+        # Now we have a valid months field replace any month names with the 
+        # corresponding month number.
         for month_name, month_ord in MONTH_NAME_MAP:
             months = months.replace(month_name, str(month_ord))
         self.line = [minutes, hours, dom, months, dow]
         (self.is_valid, self.validation_error) = self.decode()
 
+    def validate_named_field(self, field, span, names, is_range_or_list=False):
+        """Validate a CRON field that permits abbreviated name values.
+        
+        CRON allows abbreviated names for month and day of week fields in the 
+        CRON line. However, abbreviated names are not permitted in lists and 
+        ranges. Returns True if field is valid, False if invalid.
+        
+        field:             A string containing the field to be validated.
+        span:              A two way tuple (lo, hi) containing the lower and 
+                           upper bounds of valid numeric values for the field.
+        names:             A list of valid abbreviated names for the field 
+                           concerned.
+        is_range_or_list:  Is the passed field part of a range or list (used for 
+                           recursive calls when validating a list or field).
+        """
+        if field == '*':  # first-last
+            return True
+        elif field.isdigit():  # a number
+            # but its only valid if in the span range
+            return span[0] <= int(field) <= span[1]
+        elif field.lower() in names:  # an abbreviated name
+            # but it only valid if not used in a range or list
+            return not is_range_or_list
+        elif ',' in field:  # a list
+            # get the first list item and the rest of the list
+            _first, _rest = field.split(',', 1)
+            # is the first item valid
+            _first_valid = self.validate_named_field(_first, span, names, True)
+            # is the rest valid
+            _rest_valid = self.validate_named_field(_rest, span, names, True)
+            # it's only valid if both the first and rest are both valid
+            return _first_valid and _rest_valid
+        elif '/' in field:  # a step
+            # get the 'value' and the step
+            _val, _step = field.split('/', 1)
+            # is the value valid
+            _val_valid = self.validate_named_field(_val, span, names)
+            # if we have a valid value and a numeric step then its valid
+            return _val_valid and _step.isdigit()
+        elif '-' in field:  # we have a range
+            # get the lo and hi values of the range
+            lo, hi = field.split('-', 1)
+            # if lo is a digit and in the span range then the range is valid if
+            # hi is valid
+            if lo.isdigit() and span[0] <= int(lo) <= span[1]:
+                return self.validate_named_field(hi, span, names, True)
+            else:
+                # we have a non-digit in a range which is invalid
+                return False
+        else:
+            # we have something I don't know about so its invalid
+            return False
+    
     def decode(self):
         """Decode each CRON field and store the sets of valid values.
 
@@ -161,13 +237,12 @@ class ReportCron(object):
                 _range = range(int(ts_hi), int(ts_lo), -60)
             # Iterate through each ts in our range. All we need is one ts that
             # triggers the CRON line.
-            dom_match = False
             for _ts in _range:
                 # convert ts to timetuple and extract required data
                 trigger_dt = datetime.datetime.fromtimestamp(_ts)
                 trigger_tt = trigger_dt.timetuple()
                 month, dow, day, hour, minute = (trigger_tt.tm_mon,
-                                                trigger_tt.tm_wday,
+                                                (trigger_tt.tm_wday + 1) % 7,
                                                 trigger_tt.tm_mday,
                                                 trigger_tt.tm_hour,
                                                 trigger_tt.tm_min)
@@ -180,16 +255,18 @@ class ReportCron(object):
                 # Iterate over each field and check if it will prevent
                 # triggering. Remember, we only need a match on either DOM or
                 # DOW but all other fields must match.
-                for period, field, field_name, decode in element_tuple:
+                dom_match = False
+                for period, field, field_span, decode in element_tuple:
                     if period in decode:
                         # we have a match
-                        if field_name == 'DOM':
+                        if field_span == DOM:
                             # we have a match on DOM so set dom_match
                             dom_match = True
                         continue
-                    elif field_name == 'DOW' and dom_match:
-                        # No match but if consider it a match if this field is
-                        # DOW and we already have a DOM match.
+                    elif field_span == DOW and dom_match or field_span == DOM:
+                        # No match but consider it a match if this field is DOW
+                        # and we already have a DOM match. Also, if we didn't 
+                        # match on DOM then continue as we might match on DOW.
                         continue
                     else:
                         # The field will prevent the CRON line from triggerring
@@ -197,9 +274,9 @@ class ReportCron(object):
                         break
                 else:
                     # If we arrived here then all fields match and CRON would
-                    # be triggered so return True.
+                    # be triggered on this ts so return True.
                     return True
-            # If we got here it is becasue we broke out of all inner for loops
+            # If we are here it is becasue we broke out of all inner for loops
             # and the CRON was not triggered so return False.
             return False
         else:
@@ -225,7 +302,11 @@ class ReportCron(object):
             return set(xrange(span[0], span[1] + 1))
         elif field.isdigit():  # just a number
             # just return the field itself as a set
-            return set((int(field), ))
+            if span[0] <= int(field) <= span[1]:
+                return set((int(field), ))
+            else:
+                # invalid field value
+                raise ValueError("Invalid field value '%s'" % field)
         elif ',' in field:  # we have a list
             # get the first list item and the rest of the list
             _first, _rest = field.split(',', 1)
@@ -238,13 +319,18 @@ class ReportCron(object):
         elif '/' in field:  # a step
             # get the value and the step
             _val, _step = field.split('/', 1)
-            # get _val as a set using a recursive call
-            _val_set = self.parse_field(_val, span)
-            # get the set of all possible values using _step
-            _lowest = min(_val_set)
-            _step_set = set([x for x in _val_set if ((x - _lowest) % int(_step) == 0)])
-            # return the intersection of the _val and _step sets
-            return _val_set & _step_set
+            # step is valid if it is numeric
+            if _step.isdigit():
+                # get _val as a set using a recursive call
+                _val_set = self.parse_field(_val, span)
+                # get the set of all possible values using _step
+                _lowest = min(_val_set)
+                _step_set = set([x for x in _val_set if ((x - _lowest) % int(_step) == 0)])
+                # return the intersection of the _val and _step sets
+                return _val_set & _step_set
+            else:
+                # invalid step
+                raise ValueError("Invalid step value '%s'" % field)
         elif '-' in field:  # we have a range
             # get the lo and hi values of the range
             lo, hi = field.split('-', 1)
@@ -257,4 +343,4 @@ class ReportCron(object):
                 raise ValueError("Invalid range specification '%s'" % field)
         else:
             # we have something I don't know how to parse so raise a ValueError
-            raise ValueError("Invalid field '%s'" % field)
+            raise ValueError("Invalid field value '%s'" % field)
