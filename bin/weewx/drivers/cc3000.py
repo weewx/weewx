@@ -109,48 +109,58 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                           help="display records since N minutes ago")
         parser.add_option("--clear-memory", dest="clear", action="store_true",
                           help="clear station memory")
-        parser.add_option("--set-clock", dest="clock", action="store_true",
+        parser.add_option("--get-clock", dest="getclock", action="store_true",
+                          help="display station clock")
+        parser.add_option("--set-clock", dest="setclock", action="store_true",
                           help="set station clock to computer time")
-        parser.add_option("--set-interval", dest="interval",
-                          type=int, metavar="N",
+        parser.add_option("--get-interval", dest="getint", action="store_true",
+                          help="display logger archive interval")
+        parser.add_option("--set-interval", dest="interval", metavar="N",
+                          type=int,
                           help="set logging interval to N minutes (0-60)")
+        parser.add_option("--get-units", dest="getunits", action="store_true",
+                          help="show units of logger")
         parser.add_option("--set-units", dest="units", metavar="UNITS",
                           help="set units to METRIC or ENGLISH")
+        parser.add_option('--get-dst', dest='getdst', action='store_true',
+                          help='display daylight savings settings')
+        parser.add_option('--set-dst', dest='dst',
+                          metavar='mm/dd HH:MM,mm/dd HH:MM,MM',
+                          help='set daylight savings start, end, and amount')
 
     def do_options(self, options, parser, config_dict, prompt):
         self.driver = CC3000Driver(**config_dict[DRIVER_NAME])
-        if options.nrecords is not None:
-            self.show_history(options.nrecords)
-        elif options.current:
-            self.show_current()
-        elif options.clock:
+        if options.current:
+            print self.driver.get_current()
+        elif options.nrecords is not None:
+            for r in self.driver.gen_records(nrecords):
+                print r
+        elif options.clear:
+            self.clear_memory(prompt)
+        elif options.getclock:
+            print self.driver.get_time()
+        elif options.setclock:
             self.set_clock(prompt)
+        elif options.getdst:
+            print self.driver.get_dst()
+        elif options.dst is not None:
+            self.set_dst(options.setdst, prompt)
+        elif options.getint:
+            print self.driver.get_interval()
         elif options.interval is not None:
             self.set_interval(options.interval, prompt)
         elif options.units is not None:
             self.set_units(options.units, prompt)
-        elif options.clear:
-            self.clear_memory(prompt)
         else:
-            self.show_info()
+            print "firmware:", self.driver.get_version()
+            print "time:", self.driver.get_time()
+            print "dst:", self.driver.get_dst()
+            print "units:", self.driver.get_units()
+            print "memory:", self.driver.get_status()
+            print "interval:", self.driver.get_interval()
+            print "channel:", self.driver.get_channel()
+            print "charger:", self.driver.get_charger()
         self.driver.closePort()
-
-    def show_info(self):
-        """Query the station then display the settings."""
-        print "firmware:", self.driver.get_version()
-        print "time:", self.driver.get_time()
-        print "units:", self.driver.get_units()
-        print "memory:", self.driver.get_status()
-        print "interval:", self.driver.get_interval()
-        print "channel:", self.driver.get_channel()
-        print "charger:", self.driver.get_charger()
-
-    def show_history(self, nrecords=0):
-        for r in self.driver.gen_records(nrecords):
-            print r
-
-    def show_current(self):
-        print self.driver.get_current()
 
     def clear_memory(self, prompt):
         ans = None
@@ -168,6 +178,8 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                 print "Clear memory cancelled."
 
     def set_interval(self, interval, prompt):
+        if interval < 0 or 60 < interval:
+            raise ValueError("Logger interval must be 0-60 minutes")
         ans = None
         while ans not in ['y', 'n']:
             print "Interval is", self.driver.get_interval()
@@ -199,6 +211,8 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                 print "Set clock cancelled."
 
     def set_units(self, units, prompt):
+        if units.lower() not in ['metric', 'english']:
+            raise ValueError("Units must be METRIC or ENGLISH")
         ans = None
         while ans not in ['y', 'n']:
             print "Station units is", self.driver.get_units()
@@ -212,6 +226,24 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                 print "Station units is now", self.driver.get_units()
             elif ans == 'n':
                 print "Set units cancelled."
+
+    def set_dst(self, dst, prompt):
+        if dst != '0' and len(dst.split(',')) != 3:
+            raise ValueError("DST must be 0 (disabled) or start, stop, amount "
+                             "with the format mm/dd HH:MM, mm/dd HH:MM, MM")
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Station DST is", self.driver.get_dst()
+            if prompt:
+                ans = raw_input("Set DST to %s (y/n)? " % dst)
+            else:
+                print "Setting station clock to %s" % dst
+                ans = 'y'
+            if ans == 'y':
+                self.driver.set_dst(dst)
+                print "Station clock is now", self.driver.get_dst()
+            elif ans == 'n':
+                print "Set DST cancelled."
 
 
 class CC3000Driver(weewx.drivers.AbstractDevice):
@@ -452,6 +484,12 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
     def set_time(self):
         self.station.set_time()
 
+    def get_dst(self):
+        return self.station.get_dst()
+
+    def set_dst(self, dst):
+        self.station.set_dst(dst)
+
     def get_units(self):
         return self.station.get_units()
 
@@ -530,7 +568,7 @@ class CC3000(object):
     def __init__(self, port):
         self.port = port
         self.baudrate = 115200
-        self.timeout = 3 # seconds
+        self.timeout = 5 # seconds.  clear memory takes 4 seconds.
         self.serial_port = None
 
     def __enter__(self):
@@ -648,11 +686,22 @@ class CC3000(object):
             raise weewx.WeeWxIOError("Failed to set time to %s: %s" %
                                      (s, _fmt(data)))
 
+    def get_dst(self):
+        logdbg("get daylight saving")
+        return self.command("DST=?")
+
+    def set_dst(self, dst):
+        logdbg("set DST to %s" % dst)
+        data = self.command("DST=%s" % dst)
+        if data != 'OK':
+            raise weewx.WeeWxIOError("Failed to set DST to %s: %s" %
+                                     (dst, _fmt(data)))
+
     def get_units(self):
         logdbg("get units")
         return self.command("UNITS=?")
 
-    def set_units(self, units='METRIC'):
+    def set_units(self, units):
         logdbg("set units to %s" % units)
         data = self.command("UNITS=%s" % units)
         if data != 'OK':
@@ -665,8 +714,6 @@ class CC3000(object):
 
     def set_interval(self, interval=5):
         logdbg("set logging interval to %d minutes" % interval)
-        if interval < 0 or 60 < interval:
-            raise ValueError("Logger interval must be 0-60 minutes")
         data = self.command("LOGINT=%d" % interval)
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to set logging interval: %s" %
@@ -813,6 +860,11 @@ if __name__ == '__main__':
                       help='display station time')
     parser.add_option('--set-time', dest='settime', action='store_true',
                       help='set station time to computer time')
+    parser.add_option('--get-dst', dest='getdst', action='store_true',
+                      help='display daylight savings settings')
+    parser.add_option('--set-dst', dest='setdst',
+                      metavar='mm/dd HH:MM,mm/dd HH:MM,MM',
+                      help='set daylight savings start, end, and amount')
     parser.add_option('--get-interval', dest='getint', action='store_true',
                       help='display logging interval, in seconds')
     parser.add_option('--set-interval', dest='setint', metavar='INTERVAL',
@@ -842,13 +894,13 @@ if __name__ == '__main__':
             print s.get_version()
         if options.status:
             print "firmware:", s.get_version()
-            print "time:", s.get_time() # putting time here causes spurious OK
+            print "time:", s.get_time()
+            print "dst:", s.get_dst()
             print "units:", s.get_units()
             print "memory:", s.get_memory_status()
             print "interval:", s.get_interval()
             print "channel:", s.get_channel()
             print "charger:", s.get_charger()
-#            print "time:", s.get_time()
         if options.getch:
             print s.get_channel()
         if options.getbat:
@@ -872,6 +924,10 @@ if __name__ == '__main__':
             print s.get_time()
         if options.settime:
             s.set_time()
+        if options.getdst:
+            print s.get_dst()
+        if options.setdst:
+            s.set_dst(options.setdst)
         if options.getint:
             print s.get_interval()
         if options.setint:
