@@ -307,11 +307,15 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         DEBUG_OPENCLOSE = int(stn_dict.get('debug_openclose', 0))
 
     def genLoopPackets(self):
+        cmd_mode = True
+        if self.polling_interval == 0:
+            self.station.set_auto()
+            cmd_mode = False
         ntries = 0
         while ntries < self.max_tries:
             ntries += 1
             try:
-                values = self.station.get_current_data()
+                values = self.station.get_current_data(cmd_mode)
                 ntries = 0
                 data = self._parse_current(
                     values, self.header, self.sensor_map)
@@ -413,6 +417,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
     def _init_station(station):
         settings = dict()
         station.flush()
+        station.wakeup()
         station.set_echo()
         settings['arcint'] = 60 * station.get_interval() # arcint is in seconds
         settings['header'] = CC3000Driver._parse_header(station.get_header())
@@ -643,6 +648,14 @@ class CC3000(object):
         logdbg("get firmware version")
         return self.command("VERSION")
 
+    # give the station some time to wake up.  when we first hit it with a
+    # command, it often responds with an empty string.  then subsequent
+    # commands get the proper response.  so for a first command, send something
+    # innocuous and wait a bit.  hopefully subsequent commands will then work.
+    def wakeup(self):
+        self.command('ECHO=?')
+        time.sleep(1.0)
+
     def set_echo(self, cmd='ON'):
         logdbg("set echo to %s" % cmd)
         data = self.command('ECHO=%s' % cmd)
@@ -657,8 +670,15 @@ class CC3000(object):
             raise weewx.WeeWxIOError("Expected HDR, got %s" % cols[0])
         return cols
 
-    def get_current_data(self):
-        data = self.command("NOW")
+    def set_auto(self):
+        self.command("AUTO")
+
+    def get_current_data(self, send_now=True):
+        data = ''
+        if send_now:
+            data = self.command("NOW")
+        else:
+            data = self.read()
         if data == 'NO DATA' or data == 'NO DATA RECEIVED':
             loginf("No data from sensors")
             return []
@@ -871,6 +891,8 @@ if __name__ == '__main__':
                       help='set logging interval, in seconds')
     parser.add_option('--clear-memory', dest='clear', action='store_true',
                       help='clear logger memory')
+    parser.add_option('--poll', dest='poll', metavar='POLL_INTERVAL', type=int,
+                      help='poll interval in seconds')
     (options, args) = parser.parse_args()
 
     if options.version:
@@ -890,6 +912,9 @@ if __name__ == '__main__':
         exit(0)
 
     with CC3000(options.port) as s:
+        s.flush()
+        s.wakeup()
+        s.set_echo()
         if options.getver:
             print s.get_version()
         if options.status:
@@ -934,3 +959,12 @@ if __name__ == '__main__':
             s.set_interval(int(options.setint))
         if options.clear:
             s.clear_memory()
+        if options.poll is not None:
+            poll = int(options.poll)
+            cmd_mode = True
+            if poll == 0:
+                cmd_mode = False
+                s.set_auto()
+            while True:
+                print s.get_current_data(cmd_mode)
+                time.sleep(poll)
