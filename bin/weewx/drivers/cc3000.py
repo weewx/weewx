@@ -133,47 +133,47 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
         if options.current:
             print self.driver.get_current()
         elif options.nrecords is not None:
-            for r in self.driver.gen_records(nrecords):
+            for r in self.driver.station.gen_records(nrecords):
                 print r
         elif options.clear:
             self.clear_memory(prompt)
         elif options.getclock:
-            print self.driver.get_time()
+            print self.driver.station.get_time()
         elif options.setclock:
             self.set_clock(prompt)
         elif options.getdst:
-            print self.driver.get_dst()
+            print self.driver.station.get_dst()
         elif options.dst is not None:
             self.set_dst(options.setdst, prompt)
         elif options.getint:
-            print self.driver.get_interval()
+            print self.driver.station.get_interval()
         elif options.interval is not None:
             self.set_interval(options.interval, prompt)
         elif options.units is not None:
             self.set_units(options.units, prompt)
         else:
-            print "firmware:", self.driver.get_version()
-            print "time:", self.driver.get_time()
-            print "dst:", self.driver.get_dst()
-            print "units:", self.driver.get_units()
-            print "memory:", self.driver.get_status()
-            print "interval:", self.driver.get_interval()
-            print "channel:", self.driver.get_channel()
-            print "charger:", self.driver.get_charger()
+            print "firmware:", self.driver.station.get_version()
+            print "time:", self.driver.station.get_time()
+            print "dst:", self.driver.station.get_dst()
+            print "units:", self.driver.station.get_units()
+            print "memory:", self.driver.station.get_memory_status()
+            print "interval:", self.driver.station.get_interval()
+            print "channel:", self.driver.station.get_channel()
+            print "charger:", self.driver.station.get_charger()
         self.driver.closePort()
 
     def clear_memory(self, prompt):
         ans = None
         while ans not in ['y', 'n']:
-            print self.driver.get_status()
+            print self.driver.station.get_memory_status()
             if prompt:
                 ans = raw_input("Clear console memory (y/n)? ")
             else:
                 print 'Clearing console memory'
                 ans = 'y'
             if ans == 'y':
-                self.driver.clear_memory()
-                print self.driver.get_status()
+                self.driver.station.clear_memory()
+                print self.driver.station.get_memory_status()
             elif ans == 'n':
                 print "Clear memory cancelled."
 
@@ -182,22 +182,22 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             raise ValueError("Logger interval must be 0-60 minutes")
         ans = None
         while ans not in ['y', 'n']:
-            print "Interval is", self.driver.get_interval()
+            print "Interval is", self.driver.station.get_interval()
             if prompt:
                 ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
             else:
                 print "Setting interval to %d minutes" % interval
                 ans = 'y'
             if ans == 'y':
-                self.driver.set_interval(interval)
-                print "Interval is now", self.driver.get_interval()
+                self.driver.station.set_interval(interval)
+                print "Interval is now", self.driver.station.get_interval()
             elif ans == 'n':
                 print "Set interval cancelled."
 
     def set_clock(self, prompt):
         ans = None
         while ans not in ['y', 'n']:
-            print "Station clock is", self.driver.get_time()
+            print "Station clock is", self.driver.station.get_time()
             now = datetime.datetime.now()
             if prompt:
                 ans = raw_input("Set station clock to %s (y/n)? " % now)
@@ -205,8 +205,8 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                 print "Setting station clock to %s" % now
                 ans = 'y'
             if ans == 'y':
-                self.driver.set_time()
-                print "Station clock is now", self.driver.get_time()
+                self.driver.station.set_time()
+                print "Station clock is now", self.driver.station.get_time()
             elif ans == 'n':
                 print "Set clock cancelled."
 
@@ -215,15 +215,15 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             raise ValueError("Units must be METRIC or ENGLISH")
         ans = None
         while ans not in ['y', 'n']:
-            print "Station units is", self.driver.get_units()
+            print "Station units is", self.driver.station.get_units()
             if prompt:
                 ans = raw_input("Set station units to %s (y/n)? " % units)
             else:
                 print "Setting station units to %s" % units
                 ans = 'y'
             if ans == 'y':
-                self.driver.set_units(units)
-                print "Station units is now", self.driver.get_units()
+                self.driver.station.set_units(units)
+                print "Station units is now", self.driver.station.get_units()
             elif ans == 'n':
                 print "Set units cancelled."
 
@@ -233,15 +233,15 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                              "with the format mm/dd HH:MM, mm/dd HH:MM, MM")
         ans = None
         while ans not in ['y', 'n']:
-            print "Station DST is", self.driver.get_dst()
+            print "Station DST is", self.driver.station.get_dst()
             if prompt:
                 ans = raw_input("Set DST to %s (y/n)? " % dst)
             else:
                 print "Setting station clock to %s" % dst
                 ans = 'y'
             if ans == 'y':
-                self.driver.set_dst(dst)
-                print "Station clock is now", self.driver.get_dst()
+                self.driver.station.set_dst(dst)
+                print "Station clock is now", self.driver.station.get_dst()
             elif ans == 'n':
                 print "Set DST cancelled."
 
@@ -479,42 +479,6 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
     def get_current(self):
         data = self.station.get_current_data()
         return self._parse_current(data, self.header, self.sensor_map)
-
-    def gen_records(self, nrec):
-        return self.station.gen_records(nrec)
-
-    def get_time(self):
-        return self.station.get_time()
-
-    def set_time(self):
-        self.station.set_time()
-
-    def get_dst(self):
-        return self.station.get_dst()
-
-    def set_dst(self, dst):
-        self.station.set_dst(dst)
-
-    def get_units(self):
-        return self.station.get_units()
-
-    def set_units(self, units):
-        self.station.set_units(units)
-
-    def get_interval(self):
-        return self.station.get_interval()
-
-    def set_interval(self, interval):
-        self.station.set_interval(interval)
-
-    def clear_memory(self):
-        self.station.clear_memory()
-
-    def get_version(self):
-        return self.station.get_version()
-
-    def get_status(self):
-        return self.station.get_memory_status()
 
 
 def _to_ts(tstr, fmt="%Y/%m/%d %H:%M:%S"):
