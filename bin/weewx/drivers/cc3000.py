@@ -398,6 +398,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         i = 0
         last_rain = None
         for r in self.station.gen_records(nrec):
+            logdbg("values: %s" % r)
             i += 1
             if i % 100 == 0:
                 loginf("record %d of %d (total=%d)" % (i, nrec, totrec))
@@ -462,12 +463,11 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         # calculate the rain delta from rain total
         rain_delta = None
         if last_rain is not None:
-            tmp_total = rain_total
-            if tmp_total < last_rain:
+            if rain_total >= last_rain:
+                rain_delta = (rain_total - last_rain)
+            else:
                 loginf("rain counter rollover detected: new=%s last=%s" %
-                       (tmp_total, last_rain))
-                tmp_total += 65536
-            rain_delta = (tmp_total - last_rain)
+                       (rain_total, last_rain))
         else:
             loginf("rain skipped for rain_total=%s: no last rain measurement" %
                    rain_total)
@@ -487,25 +487,23 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
     def _parse_values(values, header, sensor_map, fmt):
         """parse the values and map them into the schema names.  if there is
         a failure for any one value, then the entire record fails."""
-        label = ''
-        hdr = ''
-        try:
-            pkt = dict()
-            for i, v in enumerate(values):
-                if i >= len(header):
-                    continue
-                hdr = header[i]
-                label = sensor_map.get(header[i])
-                if label is None:
-                    continue
+        pkt = dict()
+        for i, v in enumerate(values):
+            if i >= len(header):
+                continue
+            label = sensor_map.get(header[i])
+            if label is None:
+                continue
+            try:
                 if header[i] == 'TIMESTAMP':
                     pkt[label] = _to_ts(v, fmt)
                 else:
                     pkt[label] = float(v)
-            return pkt
-        except ValueError, e:
-            logerr("parse failed for %s (%s): %s" % (hdr, label, e))
-        return dict()
+            except ValueError, e:
+                logerr("parse failed for '%s' '%s': %s (idx=%s %s)" %
+                       (header[i], v, e, i, values))
+                return dict()
+        return pkt
 
     @staticmethod
     def _parse_header(header):
