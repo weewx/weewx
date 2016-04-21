@@ -22,6 +22,16 @@ Corrected the conversion factor between inHg and mbar. Thanks to user Olivier.
 Plots longer than two years now use an x-axis increment of one year. Thanks to
 user Olivier!
 
+Major update to the CC3000 driver:
+ - reading historical records is more robust
+ - added better error handling and reporting
+ - fixed to handle random NULL characters in historical records
+ - fixed rain units
+ - added ability to get data from logger as fast as it will send it
+ - added support for additional temperature sensors T1 and T2
+ - added transmitter channel in station diagnostics
+ - added option to set/get channel
+
 
 3.5.0 03/13/2016
 
