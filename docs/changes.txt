@@ -24,6 +24,20 @@ Corrected conversion factor for inHg and mbar in ultimeter driver.
 Plots longer than two years now use an x-axis increment of one year. Thanks to
 user Olivier!
 
+The WS1 driver now retries connection if it fails. Thanks to user 
+Kevin Caccamo! PR #112.
+
+Major update to the CC3000 driver:
+ - reading historical records is more robust
+ - added better error handling and reporting
+ - fixed to handle random NULL characters in historical records
+ - fixed rain units
+ - added ability to get data from logger as fast as it will send it
+ - added support for additional temperature sensors T1 and T2
+ - added transmitter channel in station diagnostics
+ - added option to set/get channel, baro offset
+ - added option to reset rain counter
+
 
 3.5.0 03/13/2016
 
