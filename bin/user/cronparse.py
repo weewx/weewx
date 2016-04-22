@@ -132,6 +132,10 @@ class ReportCron(object):
         for month_name, month_ord in MONTH_NAME_MAP:
             months = months.replace(month_name, str(month_ord))
         self.line = [minutes, hours, dom, months, dow]
+        # Is DOM restricted ie is DOM not '*'
+        self.dom_restrict = self.line[2] != '*'
+        # Is DOW restricted ie is DOW not '*'
+        self.dow_restrict = self.line[4] != '*'
         (self.is_valid, self.validation_error) = self.decode()
 
     def validate_named_field(self, field, span, names, is_range_or_list=False):
@@ -255,15 +259,20 @@ class ReportCron(object):
                 # Iterate over each field and check if it will prevent
                 # triggering. Remember, we only need a match on either DOM or
                 # DOW but all other fields must match.
-                dom_match = False
+                dom_restricted_match = False
                 for period, field, field_span, decode in element_tuple:
                     if period in decode:
                         # we have a match
                         if field_span == DOM:
-                            # we have a match on DOM so set dom_match
-                            dom_match = True
+                            # we have a match on DOM but we need to know if it 
+                            # was a match on a restricted DOM field
+                            dom_restricted_match = self.dom_restrict
+                        elif field_span == DOW and not self.dow_restrict and not dom_restricted_match:
+                            # we matched on DOW but DOW was '*' and we did not 
+                            # have a restricted DOM match so it does not count
+                            break
                         continue
-                    elif field_span == DOW and dom_match or field_span == DOM:
+                    elif field_span == DOW and dom_restricted_match or field_span == DOM:
                         # No match but consider it a match if this field is DOW
                         # and we already have a DOM match. Also, if we didn't 
                         # match on DOM then continue as we might match on DOW.
