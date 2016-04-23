@@ -259,6 +259,7 @@ class ReportCron(object):
                 # Iterate over each field and check if it will prevent
                 # triggering. Remember, we only need a match on either DOM or
                 # DOW but all other fields must match.
+                dom_match = False
                 dom_restricted_match = False
                 for period, field, field_span, decode in element_tuple:
                     if period in decode:
@@ -266,10 +267,9 @@ class ReportCron(object):
                         if field_span == DOM:
                             # we have a match on DOM but we need to know if it 
                             # was a match on a restricted DOM field
+                            dom_match = True
                             dom_restricted_match = self.dom_restrict
-                        elif field_span == DOW and not self.dow_restrict and not dom_restricted_match:
-                            # we matched on DOW but DOW was '*' and we did not 
-                            # have a restricted DOM match so it does not count
+                        elif field_span == DOW and not(dom_restricted_match or self.dow_restrict or dom_match):
                             break
                         continue
                     elif field_span == DOW and dom_restricted_match or field_span == DOM:
