@@ -199,7 +199,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             if prompt:
                 ans = raw_input("Reset rain counter (y/n)? ")
             else:
-                print 'Reseting rain counter'
+                print 'Resetting rain counter'
                 ans = 'y'
             if ans == 'y':
                 self.driver.station.reset_rain()
