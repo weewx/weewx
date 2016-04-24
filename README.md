@@ -45,7 +45,7 @@
   <li>Oregon Scientific LW300/LW301/LW302;</li>
   <li>Fine Offset WH10xx, WH20xx, and WH30xx series (including Ambient,
     Elecsa, Maplin, Tycon, Watson, and others);</li>
-  <li>Fine Offset WH2600 (Ambient Observer);</li>
+  <li>Fine Offset WH2600, HP1000 (including Ambient Observer);</li>
   <li>LaCrosse WS-23XX and WS-28XX (including TFA);</li>
   <li>Hideki TE923, TE831, TE838, DV928
    (including TFA, Cresta, Honeywell, and others);</li>
@@ -54,8 +54,8 @@
   <li>AcuRite 5-in-1 via USB console or bridge;</li>
   <li>Argent Data Systems WS1;</li>
   <li>KlimaLogg Pro;</li>
-  <li>New Mountain</li>
-  <li>AirMar 150WX</li>
+  <li>New Mountain;</li>
+  <li>AirMar 150WX;</li>
   <li>Meteostick;</li>
   <li>Ventus W820;</li>
   <li>Si1000 radio receiver;</li>
