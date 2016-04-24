@@ -2804,39 +2804,32 @@ class MyXSearch(SearchList):                                                 # 1
     </p>
 
     
-    <h2>Customizing the report generation time</h2>
+    <h2 id="customizing_gen_time">Customizing the report generation time</h2>
     
     <p>Normal <span class="code">weewx</span> operation is to run each report 
         defined in <span class="code">weewx.conf</span> every archive period. 
         Whilst this may suit most situations, there may be occasions when it 
         may be desirable to run a report less frequently than every archive 
-        period. In such cases the <span class="code">weewx</span> report CRON 
-        can be used to control when individual reports are run.
+        period. In such cases the <span class="code">report_timing</span> 
+        option can be used to control when individual reports are run.
     </p>
     
-    <h3>Report CRON</h3>
+    <h3>The <span class="code">report_timing</span> option</h3>
     
-    <p>The <span class="code">weewx</span> report CRON uses a format similar to 
-        the *nix CRON service to specify when a report is to be run. Whilst a 
-        common parameter format is used, the <span class="code">weewx</span> 
-        report CRON is confined completely to <span class="code">weewx</span> 
-        and has no interraction with the system CRON service. The 
-        <span class="code">weewx</span> report CRON uses the 
-        <span class="code">report_cron</span> setting to control when to run a 
-        given report. The <span class="code">report_cron</span> setting may be 
-        set in the <span class="code">[CheetahGenerator]</span> section of 
-        <span class="code">skin.conf</span> or it may be overriden from 
-        <span class="code">weewx.conf</span> (see section 
-        <a href="#Overriding_options_in_skin.conf_from_weewx.conf">Overriding 
-        options in <span class="code">skin.conf</span> from 
-        <span class="code">weewx.conf</span></a> for details on how to do this). 
-        The format for use of the <span class="code">report_cron</span> setting 
-        consists of five space separated parameters as follows:
+    <p>The <span class="code">report_timing</span> option uses a CRON like
+        format to control when a report is to be run. Whilst a CRON like  
+        format is used, the control of <span class="code">weewx</span> report 
+        generation using the <span class="code">report_timing</span> option 
+        is confined completely to <span class="code">weewx</span> and has no 
+        interraction with the system CRON service. 
+        
+    <p>The format for use of the <span class="code">report_timing</span> setting 
+        consists of five, space separated parameters as follows:
     </p>
 
-    <pre class="tty">report_cron = Minutes Hours Day_of_Month Months Day_of_Week</pre>
+    <pre class="tty">report_timing = Minutes Hours Day_of_Month Months Day_of_Week</pre>
     
-    The <span class="code">report_cron</span> parameters are summarised in the 
+    The <span class="code">report_timing</span> parameters are summarised in the 
     following table: 
     
     <table class="indent" summary="Report CRON parameters">
@@ -2876,21 +2869,69 @@ class MyXSearch(SearchList):                                                 # 1
         </tbody>
     </table>
 
-    <h4>Report CRON operation</h4>
+    <p>The <span class="code">report_timing</span> option may only be used in 
+        <span class="code">weewx.conf</span>. When set in the 
+        <span class="code">[StdReport]</span> section of 
+        <span class="code">weewx.conf</span> the option will apply to all reports 
+        listed under <span class="code">[StdReport]</span>. When set under a 
+        report the option will, for the report concerned, override any setting 
+        in <span class="code">[StdReport]</span>. In this manner it is possible 
+        to have different reports run at different times. The following sample 
+        <span class="code">weewx.conf</span> excerpt illustrates this:
+        </p>
         
-    <p>The interpretation of CRON fields and the syntax supported by CRON varies 
-        between operating systems. The <span class="code">weewx</span> report 
-        CRON syntax and interpretation of CRON fields are outlined below.
+        <pre class="tty">
+[StdReport]
+    
+    # Where the skins reside, relative to WEEWX_ROOT
+    SKIN_ROOT = skins
+    
+    # Where the generated reports should go, relative to WEEWX_ROOT
+    HTML_ROOT = public_html
+    
+    # The database binding indicates which data should be used in reports.
+    data_binding = wx_binding
+    
+    # Report timing parameter
+    report_timing = 0 * * * *
+    
+    # Each of the following subsections defines a report that will be run.
+    
+    [[AReport]]
+        skin = SomeSkin
+    
+    [[AnotherReport]]
+        skin = SomeOtherSkin
+        report_timing = */10 * * * *
+        </pre>
+
+    <p>In the above example, the <span class="code">[[AReport]]</span> report 
+        would be generated under under control of the default 
+        <span class="code">0 * * * *</span> setting (on the hour) and the 
+        <span class="code">[[AnotherReport]]</span> report would be generated 
+        under control of the <span class="code">*/10 * * * *</span> setting 
+        (every 10 minutes) which has overriden the default setting.
     </p>
     
-    <p>The <span class="code">weewx</span> report CRON will cause a report to be 
-        run when the minute, hour and month of year fields match the report time, 
-        and at least one of the two day fields (day of month or day of week) 
-        match the report time. This means that non-existent times, such as 
-        "missing hours" during daylight savings changeover, will never match, 
-        causing jobs scheduled during the "missing times" not to be run. 
-        Similarly, times that occur more than once (again, during daylight 
-        savings changeover) will cause matching reports to be run twice.
+    <h4>How <span class="code">report_timing</span> controls reporting</h4>
+        
+    <p>The <span class="code">report_timing</span> option uses a CRON like format 
+        to control when reports are run. The syntax used by weewx to support the 
+        <span class="code">report_timing</span> option is largely the same as 
+        the syntax used to support the *nix CRON service. The syntax used to 
+        support the <span class="code">report_timing</span> option is outlined 
+        below.
+    </p>
+    
+    <p>When the <span class="code">report_timing</span> option is in use 
+        <span class="code">weewx</span> will run a report when the minute, hour 
+        and month of year fields match the report time, and at least one of the 
+        two day fields (day of month or day of week) match the report time. 
+        This means that non-existent times, such as "missing hours" during 
+        daylight savings changeover, will never match, causing jobs scheduled 
+        during the "missing times" not to be run. Similarly, times that occur 
+        more than once (again, during daylight savings changeover) will cause 
+        matching reports to be run twice.
     </p>
     
     <p class="note" style="display:inline-block; width:70%">
@@ -2907,7 +2948,7 @@ class MyXSearch(SearchList):                                                 # 1
         <b>Note</b><br/>The day a report is to be run can be specified by two 
         fields; day of month and/or day of week. The report will be run when 
         either field matches the current time. For example,<br>
-        <span class="code">report_cron = 30 4 1,15 * 5</span><br> would cause 
+        <span class="code">report_timing = 30 4 1,15 * 5</span><br> would cause 
         the report to be run at 4:30am on the 1st and 15th of each month as well 
         as every Friday. 
     </p>
@@ -2922,7 +2963,7 @@ class MyXSearch(SearchList):                                                 # 1
         five minute archive period the following cron_report setting:
     </p>
     
-    <pre class="tty">report_cron = 22 * * * *</pre>
+    <pre class="tty">report_timing = 22 * * * *</pre>
     
     <p>would cause the report to be run during the report cycle occurring at 25 
     minutes past each hour.
@@ -2930,44 +2971,46 @@ class MyXSearch(SearchList):                                                 # 1
     
     <h4>Lists, ranges and steps</h4>
     
-    <p>The <span class="code">weewx</span> report CRON supports lists, ranges 
-    and steps for all CRON fields. Lists, ranges and steps may be used as follows:
+    <p>The <span class="code">report_timing</span> option supports lists, ranges 
+    and steps for all fields. Lists, ranges and steps may be used as follows:
     </p>
     
     <ul>
         <li>Lists. A list is a set of numbers (or ranges) separated by commas, 
         for example 1,2,5,9 or 0-4,8-12. A match with any of the elements of 
-        the list will result in a match for that particular CRON field. If the 
+        the list will result in a match for that particular field. If the 
         examples were applied to the minutes field, and subject to other fields 
-        in the CRON line, the report would be run at minutes 1,2,5 and 9 and 
-        0,1,2,3,4,8,9,10,11 and 12 respectively. Abbreviated month and day names 
-        cannot be used in a list.
+        in the <span class="code">report_timing</span> option, the report would 
+        be run at minutes 1,2,5 and 9 and 0,1,2,3,4,8,9,10,11 and 12 respectively. 
+        Abbreviated month and day names cannot be used in a list.
         </li>
         
         <li>Ranges. Ranges are two numbers separated with a hyphen, for 
         example 8-11. The specified range is inclusive. A match with any of the 
         values included in the range will result in a match for that particular 
-        CRON field. If the example was applied to the hours field, and subject 
-        to other fields in the CRON line, the report would be run at 
-        hours 8,9,10 and 11. A range may be included as an element of a list. 
-        Abbreviated month and day names cannot be used in a range.
+        field. If the example was applied to the hours field, and subject to
+        other fields in the <span class="code">report_timing</span> option, the 
+        report would be run at hours 8,9,10 and 11. A range may be included as 
+        an element of a list. Abbreviated month and day names cannot be used in 
+        a range.
         </li>
         
         <li>Steps. A step can be used in conjunction with a range or asterisk. 
         Following a range with "/<number>" specifies skips of the number's value 
         through the range. For example, 0-12/2 can be used in the hours field 
-        would, subject to other CRON line fields, run the report at 
-        hours 0,2,4,6,8,12. Steps are also permitted after an asterisk. 
-        For example */3 can be used in the hours field to, subject to other 
-        CRON line fields, run the report at hours 0,3,6,9,12,15,18 and 21.
+        would, subject to other fields in the <span class="code">report_timing</span> 
+        option, run the report at hours 0,2,4,6,8,12. Steps are also permitted 
+        after an asterisk. For example */3 can be used in the hours field to, 
+        subject to other fields, run the report at hours 0,3,6,9,12,15,18 and 
+        21.
     </ul>
     
     <h4>Nicknames</h4>
     
-    <p>The <span class="code">weewx</span> report CRON supports a number of time 
-        specification 'nicknames'. These nicknames are prefixed by the '@' 
+    <p>The <span class="code">report_timing</span> option supports a number of 
+        time specification 'nicknames'. These nicknames are prefixed by the '@' 
         character and replace the five time and date fields in the 
-        <span class="code">report_cron</span> setting. The nicknames supported 
+        <span class="code">report_timing</span> option. The nicknames supported 
         are:
     </p>
 
@@ -2975,7 +3018,7 @@ class MyXSearch(SearchList):                                                 # 1
         <tbody>
         <tr class="first_row">
             <td>Nickname</td>
-            <td>Effective report_cron setting</td>
+            <td>Effective <span class="code">report_timing</span> setting</td>
             <td>Report will be run</td>
         </tr>
         <tr>
@@ -3006,19 +3049,19 @@ class MyXSearch(SearchList):                                                 # 1
         </tbody>
     </table>
     
-    <h4>Report CRON examples</h4>
+    <h4><span class="code">report_timing</span> option examples</h4>
     
-    <p>CRON settings can be at times difficult to understand due to the complex 
+    <p>CRON like settings can be at times difficult to understand due to the complex 
         combinations of paramters. To aid in understanding the 
-        <span class="code">weewx</span> report CRON settings the following table 
-        shows a number of example report_cron settings and the report times that 
-        would cause a report to be run. 
+        <span class="code">report_timing</span> option settings the following table 
+        shows a number of example <span class="code">report_timing</span> options
+        and the report times that would cause a report to be run. 
     </p>
     
-    <table class="indent" summary="Report CRON examples">
+    <table class="indent" summary="report_timing examples">
         <tbody>
         <tr class="first_row">
-            <td>report_cron Setting</td>
+            <td><span class="code">report_timing</span> Setting</td>
             <td>Report will be run</td>
         </tr>
         <tr>
@@ -3083,12 +3126,15 @@ class MyXSearch(SearchList):                                                 # 1
         </tr>
         <tr>
             <td class="code first_col">@monthly</td>
-            <td>midnight on the 1st of the month.</td>
+            <td>Midnight on the 1st of the month.</td>
         </tr>
         </tbody>
     </table>
     
+    <h3>The <span class="code">wee_reports</span> tool and the <span class="code">report_timing</span> option</h3>
     
+    <p>The <a href="#wee_reports">wee_reports</a> tool allows weewx reports to be run independently of the main weewx program. Reports are run using the time of the last record in the archive database as the "Current" time (the default) or optionally using a unix epoch timestamp command line argument as the "Current" time. Given the one off report and variable time nature of the <a href="#wee_reports">wee_reports</a> tool the <span class="code">report_timing</span> option is ignored when using the <a href="#wee_reports">wee_reports</a> tool.
+        
     <h1 id="standard_skin">The Standard <span class="code">skin.conf</span></h1>
 
     <p>This section is a reference to the options appearing in the skin
