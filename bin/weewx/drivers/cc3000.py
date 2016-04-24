@@ -355,9 +355,12 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                     if not self.use_station_time:
                         packet['dateTime'] = int(time.time() + 0.5)
                     packet['usUnits'] = self.units
-                    packet['rain'] = self._rain_total_to_delta(
-                        packet['day_rain_total'], self.last_rain)
-                    self.last_rain = packet['day_rain_total']
+                    if 'day_rain_total' in packet:
+                        packet['rain'] = self._rain_total_to_delta(
+                            packet['day_rain_total'], self.last_rain)
+                        self.last_rain = packet['day_rain_total']
+                    else:
+                        loginf("no rain in loop values: %s" % values)
                     logdbg("packet: %s" % packet)
                     yield packet
                 if self.polling_interval:
@@ -411,9 +414,12 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                 pkt['usUnits'] = self.units
                 pkt['interval'] = self.arcint
                 # FIXME: is archive rain delta or total?
-                pkt['rain'] = self._rain_total_to_delta(
-                    pkt['day_rain_total'], last_rain)
-                last_rain = pkt['day_rain_total']
+                if 'day_rain_total' in pkt:
+                    pkt['rain'] = self._rain_total_to_delta(
+                        pkt['day_rain_total'], last_rain)
+                    last_rain = pkt['day_rain_total']
+                else:
+                    loginf("no rain in record: %s" % r)
                 logdbg("packet: %s" % pkt)
                 yield pkt
 
@@ -500,7 +506,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                 else:
                     pkt[label] = float(v)
             except ValueError, e:
-                logerr("parse failed for '%s' '%s': %s (idx=%s %s)" %
+                logerr("parse failed for '%s' '%s': %s (idx=%s values=%s)" %
                        (header[i], v, e, i, values))
                 return dict()
         return pkt
