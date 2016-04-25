@@ -963,6 +963,7 @@ if __name__ == '__main__':
             print "channel:", s.get_channel()
             print "charger:", s.get_charger()
             print "baro:", s.get_baro()
+            print "rain:", s.get_rain()
         if options.getch:
             print s.get_channel()
         if options.getbat:
@@ -997,7 +998,7 @@ if __name__ == '__main__':
         if options.clear:
             s.clear_memory()
         if options.reset:
-            s.rest_rain()
+            s.reset_rain()
         if options.poll is not None:
             poll = int(options.poll)
             cmd_mode = True
