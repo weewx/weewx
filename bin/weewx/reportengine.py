@@ -154,47 +154,45 @@ class StdReportEngine(threading.Thread):
                         if cron.is_triggered(_ts, _ts - _interval) is False:
                             # report CRON was valid but not triggered so do not run
                             # the report.
-                            _run_report = False
-                            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Report %s skipped due to report CRON settings" %
+                            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Report %s skipped due to report_timing setting" %
                                           (report, ))
+                            continue
                     else:
-                        syslog.syslog(syslog.LOG_DEBUG, "reportengine: Invalid report CRON specification ignored, report '%s' will be run: %s" %
-                                      (report, cron.validation_error))
+                        syslog.syslog(syslog.LOG_DEBUG, "reportengine: Invalid report_timing setting for report '%s', running report anyway" % report)
+                        syslog.syslog(syslog.LOG_DEBUG, "        ****  %s" % cron.validation_error)
                     
-            # Run the report unless report CRON said no.
-            if _run_report:
-                for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
+            for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
 
-                    try:
-                        # Instantiate an instance of the class.
-                        obj = weeutil.weeutil._get_object(generator)(self.config_dict, 
-                                                                     skin_dict, 
-                                                                     self.gen_ts, 
-                                                                     self.first_run,
-                                                                     self.stn_info)
-                    except Exception, e:
-                        syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
-                        syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
-                        weeutil.weeutil.log_traceback("        ****  ")
-                        syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
-                        traceback.print_exc()
-                        continue
-        
-                    try:
-                        # Call its start() method
-                        obj.start()
-                        
-                    except Exception, e:
-                        # Caught unrecoverable error. Log it, continue on to the next generator.
-                        syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % (generator,))
-                        syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % str(e))
-                        weeutil.weeutil.log_traceback("        ****  ")
-                        syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated...")
-                        traceback.print_exc()
-                        continue
-                        
-                    finally:
-                        obj.finalize()
+                try:
+                    # Instantiate an instance of the class.
+                    obj = weeutil.weeutil._get_object(generator)(self.config_dict, 
+                                                                 skin_dict, 
+                                                                 self.gen_ts, 
+                                                                 self.first_run,
+                                                                 self.stn_info)
+                except Exception, e:
+                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                    weeutil.weeutil.log_traceback("        ****  ")
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
+                    traceback.print_exc()
+                    continue
+    
+                try:
+                    # Call its start() method
+                    obj.start()
+                    
+                except Exception, e:
+                    # Caught unrecoverable error. Log it, continue on to the next generator.
+                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % (generator,))
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % str(e))
+                    weeutil.weeutil.log_traceback("        ****  ")
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated...")
+                    traceback.print_exc()
+                    continue
+                    
+                finally:
+                    obj.finalize()
         
 #===============================================================================
 #                    Class ReportGenerator
