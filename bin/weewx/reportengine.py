@@ -129,8 +129,7 @@ class StdReportEngine(threading.Thread):
             skin_dict['REPORT_NAME'] = report
             
             # Default action is to run the report. Only reason to not run it is 
-            # if we have a valid report CRON but it dod not trigger.
-            _run_report = True
+            # if we have a valid report report_timing and it did not trigger.
             if self.record is not None:
                 # StdReport called us not wee_reports so look for a report_cron 
                 # entry if we have one.
