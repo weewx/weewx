@@ -357,7 +357,7 @@ class RESTThread(threading.Thread):
         
         This version uses HTTP GETs to do the post, which should work for many
         protocols, but it can always be replaced by a specializing class."""
-        
+
         # Get the full record by querying the database ...
         _full_record = self.get_record(record, dbmanager)
         # ... convert to US if necessary ...
@@ -400,24 +400,37 @@ class RESTThread(threading.Thread):
                     self.check_response(_response)
                     # Does not seem to be an error. We're done.
                     return
-                else:
-                    # We got a bad response code. Log it and try again.
-                    syslog.syslog(
-                        syslog.LOG_DEBUG,
-                        "restx: %s: Failed upload attempt %d: Code %s" % 
-                        (self.protocol_name, _count + 1, _response.code))
+                # We got a bad response code. By default, log it and try again.
+                # Provide method for derived classes to behave otherwise if
+                # necessary.
+                self.handle_code(_response.code, _count+1)
             except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
-                # An exception was thrown. Log it and go around for another try
-                syslog.syslog(
-                    syslog.LOG_DEBUG,
-                    "restx: %s: Failed upload attempt %d: Exception %s" % 
-                    (self.protocol_name, _count + 1, e))
+                # An exception was thrown. By default, log it and try again.
+                # Provide method for derived classes to behave otherwise if
+                # necessary.
+                self.handle_exception(e, _count+1)
             time.sleep(self.retry_wait)
         else:
             # This is executed only if the loop terminates normally, meaning
             # the upload failed max_tries times. Raise an exception. Caller
             # can decide what to do with it.
-            raise FailedPost("Failed upload after %d tries" % self.max_tries)
+            raise FailedPost("Failed upload after %d tries" % (self.max_tries,))
+
+    def check_response(self, response):
+        """Check the response from a HTTP post. This version does nothing."""
+        pass
+
+    def handle_code(self, code, count):
+        """Check code from HTTP post.  This simply logs the response."""
+        syslog.syslog(syslog.LOG_DEBUG,
+                      "restx: %s: Failed upload attempt %d: Code %s" % 
+                      (self.protocol_name, count, code))
+
+    def handle_exception(self, e, count):
+        """Check exception from HTTP post.  This simply logs the exception."""
+        syslog.syslog(syslog.LOG_DEBUG,
+                      "restx: %s: Failed upload attempt %d: %s" % 
+                      (self.protocol_name, count, e))
 
     def post_request(self, request, payload=None):
         """Post a request object. This version does not catch any HTTP
@@ -440,10 +453,6 @@ class RESTThread(threading.Thread):
             # Must be Python 2.5 or early. Use a simple, unadorned request
             _response = urllib2.urlopen(request, data=payload)
         return _response
-
-    def check_response(self, response):
-        """Check the response from a HTTP post. This version does nothing."""
-        pass
     
     def skip_this_post(self, time_ts):
         """Check whether the post is current"""

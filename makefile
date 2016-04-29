@@ -12,7 +12,7 @@ RELDIR=weewx.com:/downloads/development_versions/
 DOCDST=weewx.com:/
 
 # extract version to be used in package controls and labels
-VERSION=$(shell grep __version__ bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
+VERSION=$(shell grep "__version__.*=" bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
 
 CWD = $(shell pwd)
 BLDDIR=build

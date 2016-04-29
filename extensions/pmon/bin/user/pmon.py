@@ -42,7 +42,7 @@ import weedb
 import weeutil.weeutil
 from weewx.engine import StdService
 
-VERSION = "0.3"
+VERSION = "0.4"
 
 def logmsg(level, msg):
     syslog.syslog(level, 'pmon: %s' % msg)
@@ -173,7 +173,11 @@ if __name__ == "__main__":
             'pmon_sqlite': {
                 'database_name': 'pmon.sdb',
                 'database_type': 'SQLite'}},
-        'Engines': {
+        'DatabaseTypes': {
+            'SQLite': {
+                'driver': 'weedb.sqlite',
+                'SQLITE_ROOT': '/var/tmp'}},
+        'Engine': {
             'Services': {
                 'process_services': 'user.pmon.ProcessMonitor'}}}
     eng = StdEngine(config)
@@ -189,9 +193,9 @@ if __name__ == "__main__":
     print rec
 
     time.sleep(5)
-    lastts = now_ts
+    lastts = nowts
     nowts = int(time.time())
     rec = svc.get_data(nowts, lastts)
     print rec
 
-    os.remove('/tmp/pmon.sdb')
+    os.remove('/var/tmp/pmon.sdb')

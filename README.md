@@ -11,27 +11,54 @@
   users worldwide!
 </p>
 
-<p>Support for many online services, including:</p>
+<p>Support for many online weather services, including:</p>
 <ul>
   <li>The Weather Underground</li>
   <li>CWOP</li>
   <li>PWSweather</li>
   <li>WOW</li>
   <li>AWEKAS</li>
+  <li>Open Weathermap</li>
+  <li>WeatherBug</li>
+  <li>Weather Cloud</li>
+  <li>Wetter</li>
+  <li>Windfinder</li>
+</ul>
+
+<p>Support for many data aggregation services, including:</p>
+<ul>
+  <li>EmonCMS</li>
+  <li>Graphite</li>
+  <li>InfluxDB</li>
+  <li>MQTT</li>
+  <li>Smart Energy Groups</li>
+  <li>Thingspeak</li>
+  <li>Twitter</li>
+  <li>Xively</li>
 </ul>
 
 <p>Support for over 50 types of hardware including, but not limited to:</p>
 <ul>
   <li>Davis Vantage;</li>
-  <li>Oregon Scientific WMR100, WMR200, WMR9x8, and other variants;</li>
+  <li>Oregon Scientific WMR100, WMR200, WMR300, WMR9x8,
+    and other variants;</li>
+  <li>Oregon Scientific LW300/LW301/LW302;</li>
   <li>Fine Offset WH10xx, WH20xx, and WH30xx series (including Ambient,
     Elecsa, Maplin, Tycon, Watson, and others);</li>
+  <li>Fine Offset WH2600, HP1000 (including Ambient Observer);</li>
   <li>LaCrosse WS-23XX and WS-28XX (including TFA);</li>
-  <li>Hideki TE923 (including TFA, Cresta, Honeywell, and others);</li>
+  <li>Hideki TE923, TE831, TE838, DV928
+   (including TFA, Cresta, Honeywell, and others);</li>
   <li>PeetBros Ultimeter;</li>
   <li>RainWise CC3000 and MKIII;</li>
   <li>AcuRite 5-in-1 via USB console or bridge;</li>
+  <li>Argent Data Systems WS1;</li>
   <li>KlimaLogg Pro;</li>
+  <li>New Mountain;</li>
+  <li>AirMar 150WX;</li>
+  <li>Meteostick;</li>
+  <li>Ventus W820;</li>
+  <li>Si1000 radio receiver;</li>
   <li>One-wire (including Inspeed, ADS, AAG, Hobby-Boards).</li>
 </ul>
 
