@@ -408,6 +408,7 @@ schema, plus additional fields.  To use the default mapping with the wview
 schema, these are the additional fields that must be added to the schema:
 
           ('extraTemp4',           'REAL'),
+          ('extraHumid2',          'REAL'),
           ('extraHumid3',          'REAL'),
           ('extraHumid4',          'REAL'),
           ('extraBatteryStatus1',  'REAL'),
@@ -477,7 +478,7 @@ DEFAULT_OBSERVATION_MAP = {
     'bat_2': 'extraBatteryStatus1',
     'link_2': 'extraLinkStatus1',
     't_3': 'extraTemp2',
-    'h_3': 'extraHumid3',
+    'h_3': 'extraHumid2',
     'bat_3': 'extraBatteryStatus2',
     'link_3': 'extraLinkStatus2',
     't_4': 'extraTemp3',
