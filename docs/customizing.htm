@@ -2809,9 +2809,10 @@ class MyXSearch(SearchList):                                                 # 1
     <p>Normal <span class="code">weewx</span> operation is to run each report 
         defined in <span class="code">weewx.conf</span> every archive period. 
         Whilst this may suit most situations, there may be occasions when it 
-        may be desirable to run a report less frequently than every archive 
-        period. In such cases the <span class="code">report_timing</span> 
-        option can be used to control when individual reports are run.
+        is desirable to run a report less frequently than every archive period.
+        For example, to FTP files less frequently than data is archived. In
+        such cases the <span class="code">report_timing</span> option can be
+        used to control when individual reports are run.
     </p>
     
     <h3>The <span class="code">report_timing</span> option</h3>
@@ -2823,8 +2824,8 @@ class MyXSearch(SearchList):                                                 # 1
         is confined completely to <span class="code">weewx</span> and has no 
         interraction with the system CRON service. 
         
-    <p>The format for use of the <span class="code">report_timing</span> setting 
-        consists of five, space separated parameters as follows:
+    <p>The <span class="code">report_timing</span> option consists of five, 
+        space separated parameters as follows:
     </p>
 
     <pre class="tty">report_timing = Minutes Hours Day_of_Month Months Day_of_Week</pre>
@@ -2846,25 +2847,25 @@ class MyXSearch(SearchList):                                                 # 1
         </tr>
         <tr>
             <td class="code first_col">Hours</td>
-            <td>Specifies the hours values when the report will be run</td>
-            <td>*<br>numbers in the range 0..23 inclusive</td>
+            <td>Specifies the hour values when the report will be run</td>
+            <td>*, or<br>numbers in the range 0..23 inclusive</td>
         </tr>
         <tr>
             <td class="code first_col">Day of Month</td>
             <td>Specifies the days of the month when the report will be run</td>
-            <td>*<br>numbers in the range 1..31 inclusive</td>
+            <td>*, or<br>numbers in the range 1..31 inclusive</td>
         </tr>
         <tr>
             <td class="code first_col">Months</td>
             <td>Specifies the months when the report will be run</td>
-            <td>*<br>numbers in the range 1..12 inclusive<br>abbreviated names 
+            <td>*,<br>numbers in the range 1..12 inclusive, or<br>abbreviated names 
             in the range jan..dec inclusive</td>
         </tr>
         <tr>
             <td class="code first_col">Day of Week</td>
             <td>Specifies the days of the week when the report will be run</td>
-            <td>*<br>numbers in the range 0..7 inclusive(0,7 = Sunday, 1 = 
-            Monday etc)<br>abbreviated names in the range sun..sat inclusive</td>
+            <td>*,<br>numbers in the range 0..7 inclusive(0,7 = Sunday, 1 = 
+            Monday etc), or<br>abbreviated names in the range sun..sat inclusive</td>
         </tr>
         </tbody>
     </table>
@@ -2902,65 +2903,78 @@ class MyXSearch(SearchList):                                                 # 1
     
     [[AnotherReport]]
         skin = SomeOtherSkin
-        report_timing = */10 * * * *
-        </pre>
+        report_timing = */10 * * * *</pre>
 
-    <p>In the above example, the <span class="code">[[AReport]]</span> report 
-        would be generated under under control of the default 
-        <span class="code">0 * * * *</span> setting (on the hour) and the 
+    <p>In the above case, the <span class="code">[[AReport]]</span> report 
+        would be generated under under control of the 
+        <span class="code">0 * * * *</span> setting (on the hour) under 
+        <span class="code">[StdReport]</span> and the 
         <span class="code">[[AnotherReport]]</span> report would be generated 
         under control of the <span class="code">*/10 * * * *</span> setting 
-        (every 10 minutes) which has overriden the default setting.
+        (every 10 minutes) which has overriden the 
+        <span class="code">[StdReport]</span> setting.
     </p>
     
     <h4>How <span class="code">report_timing</span> controls reporting</h4>
         
     <p>The <span class="code">report_timing</span> option uses a CRON like format 
-        to control when reports are run. The syntax used by weewx to support the 
-        <span class="code">report_timing</span> option is largely the same as 
-        the syntax used to support the *nix CRON service. The syntax used to 
-        support the <span class="code">report_timing</span> option is outlined 
-        below.
+        to control when reports are run. The syntax and interpretation of the 
+        <span class="code">report_timing</span> parameters used by weewx is 
+        largely the same as the syntax and interpretation used to support the 
+        *nix CRON service. The syntax and interpretation used to support the 
+        <span class="code">report_timing</span> option is outlined below.
     </p>
     
     <p>When the <span class="code">report_timing</span> option is in use 
         <span class="code">weewx</span> will run a report when the minute, hour 
-        and month of year fields match the report time, and at least one of the 
-        two day fields (day of month or day of week) match the report time. 
+        and month of year parameters match the report time, and at least one of 
+        the two day parameters (day of month or day of week) match the report time. 
         This means that non-existent times, such as "missing hours" during 
-        daylight savings changeover, will never match, causing jobs scheduled 
+        daylight savings changeover, will never match, causing reports scheduled 
         during the "missing times" not to be run. Similarly, times that occur 
         more than once (again, during daylight savings changeover) will cause 
-        matching reports to be run twice.
+        matching reports to be run more than once.
     </p>
     
     <p class="note" style="display:inline-block; width:70%">
         <b>Note</b><br/>Report time does not refer to the time at which the 
         report is run, but rather the date and time of the latest data the report 
-        is based upon. For normal <span class="code">weewx</span> operation, the 
-        report time aligns with the <span class="code">dateTime</span> of the 
-        most recent archive record. When reports are run using the 
-        <span class="code">wee_reports</span> utility, the report time is either 
-        the dateTime of most recent archive record (this is the default) or the 
-        optional timestamp command line argument.
-    </p>
-    <p class="note" style="display:inline-block; width:70%">
-        <b>Note</b><br/>The day a report is to be run can be specified by two 
-        fields; day of month and/or day of week. The report will be run when 
-        either field matches the current time. For example,<br>
-        <span class="code">report_timing = 30 4 1,15 * 5</span><br> would cause 
-        the report to be run at 4:30am on the 1st and 15th of each month as well 
-        as every Friday. 
+        is based upon. If you like it is the effective date and time of the report. 
+        For normal <span class="code">weewx</span> operation, the report time 
+        aligns with the <span class="code">dateTime</span> of the most recent 
+        archive record. When reports are run using the 
+        <span class="code">wee_reports</span> tool, the report time is either 
+        the <span class="code">dateTime</span> of the most recent archive record 
+        (this is the default) or the optional timestamp command line argument.
     </p>
     
-    <p>During normal operation <span class="code">weewx</span> reports are run 
-        every archive period which could be every one minute, every five minutes 
-        or some other user defined period. Because CRON settings have a resolution
-        of one minute, the <span class="code">weewx</span> report CRON will check 
-        each minute from the current report time back until the previous report 
-        time for a match. If any of these times result in a match the report will 
-        be run. For example, on a <span class="code">weewx</span> system with a 
-        five minute archive period the following cron_report setting:
+    <p class="note" style="display:inline-block; width:70%">
+        <b>Note</b><br/>The day a report is to be run can be specified by two 
+        parameters; day of month and/or day of week. If both parameters 
+        are restricted (ie not an asterisk), the report will be run when either
+        field matches the current time. For example,<br>
+        <span class="code">report_timing = 30 4 1,15 * 5</span><br> would cause 
+        the report to be run at 4:30am on the 1st and 15th of each month as well 
+        as 4:30am every Friday. 
+    </p>
+    
+    <h4>The relationship between <span class="code">report_timing</span> and archive period</h4>
+    
+    <p>A traditional CRON service has a resolution of one minute, meaning that 
+    the CRON service checks each minute as to whether to execute any commands. 
+    On the other hand, the <span class="code">weewx</span> report system checks 
+    which reports are to be run once per archive period where the archive period 
+    may be one minute, five minutes or some other user defined period. 
+    Consequently, the <span class="code">report_timing</span> option may specify 
+    a report to be run at some time that does not align with the 
+    <span class="code">weewx</span> archive period. In cases where the 
+    <span class="code">weewx</span> archive period is greater than one minute, 
+    and provided a <span class="code">report_timing</span> option is set, 
+    <span class="code">weewx</span> will check each minute boundary from the 
+    current report time back until the report time of the previous report cycle.
+    If a match is found on <b>any</b> of these times the report will be run. For 
+    example, on a <span class="code">weewx</span> system with a <b>five minute</b> 
+    archive period the following <span class="code">report_timing</span> setting:
     </p>
     
     <pre class="tty">report_timing = 22 * * * *</pre>
@@ -2972,44 +2986,46 @@ class MyXSearch(SearchList):                                                 # 1
     <h4>Lists, ranges and steps</h4>
     
     <p>The <span class="code">report_timing</span> option supports lists, ranges 
-    and steps for all fields. Lists, ranges and steps may be used as follows:
+    and steps for all parameters. Lists, ranges and steps may be used as follows:
     </p>
     
     <ul>
         <li>Lists. A list is a set of numbers (or ranges) separated by commas, 
         for example 1,2,5,9 or 0-4,8-12. A match with any of the elements of 
-        the list will result in a match for that particular field. If the 
-        examples were applied to the minutes field, and subject to other fields 
-        in the <span class="code">report_timing</span> option, the report would 
-        be run at minutes 1,2,5 and 9 and 0,1,2,3,4,8,9,10,11 and 12 respectively. 
-        Abbreviated month and day names cannot be used in a list.
+        the list will result in a match for that particular parameter. If the 
+        examples were applied to the minutes parameter, and subject to other 
+        parameters in the <span class="code">report_timing</span> option, the 
+        report would be run at minutes 1,2,5 and 9 and 0,1,2,3,4,8,9,10,11 and 
+        12 respectively. Abbreviated month and day names cannot be used in a list.
         </li>
         
         <li>Ranges. Ranges are two numbers separated with a hyphen, for 
         example 8-11. The specified range is inclusive. A match with any of the 
         values included in the range will result in a match for that particular 
-        field. If the example was applied to the hours field, and subject to
-        other fields in the <span class="code">report_timing</span> option, the 
-        report would be run at hours 8,9,10 and 11. A range may be included as 
-        an element of a list. Abbreviated month and day names cannot be used in 
-        a range.
+        parameter. If the example was applied to the hours parameter, and subject
+        to other parameters in the <span class="code">report_timing</span> option,
+        the report would be run at hours 8,9,10 and 11. A range may be included 
+        as an element of a list. Abbreviated month and day names cannot be used 
+        in a range.
         </li>
         
-        <li>Steps. A step can be used in conjunction with a range or asterisk. 
-        Following a range with "/<number>" specifies skips of the number's value 
-        through the range. For example, 0-12/2 can be used in the hours field 
-        would, subject to other fields in the <span class="code">report_timing</span> 
-        option, run the report at hours 0,2,4,6,8,12. Steps are also permitted 
-        after an asterisk. For example */3 can be used in the hours field to, 
-        subject to other fields, run the report at hours 0,3,6,9,12,15,18 and 
-        21.
+        <li>Steps. A step can be used in conjunction with a range or asterisk and
+        are denoted by a '/' followed by a number. Following a range with a step 
+        specifies skips of the step number's value through the range. For example, 
+        0-12/2 used in the hours parameter would, subject to other parameter in 
+        the <span class="code">report_timing</span> option, run the report at 
+        hours 0,2,4,6,8,12. Steps are also permitted after an asterisk in which 
+        case the skips of the step number's value occur through the all possible 
+        values of the parameter. For example */3 can be used in the hours parameter 
+        to, subject to other parameter in the <span class="code">report_timing</span> 
+        option, run the report at hours 0,3,6,9,12,15,18 and 21.
     </ul>
     
     <h4>Nicknames</h4>
     
     <p>The <span class="code">report_timing</span> option supports a number of 
         time specification 'nicknames'. These nicknames are prefixed by the '@' 
-        character and replace the five time and date fields in the 
+        character and replace the five parameters in the 
         <span class="code">report_timing</span> option. The nicknames supported 
         are:
     </p>
@@ -3052,16 +3068,16 @@ class MyXSearch(SearchList):                                                 # 1
     <h4><span class="code">report_timing</span> option examples</h4>
     
     <p>CRON like settings can be at times difficult to understand due to the complex 
-        combinations of paramters. To aid in understanding the 
+        combinations of parameters. To aid in understanding the 
         <span class="code">report_timing</span> option settings the following table 
         shows a number of example <span class="code">report_timing</span> options
-        and the report times that would cause a report to be run. 
+        and the report times when the report(s) would be run. 
     </p>
     
     <table class="indent" summary="report_timing examples">
         <tbody>
         <tr class="first_row">
-            <td><span class="code">report_timing</span> Setting</td>
+            <td><span class="code">report_timing</span> setting</td>
             <td>Report will be run</td>
         </tr>
         <tr>
@@ -3099,7 +3115,11 @@ class MyXSearch(SearchList):                                                 # 1
         </tr>
         <tr>
             <td class="code first_col">*/10 * * * *</td>
-            <td>On the hour and then every 10 minutes.</td>
+            <td>On the hour and 10, 20, 30, 40 and 50 mnutes past the hour.</td>
+        </tr>
+        <tr>
+            <td class="code first_col">*/9 * * * *</td>
+            <td>On the hour and 9, 18, 27, 36, 45 and 54 minutes past the hour.</td>
         </tr>
         <tr>
             <td class="code first_col">*/10 */2 * * *</td>
@@ -3112,12 +3132,13 @@ class MyXSearch(SearchList):                                                 # 1
         </tr>
         <tr>
             <td class="code first_col">* 1,4,14 * * *</td>
-            <td>Every archive period in the hour starting 01:00, 04:00 and 14:00 
-                (Note excludes 02:00, 05:00 and 15:00 archive periods).</td>
+            <td>Every archive period in the hour starting 01:00 to 01:59, 04:00
+                to 04:59 amd 14:00 to 14:59 (Note excludes report times at 
+                02:00, 05:00 and 15:00).</td>
         </tr>
         <tr>
             <td class="code first_col">0 * 1 * 0,3</td>
-            <td>On the hour on the first of the month and on on the hour every 
+            <td>On the hour on the first of the month and on the hour every 
                 Sunday and Wednesday.</td>
         </tr>
         <tr>
@@ -3133,7 +3154,15 @@ class MyXSearch(SearchList):                                                 # 1
     
     <h3>The <span class="code">wee_reports</span> tool and the <span class="code">report_timing</span> option</h3>
     
-    <p>The <a href="#wee_reports">wee_reports</a> tool allows weewx reports to be run independently of the main weewx program. Reports are run using the time of the last record in the archive database as the "Current" time (the default) or optionally using a unix epoch timestamp command line argument as the "Current" time. Given the one off report and variable time nature of the <a href="#wee_reports">wee_reports</a> tool the <span class="code">report_timing</span> option is ignored when using the <a href="#wee_reports">wee_reports</a> tool.
+    <p>The <a href="#wee_reports">wee_reports</a> tool allows 
+    <span class="code">weewx</span> reports to be run independently of the main
+    <span class="code">weewx</span> program. Reports are run using the time of 
+    the last record in the archive database as the "current" time (the default) 
+    or optionally using a unix epoch timestamp command line argument as the 
+    "current" time. Given the one off report and variable time nature of the 
+    <a href="#wee_reports">wee_reports</a> tool, the 
+    <span class="code">report_timing</span> option is ignored when using the 
+    <a href="#wee_reports">wee_reports</a> tool.
         
     <h1 id="standard_skin">The Standard <span class="code">skin.conf</span></h1>
 

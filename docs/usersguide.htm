@@ -2310,11 +2310,11 @@ longitude = -77.0366</pre>
 
     <p class="config_option">report_timing</p>
 
-    <p>Setting to control when reports are run. The setting can be overridden in 
+    <p>Control the times when reports are run. The setting can be overridden in 
         individual reports. Optional. Refer to the 
         <em><a href="customizing.htm#customizing_gen_time">Customizing the report 
         generation time</a></em> section in the 
-        <a href="customizing.htm">Customizing Guide</a>
+        <a href="customizing.htm">Customizing Guide</a>.
     </p>
     
     <h3 class="config_section">[[StandardReport]]</h3>
@@ -5421,6 +5421,58 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
         your computer and, instead, a default font is being substituted, which only knows
         how to plot ASCII characters. The cure is as before: install the font.</p>
 
+    <h3>Data is archived but some/all reports do not run</h3>
+    
+    <p>If <span class="code">weewx</span> appears to be running normally but 
+        some or all reports are not being run, either all the time or 
+        periodically, the problem could be the inadvertant use or incorrect 
+        setting of the <span class="code">report_timing</span> option in 
+        <span class='code'>weewx.conf</span>. The 
+        <span class="code">report_timing</span> option allows the user to 
+        specify when some or all reports are run (refer <a href="customizing.htm#customizing_gen_time">Customizing the report 
+        generation time</a>). By default the 
+        <span class="code">report_timing</span> option is disabled and all 
+        reports are run each archive period.</p>
+        
+    <p>To see if the <span class="code">report_timing</span> option is causing 
+        reports to be skipped inspect the <a href="#monitoring">log file</a>. 
+        Any reports that are skipped due to the 
+        <span class="code">report_timing</span> option will be logged as 
+        follows:</p>
+    
+    <pre class="tty">Apr 29 09:30:17 rosella weewx[3319]: reportengine: Report StandardReport skipped due to report_timing setting</pre>
+    
+    <p>If reports are being incorrectly skipped due to 
+        <span class="code">report_timing</span> then edit 
+        <span class='code'>weewx.conf</span> and check for a 
+        <span class="code">report_timing</span> option in 
+        <span class="code">[StdReport]</span>. Either remove all occurrences of 
+        <span class="code">report_timing</span> to run all reports each archive 
+        period or confirm the correct use and setting of the 
+        <span class="code">report_timing</span> option.</p>
+
+    <h3>The wrong reports are being skipped by <span class="code">report_timing</span></h3>
+    
+    <p>If the <span class="code">report_timing</span> option is being used and 
+        the results are not as expected, there may be an error in the 
+        <span class="code">report_timing</span> option. First check the 
+        <span class="code">report_timing</span> option parameters to ensure
+        they are valid and there are no additonal spaces or other unwanted 
+        characters in the parameters. Check that the 
+        <span class="code">report_timing</span> parameters are correctly set 
+        for the desired report generation times. For example, is the correct 
+        day of the week number being used if limiting the day of the week 
+        parameter (refer <a href="customizing.htm#customizing_gen_time">Customizing 
+        the report generation time</a>).
+    
+    <p>Check the <a href="#monitoring">log file</a> for any entries relating to
+        the reports concerned. Further information may sent to the log by 
+        setting <span class="code">debug=1</span> in
+        <span class='code'>weewx.conf</span> and then stop/starting 
+        <span class="code">weewx</span>. This will continue to log any skipped 
+        reports as well as logging any errors encountered in interpreting a 
+        <span class="code">report_timing</span> option.
+    
     <h2>Meteorological problems</h2>
 
     <h3 id='pressure_mismatch'>The pressure reported by <span class='code'>weewx</span> does not match the pressure on the console</h3>
