@@ -408,6 +408,7 @@ schema, plus additional fields.  To use the default mapping with the wview
 schema, these are the additional fields that must be added to the schema:
 
           ('extraTemp4',           'REAL'),
+          ('extraHumid2',          'REAL'),
           ('extraHumid3',          'REAL'),
           ('extraHumid4',          'REAL'),
           ('extraBatteryStatus1',  'REAL'),
