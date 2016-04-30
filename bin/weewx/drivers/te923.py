@@ -477,7 +477,7 @@ DEFAULT_OBSERVATION_MAP = {
     'bat_2': 'extraBatteryStatus1',
     'link_2': 'extraLinkStatus1',
     't_3': 'extraTemp2',
-    'h_3': 'extraHumid3',
+    'h_3': 'extraHumid2',
     'bat_3': 'extraBatteryStatus2',
     'link_3': 'extraLinkStatus2',
     't_4': 'extraTemp3',
@@ -1596,8 +1596,8 @@ class TE923Station(object):
                 if len(rbuf) >= 34:
                     break
             except usb.USBError, e:
-                if (not e.args[0].find('No data available') and
-                    not e.args[0].find('No error')):
+                errmsg = repr(e)
+                if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise weewx.WeeWxIOError(e)
             time.sleep(0.009) # te923tool is 0.15
         else:
@@ -1679,8 +1679,8 @@ class TE923Station(object):
                 if len(rbuf) >= 1:
                     break
             except usb.USBError, e:
-                if (not e.args[0].find('No data available') and
-                    not e.args[0].find('No error')):
+                errmsg = repr(e)
+                if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise weewx.WeeWxIOError(e)
             time.sleep(0.009)
         else:

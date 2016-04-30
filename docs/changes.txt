@@ -38,6 +38,11 @@ Major update to the CC3000 driver:
  - added option to set/get channel, baro offset
  - added option to reset rain counter
 
+Fixed brittle reference to USBError.args[0] in wmr200, wmr300, and te923
+drivers.
+
+Fixed typo in default te923 sensor mapping for h_3.  Thanks to user ngulden.
+
 
 3.5.0 03/13/2016
 
