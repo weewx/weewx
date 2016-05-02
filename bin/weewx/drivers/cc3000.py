@@ -324,7 +324,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         loginf('archive_interval is %s' % self.arcint)
         self.header = settings['header']
         loginf('header is %s' % self.header)
-        self.units = weewx.METRIC if settings['units'] == 'METRIC' else weewx.US
+        self.units = weewx.METRICWX if settings['units'] == 'METRIC' else weewx.US
         loginf('units are %s' % settings['units'])
         loginf('channel is %s' % settings['channel'])
         loginf('charger status: %s' % settings['charger'])
