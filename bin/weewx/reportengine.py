@@ -81,10 +81,16 @@ class StdReportEngine(threading.Thread):
 
         # Iterate over each requested report
         for report in self.config_dict['StdReport'].sections:
-            
+            # See if this report is disabled
+            enabled = to_bool(self.config_dict['StdReport'][report].get('enable', True))
+            if not enabled:
+                syslog.syslog(syslog.LOG_DEBUG,
+                              "reportengine: Skipping report %s" % report)
+                continue
+
             syslog.syslog(syslog.LOG_DEBUG,
                           "reportengine: Running report %s" % report)
-            
+
             # Figure out where the configuration file is for the skin used for
             # this report:
             skin_config_path = os.path.join(
@@ -92,6 +98,7 @@ class StdReportEngine(threading.Thread):
                 self.config_dict['StdReport']['SKIN_ROOT'],
                 self.config_dict['StdReport'][report].get('skin', 'Standard'),
                 'skin.conf')
+
             # Retrieve the configuration dictionary for the skin. Wrap it in
             # a try block in case we fail
             try:
@@ -105,14 +112,14 @@ class StdReportEngine(threading.Thread):
                     syslog.LOG_ERR, "reportengine: "
                     "Cannot read skin configuration file %s for report %s: %s"
                     % (skin_config_path, report, e))
-                syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
+                syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored")
                 continue
             except SyntaxError, e:
                 syslog.syslog(
                     syslog.LOG_ERR, "reportengine: "
                     "Failed to read skin configuration file %s for report %s: %s"
                     % (skin_config_path, report, e))
-                syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
+                syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored")
                 continue
 
             # Add the default database binding:
@@ -135,7 +142,7 @@ class StdReportEngine(threading.Thread):
             
             # Finally, add the report name:
             skin_dict['REPORT_NAME'] = report
-            
+
             for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
 
                 try:
@@ -152,7 +159,7 @@ class StdReportEngine(threading.Thread):
                         "Unable to instantiate generator %s" % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     weeutil.weeutil.log_traceback("        ****  ")
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored")
                     traceback.print_exc()
                     continue
     
@@ -169,7 +176,7 @@ class StdReportEngine(threading.Thread):
                         % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % str(e))
                     weeutil.weeutil.log_traceback("        ****  ")
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated...")
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated")
                     traceback.print_exc()
                     continue
                     
