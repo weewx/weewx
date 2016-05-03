@@ -43,6 +43,9 @@ drivers.
 
 Fixed typo in default te923 sensor mapping for h_3.  Thanks to user ngulden.
 
+Added flag for reports so that reports can be disabled by setting enable=False
+instead of deleting or commenting entire report sections in weewx.conf.
+
 
 3.5.0 03/13/2016
 
