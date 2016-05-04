@@ -2304,10 +2304,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             ans = raw_input("Are you sure you want to proceed (y/n)? ")
             if ans == 'y':
                 with weewx.manager.open_manager_with_config(config_dict, 'wx_binding',
-                                                            initialize=True,
-                                                            default_binding_dict={'table_name' : 'archive',
-                                                                                  'manager' : 'weewx.wxmanager.WXDaySummaryManager',
-                                                                                  'schema' : 'schemas.wview.schema'}) as archive:
+                                                            initialize=True) as archive:
                     nrecs = 0
                     # Wrap the Vantage generator function in a converter, which will convert the units to the
                     # same units used by the database:
