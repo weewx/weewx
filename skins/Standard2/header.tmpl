@@ -1,0 +1,56 @@
+##		$Revision: 1535 $
+##		$Author: tkeffer $
+##		$Date: 2013-10-14 16:20:27 -0700 (Mon, 14 Oct 2013) $
+##
+## Specifying an encoding of UTF-8 is usually safe, but if your text is 
+## actually in Latin-1, then you should replace the string "UTF-8" with "latin-1"
+#encoding UTF-8
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head profile="http://www.w3.org/2005/10/profile">
+		#if $encoding == 'utf8'
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		#end if		 
+		<title>$station.location $title_label</title>
+		<link rel="stylesheet" type="text/css" href="weewx.css"/>
+		<link rel="icon" type="image/png" href="logo.png" />
+	</head>
+
+	<body>
+
+		<div id="masthead" class="row">
+			<div id="logo" class="column column-2">
+				<a href="index.html"><img src="logo.png" /></a>
+			</div>
+			<div id="header" class="column column-10">
+				<h1>$station.location</h1>
+				<h2>$title_label</h2>
+					<h2>$current.dateTime</h2>
+			</div> <!-- End ID masthead -->
+		</div> <!-- End Row Header -->
+		
+		<div id="navwrapper" class="row">
+			<div id="nav" class="column column-12">
+				<ul>
+					<li><a href="index.html">Current</a></li>
+					<li><a href="week.html">Week</a></li>
+					<li><a href="month.html">Month</a></li>
+					<li><a href="year.html">Year</a></li>
+					<li><a href="#">Archive</a>
+						<ul>
+							<li><a href="#">Monthly Summary</a></li>
+							#for $monthYear in $SummaryByMonth
+								#set $link = "/NOAA/NOAA-" + $monthYear + ".txt"
+								<li><a href="$link" target="_blank">$monthYear</a></li>
+							#end for
+							<li><a href="#">Yearly Summary</a></li>
+							#for $yr in $SummaryByYear
+								#set $link = "/NOAA/NOAA-" + $yr + ".txt"
+								<li><a href="$link" target="_blank">$yr</a></li>
+							#end for
+						</ul>
+					</li>
+				</ul>
+			</div><!-- End ID Nav -->
+		</div><!-- END Row Nav -->

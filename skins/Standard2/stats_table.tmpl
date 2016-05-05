@@ -1,0 +1,161 @@
+<div class="widget">
+  <div class="widget_header">
+    $stats_label
+  </div>
+  <table class="stats">
+    <tbody>
+      <tr>
+        <td class="stats_label">
+          High Temperature<br/>
+          Low Temperature
+        </td>
+        <td class="stats_data">
+          $archive.outTemp.max at $archive.outTemp.maxtime<br/>
+          $archive.outTemp.min at $archive.outTemp.mintime
+        </td>
+      </tr>
+      <tr>
+        <td class="stats_label">
+          High Heat Index<br/>
+          Low Wind Chill
+        </td>
+        <td class="stats_data">
+          $archive.heatindex.max at $archive.heatindex.maxtime<br/>
+          $archive.windchill.min at $archive.windchill.mintime
+        </td>
+      </tr>
+      <tr>
+        <td class="stats_label">
+          High Humidity<br/>
+          Low Humidity
+        </td>
+        <td class="stats_data">
+          $archive.outHumidity.max at $archive.outHumidity.maxtime<br/>
+          $archive.outHumidity.min at $archive.outHumidity.mintime
+        </td>
+      </tr>
+      <tr>
+        <td class="stats_label">
+          High Dewpoint<br/>
+          Low Dewpoint
+        </td>
+        <td class="stats_data">
+          $archive.dewpoint.max at $archive.dewpoint.maxtime<br/>
+          $archive.dewpoint.min at $archive.dewpoint.mintime
+        </td>
+      </tr>
+      <tr>
+        <td class="stats_label">
+          High Barometer<br/>
+          Low Barometer
+        </td>
+        <td class="stats_data">
+          $archive.barometer.max at $archive.barometer.maxtime<br/>
+          $archive.barometer.min at $archive.barometer.mintime
+        </td>
+      </tr>
+      <tr>
+        <td class="stats_label">Today's Rain</td>
+        <td class="stats_data">$archive.rain.sum</td>
+      </tr>
+      <tr>
+        <td class="stats_label">High Rain Rate</td>
+        <td class="stats_data">$archive.rainRate.max at $archive.rainRate.maxtime</td>
+      </tr>
+      <tr>
+        <td class="stats_label">
+          High Wind
+        </td>
+        <td class="stats_data">
+          $archive.wind.max from $archive.wind.gustdir at $archive.wind.maxtime
+        </td>
+      </tr>
+      <tr>
+        <td class="stats_label">
+          Average Wind
+        </td>
+        <td class="stats_data">
+          $archive.wind.avg
+        </td>
+      </tr>
+      <tr>
+        <td class="stats_label">
+          RMS Wind
+        </td>
+        <td class="stats_data">
+          $archive.wind.rms
+        </td>
+      </tr>
+
+      <tr>
+        <td class="stats_label">
+          Vector Average Speed<br/>
+          Vector Average Direction
+        </td>
+        <td class="stats_data">
+          $archive.wind.vecavg<br/>
+          $archive.wind.vecdir
+        </td>
+      </tr>
+
+      <tr>
+        <td class="stats_label">
+          High Inside Temperature<br/>
+          Low Inside Temperature
+        </td>
+        <td class="stats_data">
+          $archive.inTemp.max at $archive.inTemp.maxtime<br/>
+          $archive.inTemp.min at $archive.inTemp.mintime
+        </td>
+      </tr>
+#if $archive.extraTemp1.has_data
+      <tr>
+        <td class="stats_label">
+          High Pond Temperature<br/>
+          Low Pond Temperature
+        </td>
+        <td class="stats_data">
+          $archive.extraTemp1.max at $archive.extraTemp1.maxtime<br/>
+          $archive.extraTemp1.min at $archive.extraTemp1.mintime
+        </td>
+      </tr>
+      #end if
+      #if $archive.UV.has_data
+      <tr>
+        <td class="stats_label">
+          High UV<br/>
+          Low UV
+        </td>
+        <td class="stats_data">
+          $archive.UV.max at $archive.UV.maxtime<br/>
+          $archive.UV.min at $archive.UV.mintime
+        </td>
+      </tr>
+      #end if
+      #if $archive.ET.has_data and $archive.ET.sum.raw >0.0
+      <tr>
+        <td class="stats_label">
+          High ET<br/>
+          Low ET
+        </td>
+        <td class="stats_data">
+          $archive.ET.max at $archive.ET.maxtime<br/>
+          $archive.ET.min at $archive.ET.mintime
+        </td>
+      </tr>
+      #end if
+      #if $archive.radiation.has_data
+      <tr>
+        <td class="stats_label">
+          High Radiation<br/>
+          Low Radiation
+        </td>
+        <td class="stats_data">
+          $archive.radiation.max at $archive.radiation.maxtime<br/>
+          $archive.radiation.min at $archive.radiation.mintime
+        </td>
+      </tr>
+      #end if
+    </tbody>
+  </table>
+</div> <!--End class "stats" -->

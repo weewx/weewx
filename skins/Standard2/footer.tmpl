@@ -1,0 +1,33 @@
+<div id="footer" class="row">
+	<div id="location" class="align-left column column-5">
+		$station.latitude[0]&deg; $station.latitude[1]' $station.latitude[2]
+		$station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]
+		$station.altitude
+	</div>
+	<div id="version" class="align-center column column-2">
+		<a href="http://weewx.com">WEEWX V$station.version</a>
+	</div>
+	<div id="server" class="align-right column column-5">
+		Weewx uptime:	$station.uptime<br/>
+		Server uptime: $station.os_uptime
+	</div>
+</div> <!-- End Footer Row -->
+
+
+## Include the Google Analytics code if the user has supplied an ID:
+#if $Extras.has_key('googleAnalyticsId')
+<script type="text/javascript">
+		var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+		document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+		try{
+				var pageTracker = _gat._getTracker("$Extras.googleAnalyticsId");
+				pageTracker._trackPageview();
+		} catch(err) {}
+</script>
+#end if
+
+</body>
+
+</html>

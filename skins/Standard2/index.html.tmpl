@@ -1,0 +1,270 @@
+#errorCatcher Echo
+
+#set global $title_label = 'Current Weather Conditions'
+#include "header.tmpl"
+
+<div id="container" class="row">
+		<div id="sidebar" class="column column-3">
+			#if $Extras.has_key('radar_img')
+				<div id="radar_img" class="widget">
+						<a	href="$Extras.radar_url"><img src="$Extras.radar_img" alt="Radar" /></a>
+						<p>Click image for expanded radar loop</p>
+			</div>
+			#end if
+			
+			<div class="widget">
+				<div class="widget_header">
+					Current Conditions
+				</div>
+
+				<table class="stats">
+					<tbody>
+						<tr>
+							<td class="stats_label">Outside Temperature</td>
+							<td class="stats_data">$current.outTemp</td>
+						</tr>
+						<tr>
+							<td class="stats_label">Wind Chill</td>
+							<td class="stats_data">$current.windchill</td>
+						</tr>
+						<tr>
+							<td class="stats_label">Heat Index</td>
+							<td class="stats_data">$current.heatindex</td>
+						</tr>
+						<tr>
+							<td class="stats_label">Dewpoint</td>
+							<td class="stats_data">$current.dewpoint</td>
+						</tr>
+						<tr>
+							<td class="stats_label">Humidity</td>
+							<td class="stats_data">$current.outHumidity</td>
+						</tr>
+						<tr>
+							<td class="stats_label">Barometer</td>
+							<td class="stats_data">$current.barometer</td>
+						</tr>
+						<tr>
+							<td class="stats_label">Barometer trend ($trend.time_delta.hour.format("%.0f"))</td>
+							<td class="stats_data">$trend.barometer</td>
+						</tr>
+						<tr>
+							<td class="stats_label">Wind</td>
+							<td class="stats_data">$current.windSpeed from $current.windDir ($current.windDir.ordinal_compass)</td>
+						</tr>
+						<tr>
+							<td class="stats_label">Rain Rate</td>
+							<td class="stats_data">$current.rainRate</td>
+						</tr>
+						<tr>
+							<td class="stats_label">Inside Temperature</td>
+							<td class="stats_data">$current.inTemp</td>
+						</tr>
+						#if $day.extraTemp1.has_data
+						<tr>
+							<td class="stats_label">Pond Temperature</td>
+							<td class="stats_data">$current.extraTemp1</td>
+						</tr>
+						#end if
+						#if $day.UV.has_data
+						<tr>
+							<td class="stats_label">UV</td>
+							<td class="stats_data">$current.UV</td>
+						</tr>
+						#end if
+						#if $day.ET.has_data and $day.ET.sum.raw > 0.0
+						<tr>
+							<td class="stats_label">ET</td>
+							<td class="stats_data">$current.ET</td>
+						</tr>
+						#end if
+						#if $day.radiation.has_data
+						<tr>
+							<td class="stats_label">Solar Radiation</td>
+							<td class="stats_data">$current.radiation</td>
+						</tr>
+						#end if
+					</tbody>
+				</table>
+			</div><!-- End Stats -->
+			
+			#set global $archive = $day
+			#set global $stats_label = 'Since Midnight'
+			#include "stats_table.tmpl"
+			
+			<div id="about" class="widget">
+        #include "about.tmpl"
+			</div>
+			
+		</div> <!-- End Sidebar -->
+
+		<div id="main" class="column column-9">
+							
+				<div id="plots">
+					<img src="daytempdew.png"		alt="temperatures" />
+					<img src="daytempchill.png" alt="heatchill" />
+					<img src="dayrain.png"			alt="rain" />
+					<img src="daywind.png"			alt="wind" />
+					<img src="daybarometer.png" alt="barometer"/>
+					<img src="daywinddir.png"		alt="Hi Wind" />
+					<img src="dayinside.png"		alt="Inside" />
+					<img src="daywindvec.png"		alt="Wind Vector" />
+					#if $day.radiation.has_data
+					<img src="dayradiation.png" alt="Radiation" />
+					#end if
+					#if $day.rxCheckPercent.has_data
+					<img src="dayrx.png"				alt="day rx percent"/>
+					#end if
+					#if $day.extraTemp1.has_data
+					<img src="daypond.png"			alt="Pond Temperatures" />
+					#end if
+				</div> <!-- End id "plots" -->
+			
+				<div id="almanac">
+					<div class="widget_header">
+						Today's Almanac
+					</div>
+					<div class="celestial_group">
+						#if $almanac.hasExtras
+						## Extended almanac information is available. Do the full set of tables.
+						<div class="celestial_body">
+							<table>
+								<caption class="align-left caption">Sun</caption>
+								<tr>
+									<td class="label">Start civil twilight:</td>
+									<td class="data">$almanac(horizon=-6).sun(use_center=1).rise</td>
+								</tr>
+								<tr>
+									<td class="label">Sunrise:</td>
+									<td class="data">$almanac.sun.rise</td>
+								</tr>
+								<tr>
+									<td class="label">Transit:</td>
+									<td class="data">$almanac.sun.transit</td>
+								</tr>
+								<tr>
+									<td class="label">Sunset:</td>
+									<td class="data">$almanac.sun.set</td>
+								</tr>
+								<tr>
+									<td class="label">End civil twilight:</td>
+									<td class="data">$almanac(horizon=-6).sun(use_center=1).set</td>
+								</tr>
+								<tr>
+									<td class="label">Azimuth:</td>
+									<td class="data">$("%.1f&deg;" % $almanac.sun.az)</td>
+								</tr>
+								<tr>
+									<td class="label">Altitude:</td>
+									<td class="data">$("%.1f&deg;" % $almanac.sun.alt)</td>
+								</tr>
+								<tr>
+									<td class="label">Right ascension:</td>
+									<td class="data">$("%.1f&deg;" % $almanac.sun.ra)</td>
+								</tr>
+								<tr>
+									<td class="label">Declination:</td>
+									<td class="data">$("%.1f&deg;" % $almanac.sun.dec)</td>
+								</tr>
+								#if $almanac.next_equinox.raw < $almanac.next_solstice.raw
+								## The equinox is before the solstice. Display them in order.
+								<tr>
+									<td class="label">Equinox:</td>
+									<td class="data">$almanac.next_equinox</td>
+								</tr>
+								<tr>
+									<td class="label">Solstice:</td>
+									<td class="data">$almanac.next_solstice</td>
+								</tr>
+								#else
+								## The solstice is before the equinox. Display them in order.
+								<tr>
+									<td class="label">Solstice:</td>
+									<td class="data">$almanac.next_solstice</td>
+								</tr>
+								<tr>
+									<td class="label">Equinox:</td>
+									<td class="data">$almanac.next_equinox</td>
+								</tr>
+								#end if
+							</table>
+						</div> <!-- end class "celestial_body" -->
+						<div class="celestial_body">
+							<table>
+								<caption class="align-left caption">Moon</caption>	 
+								<tr>
+									<td class="label">Rise:</td>
+									<td class="data">$almanac.moon.rise</td>
+								</tr>
+								<tr>
+									<td class="label">Transit:</td>
+									<td class="data">$almanac.moon.transit</td>
+								</tr>
+								<tr>
+									<td class="label">Set:</td>
+									<td class="data">$almanac.moon.set</td>
+								</tr>
+								<tr>
+									<td class="label">Azimuth:</td>
+									<td class="data">$("%.1f&deg;" % $almanac.moon.az)</td>
+								</tr>
+								<tr>
+									<td class="label">Altitude:</td>
+									<td class="data">$("%.1f&deg;" % $almanac.moon.alt)</td>
+								</tr>
+								<tr>
+									<td class="label">Right ascension:</td>
+									<td class="data">$("%.1f&deg;" % $almanac.moon.ra)</td>
+								</tr>
+								<tr>
+									<td class="label">Declination:</td>
+									<td class="data">$("%.1f&deg;" % $almanac.moon.dec)</td>
+								</tr>
+								#if $almanac.next_full_moon.raw < $almanac.next_new_moon.raw
+								<tr>
+									<td class="label">Full moon:</td>
+									<td class="data">$almanac.next_full_moon</td>
+								</tr>
+								<tr>
+									<td class="label">New moon:</td>
+									<td class="data">$almanac.next_new_moon</td>
+								</tr>
+								#else
+								<tr>
+									<td class="label">New moon:</td>
+									<td class="data">$almanac.next_new_moon</td>
+								</tr>
+								<tr>
+									<td class="label">Full moon:</td>
+									<td class="data">$almanac.next_full_moon</td>
+								</tr>
+								#end if
+								<tr>
+									<td class="label">Phase:</td>
+									<td class="data">$almanac.moon_phase<br/>($almanac.moon_fullness% full)</td>
+								</tr>
+							</table>
+						</div> <!-- end class "celestial_body" -->
+						#else
+						## No extended almanac information available. Fall back to a simple table.
+						<table>
+							<tr>
+								<td class="label">Sunrise:</td>
+								<td class="data">$almanac.sunrise</td>
+							</tr>
+							<tr>
+								<td class="label">Sunset:</td>
+								<td class="data">$almanac.sunset</td>
+							</tr>
+							<tr>
+								<td class="label">Moon Phase:</td>
+								<td class="data">$almanac.moon_phase<br/>($almanac.moon_fullness% full)</td>
+							</tr>
+						</table>
+						#end if
+					</div> <!-- end class "celestial_group" -->
+				</div> <!-- end id "almanac" -->			
+				
+		</div> <!-- End Main -->
+</div><!-- End Row "container: -->
+
+#include "footer.tmpl"

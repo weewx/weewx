@@ -1,0 +1,47 @@
+#errorCatcher Echo
+
+#set global $title_label = 'Weekly Weather Conditions'
+#include "headerCompact.tmpl"
+
+<div id="container" class="row">
+		<div id="sidebar" class="column column-3">
+			
+			#set global $archive = $week
+			#set global $stats_label = 'This Week'
+			#include "stats_table.tmpl"
+			
+			#set global $archive = $month
+			#set global $stats_label = 'This Month'
+			#include "stats_table.tmpl"
+			
+			<div id="about" class="widget">
+        #include "about.tmpl"
+			</div>
+			
+		</div> <!-- End Sidebar -->
+
+		<div id="main" class="column column-9">
+        <div id="plots">
+          <img src="weektempdew.png" alt="temperatures" />
+          <img src="weektempchill.png" alt="heatchill" />
+          <img src="weekrain.png" alt="rain" />
+          <img src="weekwind.png" alt="wind" />
+          <img src="weekbarometer.png" alt="barometer"/>
+          <img src="weekwinddir.png" alt="Hi Wind" />
+          <img src="weekinside.png" alt="Inside" />
+          <img src="weekwindvec.png" alt="Wind Vector" />
+          #if $week.radiation.has_data
+          <img src="weekradiation.png" alt="Radiation" />
+          #end if
+          #if $week.rxCheckPercent.has_data
+          <img src="weekrx.png" alt="week rx percent"/>
+          #end if
+          #if $week.extraTemp1.has_data
+          <img src="weekpond.png" alt="Pond Temperatures" />
+          #end if
+				</div> <!-- End id "plots" -->
+				
+					</div> <!-- End Main -->
+			</div><!-- End Row "container: -->
+
+			#include "footer.tmpl"
