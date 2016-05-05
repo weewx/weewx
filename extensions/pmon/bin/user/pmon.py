@@ -38,10 +38,11 @@ import time
 from subprocess import Popen, PIPE
 
 import weewx
+import weedb
 import weeutil.weeutil
 from weewx.engine import StdService
 
-VERSION = "0.2"
+VERSION = "0.4"
 
 def logmsg(level, msg):
     syslog.syslog(level, 'pmon: %s' % msg)
@@ -59,9 +60,9 @@ schema = [
     ('dateTime', 'INTEGER NOT NULL PRIMARY KEY'),
     ('usUnits', 'INTEGER NOT NULL'),
     ('interval', 'INTEGER NOT NULL'),
-    ('mem_vsz','INTEGER'),
-    ('mem_rss','INTEGER'),
-    ]
+    ('mem_vsz', 'INTEGER'),
+    ('mem_rss', 'INTEGER'),
+]
 
 
 class ProcessMonitor(StdService):
@@ -91,7 +92,7 @@ class ProcessMonitor(StdService):
     def shutDown(self):
         try:
             self.dbm.close()
-        except:
+        except weedb.DatabaseError:
             pass
 
     def new_archive_record(self, event):
@@ -118,13 +119,13 @@ class ProcessMonitor(StdService):
         try:
             # sqlite databases need some help to stay small
             self.dbm.getSql('vacuum')
-        except Exception, e:
+        except weedb.DatabaseError:
             pass
 
     COLUMNS = re.compile('[\S]+\s+[\d]+\s+[\d.]+\s+[\d.]+\s+([\d]+)\s+([\d]+)')
 
     def get_data(self, now_ts, last_ts):
-        record = {}
+        record = dict()
         record['dateTime'] = now_ts
         record['usUnits'] = weewx.METRIC
         record['interval'] = int((now_ts - last_ts) / 60)
@@ -140,7 +141,6 @@ class ProcessMonitor(StdService):
                         record['mem_rss'] = int(m.group(2))
         except (ValueError, IOError, KeyError), e:
             logerr('apcups_info failed: %s' % e)
-
         return record
 
 
@@ -149,12 +149,12 @@ class ProcessMonitor(StdService):
 # cd /home/weewx
 # PYTHONPATH=bin python bin/user/pmon.py
 #
-if __name__=="__main__":
+if __name__ == "__main__":
     from weewx.engine import StdEngine
     config = {
         'Station': {
             'station_type': 'Simulator',
-            'altitude': [0,'foot'],
+            'altitude': [0, 'foot'],
             'latitude': 0,
             'longitude': 0},
         'Simulator': {
@@ -173,20 +173,29 @@ if __name__=="__main__":
             'pmon_sqlite': {
                 'database_name': 'pmon.sdb',
                 'database_type': 'SQLite'}},
-        'Engines': {
+        'DatabaseTypes': {
+            'SQLite': {
+                'driver': 'weedb.sqlite',
+                'SQLITE_ROOT': '/var/tmp'}},
+        'Engine': {
             'Services': {
                 'process_services': 'user.pmon.ProcessMonitor'}}}
-    engine = StdEngine(config)
-    svc = ProcessMonitor(engine, config)
-    record = svc.get_data()
-    print record
+    eng = StdEngine(config)
+    svc = ProcessMonitor(eng, config)
+
+    nowts = lastts = int(time.time())
+    rec = svc.get_data(nowts, lastts)
+    print rec
 
     time.sleep(5)
-    record = svc.get_data()
-    print record
+    nowts = int(time.time())
+    rec = svc.get_data(nowts, lastts)
+    print rec
 
     time.sleep(5)
-    record = svc.get_data()
-    print record
+    lastts = nowts
+    nowts = int(time.time())
+    rec = svc.get_data(nowts, lastts)
+    print rec
 
-    os.remove('/tmp/pmon.sdb')
+    os.remove('/var/tmp/pmon.sdb')

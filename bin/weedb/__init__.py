@@ -157,7 +157,7 @@ class Transaction(object):
         self.connection.begin()
         return self.cursor
 
-    def __exit__(self, etyp, einst, etb):
+    def __exit__(self, etyp, einst, etb):  # @UnusedVariable
         if etyp is None:
             self.connection.commit()
         else:

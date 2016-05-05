@@ -101,7 +101,8 @@ class ConfigEngine(object):
             # Modify the configuration contents
             self.modify_config(config_dict, options)
 
-            # Save to the specified output, or the original location, if not specified
+            # Save to the specified output, or the original location if
+            # output is not specified
             output_path = options.output if options.output else config_path
 
         if output_path is not None:

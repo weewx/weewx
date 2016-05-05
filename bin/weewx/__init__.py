@@ -6,7 +6,7 @@
 """Package weewx, containing modules specific to the weewx runtime engine."""
 import time
 
-__version__="3.4.0"
+__version__="3.5.0"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -26,15 +26,17 @@ METRIC   = 0x10
 METRICWX = 0x11
 US       = 0x01
 
-#===============================================================================
+# =============================================================================
 #           Define possible exceptions that could get thrown.
-#===============================================================================
+# =============================================================================
 
 class WeeWxIOError(IOError):
-    """Base class of exceptions thrown when encountering an I/O error with the console."""
+    """Base class of exceptions thrown when encountering an input/output error
+    with the hardware."""
 
 class WakeupError(WeeWxIOError):
-    """Exception thrown when unable to wake up or initially connect with the console"""
+    """Exception thrown when unable to wake up or initially connect with the
+    hardware."""
     
 class CRCError(WeeWxIOError):
     """Exception thrown when unable to pass a CRC check."""
@@ -49,10 +51,12 @@ class UnknownArchiveType(HardwareError):
     """Exception thrown after reading an unrecognized archive type."""
 
 class UnsupportedFeature(StandardError):
-    """Exception thrown when attempting to access a feature that is not supported (yet)."""
+    """Exception thrown when attempting to access a feature that is not
+    supported (yet)."""
     
 class ViolatedPrecondition(StandardError):
-    """Exception thrown when a function is called with violated preconditions."""
+    """Exception thrown when a function is called with violated
+    preconditions."""
     
 class StopNow(StandardError):
     """Exception thrown to stop the engine."""
@@ -72,41 +76,45 @@ class UnknownBinding(StandardError):
 class UnitError(ValueError):
     """Exception thrown when there is a mismatch in unit systems."""
 
-#===============================================================================
+# =============================================================================
 #                       Possible event types.
-#===============================================================================
+# =============================================================================
 
 class STARTUP(object):
-    """Event issued when the engine first starts up. Services have not been loaded."""
+    """Event issued when the engine first starts up. Services have not been
+    loaded."""
 class PRE_LOOP(object):
-    """Event issued just before the main packet loop is started. Services have been loaded."""
+    """Event issued just before the main packet loop is started. Services
+    have been loaded."""
 class NEW_LOOP_PACKET(object):
-    """Event issued when a new LOOP packet is available. The event contains attribute 'packet',
-    which is the new LOOP packet."""
+    """Event issued when a new LOOP packet is available. The event contains
+    attribute 'packet', which is the new LOOP packet."""
 class CHECK_LOOP(object):
-    """Event issued in the main loop, right after a new LOOP packet has been processed. Generally,
-    it is used to throw an exception, breaking the main loop, so the console can be used
-    for other things."""
+    """Event issued in the main loop, right after a new LOOP packet has been
+    processed. Generally, it is used to throw an exception, breaking the main
+    loop, so the console can be used for other things."""
 class END_ARCHIVE_PERIOD(object):
     """Event issued at the end of an archive period."""
 class NEW_ARCHIVE_RECORD(object):
-    """Event issued when a new archive record is available. The event contains attribute 'record',
-    which is the new archive record."""
+    """Event issued when a new archive record is available. The event contains
+    attribute 'record', which is the new archive record."""
 class POST_LOOP(object):
-    """Event issued right after the main loop has been broken. Services hook into this to
-    access the console for things other than generating LOOP packet."""
+    """Event issued right after the main loop has been broken. Services hook
+    into this to access the console for things other than generating LOOP
+    packet."""
 
-#===============================================================================
+# =============================================================================
 #                       Service groups.
-#===============================================================================
+# =============================================================================
 
 # All existent service groups:
-all_service_groups = ['prep_services', 'data_services', 'process_services',
-                      'archive_services', 'restful_services', 'report_services']
+all_service_groups = [
+    'prep_services', 'data_services', 'process_services',
+    'archive_services', 'restful_services', 'report_services']
 
-#===============================================================================
+# =============================================================================
 #                       Class Event
-#===============================================================================
+# =============================================================================
 class Event(object):
     """Represents an event."""
     def __init__(self, event_type, **argv):
@@ -120,3 +128,10 @@ class Event(object):
         et = "Event type: %s | " % self.event_type
         s = "; ".join("%s: %s" %(k, self.__dict__[k]) for k in self.__dict__ if k!="event_type")
         return et + s
+
+def require_weewx_version(module, required_version):
+    """utility to check for version compatibility"""
+    from distutils.version import StrictVersion
+    if StrictVersion(__version__) < StrictVersion(required_version):
+        raise UnsupportedFeature("%s requires weewx %s or greater, found %s"
+                                 % (module, required_version, __version__))

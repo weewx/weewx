@@ -444,10 +444,10 @@ import weewx.wxformulas
 DRIVER_NAME = 'TE923'
 DRIVER_VERSION = '0.17'
 
-def loader(config_dict, engine):
+def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
 
-def configurator_loader(config_dict):
+def configurator_loader(config_dict):  # @UnusedVariable
     return TE923Configurator()
 
 def confeditor_loader():
@@ -477,7 +477,7 @@ DEFAULT_OBSERVATION_MAP = {
     'bat_2': 'extraBatteryStatus1',
     'link_2': 'extraLinkStatus1',
     't_3': 'extraTemp2',
-    'h_3': 'extraHumid3',
+    'h_3': 'extraHumid2',
     'bat_3': 'extraBatteryStatus2',
     'link_3': 'extraLinkStatus2',
     't_4': 'extraTemp3',
@@ -758,7 +758,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
                           type=str, metavar="FORMAT", default='table',
                           help="formats include: table, dict")
 
-    def do_options(self, options, parser, config_dict, prompt):
+    def do_options(self, options, parser, config_dict, prompt):  # @UnusedVariable
         if (options.format.lower() != 'table' and
             options.format.lower() != 'dict'):
             parser.error("Unknown format '%s'.  Known formats include 'table' and 'dict'." % options.format)
@@ -1010,7 +1010,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
         alarm_list = alarm.split(',')
         if len(alarm_list) != 9:
             print "Bad alarm '%s'" % alarm
-            print "Alarm format is: %s" % ALMSTR
+            print "Alarm format is: %s" % TE923Configurator.ALMSTR
             return
         weekday = alarm_list[0]
         if weekday.lower() != 'off':
@@ -1516,7 +1516,7 @@ class TE923Station(object):
         self.open()
         return self
 
-    def __exit__(self, type_, value, traceback):
+    def __exit__(self, type_, value, traceback):  # @UnusedVariable
         self.close()
 
     def open(self, interface=0):
@@ -1596,8 +1596,8 @@ class TE923Station(object):
                 if len(rbuf) >= 34:
                     break
             except usb.USBError, e:
-                if (not e.args[0].find('No data available') and
-                    not e.args[0].find('No error')):
+                errmsg = repr(e)
+                if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise weewx.WeeWxIOError(e)
             time.sleep(0.009) # te923tool is 0.15
         else:
@@ -1679,8 +1679,8 @@ class TE923Station(object):
                 if len(rbuf) >= 1:
                     break
             except usb.USBError, e:
-                if (not e.args[0].find('No data available') and
-                    not e.args[0].find('No error')):
+                errmsg = repr(e)
+                if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise weewx.WeeWxIOError(e)
             time.sleep(0.009)
         else:

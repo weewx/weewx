@@ -874,7 +874,7 @@ class ValueHelper(object):
         # Then do the format conversion:
         s = self.formatter.toString(vtx, self.context, addLabel=addLabel, 
                                     useThisFormat=useThisFormat, NONE_string=NONE_string, 
-                                    localize=True)
+                                    localize=localize)
         return s
         
     def __str__(self):

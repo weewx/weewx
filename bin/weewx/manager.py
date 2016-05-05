@@ -157,7 +157,7 @@ class Manager(object):
     def __enter__(self):
         return self
     
-    def __exit__(self, etyp, einst, etb):
+    def __exit__(self, etyp, einst, etb):  # @UnusedVariable
         self.close()    
     
     def _initialize_database(self, schema):
@@ -410,7 +410,7 @@ class Manager(object):
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_type)s IS NOT NULL"
                    
     def getAggregate(self, timespan, obs_type,
-                     aggregate_type, **option_dict):
+                     aggregate_type, **option_dict):  # @UnusedVariable
         """Returns an aggregation of a statistical type for a given time period.
         
         timespan: An instance of weeutil.Timespan with the time period over which
@@ -803,7 +803,7 @@ class DBBinder(object):
     def __enter__(self):
         return self
     
-    def __exit__(self, etyp, einst, etb):
+    def __exit__(self, etyp, einst, etb):  # @UnusedVariable
         self.close()
     
     def set_binding_defaults(self, binding_name, default_binding_dict):
@@ -1129,7 +1129,7 @@ class DaySummaryManager(Manager):
         row = self.connection.execute("""SELECT value FROM %s_day__metadata WHERE name = 'Version';""" % self.table_name)
         self.version = row[0] if row is not None else "1.0"
 
-    def _initialize_day_tables(self, archiveSchema, cursor):
+    def _initialize_day_tables(self, archiveSchema, cursor):  # @UnusedVariable
         """Initialize the tables needed for the daily summary."""
         # Create the tables needed for the daily summaries.
         for _obs_type in self.obskeys:

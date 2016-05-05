@@ -1,7 +1,53 @@
 weewx change history
 --------------------
 
-3.4.1 XX/YY/2016
+X.X.X MM/DD/YYYY
+
+Fixed rpm package so that it will retain any changes to the user directory.
+Thanks to user Pat OBrien.
+
+No ET when beyond the reach of the sun.
+
+Fixed wee_config to handle config files that have no FTP or RSYNC.
+
+Fixed bug in StdWXCalculate that ignored setting of 'None' (#110).
+
+Reset weewx launchtime when waiting for sane system clock (thanks to user
+James Taylor).
+
+Fixed anti-alias bug in genplot.  Issue #111.
+
+Corrected the conversion factor between inHg and mbar. Thanks to user Olivier.
+
+Corrected conversion factor for inHg and mbar in ultimeter driver.
+
+Plots longer than two years now use an x-axis increment of one year. Thanks to
+user Olivier!
+
+The WS1 driver now retries connection if it fails. Thanks to user 
+Kevin Caccamo! PR #112.
+
+Major update to the CC3000 driver:
+ - reading historical records is more robust
+ - added better error handling and reporting
+ - fixed to handle random NULL characters in historical records
+ - fixed rain units
+ - added ability to get data from logger as fast as it will send it
+ - added support for additional temperature sensors T1 and T2
+ - added transmitter channel in station diagnostics
+ - added option to set/get channel, baro offset
+ - added option to reset rain counter
+
+Fixed brittle reference to USBError.args[0] in wmr200, wmr300, and te923
+drivers.
+
+Fixed typo in default te923 sensor mapping for h_3.  Thanks to user ngulden.
+
+Added flag for reports so that reports can be disabled by setting enable=False
+instead of deleting or commenting entire report sections in weewx.conf.
+
+
+3.5.0 03/13/2016
 
 Fixed bug that prevented rsync uploader from working.
 
@@ -20,11 +66,31 @@ Added humidex and appTemp to group_temperature. Fixed issue #96.
 Backfill of the daily summary is now done in "tranches," reducing the memory
 requirements of MySQL. Thanks to über-user Gary Roderick! Fixes issue #83.
 
-The Vantage driver now uses a more gentle wakeup, less likely to result
-in <ACK> errors. Thanks to user Luc Heijst for figuring this out!
+Made some changes in the Vantage driver to improve performance, particularly
+with the IP version of the logger. Thanks to user Luc Heijst for nagging
+me that the driver could be improved, and for figuring out how.
 
 Plotting routines now use Unicode internally, but convert to UTF-8 if a font
 does not support it. Fixes issue #101.
+
+Improved readability of documents on mobile devices. Thank you Chris
+Davies-Barnard!
+
+The loop_on_init option can now be specified in weewx.conf
+
+When uploading data to CWOP, skip records older than 60 seconds.  Fixes
+issue #106.
+
+Added modify_config method to the driver's configuration editor so that drivers
+can modify the configuration during installation, if necessary.
+
+The fousb and ws23xx drivers use modify_config to set record_generation to
+software.  This addresses issue #84.
+
+The wmr100, wmr200, wmr9x8, and wmr300 drivers use modify_config to set
+rainRate, heatindex, windchill, and dewpoint calculations to hardware instead
+of prefer_hardware since each of these stations has partial packets.  This
+addresses issue #7 (SF #46).
 
 
 3.4.0 01/16/2016

@@ -29,7 +29,7 @@ DRIVER_NAME = 'WMR9x8'
 DRIVER_VERSION = "3.0"
 
 
-def loader(config_dict, engine):
+def loader(config_dict, engine):  # @UnusedVariable
     return WMR9x8(**config_dict[DRIVER_NAME])
 
 def confeditor_loader():
@@ -622,6 +622,13 @@ class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
         print "example /dev/ttyUSB0 or /dev/ttyS0."
         port = self._prompt('port', '/dev/ttyUSB0')
         return {'port': port}
+
+    def modify_config(self, config_dict):
+        print """
+Setting rainRate, windchill, and dewpoint calculations to hardware."""
+        config_dict['StdWXCalculate']['rainRate'] = 'hardware'
+        config_dict['StdWXCalculate']['windchill'] = 'hardware'
+        config_dict['StdWXCalculate']['dewpoint'] = 'hardware'
 
 # Define a main entry point for basic testing without the weewx engine.
 # Invoke this as follows from the weewx root dir:

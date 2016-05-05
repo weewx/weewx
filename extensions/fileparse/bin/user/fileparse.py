@@ -15,14 +15,14 @@
 # See http://www.gnu.org/licenses/
 
 
-# This driver will read weather data from a file.  The file is specified using
-# the path parameter.  Each line of the file is a name=value pair, for example:
+# This driver will read data from a file.  Each line of the file is a 
+# name=value pair, for example:
 #
 # temperature=50
 # humidity=54
 # in_temperature=75
 #
-# The units must be weewx.US:
+# The units must be in the weewx.US unit system:
 #   degree_F, inHg, inch, inch_per_hour, mile_per_hour
 #
 # To use this driver, put this file in the weewx user directory, then make
@@ -35,8 +35,9 @@
 #     path = /var/tmp/wxdata     # location of data file
 #     driver = user.fileparse
 #
-# If the variables in the file have names different from those in weewx, then
-# create a mapping such as this:
+# If the variables in the file have names different from those in the database
+# schema, then create a mapping section called label_map.  This will map the
+# variables in the file to variables in the database columns.  For example:
 #
 # [FileParse]
 #     ...
@@ -52,7 +53,8 @@ import time
 
 import weewx.drivers
 
-DRIVER_VERSION = "0.5"
+DRIVER_NAME = 'FileParse'
+DRIVER_VERSION = "0.6"
 
 def logmsg(dst, msg):
     syslog.syslog(dst, 'fileparse: %s' % msg)
@@ -76,9 +78,9 @@ def _get_as_float(d, s):
     return v
 
 def loader(config_dict, engine):
-    return FileParse(**config_dict['FileParse'])
+    return FileParseDriver(**config_dict[DRIVER_NAME])
 
-class FileParse(weewx.drivers.AbstractDevice):
+class FileParseDriver(weewx.drivers.AbstractDevice):
     """weewx driver that reads data from a file"""
 
     def __init__(self, **stn_dict):
@@ -120,10 +122,10 @@ class FileParse(weewx.drivers.AbstractDevice):
     def hardware_name(self):
         return "FileParse"
 
-# To test this driver, do the following:
+# To test this driver, run it directly as follows:
 #   PYTHONPATH=/home/weewx/bin python /home/weewx/bin/user/fileparse.py
 if __name__ == "__main__":
     import weeutil.weeutil
-    station = FileParse()
-    for packet in station.genLoopPackets():
+    driver = FileParseDriver()
+    for packet in driver.genLoopPackets():
         print weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet

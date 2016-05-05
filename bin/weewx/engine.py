@@ -480,6 +480,7 @@ class StdArchive(StdService):
 
         # If the station supports a hardware archive interval, use that.
         # Warn if it is different than what is in config.
+        ival_msg = ''
         try:
             if software_interval != self.engine.console.archive_interval:
                 syslog.syslog(syslog.LOG_ERR,
@@ -489,10 +490,11 @@ class StdArchive(StdService):
                               (software_interval,
                                self.engine.console.archive_interval))
             self.archive_interval = self.engine.console.archive_interval
+            ival_msg = "(specified by hardware)"
         except NotImplementedError:
             self.archive_interval = software_interval
-        syslog.syslog(syslog.LOG_INFO, "engine: Using archive interval of %d seconds" % 
-                      self.archive_interval)
+            ival_msg = "(specified in weewx configuration)"
+        syslog.syslog(syslog.LOG_INFO, "engine: Using archive interval of %d seconds %s" % (self.archive_interval, ival_msg))
 
         if self.archive_delay <= 0:
             raise weewx.ViolatedPrecondition("Archive delay (%.1f) must be greater than zero." % 
@@ -510,7 +512,7 @@ class StdArchive(StdService):
         self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
     
-    def startup(self, event):
+    def startup(self, event):  # @UnusedVariable
         """Called when the engine is starting up."""
         # The engine is starting up. The main task is to do a catch up on any
         # data still on the station, but not yet put in the database. Not
@@ -520,7 +522,7 @@ class StdArchive(StdService):
         except NotImplementedError:
             pass
                     
-    def pre_loop(self, event):
+    def pre_loop(self, event):  # @UnusedVariable
         """Called before the main packet loop is entered."""
         
         # If this the the initial time through the loop, then the end of
@@ -563,7 +565,7 @@ class StdArchive(StdService):
         if event.packet['dateTime'] >= self.end_archive_delay_ts:
             raise BreakLoop
 
-    def post_loop(self, event):
+    def post_loop(self, event):  # @UnusedVariable
         """The main packet loop has ended, so process the old accumulator."""
         # If we happen to startup in the small time interval between the end of
         # the archive interval and the end of the archive delay period, then
@@ -594,7 +596,7 @@ class StdArchive(StdService):
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
         dbmanager.addRecord(event.record)
 
-    def setup_database(self, config_dict):
+    def setup_database(self, config_dict):  # @UnusedVariable
         """Setup the main database archive"""
 
         # This will create the database if it doesn't exist, then return an
@@ -603,7 +605,7 @@ class StdArchive(StdService):
         syslog.syslog(syslog.LOG_INFO, "engine: Using binding '%s' to database '%s'" % (self.data_binding, dbmanager.database_name))
         
         # Back fill the daily summaries.
-        nrecs, ndays = dbmanager.backfill_day_summary()
+        _nrecs, _ndays = dbmanager.backfill_day_summary()
 
     def _catchup(self, generator):
         """Pull any unarchived records off the console and archive them.
@@ -661,11 +663,11 @@ class StdTimeSynch(StdService):
         self.bind(weewx.STARTUP,  self.startup)
         self.bind(weewx.PRE_LOOP, self.pre_loop)
     
-    def startup(self, event):
+    def startup(self, event):  # @UnusedVariable
         """Called when the engine is starting up."""
         self.do_sync()
         
-    def pre_loop(self, event):
+    def pre_loop(self, event):  # @UnusedVariable
         """Called before the main event loop is started."""
         self.do_sync()
         
@@ -735,7 +737,7 @@ class StdReport(StdService):
         
         self.bind(weewx.POST_LOOP, self.launch_report_thread)
         
-    def launch_report_thread(self, event):
+    def launch_report_thread(self, event):  # @UnusedVariable
         """Called after the packet LOOP. Processes any new data."""
         # Do not launch the reporting thread if an old one is still alive.
         # To guard against a zombie thread (alive, but doing nothing) launch
@@ -811,18 +813,20 @@ def main(options, args, EngineClass=StdEngine) :
         syslog.syslog(syslog.LOG_INFO, "engine: pid file is %s" % options.pidfile)
         daemon.daemonize(pidfile=options.pidfile)
 
+    # for backward compatibility, recognize loop_on_init from command-line
+    loop_on_init = options.loop_on_init
+
     # be sure that the system has a reasonable time (at least 1 jan 2000).
     # log any problems every minute.
-    ts = time.time()
     n = 0
-    while ts < 946684800:
+    while weewx.launchtime_ts < 946684800:
         if n % 120 == 0:
             syslog.syslog(syslog.LOG_INFO,
                           "engine: waiting for sane time.  current time is %s"
-                          % weeutil.weeutil.timestamp_to_string(ts))
+                          % weeutil.weeutil.timestamp_to_string(weewx.launchtime_ts))
         n += 1
         time.sleep(0.5)
-        ts = time.time()
+        weewx.launchtime_ts = time.time()
 
     while True:
 
@@ -838,6 +842,11 @@ def main(options, args, EngineClass=StdEngine) :
         else:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
+        # See if there is a loop_on_init directive in the configuration, but
+        # use it only if nothing was specified via command-line.
+        if loop_on_init is None:
+            loop_on_init = to_bool(config_dict.get('loop_on_init', False))
+
         try:
             syslog.syslog(syslog.LOG_DEBUG, "engine: Initializing engine")
 
@@ -846,8 +855,8 @@ def main(options, args, EngineClass=StdEngine) :
     
             syslog.syslog(syslog.LOG_INFO, "engine: Starting up weewx version %s" % weewx.__version__)
 
-            # Start the engine. It should run forever unless an exception occurs. Log it
-            # if the function returns.
+            # Start the engine. It should run forever unless an exception
+            # occurs. Log it if the function returns.
             engine.run()
             syslog.syslog(syslog.LOG_CRIT, "engine: Unexpected exit from main loop. Program exiting.")
     
@@ -855,8 +864,9 @@ def main(options, args, EngineClass=StdEngine) :
         except InitializationError, e:
             # Log it:
             syslog.syslog(syslog.LOG_CRIT, "engine: Unable to load driver: %s" % e)
-            # See if we should loop, waiting for the console to be ready, or exit:
-            if options.loop_on_init:
+            # See if we should loop, waiting for the console to be ready.
+            # Otherwise, just exit.
+            if loop_on_init:
                 syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 60 seconds then retrying...")
                 time.sleep(60)
                 syslog.syslog(syslog.LOG_NOTICE, "engine: retrying...")

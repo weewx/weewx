@@ -60,7 +60,7 @@ class GeneralPlot(object):
         self.unit_label_font_path   = config_dict.get('unit_label_font_path')
         self.unit_label_font_color  = weeplot.utilities.tobgr(config_dict.get('unit_label_font_color', '0x000000'))
         self.unit_label_font_size   = int(config_dict.get('unit_label_font_size', 10)) * self.anti_alias
-        self.unit_label_position    = (10, 0) * self.anti_alias
+        self.unit_label_position    = (10 * self.anti_alias, 0)
         
         self.bottom_label_font_path = config_dict.get('bottom_label_font_path')
         self.bottom_label_font_color= weeplot.utilities.tobgr(config_dict.get('bottom_label_font_color', '0x000000'))

@@ -135,3 +135,17 @@ class AbstractConfEditor(object):
         val = weecfg.prompt_with_options(label, dflt, opts)
         del weecfg
         return val
+
+    def modify_config(self, config_dict):
+        """Given a configuration dictionary, make any modifications required
+        by the driver.
+
+        The default behavior is to make no changes.
+
+        This method gives a driver the opportunity to modify configuration
+        settings that affect its performance.  For example, if a driver can
+        support hardware archive record generation, but software archive record
+        generation is preferred, the driver can change that parameter using
+        this method.
+        """
+        pass

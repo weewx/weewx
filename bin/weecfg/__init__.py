@@ -295,6 +295,9 @@ def modify_config(config_dict, stn_info, logger, debug=False):
             # let the driver process the stanza or give us a new one
             stanza_text = driver_editor.get_conf(orig_stanza_text)
             stanza = configobj.ConfigObj(stanza_text.splitlines())
+
+            # let the driver modify other parts of the configuration
+            driver_editor.modify_config(config_dict)
         else:
             stanza = configobj.ConfigObj(interpolation=False)
             if driver_name in config_dict:
@@ -329,7 +332,9 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                     logger.log("Using %s for %s" % (stn_info[p], p), level=2)
                 config_dict['Station'][p] = stn_info[p]
         # Update units display with any stn_info overrides
-        if stn_info.get('units') is not None:
+        if (stn_info.get('units') is not None and
+            'StdReport' in config_dict and
+            'StandardReport' in config_dict['StdReport']):
             if stn_info.get('units') in ['metric', 'metricwx']:
                 if debug:
                     logger.log("Using Metric units for display", level=2)
@@ -862,10 +867,9 @@ def reorder(name_list, ref_list):
     for name in name_list:
         if name not in ref_list:
             result.append(name)
-            
     # Finally, add these, so they are at the very end
     for name in ref_list:
-        if name in ['FTP', 'RSYNC']:
+        if name in name_list and name in ['FTP', 'RSYNC']:
             result.append(name)
             
     # Make sure I have the same number I started with

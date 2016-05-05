@@ -324,6 +324,11 @@ Using ADAPTIVE as the polling_mode can lead to USB lockups."""
 A polling_interval of anything less than 48 seconds is not recommened."""
         return orig_stanza
 
+    def modify_config(self, config_dict):
+        print """
+Setting record_generation to software."""
+        config_dict['StdArchive']['record_generation'] = 'software'
+
 
 class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
     def add_options(self, parser):

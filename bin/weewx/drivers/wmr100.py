@@ -36,7 +36,7 @@ import weeutil.weeutil
 DRIVER_NAME = 'WMR100'
 DRIVER_VERSION = "3.1"
 
-def loader(config_dict, engine):
+def loader(config_dict, engine):  # @UnusedVariable
     return WMR100(**config_dict[DRIVER_NAME])    
 
 def confeditor_loader():
@@ -412,3 +412,8 @@ class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.wmr100
 """
+
+    def modify_config(self, config_dict):
+        print """
+Setting rainRate calculation to hardware."""
+        config_dict['StdWXCalculate']['rainRate'] = 'hardware'

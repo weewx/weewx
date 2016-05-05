@@ -695,7 +695,6 @@ import syslog
 import time
 import usb
 
-import weewx
 import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
@@ -835,7 +834,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_7x = time.time()
             except usb.USBError, e:
-                if not e.args[0].find('No data available'):
+                errmsg = repr(e)
+                if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
@@ -900,7 +900,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_65 = time.time()
             except usb.USBError, e:
-                if not e.args[0].find('No data available'):
+                errmsg = repr(e)
+                if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
@@ -991,7 +992,7 @@ class Station(object):
         self.open()
         return self
 
-    def __exit__(self, _, value, traceback):
+    def __exit__(self, _, value, traceback):  # @UnusedVariable
         self.close()
 
     def open(self):
@@ -1043,7 +1044,8 @@ class Station(object):
             if DEBUG_COUNTS and count:
                 self.update_count(buf, self.recv_counts)
         except usb.USBError, e:
-            if not e.args[0].find('No data available'):
+            errmsg = repr(e)
+            if not ('No data available' in errmsg or 'No error' in errmsg):
                 raise
         return buf
 
@@ -1347,6 +1349,14 @@ class WMR300ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.wmr300
 """
+
+    def modify_config(self, config_dict):
+        print """
+Setting rainRate, windchill, heatindex, and dewpoint calculations to hardware."""
+        config_dict['StdWXCalculate']['rainRate'] = 'hardware'
+        config_dict['StdWXCalculate']['windchill'] = 'hardware'
+        config_dict['StdWXCalculate']['heatindex'] = 'hardware'
+        config_dict['StdWXCalculate']['dewpoint'] = 'hardware'
 
 
 # define a main entry point for basic testing of the station without weewx

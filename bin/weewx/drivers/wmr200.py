@@ -47,7 +47,7 @@ DRIVER_NAME = 'WMR200'
 DRIVER_VERSION = "3.1"
 
 
-def loader(config_dict, engine):
+def loader(config_dict, engine):  # @UnusedVariable
     return WMR200(**config_dict[DRIVER_NAME])
 
 def confeditor_loader():
@@ -272,7 +272,8 @@ class UsbDevice(object):
             # have been exhausted.  We have to send a heartbeat command
             # to tell the weather console to start streaming live data
             # again.
-            if ex.args[0].find('No data available') == -1:
+            errmsg = repr(ex)
+            if not ('No data available' in errmsg):
                 msg = 'read_device() USB Error Reason:%s' % ex
                 logerr(msg)
                 raise weewx.WeeWxIOError(msg)
@@ -2000,3 +2001,9 @@ class WMR200ConfEditor(weewx.drivers.AbstractConfEditor):
     # The driver to use:
     driver = weewx.drivers.wmr200
 """
+
+    def modify_config(self, config_dict):
+        print """
+Setting rainRate and windchill calculations to hardware."""
+        config_dict['StdWXCalculate']['rainRate'] = 'hardware'
+        config_dict['StdWXCalculate']['windchill'] = 'hardware'

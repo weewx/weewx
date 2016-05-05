@@ -12,7 +12,7 @@ RELDIR=weewx.com:/downloads/development_versions/
 DOCDST=weewx.com:/
 
 # extract version to be used in package controls and labels
-VERSION=$(shell grep __version__ bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
+VERSION=$(shell grep "__version__.*=" bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
 
 CWD = $(shell pwd)
 BLDDIR=build
@@ -142,7 +142,7 @@ upload-readme: readme
 	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) README.txt)
 
 # update the version in all relevant places
-VDOCS=customizing.htm usersguide.htm upgrading.htm
+VDOCS=readme.htm customizing.htm usersguide.htm upgrading.htm
 version:
 	for f in $(VDOCS); do \
   sed -e 's/^Version: [0-9].*/Version: $(VERSION)/' docs/$$f > docs/$$f.tmp; \

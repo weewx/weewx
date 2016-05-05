@@ -1,43 +1,52 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta content="en-us" http-equiv="Content-Language"/>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <title>weewx: User's Guide</title>
-	<link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>    
+    <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>    
     <link href="css/jquery.tocify.css" rel="stylesheet"/>
-    <link href="css/weewx_docs.css" rel="stylesheet"/>
-    
+    <link href="css/weewx_docs.css" rel="stylesheet"/>  
 </head>
 
+<body>
 
-<body><div id="page">
-
-<div id="toc_parent" class="sidebar">
-	<div  class="fixed">
-	  <p><a href="index.html">Docs Index</a></p>
-	  <div id="toc_controls"></div>
-	</div>
-	<div id="toc" class="scrollable">
-		<!-- The table of contents will get injected here -->
+<div class="sidebar">
+    <div class="doclist">
+        <a href="usersguide.htm">User's Guide</a><br/>
+        <a href="customizing.htm">Customization Guide</a><br/>
+        <a href="upgrading.htm">Upgrade Guide</a>
+    </div>
+    <div id="toc_controls"></div>
+    <div id="toc_parent">
+        <div id="toc">
+	    <!-- The table of contents will be injected here -->
+        </div>
     </div>
 </div>
 
-<div id="technical_content" class="main">
+<div class="main">
 
-	<div class="header">
-		<a href='http://weewx.com'>
-	        <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
-	    </a>
-	
-	    <h1 class="title">User's Guide to the <span class="code">weewx</span> Weather System<br/>
-	      <span class='version'>Version: 3.4.0</span>
-	    </h1>
-	</div><!-- End Header -->
+<div class="header">
+    <div class="logoref">
+        <a href='http://weewx.com'>
+	    <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
+        </a><br/>
+	<span class='version'>
+Version: 3.5.0
+        </span>
+    </div>
+    <div class="title">
+        User's Guide to the <span class="code">weewx</span> Weather System
+    </div>
+</div>
+
+<div id="technical_content" class="content">
 
     <p>
-        This is the complete guide to installing and configuring <span class="code">weewx</span>.
+        This is the complete guide to installing, configuring, and
+        troubleshooting <span class="code">weewx</span>.
     </p>
 
     <h1 id="about">About <span class="code">weewx</span></h1>
@@ -215,6 +224,28 @@
             <td class="code">pyusb</td>
             <td>TE923<sup><a href='#te923'>9</a></sup></td>
             <td>Experimental</td>
+        </tr>
+        <tr>
+            <td class="text_highlight" rowspan="3">DAZA</td>
+            <td>DZ-WH1080</td>
+            <td>USB</td>
+            <td class="code">pyusb</td>
+            <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>DZ-WS3101</td>
+            <td>USB</td>
+            <td class="code">pyusb</td>
+            <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>DZ-WS3104</td>
+            <td>USB</td>
+            <td class="code">pyusb</td>
+            <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+            <td></td>
         </tr>
         <tr>
             <td class="text_highlight" rowspan="3">Davis</td>
@@ -780,7 +811,7 @@
         </li>
         <li><a id="wmr200">Oregon Scientific WMR-300 stations.</a> Tested on the
             <a href="http://www.oregonscientificstore.com/p-358-oregon-scientific-wmr300-ultra-precision-professional-weather-system.aspx">Oregon
-                Scientific WMR200A</a>.
+                Scientific WMR300A</a>.
         </li>
         <li><a id="wmr9x8">Oregon Scientific WMR-9x8 stations.</a> Tested on the
             <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon Scientific
@@ -912,10 +943,10 @@
             class='code'>weewx</span>.
     </p>
 
-    <h2><a href='debian.htm'>Installing from DEB package (Quick Start)</a></h2>
+    <h2><a href='debian.htm'>Installing from DEB package</a></h2>
 
     <p>For Debian, Ubuntu, Mint, and Raspian operating systems, follow the
-        <a href='debian.htm'>"Quick Start" instructions for Debian-based systems</a>.</p>
+        <a href='debian.htm'>instructions for Debian-based systems</a>.</p>
 
     <h2><a href='redhat.htm'>Installing from Redhat RPM package</a></h2>
 
@@ -2624,6 +2655,22 @@ longitude = -77.0366</pre>
     ...
     windchill = software</pre>
 
+    <p class="config_option">ignore_zero_wind</p>
+
+    <p>
+        Indicates whether the wind direction should be undefined when the wind
+        speed is zero.  The default value is True; by default, the wind
+        direction will be undefined when wind speed is zero.
+    </p>
+
+    <p>
+        To report the wind vane direction even when there is no wind speed,
+        change this to False:
+    </p>
+    <pre class="tty">[StdWXCalculate]
+    ...
+    ignore_zero_wind = False</pre>
+
     <h2 class="config_section" id="StdArchive">[StdArchive]</h2>
 
     <p>This section is for configuring <span class="code">StdArchive</span>, the
@@ -2875,7 +2922,7 @@ longitude = -77.0366</pre>
        be changed without a good reason. Default is <span class="code">INNODB</span>.
     </p>
 
-    <h2 class="config_section">[Engines]</h2>
+    <h2 class="config_section">[Engine]</h2>
 
     <p>
         This section is used to configure the internal service engine in <span
@@ -2941,9 +2988,12 @@ longitude = -77.0366</pre>
         run with the default distribution.</p>
     <pre class="tty">
 prep_services    = weewx.engine.StdTimeSynch
-process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.wxservices.StdWXCalculate
+process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate,\
+  weewx.engine.StdQC, weewx.wxservices.StdWXCalculate
 archive_services = weewx.engine.StdArchive
-restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW, weewx.restx.StdAWEKAS
+restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground,\
+  weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW,\
+  weewx.restx.StdAWEKAS
 report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
 </pre>
     <p>If you're the type who likes to clean out your car trunk after every
@@ -3946,48 +3996,6 @@ wind_gust_max_time: None</pre>
         can do much more than the console alarms anyway.</p>
 
 
-    <h1 id="configuring_mysql">Configuring MySQL</h1>
-
-    <p>This section applies only to those who wish to use the MySQL
-        database, instead of the default SQLite database.</p>
-
-    <p>
-        First, you should change your <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a>
-        section to point to the MySQL database, <span class="code">archive_mysql</span>,
-        instead of the SQLite database <span class="code">archive_sqlite</span>. After the
-        change, it
-        will look something like this (change <span class="highlight">highlighted</span>):
-    </p>
-    <pre class="tty">
-    [[wx_binding]]
-        # The database should match one of the sections in [Databases] 
-        <span class="highlight">database = archive_mysql</span>
-        # The name of the table within the database
-        table_name = archive
-        # The class to manage the database
-        manager = weewx.wxmanager.WXDaySummaryManager
-        # The schema defines to structure of the database contents
-        schema = schemas.wview.schema</pre>
-
-    <p>Assuming that you want to use the default database configuration, your
-        <span class="code"><a href="#Databases">[[MySQL]]</a></span> section
-        should look something like this:</p>
-    <pre class="tty">[[MySQL]]
-    driver = weedb.mysql
-    host = localhost
-    user = weewx
-    password = weewx
-</pre>
-    <p>This assumes user <span class="code">weewx</span> would have password <span class="code">weewx</span>.
-        Adjust as necessary.</p>
-
-    <p>You will need to give the necessary permissions for the database <span class="code">weewx</span>
-        to whatever MySQL user you choose, by
-        default, user <span class="code">weewx</span>. Here are the necessary minimum
-        permissions:</p>
-    <pre class="tty">mysql&gt; <span class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
-mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop ON weewx.* TO weewx@localhost;</span></pre>
-
     <h1 id="running">Running <span class="code">weewx</span></h1>
 
     <p><span class="code">Weewx</span> can be run either directly,
@@ -4134,68 +4142,6 @@ sudo /etc/init.d/weewx restart</pre>
         useful for diagnosing problems and debugging.</p>
 
     <p class='tty'>debug = 1</p>
-
-    <h1 id="wview_compatibility">Compatibility with <span class="code">wview</span></h1>
-
-    <h2>sqlite3</h2>
-
-    <p>The SQLite archive database used by <span class="code">weewx</span>
-        (nominally, <span class="code">weewx.sdb</span>) is completely
-        compatible with the database used by
-        <a href="http://www.wviewweather.com">wview</a> (usually called
-        <span class="code">wview-archive.sdb</span>), at least as of wview
-        Version 5.2.X. The schema, and its semantics, is identical.
-    </p>
-
-    <p>If you have data from <span class='code'>wview</span>, you can
-        'import' them into <span class='code'>weewx</span> by simply copying the
-        SQLite database file. Assuming that the <span class='code'>wview</span>
-        data are in file
-        <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
-
-    <pre class='tty cmd'>sudo /etc/init.d/weewx stop
-cd <span class="symcode">SQLITE_ROOT</span>
-mv weewx.sdb weewx.sdb.bak
-cp /var/wview/archive/wview-archive.sdb weewx.sdb
-sudo /etc/init.d/weewx start</pre>
-
-    <p>
-        Internally, within the <span class="code">weewx.sdb</span> database,
-        <span class="code">weewx</span> also maintains a "daily summary" of all the statistics. This
-        is done for performance reasons. The daily summary will
-        automatically be built on the first startup. This could take
-        a few minutes if the <span class='code'>wview</span> archive contains
-        more than a month or two of data.
-    </p>
-
-    <p>
-        On my modest 500 MHz <a href="http://www.fit-pc.com/">fit-PC
-        Slim</a> with 512 MB of memory it took a little over 4 minutes for a
-        year and a half (25 MB) of data.
-    </p>
-
-    <h2>MySQL</h2>
-
-    <p>The MySQL archive database used by wview is "almost" compatible with
-        <span class="code">weewx</span>. The one difference is that in wview, the column <span
-                class="code">interval</span>
-        is named <span class="code">arcInt</span> (presumably because
-        <span class="code">interval</span> is a keyword in MySQL, although it can
-        still be used by surrounding the word with backquotes). </p>
-
-    <p>To change the column name to what <span class="code">weewx</span> uses, namely <span class="code">interval</span>,
-        use the utility <span class="code">mysql</span> and issue the command:</p>
-    <pre class="tty">mysql> <span class="cmd">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt `interval` INTEGER NOT NULL;</span> </pre>
-    <p>where <span class="code"><em>your-wview-archive-name</em></span> is the
-        name of your wview archive database. Note that the word <span class="code">
-        interval</span> is surrounded by backquotes.</p>
-
-    <p>Then in the <span class="code">[Databases]</span> section of
-        <span class="code">weewx.conf</span>, replace the name of the database
-        with whatever your installation of wview used <span class="code"><em>your-wview-archive-name</em></span>:</p>
-    <pre class="tty">[[archive_mysql]]
-    database_type = MySQL
-    database_name = <span class="highlight"><em>your-wview-archive-name</em></span></pre>
 
 
     <h1 id="integrating_with_webserver">Integrating with a web server</h1>
@@ -4359,6 +4305,112 @@ sudo /etc/init.d/apache2 restart</pre>
     </p>
 
 
+    <h1 id="configuring_mysql">Configuring MySQL</h1>
+
+    <p>This section applies only to those who wish to use the MySQL
+        database, instead of the default SQLite database.</p>
+
+    <p>
+        First, you should change your <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a>
+        section to point to the MySQL database, <span class="code">archive_mysql</span>,
+        instead of the SQLite database <span class="code">archive_sqlite</span>. After the
+        change, it
+        will look something like this (change <span class="highlight">highlighted</span>):
+    </p>
+    <pre class="tty">
+    [[wx_binding]]
+        # The database should match one of the sections in [Databases] 
+        <span class="highlight">database = archive_mysql</span>
+        # The name of the table within the database
+        table_name = archive
+        # The class to manage the database
+        manager = weewx.wxmanager.WXDaySummaryManager
+        # The schema defines to structure of the database contents
+        schema = schemas.wview.schema</pre>
+
+    <p>Assuming that you want to use the default database configuration, your
+        <span class="code"><a href="#Databases">[[MySQL]]</a></span> section
+        should look something like this:</p>
+    <pre class="tty">[[MySQL]]
+    driver = weedb.mysql
+    host = localhost
+    user = weewx
+    password = weewx
+</pre>
+    <p>This assumes user <span class="code">weewx</span> would have password <span class="code">weewx</span>.
+        Adjust as necessary.</p>
+
+    <p>You will need to give the necessary permissions for the database <span class="code">weewx</span>
+        to whatever MySQL user you choose, by
+        default, user <span class="code">weewx</span>. Here are the necessary minimum
+        permissions:</p>
+    <pre class="tty">mysql&gt; <span class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
+mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop ON weewx.* TO weewx@localhost;</span></pre>
+
+
+    <h1 id="wview_compatibility">Compatibility with <span class="code">wview</span></h1>
+
+    <h2>sqlite3</h2>
+
+    <p>The SQLite archive database used by <span class="code">weewx</span>
+        (nominally, <span class="code">weewx.sdb</span>) is completely
+        compatible with the database used by
+        <a href="http://www.wviewweather.com">wview</a> (usually called
+        <span class="code">wview-archive.sdb</span>), at least as of wview
+        Version 5.2.X. The schema, and its semantics, is identical.
+    </p>
+
+    <p>If you have data from <span class='code'>wview</span>, you can
+        'import' them into <span class='code'>weewx</span> by simply copying the
+        SQLite database file. Assuming that the <span class='code'>wview</span>
+        data are in file
+        <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
+
+    <pre class='tty cmd'>sudo /etc/init.d/weewx stop
+cd <span class="symcode">SQLITE_ROOT</span>
+mv weewx.sdb weewx.sdb.bak
+cp /var/wview/archive/wview-archive.sdb weewx.sdb
+sudo /etc/init.d/weewx start</pre>
+
+    <p>
+        Internally, within the <span class="code">weewx.sdb</span> database,
+        <span class="code">weewx</span> also maintains a "daily summary" of all the statistics. This
+        is done for performance reasons. The daily summary will
+        automatically be built on the first startup. This could take
+        a few minutes if the <span class='code'>wview</span> archive contains
+        more than a month or two of data.
+    </p>
+
+    <p>
+        On my modest 500 MHz <a href="http://www.fit-pc.com/">fit-PC
+        Slim</a> with 512 MB of memory it took a little over 4 minutes for a
+        year and a half (25 MB) of data.
+    </p>
+
+    <h2>MySQL</h2>
+
+    <p>The MySQL archive database used by wview is "almost" compatible with
+        <span class="code">weewx</span>. The one difference is that in wview, the column <span
+                class="code">interval</span>
+        is named <span class="code">arcInt</span> (presumably because
+        <span class="code">interval</span> is a keyword in MySQL, although it can
+        still be used by surrounding the word with backquotes). </p>
+
+    <p>To change the column name to what <span class="code">weewx</span> uses, namely <span class="code">interval</span>,
+        use the utility <span class="code">mysql</span> and issue the command:</p>
+    <pre class="tty">mysql> <span class="cmd">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt `interval` INTEGER NOT NULL;</span> </pre>
+    <p>where <span class="code"><em>your-wview-archive-name</em></span> is the
+        name of your wview archive database. Note that the word <span class="code">
+        interval</span> is surrounded by backquotes.</p>
+
+    <p>Then in the <span class="code">[Databases]</span> section of
+        <span class="code">weewx.conf</span>, replace the name of the database
+        with whatever your installation of wview used <span class="code"><em>your-wview-archive-name</em></span>:</p>
+    <pre class="tty">[[archive_mysql]]
+    database_type = MySQL
+    database_name = <span class="highlight"><em>your-wview-archive-name</em></span></pre>
+
+
     <h1 id="troubleshooting">Troubleshooting</h1>
 
     <p>This section lists some common problems installing and running
@@ -4390,12 +4442,12 @@ sudo /etc/init.d/apache2 restart</pre>
 
     <p>Troubleshooting problems when running <span class="code">weewx</span> 
     often involves analysis of a number of pieces of seemingly disparate system
-    and <span class="code">weewx</span> related information. To enable users to gather a standard set of 
-    troubleshooting information in a single report the 
-    <span class="code">wee_debug</span> utility has been developed. The 
+    and <span class="code">weewx</span> related information. The
+    <span class="code">wee_debug</span> utility gathers this information into
+    a single output to make troubleshooting easier. The 
     <span class="code">wee_debug</span> utility is particularly useful for new 
-    users as the <span class="code">wee_debug</span> output may be redirected to 
-    file and emailed or posted to a forum to assist in remote troubleshooting.</p>
+    users as the output may be redirected to file then emailed or posted to a
+    forum to assist in remote troubleshooting.</p>
     
     <p>Before using <span class="code">wee_debug</span>, it's worth running it 
     with the <span class="code">--help</span> option to see how it is used:</p>
@@ -4440,7 +4492,7 @@ before posting the information publicly.
     <p>This displays a short message indicating the 
     <span class="code">wee_debug</span> version number:</p>
 
-    <pre class="tty cmd">wee_debug version: 0.2</pre>
+    <pre class="tty">wee_debug version: 0.2</pre>
 
     <h3>Generating a debug report</h3>
     
@@ -5353,7 +5405,7 @@ sudo fc-cache -f -v</pre>
         system, then you will have to change the option <span class="code">unit_label_font_path</span>
         to point to something on your system which does support UTF-8 characters.</p>
 
-    <h3><span class="code">UnicodeEncodeError</span></h3>
+    <h3>UnicodeEncodeError</h3>
 
     <p>This problem is closely related to the <a href="#funky_symbols">"Funky symbols"</a>
         problem above. In this case, you may see errors in your log that look like:</p>
@@ -5381,6 +5433,113 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
     <p>This is frequently caused by the necessary Truetype fonts not being installed on
         your computer and, instead, a default font is being substituted, which only knows
         how to plot ASCII characters. The cure is as before: install the font.</p>
+
+    <h2>Meteorological problems</h2>
+
+    <h3 id='pressure_mismatch'>The pressure reported by <span class='code'>weewx</span> does not match the pressure on the console</h3>
+
+    <p>
+        Be sure that you are comparing the right values. There are three different types of pressure:
+    </p>
+    <dl>
+        <dt>Station Pressure</dt>
+        <dd>
+            The <em>Station Pressure</em> (SP), which is the raw, absolute
+            pressure measured by the station.
+            This is <span class='code'>pressure</span> in
+            <span class='code'>weewx</span> packets and archive records.</dd>
+        <dt>Sea Level Pressure</dt>
+        <dd>
+            The <em>Sea Level Pressure</em> (SLP) is obtained by correcting
+            the <em>Station Pressure</em> for altitude and local temperature.
+            This is <span class='code'>barometer</span> in
+            <span class='code'>weewx</span> packets and archive records.
+        </dd>
+        <dt>Altimeter</dt>
+        <dd>
+            The <em>Altimeter Setting</em> (AS) is obtained by correcting the
+            <em>Station Pressure</em> for altitude.
+            This is <span class='code'>altimeter</span> in
+            <span class='code'>weewx</span> packets and archive records.
+        </dd>
+    </dl>
+
+    <p>
+        Any station might require calibration.  For some hardware, this can
+        be done at the weather station console.  Alternatively, use the
+        <span class='code'>StdCalibrate</span> section to apply an offset.
+    </p>
+
+    <p>
+        If your station is significantly above (or below) sea level, be sure
+        that the station altitude is specified properly.  Also, be sure that
+        any calibration results in a station pressure and/or barometric
+        pressure that matches those reported by other stations in your area.
+    </p>
+
+    <h3 id='rain_mismatch'>The rainfall and/or rain rate reported by <span class='code'>weewx</span> do not match the console</h3>
+
+    <p>
+        First of all, be sure that you are comparing the right quantities.  The value <span class='code'>rain</span> is the amount of rainfall observed in a period of time.  The period of time might be a LOOP interval, in which case the <span class='code'>rain</span> is the amount of rain since the last LOOP packet.  Or the period of time might be an archive interval, in which case the <span class='code'>rain</span> is the total of rain reported in each LOOP packet since the last archive record.
+    </p>
+
+    <p>
+        Some consoles report the amount of rain in the past hour, or the amount of rain since midnight.
+    </p>
+
+    <p>
+        The rain rate is a derived quantity.  Some stations report a rain rate, but for those that do not, <span class='code'>weewx</span> will calculate the rain rate.
+    </p>
+
+    <p>
+        Be sure that the units are correct.
+    </p>
+
+    <p>
+        Finally, beware of calibration factors specific to the hardware.  For example, the bucket type on a Vantage station must be specified when you set up the weather station.  If you modify the rain bucket with a larger collection area, then you will have to add a multiplier in the <span class='code'>StdCalibrate</span> section.
+    </p>
+
+    <p>
+        To diagnose rain issues, run <span class='code'>weewx</span> directly so that you can see each LOOP packet and REC archive record.  Tip the bucket to verify that each bucket tip is detected and reported by <span class='code'>weewx</span>.  Verify that each bucket tip is converted to the correct rainfall amount.  Then check the database to verify that the values are properly added and recorded.
+    </p>
+
+    <h3 id='pressure_calibration'>Calibrating <span class='code'>barometer</span> does not change the pressure displayed by <span class='code'>weewx</span></h3>
+
+    <p>
+        Be sure that the calibration is applied to the correct quantity.
+    </p>
+
+    <p>
+        The corrections in the <span class='code'>StdCalibrate</span> section
+        apply only to raw values from the hardware; corrections are not applied
+        to derived quantities.
+    </p>
+
+    <p>
+        The station hardware matters.  Some stations report gauge pressure
+        (<span class='code'>pressure</span>) while other stations report
+        sea-level pressure (<span class='code'>barometer</span>).  For example,
+        if the hardware is a Vantage station, the correction must be applied
+        to <span class='code'>barometer</span> since the Vantage station
+        reports <span class='code'>barometer</span> and
+        <span class='code'>weewx</span> calculates
+        <span class='code'>pressure</span>.  However, if the hardware
+        is a FineOffset station, the correction must be applied to
+        <span class='code'>pressure</span> since the FineOffset stations
+        report <span class='code'>pressure</span> and
+        <span class='code'>weewx</span> calculates
+        <span class='code'>barometer</span>.
+    </p>        
+
+    <h3 id="zero_windspeed">There is no wind direction when wind speed is zero</h3>
+
+    <p>
+        This is by design - if there is no wind, then the wind direction is undefined.  An undefined value is represented by a NULL in the database or a None in Python.  This policy is enforced by the <span class='code'>StdWXCalculate</span> service.  If necessary, it can be overridden.  See the <a href="#StdWXCalculate"><span class='code'>StdWXCalculate</span></a> section for instructions.
+    </p>
+    <p>
+        <span class='code'>weewx</span> distinguishes between a value of zero and no value (NULL or None).  However, some services do not make this distinction and replace a NULL or None with a clearly invalid value such as -999.
+    </p>
+
 
     <h1 id="architecture">Architectural Notes</h1>
 
@@ -5680,11 +5839,13 @@ next_dt = time_dt + delta
 next_ts = int(time.mktime(next_dt.timetuple()))</pre>
     <p>Other time conversion problems are handled in a similar manner. </p>
 
-    <p class="copyright"> &copy; <a href="copyright.htm">Copyright</a> Tom Keffer </p>
-    
-</div><!-- #technical_content -->
+</div>
 
-</div><!-- End of Page -->
+<div class="footer">
+    <p class="copyright"> &copy; <a href="copyright.htm">Copyright</a> Tom Keffer </p>
+</div>
+
+</div>
 
 <!-- Our scripts load last so the content can load first -->
 <script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
@@ -5700,19 +5861,18 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
 </script>
 
 <script type="text/javascript">
-    function showtab(tab, id) {
-        document.getElementById(tab + '-deb').style.display = 'none';
-        document.getElementById(tab + '-rpm').style.display = 'none';
-        document.getElementById(tab + '-setup').style.display = 'none';
-        document.getElementById(tab + '-' + id).style.display = 'block';
+function showtab(tab, id) {
+    document.getElementById(tab + '-deb').style.display = 'none';
+    document.getElementById(tab + '-rpm').style.display = 'none';
+    document.getElementById(tab + '-setup').style.display = 'none';
+    document.getElementById(tab + '-' + id).style.display = 'block';
 
-        document.getElementById(tab + '-tab-deb').className = 'tab';
-        document.getElementById(tab + '-tab-rpm').className = 'tab';
-        document.getElementById(tab + '-tab-setup').className = 'tab';
-        document.getElementById(tab + '-tab-' + id).className = 'tab selected';
-    }
+    document.getElementById(tab + '-tab-deb').className = 'tab';
+    document.getElementById(tab + '-tab-rpm').className = 'tab';
+    document.getElementById(tab + '-tab-setup').className = 'tab';
+    document.getElementById(tab + '-tab-' + id).className = 'tab selected';
+}
 </script>
-
 
 </body>
 </html>

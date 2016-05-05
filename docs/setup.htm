@@ -9,7 +9,7 @@
     <link rel="icon" type="image/png" href="/docs/images/favicon.png">    
 </head>
 
-<body><div id="page">
+<body>
 
 <h1 class="title">weewx: Installation using setup.py</h1>
 
@@ -32,7 +32,7 @@
 <p>The installation will place <span class="code">weewx</span> in the
     <span class="code">/home/weewx</span> directory with the following
     layout: </p>
-<table class='locations' style="width:40%; font-size: 90%">
+<table class='locations' style="width:50%">
     <tr>
         <td align='right'>executable:</td>
         <td class='tty'>/home/weewx/bin/weewxd</td>
@@ -68,118 +68,102 @@
 <p>Ensure that Python2 is installed. Python 2.6 or 2.7 will work,
     but Python 3 will not.</p>
 <pre class='tty cmd'>python -V</pre>
-<p>Then install required python packages using the package management
-    software for your system (<em>e.g.</em>, <span class='code'>apt-get</span>, <span class='code'>yum</span>, <span
-            class='code'>yast</span>) or the
-    Python Package Management System (<span class='code'>pip</span>).
-    Select the appropriate tab for specific instructions.</p>
+<p>Then install required python packages using the package management software for your system (<em>e.g.</em>, <span class='code'>apt-get</span>, <span class='code'>yum</span>, <span class='code'>yast</span>) or the Python Package Management System (<span class='code'>pip</span>). Select the appropriate tab for specific instructions.</p>
 
 <div class='tabs'>
-    <div id='prereq-tab-debian' class='tab selected' onclick="showprereq('debian')">Debian <img
-            src='images/logo-debian.png' class='thumbnail' alt=""/> <img src='images/logo-ubuntu.png' class='thumbnail'
-                                                                         alt=""/> <img src='images/logo-mint.png'
-                                                                                       class='thumbnail' alt=""/></div>
-    <div id='prereq-tab-redhat' class='tab' onclick="showprereq('redhat')">Redhat <img src='images/logo-redhat.png'
-                                                                                       class='thumbnail' alt=""/> <img
-            src='images/logo-centos.png' class='thumbnail' alt=""/> <img src='images/logo-fedora.png' class='thumbnail'
-                                                                         alt=""/></div>
-    <div id='prereq-tab-suse' class='tab' onclick="showprereq('suse')">SuSE <img src='images/logo-suse.png'
-                                                                                 class='thumbnail' alt=""/></div>
+    <div id='prereq-tab-debian' class='tab selected' onclick="showprereq('debian')">Debian <imge src='images/logo-debian.png' class='thumbnail' alt=""/> <img src='images/logo-ubuntu.png' class='thumbnail' alt=""/> <img src='images/logo-mint.png' class='thumbnail' alt=""/></div>
+    <div id='prereq-tab-redhat' class='tab' onclick="showprereq('redhat')">Redhat <img src='images/logo-redhat.png' class='thumbnail' alt=""/> <img src='images/logo-centos.png' class='thumbnail' alt=""/> <img src='images/logo-fedora.png' class='thumbnail' alt=""/></div>
+    <div id='prereq-tab-suse' class='tab' onclick="showprereq('suse')">SuSE <img src='images/logo-suse.png' class='thumbnail' alt=""/></div>
     <div id='prereq-tab-pip' class='tab' onclick="showprereq('pip')">pip</div>
 </div>
 <div id='prereq' style='clear:both'>
     <div id='prereq-debian'>
         <pre class='tty'># debian, ubuntu, mint
-          
-          # required packages:
-          <span class="cmd">sudo apt-get install python-configobj
-          sudo apt-get install python-cheetah
-          sudo apt-get install python-imaging</span>
-          
-          # required if hardware is serial or USB:
-          <span class="cmd">sudo apt-get install python-serial
-          sudo apt-get install python-usb</span>
-          
-          # required if using MySQL:
-          <span class="cmd">sudo apt-get install mysql-client
-          sudo apt-get install python-mysqldb</span>
-          
-	  # required if you are on Raspbian and planning on using FTP:
-          <span class="cmd">sudo apt-get install ftp</span>
 
-          # optional for extended almanac information:
-          <span class="cmd">sudo apt-get install python-dev
-          sudo apt-get install python-pip
-          sudo pip install pyephem</span>
-        </pre>
+# required packages:
+<span class="cmd">sudo apt-get install python-configobj
+sudo apt-get install python-cheetah
+sudo apt-get install python-imaging</span>
+          
+# required if hardware is serial or USB:
+<span class="cmd">sudo apt-get install python-serial
+sudo apt-get install python-usb</span>
+
+# required if using MySQL:
+<span class="cmd">sudo apt-get install mysql-client
+sudo apt-get install python-mysqldb</span>
+
+	  # required if you are on Raspbian and planning on using FTP:
+<span class="cmd">sudo apt-get install ftp</span>
+
+# optional for extended almanac information:
+<span class="cmd">sudo apt-get install python-dev
+sudo apt-get install python-pip
+sudo pip install pyephem</span></pre>
     </div>
     <div id='prereq-redhat' style='display:none'>
         <pre class='tty'># redhat, centos, fedora
-          
-          # required packages:
-          <span class="cmd">sudo yum install python-configobj
-          sudo yum install python-cheetah
-          sudo yum install python-imaging</span>
-          
-          # required if hardware is serial or USB:
-          <span class="cmd">sudo yum install python-setuptools
-          sudo easy_install pyserial
-          sudo easy_install pyusb</span>
-          
-          # required if using MySQL:
-          <span class="cmd">sudo yum install mysql-client
-          sudo yum install python-mysqldb</span>
-          
-          # optional for extended almanac information:
-          <span class="cmd">sudo yum install pyephem</span>
-        </pre>
+
+# required packages:
+<span class="cmd">sudo yum install python-configobj
+sudo yum install python-cheetah
+sudo yum install python-imaging</span>
+
+# required if hardware is serial or USB:
+<span class="cmd">sudo yum install python-setuptools
+sudo easy_install pyserial
+sudo easy_install pyusb</span>
+
+# required if using MySQL:
+<span class="cmd">sudo yum install mysql-client
+sudo yum install python-mysqldb</span>
+
+# optional for extended almanac information:
+<span class="cmd">sudo yum install pyephem</span></pre>
     </div>
     <div id='prereq-suse' style='display:none'>
         <pre class='tty'># suse
-          # on some SuSE systems, use 'yast -i' instead of 'zypper install'
+# on some SuSE systems, use 'yast -i' instead of 'zypper install'
 
-          # required packages:
-          <span class="cmd">sudo zypper install python-configobj
-          sudo zypper install python-imaging
-          sudo zypper install python-Cheetah</span>
-          
-          # required if hardware is serial or USB:
-          <span class="cmd">sudo zypper install python-pyserial
-          sudo zypper install pyton-usb</span>
-          
-          # required if using MySQL:
-          <span class="cmd">sudo zypper install mysql-community-server-client
-          sudo zypper install python-mysql</span>
-          
-          # optional for extended almanac information:
-          <span class="cmd">sudo zypper install python-devel
-          sudo zypper install setuptools
-          sudo pip install pyephem</span>
-        </pre>
+# required packages:
+<span class="cmd">sudo zypper install python-configobj
+sudo zypper install python-imaging
+sudo zypper install python-Cheetah</span>
+
+# required if hardware is serial or USB:
+<span class="cmd">sudo zypper install python-pyserial
+sudo zypper install pyton-usb</span>
+
+# required if using MySQL:
+<span class="cmd">sudo zypper install mysql-community-server-client
+sudo zypper install python-mysql</span>
+
+# optional for extended almanac information:
+<span class="cmd">sudo zypper install python-devel
+sudo zypper install setuptools
+sudo pip install pyephem</span></pre>
     </div>
     <div id='prereq-pip' style='display:none'>
         <pre class='tty'># python setup tool (pip)
-          
-          # required packages:
-          <span class="cmd">sudo pip install configobj
-          sudo pip install Cheetah
-          sudo pip install pillow</span>
-          
-          # required if hardware is serial or USB:
-          <span class="cmd">sudo pip install pyserial
-          sudo pip install pyusb</span>
-          
-          # optional for extended almanac information:
-          <span class="cmd">sudo pip install pyephem</span>
-        </pre>
+
+# required packages:
+<span class="cmd">sudo pip install configobj
+sudo pip install Cheetah
+sudo pip install pillow</span>
+
+# required if hardware is serial or USB:
+<span class="cmd">sudo pip install pyserial
+sudo pip install pyusb</span>
+
+# optional for extended almanac information:
+<span class="cmd">sudo pip install pyephem</span></pre>
     </div>
 </div>
 
 <h2>Download</h2>
 
 <p>
-    Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</span> from
-    <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
+    Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</span> from <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
 </p>
 
 <h2>Install <span class='code'>weewx</span></h2>
@@ -194,56 +178,45 @@
     <span class='code'>setup.cfg</span> file.</p>
 
 <p>Then build and install:</p>
-    <pre class="tty cmd">./setup.py build
-      sudo ./setup.py install</pre>
+<pre class="tty cmd">./setup.py build
+sudo ./setup.py install</pre>
 <p>
-    The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to the
-    station.
+    The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to the station.
 </p>
 
 <h2>Run</h2>
 
 <p>Run the main program directly:</p>
-    <pre class="tty cmd">cd /home/weewx
-      sudo ./bin/weewxd weewx.conf</pre>
+<pre class="tty cmd">cd /home/weewx
+sudo ./bin/weewxd weewx.conf</pre>
 <p>Or as a daemon automatically when the computer starts:</p>
 
 <div class='tabs'>
-    <div id='startup-tab-debian' class='tab selected' onclick="showstartup('debian')">Debian <img
-            src='images/logo-debian.png' class='thumbnail' alt=""/> <img src='images/logo-ubuntu.png' class='thumbnail'
-                                                                         alt=""/> <img src='images/logo-mint.png'
-                                                                                       class='thumbnail' alt=""/></div>
-    <div id='startup-tab-redhat' class='tab' onclick="showstartup('redhat')">Redhat <img src='images/logo-redhat.png'
-                                                                                         class='thumbnail' alt=""/> <img
-            src='images/logo-centos.png' class='thumbnail' alt=""/> <img src='images/logo-fedora.png' class='thumbnail'
-                                                                         alt=""/></div>
-    <div id='startup-tab-suse' class='tab' onclick="showstartup('suse')">SuSE <img src='images/logo-suse.png'
-                                                                                   class='thumbnail' alt=""/></div>
+    <div id='startup-tab-debian' class='tab selected' onclick="showstartup('debian')">Debian <img src='images/logo-debian.png' class='thumbnail' alt=""/> <img src='images/logo-ubuntu.png' class='thumbnail' alt=""/> <img src='images/logo-mint.png' class='thumbnail' alt=""/></div>
+    <div id='startup-tab-redhat' class='tab' onclick="showstartup('redhat')">Redhat <img src='images/logo-redhat.png' class='thumbnail' alt=""/> <img src='images/logo-centos.png' class='thumbnail' alt=""/> <img src='images/logo-fedora.png' class='thumbnail' alt=""/></div>
+    <div id='startup-tab-suse' class='tab' onclick="showstartup('suse')">SuSE <img src='images/logo-suse.png' class='thumbnail' alt=""/></div>
 </div>
 <div id='startup' style='clear:both'>
     <div id='startup-debian'>
         <pre class="tty cmd">cd /home/weewx
-          sudo cp util/init.d/weewx.debian /etc/init.d/weewx
-          sudo chmod +x /etc/init.d/weewx
-          sudo update-rc.d weewx defaults 98
-          sudo /etc/init.d/weewx start
-        </pre>
+sudo cp util/init.d/weewx.debian /etc/init.d/weewx
+sudo chmod +x /etc/init.d/weewx
+sudo update-rc.d weewx defaults 98
+sudo /etc/init.d/weewx start</pre>
     </div>
     <div id='startup-redhat' style='display:none'>
         <pre class="tty cmd">cd /home/weewx
-          sudo cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx
-          sudo chmod +x /etc/rc.d/init.d/weewx
-          sudo chkconfig weewx on
-          sudo /etc/rc.d/init.d/weewx start
-        </pre>
+sudo cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx
+sudo chmod +x /etc/rc.d/init.d/weewx
+sudo chkconfig weewx on
+sudo /etc/rc.d/init.d/weewx start</pre>
     </div>
     <div id='startup-suse' style='display:none'>
         <pre class="tty cmd">cd /home/weewx
-          sudo cp util/init.d/weewx.suse /etc/init.d/weewx
-          sudo chmod +x /etc/init.d/weewx
-          sudo /usr/lib/lsb/install_initd /etc/init.d/weewx
-          sudo /etc/init.d/weewx start
-        </pre>
+sudo cp util/init.d/weewx.suse /etc/init.d/weewx
+sudo chmod +x /etc/init.d/weewx
+sudo /usr/lib/lsb/install_initd /etc/init.d/weewx
+sudo /etc/init.d/weewx start</pre>
     </div>
 </div>
 
@@ -271,9 +244,11 @@
 <h2>Customize</h2>
 
 <p>
-    To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span
-        class='code'>/home/weewx/weewx.conf</span>. See the <a href="usersguide.htm">User Guide</a> and <a
-        href="customizing.htm">Customization Guide</a> for details.
+    To enable uploads such as Weather Underground or to customize reports,
+    modify the configuration file
+    <span class='code'>/home/weewx/weewx.conf</span>. See the
+    <a href="usersguide.htm">User Guide</a> and
+    <a href="customizing.htm">Customization Guide</a> for details.
 </p>
 
 <p>
@@ -284,46 +259,45 @@
 <h2>Uninstall</h2>
 
 <p>
-    To uninstall, simply delete the directory <span class='code'>/home/weewx</span>. This will delete weewx,
+    To uninstall, simply delete the directory
+    <span class='code'>/home/weewx</span>. This will delete weewx,
     configuration files, and data.
 </p>
-    <pre class='tty cmd'>sudo rm -r /home/weewx
-      sudo rm /etc/init.d/weewx</pre>
+<pre class='tty cmd'>sudo rm -r /home/weewx
+sudo rm /etc/init.d/weewx</pre>
 
 <p class='copyright'>
     &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
 </p>
 
-</div><!-- End of Page -->
-
 <script type="text/javascript">
-    function showprereq(id) {
-        document.getElementById('prereq-debian').style.display = 'none';
-        document.getElementById('prereq-redhat').style.display = 'none';
-        document.getElementById('prereq-suse').style.display = 'none';
-        document.getElementById('prereq-pip').style.display = 'none';
+function showprereq(id) {
+    document.getElementById('prereq-debian').style.display = 'none';
+    document.getElementById('prereq-redhat').style.display = 'none';
+    document.getElementById('prereq-suse').style.display = 'none';
+    document.getElementById('prereq-pip').style.display = 'none';
 
-        document.getElementById('prereq-tab-debian').className = 'tab';
-        document.getElementById('prereq-tab-redhat').className = 'tab';
-        document.getElementById('prereq-tab-suse').className = 'tab';
-        document.getElementById('prereq-tab-pip').className = 'tab';
+    document.getElementById('prereq-tab-debian').className = 'tab';
+    document.getElementById('prereq-tab-redhat').className = 'tab';
+    document.getElementById('prereq-tab-suse').className = 'tab';
+    document.getElementById('prereq-tab-pip').className = 'tab';
 
-        document.getElementById('prereq-' + id).style.display = 'block';
-        document.getElementById('prereq-tab-' + id).className = 'tab selected';
-    }
+    document.getElementById('prereq-' + id).style.display = 'block';
+    document.getElementById('prereq-tab-' + id).className = 'tab selected';
+}
 
-    function showstartup(id) {
-        document.getElementById('startup-debian').style.display = 'none';
-        document.getElementById('startup-redhat').style.display = 'none';
-        document.getElementById('startup-suse').style.display = 'none';
+function showstartup(id) {
+    document.getElementById('startup-debian').style.display = 'none';
+    document.getElementById('startup-redhat').style.display = 'none';
+    document.getElementById('startup-suse').style.display = 'none';
 
-        document.getElementById('startup-tab-debian').className = 'tab';
-        document.getElementById('startup-tab-redhat').className = 'tab';
-        document.getElementById('startup-tab-suse').className = 'tab';
+    document.getElementById('startup-tab-debian').className = 'tab';
+    document.getElementById('startup-tab-redhat').className = 'tab';
+    document.getElementById('startup-tab-suse').className = 'tab';
 
-        document.getElementById('startup-' + id).style.display = 'block';
-        document.getElementById('startup-tab-' + id).className = 'tab selected';
-    }
+    document.getElementById('startup-' + id).style.display = 'block';
+    document.getElementById('startup-tab-' + id).className = 'tab selected';
+}
 </script>
 
 </body>

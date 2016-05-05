@@ -39,12 +39,12 @@ def guard(fn):
     return guarded_fn
 
 
-def connect(database_name='', SQLITE_ROOT='', driver='', **argv):
+def connect(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariable
     """Factory function, to keep things compatible with DBAPI. """
     return Connection(database_name=database_name, SQLITE_ROOT=SQLITE_ROOT, **argv)
 
 
-def create(database_name='', SQLITE_ROOT='', driver='', **argv):
+def create(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariable
     """Create the database specified by the db_dict. If it already exists,
     an exception of type DatabaseExists will be thrown."""
     file_path = get_filepath(SQLITE_ROOT, database_name, **argv)
@@ -67,7 +67,7 @@ def get_filepath(SQLITE_ROOT, database_name, **argv):
     root_dir = SQLITE_ROOT or argv.get('root', '')
     return os.path.join(root_dir, database_name)
     
-def drop(database_name='', SQLITE_ROOT='', driver='', **argv):
+def drop(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariable
     file_path = get_filepath(SQLITE_ROOT, database_name, **argv)
     try:
         os.remove(file_path)

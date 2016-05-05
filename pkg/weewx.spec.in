@@ -35,6 +35,7 @@
 %global dst_doc_dir %{_defaultdocdir}/%{name}-%{version}
 %global dst_cfg_dir %{_sysconfdir}/%{name}
 %global cfg_file    %{dst_cfg_dir}/weewx.conf
+%global dst_user_dir %{dst_bin_dir}/user
 
 Summary: weather software
 Name: weewx
@@ -170,4 +171,5 @@ rm -rf %{buildroot}
 %{_bindir}/wunderfixer
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
+%config(noreplace) %{dst_user_dir}/extensions.py
 %changelog

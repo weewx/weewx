@@ -329,7 +329,7 @@ class Accum(dict):
             self['wind'].addHiLo((record.get('windSpeed'), record.get('windDir')),     record['dateTime'])
         self['wind'].addSum((record['windSpeed'], record.get('windDir')))
         
-    def check_units(self, record, obs_type, add_hilo):
+    def check_units(self, record, obs_type, add_hilo):  # @UnusedVariable
         if weewx.debug:
             assert(obs_type == 'usUnits')
         self._check_units(record['usUnits'])

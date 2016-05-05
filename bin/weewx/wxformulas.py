@@ -10,7 +10,7 @@ import math
 import time
 import weewx.uwxutils
 
-INHG_PER_MBAR = 0.0295333727
+INHG_PER_MBAR = 0.0295299830714
 METER_PER_FOOT = 0.3048
 METER_PER_MILE = 1609.34
 MM_PER_INCH = 25.4
@@ -597,7 +597,10 @@ def evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts=None)
     # step 13: convert latitude to radians
     phi = lat * math.pi / 180.0
     # step 14: sunset hour angle
-    w = math.acos( - math.tan(phi) * math.tan(sd))
+    x = -math.tan(phi) * math.tan(sd)
+    if not -1 <= x <= 1: # no et when beyond the reach of the sun
+        return 0
+    w = math.acos(x)
     # step 15: extraterrestrial radiation
     gsc = 0.082
     ra = 24.0 * 60.0 / math.pi * gsc * dr * (w * math.sin(phi) * math.sin(sd) + math.cos(phi) * math.cos(sd) * math.sin(w))
