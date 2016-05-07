@@ -17,6 +17,9 @@ Weather Underground with the missing data.
 
 CHANGE HISTORY
 --------------------------------
+1.1.0 5/08/16
+Suppress strict ssl checking for wunderground http=>https
+
 1.0.0 8/16/15
 Published version.
 
@@ -61,6 +64,27 @@ from weeutil.weeutil import timestamp_to_string
 import weewx.manager
 import weewx.units
 import weewx.restx
+
+# wunderground.com quietly redirects http=>https and
+# python 2.7.9 turns on strict certificate verification
+# which breaks the original wunderfixer 0.5.2
+#
+# long discussion of the internals is at
+#     http://stackoverflow.com/questions/27804710/python-urllib2-ssl-error/27826829#27826829
+#
+# the following code is taken verbatim from
+#     https://dnaeon.github.io/disable-python-ssl-verification/
+
+import ssl
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    # Legacy Python that doesn't verify HTTPS certificates by default
+    pass
+else:
+    # Handle target environment that doesn't support HTTPS verification
+    ssl._create_default_https_context = _create_unverified_https_context
+
 
 usagestr = """%prog CONFIG_FILE|--config=CONFIG_FILE
                   [--binding=BINDING]
