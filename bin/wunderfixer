@@ -111,7 +111,7 @@ proposes !!
        -->>      or corruption of your data !       <<-- 
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
