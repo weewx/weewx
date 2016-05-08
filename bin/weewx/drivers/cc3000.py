@@ -299,35 +299,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
     }
 
     def __init__(self, **stn_dict):
-        self.port = stn_dict.get('port', CC3000.DEFAULT_PORT)
-        self.polling_interval = float(stn_dict.get('polling_interval', 1))
-        self.model = stn_dict.get('model', 'CC3000')
-        self.use_station_time = to_bool(stn_dict.get('use_station_time', True))
-        self.max_tries = int(stn_dict.get('max_tries', 5))
-        self.retry_wait = int(stn_dict.get('retry_wait', 60))
-        self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_SENSOR_MAP)
-        self.last_rain = None
-
         loginf('driver version is %s' % DRIVER_VERSION)
-        loginf('using serial port %s' % self.port)
-        loginf('polling interval is %s seconds' % self.polling_interval)
-        loginf('using %s time for loop packets' %
-               ('station' if self.use_station_time else 'computer'))
-
-        self.station = CC3000(self.port)
-        self.station.open()
-
-        # report the station configuration
-        settings = self._init_station_with_retries(
-            self.station, self.max_tries, self.retry_wait)
-        self.arcint = settings['arcint']
-        loginf('archive_interval is %s' % self.arcint)
-        self.header = settings['header']
-        loginf('header is %s' % self.header)
-        self.units = weewx.METRICWX if settings['units'] == 'METRIC' else weewx.US
-        loginf('units are %s' % settings['units'])
-        loginf('channel is %s' % settings['channel'])
-        loginf('charger status: %s' % settings['charger'])
 
         global DEBUG_SERIAL
         DEBUG_SERIAL = int(stn_dict.get('debug_serial', 0))
@@ -335,6 +307,34 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         DEBUG_CHECKSUM = int(stn_dict.get('debug_checksum', 0))
         global DEBUG_OPENCLOSE
         DEBUG_OPENCLOSE = int(stn_dict.get('debug_openclose', 0))
+
+        self.model = stn_dict.get('model', 'CC3000')
+        port = stn_dict.get('port', CC3000.DEFAULT_PORT)
+        loginf('using serial port %s' % port)
+        self.polling_interval = float(stn_dict.get('polling_interval', 1))
+        loginf('polling interval is %s seconds' % self.polling_interval)
+        self.use_station_time = to_bool(stn_dict.get('use_station_time', True))
+        loginf('using %s time for loop packets' %
+               ('station' if self.use_station_time else 'computer'))
+        self.max_tries = int(stn_dict.get('max_tries', 5))
+        self.retry_wait = int(stn_dict.get('retry_wait', 60))
+        self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_SENSOR_MAP)
+        self.last_rain = None
+
+        self.station = CC3000(port)
+        self.station.open()
+
+        # report the station configuration
+        settings = self._init_station_with_retries(
+            self.station, self.max_tries, self.retry_wait)
+        self.arcint = settings['arcint']
+        loginf('archive_interval: %s' % self.arcint)
+        self.header = settings['header']
+        loginf('header: %s' % self.header)
+        self.units = weewx.METRICWX if settings['units'] == 'METRIC' else weewx.US
+        loginf('units: %s' % settings['units'])
+        loginf('channel: %s' % settings['channel'])
+        loginf('charger status: %s' % settings['charger'])
 
     def genLoopPackets(self):
         cmd_mode = True
