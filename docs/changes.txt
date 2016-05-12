@@ -46,6 +46,10 @@ Fixed typo in default te923 sensor mapping for h_3.  Thanks to user ngulden.
 Added flag for reports so that reports can be disabled by setting enable=False
 instead of deleting or commenting entire report sections in weewx.conf.
 
+The vantage and ws23xx drivers now include the fix for the policy of
+"wind direction is undefined when no wind speed".  This was applied to other
+drivers in weewx 3.3.0.
+
 
 3.5.0 03/13/2016
 
