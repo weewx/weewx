@@ -1136,24 +1136,21 @@ class StdStationRegistry(StdRESTful):
         
         super(StdStationRegistry, self).__init__(engine, config_dict)
         
-        # Extract the required parameters. If one of them is missing,
-        # a KeyError exception will occur. Be prepared to catch it.
-        try:
-            # Extract a copy of the dictionary with the registry options:
-            _registry_dict = accumulateLeaves(config_dict['StdRESTful']['StationRegistry'], max_level=1)
-            _registry_dict.setdefault('station_url',
-                                      self.engine.stn_info.station_url)
-            if _registry_dict['station_url'] is None:
-                raise KeyError("station_url")
-        except KeyError, e:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: StationRegistry: "
-                          "Data will not be posted. Missing option %s" % e)
-            return
+        # Extract a copy of the dictionary with the registry options:
+        _registry_dict = accumulateLeaves(config_dict['StdRESTful']['StationRegistry'], max_level=1)
 
         # Should the service be run?
         if not to_bool(_registry_dict.pop('register_this_station', False)):
             syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: "
                           "Registration not requested.")
+            return
+
+        # Registry requires a valid station url
+        _registry_dict.setdefault('station_url',
+                                  self.engine.stn_info.station_url)
+        if _registry_dict['station_url'] is None:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: StationRegistry: "
+                          "Data will not be posted. No station_url specified.")
             return
 
         _registry_dict.setdefault('station_type', config_dict['Station'].get('station_type', 'Unknown'))
