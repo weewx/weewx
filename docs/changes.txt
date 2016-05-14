@@ -50,6 +50,9 @@ The vantage and ws23xx drivers now include the fix for the policy of
 "wind direction is undefined when no wind speed".  This was applied to other
 drivers in weewx 3.3.0.
 
+Fixed te923 driver behavior when reading from logger, especially on stations
+with large memory configuration.  Thanks to users Joep and Nico.
+
 
 3.5.0 03/13/2016
 
