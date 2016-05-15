@@ -2843,7 +2843,7 @@ class MyXSearch(SearchList):                                                 # 1
         <tr>
             <td class="code first_col">Minutes</td>
             <td>Specifies the minute values when the report will be run</td>
-            <td>*<br>numbers in the range 0..59 inclusive</td>
+            <td>*, or<br>numbers in the range 0..59 inclusive</td>
         </tr>
         <tr>
             <td class="code first_col">Hours</td>
@@ -2858,13 +2858,13 @@ class MyXSearch(SearchList):                                                 # 1
         <tr>
             <td class="code first_col">Months</td>
             <td>Specifies the months when the report will be run</td>
-            <td>*,<br>numbers in the range 1..12 inclusive, or<br>abbreviated names 
+            <td>*, or<br>numbers in the range 1..12 inclusive, or<br>abbreviated names 
             in the range jan..dec inclusive</td>
         </tr>
         <tr>
             <td class="code first_col">Day of Week</td>
             <td>Specifies the days of the week when the report will be run</td>
-            <td>*,<br>numbers in the range 0..7 inclusive(0,7 = Sunday, 1 = 
+            <td>*, or<br>numbers in the range 0..7 inclusive(0,7 = Sunday, 1 = 
             Monday etc), or<br>abbreviated names in the range sun..sat inclusive</td>
         </tr>
         </tbody>
@@ -2920,8 +2920,8 @@ class MyXSearch(SearchList):                                                 # 1
     <p>The <span class="code">report_timing</span> option uses a CRON like format 
         to control when reports are run. The syntax and interpretation of the 
         <span class="code">report_timing</span> parameters used by weewx is 
-        largely the same as the syntax and interpretation used to support the 
-        *nix CRON service. The syntax and interpretation used to support the 
+        largely the same as the syntax and interpretation used by the *nix 
+        CRON service. The syntax and interpretation used to support the 
         <span class="code">report_timing</span> option is outlined below.
     </p>
     
@@ -2939,13 +2939,13 @@ class MyXSearch(SearchList):                                                 # 1
     <p class="note" style="display:inline-block; width:70%">
         <b>Note</b><br/>Report time does not refer to the time at which the 
         report is run, but rather the date and time of the latest data the report 
-        is based upon. If you like it is the effective date and time of the report. 
-        For normal <span class="code">weewx</span> operation, the report time 
-        aligns with the <span class="code">dateTime</span> of the most recent 
+        is based upon. If you like, it is the effective date and time of the 
+        report. For normal <span class="code">weewx</span> operation, the report 
+        time aligns with the <span class="code">dateTime</span> of the most recent 
         archive record. When reports are run using the 
         <span class="code">wee_reports</span> tool, the report time is either 
         the <span class="code">dateTime</span> of the most recent archive record 
-        (this is the default) or the optional timestamp command line argument.
+        (the default) or the optional timestamp command line argument.
     </p>
     
     <p class="note" style="display:inline-block; width:70%">
@@ -3016,7 +3016,7 @@ class MyXSearch(SearchList):                                                 # 1
         the <span class="code">report_timing</span> option, run the report at 
         hours 0,2,4,6,8,12. Steps are also permitted after an asterisk in which 
         case the skips of the step number's value occur through the all possible 
-        values of the parameter. For example */3 can be used in the hours parameter 
+        values of the parameter. For example, */3 can be used in the hours parameter 
         to, subject to other parameter in the <span class="code">report_timing</span> 
         option, run the report at hours 0,3,6,9,12,15,18 and 21.
     </ul>
