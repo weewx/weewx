@@ -66,52 +66,52 @@ MAPS = ((), (), (), MONTH_NAME_MAP, DAY_NAME_MAP)
 
 class StdReportEngine(threading.Thread):
     """Reporting engine for weewx.
-    
+
     This engine runs zero or more reports. Each report uses a skin. A skin
     has its own configuration file specifying things such as which 'generators'
     should be run, which templates are to be used, what units are to be used,
-    etc.. 
+    etc..
     A 'generator' is a class inheriting from class ReportGenerator, that
-    produces the parts of the report, such as image plots, HTML files. 
-    
+    produces the parts of the report, such as image plots, HTML files.
+
     StdReportEngine inherits from threading.Thread, so it will be run in a
     separate thread.
-    
+
     See below for examples of generators.
     """
-    
+
     def __init__(self, config_dict, stn_info, record=None, gen_ts=None, first_run=True):
-        """Initializer for the report engine. 
-        
+        """Initializer for the report engine.
+
         config_dict: The configuration dictionary.
-        
+
         stn_info: An instance of weewx.station.StationInfo, with static
                   station information.
-        
+
         record: The current archive record [Optional; default is None]
-        
+
         gen_ts: The timestamp for which the output is to be current
         [Optional; default is the last time in the database]
-        
+
         first_run: True if this is the first time the report engine has been
         run.  If this is the case, then any 'one time' events should be done.
         """
         threading.Thread.__init__(self, name="ReportThread")
 
         self.config_dict = config_dict
-        self.stn_info    = stn_info
-        self.record      = record
-        self.gen_ts      = gen_ts
-        self.first_run   = first_run
-        
+        self.stn_info = stn_info
+        self.record = record
+        self.gen_ts = gen_ts
+        self.first_run = first_run
+
     def run(self):
         """This is where the actual work gets done.
-        
+
         Runs through the list of reports. """
-        
+
         if self.gen_ts:
             syslog.syslog(syslog.LOG_DEBUG,
-                          "reportengine: Running reports for time %s" % 
+                          "reportengine: Running reports for time %s" %
                           weeutil.weeutil.timestamp_to_string(self.gen_ts))
         else:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: "
@@ -146,14 +146,18 @@ class StdReportEngine(threading.Thread):
                     "reportengine: Found configuration file %s for report %s" %
                     (skin_config_path, report))
             except IOError, e:
-                syslog.syslog(syslog.LOG_ERR, "reportengine: Cannot read skin configuration file %s for report %s: %s" %
-                              (skin_config_path, report, e))
-                syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
+                syslog.syslog(
+                    syslog.LOG_ERR, "reportengine: "
+                    "Cannot read skin configuration file %s for report %s: %s"
+                    % (skin_config_path, report, e))
+                syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored")
                 continue
             except SyntaxError, e:
-                syslog.syslog(syslog.LOG_ERR, "reportengine: Failed to read skin configuration file %s for report %s: %s" % 
-                              (skin_config_path, report, e))
-                syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored...")
+                syslog.syslog(
+                    syslog.LOG_ERR, "reportengine: "
+                    "Failed to read skin configuration file %s for report %s: %s"
+                    % (skin_config_path, report, e))
+                syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored")
                 continue
 
             # Add the default database binding:
@@ -170,53 +174,53 @@ class StdReportEngine(threading.Thread):
             # weewx.conf configuration file for all reports:
             for scalar in self.config_dict['StdReport'].scalars:
                 skin_dict[scalar] = self.config_dict['StdReport'][scalar]
-            
+
             # Now inject any overrides for this specific report:
             skin_dict.merge(self.config_dict['StdReport'][report])
-            
+
             # Finally, add the report name:
             skin_dict['REPORT_NAME'] = report
-            
-            # Default action is to run the report. Only reason to not run it is 
+
+            # Default action is to run the report. Only reason to not run it is
             # if we have a valid report report_timing and it did not trigger.
             if self.record is not None:
-                # StdReport called us not wee_reports so look for a report_cron 
+                # StdReport called us not wee_reports so look for a report_timing
                 # entry if we have one.
-                cron_line = skin_dict.get('report_cron', None)
-                # The report_cron entry might have one or more comma separated 
-                # values which ConfigObj would interpret as a list. If so then 
-                # reconstruct our report_cron entry.
-                if hasattr(cron_line, '__iter__'):
-                    cron_line = ','.join(cron_line)
-                if cron_line:
-                    # Get a ReportCron object.
-                    cron = ReportCron(cron_line)
-                    if cron.is_valid:
-                        # Get timestamp and interval so we can check if the report
-                        # CRON is triggered.
+                timing_line = skin_dict.get('report_timing', None)
+                # The report_timing entry might have one or more comma separated
+                # values which ConfigObj would interpret as a list. If so then
+                # reconstruct our report_timing entry.
+                if hasattr(timing_line, '__iter__'):
+                    timing_line = ','.join(timing_line)
+                if timing_line:
+                    # Get a ReportTiming object.
+                    timing = ReportTiming(timing_line)
+                    if timing.is_valid:
+                        # Get timestamp and interval so we can check if the
+                        # report timing is triggered.
                         _ts = self.record['dateTime']
                         _interval = self.record['interval'] * 60
-                        # Is our report CRON triggered? cron.is_triggered returns 
-                        # True if triggered, False if not triggered and None if an 
-                        # invalid report CRON line.
-                        if cron.is_triggered(_ts, _ts - _interval) is False:
-                            # report CRON was valid but not triggered so do not run
-                            # the report.
+                        # Is our report timing triggered? timing.is_triggered
+                        # returns True if triggered, False if not triggered
+                        # and None if an invalid report timing line.
+                        if timing.is_triggered(_ts, _ts - _interval) is False:
+                            # report timing was valid but not triggered so do
+                            # not run the report.
                             syslog.syslog(syslog.LOG_DEBUG, "reportengine: Report %s skipped due to report_timing setting" %
                                           (report, ))
                             continue
                     else:
                         syslog.syslog(syslog.LOG_DEBUG, "reportengine: Invalid report_timing setting for report '%s', running report anyway" % report)
-                        syslog.syslog(syslog.LOG_DEBUG, "        ****  %s" % cron.validation_error)
-                    
+                        syslog.syslog(syslog.LOG_DEBUG, "        ****  %s" % timing.validation_error)
+
             for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
 
                 try:
                     # Instantiate an instance of the class.
                     obj = weeutil.weeutil._get_object(generator)(
-                        self.config_dict, 
-                        skin_dict, 
-                        self.gen_ts, 
+                        self.config_dict,
+                        skin_dict,
+                        self.gen_ts,
                         self.first_run,
                         self.stn_info)
                 except Exception, e:
@@ -228,11 +232,11 @@ class StdReportEngine(threading.Thread):
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored")
                     traceback.print_exc()
                     continue
-    
+
                 try:
                     # Call its start() method
                     obj.start()
-                    
+
                 except Exception, e:
                     # Caught unrecoverable error. Log it, continue on to the
                     # next generator.
@@ -245,11 +249,10 @@ class StdReportEngine(threading.Thread):
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated")
                     traceback.print_exc()
                     continue
-                    
+
                 finally:
                     obj.finalize()
 
-        
 # =============================================================================
 #                    Class ReportGenerator
 # =============================================================================
@@ -263,13 +266,13 @@ class ReportGenerator(object):
         self.first_run = first_run
         self.stn_info = stn_info
         self.db_binder = weewx.manager.DBBinder(self.config_dict)
-        
+
     def start(self):
         self.run()
-    
+
     def run(self):
         pass
-    
+
     def finalize(self):
         self.db_binder.close()
 
@@ -280,7 +283,7 @@ class ReportGenerator(object):
 
 class FtpGenerator(ReportGenerator):
     """Class for managing the "FTP generator".
-    
+
     This will ftp everything in the public_html subdirectory to a webserver."""
 
     def run(self):
@@ -323,7 +326,7 @@ class FtpGenerator(ReportGenerator):
                           "Caught exception %s in FtpGenerator: %s." % (cl, e))
             weeutil.weeutil.log_traceback("        ****  ")
             return
-        
+
         t2 = time.time()
         if log_success:
             syslog.syslog(syslog.LOG_INFO,
@@ -337,7 +340,7 @@ class FtpGenerator(ReportGenerator):
 
 class RsyncGenerator(ReportGenerator):
     """Class for managing the "rsync generator".
-    
+
     This will rsync everything in the public_html subdirectory to a server."""
 
     def run(self):
@@ -379,15 +382,15 @@ class RsyncGenerator(ReportGenerator):
 
 class CopyGenerator(ReportGenerator):
     """Class for managing the 'copy generator.'
-    
+
     This will copy files from the skin subdirectory to the public_html
     subdirectory."""
-    
+
     def run(self):
         copy_dict = self.skin_dict['CopyGenerator']
         # determine how much logging is desired
         log_success = to_bool(copy_dict.get('log_success', True))
-        
+
         copy_list = []
 
         if self.first_run:
@@ -413,7 +416,7 @@ class CopyGenerator(ReportGenerator):
         # Figure out the destination of the files
         html_dest_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
                                      self.skin_dict['HTML_ROOT'])
-        
+
         # The copy list can contain wildcard characters. Go through the
         # list globbing any character expansions
         ncopy = 0
@@ -438,11 +441,11 @@ class CopyGenerator(ReportGenerator):
         if log_success:
             syslog.syslog(syslog.LOG_INFO, "reportengine: copied %d files to %s" % (ncopy, html_dest_dir))
 
-#===============================================================================
-#                    Class ReportCron
-#===============================================================================
-            
-class ReportCron(object):
+# ===============================================================================
+#                    Class ReportTiming
+# ===============================================================================
+
+class ReportTiming(object):
     """Class for processing a CRON like line and determining whether it should
     be fired for a given time.
 
@@ -470,18 +473,18 @@ class ReportCron(object):
         @daily    : Run once a day,   ie "0 0 * * *"
         @hourly   : Run once an hour, ie "0 * * * *"
 
-    Useful ReportCron class attributes:
+    Useful ReportTiming class attributes:
 
     is_valid:         Whether passed line is a valid line or not.
     validation_error: Error message if passed line is an invalid line.
-    raw_line:         Raw line data passed to ReportCron.
+    raw_line:         Raw line data passed to ReportTiming.
     line:             5 item list representing the 5 date/time fields after the
                       raw line has been processed and dom/dow named parameters
                       replaced with numeric equivalents.
     """
 
     def __init__(self, line):
-        """Initialises a ReportCron object.
+        """Initialises a ReportTiming object.
 
         Processes raw line to produce 5 field line suitable for further
         processing.
@@ -584,7 +587,7 @@ class ReportCron(object):
                 return set((int(_field), ))
             else:
                 # invalid field value so raise ValueError
-                raise ValueError("Invalid field value '%s' in '%s'" % (field, 
+                raise ValueError("Invalid field value '%s' in '%s'" % (field,
                                                                        self.raw_line))
         elif field.lower() in names:  # an abbreviated name
             # abbreviated names are only valid if not used in a range or list
@@ -599,11 +602,11 @@ class ReportCron(object):
                     return set((int(_field), ))
                 else:
                     # invalid field value so raise ValueError
-                    raise ValueError("Invalid field value '%s' in '%s'" % (field, 
+                    raise ValueError("Invalid field value '%s' in '%s'" % (field,
                                                                            self.raw_line))
             else:
                 # invalid use of abbreviated name so raise ValueError
-                raise ValueError("Invalid use of abbreviated name '%s' in '%s'" % (field, 
+                raise ValueError("Invalid use of abbreviated name '%s' in '%s'" % (field,
                                                                                    self.raw_line))
         elif ',' in field:  # we have a list
             # get the first list item and the rest of the list
@@ -628,7 +631,7 @@ class ReportCron(object):
                 return _val_set & _step_set
             else:
                 # invalid step so raise ValueError
-                raise ValueError("Invalid step value '%s' in '%s'" % (field, 
+                raise ValueError("Invalid step value '%s' in '%s'" % (field,
                                                                       self.raw_line))
         elif '-' in field:  # we have a range
             # get the lo and hi values of the range
@@ -643,15 +646,15 @@ class ReportCron(object):
                     return set(xrange(int(lo), int(hi) + 1))
                 else:
                     # something is wrong, we have an invalid field
-                    raise ValueError("Invalid range specification '%s' in '%s'" % (field, 
+                    raise ValueError("Invalid range specification '%s' in '%s'" % (field,
                                                                                    self.raw_line))
             else:
                 # something is wrong with lo, we have an invalid field
-                raise ValueError("Invalid range specification '%s' in '%s'" % (field, 
+                raise ValueError("Invalid range specification '%s' in '%s'" % (field,
                                                                                self.raw_line))
         else:
             # we have something I don't know how to parse so raise a ValueError
-            raise ValueError("Invalid field '%s' in '%s'" % (field, 
+            raise ValueError("Invalid field '%s' in '%s'" % (field,
                                                              self.raw_line))
 
     def is_triggered(self, ts_hi, ts_lo=None):
