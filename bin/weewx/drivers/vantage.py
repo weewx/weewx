@@ -1309,10 +1309,6 @@ class Vantage(weewx.drivers.AbstractDevice):
             if func:
                 # Call the function, with the value as an argument, storing the result:
                 loop_packet[_type] = func(raw_loop_packet[_type])
-
-        # Wind direction is undefined if wind speed is zero:
-        if loop_packet['windSpeed'] == 0:
-            loop_packet['windDir'] = None
             
         # Adjust sunrise and sunset:
         start_of_day = weeutil.weeutil.startOfDay(loop_packet['dateTime'])
@@ -1367,10 +1363,6 @@ class Vantage(weewx.drivers.AbstractDevice):
             if func:
                 # Call the function, with the value as an argument, storing the result:
                 archive_packet[_type] = func(raw_archive_packet[_type])
-                
-        # Wind direction is undefined if wind speed is zero:
-        if archive_packet['windSpeed'] == 0:
-            archive_packet['windDir'] = None
         
         # Divide archive interval by 60 to keep consistent with wview
         archive_packet['interval']   = int(self.archive_interval / 60) 
@@ -2304,10 +2296,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             ans = raw_input("Are you sure you want to proceed (y/n)? ")
             if ans == 'y':
                 with weewx.manager.open_manager_with_config(config_dict, 'wx_binding',
-                                                            initialize=True,
-                                                            default_binding_dict={'table_name' : 'archive',
-                                                                                  'manager' : 'weewx.wxmanager.WXDaySummaryManager',
-                                                                                  'schema' : 'schemas.wview.schema'}) as archive:
+                                                            initialize=True) as archive:
                     nrecs = 0
                     # Wrap the Vantage generator function in a converter, which will convert the units to the
                     # same units used by the database:

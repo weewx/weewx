@@ -60,21 +60,22 @@ NAMES = ((), (), (), MONTH_NAMES, DAY_NAMES)
 # list of name maps for CRON like fields
 MAPS = ((), (), (), MONTH_NAME_MAP, DAY_NAME_MAP)
 
-#===============================================================================
+# =============================================================================
 #                    Class StdReportEngine
-#===============================================================================
+# =============================================================================
 
 class StdReportEngine(threading.Thread):
     """Reporting engine for weewx.
     
     This engine runs zero or more reports. Each report uses a skin. A skin
     has its own configuration file specifying things such as which 'generators'
-    should be run, which templates are to be used, what units are to be used, etc.. 
-    A 'generator' is a class inheriting from class ReportGenerator, that produces the parts
-    of the report, such as image plots, HTML files. 
+    should be run, which templates are to be used, what units are to be used,
+    etc.. 
+    A 'generator' is a class inheriting from class ReportGenerator, that
+    produces the parts of the report, such as image plots, HTML files. 
     
-    StdReportEngine inherits from threading.Thread, so it will be run in a separate
-    thread.
+    StdReportEngine inherits from threading.Thread, so it will be run in a
+    separate thread.
     
     See below for examples of generators.
     """
@@ -84,15 +85,16 @@ class StdReportEngine(threading.Thread):
         
         config_dict: The configuration dictionary.
         
-        stn_info: An instance of weewx.station.StationInfo, with static station information.
+        stn_info: An instance of weewx.station.StationInfo, with static
+                  station information.
         
         record: The current archive record [Optional; default is None]
         
-        gen_ts: The timestamp for which the output is to be current [Optional; default
-        is the last time in the database]
+        gen_ts: The timestamp for which the output is to be current
+        [Optional; default is the last time in the database]
         
-        first_run: True if this is the first time the report engine has been run.
-        If this is the case, then any 'one time' events should be done.
+        first_run: True if this is the first time the report engine has been
+        run.  If this is the case, then any 'one time' events should be done.
         """
         threading.Thread.__init__(self, name="ReportThread")
 
@@ -108,28 +110,41 @@ class StdReportEngine(threading.Thread):
         Runs through the list of reports. """
         
         if self.gen_ts:
-            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for time %s" % 
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "reportengine: Running reports for time %s" % 
                           weeutil.weeutil.timestamp_to_string(self.gen_ts))
         else:
-            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running reports for latest time in the database.")
+            syslog.syslog(syslog.LOG_DEBUG, "reportengine: "
+                          "Running reports for latest time in the database.")
 
         # Iterate over each requested report
         for report in self.config_dict['StdReport'].sections:
-            
-            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Running report %s" % report)
-            
+            # See if this report is disabled
+            enabled = to_bool(self.config_dict['StdReport'][report].get('enable', True))
+            if not enabled:
+                syslog.syslog(syslog.LOG_DEBUG,
+                              "reportengine: Skipping report %s" % report)
+                continue
+
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "reportengine: Running report %s" % report)
+
             # Figure out where the configuration file is for the skin used for
             # this report:
-            skin_config_path = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                            self.config_dict['StdReport']['SKIN_ROOT'],
-                                            self.config_dict['StdReport'][report].get('skin', 'Standard'),
-                                            'skin.conf')
+            skin_config_path = os.path.join(
+                self.config_dict['WEEWX_ROOT'],
+                self.config_dict['StdReport']['SKIN_ROOT'],
+                self.config_dict['StdReport'][report].get('skin', 'Standard'),
+                'skin.conf')
+
             # Retrieve the configuration dictionary for the skin. Wrap it in
             # a try block in case we fail
-            try :
+            try:
                 skin_dict = configobj.ConfigObj(skin_config_path, file_error=True)
-                syslog.syslog(syslog.LOG_DEBUG, "reportengine: Found configuration file %s for report %s" %
-                              (skin_config_path, report))
+                syslog.syslog(
+                    syslog.LOG_DEBUG,
+                    "reportengine: Found configuration file %s for report %s" %
+                    (skin_config_path, report))
             except IOError, e:
                 syslog.syslog(syslog.LOG_ERR, "reportengine: Cannot read skin configuration file %s for report %s: %s" %
                               (skin_config_path, report, e))
@@ -198,16 +213,19 @@ class StdReportEngine(threading.Thread):
 
                 try:
                     # Instantiate an instance of the class.
-                    obj = weeutil.weeutil._get_object(generator)(self.config_dict, 
-                                                                 skin_dict, 
-                                                                 self.gen_ts, 
-                                                                 self.first_run,
-                                                                 self.stn_info)
+                    obj = weeutil.weeutil._get_object(generator)(
+                        self.config_dict, 
+                        skin_dict, 
+                        self.gen_ts, 
+                        self.first_run,
+                        self.stn_info)
                 except Exception, e:
-                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Unable to instantiate generator %s." % generator)
+                    syslog.syslog(
+                        syslog.LOG_CRIT, "reportengine: "
+                        "Unable to instantiate generator %s" % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     weeutil.weeutil.log_traceback("        ****  ")
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored...")
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored")
                     traceback.print_exc()
                     continue
     
@@ -216,31 +234,35 @@ class StdReportEngine(threading.Thread):
                     obj.start()
                     
                 except Exception, e:
-                    # Caught unrecoverable error. Log it, continue on to the next generator.
-                    syslog.syslog(syslog.LOG_CRIT, "reportengine: Caught unrecoverable exception in generator %s" % (generator,))
+                    # Caught unrecoverable error. Log it, continue on to the
+                    # next generator.
+                    syslog.syslog(
+                        syslog.LOG_CRIT, "reportengine: "
+                        "Caught unrecoverable exception in generator %s"
+                        % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % str(e))
                     weeutil.weeutil.log_traceback("        ****  ")
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated...")
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated")
                     traceback.print_exc()
                     continue
                     
                 finally:
                     obj.finalize()
-        
-#===============================================================================
-#                    Class ReportGenerator
-#===============================================================================
 
+        
+# =============================================================================
+#                    Class ReportGenerator
+# =============================================================================
 
 class ReportGenerator(object):
     """Base class for all report generators."""
     def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info):
         self.config_dict = config_dict
-        self.skin_dict   = skin_dict
-        self.gen_ts      = gen_ts
-        self.first_run   = first_run
-        self.stn_info    = stn_info
-        self.db_binder   = weewx.manager.DBBinder(self.config_dict)
+        self.skin_dict = skin_dict
+        self.gen_ts = gen_ts
+        self.first_run = first_run
+        self.stn_info = stn_info
+        self.db_binder = weewx.manager.DBBinder(self.config_dict)
         
     def start(self):
         self.run()
@@ -251,9 +273,10 @@ class ReportGenerator(object):
     def finalize(self):
         self.db_binder.close()
 
-#===============================================================================
+
+# =============================================================================
 #                    Class FtpGenerator
-#===============================================================================
+# =============================================================================
 
 class FtpGenerator(ReportGenerator):
     """Class for managing the "FTP generator".
@@ -267,7 +290,7 @@ class FtpGenerator(ReportGenerator):
         log_success = to_bool(self.skin_dict.get('log_success', True))
 
         t1 = time.time()
-        if self.skin_dict.has_key('HTML_ROOT'):
+        if 'HTML_ROOT' in self.skin_dict:
             local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
                                       self.skin_dict['HTML_ROOT'])
         else:
@@ -275,76 +298,84 @@ class FtpGenerator(ReportGenerator):
                                       self.config_dict['StdReport']['HTML_ROOT'])
 
         try:
-            ftpData = weeutil.ftpupload.FtpUpload(server      = self.skin_dict['server'],
-                                                  user        = self.skin_dict['user'],
-                                                  password    = self.skin_dict['password'],
-                                                  local_root  = local_root,
-                                                  remote_root = self.skin_dict['path'],
-                                                  port        = int(self.skin_dict.get('port', 21)),
-                                                  name        = self.skin_dict['REPORT_NAME'],
-                                                  passive     = to_bool(self.skin_dict.get('passive', True)),
-                                                  max_tries   = int(self.skin_dict.get('max_tries', 3)),
-                                                  secure      = to_bool(self.skin_dict.get('secure_ftp', False)),
-                                                  debug       = int(self.skin_dict.get('debug', 0)))
+            ftp_data = weeutil.ftpupload.FtpUpload(
+                server=self.skin_dict['server'],
+                user=self.skin_dict['user'],
+                password=self.skin_dict['password'],
+                local_root=local_root,
+                remote_root=self.skin_dict['path'],
+                port=int(self.skin_dict.get('port', 21)),
+                name=self.skin_dict['REPORT_NAME'],
+                passive=to_bool(self.skin_dict.get('passive', True)),
+                max_tries=int(self.skin_dict.get('max_tries', 3)),
+                secure=to_bool(self.skin_dict.get('secure_ftp', False)),
+                debug=int(self.skin_dict.get('debug', 0)))
         except Exception:
-            syslog.syslog(syslog.LOG_DEBUG, "reportengine: FTP upload not requested. Skipped.")
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "reportengine: FTP upload not requested. Skipped.")
             return
 
         try:
-            N = ftpData.run()
+            n = ftp_data.run()
         except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError), e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
-            syslog.syslog(syslog.LOG_ERR, "reportengine: Caught exception %s in FtpGenerator; %s." % (cl, e))
+            syslog.syslog(syslog.LOG_ERR, "reportengine: "
+                          "Caught exception %s in FtpGenerator: %s." % (cl, e))
             weeutil.weeutil.log_traceback("        ****  ")
             return
         
-        t2= time.time()
+        t2 = time.time()
         if log_success:
-            syslog.syslog(syslog.LOG_INFO, """reportengine: ftp'd %d files in %0.2f seconds""" % (N, (t2-t1)))
-            
-                
-#===============================================================================
+            syslog.syslog(syslog.LOG_INFO,
+                          "reportengine: ftp'd %d files in %0.2f seconds" %
+                          (n, (t2 - t1)))
+
+
+# =============================================================================
 #                    Class RsynchGenerator
-#===============================================================================
+# =============================================================================
 
 class RsyncGenerator(ReportGenerator):
     """Class for managing the "rsync generator".
     
-    This will rsync everything in the public_html subdirectory to a webserver."""
+    This will rsync everything in the public_html subdirectory to a server."""
 
     def run(self):
         import weeutil.rsyncupload
-        # We don't try to collect performance statistics about rsync, because rsync
-        # will report them for us.  Check the debug log messages.
+        # We don't try to collect performance statistics about rsync, because
+        # rsync will report them for us.  Check the debug log messages.
         try:
-            if self.skin_dict.has_key('HTML_ROOT'):
+            if 'HTML_ROOT' in self.skin_dict:
                 html_root = self.skin_dict['HTML_ROOT']
             else:
                 html_root = self.config_dict['StdReport']['HTML_ROOT']
-            rsyncData = weeutil.rsyncupload.RsyncUpload(
-                local_root  = os.path.join(self.config_dict['WEEWX_ROOT'], html_root),
-                remote_root = self.skin_dict['path'],
-                server      = self.skin_dict['server'],
-                user        = self.skin_dict.get('user'),
-                port        = self.skin_dict.get('port'),
-                ssh_options = self.skin_dict.get('ssh_options'),
-                compress    = to_bool(self.skin_dict.get('compress', False)),
-                delete      = to_bool(self.skin_dict.get('delete', False)),
-                log_success = to_bool(self.skin_dict.get('log_success', True)))
+            rsync_data = weeutil.rsyncupload.RsyncUpload(
+                local_root=os.path.join(self.config_dict['WEEWX_ROOT'], html_root),
+                remote_root=self.skin_dict['path'],
+                server=self.skin_dict['server'],
+                user=self.skin_dict.get('user'),
+                port=self.skin_dict.get('port'),
+                ssh_options=self.skin_dict.get('ssh_options'),
+                compress=to_bool(self.skin_dict.get('compress', False)),
+                delete=to_bool(self.skin_dict.get('delete', False)),
+                log_success=to_bool(self.skin_dict.get('log_success', True)))
         except Exception:
-            syslog.syslog(syslog.LOG_DEBUG, "reportengine: rsync upload not requested. Skipped.")
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "reportengine: rsync upload not requested. Skipped.")
             return
 
         try:
-            rsyncData.run()
-        except (IOError), e:
+            rsync_data.run()
+        except IOError, e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
-            syslog.syslog(syslog.LOG_ERR, "reportengine: Caught exception %s in RsyncGenerator; %s." % (cl, e))
-            
-                
-#===============================================================================
+            syslog.syslog(syslog.LOG_ERR, "reportengine: "
+                          "Caught exception %s in RsyncGenerator: %s." %
+                          (cl, e))
+
+
+# =============================================================================
 #                    Class CopyGenerator
-#===============================================================================
+# =============================================================================
 
 class CopyGenerator(ReportGenerator):
     """Class for managing the 'copy generator.'
@@ -360,14 +391,16 @@ class CopyGenerator(ReportGenerator):
         copy_list = []
 
         if self.first_run:
-            # Get the list of files to be copied only once, at the first invocation of
-            # the generator. Wrap in a try block in case the list does not exist.
+            # Get the list of files to be copied only once, at the first
+            # invocation of the generator. Wrap in a try block in case the
+            # list does not exist.
             try:
                 copy_list += weeutil.weeutil.option_as_list(copy_dict['copy_once'])
             except KeyError:
                 pass
 
-        # Get the list of files to be copied everytime. Again, wrap in a try block.
+        # Get the list of files to be copied everytime. Again, wrap in a
+        # try block.
         try:
             copy_list += weeutil.weeutil.option_as_list(copy_dict['copy_always'])
         except KeyError:
@@ -387,8 +420,8 @@ class CopyGenerator(ReportGenerator):
         for pattern in copy_list:
             # Glob this pattern; then go through each resultant filename:
             for _file in glob.glob(pattern):
-                # Final destination is the join of the html destination directory
-                # and any relative subdirectory on the filename:
+                # Final destination is the join of the html destination
+                # directory and any relative subdirectory on the filename:
                 dest_dir = os.path.join(html_dest_dir, os.path.dirname(_file))
                 # Make the destination directory, wrapping it in a try block in
                 # case it already exists:
@@ -397,8 +430,8 @@ class CopyGenerator(ReportGenerator):
                 except OSError:
                     pass
                 # This version of copy does not copy over modification time,
-                # so it will look like a new file, causing it to be (for example)
-                # ftp'd to the server:
+                # so it will look like a new file, causing it to be (for
+                # example) ftp'd to the server:
                 shutil.copy(_file, dest_dir)
                 ncopy += 1
 

@@ -326,12 +326,12 @@ SECTION 13: Unknownn
 
 SECTION 14: Archiving
 
-0c0000FB - Unknown
+0x0000FB - Unknown
 0x0000FC - Memory size (0 = 0x1fff, 2 = 0x20000)
-0x0000FD - Number of records (High)
+0x0000FD - Index of latest record (High)
 0x0000FE - Archive interval 
            1-11 = 5, 10, 20, 30, 60, 90, 120, 180, 240, 360, 1440 mins
-0x0000FF - Number of records (Low)
+0x0000FF - Index of latest record (Low)
 0x000100 - Checksum of FB:FF
 
 0x000101 - Start of historical records:
@@ -440,9 +440,10 @@ import usb
 
 import weewx.drivers
 import weewx.wxformulas
+from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.17'
+DRIVER_VERSION = '0.18'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -453,9 +454,9 @@ def configurator_loader(config_dict):  # @UnusedVariable
 def confeditor_loader():
     return TE923ConfEditor()
 
-DEBUG_READ = 1
-DEBUG_WRITE = 1
-DEBUG_DECODE = 1
+DEBUG_READ = 0
+DEBUG_WRITE = 0
+DEBUG_DECODE = 0
 
 # map the station data to the default database schema, plus extensions
 DEFAULT_OBSERVATION_MAP = {
@@ -477,7 +478,7 @@ DEFAULT_OBSERVATION_MAP = {
     'bat_2': 'extraBatteryStatus1',
     'link_2': 'extraLinkStatus1',
     't_3': 'extraTemp2',
-    'h_3': 'extraHumid3',
+    'h_3': 'extraHumid2',
     'bat_3': 'extraBatteryStatus2',
     'link_3': 'extraLinkStatus2',
     't_4': 'extraTemp3',
@@ -816,7 +817,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
         TE923Configurator.print_data(data, fmt)
 
     @staticmethod
-    def show_history(station, ts=0, count=0, fmt='dict'):
+    def show_history(station, ts=0, count=None, fmt='dict'):
         print "Querying the station for historical records..."
         for r in station.gen_records(ts, count):
             TE923Configurator.print_data(r, fmt)
@@ -1115,6 +1116,8 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         model: Which station model is this?
         [Optional. Default is 'TE923']
         """
+        loginf('driver version is %s' % DRIVER_VERSION)
+
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
         global DEBUG_WRITE
@@ -1130,10 +1133,8 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 3))
         self.polling_interval = int(stn_dict.get('polling_interval', 10))
-        self.obs_map = stn_dict.get('map', DEFAULT_OBSERVATION_MAP)
-
-        loginf('driver version is %s' % DRIVER_VERSION)
         loginf('polling interval is %s' % str(self.polling_interval))
+        self.obs_map = stn_dict.get('map', DEFAULT_OBSERVATION_MAP)
         loginf('observation map is %s' % self.obs_map)
 
         self.station = TE923Station(max_tries=self.max_tries,
@@ -1426,10 +1427,10 @@ def decode_ws(byte1, byte2):
     value = bcd2int(byte1) / 10.0 + bcd2int(byte2 & 0x0f) * 10.0 + offset
     return value, STATE_OK
 
+# the rain counter is in the station, not the rain bucket.  so if the link
+# between rain bucket and station is lost, the station will miss rainfall and
+# there is no way to know about it.
 # FIXME: figure out how to detect link status between station and rain bucket
-# FIXME: according to sebastian, the counter is in the station, not the rain
-#        bucket.  so if the link between rain bucket and station is lost, the
-#        station will miss rainfall and there is no way to know about it.
 # NB: wview treats the raw rain count as millimeters
 def decode_rain(buf):
     """rain counter is number of bucket tips, each tip is about 0.03 inches"""
@@ -1496,6 +1497,8 @@ class TE923Station(object):
     ENDPOINT_IN = 0x81
     READ_LENGTH = 0x8
     TIMEOUT = 1000
+    START_ADDRESS = 0x101
+    RECORD_SIZE = 0x26
 
     idx_to_interval_sec = {
         1: 300, 2: 600, 3: 1200, 4: 1800, 5: 3600, 6: 5400, 7: 7200,
@@ -1584,7 +1587,7 @@ class TE923Station(object):
         time.sleep(0.1)  # te923tool is 0.3
         start_ts = time.time()
         rbuf = []
-        while time.time() - start_ts < 1:
+        while time.time() - start_ts < 3:
             try:
                 buf = self.devh.interruptRead(
                     self.ENDPOINT_IN, self.READ_LENGTH, self.TIMEOUT)
@@ -1596,8 +1599,8 @@ class TE923Station(object):
                 if len(rbuf) >= 34:
                     break
             except usb.USBError, e:
-                if (not e.args[0].find('No data available') and
-                    not e.args[0].find('No error')):
+                errmsg = repr(e)
+                if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise weewx.WeeWxIOError(e)
             time.sleep(0.009) # te923tool is 0.15
         else:
@@ -1679,8 +1682,8 @@ class TE923Station(object):
                 if len(rbuf) >= 1:
                     break
             except usb.USBError, e:
-                if (not e.args[0].find('No data available') and
-                    not e.args[0].find('No error')):
+                errmsg = repr(e)
+                if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise weewx.WeeWxIOError(e)
             time.sleep(0.009)
         else:
@@ -1729,6 +1732,8 @@ class TE923Station(object):
 
     def read_memory_size(self):
         buf = self._read(0xfc)
+        if DEBUG_DECODE:
+            logdbg("MEM  BUF[1]=%s" % buf[1])
         if buf[1] == 0:
             self._num_rec = 208
             self._num_blk = 256
@@ -1773,24 +1778,42 @@ class TE923Station(object):
     def get_versions(self):
         data = dict()
         buf = self._read(0x98)
+        if DEBUG_DECODE:
+            logdbg("VER  BUF[1]=%s BUF[2]=%s BUF[3]=%s BUF[4]=%s BUF[5]=%s" %
+                   (buf[1], buf[2], buf[3], buf[4], buf[5]))
         data['version_bar']  = buf[1]
         data['version_uv']   = buf[2]
         data['version_rcc']  = buf[3]
         data['version_wind'] = buf[4]
         data['version_sys']  = buf[5]
+        if DEBUG_DECODE:
+            logdbg("VER  bar=%s uv=%s rcc=%s wind=%s sys=%s" %
+                   (data['version_bar'], data['version_uv'],
+                    data['version_rcc'], data['version_wind'],
+                    data['version_sys']))
         return data
 
     def get_status(self):
+        # map the battery status flags.  0 indicates ok, 1 indicates failure.
+        # FIXME: i get 1 for uv even when no uv link
+        # FIXME: i get 0 for th3, th4, th5 even when no link
         status = dict()
         buf = self._read(0x4c)
-        status['bat_rain'] = buf[1] & 0x80 == 0x80
-        status['bat_wind'] = buf[1] & 0x40 == 0x40
-        status['bat_uv']   = buf[1] & 0x20 == 0x20
-        status['bat_5']    = buf[1] & 0x10 == 0x10
-        status['bat_4']    = buf[1] & 0x08 == 0x08
-        status['bat_3']    = buf[1] & 0x04 == 0x04
-        status['bat_2']    = buf[1] & 0x02 == 0x02
-        status['bat_1']    = buf[1] & 0x01 == 0x01
+        if DEBUG_DECODE:
+            logdbg("BAT  BUF[01]=%02x" % buf[1])
+        status['bat_rain'] = 0 if buf[1] & 0x80 == 0x80 else 1
+        status['bat_wind'] = 0 if buf[1] & 0x40 == 0x40 else 1
+        status['bat_uv']   = 0 if buf[1] & 0x20 == 0x20 else 1
+        status['bat_5']    = 0 if buf[1] & 0x10 == 0x10 else 1
+        status['bat_4']    = 0 if buf[1] & 0x08 == 0x08 else 1
+        status['bat_3']    = 0 if buf[1] & 0x04 == 0x04 else 1
+        status['bat_2']    = 0 if buf[1] & 0x02 == 0x02 else 1
+        status['bat_1']    = 0 if buf[1] & 0x01 == 0x01 else 1
+        if DEBUG_DECODE:
+            logdbg("BAT  rain=%s wind=%s uv=%s th5=%s th4=%s th3=%s th2=%s th1=%s" %
+                   (status['bat_rain'], status['bat_wind'], status['bat_uv'],
+                    status['bat_5'], status['bat_4'], status['bat_3'],
+                    status['bat_2'], status['bat_1']))
         return status
 
     # FIXME: is this any different than get_alt?
@@ -1828,34 +1851,42 @@ class TE923Station(object):
         data['dateTime'] = int(time.time() + 0.5)
         return data
 
-    def gen_records(self, since_ts=0, count=None):
-        """return requested records from station from oldest to newest.  If
-        since_ts is specified, then all records since that time.  If count
-        is specified, then at most the count most recent records.  If both
-        are specified then at most count records newer than the timestamp."""
-        if not count:
-            count = self._num_rec
-        if count > self._num_rec:
-            count = self._num_rec
-
+    def _get_current_index(self):
+        """get the index of the current history record"""
         buf = self._read(0xfb)
-        latest_addr = 0x101 + (buf[3] * 0x100 + buf[5] - 1) * 0x26
-        oldest_addr = latest_addr - count * 0x26
+        if DEBUG_DECODE:
+            logdbg("HIS  BUF[3]=%02x BUF[5]=%02x" % (buf[3], buf[5]))
+        record_index = buf[3] * 0x100 + buf[5]
+        if DEBUG_DECODE:
+            logdbg("HIS  record_index=%d" % record_index)
+        if record_index > self._num_rec:
+            msg = "record index of %d exceeds memory size of %d" % (
+                record_index, self._num_rec)
+            logerr(msg)
+            raise weewx.WeeWxIOError(msg)
+        return record_index
 
-        n = 0
-        tt = time.localtime(time.time())
-        while n < count and oldest_addr + n * 0x26 < latest_addr:
-            addr = oldest_addr + n * 0x26
-            if addr < 0x101:
-                addr += self._num_rec * 0x26
-            record = self.get_record(addr, tt.tm_year, tt.tm_mon)
-            if record and record['dateTime'] > since_ts:
-                yield record
-            n += 1
+    def _get_addresses(self, requested):
+        """calculate the oldest and latest addresses"""
+        count = requested
+        if count is None:
+            count = self._num_rec
+        elif count > self._num_rec:
+            count = self._num_rec
+            loginf("too many records requested (%d), using %d instead" %
+                   (requested, count))
+        idx = self._get_current_index()
+        latest_addr = self.START_ADDRESS + (idx - 1) * self.RECORD_SIZE
+        oldest_addr = latest_addr - (count - 1) * self.RECORD_SIZE
+        logdbg("count=%s oldest_addr=0x%06x latest_addr=0x%06x" %
+               (count, oldest_addr, latest_addr))
+        return oldest_addr, count
 
-    def get_record(self, addr=None, now_year=None, now_month=None):
-        """Return a single record from station and the address of the record
-        immediately preceding the single record.
+    def gen_records(self, since_ts=0, requested=None):
+        """return requested records from station from oldest to newest.  If
+        since_ts is specified, then all records since that time.  If requested
+        is specified, then at most that many most recent records.  If both
+        are specified then at most requested records newer than the timestamp.
 
         Each historical record is 38 bytes (0x26) long.  Records start at
         memory address 0x101 (257).  The index of the record after the latest
@@ -1865,9 +1896,62 @@ class TE923Station(object):
         On small memory stations, the last 32 bytes of memory are never used.
         On large memory stations, the last 20 bytes of memory are never used.
         """
+
+        logdbg("gen_records: since_ts=%s requested=%s" % (since_ts, requested))
+        if since_ts is None:
+            since_ts = 0
+        start_ts = time.time()
+        tt = time.localtime(start_ts)
+        oldest_addr, count = self._get_addresses(requested)
+        more_records = True
+        while more_records:
+            n = 0
+            while n < count:
+                addr = oldest_addr + n * self.RECORD_SIZE
+                if addr < self.START_ADDRESS:
+                    addr += self._num_rec * self.RECORD_SIZE
+                record = self.get_record(addr, tt.tm_year, tt.tm_mon)
+                n += 1
+                msg = "record %d of %d addr=0x%06x" % (n, count, addr)
+                if record and record['dateTime'] > since_ts:
+                    msg += " %s" % timestamp_to_string(record['dateTime'])
+                    logdbg("gen_records: yield %s" % msg)
+                    yield record
+                else:
+                    if record:
+                        msg += " since_ts=%d %s" % (
+                            since_ts, timestamp_to_string(record['dateTime']))
+                    logdbg("gen_records: skip %s" % msg)
+                # use the sleep to simulate slow reads
+#                time.sleep(5)
+
+            # see if reading has taken so much time that more records have
+            # arrived, but only if no specific number of records was specified.
+            # if so, read whatever records have come in since the read began.
+            if requested is None:
+                arcint = self.get_interval_seconds()
+                now = time.time()
+                if now - start_ts > arcint:
+                    newreq = int((now - start_ts) / arcint) + 1
+                    logdbg("gen_records: reading %d more records" % newreq)
+                    oldest_addr, count = self._get_addresses(newreq)
+                    start_ts = now
+                else:
+                    more_records = False
+            else:
+                more_records = False
+
+    def get_record(self, addr, now_year=None, now_month=None):
+        """Return a single record from station."""
+
+        logdbg("get_record at address 0x%06x (year=%s month=%s)" %
+               (addr, now_year, now_month))
         buf = self._read(addr)
+        if DEBUG_DECODE:
+            logdbg("REC  %02x %02x %02x %02x" %
+                   (buf[1], buf[2], buf[3], buf[4]))
         if buf[1] == 0xff:
-            # no data at this address
+            logdbg("get_record: no data at address 0x%06x" % addr)
             return None
 
         if now_year is None or now_month is None:
@@ -1885,21 +1969,16 @@ class TE923Station(object):
         minute = bcd2int(buf[4])
         ts = time.mktime((year, month, day, hour, minute, 0, 0, 0, -1))
         if DEBUG_DECODE:
-            logdbg("REC  %02x %02x %02x %02x" %
-                   (buf[1], buf[2], buf[3], buf[4]))
             logdbg("REC  %d/%02d/%02d %02d:%02d = %d" %
                    (year, month, day, hour, minute, ts))
 
         tmpbuf = buf[5:16]
-        crc1 = buf[16]
         buf = self._read(addr + 0x10) 
         tmpbuf.extend(buf[1:22])
-        crc2 = buf[22]
-        if DEBUG_DECODE:
-            logdbg("CRC  %02x %02x" % (crc1, crc2))
         
         data = decode(tmpbuf)
         data['dateTime'] = int(ts)
+        logdbg("get_record: found record %s" % data)
         return data
 
     def _read_minmax(self):
@@ -1975,17 +2054,13 @@ class TE923Station(object):
         self._write_date(buf)
 
     def _read_loc(self, loc_type):
-        if loc_type == 0:
-            buf = self._read(0x0)
-        else:
-            buf = self._read(0x16)
+        addr = 0x0 if loc_type == 0 else 0x16
+        buf = self._read(addr)
         return buf[1:33]
     
     def _write_loc(self, loc_type, buf):
-        if loc_type == 0:
-            self._write(0x00, buf)
-        else:
-            self._write(0x16, buf)
+        addr = 0x0 if loc_type == 0 else 0x16
+        self._write(addr, buf)
 
     def get_loc(self, loc_type):
         buf = self._read_loc(loc_type)

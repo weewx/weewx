@@ -613,7 +613,7 @@ def data_to_packet(data, ts, last_rain=None):
         packet['windSpeed'] = ws
         if packet['windSpeed'] is not None:
             packet['windSpeed'] *= 3.6 # weewx wants km/h
-        packet['windDir'] = wd if packet['windSpeed'] else None
+        packet['windDir'] = wd
     else:
         loginf('invalid wind reading: speed=%s dir=%s overflow=%s invalid=%s' %
                (ws, wd, wso, wsv))

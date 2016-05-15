@@ -272,7 +272,8 @@ class UsbDevice(object):
             # have been exhausted.  We have to send a heartbeat command
             # to tell the weather console to start streaming live data
             # again.
-            if ex.args[0].find('No data available') == -1:
+            errmsg = repr(ex)
+            if not ('No data available' in errmsg):
                 msg = 'read_device() USB Error Reason:%s' % ex
                 logerr(msg)
                 raise weewx.WeeWxIOError(msg)

@@ -834,7 +834,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_7x = time.time()
             except usb.USBError, e:
-                if not e.args[0].find('No data available'):
+                errmsg = repr(e)
+                if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
@@ -899,7 +900,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_65 = time.time()
             except usb.USBError, e:
-                if not e.args[0].find('No data available'):
+                errmsg = repr(e)
+                if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
@@ -1042,7 +1044,8 @@ class Station(object):
             if DEBUG_COUNTS and count:
                 self.update_count(buf, self.recv_counts)
         except usb.USBError, e:
-            if not e.args[0].find('No data available'):
+            errmsg = repr(e)
+            if not ('No data available' in errmsg or 'No error' in errmsg):
                 raise
         return buf
 
