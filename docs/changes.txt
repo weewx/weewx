@@ -3,6 +3,10 @@ weewx change history
 
 X.X.X MM/DD/YYYY
 
+Added the ability to run reports using a cron-like notation, instead of with
+every report cycle. See User's Guide for details. Thanks to user Gary Roderick.
+PR #122. Fixes issue #17.
+
 Fixed rpm package so that it will retain any changes to the user directory.
 Thanks to user Pat OBrien.
 
