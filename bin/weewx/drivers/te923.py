@@ -328,10 +328,10 @@ SECTION 14: Archiving
 
 0x0000FB - Unknown
 0x0000FC - Memory size (0 = 0x1fff, 2 = 0x20000)
-0x0000FD - Index of latest record (High)
+0x0000FD - Number of records (High)
 0x0000FE - Archive interval 
            1-11 = 5, 10, 20, 30, 60, 90, 120, 180, 240, 360, 1440 mins
-0x0000FF - Index of latest record (Low)
+0x0000FF - Number of records (Low)
 0x000100 - Checksum of FB:FF
 
 0x000101 - Start of historical records:
@@ -426,9 +426,9 @@ schema, these are the additional fields that must be added to the schema:
           ('storm',                'REAL'),
 """
 
-# TODO: figure out how to read station pressure from station
+# TODO: figure out how to read gauge pressure instead of slp
 # TODO: figure out how to clear station memory
-# TODO: clear rain total
+# TODO: add option to reset rain total
 
 # FIXME: set-date and sync-date do not work - something reverts the clock
 # FIXME: is there any way to get rid of the bad header byte on first read?
@@ -454,8 +454,8 @@ def configurator_loader(config_dict):  # @UnusedVariable
 def confeditor_loader():
     return TE923ConfEditor()
 
-DEBUG_READ = 0
-DEBUG_WRITE = 0
+DEBUG_READ = 1
+DEBUG_WRITE = 1
 DEBUG_DECODE = 0
 
 # map the station data to the default database schema, plus extensions
@@ -1141,6 +1141,9 @@ class TE923Driver(weewx.drivers.AbstractDevice):
                                     retry_wait=self.retry_wait)
         self.station.open()
         loginf('logger capacity %s records' % self.station.get_memory_size())
+        ts = self.station.get_date()
+        now = int(time.time())
+        loginf('station time is %s, computer time is %s' % (ts, now))
 
     def closePort(self):
         if self.station is not None:
@@ -1851,8 +1854,8 @@ class TE923Station(object):
         data['dateTime'] = int(time.time() + 0.5)
         return data
 
-    def _get_current_index(self):
-        """get the index of the current history record"""
+    def _get_next_index(self):
+        """get the index of the next history record"""
         buf = self._read(0xfb)
         if DEBUG_DECODE:
             logdbg("HIS  BUF[3]=%02x BUF[5]=%02x" % (buf[3], buf[5]))
@@ -1866,7 +1869,7 @@ class TE923Station(object):
             raise weewx.WeeWxIOError(msg)
         return record_index
 
-    def _get_addresses(self, requested):
+    def _get_starting_addr(self, requested):
         """calculate the oldest and latest addresses"""
         count = requested
         if count is None:
@@ -1875,7 +1878,9 @@ class TE923Station(object):
             count = self._num_rec
             loginf("too many records requested (%d), using %d instead" %
                    (requested, count))
-        idx = self._get_current_index()
+        idx = self._get_next_index()
+        if idx < 1:
+            idx += self._num_rec
         latest_addr = self.START_ADDRESS + (idx - 1) * self.RECORD_SIZE
         oldest_addr = latest_addr - (count - 1) * self.RECORD_SIZE
         logdbg("count=%s oldest_addr=0x%06x latest_addr=0x%06x" %
@@ -1898,11 +1903,21 @@ class TE923Station(object):
         """
 
         logdbg("gen_records: since_ts=%s requested=%s" % (since_ts, requested))
-        if since_ts is None:
-            since_ts = 0
+        # we need the current year and month since station does not track year
         start_ts = time.time()
         tt = time.localtime(start_ts)
-        oldest_addr, count = self._get_addresses(requested)
+        # get the archive interval for use in calculations later
+        arcint = self.get_interval_seconds()
+        # if nothing specified, get everything since time began
+        if since_ts is None:
+            since_ts = 0
+        # if no count specified, use interval to estimate number of records
+        if requested is None:
+            requested = int((start_ts - since_ts) / arcint)
+            requested += 1 # safety margin
+        # get the starting address for what we want to read, plus actual count
+        oldest_addr, count = self._get_starting_addr(requested)
+        # inner loop reads records, outer loop catches any added while reading
         more_records = True
         while more_records:
             n = 0
@@ -1922,26 +1937,22 @@ class TE923Station(object):
                         msg += " since_ts=%d %s" % (
                             since_ts, timestamp_to_string(record['dateTime']))
                     logdbg("gen_records: skip %s" % msg)
-                # use the sleep to simulate slow reads
+                # insert a sleep to simulate slow reads
 #                time.sleep(5)
 
             # see if reading has taken so much time that more records have
-            # arrived, but only if no specific number of records was specified.
-            # if so, read whatever records have come in since the read began.
-            if requested is None:
-                arcint = self.get_interval_seconds()
-                now = time.time()
-                if now - start_ts > arcint:
-                    newreq = int((now - start_ts) / arcint) + 1
-                    logdbg("gen_records: reading %d more records" % newreq)
-                    oldest_addr, count = self._get_addresses(newreq)
-                    start_ts = now
-                else:
-                    more_records = False
+            # arrived. read whatever records have come in since the read began.
+            now = time.time()
+            if now - start_ts > arcint:
+                newreq = int((now - start_ts) / arcint)
+                newreq += 1 # safety margin
+                logdbg("gen_records: reading %d more records" % newreq)
+                oldest_addr, count = self._get_starting_addr(newreq)
+                start_ts = now
             else:
                 more_records = False
 
-    def get_record(self, addr, now_year=None, now_month=None):
+    def get_record(self, addr, now_year, now_month):
         """Return a single record from station."""
 
         logdbg("get_record at address 0x%06x (year=%s month=%s)" %
@@ -1953,12 +1964,6 @@ class TE923Station(object):
         if buf[1] == 0xff:
             logdbg("get_record: no data at address 0x%06x" % addr)
             return None
-
-        if now_year is None or now_month is None:
-            now = int(time.time())
-            tt = time.localtime(now)
-            now_year = tt.tm_year
-            now_month = tt.tm_mon
         
         year = now_year
         month = buf[1] & 0x0f
