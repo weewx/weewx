@@ -57,6 +57,9 @@ drivers in weewx 3.3.0.
 Fixed te923 driver behavior when reading from logger, especially on stations
 with large memory configuration.  Thanks to users Joep and Nico.
 
+Added report_timing option.  This option uses cron-like syntax to run reports
+at arbitrary times.  Thanks to user gary roderick!
+
 
 3.5.0 03/13/2016
 
