@@ -500,7 +500,6 @@ class StdWunderground(StdRESTful):
         
         _ambient_dict = get_site_dict(
             config_dict, 'Wunderground', 'station', 'password')
-
         if _ambient_dict is None:
             return        
 
@@ -1149,8 +1148,8 @@ class StdStationRegistry(StdRESTful):
         _registry_dict.setdefault('station_url',
                                   self.engine.stn_info.station_url)
         if _registry_dict['station_url'] is None:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: StationRegistry: "
-                          "Data will not be posted. No station_url specified.")
+            syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: "
+                          "Station will not be registered: no station_url specified.")
             return
 
         _registry_dict.setdefault('station_type', config_dict['Station'].get('station_type', 'Unknown'))
@@ -1563,7 +1562,7 @@ def get_site_dict(config_dict, service, *args):
         site_dict = accumulateLeaves(config_dict['StdRESTful'][service],
                                      max_level=1)
     except KeyError:
-        syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
+        syslog.syslog(syslog.LOG_INFO, "restx: %s: "
                       "No config info. Skipped." % service)
         return None
 
@@ -1571,7 +1570,7 @@ def get_site_dict(config_dict, service, *args):
     # the service is not enabled.
     try:
         if not to_bool(site_dict['enable']):
-            syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
+            syslog.syslog(syslog.LOG_INFO, "restx: %s: "
                           "Posting not enabled." % service)
             return None
     except KeyError:
