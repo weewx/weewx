@@ -700,13 +700,14 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.9'
+DRIVER_VERSION = '0.10'
 
 DEBUG_COMM = 0
 DEBUG_LOOP = 0
 DEBUG_COUNTS = 0
 DEBUG_DECODE = 0
 DEBUG_HISTORY = 0
+DEBUG_RAIN = 0
 
 
 def loader(config_dict, _):
@@ -783,9 +784,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         DEBUG_DECODE = int(stn_dict.get('debug_decode', DEBUG_DECODE))
         global DEBUG_HISTORY
         DEBUG_HISTORY = int(stn_dict.get('debug_history', DEBUG_HISTORY))
+        global DEBUG_RAIN
+        DEBUG_RAIN = int(stn_dict.get('debug_rain', DEBUG_RAIN))
         self.last_rain = None
-        self.last_rain_historical = None
-        self.cached = dict()
         self.last_a6 = 0
         self.last_65 = 0
         self.last_7x = 0
@@ -813,9 +814,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                         # observed: 0x00 0x20 0xc1 0xc7 0xa0 0x99
                         cmd = [0x41, 0x43, 0x4b, buf[0], buf[7], _lo(self.last_record)]
                         self.station.write(cmd)
-                        packet = self.convert_loop(pkt)
-                        self.cached.update(packet)
-                        yield self.cached
+                        # we only care about packets with loop data
+                        if pkt['packet_type'] in [0xd3, 0xd4, 0xd5, 0xd6]:
+                            packet = self.convert_loop(pkt)
+                            yield packet
                 if time.time() - self.last_a6 > self.heartbeat:
                     logdbg("request station status: %s (%02x)" %
                            (self.last_record, _lo(self.last_record)))
@@ -912,25 +914,26 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         for label in self.obs_map:
             if label in pkt:
                 p[self.obs_map[label]] = pkt[label]
+        # single variable to track last_rain assumes that any historical reads
+        # will happen before any loop reads, and no historical reads will
+        # happen after any loop reads.  otherwise double-counting of rain
+        # events could happen.
+        if 'rain_total' in pkt:
+            p['rain'] = self.calculate_rain(pkt['rain_total'], self.last_rain)
+            if DEBUG_RAIN and pkt['rain_total'] != self.last_rain:
+                logdbg("rain=%s rain_total=%s last_rain=%s" %
+                       (p['rain'], pkt['rain_total'], self.last_rain))
+            self.last_rain = pkt['rain_total']
         return p
 
     def convert_historical(self, pkt, ts, last_ts):
         p = self.convert(pkt, ts)
         if last_ts is not None:
             p['interval'] = ts - last_ts
-        if 'rain_total' in pkt:
-            total = pkt['rain_total']
-            p['rain'] = weewx.wxformulas.calculate_rain(
-                total, self.last_rain_historical)
-            self.last_rain_historical = total
         return p
 
     def convert_loop(self, pkt):
         p = self.convert(pkt, int(time.time() + 0.5))
-        if 'rain_total' in pkt:
-            total = pkt['rain_total']
-            p['rain'] = weewx.wxformulas.calculate_rain(total, self.last_rain)
-            self.last_rain = total
         # add all observations if we are debugging loop data.  ignore any
         # observations that are non-numeric.
         if DEBUG_LOOP:
@@ -941,6 +944,22 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     except (ValueError, TypeError):
                         pass
         return p
+
+    @staticmethod
+    def calculate_rain(newtotal, oldtotal):
+        """Calculate the rain difference given two cumulative measurements."""
+        if newtotal is not None and oldtotal is not None:
+            if newtotal >= oldtotal:
+                delta = newtotal - oldtotal
+            else:
+                loginf("rain counter decrement detected: new=%s old=%s" %
+                       (newtotal, oldtotal))
+                delta = None
+        else:
+            loginf("possible missed rain event: new=%s old=%s" %
+                   (newtotal, oldtotal))
+            delta = None
+        return delta
 
 
 class WMR300Error(weewx.WeeWxIOError):
@@ -1216,6 +1235,7 @@ class Station(object):
     def _decode_57(buf):
         """57 packet contains station information"""
         pkt = dict()
+        pkt['packet_type'] = 0x57
         pkt['station_type'] = ''.join("%s" % chr(x) for x in buf[0:6])
         pkt['station_model'] = ''.join("%s" % chr(x) for x in buf[7:11])
         if DEBUG_HISTORY:
@@ -1227,6 +1247,7 @@ class Station(object):
     def _decode_41(_):
         """41 43 4b is ACK"""
         pkt = dict()
+        pkt['packet_type'] = 0x41
         return pkt
 
     @staticmethod
@@ -1235,6 +1256,7 @@ class Station(object):
         Station._verify_length("D2", 0x80, buf)
         Station._verify_checksum("D2", buf[:0x80], msb_first=False)
         pkt = dict()
+        pkt['packet_type'] = 0xd2
         pkt['ts'] = Station._extract_ts(buf[4:9])
         for i in range(0, 9):
             pkt['temperature_%d' % i] = Station._extract_signed(
@@ -1266,6 +1288,7 @@ class Station(object):
         Station._verify_length("D3", 0x3d, buf)
         Station._verify_checksum("D3", buf[:0x3d])
         pkt = dict()
+        pkt['packet_type'] = 0xd3
         pkt['ts'] = Station._extract_ts(buf[2:7])
         pkt['channel'] = buf[7]
         pkt['temperature_%d' % pkt['channel']] = Station._extract_signed(
@@ -1282,6 +1305,7 @@ class Station(object):
         Station._verify_length("D4", 0x36, buf)
         Station._verify_checksum("D4", buf[:0x36])
         pkt = dict()
+        pkt['packet_type'] = 0xd4
         pkt['ts'] = Station._extract_ts(buf[2:7])
         pkt['channel'] = buf[7]
         pkt['wind_gust'] = Station._extract_value(buf[8:10], 0.1) # m/s
@@ -1297,6 +1321,7 @@ class Station(object):
         Station._verify_length("D5", 0x28, buf)
         Station._verify_checksum("D5", buf[:0x28])
         pkt = dict()
+        pkt['packet_type'] = 0xd5
         pkt['ts'] = Station._extract_ts(buf[2:7])
         pkt['channel'] = buf[7]
         pkt['rain_hour'] = Station._extract_value(buf[9:11], 0.254) # mm
@@ -1311,6 +1336,7 @@ class Station(object):
         Station._verify_length("D6", 0x2e, buf)
         Station._verify_checksum("D6", buf[:0x2e])
         pkt = dict()
+        pkt['packet_type'] = 0xd6
         pkt['ts'] = Station._extract_ts(buf[2:7])
         pkt['channel'] = buf[7]
         pkt['pressure'] = Station._extract_value(buf[8:10], 0.1) # mbar
@@ -1324,6 +1350,7 @@ class Station(object):
         Station._verify_length("DC", 0x3e, buf)
         Station._verify_checksum("DC", buf[:0x3e])
         pkt = dict()
+        pkt['packet_type'] = 0xdc
         pkt['ts'] = Station._extract_ts(buf[2:7])
         return pkt
 
@@ -1333,6 +1360,7 @@ class Station(object):
         Station._verify_length("DB", 0x20, buf)
         Station._verify_checksum("DB", buf[:0x20])
         pkt = dict()
+        pkt['packet_type'] = 0xdb
         return pkt
 
 
