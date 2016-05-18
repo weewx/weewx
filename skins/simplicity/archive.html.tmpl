@@ -1,0 +1,918 @@
+#errorCatcher Echo
+#encoding UTF-8
+#set global $page_title = $Extras.labels.archive
+#set global $btn = {'archive':'button_active'}
+<!DOCTYPE html>
+  <head>
+    <title>$station.location : $page_title</title>
+    <link rel="stylesheet" type="text/css" href="weewx.css"/>
+    <link rel="icon" type="image/png" href="favicon.ico" />
+    #include "ga.inc"
+    <style>
+      .selectors {
+        clear: right;
+        float: right;
+        text-align: right;
+      }
+    </style>
+    <script type="text/javascript">
+      function openURL(urlname) {
+        window.location = urlname;
+      }
+      function openNoaaFile(date) {
+        window.location = "NOAA/NOAA-" + date + ".txt";
+      }
+    </script>
+  </head>
+  <body>
+
+    #include "header.inc"
+
+    <div class='selectors'>
+      <p>Monthly Summary:&nbsp;
+        <select NAME="noaaselect" onchange="openNoaaFile(value)">
+          #for $monthYear in $SummaryByMonth
+          <option value="$monthYear">$monthYear</option>
+          #end for
+	  <option selected>-Select month-</option>
+        </select>
+        <br/>
+        Yearly Summary:&nbsp;
+        <select NAME="noaaselect" onchange="openNoaaFile(value)">
+          #for $y in $SummaryByYear
+          <option value="$y">$y</option>
+          #end for
+	  <option selected>-Select year-</option>
+        </select>
+      </p>
+    </div>
+
+    <div id='content'>
+
+<table class='metrics'>
+  <tr style='vertical-align:top'>
+    <td>
+
+<table>
+  <tr>
+    <td class="label">Station:</td>
+    <td><span class="data">$station.hardware</span></td>
+  </tr>
+  <tr>
+    <td class="label">Time:</td>
+    <td><span class="data">$current.dateTime.format("%H:%M")</span></td>
+  </tr>
+  <tr>
+    <td class="label">Date:</td>
+    <td><span class="data">$current.dateTime.format("%d %b %Y")</span></td>
+  </tr>
+  <tr>
+    <td class="label">Latitude:</td>
+    <td><span class="data">$station.latitude[0]&deg; $station.latitude[1]' $station.latitude[2]</span></td>
+  </tr>
+  <tr>
+    <td class="label">Longitude:</td>
+    <td><span class="data">$station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</span></td>
+  </tr>
+  <tr>
+    <td class="label">Elevation:</td>
+    <td><span class="data">$station.altitude</span></td>
+  </tr>
+#if $almanac.hasExtras
+  #if $almanac.sun.set.raw is not None and $almanac.sun.rise.raw is not None
+    #set $daylight_s = $almanac.sun.set.raw - $almanac.sun.rise.raw
+    #set $daylight_h_str = "%02d" % int($daylight_s / 3600)
+    #set $daylight_m_str = "%02d" % int(($daylight_s % 3600) / 60)
+  #else
+    #set $daylight_h_str = "00"
+    #set $daylight_m_str = "00"
+  #end if
+  <tr>
+    <td class="label">Daylight:</td>
+    <td><span class="data">$daylight_h_str:$daylight_m_str</span></td>
+  </tr>
+#end if
+</table>
+
+    </td>
+    <td>&nbsp;</td>
+    <td>
+
+#if $almanac.hasExtras
+## Extended almanac information is available, do full set of data.
+<table>
+  <tr><td class="table_title" colspan="2">Sun</td></tr>
+  <tr>
+    <td class="label">Start civil twilight:</td>
+    <td class="data">$almanac(horizon=-6).sun(use_center=1).rise</td>
+  </tr>
+  <tr>
+    <td class="label">Sunrise:</td>
+    <td class="data">$almanac.sun.rise</td>
+  </tr>
+  <tr>
+    <td class="label">Transit:</td>
+    <td class="data">$almanac.sun.transit</td>
+  </tr>
+  <tr>
+    <td class="label">Sunset:</td>
+    <td class="data">$almanac.sun.set</td>
+  </tr>
+  <tr>
+    <td class="label">End civil twilight:</td>
+    <td class="data">$almanac(horizon=-6).sun(use_center=1).set</td>
+  </tr>
+  <tr>
+    <td class="label">Azimuth:</td>
+    <td class="data">$("%.1f&deg;" % $almanac.sun.az)</td>
+  </tr>
+  <tr>
+    <td class="label">Altitude:</td>
+    <td class="data">$("%.1f&deg;" % $almanac.sun.alt)</td>
+  </tr>
+  <tr>
+    <td class="label">Right ascension:</td>
+    <td class="data">$("%.1f&deg;" % $almanac.sun.ra)</td>
+  </tr>
+  <tr>
+    <td class="label">Declination:</td>
+    <td class="data">$("%.1f&deg;" % $almanac.sun.dec)</td>
+  </tr>
+  #if $almanac.next_equinox.raw < $almanac.next_solstice.raw
+  ## The equinox is before the solstice. Display them in order.
+  <tr>
+    <td class="label">Equinox:</td>
+    <td class="data">$almanac.next_equinox</td>
+  </tr>
+  <tr>
+    <td class="label">Solstice:</td>
+    <td class="data">$almanac.next_solstice</td>
+  </tr>
+  #else
+  ## The solstice is before the equinox. Display them in order.
+  <tr>
+    <td class="label">Solstice:</td>
+    <td class="data">$almanac.next_solstice</td>
+  </tr>
+  <tr>
+    <td class="label">Equinox:</td>
+    <td class="data">$almanac.next_equinox</td>
+  </tr>
+  #end if
+</table>
+    </td>
+    <td>&nbsp;</td>
+    <td>
+<table>
+  <tr><td class="table_title" colspan="2">Moon</td></tr>
+  <tr>
+    <td class="label">Rise:</td>
+    <td class="data">$almanac.moon.rise</td>
+  </tr>
+  <tr>
+    <td class="label">Transit:</td>
+    <td class="data">$almanac.moon.transit</td>
+  </tr>
+  <tr>
+    <td class="label">Set:</td>
+    <td class="data">$almanac.moon.set</td>
+  </tr>
+  <tr>
+    <td class="label">Azimuth:</td>
+    <td class="data">$("%.1f&deg;" % $almanac.moon.az)</td>
+  </tr>
+  <tr>
+    <td class="label">Altitude:</td>
+    <td class="data">$("%.1f&deg;" % $almanac.moon.alt)</td>
+  </tr>
+  <tr>
+    <td class="label">Right ascension:</td>
+    <td class="data">$("%.1f&deg;" % $almanac.moon.ra)</td>
+  </tr>
+  <tr>
+    <td class="label">Declination:</td>
+    <td class="data">$("%.1f&deg;" % $almanac.moon.dec)</td>
+  </tr>
+  #if $almanac.next_full_moon.raw < $almanac.next_new_moon.raw
+  <tr>
+    <td class="label">Full moon:</td>
+    <td class="data">$almanac.next_full_moon</td>
+  </tr>
+  <tr>
+    <td class="label">New moon:</td>
+    <td class="data">$almanac.next_new_moon</td>
+  </tr>
+  #else
+  <tr>
+    <td class="label">New moon:</td>
+    <td class="data">$almanac.next_new_moon</td>
+  </tr>
+  <tr>
+    <td class="label">Full moon:</td>
+    <td class="data">$almanac.next_full_moon</td>
+  </tr>
+  #end if
+  <tr style='vertical-align:top'>
+    <td class="label">Phase:</td>
+    <td><span class="data">$almanac.moon_phase</span><br/><span class='metric_hilo'>$almanac.moon_fullness% full</span></td>
+  </tr>
+</table>
+#else
+## No extended almanac information, fall back to a simple table.
+<table>
+  <tr><td class='table_title'>Sun and Moon</td><td></td></tr>
+  <tr>
+    <td class="label">Sunrise:</td>
+    <td class="data">$almanac.sunrise</td>
+  </tr>
+  <tr>
+    <td class="label">Sunset:</td>
+    <td class="data">$almanac.sunset</td>
+  </tr>
+  <tr style='vertical-align:top'>
+    <td class="label">Moon Phase:</td>
+    <td><span class="data">$almanac.moon_phase</span><br/><span class='metric_hilo'>$almanac.moon_fullness% full</span></td>
+  </tr>
+</table>
+#end if
+
+    </td>
+  </tr>
+</table>
+
+
+<table class='metrics'>
+  <tr>
+    <td class="table_title">Temperature ($unit.label.outTemp)</td>
+    <td width="20"></td>
+    <td class="table_title">Humidity ($unit.label.outHumidity)</td>
+    <td width="20"></td>
+    <td class="table_title">Dew Point ($unit.label.dewpoint)</td>
+  </tr>
+
+  <tr style='vertical-align:top'>
+    <td>
+      <table>
+        <tr>
+          <td class="label">Current:</td>
+          <td><span class="data">$current.outTemp.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Average:</td>
+          <td><span class="data">$day.outTemp.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day High:</td>
+          <td><span class="data">$day.outTemp.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.outTemp.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Low:</td>
+          <td><span class="data">$day.outTemp.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.outTemp.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Average:</td>
+          <td><span class="data">$week.outTemp.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week High:</td>
+          <td><span class="data">$week.outTemp.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.outTemp.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Low:</td>
+          <td><span class="data">$week.outTemp.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.outTemp.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Average:</td>
+          <td><span class="data">$month.outTemp.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month High:</td>
+          <td><span class="data">$month.outTemp.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.outTemp.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Low:</td>
+          <td><span class="data">$month.outTemp.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.outTemp.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Average:</td>
+          <td><span class="data">$year.outTemp.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year High:</td>
+          <td><span class="data">$year.outTemp.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.outTemp.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Low:</td>
+          <td><span class="data">$year.outTemp.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.outTemp.mintime</span></td>
+        </tr>
+        #if $varExists('alltime')
+        <tr>
+          <td class="label">All Time Average:</td>
+          <td><span class="data">$alltime.outTemp.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time High:</td>
+          <td><span class="data">$alltime.outTemp.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.outTemp.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time Low:</td>
+          <td><span class="data">$alltime.outTemp.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.outTemp.mintime</span></td>
+        </tr>
+        #end if
+      </table>
+    </td>
+
+    <td></td>
+
+    <td>
+      <table>
+        <tr>
+          <td class="label">Current:</td>
+          <td><span class="data">$current.outHumidity.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Average:</td>
+          <td><span class="data">$day.outHumidity.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day High:</td>
+          <td><span class="data">$day.outHumidity.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.outHumidity.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Low:</td>
+          <td><span class="data">$day.outHumidity.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.outHumidity.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Average:</td>
+          <td><span class="data">$week.outHumidity.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week High:</td>
+          <td><span class="data">$week.outHumidity.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.outHumidity.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Low:</td>
+          <td><span class="data">$week.outHumidity.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.outHumidity.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Average:</td>
+          <td><span class="data">$month.outHumidity.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month High:</td>
+          <td><span class="data">$month.outHumidity.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.outHumidity.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Low:</td>
+          <td><span class="data">$month.outHumidity.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.outHumidity.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Average:</td>
+          <td><span class="data">$year.outHumidity.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year High:</td>
+          <td><span class="data">$year.outHumidity.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.outHumidity.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Low:</td>
+          <td><span class="data">$year.outHumidity.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.outHumidity.mintime</span></td>
+        </tr>
+        #if $varExists('alltime')
+        <tr>
+          <td class="label">All Time Average:</td>
+          <td><span class="data">$alltime.outHumidity.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time High:</td>
+          <td><span class="data">$alltime.outHumidity.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.outHumidity.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time Low:</td>
+          <td><span class="data">$alltime.outHumidity.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.outHumidity.mintime</span></td>
+        </tr>
+        #end if
+      </table>
+    </td>
+
+    <td></td>
+
+    <td>
+      <table>
+        <tr>
+          <td class="label">Current:</td>
+          <td><span class="data">$current.dewpoint.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Average:</td>
+          <td><span class="data">$day.dewpoint.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day High:</td>
+          <td><span class="data">$day.dewpoint.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.dewpoint.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Low:</td>
+          <td><span class="data">$day.dewpoint.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.dewpoint.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Average:</td>
+          <td><span class="data">$week.dewpoint.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week High:</td>
+          <td><span class="data">$week.dewpoint.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.dewpoint.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Low:</td>
+          <td><span class="data">$week.dewpoint.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.dewpoint.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Average:</td>
+          <td><span class="data">$week.dewpoint.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month High:</td>
+          <td><span class="data">$month.dewpoint.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.dewpoint.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Low:</td>
+          <td><span class="data">$month.dewpoint.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.dewpoint.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Average:</td>
+          <td><span class="data">$year.dewpoint.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year High:</td>
+          <td><span class="data">$year.dewpoint.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.dewpoint.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Low:</td>
+          <td><span class="data">$year.dewpoint.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.dewpoint.mintime</span></td>
+        </tr>
+        #if $varExists('alltime')
+        <tr>
+          <td class="label">All Time Average:</td>
+          <td><span class="data">$alltime.dewpoint.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time High:</td>
+          <td><span class="data">$alltime.dewpoint.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.dewpoint.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time Low:</td>
+          <td><span class="data">$alltime.dewpoint.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.dewpoint.mintime</span></td>
+        </tr>
+        #end if
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+
+  <tr>
+    <td class="table_title">Wind Chill ($unit.label.windchill)</td>
+    <td></td>
+    <td class="table_title">Heat Index ($unit.label.heatindex)</td>
+    <td></td>
+    <td class="table_title">Barometer ($unit.label.barometer)</td>
+  </tr>
+
+  <tr style='vertical-align:top'>
+    <td>
+      <table>
+        <tr>
+          <td class="label">Current:</td>
+          <td><span class="data">$current.windchill.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Low:</td>
+          <td><span class="data">$day.windchill.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.windchill.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Low:</td>
+          <td><span class="data">$week.windchill.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.windchill.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Low:</td>
+          <td><span class="data">$month.windchill.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.windchill.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Low:</td>
+          <td><span class="data">$year.windchill.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.windchill.mintime</span></td>
+        </tr>
+        #if $varExists('alltime')
+        <tr>
+          <td class="label">All Time Low:</td>
+          <td><span class="data">$alltime.windchill.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.windchill.mintime</span></td>
+        </tr>
+        #end if
+      </table>
+    </td>
+
+    <td></td>
+
+    <td>
+      <table>
+        <tr>
+          <td class="label">Current:</td>
+          <td><span class="data">$current.heatindex.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day High:</td>
+          <td><span class="data">$day.heatindex.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.heatindex.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week High:</td>
+          <td><span class="data">$week.heatindex.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.heatindex.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month High:</td>
+          <td><span class="data">$month.heatindex.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.heatindex.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year High:</td>
+          <td><span class="data">$year.heatindex.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.heatindex.maxtime</span></td>
+        </tr>
+        #if $varExists('alltime')
+        <tr>
+          <td class="label">All Time High:</td>
+          <td><span class="data">$alltime.heatindex.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.heatindex.maxtime</span></td>
+        </tr>
+        #end if
+      </table>
+    </td>
+
+    <td></td>
+
+    <td rowspan='4'>
+      <table>
+        <tr>
+          <td class="label">Current:</td>
+          <td><span class="data">$current.barometer.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Average:</td>
+          <td><span class="data">$day.barometer.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day High:</td>
+          <td><span class="data">$day.barometer.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.barometer.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Low:</td>
+          <td><span class="data">$day.barometer.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.barometer.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Average:</td>
+          <td><span class="data">$week.barometer.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week High:</td>
+          <td><span class="data">$week.barometer.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.barometer.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Low:</td>
+          <td><span class="data">$week.barometer.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.barometer.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Average:</td>
+          <td><span class="data">$month.barometer.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month High:</td>
+          <td><span class="data">$month.barometer.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.barometer.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Low:</td>
+          <td><span class="data">$month.barometer.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.barometer.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Average:</td>
+          <td><span class="data">$year.barometer.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year High:</td>
+          <td><span class="data">$year.barometer.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.barometer.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Low:</td>
+          <td><span class="data">$year.barometer.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.barometer.mintime</span></td>
+        </tr>
+        #if $varExists('alltime')
+        <tr>
+          <td class="label">All Time Average:</td>
+          <td><span class="data">$alltime.barometer.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time High:</td>
+          <td><span class="data">$alltime.barometer.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.barometer.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time Low:</td>
+          <td><span class="data">$alltime.barometer.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.barometer.mintime</span></td>
+        </tr>
+        #end if
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+
+  <tr>
+    <td class="table_title">Wind ($unit.label.windSpeed)</td>
+    <td></td>
+    <td class="table_title">Rain ($unit.label.rain - $unit.label.rainRate)</td>
+    <td></td>
+    <td></td>
+  </tr>
+
+  <tr style='vertical-align:top'>
+    <td>
+      <table>
+        <tr>
+          <td class="label">Current:</td>
+          <td><span class="data">$current.windSpeed.formatted $current.windDir.ordinal_compass</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Average:</td>
+          <td><span class="data">$day.wind.avg.formatted $day.wind.vecdir.ordinal_compass</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day High:</td>
+          <td><span class="data">$day.wind.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.wind.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Average:</td>
+          <td><span class="data">$week.wind.avg.formatted $week.wind.vecdir.ordinal_compass</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week High:</td>
+          <td><span class="data">$week.wind.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.wind.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Average:</td>
+          <td><span class="data">$month.wind.avg.formatted $month.wind.vecdir.ordinal_compass</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month High:</td>
+          <td><span class="data">$month.wind.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.wind.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Average:</td>
+          <td><span class="data">$year.wind.avg.formatted $year.wind.vecdir.ordinal_compass</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year High:</td>
+          <td><span class="data">$year.wind.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.wind.maxtime</span></td>
+        </tr>
+        #if $varExists('alltime')
+        <tr>
+          <td class="label">All Time Average:</td>
+          <td><span class="data">$alltime.wind.avg.formatted $alltime.wind.vecdir.ordinal_compass</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time High:</td>
+          <td><span class="data">$alltime.wind.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.wind.maxtime</span></td>
+        </tr>
+        #end if
+      </table>
+    </td>
+
+    <td></td>
+
+    <td>
+      <table>
+        <tr>
+          <td class="label">Rate:</td>
+          <td><span class="data">$current.rainRate.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day:</td>
+          <td><span class="data">$day.rain.sum.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day High Rate:</td>
+          <td><span class="data">$day.rainRate.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.rainRate.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week:</td>
+          <td><span class="data">$week.rain.sum.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week High Rate:</td>
+          <td><span class="data">$week.rainRate.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.rainRate.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month:</td>
+          <td><span class="data">$month.rain.sum.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month High Rate:</td>
+          <td><span class="data">$month.rainRate.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.rainRate.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year:</td>
+          <td><span class="data">$year.rain.sum.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year High Rate:</td>
+          <td><span class="data">$year.rainRate.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.rainRate.maxtime</span></td>
+        </tr>
+        #if $varExists('alltime')
+        <tr>
+          <td class="label">All Time High Rate:</td>
+          <td><span class="data">$alltime.rainRate.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.rainRate.maxtime</span></td>
+        </tr>
+        #end if
+      </table>
+    </td>
+
+    <td></td>
+
+    <td></td>
+  </tr>
+
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+
+  <tr>
+    <td class="table_title">Inside Temperature ($unit.label.inTemp)</td>
+    <td width="20"></td>
+    <td class="table_title">Inside Humidity ($unit.label.outTemp)</td>
+    <td></td>
+    <td></td>
+  </tr>
+
+  <tr style='vertical-align:top'>
+    <td>
+      <table>
+        <tr>
+          <td class="label">Current:</td>
+          <td><span class="data">$current.inTemp.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Average:</td>
+          <td><span class="data">$day.inTemp.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day High:</td>
+          <td><span class="data">$day.inTemp.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.inTemp.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Low:</td>
+          <td><span class="data">$day.inTemp.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.inTemp.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Average:</td>
+          <td><span class="data">$week.inTemp.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week High:</td>
+          <td><span class="data">$week.inTemp.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.inTemp.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Low:</td>
+          <td><span class="data">$week.inTemp.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.inTemp.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Average:</td>
+          <td><span class="data">$month.inTemp.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month High:</td>
+          <td><span class="data">$month.inTemp.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.inTemp.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Low:</td>
+          <td><span class="data">$month.inTemp.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.inTemp.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Average:</td>
+          <td><span class="data">$year.inTemp.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year High:</td>
+          <td><span class="data">$year.inTemp.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.inTemp.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Low:</td>
+          <td><span class="data">$year.inTemp.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.inTemp.mintime</span></td>
+        </tr>
+        #if $varExists('alltime')
+        <tr>
+          <td class="label">All Time Average:</td>
+          <td><span class="data">$alltime.inTemp.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time High:</td>
+          <td><span class="data">$alltime.inTemp.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.inTemp.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time Low:</td>
+          <td><span class="data">$alltime.inTemp.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.inTemp.mintime</span></td>
+        </tr>
+        #end if
+      </table>
+    </td>
+
+    <td></td>
+
+    <td>
+      <table>
+        <tr>
+          <td class="label">Current:</td>
+          <td><span class="data">$current.inHumidity.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Average:</td>
+          <td><span class="data">$day.inHumidity.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day High:</td>
+          <td><span class="data">$day.inHumidity.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.inHumidity.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Day Low:</td>
+          <td><span class="data">$day.inHumidity.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$day.inHumidity.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Average:</td>
+          <td><span class="data">$week.inHumidity.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week High:</td>
+          <td><span class="data">$week.inHumidity.max.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.inHumidity.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Week Low:</td>
+          <td><span class="data">$week.inHumidity.min.formatted</span><span class="hilo_time">&nbsp;at&nbsp;$week.inHumidity.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Average:</td>
+          <td><span class="data">$month.inHumidity.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month High:</td>
+          <td><span class="data">$month.inHumidity.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.inHumidity.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Month Low:</td>
+          <td><span class="data">$month.inHumidity.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$month.inHumidity.mintime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Average:</td>
+          <td><span class="data">$year.inHumidity.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year High:</td>
+          <td><span class="data">$year.inHumidity.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.inHumidity.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">Year Low:</td>
+          <td><span class="data">$year.inHumidity.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$year.inHumidity.mintime</span></td>
+        </tr>
+        #if $varExists('alltime')
+        <tr>
+          <td class="label">All Time Average:</td>
+          <td><span class="data">$alltime.inHumidity.avg.formatted</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time High:</td>
+          <td><span class="data">$alltime.inHumidity.max.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.inHumidity.maxtime</span></td>
+        </tr>
+        <tr>
+          <td class="label">All Time Low:</td>
+          <td><span class="data">$alltime.inHumidity.min.formatted</span><span class="hilo_time">&nbsp;on&nbsp;$alltime.inHumidity.mintime</span></td>
+        </tr>
+        #end if
+      </table>
+    </td>
+
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+    </div>
+
+  </body>
+</html>

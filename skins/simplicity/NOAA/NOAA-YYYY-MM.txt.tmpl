@@ -1,0 +1,42 @@
+#errorCatcher Echo
+##    $Revision: 229 $
+##    $Author: tkeffer $
+##    $Date: 2010-04-12 14:49:37 -0700 (Mon, 12 Apr 2010) $
+#set $YM="%Y %m"
+#set $D=" %d"
+#set $M=" %b"
+#set $Time=" %H:%M"
+#set $NODAY=" N/A"
+#set $Temp="%6.1f"
+#set $Wind="%6.1f"
+#set $Dir="%6.0f"
+#set $Count="%6d"
+#set $NONE="   N/A"
+#if $unit.unit_type_dict.group_rain == "mm"
+#set $Rain="%6.1f"
+#else
+#set $Rain="%6.2f"
+#end if
+                   MONTHLY CLIMATOLOGICAL SUMMARY for $month_name $year_name
+
+
+NAME: $station.location                  
+ELEV: $station.altitude    LAT: $station.latitude[0]-$station.latitude[1] $station.latitude[2]    LONG: $station.longitude[0]-$station.longitude[1] $station.longitude[2]
+
+
+                   TEMPERATURE ($unit.label.outTemp.strip()), RAIN ($unit.label.rain.strip()), WIND SPEED ($unit.label.windSpeed.strip())
+
+                                         HEAT   COOL         AVG
+      MEAN                               DEG    DEG          WIND                   DOM
+DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME    DIR
+---------------------------------------------------------------------------------------
+#for $day in $month.days
+#if $day.barometer.count.raw
+$day.dateTime.format($D) $day.outTemp.avg.nolabel($Temp,$NONE) $day.outTemp.max.nolabel($Temp,$NONE) $day.outTemp.maxtime.format($Time) $day.outTemp.min.nolabel($Temp,$NONE) $day.outTemp.mintime.format($Time) $day.heatdeg.sum.nolabel($Temp,$NONE) $day.cooldeg.sum.nolabel($Temp,$NONE) $day.rain.sum.nolabel($Rain,$NONE) $day.wind.avg.nolabel($Wind,$NONE) $day.wind.max.nolabel($Wind,$NONE) $day.wind.maxtime.format($Time) $day.wind.vecdir.nolabel($Dir,$NONE)
+#else
+$day.dateTime.format($D)
+#end if
+#end for
+---------------------------------------------------------------------------------------
+    $month.outTemp.avg.nolabel($Temp,$NONE) $month.outTemp.max.nolabel($Temp,$NONE)    $month.outTemp.maxtime.format($D) $month.outTemp.min.nolabel($Temp,$NONE)    $month.outTemp.mintime.format($D) $month.heatdeg.sum.nolabel($Temp,$NONE) $month.cooldeg.sum.nolabel($Temp,$NONE) $month.rain.sum.nolabel($Rain,$NONE) $month.wind.avg.nolabel($Wind,$NONE) $month.wind.max.nolabel($Wind,$NONE)    $month.wind.maxtime.format($D) $month.wind.vecdir.nolabel($Dir)
+    
