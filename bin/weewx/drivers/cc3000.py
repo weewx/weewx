@@ -139,6 +139,11 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
         parser.add_option('--set-dst', dest='dst',
                           metavar='mm/dd HH:MM,mm/dd HH:MM,MM',
                           help='set daylight savings start, end, and amount')
+        parser.add_option("--get-channel", dest="getch", action="store_true",
+                          help="display the station channel")
+        parser.add_option("--set-channel", dest="ch", metavar="CHANNEL",
+                          type=int,
+                          help="set the station channel")
 
     def do_options(self, options, parser, config_dict, prompt):
         self.driver = CC3000Driver(**config_dict[DRIVER_NAME])
@@ -163,8 +168,14 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             print self.driver.station.get_interval()
         elif options.interval is not None:
             self.set_interval(options.interval, prompt)
+        elif options.getunits:
+            print self.driver.station.get_units()
         elif options.units is not None:
             self.set_units(options.units, prompt)
+        elif options.getch:
+            print self.driver.station.get_channel()
+        elif options.ch is not None:
+            self.set_channel(options.ch, prompt)
         else:
             print "firmware:", self.driver.station.get_version()
             print "time:", self.driver.station.get_time()
@@ -267,13 +278,30 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             if prompt:
                 ans = raw_input("Set DST to %s (y/n)? " % dst)
             else:
-                print "Setting station clock to %s" % dst
+                print "Setting station DST to %s" % dst
                 ans = 'y'
             if ans == 'y':
                 self.driver.station.set_dst(dst)
-                print "Station clock is now", self.driver.station.get_dst()
+                print "Station DST is now", self.driver.station.get_dst()
             elif ans == 'n':
                 print "Set DST cancelled."
+
+    def set_channel(self, ch, prompt):
+        if ch not in [0, 1, 2, 3]:
+            raise ValueError("Channel must be one of 0, 1, 2, or 3")
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Station channel is", self.driver.station.get_channel()
+            if prompt:
+                ans = raw_input("Set channel to %s (y/n)? " % ch)
+            else:
+                print "Setting station channel to %s" % ch
+                ans = 'y'
+            if ans == 'y':
+                self.driver.station.set_channel(ch)
+                print "Station channel is now", self.driver.station.get_ch()
+            elif ans == 'n':
+                print "Set channel cancelled."
 
 
 class CC3000Driver(weewx.drivers.AbstractDevice):
@@ -392,6 +420,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
             nrec = int(delta / self.arcint)
             logdbg("genStartupRecords: nrec=%d delta=%d" % (nrec, delta))
             if nrec == 0:
+                loginf("no need to read logger records")
                 return
         else:
             logdbg("genStartupRecords: nrec=%d" % nrec)
