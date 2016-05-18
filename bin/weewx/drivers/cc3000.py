@@ -494,6 +494,9 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         """parse the values and map them into the schema names.  if there is
         a failure for any one value, then the entire record fails."""
         pkt = dict()
+        if len(values) != len(header) + 1:
+            logdbg("values/header mismatch: %s %s" % (values, header))
+            return pkt
         for i, v in enumerate(values):
             if i >= len(header):
                 continue
@@ -679,7 +682,8 @@ class CC3000(object):
         return cols
 
     def set_auto(self):
-        self.command("AUTO")
+        # auto does not echo the command
+        self.send_cmd("AUTO")
 
     def get_current_data(self, send_now=True):
         data = ''
@@ -896,6 +900,8 @@ if __name__ == '__main__':
                       help='display memory status')
     parser.add_option('--get-channel', dest='getch', action='store_true',
                       help='display station channel')
+    parser.add_option('--set-channel', dest='setch', metavar='CHANNEL',
+                      help='set station channel')
     parser.add_option('--get-battery', dest='getbat', action='store_true',
                       help='display battery status')
     parser.add_option('--get-current', dest='getcur', action='store_true',
@@ -966,6 +972,8 @@ if __name__ == '__main__':
             print "rain:", s.get_rain()
         if options.getch:
             print s.get_channel()
+        if options.setch is not None:
+            s.set_channel(int(options.setch))
         if options.getbat:
             print s.get_charger()
         if options.getcur:
