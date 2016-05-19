@@ -1610,20 +1610,7 @@ class TE923Station(object):
             logdbg("timeout while reading: ignoring bytes: %s" % _fmt(rbuf))
             raise BadRead("Timeout after %d bytes" % len(rbuf))
 
-        if len(rbuf) < 34:
-            raise BadRead("Not enough bytes: %d < 34" % len(rbuf))
-        elif len(rbuf) != 34:
-            loginf("read: wrong number of bytes: %d != 34" % len(rbuf))
-        if rbuf[0] != 0x5a:
-            raise BadHeader("Bad header byte: %02x != %02x" % (rbuf[0], 0x5a))
-
-        crc = 0x00
-        for x in rbuf[:33]:
-            crc = crc ^ x
-        if crc != rbuf[33]:
-            raise BadRead("Bad crc: %02x != %02x" % (crc, rbuf[33]))
-
-        # Send acknowledgement
+        # Send acknowledgement whether or not it was a good read
         reqbuf = [0x24, 0xAF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         reqbuf[4] = addr / 0x10000
         reqbuf[3] = (addr - (reqbuf[4] * 0x10000)) / 0x100
@@ -1635,6 +1622,25 @@ class TE923Station(object):
                                    index=0x0000,
                                    buffer=reqbuf,
                                    timeout=self.TIMEOUT)
+
+        # now check what we got
+        if len(rbuf) < 34:
+            raise BadRead("Not enough bytes: %d < 34" % len(rbuf))
+        # there must be a header byte...
+        if rbuf[0] != 0x5a:
+            raise BadHeader("Bad header byte: %02x != %02x" % (rbuf[0], 0x5a))
+        # ...and the last byte must be a valid crc
+        crc = 0x00
+        for x in rbuf[:33]:
+            crc = crc ^ x
+        if crc != rbuf[33]:
+            raise BadRead("Bad crc: %02x != %02x" % (crc, rbuf[33]))
+
+        # early versions of this driver used to get long reads, but these
+        # might not happen any more. log it then try to use the data anyway.
+        if len(rbuf) != 34:
+            loginf("read: wrong number of bytes: %d != 34" % len(rbuf))
+
         return rbuf
 
     def _raw_write(self, addr, buf):
@@ -1700,6 +1706,11 @@ class TE923Station(object):
             raise BadHeader("Bad header byte: %02x != %02x" % (rbuf[0], 0x5a))
 
     def _read(self, addr):
+        """raw_read returns the entire 34-byte chunk, i.e., one header byte,
+        32 data bytes, one checksum byte.  this function simply returns it."""
+        # FIXME: strip the header and checksum so that we return only the
+        #        32 bytes of data.  this will require shifting every index
+        #        pretty much everywhere else in this code.
         if DEBUG_READ:
             logdbg("read: address 0x%06x" % addr)
         for cnt in range(self.max_tries):
@@ -1803,7 +1814,7 @@ class TE923Station(object):
         status = dict()
         buf = self._read(0x4c)
         if DEBUG_DECODE:
-            logdbg("BAT  BUF[01]=%02x" % buf[1])
+            logdbg("BAT  BUF[1]=%02x" % buf[1])
         status['bat_rain'] = 0 if buf[1] & 0x80 == 0x80 else 1
         status['bat_wind'] = 0 if buf[1] & 0x40 == 0x40 else 1
         status['bat_uv']   = 0 if buf[1] & 0x20 == 0x20 else 1
@@ -1860,10 +1871,9 @@ class TE923Station(object):
         if DEBUG_DECODE:
             logdbg("HIS  BUF[3]=%02x BUF[5]=%02x" % (buf[3], buf[5]))
         record_index = buf[3] * 0x100 + buf[5]
-        if DEBUG_DECODE:
-            logdbg("HIS  record_index=%d" % record_index)
+        logdbg("record_index=%s" % record_index)
         if record_index > self._num_rec:
-            msg = "record index of %d exceeds memory size of %d" % (
+            msg = "record index of %d exceeds memory size of %d records" % (
                 record_index, self._num_rec)
             logerr(msg)
             raise weewx.WeeWxIOError(msg)
@@ -2246,7 +2256,6 @@ class TE923Station(object):
             raise weewx.WeeWxIOError(msg)
         return interval
 
-    # FIXME: check this - the logic seems dodgey as it drops first element
     def set_interval(self, idx):
         buf = self._read(0xFE)
         buf = buf[1:33]
