@@ -461,8 +461,12 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         return self.arcint
 
     def getTime(self):
-        v = self.station.get_time()
-        return _to_ts(v)
+        try:
+            v = self.station.get_time()
+            return _to_ts(v)
+        except ValueError, e:
+            logerr("getTime failed: %s" % e)
+        return 0
 
     def setTime(self):
         self.station.set_time()
