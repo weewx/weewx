@@ -121,7 +121,7 @@ def windchillC(T_C, V_kph):
     
 def heatindexF(T, R):
     """Calculate heat index.
-    http://www.crh.noaa.gov/jkl/?n=heat_index_calculator
+    http://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
     
     T: Temperature in Fahrenheit
     
