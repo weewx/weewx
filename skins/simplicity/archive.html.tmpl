@@ -13,6 +13,7 @@
         clear: right;
         float: right;
         text-align: right;
+        margin-left: 20px;
       }
     </style>
     <script type="text/javascript">
@@ -29,22 +30,23 @@
     #include "header.inc"
 
     <div class='selectors'>
-      <p>Monthly Summary:&nbsp;
+      Tabular Summaries<br/>
+      <div>Monthly:&nbsp;
         <select NAME="noaaselect" onchange="openNoaaFile(value)">
           #for $monthYear in $SummaryByMonth
           <option value="$monthYear">$monthYear</option>
           #end for
-	  <option selected>-Select month-</option>
+	  <option selected>-Select-</option>
         </select>
-        <br/>
-        Yearly Summary:&nbsp;
+      </div>
+      <div>Yearly:&nbsp;
         <select NAME="noaaselect" onchange="openNoaaFile(value)">
           #for $y in $SummaryByYear
           <option value="$y">$y</option>
           #end for
-	  <option selected>-Select year-</option>
+	  <option selected>-Select-</option>
         </select>
-      </p>
+      </div>
     </div>
 
     <div id='content'>
