@@ -83,6 +83,10 @@ a {
     float: right;
 }
 
+.sidebar table {
+    margin-left: auto;
+}
+
 .widget {
     margin-bottom: 20px;
 }
