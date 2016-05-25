@@ -10,14 +10,13 @@ a {
 }
 
 .page_heading {
-    width: 98%;
     padding: 4px;
     padding-left: 8px;
     padding-right: 8px;
     margin-bottom: 10px;
     background-color: #eeeeee;
     border: 1px solid #aaaaaa;
-    display: inline-block;
+    overflow: auto;
 }
 
 .section_heading {

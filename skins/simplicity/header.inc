@@ -15,8 +15,8 @@
     </div>
   </div>
   <div class="nav">
-    <div class="navitem $btn.get('current', 'button')">
-      <a href="index.html">Current</a></div>
+    <div class="navitem $btn.get('day', 'button')">
+      <a href="index.html">Day</a></div>
     <div class="navitem $btn.get('week', 'button')">
       <a href="week.html">Week</a></div>
     <div class="navitem $btn.get('month', 'button')">
