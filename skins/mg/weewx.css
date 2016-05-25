@@ -90,15 +90,14 @@ a {
     margin-bottom: 20px;
 }
 
-.historical_summary .label {
+.label {
     text-align: right;
 }
-.historical_summary .data {
+.data {
     font-weight: bold;
-    text-align: right;
 }
-.historical_summary .time {
-    font-size: 70%;
+
+.historical_summary .data {
     text-align: right;
 }
 
@@ -113,29 +112,9 @@ a {
 .celestial tr {
     vertical-align: top;
 }
-.celestial .label {
-    text-align: right;
-}
-.celestial .data {
-    font-weight: bold;
-}
 .celestial caption {
     text-align: left;
     border-bottom: 1px solid #aaaaaa;
-}
-
-.about .label {
-    text-align: right;
-}
-.about .data {
-    font-weight: bold;
-}
-
-#station_info .label {
-    text-align: right;
-}
-#station_info .data {
-    text-align: left;
 }
 
 .plot {
