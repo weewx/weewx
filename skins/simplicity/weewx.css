@@ -90,13 +90,14 @@ a {
     margin-bottom: 20px;
 }
 
-.stats_label {
+.historical_summary .label {
     text-align: right;
 }
-.stats_data {
+.historical_summary .data {
     font-weight: bold;
+    text-align: right;
 }
-.stats_time {
+.historical_summary .time {
     font-size: 70%;
     text-align: right;
 }
@@ -107,9 +108,6 @@ a {
 }
 .historical_summary tr {
     vertical-align: top;
-}
-.historical_summary .stats_data {
-    text-align: right;
 }
 
 .celestial tr {
@@ -133,20 +131,20 @@ a {
     font-weight: bold;
 }
 
-.metrics table {
+.archive table {
     margin-bottom: 15px;
 }
-.metrics .table_title {
+.archive .table_title {
     font-weight: bold;
     border-bottom: 1px solid #aaaaaa;
 }
-.metrics .label {
+.archive .label {
     text-align: right;
 }
-.metrics .data {
+.archive .data {
     font-weight: bold;
 }
-.metrics .hilo_time {
+.archive .hilo_time {
     font-size: 70%;
     text-align: right;
 }
