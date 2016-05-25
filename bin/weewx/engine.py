@@ -60,7 +60,7 @@ class StdEngine(object):
         socket.setdefaulttimeout(timeout)
         
         # Default garbage collection is every 3 hours:
-        self.gc_interval = int(config_dict.get('gc_interval', 3*3600))
+        self.gc_interval = int(config_dict.get('gc_interval', 3 * 3600))
 
         # Set up the callback dictionary:
         self.callbacks = dict()
@@ -86,7 +86,8 @@ class StdEngine(object):
         # Find the driver name for this type of hardware
         driver = config_dict[stationType]['driver']
         
-        syslog.syslog(syslog.LOG_INFO, "engine: Loading station type %s (%s)" % (stationType, driver))
+        syslog.syslog(syslog.LOG_INFO, "engine: Loading station type %s (%s)" %
+                      (stationType, driver))
 
         # Import the driver:
         __import__(driver)
@@ -102,6 +103,8 @@ class StdEngine(object):
             # Call it with the configuration dictionary as the only argument:
             self.console = loader_function(config_dict, self)
         except Exception, ex:
+            syslog.syslog(syslog.LOG_ERR,
+                          "import of driver failed: %s (%s)" % (ex, type(ex)))
             # Signal that we have an initialization error:
             raise InitializationError(ex)
         
@@ -256,7 +259,7 @@ class StdEngine(object):
         try:
             return self.console.getTime()
         except NotImplementedError:
-            return int(time.time()+0.5)
+            return int(time.time() + 0.5)
 
 #==============================================================================
 #                    Class StdService
@@ -310,7 +313,8 @@ class StdConvert(StdService):
         """Do unit conversions for a LOOP packet"""
         # No need to do anything if the packet is already in the target
         # unit system
-        if event.packet['usUnits'] == self.target_unit: return
+        if event.packet['usUnits'] == self.target_unit:
+            return
         # Perform the conversion
         converted_packet = self.converter.convertDict(event.packet)
         # Add the new unit system
@@ -322,7 +326,8 @@ class StdConvert(StdService):
         """Do unit conversions for an archive record."""
         # No need to do anything if the record is already in the target
         # unit system
-        if event.record['usUnits'] == self.target_unit: return
+        if event.record['usUnits'] == self.target_unit:
+            return
         # Perform the conversion
         converted_record = self.converter.convertDict(event.record)
         # Add the new unit system
@@ -426,7 +431,7 @@ class StdQC(StdService):
     def new_loop_packet(self, event):
         """Apply quality check to the data in a LOOP packet"""
         for obs_type in self.min_max_dict:
-            if event.packet.has_key(obs_type) and event.packet[obs_type] is not None:
+            if obs_type in event.packet and event.packet[obs_type] is not None:
                 if not self.min_max_dict[obs_type][0] <= event.packet[obs_type] <= self.min_max_dict[obs_type][1]:
                     syslog.syslog(syslog.LOG_NOTICE, "engine: %s LOOP value '%s' %s outside limits (%s, %s)" % 
                                   (weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), 
@@ -437,7 +442,7 @@ class StdQC(StdService):
     def new_archive_record(self, event):
         """Apply quality check to the data in an archive packet"""
         for obs_type in self.min_max_dict:
-            if event.record.has_key(obs_type) and event.record[obs_type] is not None:
+            if obs_type in event.record and event.record[obs_type] is not None:
                 if not self.min_max_dict[obs_type][0] <= event.record[obs_type] <= self.min_max_dict[obs_type][1]:
                     syslog.syslog(syslog.LOG_NOTICE, "engine: %s Archive value '%s' %s outside limits (%s, %s)" % 
                                   (weeutil.weeutil.timestamp_to_string(event.record['dateTime']),
@@ -461,11 +466,11 @@ class StdArchive(StdService):
 
         # Extract the various options from the config file. If it's missing, fill in with defaults:
         if 'StdArchive' in config_dict:
-            self.data_binding      = config_dict['StdArchive'].get('data_binding', 'wx_binding')
+            self.data_binding = config_dict['StdArchive'].get('data_binding', 'wx_binding')
             self.record_generation = config_dict['StdArchive'].get('record_generation', 'hardware').lower()
             self.archive_delay = to_int(config_dict['StdArchive'].get('archive_delay', 15))
-            software_interval  = to_int(config_dict['StdArchive'].get('archive_interval', 300))
-            self.loop_hilo     = to_bool(config_dict['StdArchive'].get('loop_hilo', True))
+            software_interval = to_int(config_dict['StdArchive'].get('archive_interval', 300))
+            self.loop_hilo = to_bool(config_dict['StdArchive'].get('loop_hilo', True))
         else:
             self.data_binding = 'wx_binding'
             self.record_generation = 'hardware'
@@ -494,7 +499,8 @@ class StdArchive(StdService):
         except NotImplementedError:
             self.archive_interval = software_interval
             ival_msg = "(specified in weewx configuration)"
-        syslog.syslog(syslog.LOG_INFO, "engine: Using archive interval of %d seconds %s" % (self.archive_interval, ival_msg))
+        syslog.syslog(syslog.LOG_INFO, "engine: Using archive interval of %d seconds %s" %
+                      (self.archive_interval, ival_msg))
 
         if self.archive_delay <= 0:
             raise weewx.ViolatedPrecondition("Archive delay (%.1f) must be greater than zero." % 
@@ -505,11 +511,11 @@ class StdArchive(StdService):
         
         self.setup_database(config_dict)
         
-        self.bind(weewx.STARTUP,            self.startup)
-        self.bind(weewx.PRE_LOOP,           self.pre_loop)
-        self.bind(weewx.POST_LOOP,          self.post_loop)
-        self.bind(weewx.CHECK_LOOP,         self.check_loop)
-        self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)
+        self.bind(weewx.STARTUP, self.startup)
+        self.bind(weewx.PRE_LOOP, self.pre_loop)
+        self.bind(weewx.POST_LOOP, self.post_loop)
+        self.bind(weewx.CHECK_LOOP, self.check_loop)
+        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
     
     def startup(self, event):  # @UnusedVariable
@@ -605,7 +611,7 @@ class StdArchive(StdService):
         syslog.syslog(syslog.LOG_INFO, "engine: Using binding '%s' to database '%s'" % (self.data_binding, dbmanager.database_name))
         
         # Back fill the daily summaries.
-        _nrecs, _ndays = dbmanager.backfill_day_summary()
+        _nrecs, _ndays = dbmanager.backfill_day_summary() # @UnusedVariable
 
     def _catchup(self, generator):
         """Pull any unarchived records off the console and archive them.
@@ -642,7 +648,7 @@ class StdArchive(StdService):
         end_ts = start_ts + self.archive_interval
         
         # Instantiate a new accumulator
-        new_accumulator =  weewx.accum.Accum(weeutil.weeutil.TimeSpan(start_ts, end_ts))
+        new_accumulator = weewx.accum.Accum(weeutil.weeutil.TimeSpan(start_ts, end_ts))
         return new_accumulator
     
 #==============================================================================
@@ -658,16 +664,16 @@ class StdTimeSynch(StdService):
         # Zero out the time of last synch, and get the time between synchs.
         self.last_synch_ts = 0
         self.clock_check = int(config_dict['StdTimeSynch'].get('clock_check', 14400))
-        self.max_drift   = int(config_dict['StdTimeSynch'].get('max_drift', 5))
+        self.max_drift = int(config_dict['StdTimeSynch'].get('max_drift', 5))
         
-        self.bind(weewx.STARTUP,  self.startup)
+        self.bind(weewx.STARTUP, self.startup)
         self.bind(weewx.PRE_LOOP, self.pre_loop)
     
-    def startup(self, event):  # @UnusedVariable
+    def startup(self, event): # @UnusedVariable
         """Called when the engine is starting up."""
         self.do_sync()
         
-    def pre_loop(self, event):  # @UnusedVariable
+    def pre_loop(self, event): # @UnusedVariable
         """Called before the main event loop is started."""
         self.do_sync()
         
@@ -680,7 +686,8 @@ class StdTimeSynch(StdService):
             self.last_synch_ts = now_ts
             try:
                 console_time = self.engine.console.getTime()
-                if console_time is None: return
+                if console_time is None:
+                    return
                 # getTime can take a long time to run, so we use the current
                 # system time
                 diff = console_time - time.time()
@@ -720,8 +727,7 @@ class StdPrint(StdService):
     def sort(rec):
         return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
             
-        
-        
+
 #==============================================================================
 #                    Class StdReport
 #==============================================================================
@@ -731,10 +737,10 @@ class StdReport(StdService):
     
     def __init__(self, engine, config_dict):
         super(StdReport, self).__init__(engine, config_dict)
-        self.max_wait    = int(config_dict['StdReport'].get('max_wait', 60))
-        self.thread      = None
+        self.max_wait = int(config_dict['StdReport'].get('max_wait', 60))
+        self.thread = None
         self.launch_time = None
-        self.record      = None
+        self.record = None
         
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         self.bind(weewx.POST_LOOP, self.launch_report_thread)
@@ -748,14 +754,14 @@ class StdReport(StdService):
         # Do not launch the reporting thread if an old one is still alive.
         # To guard against a zombie thread (alive, but doing nothing) launch
         # anyway if enough time has passed.
-        if self.thread and self.thread.isAlive() and time.time()-self.launch_time < self.max_wait:
+        if self.thread and self.thread.isAlive() and time.time() - self.launch_time < self.max_wait:
             return
             
         try:
             self.thread = weewx.reportengine.StdReportEngine(self.config_dict,
                                                              self.engine.stn_info,
                                                              self.record,
-                                                             first_run= not self.launch_time) 
+                                                             first_run=not self.launch_time)
             self.thread.start()
             self.launch_time = time.time()
         except thread.error:
@@ -795,7 +801,7 @@ def sigTERMhandler(dummy_signum, dummy_frame):
 #                    Function main
 #==============================================================================
 
-def main(options, args, EngineClass=StdEngine) :
+def main(options, args, engine_class=StdEngine):
     """Prepare the main loop and run it. 
 
     Mostly consists of a bunch of high-level preparatory calls, protected
@@ -858,7 +864,7 @@ def main(options, args, EngineClass=StdEngine) :
             syslog.syslog(syslog.LOG_DEBUG, "engine: Initializing engine")
 
             # Create and initialize the engine
-            engine = EngineClass(config_dict)
+            engine = engine_class(config_dict)
     
             syslog.syslog(syslog.LOG_INFO, "engine: Starting up weewx version %s" % weewx.__version__)
 
@@ -908,7 +914,7 @@ def main(options, args, EngineClass=StdEngine) :
             weeutil.weeutil.log_traceback("    ****  ", syslog.LOG_DEBUG)
             syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 10 seconds then retrying...")
             time.sleep(10)
-            syslog.syslog(syslog.LOG_NOTICE,"engine: retrying...")
+            syslog.syslog(syslog.LOG_NOTICE, "engine: retrying...")
     
         except Restart:
             syslog.syslog(syslog.LOG_NOTICE, "engine: Received signal HUP. Restarting.")
@@ -919,7 +925,7 @@ def main(options, args, EngineClass=StdEngine) :
 
         # Catch any keyboard interrupts and log them
         except KeyboardInterrupt:
-            syslog.syslog(syslog.LOG_CRIT,"engine: Keyboard interrupt.")
+            syslog.syslog(syslog.LOG_CRIT, "engine: Keyboard interrupt.")
             # Reraise the exception (this should cause the program to exit)
             raise
     
@@ -938,7 +944,7 @@ def getConfiguration(config_path):
     """Return the configuration file at the given path."""
     # Try to open up the given configuration file. Declare an error if
     # unable to.
-    try :
+    try:
         config_dict = configobj.ConfigObj(config_path, file_error=True)
     except IOError:
         sys.stderr.write("Unable to open configuration file %s" % config_path)
