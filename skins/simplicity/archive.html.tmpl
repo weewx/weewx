@@ -54,17 +54,10 @@
     <td>
 
 <table>
+  <tr><td class="table_title" colspan="2">Station</td></tr>
   <tr>
-    <td class="label">Station:</td>
+    <td class="label">Type:</td>
     <td><span class="data">$station.hardware</span></td>
-  </tr>
-  <tr>
-    <td class="label">Time:</td>
-    <td><span class="data">$current.dateTime.format("%H:%M")</span></td>
-  </tr>
-  <tr>
-    <td class="label">Date:</td>
-    <td><span class="data">$current.dateTime.format("%d %b %Y")</span></td>
   </tr>
   <tr>
     <td class="label">Latitude:</td>
@@ -77,6 +70,14 @@
   <tr>
     <td class="label">Elevation:</td>
     <td><span class="data">$station.altitude</span></td>
+  </tr>
+  <tr>
+    <td class="label">Date:</td>
+    <td><span class="data">$current.dateTime.format("%d %b %Y")</span></td>
+  </tr>
+  <tr>
+    <td class="label">Time:</td>
+    <td><span class="data">$current.dateTime.format("%H:%M")</span></td>
   </tr>
 #if $almanac.hasExtras
   #if $almanac.sun.set.raw is not None and $almanac.sun.rise.raw is not None
