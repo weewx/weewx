@@ -1,0 +1,176 @@
+#errorCatcher Echo
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>$station.location</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="weewx.css"/>
+    <link rel="icon" type="image/png" href="favicon.ico" />
+    <link href="metricsgraphics-2.9.0.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="jquery-1.12.3.min.js"></script>
+    <script type="text/javascript" src="d3-3.5.16.min.js"></script>
+    <script type="text/javascript" src="metricsgraphics-2.9.0.min.js"></script>
+    #include "ga.inc"
+
+    <script>
+var periods = ['day', 'week', 'month', 'year'];
+function choose_period(id) {
+  for(var i=0; i<periods.length; i++) {
+    var b = document.getElementById('btn_'+periods[i]);
+    if (b) b.className = (id == periods[i]) ? 'button_active' : 'button';
+  }
+  update_data(id);
+}
+
+function cvt_date(series) {
+    for(var i=0; i<series.length; i++) {
+        series[i].date = new Date(series[i].date * 1000);
+    }
+}
+
+function update_data(id) {
+  d3.json("data.json", function(data) {
+    var pts;
+    if (id == 'day') {
+      pts = data.day;
+    } else if (id == 'week') {
+      pts = data.week;
+    } else if (id == 'month') {
+      pts = data.month;
+    } else if (id == 'year') {
+      pts = data.year;
+    }
+    cvt_date(pts.outTemp);
+    cvt_date(pts.dewpoint);
+    cvt_date(pts.heatindex);
+    cvt_date(pts.windchill);
+    cvt_date(pts.inTemp);
+    cvt_date(pts.outHumidity);
+    cvt_date(pts.inHumidity);
+    cvt_date(pts.barometer);
+    cvt_date(pts.windSpeed);
+    cvt_date(pts.windGust);
+    cvt_date(pts.windDir);
+    cvt_date(pts.windGustDir);
+    cvt_date(pts.rain);
+    cvt_date(pts.rainRate);
+    MG.data_graphic({
+        title: "Temperature",
+        legend: ["Temperature", "Dewpoint", "Heat Index", "Wind Chill", "Inside Temperature"],
+        data: [pts.outTemp, pts.dewpoint, pts.heatindex, pts.windchill, pts.inTemp],
+        target: '#temperature',
+        legend_target: '#temperature_legend',
+        full_width: true,
+        aggregate_rollover: true
+    });
+    MG.data_graphic({
+        title: "Humidity",
+        legend: ["Humidity", "Inside Humidity"],
+        data: [pts.outHumidity, pts.inHumidity],
+        target: '#humidity',
+        legend_target: '#humidity_legend',
+        full_width: true,
+        aggregate_rollover: true
+    });
+    MG.data_graphic({
+        title: "Pressure",
+        legend: ["Pressure"],
+        data: [pts.barometer],
+        target: '#pressure',
+        legend_target: '#pressure_legend',
+        full_width: true,
+        aggregate_rollover: true
+    });
+    MG.data_graphic({
+        title: "Wind Speed",
+        legend: ["Average", "Gust"],
+        data: [pts.windSpeed, pts.windGust],
+        target: '#wind_speed',
+        legend_target: '#wind_speed_legend',
+        full_width: true,
+        aggregate_rollover: true
+    });
+    MG.data_graphic({
+        title: "Wind Direction",
+        legend: ["Average", "Gust"],
+        data: [pts.windDir, pts.windGustDir],
+        target: '#wind_dir',
+        legend_target: '#wind_dir_legend',
+        chart_type: 'point',
+        full_width: true,
+        aggregate_rollover: true
+    });
+    MG.data_graphic({
+        title: "Rain",
+        legend: ["Rain", "Rain Rate"],
+        data: [pts.rain, pts.rainRate],
+        target: '#rain',
+        legend_target: '#rain_legend',
+        full_width: true,
+        aggregate_rollover: true
+    });
+  });
+}
+    </script>
+  </head>
+  <body>
+
+<div id="header" class="page_heading">
+  <div class="title_left">
+    <div class="station_title">$station.location</div>
+  </div>
+  <div class="title_right">
+    <div class="logo">
+      <a href="http://weewx.com/"><img src="weewx.png" /></a>
+    </div>
+    <div class="station_location">
+      $current.dateTime<br/>
+      $station.latitude[0]&deg; $station.latitude[1]' $station.latitude[2]
+      $station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]<br/>
+      $station.altitude
+    </div>
+  </div>
+  <div class="nav">
+    <div class="navitem">
+      <a class="button_active" id="btn_day" onclick="choose_period('day')">Day</a>
+    </div>
+    <div class="navitem">
+      <a class="button" id="btn_week" onclick="choose_period('week')">Week</a>
+    </div>
+    <div class="navitem">
+      <a class="button" id="btn_month" onclick="choose_period('month')">Month</a>
+    </div>
+    <div class="navitem">
+      <a class="button" id="btn_year" onclick="choose_period('year')">Year</a>
+    </div>
+  </div>
+</div>
+
+<div style="clear:both"></div>
+
+<div class="content">
+  <div class="sidebar">
+    #include "radar.inc"
+    #include "current_conditions.inc"
+    #include "historical_summary.inc"
+    #include "celestial.inc"
+    #include "station_info.inc"
+  </div>
+
+  <div class="main">
+    <div id="temperature" class="plot"></div>
+    <div id="humidity" class="plot"></div>
+    <div id="pressure" class="plot"></div>
+    <div id="wind_speed" class="plot"></div>
+    <div id="wind_dir" class="plot"></div>
+    <div id="rain" class="plot"></div>
+  </div>
+</div>
+
+  </body>
+
+<script>
+choose_period('day');
+</script>
+
+</html>

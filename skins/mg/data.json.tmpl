@@ -1,0 +1,51 @@
+## [{"date":x, "value":y}, {"date":x, "value":y}, ...]
+
+#set $observations = ['outTemp','dewpoint','heatindex','windchill','inTemp','outHumidity','inHumidity','barometer','rain','rainRate','windSpeed','windDir','windGust','windGustDir']
+
+{
+
+"day":{
+#set $first=1
+#for $o in $observations
+#if not $first
+,
+#end if
+#set $first=0
+"$o": $json.get_data(obs=$o)
+#end for
+},
+
+"week":{
+#set $first=1
+#for $o in $observations
+#if not $first
+,
+#end if
+#set $first=0
+"$o": $json.get_data(obs=$o, time_length=7*86400, aggregate_type='avg', aggregate_interval=3600)
+#end for
+},
+
+"month":{
+#set $first=1
+#for $o in $observations
+#if not $first
+,
+#end if
+#set $first=0
+"$o": $json.get_data(obs=$o, time_length=30*86400, aggregate_type='avg', aggregate_interval=86400)
+#end for
+},
+
+"year":{
+#set $first=1
+#for $o in $observations
+#if not $first
+,
+#end if
+#set $first=0
+"$o": $json.get_data(obs=$o, time_length=365*86400, aggregate_type='avg', aggregate_interval=7*86400)
+#end for
+}
+
+}
