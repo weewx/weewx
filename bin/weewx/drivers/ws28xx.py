@@ -938,7 +938,7 @@ import weewx.wxformulas
 import weeutil.weeutil
 
 DRIVER_NAME = 'WS28xx'
-DRIVER_VERSION = '0.34'
+DRIVER_VERSION = '0.35'
 
 
 def loader(config_dict, engine):
@@ -1382,7 +1382,13 @@ class WS28xxDriver(weewx.drivers.AbstractDevice):
             n = self.get_num_history_scanned()
             if n == last_n:
                 dur = now - last_ts
-                loginf('No data after %d seconds (press SET to sync)' % dur)
+                if self._service.isRunning():
+                    loginf('No data after %d seconds (press SET to sync)'
+                           % dur)
+                else:
+                    loginf('No data after %d seconds: RF thread is not running'
+                           % dur)
+                    break
             else:
                 ntries = 0
                 last_ts = now
@@ -3148,8 +3154,8 @@ class sHID(object):
         time.sleep(usbWait)
         self.devh.getDescriptor(0x2, 0, 0x22)
         time.sleep(usbWait)
-        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                             0xa, [], 0x0, 0x0, 1000)
+        self.devh.controlMsg(
+            usb.TYPE_CLASS + usb.RECIP_INTERFACE, 0xa, [], 0x0, 0x0, 1000)
         time.sleep(usbWait)
         self.devh.getDescriptor(0x22, 0, 0x2a9)
         time.sleep(usbWait)
@@ -3167,43 +3173,44 @@ class sHID(object):
         buf[0] = 0xD1
         if DEBUG_COMM > 1:
             self.dump('setTX', buf, fmt=DEBUG_DUMP_FORMAT)
-        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                             request=0x0000009,
-                             buffer=buf,
-                             value=0x00003d1,
-                             index=0x0000000,
-                             timeout=self.timeout)
+        self.devh.controlMsg(
+            requestType=usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+            request=0x0000009,
+            buffer=buf,
+            value=0x00003d1,
+            index=0x0000000,
+            timeout=self.timeout)
 
     def setRX(self):
         buf = [0]*0x15
         buf[0] = 0xD0
         if DEBUG_COMM > 1:
             self.dump('setRX', buf, fmt=DEBUG_DUMP_FORMAT)
-        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                             request=0x0000009,
-                             buffer=buf,
-                             value=0x00003d0,
-                             index=0x0000000,
-                             timeout=self.timeout)
+        self.devh.controlMsg(
+            requestType=usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+            request=0x0000009,
+            buffer=buf,
+            value=0x00003d0,
+            index=0x0000000,
+            timeout=self.timeout)
 
-    def getState(self,StateBuffer):
-        buf = self.devh.controlMsg(requestType=usb.TYPE_CLASS |
-                                   usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
-                                   request=usb.REQ_CLEAR_FEATURE,
-                                   buffer=0x0a,
-                                   value=0x00003de,
-                                   index=0x0000000,
-                                   timeout=self.timeout)
+    def getState(self):
+        buf = self.devh.controlMsg(
+            requestType=usb.TYPE_CLASS | usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
+            request=usb.REQ_CLEAR_FEATURE,
+            buffer=0x0a,
+            value=0x00003de,
+            index=0x0000000,
+            timeout=self.timeout)
         if DEBUG_COMM > 1:
             self.dump('getState', buf, fmt=DEBUG_DUMP_FORMAT)
-        StateBuffer[0]=[0]*0x2
-        StateBuffer[0][0]=buf[1]
-        StateBuffer[0][1]=buf[2]
+        return buf
 
-    def readConfigFlash(self, addr, numBytes, data):
+    def readConfigFlash(self, addr, numBytes):
         if numBytes > 512:
-            raise Exception('bad number of bytes')
+            raise Exception('bad number of bytes (%s)' % numBytes)
 
+        data = None
         while numBytes:
             buf=[0xcc]*0x0f #0x15
             buf[0] = 0xdd
@@ -3212,33 +3219,33 @@ class sHID(object):
             buf[3] = (addr >>0) & 0xFF
             if DEBUG_COMM > 1:
                 self.dump('readCfgFlash>', buf, fmt=DEBUG_DUMP_FORMAT)
-            self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                                 request=0x0000009,
-                                 buffer=buf,
-                                 value=0x00003dd,
-                                 index=0x0000000,
-                                 timeout=self.timeout)
-            buf = self.devh.controlMsg(requestType=usb.TYPE_CLASS |
-                                       usb.RECIP_INTERFACE |
-                                       usb.ENDPOINT_IN,
-                                       request=usb.REQ_CLEAR_FEATURE,
-                                       buffer=0x15,
-                                       value=0x00003dc,
-                                       index=0x0000000,
-                                       timeout=self.timeout)
-            new_data=[0]*0x15
+            self.devh.controlMsg(
+                requestType=usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                request=0x0000009,
+                buffer=buf,
+                value=0x00003dd,
+                index=0x0000000,
+                timeout=self.timeout)
+            buf = self.devh.controlMsg(
+                usb.TYPE_CLASS | usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
+                request=usb.REQ_CLEAR_FEATURE,
+                buffer=0x15,
+                value=0x00003dc,
+                index=0x0000000,
+                timeout=self.timeout)
+            data=[0]*0x15
             if numBytes < 16:
                 for i in xrange(0, numBytes):
-                    new_data[i] = buf[i+4]
+                    data[i] = buf[i+4]
                 numBytes = 0
             else:
                 for i in xrange(0, 16):
-                    new_data[i] = buf[i+4]
+                    data[i] = buf[i+4]
                 numBytes -= 16
                 addr += 16
             if DEBUG_COMM > 1:
                 self.dump('readCfgFlash<', buf, fmt=DEBUG_DUMP_FORMAT)
-        data[0] = new_data # FIXME: new_data might be unset
+        return data
 
     def setState(self,state):
         buf = [0]*0x15
@@ -3246,12 +3253,13 @@ class sHID(object):
         buf[1] = state
         if DEBUG_COMM > 1:
             self.dump('setState', buf, fmt=DEBUG_DUMP_FORMAT)
-        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                             request=0x0000009,
-                             buffer=buf,
-                             value=0x00003d7,
-                             index=0x0000000,
-                             timeout=self.timeout)
+        self.devh.controlMsg(
+            requestType=usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+            request=0x0000009,
+            buffer=buf,
+            value=0x00003d7,
+            index=0x0000000,
+            timeout=self.timeout)
 
     def setFrame(self,data,numBytes):
         buf = [0]*0x111
@@ -3264,22 +3272,22 @@ class sHID(object):
             self.dump('setFrame', buf, 'short')
         elif DEBUG_COMM > 1:
             self.dump('setFrame', buf, fmt=DEBUG_DUMP_FORMAT)
-        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                             request=0x0000009,
-                             buffer=buf,
-                             value=0x00003d5,
-                             index=0x0000000,
-                             timeout=self.timeout)
+        self.devh.controlMsg(
+            requestType=usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+            request=0x0000009,
+            buffer=buf,
+            value=0x00003d5,
+            index=0x0000000,
+            timeout=self.timeout)
 
     def getFrame(self,data,numBytes):
-        buf = self.devh.controlMsg(requestType=usb.TYPE_CLASS |
-                                   usb.RECIP_INTERFACE |
-                                   usb.ENDPOINT_IN,
-                                   request=usb.REQ_CLEAR_FEATURE,
-                                   buffer=0x111,
-                                   value=0x00003d6,
-                                   index=0x0000000,
-                                   timeout=self.timeout)
+        buf = self.devh.controlMsg(
+            requestType=usb.TYPE_CLASS | usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
+            request=usb.REQ_CLEAR_FEATURE,
+            buffer=0x111,
+            value=0x00003d6,
+            index=0x0000000,
+            timeout=self.timeout)
         new_data=[0]*0x131
         new_numBytes=(buf[1] << 8 | buf[2])& 0x1ff
         for i in xrange(0, new_numBytes):
@@ -3300,12 +3308,13 @@ class sHID(object):
         buf[4] = 0x00
         if DEBUG_COMM > 1:
             self.dump('writeReg', buf, fmt=DEBUG_DUMP_FORMAT)
-        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                             request=0x0000009,
-                             buffer=buf,
-                             value=0x00003f0,
-                             index=0x0000000,
-                             timeout=self.timeout)
+        self.devh.controlMsg(
+            requestType=usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+            request=0x0000009,
+            buffer=buf,
+            value=0x00003f0,
+            index=0x0000000,
+            timeout=self.timeout)
 
     def execute(self, command):
         buf = [0]*0x0f #*0x15
@@ -3313,12 +3322,13 @@ class sHID(object):
         buf[1] = command
         if DEBUG_COMM > 1:
             self.dump('execute', buf, fmt=DEBUG_DUMP_FORMAT)
-        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                             request=0x0000009,
-                             buffer=buf,
-                             value=0x00003d9,
-                             index=0x0000000,
-                             timeout=self.timeout)
+        self.devh.controlMsg(
+            requestType=usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+            request=0x0000009,
+            buffer=buf,
+            value=0x00003d9,
+            index=0x0000000,
+            timeout=self.timeout)
 
     def setPreamblePattern(self,pattern):
         buf = [0]*0x15
@@ -3326,12 +3336,13 @@ class sHID(object):
         buf[1] = pattern
         if DEBUG_COMM > 1:
             self.dump('setPreamble', buf, fmt=DEBUG_DUMP_FORMAT)
-        self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                             request=0x0000009,
-                             buffer=buf,
-                             value=0x00003d8,
-                             index=0x0000000,
-                             timeout=self.timeout)
+        self.devh.controlMsg(
+            requestType=usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+            request=0x0000009,
+            buffer=buf,
+            value=0x00003d8,
+            index=0x0000000,
+            timeout=self.timeout)
 
     # three formats, long, short, auto.  short shows only the first 16 bytes.
     # long shows the full length of the buffer.  auto shows the message length
@@ -3376,19 +3387,20 @@ class sHID(object):
             buf[1] = 0x0a
             buf[2] = (addr >>8) & 0xFF
             buf[3] = (addr >>0) & 0xFF
-            handle.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
-                              request=0x0000009,
-                              buffer=buf,
-                              value=0x00003dd,
-                              index=0x0000000,
-                              timeout=1000)
-            buf = handle.controlMsg(requestType=usb.TYPE_CLASS |
-                                    usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
-                                    request=usb.REQ_CLEAR_FEATURE,
-                                    buffer=0x15,
-                                    value=0x00003dc,
-                                    index=0x0000000,
-                                    timeout=1000)
+            handle.controlMsg(
+                requestType=usb.TYPE_CLASS + usb.RECIP_INTERFACE,
+                request=0x0000009,
+                buffer=buf,
+                value=0x00003dd,
+                index=0x0000000,
+                timeout=1000)
+            buf = handle.controlMsg(
+                usb.TYPE_CLASS | usb.RECIP_INTERFACE | usb.ENDPOINT_IN,
+                request=usb.REQ_CLEAR_FEATURE,
+                buffer=0x15,
+                value=0x00003dc,
+                index=0x0000000,
+                timeout=1000)
             new_data=[0]*0x15
             if numBytes < 16:
                 for i in xrange(0, numBytes):
@@ -3971,19 +3983,18 @@ class CCommunicationService(object):
         freq = self.DataStore.TransceiverSettings.Frequency
         loginf('base frequency: %d' % freq)
         freqVal =  long(freq / 16000000.0 * 16777216.0)
-        corVec = [None]
-        self.shid.readConfigFlash(0x1F5, 4, corVec)
-        corVal = corVec[0][0] << 8
-        corVal |= corVec[0][1]
+        corVec = self.shid.readConfigFlash(0x1F5, 4)
+        corVal = corVec[0] << 8
+        corVal |= corVec[1]
         corVal <<= 8
-        corVal |= corVec[0][2]
+        corVal |= corVec[2]
         corVal <<= 8
-        corVal |= corVec[0][3]
-        loginf('frequency correction: %d (0x%x)' % (corVal,corVal))
+        corVal |= corVec[3]
+        loginf('frequency correction: %d (0x%x)' % (corVal, corVal))
         freqVal += corVal
         if not (freqVal % 2):
             freqVal += 1
-        loginf('adjusted frequency: %d (0x%x)' % (freqVal,freqVal))
+        loginf('adjusted frequency: %d (0x%x)' % (freqVal, freqVal))
         self.reg_names[self.AX5051RegisterNames.FREQ3] = (freqVal >>24) & 0xFF
         self.reg_names[self.AX5051RegisterNames.FREQ2] = (freqVal >>16) & 0xFF
         self.reg_names[self.AX5051RegisterNames.FREQ1] = (freqVal >>8)  & 0xFF
@@ -3995,21 +4006,20 @@ class CCommunicationService(object):
                 self.reg_names[self.AX5051RegisterNames.FREQ0]))
 
         # figure out the transceiver id
-        buf = [None]
-        self.shid.readConfigFlash(0x1F9, 7, buf)
-        tid  = buf[0][5] << 8
-        tid += buf[0][6]
-        loginf('transceiver identifier: %d (0x%04x)' % (tid,tid))
+        buf = self.shid.readConfigFlash(0x1F9, 7)
+        tid  = buf[5] << 8
+        tid += buf[6]
+        loginf('transceiver identifier: %d (0x%04x)' % (tid, tid))
         self.DataStore.setDeviceID(tid)
 
         # figure out the transceiver serial number
-        sn  = str("%02d"%(buf[0][0]))
-        sn += str("%02d"%(buf[0][1]))
-        sn += str("%02d"%(buf[0][2]))
-        sn += str("%02d"%(buf[0][3]))
-        sn += str("%02d"%(buf[0][4]))
-        sn += str("%02d"%(buf[0][5]))
-        sn += str("%02d"%(buf[0][6]))
+        sn  = str("%02d"%(buf[0]))
+        sn += str("%02d"%(buf[1]))
+        sn += str("%02d"%(buf[2]))
+        sn += str("%02d"%(buf[3]))
+        sn += str("%02d"%(buf[4]))
+        sn += str("%02d"%(buf[5]))
+        sn += str("%02d"%(buf[6]))
         loginf('transceiver serial: %s' % sn)
         self.DataStore.setTransceiverSerNo(sn)
             
@@ -4102,11 +4112,9 @@ class CCommunicationService(object):
                 self.doRFCommunication()
         except Exception, e:
             logerr('exception in doRF: %s' % e)
-#            if weewx.debug:
-#                log_traceback(dst=syslog.LOG_DEBUG)
             log_traceback(dst=syslog.LOG_INFO)
             self.running = False
-            raise
+#            raise
         finally:
             logdbg('stopping rf communication')
 
@@ -4131,10 +4139,9 @@ class CCommunicationService(object):
         time.sleep(self.firstSleep)
         self.pollCount = 0
         while self.running:
-            StateBuffer = [None]
-            self.shid.getState(StateBuffer)
+            state_buffer = self.shid.getState()
             self.pollCount += 1
-            if StateBuffer[0][0] == 0x16:
+            if state_buffer[1] == 0x16:
                 break
             time.sleep(self.nextSleep)
         else:
