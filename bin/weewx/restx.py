@@ -322,7 +322,7 @@ class RESTThread(threading.Thread):
                     _time_str = timestamp_to_string(_record['dateTime'])
                     syslog.syslog(syslog.LOG_INFO,
                                   "restx: %s: Skipped record %s" %
-                                  self.protocol_name, _time_str)
+                                  (self.protocol_name, _time_str))
             except BadLogin:
                 syslog.syslog(syslog.LOG_ERR, "restx: %s: bad login; "
                               "waiting 60 minutes then retrying" %
