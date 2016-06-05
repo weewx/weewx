@@ -443,7 +443,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.18'
+DRIVER_VERSION = '0.18rc6'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -1193,7 +1193,10 @@ class TE923Driver(weewx.drivers.AbstractDevice):
             self._last_rain_archive = packet['rainTotal']
             if self._last_ts:
                 packet['interval'] = (packet['dateTime'] - self._last_ts) / 60
-                yield packet
+                if packet['interval'] > 0:
+                    yield packet
+                else:
+                    loginf("skip packet with duplidate timestamp: %s" % packet)
             self._last_ts = packet['dateTime']
 
     @staticmethod
@@ -1590,7 +1593,7 @@ class TE923Station(object):
         time.sleep(0.1)  # te923tool is 0.3
         start_ts = time.time()
         rbuf = []
-        while time.time() - start_ts < 3:
+        while time.time() - start_ts < 5:
             try:
                 buf = self.devh.interruptRead(
                     self.ENDPOINT_IN, self.READ_LENGTH, self.TIMEOUT)
