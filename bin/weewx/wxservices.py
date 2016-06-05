@@ -89,6 +89,15 @@ class StdWXCalculate(weewx.engine.StdService):
         self.wind_height = float(svc_dict.get('wind_height', 2.0))
         # Time window to accept a record 12 hours ago:
         self.max_delta_12h = int(svc_dict.get('max_delta_12h', 1800))
+        # cache the archive interval.  nominally the interval is included in
+        # each record for which calculations are being done.  however, if the
+        # calculation is being done on a loop packet, there will probably be no
+        # interval field in that packet.  the archive_interval is the value
+        # from the last archive record encountered.  the alternative to
+        # caching is to hard-fail - if a calculation depends on archive
+        # interval, it would be calculated only for archive records, not
+        # loop packets.  currently this applies only to pressure calculation.
+        self.archive_interval = None
 
         # find out which calculations should be performed
         self.calculations = dict()
@@ -115,13 +124,14 @@ class StdWXCalculate(weewx.engine.StdService):
         self.longitude = engine.stn_info.longitude_f
         self.temperature_12h_ago = None
         self.ts_12h_ago = None
-        self.archive_interval = None
         self.rain_events = []
 
         # report about which values will be calculated...
-        syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following values will be calculated: %s" % ', '.join(["%s=%s" % (k, self.calculations[k]) for k in self.calculations]))
+        syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following values will be calculated: %s" %
+                      ', '.join(["%s=%s" % (k, self.calculations[k]) for k in self.calculations]))
         # ...and which algorithms will be used.
-        syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following algorithms will be used for calculations: %s" % ', '.join(["%s=%s" % (k, self.algorithms[k]) for k in self.algorithms]))
+        syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following algorithms will be used for calculations: %s" %
+                      ', '.join(["%s=%s" % (k, self.algorithms[k]) for k in self.algorithms]))
 
         # we will process both loop and archive events
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
@@ -148,7 +158,7 @@ class StdWXCalculate(weewx.engine.StdService):
             elif obs not in data_us or data_us[obs] is None:
                 calc = True
             if calc:
-                getattr(self, 'calc_'+obs)(data_us, data_type)
+                getattr(self, 'calc_' + obs)(data_us, data_type)
         data_x = weewx.units.to_std_system(data_us, data_dict['usUnits'])
         data_dict.update(data_x)
 
@@ -188,10 +198,11 @@ class StdWXCalculate(weewx.engine.StdService):
             data['heatindex'] = None
 
     def calc_pressure(self, data, data_type):  # @UnusedVariable
-        self._get_archive_interval(data)
-        if (self.archive_interval is not None and 'barometer' in data and
+        interval = self._get_archive_interval(data)
+        if (interval is not None and 'barometer' in data and
             'outTemp' in data and 'outHumidity' in data):
-            temperature_12h_ago = self._get_temperature_12h(data['dateTime'], self.archive_interval)
+            temperature_12h_ago = self._get_temperature_12h(
+                data['dateTime'], interval)
             if (data['barometer'] is not None and
                 data['outTemp'] is not None and
                 data['outHumidity'] is not None and
@@ -346,15 +357,17 @@ class StdWXCalculate(weewx.engine.StdService):
             pass
 
     def _get_archive_interval(self, data):
-        if 'interval' in data and self.archive_interval != data['interval'] * 60:
-            self.archive_interval = data['interval'] * 60
+        if 'interval' in data and data['interval']:
+            # cache the interval so it can be used for loop calculations
+            self.archive_inteval = data['interval'] * 60
+        return self.archive_interval
 
     def _get_temperature_12h(self, ts, archive_interval):
         """Get the temperature from 12 hours ago.  Return None if no
         temperature is found.  Convert to US if necessary since this
         service operates in US unit system."""
 
-        ts12 = weeutil.weeutil.startOfInterval(ts - 12*3600, archive_interval)
+        ts12 = weeutil.weeutil.startOfInterval(ts - 12 * 3600, archive_interval)
 
         # No need to look up the temperature if we're still in the same
         # archive interval:
