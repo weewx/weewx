@@ -16,6 +16,37 @@ import weeutil.weeutil
 
 
 class StdWXCalculate(weewx.engine.StdService):
+    """Wrapper class for WXCalculate.
+
+    A StdService wrapper for a WXCalculate object so it may be called as a 
+    service. This also allows the WXCalculate class to be used elsewhere 
+    without the overheads of running it as a weewx service.
+    """
+
+    def __init__(self, engine, config_dict):
+        """Initialize the service.
+
+        Create a WXCalculate object and initialise our bindings.
+        """
+        super(StdWXCalculate, self).__init__(engine, config_dict)
+
+        self.WXCalculate = WXCalculate(config_dict, 
+                                       engine.stn_info.altitude_vt, 
+                                       engine.stn_info.latitude_f, 
+                                       engine.stn_info.longitude_f, 
+                                       engine.db_binder.get_manager('wx_binding'))
+
+        # we will process both loop and archive events
+        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+
+    def new_loop_packet(self, event):
+        self.WXCalculate.do_calculations(event.packet, 'loop')
+
+    def new_archive_record(self, event):
+        self.WXCalculate.do_calculations(event.record, 'archive')
+
+class WXCalculate(object):
     """Add derived quantities to a record.
 
     Derived quantities should depend only on independent observations.
@@ -49,7 +80,7 @@ class StdWXCalculate(weewx.engine.StdService):
         'windrun',
         ]
 
-    def __init__(self, engine, config_dict):
+    def __init__(self, config_dict, alt_vt, lat_f, long_f, dbm):
         """Initialize the calculation service.  Sample configuration:
 
         [StdWXCalculate]
@@ -69,8 +100,8 @@ class StdWXCalculate(weewx.engine.StdService):
                 altimeter = aaASOS
                 maxSolarRad = RS
         """
-        super(StdWXCalculate, self).__init__(engine, config_dict)
-
+        
+        self.dbmanager = dbm
         # get any configuration settings
         svc_dict = config_dict.get('StdWXCalculate', {})
         # window of time to measure rain rate, in seconds
@@ -116,12 +147,10 @@ class StdWXCalculate(weewx.engine.StdService):
         self.algorithms.setdefault('maxSolarRad', 'RS')
 
         # various bits we need for internal housekeeping
-        self.altitude_ft = weewx.units.convert(
-            engine.stn_info.altitude_vt, "foot")[0]
-        self.altitude_m = weewx.units.convert(
-            engine.stn_info.altitude_vt, "meter")[0]
-        self.latitude = engine.stn_info.latitude_f
-        self.longitude = engine.stn_info.longitude_f
+        self.altitude_ft = weewx.units.convert(alt_vt, "foot")[0]
+        self.altitude_m = weewx.units.convert(alt_vt, "meter")[0]
+        self.latitude = lat_f
+        self.longitude = long_f
         self.temperature_12h_ago = None
         self.ts_12h_ago = None
         self.rain_events = []
@@ -132,16 +161,6 @@ class StdWXCalculate(weewx.engine.StdService):
         # ...and which algorithms will be used.
         syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following algorithms will be used for calculations: %s" %
                       ', '.join(["%s=%s" % (k, self.algorithms[k]) for k in self.algorithms]))
-
-        # we will process both loop and archive events
-        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-
-    def new_loop_packet(self, event):
-        self.do_calculations(event.packet, 'loop')
-
-    def new_archive_record(self, event):
-        self.do_calculations(event.record, 'archive')
 
     def do_calculations(self, data_dict, data_type):
         if self.ignore_zero_wind:
@@ -304,7 +323,7 @@ class StdWXCalculate(weewx.engine.StdService):
         end_ts = data['dateTime']
         start_ts = end_ts - self.et_period
         try:
-            dbmanager = self.engine.db_binder.get_manager('wx_binding')
+            dbmanager = self.dbmanager
             r = dbmanager.getSql(
                 "SELECT"
                 " MAX(outTemp),MIN(outTemp),AVG(radiation),AVG(windSpeed),usUnits"
@@ -341,7 +360,7 @@ class StdWXCalculate(weewx.engine.StdService):
         sts = weeutil.weeutil.startOfDay(ets)
         try:
             run = 0.0
-            dbmanager = self.engine.db_binder.get_manager('wx_binding')
+            dbmanager = self.dbmanager
             for row in dbmanager.genSql("SELECT `interval`,windSpeed,usUnits"
                                         " FROM %s"
                                         " WHERE dateTime>? AND dateTime<=?" %
@@ -377,7 +396,7 @@ class StdWXCalculate(weewx.engine.StdService):
         # archive interval:
         if ts12 != self.ts_12h_ago:
             # We're in a new interval. Hit the database to get the temperature
-            dbmanager = self.engine.db_binder.get_manager('wx_binding')
+            dbmanager = self.dbmanager
             record = dbmanager.getRecord(ts12, max_delta=self.max_delta_12h)
             if record is None:
                 # Nothing in the database. Set temperature to None.
