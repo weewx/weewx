@@ -261,7 +261,7 @@ class WXCalculate(object):
                 self.rain_events[0][0] <= data['dateTime'] - self.rain_period):
                 events = []
                 for e in self.rain_events:
-                    if [0] > data['dateTime'] - self.rain_period:
+                    if e[0] > data['dateTime'] - self.rain_period:
                         events.append((e[0], e[1]))
                 self.rain_events = events
             # ...then add new rain event if there is one
