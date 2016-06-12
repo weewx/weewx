@@ -237,13 +237,17 @@ class StdWXCalculate(weewx.engine.StdService):
     def calc_rainRate(self, data, data_type):
         # if this is a loop packet then cull and add to the queue
         if data_type == 'loop':
-            events = []
-            for e in self.rain_events:
-                if e[0] > data['dateTime'] - self.rain_period:
-                    events.append((e[0], e[1]))
+            # punt any old events from the event list...
+            if (self.rain_events and
+                self.rain_events[0][0] <= data['dateTime'] - self.rain_period):
+                events = []
+                for e in self.rain_events:
+                    if [0] > data['dateTime'] - self.rain_period:
+                        events.append((e[0], e[1]))
+                self.rain_events = events
+            # ...then add new rain event if there is one
             if 'rain' in data and data['rain']:
-                events.append((data['dateTime'], data['rain']))
-            self.rain_events = events
+                self.rain_events.append((data['dateTime'], data['rain']))
         # for both loop and archive, add up the rain...
         rainsum = 0
         for e in self.rain_events:
