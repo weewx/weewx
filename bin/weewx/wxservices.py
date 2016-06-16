@@ -30,21 +30,21 @@ class StdWXCalculate(weewx.engine.StdService):
         """
         super(StdWXCalculate, self).__init__(engine, config_dict)
 
-        self.WXCalculate = WXCalculate(config_dict, 
-                                       engine.stn_info.altitude_vt, 
-                                       engine.stn_info.latitude_f, 
-                                       engine.stn_info.longitude_f, 
-                                       engine.db_binder.get_manager('wx_binding'))
+        self.calc = WXCalculate(config_dict, 
+                                engine.stn_info.altitude_vt, 
+                                engine.stn_info.latitude_f, 
+                                engine.stn_info.longitude_f,
+                                engine.db_binder)
 
         # we will process both loop and archive events
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
     def new_loop_packet(self, event):
-        self.WXCalculate.do_calculations(event.packet, 'loop')
+        self.calc.do_calculations(event.packet, 'loop')
 
     def new_archive_record(self, event):
-        self.WXCalculate.do_calculations(event.record, 'archive')
+        self.calc.do_calculations(event.record, 'archive')
 
 class WXCalculate(object):
     """Add derived quantities to a record.
@@ -80,10 +80,11 @@ class WXCalculate(object):
         'windrun',
         ]
 
-    def __init__(self, config_dict, alt_vt, lat_f, long_f, dbm):
+    def __init__(self, config_dict, alt_vt, lat_f, long_f, db_binder=None):
         """Initialize the calculation service.  Sample configuration:
 
         [StdWXCalculate]
+            data_binding = wx_binding
             ignore_zero_wind = True
             rain_period = 900           # for rain rate
             et_period = 3600            # for evapotranspiration
@@ -101,9 +102,13 @@ class WXCalculate(object):
                 maxSolarRad = RS
         """
         
-        self.dbmanager = dbm
         # get any configuration settings
         svc_dict = config_dict.get('StdWXCalculate', {})
+        # database binding for any calculations that need database queries
+        if db_binder is None:
+            db_binder = weewx.manager.DBBinder(config_dict)
+        self.binder = db_binder
+        self.binding = svc_dict.get('data_binding', 'wx_binding')
         # window of time to measure rain rate, in seconds
         self.rain_period = int(svc_dict.get('rain_period', 900))
         # window of time for evapotranspiration calculation, in seconds
@@ -323,7 +328,7 @@ class WXCalculate(object):
         end_ts = data['dateTime']
         start_ts = end_ts - self.et_period
         try:
-            dbmanager = self.dbmanager
+            dbmanager = self.db_binder.get_manager(self.binding)
             r = dbmanager.getSql(
                 "SELECT"
                 " MAX(outTemp),MIN(outTemp),AVG(radiation),AVG(windSpeed),usUnits"
@@ -360,7 +365,7 @@ class WXCalculate(object):
         sts = weeutil.weeutil.startOfDay(ets)
         try:
             run = 0.0
-            dbmanager = self.dbmanager
+            dbmanager = self.db_binder.get_manager(self.binding)
             for row in dbmanager.genSql("SELECT `interval`,windSpeed,usUnits"
                                         " FROM %s"
                                         " WHERE dateTime>? AND dateTime<=?" %
@@ -396,7 +401,7 @@ class WXCalculate(object):
         # archive interval:
         if ts12 != self.ts_12h_ago:
             # We're in a new interval. Hit the database to get the temperature
-            dbmanager = self.dbmanager
+            dbmanager = self.db_binder.get_manager(self.binding)
             record = dbmanager.getRecord(ts12, max_delta=self.max_delta_12h)
             if record is None:
                 # Nothing in the database. Set temperature to None.
