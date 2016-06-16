@@ -958,6 +958,11 @@ Version: 3.5.0
     <p>For SuSE and OpenSUSE, follow the
         <a href='suse.htm'>instructions for SuSE-based systems</a>.</p>
 
+    <h2><a href='macos.htm'>Installing on MacOS</a></h2>
+
+    <p>For MacOS, follow the 
+        <a href='macos.htm'>instructions for MacOS systems</a>.</p>
+
     <h2><a href='setup.htm'>Installing using the Python tool setup.py</a></h2>
 
     <p>For all other operating systems, follow the
@@ -986,6 +991,9 @@ Version: 3.5.0
             <img src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/>
             <img src='images/logo-fedora.png' class='thumbnail' alt="Fedora logo"/>
             <img src='images/logo-suse.png' class='thumbnail' alt="SUSE logo"/>
+        </div>
+        <div id='layout-tab-macos' class='tab' onclick="showtab('layout','macos')">macos
+            <img src='images/logo-apple.png' class='thumbnail' alt="Apple logo"/>
         </div>
         <div id='layout-tab-setup' class='tab' onclick="showtab('layout','setup')">setup.py</div>
     </div>
@@ -1092,6 +1100,64 @@ Version: 3.5.0
                     <td>Log file</td>
                     <td class="symcode"></td>
                     <td class='tty'>/var/log/messages</td>
+                </tr>
+            </table>
+        </div>
+        <div id='layout-macos' style='display:none'>
+            <table class='locations' width='100%'>
+                <tr class='selected'>
+                    <td colspan='3' class='locations_banner'>Application layout for install on MacOS
+                    </td>
+                </tr>
+                <tr class="first_row" style="background-color: inherit">
+                    <td>Role</td>
+                    <td>Symbolic Name</td>
+                    <td>Nominal Location</td>
+                </tr>
+                <tr>
+                    <td><span class='code'>weewx</span> root directory</td>
+                    <td class="symcode">WEEWX_ROOT</td>
+                    <td class="tty">/Users/Shared/weewx</td>
+                </tr>
+                <tr>
+                    <td>Executables</td>
+                    <td class="symcode">BIN_ROOT</td>
+                    <td class='tty'>/Users/Shared/weewx/bin/</td>
+                </tr>
+                <tr>
+                    <td>Configuration directory</td>
+                    <td class="symcode">CONFIG_ROOT</td>
+                    <td class='tty'>/Users/Shared/weewx/</td>
+                </tr>
+                <tr>
+                    <td>Skins and templates</td>
+                    <td class="symcode">SKIN_ROOT</td>
+                    <td class='tty'>/Users/Shared/weewx/skins/</td>
+                </tr>
+                <tr>
+                    <td>SQLite databases</td>
+                    <td class="symcode">SQLITE_ROOT</td>
+                    <td class='tty'>/Users/Shared/weewx/archive</td>
+                </tr>
+                <tr>
+                    <td>Web pages and images</td>
+                    <td class="symcode">HTML_ROOT</td>
+                    <td class='tty'>/Users/Shared/weewx/public_html/</td>
+                </tr>
+                <tr>
+                    <td>Documentation</td>
+                    <td class="symcode">DOC_ROOT</td>
+                    <td class='tty'>/Users/Shared/weewx/docs/</td>
+                </tr>
+                <tr>
+                    <td>PID file</td>
+                    <td class="symcode"></td>
+                    <td class='tty'>/var/run/weewx.pid</td>
+                </tr>
+                <tr>
+                    <td>Log file</td>
+                    <td class="symcode"></td>
+                    <td class='tty'>/var/log/system.log</td>
                 </tr>
             </table>
         </div>
@@ -5927,11 +5993,13 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
 function showtab(tab, id) {
     document.getElementById(tab + '-deb').style.display = 'none';
     document.getElementById(tab + '-rpm').style.display = 'none';
+    document.getElementById(tab + '-macos').style.display = 'none';
     document.getElementById(tab + '-setup').style.display = 'none';
     document.getElementById(tab + '-' + id).style.display = 'block';
 
     document.getElementById(tab + '-tab-deb').className = 'tab';
     document.getElementById(tab + '-tab-rpm').className = 'tab';
+    document.getElementById(tab + '-tab-macos').className = 'tab';
     document.getElementById(tab + '-tab-setup').className = 'tab';
     document.getElementById(tab + '-tab-' + id).className = 'tab selected';
 }

@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta content="en-us" http-equiv="Content-Language"/>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+    <title>weewx: Installation on MacOS systems</title>
+    <link href="css/weewx_docs.css" rel="stylesheet"/>
+    <link rel="icon" type="image/png" href="/docs/images/favicon.png">    
+</head>
+
+<body>
+
+<h1 class="title">weewx: Installation on MacOS systems</h1>
+
+<p class='os-icons'>
+    <img class='logo' src='images/logo-apple.png' alt=""/>
+</p>
+
+<p>This is a guide to installing <span class='code'>weewx</span> on MacOS.</p>
+
+<h2>Download</h2>
+
+<p>
+    Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</span> from <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
+</p>
+
+<h2>Install</h2>
+<p>Install pre-requisites:</p>
+<pre class='tty cmd'>sudo easy_install pysqlite
+sudo easy_install configobj
+sudo easy_install Cheetah
+sudo easy_install PIL
+sudo easy_install pyserial
+sudo easy_install pyusb
+sudo easy_install pyephem</pre>
+<p>If the PIL or Cheetah installation fails, you might have to install xcode then try the easy_install again:</p>
+<pre class='tty cmd'>xcode-select --install</pre>
+<p>Expand the source archive:</p>
+<pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
+<p>Change directory:</p>
+<pre class="tty cmd">cd weewx-X.Y.Z</pre>
+<p>Set the installation location to <span class="code">/Users/Shared/weewx</span></p>
+<pre class="tty cmd">perl -pi -e 's%^home.*%home = /Users/Shared/weewx%' setup.cfg</pre>
+<p>Install:</p>
+<pre class="tty cmd">./setup.py install</pre>
+<p>
+    The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to the station.
+</p>
+
+<h2>Run</h2>
+
+<p>Run the main program directly:</p>
+<pre class="tty cmd">cd /Users/Shared/weewx
+./bin/weewxd weewx.conf</pre>
+<p>Or as a daemon automatically when the computer starts:</p>
+<pre class="tty cmd">sudo cp util/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
+sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
+
+<h2>Status</h2>
+<p>To make sure things are running properly look in the system log for messages from <span class='code'>weewx</span>.
+</p>
+<pre class='tty cmd'>tail -f /var/log/system.log</pre>
+
+<h2>Verify</h2>
+<p>After about 5 minutes, open the station web page in a web browser. You should see your station information and data.
+</p>
+<pre class='tty'><a href="file:///Users/Shared/weewx/public_html/index.html">file:///Users/Shared/weewx/public_html/index.html</a></pre>
+<p>If your hardware supports hardware archiving, then how long you wait will depend on the <a href="usersguide.htm#archive_interval">archive interval</a> set in your hardware.
+</p>
+
+<h2>Customize</h2>
+<p>To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span class='code'>/Users/Shared/weewx/weewx.conf</span>. See the <a href="usersguide.htm">User Guide</a> and <a href="customizing.htm">Customization Guide</a> for details.
+</p>
+
+<p><span class='code'>weewx</span> must be restarted for configuration file changes to take effect.
+</p>
+
+<h2>Start/Stop</h2>
+<p>To start/stop <span class='code'>weewx</span>:</p>
+<pre class='tty cmd'>sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
+sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
+
+<h2>Uninstall</h2>
+<p>To uninstall, simply delete the directory <span class='code'>/Users/Shared/weewx</span>.  This will delete weewx, configuration files, and data.</p>
+<pre class='tty cmd'>rm -r /Users/Shared/weewx
+sudo rm /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
+
+<h2>Layout</h2>
+<p>The instructions above will result in the following layout:</p>
+<table class='locations' style="width:50%">
+    <tr>
+        <td align='right'>executable:</td>
+        <td class='tty'>/Users/Shared/weewx/bin/weewxd</td>
+    </tr>
+    <tr>
+        <td align='right'>configuration file:</td>
+        <td class='tty'>/Users/Shared/weewx/weewx.conf</td>
+    </tr>
+    <tr>
+        <td align='right'>utilities:</td>
+        <td class='tty'>/Users/Shared/weewx/bin/</td>
+    </tr>
+    <tr>
+        <td align='right'>skins and templates:</td>
+        <td class='tty'>/Users/Shared/weewx/skins/</td>
+    </tr>
+    <tr>
+        <td align='right'>sqlite databases:</td>
+        <td class='tty'>/Users/Shared/weewx/archive/</td>
+    </tr>
+    <tr>
+        <td align='right'>generated web pages and images:</td>
+        <td class='tty'>/Users/Shared/weewx/public_html/</td>
+    </tr>
+    <tr>
+        <td align='right'>documentation:</td>
+        <td class='tty'>/Users/Shared/weewx/docs/</td>
+    </tr>
+</table>
+
+<p class='copyright'>
+    &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
+</p>
+
+</body>
+</html>

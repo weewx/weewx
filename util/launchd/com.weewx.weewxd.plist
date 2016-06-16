@@ -15,8 +15,8 @@
   <true/>
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/weewx/bin/weewxd</string>
-    <string>/Users/weewx/weewx.conf</string>
+    <string>/Users/Shared/weewx/bin/weewxd</string>
+    <string>/Users/Shared/weewx/weewx.conf</string>
   </array>
 </dict>
 </plist>
