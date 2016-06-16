@@ -107,7 +107,7 @@ class WXCalculate(object):
         # database binding for any calculations that need database queries
         if db_binder is None:
             db_binder = weewx.manager.DBBinder(config_dict)
-        self.binder = db_binder
+        self.db_binder = db_binder
         self.binding = svc_dict.get('data_binding', 'wx_binding')
         # window of time to measure rain rate, in seconds
         self.rain_period = int(svc_dict.get('rain_period', 900))
