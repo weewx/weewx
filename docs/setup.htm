@@ -29,39 +29,11 @@
     <span class="code">setup.py</span>.
 </p>
 
-<p>The installation will place <span class="code">weewx</span> in the
-    <span class="code">/home/weewx</span> directory with the following
-    layout: </p>
-<table class='locations' style="width:50%">
-    <tr>
-        <td align='right'>executable:</td>
-        <td class='tty'>/home/weewx/bin/weewxd</td>
-    </tr>
-    <tr>
-        <td align='right'>configuration file:</td>
-        <td class='tty'>/home/weewx/weewx.conf</td>
-    </tr>
-    <tr>
-        <td align='right'>utilities:</td>
-        <td class='tty'>/home/weewx/bin/</td>
-    </tr>
-    <tr>
-        <td align='right'>skins and templates:</td>
-        <td class='tty'>/home/weewx/skins/</td>
-    </tr>
-    <tr>
-        <td align='right'>sqlite databases:</td>
-        <td class='tty'>/home/weewx/archive/</td>
-    </tr>
-    <tr>
-        <td align='right'>generated web pages and images:</td>
-        <td class='tty'>/home/weewx/public_html/</td>
-    </tr>
-    <tr>
-        <td align='right'>documentation:</td>
-        <td class='tty'>/home/weewx/docs/</td>
-    </tr>
-</table>
+<h2>Download</h2>
+
+<p>
+    Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</span> from <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
+</p>
 
 <h2>Install Prerequisites</h2>
 
@@ -159,12 +131,6 @@ sudo pip install pyusb</span>
 <span class="cmd">sudo pip install pyephem</span></pre>
     </div>
 </div>
-
-<h2>Download</h2>
-
-<p>
-    Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</span> from <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
-</p>
 
 <h2>Install <span class='code'>weewx</span></h2>
 
@@ -265,6 +231,42 @@ sudo /etc/init.d/weewx start</pre>
 </p>
 <pre class='tty cmd'>sudo rm -r /home/weewx
 sudo rm /etc/init.d/weewx</pre>
+
+<h2>Layout</h2>
+
+<p>The installation will place <span class="code">weewx</span> in the
+    <span class="code">/home/weewx</span> directory with the following
+    layout: </p>
+<table class='locations' style="width:50%">
+    <tr>
+        <td align='right'>executable:</td>
+        <td class='tty'>/home/weewx/bin/weewxd</td>
+    </tr>
+    <tr>
+        <td align='right'>configuration file:</td>
+        <td class='tty'>/home/weewx/weewx.conf</td>
+    </tr>
+    <tr>
+        <td align='right'>skins and templates:</td>
+        <td class='tty'>/home/weewx/skins/</td>
+    </tr>
+    <tr>
+        <td align='right'>sqlite databases:</td>
+        <td class='tty'>/home/weewx/archive/</td>
+    </tr>
+    <tr>
+        <td align='right'>generated web pages and images:</td>
+        <td class='tty'>/home/weewx/public_html/</td>
+    </tr>
+    <tr>
+        <td align='right'>documentation:</td>
+        <td class='tty'>/home/weewx/docs/</td>
+    </tr>
+    <tr>
+        <td align='right'>utilities:</td>
+        <td class='tty'>/home/weewx/bin/</td>
+    </tr>
+</table>
 
 <p class='copyright'>
     &copy; <a href='copyright.htm'>Copyright</a> Tom Keffer
