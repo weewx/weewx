@@ -5157,7 +5157,20 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         have to buy every weather station ever invented, and I don't want
         my roof to look like a weather station farm!</p>
 
-    <p>Here's the general strategy for doing a port.</p>
+    <h2>General guidelines</h2>
+    <p>
+        <ul>
+            <li>The driver should emit data as it receives it from the hardware (no caching).</li>
+            <li>The driver should emit only data it receives from the hardware (no "filling in the gaps").</li>
+            <li>The driver should not modify the data unless the modification is directly related to the
+                hardware (e.g., decoding a hardware-specific sensor value).</li>
+            <li>If the hardware flags "bad data", then the driver should emit a null
+                value for that datum (Python <span class="code">None</span>).</li>
+            <li>The driver should not calculate any derived variables (such as dewpoint). The service
+                <span class="code">StdWXService</span> will do that.</li>
+            <li>However, if the hardware emits a derived variable, then the driver should emit it.</li>
+        </ul>
+    </p>
 
     <h2>Implement the driver</h2>
 
