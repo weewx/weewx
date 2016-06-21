@@ -632,7 +632,7 @@ class AmbientThread(RESTThread):
        using the Ambient PWS protocol."""
     
     def __init__(self, queue, manager_dict,
-                 station, password, server_url,
+                 station, password, server_url, post_indoor_observations=False,
                  protocol_name="Unknown-Ambient",
                  post_interval=None, max_backlog=sys.maxint, stale=None, 
                  log_success=True, log_failure=True,
@@ -663,9 +663,13 @@ class AmbientThread(RESTThread):
         self.station = station
         self.password = password
         self.server_url = server_url
+        self.formats = AmbientThread._FORMATS
+        if to_bool(post_indoor_observations):
+            self.formats = dict(AmbientThread._FORMATS)
+            self.formats.update(AmbientThread._INDOOR_FORMATS)
 
     # Types and formats of the data to be published:
-    _formats = {'dateTime'    : 'dateutc=%s',
+    _FORMATS = {'dateTime'    : 'dateutc=%s',
                 'barometer'   : 'baromin=%.3f',
                 'outTemp'     : 'tempf=%.1f',
                 'outHumidity' : 'humidity=%03.0f',
@@ -689,6 +693,10 @@ class AmbientThread(RESTThread):
                 'leafWet2'    : "leafwetness2=%03.0f",
                 'realtime'    : 'realtime=%s',
                 'rtfreq'      : 'rtfreq=%s'}
+
+    _INDOOR_FORMATS = {
+        'inTemp' : 'intempf=%.1f',
+        'inHumidity' : 'indoorhumidity=%03.0f'}
     
     def format_url(self, record):
         """Return an URL for posting using the Ambient protocol."""
@@ -703,7 +711,7 @@ class AmbientThread(RESTThread):
         
         # Go through each of the supported types, formatting it, then adding
         # to _liststr:
-        for _key in AmbientThread._formats:
+        for _key in self.formats:
             _v = record.get(_key)
             # Check to make sure the type is not null
             if _v is not None:
@@ -715,7 +723,7 @@ class AmbientThread(RESTThread):
                     # things.
                     _v = urllib.quote(str(datetime.datetime.utcfromtimestamp(_v)))
                 # Format the value, and accumulate in _liststr:
-                _liststr.append(AmbientThread._formats[_key] % _v)
+                _liststr.append(self.formats[_key] % _v)
         # Now stick all the pieces together with an ampersand between them:
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
@@ -752,7 +760,7 @@ class WOWThread(AmbientThread):
     """Class for posting to the WOW variant of the Ambient protocol."""
     
     # Types and formats of the data to be published:
-    _formats = {'dateTime'    : 'dateutc=%s',
+    _FORMATS = {'dateTime'    : 'dateutc=%s',
                 'barometer'   : 'baromin=%.3f',
                 'outTemp'     : 'tempf=%.1f',
                 'outHumidity' : 'humidity=%.0f',
@@ -775,14 +783,14 @@ class WOWThread(AmbientThread):
 
         # Go through each of the supported types, formatting it, then adding
         # to _liststr:
-        for _key in WOWThread._formats:
+        for _key in WOWThread._FORMATS:
             _v = record.get(_key)
             # Check to make sure the type is not null
             if _v is not None:
                 if _key == 'dateTime':
                     _v = urllib.quote_plus(datetime.datetime.utcfromtimestamp(_v).isoformat(' '))
                 # Format the value, and accumulate in _liststr:
-                _liststr.append(WOWThread._formats[_key] % _v)
+                _liststr.append(WOWThread._FORMATS[_key] % _v)
         # Now stick all the pieces together with an ampersand between them:
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
@@ -1244,7 +1252,7 @@ class StationRegistryThread(RESTThread):
         
         return _record
         
-    _formats = {'station_url': 'station_url=%s',
+    _FORMATS = {'station_url': 'station_url=%s',
                 'description': 'description=%s',
                 'latitude': 'latitude=%.4f',
                 'longitude': 'longitude=%.4f',
@@ -1258,11 +1266,11 @@ class StationRegistryThread(RESTThread):
         """Return an URL for posting using the StationRegistry protocol."""
     
         _liststr = []
-        for _key in StationRegistryThread._formats:
+        for _key in StationRegistryThread._FORMATS:
             v = record[_key]
             if v is not None:
                 _liststr.append(urllib.quote_plus(
-                    StationRegistryThread._formats[_key] % v, '='))
+                    StationRegistryThread._FORMATS[_key] % v, '='))
         _urlquery = '&'.join(_liststr)
         _url = "%s?%s" % (self.server_url, _urlquery)
         return _url

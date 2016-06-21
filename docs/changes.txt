@@ -63,6 +63,8 @@ reading loop data.  Thanks to user EricG.
 
 Added solaris .smf configuration.  Thanks to user whorfin.
 
+Added option post_indoor_observations for weather underground.
+
 
 3.5.0 03/13/2016
 
