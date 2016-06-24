@@ -254,7 +254,7 @@ class SerialWrapper(BaseWrapper):
         try:
             _buffer = self.serial_port.read(chars)
         except serial.serialutil.SerialException, e:
-            syslog.syslog(syslog.LOG_ERR, "vantage: SerialException.")
+            syslog.syslog(syslog.LOG_ERR, "vantage: SerialException on read.")
             syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
             syslog.syslog(syslog.LOG_ERR, "   ****  Is there a competing process running??")
             # Reraise as a Weewx error I/O error:
@@ -265,7 +265,14 @@ class SerialWrapper(BaseWrapper):
         return _buffer
     
     def write(self, data):
-        N = self.serial_port.write(data)
+        import serial
+        try:
+            N = self.serial_port.write(data)
+        except serial.serialutil.SerialException, e:
+            syslog.syslog(syslog.LOG_ERR, "vantage: SerialException on write.")
+            syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
+            # Reraise as a Weewx error I/O error:
+            raise weewx.WeeWxIOError(e)
         # Python version 2.5 and earlier returns 'None', so it cannot be used to test for completion.
         if N is not None and N != len(data):
             raise weewx.WeeWxIOError("Expected to write %d chars; sent %d instead" % (len(data), N))
