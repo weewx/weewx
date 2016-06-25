@@ -21,7 +21,7 @@ import weewx.units
 import weewx.engine
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.0.7'
+DRIVER_VERSION = '3.0.8'
 
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
