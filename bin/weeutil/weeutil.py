@@ -911,7 +911,7 @@ def secs_to_string(secs):
     ans = ', '.join(str_list)
     return ans
 
-def timestamp_to_string(ts):
+def timestamp_to_string(ts, format_str="%Y-%m-%d %H:%M:%S %Z"):
     """Return a string formatted from the timestamp
     
     Example:
@@ -923,7 +923,7 @@ def timestamp_to_string(ts):
     ******* N/A *******     (    N/A   )
     """
     if ts:
-        return "%s (%d)" % (time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime(ts)), ts)
+        return "%s (%d)" % (time.strftime(format_str, time.localtime(ts)), ts)
     else:
         return "******* N/A *******     (    N/A   )"
 
