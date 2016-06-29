@@ -904,7 +904,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         new_temp_hum_bits = 0xFF
 
         # Check arguments are consistent.
-        if new_channel not in range(0, 8):
+        if new_channel not in range(1, 9):
             raise weewx.ViolatedPrecondition("Invalid channel %d" % new_channel)
         if new_transmitter_type not in range(0, 11):
             raise weewx.ViolatedPrecondition("Invalid transmitter type %d" % new_transmitter_type)

@@ -64,6 +64,8 @@ reading loop data.  Thanks to user EricG.
 Fixed problem with the Vantage driver where program could crash if a
 serial I/O error happens during write. Fixes issue #134.
 
+Fixed problem that prevented channel 8 from being set by the Vantage driver.
+
 Added solaris .smf configuration.  Thanks to user whorfin.
 
 Added option post_indoor_observations for weather underground.
