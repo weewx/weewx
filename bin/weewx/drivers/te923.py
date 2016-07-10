@@ -471,7 +471,7 @@ DEFAULT_OBSERVATION_MAP = {
     'h_in': 'inHumidity',
     't_1': 'outTemp',
     'h_1': 'outHumidity',
-    'bat_1': 'outBatteryStatus',
+    'bat_1': 'outTempBatteryStatus',
     'link_1': 'outLinkStatus',
     't_2': 'extraTemp1',
     'h_2': 'extraHumid1',
