@@ -443,7 +443,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.18rc6'
+DRIVER_VERSION = '0.18'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -471,7 +471,7 @@ DEFAULT_OBSERVATION_MAP = {
     'h_in': 'inHumidity',
     't_1': 'outTemp',
     'h_1': 'outHumidity',
-    'bat_1': 'outBatteryStatus',
+    'bat_1': 'outTempBatteryStatus',
     'link_1': 'outLinkStatus',
     't_2': 'extraTemp1',
     'h_2': 'extraHumid1',
@@ -1537,7 +1537,6 @@ class TE923Station(object):
         self.devh = dev.open()
         if not self.devh:
             raise weewx.WeeWxIOError('Open USB device failed')
-        self.devh.reset()
 
         # be sure kernel does not claim the interface
         try:
@@ -1553,6 +1552,8 @@ class TE923Station(object):
             self.close()
             logcrt("Unable to claim USB interface %s: %s" % (interface, e))
             raise weewx.WeeWxIOError(e)
+
+        self.devh.reset()
 
         # figure out which type of memory this station has
         self.read_memory_size()
