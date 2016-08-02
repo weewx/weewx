@@ -387,7 +387,7 @@ class WXCalculate(object):
     def _get_archive_interval(self, data):
         if 'interval' in data and data['interval']:
             # cache the interval so it can be used for loop calculations
-            self.archive_inteval = data['interval'] * 60
+            self.archive_interval = data['interval'] * 60
         return self.archive_interval
 
     def _get_temperature_12h(self, ts, archive_interval):
