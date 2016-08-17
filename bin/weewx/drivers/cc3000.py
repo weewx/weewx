@@ -132,7 +132,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--set-clock", dest="setclock", action="store_true",
                           help="set station clock to computer time")
         parser.add_option("--get-interval", dest="getint", action="store_true",
-                          help="display logger archive interval")
+                          help="display logger archive interval, in minutes")
         parser.add_option("--set-interval", dest="interval", metavar="N",
                           type=int,
                           help="set logging interval to N minutes (0-60)")
@@ -171,9 +171,9 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
         elif options.dst is not None:
             self.set_dst(options.setdst, prompt)
         elif options.getint:
-            print self.driver.station.get_interval()
+            print self.driver.station.get_interval() * 60
         elif options.interval is not None:
-            self.set_interval(options.interval, prompt)
+            self.set_interval(options.interval / 60, prompt)
         elif options.getunits:
             print self.driver.station.get_units()
         elif options.units is not None:
@@ -188,7 +188,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             print "dst:", self.driver.station.get_dst()
             print "units:", self.driver.station.get_units()
             print "memory:", self.driver.station.get_memory_status()
-            print "interval:", self.driver.station.get_interval()
+            print "interval:", self.driver.station.get_interval() * 60
             print "channel:", self.driver.station.get_channel()
             print "charger:", self.driver.station.get_charger()
             print "baro:", self.driver.station.get_baro()
@@ -495,7 +495,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         station.wakeup()
         station.set_echo()
         settings = dict()
-        settings['arcint'] = 60 * station.get_interval() # arcint is in seconds
+        settings['arcint'] = station.get_interval() * 60 # arcint is in seconds
         settings['header'] = CC3000Driver._parse_header(station.get_header())
         settings['units'] = station.get_units()
         settings['channel'] = station.get_channel()
@@ -966,7 +966,7 @@ if __name__ == '__main__':
     parser.add_option('--get-interval', dest='getint', action='store_true',
                       help='display logging interval, in seconds')
     parser.add_option('--set-interval', dest='setint', metavar='INTERVAL',
-                      help='set logging interval, in seconds')
+                      type=int, help='set logging interval, in seconds')
     parser.add_option('--clear-memory', dest='clear', action='store_true',
                       help='clear logger memory')
     parser.add_option('--reset-rain', dest='reset', action='store_true',
@@ -1003,7 +1003,7 @@ if __name__ == '__main__':
             print "dst:", s.get_dst()
             print "units:", s.get_units()
             print "memory:", s.get_memory_status()
-            print "interval:", s.get_interval()
+            print "interval:", s.get_interval() * 60
             print "channel:", s.get_channel()
             print "charger:", s.get_charger()
             print "baro:", s.get_baro()
@@ -1038,9 +1038,9 @@ if __name__ == '__main__':
         if options.setdst:
             s.set_dst(options.setdst)
         if options.getint:
-            print s.get_interval()
+            print s.get_interval() * 60
         if options.setint:
-            s.set_interval(int(options.setint))
+            s.set_interval(int(options.setint) / 60)
         if options.clear:
             s.clear_memory()
         if options.reset:
