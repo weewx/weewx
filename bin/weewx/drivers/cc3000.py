@@ -21,6 +21,8 @@ The CC3000 communicates using FTDI USB serial bridge.  The CC3000R has both
 RS-232 and RS-485 serial ports, only one of which may be used at a time.
 A long range (LR) version transmits up to 2 km using 2.4GHz.
 
+The RS232 communicates using 115200 N-8-1
+
 The instrument cluster contains a DIP switch controls with value 0-3 and a
 default of 0.  This setting prevents interference when there are multiple
 weather stations within radio range.
