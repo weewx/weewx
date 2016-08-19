@@ -75,6 +75,17 @@ Configuration
     # memory requirements.
     tranche = 250
 
+    # Some sources include UV and radiation values irrespective of whether the
+    # station is equipped with UV and solar radiation sensors. The weewx
+    # convention is to store the None value if no sensor or observation is
+    # present. Specify whether a UV and/or solar radiation sensor was present
+    # when the data to be imported was created. Set True if sensor fitted,
+    # False if not. Default is True.
+    # For a CSV import these values should be set to False if the respective
+    # observations do exist in the CSV import data but the respectived sensor
+    # was NOT present when the import data was created. Otherwise they may be
+    # set to True or omitted.
+
     # Date-time format of CSV field from which the weewx archive record
     # dateTime field is to be extracted. wee_import first attempts to interpret
     # date/time info in this format, if this fails it then attempts to
@@ -323,6 +334,18 @@ Configuration
     # memory requirements.
     tranche = 250
 
+    # Some sources include UV and radiation values irrespective of whether the
+    # station is equipped with UV and solar radiation sensors. The weewx
+    # convention is to store the None value if no sensor or observation is
+    # present. Specify whether a UV and/or solar radiation sensor was present
+    # when the data to be imported was created. Set True if sensor fitted,
+    # False if not. Default is True.
+    # For a Cumulus monthly log file import these values should be set to
+    # False if the respective sensor was NOT present otherwise they should be
+    # set to True or omitted.
+    UV = False
+    radiation = False
+
     # The units used for temperature, pressure, rain and windspeed related
     # observations in the Cumulus monthly logs are set at the Cumulus
     # Station Configuration Screen. For correct import of the monthly logs
@@ -368,6 +391,18 @@ Adding a New Import Source
                                tuple of the format (lower, upper) where lower
                                is the lower inclusive limit and upper is the
                                upper inclusive limit.
+            -   self.UV_sensor: Was a UV sensor present when the data to be
+                                imported was created. If set True then any UV
+                                data will be imported, if set False then any
+                                imported UV data will ignored and the weewx UV
+                                field set to None. Boolean.
+
+            -   self.solar_sensor: Was a solar radiation sensor present when
+                                   the data to be imported was created. If set
+                                   True then any solar radiation data will be
+                                   imported, if set False then any imported
+                                   solar radiation data will ignored and the
+                                   weewx radiation field set to None. Boolean.
 
         -   Define a period_generator() method that:
 
@@ -416,7 +451,7 @@ import weewx.wxservices
 
 from weewx.manager import open_manager_with_config
 from weewx.units import unit_nicknames, convertStd, to_std_system, ValueTuple
-from weeutil.weeutil import TimeSpan, timestamp_to_string, startOfDay, option_as_list, to_int
+from weeutil.weeutil import TimeSpan, timestamp_to_string, startOfDay, option_as_list, to_int, tobool
 
 # wee_import version number
 WEE_IMPORT_VERSION = '0.1'
@@ -752,6 +787,15 @@ class Source(object):
         # get our 'tranche' setting from our import config dict, default to 250
         self.tranche = to_int(import_config_dict.get('tranche', 250))
 
+        # Some sources include UV index and solar radiation values even if no
+        # sensor was present. The weewx convention is to store the None value
+        # when a sensor or observation does not exist. Record whether UV and/or
+        # solar radiation sensor was present.
+        # UV
+        self.UV_sensor = tobool(import_config_dict.get('UV', True))
+        # Solar radiation
+        self.solar_sensor = tobool(import_config_dict.get('radiation', True))
+
         # set some properties based on our command line options
         self.dry_run = options.dry_run
         self.calc_missing = options.calc_missing
@@ -1012,16 +1056,17 @@ class Source(object):
             else:
                 wlog.logonly(syslog.LOG_INFO, _msg)
             for key, entry in _map.iteritems():
-                _units_msg = ""
-                if 'units' in entry:
-                    _units_msg = " in units '%s'" % entry['units']
-                _msg = "     import field '%s'%s --> weewx field '%s'" % (key,
-                                                                          _units_msg,
-                                                                          entry['name'])
-                if self.verbose:
-                    wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
-                else:
-                    wlog.logonly(syslog.LOG_INFO, _msg)
+                if 'name' in entry:
+                    _units_msg = ""
+                    if 'units' in entry:
+                        _units_msg = " in units '%s'" % entry['units']
+                    _msg = "     import field '%s'%s --> weewx field '%s'" % (key,
+                                                                              _units_msg,
+                                                                              entry['name'])
+                    if self.verbose:
+                        wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
+                    else:
+                        wlog.logonly(syslog.LOG_INFO, _msg)
         elif self._header_map:
             # We have a static map that maps header fields to weewx (eg WU).
             # Step through each field name in our data.
@@ -1166,6 +1211,7 @@ class Source(object):
                 else:
                     # is our mapped field in the record
                     if self.map[_field]['name'] in _row:
+
                         # Yes it is. Try to get a value for the obs but
                         # if we can't catch the error
                         try:
@@ -1181,14 +1227,17 @@ class Source(object):
                                                                                                 _row[self.map[_field]['name']],
                                                                                                 timestamp_to_string(_rec['dateTime']))
                                 raise ValueError(_msg)
-                        # if our imported 'rain' field is cumulative
+                        # Some fields need some special processing
+
+                        # Rain - if our imported 'rain' field is cumulative
                         # (self.rain == 'cumulative') then we need to calculate
                         # the discrete rainfall for this archive period
                         if _field == "rain" and self.rain == "cumulative":
                             _rain = self.getRain(_last_rain, _temp)
                             _last_rain = _temp
                             _temp = _rain
-                        # check any wind direction fields are within our
+
+                        # Wind - check any wind direction fields are within our
                         # bounds and convert to 0 to 360 range
                         if _field == "windDir" or _field == "windGustDir":
                             if self.wind_dir[0] <= _temp <= self.wind_dir[1]:
@@ -1197,6 +1246,19 @@ class Source(object):
                             else:
                                 # outside our bounds so set to None
                                 _temp = None
+
+                        # UV - if there was no UV sensor used to create the
+                        # imported data then we need to set the imported value
+                        # to None
+                        if _field == 'UV' and not self.UV_sensor:
+                            _temp = None
+
+                        # Solar radiation - if there was no solar radiation
+                        # sensor used to create the imported data then we need
+                        # to set the imported value to None
+                        if _field == 'radiation' and not self.solar_sensor:
+                            _temp = None
+
                         # if no mapped field for a unit system we have to do
                         # field by field unit conversions
                         if _units is None:
@@ -1633,6 +1695,8 @@ class CSVSource(Source):
         wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     rain=%s, wind_direction=%s" % (self.rain, self.wind_dir)
         wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        _msg = "     UV=%s, radiation=%s" % (self.UV_sensor, self.solar_sensor)
+        wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
         wlog.printlog(syslog.LOG_INFO, _msg)
@@ -1644,6 +1708,14 @@ class CSVSource(Source):
             print "Any missing derived observations WILL be calculated."
         else:
             print "Any missing derived observations WILL NOT be calculated."
+        if self.UV_sensor:
+            print "All weewx UV fields will be set to None."
+        else:
+            print "weewx UV field will use CSV UV index field value (if it exists)."
+        if self.solar_sensor:
+            print "All weewx radiation fields will be set to None."
+        else:
+            print "weewx radiation field will use CSV solar radiation field value (if it exists)."
         if options.date:
             print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
             print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
@@ -2090,6 +2162,8 @@ class CumulusSource(Source):
         _msg = "     tranche=%s, interval=%s" % (self.tranche,
                                                  self.interval)
         wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        _msg = "     UV=%s, radiation=%s" % (self.UV_sensor, self.solar_sensor)
+        wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
         wlog.printlog(syslog.LOG_INFO, _msg)
@@ -2101,6 +2175,14 @@ class CumulusSource(Source):
             print "Any missing derived observations WILL be calculated."
         else:
             print "Any missing derived observations WILL NOT be calculated."
+        if self.UV_sensor:
+            print "All weewx UV fields will be set to None."
+        else:
+            print "weewx UV field will use Cumulus monthly log UV index field value."
+        if self.solar_sensor:
+            print "All weewx radiation fields will be set to None."
+        else:
+            print "weewx radiation field will use Cumulus monthly log solar radiation field value."
         if options.date:
             print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
             print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
