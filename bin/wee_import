@@ -82,7 +82,7 @@ Configuration
     # when the data to be imported was created. Set True if sensor fitted,
     # False if not. Default is True.
     # For a CSV import these values should be set to False if the respective
-    # observations do exist in the CSV import data but the respectived sensor
+    # observations do exist in the CSV import data but the respective sensor
     # was NOT present when the import data was created. Otherwise they may be
     # set to True or omitted.
 
@@ -456,7 +456,6 @@ from weeutil.weeutil import TimeSpan, timestamp_to_string, startOfDay, option_as
 # wee_import version number
 WEE_IMPORT_VERSION = '0.1'
 # minimum weewx version required for this version of wee_import
-# FIX ME - need to change to 3.6.0 before release
 REQUIRED_WEEWX = "3.5.0"
 
 # Minimum requirements in any explicit or implicit weewx field-to-import field
@@ -509,7 +508,7 @@ epilog = """wee_import will import data from an external source into a weewx
 
 
 def main():
-    """The main routine that kicks everthing off."""
+    """The main routine that kicks everything off."""
 
     global wlog
 
@@ -626,7 +625,7 @@ def main():
         print "**** Nothing done, exiting."
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
-    except (weewx.ViolatedPrecondition, weewx.UnsupportedFeature) as e:
+    except (weewx.ViolatedPrecondition, weewx.UnsupportedFeature), e:
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
@@ -636,7 +635,7 @@ def main():
     except SystemExit, e:
         print e
         exit(0)
-    except (ValueError, weewx.UnitError) as e:
+    except (ValueError, weewx.UnitError), e:
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
@@ -756,7 +755,7 @@ class Source(object):
                                    observation timestamp is to be derived. A
                                    string in Python datetime string format such
                                    as '%Y-%m-%d %H:%M:%S'. If the date time
-                                   data field cannot be intrepreted as a string
+                                   data field cannot be interpreted as a string
                                    wee_import attempts to interpret the field
                                    as a unix timestamp. If the field is not a
                                    valid unix timestamp an error is raised.
@@ -959,7 +958,7 @@ class Source(object):
                 _msg = 'Mapping raw import data for period %d...' % self.period_no
                 wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
                 _mapped_data = self.mapRawData(_raw_data, weewx.US)
-                _msg = 'Raw import data mapped sucessfully for period %d.' % self.period_no
+                _msg = 'Raw import data mapped successfully for period %d.' % self.period_no
                 wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
 
                 # save the mapped data to archive
@@ -1295,7 +1294,7 @@ class Source(object):
                 _rec['usUnits'] = _units
             else:
                 # no mapped field for unit system but we have already converted
-                # any necessary fileds on a field by field basis so all we need
+                # any necessary fields on a field by field basis so all we need
                 # do is set 'usUnits', any bulk conversion will be taken care of
                 # by saveToArchive()
                 _rec['usUnits'] = unit_sys
@@ -1310,7 +1309,7 @@ class Source(object):
             _records.append(_rec)
         # If we have more than 1 unique value for interval in our records it
         # could be a sign of missing data and impact the integrity of our data,
-        # so do the check and see if the user whats to continue
+        # so do the check and see if the user wants to continue
         if len(_records) > 0:
             # if we have any records to return do the unique interval check
             # before we return the records
@@ -1375,12 +1374,12 @@ class Source(object):
             archive_interval parameter in [StdArchive] in weewx.conf. In this
             case interval may or may not be the same as the difference in time
             between consecutive records. This method may be of use when the
-            import source has a known interval but may be misisng a number of
-            records which makes deriving the itnerval from the imported data
+            import source has a known interval but may be missing a number of
+            records which makes deriving the interval from the imported data
             problematic. This method is used when the interval parameter in
             wee_import.conf is 'conf'.
 
-        Input paramters:
+        Input parameters:
 
             last_ts. timestamp of the previous record.
             current_rain. timestamp of the current record.
@@ -1430,7 +1429,7 @@ class Source(object):
                                   daily or some other period). Need to return
                                   current_rain.
 
-        Input paramters:
+        Input parameters:
 
             last_rain. Previous rainfall total.
             current_rain. Current rainfall total.
@@ -1461,7 +1460,7 @@ class Source(object):
 
         Input parameters:
 
-            record: A weewx compatble archive record.
+            record: A weewx compatible archive record.
 
         Returns a weewx compatible archive record that includes any derived
         observations that were previously missing/None.
@@ -1669,7 +1668,7 @@ class CSVSource(Source):
         else:
             raise weewx.ViolatedPrecondition("CSV source file not specified.")
 
-        # inititalise our import field-to-weewx archive field map
+        # initialise our import field-to-weewx archive field map
         self.map = None
         # initialise some other properties we will need
         self.start = 1
@@ -1780,7 +1779,7 @@ class WunderSource(Source):
     """Class to interact with the Weather Underground.
 
     Uses WXDailyHistory.asp call via http to obtain historical daily weather
-    observations for a given PWS. WU uses gelocation of the requester to
+    observations for a given PWS. WU uses geolocation of the requester to
     determine the units to use when providing historical PWS records. Fields
     that can be provided with multiple possible units have the units in use
     appended to the returned field name. This means that a request for a user
@@ -1830,7 +1829,7 @@ class WunderSource(Source):
         self.wunder_config_dict = wunder_config_dict
 
         # get a few config settings from our Wunder config dict
-        # save pur station name
+        # save our station name
         if options.station:
             self.station = options.station
         else:
@@ -1854,7 +1853,7 @@ class WunderSource(Source):
         # We use the latter so force 'cumulative' for rain.
         self.rain = 'cumulative'
 
-        # inititalise our import field-to-weewx archive field map
+        # initialise our import field-to-weewx archive field map
         self.map = None
         # For a WU import we might have to import multiple days but we can only
         # get one day at a time from WU. So our start and end properties
@@ -1906,7 +1905,7 @@ class WunderSource(Source):
         request. This raw data needs to be cleaned of unnecessary
         characters/codes and an iterable returned.
 
-        Since WU gelocates any http request we do not know what units our WU
+        Since WU geolocates any http request we do not know what units our WU
         data will use until we actually receive the data. A further
         complication is that WU appends the unit abbreviation to the end of the
         returned field name for fields that can have different units. So once
@@ -1963,7 +1962,7 @@ class WunderSource(Source):
     def period_generator(self):
         """Generator function yielding a sequence of datetime objects.
 
-        This generator controls the FOR statment in the parents run() method
+        This generator controls the FOR statement in the parents run() method
         that loops over the WU days to be imported. The generator yields a
         datetime object from the range of dates to be imported."""
 
@@ -1983,7 +1982,7 @@ class CumulusSource(Source):
     """Class to interact with a Cumulus generated monthly log files.
 
     Handles the import of data from Cumulus monthly log files.Cumulus stores
-    observastion data in monthly log files. Each log file contains a month of
+    observation data in monthly log files. Each log file contains a month of
     data in CSV format. The format of the CSV data (eg field delimiter, decimal
     point character) depends upon the settings used in Cumulus.
 
@@ -2061,11 +2060,11 @@ class CumulusSource(Source):
         # rainfall since midnight and treat it as a cumulative value.
         self.rain = 'cumulative'
 
-        # inititalise our import field-to-weewx archive field map
+        # initialise our import field-to-weewx archive field map
         self.map = None
 
         # Units of measure for some obs (eg temperatures) cannot be derived from
-        # the Cumulus montly log files. These units must be specified by the
+        # the Cumulus monthly log files. These units must be specified by the
         # user in wee_import.conf. Read these units and fill in the missing
         # unit data in the header map. Do some basic error checking and
         # validation, if one of the fields is missing or invalid then we need
@@ -2237,8 +2236,8 @@ class CumulusSource(Source):
     def period_generator(self):
         """Generator function yielding a sequence of monthly log file names.
 
-        This generator controls the FOR statment in the parents run() method
-        that loops over the monhtly log files to be imported. The generator
+        This generator controls the FOR statement in the parents run() method
+        that loops over the monthly log files to be imported. The generator
         yields a monthly log file name from the list of monthly log files to
         be imported until the list is exhausted. The generator also sets the
         first_period and last_period properties."""
