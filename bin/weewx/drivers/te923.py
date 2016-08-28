@@ -382,17 +382,17 @@ The station shows up on the USB as a HID.  Control packet is 8 bytes.
 Read from station:
  0x05 (Length)
  0xAF (Read)
- Addr (Bit 17:16), Addr (Bits 15:8), Addr (Bits (7:0), CRC, Unused, Unused
+ Addr (Bit 17:16), Addr (Bits 15:8), Addr (Bits 7:0), CRC, Unused, Unused
 
 Read acknowledge:
  0x24 (Ack)
  0xAF (Read)
- Addr (Bit 17:16), Addr (Bits 15:8), Addr (Bits (7:0), CRC, Unused, Unused
+ Addr (Bit 17:16), Addr (Bits 15:8), Addr (Bits 7:0), CRC, Unused, Unused
 
 Write to station:
  0x07 (Length)
  0xAE (Write)
- Addr (Bit 17:16), Addr (Bits 15:8), Addr (Bits (7:0), Data1, Data2, Data3
+ Addr (Bit 17:16), Addr (Bits 15:8), Addr (Bits 7:0), Data1, Data2, Data3
  ... Data continue with 3 more packets of length 7 then ...
  0x02 (Length), Data32, CRC, Unused, Unused, Unused, Unused, Unused, Unused
 
