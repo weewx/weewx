@@ -427,15 +427,12 @@ Adding a New Import Source
         new class when required.
 """
 
-from __future__ import with_statement
-
 # Python imports
 import optparse
 
 from distutils.version import StrictVersion
 
 # weewx imports
-import weecfg
 import weewx
 import weeimport
 import weeimport.weeimport
@@ -445,19 +442,16 @@ WEE_IMPORT_VERSION = '0.1'
 # minimum weewx version required for this version of wee_import
 REQUIRED_WEEWX = "3.5.0"
 
-# Instance of our logger
-wlog = None
-
 description = """Import observation data into a weewx archive."""
 
 usage = """wee_import --help
        wee_import --version
        wee_import --import-config=IMPORT_CONFIG_FILE
             [--config=CONFIG_FILE]
-            [--date YYYY/MM/DD|YYYY/MM/DD hh:mm-YYYY/MM/DD hh:mm]
+            [--date YYYY/MM/DD|YYYY/MM/DD hh:mm|YYYY/MM/DD (hh:mm)-YYYY/MM/DD (hh:mm)]
             [--dry-run]
             [--verbose]
-            [--log=None|LOG_FACILITY]
+            [--log=-|LOG_FILE]
 """
 
 epilog = """wee_import will import data from an external source into a weewx
@@ -469,8 +463,6 @@ epilog = """wee_import will import data from an external source into a weewx
 def main():
     """The main routine that kicks everything off."""
 
-    global wlog
-
     # Create a command line parser:
     parser = optparse.OptionParser(description=description,
                                    usage=usage,
@@ -478,27 +470,30 @@ def main():
 
     # Add the various options:
     parser.add_option("--config", dest="config_path", type=str,
-                      metavar="CONFIG_FILE", default='weewx.conf',
+                      metavar="CONFIG_FILE", default="weewx.conf",
                       help="Use weewx configuration file CONFIG_FILE.")
     parser.add_option("--import-config", dest="import_config_path", type=str,
-                      metavar="IMPORT_CONFIG_FILE", default='wee_import.conf',
-                      help="Use wee_import configuration file CONFIG_FILE.")
-    parser.add_option('--dry-run', dest='dry_run', action='store_true',
-                      help='Print what would happen but do not do it.')
+                      metavar="IMPORT_CONFIG_FILE", default="wee_import.conf",
+                      help="Use wee_import configuration file IMPORT_CONFIG_FILE.")
+    parser.add_option("--dry-run", dest="dry_run", action="store_true",
+                      help="Print what would happen but do not do it.")
     parser.add_option("--date", dest="date", type=str, metavar="YYYY-MM-DD",
-                      help="Date to import as a string of form \"YYYY-MM-DD\" "
-                           "or a date range of form \"YYYY-MM-DD hh:mm-"
-                           "YYYY-MM-DD hh:mm\"")
-    parser.add_option('--log', dest='logging', type=str, metavar="LOG_FACILITY",
-                      help="Control logging of most output. If omitted or "
-                           "LOG_FACILITY is 'weewx' then logs are written to the "
-                           "same log used by weewx. If LOG_FACILITY is 'syslog' "
-                           "then logs are written to syslog. Logging is turned "
-                           "off if LOG_FACILITY is None.")
+                      help="Date or time to import as a string of form "
+                           "'YYYY-MM-DD' or 'YYYY-MM-DD hh:mm'. A date range or "
+                           "date-time range may be specified by separating two "
+                           "date strings or two date-time strings with a hyphen. "
+                           "Argument must be enclosed in quotation marks.")
+    parser.add_option("--log", dest="logging", type=str, metavar="LOG_FILE",
+                      help="Control logging of most output. Log output is sent "
+                           "to LOG_FILE if specified. Log output is turned off "
+                           "by using '--log=-'. Default is to log output to file "
+                           "'wee_import_YYYMMDDhhmmss.log' located in the same "
+                           "folder as IMPORT_CONFIG_FILE where YYYMMDDhhmmss "
+                           "represents the date and time wee_import was run.")
     parser.add_option("--verbose", action="store_true", dest="verbose",
                       help="Print useful extra output.")
-    parser.add_option('--version', dest='version', action='store_true',
-                      help='Display wee_import version number.')
+    parser.add_option("--version", dest="version", action="store_true",
+                      help="Display wee_import version number.")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
