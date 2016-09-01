@@ -4,6 +4,8 @@
 #    See the file LICENSE.txt for your full rights.
 #
 
+from __future__ import with_statement
+
 """Module providing the base classes and API for importing observational data
 into weewx.
 """

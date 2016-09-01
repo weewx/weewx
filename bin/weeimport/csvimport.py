@@ -4,12 +4,15 @@
 #    See the file LICENSE.txt for your full rights.
 #
 
-"""Module to interract with a CSV file and import raw observational data for 
+"""Module to interract with a CSV file and import raw observational data for
 use with weeimport.
 """
 
+from __future__ import with_statement
+
 # Python imports
 import csv
+import logging
 import os
 import syslog
 

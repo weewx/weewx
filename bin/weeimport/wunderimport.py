@@ -4,13 +4,16 @@
 #    See the file LICENSE.txt for your full rights.
 #
 
-"""Module to interract with Weather Underground PWS history and import raw 
+"""Module to interract with Weather Underground PWS history and import raw
 observational data for use with weeimport.
 """
+
+from __future__ import with_statement
 
 # Python imports
 import csv
 import datetime
+import logging
 import syslog
 import urllib2
 

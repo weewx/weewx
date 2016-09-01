@@ -3,13 +3,16 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Module to interract with Cumulus monthly log files and import raw 
+"""Module to interract with Cumulus monthly log files and import raw
 observational data for use with weeimport.
 """
+
+from __future__ import with_statement
 
 # Python imports
 import csv
 import glob
+import logging
 import os
 import syslog
 import time
