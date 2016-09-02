@@ -159,6 +159,7 @@ class WXCalculate(object):
         self.temperature_12h_ago = None
         self.ts_12h_ago = None
         self.rain_events = []
+        self.archive_rain_events = []
 
         # report about which values will be calculated...
         syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following values will be calculated: %s" %
@@ -261,9 +262,8 @@ class WXCalculate(object):
     def calc_rainRate(self, data, data_type):
         # if this is a loop packet then cull and add to the queue
         if data_type == 'loop':
-            # punt any old events from the event list...
-            if (self.rain_events and
-                self.rain_events[0][0] <= data['dateTime'] - self.rain_period):
+            # punt any old events from the loop event list...
+            if (self.rain_events and self.rain_events[0][0] <= data['dateTime'] - self.rain_period):
                 events = []
                 for e in self.rain_events:
                     if e[0] > data['dateTime'] - self.rain_period:
@@ -272,10 +272,27 @@ class WXCalculate(object):
             # ...then add new rain event if there is one
             if 'rain' in data and data['rain']:
                 self.rain_events.append((data['dateTime'], data['rain']))
+        elif data_type == 'archive':
+            # punt any old events from the archive event list...
+            if (self.archive_rain_events and self.archive_rain_events[0][0] <= data['dateTime'] - self.rain_period):
+                events = []
+                for e in self.archive_rain_events:
+                    if e[0] > data['dateTime'] - self.rain_period:
+                        events.append((e[0], e[1]))
+                self.archive_rain_events = events
+            # ...then add new rain event if there is one
+            if 'rain' in data and data['rain']:
+                self.archive_rain_events.append((data['dateTime'], data['rain']))
         # for both loop and archive, add up the rain...
         rainsum = 0
-        for e in self.rain_events:
-            rainsum += e[1]
+        if len(self.rain_events) != 0:
+            # we have loop rain events so add them up
+            for e in self.rain_events:
+                rainsum += e[1]
+        elif data_type == 'archive':
+            # no loop rain events but do we have any archive rain events
+            for e in self.archive_rain_events:
+                rainsum += e[1]
         # ...then divide by the period and scale to an hour
         data['rainRate'] = 3600 * rainsum / self.rain_period
 
