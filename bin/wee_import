@@ -527,6 +527,7 @@ Adding a New Import Source
 """
 
 # Python imports
+import logging
 import optparse
 
 from distutils.version import StrictVersion
