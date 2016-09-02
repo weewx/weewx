@@ -113,10 +113,6 @@ class Source(object):
         # give our source object some logging abilities
         self.wlog = log
 
-        # tell our user (and more importantly the logs) that we are starting
-        # wee_import before any other 'housekeeping' messages are printed/logged
-        self.wlog.printlog(logging.INFO, "Starting wee_import...")
-
         # save our weewx config dict
         self.config_dict = config_dict
 
@@ -984,10 +980,9 @@ class WeeImportLog(object):
         self.log = log_dest != '-'
         # if we are to log then setup our logger
         if self.log:
-            print "we are logging so set it up"
             # have we been given an explicit log destination?
             if log_dest is None:
-                # no, so use default which is to log to same folder as our
+                # no, so use default which is to log to same directory as our
                 # import config file and use log file name of
                 # 'weeimport_YYYMMDDhhmmss.log'
                 (head, tail) = os.path.split(import_config_path)

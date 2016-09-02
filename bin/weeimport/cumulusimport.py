@@ -40,7 +40,7 @@ class CumulusSource(weeimport.Source):
     data in CSV format. The format of the CSV data (eg field delimiter, decimal
     point character) depends upon the settings used in Cumulus.
 
-    Data is imported from all month log files found in the source folder one
+    Data is imported from all month log files found in the source directory one
     log file at a time. Units of measure are not specified in the monthly log
     files so the units of measure must be specified in the wee_import config
     file. Whilst the Cumulus monthly log file format is well defined, some
@@ -187,9 +187,9 @@ class CumulusSource(weeimport.Source):
 
         # get our source file path
         try:
-            self.source = cumulus_config_dict['folder']
+            self.source = cumulus_config_dict['directory']
         except KeyError:
-            raise weewx.ViolatedPrecondition("Cumulus monthly logs folder not specified in '%s'." % import_config_path)
+            raise weewx.ViolatedPrecondition("Cumulus monthly logs directory not specified in '%s'." % import_config_path)
 
         # Now get a list on monthly log files sorted from oldest to newest
         month_log_list = glob.glob(self.source + '/?????log.txt')
@@ -198,7 +198,7 @@ class CumulusSource(weeimport.Source):
                                               key = lambda el : (el[1], el[2]))]
         if len(self.log_list) == 0:
             raise weeimport.WeeImportIOError(
-                "No Cumulus monthly logs found in folder '%s'." % self.source)
+                "No Cumulus monthly logs found in directory '%s'." % self.source)
 
         # tell the user/log what we intend to do
         _msg = "An import from Cumulus monthly log files has been requested."

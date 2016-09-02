@@ -22,7 +22,7 @@ Design
    as field maps etc. Details of the supported command line parameters/options
    can be viewed by entering wee_import --help at the command line. Details of
    the wee_import config file settings can be found in sample import conf files
-   distributed in the weewx/util/import folder.
+   distributed in the weewx/util/import directory.
 
    wee_import utilises an abstract base class that defines the majority of the
    wee_import functionality. The abstract base class and other supporting
@@ -320,9 +320,9 @@ source = CSV
 [Cumulus]
     # Parameters used when importing Cumulus monthly log files
     #
-    # Folder containing Cumulus monthly log files to be imported. Format is:
-    #   folder = full path without trailing /
-    folder = /var/tmp/cumulus
+    # Directory containing Cumulus monthly log files to be imported. Format is:
+    #   directory = full path without trailing /
+    directory = /var/tmp/cumulus
 
     # When importing Cumulus monthly log file data the following weewx database
     # fields will be populated directly by the imported data:
@@ -588,7 +588,7 @@ def main():
                            "to LOG_FILE if specified. Log output is turned off "
                            "by using '--log=-'. Default is to log output to file "
                            "'wee_import_YYYMMDDhhmmss.log' located in the same "
-                           "folder as IMPORT_CONFIG_FILE where YYYMMDDhhmmss "
+                           "directory as IMPORT_CONFIG_FILE where YYYMMDDhhmmss "
                            "represents the date and time wee_import was run.")
     parser.add_option("--verbose", action="store_true", dest="verbose",
                       help="Print useful extra output.")
@@ -609,6 +609,10 @@ def main():
         print "wee_import version: %s" % WEE_IMPORT_VERSION
         exit(0)
 
+    # If we made it this far we want to do something so advise the user we are 
+    # starting up
+    print "Starting wee_import..."
+    
     # Set up logging
     wlog = weeimport.weeimport.WeeImportLog(options.logging,
                                             options.verbose,
