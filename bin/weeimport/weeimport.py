@@ -371,7 +371,7 @@ class Source(object):
                 else:
                     # otherwise its invalid so ignore it
                     pass
-            # dd some crude error checking
+            # do some crude error checking
             # we must have a dateTime entry
             if _map['dateTime'] is not None:
                 # do we have a unit system specified (ie a 'usUnits' entry)
@@ -969,7 +969,7 @@ class WeeImportLog(object):
         """Initialise our log environment."""
 
         # Flag to indicate whether we are logging to file or not. Log to file
-        # everytime except when logging is explicitly turned off on the
+        # every time except when logging is explicitly turned off on the
         # command line
         self.log = log_dest != '-'
         # if we are to log then setup our logger

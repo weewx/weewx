@@ -61,7 +61,7 @@ Configuration
 # Specify the source. Available options are:
 #   CSV - import obs from a single CSV format file
 #   Wunder - import obs from a Weather Underground PWS history
-#   Cumuls - import obs from a one or more Cumulus monthly log files
+#   Cumulus - import obs from a one or more Cumulus monthly log files
 # Format is:
 #   source = (CSV | Wunder | Cumulus)
 source = CSV

@@ -4,7 +4,7 @@
 #    See the file LICENSE.txt for your full rights.
 #
 
-"""Module to interract with Weather Underground PWS history and import raw
+"""Module to interact with Weather Underground PWS history and import raw
 observational data for use with weeimport.
 """
 

@@ -3,7 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Module to interract with Cumulus monthly log files and import raw
+"""Module to interact with Cumulus monthly log files and import raw
 observational data for use with weeimport.
 """
 

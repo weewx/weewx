@@ -4,7 +4,7 @@
 #    See the file LICENSE.txt for your full rights.
 #
 
-"""Module to interract with a CSV file and import raw observational data for
+"""Module to interact with a CSV file and import raw observational data for
 use with weeimport.
 """
 
