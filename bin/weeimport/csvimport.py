@@ -21,6 +21,7 @@ import weeimport
 import weewx
 
 from weeutil.weeutil import timestamp_to_string, option_as_list
+from weewx.units import unit_nicknames
 
 
 # ============================================================================
@@ -105,10 +106,10 @@ class CSVSource(weeimport.Source):
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
         self.wlog.printlog(logging.INFO, _msg)
-        if self.dry_run:
-            print "This is a dry run, imported data WILL NOT be saved to archive."
-        else:
-            print "This is NOT a dry run, imported data WILL be saved to archive."
+        _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
+                                                                        self.archive_unit_sys,
+                                                                        unit_nicknames[self.archive_unit_sys])
+        self.wlog.printlog(logging.INFO, _msg)
         if self.calc_missing:
             print "Any missing derived observations WILL be calculated."
         else:
@@ -124,6 +125,10 @@ class CSVSource(weeimport.Source):
         if options.date:
             print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
             print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
+        if self.dry_run:
+            print "This is a dry run, imported data WILL NOT be saved to archive."
+        else:
+            print "This is NOT a dry run, imported data WILL be saved to archive."
 
     def getRawData(self, period):
         """Obtain an iterable containing the raw data to be imported.

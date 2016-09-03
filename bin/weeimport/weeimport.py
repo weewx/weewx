@@ -27,7 +27,7 @@ import weewx
 import weewx.wxservices
 
 from weewx.manager import open_manager_with_config
-from weewx.units import unit_nicknames, convertStd, to_std_system, ValueTuple
+from weewx.units import unit_constants, unit_nicknames, convertStd, to_std_system, ValueTuple
 from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool, _get_object
 
 # List of sources we support
@@ -137,18 +137,6 @@ class Source(object):
         self.dry_run = options.dry_run
         self.verbose = options.verbose
 
-        # parameters required to obtain a WXCalculate object
-        stn_dict = config_dict['Station']
-        altitude_t = option_as_list(stn_dict.get('altitude', (None, None)))
-        try:
-            altitude_vt = weewx.units.ValueTuple(float(altitude_t[0]),
-                                                 altitude_t[1],
-                                                 "group_altitude")
-        except KeyError, e:
-            raise weewx.ViolatedPrecondition(
-                "Value 'altitude' needs a unit (%s)" % e)
-        latitude_f = float(stn_dict['latitude'])
-        longitude_f = float(stn_dict['longitude'])
         # get some weewx database info
         self.db_binding_wx = get_binding(config_dict)
         self.dbm = open_manager_with_config(config_dict, self.db_binding_wx,
@@ -156,11 +144,34 @@ class Source(object):
                                             default_binding_dict={'table_name': 'archive',
                                                                   'manager': 'weewx.wxmanager.WXDaySummaryManager',
                                                                   'schema': 'schemas.wview.schema'})
-        # get a WXCalculate object
-        self.wxcalculate = weewx.wxservices.WXCalculate(config_dict,
-                                                        altitude_vt,
-                                                        latitude_f,
-                                                        longitude_f)
+        # get the unit system used in our db
+        if self.dbm.std_unit_system is None:
+            # we have a fresh archive (ie no records) so cannot deduce
+            # the unit system in use, so go to our config_dict
+            self.archive_unit_sys = unit_constants[self.config_dict['StdConvert'].get('target_unit','US')]
+        else:
+            # get our unit system from the archive db
+            self.archive_unit_sys = self.dbm.std_unit_system
+        if self.calc_missing:
+            # parameters required to obtain a WXCalculate object
+            stn_dict = config_dict['Station']
+            altitude_t = option_as_list(stn_dict.get('altitude', (None, None)))
+            try:
+                altitude_vt = weewx.units.ValueTuple(float(altitude_t[0]),
+                                                     altitude_t[1],
+                                                     "group_altitude")
+            except KeyError, e:
+                raise weewx.ViolatedPrecondition(
+                    "Value 'altitude' needs a unit (%s)" % e)
+            latitude_f = float(stn_dict['latitude'])
+            longitude_f = float(stn_dict['longitude'])
+            # get a WXCalculate object
+            self.wxcalculate = weewx.wxservices.WXCalculate(config_dict,
+                                                            altitude_vt,
+                                                            latitude_f,
+                                                            longitude_f)
+        else:
+            self.wxcalculate = None
 
         # initialise a few properties we will need during the import
         # answer flags
@@ -217,8 +228,6 @@ class Source(object):
         self.total_rec_proc = 0
         # total unique records identified
         self.total_unique_rec = 0
-        # unit system of our archive
-        self.archive_unit_sys = None
         # time we started to first save
         self.t1 = None
 
@@ -503,7 +512,7 @@ class Source(object):
                     raise WeeImportFieldError(
                         "Field '%s' not found in source data." % self.map['usUnits']['name'])
                 # we have a value but is it valid
-                if _raw_units in weewx.units.unit_nicknames:
+                if _raw_units in unit_nicknames:
                     # it is valid so use it
                     _units = _raw_units
                 else:
@@ -833,6 +842,14 @@ class Source(object):
                      (in dict form) to be written to archive
         """
 
+        if self.first_period:
+            # collect the time for some stats reporting later
+            self.t1 = time.time()
+            # it's convenient to give this message now
+            if self.dry_run:
+                print 'Starting dry run import ...'
+            else:
+                print 'Starting import ...'
         # do we have any records?
         if records and len(records) > 0:
             # we do, confirm the user actually wants to save them
@@ -846,29 +863,6 @@ class Source(object):
                 self.ans = raw_input("Are you sure you want to proceed (y/n)? ")
             if self.ans == 'y' or self.dry_run:
                 # we are going to save them
-                # if it's our first collection of records then provide some info
-                # on the import
-                if self.first_period:
-                    # collect the time for some stats reporting later
-                    self.t1 = time.time()
-                    if archive.std_unit_system is None:
-                        # we have a fresh archive (ie no records) so cannot deduce
-                        # the unit system in use, so go to our config_dict
-                        self.archive_unit_sys = getattr(weewx,
-                                                        self.config_dict['StdConvert'].get('target_unit',
-                                                                                           'US'))
-                    else:
-                        # get our unit system from the archive
-                        self.archive_unit_sys = archive.std_unit_system
-                    _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (archive.table_name,
-                                                                                   self.archive_unit_sys,
-                                                                                   weewx.units.unit_nicknames[self.archive_unit_sys])
-                    self.wlog.printlog(logging.INFO, _msg)
-                    # it's convenient to give this message now
-                    if self.dry_run:
-                        print 'Starting dry run import, no records will added to the archive ...'
-                    else:
-                        print 'Starting import ...'
                 # reset record counter
                 nrecs = 0
                 # initialise our list of records for this tranche
