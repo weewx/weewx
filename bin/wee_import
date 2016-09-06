@@ -91,6 +91,15 @@ source = CSV
     #   interval = (derive | conf | x)
     interval = derive
 
+    # Should the [StdQC] max/min limits in weewx.conf be applied to the
+    # imported data. This may be useful if the source has extreme values that
+    # are clear incorrect for some observations. Available options are:
+    #   True  - weewx.conf [StdQC] max/min limits are applied.
+    #   False - weewx.conf [StdQC] max/min limits are not applied.
+    # Format is:
+    #   weewx_qc = (True | False)
+    weewx_qc = True
+
     # Should any missing derived observations be calculated from the imported
     # data if possible. Available options are:
     #   True  - Any missing derived observations are calculated.
@@ -282,6 +291,15 @@ source = CSV
     #   interval = (derive | conf | x)
     interval = x
 
+    # Should the [StdQC] max/min limits in weewx.conf be applied to the
+    # imported data. This may be useful if the source has extreme values that
+    # are clear incorrect for some observations. Available options are:
+    #   True  - weewx.conf [StdQC] max/min limits are applied.
+    #   False - weewx.conf [StdQC] max/min limits are not applied.
+    # Format is:
+    #   weewx_qc = (True | False)
+    weewx_qc = True
+
     # Should any missing derived observations be calculated from the imported
     # data if possible. Available options are:
     #   True  - Any missing derived observations are calculated.
@@ -385,6 +403,15 @@ source = CSV
     # Format is:
     #   interval = (derive | conf | x)
     interval = x
+
+    # Should the [StdQC] max/min limits in weewx.conf be applied to the
+    # imported data. This may be useful if the source has extreme values that
+    # are clear incorrect for some observations. Available options are:
+    #   True  - weewx.conf [StdQC] max/min limits are applied.
+    #   False - weewx.conf [StdQC] max/min limits are not applied.
+    # Format is:
+    #   weewx_qc = (True | False)
+    weewx_qc = True
 
     # Should any missing derived observations be calculated from the imported
     # data if possible. Available options are:
@@ -574,7 +601,7 @@ def main():
                       help="Use weewx configuration file CONFIG_FILE.")
     parser.add_option("--import-config", dest="import_config_path", type=str,
                       metavar="IMPORT_CONFIG_FILE", default="wee_import.conf",
-                      help="Use wee_import configuration file IMPORT_CONFIG_FILE.")
+                      help="Use import configuration file IMPORT_CONFIG_FILE.")
     parser.add_option("--dry-run", dest="dry_run", action="store_true",
                       help="Print what would happen but do not do it.")
     parser.add_option("--date", dest="date", type=str, metavar="YYYY-MM-DD",

@@ -121,6 +121,8 @@ class Source(object):
         self.interval = import_config_dict.get('interval', 'derive')
         # tranche, default to 250
         self.tranche = to_int(import_config_dict.get('tranche', 250))
+        # apply QC, default to True
+        self.apply_qc = tobool(import_config_dict.get('weewx_qc', True))
         # calc-missing, default to True
         self.calc_missing = tobool(import_config_dict.get('calc_missing', True))
 
@@ -172,6 +174,9 @@ class Source(object):
                                                             longitude_f)
         else:
             self.wxcalculate = None
+
+        # get ourselves an ImportQC object to do QC on imported records
+        self.import_QC = ImportQC(config_dict, log)
 
         # initialise a few properties we will need during the import
         # answer flags
@@ -798,6 +803,23 @@ class Source(object):
             # we have no previous rain value so return zero
             return 0.0
 
+    def qc(self, record):
+        """ Apply weewx.conf QC to a record.
+
+        If qc option is set in the import config file then apply and StdQC
+        checks specfied in weewx.conf.
+
+        Input parameters:
+
+            record: A weewx compatible archive record.
+
+        Returns nothing. record is modified directly with obs outside of QC
+        limits set to None.
+        """
+
+        if self.apply_qc:
+            self.import_QC.apply_qc(record)
+
     def calcMissing(self, record):
         """ Add missing observations to a record.
 
@@ -825,9 +847,12 @@ class Source(object):
         records is processed and saved to archive in transactions of
         self.tranche records at a time.
 
-        Uses weewx API addRecord() method to add archive records. No change is
-        made to the daily summaries so these will need to be rebuilt if any
-        records are imported.
+        Quality checks on the imported record are performed using the weewx
+        StdQC configuration from weewx.conf if the import config file qc option
+        was set. Any missing derived observations are then added to the archive
+        record using the weewx WXCalculate class if the import config file
+        calc_missing option was set. weewx API addRecord() method is used to
+        add archive records.
 
         If --dry-run was set then nothing is saved to archive, only the counts
         and progress/summary messages are printed. If --dry-run was not set
@@ -876,10 +901,12 @@ class Source(object):
                     print "Period %d ..." % self.period_no
                 # step through each record in this period
                 for _rec in records:
-                    # convert our record if reqd and add any derived obs that we
-                    # can to our record
-                    _final_rec = self.calcMissing(weewx.units.to_std_system(_rec,
-                                                                            self.archive_unit_sys))
+                    # convert our record
+                    _conv_rec = to_std_system(_rec, self.archive_unit_sys)
+                    # perform any any required QC checks
+                    self.qc(_conv_rec)
+                    # now add any derived obs that we can to our record
+                    _final_rec = self.calcMissing(_rec)
                     # add the record to our tranche and increment our count
                     _tranche.append(_final_rec)
                     nrecs += 1
@@ -922,16 +949,6 @@ class Source(object):
                 # update our counts
                 self.total_rec_proc += nrecs
                 self.total_unique_rec += len(unique_set)
-                # if this was the last period then display a suitable message
-                if self.last_period:
-                    tdiff = time.time() - self.t1
-                    if self.dry_run:
-                        print "Finished dry run import. %d records were processed and %d unique records would have been imported." % (self.total_rec_proc, self.total_unique_rec)
-                    else:
-                        _msg = "Finished import. %d raw records resulted in %d unique records being processed in %.2f seconds." % (self.total_rec_proc, self.total_unique_rec, tdiff)
-                        self.wlog.printlog(logging.INFO, _msg)
-                        print 'Whilst %d unique records were processed those with a timestamp already in the archive' % (self.total_unique_rec,)
-                        print 'will not have been imported. Confirm successful import in syslog or weewx log file.'
             elif self.ans == 'n':
                 # user does not want to import so display a message and then
                 # ask to exit
@@ -948,9 +965,30 @@ class Source(object):
                 # multiple periods
                 _msg = 'Period %d - no records identified for import.' % self.period_no
             print _msg
-            if self.last_period and self.total_rec_proc == 0:
-                _msg = 'No records were identified for import. Exiting. Nothing done.'
+            if self.last_period:
+                if self.total_rec_proc == 0:
+                    _msg = 'No records were identified for import. Exiting. Nothing done.'
+                    self.wlog.printlog(logging.INFO, _msg)
+                else:
+                    if self.dry_run:
+                        print "Finished dry run import. %d records were processed and %d unique records would have been imported." % (self.total_rec_proc, self.total_unique_rec)
+                    else:
+                        tdiff = time.time() - self.t1
+                        _msg = "Finished import. %d raw records resulted in %d unique records being processed in %.2f seconds." % (self.total_rec_proc, self.total_unique_rec, tdiff)
+                        self.wlog.printlog(logging.INFO, _msg)
+                        print 'Whilst %d unique records were processed those with a timestamp already in the archive' % (self.total_unique_rec,)
+                        print 'will not have been imported. Confirm successful import in syslog or weewx log file.'
+            return
+        # do any final summary logging if we have finished all the periods
+        if self.last_period:
+            if self.dry_run:
+                print "Finished dry run import. %d records were processed and %d unique records would have been imported." % (self.total_rec_proc, self.total_unique_rec)
+            else:
+                tdiff = time.time() - self.t1
+                _msg = "Finished import. %d raw records resulted in %d unique records being processed in %.2f seconds." % (self.total_rec_proc, self.total_unique_rec, tdiff)
                 self.wlog.printlog(logging.INFO, _msg)
+                print 'Whilst %d unique records were processed those with a timestamp already in the archive' % (self.total_unique_rec,)
+                print 'will not have been imported. Confirm successful import in syslog or weewx log file.'
 
 
 # ============================================================================
@@ -1021,6 +1059,66 @@ class WeeImportLog(object):
         if verbose:
             print message
             self.logonly(level, message)
+
+
+# ============================================================================
+#                              class ImportQC
+# ============================================================================
+
+
+class ImportQC(object):
+    """Class to perform weewx like quality check on imported records."""
+
+    def __init__(self, config_dict, log):
+
+        # give our object some logging abilities
+        self.wlog = log
+
+        # If the 'StdQC' or 'MinMax' sections do not exist in the configuration
+        # dictionary, then an exception will get thrown and nothing will be
+        # done.
+        try:
+            mm_dict = config_dict['StdQC']['MinMax']
+        except KeyError:
+            self.wlog.printlog(logging.INFO,
+                               "No QC information in weewx config file.")
+            return
+
+        self.min_max_dict = {}
+
+        target_unit_name = config_dict['StdConvert']['target_unit']
+        target_unit = weewx.units.unit_constants[target_unit_name.upper()]
+        converter = weewx.units.StdUnitConverters[target_unit]
+
+        for obs_type in mm_dict.scalars:
+            minval = float(mm_dict[obs_type][0])
+            maxval = float(mm_dict[obs_type][1])
+            if len(mm_dict[obs_type]) == 3:
+                group = weewx.units._getUnitGroup(obs_type)
+                vt = (minval, mm_dict[obs_type][2], group)
+                minval = converter.convert(vt)[0]
+                vt = (maxval, mm_dict[obs_type][2], group)
+                maxval = converter.convert(vt)[0]
+            self.min_max_dict[obs_type] = (minval, maxval)
+
+    def apply_qc(self, record):
+        """Apply quality check to the data in a record."""
+
+        # print "in apply_wc"
+        # print "self.min_max_dict=%s" % self.min_max_dict
+        # print "record=%s" % record
+        for obs_type in self.min_max_dict:
+            # print "obs_type=%s" % obs_type
+            if record.has_key(obs_type) and record[obs_type] is not None:
+                if not self.min_max_dict[obs_type][0] <= record[obs_type] <= self.min_max_dict[obs_type][1]:
+                    _msg = "%s record value '%s' %s outside limits (%s, %s)" % (timestamp_to_string(record['dateTime']),
+                                                                                obs_type, record[obs_type],
+                                                                                self.min_max_dict[obs_type][0],
+                                                                                self.min_max_dict[obs_type][1])
+                    self.wlog.printlog(logging.INFO, _msg)
+                    record[obs_type] = None
+                    # print "set %s to None" % obs_type
+
 
 
 # ============================================================================
