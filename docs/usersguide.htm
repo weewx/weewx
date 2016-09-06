@@ -2452,7 +2452,9 @@ longitude = -77.0366</pre>
 
     <p class="config_important">secure_ftp</p>
 
-    <p>Set to <span class="code">True</span> to use a secure FTP (SFTP) connection. Not
+    <p>Set to <span class="code">True</span> to use FTP (FTPS) over TLS. This is an extension to the FTP
+        protocol that uses a Secure Socket Layer (SSL) protocol, <em>not</em> to be confused with
+        SFTP, which uses a Secure Socket Shell protocol. Not
         all FTP servers support this. In particular, the Microsoft FTP server seems to do a poor
         job of it. Requires Python V2.7. Will not work with older versions of Python.
         Optional. Default is <span class="code">False</span></p>
