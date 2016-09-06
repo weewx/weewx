@@ -481,21 +481,21 @@ usage = """wee_import --help
             [--config=CONFIG_FILE]
             [--import-config=IMPORT_CONFIG_FILE]
             --source=CSV_SOURCE_FILE
-            [--date YYYY/MM/DD|YYYY/MM/DD hh:mm-YYYY/MM/DD hh:mm]
+            [--date "YYYY/MM/DD|YYYY/MM/DD hh:mm-YYYY/MM/DD hh:mm"]
             [--calc-missing] [--dry-run]
             [--log=None|LOG_FACILITY] [--verbose]
        wee_import --wunder
             [--config=CONFIG_FILE]
             [--import-config=IMPORT_CONFIG_FILE]
             --station=PWS_NAME
-            [--date YYYY/MM/DD|YYYY/MM/DD hh:mm-YYYY/MM/DD hh:mm]
+            [--date "YYYY/MM/DD|YYYY/MM/DD hh:mm-YYYY/MM/DD hh:mm"]
             [--calc-missing] [--dry-run]
             [--log=None|LOG_FACILITY] [--verbose]
        wee_import --cumulus
             [--config=CONFIG_FILE]
             [--import-config=IMPORT_CONFIG_FILE]
             --source=MONTHLY_LOGS_FOLDER
-            [--date YYYY/MM/DD|YYYY/MM/DD hh:mm-YYYY/MM/DD hh:mm]
+            [--date "YYYY/MM/DD|YYYY/MM/DD hh:mm-YYYY/MM/DD hh:mm"]
             [--calc-missing] [--dry-run]
             [--log=None|LOG_FACILITY] [--verbose]
        wee_import --version
@@ -545,10 +545,10 @@ def main():
     parser.add_option('--station', dest='station', type=str,
                       metavar="PWS_NAME",
                       help="Station name to be used (eg, \"KORHOODR3\").")
-    parser.add_option("--date", dest="date", type=str, metavar="YYYY-MM-DD",
-                      help="Date to import as a string of form \"YYYY-MM-DD\" "
-                           "or a date range of form \"YYYY-MM-DD hh:mm-"
-                           "YYYY-MM-DD hh:mm\"")
+    parser.add_option("--date", dest="date", type=str, metavar="YYYY/MM/DD",
+                      help="Date to import as a string of form \"YYYY/MM/DD\" "
+                           "or a date range of form \"YYYY/MM/DD hh:mm-"
+                           "YYYY/MM/DD hh:mm\"")
     parser.add_option('--log', dest='logging', type=str,
                       metavar="LOG_FACILITY", default='weewx',
                       help="Control logging of most output. If omitted or "
