@@ -81,7 +81,7 @@
   <li>Support for multiple skins</li>
   <li>Support sqlite and MySQL</li>
   <li>Optional uploads to Weather Underground, CWOP, AWEKAS, WOW, and others</li>
-  <li>Uploads to your website via FTP, SFTP, or rsync</li>
+  <li>Uploads to your website via FTP, FTPS, or rsync</li>
   <li>Extensive almanac information</li>
 </ul>
 

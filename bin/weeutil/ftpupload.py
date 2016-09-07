@@ -47,7 +47,7 @@ class FtpUpload(object):
         max_tries: How many times to try creating a directory or uploading
         a file before giving up [Optional. Default is 3]
         
-        secure: Set to True to attempt a secure FTP (SFTP) session.
+        secure: Set to True to attempt an FTP over TLS (FTPS) session.
         
         debug: Set to 1 for extra debug information, 0 otherwise.
         """
@@ -73,7 +73,7 @@ class FtpUpload(object):
                 FTPClass = ftplib.FTP_TLS
             except AttributeError:
                 FTPClass = ftplib.FTP
-                syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Your version of Python does not support SFTP. Using unsecure connection.")
+                syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Your version of Python does not support FTPS. Using insecure connection.")
                 self.secure = False
         else:
             FTPClass = ftplib.FTP
