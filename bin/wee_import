@@ -575,7 +575,7 @@ usage = """wee_import --help
        wee_import --version
        wee_import --import-config=IMPORT_CONFIG_FILE
             [--config=CONFIG_FILE]
-            [--date YYYY/MM/DD|YYYY/MM/DD hh:mm|YYYY/MM/DD (hh:mm)-YYYY/MM/DD (hh:mm)]
+            [--date=YYYY/MM/DD|'YYYY/MM/DD hh:mm'|'YYYY/MM/DD (hh:mm)-YYYY/MM/DD (hh:mm)']
             [--dry-run]
             [--verbose]
             [--log=-|LOG_FILE]
@@ -606,10 +606,11 @@ def main():
                       help="Print what would happen but do not do it.")
     parser.add_option("--date", dest="date", type=str, metavar="YYYY-MM-DD",
                       help="Date or time to import as a string of form "
-                           "'YYYY-MM-DD' or 'YYYY-MM-DD hh:mm'. A date range or "
+                           "YYYY/MM/DD or 'YYYY/MM/DD hh:mm'. A date range or "
                            "date-time range may be specified by separating two "
                            "date strings or two date-time strings with a hyphen. "
-                           "Argument must be enclosed in quotation marks.")
+                           "Arguments that include hh:mm must be enclosed in "
+                           "quotation marks.")
     parser.add_option("--log", dest="logging", type=str, metavar="LOG_FILE",
                       help="Control logging of most output. Log output is sent "
                            "to LOG_FILE if specified. Log output is turned off "
