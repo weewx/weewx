@@ -1227,6 +1227,8 @@ class Station(object):
             if DEBUG_DECODE:
                 logdbg('%s %s' % (_fmt_bytes(buf), pkt))
             return pkt
+        except IndexError, e:
+            raise WMR300Error("cannot decode buffer: %s" % e)
         except AttributeError:
             raise WMR300Error("unknown packet type %02x: %s" %
                               (buf[0], _fmt_bytes(buf)))
