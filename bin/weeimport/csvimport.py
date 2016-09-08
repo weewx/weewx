@@ -12,7 +12,6 @@ from __future__ import with_statement
 
 # Python imports
 import csv
-import logging
 import os
 import syslog
 
@@ -84,32 +83,32 @@ class CSVSource(weeimport.Source):
 
         # tell the user/log what we intend to do
         _msg = "A CSV import from source file '%s' has been requested." % self.source
-        self.wlog.printlog(logging.INFO, _msg)
+        self.wlog.printlog(syslog.LOG_INFO, _msg)
         _msg = "The following options will be used:"
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     source=%s, date=%s" % (self.source, options.date)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
                                                      self.calc_missing)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     tranche=%s, interval=%s, date/time_string_format=%s" % (self.tranche,
                                                                              self.interval,
                                                                              self.raw_datetime_format)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     rain=%s, wind_direction=%s" % (self.rain, self.wind_dir)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     UV=%s, radiation=%s" % (self.UV_sensor, self.solar_sensor)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
-        self.wlog.printlog(logging.INFO, _msg)
+        self.wlog.printlog(syslog.LOG_INFO, _msg)
         _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
                                                                         self.archive_unit_sys,
                                                                         unit_nicknames[self.archive_unit_sys])
-        self.wlog.printlog(logging.INFO, _msg)
+        self.wlog.printlog(syslog.LOG_INFO, _msg)
         if self.calc_missing:
             print "Any missing derived observations WILL be calculated."
         else:
@@ -180,4 +179,6 @@ class CSVSource(weeimport.Source):
         return a single value before it is exhausted.
         """
 
+        self.first_period = True
+        self.last_period = True
         yield 1

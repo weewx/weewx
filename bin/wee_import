@@ -16,16 +16,16 @@ Compatibility:
 
 Design
 
-   wee_import utilises a config file and a number of command line options to
-   control the import. The config file defines the type of input to be
-   performed and the import data source as well as more advanced options such
-   as field maps etc. Details of the supported command line parameters/options
-   can be viewed by entering wee_import --help at the command line. Details of
-   the wee_import config file settings can be found in sample import conf files
-   distributed in the weewx/util/import directory.
+   wee_import utilises a config file (the import config file) and a number of
+   command line options to control the import. The config file defines the type
+   of input to be performed and the import data source as well as more advanced
+   options such as field maps etc. Details of the supported command line
+   parameters/options can be viewed by entering wee_import --help at the command
+   line. Details of the wee_import config file settings can be found in example
+   import config files distributed in the weewx/util/import directory.
 
-   wee_import utilises an abstract base class that defines the majority of the
-   wee_import functionality. The abstract base class and other supporting
+   wee_import utilises an abstract base class Source that defines the majority
+   of the wee_import functionality. The abstract base class and other supporting
    structures are in bin/weeimport/weeimport.py. Child classes are created from
    the base class for each different import type supported by wee_import. The
    child classes set a number of import type specific properties as well as
@@ -39,7 +39,7 @@ Design
    As with other weewx utilities, wee_import advises the user of basic
    configuration, action taken and results via stdout. However, since
    wee_import can make substantial changes to the weewx archive, wee_import also
-   logs to a file by default. This functionality is controlled via a command
+   logs to file by default. This functionality is controlled via a command
    line option.
 
 Prerequisites
@@ -504,18 +504,6 @@ Adding a New Import Source
                                tuple of the format (lower, upper) where lower
                                is the lower inclusive limit and upper is the
                                upper inclusive limit.
-            -   self.UV_sensor: Was a UV sensor present when the data to be
-                                imported was created. If set True then any UV
-                                data will be imported, if set False then any
-                                imported UV data will ignored and the weewx UV
-                                field set to None. Boolean.
-
-            -   self.solar_sensor: Was a solar radiation sensor present when
-                                   the data to be imported was created. If set
-                                   True then any solar radiation data will be
-                                   imported, if set False then any imported
-                                   solar radiation data will ignored and the
-                                   weewx radiation field set to None. Boolean.
 
         -   Define a period_generator() method that:
 
@@ -554,8 +542,8 @@ Adding a New Import Source
 """
 
 # Python imports
-import logging
 import optparse
+import syslog
 
 from distutils.version import StrictVersion
 
@@ -578,7 +566,7 @@ usage = """wee_import --help
             [--date=YYYY/MM/DD|'YYYY/MM/DD hh:mm'|'YYYY/MM/DD (hh:mm)-YYYY/MM/DD (hh:mm)']
             [--dry-run]
             [--verbose]
-            [--log=-|LOG_FILE]
+            [--log=-]
 """
 
 epilog = """wee_import will import data from an external source into a weewx
@@ -600,7 +588,7 @@ def main():
                       metavar="CONFIG_FILE", default="weewx.conf",
                       help="Use weewx configuration file CONFIG_FILE.")
     parser.add_option("--import-config", dest="import_config_path", type=str,
-                      metavar="IMPORT_CONFIG_FILE", default="wee_import.conf",
+                      metavar="IMPORT_CONFIG_FILE",
                       help="Use import configuration file IMPORT_CONFIG_FILE.")
     parser.add_option("--dry-run", dest="dry_run", action="store_true",
                       help="Print what would happen but do not do it.")
@@ -611,13 +599,13 @@ def main():
                            "date strings or two date-time strings with a hyphen. "
                            "Arguments that include hh:mm must be enclosed in "
                            "quotation marks.")
-    parser.add_option("--log", dest="logging", type=str, metavar="LOG_FILE",
-                      help="Control logging of most output. Log output is sent "
-                           "to LOG_FILE if specified. Log output is turned off "
-                           "by using '--log=-'. Default is to log output to file "
-                           "'wee_import_YYYMMDDhhmmss.log' located in the same "
-                           "directory as IMPORT_CONFIG_FILE where YYYMMDDhhmmss "
-                           "represents the date and time wee_import was run.")
+    parser.add_option("--log", dest="logging", type=str, metavar="-",
+                      help="Control wee_import log output. By default log output "
+                           "is sent to the same log file as used by weewx. "
+                           "wee_import logging may be disabled by using '--log=-'."
+                           "Some weewx API log output cannot be controlled by "
+                           "wee_import and will be sent to to the default log file "
+                           "irrespective of the '--log' option.")
     parser.add_option("--verbose", action="store_true", dest="verbose",
                       help="Print useful extra output.")
     parser.add_option("--version", dest="version", action="store_true",
@@ -637,15 +625,13 @@ def main():
         print "wee_import version: %s" % WEE_IMPORT_VERSION
         exit(0)
 
-    # If we made it this far we want to do something so advise the user we are 
-    # starting up
-    print "Starting wee_import..."
-    
     # Set up logging
     wlog = weeimport.weeimport.WeeImportLog(options.logging,
                                             options.verbose,
-                                            options.dry_run,
-                                            options.import_config_path)
+                                            options.dry_run)
+
+    # advise the user we are starting up
+    wlog.printlog(syslog.LOG_INFO, "Starting wee_import...")
 
     # If we got this far we must want to import something so get a Source
     # object from our factory and try to import. Be prepared to catch any
@@ -656,28 +642,28 @@ def main():
                                                               wlog)
         source_obj.run()
     except weeimport.weeimport.WeeImportIOError, e:
-        wlog.printlog(logging.INFO, "**** Unable to load source file.")
-        wlog.printlog(logging.INFO, "**** %s" % e)
+        wlog.printlog(syslog.LOG_INFO, "**** Unable to load source file.")
+        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
-        wlog.logonly(logging.INFO, "**** Nothing done.")
+        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
     except weeimport.weeimport.WeeImportFieldError, e:
-        wlog.printlog(logging.INFO, "**** Unable to map source data.")
-        wlog.printlog(logging.INFO, "**** %s" % e)
+        wlog.printlog(syslog.LOG_INFO, "**** Unable to map source data.")
+        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
-        wlog.logonly(logging.INFO, "**** Nothing done.")
+        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
     except weeimport.weeimport.WeeImportMapError, e:
-        wlog.printlog(logging.INFO,
+        wlog.printlog(syslog.LOG_INFO,
                       "**** Unable to parse source-to-weewx field map.")
-        wlog.printlog(logging.INFO, "**** %s" % e)
+        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
-        wlog.logonly(logging.INFO, "**** Nothing done.")
+        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
     except (weewx.ViolatedPrecondition, weewx.UnsupportedFeature), e:
-        wlog.printlog(logging.INFO, "**** %s" % e)
+        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
-        wlog.logonly(logging.INFO, "**** Nothing done.")
+        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         print
         parser.print_help()
         exit(1)
@@ -685,15 +671,15 @@ def main():
         print e
         exit(0)
     except (ValueError, weewx.UnitError), e:
-        wlog.printlog(logging.INFO, "**** %s" % e)
+        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
-        wlog.logonly(logging.INFO, "**** Nothing done.")
+        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
     except IOError, e:
-        wlog.printlog(logging.INFO, "**** Unable to load config file.")
-        wlog.printlog(logging.INFO, "**** %s" % e)
+        wlog.printlog(syslog.LOG_INFO, "**** Unable to load config file.")
+        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
-        wlog.logonly(logging.INFO, "**** Nothing done.")
+        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
 
 # execute our main code

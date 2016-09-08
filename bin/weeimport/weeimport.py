@@ -12,7 +12,6 @@ into weewx.
 
 # Python imports
 import datetime
-import logging
 import os.path
 import re
 import sys
@@ -33,7 +32,6 @@ from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool,
 # List of sources we support
 SUPPORTED_SOURCES = ['CSV', 'Wunder', 'Cumulus']
 
-### Is this required?
 # Minimum requirements in any explicit or implicit weewx field-to-import field
 # map
 MINIMUM_MAP = {'dateTime': {'units': 'unix_epoch'},
@@ -73,21 +71,23 @@ class Source(object):
     """ Abstract base class used for interacting with an external data source
         to import records into the weewx archive.
 
-    Child classes must define a getRawData() method which:
-    -   gets the raw observation data and returns an iterable yielding data
-        dicts whose fields can be mapped to a weewx archive field.
-    -   defines an import data field-to-weewx archive field map (self.map).
-
-    __init__() must also define the following properties:
+    __init__() must define the following properties:
         self.dry_run      - Is this a dry run (ie do not save imported records
-                            to archive). [True|False]
+                            to archive). [True|False].
         self.calc_missing - Calculate any missing derived observations.
-                            [True|False]
+                            [True|False].
         self.tranche      - Number of records to be written to archive in a
-                            single transaction. Integer
+                            single transaction. Integer.
         self.interval     - Method of determining interval value if interval
                             field not included in data source.
-                            ['config'|'derive']
+                            ['config'|'derive'|x] where x is an integer.
+
+    Child classes are used to interract with a specific source (eg CSV file,
+    WU). Any such child classes must define a getRawData() method which:
+        -   gets the raw observation data and returns an iterable yielding data
+            dicts whose fields can be mapped to a weewx archive field
+        -   defines an import data field-to-weewx archive field map (self.map)
+
         self.raw_datetime_format - Format of date time data field from which
                                    observation timestamp is to be derived. A
                                    string in Python datetime string format such
@@ -104,10 +104,10 @@ class Source(object):
     def __init__(self, config_dict, import_config_dict, options, log):
         """A generic initialisation.
 
-        Set some realistic default values for tranche, interval and
-        raw_datetime_format. Obtain altitude, latitude, longitude and a
-        database manager object so that a WXCalculate object can be created to
-        handle adding any missing derived observations to the imported records.
+        Set some realistic default values for options read from the import
+        config file. Obtain objects to handle missing derived obs (if required)
+        and QC on imported data. Parse any --date command line option so we
+        know what records to import.
         """
 
         # give our source object some logging abilities
@@ -125,19 +125,14 @@ class Source(object):
         self.apply_qc = tobool(import_config_dict.get('weewx_qc', True))
         # calc-missing, default to True
         self.calc_missing = tobool(import_config_dict.get('calc_missing', True))
-
         # Some sources include UV index and solar radiation values even if no
         # sensor was present. The weewx convention is to store the None value
         # when a sensor or observation does not exist. Record whether UV and/or
         # solar radiation sensor was present.
-        # UV, default to true
+        # UV, default to True
         self.UV_sensor = tobool(import_config_dict.get('UV', True))
         # solar, default to True
         self.solar_sensor = tobool(import_config_dict.get('radiation', True))
-
-        # set some properties based on our command line options
-        self.dry_run = options.dry_run
-        self.verbose = options.verbose
 
         # get some weewx database info
         self.db_binding_wx = get_binding(config_dict)
@@ -154,6 +149,8 @@ class Source(object):
         else:
             # get our unit system from the archive db
             self.archive_unit_sys = self.dbm.std_unit_system
+
+        # do we need a WXCalculate object, if so get one
         if self.calc_missing:
             # parameters required to obtain a WXCalculate object
             stn_dict = config_dict['Station']
@@ -178,15 +175,9 @@ class Source(object):
         # get ourselves an ImportQC object to do QC on imported records
         self.import_QC = ImportQC(config_dict, log)
 
-        # initialise a few properties we will need during the import
-        # answer flags
-        self.ans = None
-        self.interval_ans = None
-        # properties to help with processing multi-period imports
-        self.first_period = True
-        self.last_period = False
-        self.period_no = 1
-
+        # Process our command line options
+        self.dry_run = options.dry_run
+        self.verbose = options.verbose
         # If a --date command line option was used then we need to determine
         # the time span over which we will import any records. We will import
         # records that have dateTime > self.first_ts and <=self.last_ts.
@@ -229,6 +220,14 @@ class Source(object):
             self.first_ts = None
             self.last_ts = None
 
+        # initialise a few properties we will need during the import
+        # answer flags
+        self.ans = None
+        self.interval_ans = None
+        # properties to help with processing multi-period imports
+        self.first_period = True
+        self.last_period = False
+        self.period_no = 1
         # total records processed
         self.total_rec_proc = 0
         # total unique records identified
@@ -300,60 +299,67 @@ class Source(object):
 
                 # get the raw data
                 _msg = 'Obtaining raw import data for period %d...' % self.period_no
-                self.wlog.verboselog(logging.INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
                 _raw_data = self.getRawData(period)
                 _msg = 'Raw import data read successfully for period %d.' % self.period_no
-                self.wlog.verboselog(logging.INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
 
                 # map the raw data to a weewx archive compatible dictionary
                 _msg = 'Mapping raw import data for period %d...' % self.period_no
-                self.wlog.verboselog(logging.INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
                 _mapped_data = self.mapRawData(_raw_data, weewx.US)
                 _msg = 'Raw import data mapped successfully for period %d.' % self.period_no
-                self.wlog.verboselog(logging.INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
 
                 # save the mapped data to archive
                 _msg = 'Saving mapped data to archive for period %d...' % self.period_no
-                self.wlog.verboselog(logging.INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
                 self.saveToArchive(archive, _mapped_data)
                 _msg = 'Mapped data saved to archive successfully for period %d.' % self.period_no
-                self.wlog.verboselog(logging.INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
 
                 # increment our period counter
                 self.period_no += 1
+            # provide some summary info now that we have finished the import
+            _msg = "Finished import. %d raw records resulted in %d unique records being processed in %.2f seconds." % (self.total_rec_proc,
+                                                                                                                       self.total_unique_rec,
+                                                                                                                       self.tdiff)
+            self.wlog.printlog(syslog.LOG_INFO, _msg)
+            print 'Whilst %d unique records were processed those with a timestamp already in the archive' % (self.total_unique_rec, )
+            print 'will not have been imported. Confirm successful import in weewx log file.'
 
     def parseMap(self, source_type, source, import_config_dict):
         """Produce a source field-to-weewx archive field data map.
 
         Data from an external source can be mapped to the weewx archive using a
-        fixed map (WU) or through a user defined map in the wee_import conf file.
+        fixed map (WU) or through a user defined map in the import config file.
         First look for a map in the wee_import conf file, if the map is valid
         then return it. If the map is not valid or not found then return the
         default map.
 
         Input parameters:
 
-            source_type: String holding name of the stanza in
-                         import_config_dict holding the config details for the
+            source_type: String holding name of the section in
+                         import_config_dict the holds config details for the
                          source being used.
 
-            source: Iterable holding the source data. Used if something like
-                    import field names are included in the source data (eg CSV).
+            source: Iterable holding the source data. Used if import field
+                    names are included in the source data (eg CSV).
 
             import_config_dict: wee_import config dict.
 
         Returns a map as a dictionary of elements with each element structured
         as follows:
 
-            'archive_name': {'name': 'field_name', 'units': 'unit_name'}
+            'arch_filed_name': {'name': 'field_name', 'units': 'unit_name'}
 
             where:
 
-                archive_name is an observation name in the weewx database
-                schema
-                field_name is the name of a field from the external source
-                unit_name is the name of the units, as defined in weewx, used
-                by field_name
+                - arch_filed_name is an observation name in the weewx database
+                  schema
+                - field_name is the name of a field from the external source
+                - unit_name is the weewx unit name of the units used by
+                  field_name
         """
 
         # start with the minimum map
@@ -402,9 +408,9 @@ class Source(object):
             # will use
             _msg = "The following imported field-to-weewx field map will be used:"
             if self.verbose:
-                self.wlog.verboselog(logging.INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
             else:
-                self.wlog.logonly(logging.INFO, _msg)
+                self.wlog.logonly(syslog.LOG_INFO, _msg)
             for key, entry in _map.iteritems():
                 if 'name' in entry:
                     _units_msg = ""
@@ -414,9 +420,9 @@ class Source(object):
                                                                               _units_msg,
                                                                               entry['name'])
                     if self.verbose:
-                        self.wlog.verboselog(logging.INFO, _msg, self.verbose)
+                        self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
                     else:
-                        self.wlog.logonly(logging.INFO, _msg)
+                        self.wlog.logonly(syslog.LOG_INFO, _msg)
         elif self._header_map:
             # We have a static map that maps header fields to weewx (eg WU).
             # Step through each field name in our data.
@@ -631,11 +637,11 @@ class Source(object):
                         if self.map[_field]['name'] not in _warned:
                             _msg = "Warning: Import field '%s' is mapped to weewx field '%s'" % (self.map[_field]['name'],
                                                                                                  _field)
-                            self.wlog.printlog(logging.INFO, _msg)
+                            self.wlog.printlog(syslog.LOG_INFO, _msg)
                             _msg = "         but the import field could not be found."
-                            self.wlog.printlog(logging.INFO, _msg)
+                            self.wlog.printlog(syslog.LOG_INFO, _msg)
                             _msg = "         weewx field '%s' will be set to 'None'." % _field
-                            self.wlog.printlog(logging.INFO, _msg)
+                            self.wlog.printlog(syslog.LOG_INFO, _msg)
                             # make sure we do this warning once only
                             _warned.append(self.map[_field]['name'])
             # if we have a mapped field for a unit system with a valid value,
@@ -673,7 +679,7 @@ class Source(object):
                     break
             if _diff_interval and self.interval_ans != 'y':
                 # we had more than one unique value for interval, warn the user
-                self.wlog.printlog(logging.INFO, "Warning: Records to be imported contain multiple different 'interval' values.")
+                self.wlog.printlog(syslog.LOG_INFO, "Warning: Records to be imported contain multiple different 'interval' values.")
                 print "         This may mean the imported data is missing some records and it may lead"
                 print "         to data integrity issues. If the raw data has a known, fixed interval value"
                 print "         setting the relevant 'interval' setting in wee_import config to this value"
@@ -685,26 +691,26 @@ class Source(object):
                     # processed some records. So log it then raise a SystemExit()
                     if self.dry_run:
                         print "Dry run import aborted by user. %d records were processed." % self.total_rec_proc
-                        self.wlog.logonly(logging.INFO, 'User chose to abort import. Exiting. Nothing done.')
+                        self.wlog.logonly(syslog.LOG_INFO, 'User chose to abort import. Exiting. Nothing done.')
                         raise SystemExit('Exiting. Nothing done.')
                     else:
                         print "Whilst %d records were processed those with a timestamp already in the archive" % self.total_rec_proc
                         print "will not have been imported. Confirm successful import in syslog or weewx log file."
                         _msg = "User chose to abort import. %d records were processed. Exiting." % self.total_rec_proc
-                        self.wlog.logonly(logging.INFO, _msg)
+                        self.wlog.logonly(syslog.LOG_INFO, _msg)
                         if self.total_rec_proc > 0:
-                            print "As the import was aborted before completion refer to the syslog or weewx log"
+                            print "As the import was aborted before completion refer to the weewx log"
                             print "file to confirm which records were imported."
                             raise SystemExit('Exiting.')
                         raise SystemExit('Exiting. Nothing done.')
-            self.wlog.verboselog(logging.INFO,
+            self.wlog.verboselog(syslog.LOG_INFO,
                                  "Mapped %d records." % len(_records),
                                  self.verbose)
             # the user wants to continue or we have only one unique value for
             # interval so return the records
             return _records
         else:
-            self.wlog.verboselog(logging.INFO,
+            self.wlog.verboselog(syslog.LOG_INFO,
                                  "Mapped 0 records.",
                                  self.verbose)
             # we have no records to return so return None
@@ -756,7 +762,7 @@ class Source(object):
                 if _interval < 0:
                     # so raise an error
                     _msg = "Cannot derive 'interval' for record timestamp: %s." % timestamp_to_string(current_ts)
-                    self.wlog.printlog(logging.INFO, _msg)
+                    self.wlog.printlog(syslog.LOG_INFO, _msg)
                     raise ValueError(
                         "Raw data is not in ascending date time order.")
             except TypeError:
@@ -806,8 +812,8 @@ class Source(object):
     def qc(self, record):
         """ Apply weewx.conf QC to a record.
 
-        If qc option is set in the import config file then apply and StdQC
-        checks specfied in weewx.conf.
+        If qc option is set in the import config file then apply any StdQC
+        min/max checks specfied in weewx.conf.
 
         Input parameters:
 
@@ -823,8 +829,8 @@ class Source(object):
     def calcMissing(self, record):
         """ Add missing observations to a record.
 
-        If --calc_missing was used on the command line then add any missing
-        derived observations (ie observation is missing or None) to the
+        If calc_missing option is True in the import config file then add any
+        missing derived observations (ie observation is missing or None) to the
         imported record. The weewx WxCalculate class is used to add any missing
         observations.
 
@@ -847,17 +853,16 @@ class Source(object):
         records is processed and saved to archive in transactions of
         self.tranche records at a time.
 
-        Quality checks on the imported record are performed using the weewx
-        StdQC configuration from weewx.conf if the import config file qc option
-        was set. Any missing derived observations are then added to the archive
-        record using the weewx WXCalculate class if the import config file
-        calc_missing option was set. weewx API addRecord() method is used to
-        add archive records.
+        if the import config file qc option was set quality checks on the
+        imported record are performed using the weewx StdQC configuration from
+        weewx.conf . Any missing derived observations are then added to the
+        archive record using the weewx WXCalculate class if the import config
+        file calc_missing option was set. weewx API addRecord() method is used
+        to add archive records.
 
-        If --dry-run was set then nothing is saved to archive, only the counts
-        and progress/summary messages are printed. If --dry-run was not set
-        then the user is requested to confirm the import before any records are
-        saved to archive.
+        If --dry-run was set then every aspect of the import is carried out but
+        nothing is saved to archive. If --dry-run was not set then the user is
+        requested to confirm the import before any records are saved to archive.
 
         Input parameters:
 
@@ -952,7 +957,7 @@ class Source(object):
             elif self.ans == 'n':
                 # user does not want to import so display a message and then
                 # ask to exit
-                self.wlog.logonly(logging.INFO,
+                self.wlog.logonly(syslog.LOG_INFO,
                                   'User chose not to import records. Exiting. Nothing done.')
                 raise SystemExit('Exiting. Nothing done.')
         else:
@@ -968,27 +973,21 @@ class Source(object):
             if self.last_period:
                 if self.total_rec_proc == 0:
                     _msg = 'No records were identified for import. Exiting. Nothing done.'
-                    self.wlog.printlog(logging.INFO, _msg)
+                    self.wlog.printlog(syslog.LOG_INFO, _msg)
                 else:
                     if self.dry_run:
-                        print "Finished dry run import. %d records were processed and %d unique records would have been imported." % (self.total_rec_proc, self.total_unique_rec)
+                        print "Finished dry run import. %d records were processed and %d unique records would have been imported." % (self.total_rec_proc,
+                                                                                                                                      self.total_unique_rec)
                     else:
-                        tdiff = time.time() - self.t1
-                        _msg = "Finished import. %d raw records resulted in %d unique records being processed in %.2f seconds." % (self.total_rec_proc, self.total_unique_rec, tdiff)
-                        self.wlog.printlog(logging.INFO, _msg)
-                        print 'Whilst %d unique records were processed those with a timestamp already in the archive' % (self.total_unique_rec,)
-                        print 'will not have been imported. Confirm successful import in syslog or weewx log file.'
+                        self.tdiff = time.time() - self.t1
             return
         # do any final summary logging if we have finished all the periods
         if self.last_period:
             if self.dry_run:
-                print "Finished dry run import. %d records were processed and %d unique records would have been imported." % (self.total_rec_proc, self.total_unique_rec)
+                print "Finished dry run import. %d records were processed and %d unique records would have been imported." % (self.total_rec_proc,
+                                                                                                                              self.total_unique_rec)
             else:
-                tdiff = time.time() - self.t1
-                _msg = "Finished import. %d raw records resulted in %d unique records being processed in %.2f seconds." % (self.total_rec_proc, self.total_unique_rec, tdiff)
-                self.wlog.printlog(logging.INFO, _msg)
-                print 'Whilst %d unique records were processed those with a timestamp already in the archive' % (self.total_unique_rec,)
-                print 'will not have been imported. Confirm successful import in syslog or weewx log file.'
+                self.tdiff = time.time() - self.t1
 
 
 # ============================================================================
@@ -999,53 +998,46 @@ class Source(object):
 class WeeImportLog(object):
     """Class to handle wee_import logging.
 
-    This class utilises the python logging module to log wee_import output to
-    a file.
+    This class provides a wrapper around the python syslog module to handle
+    wee_import logging requirements. The --log=- command line option disables
+    log output otherwise log output is sent to the same log used by weewx.
     """
 
-    def __init__(self, log_dest, verbose, dry_run, import_config_path):
+    def __init__(self, opt_logging, verbose, dry_run):
         """Initialise our log environment."""
 
+        # first check if we are turning off log to file or not
+        if opt_logging:
+            log_bool = opt_logging.strip() == '-'
+        else:
+            log_bool = False
         # Flag to indicate whether we are logging to file or not. Log to file
         # every time except when logging is explicitly turned off on the
-        # command line
-        self.log = log_dest != '-'
-        # if we are to log then setup our logger
+        # command line or its a dry run.
+        self.log = not (dry_run or log_bool)
+        # if we are logging then setup our syslog environment
+        # if --verbose we log up to syslog.LOG_DEBUG
+        # otherwise just log up to syslog.LOG_INFO
         if self.log:
-            # have we been given an explicit log destination?
-            if log_dest is None:
-                # no, so use default which is to log to same directory as our
-                # import config file and use log file name of
-                # 'weeimport_YYYMMDDhhmmss.log'
-                (head, tail) = os.path.split(import_config_path)
-                _file = time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))
-                _file = 'weeimport_' + _file + '.log'
-                log_file = os.path.join(head, _file)
-            else:
-                # yes, so do some rudimentary checking
-                log_file = log_dest
-
-            # now setup the logger
-            self.logger = logging.getLogger('weeimport')
-            handler = logging.FileHandler(log_file)
-            formatter = logging.Formatter('%(asctime)s - [%(process)d]: %(name)s: %(levelname)s: %(message)s',
-                                          "%b %d %H:%M:%S")
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
-            # set log level depending on verbosity
+            syslog.openlog(logoption=syslog.LOG_PID | syslog.LOG_CONS)
             if verbose:
-                self.logger.setLevel(logging.DEBUG)
+                syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
             else:
-                self.logger.setLevel(logging.INFO)
-            # let the user know what we are doing
-            print "Log output will be written to '%s'" % log_file
+                syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+        # logging by other modules (eg WxCalculate) does not use WeeImportLog
+        # but we can disable most logging by raising the log priority if its a
+        # dry run
+        if dry_run:
+            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_CRIT))
 
     def logonly(self, level, message):
         """Log to file only."""
 
         # are we logging ?
         if self.log:
-            self.logger.log(level, message)
+             # add a little preamble to say this is wee_import
+            _message = 'wee_import: ' + message
+            syslog.syslog(level, _message)
 
     def printlog(self, level, message):
         """Print to screen and log to file."""
@@ -1080,14 +1072,14 @@ class ImportQC(object):
         try:
             mm_dict = config_dict['StdQC']['MinMax']
         except KeyError:
-            self.wlog.printlog(logging.INFO,
+            self.wlog.printlog(syslog.LOG_INFO,
                                "No QC information in weewx config file.")
             return
 
         self.min_max_dict = {}
 
         target_unit_name = config_dict['StdConvert']['target_unit']
-        target_unit = weewx.units.unit_constants[target_unit_name.upper()]
+        target_unit = unit_constants[target_unit_name.upper()]
         converter = weewx.units.StdUnitConverters[target_unit]
 
         for obs_type in mm_dict.scalars:
@@ -1104,21 +1096,20 @@ class ImportQC(object):
     def apply_qc(self, record):
         """Apply quality check to the data in a record."""
 
-        # print "in apply_wc"
-        # print "self.min_max_dict=%s" % self.min_max_dict
-        # print "record=%s" % record
+        # step through each ob type for which we have QC limits
         for obs_type in self.min_max_dict:
-            # print "obs_type=%s" % obs_type
+            # do we have that obs in our record and does it have a vallue
             if record.has_key(obs_type) and record[obs_type] is not None:
+                # is our obs value outside our QC limits
                 if not self.min_max_dict[obs_type][0] <= record[obs_type] <= self.min_max_dict[obs_type][1]:
+                    # yes, inform the user if we applied a QC limit
                     _msg = "%s record value '%s' %s outside limits (%s, %s)" % (timestamp_to_string(record['dateTime']),
                                                                                 obs_type, record[obs_type],
                                                                                 self.min_max_dict[obs_type][0],
                                                                                 self.min_max_dict[obs_type][1])
-                    self.wlog.printlog(logging.INFO, _msg)
+                    self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    # finally set the offending obs to None
                     record[obs_type] = None
-                    # print "set %s to None" % obs_type
-
 
 
 # ============================================================================

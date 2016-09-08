@@ -12,7 +12,6 @@ from __future__ import with_statement
 # Python imports
 import csv
 import glob
-import logging
 import os
 import syslog
 import time
@@ -121,8 +120,7 @@ class CumulusSource(weeimport.Source):
 
         # Units of measure for some obs (eg temperatures) cannot be derived from
         # the Cumulus monthly log files. These units must be specified by the
-        # user in wee_import.conf. Read these units and fill in the missing
-        # unit data in the header map. Do some basic error checking and
+        # missing unit data in the header map. Do some basic error checking and
         # validation, if one of the fields is missing or invalid then we need
         # to catch the error and raise it as we can't go on.
         # Temperature
@@ -203,29 +201,29 @@ class CumulusSource(weeimport.Source):
 
         # tell the user/log what we intend to do
         _msg = "An import from Cumulus monthly log files has been requested."
-        self.wlog.printlog(logging.INFO, _msg)
+        self.wlog.printlog(syslog.LOG_INFO, _msg)
         _msg = "The following options will be used:"
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     source=%s, date=%s" % (self.source, options.date)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
                                                      self.calc_missing)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     tranche=%s, interval=%s" % (self.tranche,
                                                  self.interval)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     UV=%s, radiation=%s" % (self.UV_sensor, self.solar_sensor)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
-        self.wlog.printlog(logging.INFO, _msg)
+        self.wlog.printlog(syslog.LOG_INFO, _msg)
         _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
                                                                         self.archive_unit_sys,
                                                                         unit_nicknames[self.archive_unit_sys])
-        self.wlog.printlog(logging.INFO, _msg)
+        self.wlog.printlog(syslog.LOG_INFO, _msg)
         if self.calc_missing:
             print "Any missing derived observations WILL be calculated."
         else:

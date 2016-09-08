@@ -13,7 +13,6 @@ from __future__ import with_statement
 # Python imports
 import csv
 import datetime
-import logging
 import syslog
 import urllib2
 
@@ -125,28 +124,28 @@ class WunderSource(weeimport.Source):
 
         # tell the user/log what we intend to do
         _msg = "A Weather Underground import from station '%s' has been requested." % self.station_id
-        self.wlog.printlog(logging.INFO, _msg)
+        self.wlog.printlog(syslog.LOG_INFO, _msg)
         _msg = "The following options will be used:"
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     station=%s, date=%s" % (self.station_id, options.date)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
                                                      self.calc_missing)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     tranche=%s, interval=%s, wind_direction=%s" % (self.tranche,
                                                                     self.interval,
                                                                     self.wind_dir)
-        self.wlog.verboselog(logging.DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
-        self.wlog.printlog(logging.INFO, _msg)
+        self.wlog.printlog(syslog.LOG_INFO, _msg)
         _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
                                                                         self.archive_unit_sys,
                                                                         unit_nicknames[self.archive_unit_sys])
-        self.wlog.printlog(logging.INFO, _msg)
+        self.wlog.printlog(syslog.LOG_INFO, _msg)
         if self.calc_missing:
             print "Any missing derived observations WILL be calculated."
         else:
