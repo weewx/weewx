@@ -39,7 +39,6 @@ install: build
 	cp -r $(SRC)/bin/* $(DST_BINDIR)
 	cp -r $(SRC)/docs/* $(DST_DOCDIR)
 	cp -r $(SRC)/skins $(DST_CFGDIR)
-	cp -r $(SRC)/util/apache $(DST_CFGDIR)
 	cp -r $(SRC)/util/logrotate.d $(DST_CFGDIR)
 	cp -r $(SRC)/util/logwatch $(DST_CFGDIR)
 	cp -r $(SRC)/util/rsyslog.d $(DST_CFGDIR)
@@ -53,6 +52,12 @@ install: build
 	rm $(DST_CFGDIR)/skins/Standard/backgrounds/night.gif
 
 # patch paths in files we care about
+	mkdir -p $(DST_CFGDIR)/apache/conf.d
+	chmod 755 $(DST_CFGDIR)/apache
+	chmod 755 $(DST_CFGDIR)/apache/conf.d
+	cat $(SRC)/util/apache/conf.d/weewx.conf | sed \
+ -e '%/home/weewx/public_html%/var/www/weewx%g' \
+ > $(DST_CFGDIR)/apache/conf.d/weewx.conf
 	cat $(SRC)/weewx.conf | sed \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
