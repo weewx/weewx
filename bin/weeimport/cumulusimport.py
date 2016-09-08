@@ -120,6 +120,7 @@ class CumulusSource(weeimport.Source):
 
         # Units of measure for some obs (eg temperatures) cannot be derived from
         # the Cumulus monthly log files. These units must be specified by the
+        # user in the import config file. Read these units and fill in the
         # missing unit data in the header map. Do some basic error checking and
         # validation, if one of the fields is missing or invalid then we need
         # to catch the error and raise it as we can't go on.
