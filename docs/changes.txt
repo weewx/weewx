@@ -74,6 +74,9 @@ Added option post_indoor_observations for weather underground.
 
 Added maximum value to radiation and UV plots.
 
+In the .deb package, put weewx reports in /var/www/html/weewx instead of
+/var/www/weewx to match the change of DocumentRoot in debian 8 and later.
+
 
 3.5.0 03/13/2016
 
