@@ -4254,7 +4254,8 @@ sudo /etc/init.d/weewx restart</pre>
         <span class='code'>/var/www/html/weewx</span></p>
 
     <p>If <span class='code'>weewx</span> was installed using
-        <span class='code'>setup.py</span>:</p>
+        <span class='code'>setup.py</span>, you must install an Apache
+        configuration snippet to tell Apache where to find the reports:</p>
 
     <pre class='tty cmd'>sudo cp util/apache/conf.d/weewx.conf /etc/apache2/conf.d</pre>
 
@@ -4270,7 +4271,7 @@ sudo /etc/init.d/weewx restart</pre>
     AllowOverride None
 &lt;/Directory&gt;</pre>
 
-    <p>Restart Apache:</p>
+    <p>Restart Apache to make the changes happen:</p>
     <pre class='tty cmd'>sudo /etc/init.d/apache2 restart</pre>
         </li>
 
