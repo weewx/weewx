@@ -443,7 +443,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.18'
+DRIVER_VERSION = '0.19'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -1502,7 +1502,7 @@ class BadHeader(weewx.WeeWxIOError):
 class TE923Station(object):
     ENDPOINT_IN = 0x81
     READ_LENGTH = 0x8
-    TIMEOUT = 1000
+    TIMEOUT = 1200
     START_ADDRESS = 0x101
     RECORD_SIZE = 0x26
 
@@ -1553,7 +1553,8 @@ class TE923Station(object):
             logcrt("Unable to claim USB interface %s: %s" % (interface, e))
             raise weewx.WeeWxIOError(e)
 
-        self.devh.reset()
+# doing a reset seems to cause problems more often than it eliminates them
+#        self.devh.reset()
 
         # figure out which type of memory this station has
         self.read_memory_size()
@@ -1591,7 +1592,8 @@ class TE923Station(object):
         if ret != 8:
             raise BadRead('Unexpected response to data request: %s != 8' % ret)
 
-        time.sleep(0.1)  # te923tool is 0.3
+# sleeping does not seem to have any effect on the reads
+#        time.sleep(0.1)  # te923tool is 0.3
         start_ts = time.time()
         rbuf = []
         while time.time() - start_ts < 5:
@@ -1609,7 +1611,8 @@ class TE923Station(object):
                 errmsg = repr(e)
                 if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise weewx.WeeWxIOError(e)
-            time.sleep(0.009) # te923tool is 0.15
+# sleeping seems to have no effect on the reads
+#            time.sleep(0.009) # te923tool is 0.15
         else:
             logdbg("timeout while reading: ignoring bytes: %s" % _fmt(rbuf))
             raise BadRead("Timeout after %d bytes" % len(rbuf))
@@ -2359,7 +2362,7 @@ if __name__ == '__main__':
                 else:
                     print_data(data, options.format)
             if options.records is not None:
-                for data in station.gen_records(count=options.records):
+                for data in station.gen_records(requested=options.records):
                     if options.format.lower() == FMT_TE923TOOL:
                         print_readings(data)
                     else:
