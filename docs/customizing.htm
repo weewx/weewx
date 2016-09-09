@@ -5182,10 +5182,10 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
        wee_import --version
        wee_import --import-config=IMPORT_CONFIG_FILE
             [--config=CONFIG_FILE]
-            [--date YYYY/MM/DD|YYYY/MM/DD hh:mm|YYYY/MM/DD (hh:mm)-YYYY/MM/DD (hh:mm)]
+            [--date=YYYY/MM/DD|'YYYY/MM/DD hh:mm'|'YYYY/MM/DD (hh:mm)-YYYY/MM/DD (hh:mm)']
             [--dry-run]
             [--verbose]
-            [--log=-|LOG_FILE]
+            [--log=-]
 
 
 Import observation data into a weewx archive.
@@ -5196,17 +5196,17 @@ Options:
   --import-config=IMPORT_CONFIG_FILE
                         Use import configuration file IMPORT_CONFIG_FILE.
   --dry-run             Print what would happen but do not do it.
-  --date=YYYY-MM-DD     Date or time to import as a string of form 'YYYY-MM-
-                        DD' or 'YYYY-MM-DD hh:mm'. A date range or date-time
-                        range may be specified by separating two date strings
-                        or two date-time strings with a hyphen. Argument must
-                        be enclosed in quotation marks.
-  --log=LOG_FILE        Control logging of most output. Log output is sent to
-                        LOG_FILE if specified. Log output is turned off by
-                        using '--log=-'. Default is to log output to file
-                        'wee_import_YYYMMDDhhmmss.log' located in the same
-                        directory as IMPORT_CONFIG_FILE where YYYMMDDhhmmss
-                        represents the date and time wee_import was run.
+  --date=YYYY-MM-DD     Date or time to import as a string of form YYYY/MM/DD
+                        or 'YYYY/MM/DD hh:mm'. A date range or date-time range
+                        may be specified by separating two date strings or two
+                        date-time strings with a hyphen. Arguments that
+                        include hh:mm must be enclosed in quotation marks.
+  --log=-               Control wee_import log output. By default log output
+                        is sent to the same log file as used by weewx.
+                        wee_import logging may be disabled by using '--
+                        log=-'.Some weewx API log output cannot be controlled
+                        by wee_import and will be sent to to the default log
+                        file irrespective of the '--log' option.
   --verbose             Print useful extra output.
   --version             Display wee_import version number.
 
@@ -5318,24 +5318,17 @@ the daily summaries using the wee_database utility.</pre>
     <p>The <span class="config_option">--log</span> option controls the 
         <span class="code">wee_import</span> log output. Omitting the option 
         will result in <span class="code">wee_import</span> log output being 
-        sent to a file <span class="code">weeimport_YYYMMDDhhmmss.log</span> 
-        located in the same folder as the import configuration file being used 
-        where <span class="code">YYYMMDDhhmmss</span> represents the date and 
-        time that <span class="code">wee_import</span> was executed. If a path 
-        and file are specified using the <span class="config_option">--log</span> 
-        command line option then the <span class="code">wee_import</span> log 
-        output will be sent to that file. <span class="code">wee_import</span> 
-        log output can be disabled by using 
-        <span class="config_option">--log=-</span>. The 
-        <span class="config_option">--log</span> command line option is used 
-        as follows:
+        sent to the <span class="code">weewx</span> log file (nominally the 
+        system log, refer to 
+        <em><a href="usersguide.htm#monitoring">Monitoring <span class="code">weewx</span></a></em> 
+        and 
+        <em><a href="usersguide.htm#Where_to_find_things">Where to find things</a></em> 
+        to find it). <span class="code">wee_import</span> log output can be 
+        disabled by using <span class="config_option">--log=-</span>. The 
+        <span class="config_option">--log</span> command line option is used as
+        follows:
     </p>
     
-    <pre class="tty">wee_import --import-config=/folder/import.conf --log=/this/folder/file.log
-</pre>
-
-    <p>or</p>
-
     <pre class="tty">wee_import --import-config=/folder/import.conf --log=-
 </pre>
     
@@ -5352,7 +5345,7 @@ the daily summaries using the wee_database utility.</pre>
     
     <p><span class="code">wee_import</span> can import observational data from 
         a single CSV file. To be imported by 
-        <span class="code">wee_import</span> the CSV source file must be 
+        <span class="code">wee_import</span>, the CSV source file must be 
         structured as follows:</p>
         
         <ul>
@@ -5399,7 +5392,7 @@ the daily summaries using the wee_database utility.</pre>
     
     <p>The <span class="code">weewx</span> archive fields populated during a 
         CSV import depend on the CSV-to-<span class="code">weewx</span> field 
-        mappings specified in <span class="code">[CSV]</span> stanza in the 
+        mappings specified in <span class="code">[CSV]</span> section in the 
         import configuration file. If a valid field mapping exists, the 
         <span class="code">weewx</span> field exists in the 
         <span class="code">weewx</span> archive table schema and provided the 
@@ -5417,7 +5410,7 @@ the daily summaries using the wee_database utility.</pre>
         <em><a href="#csv_calc_missing">calc_missing</a></em>) may result in a 
         number of derived fields being calculated from the imported data. If 
         these derived fields exist in the in-use database schema they will be 
-        saved to the database.
+        saved to the database as well.
     </p>
     
     <h3>Importing observations from a CSV file</h3>
@@ -5473,6 +5466,10 @@ the daily summaries using the wee_database utility.</pre>
                     Determines how the <span class="code">weewx</span> interval 
                     field is derived. Refer to 
                     <em><a href="#csv_interval"><span class="code">interval</span></a></em>.</li>
+                <li><strong><span class="code">qc</span></strong>. Determines 
+                    whether quality control checks are performed on the imported 
+                    data. Refer to 
+                    <em><a href="#csv_qc"><span class="code">qc</span></a></em>.</li>
                 <li><strong><span class="code">calc_missing</span></strong>. 
                     Determines whether missing derived observations will be 
                     calculated from the imported data. Refer to 
@@ -5534,19 +5531,30 @@ the daily summaries using the wee_database utility.</pre>
             </p>
     
             <pre class="tty">Starting wee_import...
-Log output will be written to '/var/tmp/weeimport_20160902234436.log'
-A CSV import from source file '/var/tmp/csv/data.csv' has been requested.
+A CSV import from source file '/var/tmp/data.csv' has been requested.
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-This is a dry run, imported data WILL NOT be saved to archive.
+Destination table 'archive' unit system is '0x01' (US).
 Any missing derived observations WILL be calculated.
 All weewx UV fields will be set to None.
 All weewx radiation fields will be set to None.
-Destination table 'archive' unit system is '0x01' (US).
-Starting dry run import, no records will added to the archive ...
-Period 1 ...
+This is a dry run, imported data WILL NOT be saved to archive.
+Starting dry run import ...
+70685 records identified for import.
 Records processed: 70685; Unique records: 70685; Last timestamp: 2010-09-04 04:20:00 AEST (1283538000)
+Finished dry run import. 70685 records were processed and 70685 unique records would have been imported.
 </pre>
 
+        <p class="note" style="display:inline-block; width:70%">
+            <b>Note</b><br/>As the <span class="code">weewx</span> database is 
+            not altered when the <span class="code">--dry-run</span> command 
+            line option is used, <span class="code">wee_import</span> log output 
+            is suspended during a dry run import. In effect, the use of 
+            <span class="code">--dry-run</span> is equivalent to 
+            <span class="code">--dry-run --log=-</span>. During a dry run import 
+            the only <span class="code">wee_import</span> output is that 
+            displayed on <span class="code">stdout</span>(console).
+        </p>
+    
         <li>Once the dry run results are satisfactory the source data can be 
             imported using the following command:</li>
         
@@ -5560,14 +5568,15 @@ Records processed: 70685; Unique records: 70685; Last timestamp: 2010-09-04 04:2
             or not with the import:</p>
     
     <pre class="tty">Starting wee_import...
-Log output will be written to '/var/tmp/weeimport_20160903094147.log'
-A CSV import from source file '/home/weewx/test_data.csv' has been requested.
+A CSV import from source file '/var/tmp/data.csv' has been requested.
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-This is NOT a dry run, imported data WILL be saved to archive.
+Destination table 'archive' unit system is '0x01' (US).
 Any missing derived observations WILL be calculated.
 All weewx UV fields will be set to None.
 All weewx radiation fields will be set to None.
-Records covering multiple periods have been identified for import.
+This is NOT a dry run, imported data WILL be saved to archive.
+Starting import ...
+70685 records identified for import.
 Proceeding will save all imported records in the weewx archive.
 Are you sure you want to proceed (y/n)?
 </pre>
@@ -5582,10 +5591,7 @@ Are you sure you want to proceed (y/n)?
             progress of the import will be displayed similar to the following:
         </li>
     
-        <pre class="tty">Destination table 'archive' unit system is '0x01' (US).
-Starting import ...
-Period 1 ...
-Records processed: 250; Unique records: 250; Last timestamp: 2010-02-09 19:25:00 AEST (1265707500)
+        <pre class="tty">Records processed: 250; Unique records: 250; Last timestamp: 2010-02-09 19:25:00 AEST (1265707500)
 </pre>
     
         <p>The line commencing with <span class="code">Records processed</span> 
@@ -5595,6 +5601,9 @@ Records processed: 250; Unique records: 250; Last timestamp: 2010-02-09 19:25:00
             complete a brief summary is displayed similar to the following:</p>
     
         <pre class="tty">Records processed: 70685; Unique records: 70685; Last timestamp: 2010-09-04 04:20:00 AEST (1283538000)
+Finished import. 70685 raw records resulted in 70685 unique records being processed in 56.98 seconds.
+Whilst 70685 unique records were processed those with a timestamp already in the archive
+will not have been imported. Confirm successful import in the weewx log file.
 </pre>
     
         <li>Whilst <span class="code">wee_import</span> will advise of the 
@@ -5602,7 +5611,7 @@ Records processed: 250; Unique records: 250; Last timestamp: 2010-02-09 19:25:00
             <span class="code">wee_import</span> does know how many, if any, of 
             the imported records were successfully saved to the database. The 
             user should look carefully through the 
-            <span class="code">wee_import</span> log file covering the 
+            <span class="code">weewx</span> log file covering the 
             <span class="code">wee_import</span> session and take note of any 
             records that were not imported. The most common reason for imported 
             records not being saved to the database is because a record with 
@@ -5791,6 +5800,21 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     Determines how the <span class="code">weewx</span> interval 
                     field is derived. Refer to 
                     <em><a href="#wunder_interval"><span class="code">interval</span></a></em>.</li>
+                <li><strong><span class="code">qc</span></strong>. Determines 
+                    whether quality control checks are performed on the imported 
+                    data. Refer to 
+                    <em><a href="#wunder_qc"><span class="code">qc</span></a></em>.</li>
+        
+                    <p class="note" style="display:inline-block; width:70%">
+                        <b>Note</b><br/>As Weather Underground imports at times 
+                        contain nonsense values, particularly for fields for 
+                        which no data was uploaded to Weather Underground by the 
+                        PWS, the use of quality control checks on imported data 
+                        can prevent these nonsense values from being imported 
+                        and contaminating the <span class="code">weewx</span> 
+                        database. 
+                    </p>
+                
                 <li><strong><span class="code">calc_missing</span></strong>. 
                     Determines whether missing derived observations will be 
                     calculated from the imported data. Refer to 
@@ -5843,6 +5867,14 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 records are imported. 
             </p>
             
+            <p class="note" style="display:inline-block; width:70%">
+                <b>Note</b><br/><span class="code">wee_import</span> obtains 
+                Weather Underground daily history data one day at a time via a 
+                HTTP request and as such the import of large time spans of data 
+                may take some time. Such imports may be best handled as a series 
+                of imports of smaller time spans.
+            </p>
+    
             <p>This will result in a short preamble giving the user brief details 
                 on the data source, its destination and some other details on 
                 how the data will be processed. The import will then be 
@@ -5853,15 +5885,15 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             </p>
     
             <pre class="tty">Starting wee_import...
-Log output will be written to '/var/tmp/weeimport_20160903101433.log'
 A Weather Underground import from station 'ISTATION123' has been requested.
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-This is a dry run, imported data WILL NOT be saved to archive.
+Destination table 'archive' unit system is '0x01' (US).
 Any missing derived observations WILL be calculated.
 Observations timestamped after 2016-01-20 22:30:00 AEST (1453293000) and up to and
 including 2016-01-23 06:00:00 AEST (1453492800) will be imported.
-Destination table 'archive' unit system is '0x01' (US).
-Starting dry run import, no records will added to the archive ...
+This is a dry run, imported data WILL NOT be saved to archive.
+Starting dry run import ...
+Records covering multiple periods have been identified for import.
 Period 1 ...
 Records processed: 18; Unique records: 18; Last timestamp: 2016-01-20 23:55:00 AEST (1453298100)
 Period 2 ...
@@ -5873,6 +5905,17 @@ Records processed: 71; Unique records: 71; Last timestamp: 2016-01-23 06:00:00 A
 Finished dry run import. 662 records were processed and 662 unique records would have been imported.
 </pre>
 
+        <p class="note" style="display:inline-block; width:70%">
+            <b>Note</b><br/>As the <span class="code">weewx</span> database is 
+            not altered when the <span class="code">--dry-run</span> command 
+            line option is used, <span class="code">wee_import</span> log output 
+            is suspended during a dry run import. In effect, the use of 
+            <span class="code">--dry-run</span> is equivalent to 
+            <span class="code">--dry-run --log=-</span>. During a dry run import 
+            the only <span class="code">wee_import</span> output is that 
+            displayed on <span class="code">stdout</span>(console).
+        </p>
+    
         <li>Once the dry run results are satisfactory the source data can be 
             imported using the following command:</li>
         
@@ -5887,17 +5930,26 @@ Finished dry run import. 662 records were processed and 662 unique records would
             or not with the import:</p>
     
     <pre class="tty">Starting wee_import...
-Log output will be written to '/var/tmp/weeimport_20160903102819.log'
 A Weather Underground import from station 'ISTATION123' has been requested.
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-This is NOT a dry run, imported data WILL be saved to archive.
+Destination table 'archive' unit system is '0x01' (US).
 Any missing derived observations WILL be calculated.
 Observations timestamped after 2016-01-20 22:30:00 AEST (1453293000) and up to and
 including 2016-01-23 06:00:00 AEST (1453492800) will be imported.
+This is NOT a dry run, imported data WILL be saved to archive.
+Starting import ...
 Records covering multiple periods have been identified for import.
 Proceeding will save all imported records in the weewx archive.
 Are you sure you want to proceed (y/n)?
 </pre>
+    
+        <p class="note" style="display:inline-block; width:70%">
+            <b>Note</b><br/><span class="code">wee_import</span> obtains 
+            Weather Underground daily history data one day at a time via a HTTP
+            request and as such the import of large time spans of data may take 
+            some time. Such imports may be best handled as a series of imports 
+            of smaller time spans.
+        </p>
     
         <li>The preamble should be read carefully and if the import parameters 
             are acceptable enter <span class="code">y</span> to proceed with the 
@@ -5909,9 +5961,7 @@ Are you sure you want to proceed (y/n)?
             progress of the import will be displayed similar to the following:
         </li>
     
-        <pre class="tty">Destination table 'archive' unit system is '0x01' (US).
-Starting import ...
-Period 1 ...
+        <pre class="tty">Period 1 ...
 Records processed: 18; Unique records: 18; Last timestamp: 2016-01-20 23:55:00 AEST (1453298100)
 Period 2 ...
 Records processed: 286; Unique records: 286; Last timestamp: 2016-01-21 23:55:00 AEST (1453384500)
@@ -5927,7 +5977,7 @@ Records processed: 286; Unique records: 286; Last timestamp: 2016-01-21 23:55:00
     
         <pre class="tty">Finished import. 662 raw records resulted in 662 unique records being processed in 8.67 seconds.
 Whilst 662 unique records were processed those with a timestamp already in the archive
-will not have been imported. Confirm successful import in syslog or weewx log file.
+will not have been imported. Confirm successful import in the weewx log file.
 </pre>
     
         <p class="note" style="display:inline-block; width:70%">
@@ -5944,7 +5994,7 @@ will not have been imported. Confirm successful import in syslog or weewx log fi
             timestamps that are already in the <span class="code">weewx</span> 
             archive will be ignored. It may; however, generated many 
             <span class="code">UNIQUE constraint failed: archive.dateTime</span>
-            messages in the <span class="code">wee_import</span> log.
+            messages in the <span class="code">weewx</span> log.
         </p>
         
         <li>Whilst <span class="code">wee_import</span> will advise of the 
@@ -5952,7 +6002,7 @@ will not have been imported. Confirm successful import in syslog or weewx log fi
             <span class="code">wee_import</span> does know how many, if any, of 
             the imported records were successfully saved to the database. The 
             user should look carefully through the 
-            <span class="code">wee_import</span> log file covering the 
+            <span class="code">weewx</span> log file covering the 
             <span class="code">wee_import</span> session and take note of any 
             records that were not imported. The most common reason for imported 
             records not being saved to the database is because a record with 
@@ -6141,6 +6191,10 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     Determines how the <span class="code">weewx</span> interval 
                     field is derived. Refer to 
                     <em><a href="#cumulus_interval"><span class="code">interval</span></a></em>.</li>
+                <li><strong><span class="code">qc</span></strong>. Determines 
+                    whether quality control checks are performed on the imported 
+                    data. Refer to 
+                    <em><a href="#cumulus_qc"><span class="code">qc</span></a></em>.</li>
                 <li><strong><span class="code">calc_missing</span></strong>. 
                     Determines whether missing derived observations will be 
                     calculated from the imported data. Refer to 
@@ -6198,8 +6252,8 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             </p>
     
             <pre class="tty">Starting wee_import...
-Log output will be written to '/var/tmp/weeimport_20160904103326.log'
-An import from Cumulus monthly log files has been requested.
+An import from Cumulus monthly log files located in the '/var/tmp/cumulus' directory
+has been requested.
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
 Any missing derived observations WILL be calculated.
@@ -6207,6 +6261,7 @@ All weewx UV fields will be set to None.
 All weewx radiation fields will be set to None.
 This is a dry run, imported data WILL NOT be saved to archive.
 Starting dry run import ...
+Records covering multiple periods have been identified for import.
 Period 1 ...
 Records processed: 4189; Unique records: 4169; Last timestamp: 2015-12-01 09:40:00 AEST (1448926800)
 Period 2 ...
@@ -6247,8 +6302,8 @@ Finished dry run import. 37648 records were processed and 37620 unique records w
             or not with the import:</p>
     
     <pre class="tty">Starting wee_import...
-Log output will be written to '/var/tmp/weeimport_20160904103818.log'
-An import from Cumulus monthly log files has been requested.
+An import from Cumulus monthly log files located in the '/var/tmp/cumulus' directory
+has been requested.
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
 Any missing derived observations WILL be calculated.
@@ -6258,7 +6313,6 @@ This is NOT a dry run, imported data WILL be saved to archive.
 Starting import ...
 Records covering multiple periods have been identified for import.
 Proceeding will save all imported records in the weewx archive.
-Are you sure you want to proceed (y/n)? y
 </pre>
 
         <p>If there is more than one Cumulus monthly log file then 
@@ -6271,8 +6325,8 @@ Are you sure you want to proceed (y/n)? y
             to:</p>
     
     <pre class="tty">Starting wee_import...
-Log output will be written to '/var/tmp/weeimport_20160904104557.log'
-An import from Cumulus monthly log files has been requested.
+An import from Cumulus monthly log files located in the '/var/tmp/cumulus' directory
+has been requested.
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
 Any missing derived observations WILL be calculated.
@@ -6285,7 +6339,6 @@ Starting import ...
 Period 1 - no records identified for import.
 Period 2 - no records identified for import.
 Period 3 - no records identified for import.
-Records covering multiple periods have been identified for import.
 Proceeding will save all imported records in the weewx archive.
 Are you sure you want to proceed (y/n)?
 </pre>
@@ -6326,7 +6379,7 @@ Records processed: 3238; Unique records: 3232; Last timestamp: 2016-04-24 00:00:
     
         <pre class="tty">Finished import. 37648 raw records resulted in 37620 unique records being processed in 81.13 seconds.
 Whilst 37620 unique records were processed those with a timestamp already in the archive
-will not have been imported. Confirm successful import in syslog or weewx log file.
+will not have been imported. Confirm successful import in the weewx log file.
 </pre>
     
         <li>Whilst <span class="code">wee_import</span> will advise of the 
@@ -6334,7 +6387,7 @@ will not have been imported. Confirm successful import in syslog or weewx log fi
             <span class="code">wee_import</span> does know how many, if any, of 
             the imported records were successfully saved to the database. The 
             user should look carefully through the 
-            <span class="code">wee_import</span> log file covering the 
+            <span class="code">weewx</span> log file covering the 
             <span class="code">wee_import</span> session and take note of any 
             records that were not imported. The most common reason for imported 
             records not being saved to the database is because a record with 
@@ -6431,7 +6484,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
     <p class='config_option' id='csv_file'>file</p>
     
     <p>The file containing the CSV format data to be used as the source during 
-        the import. Include full path and filename. No default.
+        the import. Include full path and filename. There is no default.
     </p>
     
     <p class='config_option' id='csv_interval'>interval</p>
@@ -6480,12 +6533,40 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
         or a fixed interval setting.
     </p>
     
+    <p class='config_option' id='csv_qc'>qc</p>
+    
+    <p>Determines whether simple quality control checks are applied to imported 
+        data. Setting <span class="code">qc = True</span> will result in 
+        <span class="code">wee_import</span> applying the 
+        <span class="code">weewx</span> <span class="code">StdQC</span> minimum 
+        and maximum checks to any imported observations. 
+        <span class="code">wee_import</span> quality control checks use the same 
+        configuration settings, and operate in the same manner, as the 
+        <span class="code">weewx</span> <span class="code">StdQC</span> service 
+        (refer to the <a href="usersguide.htm#StdQC">[StdQC]</a> section of the
+        <a href="usersguide.htm">User's Guide</a>). If an observation falls 
+        outside of the quality control range for that observation, then the 
+        observation will be set to <span class="code">None</span>. The user will 
+        be alerted through a short message to 
+        <span class="code">stdout</span>(console) and the 
+        <span class="code">weewx</span> log similar to:</p>
+        
+        <pre class="tty">2016-01-12 10:00:00 AEST (1452556800) record value 'outTemp' 194.34 outside limits (0.0, 120.0)
+</pre>
+    
+    <p>As derived observations are calculated after the quality control check is applied, derived 
+        observations are not subject to quality control checks. Setting 
+        <span class="code">qc = False</span> will result in 
+        <span class="code">wee_import</span> not applying quality control checks 
+        to imported data. The default is <span class="code">True</span>.
+    </p>
+    
     <p class='config_option' id='csv_calc_missing'>calc_missing</p>
     
     <p>Determines whether any missing derived observations will be calculated 
         from the imported data. Setting 
         <span class="code">calc_missing = True</span> will result in 
-        <span class="code">weewx</span> using the <span class="code">weewx</span>
+        <span class="code">wee_import</span> using the <span class="code">weewx</span>
         <span class="code">StdWXCalculate</span> service to calculate any 
         missing derived observations from the imported data. Setting 
         <span class="code">calc_missing = False</span> will result in 
@@ -6792,7 +6873,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
     <p class='config_option' id='wunder_station_id'>station_id</p>
     
     <p>The Weather Underground weather station ID of the PWS from which the 
-        daily history will be imported. No default.
+        daily history will be imported. There is no default.
     </p>
     
     <p class='config_option' id='wunder_interval'>interval</p>
@@ -6816,6 +6897,19 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
     </p>
     
     <p>The default is <span class="code">derive</span>.</p>
+    
+    <p class='config_option' id='wunder_qc'>qc</p>
+    
+    <p>Determines whether simple quality control checks are applied to imported 
+        data. This option is identical in operation to the CSV 
+        <em><a href="#csv_qc">qc</a></em> option but applies to Weather 
+        Underground imports only. As Weather Underground imports at times 
+        contain nonsense values, particularly for fields for which no data was 
+        uploaded to Weather Underground by the PWS, the use of quality control 
+        checks on imported data can prevent these nonsense values from being 
+        imported and contaminating the <span class="code">weewx</span> database. 
+        The default is <span class="code">True</span>.
+    </p>
     
     <p class='config_option' id='wunder_calc_missing'>calc_missing</p>
     
@@ -6854,7 +6948,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
     <p class='config_option' id='cumulus_directory'>directory</p>
     
     <p>The full path to the directory containing the Cumulus monthly log files 
-        to be imported. Do not include a trailing /. No default.
+        to be imported. Do not include a trailing /. There is no default.
     </p>
     
     <p class='config_option' id='cumulus_interval'>interval</p>
@@ -6879,6 +6973,14 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
     </p>
     
     <p>The default is <span class="code">derive</span>.</p>
+    
+    <p class='config_option' id='cumulus_qc'>qc</p>
+    
+    <p>Determines whether simple quality control checks are applied to imported 
+        data. This option is identical in operation to the CSV 
+        <em><a href="#csv_qc">qc</a></em> option but applies to Cumulus imports 
+        only. The default is <span class="code">True</span>.
+    </p>
     
     <p class='config_option' id='cumulus_calc_missing'>calc_missing</p>
     
