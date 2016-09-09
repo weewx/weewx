@@ -201,14 +201,15 @@ class CumulusSource(weeimport.Source):
                 "No Cumulus monthly logs found in directory '%s'." % self.source)
 
         # tell the user/log what we intend to do
-        _msg = "An import from Cumulus monthly log files has been requested."
+        _msg = "An import from Cumulus monthly log files located in the '%s' directory" % self.source
         self.wlog.printlog(syslog.LOG_INFO, _msg)
+        self.wlog.printlog(syslog.LOG_INFO, "has been requested.")
         _msg = "The following options will be used:"
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
-        _msg = "     source=%s, date=%s" % (self.source, options.date)
+        _msg = "     date=%s" % options.date
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
         _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
                                                      self.calc_missing)

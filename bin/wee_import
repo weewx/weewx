@@ -97,8 +97,8 @@ source = CSV
     #   True  - weewx.conf [StdQC] max/min limits are applied.
     #   False - weewx.conf [StdQC] max/min limits are not applied.
     # Format is:
-    #   weewx_qc = (True | False)
-    weewx_qc = True
+    #   qc = (True | False)
+    qc = True
 
     # Should any missing derived observations be calculated from the imported
     # data if possible. Available options are:
@@ -297,8 +297,8 @@ source = CSV
     #   True  - weewx.conf [StdQC] max/min limits are applied.
     #   False - weewx.conf [StdQC] max/min limits are not applied.
     # Format is:
-    #   weewx_qc = (True | False)
-    weewx_qc = True
+    #   qc = (True | False)
+    qc = True
 
     # Should any missing derived observations be calculated from the imported
     # data if possible. Available options are:
@@ -410,8 +410,8 @@ source = CSV
     #   True  - weewx.conf [StdQC] max/min limits are applied.
     #   False - weewx.conf [StdQC] max/min limits are not applied.
     # Format is:
-    #   weewx_qc = (True | False)
-    weewx_qc = True
+    #   qc = (True | False)
+    qc = True
 
     # Should any missing derived observations be calculated from the imported
     # data if possible. Available options are:

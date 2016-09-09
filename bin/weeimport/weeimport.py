@@ -122,7 +122,7 @@ class Source(object):
         # tranche, default to 250
         self.tranche = to_int(import_config_dict.get('tranche', 250))
         # apply QC, default to True
-        self.apply_qc = tobool(import_config_dict.get('weewx_qc', True))
+        self.apply_qc = tobool(import_config_dict.get('qc', True))
         # calc-missing, default to True
         self.calc_missing = tobool(import_config_dict.get('calc_missing', True))
         # Some sources include UV index and solar radiation values even if no
@@ -320,13 +320,28 @@ class Source(object):
 
                 # increment our period counter
                 self.period_no += 1
-            # provide some summary info now that we have finished the import
-            _msg = "Finished import. %d raw records resulted in %d unique records being processed in %.2f seconds." % (self.total_rec_proc,
-                                                                                                                       self.total_unique_rec,
-                                                                                                                       self.tdiff)
-            self.wlog.printlog(syslog.LOG_INFO, _msg)
-            print 'Whilst %d unique records were processed those with a timestamp already in the archive' % (self.total_unique_rec, )
-            print 'will not have been imported. Confirm successful import in weewx log file.'
+            # Provide some summary info now that we have finished the import.
+            # What we say depends on whether it was a dry run or not and
+            # whether we imported and records or not.
+            if self.total_rec_proc == 0:
+                # nothing imported so say so
+                _msg = 'No records were identified for import. Exiting. Nothing done.'
+                self.wlog.printlog(syslog.LOG_INFO, _msg)
+            else:
+                # we imported something
+                if self.dry_run:
+                    # but it was a dry run
+                    _msg = "Finished dry run import. %d records were processed and %d unique records would have been imported." % (self.total_rec_proc,
+                                                                                                                                   self.total_unique_rec)
+                    self.wlog.printlog(syslog.LOG_INFO, _msg)
+                else:
+                    # something should have been saved to database
+                    _msg = "Finished import. %d raw records resulted in %d unique records being processed in %.2f seconds." % (self.total_rec_proc,
+                                                                                                                               self.total_unique_rec,
+                                                                                                                               self.tdiff)
+                    self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    print 'Whilst %d unique records were processed those with a timestamp already in the archive' % (self.total_unique_rec, )
+                    print 'will not have been imported. Confirm successful import in the weewx log file.'
 
     def parseMap(self, source_type, source, import_config_dict):
         """Produce a source field-to-weewx archive field data map.
@@ -882,13 +897,17 @@ class Source(object):
                 print 'Starting import ...'
         # do we have any records?
         if records and len(records) > 0:
-            # we do, confirm the user actually wants to save them
-            while self.ans not in ['y', 'n'] and not self.dry_run:
-                if self.first_period and self.last_period:
-                    # there is only 1 period
+            # if this is the first period then give a little summary about what
+            # records we have
+            if self.first_period:
+                if self.last_period:
+                    # there is only 1 period, so we can count them
                     print "%s records identified for import." % len(records)
                 else:
+                    # there are more periods so say so
                     print "Records covering multiple periods have been identified for import."
+            # we do, confirm the user actually wants to save them
+            while self.ans not in ['y', 'n'] and not self.dry_run:
                 print "Proceeding will save all imported records in the weewx archive."
                 self.ans = raw_input("Are you sure you want to proceed (y/n)? ")
             if self.ans == 'y' or self.dry_run:
@@ -970,24 +989,9 @@ class Source(object):
                 # multiple periods
                 _msg = 'Period %d - no records identified for import.' % self.period_no
             print _msg
-            if self.last_period:
-                if self.total_rec_proc == 0:
-                    _msg = 'No records were identified for import. Exiting. Nothing done.'
-                    self.wlog.printlog(syslog.LOG_INFO, _msg)
-                else:
-                    if self.dry_run:
-                        print "Finished dry run import. %d records were processed and %d unique records would have been imported." % (self.total_rec_proc,
-                                                                                                                                      self.total_unique_rec)
-                    else:
-                        self.tdiff = time.time() - self.t1
-            return
-        # do any final summary logging if we have finished all the periods
+        # if we have finished record the time taken for our summary
         if self.last_period:
-            if self.dry_run:
-                print "Finished dry run import. %d records were processed and %d unique records would have been imported." % (self.total_rec_proc,
-                                                                                                                              self.total_unique_rec)
-            else:
-                self.tdiff = time.time() - self.t1
+            self.tdiff = time.time() - self.t1
 
 
 # ============================================================================
