@@ -7,6 +7,10 @@ Added the ability to run reports using a cron-like notation, instead of with
 every report cycle. See User's Guide for details. Thanks to user Gary Roderick.
 PR #122. Fixes issue #17.
 
+Added the ability to easily import CSV, Weather Underground, and Cumulus
+data using a new utility, wee_import. Thanks again to über-user Gary Roderick.
+PR #148. Fixes issue #97.
+
 Fixed rpm package so that it will retain any changes to the user directory.
 Thanks to user Pat OBrien.
 

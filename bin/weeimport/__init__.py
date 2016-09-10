@@ -1,5 +1,6 @@
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com> and
+#                            Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
 #
