@@ -5713,10 +5713,9 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <li>The following <span class="code">weewx</span> archive fields 
                 will be populated with values derived from the imported data 
                 provided <span class="code">calc_missing = True</span> is 
-                included in the <span class="code">[Wunder]</span> section of 
-                the import configuration file being used and the field exists 
-                in the in-use <span class="code">weewx</span> archive table 
-                schema.</li>
+                included in the <span class="code">[WU]</span> section of the
+                import configuration file being used and the field exists in the
+                in-use <span class="code">weewx</span> archive table schema.</li>
         
                 <ul>
                     <li><span class="code">altimeter</span></li>
@@ -5732,17 +5731,17 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     <span class="code">calc_missing</span> option is
                     <span class="code">True</span> so if the 
                     <span class="code">calc_missing</span> option is omitted 
-                    from the <span class="code">[Wunder]</span> section the 
-                    same fields will be calculated and stored as if 
+                    from the <span class="code">[WU]</span> section the same
+                    fields will be calculated and stored as if 
                     <span class="code">calc_missing = True</span> had been used. 
                 </p>
                 
                 <p class="note" style="display:inline-block; width:70%">
                     <b>Note</b><br/>If 
                     <span class="code">calc_missing = False</span> is included 
-                    in the <span class="code">[Wunder]</span> section of the 
-                    import configuration file being used then all of the above 
-                    fields will be set to <span class="code">None/NULL</span>. 
+                    in the <span class="code">[WU]</span> section of the import
+                    configuration file being used then all of the above fields
+                    will be set to <span class="code">None/NULL</span>. 
                 </p>
     </ul>
     
@@ -5769,24 +5768,24 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <span class="code">weewx/util/import</span> directory. In this case 
             we will make a copy of the example Weather Underground import 
             configuration file and save it as 
-            <span class="code">wunder.conf</span> in the 
+            <span class="code">wu.conf</span> in the 
             <span class="code">/var/tmp</span> directory:
         
-            <pre class="tty">$ cp /home/weewx/util/import/wunder-example.conf /var/tmp/wunder.conf
+            <pre class="tty">$ cp /home/weewx/util/import/wu-example.conf /var/tmp/wu.conf
 </pre>
             
         <li>Confirm the <span class="code">source</span> option (refer to 
             <em><a href="#import_config_source"><span class="code">source</span></a></em>) 
             in the import configuration file 
-            <span class="code">wunder.conf</span> (refer to 
+            <span class="code">wu.conf</span> (refer to 
             <em><a href="#import_config">The import configuration file</a></em>) 
             is set as follows:</li>
         
-            <pre class="tty">source = Wunder</span></pre>
+            <pre class="tty">source = WU</span></pre>
         
         <li>Confirm the following options in the 
-            <span class="code">[Wunder]</span> section of the import 
-            configuration file <span class="code">wunder.conf</span> (refer to 
+            <span class="code">[WU]</span> section of the import configuration 
+            file <span class="code">wu.conf</span> (refer to 
             <em><a href="#import_config">The import configuration file</a></em>)
             are correctly set:</li>
     
@@ -5795,15 +5794,15 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     The 11 or 12 character weather station ID of the Weather 
                     Underground PWS that will be the source of the imported 
                     data. Refer to 
-                    <em><a href="#wunder_station_id"><span class="code">station_id</span></a></em>.</li>
+                    <em><a href="#wu_station_id"><span class="code">station_id</span></a></em>.</li>
                 <li><strong><span class="code">interval</span></strong>. 
                     Determines how the <span class="code">weewx</span> interval 
                     field is derived. Refer to 
-                    <em><a href="#wunder_interval"><span class="code">interval</span></a></em>.</li>
+                    <em><a href="#wu_interval"><span class="code">interval</span></a></em>.</li>
                 <li><strong><span class="code">qc</span></strong>. Determines 
                     whether quality control checks are performed on the imported 
                     data. Refer to 
-                    <em><a href="#wunder_qc"><span class="code">qc</span></a></em>.</li>
+                    <em><a href="#wu_qc"><span class="code">qc</span></a></em>.</li>
         
                     <p class="note" style="display:inline-block; width:70%">
                         <b>Note</b><br/>As Weather Underground imports at times 
@@ -5818,16 +5817,16 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 <li><strong><span class="code">calc_missing</span></strong>. 
                     Determines whether missing derived observations will be 
                     calculated from the imported data. Refer to 
-                    <em><a href="#wunder_calc_missing"><span class="code">calc_missing</span></a></em>.</li>
+                    <em><a href="#wu_calc_missing"><span class="code">calc_missing</span></a></em>.</li>
                 <li><strong><span class="code">tranche</span></strong>. The 
                     number of records written to the 
                     <span class="code">weewx</span> database in each transaction. 
                     Refer to 
-                    <em><a href="#wunder_tranche"><span class="code">tranche</span></a></em>.</li>
+                    <em><a href="#wu_tranche"><span class="code">tranche</span></a></em>.</li>
                 <li><strong><span class="code">wind_direction</span></strong>. 
                     Determines how imported wind direction fields are 
                     interpreted. Refer to 
-                    <em><a href="#wunder_wind_direction"><span class="code">wind_direction</span></a></em>.</li>
+                    <em><a href="#wu_wind_direction"><span class="code">wind_direction</span></a></em>.</li>
             </ul>
     
         <li>When first importing data it is often prudent to do a dry run import 
@@ -5843,7 +5842,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <em><a href="#common_options">Command line options</a></em> section. 
             To perform a dry run import enter the following command:</li>
             
-            <pre class="tty">wee_import --import-config=/var/tmp/wunder.conf --date="2016/01/20 22:30-2016/01/23 06:00" --dry-run
+            <pre class="tty">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00" --dry-run
 </pre>
     
             <p class="note" style="display:inline-block; width:70%">
@@ -5919,7 +5918,7 @@ Finished dry run import. 662 records were processed and 662 unique records would
         <li>Once the dry run results are satisfactory the source data can be 
             imported using the following command:</li>
         
-        <pre class="tty">wee_import --import-config=/var/tmp/wunder.conf --date="2016/01/20 22:30-2016/01/23 06:00"
+        <pre class="tty">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00"
 </pre>
 
         <p>This will result in a short preamble giving the user brief details 
@@ -6467,7 +6466,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
         <ul>
             <li><span class="code">CSV</span> to import from a single CSV format 
                 file.</li>
-            <li><span class="code">Wunder</span> to import from a Weather 
+            <li><span class="code">WU</span> to import from a Weather 
                 Underground PWS daily history.</li>
             <li><span class="code">Cumulus</span> to import from one or more 
                 Cumulus monthly log files.</li>
@@ -6863,20 +6862,20 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
         file.
     </p>
     
-    <h3 class="config_section">[Wunder]</h3>
+    <h3 class="config_section">[WU]</h3>
     
-    <p>The <span class="config_option">[Wunder]</span> section contains the 
+    <p>The <span class="config_option">[WU]</span> section contains the 
         options relating to the import of observational data from a Weather 
         Underground PWS daily history.
     </p>
     
-    <p class='config_option' id='wunder_station_id'>station_id</p>
+    <p class='config_option' id='wu_station_id'>station_id</p>
     
     <p>The Weather Underground weather station ID of the PWS from which the 
         daily history will be imported. There is no default.
     </p>
     
-    <p class='config_option' id='wunder_interval'>interval</p>
+    <p class='config_option' id='wu_interval'>interval</p>
     
     <p>Determines how the time interval (<span class="code">weewx</span> 
         database field <span class="code">interval</span>) between successive 
@@ -6898,7 +6897,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
     
     <p>The default is <span class="code">derive</span>.</p>
     
-    <p class='config_option' id='wunder_qc'>qc</p>
+    <p class='config_option' id='wu_qc'>qc</p>
     
     <p>Determines whether simple quality control checks are applied to imported 
         data. This option is identical in operation to the CSV 
@@ -6911,7 +6910,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
         The default is <span class="code">True</span>.
     </p>
     
-    <p class='config_option' id='wunder_calc_missing'>calc_missing</p>
+    <p class='config_option' id='wu_calc_missing'>calc_missing</p>
     
     <p>Determines whether any missing derived observations will be calculated 
         from the imported data. This option is identical in operation to the 
@@ -6920,7 +6919,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
         <span class="code">True</span>.
     </p>
     
-    <p class='config_option' id='wunder_tranche'>tranche</p>
+    <p class='config_option' id='wu_tranche'>tranche</p>
     
     <p>The number of records written to the <span class="code">weewx</span> 
         database in each transaction. This option is identical in operation to 
@@ -6929,7 +6928,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
         <span class="code">250</span> which should suit most users.
     </p>
     
-    <p class='config_option' id='wunder_wind_direction'>wind_direction</p>
+    <p class='config_option' id='wu_wind_direction'>wind_direction</p>
     
     <p>Determines the range of acceptable wind direction values in degrees. 
         This option is identical in operation to the CSV 

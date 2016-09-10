@@ -27,11 +27,11 @@ from weewx.units import unit_nicknames
 
 
 # ============================================================================
-#                             class WunderStation
+#                             class WUSource
 # ============================================================================
 
 
-class WunderSource(weeimport.Source):
+class WUSource(weeimport.Source):
     """Class to interact with the Weather Underground.
 
     Uses WXDailyHistory.asp call via http to obtain historical daily weather
@@ -72,27 +72,27 @@ class WunderSource(weeimport.Source):
                                                'map_to': 'radiation'}
                    }
 
-    def __init__(self, config_dict, config_path, wunder_config_dict, import_config_path, options, log):
+    def __init__(self, config_dict, config_path, wu_config_dict, import_config_path, options, log):
 
         # call our parents __init__
-        super(WunderSource, self).__init__(config_dict,
-                                           wunder_config_dict,
-                                           options,
-                                           log)
+        super(WUSource, self).__init__(config_dict,
+                                       wu_config_dict,
+                                       options,
+                                       log)
 
         # save our import config path
         self.import_config_path = import_config_path
         # save our import config dict
-        self.wunder_config_dict = wunder_config_dict
+        self.wu_config_dict = wu_config_dict
 
         # get our WU station ID
         try:
-            self.station_id = wunder_config_dict['station_id']
+            self.station_id = wu_config_dict['station_id']
         except KeyError:
             raise weewx.ViolatedPrecondition("Weather Underground station ID not specified in '%s'." % import_config_path)
 
         # wind dir bounds
-        _wind_direction = option_as_list(wunder_config_dict.get('wind_direction',
+        _wind_direction = option_as_list(wu_config_dict.get('wind_direction',
                                                                 '0,360'))
         try:
             if float(_wind_direction[0]) <= float(_wind_direction[1]):
@@ -205,7 +205,7 @@ class WunderSource(weeimport.Source):
         _cleanWUdata = []
         for _row in _wudata:
             # get rid of any HTML tags
-            _line = ''.join(WunderSource._tags.split(_row))
+            _line = ''.join(WUSource._tags.split(_row))
             # get rid of any blank lines
             if _line != "\n":
                 # save what's left
@@ -215,8 +215,7 @@ class WunderSource(weeimport.Source):
         # the dictionary
         _reader = csv.DictReader(_cleanWUdata)
         # finally, get our database-source mapping
-        self.map = self.parseMap('Wunderground', _reader,
-                                 self.wunder_config_dict)
+        self.map = self.parseMap('WU', _reader, self.wu_config_dict)
         # return our dict reader
         return _reader
 

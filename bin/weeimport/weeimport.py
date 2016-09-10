@@ -30,7 +30,7 @@ from weewx.units import unit_constants, unit_nicknames, convertStd, to_std_syste
 from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool, _get_object
 
 # List of sources we support
-SUPPORTED_SOURCES = ['CSV', 'Wunder', 'Cumulus']
+SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus']
 
 # Minimum requirements in any explicit or implicit weewx field-to-import field
 # map
