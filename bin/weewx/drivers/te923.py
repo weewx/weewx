@@ -1186,6 +1186,8 @@ class TE923Driver(weewx.drivers.AbstractDevice):
 
     # there is no battery status for historical records.
     def genStartupRecords(self, since_ts=0):
+        loginf("reading records from logger since %s" % since_ts)
+        cnt = 0
         for data in self.station.gen_records(since_ts):
             packet = self.data_to_packet(data, status=None,
                                          last_rain=self._last_rain_archive,
@@ -1194,10 +1196,14 @@ class TE923Driver(weewx.drivers.AbstractDevice):
             if self._last_ts:
                 packet['interval'] = (packet['dateTime'] - self._last_ts) / 60
                 if packet['interval'] > 0:
+                    cnt += 1
                     yield packet
                 else:
                     loginf("skip packet with duplidate timestamp: %s" % packet)
             self._last_ts = packet['dateTime']
+            if cnt % 50 == 0:
+                loginf("read %s records from logger" % cnt)
+        loginf("read %s records from logger" % cnt)
 
     @staticmethod
     def data_to_packet(data, status=None, last_rain=None,
