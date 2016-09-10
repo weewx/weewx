@@ -299,24 +299,24 @@ class Source(object):
 
                 # get the raw data
                 _msg = 'Obtaining raw import data for period %d...' % self.period_no
-                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
                 _raw_data = self.getRawData(period)
                 _msg = 'Raw import data read successfully for period %d.' % self.period_no
-                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
 
                 # map the raw data to a weewx archive compatible dictionary
                 _msg = 'Mapping raw import data for period %d...' % self.period_no
-                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
                 _mapped_data = self.mapRawData(_raw_data, weewx.US)
                 _msg = 'Raw import data mapped successfully for period %d.' % self.period_no
-                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
 
                 # save the mapped data to archive
                 _msg = 'Saving mapped data to archive for period %d...' % self.period_no
-                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
                 self.saveToArchive(archive, _mapped_data)
                 _msg = 'Mapped data saved to archive successfully for period %d.' % self.period_no
-                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
 
                 # increment our period counter
                 self.period_no += 1
@@ -340,8 +340,8 @@ class Source(object):
                                                                                                                                self.total_unique_rec,
                                                                                                                                self.tdiff)
                     self.wlog.printlog(syslog.LOG_INFO, _msg)
-                    print 'Whilst %d unique records were processed those with a timestamp already in the archive' % (self.total_unique_rec, )
-                    print 'will not have been imported. Confirm successful import in the weewx log file.'
+                    print "Those records with a timestamp already in the archive will not have been imported."
+                    print "Confirm successful import in the weewx log file."
 
     def parseMap(self, source_type, source, import_config_dict):
         """Produce a source field-to-weewx archive field data map.
@@ -423,7 +423,7 @@ class Source(object):
             # will use
             _msg = "The following imported field-to-weewx field map will be used:"
             if self.verbose:
-                self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
             else:
                 self.wlog.logonly(syslog.LOG_INFO, _msg)
             for key, entry in _map.iteritems():
@@ -435,7 +435,7 @@ class Source(object):
                                                                               _units_msg,
                                                                               entry['name'])
                     if self.verbose:
-                        self.wlog.verboselog(syslog.LOG_INFO, _msg, self.verbose)
+                        self.wlog.verboselog(syslog.LOG_INFO, _msg)
                     else:
                         self.wlog.logonly(syslog.LOG_INFO, _msg)
         elif self._header_map:
@@ -706,11 +706,9 @@ class Source(object):
                     # processed some records. So log it then raise a SystemExit()
                     if self.dry_run:
                         print "Dry run import aborted by user. %d records were processed." % self.total_rec_proc
-                        self.wlog.logonly(syslog.LOG_INFO, 'User chose to abort import. Exiting. Nothing done.')
-                        raise SystemExit('Exiting. Nothing done.')
                     else:
-                        print "Whilst %d records were processed those with a timestamp already in the archive" % self.total_rec_proc
-                        print "will not have been imported. Confirm successful import in syslog or weewx log file."
+                        print "Those records with a timestamp already in the archive will not have been imported."
+                        print "Confirm successful import in syslog or weewx log file."
                         _msg = "User chose to abort import. %d records were processed. Exiting." % self.total_rec_proc
                         self.wlog.logonly(syslog.LOG_INFO, _msg)
                         if self.total_rec_proc > 0:
@@ -719,15 +717,12 @@ class Source(object):
                             raise SystemExit('Exiting.')
                         raise SystemExit('Exiting. Nothing done.')
             self.wlog.verboselog(syslog.LOG_INFO,
-                                 "Mapped %d records." % len(_records),
-                                 self.verbose)
+                                 "Mapped %d records." % len(_records))
             # the user wants to continue or we have only one unique value for
             # interval so return the records
             return _records
         else:
-            self.wlog.verboselog(syslog.LOG_INFO,
-                                 "Mapped 0 records.",
-                                 self.verbose)
+            self.wlog.verboselog(syslog.LOG_INFO, "Mapped 0 records.")
             # we have no records to return so return None
             return None
 
@@ -1007,7 +1002,7 @@ class WeeImportLog(object):
     log output otherwise log output is sent to the same log used by weewx.
     """
 
-    def __init__(self, opt_logging, verbose, dry_run):
+    def __init__(self, opt_logging, opt_verbose, opt_dry_run):
         """Initialise our log environment."""
 
         # first check if we are turning off log to file or not
@@ -1018,21 +1013,23 @@ class WeeImportLog(object):
         # Flag to indicate whether we are logging to file or not. Log to file
         # every time except when logging is explicitly turned off on the
         # command line or its a dry run.
-        self.log = not (dry_run or log_bool)
+        self.log = not (opt_dry_run or log_bool)
         # if we are logging then setup our syslog environment
         # if --verbose we log up to syslog.LOG_DEBUG
         # otherwise just log up to syslog.LOG_INFO
         if self.log:
             syslog.openlog(logoption=syslog.LOG_PID | syslog.LOG_CONS)
-            if verbose:
+            if opt_verbose:
                 syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
             else:
                 syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
         # logging by other modules (eg WxCalculate) does not use WeeImportLog
         # but we can disable most logging by raising the log priority if its a
         # dry run
-        if dry_run:
+        if opt_dry_run:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_CRIT))
+        # keep opt_verbose for later
+        self.verbose = opt_verbose
 
     def logonly(self, level, message):
         """Log to file only."""
@@ -1049,10 +1046,10 @@ class WeeImportLog(object):
         print message
         self.logonly(level, message)
 
-    def verboselog(self, level, message, verbose):
+    def verboselog(self, level, message):
         """Print to screen if --verbose and log to file always."""
 
-        if verbose:
+        if self.verbose:
             print message
             self.logonly(level, message)
 

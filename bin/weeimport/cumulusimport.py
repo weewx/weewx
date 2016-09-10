@@ -201,24 +201,23 @@ class CumulusSource(weeimport.Source):
                 "No Cumulus monthly logs found in directory '%s'." % self.source)
 
         # tell the user/log what we intend to do
-        _msg = "An import from Cumulus monthly log files located in the '%s' directory" % self.source
+        _msg = "Cumulus monthly log files in the '%s' directory will be imported" % self.source
         self.wlog.printlog(syslog.LOG_INFO, _msg)
-        self.wlog.printlog(syslog.LOG_INFO, "has been requested.")
         _msg = "The following options will be used:"
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     date=%s" % options.date
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
                                                      self.calc_missing)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     tranche=%s, interval=%s" % (self.tranche,
                                                  self.interval)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     UV=%s, radiation=%s" % (self.UV_sensor, self.solar_sensor)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
         self.wlog.printlog(syslog.LOG_INFO, _msg)
@@ -227,24 +226,16 @@ class CumulusSource(weeimport.Source):
                                                                         unit_nicknames[self.archive_unit_sys])
         self.wlog.printlog(syslog.LOG_INFO, _msg)
         if self.calc_missing:
-            print "Any missing derived observations WILL be calculated."
-        else:
-            print "Any missing derived observations WILL NOT be calculated."
-        if self.UV_sensor:
+            print "Missing derived observations will be calculated."
+        if not self.UV_sensor:
             print "All weewx UV fields will be set to None."
-        else:
-            print "weewx UV field will use Cumulus monthly log UV index field value."
-        if self.solar_sensor:
+        if not self.solar_sensor:
             print "All weewx radiation fields will be set to None."
-        else:
-            print "weewx radiation field will use Cumulus monthly log solar radiation field value."
         if options.date:
             print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
             print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
         if self.dry_run:
-            print "This is a dry run, imported data WILL NOT be saved to archive."
-        else:
-            print "This is NOT a dry run, imported data WILL be saved to archive."
+            print "This is a dry run, imported data will not be saved to archive."
 
     def getRawData(self, period):
         """Get raw observation data and construct a map from Cumulus monthly

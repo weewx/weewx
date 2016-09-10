@@ -85,23 +85,23 @@ class CSVSource(weeimport.Source):
         _msg = "A CSV import from source file '%s' has been requested." % self.source
         self.wlog.printlog(syslog.LOG_INFO, _msg)
         _msg = "The following options will be used:"
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     source=%s, date=%s" % (self.source, options.date)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
                                                      self.calc_missing)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     tranche=%s, interval=%s, date/time_string_format=%s" % (self.tranche,
                                                                              self.interval,
                                                                              self.raw_datetime_format)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     rain=%s, wind_direction=%s" % (self.rain, self.wind_dir)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     UV=%s, radiation=%s" % (self.UV_sensor, self.solar_sensor)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
         self.wlog.printlog(syslog.LOG_INFO, _msg)
@@ -110,24 +110,16 @@ class CSVSource(weeimport.Source):
                                                                         unit_nicknames[self.archive_unit_sys])
         self.wlog.printlog(syslog.LOG_INFO, _msg)
         if self.calc_missing:
-            print "Any missing derived observations WILL be calculated."
-        else:
-            print "Any missing derived observations WILL NOT be calculated."
-        if self.UV_sensor:
+            print "Missing derived observations will be calculated."
+        if not self.UV_sensor:
             print "All weewx UV fields will be set to None."
-        else:
-            print "weewx UV field will use CSV UV index field value (if it exists)."
-        if self.solar_sensor:
+        if not self.solar_sensor:
             print "All weewx radiation fields will be set to None."
-        else:
-            print "weewx radiation field will use CSV solar radiation field value (if it exists)."
         if options.date:
             print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
             print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
         if self.dry_run:
-            print "This is a dry run, imported data WILL NOT be saved to archive."
-        else:
-            print "This is NOT a dry run, imported data WILL be saved to archive."
+            print "This is a dry run, imported data wil not be saved to archive."
 
     def getRawData(self, period):
         """Obtain an iterable containing the raw data to be imported.

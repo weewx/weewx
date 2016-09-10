@@ -123,22 +123,22 @@ class WUSource(weeimport.Source):
         self.increment = datetime.timedelta(days=1)
 
         # tell the user/log what we intend to do
-        _msg = "A Weather Underground import from station '%s' has been requested." % self.station_id
+        _msg = "Observation history for Weather Underground station '%s' will be imported." % self.station_id
         self.wlog.printlog(syslog.LOG_INFO, _msg)
         _msg = "The following options will be used:"
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     station=%s, date=%s" % (self.station_id, options.date)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
                                                      self.calc_missing)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     tranche=%s, interval=%s, wind_direction=%s" % (self.tranche,
                                                                     self.interval,
                                                                     self.wind_dir)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg, self.verbose)
+        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
         self.wlog.printlog(syslog.LOG_INFO, _msg)
@@ -147,16 +147,12 @@ class WUSource(weeimport.Source):
                                                                         unit_nicknames[self.archive_unit_sys])
         self.wlog.printlog(syslog.LOG_INFO, _msg)
         if self.calc_missing:
-            print "Any missing derived observations WILL be calculated."
-        else:
-            print "Any missing derived observations WILL NOT be calculated."
+            print "Missing derived observations will be calculated."
         if options.date:
             print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
             print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
         if self.dry_run:
-            print "This is a dry run, imported data WILL NOT be saved to archive."
-        else:
-            print "This is NOT a dry run, imported data WILL be saved to archive."
+            print "This is a dry run, imported data will not be saved to archive."
 
     def getRawData(self, period):
         """Get raw observation data and construct a map from WU to weewx
