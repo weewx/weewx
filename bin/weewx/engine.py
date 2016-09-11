@@ -414,12 +414,12 @@ class StdQC(StdService):
     def new_loop_packet(self, event):
         """Apply quality check to the data in a loop packet"""
         
-        self.qc.apply_qc(event.packet)
+        self.qc.apply_qc(event.packet, 'LOOP')
 
     def new_archive_record(self, event):
         """Apply quality check to the data in an archive record"""
         
-        self.qc.apply_qc(event.record)
+        self.qc.apply_qc(event.record, 'Archive')
 
 #==============================================================================
 #                    Class StdArchive
