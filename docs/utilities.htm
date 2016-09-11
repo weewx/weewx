@@ -75,7 +75,7 @@ Version: 3.5.0
             </a> for resending data missing on the Weather Underground site.</li>
         </ul>
 
-        <!-- =========================================================================================== -->
+        <!-- ======== -->
 
 
         <h1 id="wee_config_utility"><span class="code">wee_config</span></h1>
@@ -87,7 +87,7 @@ Version: 3.5.0
             longitude, or altitude. But, what if you want to change these later?
             In particular, what if you want to change device drivers? You could
             edit the definitive configuration file, <span class="code">weewx.conf</span>,
-            by hand &mdash; described in detail in the <a href="#weewxconf">next section</a>
+            by hand &mdash; described in detail in the <a href="usersguide.htm">User's Guide</a>
             &mdash; but it's a big file with lots of nuances. Alternatively, if
             you're just changing something simple, you may be able to use the
             utility <span class="code">wee_config</span>.
@@ -289,15 +289,17 @@ Saved configuration to /home/weewx/weewx.conf
             <span class="code">--upgrade</span>, are used by the various <span class="code">weewx</span>
             installers and are not generally intended for the end user.</p>
 
-        <!-- =========================================================================================== -->
+        <!-- ======== -->
 
 
         <h1 id="wee_database_utility"><span class="code">wee_database</span></h1>
-        <p>This utility also has the ability to check a SQLite version of the archive
-            database for embedded strings (where a float is expected).</p>
+        <p>The database utility simplifies operations typically made to the
+            database.  For example, it can backfill the aggregation tables
+            or check a SQLite database for embedded strings where floats are
+            expected.</p>
 
-        <p>Before starting, it's worth running the utility with the <span class="code">--help</span>
-            flag to see how it is used:</p>
+        <p>Before starting, it's worth running the utility with the
+            <span class="code">--help</span> flag to see how it is used:</p>
         <pre class="tty cmd">wee_database --help</pre>
         <p>This will result in an output that looks something like this:</p>
       <pre class="tty">
@@ -363,7 +365,7 @@ permissions for the requested operation.
 </pre>
 
 
-        <!-- =========================================================================================== -->
+        <!-- ======== -->
 
 
         <h1 id="wee_debug_utility"><span class="code">wee_debug</span></h1>
@@ -640,7 +642,7 @@ wee_debug report successfully generated
             </table>
 
 
-            <!-- =========================================================================================== -->
+            <!-- ======== -->
 
 
             <h1 id="wee_device_utility"><span class="code">wee_device</span></h1>
@@ -1651,7 +1653,7 @@ wind_gust_max_time: None</pre>
                 create alarms in weewx, and the <span class="code">weewx</span> alarms
                 can do much more than the console alarms anyway.</p>
 
-            <!-- =========================================================================================== -->
+            <!-- ======== -->
 
 
             <h1 id="wee_extension_utility"><span class="code">wee_extension</span></h1>
@@ -1798,7 +1800,7 @@ cmon             0.7      Collect and display computer health indicators</pre>
 wee_extension --list</span>
 No extensions installed</pre>
 
-            <!-- =========================================================================================== -->
+            <!-- ======== -->
 
 
             <h1 id="wee_import_utility"><span class="code">wee_import</span></h1>
@@ -3791,25 +3793,86 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 settings.
             </p>
 
-            <!-- =========================================================================================== -->
+            <!-- ======== -->
 
 
             <h1 id="wee_reports_utility"><span class="code">wee_reports</span></h1>
-            <p>Need a guide to using wee_reports</p>
+            <p>In normal operation, <span class='code'>weewx</span> generates
+                reports on each archive interval, when new data arrive.  The
+                reports utility is used to generate reports on demand.  It uses
+                the same configuration file that
+                <span class='code'>weewx</span> uses.
+            </p>
 
-            <!-- =========================================================================================== -->
+            <p>Run the utility with the <span class='code'>--help</span>
+                option to see how it is used:
+            </p>
+
+            <pre class="tty cmd">wee_reports --help</pre>
+
+            <p>This results in something like this:</p>
+
+            <pre class="tty">Usage: wee_reports: [config_file] [timestamp] [--config=CONFIG_FILE] [--help]
+
+Run all reports defined in the specified configuration file. Use this utility
+to run reports immediately instead of waiting for the end of an archive
+interval.
+
+Options:
+  -h, --help            show this help message and exit
+  --config=CONFIG_FILE  Use the configuration file CONFIG_FILE
+</pre>
+
+            <!-- ======== -->
 
 
             <h1 id="weewxd_utility"><span class="code">weewxd</span></h1>
 
+            <p>The <span class='code'>weewxd</span> application is the heart
+                of <span class='code'>weewx</span>.  It can be run directly,
+                or in the background as a daemon.
+            </p>
 
-            <!-- =========================================================================================== -->
+            <p>Run with the <span class='code'>--help</span> option to see
+                how it is used:
+            </p>
+
+            <pre class="tty cmd">weewxd --help</pre>
+
+            <p>This results in output something like:</p>
+
+            <pre class="tty">Usage: weewxd --help
+       weewxd --version
+       weewxd config_file [--daemon] [--pidfile=PIDFILE] 
+                          [--exit]   [--loop-on-init]
+                          [--log-label=LABEL]
+           
+  Entry point to the weewx weather program. Can be run directly, or as a daemon
+  by specifying the '--daemon' option.
+
+Arguments:
+    config_file: The weewx configuration file to be used.
+
+
+Options:
+  -h, --help            show this help message and exit
+  -d, --daemon          Run as a daemon
+  -p PIDFILE, --pidfile=PIDFILE
+                        Store the process ID in PIDFILE
+  -v, --version         Display version number then exit
+  -x, --exit            Exit on I/O and database errors instead of restarting
+  -r, --loop-on-init    Retry forever if device is not ready on startup
+  -n LABEL, --log-label=LABEL
+                        Label to use in syslog entries</pre>
+
+
+            <!-- ======== -->
 
 
             <h1 id="wunderfixer_utility"><span class="code">wunderfixer</span></h1>
 
 
-            <!-- =========================================================================================== -->
+            <!-- ======== -->
 
     </div> <!-- end technical_content -->
 
