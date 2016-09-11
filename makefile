@@ -142,7 +142,7 @@ upload-readme: readme
 	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) README.txt)
 
 # update the version in all relevant places
-VDOCS=readme.htm customizing.htm usersguide.htm upgrading.htm
+VDOCS=readme.htm customizing.htm usersguide.htm upgrading.htm utilities.htm
 version:
 	for f in $(VDOCS); do \
   sed -e 's/^Version: [0-9].*/Version: $(VERSION)/' docs/$$f > docs/$$f.tmp; \
