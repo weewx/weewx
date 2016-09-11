@@ -1805,9 +1805,9 @@ No extensions installed</pre>
 
 
             <p>Some <span class="code">weewx</span> users will have historical data from
-                another source (eg other weather station software or a manually compiled
+                another source (e.g., other weather station software or a manually compiled
                 file) which they wish to import into <span class="code">weewx</span>.
-                Such data can, depending upon the source, be imported automatically
+                Such data can, depending upon the source, be imported
                 using the <span class="code">wee_import</span> utility. This section
                 details the use of the <span class="code">wee_import</span> utility.
             </p>
@@ -1821,8 +1821,6 @@ No extensions installed</pre>
                 </li>
                 <li>one or more Cumulus monthly log files</li>
             </ul>
-
-            <h2 id='import_help'><span class="code">wee_import</span> help</h2>
 
             <p>Before starting, it's worth running the utility with the
                 <span class="config_option">--help</span> flag to see how
@@ -1881,7 +1879,7 @@ the daily summaries using the wee_database utility.</pre>
                 install, you may have to tell it explicitly. You can do this by using
                 the <span class="config_option">--config</span> option:</p>
 
-    <pre class="tty">wee_import --config=/this/folder/weewx.conf --import-config=/folder/import.conf
+    <pre class="tty cmd">wee_import --config=/this/folder/weewx.conf --import-config=/folder/import.conf
 </pre>
 
             <h4><span class="config_option">--import-config</span></h4>
@@ -1897,7 +1895,7 @@ the daily summaries using the wee_database utility.</pre>
                 suit your needs. The <span class="config_option">--import-config</span>
                 command line option is used as follows:</p>
 
-    <pre class="tty">wee_import --import-config=/folder/import.conf
+    <pre class="tty cmd">wee_import --import-config=/folder/import.conf
 </pre>
 
             <h4><span class="config_option">--dry-run</span></h4>
@@ -1907,7 +1905,7 @@ the daily summaries using the wee_database utility.</pre>
                 saved to the database. This is a useful option to use when first
                 importing data.</p>
 
-    <pre class="tty">wee_import --import-config=/folder/import.conf --dry-run
+    <pre class="tty cmd">wee_import --import-config=/folder/import.conf --dry-run
 </pre>
 
             <h4><span class="config_option">--date</span></h4>
@@ -1919,21 +1917,21 @@ the daily summaries using the wee_database utility.</pre>
                 range. The date format used is <span class="code">YYYY/MM/DD</span> and
                 the date-time format <span class="code">YYYY/MM/DD HH:MM</span>. A range
                 is specified by separating two date or date-time formats by a hyphen,
-                eg <span class="code">'2015/12/1-2015/12/30'</span>. Note that the
+                e.g., <span class="code">'2015/12/1-2015/12/30'</span>. Note that the
                 date-time or date-time range string must be enclosed in single or double
                 quotation marks. The effect of the different
                 <span class="config_option">--date</span> command line option values
                 is shown in the following table:</p>
 
-            <table class="indent" style="width:50%" summary="--date_option operation">
+            <table class="indent" summary="--date_option operation">
                 <tbody>
                 <tr class="first_row">
-                    <td><span class="config_option">--date</span> command line option setting</td>
+                    <td>command line option</td>
                     <td>Records imported for a CSV or Cumulus import</td>
                     <td>Records imported for a Weather Underground import</td>
                 </tr>
                 <tr>
-                    <td class="code first_col">omitted<br>(ie the default)</td>
+                    <td class="code first_col">omitted<br>(i.e., the default)</td>
                     <td>All available records</td>
                     <td>Todays records only</td>
                 </tr>
@@ -1960,7 +1958,7 @@ the daily summaries using the wee_database utility.</pre>
                 </tbody>
             </table>
 
-            <p class="note" style="display:inline-block; width:70%">
+            <p class="note" style="display:inline-block;">
                 <b>Note</b><br/>If the <span class="config_option">--date</span>
                 command line option is omitted the default is to import all available
                 records when importing from a CSV or Cumulus source or to import today's
@@ -1983,7 +1981,7 @@ the daily summaries using the wee_database utility.</pre>
                 follows:
             </p>
 
-    <pre class="tty">wee_import --import-config=/folder/import.conf --log=-
+    <pre class="tty cmd">wee_import --import-config=/folder/import.conf --log=-
 </pre>
 
             <h4><span class="config_option">--verbose</span></h4>
@@ -1992,14 +1990,13 @@ the daily summaries using the wee_database utility.</pre>
                 line option will cause additional information to be printed during
                 <span class="code">wee_import</span> execution.</p>
 
-    <pre class="tty">wee_import --import-config=/folder/import.conf --verbose
+    <pre class="tty cmd">wee_import --import-config=/folder/import.conf --verbose
 </pre>
 
-            <h2>CSV observations</h2>
+            <h2>CSV files</h2>
 
-            <p><span class="code">wee_import</span> can import observational data from
-                a single CSV file. To be imported by
-                <span class="code">wee_import</span>, the CSV source file must be
+            <p><span class="code">wee_import</span> can import data from
+                a single CSV file. The CSV source file must be
                 structured as follows:</p>
 
             <ul>
@@ -2062,7 +2059,7 @@ the daily summaries using the wee_database utility.</pre>
                 <span class="code">weewx</span> archive field to be populated.
             </p>
 
-            <p class="note" style="display:inline-block; width:70%">
+            <p class="note" style="display:inline-block;">
                 <b>Note</b><br/>The use of the
                 <span class="config_option">calc_missing</span> option in the import
                 configuration file (refer to
@@ -2099,7 +2096,7 @@ the daily summaries using the wee_database utility.</pre>
                     <span class="code">/var/tmp</span> directory:
                 </li>
 
-            <pre class="tty">$ cp /home/weewx/util/import/csv-example.conf /var/tmp/csv.conf
+            <pre class="tty cmd">$ cp /home/weewx/util/import/csv-example.conf /var/tmp/csv.conf
 </pre>
 
                 <li>Confirm the <span class="code">source</span> option (refer to
@@ -2194,7 +2191,7 @@ the daily summaries using the wee_database utility.</pre>
                     To perform a dry run import enter the following command:
                 </li>
 
-            <pre class="tty">wee_import --import-config=/var/tmp/csv.conf --dry-run
+            <pre class="tty cmd">wee_import --import-config=/var/tmp/csv.conf --dry-run
 </pre>
 
                 <p>This will result in a short preamble giving the user brief
@@ -2235,7 +2232,7 @@ Finished dry run import. 70685 records were processed and 70685 unique records w
                     imported using the following command:
                 </li>
 
-                <pre class="tty">wee_import --import-config=/var/tmp/csv.conf</pre>
+                <pre class="tty cmd">wee_import --import-config=/var/tmp/csv.conf</pre>
 
                 <p>This will result in a short preamble giving the user brief details
                     on the data source, its destination and some other details on how
@@ -2335,7 +2332,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 </ul>
             </ol>
 
-            <h2>Weather Underground PWS observations</h2>
+            <h2>Weather Underground</h2>
 
             <p><span class="code">wee_import</span> can import observational data from
                 the daily history of a Weather Undeground PWS. A Weather Underground PWS
@@ -2374,7 +2371,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
                     <p class="note" style="display:inline-block; width:70%">
                         <b>Note</b><br/>If an appropriate field does not exist in
-                        the Weather Underground daily history (eg
+                        the Weather Underground daily history (e.g.,
                         <span class="code">radiation</span> if no radiation sensor,
                         <span class="code">outHumidity</span> if
                         <span class="code">outHumidity</span> was never uploaded to
@@ -2457,7 +2454,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     <span class="code">wu.conf</span> in the
                     <span class="code">/var/tmp</span> directory:
 
-            <pre class="tty">$ cp /home/weewx/util/import/wu-example.conf /var/tmp/wu.conf
+            <pre class="tty cmd">$ cp /home/weewx/util/import/wu-example.conf /var/tmp/wu.conf
 </pre>
 
                 <li>Confirm the <span class="code">source</span> option (refer to
@@ -2537,7 +2534,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     To perform a dry run import enter the following command:
                 </li>
 
-            <pre class="tty">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00" --dry-run
+            <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00" --dry-run
 </pre>
 
                 <p class="note" style="display:inline-block; width:70%">
@@ -2614,7 +2611,7 @@ Finished dry run import. 662 records were processed and 662 unique records would
                     imported using the following command:
                 </li>
 
-        <pre class="tty">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00"
+        <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00"
 </pre>
 
                 <p>This will result in a short preamble giving the user brief details
@@ -2867,7 +2864,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     and save it as <span class="code">cumulus.conf</span> in the
                     <span class="code">/var/tmp</span> directory:
 
-            <pre class="tty">$ cp /home/weewx/util/import/cumulus-example.conf /var/tmp/cumulus.conf
+            <pre class="tty cmd">$ cp /home/weewx/util/import/cumulus-example.conf /var/tmp/cumulus.conf
 </pre>
 
                 <li>Confirm the <span class="code">source</span> option (refer to
@@ -2957,7 +2954,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     To perform a dry run import enter the following command:
                 </li>
 
-            <pre class="tty">wee_import --import-config=/var/tmp/cumulus.conf --dry-run
+            <pre class="tty cmd">wee_import --import-config=/var/tmp/cumulus.conf --dry-run
 </pre>
 
                 <p>This will result in a short preamble giving the user brief
@@ -3010,7 +3007,7 @@ Finished dry run import. 37648 records were processed and 37620 unique records w
                     imported using the following command:
                 </li>
 
-        <pre class="tty">wee_import --import-config=/var/tmp/cumulus.conf
+        <pre class="tty cmd">wee_import --import-config=/var/tmp/cumulus.conf
 </pre>
 
                 <p>This will result in a short preamble giving the user brief details
@@ -3421,7 +3418,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <p class="note" style="display:inline-block; width:70%">
                 <b>Note</b><br/><span class="code">wee_import</span> only supports
                 cumulative rainfall data that resets on a midnight boundary, cumulative
-                rainfall data that resets at some other time; eg 9am, is not supported.
+                rainfall data that resets at some other time; e.g., 9am, is not supported.
                 In such cases the rainfall data will need to be converted to either
                 reset on a midnight boundary or a discrete value per date-time period
                 and <span class="config_option">rain = discrete</span> used. The former
@@ -3435,16 +3432,16 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <p><span class="code">weewx</span> records wind direction in degrees as a
                 number from 0 to 360 inclusive (no wind direction is recorded as
                 <span class="code">None/NULL</span>), whereas some data sources may
-                provide wind direction as number over a different range (eg -180 to
+                provide wind direction as number over a different range (e.g., -180 to
                 +180) or may use a particular value when there is no wind direction
-                (eg 0 may represent no wind direction and 360 may represent a northerly
+                (e.g., 0 may represent no wind direction and 360 may represent a northerly
                 wind, or -9999 (or some similar clearly invalid number) to represent
                 there being no wind direction). <span class="code">wee_import</span>
                 handles such variations in data by defining a range over which imported
                 wind direction values are accepted. Any value outside of this range is
                 treated as there being no wind direction and is recorded as
                 <span class="code">None/NULL</span>. Any value inside the range is
-                normalised to the range 0 to 360 inclusive (eg -180 would be normalised
+                normalised to the range 0 to 360 inclusive (e.g., -180 would be normalised
                 to 180). The <span class="config_option">wind_direction</span> option
                 consists of two comma separated numbers of the format lower, upper where
                 lower and upper are inclusive. The operation of the
@@ -3573,9 +3570,9 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 the appropriate unit conversion and store the resulting value in the
                 appropriate <span class="code">weewx</span> archive field. A mapping is
                 not required for every <span class="code">weewx</span> archive field
-                (eg the source may not provide inside temperature so no
+                (e.g., the source may not provide inside temperature so no
                 <span class="code">inTemp</span> field mapping is required) and neither
-                does every CSV field need to be included in a mapping (eg the source
+                does every CSV field need to be included in a mapping (e.g., the source
                 data field <span class="code">monthrain</span> may have no use if the
                 source data field <span class="code">dayrain</span> provides the data
                 for the <span class="code">weewx</span> archive
@@ -3585,7 +3582,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
             <p class="note" style="display:inline-block; width:70%">
                 <b>Note</b><br/>Any <span class="code">weewx</span> archive fields that
-                are derived (eg <span class="code">dewpoint</span>) and for which there
+                are derived (e.g., <span class="code">dewpoint</span>) and for which there
                 is no field mapping may be calculated during import by use of the
                 <span class="config_option">calc_missing</span> option in the
                 <span class="code">[CSV]</span> section of the import configuration
