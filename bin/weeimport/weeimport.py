@@ -24,6 +24,7 @@ from datetime import datetime as dt
 # weewx imports
 import weecfg
 import weewx
+import weewx.qc
 import weewx.wxservices
 
 from weewx.manager import open_manager_with_config
@@ -173,8 +174,8 @@ class Source(object):
         else:
             self.wxcalculate = None
 
-        # get ourselves an ImportQC object to do QC on imported records
-        self.import_QC = ImportQC(config_dict, log)
+        # get ourselves a QC object to do QC on imported records
+        self.import_QC = weewx.qc.QC(config_dict, parent='weeimport')
 
         # Process our command line options
         self.dry_run = options.dry_run
@@ -820,7 +821,7 @@ class Source(object):
             # we have no previous rain value so return zero
             return 0.0
 
-    def qc(self, record):
+    def qc(self, data_dict, data_type):
         """ Apply weewx.conf QC to a record.
 
         If qc option is set in the import config file then apply any StdQC
@@ -828,14 +829,14 @@ class Source(object):
 
         Input parameters:
 
-            record: A weewx compatible archive record.
+            data_dict: A weewx compatible archive record.
 
-        Returns nothing. record is modified directly with obs outside of QC
+        Returns nothing. data_dict is modified directly with obs outside of QC
         limits set to None.
         """
 
         if self.apply_qc:
-            self.import_QC.apply_qc(record)
+            self.import_QC.apply_qc(data_dict, data_type=data_type)
 
     def calcMissing(self, record):
         """ Add missing observations to a record.
@@ -924,7 +925,7 @@ class Source(object):
                     # convert our record
                     _conv_rec = to_std_system(_rec, self.archive_unit_sys)
                     # perform any any required QC checks
-                    self.qc(_conv_rec)
+                    self.qc(_conv_rec, 'Archive')
                     # now add any derived obs that we can to our record
                     _final_rec = self.calcMissing(_rec)
                     # add the record to our tranche and increment our count
@@ -1053,65 +1054,6 @@ class WeeImportLog(object):
         if self.verbose:
             print message
             self.logonly(level, message)
-
-
-# ============================================================================
-#                              class ImportQC
-# ============================================================================
-
-
-class ImportQC(object):
-    """Class to perform weewx like quality check on imported records."""
-
-    def __init__(self, config_dict, log):
-
-        # give our object some logging abilities
-        self.wlog = log
-
-        # If the 'StdQC' or 'MinMax' sections do not exist in the configuration
-        # dictionary, then an exception will get thrown and nothing will be
-        # done.
-        try:
-            mm_dict = config_dict['StdQC']['MinMax']
-        except KeyError:
-            self.wlog.printlog(syslog.LOG_INFO,
-                               "No QC information in weewx config file.")
-            return
-
-        self.min_max_dict = {}
-
-        target_unit_name = config_dict['StdConvert']['target_unit']
-        target_unit = unit_constants[target_unit_name.upper()]
-        converter = weewx.units.StdUnitConverters[target_unit]
-
-        for obs_type in mm_dict.scalars:
-            minval = float(mm_dict[obs_type][0])
-            maxval = float(mm_dict[obs_type][1])
-            if len(mm_dict[obs_type]) == 3:
-                group = weewx.units._getUnitGroup(obs_type)
-                vt = (minval, mm_dict[obs_type][2], group)
-                minval = converter.convert(vt)[0]
-                vt = (maxval, mm_dict[obs_type][2], group)
-                maxval = converter.convert(vt)[0]
-            self.min_max_dict[obs_type] = (minval, maxval)
-
-    def apply_qc(self, record):
-        """Apply quality check to the data in a record."""
-
-        # step through each ob type for which we have QC limits
-        for obs_type in self.min_max_dict:
-            # do we have that obs in our record and does it have a vallue
-            if record.has_key(obs_type) and record[obs_type] is not None:
-                # is our obs value outside our QC limits
-                if not self.min_max_dict[obs_type][0] <= record[obs_type] <= self.min_max_dict[obs_type][1]:
-                    # yes, inform the user if we applied a QC limit
-                    _msg = "%s record value '%s' %s outside limits (%s, %s)" % (timestamp_to_string(record['dateTime']),
-                                                                                obs_type, record[obs_type],
-                                                                                self.min_max_dict[obs_type][0],
-                                                                                self.min_max_dict[obs_type][1])
-                    self.wlog.printlog(syslog.LOG_INFO, _msg)
-                    # finally set the offending obs to None
-                    record[obs_type] = None
 
 
 # ============================================================================

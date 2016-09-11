@@ -120,7 +120,7 @@ class CSVSource(weeimport.Source):
             print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
             print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
         if self.dry_run:
-            print "This is a dry run, imported data wil not be saved to archive."
+            print "This is a dry run, imported data will not be saved to archive."
 
     def getRawData(self, period):
         """Obtain an iterable containing the raw data to be imported.
