@@ -2063,9 +2063,8 @@ the daily summaries using the wee_database utility.</pre>
 
             <p class="note">
                 <b>Note</b><br/>The use of the
-                <span class="config_option">calc_missing</span> option in the import
-                configuration file (refer to
-                <em><a href="#csv_calc_missing">calc_missing</a></em>) may result in a
+                <span class="config_option"><a href="#csv_calc_missing">calc_missing</a></span> option in the import
+                configuration file may result in a
                 number of derived fields being calculated from the imported data. If
                 these derived fields exist in the in-use database schema they will be
                 saved to the database as well.
@@ -2101,81 +2100,61 @@ the daily summaries using the wee_database utility.</pre>
             <pre class="tty cmd">$ cp /home/weewx/util/import/csv-example.conf /var/tmp/csv.conf
 </pre>
 
-                <li>Confirm the <span class="code">source</span> option (refer to
-                    <em><a href="#import_config_source"><span class="code">source</span></a></em>)
-                    in the import configuration file <span class="code">csv.conf</span>
-                    (refer to
-                    <em><a href="#import_config">The configuration import configuration file</a></em>)
-                    is set as follows:
+                <li>Confirm that the <span class="code"><a href="#import_config_source">source</a></span> option is set to CSV:
                 </li>
 
                 <pre class="tty">source = CSV</pre>
 
-                <li>Confirm the following options in the <span class="code">[CSV]</span>
-                    section of the import configuration file
-                    <span class="code">csv.conf</span> (refer to
-                    <em><a href="#import_config">The import configuration file</a></em>)
-                    are correctly set:
+                <li>Confirm that the following options in the <span class="code">[CSV]</span>
+                    section are set:
                 </li>
 
                 <ul>
-                    <li><strong><span class="code">file</span></strong>.
+                    <li><strong><span class="code"><a href="#csv_file">file</a></span></strong>.
                         The full path and file name of the file containing the CSV
                         formatted data to be imported. For the example below we will
                         use the file <span class="code">/var/tmp/csv/data.csv</span>
-                        as the CSV source data file. Refer to
-                        <em><a href="#csv_file"><span class="code">file</span></a></em>.
+                        as the CSV source data file.
                     </li>
-                    <li><strong><span class="code">interval</span></strong>.
+                    <li><strong><span class="code"><a href="#csv_interval">interval</a></span></strong>.
                         Determines how the <span class="code">weewx</span> interval
-                        field is derived. Refer to
-                        <em><a href="#csv_interval"><span class="code">interval</span></a></em>.
+                        field is derived.
                     </li>
-                    <li><strong><span class="code">qc</span></strong>. Determines
+                    <li><strong><span class="code"><a href="#csv_qc">qc</a></span></strong>. Determines
                         whether quality control checks are performed on the imported
-                        data. Refer to
-                        <em><a href="#csv_qc"><span class="code">qc</span></a></em>.
+                        data.
                     </li>
-                    <li><strong><span class="code">calc_missing</span></strong>.
+                    <li><strong><span class="code"><a href="#csv_calc_missing">calc_missing</a></span></strong>.
                         Determines whether missing derived observations will be
-                        calculated from the imported data. Refer to
-                        <em><a href="#csv_calc_missing"><span class="code">calc_missing</span></a></em>.
+                        calculated from the imported data.
                     </li>
-                    <li><strong><span class="code">tranche</span></strong>. The
+                    <li><strong><span class="code"><a href="#csv_tranche">tranche</a></span></strong>. The
                         number of records written to the
                         <span class="code">weewx</span> database in each transaction.
-                        Refer to
-                        <em><a href="#csv_tranche"><span class="code">tranche</span></a></em>.
                     </li>
-                    <li><strong><span class="code">UV_sensor</span></strong>.
+                    <li><strong><span class="code"><a href="#csv_UV">UV_sensor</a></span></strong>.
                         Whether a UV sensor was installed when the source data was
-                        produced. Refer to
-                        <em><a href="#csv_UV"><span class="code">UV_sensor</span></a></em>.
+                        produced.
                     </li>
-                    <li><strong><span class="code">solar_sensor</span></strong>.
+                    <li><strong><span class="code"><a href="#csv_solar">solar_sensor</a></span></strong>.
                         Whether a solar radiation sensor was installed when the
-                        source data was produced. Refer to
-                        <em><a href="#csv_solar"><span class="code">solar_sensor</span></a></em>.
+                        source data was produced.
                     </li>
-                    <li><strong><span class="code">raw_datetime_format</span></strong>.
-                        The format of the imported date time field. Refer to
-                        <em><a href="#csv_raw_datetime_format"><span class="code">raw_datetime_format</span></a></em>.
+                    <li><strong><span class="code"><a href="#csv_raw_datetime_format">raw_datetime_format</a></span></strong>.
+                        The format of the imported date time field.
                     </li>
-                    <li><strong><span class="code">rain</span></strong>. Determines
+                    <li><strong><span class="code"><a href="#csv_rain">rain</a></span></strong>. Determines
                         how the <span class="code">weewx</span> rain field is
-                        derived. Refer to
-                        <em><a href="#csv_rain"><span class="code">rain</span></a></em>.
+                        derived.
                     </li>
-                    <li><strong><span class="code">wind_direction</span></strong>.
+                    <li><strong><span class="code"><a href="#csv_wind_direction">wind_direction</a></span></strong>.
                         Determines how imported wind direction fields are
-                        interpreted. Refer to
-                        <em><a href="#csv_wind_direction"><span class="code">wind_direction</span></a></em>.
+                        interpreted.
                     </li>
-                    <li><strong><span class="code">[[Map]]</span></strong>. Defines
+                    <li><strong><span class="code"><a href="#csv_map">[[Map]]</a></span></strong>. Defines
                         the mapping between imported data fields and
                         <span class="code">weewx</span> archive fields. Also defines
-                        the units of measure for each imported field. Refer to
-                        <em><a href="#csv_map"><span class="code">[[Map]]</span></a></em>.
+                        the units of measure for each imported field.
                     </li>
                 </ul>
 
@@ -2186,8 +2165,7 @@ the daily summaries using the wee_database utility.</pre>
                     consideration should be given to any additional command line options
                     to be used such as <span class="code">--date</span>. The available
                     command line options are shown in the
-                    <span class="code">wee_import --help</span> output above (refer to
-                    <em><a href="#import_help">wee_import help</a></em>). Additional
+                    <span class="code">wee_import --help</span> output above. Additional
                     details are also provided in the
                     <em><a href="#common_options">Command line options</a></em> section.
                     To perform a dry run import enter the following command:
@@ -2318,9 +2296,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                         data can be identified in a single block only. Once any
                         contaminated data has been removed the daily summary tables
                         will need to be dropped and rebuild using the
-                        <span class="code">wee_database</span> utility (refer to
-                        <em><a href="#Dropping_and_rebuilding_the_daily_summaries">Dropping and rebuilding the daily
-                            summaries</a></em>).
+                        <span class="code">wee_database</span> utility.
                     </li>
 
                     <li>If the imported data is the only data in an SQLite database
@@ -2459,39 +2435,28 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <pre class="tty cmd">$ cp /home/weewx/util/import/wu-example.conf /var/tmp/wu.conf
 </pre>
 
-                <li>Confirm the <span class="code">source</span> option (refer to
-                    <em><a href="#import_config_source"><span class="code">source</span></a></em>)
-                    in the import configuration file
-                    <span class="code">wu.conf</span> (refer to
-                    <em><a href="#import_config">The import configuration file</a></em>)
-                    is set as follows:
+                <li>Confirm that the <span class="code"><a href="#import_config_source">source</a></span> option is set to WU
                 </li>
 
                 <pre class="tty">source = WU</pre>
 
-                <li>Confirm the following options in the
-                    <span class="code">[WU]</span> section of the import configuration
-                    file <span class="code">wu.conf</span> (refer to
-                    <em><a href="#import_config">The import configuration file</a></em>)
-                    are correctly set:
+                <li>Confirm that the following options in the
+                    <span class="code">[WU]</span> section are correctly set:
                 </li>
 
                 <ul>
-                    <li><strong><span class="code">station_id</span></strong>.
+                    <li><strong><span class="code"><a href="#wu_station_id">station_id</a></span></strong>.
                         The 11 or 12 character weather station ID of the Weather
                         Underground PWS that will be the source of the imported
-                        data. Refer to
-                        <em><a href="#wu_station_id"><span class="code">station_id</span></a></em>.
+                        data.
                     </li>
-                    <li><strong><span class="code">interval</span></strong>.
+                    <li><strong><span class="code"><a href="#wu_interval">interval</a></span></strong>.
                         Determines how the <span class="code">weewx</span> interval
-                        field is derived. Refer to
-                        <em><a href="#wu_interval"><span class="code">interval</span></a></em>.
+                        field is derived.
                     </li>
-                    <li><strong><span class="code">qc</span></strong>. Determines
+                    <li><strong><span class="code"><a href="#wu_qc">qc</a></span></strong>. Determines
                         whether quality control checks are performed on the imported
-                        data. Refer to
-                        <em><a href="#wu_qc"><span class="code">qc</span></a></em>.
+                        data.
                     </li>
 
                     <p class="note">
@@ -2504,21 +2469,17 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                         database.
                     </p>
 
-                    <li><strong><span class="code">calc_missing</span></strong>.
+                    <li><strong><span class="code"><a href="#wu_calc_missing">calc_missing</a></span></strong>.
                         Determines whether missing derived observations will be
-                        calculated from the imported data. Refer to
-                        <em><a href="#wu_calc_missing"><span class="code">calc_missing</span></a></em>.
+                        calculated from the imported data.
                     </li>
-                    <li><strong><span class="code">tranche</span></strong>. The
+                    <li><a href="#wu_tranche"><strong><span class="code">tranche</span></strong></a>. The
                         number of records written to the
                         <span class="code">weewx</span> database in each transaction.
-                        Refer to
-                        <em><a href="#wu_tranche"><span class="code">tranche</span></a></em>.
                     </li>
-                    <li><strong><span class="code">wind_direction</span></strong>.
+                    <li><a href="#wu_wind_direction"><strong><span class="code">wind_direction</span></strong></a>.
                         Determines how imported wind direction fields are
-                        interpreted. Refer to
-                        <em><a href="#wu_wind_direction"><span class="code">wind_direction</span></a></em>.
+                        interpreted.
                     </li>
                 </ul>
 
@@ -2529,8 +2490,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     consideration should be given to any additional command line options
                     to be used such as <span class="code">--date</span>. The available
                     command line options are shown in the
-                    <span class="code">wee_import --help</span> output above (refer to
-                    <em><a href="#import_help">wee_import help</a></em>). Additional
+                    <span class="code">wee_import --help</span> output above. Additional
                     details are also provided in the
                     <em><a href="#common_options">Command line options</a></em> section.
                     To perform a dry run import enter the following command:
@@ -2727,9 +2687,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                         data or it can be identified in a single block only. Once
                         any contaminated data has been removed the daily summary
                         tables will need to be dropped and rebuild using the
-                        <span class="code">wee_database</span> utility (refer to
-                        <em><a href="#Dropping_and_rebuilding_the_daily_summaries">Dropping and rebuilding the daily
-                            summaries</a></em>).
+                        <span class="code">wee_database</span> utility.
                     </li>
 
                     <li>If the imported data is the only data in an SQLite database
@@ -2869,76 +2827,54 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <pre class="tty cmd">$ cp /home/weewx/util/import/cumulus-example.conf /var/tmp/cumulus.conf
 </pre>
 
-                <li>Confirm the <span class="code">source</span> option (refer to
-                    <em><a href="#import_config_source"><span class="code">source</span></a></em>)
-                    in the import configuration file
-                    <span class="code">cumulus.conf</span> (refer to
-                    <em><a href="#import_config">The import configuration file</a></em>)
-                    is set as follows:
+                <li>Confirm that the <span class="code">source</span> option is set to Cumulus:
                 </li>
 
                 <pre class="tty">source = Cumulus</pre>
 
-                <li>Confirm the following options in the
-                    <span class="code">[Cumulus]</span> section of the import
-                    configuration file <span class="code">cumulus.conf</span>
-                    (refer to
-                    <em><a href="#import_config">The import configuration file</a></em>)
-                    are correctly set:
+                <li>Confirm that the following options in the
+                    <span class="code">[Cumulus]</span> section are correctly set:
                 </li>
 
                 <ul>
-                    <li><strong><span class="code">directory</span></strong>.
+                    <li><a href="#cumulus_directory"><strong><span class="code">directory</span></strong></a>.
                         The full path to the directory containing the Cumulus
                         monthly log files to be used as the source of the imported
-                        data. Refer to
-                        <em><a href="#cumulus_directory"><span class="code">directory</span></a></em>.
+                        data.
                     </li>
-                    <li><strong><span class="code">interval</span></strong>.
+                    <li><a href="#cumulus_interval"><strong><span class="code">interval</span></strong></a>.
                         Determines how the <span class="code">weewx</span> interval
-                        field is derived. Refer to
-                        <em><a href="#cumulus_interval"><span class="code">interval</span></a></em>.
+                        field is derived.
                     </li>
-                    <li><strong><span class="code">qc</span></strong>. Determines
+                    <li><a href="#cumulus_qc"><strong><span class="code">qc</span></strong></a>. Determines
                         whether quality control checks are performed on the imported
-                        data. Refer to
-                        <em><a href="#cumulus_qc"><span class="code">qc</span></a></em>.
+                        data.
                     </li>
-                    <li><strong><span class="code">calc_missing</span></strong>.
+                    <li><a href="#cumulus_calc_missing"><strong><span class="code">calc_missing</span></strong></a>.
                         Determines whether missing derived observations will be
-                        calculated from the imported data. Refer to
-                        <em><a href="#cumulus_calc_missing"><span class="code">calc_missing</span></a></em>.
+                        calculated from the imported data.
                     </li>
-                    <li><strong><span class="code">delimiter</span></strong>. The
+                    <li><a href="#cumulus_delimiter"><strong><span class="code">delimiter</span></strong></a>. The
                         field delimiter used in the Cumulus monthly log files.
-                        Refer to
-                        <em><a href="#cumulus_delimiter"><span class="code">delimiter</span></a></em>.
                     </li>
-                    <li><strong><span class="code">decimal</span></strong>. The
+                    <li><a href="#cumulus_decimal"><strong><span class="code">decimal</span></strong></a>. The
                         decimal point character used in the Cumulus monthly log
-                        files. Refer to
-                        <em><a href="#cumulus_decimal"><span class="code">decimal</span></a></em>.
+                        files.
                     </li>
-                    <li><strong><span class="code">tranche</span></strong>. The
+                    <li><a href="#cumulus_tranche"><strong><span class="code">tranche</span></strong></a>. The
                         number of records written to the
                         <span class="code">weewx</span> database in each transaction.
-                        Refer to
-                        <em><a href="#cumulus_tranche"><span class="code">tranche</span></a></em>.
                     </li>
-                    <li><strong><span class="code">UV_sensor</span></strong>.
+                    <li><a href="#cumulus_UV"><strong><span class="code">UV_sensor</span></strong></a>.
                         Whether a UV sensor was installed when the source data was
-                        produced. Refer to
-                        <em><a href="#cumulus_UV"><span class="code">UV_sensor</span></a></em>.
+                        produced.
                     </li>
-                    <li><strong><span class="code">solar_sensor</span></strong>.
+                    <li><a href="#cumulus_solar"><strong><span class="code">solar_sensor</span></strong></a>.
                         Whether a solar radiation sensor was installed when the
-                        source data was produced. Refer to
-                        <em><a href="#cumulus_solar"><span class="code">solar_sensor</span></a></em>.
+                        source data was produced.
                     </li>
-                    <li><strong><span class="code">[[Units]]</span></strong>.
+                    <li><a href="#cumulus_units"><strong><span class="code">[[Units]]</span></strong></a>.
                         Defines the units used in the Cumulus monthly log files.
-                        Refer to
-                        <em><a href="#cumulus_units"><span class="code">[[Units]]</span></a></em>.
                     </li>
                 </ul>
 
@@ -2949,8 +2885,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     consideration should be given to any additional command line options
                     to be used such as <span class="code">--date</span>. The available
                     command line options are shown in the
-                    <span class="code">wee_import --help</span> output above (refer to
-                    <em><a href="#import_help">wee_import help</a></em>). Additional
+                    <span class="code">wee_import --help</span> output above. Additional
                     details are also provided in the
                     <em><a href="#common_options">Command line options</a></em> section.
                     To perform a dry run import enter the following command:
@@ -3136,9 +3071,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                         data can be identified in a single block only. Once any
                         contaminated data has been removed the daily summary tables
                         will need to be dropped and rebuild using the
-                        <span class="code">wee_database</span> utility (refer to
-                        <em><a href="#Dropping_and_rebuilding_the_daily_summaries">Dropping and rebuilding the daily
-                            summaries</a></em>).
+                        <span class="code">wee_database</span> utility.
                     </li>
 
                     <li>If the imported data is the only data in an SQLite database
@@ -3154,13 +3087,11 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
             <h2 id='import_config'>The import configuration file</h2>
 
-            <p><span class="code">wee_import</span> uses a secondary configuration file
-                to specify the import type and to store various options associated with
-                each import type. The import configuration file to be used during a
-                <span class="code">wee_import</span> session is specified at the
+            <p><span class="code">wee_import</span> requires a second configuration file, the import configuration file, in addition to the standard weewx configuration file.  The import configuration file
+                specifies the import type and various options associated with
+                each type of import. The import configuration file is specified at the
                 <span class="code">wee_import</span> command line using the mandatory
-                <span class="code">--import-config</span> command line option (refer to
-                <em><a href="#common_options">Command line options</a></em>). How the
+                <span class="code">--import-config</span> command line option. How the
                 user constructs the import configuration file is up to the user;
                 however, the recommended method is to copy one of the example import
                 configuration files located in the <span class="code">util/import</span>
@@ -3269,14 +3200,10 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 and maximum checks to any imported observations.
                 <span class="code">wee_import</span> quality control checks use the same
                 configuration settings, and operate in the same manner, as the
-                <span class="code">weewx</span> <span class="code">StdQC</span> service
-                (refer to the <a href="usersguide.htm#StdQC">[StdQC]</a> section of the
-                <a href="usersguide.htm">User's Guide</a>). If an observation falls
+                <a href="usersguide.htm#StdQC"><span class="code">StdQC</span></a> service. For example, for min/max QC, if an observation falls
                 outside of the quality control range for that observation, then the
                 observation will be set to <span class="code">None</span>. The user will
-                be alerted through a short message to
-                <span class="code">stdout</span>(console) and the
-                <span class="code">weewx</span> log similar to:</p>
+                be alerted through a short message similar to:</p>
 
         <pre class="tty">2016-01-12 10:00:00 AEST (1452556800) record value 'outTemp' 194.34 outside limits (0.0, 120.0)
 </pre>
