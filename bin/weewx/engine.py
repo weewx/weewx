@@ -394,18 +394,47 @@ class StdCalibrate(StdService):
 #==============================================================================
 
 class StdQC(StdService):
-    """Performs quality check on incoming data."""
+    """Service that performs quality check on incoming data."""
 
     def __init__(self, engine, config_dict):
         super(StdQC, self).__init__(engine, config_dict)
 
+        # Get a QC object to apply the QC checks to our data
+        self.qc = QC(config_dict)
+        
+        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        
+    def new_loop_packet(self, event):
+        """Apply quality check to the data in a loop packet"""
+        
+        self.qc.apply_qc(event.packet)
+
+    def new_archive_record(self, event):
+        """Apply quality check to the data in an archive record"""
+        
+        self.qc.apply_qc(event.record)
+
+#==============================================================================
+#                    Class QC
+#==============================================================================
+
+class QC(object):
+    """Class to apply quality checks to a record."""
+    
+    def __init__(self, config_dict, parent='engine'):
+        
+        # Save our 'parent' - for use when logging
+        self.parent = parent
+        
         # If the 'StdQC' or 'MinMax' sections do not exist in the configuration
         # dictionary, then an exception will get thrown and nothing will be
         # done.
         try:
             mm_dict = config_dict['StdQC']['MinMax']
         except KeyError:
-            syslog.syslog(syslog.LOG_NOTICE, "engine: No QC information in config file.")
+            syslog.syslog(syslog.LOG_NOTICE, 
+                          self.parent + ": No QC information in config file.")
             return
 
         self.min_max_dict = {}
@@ -425,30 +454,17 @@ class StdQC(StdService):
                 maxval = converter.convert(vt)[0]
             self.min_max_dict[obs_type] = (minval, maxval)
         
-        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        
-    def new_loop_packet(self, event):
-        """Apply quality check to the data in a LOOP packet"""
-        for obs_type in self.min_max_dict:
-            if obs_type in event.packet and event.packet[obs_type] is not None:
-                if not self.min_max_dict[obs_type][0] <= event.packet[obs_type] <= self.min_max_dict[obs_type][1]:
-                    syslog.syslog(syslog.LOG_NOTICE, "engine: %s LOOP value '%s' %s outside limits (%s, %s)" % 
-                                  (weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), 
-                                   obs_type, event.packet[obs_type], 
-                                   self.min_max_dict[obs_type][0], self.min_max_dict[obs_type][1]))
-                    event.packet[obs_type] = None
+    def apply_qc(self, data_dict):
+        """Apply quality checks to the data in a record"""
 
-    def new_archive_record(self, event):
-        """Apply quality check to the data in an archive packet"""
         for obs_type in self.min_max_dict:
-            if obs_type in event.record and event.record[obs_type] is not None:
-                if not self.min_max_dict[obs_type][0] <= event.record[obs_type] <= self.min_max_dict[obs_type][1]:
-                    syslog.syslog(syslog.LOG_NOTICE, "engine: %s Archive value '%s' %s outside limits (%s, %s)" % 
-                                  (weeutil.weeutil.timestamp_to_string(event.record['dateTime']),
-                                   obs_type, event.record[obs_type], 
+            if data_dict.has_key(obs_type) and data_dict[obs_type] is not None:
+                if not self.min_max_dict[obs_type][0] <= data_dict[obs_type] <= self.min_max_dict[obs_type][1]:
+                    syslog.syslog(syslog.LOG_NOTICE, self.parent + ": %s LOOP value '%s' %s outside limits (%s, %s)" % 
+                                  (weeutil.weeutil.timestamp_to_string(data_dict['dateTime']), 
+                                   obs_type, data_dict[obs_type], 
                                    self.min_max_dict[obs_type][0], self.min_max_dict[obs_type][1]))
-                    event.record[obs_type] = None
+                    data_dict[obs_type] = None
 
 #==============================================================================
 #                    Class StdArchive
