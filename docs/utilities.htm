@@ -413,7 +413,7 @@ should thoroughly check the generated output for personal/private information
 before posting the information publicly.
 </pre>
 
-        <h2><span class="code">wee_debug</span> version number</h3>
+        <h2><span class="code">wee_debug</span> version number</h2>
 
             <p>To display the <span class="code">wee_debug</span> version number:</p>
 
@@ -1995,7 +1995,7 @@ the daily summaries using the wee_database utility.</pre>
     <pre class="tty cmd">wee_import --import-config=/folder/import.conf --verbose
 </pre>
 
-            <h2>CSV files</h2>
+            <h2>Importing from CSV files</h2>
 
             <p><span class="code">wee_import</span> can import data from
                 a single CSV file. The CSV source file must be
@@ -2082,16 +2082,13 @@ the daily summaries using the wee_database utility.</pre>
                     <span class="code">/var/tmp</span> folder will be used.
                 </li>
 
-                <li>As <span class="code">wee_import</span> will make alterations to the
-                    <span class="code">weewx</span> database make a backup copy of the
-                    <span class="code">weewx</span> database for use should the import
-                    go awry.
+                <li>Make a backup of the
+                    <span class="code">weewx</span> database in case the import
+                    should go awry.
                 </li>
 
-                <li>If an import configuration file has not already been produced for
-                    this CSV import, make a copy of the example CSV import configuration
-                    file provided in the <span class="code">weewx/util/import</span>
-                    directory. In this case we will make a copy of the example CSV
+                <li>Create an import configuration file.
+                    In this case we will make a copy of the example CSV
                     import configuration file and save it as
                     <span class="code">csv.conf</span> in the
                     <span class="code">/var/tmp</span> directory:
@@ -2112,9 +2109,7 @@ the daily summaries using the wee_database utility.</pre>
                 <ul>
                     <li><strong><span class="code"><a href="#csv_file">file</a></span></strong>.
                         The full path and file name of the file containing the CSV
-                        formatted data to be imported. For the example below we will
-                        use the file <span class="code">/var/tmp/csv/data.csv</span>
-                        as the CSV source data file.
+                        formatted data to be imported.
                     </li>
                     <li><strong><span class="code"><a href="#csv_interval">interval</a></span></strong>.
                         Determines how the <span class="code">weewx</span> interval
@@ -2158,30 +2153,18 @@ the daily summaries using the wee_database utility.</pre>
                     </li>
                 </ul>
 
-                <li>When first importing data it is often prudent to do a dry run import
-                    before any data is actually imported. A dry run import will perform
+                <li>When first importing data it is prudent to do a dry run import
+                    before any data are actually imported. A dry run import will perform
                     all steps of the import without actually writing imported data to
                     the <span class="code">weewx</span> database. In addition,
                     consideration should be given to any additional command line options
-                    to be used such as <span class="code">--date</span>. The available
-                    command line options are shown in the
-                    <span class="code">wee_import --help</span> output above. Additional
-                    details are also provided in the
-                    <em><a href="#common_options">Command line options</a></em> section.
-                    To perform a dry run import enter the following command:
+                    such as <span class="code">--date</span>.
                 </li>
+                <p>To perform a dry run enter the following command:</p>
 
             <pre class="tty cmd">wee_import --import-config=/var/tmp/csv.conf --dry-run
 </pre>
-
-                <p>This will result in a short preamble giving the user brief
-                    details on the data source, its destination and some other
-                    details on how the data will be processed. The import will then
-                    be performed but no data is written to the
-                    <span class="code">weewx</span> database. Upon completion a
-                    brief summary of the records processed is provided. The output
-                    should be similar to:
-                </p>
+                <p>The output should be something like this:</p>
 
             <pre class="tty">Starting wee_import...
 A CSV import from source file '/var/tmp/data.csv' has been requested.
@@ -2197,6 +2180,14 @@ Records processed: 70685; Unique records: 70685; Last timestamp: 2010-09-04 04:2
 Finished dry run import. 70685 records were processed and 70685 unique records would have been imported.
 </pre>
 
+                <p>The output includes details about the data source, its
+                    destination and some other details on how the data will
+                    be processed. The import will then
+                    be performed but no data will be written to the
+                    <span class="code">weewx</span> database. Upon completion a
+                    brief summary of the records processed is provided.
+                </p>
+
                 <p class="note">
                     <b>Note</b><br/>As the <span class="code">weewx</span> database is
                     not altered when the <span class="code">--dry-run</span> command
@@ -2205,21 +2196,18 @@ Finished dry run import. 70685 records were processed and 70685 unique records w
                     <span class="code">--dry-run</span> is equivalent to
                     <span class="code">--dry-run --log=-</span>. During a dry run import
                     the only <span class="code">wee_import</span> output is that
-                    displayed on <span class="code">stdout</span>(console).
+                    displayed on <span class="code">stdout</span>.
                 </p>
 
-                <li>Once the dry run results are satisfactory the source data can be
+                <li>Once the dry run results are satisfactory the data can be
                     imported using the following command:
                 </li>
 
                 <pre class="tty cmd">wee_import --import-config=/var/tmp/csv.conf</pre>
 
-                <p>This will result in a short preamble giving the user brief details
-                    on the data source, its destination and some other details on how
-                    the data will be processed. This output will vary slightly
-                    depending on what command line options have been used. At the end
-                    of the preamble the user will be prompted as to whether to proceed
-                    or not with the import:</p>
+                <p>This will result in a short preamble similar to that from
+                    the dry run.  At the end
+                    of the preamble there will be a prompt:</p>
 
     <pre class="tty">Starting wee_import...
 A CSV import from source file '/var/tmp/data.csv' has been requested.
@@ -2235,11 +2223,10 @@ Proceeding will save all imported records in the weewx archive.
 Are you sure you want to proceed (y/n)?
 </pre>
 
-                <li>The preamble should be read carefully and if the import parameters
+                <li>If the import parameters
                     are acceptable enter <span class="code">y</span> to proceed with the
-                    import or <span class="code">n</span> to abort the import. If the
-                    import is aborted the user is informed of this and returned to the
-                    command line. If the user proceeds with the import then the source
+                    import or <span class="code">n</span> to abort the import.
+                    If the import is confirmed then the source
                     data will be imported, processed and saved in the
                     <span class="code">weewx</span> database. Information on the
                     progress of the import will be displayed similar to the following:
@@ -2286,34 +2273,12 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     <span class="code">weewx</span> database has been contaminated with
                     incorrect data, then the imported data may be removed by:
                 </li>
-
-                <ul>
-                    <li>Manually deleting the contaminated data from the
-                        <span class="code">weewx</span> archive database using SQL
-                        commands. The simplicity of this process will depend on the
-                        users ability to use SQL, the amount of data imported and
-                        whether the imported data was dispersed amongst existing
-                        data can be identified in a single block only. Once any
-                        contaminated data has been removed the daily summary tables
-                        will need to be dropped and rebuild using the
-                        <span class="code">wee_database</span> utility.
-                    </li>
-
-                    <li>If the imported data is the only data in an SQLite database
-                        then the easiest method of removing the contaminated data
-                        is to delete the SQLite database file.
-                    </li>
-
-                    <li>If the above steps are not appropriate then the database
-                        should be restored from the previously made backup.
-                    </li>
-                </ul>
             </ol>
 
-            <h2>Weather Underground</h2>
+            <h2>Importing from Weather Underground</h2>
 
-            <p><span class="code">wee_import</span> can import observational data from
-                the daily history of a Weather Undeground PWS. A Weather Underground PWS
+            <p><span class="code">wee_import</span> can import data from
+                the daily history of a Weather Undeground PWS. A Weather Underground
                 daily history provides weather station observations received by Weather
                 Underground for the PWS concerned on a day by day basis. As such, the
                 data is analogous to the <span class="code">weewx</span> archive table.
@@ -2332,7 +2297,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <ul>
                 <li>Provided data exists for each field in the Weather Underground
                     PWS daily history, the following <span class="code">weewx</span>
-                    archive fields will be directly populated by imported data:</p>
+                    archive fields will be directly populated by imported data:
 
                     <ul>
                         <li><span class="code">dateTime</span></li>
@@ -2349,14 +2314,16 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
                     <p class="note">
                         <b>Note</b><br/>If an appropriate field does not exist in
-                        the Weather Underground daily history (e.g.,
-                        <span class="code">radiation</span> if no radiation sensor,
-                        <span class="code">outHumidity</span> if
-                        <span class="code">outHumidity</span> was never uploaded to
-                        Weather Undeground) then the corresponding
+                        the Weather Underground daily history then the corresponding
                         <span class="code">weewx</span> archive field will be set
                         to <span class="code">None/NULL</span>.
+                        For example, if there is no solar radiation sensor
+                        then <span class="code">radiation</span> will be NULL,
+                        or if <span class="code">outHumidity</span> was never
+                        uploaded to Weather Undeground then
+                        <span class="code">outHumidity</span> will be NULL.
                     </p>
+                </li>
 
                 <li>The following <span class="code">weewx</span> archive fields
                     will be populated from other settings or configuration
@@ -2372,7 +2339,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     will be populated with values derived from the imported data
                     provided <span class="code">calc_missing = True</span> is
                     included in the <span class="code">[WU]</span> section of the
-                    import configuration file being used and the field exists in the
+                    import configuration file and the field exists in the
                     in-use <span class="code">weewx</span> archive table schema.
                 </li>
 
@@ -2386,25 +2353,18 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 </ul>
 
                 <p class="note">
-                    <b>Note</b><br/>The default setting of the
-                    <span class="code">calc_missing</span> option is
-                    <span class="code">True</span> so if the
-                    <span class="code">calc_missing</span> option is omitted
-                    from the <span class="code">[WU]</span> section the same
-                    fields will be calculated and stored as if
-                    <span class="code">calc_missing = True</span> had been used.
-                </p>
-
-                <p class="note">
                     <b>Note</b><br/>If
                     <span class="code">calc_missing = False</span> is included
                     in the <span class="code">[WU]</span> section of the import
                     configuration file being used then all of the above fields
                     will be set to <span class="code">None/NULL</span>.
+                    The default setting of the
+                    <span class="code">calc_missing</span> option is
+                    <span class="code">True</span>
                 </p>
             </ul>
 
-            <h3>Importing observations from a Weather Underground PWS</h3>
+            <h3>Importing observations from Weather Underground</h3>
 
             <p>To import observations from the daily history of a Weather Underground
                 PWS:</p>
@@ -2417,16 +2377,12 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     ID of <span class="code">ISTATION123</span> will be used.
                 </li>
 
-                <li>As <span class="code">wee_import</span> will make alterations to the
-                    <span class="code">weewx</span> database make a backup copy of the
-                    <span class="code">weewx</span> database for use should the import
-                    go awry.
+                <li>Make a backup of the
+                    <span class="code">weewx</span> database in case the
+                    import should go awry.
                 </li>
 
-                <li>If an import configuration file has not already been produced for
-                    this Weather Underground import, make a copy of the example Weather
-                    Underground import configuration file provided in the
-                    <span class="code">weewx/util/import</span> directory. In this case
+                <li>Create an import configuration file. In this case
                     we will make a copy of the example Weather Underground import
                     configuration file and save it as
                     <span class="code">wu.conf</span> in the
@@ -2462,7 +2418,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     <p class="note">
                         <b>Note</b><br/>As Weather Underground imports at times
                         contain nonsense values, particularly for fields for
-                        which no data was uploaded to Weather Underground by the
+                        which no data were uploaded to Weather Underground by the
                         PWS, the use of quality control checks on imported data
                         can prevent these nonsense values from being imported
                         and contaminating the <span class="code">weewx</span>
@@ -2483,18 +2439,14 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     </li>
                 </ul>
 
-                <li>When first importing data it is often prudent to do a dry run import
-                    before any data is actually imported. A dry run import will perform
+                <li>When first importing data it is prudent to do a dry run import
+                    before any data are actually imported. A dry run import will perform
                     all steps of the import without actually writing imported data to
                     the <span class="code">weewx</span> database. In addition,
                     consideration should be given to any additional command line options
-                    to be used such as <span class="code">--date</span>. The available
-                    command line options are shown in the
-                    <span class="code">wee_import --help</span> output above. Additional
-                    details are also provided in the
-                    <em><a href="#common_options">Command line options</a></em> section.
-                    To perform a dry run import enter the following command:
+                    to be used such as <span class="code">--date</span>.
                 </li>
+                <p>To perform a dry run enter the following command:</p>
 
             <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00" --dry-run
 </pre>
@@ -2528,14 +2480,13 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     of imports of smaller time spans.
                 </p>
 
-                <p>This will result in a short preamble giving the user brief details
+                <p>This will result in a short preamble with details
                     on the data source, its destination and some other details on
                     how the data will be processed. The import will then be
-                    performed but no data is written to the
-                    <span class="code">weewx</span> database. Upon completion a
-                    brief summary of the records processed is provided. The output
-                    should be similar to:
+                    performed but no data will written to the
+                    <span class="code">weewx</span> database.
                 </p>
+                <p>The output should be similar to:</p>
 
             <pre class="tty">Starting wee_import...
 A Weather Underground import from station 'ISTATION123' has been requested.
@@ -2575,13 +2526,10 @@ Finished dry run import. 662 records were processed and 662 unique records would
 
         <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00"
 </pre>
-
-                <p>This will result in a short preamble giving the user brief details
-                    on the data source, its destination and some other details on how
-                    the data will be processed. This output will vary slightly
-                    depending on what command line options have been used. At the end
-                    of the preamble the user will be prompted as to whether to proceed
-                    or not with the import:</p>
+        
+                <p>This will result in a short preamble similar to that of
+                    a dry run. At the end of the preamble there will be a
+                    prompt:</p>
 
     <pre class="tty">Starting wee_import...
 A Weather Underground import from station 'ISTATION123' has been requested.
@@ -2605,11 +2553,10 @@ Are you sure you want to proceed (y/n)?
                     of smaller time spans.
                 </p>
 
-                <li>The preamble should be read carefully and if the import parameters
+                <li>If the import parameters
                     are acceptable enter <span class="code">y</span> to proceed with the
-                    import or <span class="code">n</span> to abort the import. If the
-                    import is aborted the user is informed of this and returned to the
-                    command line. If the user proceeds with the import then the source
+                    import or <span class="code">n</span> to abort the import.
+                    If the import is confirmed, the source
                     data will be imported, processed and saved in the
                     <span class="code">weewx</span> database. Information on the
                     progress of the import will be displayed similar to the following:
@@ -2677,31 +2624,9 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     <span class="code">weewx</span> database has been contaminated with
                     incorrect data, then the imported data may be removed by:
                 </li>
-
-                <ul>
-                    <li>Manually deleting the contaminated data from the
-                        <span class="code">weewx</span> archive database using SQL
-                        commands. The simplicity of this process will depend on the
-                        users ability to use SQL, the amount of data imported and
-                        whether the imported data was dispersed amongst existing
-                        data or it can be identified in a single block only. Once
-                        any contaminated data has been removed the daily summary
-                        tables will need to be dropped and rebuild using the
-                        <span class="code">wee_database</span> utility.
-                    </li>
-
-                    <li>If the imported data is the only data in an SQLite database
-                        then the easiest method of removing the contaminated data
-                        is to delete the SQLite database file.
-                    </li>
-
-                    <li>If the above steps are not appropriate then the database
-                        should be restored from the previously made backup.
-                    </li>
-                </ul>
             </ol>
 
-            <h2>Cumulus monthly log files</h2>
+            <h2>Importing from Cumulus</h2>
 
             <p><span class="code">wee_import</span> can import observational data from
                 the one or more Cumulus monthly log files. A Cumulus monthly log file
@@ -2722,7 +2647,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <ul>
                 <li>Provided data exists for each field in the Cumulus monthly
                     logs, the following <span class="code">weewx</span>
-                    archive fields will be directly populated by imported data:</p>
+                    archive fields will be directly populated by imported data:
 
                     <ul>
                         <li><span class="code">dateTime</span></li>
@@ -2751,6 +2676,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                         <span class="code">weewx</span> archive field will be set
                         to <span class="code">None/NULL</span>.
                     </p>
+                </li>
 
                 <li>The following <span class="code">weewx</span> archive fields
                     will be populated from other settings or configuration options:
@@ -2777,22 +2703,14 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 </ul>
 
                 <p class="note">
-                    <b>Note</b><br/>The default setting of the
-                    <span class="code">calc_missing</span> option is
-                    <span class="code">True</span> so if the
-                    <span class="code">calc_missing</span> option is omitted
-                    from the <span class="code">[Cumulus]</span> section of the
-                    import configuration file being used the same fields will
-                    be calculated and stored as if
-                    <span class="code">calc_missing = True</span> had been used.
-                </p>
-
-                <p class="note">
                     <b>Note</b><br/>If
                     <span class="code">calc_missing = False</span> is included
-                    in the <span class="code">[Cumulus]</span> section of the
-                    import configuration file being used then all of the above
-                    fields will be set to <span class="code">None/NULL</span>.
+                    in the <span class="code">[WU]</span> section of the import
+                    configuration file being used then all of the above fields
+                    will be set to <span class="code">None/NULL</span>.
+                    The default setting of the
+                    <span class="code">calc_missing</span> option is
+                    <span class="code">True</span>
                 </p>
             </ul>
 
@@ -2804,22 +2722,17 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 <li>Ensure the Cumulus monthly log file(s) to be used for the import
                     are located in a directory accessible by the machine that will run
                     <span class="code">wee_import</span>. For the purposes of these
-                    instructions the Cumulus monthly log files will be located in the
-                    <span class="code">/var/tmp/cumulus</span> folder. There are nine
-                    monthly logs files covering the period November 2015 to July 2016
-                    inclusive.
+                    instructions, there are nine monthly logs files covering the
+                    period November 2015 to July 2016, inclusive, located in the
+                    <span class="code">/var/tmp/cumulus</span> folder.
                 </li>
 
-                <li>As <span class="code">wee_import</span> will make alterations to the
-                    <span class="code">weewx</span> database make a backup copy of the
-                    <span class="code">weewx</span> database for use should the import
-                    go awry.
+                <li>Make a backup of the
+                    <span class="code">weewx</span> database in case the
+                    import should go awry.
                 </li>
 
-                <li>If an import configuration file has not already been produced for
-                    this Cumulus import, make a copy of the example Cumulus import
-                    configuration file provided in the
-                    <span class="code">weewx/util/import</span> directory. In this case
+                <li>Create an import configuration file. In this case
                     we will make a copy of the example Cumulus import configuration file
                     and save it as <span class="code">cumulus.conf</span> in the
                     <span class="code">/var/tmp</span> directory:
@@ -2878,30 +2791,25 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     </li>
                 </ul>
 
-                <li>When first importing data it is often prudent to do a dry run import
-                    before any data is actually imported. A dry run import will perform
+                <li>When first importing data it is prudent to do a dry run import
+                    before any data are actually imported. A dry run import will perform
                     all steps of the import without actually writing imported data to
                     the <span class="code">weewx</span> database. In addition,
                     consideration should be given to any additional command line options
-                    to be used such as <span class="code">--date</span>. The available
-                    command line options are shown in the
-                    <span class="code">wee_import --help</span> output above. Additional
-                    details are also provided in the
-                    <em><a href="#common_options">Command line options</a></em> section.
-                    To perform a dry run import enter the following command:
+                    to be used such as <span class="code">--date</span>.
                 </li>
+                <p>To perform a dry run enter the following command:</p>
 
             <pre class="tty cmd">wee_import --import-config=/var/tmp/cumulus.conf --dry-run
 </pre>
 
-                <p>This will result in a short preamble giving the user brief
+                <p>This will result in a short preamble with
                     details on the data source, its destination and some other
                     details on how the data will be processed. The import will then
-                    be performed but no data is written to the
-                    <span class="code">weewx</span> database. Upon completion a
-                    brief summary of the records processed is provided. The output
-                    should be similar to:
+                    be performed but no data will be written to the
+                    <span class="code">weewx</span> database.
                 </p>
+                <p>The output should be similar to:</p>
 
             <pre class="tty">Starting wee_import...
 An import from Cumulus monthly log files located in the '/var/tmp/cumulus' directory
@@ -2940,19 +2848,15 @@ Finished dry run import. 37648 records were processed and 37620 unique records w
                     files used for this import.
                 </p>
 
-                <li>Once the dry run results are satisfactory the source data can be
+                <li>Once the dry run results are satisfactory the data can be
                     imported using the following command:
                 </li>
 
         <pre class="tty cmd">wee_import --import-config=/var/tmp/cumulus.conf
 </pre>
 
-                <p>This will result in a short preamble giving the user brief details
-                    on the data source, its destination and some other details on how
-                    the data will be processed. This output will vary slightly
-                    depending on what command line options have been used. At the end
-                    of the preamble the user will be prompted as to whether to proceed
-                    or not with the import:</p>
+                <p>This will result in a preamble similar to that of a dry run.
+                    At the end of the preamble there will be a prompt:</p>
 
     <pre class="tty">Starting wee_import...
 An import from Cumulus monthly log files located in the '/var/tmp/cumulus' directory
@@ -2966,6 +2870,7 @@ This is NOT a dry run, imported data WILL be saved to archive.
 Starting import ...
 Records covering multiple periods have been identified for import.
 Proceeding will save all imported records in the weewx archive.
+Are you sure you want to proceed (y/n)?
 </pre>
 
                 <p>If there is more than one Cumulus monthly log file then
@@ -2996,11 +2901,10 @@ Proceeding will save all imported records in the weewx archive.
 Are you sure you want to proceed (y/n)?
 </pre>
 
-                <li>The preamble should be read carefully and if the import parameters
-                    are acceptable enter <span class="code">y</span> to proceed with the
-                    import or <span class="code">n</span> to abort the import. If the
-                    import is aborted the user is informed of this and returned to the
-                    command line. If the user proceeds with the import then the source
+                <li>If the import parameters are acceptable enter
+                    <span class="code">y</span> to proceed with the
+                    import or <span class="code">n</span> to abort the import.
+                    If the import is confirmed, the source
                     data will be imported, processed and saved in the
                     <span class="code">weewx</span> database. Information on the
                     progress of the import will be displayed similar to the following:
@@ -3052,38 +2956,45 @@ will not have been imported. Confirm successful import in the weewx log file.
 Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
 </pre>
 
-                <p>In such cases the user should take note of the timestamp of the
+                <p>In such cases take note of the timestamp of the
                     record(s) concerned and make a decision about whether to delete the
                     pre-existing record and re-import the record or retain the
                     pre-existing record.</p>
+            </ol>
 
-                <li>If errors were encountered, or the user suspects the
-                    <span class="code">weewx</span> database has been contaminated with
-                    incorrect data, then the imported data may be removed by:
+            <h2 id='import_failures'>Dealing with import failures</h2>
+
+            <p>Sometimes bad things happen during an import.</p>
+
+            <p>If errors were encountered, or if you suspect that the
+                <span class="code">weewx</span> database has been
+                contaminated with incorrect data, here are some things
+                you can try to fix things up.
+            </p>
+
+            <ul>
+                <li>Manually delete the contaminated data.  Use SQL
+                    commands to manipulate the data in the
+                    <span class="code">weewx</span> archive database.
+                    The simplicity of this process will depend on your
+                    ability to use SQL, the amount of data imported, and
+                    whether the imported data was dispersed amongst
+                    existing. Once contaminated data have been removed the
+                    daily summary tables will need to be dropped and
+                    rebuilt using the
+                    <span class="code">wee_database</span> utility.
                 </li>
 
-                <ul>
-                    <li>Manually deleting the contaminated data from the
-                        <span class="code">weewx</span> archive database using SQL
-                        commands. The simplicity of this process will depend on the
-                        users ability to use SQL, the amount of data imported and
-                        whether the imported data was dispersed amongst existing
-                        data can be identified in a single block only. Once any
-                        contaminated data has been removed the daily summary tables
-                        will need to be dropped and rebuild using the
-                        <span class="code">wee_database</span> utility.
-                    </li>
+                <li>Delete the database and start over.  For SQLite,
+                    simply delete the database file.  For MySQL, drop
+                    the database.  Then try the import again.
+                </li>
 
-                    <li>If the imported data is the only data in an SQLite database
-                        then the easiest method of removing the contaminated data
-                        is to delete the SQLite database file.
-                    </li>
-
-                    <li>If the above steps are not appropriate then the database
-                        should be restored from the previously made backup.
-                    </li>
-                </ul>
-            </ol>
+                <li>If the above steps are not appropriate then the
+                    database should be restored from backup.  You did
+                    make a backup before starting the import?
+                </li>
+            </ul>
 
             <h2 id='import_config'>The import configuration file</h2>
 
