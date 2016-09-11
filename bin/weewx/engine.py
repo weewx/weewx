@@ -25,6 +25,7 @@ import daemon
 import weedb
 import weewx.accum
 import weewx.manager
+import weewx.qc
 import weewx.station
 import weewx.reportengine
 import weeutil.weeutil
@@ -394,61 +395,31 @@ class StdCalibrate(StdService):
 #==============================================================================
 
 class StdQC(StdService):
-    """Performs quality check on incoming data."""
+    """Service that performs quality check on incoming data.
 
+    A StdService wrapper for a QC object so it may be called as a service. This 
+    also allows the weewx.qc.QC class to be used elsewhere without the 
+    overheads of running it as a weewx service.
+    """
+    
     def __init__(self, engine, config_dict):
         super(StdQC, self).__init__(engine, config_dict)
 
-        # If the 'StdQC' or 'MinMax' sections do not exist in the configuration
-        # dictionary, then an exception will get thrown and nothing will be
-        # done.
-        try:
-            mm_dict = config_dict['StdQC']['MinMax']
-        except KeyError:
-            syslog.syslog(syslog.LOG_NOTICE, "engine: No QC information in config file.")
-            return
-
-        self.min_max_dict = {}
-
-        target_unit_name = config_dict['StdConvert']['target_unit']
-        target_unit = weewx.units.unit_constants[target_unit_name.upper()]
-        converter = weewx.units.StdUnitConverters[target_unit]
-
-        for obs_type in mm_dict.scalars:
-            minval = float(mm_dict[obs_type][0])
-            maxval = float(mm_dict[obs_type][1])
-            if len(mm_dict[obs_type]) == 3:
-                group = weewx.units._getUnitGroup(obs_type)
-                vt = (minval, mm_dict[obs_type][2], group)
-                minval = converter.convert(vt)[0]
-                vt = (maxval, mm_dict[obs_type][2], group)
-                maxval = converter.convert(vt)[0]
-            self.min_max_dict[obs_type] = (minval, maxval)
+        # Get a QC object to apply the QC checks to our data
+        self.qc = weewx.qc.QC(config_dict)
         
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         
     def new_loop_packet(self, event):
-        """Apply quality check to the data in a LOOP packet"""
-        for obs_type in self.min_max_dict:
-            if obs_type in event.packet and event.packet[obs_type] is not None:
-                if not self.min_max_dict[obs_type][0] <= event.packet[obs_type] <= self.min_max_dict[obs_type][1]:
-                    syslog.syslog(syslog.LOG_NOTICE, "engine: %s LOOP value '%s' %s outside limits (%s, %s)" % 
-                                  (weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), 
-                                   obs_type, event.packet[obs_type], 
-                                   self.min_max_dict[obs_type][0], self.min_max_dict[obs_type][1]))
-                    event.packet[obs_type] = None
+        """Apply quality check to the data in a loop packet"""
+        
+        self.qc.apply_qc(event.packet)
 
     def new_archive_record(self, event):
-        """Apply quality check to the data in an archive packet"""
-        for obs_type in self.min_max_dict:
-            if obs_type in event.record and event.record[obs_type] is not None:
-                if not self.min_max_dict[obs_type][0] <= event.record[obs_type] <= self.min_max_dict[obs_type][1]:
-                    syslog.syslog(syslog.LOG_NOTICE, "engine: %s Archive value '%s' %s outside limits (%s, %s)" % 
-                                  (weeutil.weeutil.timestamp_to_string(event.record['dateTime']),
-                                   obs_type, event.record[obs_type], 
-                                   self.min_max_dict[obs_type][0], self.min_max_dict[obs_type][1]))
-                    event.record[obs_type] = None
+        """Apply quality check to the data in an archive record"""
+        
+        self.qc.apply_qc(event.record)
 
 #==============================================================================
 #                    Class StdArchive
