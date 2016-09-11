@@ -38,41 +38,40 @@
 Version: 3.5.0
         </span>
         </div>
-        <div class="title"><span class="code">weewx</span> Utilities Guide</div>
-    </div>
+        <div class="title"><span class="code">weewx</span> Utilities Guide</div></div>
 
     <div id="technical_content" class="content">
         <p>This is a reference guide to the various executable utilities that come with <span class="code">weewx</span>.
             It covers:
         </p>
         <ul>
-            <a href="#wee_config_utility">
-                <li><span class="code">wee_config</span>
-            </a></a> for changing the configuration file, and adding new device drivers;</li>
-            <a href="#wee_database_utility">
-                <li><span class="code">wee_database</span>
-            </a> for reconfiguring the database;</li>
-            <a href="#wee_debug_utility">
-                <li><span class="code">wee_debug</span>
-            </a> for producing debug reports for remote support;</li>
-            <a href="#wee_device_utility">
-                <li><span class="code">wee_device</span>
-            </a> for configuring your hardware;</li>
-            <a href="#wee_extension_utility">
-                <li><span class="code">wee_extension</span>
-            </a> for installing and removing extensions;</li>
-            <a href="#wee_import_utility">
-                <li><span class="code">wee_import</span>
-            </a> for importing historical data from external sources;</li>
-            <a href="#wee_reports_utility">
-                <li><span class="code">wee_reports</span>
-            </a> for running reports without running weewx itself;</li>
-            <a href="#weewxd_utility">
-                <li><span class="code">weewxd</span>
-            </a> the main weewx program;</li>
-            <a href="#wunderfixer">
-                <li><span class="code">wunderfixer</span>
-            </a> for resending data missing on the Weather Underground site.</li>
+            <li><a href="#wee_config_utility">
+                <span class="code">wee_config</span></a>
+                for changing the configuration file, and configuring new device drivers;</li>
+            <li><a href="#wee_database_utility">
+                <span class="code">wee_database</span></a>
+                for reconfiguring the database;</li>            
+            <li><a href="#wee_debug_utility">
+                <span class="code">wee_debug</span></a>
+                for producing debug reports for remote support;</li>
+            <li><a href="#wee_device_utility">
+                <span class="code">wee_device</span></a>
+                for configuring your hardware;</li>
+            <li><a href="#wee_extension_utility">
+                <span class="code">wee_extension</span></a>
+                for installing and removing extensions;</li>
+            <li><a href="#wee_import_utility">
+                <span class="code">wee_import</span></a>
+                for importing historical data from external sources;</li>
+            <li><a href="#wee_reports_utility">
+                <span class="code">wee_reports</span></a>
+                for running reports without running weewx itself;</li>
+            <li><a href="#weewxd_utility">
+                <span class="code">weewxd</span></a>
+                the main weewx program;</li>
+            <li><a href="#wunderfixer">
+                <span class="code">wunderfixer</span></a>
+                for resending data missing on the Weather Underground site.</li>
         </ul>
 
         <!-- ======== -->
@@ -210,7 +209,8 @@ Module name              Driver name    Version  Status
   weewx.drivers.wmr9x8     WMR9x8         3.0
   weewx.drivers.ws1        WS1            0.19
   weewx.drivers.ws23xx     WS23xx         0.24
-  weewx.drivers.ws28xx     WS28xx         0.34     No module named usb      </pre>
+  weewx.drivers.ws28xx     WS28xx         0.34     No module named usb
+</pre>
 
         <p>The column <span class="code">Status</span> can give you some indication of whether you are missing
             any modules to use this driver. It's not completely accurate, but works for most drivers.</p>
@@ -302,7 +302,7 @@ Saved configuration to /home/weewx/weewx.conf
             <span class="code">--help</span> flag to see how it is used:</p>
         <pre class="tty cmd">wee_database --help</pre>
         <p>This will result in an output that looks something like this:</p>
-      <pre class="tty">
+        <pre class="tty">
 Usage: wee_database --help
        wee_database --create-archive
             [CONFIG_FILE|--config=CONFIG_FILE]
@@ -386,7 +386,7 @@ permissions for the requested operation.
 
         <p>This results in:</p>
 
-    <pre class="tty">Usage: wee_debug --help
+        <pre class="tty">Usage: wee_debug --help
        wee_debug --info
             [--output|--output DEBUG_PATH]
             [--verbosity=0|1|2]
@@ -441,7 +441,7 @@ before posting the information publicly.
             <pre class="tty cmd">wee_debug --info</pre>
 
             <p>This results in:</p>
-    <pre class="tty">Using verbosity=1, displaying most info
+            <pre class="tty">Using verbosity=1, displaying most info
 
 wee_debug output will be sent to stdout(console)
 
@@ -525,7 +525,7 @@ Databases configured in weewx.conf
 Parsed and obfuscated weewx.conf
 # WEEWX CONFIGURATION FILE
 #
-# Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+# Copyright (c) 2009-2015 Tom Keffer &lt;tkeffer@gmail.com&gt;
 # See the file LICENSE.txt for your rights.
 
 ##############################################################################
@@ -837,7 +837,7 @@ Mutating actions will request confirmation before proceeding.</pre>
                        version: 255
                      wind_coef: None
                      wind_mult: 0</pre>
-            <p><span class="highlight">Highlighted&nbsp;</span> values can be modified with the <span
+            <p><span class="highlight">Highlighted</span> values can be modified with the <span
                     class='code'>wee_device</span> utility.</p>
 
             <h3 id="fo_changing_the_archive_interval">Changing the archive interval</h3>
@@ -1238,7 +1238,7 @@ confirmation before proceeding.</pre>
             <p>The console version number is available only on consoles with firmware
                 dates after about 2006.</p>
 
-            <p><span class="highlight">Highlighted&nbsp;</span> values can be changed using this utility.</p>
+            <p><span class="highlight">Highlighted</span> values can be changed using this utility.</p>
 
             <h3 id="vantage_time_zone">Time zone</h3>
 
@@ -2109,7 +2109,7 @@ the daily summaries using the wee_database utility.</pre>
                     is set as follows:
                 </li>
 
-                <pre class="tty">source = CSV</span></pre>
+                <pre class="tty">source = CSV</pre>
 
                 <li>Confirm the following options in the <span class="code">[CSV]</span>
                     section of the import configuration file
@@ -2467,7 +2467,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     is set as follows:
                 </li>
 
-                <pre class="tty">source = WU</span></pre>
+                <pre class="tty">source = WU</pre>
 
                 <li>Confirm the following options in the
                     <span class="code">[WU]</span> section of the import configuration
@@ -2877,7 +2877,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     is set as follows:
                 </li>
 
-                <pre class="tty">source = Cumulus</span></pre>
+                <pre class="tty">source = Cumulus</pre>
 
                 <li>Confirm the following options in the
                     <span class="code">[Cumulus]</span> section of the import
