@@ -1845,11 +1845,11 @@ Options:
                         date-time strings with a hyphen. Arguments that
                         include hh:mm must be enclosed in quotation marks.
   --log=-               Control wee_import log output. By default log output
-                        is sent to the same log file as used by weewx.
-                        wee_import logging may be disabled by using '--
-                        log=-'.Some weewx API log output cannot be controlled
-                        by wee_import and will be sent to to the default log
-                        file irrespective of the '--log' option.
+                        is sent to the weewx log file. wee_import logging may
+                        be disabled by using '--log=-'. Some weewx API log
+                        output cannot be controlled by wee_import and will be
+                        sent to to the default log file irrespective of the '
+                        --log' option.
   --verbose             Print useful extra output.
   --version             Display wee_import version number.
 
@@ -2159,10 +2159,8 @@ the daily summaries using the wee_database utility.</pre>
 A CSV import from source file '/var/tmp/data.csv' has been requested.
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
-Any missing derived observations WILL be calculated.
-All weewx UV fields will be set to None.
-All weewx radiation fields will be set to None.
-This is a dry run, imported data WILL NOT be saved to archive.
+Missing derived observations will be calculated.
+This is a dry run, imported data will not be saved to archive.
 Starting dry run import ...
 70685 records identified for import.
 Records processed: 70685; Unique records: 70685; Last timestamp: 2010-09-04 04:20:00 AEST (1283538000)
@@ -2202,10 +2200,7 @@ Finished dry run import. 70685 records were processed and 70685 unique records w
 A CSV import from source file '/var/tmp/data.csv' has been requested.
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
-Any missing derived observations WILL be calculated.
-All weewx UV fields will be set to None.
-All weewx radiation fields will be set to None.
-This is NOT a dry run, imported data WILL be saved to archive.
+Missing derived observations will be calculated.
 Starting import ...
 70685 records identified for import.
 Proceeding will save all imported records in the weewx archive.
@@ -2231,10 +2226,9 @@ Are you sure you want to proceed (y/n)?
                     complete a brief summary is displayed similar to the following:</p>
 
         <pre class="tty">Records processed: 70685; Unique records: 70685; Last timestamp: 2010-09-04 04:20:00 AEST (1283538000)
-Finished import. 70685 raw records resulted in 70685 unique records being processed in 56.98 seconds.
-Whilst 70685 unique records were processed those with a timestamp already in the archive
-will not have been imported. Confirm successful import in the weewx log file.
-</pre>
+Finished import. 70685 raw records resulted in 70685 unique records being processed in 276.63 seconds.
+Those records with a timestamp already in the archive will not have been imported.
+Confirm successful import in the weewx log file.</pre>
 
                 <li>Whilst <span class="code">wee_import</span> will advise of the
                     number of records processed and the number of unique records found,
@@ -2257,11 +2251,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     record(s) concerned and make a decision about whether to delete the
                     pre-existing record and re-import the record or retain the
                     pre-existing record.</p>
-
-                <li>If errors were encountered, or the user suspects the
-                    <span class="code">weewx</span> database has been contaminated with
-                    incorrect data, then the imported data may be removed by:
-                </li>
+            
             </ol>
 
             <h2>Importing from Weather Underground</h2>
@@ -2478,24 +2468,24 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 <p>The output should be similar to:</p>
 
             <pre class="tty">Starting wee_import...
-A Weather Underground import from station 'ISTATION123' has been requested.
+Observation history for Weather Underground station 'ISTATION123' will be imported.
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
-Any missing derived observations WILL be calculated.
+Missing derived observations will be calculated.
 Observations timestamped after 2016-01-20 22:30:00 AEST (1453293000) and up to and
 including 2016-01-23 06:00:00 AEST (1453492800) will be imported.
-This is a dry run, imported data WILL NOT be saved to archive.
+This is a dry run, imported data will not be saved to archive.
 Starting dry run import ...
 Records covering multiple periods have been identified for import.
 Period 1 ...
 Records processed: 18; Unique records: 18; Last timestamp: 2016-01-20 23:55:00 AEST (1453298100)
 Period 2 ...
-Records processed: 285; Unique records: 285; Last timestamp: 2016-01-21 23:55:00 AEST (1453384500)
+Records processed: 263; Unique records: 263; Last timestamp: 2016-01-21 23:55:00 AEST (1453384500)
 Period 3 ...
-Records processed: 288; Unique records: 288; Last timestamp: 2016-01-22 23:55:00 AEST (1453470900)
+Records processed: 264; Unique records: 264; Last timestamp: 2016-01-22 23:50:00 AEST (1453470600)
 Period 4 ...
-Records processed: 71; Unique records: 71; Last timestamp: 2016-01-23 06:00:00 AEST (1453492800)
-Finished dry run import. 662 records were processed and 662 unique records would have been imported.
+Records processed: 62; Unique records: 62; Last timestamp: 2016-01-23 05:55:00 AEST (1453492500)
+Finished dry run import. 607 records were processed and 607 unique records would have been imported.
 </pre>
 
                 <p class="note">
@@ -2521,13 +2511,12 @@ Finished dry run import. 662 records were processed and 662 unique records would
                     prompt:</p>
 
     <pre class="tty">Starting wee_import...
-A Weather Underground import from station 'ISTATION123' has been requested.
+Observation history for Weather Underground station 'ISTATION123' will be imported.
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
-Any missing derived observations WILL be calculated.
+Missing derived observations will be calculated.
 Observations timestamped after 2016-01-20 22:30:00 AEST (1453293000) and up to and
 including 2016-01-23 06:00:00 AEST (1453492800) will be imported.
-This is NOT a dry run, imported data WILL be saved to archive.
 Starting import ...
 Records covering multiple periods have been identified for import.
 Proceeding will save all imported records in the weewx archive.
@@ -2565,9 +2554,9 @@ Records processed: 286; Unique records: 286; Last timestamp: 2016-01-21 23:55:00
                     created for each day. When the import is complete a brief summary
                     is displayed similar to the following:</p>
 
-        <pre class="tty">Finished import. 662 raw records resulted in 662 unique records being processed in 8.67 seconds.
-Whilst 662 unique records were processed those with a timestamp already in the archive
-will not have been imported. Confirm successful import in the weewx log file.
+        <pre class="tty">Finished import. 607 raw records resulted in 607 unique records being processed in 80.94 seconds.
+Those records with a timestamp already in the archive will not have been imported.
+Confirm successful import in the weewx log file.
 </pre>
 
                 <p class="note">
@@ -2609,10 +2598,6 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     pre-existing record and re-import the record or retain the
                     pre-existing record.</p>
 
-                <li>If errors were encountered, or the user suspects the
-                    <span class="code">weewx</span> database has been contaminated with
-                    incorrect data, then the imported data may be removed by:
-                </li>
             </ol>
 
             <h2>Importing from Cumulus</h2>
@@ -2801,14 +2786,11 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 <p>The output should be similar to:</p>
 
             <pre class="tty">Starting wee_import...
-An import from Cumulus monthly log files located in the '/var/tmp/cumulus' directory
-has been requested.
+Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
-Any missing derived observations WILL be calculated.
-All weewx UV fields will be set to None.
-All weewx radiation fields will be set to None.
-This is a dry run, imported data WILL NOT be saved to archive.
+Missing derived observations will be calculated.
+This is a dry run, imported data will not be saved to archive.
 Starting dry run import ...
 Records covering multiple periods have been identified for import.
 Period 1 ...
@@ -2848,14 +2830,10 @@ Finished dry run import. 37648 records were processed and 37620 unique records w
                     At the end of the preamble there will be a prompt:</p>
 
     <pre class="tty">Starting wee_import...
-An import from Cumulus monthly log files located in the '/var/tmp/cumulus' directory
-has been requested.
+Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
-Any missing derived observations WILL be calculated.
-All weewx UV fields will be set to None.
-All weewx radiation fields will be set to None.
-This is NOT a dry run, imported data WILL be saved to archive.
+Missing derived observations will be calculated.
 Starting import ...
 Records covering multiple periods have been identified for import.
 Proceeding will save all imported records in the weewx archive.
@@ -2872,16 +2850,12 @@ Are you sure you want to proceed (y/n)?
                     to:</p>
 
     <pre class="tty">Starting wee_import...
-An import from Cumulus monthly log files located in the '/var/tmp/cumulus' directory
-has been requested.
+Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
-Any missing derived observations WILL be calculated.
-All weewx UV fields will be set to None.
-All weewx radiation fields will be set to None.
+Missing derived observations will be calculated.
 Observations timestamped after 2016-02-12 00:00:00 AEST (1455199200) and up to and
-including 2016-02-24 00:00:00 AEST (1456236000) will be imported.
-This is NOT a dry run, imported data WILL be saved to archive.
+including 2016-02-25 00:00:00 AEST (1456322400) will be imported.
 Starting import ...
 Period 1 - no records identified for import.
 Period 2 - no records identified for import.
@@ -2923,9 +2897,9 @@ Records processed: 3238; Unique records: 3232; Last timestamp: 2016-04-24 00:00:
                     When the import is complete a brief summary is displayed similar to
                     the following:</p>
 
-        <pre class="tty">Finished import. 37648 raw records resulted in 37620 unique records being processed in 81.13 seconds.
-Whilst 37620 unique records were processed those with a timestamp already in the archive
-will not have been imported. Confirm successful import in the weewx log file.
+        <pre class="tty">Finished import. 37648 raw records resulted in 37620 unique records being processed in 93.70 seconds.
+Those records with a timestamp already in the archive will not have been imported.
+Confirm successful import in the weewx log file.
 </pre>
 
                 <li>Whilst <span class="code">wee_import</span> will advise of the
