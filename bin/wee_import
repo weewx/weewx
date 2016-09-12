@@ -555,7 +555,7 @@ import weeimport.weeimport
 # wee_import version number
 WEE_IMPORT_VERSION = '0.1'
 # minimum weewx version required for this version of wee_import
-REQUIRED_WEEWX = "3.5.0"
+REQUIRED_WEEWX = "3.6.0"
 
 description = """Import observation data into a weewx archive."""
 
@@ -601,11 +601,11 @@ def main():
                            "quotation marks.")
     parser.add_option("--log", dest="logging", type=str, metavar="-",
                       help="Control wee_import log output. By default log output "
-                           "is sent to the same log file as used by weewx. "
-                           "wee_import logging may be disabled by using '--log=-'."
-                           "Some weewx API log output cannot be controlled by "
-                           "wee_import and will be sent to to the default log file "
-                           "irrespective of the '--log' option.")
+                           "is sent to the weewx log file. wee_import logging "
+                           "may be disabled by using '--log=-'. Some weewx API "
+                           "log output cannot be controlled by wee_import and "
+                           "will be sent to to the default log file irrespective "
+                           "of the '--log' option.")
     parser.add_option("--verbose", action="store_true", dest="verbose",
                       help="Print useful extra output.")
     parser.add_option("--version", dest="version", action="store_true",
