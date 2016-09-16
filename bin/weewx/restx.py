@@ -364,11 +364,12 @@ class RESTThread(threading.Thread):
         _us_record = weewx.units.to_US(_full_record)
         # ... format the URL, using the relevant protocol ...
         _url = self.format_url(_us_record)
+        _data = self.format_data(_us_record)
         # ... convert to a Request object ...
         _request = urllib2.Request(_url)
         _request.add_header("User-Agent", "weewx/%s" % weewx.__version__)
         # ... then, finally, post it
-        self.post_with_retries(_request)
+        self.post_with_retries(_request, _data)
 
     def post_with_retries(self, request, payload=None):
         """Post a request, retrying if necessary
@@ -480,6 +481,9 @@ class RESTThread(threading.Thread):
     
         self.lastpost = time_ts
         return False
+
+    def format_data(self, record):
+        return None
 
 #==============================================================================
 #                    Ambient protocols
