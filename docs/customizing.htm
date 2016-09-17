@@ -584,7 +584,8 @@ Version: 3.5.0
             specify which database to use, you specify which <em>binding</em> to use.
             Bindings do not change with the database implementation, so, for example,
             you know that <span class="code">wx_binding</span> will always point to
-            the weather database. Bindings are listed in section <a
+            the weather database, no matter if its implementation is a sqlite database
+            or a MySQL database. Bindings are listed in section <a
                 href="usersguide.htm#DataBindings"><span class="code">[DataBindings]</span></a>
             in <span class="code">weewx.conf</span>.
         </p>
@@ -650,16 +651,15 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             units, others use US Customary units, and many use a mixture. The
             driver ensures that the units are consistent for storage in the
             <span class='code'>weewx</span> database. By default, and to maintain
-            compatibility with <span class='code'>wview</span>, the database
-            units are US Customary.</p>
+            compatibility with <span class='code'>wview</span>, the default database
+            units are US Customary, although this can be changed.</p>
 
-        <p>Much of the <span class='code'>weewx</span> unit architecture is focused
-            on presenting data with the appropriate units. Although the units of the
-            data in the database are US Customary, they can be displayed in any
-            combination of unit systems.</p>
+        <p>Note that whatever unit system is used in the database, data can be <em>displayed</em> using
+            any unit system. So, in practice, it does not matter what unit system is used in the
+            database.</p>
 
-        <p>Each <em>observation type</em> such as <span class='code'>outTemp</span>
-            or <span class='code'>pressure</span> may be associated with a
+        <p>Each <em>observation type</em>, such as <span class='code'>outTemp</span>
+            or <span class='code'>pressure</span>, is associated with a
             <em>unit group</em> such as <span class='code'>group_temperature</span> or
             <span class='code'>group_pressure</span>. Each
             unit group is associated with a <em>unit type</em> such
@@ -709,14 +709,15 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             For the standard skin that comes with <span class="code">weewx</span>,
             the file is <span class="code">skins/Standard/skin.conf</span>.
             It includes many, many options that can be changed. For a complete list,
-            see the section <em><a href="#standard_skin">The Standard <span class="code">skin.conf</span></a></em>.
+            see the section below, <em><a href="#standard_skin">The Standard
+            <span class="code">skin.conf</span></a></em>.
         </p>
 
         <p>
             For example, suppose you wish to use metric units in the
             presentation layer, instead of the default US Customary Units. The
-            section that controls units is <span class="code">[Units][[Groups]]</span>.
-            It looks like this:
+            section in <span class="code">skin.conf</span> that controls units
+            is <span class="code">[Units][[Groups]]</span>. It looks like this:
         </p>
     <pre class="tty">[Units]
     [[Groups]]
@@ -779,7 +780,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 class="code">weewx.conf</span></h3>
 
         <p>This approach is very similar, except that instead of changing the
-            skin configuration file directly, you override its options by editing
+            skin configuration file, <span class="code">skin.conf</span>, directly,
+            you override its options by editing
             the main configuration file, <span class="code">weewx.conf</span>. The
             advantage of this approach is that you can use the same skin to produce
             several different output, each with separate options.</p>
@@ -4413,7 +4415,7 @@ weewx.units.obs_group_dict['snow_depth'] = 'group_depth'</pre>
         </p>
 
 
-        <h1 id="service_engine">Customizing the engine</h1>
+        <h1 id="service_engine">Customizing the <span class="code">weewx</span> service engine</h1>
 
         <p>This is an advanced topic intended for those who wish to try their hand
             at extending the internal engine in weewx. You should have a passing
@@ -4691,8 +4693,7 @@ class MyAlarm(StdService):
             added advantage of being compatible with the wview database.
             Nevertheless, there may be occasions where you may want to add a SQL
             type to your database, or change its unit system. This section shows
-            you how to do this, using the utility
-            <span class="code">wee_database</span>.</p>
+            you how to do this. </p>
 
 
         <!-- Moved to utilities.htm -->
@@ -4782,9 +4783,9 @@ class AddElectricity(StdService):
             a type?
         </p>
 
-        <p>The utility <span class="code">wee_database</span> can be used to do this. It will
-            create a new database that is similar to the old database, except it has the new type in its
-            schema.</p>
+        <p>The utility <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>
+            can be used to do this. It will create a new database that is similar to the old database,
+            except it will have the new type in its schema.</p>
 
         <p>Here's our general strategy:</p>
         <ol>
