@@ -41,9 +41,7 @@ Version: 3.5.0
         <div class="title"><span class="code">weewx</span> Utilities Guide</div></div>
 
     <div id="technical_content" class="content">
-        <p>This is a reference guide to the various executable utilities that come with <span class="code">weewx</span>.
-            It covers:
-        </p>
+        <p>This is a reference guide to the executable utilities that come with <span class="code">weewx</span>:</p>
         <ul>
             <li><a href="#wee_config_utility">
                 <span class="code">wee_config</span></a>
@@ -187,8 +185,8 @@ Options:
             change device drivers. Say that you originally installed
             <span class="code">weewx</span> with the Simulator. Now you've bought a
             Davis Vantage and you want to switch to that. Here's how you do it.
-            First, if you don't know the name of the driver, you can list all the
-            drivers available in your weewx install:
+            First, if you don't know the name of the driver, you can ask
+            <span class="code">wee_config</span> to list all the available drivers:
         </p>
 
         <pre class="tty cmd">wee_config --list-drivers</pre>
@@ -225,9 +223,9 @@ Module name              Driver name    Version  Status
 
         <p>
             The utility will go through your previously selected options, such as
-            station description, latitude, longitude, altitude, <i>etc.</i>. Your
-            previously selected values, <em>including</em> the specified device driver,
-            will all be the defaults. So, all you have to do is keep hitting
+            station description, latitude, longitude, altitude, <i>etc.</i>. With the exception
+            of your newly specified device driver, all your
+            previously selected values will be the defaults. So, all you have to do is keep hitting
             enter. This is what it looked like when I switched from the simulator
             to the Vantage driver:
         </p>
@@ -294,11 +292,11 @@ Saved configuration to /home/weewx/weewx.conf
 
         <h1 id="wee_database_utility"><span class="code">wee_database</span></h1>
         <p>The database utility simplifies operations typically made to the
-            database.  For example, it can backfill the aggregation tables
+            database.  For example, it can backfill the daily summaries
             or check a SQLite database for embedded strings where floats are
             expected.</p>
 
-        <p>Before starting, it's worth running the utility with the
+        <p>Run the utility with the
             <span class="code">--help</span> flag to see how it is used:</p>
         <pre class="tty cmd">wee_database --help</pre>
         <p>This will result in an output that looks something like this:</p>

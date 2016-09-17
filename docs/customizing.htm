@@ -4901,9 +4901,9 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
                     It's worth noting that there's actually a hidden, last step:
                     recreating the daily summaries inside the new database. This will be
                     done automatically by <span class="code">weewx</span> at the next
-                    startup. Alternatively, it can be done manually using the <span
-                        class="code">wee_database</span> utility and the <span
-                        class="code">--backfill-daily</span> option:
+                    startup. Alternatively, it can be done manually using the
+                    <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>
+                    utility and the <span class="code">--backfill-daily</span> option:
                 </p>
                 <pre class="tty cmd">wee_database weewx.conf --backfill-daily</pre>
             </li>
@@ -5011,7 +5011,7 @@ weewx.units.obs_group_dict['electricity'] = 'group_power'</pre>
             <li>Make sure you have the necessary permissions to create the new
                 database.
             </li>
-            <li>Use the utility <span class='code'>wee_database</span> to
+            <li>Use the utility <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> to
                 create the new database and populate it with data from the old
                 database.
             </li>
@@ -5087,9 +5087,9 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
                     It's worth noting that there's actually a hidden, last step:
                     recreating the daily summaries inside the new database. This will be
                     done automatically by <span class="code">weewx</span> at the next
-                    startup. Alternatively, it can be done manually using the <span
-                        class="code">wee_database</span> utility and the <span
-                        class="code">--backfill-daily</span> option:
+                    startup. Alternatively, it can be done manually using the
+                    <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> utility
+                    and the <span class="code">--backfill-daily</span> option:
                 </p>
                 <pre class="tty cmd">wee_database weewx.conf --backfill-daily</pre>
             </li>
@@ -5105,10 +5105,10 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         <pre class="tty cmd">wee_database weewx.conf --backfill-daily</pre>
 
         <h1 id="import">Importing observation data</h1>
-        <p>The utility class="code">wee_import</span> can import historical data from various data sources,
-            including CSV files, the Weather Underground, and Cumulus monthly log files. See the section
-            on <a href="utilities.htm#wee_import_utility"><span class="code>">wee_import</span> in the Utilities
-                Guide</a>
+        <p>The utility <a href="utilities.htm#wee_import_utility"><span class="code">wee_import</span></a>
+            can import historical data from various data sources,
+            including CSV files, the Weather Underground, and Cumulus monthly log files.
+            See the <a href="utilities.htm#wee_import_utility">Utilities Guide</a>
             for more information.</p>
 
         <!-- wee_import moved to utilities.htm-->
