@@ -67,6 +67,8 @@ reading loop data.  Thanks to user EricG.
 
 Made wmr300 driver more robust against empty usb data buffers.
 
+Fixed pressure/barometer in wmr300 driver when reading historical records.
+
 Fixed problem with the Vantage driver where program could crash if a
 serial I/O error happens during write. Fixes issue #134.
 

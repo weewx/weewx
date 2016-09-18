@@ -700,7 +700,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.10'
+DRIVER_VERSION = '0.11'
 
 DEBUG_COMM = 0
 DEBUG_LOOP = 0
@@ -1280,7 +1280,7 @@ class Station(object):
         pkt['rain_total'] = Station._extract_value(buf[86:88], 0.254) # mm
         pkt['rain_start_dateTime'] = Station._extract_ts(buf[88:93])
         pkt['rain_rate'] = Station._extract_value(buf[93:95], 0.254) # mm/hour
-        pkt['pressure'] = Station._extract_value(buf[95:97], 0.1) # mbar
+        pkt['barometer'] = Station._extract_value(buf[95:97], 0.1) # mbar
         pkt['pressure_trend'] = Station._extract_value(buf[97:98], 1.0)
         return pkt
 
