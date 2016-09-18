@@ -710,7 +710,22 @@ wee_debug report successfully generated
         <p class="tty cmd">wee_device /path/to/weewx.conf --help</p>
 
         <p>What follows is a guide to the level of support offered by <span class="code">wee_device</span> for
-            each type of weather station.</p>
+            each type of weather station:</p>
+        <ul>
+            <li><a href="#wee_device_acurite">AcuRite</a></li>
+            <li><a href="#wee_device_cc3000">CC3000</a></li>
+            <li><a href="#wee_device_fousb">FineOffsetUSB</a></li>
+            <li><a href="#wee_device_te923">TE923</a></li>
+            <li><a href="#wee_device_ultimeter">Ultimeter</a></li>
+            <li><a href="#wee_device_vantage">Vantage</a></li>
+            <li><a href="#wee_device_wmr100">WMR100</a></li>
+            <li><a href="#wee_device_wmr200">WMR200</a></li>
+            <li><a href="#wee_device_wmr300">WMR300</a></li>
+            <li><a href="#wee_device_wmr9x8">WMR9x8</a></li>
+            <li><a href="#wee_device_ws1">WS1</a></li>
+            <li><a href="#wee_device_ws23xx">WS23xx</a></li>
+            <li><a href="#wee_device_ws28xx">WS28xx</a></li>
+        </ul>
 
         <h2 id="wee_device_acurite">AcuRite</h2>
 
@@ -734,21 +749,17 @@ wee_debug report successfully generated
         <h2 id="wee_device_cc3000">CC3000</h2>
 
         <p>The CC3000 data logger may be configured to return data in
-            METRIC or US units. These are not the same groups of METRIC and US
-            units as defined within <span class='code'>weewx</span>. However, the
-            CC3000 driver will convert to the appropriate units for the
-            <span class='code'>weewx</span> configuration.</p>
+            METRIC or ENGLISH units as selected by option
+            <span class="code">--set-units</span>. These are then mapped
+            to the weewx unit groups METRICWX or US, respectively.</p>
 
         <p>The CC3000 data logger stores 2MB of records.</p>
 
         <p>The CC3000 driver supports catchup on startup, but it does not
             support hardware record generation.</p>
 
-        <p>The <span class='code'>wee_device</span> utility can be used to
-            configure the station hardware. When the
-            <span class='code'>station_type</span> is
-            <span class='code'>CC3000</span>,
-            the <span class='code'>--help</span> option will produce output
+        <p>Invoking <span class='code'>wee_device</span> with
+            the <span class='code'>--help</span> option will produce
             something like this:</p>
 
     <pre class="tty">CC3000 driver version 0.8
