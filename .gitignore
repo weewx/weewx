@@ -8,3 +8,7 @@ build
 dist
 MANIFEST
 junk*
+*.sln
+*.user
+*.pyproj
+*.suo
