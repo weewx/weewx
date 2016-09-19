@@ -1069,9 +1069,10 @@ confirmation before proceeding.</pre>
         <p>When the <span class='code'>station_type</span> is <span class='code'>Vantage</span>, the <span class='code'>--help</span>
             option will produce output something like this:</p>
 
-    <pre class="tty">Using configuration file /home/weewx/weewx.conf
-Using Vantage driver version 3.0 (weewx.drivers.vantage)
-Usage: wee_device [config_file] [--help] [--info] [--clear]
+    <pre class="tty">wee_device /home/weewx/weewx.conf --help
+Using configuration file /home/weewx/weewx.conf
+Using Vantage driver version 3.0.8 (weewx.drivers.vantage)
+Usage: wee_device [config_file] [--help] [--info] [--clear-memory]
     [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg]
     [--set-bucket=CODE] [--set-rain-year-start=MM]
     [--set-offset=VARIABLE,OFFSET]
@@ -1089,7 +1090,7 @@ Options:
   -y                    answer yes to every prompt
   --info                To print configuration, reception, and barometer
                         calibration information about your weather station.
-  --clear               To clear the memory of your weather station.
+  --clear-memory        To clear the memory of your weather station.
   --set-interval=SECONDS
                         Sets the archive interval to the specified number of
                         seconds. Valid values are 60, 300, 600, 900, 1800,
@@ -1209,7 +1210,7 @@ confirmation before proceeding.</pre>
         <p><span class="highlight">Highlighted</span> values can be modified using the various <span class="code">wee_device</span>
             commands below.</p>
 
-        <h2 class="code">Command --clear</h2>
+        <h3 class="code">Command --clear-memory</h3>
         <p>This command will clear the logger memory after asking for confirmation.</p>
 
         <h3 id="vantage_archive_interval">Command <span class="code">--set-interval</span></h3>
@@ -1615,8 +1616,8 @@ wind_gust_max_time: None</pre>
         <h1 id="wee_extension_utility"><span class="code">wee_extension</span></h1>
 
         <p>
-            The utility <span class="code">wee_extension</span> is used to add and remove extensions. It's worth running
-            with the <span class="code">--help</span> option to see how it is used: </p>
+            The utility <span class="code">wee_extension</span> is used to add and remove extensions. Use
+            the <span class="code">--help</span> option to see how it is used: </p>
 
         <pre class="tty cmd">wee_extension --help</pre>
 
@@ -1657,31 +1658,18 @@ Options:
   --dry-run             Print what would happen but do not do it.
   --verbosity=N         How much status to display, 0-3</pre>
 
-        <p>To install an extension:</p>
+        <h2>Command <span class="code">--install</span></h2>
+        <p>Use this command to install an extension.</p>
 
-    <pre class='tty cmd'>wee_extension --install extensions/basic
-wee_extension --install basic.tar.gz</pre>
-
-        <p>To uninstall an extension:</p>
-
-        <p class='tty cmd'>wee_extension --uninstall basic</p>
-
-        <p>To list installed extensions:</p>
-
-        <p class='tty cmd'>wee_extension --list</p>
-
-        <p>The utility will make only the following changes:</p>
-        <ul>
-            <li>Modifications to <span class='code'>weewx.conf</span></li>
-            <li>Add/Remove directories in <span class='code'>skins</span></li>
-            <li>Add/Remove directories in <span class='code'>user</span></li>
-        </ul>
         <p>The utility makes a copy of any file or directory that it modifies or replaces. When installing, it creates a
             directory called <span class='code'>installer</span> in the <span class='code'>user</span> directory. The
             contents of the <span class='code'>installer</span> directory are used to enumerate and uninstall
             extensions.</p>
 
-        <h2>Installing an extension</h2>
+        <pre class='tty cmd'>wee_extension --install extensions/basic
+wee_extension --install basic.tar.gz</pre>
+
+
 
         <p>
             Let's try installing a simple extension, <a
@@ -1724,17 +1712,18 @@ Finished installing extension '/var/tmp/weewx-cmon-0.7.tgz'</pre>
             </li>
         </ol>
 
-        <h2>Listing installed extensions</h2>
+        <h2>Command <span class="code">--list</span></h2>
+        <p>This command will list all the extensions that you have installed.</p>
 
-        <p>The utility <span class="code">wee_extension</span> can tell you which extensions you have installed:</p>
     <pre class="tty"><span class="cmd">wee_extension --list</span>
 Extension Name   Version  Description
 cmon             0.7      Collect and display computer health indicators</pre>
-        <p>You can see it lists the extension we just installed, <span class="code">cmon</span>.</p>
+        <p>You can see that it listed the extension we just installed, <span class="code">cmon</span>.</p>
 
-        <h2>Removing extensions</h2>
 
-        <p>You can remove an extension using the same tool:</p>
+        <h2>Command <span class="code">--uninstall</span></h2>
+
+        <p>You can remove an extension using <span class="code">wee_extension</span>:</p>
     <pre class="tty"><span class="cmd">wee_extension --uninstall=cmon
 wee_extension --list</span>
 No extensions installed</pre>
