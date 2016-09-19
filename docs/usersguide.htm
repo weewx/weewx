@@ -3271,13 +3271,15 @@ sudo /etc/init.d/weewx restart</pre>
 
             <li>
                 <p>Configure Apache to see the <span class="code">weewx</span> reports.</p>
-
+                <ul>
+                    <li>
                 <p>If <span class='code'>weewx</span> was installed from DEB or RPM
                     package, no configuration should be necessary since the reports are placed
                     in the directory <span class='code'>/var/www/html/weewx</span>,
                     which is in the Apache DocumentRoot directory
                     <span class='code'>/var/www/html</span></p>
-
+                    </li>
+                    <li>
                 <p>If <span class='code'>weewx</span> was installed using
                     <span class='code'>setup.py</span>, you must tell Apache
                     where to find the <span class='code'>weewx</span> reports.
@@ -3300,6 +3302,8 @@ sudo /etc/init.d/weewx restart</pre>
 
                 <p>Restart Apache to make the changes happen:</p>
                 <pre class='tty cmd'>sudo /etc/init.d/apache2 restart</pre>
+                    </li>
+                </ul>
             </li>
 
             <li>
