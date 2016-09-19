@@ -1301,7 +1301,7 @@ Options:
 
 Mutating actions will request confirmation before proceeding.</pre>
 
-        <h3>Station information</h3>
+        <h3>Command <span class="code">--info</span></h3>
 
         <p>Display the station settings with the <span class='code'>--info</span> option.</p>
         <pre class="tty cmd">wee_device --info </pre>
@@ -1330,25 +1330,28 @@ icon alarm active: 0
 in humidity: 48.0
 ...</pre>
 
-        <h3 id="ws23xx_changing_the_archive_interval">Changing the archive interval</h3>
+        <h3>Option <span class="code">--set-interval</span></h3>
 
         <p>WS23xx stations ship from the factory with an archive interval of 60 minutes (3600 seconds). To change the
             station's interval to 5 minutes, do the following:</p>
 
         <p class="tty cmd">wee_device --set-interval=5</p>
 
-        <p class="warning"><strong>Warning!</strong><br/> Changing the recording interval will clear the station memory.
+        <p class="warning"><strong>Warning!</strong><br/> Changing the archive interval will clear the station memory.
         </p>
 
-        <h3 id="ws23xx_dumping_the_console_memory">Dumping the console memory</h3>
+        <h3>Option <span class="code">--history</span></h3>
 
-        <p>WS23xx stations store records in a circular buffer - once the buffer fills, the oldest records are replaced
+        <p>WS23xx stations store records in a circular buffer &mdash; once the buffer fills, the oldest records are replaced
             by newer records. The console stores up to 175 records. The <span
                     class='code'>history number of records</span> indicates how many records are in memory. The <span
                     class='code'>history interval</span> indicates the number of minutes between records.</p>
 
         <p>For example, to display the latest 30 records from the console memory:</p>
         <pre class="tty cmd">wee_device --history=30</pre>
+
+        <h3>Option <span class="code">--clear-memory</span></h3>
+
         <p>To clear the console memory:</p>
         <pre class="tty cmd">wee_device --clear-memory</pre>
 
