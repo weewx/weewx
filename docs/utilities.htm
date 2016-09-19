@@ -435,9 +435,9 @@ should thoroughly check the generated output for personal/private information
 before posting the information publicly.
 </pre>
 
-        <h2>Generating a debug report</h2>
+        <h2>Command <span class="code">--info</span></h2>
 
-        <p>Generate a debug report using the <span class="code">--info</span> option as follows:</p>
+        <p>This command generates a debug report which can be sent off for remote debugging.</p>
 
         <p class="warning"><strong>Warning!</strong><br/> The <span class="code">wee_debug</span> output includes a copy
             of the in use <span class="code">weewx</span> config file (usually <span class="code">weewx.conf</span>) and
@@ -562,9 +562,9 @@ Parsed and obfuscated weewx.conf
 wee_debug report successfully generated
 </pre>
 
-        <h2>Redirecting <span class="code">wee_debug</span> output</h2>
+        <h2>Option <span class="code">--output</span></h2>
 
-        <p>By default, <span class="code">wee_debug</span> output is sent to the system "standard output" (<span
+        <p>By default, <span class="code">wee_debug</span> sends its output to the system "standard output" (<span
                 class="code">stdout</span>) unless the <span class="code">--output</span> option is used. </p>
         <p>Command <span class="code">--output</span> with no parameter sends output to the default file <span
                 class="code">/var/tmp/weewx.debug</span>. Example:</p>
@@ -575,7 +575,7 @@ wee_debug report successfully generated
 
         <pre class="tty cmd">wee_debug --info --output /home/weewx/another.debug</pre>
 
-        <h2><span class="code">wee_debug</span> verbosity</h2>
+        <h2>Option <span class="code">--verbosity</span></h2>
 
         <p>The depth of information included in the <span class="code">wee_debug</span> output can be changed using the
             <span class="code">--verbosity</span> option. The <span class="code">--verbosity</span> option can be set to
@@ -1209,15 +1209,8 @@ confirmation before proceeding.</pre>
         <p><span class="highlight">Highlighted</span> values can be modified using the various <span class="code">wee_device</span>
             commands below.</p>
 
-        <h3 id="vantage_time_zone">Command <span class="code">--set-tz-code</span></h3>
-
-        <p>This command can be used to change the time zone. Consult the Vantage manual for the code that corresponds to
-            your time zone.</p>
-
-        <p class="warning">You can set either the time zone code <em>or</em> the time zone offset, but not both. </p>
-
-        <p>For example, to set the time zone code to Central European Time (code 20):</p>
-        <pre class="tty cmd">wee_device --set-tz-code=20</pre>
+        <h2 class="code">Command --clear</h2>
+        <p>This command will clear the logger memory after asking for confirmation.</p>
 
         <h3 id="vantage_archive_interval">Command <span class="code">--set-interval</span></h3>
 
@@ -1237,6 +1230,13 @@ confirmation before proceeding.</pre>
         <p>Use this command to set the console's stored altitude. The altitude must be in <em>feet</em>. Example:</p>
         <pre class="tty cmd">wee_device --set-altitude=700</pre>
 
+        <h3>Command <span class="code">--set-barometer</span></h3>
+        <p>Use this command to calibrate the barometer in your Vantage weather station. To use it, you must have a known
+            correct barometer reading <em>for your altitude</em>. In practice, you will either have to move your console
+            to a known-correct station (perhaps a nearby airport) and perform the calibration there, or reduce the
+            barometer reading to your altitude. Otherwise, specify the value zero and the station will pick a sensible
+            value.</p>
+
         <h3 id="vantage_rain_bucket_type">Command <span class="code">--set-bucket</span></h3>
 
         <p>Normally, this is set by Davis, but if you have replaced your bucket with a different kind, you might want to
@@ -1244,9 +1244,20 @@ confirmation before proceeding.</pre>
         <pre class="tty cmd">wee_device --set-bucket=2</pre>
 
         <h3>Command <span class="code">--set-rain-year-start</span></h3>
-        <p>The Davis Vantage series allows the start of the rain year to be something other than 1 January. For
-        example, to set it to 1 October:</p>
+        <p>The Davis Vantage series allows the start of the rain year to be something other than 1 January. For example,
+            to set it to 1 October:</p>
         <pre class="tty cmd">wee_device --set-rain-year-start=10</pre>
+
+        <h3 id="vantage_setting_offsets">Command <span class="code">--set-offset</span></h3>
+
+        <p>The Davis instruments can correct sensor errors by adding an <em>offset</em> to their emitted values. This is
+            particularly useful for Southern Hemisphere users. Davis fits the wind vane to the Integrated Sensor Suite
+            (ISS) in a position optimized for Northern Hemisphere users, who face the solar panel to the south. Users
+            south of the equator must orient the ISS's solar panel to the north to get maximal insolation, resulting in
+            a 180&deg; error in the wind direction. The solution is to add a 180&deg; offset correction. You can do this
+            with the following command:</p>
+
+        <pre class="tty cmd">wee_device --set-offset=windDir,180</pre>
 
         <h3 id="vantage_configuring_additional_sensors">Command <span class="code">--set-transmitter-type</span></h3>
 
@@ -1268,34 +1279,58 @@ confirmation before proceeding.</pre>
 
         <p>The <span class="code">--help</span> option will give you the code for each sensor type.</p>
 
-        <h3 id="vantage_setting_offsets">Command <span class="code">--set-offset</span></h3>
+        <h3>Command <span class="code">--set-dst</span></h3>
 
-        <p>The Davis instruments can correct sensor errors by adding an <em>offset</em> to their emitted values. This is
-            particularly useful for Southern Hemisphere users. Davis fits the wind vane to the Integrated Sensor Suite
-            (ISS) in a position optimized for Northern Hemisphere users, who face the solar panel to the south. Users
-            south of the equator must orient the ISS's solar panel to the north to get maximal insolation, resulting in
-            a 180&deg; error in the wind direction. The solution is to add a 180&deg; offset correction. You can do this
-            with the following command:</p>
+        <p>Use the command to tell your console whether or not daylight savings time is in effect, or to have it set
+            automatically based on the time zone.</p>
 
-        <pre class="tty cmd">wee_device --set-offset=windDir,180</pre>
+        <h3 id="vantage_time_zone">Command <span class="code">--set-tz-code</span></h3>
+
+        <p>This command can be used to change the time zone. Consult the Vantage manual for the code that corresponds to
+            your time zone.</p>
+
+        <p class="warning">You can set either the time zone code <em>or</em> the time zone offset, but not both. </p>
+
+        <p>For example, to set the time zone code to Central European Time (code 20):</p>
+        <pre class="tty cmd">wee_device --set-tz-code=20</pre>
+
+        <h3>Command <span class="code">--set-tz-offset</span></h3>
+        <p>If you live in an odd time zone that is perhaps not covered by the "canned" Davis time zones, you can set the
+            offset from UTC using this command.</p>
+
+        <p class="warning">You can set either the time zone code <em>or</em> the time zone offset, but not both. </p>
+
+        <p>For example, to set the time zone offset for Newfoundland Standard Time (UTC-03:30), use the following:</p>
+        <pre class="tty cmd">wee_device --set-tz-offset=-0330</pre>
+
+        <h3>Command <span class="code">--set-lamp</span></h3>
+        <p>Use this command to turn the console lamp on or off.</p>
+
+        <h3>Command <span class="code">--start</span></h3>
+        <p>Use this command to start the logger. There are occasions when an out-of-the-box logger needs this
+            command.</p>
+
+        <h3>Command <span class="code">--stop</span></h3>
+        <p>Use this command to stop the logger. I can't think of a good reason why you would need to do this, but the
+            command is included for completeness.</p>
 
         <h3 id="vantage_dumping_the_logger_memory">Command <span class="code">--dump</span></h3>
 
         <p>Generally, <span class="code">weewx</span> downloads only new archive records from the on-board logger in the
             Vantage. However, occasionally the memory in the Vantage will get corrupted, making this impossible. See the
-            troubleshooting section <em><a href="usersguide.htm#html_generated_but_not_updated">Weewx generates HTML pages, but
-                it does not update them</a></em>. The fix involves clearing the memory but, unfortunately, this means
-            you may lose any data which might have accumulated in the logger memory, but not yet downloaded. By using
-            the <span class="code">--dump</span> command before clearing the memory, you might be able to save these
-            data. Stop <span class="code">weewx</span> first, then</p>
+            troubleshooting section <em><a href="usersguide.htm#html_generated_but_not_updated">Weewx generates HTML
+                pages, but it does not update them</a></em>. The fix involves clearing the memory but, unfortunately,
+            this means you may lose any data which might have accumulated in the logger memory, but not yet downloaded.
+            By using the <span class="code">--dump</span> command before clearing the memory, you might be able to save
+            these data. Stop <span class="code">weewx</span> first, then</p>
         <pre class="tty cmd">wee_device --dump</pre>
         <p>This will dump all data archived in the Vantage memory directly to the database, without regard to whether or
             not they have been seen before. Because the command dumps <em>all</em> data, it may result in many duplicate
             primary key errors. These can be ignored.</p>
 
         <h3>Command <span class="code">--logger-summary</span></h3>
-        <p>This command is useful for debugging the console logger. It will scan the logger memory, recording the timestamp
-        in each page and index slot to the file <span class="code">FILE</span>.</p>
+        <p>This command is useful for debugging the console logger. It will scan the logger memory, recording the
+            timestamp in each page and index slot to the file <span class="code">FILE</span>.</p>
         <p>Example:</p>
         <pre class="tty cmd">wee_device --logger-summary=/var/tmp/summary.txt</pre>
 
@@ -1960,56 +1995,57 @@ the daily summaries using the wee_database utility.</pre>
             <pre class="tty">source = CSV</pre>
 
             <li>Confirm that the following options in the <span class="code">[CSV]</span> section are set:
-            </li>
 
-            <ul>
-                <li><strong><span class="code"><a href="#csv_file">file</a></span></strong>. The full path and file name
-                    of the file containing the CSV formatted data to be imported.
-                </li>
-                <li><strong><span class="code"><a href="#csv_interval">interval</a></span></strong>. Determines how the
-                    <span class="code">weewx</span> interval field is derived.
-                </li>
-                <li><strong><span class="code"><a href="#csv_qc">qc</a></span></strong>. Determines whether quality
-                    control checks are performed on the imported data.
-                </li>
-                <li><strong><span class="code"><a href="#csv_calc_missing">calc_missing</a></span></strong>. Determines
-                    whether missing derived observations will be calculated from the imported data.
-                </li>
-                <li><strong><span class="code"><a href="#csv_tranche">tranche</a></span></strong>. The number of records
-                    written to the <span class="code">weewx</span> database in each transaction.
-                </li>
-                <li><strong><span class="code"><a href="#csv_UV">UV_sensor</a></span></strong>. Whether a UV sensor was
-                    installed when the source data was produced.
-                </li>
-                <li><strong><span class="code"><a href="#csv_solar">solar_sensor</a></span></strong>. Whether a solar
-                    radiation sensor was installed when the source data was produced.
-                </li>
-                <li><strong><span class="code"><a
-                        href="#csv_raw_datetime_format">raw_datetime_format</a></span></strong>. The format of the
-                    imported date time field.
-                </li>
-                <li><strong><span class="code"><a href="#csv_rain">rain</a></span></strong>. Determines how the <span
-                        class="code">weewx</span> rain field is derived.
-                </li>
-                <li><strong><span class="code"><a href="#csv_wind_direction">wind_direction</a></span></strong>.
-                    Determines how imported wind direction fields are interpreted.
-                </li>
-                <li><strong><span class="code"><a href="#csv_map">[[Map]]</a></span></strong>. Defines the mapping
-                    between imported data fields and <span class="code">weewx</span> archive fields. Also defines the
-                    units of measure for each imported field.
-                </li>
-            </ul>
+
+                <ul>
+                    <li><strong><span class="code"><a href="#csv_file">file</a></span></strong>. The full path and file
+                        name of the file containing the CSV formatted data to be imported.
+                    </li>
+                    <li><strong><span class="code"><a href="#csv_interval">interval</a></span></strong>. Determines how
+                        the <span class="code">weewx</span> interval field is derived.
+                    </li>
+                    <li><strong><span class="code"><a href="#csv_qc">qc</a></span></strong>. Determines whether quality
+                        control checks are performed on the imported data.
+                    </li>
+                    <li><strong><span class="code"><a href="#csv_calc_missing">calc_missing</a></span></strong>.
+                        Determines whether missing derived observations will be calculated from the imported data.
+                    </li>
+                    <li><strong><span class="code"><a href="#csv_tranche">tranche</a></span></strong>. The number of
+                        records written to the <span class="code">weewx</span> database in each transaction.
+                    </li>
+                    <li><strong><span class="code"><a href="#csv_UV">UV_sensor</a></span></strong>. Whether a UV sensor
+                        was installed when the source data was produced.
+                    </li>
+                    <li><strong><span class="code"><a href="#csv_solar">solar_sensor</a></span></strong>. Whether a
+                        solar radiation sensor was installed when the source data was produced.
+                    </li>
+                    <li><strong><span class="code"><a
+                            href="#csv_raw_datetime_format">raw_datetime_format</a></span></strong>. The format of the
+                        imported date time field.
+                    </li>
+                    <li><strong><span class="code"><a href="#csv_rain">rain</a></span></strong>. Determines how the
+                        <span class="code">weewx</span> rain field is derived.
+                    </li>
+                    <li><strong><span class="code"><a href="#csv_wind_direction">wind_direction</a></span></strong>.
+                        Determines how imported wind direction fields are interpreted.
+                    </li>
+                    <li><strong><span class="code"><a href="#csv_map">[[Map]]</a></span></strong>. Defines the mapping
+                        between imported data fields and <span class="code">weewx</span> archive fields. Also defines
+                        the units of measure for each imported field.
+                    </li>
+                </ul>
+            </li>
 
             <li>When first importing data it is prudent to do a dry run import before any data are actually imported. A
                 dry run import will perform all steps of the import without actually writing imported data to the <span
                         class="code">weewx</span> database. In addition, consideration should be given to any additional
                 command line options such as <span class="code">--date</span>.
-            </li>
-            <p>To perform a dry run enter the following command:</p>
+
+                <p>To perform a dry run enter the following command:</p>
 
             <pre class="tty cmd">wee_import --import-config=/var/tmp/csv.conf --dry-run
 </pre>
-            <p>The output should be something like this:</p>
+                <p>The output should be something like this:</p>
 
             <pre class="tty">Starting wee_import...
 A CSV import from source file '/var/tmp/data.csv' has been requested.
@@ -2023,25 +2059,26 @@ Records processed: 70685; Unique records: 70685; Last timestamp: 2010-09-04 04:2
 Finished dry run import. 70685 records were processed and 70685 unique records would have been imported.
 </pre>
 
-            <p>The output includes details about the data source, its destination and some other details on how the data
-                will be processed. The import will then be performed but no data will be written to the <span
-                        class="code">weewx</span> database. Upon completion a brief summary of the records processed is
-                provided. </p>
+                <p>The output includes details about the data source, its destination and some other details on how the
+                    data will be processed. The import will then be performed but no data will be written to the <span
+                            class="code">weewx</span> database. Upon completion a brief summary of the records processed
+                    is provided. </p>
 
-            <p class="note">
-                <b>Note</b><br/>As the <span class="code">weewx</span> database is not altered when the <span
-                    class="code">--dry-run</span> command line option is used, <span class="code">wee_import</span> log
-                output is suspended during a dry run import. In effect, the use of <span class="code">--dry-run</span>
-                is equivalent to <span class="code">--dry-run --log=-</span>. During a dry run import the only <span
-                    class="code">wee_import</span> output is that displayed on <span class="code">stdout</span>. </p>
-
-            <li>Once the dry run results are satisfactory the data can be imported using the following command:
+                <p class="note">
+                    <b>Note</b><br/>As the <span class="code">weewx</span> database is not altered when the <span
+                        class="code">--dry-run</span> command line option is used, <span class="code">wee_import</span>
+                    log output is suspended during a dry run import. In effect, the use of <span
+                        class="code">--dry-run</span> is equivalent to <span class="code">--dry-run --log=-</span>.
+                    During a dry run import the only <span class="code">wee_import</span> output is that displayed on
+                    <span class="code">stdout</span>. </p>
             </li>
 
-            <pre class="tty cmd">wee_import --import-config=/var/tmp/csv.conf</pre>
+            <li>Once the dry run results are satisfactory the data can be imported using the following command:
 
-            <p>This will result in a short preamble similar to that from the dry run. At the end of the preamble there
-                will be a prompt:</p>
+                <pre class="tty cmd">wee_import --import-config=/var/tmp/csv.conf</pre>
+
+                <p>This will result in a short preamble similar to that from the dry run. At the end of the preamble
+                    there will be a prompt:</p>
 
     <pre class="tty">Starting wee_import...
 A CSV import from source file '/var/tmp/data.csv' has been requested.
@@ -2053,26 +2090,27 @@ Starting import ...
 Proceeding will save all imported records in the weewx archive.
 Are you sure you want to proceed (y/n)?
 </pre>
+            </li>
 
             <li>If the import parameters are acceptable enter <span class="code">y</span> to proceed with the import or
                 <span class="code">n</span> to abort the import. If the import is confirmed then the source data will be
                 imported, processed and saved in the <span class="code">weewx</span> database. Information on the
                 progress of the import will be displayed similar to the following:
-            </li>
 
         <pre class="tty">Records processed: 250; Unique records: 250; Last timestamp: 2010-02-09 19:25:00 AEST (1265707500)
 </pre>
 
-            <p>The line commencing with <span class="code">Records processed</span> should update as records are
-                imported with progress information on number of records processed, number of unique records imported and
-                the date time of the latest record processed. When the import is complete a brief summary is displayed
-                similar to the following:</p>
+                <p>The line commencing with <span class="code">Records processed</span> should update as records are
+                    imported with progress information on number of records processed, number of unique records imported
+                    and the date time of the latest record processed. When the import is complete a brief summary is
+                    displayed similar to the following:</p>
 
         <pre class="tty">Records processed: 70685; Unique records: 70685; Last timestamp: 2010-09-04 04:20:00 AEST (1283538000)
 Finished import. 70685 raw records resulted in 70685 unique records being processed in 276.63 seconds.
 Those records with a timestamp already in the archive will not have been imported.
 Confirm successful import in the weewx log file.</pre>
 
+            </li>
             <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
                 number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
                 imported records were successfully saved to the database. The user should look carefully through the
@@ -2839,7 +2877,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 should be used.
             </li>
         </ul>
-        </p>
+
 
         <p class="note">
             <b>Note</b><br/><span class="code">wee_import</span> only supports cumulative rainfall data that resets on a
