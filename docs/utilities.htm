@@ -611,7 +611,7 @@ wee_debug report successfully generated
                 <td>summary of <span class="code">weewx</span> archive</td>
             </tr>
             <tr>
-                <td>parsed and obfusated <span class="code">weewx</span> config file (usually <span class="code">weewx.conf</span>)
+                <td>parsed and obfuscated <span class="code">weewx</span> config file (usually <span class="code">weewx.conf</span>)
                 </td>
             </tr>
             <tr>
@@ -2118,15 +2118,15 @@ Confirm successful import in the weewx log file.</pre>
                 take note of any records that were not imported. The most common reason for imported records not being
                 saved to the database is because a record with that timestamp already exists in the database, in such
                 cases something similar to following will be found in the log:
-            </li>
 
         <pre class="tty">
 Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
 </pre>
 
-            <p>In such cases the user should take note of the timestamp of the record(s) concerned and make a decision
-                about whether to delete the pre-existing record and re-import the record or retain the pre-existing
-                record.</p>
+                <p>In such cases the user should take note of the timestamp of the record(s) concerned and make a
+                    decision about whether to delete the pre-existing record and re-import the record or retain the
+                    pre-existing record.</p>
+            </li>
 
         </ol>
 
@@ -2171,34 +2171,33 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
             <li>The following <span class="code">weewx</span> archive fields will be populated from other settings or
                 configuration options:
+                <ul>
+                    <li><span class="code">interval</span></li>
+                    <li><span class="code">usUnits</span></li>
+                </ul>
             </li>
-
-            <ul>
-                <li><span class="code">interval</span></li>
-                <li><span class="code">usUnits</span></li>
-            </ul>
 
             <li>The following <span class="code">weewx</span> archive fields will be populated with values derived from
                 the imported data provided <span class="code">calc_missing = True</span> is included in the <span
                         class="code">[WU]</span> section of the import configuration file and the field exists in the
                 in-use <span class="code">weewx</span> archive table schema.
+
+                <ul>
+                    <li><span class="code">altimeter</span></li>
+                    <li><span class="code">ET</span></li>
+                    <li><span class="code">heatindex</span></li>
+                    <li><span class="code">pressure</span></li>
+                    <li><span class="code">rainRate</span></li>
+                    <li><span class="code">windchill</span></li>
+                </ul>
+
+                <p class="note">
+                    <b>Note</b><br/>If <span class="code">calc_missing = False</span> is included in the <span
+                        class="code">[WU]</span> section of the import configuration file being used then all of the
+                    above fields will be set to <span class="code">None/NULL</span>. The default setting of the <span
+                        class="code">calc_missing</span> option is <span class="code">True</span>
+                </p>
             </li>
-
-            <ul>
-                <li><span class="code">altimeter</span></li>
-                <li><span class="code">ET</span></li>
-                <li><span class="code">heatindex</span></li>
-                <li><span class="code">pressure</span></li>
-                <li><span class="code">rainRate</span></li>
-                <li><span class="code">windchill</span></li>
-            </ul>
-
-            <p class="note">
-                <b>Note</b><br/>If <span class="code">calc_missing = False</span> is included in the <span class="code">[WU]</span>
-                section of the import configuration file being used then all of the above fields will be set to <span
-                    class="code">None/NULL</span>. The default setting of the <span class="code">calc_missing</span>
-                option is <span class="code">True</span>
-            </p>
         </ul>
 
         <h3>Importing observations from Weather Underground</h3>
@@ -2229,69 +2228,68 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <pre class="tty">source = WU</pre>
 
             <li>Confirm that the following options in the <span class="code">[WU]</span> section are correctly set:
+
+                <ul>
+                    <li><strong><span class="code"><a href="#wu_station_id">station_id</a></span></strong>. The 11 or 12
+                        character weather station ID of the Weather Underground PWS that will be the source of the
+                        imported data.
+                    </li>
+                    <li><strong><span class="code"><a href="#wu_interval">interval</a></span></strong>. Determines how
+                        the <span class="code">weewx</span> interval field is derived.
+                    </li>
+                    <li><strong><span class="code"><a href="#wu_qc">qc</a></span></strong>. Determines whether quality
+                        control checks are performed on the imported data.
+
+                        <p class="note">
+                            <b>Note</b><br/>As Weather Underground imports at times contain nonsense values,
+                            particularly for fields for which no data were uploaded to Weather Underground by the PWS,
+                            the use of quality control checks on imported data can prevent these nonsense values from
+                            being imported and contaminating the <span class="code">weewx</span> database. </p>
+                    </li>
+
+                    <li><strong><span class="code"><a href="#wu_calc_missing">calc_missing</a></span></strong>.
+                        Determines whether missing derived observations will be calculated from the imported data.
+                    </li>
+                    <li><a href="#wu_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
+                        records written to the <span class="code">weewx</span> database in each transaction.
+                    </li>
+                    <li><a href="#wu_wind_direction"><strong><span class="code">wind_direction</span></strong></a>.
+                        Determines how imported wind direction fields are interpreted.
+                    </li>
+                </ul>
             </li>
-
-            <ul>
-                <li><strong><span class="code"><a href="#wu_station_id">station_id</a></span></strong>. The 11 or 12
-                    character weather station ID of the Weather Underground PWS that will be the source of the imported
-                    data.
-                </li>
-                <li><strong><span class="code"><a href="#wu_interval">interval</a></span></strong>. Determines how the
-                    <span class="code">weewx</span> interval field is derived.
-                </li>
-                <li><strong><span class="code"><a href="#wu_qc">qc</a></span></strong>. Determines whether quality
-                    control checks are performed on the imported data.
-                </li>
-
-                <p class="note">
-                    <b>Note</b><br/>As Weather Underground imports at times contain nonsense values, particularly for
-                    fields for which no data were uploaded to Weather Underground by the PWS, the use of quality control
-                    checks on imported data can prevent these nonsense values from being imported and contaminating the
-                    <span class="code">weewx</span> database. </p>
-
-                <li><strong><span class="code"><a href="#wu_calc_missing">calc_missing</a></span></strong>. Determines
-                    whether missing derived observations will be calculated from the imported data.
-                </li>
-                <li><a href="#wu_tranche"><strong><span class="code">tranche</span></strong></a>. The number of records
-                    written to the <span class="code">weewx</span> database in each transaction.
-                </li>
-                <li><a href="#wu_wind_direction"><strong><span class="code">wind_direction</span></strong></a>.
-                    Determines how imported wind direction fields are interpreted.
-                </li>
-            </ul>
 
             <li>When first importing data it is prudent to do a dry run import before any data are actually imported. A
                 dry run import will perform all steps of the import without actually writing imported data to the <span
                         class="code">weewx</span> database. In addition, consideration should be given to any additional
                 command line options to be used such as <span class="code">--date</span>.
-            </li>
-            <p>To perform a dry run enter the following command:</p>
+                <p>To perform a dry run enter the following command:</p>
 
             <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00" --dry-run
 </pre>
 
-            <p class="note">
-                <b>Note</b><br/>If the <span class="code">--date</span> command line option is omitted or a date (not
-                date-time) range is used during a Weather Underground import, then the current days history data will be
-                imported. This includes records timestamped from <span class="code">00:00</span> (inclusive) at the
-                start of the day up to but NOT including the <span class="code">00:00</span> record at the end of the
-                last day. As the timestamped record refers to observations of the previous interval, such an import
-                actually includes one record with observations from the previous day (the <span
-                    class="code">00:00</span> record at the start of the day). Whilst this will not present a problem
-                for <span class="code">wee_import</span> as any records being imported with a timestamp that already
-                exists in the <span class="code">weewx</span> database are ignored, the user may wish to use the <span
-                    class="code">--date</span> option with a suitable date-time range to precisely control which records
-                are imported. </p>
+                <p class="note">
+                    <b>Note</b><br/>If the <span class="code">--date</span> command line option is omitted or a date
+                    (not date-time) range is used during a Weather Underground import, then the current days history
+                    data will be imported. This includes records timestamped from <span class="code">00:00</span>
+                    (inclusive) at the start of the day up to but NOT including the <span class="code">00:00</span>
+                    record at the end of the last day. As the timestamped record refers to observations of the previous
+                    interval, such an import actually includes one record with observations from the previous day (the
+                    <span class="code">00:00</span> record at the start of the day). Whilst this will not present a
+                    problem for <span class="code">wee_import</span> as any records being imported with a timestamp that
+                    already exists in the <span class="code">weewx</span> database are ignored, the user may wish to use
+                    the <span class="code">--date</span> option with a suitable date-time range to precisely control
+                    which records are imported. </p>
 
-            <p class="note">
-                <b>Note</b><br/><span class="code">wee_import</span> obtains Weather Underground daily history data one
-                day at a time via a HTTP request and as such the import of large time spans of data may take some time.
-                Such imports may be best handled as a series of imports of smaller time spans. </p>
+                <p class="note">
+                    <b>Note</b><br/><span class="code">wee_import</span> obtains Weather Underground daily history data
+                    one day at a time via a HTTP request and as such the import of large time spans of data may take
+                    some time. Such imports may be best handled as a series of imports of smaller time spans. </p>
 
-            <p>This will result in a short preamble with details on the data source, its destination and some other
-                details on how the data will be processed. The import will then be performed but no data will written to
-                the <span class="code">weewx</span> database. </p>
-            <p>The output should be similar to:</p>
+                <p>This will result in a short preamble with details on the data source, its destination and some other
+                    details on how the data will be processed. The import will then be performed but no data will
+                    written to the <span class="code">weewx</span> database. </p>
+                <p>The output should be similar to:</p>
 
             <pre class="tty">Starting wee_import...
 Observation history for Weather Underground station 'ISTATION123' will be imported.
@@ -2314,22 +2312,22 @@ Records processed: 62; Unique records: 62; Last timestamp: 2016-01-23 05:55:00 A
 Finished dry run import. 607 records were processed and 607 unique records would have been imported.
 </pre>
 
-            <p class="note">
-                <b>Note</b><br/>As the <span class="code">weewx</span> database is not altered when the <span
-                    class="code">--dry-run</span> command line option is used, <span class="code">wee_import</span> log
-                output is suspended during a dry run import. In effect, the use of <span class="code">--dry-run</span>
-                is equivalent to <span class="code">--dry-run --log=-</span>. During a dry run import the only <span
-                    class="code">wee_import</span> output is that displayed on <span class="code">stdout</span>(console).
-            </p>
+                <p class="note">
+                    <b>Note</b><br/>As the <span class="code">weewx</span> database is not altered when the <span
+                        class="code">--dry-run</span> command line option is used, <span class="code">wee_import</span>
+                    log output is suspended during a dry run import. In effect, the use of <span
+                        class="code">--dry-run</span> is equivalent to <span class="code">--dry-run --log=-</span>.
+                    During a dry run import the only <span class="code">wee_import</span> output is that displayed on
+                    <span class="code">stdout</span>(console). </p>
+            </li>
 
             <li>Once the dry run results are satisfactory the source data can be imported using the following command:
-            </li>
 
         <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00"
 </pre>
 
-            <p>This will result in a short preamble similar to that of a dry run. At the end of the preamble there will
-                be a prompt:</p>
+                <p>This will result in a short preamble similar to that of a dry run. At the end of the preamble there
+                    will be a prompt:</p>
 
     <pre class="tty">Starting wee_import...
 Observation history for Weather Underground station 'ISTATION123' will be imported.
@@ -2344,16 +2342,16 @@ Proceeding will save all imported records in the weewx archive.
 Are you sure you want to proceed (y/n)?
 </pre>
 
-            <p class="note">
-                <b>Note</b><br/><span class="code">wee_import</span> obtains Weather Underground daily history data one
-                day at a time via a HTTP request and as such the import of large time spans of data may take some time.
-                Such imports may be best handled as a series of imports of smaller time spans. </p>
+                <p class="note">
+                    <b>Note</b><br/><span class="code">wee_import</span> obtains Weather Underground daily history data
+                    one day at a time via a HTTP request and as such the import of large time spans of data may take
+                    some time. Such imports may be best handled as a series of imports of smaller time spans. </p>
+            </li>
 
             <li>If the import parameters are acceptable enter <span class="code">y</span> to proceed with the import or
                 <span class="code">n</span> to abort the import. If the import is confirmed, the source data will be
                 imported, processed and saved in the <span class="code">weewx</span> database. Information on the
                 progress of the import will be displayed similar to the following:
-            </li>
 
         <pre class="tty">Period 1 ...
 Records processed: 18; Unique records: 18; Last timestamp: 2016-01-20 23:55:00 AEST (1453298100)
@@ -2361,28 +2359,29 @@ Period 2 ...
 Records processed: 286; Unique records: 286; Last timestamp: 2016-01-21 23:55:00 AEST (1453384500)
 </pre>
 
-            <p>The line commencing with <span class="code">Records processed</span> should update as records are
-                imported with progress information on number of records processed, number of unique records imported and
-                the date time of the latest record processed. If the import spans multiple days then a new <span
-                        class="code">Period</span> line is created for each day. When the import is complete a brief
-                summary is displayed similar to the following:</p>
+                <p>The line commencing with <span class="code">Records processed</span> should update as records are
+                    imported with progress information on number of records processed, number of unique records imported
+                    and the date time of the latest record processed. If the import spans multiple days then a new <span
+                            class="code">Period</span> line is created for each day. When the import is complete a brief
+                    summary is displayed similar to the following:</p>
 
         <pre class="tty">Finished import. 607 raw records resulted in 607 unique records being processed in 80.94 seconds.
 Those records with a timestamp already in the archive will not have been imported.
 Confirm successful import in the weewx log file.
 </pre>
 
-            <p class="note">
-                <b>Note</b><br/>It is not unusual to see a Weather Underground import return a different number of
-                records for the same import performed at different times. If importing the current day this could be
-                because an additional record may have been added between <span class="code">wee_import</span> runs. For
-                periods before today, this behaviour appears to be a vagary of Weather Underground. The only solution
-                appears to be to repeat the import with the same <span class="code">--date</span> command line option
-                setting and observe whether the missing records are imported. Repeating the import will not adversely
-                affect any existing data as records with timestamps that are already in the <span
-                    class="code">weewx</span> archive will be ignored. It may; however, generated many <span
-                    class="code">UNIQUE constraint failed: archive.dateTime</span> messages in the <span class="code">weewx</span>
-                log. </p>
+                <p class="note">
+                    <b>Note</b><br/>It is not unusual to see a Weather Underground import return a different number of
+                    records for the same import performed at different times. If importing the current day this could be
+                    because an additional record may have been added between <span class="code">wee_import</span> runs.
+                    For periods before today, this behaviour appears to be a vagary of Weather Underground. The only
+                    solution appears to be to repeat the import with the same <span class="code">--date</span> command
+                    line option setting and observe whether the missing records are imported. Repeating the import will
+                    not adversely affect any existing data as records with timestamps that are already in the <span
+                        class="code">weewx</span> archive will be ignored. It may; however, generated many <span
+                        class="code">UNIQUE constraint failed: archive.dateTime</span> messages in the <span
+                        class="code">weewx</span> log. </p>
+            </li>
 
             <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
                 number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
@@ -2391,16 +2390,16 @@ Confirm successful import in the weewx log file.
                 take note of any records that were not imported. The most common reason for imported records not being
                 saved to the database is because a record with that timestamp already exists in the database, in such
                 cases something similar to following will be found in the log:
-            </li>
 
         <pre class="tty">
 Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
 </pre>
 
-            <p>In such cases the user should take note of the timestamp of the record(s) concerned and make a decision
-                about whether to delete the pre-existing record and re-import the record or retain the pre-existing
-                record.</p>
+                <p>In such cases the user should take note of the timestamp of the record(s) concerned and make a
+                    decision about whether to delete the pre-existing record and re-import the record or retain the
+                    pre-existing record.</p>
 
+            </li>
         </ol>
 
         <h2>Importing from Cumulus</h2>
@@ -2448,31 +2447,31 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
             <li>The following <span class="code">weewx</span> archive fields will be populated from other settings or
                 configuration options:
-            </li>
 
-            <ul>
-                <li><span class="code">interval</span></li>
-                <li><span class="code">usUnits</span></li>
-            </ul>
+                <ul>
+                    <li><span class="code">interval</span></li>
+                    <li><span class="code">usUnits</span></li>
+                </ul>
+            </li>
 
             <li>The following <span class="code">weewx</span> archive fields will be populated with values derived from
                 the imported data provided <span class="code">calc_missing = True</span> is included in the <span
                         class="code">[Cumulus]</span> section of the import configuration file being used and the field
                 exists in the in-use <span class="code">weewx</span> archive table schema.
+
+                <ul>
+                    <li><span class="code">altimeter</span></li>
+                    <li><span class="code">ET</span></li>
+                    <li><span class="code">pressure</span></li>
+                </ul>
+
+                <p class="note">
+                    <b>Note</b><br/>If <span class="code">calc_missing = False</span> is included in the <span
+                        class="code">[WU]</span> section of the import configuration file being used then all of the
+                    above fields will be set to <span class="code">None/NULL</span>. The default setting of the <span
+                        class="code">calc_missing</span> option is <span class="code">True</span>
+                </p>
             </li>
-
-            <ul>
-                <li><span class="code">altimeter</span></li>
-                <li><span class="code">ET</span></li>
-                <li><span class="code">pressure</span></li>
-            </ul>
-
-            <p class="note">
-                <b>Note</b><br/>If <span class="code">calc_missing = False</span> is included in the <span class="code">[WU]</span>
-                section of the import configuration file being used then all of the above fields will be set to <span
-                    class="code">None/NULL</span>. The default setting of the <span class="code">calc_missing</span>
-                option is <span class="code">True</span>
-            </p>
         </ul>
 
         <h3>Importing observations from Cumulus monthly log files</h3>
@@ -2502,56 +2501,55 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <pre class="tty">source = Cumulus</pre>
 
             <li>Confirm that the following options in the <span class="code">[Cumulus]</span> section are correctly set:
-            </li>
 
-            <ul>
-                <li><a href="#cumulus_directory"><strong><span class="code">directory</span></strong></a>. The full path
-                    to the directory containing the Cumulus monthly log files to be used as the source of the imported
-                    data.
-                </li>
-                <li><a href="#cumulus_interval"><strong><span class="code">interval</span></strong></a>. Determines how
-                    the <span class="code">weewx</span> interval field is derived.
-                </li>
-                <li><a href="#cumulus_qc"><strong><span class="code">qc</span></strong></a>. Determines whether quality
-                    control checks are performed on the imported data.
-                </li>
-                <li><a href="#cumulus_calc_missing"><strong><span class="code">calc_missing</span></strong></a>.
-                    Determines whether missing derived observations will be calculated from the imported data.
-                </li>
-                <li><a href="#cumulus_delimiter"><strong><span class="code">delimiter</span></strong></a>. The field
-                    delimiter used in the Cumulus monthly log files.
-                </li>
-                <li><a href="#cumulus_decimal"><strong><span class="code">decimal</span></strong></a>. The decimal point
-                    character used in the Cumulus monthly log files.
-                </li>
-                <li><a href="#cumulus_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
-                    records written to the <span class="code">weewx</span> database in each transaction.
-                </li>
-                <li><a href="#cumulus_UV"><strong><span class="code">UV_sensor</span></strong></a>. Whether a UV sensor
-                    was installed when the source data was produced.
-                </li>
-                <li><a href="#cumulus_solar"><strong><span class="code">solar_sensor</span></strong></a>. Whether a
-                    solar radiation sensor was installed when the source data was produced.
-                </li>
-                <li><a href="#cumulus_units"><strong><span class="code">[[Units]]</span></strong></a>. Defines the units
-                    used in the Cumulus monthly log files.
-                </li>
-            </ul>
+                <ul>
+                    <li><a href="#cumulus_directory"><strong><span class="code">directory</span></strong></a>. The full
+                        path to the directory containing the Cumulus monthly log files to be used as the source of the
+                        imported data.
+                    </li>
+                    <li><a href="#cumulus_interval"><strong><span class="code">interval</span></strong></a>. Determines
+                        how the <span class="code">weewx</span> interval field is derived.
+                    </li>
+                    <li><a href="#cumulus_qc"><strong><span class="code">qc</span></strong></a>. Determines whether
+                        quality control checks are performed on the imported data.
+                    </li>
+                    <li><a href="#cumulus_calc_missing"><strong><span class="code">calc_missing</span></strong></a>.
+                        Determines whether missing derived observations will be calculated from the imported data.
+                    </li>
+                    <li><a href="#cumulus_delimiter"><strong><span class="code">delimiter</span></strong></a>. The field
+                        delimiter used in the Cumulus monthly log files.
+                    </li>
+                    <li><a href="#cumulus_decimal"><strong><span class="code">decimal</span></strong></a>. The decimal
+                        point character used in the Cumulus monthly log files.
+                    </li>
+                    <li><a href="#cumulus_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
+                        records written to the <span class="code">weewx</span> database in each transaction.
+                    </li>
+                    <li><a href="#cumulus_UV"><strong><span class="code">UV_sensor</span></strong></a>. Whether a UV
+                        sensor was installed when the source data was produced.
+                    </li>
+                    <li><a href="#cumulus_solar"><strong><span class="code">solar_sensor</span></strong></a>. Whether a
+                        solar radiation sensor was installed when the source data was produced.
+                    </li>
+                    <li><a href="#cumulus_units"><strong><span class="code">[[Units]]</span></strong></a>. Defines the
+                        units used in the Cumulus monthly log files.
+                    </li>
+                </ul>
+            </li>
 
             <li>When first importing data it is prudent to do a dry run import before any data are actually imported. A
                 dry run import will perform all steps of the import without actually writing imported data to the <span
                         class="code">weewx</span> database. In addition, consideration should be given to any additional
                 command line options to be used such as <span class="code">--date</span>.
-            </li>
-            <p>To perform a dry run enter the following command:</p>
+                <p>To perform a dry run enter the following command:</p>
 
             <pre class="tty cmd">wee_import --import-config=/var/tmp/cumulus.conf --dry-run
 </pre>
 
-            <p>This will result in a short preamble with details on the data source, its destination and some other
-                details on how the data will be processed. The import will then be performed but no data will be written
-                to the <span class="code">weewx</span> database. </p>
-            <p>The output should be similar to:</p>
+                <p>This will result in a short preamble with details on the data source, its destination and some other
+                    details on how the data will be processed. The import will then be performed but no data will be
+                    written to the <span class="code">weewx</span> database. </p>
+                <p>The output should be similar to:</p>
 
             <pre class="tty">Starting wee_import...
 Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
@@ -2582,17 +2580,17 @@ Records processed: 3544; Unique records: 3543; Last timestamp: 2016-07-26 17:00:
 Finished dry run import. 37648 records were processed and 37620 unique records would have been imported.
 </pre>
 
-            <p class="note">
-                <b>Note</b><br/>The nine periods correspond to the nine monthly log files used for this import. </p>
+                <p class="note">
+                    <b>Note</b><br/>The nine periods correspond to the nine monthly log files used for this import. </p>
+            </li>
 
             <li>Once the dry run results are satisfactory the data can be imported using the following command:
-            </li>
 
         <pre class="tty cmd">wee_import --import-config=/var/tmp/cumulus.conf
 </pre>
 
-            <p>This will result in a preamble similar to that of a dry run. At the end of the preamble there will be a
-                prompt:</p>
+                <p>This will result in a preamble similar to that of a dry run. At the end of the preamble there will be
+                    a prompt:</p>
 
     <pre class="tty">Starting wee_import...
 Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
@@ -2605,11 +2603,11 @@ Proceeding will save all imported records in the weewx archive.
 Are you sure you want to proceed (y/n)?
 </pre>
 
-            <p>If there is more than one Cumulus monthly log file then <span class="code">wee_import</span> will provide
-                summary information on a per period basis during the import. In addition, if the <span class="code">--date</span>
-                command line option is used then source data that falls outside the date or date range specified with
-                the <span class="code">--date</span> command line option is ignored. In such cases the preamble may look
-                similar to:</p>
+                <p>If there is more than one Cumulus monthly log file then <span class="code">wee_import</span> will
+                    provide summary information on a per period basis during the import. In addition, if the <span
+                            class="code">--date</span> command line option is used then source data that falls outside
+                    the date or date range specified with the <span class="code">--date</span> command line option is
+                    ignored. In such cases the preamble may look similar to:</p>
 
     <pre class="tty">Starting wee_import...
 Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
@@ -2625,18 +2623,18 @@ Period 3 - no records identified for import.
 Proceeding will save all imported records in the weewx archive.
 Are you sure you want to proceed (y/n)?
 </pre>
+            </li>
 
             <li>If the import parameters are acceptable enter <span class="code">y</span> to proceed with the import or
                 <span class="code">n</span> to abort the import. If the import is confirmed, the source data will be
                 imported, processed and saved in the <span class="code">weewx</span> database. Information on the
                 progress of the import will be displayed similar to the following:
-            </li>
 
         <pre class="tty">Records processed: 1599; Unique records: 1599; Last timestamp: 2016-02-24 00:00:00 AEST (1456236000)
 </pre>
 
-            <p>Again if there is more than one Cumulus monthly log file and if the <span class="code">--date</span>
-                command line option is used then the progress information may instead look similar to:</p>
+                <p>Again if there is more than one Cumulus monthly log file and if the <span class="code">--date</span>
+                    command line option is used then the progress information may instead look similar to:</p>
 
         <pre class="tty">Period 4 ...
 Records processed: 2521; Unique records: 2521; Last timestamp: 2016-03-01 09:40:00 AEST (1456789200)
@@ -2646,16 +2644,17 @@ Period 6 ...
 Records processed: 3238; Unique records: 3232; Last timestamp: 2016-04-24 00:00:00 AEST (1461420000)
 </pre>
 
-            <p>The line commencing with <span class="code">Records processed</span> should update as records are
-                imported with progress information on number of records processed, number of unique records imported and
-                the date time of the latest record processed. If the import spans multiple months (ie multiple monthly
-                log files) then a new <span class="code">Period</span> line is created for each month. When the import
-                is complete a brief summary is displayed similar to the following:</p>
+                <p>The line commencing with <span class="code">Records processed</span> should update as records are
+                    imported with progress information on number of records processed, number of unique records imported
+                    and the date time of the latest record processed. If the import spans multiple months (ie multiple
+                    monthly log files) then a new <span class="code">Period</span> line is created for each month. When
+                    the import is complete a brief summary is displayed similar to the following:</p>
 
         <pre class="tty">Finished import. 37648 raw records resulted in 37620 unique records being processed in 93.70 seconds.
 Those records with a timestamp already in the archive will not have been imported.
 Confirm successful import in the weewx log file.
 </pre>
+            </li>
 
             <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
                 number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
@@ -2664,14 +2663,14 @@ Confirm successful import in the weewx log file.
                 take note of any records that were not imported. The most common reason for imported records not being
                 saved to the database is because a record with that timestamp already exists in the database, in such
                 cases something similar to following will be found in the log:
-            </li>
 
         <pre class="tty">
 Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
 </pre>
 
-            <p>In such cases take note of the timestamp of the record(s) concerned and make a decision about whether to
-                delete the pre-existing record and re-import the record or retain the pre-existing record.</p>
+                <p>In such cases take note of the timestamp of the record(s) concerned and make a decision about whether
+                    to delete the pre-existing record and re-import the record or retain the pre-existing record.</p>
+            </li>
         </ol>
 
         <h2 id='import_failures'>Dealing with import failures</h2>
