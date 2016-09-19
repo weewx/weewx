@@ -3046,9 +3046,59 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
 
         <p>The WS28xx driver does not support hardware archive record generation.</p>
 
+        <h3 id="ws28xx_pairing">Pairing</h3>
 
+        <p>The console and transceiver must be paired. Pairing ensures that your transceiver is talking to your console,
+            not your neighbor's console. Pairing should only have to be done once, although you might have to pair again
+            after power cycling the console, for example after you replace the batteries.</p>
 
+        <p>There are two ways to pair the console and the transceiver:</p>
+        <ol>
+            <li><strong>The Weewx way.</strong> Be sure that <span class='code'>weewx</span> is not running. Run the
+                configuration utility, press and hold the [v] button on the console until you see 'PC' in the display,
+                then release the button. If the console pairs with the transceiver, 'PC' will go away within a second or
+                two.
+            <pre class='tty'><span class="cmd">wee_device --pair</span>
 
+Pairing transceiver with console...
+Press and hold the [v] key until "PC" appears (attempt 1 of 3)
+Transceiver is paired to console</pre>
+            </li>
+            <li><strong>The HeavyWeather way.</strong> Follow the pairing instructions that came with the station. You
+                will have to run HeavyWeather on a windows computer with the USB transceiver. After HeavyWeather
+                indicates the devices are paired, put the USB transceiver in your <span class="code">weewx</span>
+                computer and start weewx. Do not power cycle the station console or you will have to start over.
+            </li>
+        </ol>
+
+        <p>If the console does not pair, you will see messages in the log such as this:</p>
+        <pre class='tty'>ws28xx: RFComm: message from console contains unknown device ID (id=165a resp=80 req=6)</pre>
+        <p>Either approach to pairing may require multiple attempts.</p>
+
+        <h3 id="ws28xx_synchronizing">Synchronizing</h3>
+
+        <p>After pairing, the transceiver and console must be synchronized in order to communicate. Synchronization will
+            happen automatically at the top of each hour, or you can force synchronization by pressing the [SET] button
+            momentarily. Do not press and hold the [SET] button - that modifies the console alarms.</p>
+
+        <p>When the transceiver and console are synchronized, you will see lots of '<span
+                class="code">ws28xx: RFComm</span>' messages in the log when <span class="code">debug=1</span>. When the
+            devices are not synchronized, you will see messages like this about every 10 minutes:</p>
+        <pre class='tty'>Nov  7 19:12:17 raspi weewx[2335]: ws28xx: MainThread: no contact with console</pre>
+        <p>If you see this, or if you see an extended gap in the weather data in the <span class="code">weewx</span>
+            plots, press momentarily the [SET] button, or wait until the top of the hour.</p>
+
+        <p>When the transceiver has not received new data for awhile, you will see messages like this in the log:</p>
+        <pre class='tty'>Nov  7 19:12:17 raspi weewx[2335]: ws28xx: MainThread: no new weather data</pre>
+        <p>If you see 'no new weather data' messages with the 'no contact with console' messages, it simply means that
+            the transceiver has not been able to synchronize with the console. If you see only the 'no new weather data'
+            messages, then the sensors are not communicating with the console, or the console may be defective.</p>
+
+        <h3>Alarms</h3>
+
+        <p>When an alarm goes off, communication with the transceiver stops. The WS28xx driver clears all alarms in the
+            station. It is better to create alarms in weewx, and the <span class="code">weewx</span> alarms can do much
+            more than the console alarms anyway.</p>
 
         <h1 id="running">Running <span class="code">weewx</span></h1>
 
