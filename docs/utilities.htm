@@ -1621,11 +1621,11 @@ Options:
                         date-time strings with a hyphen. Arguments that
                         include hh:mm must be enclosed in quotation marks.
   --log=-               Control wee_import log output. By default log output
-                        is sent to the weewx log file. wee_import logging may
-                        be disabled by using '--log=-'. Some weewx API log
-                        output cannot be controlled by wee_import and will be
-                        sent to to the default log file irrespective of the '
-                        --log' option.
+                        is sent to the weewx log file. Log output may be
+                        disabled by using '--log=-'. Some weewx API log output
+                        cannot be controlled by wee_import and will be sent to
+                        the default log file irrespective of the '--log'
+                        option.
   --verbose             Print useful extra output.
   --version             Display wee_import version number.
 
@@ -1860,9 +1860,9 @@ the daily summaries using the wee_database utility.</pre>
                     <li><strong><span class="code"><a href="#csv_wind_direction">wind_direction</a></span></strong>.
                         Determines how imported wind direction fields are interpreted.
                     </li>
-                    <li><strong><span class="code"><a href="#csv_map">[[Map]]</a></span></strong>. Defines the mapping
-                        between imported data fields and <span class="code">weewx</span> archive fields. Also defines
-                        the units of measure for each imported field.
+                    <li><strong><span class="code"><a href="#csv_fieldmap">[[FieldMap]]</a></span></strong>. Defines the
+                        mapping between imported data fields and <span class="code">weewx</span> archive fields. Also 
+                        defines the units of measure for each imported field.
                     </li>
                 </ul>
             </li>
@@ -2836,9 +2836,9 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
         <p>The default is <span class="config_option">0, 360</span>. </p>
 
-        <p class='config_option' id='csv_map'>[[Map]]</p>
+        <p class='config_option' id='csv_fieldmap'>[[FieldMap]]</p>
 
-        <p>The <span class='config_option'>[[Map]]</span> stanza defines the mapping from the source data fields to
+        <p>The <span class='config_option'>[[FieldMap]]</span> stanza defines the mapping from the source data fields to
             <span class="code">weewx</span> archive fields. The map consists of one row per field using the format: </p>
 
     <pre class="tty">weewx_archive_field_name = csv_field_name, weewx_unit_name
