@@ -1944,7 +1944,7 @@ Confirm successful import in the weewx log file.</pre>
             </li>
             <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
                 number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
-                imported records were successfully saved to the database. The user should look carefully through the
+                imported records were successfully saved to the database. You should look carefully through the
                 <span class="code">weewx</span> log file covering the <span class="code">wee_import</span> session and
                 take note of any records that were not imported. The most common reason for imported records not being
                 saved to the database is because a record with that timestamp already exists in the database, in such
@@ -1954,7 +1954,7 @@ Confirm successful import in the weewx log file.</pre>
 Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
 </pre>
 
-                <p>In such cases the user should take note of the timestamp of the record(s) concerned and make a
+                <p>In such cases you should take note of the timestamp of the record(s) concerned and make a
                     decision about whether to delete the pre-existing record and re-import the record or retain the
                     pre-existing record.</p>
             </li>
@@ -2108,7 +2108,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     interval, such an import actually includes one record with observations from the previous day (the
                     <span class="code">00:00</span> record at the start of the day). Whilst this will not present a
                     problem for <span class="code">wee_import</span> as any records being imported with a timestamp that
-                    already exists in the <span class="code">weewx</span> database are ignored, the user may wish to use
+                    already exists in the <span class="code">weewx</span> database are ignored, you may wish to use
                     the <span class="code">--date</span> option with a suitable date-time range to precisely control
                     which records are imported. </p>
 
@@ -2216,7 +2216,7 @@ Confirm successful import in the weewx log file.
 
             <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
                 number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
-                imported records were successfully saved to the database. The user should look carefully through the
+                imported records were successfully saved to the database. You should look carefully through the
                 <span class="code">weewx</span> log file covering the <span class="code">wee_import</span> session and
                 take note of any records that were not imported. The most common reason for imported records not being
                 saved to the database is because a record with that timestamp already exists in the database, in such
@@ -2226,7 +2226,7 @@ Confirm successful import in the weewx log file.
 Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
 </pre>
 
-                <p>In such cases the user should take note of the timestamp of the record(s) concerned and make a
+                <p>In such cases you should take note of the timestamp of the record(s) concerned and make a
                     decision about whether to delete the pre-existing record and re-import the record or retain the
                     pre-existing record.</p>
 
@@ -2489,7 +2489,7 @@ Confirm successful import in the weewx log file.
 
             <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
                 number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
-                imported records were successfully saved to the database. The user should look carefully through the
+                imported records were successfully saved to the database. You should look carefully through the
                 <span class="code">weewx</span> log file covering the <span class="code">wee_import</span> session and
                 take note of any records that were not imported. The most common reason for imported records not being
                 saved to the database is because a record with that timestamp already exists in the database, in such
@@ -2523,6 +2523,11 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 database. Then try the import again.
             </li>
 
+                <p class="warning">
+                    <strong>Warning!</strong><br/>Deleting the database file or dropping the database will result in all 
+                    data in the database being lost.
+                </p>
+            
             <li>If the above steps are not appropriate then the database should be restored from backup. You did make a
                 backup before starting the import?
             </li>
@@ -2534,11 +2539,10 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             addition to the standard weewx configuration file. The import configuration file specifies the import type
             and various options associated with each type of import. The import configuration file is specified at the
             <span class="code">wee_import</span> command line using the mandatory <span
-                    class="code">--import-config</span> command line option. How the user constructs the import
-            configuration file is up to the user; however, the recommended method is to copy one of the example import
-            configuration files located in the <span class="code">util/import</span> folder, modify the configuration
-            options in the newly copied file to suit the import to be performed and then use this file as the import
-            configuration file. </p>
+                    class="code">--import-config</span> command line option. How you construct the import configuration 
+            file is up to you; however, the recommended method is to copy one of the example import configuration files 
+            located in the <span class="code">util/import</span> folder, modify the configuration options in the newly 
+            copied file to suit the import to be performed and then use this file as the import configuration file. </p>
 
         <p>Following is the definitive guide to the options available in the import configuration file. Default values
             are provided for a number of options, meaning that if they are not listed in the import configuration file
@@ -2583,96 +2587,97 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 successive records. This method is suitable when the data was recorded at fixed intervals and there are
                 NO missing records in the source data. Use of this method when there are missing records in the source
                 data can compromise the integrity of the <span class="code">weewx</span> statistical data. Select this
-                method by setting <span class="code">interval = derive</span>.
+                method by setting <span class="config_option">interval = derive</span>.
             </li>
             <li>The interval can be set to the same value as the <span class="code">archive_interval</span> setting
                 under <span class="code">[StdArchive]</span> in <span class="code">weewx.conf</span>. This setting is
                 useful if the data was recorded at fixed intervals but there are some missing records and the fixed
-                interval is the same as the <span class="code">archive_interval</span> setting under <span class="code">[StdArchive]</span>
-                in <span class="code">weewx.conf</span>. Select this method by setting <span class="code">interval = conf</span>.
+                interval is the same as the <span class="code">archive_interval</span> setting under <span 
+                        class="code">[StdArchive]</span> in <span class="code">weewx.conf</span>. Select this method 
+                by setting <span class="config_option">interval = conf</span>.
             </li>
             <li>The interval can be set to a fixed number of minutes. This setting is useful if the source data was
                 recorded at fixed intervals but there are some missing records and the fixed interval is different to
                 the <span class="code">archive_interval</span> setting under <span class="code">[StdArchive]</span> in
-                <span class="code">weewx.conf</span>. Select this method by setting <span
-                        class="code">interval = x</span> where <span class="code">x</span> is an integer number of
-                minutes.
+                <span class="code">weewx.conf</span>. Select this method by setting <span class="config_option">interval = x</span> 
+                where <span class="code">x</span> is an integer number of minutes.
             </li>
         </ul>
 
-        <p>The default value is <span class="code">derive</span>. If the CSV source data records are equally spaced in
-            time, but some records are missing, then better result may be achieved using <span class="code">conf</span>
+        <p>The default value is <span class="config_option">derive</span>. If the CSV source data records are equally spaced in
+            time, but some records are missing, then a better result may be achieved using <span class="code">conf</span>
             or a fixed interval setting. </p>
 
         <p class='config_option' id='csv_qc'>qc</p>
 
-        <p>Determines whether simple quality control checks are applied to imported data. Setting <span class="code">qc = True</span>
-            will result in <span class="code">wee_import</span> applying the <span class="code">weewx</span> <span
-                    class="code">StdQC</span> minimum and maximum checks to any imported observations. <span
-                    class="code">wee_import</span> quality control checks use the same configuration settings, and
+        <p>Determines whether simple quality control checks are applied to imported data. Setting <span 
+                    class="config_option">qc = True</span> will result in <span class="code">wee_import</span> applying 
+            the <span class="code">weewx</span> <span class="code">StdQC</span> minimum and maximum checks to any imported 
+            observations. <span class="code">wee_import</span> quality control checks use the same configuration settings, and
             operate in the same manner, as the <a href="usersguide.htm#StdQC"><span class="code">StdQC</span></a>
-            service. For example, for min/max QC, if an observation falls outside of the quality control range for that
-            observation, then the observation will be set to <span class="code">None</span>. The user will be alerted
-            through a short message similar to:</p>
+            service. For example, for minimum/maximum quality checks, if an observation falls outside of the quality 
+            control range for that observation, then the observation will be set to <span class="code">None</span>. In such 
+            cases you will be alerted through a short message similar to:</p>
 
         <pre class="tty">2016-01-12 10:00:00 AEST (1452556800) record value 'outTemp' 194.34 outside limits (0.0, 120.0)
 </pre>
 
         <p>As derived observations are calculated after the quality control check is applied, derived observations are
-            not subject to quality control checks. Setting <span class="code">qc = False</span> will result in <span
+            not subject to quality control checks. Setting <span class="config_option">qc = False</span> will result in <span
                     class="code">wee_import</span> not applying quality control checks to imported data. The default is
-            <span class="code">True</span>. </p>
+            <span class="config_option">True</span>. </p>
 
         <p class='config_option' id='csv_calc_missing'>calc_missing</p>
 
         <p>Determines whether any missing derived observations will be calculated from the imported data. Setting <span
-                class="code">calc_missing = True</span> will result in <span class="code">wee_import</span> using the
+                class="config_option">calc_missing = True</span> will result in <span class="code">wee_import</span> using the
             <span class="code">weewx</span> <span class="code">StdWXCalculate</span> service to calculate any missing
-            derived observations from the imported data. Setting <span class="code">calc_missing = False</span> will
+            derived observations from the imported data. Setting <span class="config_option">calc_missing = False</span> will
             result in <span class="code">weewx</span> leaving any missing derived observations as <span class="code">None</span>.
             The observations that <span class="code">StdWXCalculate</span> can calculate are listed in the <a
                     href="usersguide.htm#StdWXCalculate">[StdWXCalculate]</a> section of the <a href="usersguide.htm">User's
-                Guide</a>. The default is <span class="code">True</span>. </p>
+                Guide</a>. The default is <span class="config_option">True</span>. </p>
 
         <p class='config_option' id='csv_tranche'>tranche</p>
 
         <p>To speed up database operations imported records are committed to database in groups of records rather than
-            individually. The size of the group is set by the <span class="code">tranche</span> parameter. Increasing
-            the <span class="code">tranche</span> parameter may result in a slight speed increase but at the expense of
-            increased memory usage. Decreasing the <span class="code">tranche</span> parameter will result in less
+            individually. The size of the group is set by the <span class="config_option">tranche</span> parameter. Increasing
+            the <span class="config_option">tranche</span> parameter may result in a slight speed increase but at the expense of
+            increased memory usage. Decreasing the <span class="config_option">tranche</span> parameter will result in less
             memory usage but at the expense of more frequent database access and likely increased time to import. The
-            default is <span class="code">250</span> which should suit most users. </p>
+            default is <span class="config_option">250</span> which should suit most users. </p>
 
         <p class='config_option' id='csv_UV'>UV_sensor</p>
 
         <p><span class="code">weewx</span> records a <span class="code">None/NULL</span> for UV when no UV sensor is
             installed, whereas some weather station software records a value of 0 for UV index when there is no UV
-            sensor installed. The <span class="code">UV_sensor</span> parameter enables <span
+            sensor installed. The <span class="config_option">UV_sensor</span> parameter enables <span
                     class="code">wee_import</span> to distinguish between the case where a UV sensor is present and the
-            UV index is 0 and the case where no UV sensor is present and UV index is 0. <span class="code">UV_sensor = False</span>
-            should be used when no UV sensor was used in producing the source data. <span
-                    class="code">UV_sensor = False</span> will result in <span class="code">None/Null</span> being
-            recorded in the <span class="code">weewx</span> archive field <span class="code">UV</span> irrespective of
-            any UV observations in the source data. <span class="code">UV_sensor = True</span> should be used when a UV
-            sensor was used in producing the source data. <span class="code">UV_sensor = True</span> will result in UV
-            observations in the source data being stored in the <span class="code">weewx</span> archive field <span
-                    class="code">UV</span>. The default is <span class="code">True</span>. </p>
+            UV index is 0 and the case where no UV sensor is present and UV index is 0. <span 
+                    class="config_option">UV_sensor = False</span> should be used when no UV sensor was used in producing 
+            the source data. <span class="config_option">UV_sensor = False</span> will result in <span 
+                    class="code">None/Null</span> being recorded in the <span class="code">weewx</span> archive field <span 
+                    class="code">UV</span> irrespective of any UV observations in the source data. <span 
+                    class="config_option">UV_sensor = True</span> should be used when a UV sensor was used in producing 
+            the source data. <span class="config_option">UV_sensor = True</span> will result in UV observations in the 
+            source data being stored in the <span class="code">weewx</span> archive field <span class="code">UV</span>. 
+            The default is <span class="config_option">True</span>. </p>
 
         <p class='config_option' id='csv_solar'>solar_sensor</p>
 
         <p><span class="code">weewx</span> records a <span class="code">None/NULL</span> when no solar radiation sensor
             is installed, whereas some weather station software records a value of 0 for solar radiation when there is
-            no solar radiation sensor installed. The <span class="code">solar_sensor</span> parameter enables <span
+            no solar radiation sensor installed. The <span class="config_option">solar_sensor</span> parameter enables <span
                     class="code">wee_import</span> to distinguish between the case where a solar radiation sensor is
             present and solar radiation is 0 and the case where no solar radiation sensor is present and solar radiation
-            is 0. <span class="code">solar_sensor = False</span> should be used when no solar radiation sensor was used
-            in producing the source data. <span class="code">solar_sensor = False</span> will result in <span
+            is 0. <span class="config_option">solar_sensor = False</span> should be used when no solar radiation sensor was used
+            in producing the source data. <span class="config_option">solar_sensor = False</span> will result in <span
                     class="code">None/Null</span> being recorded in the <span class="code">weewx</span> archive field
             <span class="code">radiation</span> irrespective of any solar radiation observations in the source data.
-            <span class="code">solar_sensor = True</span> should be used when a solar radiation sensor was used in
-            producing the source data. <span class="code">solar_sensor = True</span> will result in solar radiation
+            <span class="config_option">solar_sensor = True</span> should be used when a solar radiation sensor was used in
+            producing the source data. <span class="config_option">solar_sensor = True</span> will result in solar radiation
             observations in the source data being stored in the <span class="code">weewx</span> archive field <span
-                    class="code">radiation</span>. The default is <span class="code">True</span>. </p>
+                    class="code">radiation</span>. The default is <span class="config_option">True</span>. </p>
 
         <p class='config_option' id='csv_raw_datetime_format'>raw_datetime_format</p>
 
@@ -2687,7 +2692,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             9:25:00 12/28/16 would use <span class="code">%H:%M:%S %m/%d/%y</span>. If the source data provides a unix
             epoch timestamp as the date-time field then the unix epoch timestamp is used directly and the <span
                     class="config_option">raw_datetime_format</span> option is ignored. The default is <span
-                    class="code">%Y-%m-%d %H:%M:%S</span>. </p>
+                    class="config_option">%Y-%m-%d %H:%M:%S</span>. </p>
 
         <p class='config_option' id='csv_rain'>rain</p>
 
@@ -2856,12 +2861,12 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
         <p class="note">
             <b>Note</b><br/>Any <span class="code">weewx</span> archive fields that are derived (e.g., <span
                 class="code">dewpoint</span>) and for which there is no field mapping may be calculated during import by
-            use of the <span class="config_option">calc_missing</span> option in the <span class="code">[CSV]</span>
+            use of the <span class="config_option">calc_missing</span> option in the <span class="config_section">[CSV]</span>
             section of the import configuration file. </p>
 
         <h3 class="config_section">[WU]</h3>
 
-        <p>The <span class="config_option">[WU]</span> section contains the options relating to the import of
+        <p>The <span class="config_section">[WU]</span> section contains the options relating to the import of
             observational data from a Weather Underground PWS daily history. </p>
 
         <p class='config_option' id='wu_station_id'>station_id</p>
@@ -2883,7 +2888,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             interval in minutes used to upload the Weather Underground data. The most appropriate setting will depend on
             the completeness and (time) accuracy of the Weather Underground data being imported. </p>
 
-        <p>The default is <span class="code">derive</span>.</p>
+        <p>The default is <span class="config_option">derive</span>.</p>
 
         <p class='config_option' id='wu_qc'>qc</p>
 
@@ -2892,19 +2897,19 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             only. As Weather Underground imports at times contain nonsense values, particularly for fields for which no
             data was uploaded to Weather Underground by the PWS, the use of quality control checks on imported data can
             prevent these nonsense values from being imported and contaminating the <span class="code">weewx</span>
-            database. The default is <span class="code">True</span>. </p>
+            database. The default is <span class="config_option">True</span>. </p>
 
         <p class='config_option' id='wu_calc_missing'>calc_missing</p>
 
         <p>Determines whether any missing derived observations will be calculated from the imported data. This option is
             identical in operation to the CSV <em><a href="#csv_calc_missing">calc_missing</a></em> option but applies
-            to Weather Underground imports only. The default is <span class="code">True</span>. </p>
+            to Weather Underground imports only. The default is <span class="config_option">True</span>. </p>
 
         <p class='config_option' id='wu_tranche'>tranche</p>
 
         <p>The number of records written to the <span class="code">weewx</span> database in each transaction. This
             option is identical in operation to the CSV <em><a href="#csv_tranche">tranche</a></em> option but applies
-            to Weather Underground imports only. The default is <span class="code">250</span> which should suit most
+            to Weather Underground imports only. The default is <span class="config_option">250</span> which should suit most
             users. </p>
 
         <p class='config_option' id='wu_wind_direction'>wind_direction</p>
@@ -2915,7 +2920,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
         <h3 class="config_section">[Cumulus]</h3>
 
-        <p>The <span class="config_option">[Cumulus]</span> section contains the options relating to the import of
+        <p>The <span class="config_section">[Cumulus]</span> section contains the options relating to the import of
             observational data from Cumulus monthly log files. </p>
 
         <p class='config_option' id='cumulus_directory'>directory</p>
@@ -2938,7 +2943,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             interval' setting. The most appropriate setting will depend on the completeness and (time) accuracy of the
             Cumulus data being imported. </p>
 
-        <p>The default is <span class="code">derive</span>.</p>
+        <p>The default is <span class="config_option">derive</span>.</p>
 
         <p class='config_option' id='cumulus_qc'>qc</p>
 
@@ -2950,7 +2955,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
         <p>Determines whether any missing derived observations will be calculated from the imported data. This option is
             identical in operation to the CSV <em><a href="#csv_calc_missing">calc_missing</a></em> option but applies
-            to Cumulus imports only. The default is <span class="code">True</span>. </p>
+            to Cumulus imports only. The default is <span class="config_option">True</span>. </p>
 
         <p class='config_option' id='cumulus_delimiter'>delimiter</p>
 
@@ -2975,19 +2980,17 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
         <p class='config_option' id='cumulus_UV'>UV_sensor</p>
 
-        <p>The <span class="config_option">UV_sensor</span> parameter enables <span class="code">wee_import</span> to
-            distinguish between the case where a UV sensor is present and the UV index is 0 and the case where no UV
-            sensor is present and UV index is 0. This option is identical in operation to the CSV <em><a href="#csv_UV">UV_sensor</a></em>
-            option but applies to Cumulus monthly log file imports only. The default is <span
-                    class="config_option">True</span>. </p>
+        <p>Enables <span class="code">wee_import</span> to distinguish between the case where a UV sensor is present and 
+            the UV index is 0 and the case where no UV sensor is present and UV index is 0. This option is identical in 
+            operation to the CSV <em><a href="#csv_UV">UV_sensor</a></em> option but applies to Cumulus monthly log file 
+            imports only. The default is <span class="config_option">True</span>. </p>
 
         <p class='config_option' id='cumulus_solar'>solar_sensor</p>
 
-        <p>The <span class="config_option">solar_sensor</span> parameter enables <span class="code">wee_import</span> to
-            distinguish between the case where a solar radiation sensor is present and the solar radiation is 0 and the
-            case where no solar radiation sensor is present and solar radiation is 0. This option is identical in
-            operation to the CSV <em><a href="#csv_solar">solar_sensor</a></em> option but applies to Cumulus monthly
-            log file imports only. The default is <span class="config_option">True</span>. </p>
+        <p>Enables <span class="code">wee_import</span> to distinguish between the case where a solar radiation sensor 
+            is present and the solar radiation is 0 and the case where no solar radiation sensor is present and solar 
+            radiation is 0. This option is identical in operation to the CSV <em><a href="#csv_solar">solar_sensor</a></em>
+            option but applies to Cumulus monthly log file imports only. The default is <span class="config_option">True</span>. </p>
 
         <p class='config_option' id='cumulus_units'>[[Units]]</p>
 
