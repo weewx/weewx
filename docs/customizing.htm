@@ -134,7 +134,7 @@ Version: 3.6.0a1
             possible, <span class="code">weewx</span> should work "out of the box"
             with minimal configuration. However, in some cases the driver may
             include code to configure and test the hardware, typically via the
-            <span class="code">wee_config</span> utility.</p>
+            <span class="code">wee_device</span> utility.</p>
 
         <p>In many cases there are useful dependent variables that use the
             primary variables emitted by the driver. For example, rain rate,
@@ -176,9 +176,9 @@ Version: 3.6.0a1
             rain over the interval. For battery status it's the last value in the
             interval.</p>
 
-        <p>Some hardware is capable of generated its own archive records (the
-            Davis Vantage and Oregon Scientific WMR200 for example), but for most
-            hardware, weewx generates them.</p>
+        <p>Some hardware is capable of generating its own archive records (the
+            Davis Vantage and Oregon Scientific WMR200 for example), but for
+            hardware that does not archive data, weewx generates them.</p>
 
         <p>It is the archive data that is put in the SQL database, although,
             occasionally, the LOOP packets can be useful (such as for the Weather
@@ -254,10 +254,10 @@ Version: 3.6.0a1
             </tr>
             <tr>
                 <td class="code first_col">weewx.engine.StdReport</td>
-                <td>Launch a new thread to do report processing after a new archive
-                    record arrives. Reports do things such as generate HTML files,
-                    generate images, or FTP/rsync files to a web server. New reports
-                    can be added easily by the user.
+                <td>Launch a new thread to do report processing after a new
+                    archive record arrives. Reports do things such as generate
+                    HTML or CSV files, generate images, or FTP/rsync files to
+                    a web server.
                 </td>
             </tr>
             </tbody>
@@ -277,7 +277,8 @@ Version: 3.6.0a1
 
         <h3>Reports</h3>
 
-        <p>The Standard Report Service runs zero or more <em>Reports</em>. The
+        <p>The standard reporting service, <span class="code">StdReport</span>,
+            runs zero or more <em>reports</em>. The
             specific reports which get run are set in the configuration file <span
                     class="code">weewx.conf</span>, in section <span class="code">[StdReport]</span>.
         </p>
@@ -332,7 +333,7 @@ Version: 3.6.0a1
             configuration file <span class="code">weewx.conf</span> or the skin
             configuration file <span class="code">skin.conf</span>. </p>
 
-        <p>Like all reports, the FTP and RSYNC "Reports" also use a skin, and
+        <p>Like all reports, the FTP and RSYNC "reports" also use a skin, and
             include a skin configuration file, although they are quite minimal.</p>
 
         <p>Skins live in their own directory called
@@ -365,7 +366,7 @@ Version: 3.6.0a1
         <h3>Generators</h3>
 
         <p>
-            To create their output, skins rely on one or more <em>Generators</em>,
+            To create their output, skins rely on one or more <em>generators</em>,
             which are what do the actual work, such as creating HTML
             files or plot images. Generators can also copy files around or
             FTP/rsync them to remote locations. The default install of <span
@@ -2888,8 +2889,8 @@ class MyXSearch(SearchList):                                                 # 1
 
         <h3>The <span class="code">report_timing</span> option</h3>
 
-        <p>The <span class="code">report_timing</span> option uses a CRON like
-            format to control when a report is to be run. Whilst a CRON like
+        <p>The <span class="code">report_timing</span> option uses a CRON-like
+            format to control when a report is to be run. Whilst a CRON-like
             format is used, the control of <span class="code">weewx</span> report
             generation using the <span class="code">report_timing</span> option
             is confined completely to <span class="code">weewx</span> and has no
@@ -2907,7 +2908,7 @@ class MyXSearch(SearchList):                                                 # 1
             in the following table:
         </p>
 
-        <table class="indent" summary="Report CRON parameters">
+        <table class="indent" summary="report_timing parameters">
             <tbody>
             <tr class="first_row">
                 <td>Parameter</td>
@@ -2994,13 +2995,11 @@ class MyXSearch(SearchList):                                                 # 1
 
         <h4>How <span class="code">report_timing</span> controls reporting</h4>
 
-        <p>The <span class="code">report_timing</span> option uses a CRON like
-            format to control when reports are run. The syntax and interpretation
-            of the <span class="code">report_timing</span> parameters used by
-            weewx is largely the same as the syntax and interpretation used by the
-            CRON service in many Unix and Unix-like operating systems. The syntax
-            and interpretation used to support the
-            <span class="code">report_timing</span> option is outlined below.
+        <p>The syntax and interpretation of the
+            <span class="code">report_timing</span> parameters are largely the
+            same as those of the CRON service in many Unix and Unix-like
+            operating systems. The syntax
+            and interpretation are outlined below.
         </p>
 
         <p>When the <span class="code">report_timing</span> option is in use
@@ -3029,7 +3028,7 @@ class MyXSearch(SearchList):                                                 # 1
         <p class="note" style="display:inline-block; width:70%">
             <b>Note</b><br/>The day a report is to be run can be specified by two
             parameters; day of month and/or day of week. If both parameters
-            are restricted (ie not an asterisk), the report will be run when either
+            are restricted (i.e., not an asterisk), the report will be run when either
             field matches the current time. For example,<br>
             <span class="code">report_timing = 30 4 1,15 * 5</span><br> would cause
             the report to be run at 4:30am on the 1st and 15th of each month as well
@@ -3041,7 +3040,7 @@ class MyXSearch(SearchList):                                                 # 1
         <p>A traditional CRON service has a resolution of one minute, meaning that
             the CRON service checks each minute as to whether to execute any commands.
             On the other hand, the <span class="code">weewx</span> report system checks
-            which reports are to be run once per archive period where the archive period
+            which reports are to be run once per archive period, where the archive period
             may be one minute, five minutes or some other user defined period.
             Consequently, the <span class="code">report_timing</span> option may specify
             a report to be run at some time that does not align with the
@@ -3108,7 +3107,7 @@ class MyXSearch(SearchList):                                                 # 1
             are:
         </p>
 
-        <table class="indent" summary="Report CRON examples">
+        <table class="indent" summary="report_timing examples">
             <tbody>
             <tr class="first_row">
                 <td>Nickname</td>
@@ -3145,10 +3144,10 @@ class MyXSearch(SearchList):                                                 # 1
 
         <h4><span class="code">report_timing</span> option examples</h4>
 
-        <p>CRON like settings can be at times difficult to understand due to the complex
+        <p>Numeric settings for <span class="code">report_timing</span> can be at times difficult to understand due to the complex
             combinations of parameters. The following table
             shows a number of example <span class="code">report_timing</span> options
-            and the times when the report would be run.
+            and the corresponding times when the report would be run.
         </p>
 
         <table class="indent" summary="report_timing examples">
@@ -3235,15 +3234,8 @@ class MyXSearch(SearchList):                                                 # 1
 
         <h3>The <span class="code">wee_reports</span> tool and the <span class="code">report_timing</span> option</h3>
 
-        <p>The <a href="#wee_reports">wee_reports</a> tool allows
-            <span class="code">weewx</span> reports to be run independently of the main
-            <span class="code">weewx</span> program. Reports are run using the time of
-            the last record in the archive database as the "current" time (the default)
-            or optionally using a unix epoch timestamp command line argument as the
-            "current" time. Given the one off report and variable time nature of the
-            <a href="#wee_reports">wee_reports</a> tool, the
-            <span class="code">report_timing</span> option is ignored when using the
-            <a href="#wee_reports">wee_reports</a> tool.
+        <p>The <span class="code">report_timing</span> option is ignored when
+            using the <a href="#wee_reports">wee_reports</a> tool.
         </p>
 
         <h1 id="standard_skin">The Standard <span class="code">skin.conf</span></h1>
