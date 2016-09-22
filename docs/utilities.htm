@@ -157,20 +157,25 @@ Options:
   --debug               Show diagnostic information while running.
 </pre>
 
+        <h2><span id='common_options'>Command line options</span></h2>
+
+        <h3 class="config_option">--config</h3>
         <p>
-            The utility is pretty good about "guessing" where your configuration file <span
-                class="code">weewx.conf</span> is, but if you've done an unusual install, you may have to tell it
-            explicitly. You can do this by either putting the location directly in the command line: </p>
+            The utility is pretty good about "guessing" where the configuration
+            file <span class="code">weewx.conf</span> is, but if you've done
+            an unusual install, you may have to tell it explicitly. You can do
+            this by either putting the location directly in the command line:
+        </p>
 
         <pre class="tty cmd">wee_config /home/weewx/weewx.conf</pre>
 
-        <p>
-            or by using option <span class="code">--config</span>: </p>
+        <p>or by using option <span class="code">--config</span>:</p>
 
         <pre class="tty cmd">wee_config --config=/home/weewx/weewx.conf</pre>
 
-        <h2>Command <span class="code">--list-drivers</span></h2>
-        <p>Use this command to list which device drivers are available on your system. For example:</p>
+        <h3 class="config_option">--list-drivers</h3>
+        <p>Use this command to list which device drivers are available on your
+            system. For example:</p>
 
         <pre class="tty cmd">wee_config --list-drivers</pre>
 
@@ -196,35 +201,58 @@ Module name              Driver name    Version  Status
         <p>The column <span class="code">Status</span> can give you some indication of whether you are missing any
             modules to use this driver. It's not completely accurate, but works for most drivers.</p>
 
+        <h3 class="config_option">--reconfigure</h3>
 
-        <h2>Command <span class="code">--install</span></h2>
-        <p>This command is used internally by weewx, and is not intended for the end-user.</p>
+        <p>This command is used to change station parameters, including the
+            device driver.  The reconfigure command will prompt for all of
+            the required station parameters.</p>
 
-        <p>It will install a brand new configuration file using the file <span class="code">DIST_CONFIG</span> as a
-            template. It will then prompt the user for station parameters (such as altitude, latitude, longitude, <i>etc.</i>).
-        </p>
+        <pre class="tty cmd">wee_config --reconfigure</pre>
 
-        <h2>Command <span class="code">--upgrade</span></h2>
-        <p>This command is used internally by weewx, and is not intended for the end-user.</p>
+        <p>When used with the <span class="code">--no-prompt</span> option,
+            reconfigure will modify specific parameters with no interaction.
+            For example, this would set the station altitude:</p>
 
-        <p>This action first upgrades the existing configuration file, making any changes demanded by the latest version
-            of weewx. It then merges the result with the contents of <span class="code">DIST_CONFIG</span>.</p>
+        <pre class="tty cmd">wee_config --reconfigure --altitude=35,foot --no-prompt</pre>
 
-        <h2>Command <span class="code">--reconfigure</span></h2>
+        <p>This would change the driver to a user-installed netatmo driver:</p>
 
-        <p>
-            This command is used to change station parameters, including the device driver. It is the most likely to be
-            used by the end-user. </p>
+        <pre class="tty cmd">wee_config --reconfigure --driver=user.netatmo --no-prompt</pre>
 
-        <p> Example: say that you originally installed <span class="code">weewx</span> with the Simulator. Now you've
-            bought a Davis Vantage and you want to switch to that. Here's how you do it. First, use the command <span
-                    class="code">--list-drivers</span> above to list all the available drivers. </p>
+        <h2>Example: changing the driver</h2>
+
+        <p>Say that you originally installed <span class="code">weewx</span>
+            with the Simulator. Now you've bought a Davis Vantage and you want
+            to switch to that. Here's how you do it. First, use the command
+            <span class="code">--list-drivers</span> to see which drivers
+            are installed.</p>
+
+        <pre class="tty"><span class="cmd">wee_config --list-drivers</span>
+
+Module name              Driver name    Version  Status
+  weewx.drivers.acurite    AcuRite        0.19     
+  weewx.drivers.cc3000     CC3000         0.8
+  weewx.drivers.fousb      FineOffsetUSB  1.7      
+  weewx.drivers.simulator  Simulator      3.0
+  weewx.drivers.te923      TE923          0.14     
+  weewx.drivers.ultimeter  Ultimeter      0.13
+  weewx.drivers.vantage    Vantage        3.0
+  weewx.drivers.wmr100     WMR100         3.0      
+  weewx.drivers.wmr200     WMR200         3.0      
+  weewx.drivers.wmr9x8     WMR9x8         3.0
+  weewx.drivers.ws1        WS1            0.19
+  weewx.drivers.ws23xx     WS23xx         0.24
+  weewx.drivers.ws28xx     WS28xx         0.34
+</pre>
 
         <p>
             From the list, you will find that the name of the driver for the Vantage is <span class="code">weewx.drivers.vantage</span>.
             Now run <span class="code">wee_config</span>, with the <span class="code">--reconfigure</span> command,
             specifying that driver: </p>
         <pre class="tty cmd">wee_config --reconfigure --driver=weewx.drivers.vantage</pre>
+
+        <p>You can also run without specifying the driver <i>a priori</i>:</p>
+        <pre class="tty cmd">wee_config --reconfigure</pre>
 
         <p>
             The utility will go through your previously selected options, such as station description, latitude,
@@ -438,20 +466,26 @@ should thoroughly check the generated output for personal/private information
 before posting the information publicly.
 </pre>
 
-        <h2>Command <span class="code">--info</span></h2>
+        <h2><span id='common_options'>Command line options</span></h2>
+
+        <h3 class="config_option">--info</h3>
 
         <p>This command generates a debug report which can be sent off for remote debugging.</p>
 
-        <p class="warning"><strong>Warning!</strong><br/> The <span class="code">wee_debug</span> output includes a copy
-            of the in use <span class="code">weewx</span> config file (usually <span class="code">weewx.conf</span>) and
-            whilst <span class="code">wee_debug</span> attempts to obfuscate any personal or sensitive information in
-            <span class="code">weewx.conf</span>, the user should carefully check the <span
-                    class="code">wee_debug</span> output for any remaining personal or sensitive information before
-            emailing or posting the output publicly.</p>
-
         <pre class="tty cmd">wee_debug --info</pre>
 
-        <p>This results in:</p>
+        <p class="warning"><strong>Warning!</strong><br/> The
+            <span class="code">wee_debug</span> output includes a copy
+            of the in use <span class="code">weewx</span> config file (usually
+            <span class="code">weewx.conf</span>) and whilst
+            <span class="code">wee_debug</span> attempts to obfuscate any
+            personal or sensitive information in
+            <span class="code">weewx.conf</span>, the user should carefully
+            check the <span class="code">wee_debug</span> output for any
+            remaining personal or sensitive information before
+            emailing or posting the output publicly.</p>
+
+        <p>This results in output something like this:</p>
             <pre class="tty">Using verbosity=1, displaying most info
 
 wee_debug output will be sent to stdout(console)
@@ -565,7 +599,7 @@ Parsed and obfuscated weewx.conf
 wee_debug report successfully generated
 </pre>
 
-        <h2>Option <span class="code">--output</span></h2>
+        <h3 class="config_option">--output</h3>
 
         <p>By default, <span class="code">wee_debug</span> sends its output to the system "standard output" (<span
                 class="code">stdout</span>) unless the <span class="code">--output</span> option is used. </p>
@@ -578,7 +612,7 @@ wee_debug report successfully generated
 
         <pre class="tty cmd">wee_debug --info --output /home/weewx/another.debug</pre>
 
-        <h2>Option <span class="code">--verbosity</span></h2>
+        <h3 class="config_option">--verbosity</h3>
 
         <p>The depth of information included in the <span class="code">wee_debug</span> output can be changed using the
             <span class="code">--verbosity</span> option. The <span class="code">--verbosity</span> option can be set to
@@ -701,8 +735,9 @@ wee_debug report successfully generated
         <h1 id="wee_extension_utility"><span class="code">wee_extension</span></h1>
 
         <p>
-            The utility <span class="code">wee_extension</span> is used to add and remove extensions. Use
-            the <span class="code">--help</span> option to see how it is used: </p>
+            The utility <span class="code">wee_extension</span> is used to add
+            and remove extensions. Use the <span class="code">--help</span>
+            option to see how it is used: </p>
 
         <pre class="tty cmd">wee_extension --help</pre>
 
@@ -743,18 +778,38 @@ Options:
   --dry-run             Print what would happen but do not do it.
   --verbosity=N         How much status to display, 0-3</pre>
 
-        <h2>Command <span class="code">--install</span></h2>
-        <p>Use this command to install an extension.</p>
+        <h2><span id='common_options'>Command line options</span></h2>
 
-        <p>The utility makes a copy of any file or directory that it modifies or replaces. When installing, it creates a
-            directory called <span class='code'>installer</span> in the <span class='code'>user</span> directory. The
-            contents of the <span class='code'>installer</span> directory are used to enumerate and uninstall
-            extensions.</p>
+        <h3 class="config_option">--install</h3>
+        <p>Use this command to install an extension.  You must specify the
+            path to a .zip archive, a .tgz/.tar.gz archive, or a directory.</p>
 
         <pre class='tty cmd'>wee_extension --install extensions/basic
 wee_extension --install basic.tar.gz</pre>
 
+        <h3 class="config_option">--list</h3>
+        <p>This command will list all the extensions that you have
+            installed.</p>
 
+        <pre class='tty cmd'>wee_extension --list</pre>
+
+        <h3 class="config_option">--uninstall</h3>
+
+        <p>Use this command to remove an extension.  You must specify the
+            name of the extension, without any version number or zip/tgz
+            extension.</p>
+
+        <pre class="tty cmd">wee_extension --uninstall=basic</pre>
+
+        <h2>Example: install an extension</h2>
+
+        <p>The <span class="code">wee_extension</span> utility makes a copy of
+            any file or directory that it modifies or replaces. When
+            installing, it creates a directory called
+            <span class='code'>installer</span> in the
+            <span class='code'>user</span> directory. The contents of the
+            <span class='code'>installer</span> directory are used to
+            enumerate and uninstall extensions.</p>
 
         <p>
             Let's try installing a simple extension, <a
@@ -797,21 +852,21 @@ Finished installing extension '/var/tmp/weewx-cmon-0.7.tgz'</pre>
             </li>
         </ol>
 
-        <h2>Command <span class="code">--list</span></h2>
-        <p>This command will list all the extensions that you have installed.</p>
+        <p>Now you can use the <span class="code">--list<span> command to
+            see which extensions are installed:</p>
 
     <pre class="tty"><span class="cmd">wee_extension --list</span>
 Extension Name   Version  Description
 cmon             0.7      Collect and display computer health indicators</pre>
         <p>You can see that it listed the extension we just installed, <span class="code">cmon</span>.</p>
 
+        <p>You can remove an extension using the
+            <span class="code">--uninstall</span> command:</p>
 
-        <h2>Command <span class="code">--uninstall</span></h2>
-
-        <p>You can remove an extension using <span class="code">wee_extension</span>:</p>
     <pre class="tty"><span class="cmd">wee_extension --uninstall=cmon
 wee_extension --list</span>
 No extensions installed</pre>
+
 
         <!-- ======== -->
 
