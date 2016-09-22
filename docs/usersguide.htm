@@ -2131,6 +2131,16 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
             to the bare minimum. However, this will only make a slight
             difference in execution speed and memory use.</p>
 
+
+        <h1 id="running">Running <span class="code">weewx</span></h1>
+
+        <p><span class="code">Weewx</span> can be run either directly,
+            or as a daemon. When first trying
+            <span class="code">weewx</span>, it is best to run it directly
+            because you will be able to see sensor output and diagnostics, as well
+            as log messages. Once everything is working properly, run it as a
+            daemon.</p>
+
         <h2>Running directly</h2>
 
         <p>To run <span class="code">weewx</span> directly, invoke
@@ -2252,16 +2262,6 @@ sudo /etc/init.d/weewx restart</pre>
         <p>You can also tell <span class="code">weewx</span> to reread its configuration
             file without stopping by using the &#39;reload&#39; option: </p>
         <pre class="tty cmd">sudo /etc/init.d/weewx reload </pre>
-
-
-        <h1 id="running">Running <span class="code">weewx</span></h1>
-
-        <p><span class="code">Weewx</span> can be run either directly,
-            or as a daemon. When first trying
-            <span class="code">weewx</span>, it is best to run it directly
-            because you will be able to see sensor output and diagnostics, as well
-            as log messages. Once everything is working properly, run it as a
-            daemon.</p>
 
 
         <h1 id="monitoring">Monitoring <span class="code">weewx</span></h1>
@@ -2423,20 +2423,13 @@ sudo /etc/init.d/weewx restart</pre>
             </tr>
         </table>
 
-        <h2><span class="code">weewx</span> database</h2>
+        <h2>Database</h2>
 
         <p>
             Finally, you will need to backup the database.
         </p>
         <p>
-            For a SQLite configuration, you will need to backup the <span class='code'>weewx.sdb</span> file.
-        </p>
-        <p class="note">
-            Do not make the copy of the SQLite database while in the middle of a
-            transaction! Schedule the
-            backup for immediately after an archive record is written, and then make sure
-            the backup completes before the next archive record arrives.
-            Alternatively, stop weewx, perform the backup, then restart weewx.
+            For a SQLite configuration, make a copy of the <span class='code'>weewx.sdb</span> file.
         </p>
 
         <table class="locations" style="width:70%">
@@ -2449,6 +2442,15 @@ sudo /etc/init.d/weewx restart</pre>
                 <td class='tty'>/var/lib/weewx/weewx.sdb</td>
             </tr>
         </table>
+
+        <p class="note">
+            Do not make the copy of the SQLite database while in the middle of
+            a transaction! Schedule the backup for immediately after an
+            archive record is written, and then make sure the backup completes
+            before the next archive record arrives. Alternatively, stop weewx,
+            perform the backup, then restart weewx.
+        </p>
+
         <p>
             For a MySQL configuration, save a dump of the archive database.
         </p>
@@ -2457,8 +2459,8 @@ sudo /etc/init.d/weewx restart</pre>
 
         <p>
             To restore from backup, do a fresh install of
-            <span class='code'>weewx</span> then replace the default files with
-            those from a backup. Then start <span class='code'>weewx</span>.
+            <span class='code'>weewx</span>, replace the default files with
+            those from a backup, then start <span class='code'>weewx</span>.
         </p>
 
 
