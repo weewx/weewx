@@ -379,23 +379,33 @@ If you are using a MySQL database it is assumed that you have the appropriate
 permissions for the requested operation.
 </pre>
 
-        <h2>Command <span class="code">--create-archive</span></h2>
-        <p>If the database does not already exist, this command will create it and initialize it with the schema
-            specified in the configuration file <span class="code">weewx.conf</span>. Because weewx does this
+        <h2><span id='common_options'>Command line options</span></h2>
+
+        <h3 class="config_option">--create-archive</h3>
+        <p>If the database does not already exist, this command will create it
+            and initialize it with the schema specified in the
+            <span class="code">weewx</span> configuration file.
+            Because <span class="code">weewx</span> does this
             automatically, this command is rarely needed.</p>
 
-        <h2>Command <span class="code">--drop-daily</span></h2>
+        <pre class="tty cmd">wee_database --create-archive</pre>
+
+        <h3 class="config_option">--drop-daily</h3>
         <p>In addition to the regular archive data, every weewx database also includes a daily summary table for each
             observation type. Because there can be dozens of observation types, there can be dozens of these daily
             summaries. It doesn't happen very often, but there can be occasions when it's necessary to drop them all and
             then rebuild them. Dropping them by hand would be very tedious! This command does them all at once.</p>
 
-        <h2>Command <span class="code">--backfill-daily</span></h2>
-        <p>This command is kind of the inverse of option <span class="code">--drop-daily</span> in that it rebuilds the
+        <pre class="tty cmd">wee_database --drop-daily</pre>
+
+        <h3 class="config_option">--backfill-daily</h3>
+        <p>This command is the inverse of option <span class="code">--drop-daily</span> in that it rebuilds the
             daily summaries from the archive data.</p>
 
-        <h2>Command <span class="code">--reconfigure</span></h2>
-        <p>This command is useful changing the schema in your database.</p>
+        <pre class="tty cmd">wee_database --backfill-daily</pre>
+
+        <h3 class="config_option">--reconfigure</h3>
+        <p>This command is useful for changing the schema in your database.</p>
 
         <p>It creates a new database with the same name as the old, except with the suffix <span
                 class="code">_new</span> attached at the end (nominally, <span class="code">weewx.sdb_new</span> if you
@@ -403,13 +413,19 @@ permissions for the requested operation.
             the schema specified in <span class="code">weewx.conf</span>. Finally, it copies over the data from your old
             database into the new database.</p>
 
-        <h2>Command <span class="code">--string-check</span></h2>
+        <p>See the section <a href="customizing.htm#Adding_a_new_observation_type">Adding a new observation type</a> in the Customization Guide
+            for step-by-step instructions that use this option.</p>
+
+        <h3 class="config_option">--string-check</h3>
         <p>Normally, all entries in the archive database are pure numbers. However, some visual SQLite database editors
             use a null string instead of a null value when deleting entries. These nulls strings can crash weewx. This
             command checks for them and, if the option <span class="code">--fix</span> is specified, substitutes a true
             null value if it finds any.</p>
 
-        <h2>Command <span class="code">--transfer</span></h2>
+        <pre class="tty cmd">wee_database --string-check
+wee_database --string-check --fix</pre>
+
+        <h3 class="config_option">--transfer</h3>
         <p>This command is useful for moving your database from one type of database to another, such as from SQLite to
             MySQL. To use it, you must have two bindings specified in your <span class="code">weewx.conf</span>
             configuration file. One will serve as the source, the other as the destination. Specify the source binding
@@ -420,6 +436,7 @@ permissions for the requested operation.
             to MySQL</a>, and from <a
                 href="https://github.com/weewx/weewx/wiki/Transfer%20from%20MySQL%20to%20sqlite#using-wee_database">MySQL
             to SQLite</a>, using <span class="code">wee_database</span>.</p>
+
 
         <!-- ======== -->
 
