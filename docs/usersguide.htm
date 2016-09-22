@@ -52,7 +52,7 @@ Version: 3.6.0a1
 
         <h1 id="about">About <span class="code">weewx</span></h1>
 
-        <p><span class="code"><a href="http://www.weewx.com">weewx</a></span> is
+        <p><span class="code"><a href="http://www.weewx.com">Weewx</a></span> is
             software, written in <a href="http://www.python.org">Python</a>, that
             interacts with a weather station to produce plots, reports, and HTML
             pages. It can optionally upload the reports to a remote Web server as
@@ -68,789 +68,42 @@ Version: 3.6.0a1
             downloads are available at
             <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.</p>
 
-        <p><span class="code">weewx</span> is about 8,000 lines of code, plus
+        <p><span class="code">Weewx</span> is about 8,000 lines of code, plus
             another 11,000 for the many drivers used by the supported hardware. </p>
-
-        <h1 id="hardware">Supported hardware</h1>
-
-        <p>
-            Many types of station hardware are supported. In addition to hardware
-            support, <span class="code">weewx</span> comes with a software
-            simulator, useful for testing and evaluation.
-        </p>
-
-        <p>The following table enumerates many of the weather stations that
-            are known to work with <span class='code'>weewx</span>. If your
-            station is not in the table, check the pictures at the
-            <a href="http://weewx.com/hardware.html">supported hardware page</a> &mdash;
-            it could be a variation of one of the supported models. You can also
-            check the <a href="http://weewx.com/hwcmp.html">station comparison</a>
-            table &mdash; sometimes new models use the same communication protocols
-            as older hardware.
-        </p>
-
-        <p>The maturity column indicates the degree of confidence in the
-            driver. For stations marked <span class="code">Tested</span>,
-            the station is routinely tested as part of the release process
-            and should work as documented. For stations not marked at all,
-            they are "known to work" using the indicated driver, but are not
-            routinely tested. For stations marked
-            <span class="code">Experimental</span>, we are still working
-            on the driver. There can be problems.
-        </p>
-
-        <table class="indent">
-            <caption>Weather hardware supported by <span class='code'>weewx</span></caption>
-            <tr class="first_row">
-                <td>Vendor</td>
-                <td>Model</td>
-                <td>Hardware<br/>Interface</td>
-                <td>Required<br/>Package</td>
-                <td>Station<br/>Driver</td>
-                <td>Maturity</td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="6">AcuRite</td>
-                <td>01025</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>01035</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>01036</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>01525</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>02032</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>02064</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td class="text_highlight">Argent Data Systems</td>
-                <td>WS1</td>
-                <td>Serial</td>
-                <td class="code">pyusb</td>
-                <td>WS1<sup><a href='#ads'>10</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="2">Aercus</td>
-                <td>WS2083</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WS3083</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="5">Ambient Weather</td>
-                <td>WS1090</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td>Tested</td>
-            </tr>
-            <tr>
-                <td>WS2080</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td>Tested</td>
-            </tr>
-            <tr>
-                <td>WS2080A</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td>Tested</td>
-            </tr>
-            <tr>
-                <td>WS2090</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WS2095</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="2">Cresta</td>
-                <td>WRX815</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>PWS720</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="3">DAZA</td>
-                <td>DZ-WH1080</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>DZ-WS3101</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>DZ-WS3104</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="3">Davis</td>
-                <td>VantagePro2</td>
-                <td>Serial or USB</td>
-                <td class="code">pyserial</td>
-                <td>Vantage<sup><a href='#vantage'>1</a></sup></td>
-                <td>Tested</td>
-            </tr>
-            <tr>
-                <td>VantagePro2</td>
-                <td>WeatherLink IP</td>
-                <td class="code">&nbsp;</td>
-                <td>Vantage<sup><a href='#vantage'>1</a></sup></td>
-                <td>Tested</td>
-            </tr>
-            <tr>
-                <td>VantageVue</td>
-                <td>Serial or USB</td>
-                <td class="code">pyserial</td>
-                <td>Vantage<sup><a href='#vantage'>1</a></sup></td>
-                <td>Tested</td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="2">Elecsa</td>
-                <td>6975</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>6976</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="11">Fine Offset</td>
-                <td>WH1080</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WH1081</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WH1091</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WH1090</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WS1080</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WA2080</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WA2081</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WH2080</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WH2081</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WH3080</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WH3081</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="1">General Tools</td>
-                <td>WS831DL</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="6">Hideki</td>
-                <td>DV928</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>TE821</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>TE827</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>TE831</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>TE838</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>TE923</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td class="text_highlight">Huger</td>
-                <td>WM918</td>
-                <td>Serial</td>
-                <td class="code">pyserial</td>
-                <td>WMR9x8<sup><a href='#wmr9x8'>5</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight">IROX</td>
-                <td>Pro X</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="4">La Crosse</td>
-                <td>C86234</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WS28xx<sup><a href='#ws28xx'>8</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>WS-1640</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>WS-23XX</td>
-                <td>Serial</td>
-                <td class="code">fcntl/select</td>
-                <td>WS23xx<sup><a href='#ws23xx'>7</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>WS-28XX</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WS28xx<sup><a href='#ws28xx'>8</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="2">Maplin</td>
-                <td>N96GY</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>N96FY</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="3">Meade</td>
-                <td>TE923W</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>TE923W-M</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>TE924W</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td class="text_highlight">Mebus</td>
-                <td>TE923</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td class="text_highlight">National Geographic</td>
-                <td>265</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="14">Oregon Scientific</td>
-                <td>WMR88</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WMR88A</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WMR100</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WMR100N</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
-                <td>Tested</td>
-            </tr>
-            <tr>
-                <td>WMR180</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WMR180A</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WMRS200</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WMR200</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR200<sup><a href="#wmr200">3</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>WMR200A</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR200<sup><a href="#wmr200">3</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>WMR300</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR300<sup><a href="#wmr300">4</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>WMR300A</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR300<sup><a href="#wmr300">4</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>WMR918</td>
-                <td>Serial</td>
-                <td class="code">pyserial</td>
-                <td>WMR9x8<sup><a href='#wmr9x8'>5</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WMR928N</td>
-                <td>Serial</td>
-                <td class="code">pyserial</td>
-                <td>WMR9x8<sup><a href='#wmr9x8'>5</a></sup></td>
-                <td>Tested</td>
-            </tr>
-            <tr>
-                <td>WMR968</td>
-                <td>Serial</td>
-                <td class="code">pyserial</td>
-                <td>WMR9x8<sup><a href='#wmr9x8'>5</a></sup></td>
-                <td>Tested</td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="4">PeetBros</td>
-                <td>Ultimeter 100</td>
-                <td>Serial</td>
-                <td class="code">pyserial</td>
-                <td>Ultimeter<sup><a href='#peetbros'>11</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>Ultimeter 800</td>
-                <td>Serial</td>
-                <td class="code">pyserial</td>
-                <td>Ultimeter<sup><a href='#peetbros'>11</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>Ultimeter 2000</td>
-                <td>Serial</td>
-                <td class="code">pyserial</td>
-                <td>Ultimeter<sup><a href='#peetbros'>11</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>Ultimeter 2100</td>
-                <td>Serial</td>
-                <td class="code">pyserial</td>
-                <td>Ultimeter<sup><a href='#peetbros'>11</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="2">RainWise</td>
-                <td>Mark III</td>
-                <td>Serial</td>
-                <td class="code">pyserial</td>
-                <td>CC3000<sup><a href='#rainwise'>12</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>CC3000</td>
-                <td>Serial</td>
-                <td class="code">pyserial</td>
-                <td>CC3000<sup><a href="#rainwise">12</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="3">Radio Shack</td>
-                <td>63-256</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WX200</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WMR200<sup><a href="#wmr200">3</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>63-1016</td>
-                <td>Serial</td>
-                <td class="code">pyserial</td>
-                <td>WMR9x8<sup><a href='#wmr9x8'>5</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="2">Sinometer</td>
-                <td>WS1080 / WS1081</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WS3100 / WS3101</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan='2'>TechnoLine</td>
-                <td>WS-2300</td>
-                <td>Serial</td>
-                <td class="code">fcntl/select</td>
-                <td>WS23xx<sup><a href='#ws23xx'>7</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>WS-2350</td>
-                <td>Serial</td>
-                <td class="code">fcntl/select</td>
-                <td>WS23xx<sup><a href='#ws23xx'>7</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan='5'>TFA</td>
-                <td>Matrix</td>
-                <td>Serial</td>
-                <td class="code">fcntl/select</td>
-                <td>WS23xx<sup><a href='#ws23xx'>7</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>Nexus</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>Opus</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WS28xx<sup><a href='#ws28xx'>8</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>Primus</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>WS28xx<sup><a href='#ws28xx'>8</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>Sinus</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td class="text_highlight">Tycon</td>
-                <td>TP1080WC</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="2">Watson</td>
-                <td>W-8681</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>WX-2008</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight">Velleman</td>
-                <td>WS3080</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class="text_highlight" rowspan="2">Ventus</td>
-                <td>W831</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-            <tr>
-                <td>W928</td>
-                <td>USB</td>
-                <td class="code">pyusb</td>
-                <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
-            </tr>
-        </table>
-
-        <ol>
-            <li><a id="vantage">Davis &quot;Vantage&quot; series</a> of weather
-                stations, including the
-                <a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">VantagePro2</a>&trade;
-                and
-                <a href="http://www.vantagevue.com/">VantageVue</a>&trade;,
-                using serial, USB, or
-                <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">WeatherLinkIP</a>&trade;
-                connections. Both the &quot;Rev A&quot; (firmware dated before
-                22 April 2002) and &quot;Rev B&quot; versions are supported.
-            </li>
-            <li><a id="wmr100">Oregon Scientific WMR-100 stations.</a> Tested on the
-                <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">Oregon
-                    Scientific WMR100N</a>.
-            </li>
-            <li><a id="wmr200">Oregon Scientific WMR-200 stations.</a> Tested on the
-                <a href="http://www.oregonscientificstore.com/Oregon-Scientific-WMR200-Bundle-Complete-Weather-Bundle.data">Oregon
-                    Scientific WMR200</a>.
-            </li>
-            <li><a id="wmr200">Oregon Scientific WMR-300 stations.</a> Tested on the
-                <a href="http://www.oregonscientificstore.com/p-358-oregon-scientific-wmr300-ultra-precision-professional-weather-system.aspx">Oregon
-                    Scientific WMR300A</a>.
-            </li>
-            <li><a id="wmr9x8">Oregon Scientific WMR-9x8 stations.</a> Tested on the
-                <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon
-                    Scientific
-                    WMR968</a>.
-            </li>
-            <li><a id="fousb">Fine Offset 10xx, 20xx, and 30xx stations.</a>
-                Tested on the
-                <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>.
-            </li>
-            <li><a id="ws23xx">La Crosse WS-23xx stations.</a> Tested on the
-                <a href="http://lacrossetechnologies.com/2317/">La Crosse 2317</a>.
-            </li>
-            <li><a id="ws28xx">La Crosse WS-28xx stations.</a> Tested on the
-                <a href="http://lacrossetechnologies.com/2814/">La Crosse C86234</a>.
-            </li>
-            <li><a id="te923">Hideki Professional Weather Stations.</a> Tested on the
-                <a href="http://www.ambientweather.com/hotewiwest.html">Meade TE923</a>.
-            </li>
-            <li><a id="ads">ADS WS1 Stations.</a> Tested on the
-                <a href="http://www.argentdata.com/catalog/product_info.php?products_id=135">WS1</a>.
-            </li>
-            <li><a id="peetbros">PeetBros Ultimeter Stations.</a> Tested on the
-                <a href="http://www.peetbros.com/">Ultimeter 2000</a>.
-            </li>
-            <li><a id="rainwise">RainWise Mark III Stations.</a> Tested on the
-                <a href="http://www.rainwise.com/">CC3000</a>.
-            </li>
-            <li><a id="acurite">AcuRite Weather Stations.</a> Tested on the
-                <a href="http://www.acurite.com/8-pro-digital-weather-station-with-pc-connect-01036.html">01036RX</a>.
-            </li>
-        </ol>
 
         <h1 id="prerequisites">System requirements</h1>
 
-        <h2>Hardware</h2>
+        <h2 id="hardware">Station hardware</h2>
 
-        <p>Weewx is written in Python, so it has the overhead associated with that
+        <p><span class="code">Weewx</span> includes support for many types
+            of weather stations.   In addition to hardware
+            support, <span class="code">weewx</span> comes with a software
+            simulator, useful for testing and evaluation.
+        </p>
+        <p>The
+            <a href="hardware.htm#driver_status">driver compatibility table</a>
+            in the hardware guide has a detailed list of the manufacturers and
+            models supported by the drivers that come with
+            <span class="code">weewx</span>.  If you do
+            not see your hardware in this table, check the list of
+            <a href="http://weewx.com/hardware.html">supported hardware</a>;
+            the pictures may help you identify the manufacturer and/or model.
+            Compatibility for some hardware is provided by 3rd party drivers,
+            available at the
+            <a href="https://github.com/weewx/weewx/wiki">Wiki</a>.
+            Finally, check the
+            <a href="http://weewx.com/hwcmp.html">hardware comparison</a>
+            to see if your hardware is known but not yet supported.
+        </p>
+        <p>
+            If you still cannot find your hardware, post to the
+            <a href="http://groups.google.com/group/weewx-user">weewx user</a>
+            group for help.
+        </p>
+
+        <h2>Computer hardware</h2>
+
+        <p><span class="code">Weewx</span> is written in Python, so it has the overhead associated with that
             language. Nevertheless, it is "fast enough" on just about any hardware. It
             has been run on everything from an early MacBook to a router!</p>
 
@@ -859,7 +112,7 @@ Version: 3.6.0a1
             consumes about 5% of the CPU, 100 MB of virtual memory,
             and 20 MB of real memory. </p>
 
-        <p>Weewx also runs great on a Raspberry Pi, although report generation will take longer.
+        <p><span class="code">Weewx</span> also runs great on a Raspberry Pi, although report generation will take longer.
             For example, the 12 "To Date" templates take about 5.1 seconds on the RPi,
             compared to 3.0 seconds on my Fit-PC, and a mere 0.9 seconds on my vintage
             Dell Optiplex 745.</p>
@@ -1902,7 +1155,7 @@ longitude = -77.0366</pre>
 
         <h3 class="config_section">[[AWEKAS]]</h3>
 
-        <p class="config_section"><span class="code">Weewx</span> can send your
+        <p class="config_section"><span class="code">weewx</span> can send your
             current data to the <a href="http://www.awekas.at/">Automatisches
                 Wetterkarten System</a> (AWEKAS). If you wish
             to do this, set the option <span class='code'>enable</span> to
@@ -2009,7 +1262,7 @@ longitude = -77.0366</pre>
 
         <h3 class="config_section">[[PWSweather]]</h3>
 
-        <p><span class="code">Weewx </span>can send your current data to the
+        <p><span class="code">Weewx</span> can send your current data to the
             <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you
             wish to do this, set the option
             <span class='code'>enable</span> to <span class='code'>true</span>,
@@ -2318,7 +1571,7 @@ longitude = -77.0366</pre>
             unit system. Hence, your data will be stored in the database
             using whatever unit system you specify here. </p>
 
-        <p><em>Once chosen, it cannot be changed!</em> Weewx does not allow you to
+        <p><em>Once chosen, it cannot be changed!</em> <span class="code">weewx</span> does not allow you to
             mix unit systems within the databases. You must chose a unit system
             and then stick with it. This means that users coming from wview (which
             uses US Customary) should not change the default setting. Having said
@@ -2877,238 +2130,6 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
             to the bare minimum. However, this will only make a slight
             difference in execution speed and memory use.</p>
 
-
-        <h1 id="hardware_notes">Hardware notes</h1>
-        <!-- wee_device documentation moved to utilities.htm -->
-
-        <p>This section lists some the limitations and abilities of the various types
-        of hardware that <span class="weewx">weewx</span> supports.</p>
-
-        <p>For information on how to configure your hardware, see the utility
-            <a href="utilities.htm#wee_device_utility"><span class="code">wee_device</span></a>.</p>
-
-        <h2>AcuRite</h2>
-        <p>The AcuRite console must be set to USB mode 3 or 4. Communication via USB is disabled in modes 1 and 2. Mode
-            4 is more reliable than mode 3; mode 3 enables logging of data, mode 4 does not. When the console is logging
-            it frequently causes USB communication problems.</p>
-
-        <p>The wind speed updates every 18 seconds. The wind direction updates every 30 seconds. Other sensors update
-            every 60 seconds.</p>
-
-        <p>The AcuRite stations do not record wind gusts.</p>
-
-        <p>The station emits partial packets, which may confuse some online services</p>
-
-
-        <h2>CC3000</h2>
-        <p>The CC3000 data logger stores 2MB of records.</p>
-
-        <p>The CC3000 driver supports catchup on startup, but it does not support hardware record generation.</p>
-
-
-        <h2>FineOffsetUSB</h2>
-
-        <p>The station clock can only be set manually via buttons on the console, or (if the station supports it) by
-            WWVB radio. The FineOffsetUSB driver ignores the station clock since it cannot be trusted.</p>
-
-        <p>The station reads data from the sensors every 48 seconds. The 30xx stations read UV data every 60
-            seconds.</p>
-
-        <p>The 10xx and 20xx stations can save up to 4080 historical readings. That is about 85 days of data with the
-            default recording interval of 30 minutes, or about 14 days with a recording interval of 5 minutes. The 30xx
-            stations can save up to 3264 historical readings.</p>
-
-        <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since
-            the last record in the archive database.</p>
-
-        <h3 id="polling_mode_and_the_polling_interval">Polling mode and the polling interval</h3>
-
-        <p>When reading 'live' data, <span class='code'>weewx</span> can read as fast as possible, or at a user-defined
-            period. This is controlled by the option <span class='code'>polling_mode</span> in
-            <span class="code">weewx.conf</span>.</p>
-        <table class='indent'>
-            <caption>Polling modes for Fine Offset stations</caption>
-            <tr class="first_row">
-                <td width='15%'>Mode</td>
-                <td width='30%'><span class='code'>weewx.conf</span></td>
-                <td>Notes</td>
-            </tr>
-            <tr>
-                <td class="first_col">ADAPTIVE</td>
-                <td>
-                <pre class='tty' style='margin:0'>[FineOffsetUSB]
-    polling_mode = ADAPTIVE</pre>
-                </td>
-                <td>
-                    <p>In this mode, <span class='code'>weewx</span> reads data from the station as often as possible,
-                        but at intervals that avoid communication between the console and the sensors. Nominally this
-                        results in reading data every 48 seconds.</p>
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col">PERIODIC</td>
-                <td>
-                <pre class='tty' style='margin:0'>[FineOffsetUSB]
-    polling_mode = PERIODIC
-    polling_interval = 60</pre>
-                </td>
-                <td>
-                    <p>In this mode, <span class='code'>weewx</span> reads data from the station every <span
-                            class='code'>polling_interval</span> seconds.</p>
-
-                    <p>The console reads the sensors every 48 seconds (60 seconds for UV), so setting the <span
-                            class='code'>polling_interval</span> to a value less than 48 will result in duplicate
-                        readings. </p>
-                </td>
-            </tr>
-        </table>
-
-        <h2>TE923</h2>
-        <p>Some station models will recognize up to 5 remote temperature/humidity sensor units. Use the hardware switch
-            in each sensor unit to identify sensors. Use the <span class='code'>map</span> in <span class='code'>weewx.conf</span>
-            to associate each sensor with a database field. </p>
-
-        <p>The station has either 208 or 3442 history records, depending on the model. That is just over a day (208
-            records) or about 23 days (3442 records) with an archive interval of 5 minutes.</p>
-
-        <p>The TE923 driver will read history records from the station when weewx starts up, but it does not support
-            hardware record generation.</p>
-
-        <h2>Ultimeter</h2>
-        <p>The Ultimeter driver operates the Ultimeter in Data Logger Mode, which results in sensor readings every 1/2
-            second or so.</p>
-
-        <p>The Ultimeter driver ignores the maximum, minimum, and average values recorded by the station.</p>
-
-        <h2>WMR100</h2>
-
-        <p>The station emits partial packets, which may confuse some online services.</p>
-
-
-        <h2>WMR200</h2>
-
-        <p>The station emits partial packets, which may confuse some online services.</p>
-
-        <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since
-            the last record in the archive database. </p>
-
-
-        <h2>WMR300</h2>
-
-        <p>The station emits partial packets, which may confuse some online services.</p>
-
-        <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since
-            the last record in the archive database. This can take a couple of hours, depending on the number of records
-            in the logger and the speed of the computer and disk. </p>
-
-        <h2>WMR9x8</h2>
-
-        <p>The station includes a data logger, but the driver does not read records from the station.</p>
-
-        <p>The station emits partial packets, which may confuse some online services.</p>
-
-
-        <h2>WS1</h2>
-
-        <p>The WS1 stations produce data every 1/2 second or so.</p>
-
-
-        <h2>WS23xx</h2>
-
-        <p>The hardware interface is a serial port, but USB-serial converters can be used with computers that have no
-            serial port. Beware that not every type of USB-serial converter will work. Converters based on ATEN UC-232A
-            chipset are known to work.</p>
-
-        <p>The station does not record wind gust or wind gust direction.</p>
-
-        <p>The hardware calculates windchill and dewpoint.</p>
-
-        <p>The station has 175 history records. That is just over 7 days of data with the factory default history
-            recording interval of 60 minutes, or about 14 hours with a recording interval of 5 minutes.</p>
-
-        <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since
-            the last record in the archive database.</p>
-
-
-        <h2>WS28xx</h2>
-
-        <p><span class='code'>weewx</span> communicates with a USB transceiver, which communicates with the station
-            console, which in turn communicates with the sensors. The transceiver and console must be paired and
-            synchronized.</p>
-
-        <p>The station has 1797 history records. That is just over 6 days of data with an archive interval of 5
-            minutes.</p>
-
-        <p>When <span class='code'>weewx</span> starts up it will attempt to download all records from the console since
-            the last record in the archive database. </p>
-
-        <p>The WS28xx driver sets the station archive interval to 5 minutes.</p>
-
-        <p>The WS28xx driver does not support hardware archive record generation.</p>
-
-        <h3 id="ws28xx_pairing">Pairing</h3>
-
-        <p>The console and transceiver must be paired. Pairing ensures that your transceiver is talking to your console,
-            not your neighbor's console. Pairing should only have to be done once, although you might have to pair again
-            after power cycling the console, for example after you replace the batteries.</p>
-
-        <p>There are two ways to pair the console and the transceiver:</p>
-        <ol>
-            <li><strong>The Weewx way.</strong> Be sure that <span class='code'>weewx</span> is not running. Run the
-                configuration utility, press and hold the [v] button on the console until you see 'PC' in the display,
-                then release the button. If the console pairs with the transceiver, 'PC' will go away within a second or
-                two.
-            <pre class='tty'><span class="cmd">wee_device --pair</span>
-
-Pairing transceiver with console...
-Press and hold the [v] key until "PC" appears (attempt 1 of 3)
-Transceiver is paired to console</pre>
-            </li>
-            <li><strong>The HeavyWeather way.</strong> Follow the pairing instructions that came with the station. You
-                will have to run HeavyWeather on a windows computer with the USB transceiver. After HeavyWeather
-                indicates the devices are paired, put the USB transceiver in your <span class="code">weewx</span>
-                computer and start weewx. Do not power cycle the station console or you will have to start over.
-            </li>
-        </ol>
-
-        <p>If the console does not pair, you will see messages in the log such as this:</p>
-        <pre class='tty'>ws28xx: RFComm: message from console contains unknown device ID (id=165a resp=80 req=6)</pre>
-        <p>Either approach to pairing may require multiple attempts.</p>
-
-        <h3 id="ws28xx_synchronizing">Synchronizing</h3>
-
-        <p>After pairing, the transceiver and console must be synchronized in order to communicate. Synchronization will
-            happen automatically at the top of each hour, or you can force synchronization by pressing the [SET] button
-            momentarily. Do not press and hold the [SET] button - that modifies the console alarms.</p>
-
-        <p>When the transceiver and console are synchronized, you will see lots of '<span
-                class="code">ws28xx: RFComm</span>' messages in the log when <span class="code">debug=1</span>. When the
-            devices are not synchronized, you will see messages like this about every 10 minutes:</p>
-        <pre class='tty'>Nov  7 19:12:17 raspi weewx[2335]: ws28xx: MainThread: no contact with console</pre>
-        <p>If you see this, or if you see an extended gap in the weather data in the <span class="code">weewx</span>
-            plots, press momentarily the [SET] button, or wait until the top of the hour.</p>
-
-        <p>When the transceiver has not received new data for awhile, you will see messages like this in the log:</p>
-        <pre class='tty'>Nov  7 19:12:17 raspi weewx[2335]: ws28xx: MainThread: no new weather data</pre>
-        <p>If you see 'no new weather data' messages with the 'no contact with console' messages, it simply means that
-            the transceiver has not been able to synchronize with the console. If you see only the 'no new weather data'
-            messages, then the sensors are not communicating with the console, or the console may be defective.</p>
-
-        <h3>Alarms</h3>
-
-        <p>When an alarm goes off, communication with the transceiver stops. The WS28xx driver clears all alarms in the
-            station. It is better to create alarms in weewx, and the <span class="code">weewx</span> alarms can do much
-            more than the console alarms anyway.</p>
-
-        <h1 id="running">Running <span class="code">weewx</span></h1>
-
-        <p><span class="code">Weewx</span> can be run either directly,
-            or as a daemon. When first trying
-            <span class="code">weewx</span>, it is best to run it directly
-            because you will be able to see sensor output and diagnostics, as well
-            as log messages. Once everything is working properly, run it as a
-            daemon.</p>
-
         <h2>Running directly</h2>
 
         <p>To run <span class="code">weewx</span> directly, invoke
@@ -3230,6 +2251,17 @@ sudo /etc/init.d/weewx restart</pre>
         <p>You can also tell <span class="code">weewx</span> to reread its configuration
             file without stopping by using the &#39;reload&#39; option: </p>
         <pre class="tty cmd">sudo /etc/init.d/weewx reload </pre>
+
+
+        <h1 id="running">Running <span class="code">weewx</span></h1>
+
+        <p><span class="code">Weewx</span> can be run either directly,
+            or as a daemon. When first trying
+            <span class="code">weewx</span>, it is best to run it directly
+            because you will be able to see sensor output and diagnostics, as well
+            as log messages. Once everything is working properly, run it as a
+            daemon.</p>
+
 
         <h1 id="monitoring">Monitoring <span class="code">weewx</span></h1>
 
@@ -3390,7 +2422,7 @@ sudo /etc/init.d/weewx restart</pre>
             </tr>
         </table>
 
-        <h2>Weewx database</h2>
+        <h2><span class="code">weewx</span> database</h2>
 
         <p>
             Finally, you will need to backup the database.
@@ -3726,7 +2758,7 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
 
         <p>Or, at least, it should! </p>
 
-        <h3 id="html_generated_but_not_updated">Weewx generates HTML pages, but it does not update them</h3>
+        <h3 id="html_generated_but_not_updated"><span class="code">weewx</span> generates HTML pages, but it does not update them</h3>
 
         <p>If you are getting a symptom that everything appears normal, that is
             image and HTML files are generated (<em>(look in the log to be sure</em>)
@@ -4754,7 +3786,7 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
 
         <h2>Time</h2>
 
-        <p><span class="code">Weewx </span>stores all data in UTC (roughly, &quot;Greenwich&quot;
+        <p><span class="code">Weewx</span> stores all data in UTC (roughly, &quot;Greenwich&quot;
             or &quot;Zulu&quot;) time. However, usually one is interested in weather events
             in local time and want image and HTML generation to reflect that. Furthermore,
             most weather stations are configured in local time. This requires that many
@@ -4774,8 +3806,8 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
             then things get a bit more complicated. One could modify the above to recognize
             whether a DST transition occurs sometime between <span class="code">last_ts</span>
             and the next three hours and, if so, make the necessary adjustments. This is
-            generally what <span class="code">wview</span> does. <span class="code">Weewx
-      </span>takes a different approach and converts from UTC to local, does the arithmetic,
+            generally what <span class="code">wview</span> does. <span class="code">Weewx</span>
+            takes a different approach and converts from UTC to local, does the arithmetic,
             then converts back. This is inefficient, but bulletproof against changes in
             DST algorithms, etc: </p>
     <pre class="tty">time_dt = datetime.datetime.fromtimestamp(last_ts)
