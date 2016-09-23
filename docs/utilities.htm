@@ -957,7 +957,7 @@ the daily summaries using the wee_database utility.</pre>
 
         <p>The utility is pretty good at "guessing" where your configuration file <span class="code">weewx.conf</span>
             is, but if you've done an unusual install, you may have to tell it explicitly. You can do this by using the
-            <span class="config_option">--config</span> option:</p>
+            <span class="code">--config</span> option:</p>
 
     <pre class="tty cmd">wee_import --config=/this/folder/weewx.conf --import-config=/folder/import.conf
 </pre>
@@ -2413,7 +2413,8 @@ Options:
             previous day.
         </p>
 
-        <p>Before starting, it's worth running the utility with the <span class="config_option">--help</span> flag to
+        <p>Before starting, it's worth running the utility with the
+            <span class="code">--help</span> flag to
             see how <span class="code">wunderfixer</span> is used:
         </p>
 
@@ -2478,13 +2479,13 @@ Options:
 
         <h2><span id='common_options'>Command line options</span></h2>
 
-        <p>The <span class="code">wunderfixer</span> command line options are described in more detail below:</p>
+        <p>The <span class="code">wunderfixer</span> options are described in more detail below:</p>
 
         <h4><span class="config_option" id="wunderfixer_config">--config</span></h4>
 
         <p>The utility is pretty good at "guessing" where your configuration file <span class="code">weewx.conf</span>
             is, but if you've done an unusual install, you may have to tell it explicitly. You can do this by using the
-                    <span class="config_option">--config</span> option:
+                    <span class="code">--config</span> option:
         </p>
 
         <pre class="tty cmd">wunderfixer --config=/this/folder/weewx.conf
@@ -2493,8 +2494,8 @@ Options:
         <h4><span class="config_option" id="wunderfixer_binding">--binding</span></h4>
 
         <p>Specifies the data binding to be used as the source of data for missing records to be published to Weather 
-            Underground. Default is <span class="config_option">wx_binding</span>. The <span 
-                    class="config_option">--binding</span> command line option is used as follows:
+            Underground. Default is <span class="code">wx_binding</span>. The <span 
+                    class="code">--binding</span> option is used as follows:
         </p>
 
         <pre class="tty cmd">wunderfixer --binding=another_binding</pre>
@@ -2503,9 +2504,8 @@ Options:
 
         <p>Optional weather station ID of the Weather Underground PWS to be checked. The default is to use the  station 
             specified in the <a href="usersguide.htm#[[Wunderground]]">[[StdRESTful][[Wunderground]]</a> section of <span 
-                    class="code">weewx.conf</span> (or the configuration file  specified using the <a 
-                    href="#wunderfixer_config"><strong><span class="code">--config</span></strong></a> command line 
-            option). The <span class="config_option">--station</span> command line option is used as follows:
+                    class="code">weewx.conf</span> (or the configuration file  specified using the <span class="code">--config</span>
+            option). The <span class="code">--station</span> option is used as follows:
         </p>
 
         <pre class="tty cmd">wunderfixer --station=AB123456789</pre>
@@ -2513,9 +2513,8 @@ Options:
         <h4><span class="config_option" id="wunderfixer_password">--password</span></h4>
 
         <p>Optional password for the weather station ID to be checked. The default is to use the password specified in 
-            the <a href="usersguide.htm#[[Wunderground]]">[[StdRESTful][[Wunderground]]</a> section of <a 
-                    href="#wunderfixer_config"><strong><span class="code">--config</span></strong></a> command line 
-            option). The <span class="config_option">--password</span> command line option is used as follows:
+            the <a href="usersguide.htm#[[Wunderground]]">[[StdRESTful][[Wunderground]]</a> section of <span class="code">--config</span>
+            option). The <span class="code">--password</span> option is used as follows:
         </p>
 
         <pre class="tty cmd">wunderfixer --station=AB123456789 --password=hardtoguess</pre>
@@ -2524,8 +2523,8 @@ Options:
 
         <p>Optional date to check. By default <span class="code">wunderfixer</span> checks the current date according to 
             the system date-time. This feature is useful if running <span class="code">wunderfixer</span> as a cron job. 
-            The <span class="config_option">--date</span> command line option accepts date strings in the format <span 
-                    class="config_option">YYYY-MM-DD</span> as follows:
+            The <span class="code">--date</span> option accepts date strings in the format <span 
+                    class="code">YYYY-MM-DD</span> as follows:
         </p>
 
         <pre class="tty cmd">wunderfixer --date=2016-04-20</pre>
@@ -2533,59 +2532,59 @@ Options:
         <h4><span class="config_option" id="wunderfixer_epsilon">--epsilon</span></h4>
 
         <p>At times Weather Underground records may have a date-time that is slightly different to the timestamp of the 
-            record as recorded by <span class="code">weewx</span>. The <span class="config_option">--epsilon</span> 
-            command line option allows timestamps that are within the <span class="config_option">--epsilon</span> value 
-            seconds of each other to be considered the same. The default value is <span class="config_option">120</span>. 
-            The <span class="config_option">--epsilon</span> command line option is used as follows:
+            record as recorded by <span class="code">weewx</span>. The <span class="code">--epsilon</span> 
+            option allows timestamps that are within the <span class="code">--epsilon</span> value 
+            seconds of each other to be considered the same. The default value is <span class="code">120</span>. 
+            The <span class="code">--epsilon</span> option is used as follows:
         </p>
 
         <pre class="tty cmd">wunderfixer --epsilon=60</pre>
 
         <h4><span class="config_option" id="wunderfixer_verbose">--verbose</span></h4>
 
-        <p>Use of the <span class="config_option">--verbose</span> command line option results in <span 
+        <p>Use of the <span class="code">--verbose</span> option results in <span 
                     class="code">wunderfixer</span> displaying useful additional information during execution. The <span 
-                    class="config_option">--verbose</span> command line option is of little use when <span 
+                    class="code">--verbose</span> option is of little use when <span 
                     class="code">wunderfixer</span> is run as a cron job.
         </p>
 
         <h4><span class="config_option" id="wunderfixer_log">--log</span></h4>
 
         <p>Control the <span class="code">wunderfixer</span> log output. The default is no logging. If <span 
-                    class="config_option">--log=weewx</span> is used then <span class="code">wunderfixer</span> logs to 
+                    class="code">--log=weewx</span> is used then <span class="code">wunderfixer</span> logs to 
             the same log file as used by <span class="code">weewx</span>. Any other setting will result in <span 
-                    class="code">wunderfixer</span> logs being written to <span class="config_option">syslog</span>. 
-            The <span class="config_option">--log</span> command line option is used as follows:
+                    class="code">wunderfixer</span> logs being written to <span class="code">syslog</span>. 
+            The <span class="code">--log</span> option is used as follows:
         </p>
 
         <pre class="tty cmd">wunderfixer --log=weewx</pre>
 
         <h4><span class="config_option" id="wunderfixer_test">--test</span></h4>
 
-        <p>The <span class="config_option">--test</span> command line option will cause <span 
+        <p>The <span class="code">--test</span> option will cause <span 
                     class="code">wunderfixer</span> to do everything except upload any missing data to Weather 
             Underground. Summary information on any identified missing data will be displayed.
         </p>
 
         <h4><span class="config_option" id="wunderfixer_query">--query</span></h4>
 
-        <p>The <span class="config_option">--query</span> command line option will cause  <span 
+        <p>The <span class="code">--query</span> option will cause  <span 
                     class="code">wunderfixer</span> to seek user confirmation before each missing record is uploaded to 
             Weather Underground. When queired you may respond with <span class="code">y</span> to publish the record, 
                     <span class="code">n</span> to skip the record without publishing, <span class="code">a</span> to 
             publish the record and automatically publish all further records or <span class="code">q</span> to skip the 
-            record and quit <span class="code">wunderfixer</span>. The <span class="config_option">--query</span> command 
+            record and quit <span class="code">wunderfixer</span>. The <span class="code">--query</span> command 
             line option should not be used as part of a cron job.
         </p>
 
         
-        <h2 id='wunderfixer_cmd_line'>Running <span class="code">wunderfixer</span> from the command line</h2>
+        <h2 id='wunderfixer_cmd_line'>Running directly</h2>
 
-        <p><span class="code">wunderfixer</span> can be run from the command line to publish missing Weather Underground 
+        <p><span class="code">Wunderfixer</span> can be run directly to publish missing
             data for a single day. This may be useful if you wish to recover from an outage or if for some other reason 
-            you have missing Weather Underground data. Running <span class="code">wunderfixer</span> from the command 
-            line is also a useful exercise in the lead up to setting <a href="#wunderfixer_cron"><span 
-                    class="code">wunderfixer</span> to run as a cron job</a> as it allows you to verify correct operation 
+            you have missing Weather Underground data. Running <span class="code">wunderfixer</span> directly
+            is also a useful exercise in the lead up to setting <span 
+                    class="code">wunderfixer</span> to run as a  <a href="#wunderfixer_cron">cron job</a> as it allows you to verify correct operation 
             of <span class="code">wunderfixer</span> through the on screen reporting. To run <span 
                     class="code">wunderfixer</span> from the command line:
         </p>
@@ -2595,18 +2594,15 @@ Options:
             Weather Underground station to which <span class="code">weewx</span> posts observation data. Accordingly, 
             these instructions will publish today's data for the station whose credentials appear in the <a 
                     href="usersguide.htm#[[Wunderground]]">[[StdRESTful][[Wunderground]]</a> section of <span 
-                    class="code">weewx.conf</span>. Data for another station or date could be published by using the <a 
-                    href="#wunderfixer_station"><strong><span class="code">--station</span></strong></a>, <a 
-                    href="#wunderfixer_station"><strong><span class="code">--password</span></strong></a> and <a 
-                    href="#wunderfixer_station"><strong><span class="code">--date</span></strong></a> command line 
-            options.
+                    class="code">weewx.conf</span>. Data for another station or date could be published by using the <span class="code">--station</span>, <span class="code">--password</span> and <span class="code">--date</span> options.
         </p>
 
         <ol>
-            <li>Before publishing missing data for the first time it may be prudent to run <span 
-                        class="code">wunderfixer</span> with the <a href="#wunderfixer_station"><strong><span 
-                        class="code">--test</span></strong></a> command line option to confirm operation before 
-                running <span class="code">wunderfixer</span> a second time to publish any missing data:
+            <li>Before publishing missing data for the first time it may be
+                prudent to run <span class="code">wunderfixer</span> with the
+                <span class="code">--test</span> option to confirm operation
+                before running <span class="code">wunderfixer</span> a second
+                time to publish any missing data:
             </li>
 
             <pre class="tty cmd">wunderfixer --test</pre>
@@ -2627,13 +2623,12 @@ Using database binding 'wx_binding', which is bound to database 'archive_sqlite'
                 </p>
                 
                 <p class="note">
-                    <b>Note</b><br/>Use of the <a href="#wunderfixer_station"><strong><span 
-                        class="code">--verbose</span></strong></a> command line option will display additional information 
+                    <strong>Note</strong><br/>Use of the <span class="code">--verbose</span> option will display additional information 
                     on the station being used, the date being checked and numbers of records.
                 </p>
 
-            <li>Once the results using the <a href="#wunderfixer_station"><strong><span 
-                        class="code">--test</span></strong></a> command line option are satisfactory the missing records 
+            <li>Once the results using the <span class="code">--test</span>
+                option are satisfactory the missing records 
                 can be published using the command:
             </li>
             
@@ -2655,7 +2650,7 @@ Using database binding 'wx_binding', which is bound to database 'archive_sqlite'
                     records were found then no records will be listed.
                 </p>
                 
-                <p>If the <a href="#wunderfixer_query"><strong><span class="code">--query</span></strong></a> option had 
+                <p>If the <span class="code">--query</span> option had 
                     been used the output would be something like this:
                 </p>
                 
@@ -2688,7 +2683,7 @@ Missing records:
         </ol>
 
         
-        <h2 id='wunderfixer_cron'>Running <span class="code">wunderfixer</span> as a cron job</h2>
+        <h2 id='wunderfixer_cron'>Running as a cron job</h2>
 
         <p>At times Weather Underground flatly refuses to update older dates, typically those more than a couple of weeks 
             old. For this reason running <span class="code">wunderfixer</span> using a nightly cron job is advisable. To 
@@ -2696,13 +2691,14 @@ Missing records:
         </p>
         
         <ol>
-            <li>Ensure that <span class="code">wunderfixer</span> operates as intended when <a 
-                        href="#wunderfixer_cmd_line">run from the command line</a>. To ensure <span 
-                        class="code">wunderfixer</span> runs correctly you must publish data (i.e, run <span 
-                        class="code">wunderfixer</span> without the <a 
-                        href="#wunderfixer_test"><strong><span class="code">--test</span></strong></a> command line 
-                option) as running <span class="code">wunderfixer</span> with the <a 
-                        href="#wunderfixer_test"><strong><span class="code">--test</span></strong></a> command line option
+            <li>Ensure that <span class="code">wunderfixer</span> operates as
+                intended when <a href="#wunderfixer_cmd_line">run directly</a>.
+                To ensure <span class="code">wunderfixer</span> runs correctly
+                you must publish data (i.e, run
+                <span class="code">wunderfixer</span> without the
+                <span class="code">--test</span> option) as running
+                <span class="code">wunderfixer</span> with the
+                <span class="code">--test</span> option
                 does not utilise the station password.
             </li>
 
@@ -2788,8 +2784,7 @@ Missing records:
                     
                     <li>Check the <span class="code">wunderfixer</span> log to confirm how many, if any, records were 
                         uploaded to Weather Underground. The location of the <span class="code">wunderfixer</span> log 
-                        will depend on the <a href="#wunderfixer_station"><strong><span 
-                                class="code">--log</span></strong></a> option used and your version of Linux.
+                        will depend on the <span class="code">--log</span> option used and your version of Linux.
                     </li>
                     
                     <li>Check the Weather Undeground daily history for the station concerned to ensure that any missing 
@@ -2799,7 +2794,7 @@ Missing records:
             </li>
         </ol>
 
-        <h2>Dealing with <span class="code">wunderfixer</span> issues and errors</h2>
+        <h2>Dealing with failures</h2>
 
         <p>Weather Underground is known for a number of quirks in behaviour, this coupled with a misconfigured <span 
                     class="code">wunderfixer</span> session or incomplete <span class="code">weewx</span> archive data 
@@ -2828,11 +2823,11 @@ Missing records:
                 exist then it must be re-created before it can be published by <span class="code">wunderfixer</span>.
             </li>
             
-            <li><span class="code">wunderfixer</span> may have been run with the <a 
-                        href="#wunderfixer_station"><strong><span class="code">--test</span></strong></a> command line 
-                option thus only checking for missing records and not publishing them. In this case, run <span 
-                        class="code">wunderfixer</span> again without the <a href="#wunderfixer_station"><strong><span 
-                        class="code">--test</span></strong></a> command line option.
+            <li><span class="code">wunderfixer</span> may have been run with
+                the <span class="code">--test</span> option thus only checking
+                for missing records and not publishing them. In this case, run
+                <span class="code">wunderfixer</span> again without the
+                <span class="code">--test</span> option.
             </li>
         </ol>
         
@@ -2847,7 +2842,7 @@ Missing records:
                     class="code">wunderfixer</span> sessions using the correct data will not result in the correct data 
             being published as Weather Underground allows publishing of new records but not re-publishing of existing 
             records. For these reasons you should ensure <span class="code">wunderfixer</span> is operating correctly 
-            with the <a href="#wunderfixer_station"><strong><span class="code">--test</span></strong></a> command line 
+            with the <span class="code">--test</span>
             option before publishing any missing data or running <span class="code">wunderfixer</span> as a cron job.
         </p>
 
