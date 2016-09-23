@@ -1046,7 +1046,7 @@ the daily summaries using the wee_database utility.</pre>
         </table>
 
         <p class="note">
-            <b>Note</b><br/>If the <span class="code">--date</span> option is omitted the default
+            <strong>Note</strong><br/>If the <span class="code">--date</span> option is omitted the default
             is to import all available records when importing from a CSV or Cumulus source or to import today's records
             only when importing from Weather Underground. </p>
 
@@ -1252,7 +1252,7 @@ the daily summaries using the wee_database utility.</pre>
 
 
         <p class="note">
-            <b>Note</b><br/><span class="code">wee_import</span> only supports cumulative rainfall data that resets on a
+            <strong>Note</strong><br/><span class="code">wee_import</span> only supports cumulative rainfall data that resets on a
             midnight boundary, cumulative rainfall data that resets at some other time; e.g., 9am, is not supported. In
             such cases the rainfall data will need to be converted to either reset on a midnight boundary or a discrete
             value per date-time period and <span class="code">rain = discrete</span> used. The former may be
@@ -1396,7 +1396,7 @@ the daily summaries using the wee_database utility.</pre>
             will not be used and may be omitted. </p>
 
         <p class="note">
-            <b>Note</b><br/>Any <span class="code">weewx</span> archive fields that are derived (e.g., <span
+            <strong>Note</strong><br/>Any <span class="code">weewx</span> archive fields that are derived (e.g., <span
                 class="code">dewpoint</span>) and for which there is no field mapping may be calculated during import by
             use of the <span class="code">calc_missing</span> option in the <span class="config_section">[CSV]</span>
             section of the import configuration file. </p>
@@ -1598,7 +1598,7 @@ the daily summaries using the wee_database utility.</pre>
             archive field to be populated. </p>
 
         <p class="note">
-            <b>Note</b><br/>The use of the <span class="code"><a
+            <strong>Note</strong><br/>The use of the <span class="code"><a
                 href="#csv_calc_missing">calc_missing</a></span> option in the import configuration file may result in a
             number of derived fields being calculated from the imported data. If these derived fields exist in the
             in-use database schema they will be saved to the database as well. </p>
@@ -1701,7 +1701,7 @@ Finished dry run import. 70685 records were processed and 70685 unique records w
                     is provided. </p>
 
                 <p class="note">
-                    <b>Note</b><br/>As the <span class="code">weewx</span> database is not altered when the <span
+                    <strong>Note</strong><br/>As the <span class="code">weewx</span> database is not altered when the <span
                         class="code">--dry-run</span> option is used, <span class="code">wee_import</span>
                     log output is suspended during a dry run import. In effect, the use of <span
                         class="code">--dry-run</span> is equivalent to <span class="code">--dry-run --log=-</span>.
@@ -1798,7 +1798,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 </ul>
 
                 <p class="note">
-                    <b>Note</b><br/>If an appropriate field does not exist in the Weather Underground daily history then
+                    <strong>Note</strong><br/>If an appropriate field does not exist in the Weather Underground daily history then
                     the corresponding <span class="code">weewx</span> archive field will be set to <span class="code">None/NULL</span>.
                     For example, if there is no solar radiation sensor then <span class="code">radiation</span> will be
                     NULL, or if <span class="code">outHumidity</span> was never uploaded to Weather Undeground then
@@ -1828,7 +1828,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 </ul>
 
                 <p class="note">
-                    <b>Note</b><br/>If <span class="code">calc_missing = False</span> is included in the <span
+                    <strong>Note</strong><br/>If <span class="code">calc_missing = False</span> is included in the <span
                         class="code">[WU]</span> section of the import configuration file being used then all of the
                     above fields will be set to <span class="code">None/NULL</span>. The default setting of the <span
                         class="code">calc_missing</span> option is <span class="code">True</span>
@@ -1877,7 +1877,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                         control checks are performed on the imported data.
 
                         <p class="note">
-                            <b>Note</b><br/>As Weather Underground imports at times contain nonsense values,
+                            <strong>Note</strong><br/>As Weather Underground imports at times contain nonsense values,
                             particularly for fields for which no data were uploaded to Weather Underground by the PWS,
                             the use of quality control checks on imported data can prevent these nonsense values from
                             being imported and contaminating the <span class="code">weewx</span> database. </p>
@@ -1905,7 +1905,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 </pre>
 
                 <p class="note">
-                    <b>Note</b><br/>If the <span class="code">--date</span> option is omitted or a date
+                    <strong>Note</strong><br/>If the <span class="code">--date</span> option is omitted or a date
                     (not date-time) range is used during a Weather Underground import, then the current days history
                     data will be imported. This includes records timestamped from <span class="code">00:00</span>
                     (inclusive) at the start of the day up to but NOT including the <span class="code">00:00</span>
@@ -1918,7 +1918,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     which records are imported. </p>
 
                 <p class="note">
-                    <b>Note</b><br/><span class="code">wee_import</span> obtains Weather Underground daily history data
+                    <strong>Note</strong><br/><span class="code">wee_import</span> obtains Weather Underground daily history data
                     one day at a time via a HTTP request and as such the import of large time spans of data may take
                     some time. Such imports may be best handled as a series of imports of smaller time spans. </p>
 
@@ -1949,7 +1949,7 @@ Finished dry run import. 607 records were processed and 607 unique records would
 </pre>
 
                 <p class="note">
-                    <b>Note</b><br/>As the <span class="code">weewx</span> database is not altered when the <span
+                    <strong>Note</strong><br/>As the <span class="code">weewx</span> database is not altered when the <span
                         class="code">--dry-run</span> option is used, <span class="code">wee_import</span>
                     log output is suspended during a dry run import. In effect, the use of <span
                         class="code">--dry-run</span> is equivalent to <span class="code">--dry-run --log=-</span>.
@@ -1979,7 +1979,7 @@ Are you sure you want to proceed (y/n)?
 </pre>
 
                 <p class="note">
-                    <b>Note</b><br/><span class="code">wee_import</span> obtains Weather Underground daily history data
+                    <strong>Note</strong><br/><span class="code">wee_import</span> obtains Weather Underground daily history data
                     one day at a time via a HTTP request and as such the import of large time spans of data may take
                     some time. Such imports may be best handled as a series of imports of smaller time spans. </p>
             </li>
@@ -2007,7 +2007,7 @@ Confirm successful import in the weewx log file.
 </pre>
 
                 <p class="note">
-                    <b>Note</b><br/>It is not unusual to see a Weather Underground import return a different number of
+                    <strong>Note</strong><br/>It is not unusual to see a Weather Underground import return a different number of
                     records for the same import performed at different times. If importing the current day this could be
                     because an additional record may have been added between <span class="code">wee_import</span> runs.
                     For periods before today, this behaviour appears to be a vagary of Weather Underground. The only
@@ -2077,7 +2077,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 </ul>
 
                 <p class="note">
-                    <b>Note</b><br/>If a field in the Cumulus monthly log file has no data then the corresponding <span
+                    <strong>Note</strong><br/>If a field in the Cumulus monthly log file has no data then the corresponding <span
                         class="code">weewx</span> archive field will be set to <span class="code">None/NULL</span>. </p>
             </li>
 
@@ -2102,7 +2102,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 </ul>
 
                 <p class="note">
-                    <b>Note</b><br/>If <span class="code">calc_missing = False</span> is included in the <span
+                    <strong>Note</strong><br/>If <span class="code">calc_missing = False</span> is included in the <span
                         class="code">[WU]</span> section of the import configuration file being used then all of the
                     above fields will be set to <span class="code">None/NULL</span>. The default setting of the <span
                         class="code">calc_missing</span> option is <span class="code">True</span>
@@ -2217,7 +2217,7 @@ Finished dry run import. 37648 records were processed and 37620 unique records w
 </pre>
 
                 <p class="note">
-                    <b>Note</b><br/>The nine periods correspond to the nine monthly log files used for this import. </p>
+                    <strong>Note</strong><br/>The nine periods correspond to the nine monthly log files used for this import. </p>
             </li>
 
             <li>Once the dry run results are satisfactory the data can be imported using the following command:
@@ -2421,7 +2421,7 @@ Options:
         </p>
         
         <p class="note">
-            <b>Note</b><br/><span class="code">wunderfixer</span> uses the Weather Underground convention of what is a 
+            <strong>Note</strong><br/><span class="code">wunderfixer</span> uses the Weather Underground convention of what is a 
             day. That is, a day runs from the record timestamped at midnight to the last record timestamped on the same 
             day. By this convention, the first record is actually an archive for the last archive interval of the 
             previous day.
@@ -2601,7 +2601,7 @@ Options:
         </p>
 
         <p class="note">
-            <b>Note</b><br/>Most users will use <span class="code">wunderfixer</span> to publish missing data for the 
+            <strong>Note</strong><br/>Most users will use <span class="code">wunderfixer</span> to publish missing data for the 
             Weather Underground station to which <span class="code">weewx</span> posts observation data. Accordingly, 
             these instructions will publish today's data for the station whose credentials appear in the <a 
                     href="usersguide.htm#[[Wunderground]]">[[StdRESTful][[Wunderground]]</a> section of <span 
@@ -2686,7 +2686,7 @@ Missing records:
 </pre>
         
             <p class="note">
-                <b>Note</b><br/>At times two <span class="code">wunderfixer</span> sessions for the same station and date 
+                <strong>Note</strong><br/>At times two <span class="code">wunderfixer</span> sessions for the same station and date 
                 may return two different sets of missing records. This is a vagary of Weather Underground and is not a 
                 cause for concern. If you are concerned that not all missing records were published you can run <span 
                         class="code">wunderfixer</span> again with the same settings. Re-publishing records that already 
@@ -2731,7 +2731,7 @@ Missing records:
             <pre class="tty cmd">crontab -e</pre>
             
             <p class="note">
-                <b>Note</b><br/>The above command will create a crontab file for the currently logged in user. Any 
+                <strong>Note</strong><br/>The above command will create a crontab file for the currently logged in user. Any 
                 commands in the crontab will be executed as the user who owns the crontab. If the currently logged in 
                 user does not have adequate permissions to run <span class="code">wunderfixer</span> you may need to use 
                 the root user crontab by using the command <span class="code">sudo crontab -e</span>.
