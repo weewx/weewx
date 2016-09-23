@@ -407,13 +407,13 @@ permissions for the requested operation.
 
         <pre class="tty cmd">wee_database --drop-daily</pre>
 
-        <h3>Action <span class="config_option">--backfill-daily</span></h3>
+        <h3>Action <span class="code">--backfill-daily</span></h3>
         <p>This action is the inverse of option <span class="code">--drop-daily</span> in that it rebuilds the
             daily summaries from the archive data.</p>
 
         <pre class="tty cmd">wee_database --backfill-daily</pre>
 
-        <h3>Action <span class="config_option">--reconfigure</span></h3>
+        <h3>Action <span class="code">--reconfigure</span></h3>
         <p>This action is useful for changing the schema in your database.</p>
 
         <p>It creates a new database with the same name as the old, except with the suffix <span
@@ -425,7 +425,7 @@ permissions for the requested operation.
         <p>See the section <a href="customizing.htm#Adding_a_new_observation_type">Adding a new observation type</a> in the Customization Guide
             for step-by-step instructions that use this option.</p>
 
-        <h3>Action <span class="config_option">--string-check</span></h3>
+        <h3>Action <span class="code">--string-check</span></h3>
         <p>Normally, all entries in the archive database are pure numbers. However, some visual SQLite database editors
             use a null string instead of a null value when deleting entries. These nulls strings can crash weewx. This
             action checks for them and, if the option <span class="code">--fix</span> is specified, substitutes a true
@@ -434,7 +434,7 @@ permissions for the requested operation.
         <pre class="tty cmd">wee_database --string-check
 wee_database --string-check --fix</pre>
 
-        <h3>Action <span class="config_option">--transfer</span></h3>
+        <h3>Action <span class="code">--transfer</span></h3>
         <p>This action is useful for moving your database from one type of database to another, such as from SQLite to
             MySQL. To use it, you must have two bindings specified in your <span class="code">weewx.conf</span>
             configuration file. One will serve as the source, the other as the destination. Specify the source binding
@@ -494,7 +494,7 @@ before posting the information publicly.
 
         <h2><span id='wee_debug_details'>Actions and options</span></h2>
 
-        <h3>Action <span class="config_option">--info</span></h3>
+        <h3>Action <span class="code">--info</span></h3>
 
         <p>This action generates a debug report which can be sent off for remote debugging.</p>
 
@@ -625,7 +625,7 @@ Parsed and obfuscated weewx.conf
 wee_debug report successfully generated
 </pre>
 
-        <h3>Option <span class="config_option">--output</span></h3>
+        <h3>Option <span class="code">--output</span></h3>
 
         <p>By default, <span class="code">wee_debug</span> sends its output to
             the system "standard output" (<span class="code">stdout</span>)
@@ -641,7 +641,7 @@ wee_debug report successfully generated
 
         <pre class="tty cmd">wee_debug --info --output /home/weewx/another.debug</pre>
 
-        <h3>Option <span class="config_option">--verbosity</span></h3>
+        <h3>Option <span class="code">--verbosity</span></h3>
 
         <p>The amount of information included in the
             <span class="code">wee_debug</span> output can be changed using the
@@ -812,20 +812,20 @@ Options:
 
         <h2><span id='wee_extensions_details'>Actions and options</span></h2>
 
-        <h3>Action <span class="config_option">--install</span></h3>
+        <h3>Action <span class="code">--install</span></h3>
         <p>Use this action to install an extension.  You must specify the
             path to a .zip archive, a .tgz/.tar.gz archive, or a directory.</p>
 
         <pre class='tty cmd'>wee_extension --install extensions/basic
 wee_extension --install basic.tar.gz</pre>
 
-        <h3>Action <span class="config_option">--list</span></h3>
+        <h3>Action <span class="code">--list</span></h3>
         <p>This action will list all the extensions that you have
             installed.</p>
 
         <pre class='tty cmd'>wee_extension --list</pre>
 
-        <h3>Action <span class="config_option">--uninstall</span></h3>
+        <h3>Action <span class="code">--uninstall</span></h3>
 
         <p>Use this action to remove an extension.  You must specify the
             name of the extension, without any version number or zip/tgz
@@ -920,7 +920,7 @@ No extensions installed</pre>
             <li>one or more Cumulus monthly log files</li>
         </ul>
 
-        <p>Before starting, it's worth running the utility with the <span class="config_option">--help</span> flag to
+        <p>Before starting, it's worth running the utility with the <span class="code">--help</span> flag to
             see how <span class="code">wee_import</span> is used:</p>
 
         <pre class="tty cmd">wee_import --help</pre>
@@ -968,7 +968,7 @@ the daily summaries using the wee_database utility.</pre>
 
         <p>The <span class="code">wee_import</span> actions and options are described in more detail below:</p>
 
-        <h3>Option <span class="config_option">--config</span></h3>
+        <h3>Option <span class="code">--config</span></h3>
 
         <p>The utility is pretty good at "guessing" where your configuration file <span class="code">weewx.conf</span>
             is, but if you've done an unusual install, you may have to tell it explicitly. You can do this by using the
@@ -977,37 +977,37 @@ the daily summaries using the wee_database utility.</pre>
     <pre class="tty cmd">wee_import --config=/this/folder/weewx.conf --import-config=/folder/import.conf
 </pre>
 
-        <h3>Option <span class="config_option">--import-config</span></h3>
+        <h3>Option <span class="code">--import-config</span></h3>
 
         <p><span class="code">wee_import</span> uses a secondary configuration file to store various import parameters.
-            The <span class="config_option">--import-config</span> option is mandatory for all imports.
+            The <span class="code">--import-config</span> option is mandatory for all imports.
             Example import configuration files for each type of import supported by <span class="code">wee_import</span>
             are provided in the <span class="code">util/import</span> folder. These example files are best used by
             making a copy of the applicable example file in a working directory and then modifying the duplicate file to
-            suit your needs. The <span class="config_option">--import-config</span> option is used as
+            suit your needs. The <span class="code">--import-config</span> option is used as
             follows:</p>
 
     <pre class="tty cmd">wee_import --import-config=/folder/import.conf
 </pre>
 
-        <h3>Option <span class="config_option">--dry-run</span></h3>
+        <h3>Option <span class="code">--dry-run</span></h3>
 
-        <p>The inclusion of the <span class="config_option">--dry-run</span> option will cause the import
+        <p>The inclusion of the <span class="code">--dry-run</span> option will cause the import
             to proceed but no actual data will be saved to the database. This is a useful option to use when first
             importing data.</p>
 
     <pre class="tty cmd">wee_import --import-config=/folder/import.conf --dry-run
 </pre>
 
-        <h3>Option <span class="config_option">--date</span></h3>
+        <h3>Option <span class="code">--date</span></h3>
 
-        <p>The date-time range of records to be imported can be specified by use of the <span class="config_option">--date</span>
-            option. The <span class="config_option">--date</span> option can specify a single
+        <p>The date-time range of records to be imported can be specified by use of the <span class="code">--date</span>
+            option. The <span class="code">--date</span> option can specify a single
             date, as single date-time, a date range or a date-time range. The date format used is <span class="code">YYYY/MM/DD</span>
             and the date-time format <span class="code">YYYY/MM/DD HH:MM</span>. A range is specified by separating two
             date or date-time formats by a hyphen, e.g., <span class="code">'2015/12/1-2015/12/30'</span>. Note that the
             date-time or date-time range string must be enclosed in single or double quotation marks. The effect of the
-            different <span class="config_option">--date</span> option values is shown in the following
+            different <span class="code">--date</span> option values is shown in the following
             table:</p>
 
         <table class="indent" summary="--date_option operation">
@@ -1046,26 +1046,26 @@ the daily summaries using the wee_database utility.</pre>
         </table>
 
         <p class="note">
-            <b>Note</b><br/>If the <span class="config_option">--date</span> option is omitted the default
+            <b>Note</b><br/>If the <span class="code">--date</span> option is omitted the default
             is to import all available records when importing from a CSV or Cumulus source or to import today's records
             only when importing from Weather Underground. </p>
 
-        <h3>Option <span class="config_option">--log</span></h3>
+        <h3>Option <span class="code">--log</span></h3>
 
-        <p>The <span class="config_option">--log</span> option controls the <span class="code">wee_import</span> log
+        <p>The <span class="code">--log</span> option controls the <span class="code">wee_import</span> log
             output. Omitting the option will result in <span class="code">wee_import</span> log output being sent to the
             <span class="code">weewx</span> log file (nominally the system log, refer to <em><a
                     href="usersguide.htm#monitoring">Monitoring <span class="code">weewx</span></a></em> and <em><a
                     href="usersguide.htm#Where_to_find_things">Where to find things</a></em> to find it). <span
-                    class="code">wee_import</span> log output can be disabled by using <span class="config_option">--log=-</span>.
-            The <span class="config_option">--log</span> option is used as follows: </p>
+                    class="code">wee_import</span> log output can be disabled by using <span class="code">--log=-</span>.
+            The <span class="code">--log</span> option is used as follows: </p>
 
     <pre class="tty cmd">wee_import --import-config=/folder/import.conf --log=-
 </pre>
 
-        <h3>Option <span class="config_option">--verbose</span></h3>
+        <h3>Option <span class="code">--verbose</span></h3>
 
-        <p>Inclusion of the <span class="config_option">--verbose</span> option will cause additional
+        <p>Inclusion of the <span class="code">--verbose</span> option will cause additional
             information to be printed during <span class="code">wee_import</span> execution.</p>
 
     <pre class="tty cmd">wee_import --import-config=/folder/import.conf --verbose
@@ -1124,7 +1124,7 @@ the daily summaries using the wee_database utility.</pre>
                 successive records. This method is suitable when the data was recorded at fixed intervals and there are
                 NO missing records in the source data. Use of this method when there are missing records in the source
                 data can compromise the integrity of the <span class="code">weewx</span> statistical data. Select this
-                method by setting <span class="config_option">interval = derive</span>.
+                method by setting <span class="code">interval = derive</span>.
             </li>
             <li>The interval can be set to the same value as the <span class="code">archive_interval</span> setting
                 under <span class="code">[StdArchive]</span> in <span class="code">weewx.conf</span>. This setting is
@@ -1136,19 +1136,19 @@ the daily summaries using the wee_database utility.</pre>
             <li>The interval can be set to a fixed number of minutes. This setting is useful if the source data was
                 recorded at fixed intervals but there are some missing records and the fixed interval is different to
                 the <span class="code">archive_interval</span> setting under <span class="code">[StdArchive]</span> in
-                <span class="code">weewx.conf</span>. Select this method by setting <span class="config_option">interval = x</span> 
+                <span class="code">weewx.conf</span>. Select this method by setting <span class="code">interval = x</span> 
                 where <span class="code">x</span> is an integer number of minutes.
             </li>
         </ul>
 
-        <p>The default value is <span class="config_option">derive</span>. If the CSV source data records are equally spaced in
+        <p>The default value is <span class="code">derive</span>. If the CSV source data records are equally spaced in
             time, but some records are missing, then a better result may be achieved using <span class="code">conf</span>
             or a fixed interval setting. </p>
 
         <h4 class='config_option' id='csv_qc'>qc</h4>
 
         <p>Determines whether simple quality control checks are applied to imported data. Setting <span 
-                    class="config_option">qc = True</span> will result in <span class="code">wee_import</span> applying 
+                    class="code">qc = True</span> will result in <span class="code">wee_import</span> applying 
             the <span class="code">weewx</span> <span class="code">StdQC</span> minimum and maximum checks to any imported 
             observations. <span class="code">wee_import</span> quality control checks use the same configuration settings, and
             operate in the same manner, as the <a href="usersguide.htm#StdQC"><span class="code">StdQC</span></a>
@@ -1160,76 +1160,76 @@ the daily summaries using the wee_database utility.</pre>
 </pre>
 
         <p>As derived observations are calculated after the quality control check is applied, derived observations are
-            not subject to quality control checks. Setting <span class="config_option">qc = False</span> will result in <span
+            not subject to quality control checks. Setting <span class="code">qc = False</span> will result in <span
                     class="code">wee_import</span> not applying quality control checks to imported data. The default is
-            <span class="config_option">True</span>. </p>
+            <span class="code">True</span>. </p>
 
         <h4 class='config_option' id='csv_calc_missing'>calc_missing</h4>
 
         <p>Determines whether any missing derived observations will be calculated from the imported data. Setting <span
-                class="config_option">calc_missing = True</span> will result in <span class="code">wee_import</span> using the
+                class="code">calc_missing = True</span> will result in <span class="code">wee_import</span> using the
             <span class="code">weewx</span> <span class="code">StdWXCalculate</span> service to calculate any missing
-            derived observations from the imported data. Setting <span class="config_option">calc_missing = False</span> will
+            derived observations from the imported data. Setting <span class="code">calc_missing = False</span> will
             result in <span class="code">weewx</span> leaving any missing derived observations as <span class="code">None</span>.
             The observations that <span class="code">StdWXCalculate</span> can calculate are listed in the <a
                     href="usersguide.htm#StdWXCalculate">[StdWXCalculate]</a> section of the <a href="usersguide.htm">User's
-                Guide</a>. The default is <span class="config_option">True</span>. </p>
+                Guide</a>. The default is <span class="code">True</span>. </p>
 
         <h4 class='config_option' id='csv_tranche'>tranche</h4>
 
         <p>To speed up database operations imported records are committed to database in groups of records rather than
-            individually. The size of the group is set by the <span class="config_option">tranche</span> parameter. Increasing
-            the <span class="config_option">tranche</span> parameter may result in a slight speed increase but at the expense of
-            increased memory usage. Decreasing the <span class="config_option">tranche</span> parameter will result in less
+            individually. The size of the group is set by the <span class="code">tranche</span> parameter. Increasing
+            the <span class="code">tranche</span> parameter may result in a slight speed increase but at the expense of
+            increased memory usage. Decreasing the <span class="code">tranche</span> parameter will result in less
             memory usage but at the expense of more frequent database access and likely increased time to import. The
-            default is <span class="config_option">250</span> which should suit most users. </p>
+            default is <span class="code">250</span> which should suit most users. </p>
 
         <h4 class='config_option' id='csv_UV'>UV_sensor</h4>
 
         <p><span class="code">weewx</span> records a <span class="code">None/NULL</span> for UV when no UV sensor is
             installed, whereas some weather station software records a value of 0 for UV index when there is no UV
-            sensor installed. The <span class="config_option">UV_sensor</span> parameter enables <span
+            sensor installed. The <span class="code">UV_sensor</span> parameter enables <span
                     class="code">wee_import</span> to distinguish between the case where a UV sensor is present and the
             UV index is 0 and the case where no UV sensor is present and UV index is 0. <span 
-                    class="config_option">UV_sensor = False</span> should be used when no UV sensor was used in producing 
-            the source data. <span class="config_option">UV_sensor = False</span> will result in <span 
+                    class="code">UV_sensor = False</span> should be used when no UV sensor was used in producing 
+            the source data. <span class="code">UV_sensor = False</span> will result in <span 
                     class="code">None/Null</span> being recorded in the <span class="code">weewx</span> archive field <span 
                     class="code">UV</span> irrespective of any UV observations in the source data. <span 
-                    class="config_option">UV_sensor = True</span> should be used when a UV sensor was used in producing 
-            the source data. <span class="config_option">UV_sensor = True</span> will result in UV observations in the 
+                    class="code">UV_sensor = True</span> should be used when a UV sensor was used in producing 
+            the source data. <span class="code">UV_sensor = True</span> will result in UV observations in the 
             source data being stored in the <span class="code">weewx</span> archive field <span class="code">UV</span>. 
-            The default is <span class="config_option">True</span>. </p>
+            The default is <span class="code">True</span>. </p>
 
         <h4 class='config_option' id='csv_solar'>solar_sensor</h4>
 
         <p><span class="code">weewx</span> records a <span class="code">None/NULL</span> when no solar radiation sensor
             is installed, whereas some weather station software records a value of 0 for solar radiation when there is
-            no solar radiation sensor installed. The <span class="config_option">solar_sensor</span> parameter enables <span
+            no solar radiation sensor installed. The <span class="code">solar_sensor</span> parameter enables <span
                     class="code">wee_import</span> to distinguish between the case where a solar radiation sensor is
             present and solar radiation is 0 and the case where no solar radiation sensor is present and solar radiation
-            is 0. <span class="config_option">solar_sensor = False</span> should be used when no solar radiation sensor was used
-            in producing the source data. <span class="config_option">solar_sensor = False</span> will result in <span
+            is 0. <span class="code">solar_sensor = False</span> should be used when no solar radiation sensor was used
+            in producing the source data. <span class="code">solar_sensor = False</span> will result in <span
                     class="code">None/Null</span> being recorded in the <span class="code">weewx</span> archive field
             <span class="code">radiation</span> irrespective of any solar radiation observations in the source data.
-            <span class="config_option">solar_sensor = True</span> should be used when a solar radiation sensor was used in
-            producing the source data. <span class="config_option">solar_sensor = True</span> will result in solar radiation
+            <span class="code">solar_sensor = True</span> should be used when a solar radiation sensor was used in
+            producing the source data. <span class="code">solar_sensor = True</span> will result in solar radiation
             observations in the source data being stored in the <span class="code">weewx</span> archive field <span
-                    class="code">radiation</span>. The default is <span class="config_option">True</span>. </p>
+                    class="code">radiation</span>. The default is <span class="code">True</span>. </p>
 
         <h4 class='config_option' id='csv_raw_datetime_format'>raw_datetime_format</h4>
 
         <p><span class="code">weewx</span> records each record with a unique unix epoch timestamp, whereas many weather
             station applications or web sources export observational data with a human readable date-time. This human
-            readable date-time is interpreted according to the format set by the <span class="config_option">raw_datetime_format</span>
+            readable date-time is interpreted according to the format set by the <span class="code">raw_datetime_format</span>
             option. This option consists of <em> <a
                     href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">Python
                 strptime() format codes</a> </em> and literal characters to represent the date-time data being imported.
             For example, if the source data uses the format 23 January 2015 15:34 then the appropriate setting for <span
-                    class="config_option">raw_datetime_format</span> would be <span class="code">%d %B %Y %H:%M</span>,
+                    class="code">raw_datetime_format</span> would be <span class="code">%d %B %Y %H:%M</span>,
             9:25:00 12/28/16 would use <span class="code">%H:%M:%S %m/%d/%y</span>. If the source data provides a unix
             epoch timestamp as the date-time field then the unix epoch timestamp is used directly and the <span
-                    class="config_option">raw_datetime_format</span> option is ignored. The default is <span
-                    class="config_option">%Y-%m-%d %H:%M:%S</span>. </p>
+                    class="code">raw_datetime_format</span> option is ignored. The default is <span
+                    class="code">%Y-%m-%d %H:%M:%S</span>. </p>
 
         <h4 class='config_option' id='csv_rain'>rain</h4>
 
@@ -1242,10 +1242,10 @@ the daily summaries using the wee_database utility.</pre>
         <ul>
             <li>If the imported rain data is a running total then <span class="code">wee_import</span> can derive the
                 <span class="code">weewx rain</span> field from successive totals. For this method use <span
-                        class="config_option">rain = cumulative</span>.
+                        class="code">rain = cumulative</span>.
             </li>
 
-            <li>If the imported rain data is a discrete value per date-time period then <span class="config_option">rain = discrete</span>
+            <li>If the imported rain data is a discrete value per date-time period then <span class="code">rain = discrete</span>
                 should be used.
             </li>
         </ul>
@@ -1255,7 +1255,7 @@ the daily summaries using the wee_database utility.</pre>
             <b>Note</b><br/><span class="code">wee_import</span> only supports cumulative rainfall data that resets on a
             midnight boundary, cumulative rainfall data that resets at some other time; e.g., 9am, is not supported. In
             such cases the rainfall data will need to be converted to either reset on a midnight boundary or a discrete
-            value per date-time period and <span class="config_option">rain = discrete</span> used. The former may be
+            value per date-time period and <span class="code">rain = discrete</span> used. The former may be
             possible by selecting another rainfall field (if available) in the source data, otherwise it will require
             manual manipulation of the source data. </p>
 
@@ -1270,14 +1270,14 @@ the daily summaries using the wee_database utility.</pre>
             imported wind direction values are accepted. Any value outside of this range is treated as there being no
             wind direction and is recorded as <span class="code">None/NULL</span>. Any value inside the range is
             normalised to the range 0 to 360 inclusive (e.g., -180 would be normalised to 180). The <span
-                    class="config_option">wind_direction</span> option consists of two comma separated numbers of the
-            format lower, upper where lower and upper are inclusive. The operation of the <span class="config_option">wind_direction</span>
+                    class="code">wind_direction</span> option consists of two comma separated numbers of the
+            format lower, upper where lower and upper are inclusive. The operation of the <span class="code">wind_direction</span>
             option is best illustrated through the following table: </p>
 
         <table class="indent" style="width:50%" summary="wind_direction operation">
             <tbody>
             <tr class="first_row">
-                <td><span class="config_option">wind_direction</span> option setting</td>
+                <td><span class="code">wind_direction</span> option setting</td>
                 <td>Source data wind direction value</td>
                 <td>Imported wind direction value</td>
             </tr>
@@ -1371,21 +1371,21 @@ the daily summaries using the wee_database utility.</pre>
             </tbody>
         </table>
 
-        <p>The default is <span class="config_option">0, 360</span>. </p>
+        <p>The default is <span class="code">0, 360</span>. </p>
 
         <h4 class='config_option' id='csv_fieldmap'>[[FieldMap]]</h4>
 
-        <p>The <span class='config_option'>[[FieldMap]]</span> stanza defines the mapping from the source data fields to
+        <p>The <span class='code'>[[FieldMap]]</span> stanza defines the mapping from the source data fields to
             <span class="code">weewx</span> archive fields. The map consists of one row per field using the format: </p>
 
     <pre class="tty">weewx_archive_field_name = csv_field_name, weewx_unit_name
 </pre>
 
-        <p>Where <span class="config_option">weewx_archive_field_name</span> is a database field name in the <span
-                class="code">weewx</span> archive table schema, <span class="config_option">csv_field_name</span> is the
-            name of a field from the CSV file and <span class="config_option">weewx_unit_name</span> is the <span
+        <p>Where <span class="code">weewx_archive_field_name</span> is a database field name in the <span
+                class="code">weewx</span> archive table schema, <span class="code">csv_field_name</span> is the
+            name of a field from the CSV file and <span class="code">weewx_unit_name</span> is the <span
                     class="code">weewx</span> unit name of the units used by <span
-                    class="config_option">csv_field_name</span>. This mapping allows <span
+                    class="code">csv_field_name</span>. This mapping allows <span
                     class="code">wee_import</span> to take a source data field, do the appropriate unit conversion and
             store the resulting value in the appropriate <span class="code">weewx</span> archive field. A mapping is not
             required for every <span class="code">weewx</span> archive field (e.g., the source may not provide inside
@@ -1398,7 +1398,7 @@ the daily summaries using the wee_database utility.</pre>
         <p class="note">
             <b>Note</b><br/>Any <span class="code">weewx</span> archive fields that are derived (e.g., <span
                 class="code">dewpoint</span>) and for which there is no field mapping may be calculated during import by
-            use of the <span class="config_option">calc_missing</span> option in the <span class="config_section">[CSV]</span>
+            use of the <span class="code">calc_missing</span> option in the <span class="config_section">[CSV]</span>
             section of the import configuration file. </p>
 
         <h3 class="config_section">[WU]</h3>
@@ -1417,15 +1417,15 @@ the daily summaries using the wee_database utility.</pre>
                 class="code">interval</span>) between successive observations is determined. This option is identical in
             operation to the CSV <em><a href="#csv_interval">interval</a></em> option but applies to Weather Underground
             imports only. As Weather Underground often skips observation records when responding to a daily history
-            query, the use of <span class="config_option">interval = derive</span> may give incorrect or inconsistent
-            interval values. Better results may be obtained by using <span class="config_option">interval = conf</span>
+            query, the use of <span class="code">interval = derive</span> may give incorrect or inconsistent
+            interval values. Better results may be obtained by using <span class="code">interval = conf</span>
             if the current <span class="code">weewx</span> installation has the same <span
                     class="code">archive_interval</span> as the Weather Underground data, or by using <span
-                    class="config_option">interval = x</span> where <span class="config_option">x</span> is the time
+                    class="code">interval = x</span> where <span class="code">x</span> is the time
             interval in minutes used to upload the Weather Underground data. The most appropriate setting will depend on
             the completeness and (time) accuracy of the Weather Underground data being imported. </p>
 
-        <p>The default is <span class="config_option">derive</span>.</p>
+        <p>The default is <span class="code">derive</span>.</p>
 
         <h4 class='config_option' id='wu_qc'>qc</h4>
 
@@ -1434,26 +1434,26 @@ the daily summaries using the wee_database utility.</pre>
             only. As Weather Underground imports at times contain nonsense values, particularly for fields for which no
             data was uploaded to Weather Underground by the PWS, the use of quality control checks on imported data can
             prevent these nonsense values from being imported and contaminating the <span class="code">weewx</span>
-            database. The default is <span class="config_option">True</span>. </p>
+            database. The default is <span class="code">True</span>. </p>
 
         <h4 class='config_option' id='wu_calc_missing'>calc_missing</h4>
 
         <p>Determines whether any missing derived observations will be calculated from the imported data. This option is
             identical in operation to the CSV <em><a href="#csv_calc_missing">calc_missing</a></em> option but applies
-            to Weather Underground imports only. The default is <span class="config_option">True</span>. </p>
+            to Weather Underground imports only. The default is <span class="code">True</span>. </p>
 
         <h4 class='config_option' id='wu_tranche'>tranche</h4>
 
         <p>The number of records written to the <span class="code">weewx</span> database in each transaction. This
             option is identical in operation to the CSV <em><a href="#csv_tranche">tranche</a></em> option but applies
-            to Weather Underground imports only. The default is <span class="config_option">250</span> which should suit most
+            to Weather Underground imports only. The default is <span class="code">250</span> which should suit most
             users. </p>
 
         <h4 class='config_option' id='wu_wind_direction'>wind_direction</h4>
 
         <p>Determines the range of acceptable wind direction values in degrees. This option is identical in operation to
             the CSV <em><a href="#csv_wind_direction">wind_direction</a></em> option but applies to Weather Underground
-            imports only. The default is <span class="config_option">0, 360</span> which should suit most users. </p>
+            imports only. The default is <span class="code">0, 360</span> which should suit most users. </p>
 
         <h3 class="config_section">[Cumulus]</h3>
 
@@ -1471,16 +1471,16 @@ the daily summaries using the wee_database utility.</pre>
                 class="code">interval</span>) between successive observations is determined. This option is identical in
             operation to the CSV <em><a href="#csv_interval">interval</a></em> option but applies to Cumulus monthly log
             file imports only. As Cumulus monthly log files can, at times, have missing entries, the use of <span
-                    class="config_option">interval = derive</span> may give incorrect or inconsistent interval values.
-            Better results may be obtained by using <span class="config_option">interval = conf</span> if the <span
-                    class="config_option">archive_interval</span> for the current <span class="code">weewx</span>
+                    class="code">interval = derive</span> may give incorrect or inconsistent interval values.
+            Better results may be obtained by using <span class="code">interval = conf</span> if the <span
+                    class="code">archive_interval</span> for the current <span class="code">weewx</span>
             installation is the same as the Cumulus 'data log interval' setting used to generate the Cumulus monthly log
-            files, or by using <span class="config_option">interval = x</span> where <span
-                    class="config_option">x</span> is the time interval in minutes used as the Cumulus 'data log
+            files, or by using <span class="code">interval = x</span> where <span
+                    class="code">x</span> is the time interval in minutes used as the Cumulus 'data log
             interval' setting. The most appropriate setting will depend on the completeness and (time) accuracy of the
             Cumulus data being imported. </p>
 
-        <p>The default is <span class="config_option">derive</span>.</p>
+        <p>The default is <span class="code">derive</span>.</p>
 
         <h4 class='config_option' id='cumulus_qc'>qc</h4>
 
@@ -1492,27 +1492,27 @@ the daily summaries using the wee_database utility.</pre>
 
         <p>Determines whether any missing derived observations will be calculated from the imported data. This option is
             identical in operation to the CSV <em><a href="#csv_calc_missing">calc_missing</a></em> option but applies
-            to Cumulus imports only. The default is <span class="config_option">True</span>. </p>
+            to Cumulus imports only. The default is <span class="code">True</span>. </p>
 
         <h4 class='config_option' id='cumulus_delimiter'>delimiter</h4>
 
         <p>The character used as the field delimiter in the Cumulus monthly log file. A comma is frequently used but it
             may be another character depending on the settings on the machine that produced the Cumulus monthly log
-            files. This parameter must be included in quotation marks. Default is <span class="config_option">','</span>.
+            files. This parameter must be included in quotation marks. Default is <span class="code">','</span>.
         </p>
 
         <h4 class='config_option' id='cumulus_decimal'>decimal</h4>
 
         <p>The character used as the decimal point in the Cumulus monthly log files A full stop is frequently used but
             it may be another character depending on the settings on the machine that produced the Cumulus monthly log
-            files. This parameter must be included in quotation marks. Default is <span class="config_option">'.'</span>.
+            files. This parameter must be included in quotation marks. Default is <span class="code">'.'</span>.
         </p>
 
         <h4 class='config_option' id='cumulus_tranche'>tranche</h4>
 
         <p>The number of records are written to the <span class="code">weewx</span> database in each transaction. This
             option is identical in operation to the CSV <em><a href="#csv_tranche">tranche</a></em> option but applies
-            to Cumulus monthly log file imports only. The default is <span class="config_option">250</span> which should
+            to Cumulus monthly log file imports only. The default is <span class="code">250</span> which should
             suit most users. </p>
 
         <h4 class='config_option' id='cumulus_UV'>UV_sensor</h4>
@@ -1520,18 +1520,18 @@ the daily summaries using the wee_database utility.</pre>
         <p>Enables <span class="code">wee_import</span> to distinguish between the case where a UV sensor is present and 
             the UV index is 0 and the case where no UV sensor is present and UV index is 0. This option is identical in 
             operation to the CSV <em><a href="#csv_UV">UV_sensor</a></em> option but applies to Cumulus monthly log file 
-            imports only. The default is <span class="config_option">True</span>. </p>
+            imports only. The default is <span class="code">True</span>. </p>
 
         <h4 class='config_option' id='cumulus_solar'>solar_sensor</h4>
 
         <p>Enables <span class="code">wee_import</span> to distinguish between the case where a solar radiation sensor 
             is present and the solar radiation is 0 and the case where no solar radiation sensor is present and solar 
             radiation is 0. This option is identical in operation to the CSV <em><a href="#csv_solar">solar_sensor</a></em>
-            option but applies to Cumulus monthly log file imports only. The default is <span class="config_option">True</span>. </p>
+            option but applies to Cumulus monthly log file imports only. The default is <span class="code">True</span>. </p>
 
         <h4 class='config_option' id='cumulus_units'>[[Units]]</h4>
 
-        <p>The <span class="config_option">[[Units]]</span> stanza defines the units used in the Cumulus monthly log
+        <p>The <span class="code">[[Units]]</span> stanza defines the units used in the Cumulus monthly log
             files. Units settings are required for <span class="code">temperature</span>, <span
                     class="code">pressure</span>, <span class="code">rain</span> and <span class="code">speed</span>.
             The format for each setting is: </p>
@@ -1598,7 +1598,7 @@ the daily summaries using the wee_database utility.</pre>
             archive field to be populated. </p>
 
         <p class="note">
-            <b>Note</b><br/>The use of the <span class="config_option"><a
+            <b>Note</b><br/>The use of the <span class="code"><a
                 href="#csv_calc_missing">calc_missing</a></span> option in the import configuration file may result in a
             number of derived fields being calculated from the imported data. If these derived fields exist in the
             in-use database schema they will be saved to the database as well. </p>
@@ -2489,7 +2489,7 @@ Options:
 
         <p>The <span class="code">wunderfixer</span> options are described in more detail below:</p>
 
-        <h3>Option <span class="config_option" id="wunderfixer_config">--config</span></h3>
+        <h3>Option <span class="code" id="wunderfixer_config">--config</span></h3>
 
         <p>The utility is pretty good at "guessing" where your configuration file <span class="code">weewx.conf</span>
             is, but if you've done an unusual install, you may have to tell it explicitly. You can do this by using the
@@ -2499,7 +2499,7 @@ Options:
         <pre class="tty cmd">wunderfixer --config=/this/folder/weewx.conf
 </pre>
 
-        <h3>Option <span class="config_option" id="wunderfixer_binding">--binding</span></h3>
+        <h3>Option <span class="code" id="wunderfixer_binding">--binding</span></h3>
 
         <p>Specifies the data binding to be used as the source of data for missing records to be published to Weather 
             Underground. Default is <span class="code">wx_binding</span>. The <span 
@@ -2508,7 +2508,7 @@ Options:
 
         <pre class="tty cmd">wunderfixer --binding=another_binding</pre>
 
-        <h3>Option <span class="config_option" id="wunderfixer_station">--station</span></h3>
+        <h3>Option <span class="code" id="wunderfixer_station">--station</span></h3>
 
         <p>Optional weather station ID of the Weather Underground PWS to be checked. The default is to use the  station 
             specified in the <a href="usersguide.htm#[[Wunderground]]">[[StdRESTful][[Wunderground]]</a> section of <span 
@@ -2518,7 +2518,7 @@ Options:
 
         <pre class="tty cmd">wunderfixer --station=AB123456789</pre>
 
-        <h3>Option <span class="config_option" id="wunderfixer_password">--password</span></h3>
+        <h3>Option <span class="code" id="wunderfixer_password">--password</span></h3>
 
         <p>Optional password for the weather station ID to be checked. The default is to use the password specified in 
             the <a href="usersguide.htm#[[Wunderground]]">[[StdRESTful][[Wunderground]]</a> section of <span class="code">--config</span>
@@ -2527,7 +2527,7 @@ Options:
 
         <pre class="tty cmd">wunderfixer --station=AB123456789 --password=hardtoguess</pre>
 
-        <h3>Option <span class="config_option" id="wunderfixer_date">--date</span></h3>
+        <h3>Option <span class="code" id="wunderfixer_date">--date</span></h3>
 
         <p>Optional date to check. By default <span class="code">wunderfixer</span> checks the current date according to 
             the system date-time. This feature is useful if running <span class="code">wunderfixer</span> as a cron job. 
@@ -2537,7 +2537,7 @@ Options:
 
         <pre class="tty cmd">wunderfixer --date=2016-04-20</pre>
 
-        <h3>Option <span class="config_option" id="wunderfixer_epsilon">--epsilon</span></h3>
+        <h3>Option <span class="code" id="wunderfixer_epsilon">--epsilon</span></h3>
 
         <p>At times Weather Underground records may have a date-time that is slightly different to the timestamp of the 
             record as recorded by <span class="code">weewx</span>. The <span class="code">--epsilon</span> 
@@ -2548,7 +2548,7 @@ Options:
 
         <pre class="tty cmd">wunderfixer --epsilon=60</pre>
 
-        <h3>Option <span class="config_option" id="wunderfixer_verbose">--verbose</span></h3>
+        <h3>Option <span class="code" id="wunderfixer_verbose">--verbose</span></h3>
 
         <p>Use of the <span class="code">--verbose</span> option results in <span 
                     class="code">wunderfixer</span> displaying useful additional information during execution. The <span 
@@ -2556,7 +2556,7 @@ Options:
                     class="code">wunderfixer</span> is run as a cron job.
         </p>
 
-        <h3>Option <span class="config_option" id="wunderfixer_log">--log</span></h3>
+        <h3>Option <span class="code" id="wunderfixer_log">--log</span></h3>
 
         <p>Control the <span class="code">wunderfixer</span> log output. The default is no logging. If <span 
                     class="code">--log=weewx</span> is used then <span class="code">wunderfixer</span> logs to 
@@ -2567,14 +2567,14 @@ Options:
 
         <pre class="tty cmd">wunderfixer --log=weewx</pre>
 
-        <h3>Option <span class="config_option" id="wunderfixer_test">--test</span></h3>
+        <h3>Option <span class="code" id="wunderfixer_test">--test</span></h3>
 
         <p>The <span class="code">--test</span> option will cause <span 
                     class="code">wunderfixer</span> to do everything except upload any missing data to Weather 
             Underground. Summary information on any identified missing data will be displayed.
         </p>
 
-        <h3>Option <span class="config_option" id="wunderfixer_query">--query</span></h3>
+        <h3>Option <span class="code" id="wunderfixer_query">--query</span></h3>
 
         <p>The <span class="code">--query</span> option will cause
             <span class="code">wunderfixer</span> to seek user confirmation
