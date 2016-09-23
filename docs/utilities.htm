@@ -884,7 +884,7 @@ Finished installing extension '/var/tmp/weewx-cmon-0.7.tgz'</pre>
             </li>
         </ol>
 
-        <p>Now you can use the <span class="code">--list<span> action to
+        <p>Now you can use the <span class="code">--list</span> action to
             see which extensions are installed:</p>
 
     <pre class="tty"><span class="cmd">wee_extension --list</span>
@@ -2455,12 +2455,6 @@ Or, switch to weewx!
 Be sure to use the --test switch first to see whether you like what it
 proposes !!
 
-       -->> Usage of this utility is at YOUR RISK ! <<--
-       -->>  The author assumes no responsibility   <<--
-       -->>      whatsoever for any problems        <<--
-       -->>      or corruption of your data !       <<--
-
-
 Options:
   -h, --help            show this help message and exit
   -c CONFIG_PATH, --config=CONFIG_PATH
@@ -2781,7 +2775,7 @@ Missing records:
                             href="usersguide.htm#[[Wunderground]]">[[StdRESTful][[Wunderground]]</a> section of <span 
                             class="code">weewx.conf</span>. <span class="code">wunderfixer</span> log output will be sent 
                     to the log file used by <span class="code">weewx</span>. The <span 
-                            class="code">> /dev/null 2>&1</span> portion of the command suppresses any <span 
+                            class="code">&gt; /dev/null 2>&amp;1</span> portion of the command suppresses any <span 
                             class="code">wunderfixer</span> screen output by redirecting any screen and error output to 
                     the null device.
                 </p>
