@@ -12,6 +12,15 @@
 
 <body>
 
+<!-- please use the following nomenclature for consistency:         -->
+<!-- command - something entered at a unix or sql prompt            -->
+<!--            e.g., wee_extension --import=basic --no-prompt      -->
+<!--                  select * from archive;                        -->
+<!-- action - specifier to a command that tells it to do something  -->
+<!--            e.g., --import=basic                                -->
+<!-- option - specifier to a command that affects action behavior   -->
+<!--            e.g., --no-prompt                                   -->
+
 <div class="sidebar">
     <div class="doclist">
         <a href="usersguide.htm">User's Guide</a><br/>
@@ -174,7 +183,7 @@ Options:
         <pre class="tty cmd">wee_config --config=/home/weewx/weewx.conf</pre>
 
         <h3 class="config_option">--list-drivers</h3>
-        <p>Use this command to list which device drivers are available on your
+        <p>Use this action to list which device drivers are available on your
             system. For example:</p>
 
         <pre class="tty cmd">wee_config --list-drivers</pre>
@@ -203,8 +212,8 @@ Module name              Driver name    Version  Status
 
         <h3 class="config_option">--reconfigure</h3>
 
-        <p>This command is used to change station parameters, including the
-            device driver.  The reconfigure command will prompt for all of
+        <p>This action is used to change station parameters, including the
+            device driver.  The reconfigure action will prompt for all of
             the required station parameters.</p>
 
         <pre class="tty cmd">wee_config --reconfigure</pre>
@@ -223,7 +232,7 @@ Module name              Driver name    Version  Status
 
         <p>Say that you originally installed <span class="code">weewx</span>
             with the Simulator. Now you've bought a Davis Vantage and you want
-            to switch to that. Here's how you do it. First, use the command
+            to switch to that. Here's how you do it. First, use the action
             <span class="code">--list-drivers</span> to see which drivers
             are installed.</p>
 
@@ -247,7 +256,7 @@ Module name              Driver name    Version  Status
 
         <p>
             From the list, you will find that the name of the driver for the Vantage is <span class="code">weewx.drivers.vantage</span>.
-            Now run <span class="code">wee_config</span>, with the <span class="code">--reconfigure</span> command,
+            Now run <span class="code">wee_config</span>, with the <span class="code">--reconfigure</span> action,
             specifying that driver: </p>
         <pre class="tty cmd">wee_config --reconfigure --driver=weewx.drivers.vantage</pre>
 
@@ -382,11 +391,11 @@ permissions for the requested operation.
         <h2><span id='wee_database_details'>Actions and options</span></h2>
 
         <h3 class="config_option">--create-archive</h3>
-        <p>If the database does not already exist, this command will create it
+        <p>If the database does not already exist, this action will create it
             and initialize it with the schema specified in the
             <span class="code">weewx</span> configuration file.
             Because <span class="code">weewx</span> does this
-            automatically, this command is rarely needed.</p>
+            automatically, this action is rarely needed.</p>
 
         <pre class="tty cmd">wee_database --create-archive</pre>
 
@@ -394,18 +403,18 @@ permissions for the requested operation.
         <p>In addition to the regular archive data, every weewx database also includes a daily summary table for each
             observation type. Because there can be dozens of observation types, there can be dozens of these daily
             summaries. It doesn't happen very often, but there can be occasions when it's necessary to drop them all and
-            then rebuild them. Dropping them by hand would be very tedious! This command does them all at once.</p>
+            then rebuild them. Dropping them by hand would be very tedious! This action does them all at once.</p>
 
         <pre class="tty cmd">wee_database --drop-daily</pre>
 
         <h3 class="config_option">--backfill-daily</h3>
-        <p>This command is the inverse of option <span class="code">--drop-daily</span> in that it rebuilds the
+        <p>This action is the inverse of option <span class="code">--drop-daily</span> in that it rebuilds the
             daily summaries from the archive data.</p>
 
         <pre class="tty cmd">wee_database --backfill-daily</pre>
 
         <h3 class="config_option">--reconfigure</h3>
-        <p>This command is useful for changing the schema in your database.</p>
+        <p>This action is useful for changing the schema in your database.</p>
 
         <p>It creates a new database with the same name as the old, except with the suffix <span
                 class="code">_new</span> attached at the end (nominally, <span class="code">weewx.sdb_new</span> if you
@@ -419,14 +428,14 @@ permissions for the requested operation.
         <h3 class="config_option">--string-check</h3>
         <p>Normally, all entries in the archive database are pure numbers. However, some visual SQLite database editors
             use a null string instead of a null value when deleting entries. These nulls strings can crash weewx. This
-            command checks for them and, if the option <span class="code">--fix</span> is specified, substitutes a true
+            action checks for them and, if the option <span class="code">--fix</span> is specified, substitutes a true
             null value if it finds any.</p>
 
         <pre class="tty cmd">wee_database --string-check
 wee_database --string-check --fix</pre>
 
         <h3 class="config_option">--transfer</h3>
-        <p>This command is useful for moving your database from one type of database to another, such as from SQLite to
+        <p>This action is useful for moving your database from one type of database to another, such as from SQLite to
             MySQL. To use it, you must have two bindings specified in your <span class="code">weewx.conf</span>
             configuration file. One will serve as the source, the other as the destination. Specify the source binding
             with option <span class="code">--binding</span>, the destination binding with option <span class="code">--dest-binding</span>.
@@ -483,11 +492,11 @@ should thoroughly check the generated output for personal/private information
 before posting the information publicly.
 </pre>
 
-        <h2><span id='wee_debug_details'>Commands options</span></h2>
+        <h2><span id='wee_debug_details'>Actions and options</span></h2>
 
         <h3 class="config_option">--info</h3>
 
-        <p>This command generates a debug report which can be sent off for remote debugging.</p>
+        <p>This action generates a debug report which can be sent off for remote debugging.</p>
 
         <pre class="tty cmd">wee_debug --info</pre>
 
@@ -722,7 +731,7 @@ wee_debug report successfully generated
             to display. Make sure it's set correctly before attempting to use this utility.</p>
 
         <p>Because <span class="code">wee_device</span> uses hardware-specific code, its options are different for every
-            station type. You should run it with the <span class="code">--help</span> command to see how to use it for
+            station type. You should run it with <span class="code">--help</span> to see how to use it for
             your specific station:</p>
 
         <p class="tty cmd">wee_device --help</p>
@@ -804,21 +813,21 @@ Options:
         <h2><span id='wee_extensions_details'>Actions and options</span></h2>
 
         <h3 class="config_option">--install</h3>
-        <p>Use this command to install an extension.  You must specify the
+        <p>Use this action to install an extension.  You must specify the
             path to a .zip archive, a .tgz/.tar.gz archive, or a directory.</p>
 
         <pre class='tty cmd'>wee_extension --install extensions/basic
 wee_extension --install basic.tar.gz</pre>
 
         <h3 class="config_option">--list</h3>
-        <p>This command will list all the extensions that you have
+        <p>This action will list all the extensions that you have
             installed.</p>
 
         <pre class='tty cmd'>wee_extension --list</pre>
 
         <h3 class="config_option">--uninstall</h3>
 
-        <p>Use this command to remove an extension.  You must specify the
+        <p>Use this action to remove an extension.  You must specify the
             name of the extension, without any version number or zip/tgz
             extension.</p>
 
@@ -875,7 +884,7 @@ Finished installing extension '/var/tmp/weewx-cmon-0.7.tgz'</pre>
             </li>
         </ol>
 
-        <p>Now you can use the <span class="code">--list<span> command to
+        <p>Now you can use the <span class="code">--list<span> action to
             see which extensions are installed:</p>
 
     <pre class="tty"><span class="cmd">wee_extension --list</span>
@@ -884,7 +893,7 @@ cmon             0.7      Collect and display computer health indicators</pre>
         <p>You can see that it listed the extension we just installed, <span class="code">cmon</span>.</p>
 
         <p>You can remove an extension using the
-            <span class="code">--uninstall</span> command:</p>
+            <span class="code">--uninstall</span> action:</p>
 
     <pre class="tty"><span class="cmd">wee_extension --uninstall=cmon
 wee_extension --list</span>
@@ -957,7 +966,7 @@ the daily summaries using the wee_database utility.</pre>
 
         <h2><span id='wee_import_details'>Actions and options</span></h2>
 
-        <p>The <span class="code">wee_import</span> commands and options are described in more detail below:</p>
+        <p>The <span class="code">wee_import</span> actions and options are described in more detail below:</p>
 
         <h3><span class="config_option">--config</span></h3>
 
