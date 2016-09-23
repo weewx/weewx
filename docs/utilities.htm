@@ -157,7 +157,7 @@ Options:
   --debug               Show diagnostic information while running.
 </pre>
 
-        <h2><span id='common_options'>Commands and options</span></h2>
+        <h2><span id='wee_config_details'>Actions and options</span></h2>
 
         <h3 class="config_option">--config</h3>
         <p>
@@ -379,7 +379,7 @@ If you are using a MySQL database it is assumed that you have the appropriate
 permissions for the requested operation.
 </pre>
 
-        <h2><span id='common_options'>Commands and options</span></h2>
+        <h2><span id='wee_database_details'>Actions and options</span></h2>
 
         <h3 class="config_option">--create-archive</h3>
         <p>If the database does not already exist, this command will create it
@@ -483,7 +483,7 @@ should thoroughly check the generated output for personal/private information
 before posting the information publicly.
 </pre>
 
-        <h2><span id='common_options'>Commands options</span></h2>
+        <h2><span id='wee_debug_details'>Commands options</span></h2>
 
         <h3 class="config_option">--info</h3>
 
@@ -801,7 +801,7 @@ Options:
   --dry-run             Print what would happen but do not do it.
   --verbosity=N         How much status to display, 0-3</pre>
 
-        <h2><span id='common_options'>Commands and options</span></h2>
+        <h2><span id='wee_extensions_details'>Actions and options</span></h2>
 
         <h3 class="config_option">--install</h3>
         <p>Use this command to install an extension.  You must specify the
@@ -955,7 +955,7 @@ archive. Daily summaries are updated as each archive record is
 imported so there should be no need to separately drop and rebuild
 the daily summaries using the wee_database utility.</pre>
 
-        <h2><span id='common_options'>Commands and options</span></h2>
+        <h2><span id='wee_import_details'>Actions and options</span></h2>
 
         <p>The <span class="code">wee_import</span> commands and options are described in more detail below:</p>
 
@@ -2482,7 +2482,7 @@ Options:
   -q, --query           For each record, query the user before making a
                         change.</pre>
 
-        <h2><span id='common_options'>Commands and options</span></h2>
+        <h2><span id='wunderfixer_details'>Actions and options</span></h2>
 
         <p>The <span class="code">wunderfixer</span> options are described in more detail below:</p>
 
@@ -2587,7 +2587,7 @@ Options:
         </p>
 
         
-        <h2 id='wunderfixer_cmd_line'>Running directly</h2>
+        <h2 id='wunderfixer_direct'>Running directly</h2>
 
         <p><span class="code">Wunderfixer</span> can be run directly to publish missing
             data for a single day. This may be useful if you wish to recover from an outage or if for some other reason 
@@ -2702,7 +2702,7 @@ Missing records:
         
         <ol>
             <li>Ensure that <span class="code">wunderfixer</span> operates as
-                intended when <a href="#wunderfixer_cmd_line">run directly</a>.
+                intended when <a href="#wunderfixer_direct">run directly</a>.
                 To ensure <span class="code">wunderfixer</span> runs correctly
                 you must publish data (i.e, run
                 <span class="code">wunderfixer</span> without the
