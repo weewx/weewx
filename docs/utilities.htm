@@ -168,7 +168,7 @@ Options:
 
         <h2><span id='wee_config_details'>Actions and options</span></h2>
 
-        <h3 class="config_option">--config</h3>
+        <h3>Option <span class="code">--config</span></h3>
         <p>
             The utility is pretty good about "guessing" where the configuration
             file <span class="code">weewx.conf</span> is, but if you've done
@@ -182,7 +182,7 @@ Options:
 
         <pre class="tty cmd">wee_config --config=/home/weewx/weewx.conf</pre>
 
-        <h3 class="config_option">--list-drivers</h3>
+        <h3>Action <span class="code">--list-drivers</span></h3>
         <p>Use this action to list which device drivers are available on your
             system. For example:</p>
 
@@ -210,7 +210,7 @@ Module name              Driver name    Version  Status
         <p>The column <span class="code">Status</span> can give you some indication of whether you are missing any
             modules to use this driver. It's not completely accurate, but works for most drivers.</p>
 
-        <h3 class="config_option">--reconfigure</h3>
+        <h3>Action <span class="code">--reconfigure</span></h3>
 
         <p>This action is used to change station parameters, including the
             device driver.  The reconfigure action will prompt for all of
@@ -390,7 +390,7 @@ permissions for the requested operation.
 
         <h2><span id='wee_database_details'>Actions and options</span></h2>
 
-        <h3 class="config_option">--create-archive</h3>
+        <h3>Action <span class="code">--create-archive</span></h3>
         <p>If the database does not already exist, this action will create it
             and initialize it with the schema specified in the
             <span class="code">weewx</span> configuration file.
@@ -399,7 +399,7 @@ permissions for the requested operation.
 
         <pre class="tty cmd">wee_database --create-archive</pre>
 
-        <h3 class="config_option">--drop-daily</h3>
+        <h3>Action <span class="code">--drop-daily</span></h3>
         <p>In addition to the regular archive data, every weewx database also includes a daily summary table for each
             observation type. Because there can be dozens of observation types, there can be dozens of these daily
             summaries. It doesn't happen very often, but there can be occasions when it's necessary to drop them all and
@@ -407,13 +407,13 @@ permissions for the requested operation.
 
         <pre class="tty cmd">wee_database --drop-daily</pre>
 
-        <h3 class="config_option">--backfill-daily</h3>
+        <h3>Action <span class="config_option">--backfill-daily</span></h3>
         <p>This action is the inverse of option <span class="code">--drop-daily</span> in that it rebuilds the
             daily summaries from the archive data.</p>
 
         <pre class="tty cmd">wee_database --backfill-daily</pre>
 
-        <h3 class="config_option">--reconfigure</h3>
+        <h3>Action <span class="config_option">--reconfigure</span></h3>
         <p>This action is useful for changing the schema in your database.</p>
 
         <p>It creates a new database with the same name as the old, except with the suffix <span
@@ -425,7 +425,7 @@ permissions for the requested operation.
         <p>See the section <a href="customizing.htm#Adding_a_new_observation_type">Adding a new observation type</a> in the Customization Guide
             for step-by-step instructions that use this option.</p>
 
-        <h3 class="config_option">--string-check</h3>
+        <h3>Action <span class="config_option">--string-check</span></h3>
         <p>Normally, all entries in the archive database are pure numbers. However, some visual SQLite database editors
             use a null string instead of a null value when deleting entries. These nulls strings can crash weewx. This
             action checks for them and, if the option <span class="code">--fix</span> is specified, substitutes a true
@@ -434,7 +434,7 @@ permissions for the requested operation.
         <pre class="tty cmd">wee_database --string-check
 wee_database --string-check --fix</pre>
 
-        <h3 class="config_option">--transfer</h3>
+        <h3>Action <span class="config_option">--transfer</span></h3>
         <p>This action is useful for moving your database from one type of database to another, such as from SQLite to
             MySQL. To use it, you must have two bindings specified in your <span class="code">weewx.conf</span>
             configuration file. One will serve as the source, the other as the destination. Specify the source binding
@@ -494,7 +494,7 @@ before posting the information publicly.
 
         <h2><span id='wee_debug_details'>Actions and options</span></h2>
 
-        <h3 class="config_option">--info</h3>
+        <h3>Action <span class="config_option">--info</span></h3>
 
         <p>This action generates a debug report which can be sent off for remote debugging.</p>
 
@@ -625,7 +625,7 @@ Parsed and obfuscated weewx.conf
 wee_debug report successfully generated
 </pre>
 
-        <h3 class="config_option">--output</h3>
+        <h3>Option <span class="config_option">--output</span></h3>
 
         <p>By default, <span class="code">wee_debug</span> sends its output to
             the system "standard output" (<span class="code">stdout</span>)
@@ -641,7 +641,7 @@ wee_debug report successfully generated
 
         <pre class="tty cmd">wee_debug --info --output /home/weewx/another.debug</pre>
 
-        <h3 class="config_option">--verbosity</h3>
+        <h3>Option <span class="config_option">--verbosity</span></h3>
 
         <p>The amount of information included in the
             <span class="code">wee_debug</span> output can be changed using the
@@ -812,20 +812,20 @@ Options:
 
         <h2><span id='wee_extensions_details'>Actions and options</span></h2>
 
-        <h3 class="config_option">--install</h3>
+        <h3>Action <span class="config_option">--install</span></h3>
         <p>Use this action to install an extension.  You must specify the
             path to a .zip archive, a .tgz/.tar.gz archive, or a directory.</p>
 
         <pre class='tty cmd'>wee_extension --install extensions/basic
 wee_extension --install basic.tar.gz</pre>
 
-        <h3 class="config_option">--list</h3>
+        <h3>Action <span class="config_option">--list</span></h3>
         <p>This action will list all the extensions that you have
             installed.</p>
 
         <pre class='tty cmd'>wee_extension --list</pre>
 
-        <h3 class="config_option">--uninstall</h3>
+        <h3>Action <span class="config_option">--uninstall</span></h3>
 
         <p>Use this action to remove an extension.  You must specify the
             name of the extension, without any version number or zip/tgz
@@ -968,7 +968,7 @@ the daily summaries using the wee_database utility.</pre>
 
         <p>The <span class="code">wee_import</span> actions and options are described in more detail below:</p>
 
-        <h3><span class="config_option">--config</span></h3>
+        <h3>Option <span class="config_option">--config</span></h3>
 
         <p>The utility is pretty good at "guessing" where your configuration file <span class="code">weewx.conf</span>
             is, but if you've done an unusual install, you may have to tell it explicitly. You can do this by using the
@@ -977,7 +977,7 @@ the daily summaries using the wee_database utility.</pre>
     <pre class="tty cmd">wee_import --config=/this/folder/weewx.conf --import-config=/folder/import.conf
 </pre>
 
-        <h3><span class="config_option">--import-config</span></h3>
+        <h3>Option <span class="config_option">--import-config</span></h3>
 
         <p><span class="code">wee_import</span> uses a secondary configuration file to store various import parameters.
             The <span class="config_option">--import-config</span> option is mandatory for all imports.
@@ -990,7 +990,7 @@ the daily summaries using the wee_database utility.</pre>
     <pre class="tty cmd">wee_import --import-config=/folder/import.conf
 </pre>
 
-        <h3><span class="config_option">--dry-run</span></h3>
+        <h3>Option <span class="config_option">--dry-run</span></h3>
 
         <p>The inclusion of the <span class="config_option">--dry-run</span> option will cause the import
             to proceed but no actual data will be saved to the database. This is a useful option to use when first
@@ -999,7 +999,7 @@ the daily summaries using the wee_database utility.</pre>
     <pre class="tty cmd">wee_import --import-config=/folder/import.conf --dry-run
 </pre>
 
-        <h3><span class="config_option">--date</span></h3>
+        <h3>Option <span class="config_option">--date</span></h3>
 
         <p>The date-time range of records to be imported can be specified by use of the <span class="config_option">--date</span>
             option. The <span class="config_option">--date</span> option can specify a single
@@ -1050,7 +1050,7 @@ the daily summaries using the wee_database utility.</pre>
             is to import all available records when importing from a CSV or Cumulus source or to import today's records
             only when importing from Weather Underground. </p>
 
-        <h3><span class="config_option">--log</span></h3>
+        <h3>Option <span class="config_option">--log</span></h3>
 
         <p>The <span class="config_option">--log</span> option controls the <span class="code">wee_import</span> log
             output. Omitting the option will result in <span class="code">wee_import</span> log output being sent to the
@@ -1063,7 +1063,7 @@ the daily summaries using the wee_database utility.</pre>
     <pre class="tty cmd">wee_import --import-config=/folder/import.conf --log=-
 </pre>
 
-        <h3><span class="config_option">--verbose</span></h3>
+        <h3>Option <span class="config_option">--verbose</span></h3>
 
         <p>Inclusion of the <span class="config_option">--verbose</span> option will cause additional
             information to be printed during <span class="code">wee_import</span> execution.</p>
@@ -2495,7 +2495,7 @@ Options:
 
         <p>The <span class="code">wunderfixer</span> options are described in more detail below:</p>
 
-        <h3><span class="config_option" id="wunderfixer_config">--config</span></h3>
+        <h3>Option <span class="config_option" id="wunderfixer_config">--config</span></h3>
 
         <p>The utility is pretty good at "guessing" where your configuration file <span class="code">weewx.conf</span>
             is, but if you've done an unusual install, you may have to tell it explicitly. You can do this by using the
@@ -2505,7 +2505,7 @@ Options:
         <pre class="tty cmd">wunderfixer --config=/this/folder/weewx.conf
 </pre>
 
-        <h3><span class="config_option" id="wunderfixer_binding">--binding</span></h3>
+        <h3>Option <span class="config_option" id="wunderfixer_binding">--binding</span></h3>
 
         <p>Specifies the data binding to be used as the source of data for missing records to be published to Weather 
             Underground. Default is <span class="code">wx_binding</span>. The <span 
@@ -2514,7 +2514,7 @@ Options:
 
         <pre class="tty cmd">wunderfixer --binding=another_binding</pre>
 
-        <h3><span class="config_option" id="wunderfixer_station">--station</span></h3>
+        <h3>Option <span class="config_option" id="wunderfixer_station">--station</span></h3>
 
         <p>Optional weather station ID of the Weather Underground PWS to be checked. The default is to use the  station 
             specified in the <a href="usersguide.htm#[[Wunderground]]">[[StdRESTful][[Wunderground]]</a> section of <span 
@@ -2524,7 +2524,7 @@ Options:
 
         <pre class="tty cmd">wunderfixer --station=AB123456789</pre>
 
-        <h3><span class="config_option" id="wunderfixer_password">--password</span></h3>
+        <h3>Option <span class="config_option" id="wunderfixer_password">--password</span></h3>
 
         <p>Optional password for the weather station ID to be checked. The default is to use the password specified in 
             the <a href="usersguide.htm#[[Wunderground]]">[[StdRESTful][[Wunderground]]</a> section of <span class="code">--config</span>
@@ -2533,7 +2533,7 @@ Options:
 
         <pre class="tty cmd">wunderfixer --station=AB123456789 --password=hardtoguess</pre>
 
-        <h3><span class="config_option" id="wunderfixer_date">--date</span></h3>
+        <h3>Option <span class="config_option" id="wunderfixer_date">--date</span></h3>
 
         <p>Optional date to check. By default <span class="code">wunderfixer</span> checks the current date according to 
             the system date-time. This feature is useful if running <span class="code">wunderfixer</span> as a cron job. 
@@ -2543,7 +2543,7 @@ Options:
 
         <pre class="tty cmd">wunderfixer --date=2016-04-20</pre>
 
-        <h3><span class="config_option" id="wunderfixer_epsilon">--epsilon</span></h3>
+        <h3>Option <span class="config_option" id="wunderfixer_epsilon">--epsilon</span></h3>
 
         <p>At times Weather Underground records may have a date-time that is slightly different to the timestamp of the 
             record as recorded by <span class="code">weewx</span>. The <span class="code">--epsilon</span> 
@@ -2554,7 +2554,7 @@ Options:
 
         <pre class="tty cmd">wunderfixer --epsilon=60</pre>
 
-        <h3><span class="config_option" id="wunderfixer_verbose">--verbose</span></h3>
+        <h3>Option <span class="config_option" id="wunderfixer_verbose">--verbose</span></h3>
 
         <p>Use of the <span class="code">--verbose</span> option results in <span 
                     class="code">wunderfixer</span> displaying useful additional information during execution. The <span 
@@ -2562,7 +2562,7 @@ Options:
                     class="code">wunderfixer</span> is run as a cron job.
         </p>
 
-        <h3><span class="config_option" id="wunderfixer_log">--log</span></h3>
+        <h3>Option <span class="config_option" id="wunderfixer_log">--log</span></h3>
 
         <p>Control the <span class="code">wunderfixer</span> log output. The default is no logging. If <span 
                     class="code">--log=weewx</span> is used then <span class="code">wunderfixer</span> logs to 
@@ -2573,14 +2573,14 @@ Options:
 
         <pre class="tty cmd">wunderfixer --log=weewx</pre>
 
-        <h3><span class="config_option" id="wunderfixer_test">--test</span></h3>
+        <h3>Option <span class="config_option" id="wunderfixer_test">--test</span></h3>
 
         <p>The <span class="code">--test</span> option will cause <span 
                     class="code">wunderfixer</span> to do everything except upload any missing data to Weather 
             Underground. Summary information on any identified missing data will be displayed.
         </p>
 
-        <h3><span class="config_option" id="wunderfixer_query">--query</span></h3>
+        <h3>Option <span class="config_option" id="wunderfixer_query">--query</span></h3>
 
         <p>The <span class="code">--query</span> option will cause
             <span class="code">wunderfixer</span> to seek user confirmation
