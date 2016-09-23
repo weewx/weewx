@@ -1023,6 +1023,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             raise weewx.WeeWxIOError("Unable to read archive interval after %d tries" % self.max_tries)
         if ival is None:
             raise weewx.WeeWxIOError("Cannot determine archive interval")
+        return ival
 
     def openPort(self):
         if self.devh is not None:
