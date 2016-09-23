@@ -157,7 +157,7 @@ Options:
   --debug               Show diagnostic information while running.
 </pre>
 
-        <h2><span id='common_options'>Command line options</span></h2>
+        <h2><span id='common_options'>Commands and options</span></h2>
 
         <h3 class="config_option">--config</h3>
         <p>
@@ -379,7 +379,7 @@ If you are using a MySQL database it is assumed that you have the appropriate
 permissions for the requested operation.
 </pre>
 
-        <h2><span id='common_options'>Command line options</span></h2>
+        <h2><span id='common_options'>Commands and options</span></h2>
 
         <h3 class="config_option">--create-archive</h3>
         <p>If the database does not already exist, this command will create it
@@ -483,7 +483,7 @@ should thoroughly check the generated output for personal/private information
 before posting the information publicly.
 </pre>
 
-        <h2><span id='common_options'>Command line options</span></h2>
+        <h2><span id='common_options'>Commands options</span></h2>
 
         <h3 class="config_option">--info</h3>
 
@@ -618,22 +618,28 @@ wee_debug report successfully generated
 
         <h3 class="config_option">--output</h3>
 
-        <p>By default, <span class="code">wee_debug</span> sends its output to the system "standard output" (<span
-                class="code">stdout</span>) unless the <span class="code">--output</span> option is used. </p>
-        <p>Command <span class="code">--output</span> with no parameter sends output to the default file <span
-                class="code">/var/tmp/weewx.debug</span>. Example:</p>
+        <p>By default, <span class="code">wee_debug</span> sends its output to
+            the system "standard output" (<span class="code">stdout</span>)
+            unless the <span class="code">--output</span> option is used. </p>
+        <p>The option <span class="code">--output</span> with no parameter
+            sends output to the default file
+            <span class="code">/var/tmp/weewx.debug</span>. Example:</p>
 
         <pre class="tty cmd">wee_debug --info --output</pre>
 
-        <p>Command <span class="code">--output</span> with a specified file will send it to that file. Example:</p>
+        <p>The option <span class="code">--output</span> with a specified file
+            will send it to that file. Example:</p>
 
         <pre class="tty cmd">wee_debug --info --output /home/weewx/another.debug</pre>
 
         <h3 class="config_option">--verbosity</h3>
 
-        <p>The depth of information included in the <span class="code">wee_debug</span> output can be changed using the
-            <span class="code">--verbosity</span> option. The <span class="code">--verbosity</span> option can be set to
-            0, 1 or 2 with each higher level successively displaying more information. The default level is 1. The
+        <p>The amount of information included in the
+            <span class="code">wee_debug</span> output can be changed using the
+            <span class="code">--verbosity</span> option. The
+            <span class="code">--verbosity</span> option can be set to
+            0, 1 or 2 with each higher level successively displaying more
+            information. The default level is 1. The
             information displayed for each level is:</p>
 
         <table class="indent">
@@ -795,7 +801,7 @@ Options:
   --dry-run             Print what would happen but do not do it.
   --verbosity=N         How much status to display, 0-3</pre>
 
-        <h2><span id='common_options'>Command line options</span></h2>
+        <h2><span id='common_options'>Commands and options</span></h2>
 
         <h3 class="config_option">--install</h3>
         <p>Use this command to install an extension.  You must specify the
@@ -949,9 +955,9 @@ archive. Daily summaries are updated as each archive record is
 imported so there should be no need to separately drop and rebuild
 the daily summaries using the wee_database utility.</pre>
 
-        <h2><span id='common_options'>Command line options</span></h2>
+        <h2><span id='common_options'>Commands and options</span></h2>
 
-        <p>The <span class="code">wee_import</span> command line options are described in more detail below:</p>
+        <p>The <span class="code">wee_import</span> commands and options are described in more detail below:</p>
 
         <h3><span class="config_option">--config</span></h3>
 
@@ -965,11 +971,11 @@ the daily summaries using the wee_database utility.</pre>
         <h3><span class="config_option">--import-config</span></h3>
 
         <p><span class="code">wee_import</span> uses a secondary configuration file to store various import parameters.
-            The <span class="config_option">--import-config</span> command line option is mandatory for all imports.
+            The <span class="config_option">--import-config</span> option is mandatory for all imports.
             Example import configuration files for each type of import supported by <span class="code">wee_import</span>
             are provided in the <span class="code">util/import</span> folder. These example files are best used by
             making a copy of the applicable example file in a working directory and then modifying the duplicate file to
-            suit your needs. The <span class="config_option">--import-config</span> command line option is used as
+            suit your needs. The <span class="config_option">--import-config</span> option is used as
             follows:</p>
 
     <pre class="tty cmd">wee_import --import-config=/folder/import.conf
@@ -977,7 +983,7 @@ the daily summaries using the wee_database utility.</pre>
 
         <h3><span class="config_option">--dry-run</span></h3>
 
-        <p>The inclusion of the <span class="config_option">--dry-run</span> command line option will cause the import
+        <p>The inclusion of the <span class="config_option">--dry-run</span> option will cause the import
             to proceed but no actual data will be saved to the database. This is a useful option to use when first
             importing data.</p>
 
@@ -987,18 +993,18 @@ the daily summaries using the wee_database utility.</pre>
         <h3><span class="config_option">--date</span></h3>
 
         <p>The date-time range of records to be imported can be specified by use of the <span class="config_option">--date</span>
-            command line option. The <span class="config_option">--date</span> command line option can specify a single
+            option. The <span class="config_option">--date</span> option can specify a single
             date, as single date-time, a date range or a date-time range. The date format used is <span class="code">YYYY/MM/DD</span>
             and the date-time format <span class="code">YYYY/MM/DD HH:MM</span>. A range is specified by separating two
             date or date-time formats by a hyphen, e.g., <span class="code">'2015/12/1-2015/12/30'</span>. Note that the
             date-time or date-time range string must be enclosed in single or double quotation marks. The effect of the
-            different <span class="config_option">--date</span> command line option values is shown in the following
+            different <span class="config_option">--date</span> option values is shown in the following
             table:</p>
 
         <table class="indent" summary="--date_option operation">
             <tbody>
             <tr class="first_row">
-                <td>command line option</td>
+                <td>option</td>
                 <td>Records imported for a CSV or Cumulus import</td>
                 <td>Records imported for a Weather Underground import</td>
             </tr>
@@ -1031,7 +1037,7 @@ the daily summaries using the wee_database utility.</pre>
         </table>
 
         <p class="note">
-            <b>Note</b><br/>If the <span class="config_option">--date</span> command line option is omitted the default
+            <b>Note</b><br/>If the <span class="config_option">--date</span> option is omitted the default
             is to import all available records when importing from a CSV or Cumulus source or to import today's records
             only when importing from Weather Underground. </p>
 
@@ -1043,14 +1049,14 @@ the daily summaries using the wee_database utility.</pre>
                     href="usersguide.htm#monitoring">Monitoring <span class="code">weewx</span></a></em> and <em><a
                     href="usersguide.htm#Where_to_find_things">Where to find things</a></em> to find it). <span
                     class="code">wee_import</span> log output can be disabled by using <span class="config_option">--log=-</span>.
-            The <span class="config_option">--log</span> command line option is used as follows: </p>
+            The <span class="config_option">--log</span> option is used as follows: </p>
 
     <pre class="tty cmd">wee_import --import-config=/folder/import.conf --log=-
 </pre>
 
         <h3><span class="config_option">--verbose</span></h3>
 
-        <p>Inclusion of the <span class="config_option">--verbose</span> command line option will cause additional
+        <p>Inclusion of the <span class="config_option">--verbose</span> option will cause additional
             information to be printed during <span class="code">wee_import</span> execution.</p>
 
     <pre class="tty cmd">wee_import --import-config=/folder/import.conf --verbose
@@ -1060,9 +1066,8 @@ the daily summaries using the wee_database utility.</pre>
 
         <p><span class="code">wee_import</span> requires a second configuration file, the import configuration file, in
             addition to the standard weewx configuration file. The import configuration file specifies the import type
-            and various options associated with each type of import. The import configuration file is specified at the
-            <span class="code">wee_import</span> command line using the mandatory <span
-                    class="code">--import-config</span> command line option. How you construct the import configuration 
+            and various options associated with each type of import. The import configuration file is specified using the mandatory <span
+                    class="code">--import-config</span> option. How you construct the import configuration 
             file is up to you; however, the recommended method is to copy one of the example import configuration files 
             located in the <span class="code">util/import</span> folder, modify the configuration options in the newly 
             copied file to suit the import to be performed and then use this file as the import configuration file. </p>
@@ -1661,7 +1666,7 @@ the daily summaries using the wee_database utility.</pre>
             <li>When first importing data it is prudent to do a dry run import before any data are actually imported. A
                 dry run import will perform all steps of the import without actually writing imported data to the <span
                         class="code">weewx</span> database. In addition, consideration should be given to any additional
-                command line options such as <span class="code">--date</span>.
+                options such as <span class="code">--date</span>.
 
                 <p>To perform a dry run enter the following command:</p>
 
@@ -1688,7 +1693,7 @@ Finished dry run import. 70685 records were processed and 70685 unique records w
 
                 <p class="note">
                     <b>Note</b><br/>As the <span class="code">weewx</span> database is not altered when the <span
-                        class="code">--dry-run</span> command line option is used, <span class="code">wee_import</span>
+                        class="code">--dry-run</span> option is used, <span class="code">wee_import</span>
                     log output is suspended during a dry run import. In effect, the use of <span
                         class="code">--dry-run</span> is equivalent to <span class="code">--dry-run --log=-</span>.
                     During a dry run import the only <span class="code">wee_import</span> output is that displayed on
@@ -1884,14 +1889,14 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <li>When first importing data it is prudent to do a dry run import before any data are actually imported. A
                 dry run import will perform all steps of the import without actually writing imported data to the <span
                         class="code">weewx</span> database. In addition, consideration should be given to any additional
-                command line options to be used such as <span class="code">--date</span>.
+                options to be used such as <span class="code">--date</span>.
                 <p>To perform a dry run enter the following command:</p>
 
             <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00" --dry-run
 </pre>
 
                 <p class="note">
-                    <b>Note</b><br/>If the <span class="code">--date</span> command line option is omitted or a date
+                    <b>Note</b><br/>If the <span class="code">--date</span> option is omitted or a date
                     (not date-time) range is used during a Weather Underground import, then the current days history
                     data will be imported. This includes records timestamped from <span class="code">00:00</span>
                     (inclusive) at the start of the day up to but NOT including the <span class="code">00:00</span>
@@ -1936,7 +1941,7 @@ Finished dry run import. 607 records were processed and 607 unique records would
 
                 <p class="note">
                     <b>Note</b><br/>As the <span class="code">weewx</span> database is not altered when the <span
-                        class="code">--dry-run</span> command line option is used, <span class="code">wee_import</span>
+                        class="code">--dry-run</span> option is used, <span class="code">wee_import</span>
                     log output is suspended during a dry run import. In effect, the use of <span
                         class="code">--dry-run</span> is equivalent to <span class="code">--dry-run --log=-</span>.
                     During a dry run import the only <span class="code">wee_import</span> output is that displayed on
@@ -1997,8 +2002,8 @@ Confirm successful import in the weewx log file.
                     records for the same import performed at different times. If importing the current day this could be
                     because an additional record may have been added between <span class="code">wee_import</span> runs.
                     For periods before today, this behaviour appears to be a vagary of Weather Underground. The only
-                    solution appears to be to repeat the import with the same <span class="code">--date</span> command
-                    line option setting and observe whether the missing records are imported. Repeating the import will
+                    solution appears to be to repeat the import with the same <span class="code">--date</span>
+                    option setting and observe whether the missing records are imported. Repeating the import will
                     not adversely affect any existing data as records with timestamps that are already in the <span
                         class="code">weewx</span> archive will be ignored. It may; however, generated many <span
                         class="code">UNIQUE constraint failed: archive.dateTime</span> messages in the <span
@@ -2162,7 +2167,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <li>When first importing data it is prudent to do a dry run import before any data are actually imported. A
                 dry run import will perform all steps of the import without actually writing imported data to the <span
                         class="code">weewx</span> database. In addition, consideration should be given to any additional
-                command line options to be used such as <span class="code">--date</span>.
+                options to be used such as <span class="code">--date</span>.
                 <p>To perform a dry run enter the following command:</p>
 
             <pre class="tty cmd">wee_import --import-config=/var/tmp/cumulus.conf --dry-run
@@ -2227,8 +2232,8 @@ Are you sure you want to proceed (y/n)?
 
                 <p>If there is more than one Cumulus monthly log file then <span class="code">wee_import</span> will
                     provide summary information on a per period basis during the import. In addition, if the <span
-                            class="code">--date</span> command line option is used then source data that falls outside
-                    the date or date range specified with the <span class="code">--date</span> command line option is
+                            class="code">--date</span> option is used then source data that falls outside
+                    the date or date range specified with the <span class="code">--date</span> option is
                     ignored. In such cases the preamble may look similar to:</p>
 
     <pre class="tty">Starting wee_import...
@@ -2256,7 +2261,7 @@ Are you sure you want to proceed (y/n)?
 </pre>
 
                 <p>Again if there is more than one Cumulus monthly log file and if the <span class="code">--date</span>
-                    command line option is used then the progress information may instead look similar to:</p>
+                    option is used then the progress information may instead look similar to:</p>
 
         <pre class="tty">Period 4 ...
 Records processed: 2521; Unique records: 2521; Last timestamp: 2016-03-01 09:40:00 AEST (1456789200)
@@ -2477,7 +2482,7 @@ Options:
   -q, --query           For each record, query the user before making a
                         change.</pre>
 
-        <h2><span id='common_options'>Command line options</span></h2>
+        <h2><span id='common_options'>Commands and options</span></h2>
 
         <p>The <span class="code">wunderfixer</span> options are described in more detail below:</p>
 
@@ -2568,13 +2573,17 @@ Options:
 
         <h3><span class="config_option" id="wunderfixer_query">--query</span></h3>
 
-        <p>The <span class="code">--query</span> option will cause  <span 
-                    class="code">wunderfixer</span> to seek user confirmation before each missing record is uploaded to 
-            Weather Underground. When queried you may respond with <span class="code">y</span> to publish the record, 
-                    <span class="code">n</span> to skip the record without publishing, <span class="code">a</span> to 
-            publish the record and automatically publish all further records or <span class="code">q</span> to skip the 
-            record and quit <span class="code">wunderfixer</span>. The <span class="code">--query</span> command 
-            line option should not be used as part of a cron job.
+        <p>The <span class="code">--query</span> option will cause
+            <span class="code">wunderfixer</span> to seek user confirmation
+            before each missing record is uploaded to Weather Underground.
+            When queried you may respond with <span class="code">y</span> to
+            publish the record, <span class="code">n</span> to skip the record
+            without publishing, <span class="code">a</span> to publish the
+            record and automatically publish all further records or
+            <span class="code">q</span> to skip the record and quit
+            <span class="code">wunderfixer</span>. The
+            <span class="code">--query</span> option should not be used as
+            part of a cron job.
         </p>
 
         
@@ -2585,8 +2594,7 @@ Options:
             you have missing Weather Underground data. Running <span class="code">wunderfixer</span> directly
             is also a useful exercise in the lead up to setting <span 
                     class="code">wunderfixer</span> to run as a  <a href="#wunderfixer_cron">cron job</a> as it allows you to verify correct operation 
-            of <span class="code">wunderfixer</span> through the on screen reporting. To run <span 
-                    class="code">wunderfixer</span> from the command line:
+            of <span class="code">wunderfixer</span> through the on screen reporting.
         </p>
 
         <p class="note">
@@ -2596,6 +2604,8 @@ Options:
                     href="usersguide.htm#[[Wunderground]]">[[StdRESTful][[Wunderground]]</a> section of <span 
                     class="code">weewx.conf</span>. Data for another station or date could be published by using the <span class="code">--station</span>, <span class="code">--password</span> and <span class="code">--date</span> options.
         </p>
+
+        <p>To run <span class="code">wunderfixer</span> directly:</p>
 
         <ol>
             <li>Before publishing missing data for the first time it may be
