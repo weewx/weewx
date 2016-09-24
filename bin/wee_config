@@ -30,7 +30,7 @@ usage = """Usage: wee_config --help
            [--location="Home Sweet Home"]
            [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
 
-Commands:
+Actions:
 
 --list-drivers  List the available weewx device drivers, then exit.
 --install       Install a new configuration file starting with the contents of

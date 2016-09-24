@@ -99,7 +99,8 @@ Version: 3.6.0a1
             used: </p>
         <pre class="tty cmd">wee_config --help</pre>
         <p>This results in:</p>
-    <pre class="tty">Usage: wee_config --help
+    <pre class="tty">
+Usage: wee_config --help
        wee_config --version
        wee_config --list-drivers
        wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
@@ -116,7 +117,7 @@ Version: 3.6.0a1
            [--location="Home Sweet Home"]
            [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
 
-Commands:
+Actions:
 
 --list-drivers  List the available weewx device drivers, then exit.
 --install       Install a new configuration file starting with the contents of
@@ -350,12 +351,19 @@ Usage: wee_database --help
             --dest-binding=BINDING_NAME
             [--dry-run]
 
+Configure the weewx databases. Most of these functions are
+handled automatically by weewx, but they may be useful in special cases.
 
-Configure the weewx databases. Most of these functions are handled
-automatically by weewx, but they may be useful as a utility in special cases.
-In particular, the 'reconfigure' option can be useful if you decide to add or
-drop data types from the database schema or change unit systems and the
-'transfer' option is useful if converting from one database type to another.
+Actions:
+
+--create-archive  Create the archive database and initialize it with the schema.
+--drop-daily      Drop the daily summaries from the database.
+--backfill-daily  Rebuild the daily summaries from the archive database.
+--reconfigure     Create a new database using the schema in the configuration file.
+                  Copy over data from the old database.
+--string-check    Scan the archive database, looking for null strings that may have
+                  been introduced by a SQL editing program.
+--transfer        Move data from one database to another.
 
 Options:
   -h, --help            show this help message and exit
@@ -471,12 +479,17 @@ wee_database --string-check --fix</pre>
             [--verbosity=0|1|2]
        wee_debug --version
 
+Description:
 
-Generate a standard suite of system/weewx information to aid in remote
-debugging. The wee_debug output consists of two parts, the first part
+Generate a standard suite of system/weewx information to aid
+in remote debugging. The wee_debug output consists of two parts, the first part
 containing a snapshot of relevant system/weewx information and the second part
 a parsed and obfuscated copy of weewx.conf. This output can be redirected to
 file and posted when seeking assistance via forums or email.
+
+Actions:
+
+--info           Generate a debug report.
 
 Options:
   -h, --help     show this help message and exit
@@ -788,7 +801,7 @@ Usage: wee_extension --help
 
 Install, list, and uninstall extensions to weewx.
 
-Commands:
+Actions:
 
 --list:      Show installed extensions.
 --install:   Install the specified extension.
@@ -800,15 +813,16 @@ Options:
   --install=FILENAME|DIRECTORY
                         Install the extension contained in FILENAME or
                         DIRECTORY. FILENAME must be an archive that contains a
-                        packaged extension such as pmon.tar.gz.  DIRECTORY
-                        must be a packaged extension.
+                        packaged extension such as pmon.tar.gz.  DIRECTORY is
+                        the result of extracting that archive.
   --uninstall=EXTENSION
                         Uninstall the extension with name EXTENSION.
   --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
   --tmpdir=DIR          Use temporary directory DIR.
   --bin-root=BIN_ROOT   Look in BIN_ROOT for weewx executables.
   --dry-run             Print what would happen but do not do it.
-  --verbosity=N         How much status to display, 0-3</pre>
+  --verbosity=N         How much status to display, 0-3
+</pre>
 
         <h2><span id='wee_extensions_details'>Actions and options</span></h2>
 

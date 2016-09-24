@@ -44,18 +44,23 @@ COUNT_FIELD = 'dateTime'
 # Redirect the import of setup (needed to get extension info)
 sys.modules['setup'] = weecfg.extension
 
-description = """Generate a standard suite of system/weewx information to aid
-in remote debugging. The wee_debug output consists of two parts, the first part
-containing a snapshot of relevant system/weewx information and the second part
-a parsed and obfuscated copy of weewx.conf. This output can be redirected to
-file and posted when seeking assistance via forums or email."""
-
 usage = """wee_debug --help
        wee_debug --info
             [--output|--output DEBUG_PATH]
             [--verbosity=0|1|2]
        wee_debug --version
-"""
+
+Description:
+
+Generate a standard suite of system/weewx information to aid
+in remote debugging. The wee_debug output consists of two parts, the first part
+containing a snapshot of relevant system/weewx information and the second part
+a parsed and obfuscated copy of weewx.conf. This output can be redirected to
+file and posted when seeking assistance via forums or email.
+
+Actions:
+
+--info           Generate a debug report."""
 
 epilog = """wee_debug will attempt to obfuscate obvious personal/private
 information in weewx.conf such as user names, passwords and API keys; however,
@@ -68,8 +73,7 @@ def main():
     syslog.openlog('wee_debug', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
-    parser = optparse.OptionParser(description = description,
-                                   usage = usage,
+    parser = optparse.OptionParser(usage = usage,
                                    epilog = epilog)
 
     # Add the various options:
