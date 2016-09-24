@@ -28,7 +28,7 @@ usage = """wee_extension --help
 
 Install, list, and uninstall extensions to weewx.
 
-Commands:
+Actions:
 
 --list:      Show installed extensions.
 --install:   Install the specified extension.
