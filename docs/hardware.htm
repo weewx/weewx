@@ -832,34 +832,52 @@ Version: 3.6.0a1
         <p>The station emits partial packets, which may confuse some online
             services.</p>
 
+        <p>Some consoles have a small internal logger.  Data in the logger
+            are erased when power is removed from the station.</p>
+
+        <p>The console has a sensor for inside humidity, but the values from
+            that sensor are available only by reading from the console logger.
+            Due to instability of the console firmware, the
+            <span class="code">weewx</span> driver does not read the console
+            logger.</p>
+
         <h2 id="acurite_usb_mode">USB Mode</h2>
 
-        <p>The AcuRite stations have 4 USB modes:</p>
+        <p>The AcuRite stations have a setting called "USB Mode" that controls
+            how data are saved and communicated:</p>
 
         <table id='usbmode' class='station_data'>
-            <caption>AcuRite station data</caption>
+            <caption>AcuRite USB mode</caption>
             <tbody>
             <tr>
+                <th>Mode</th>
                 <th>Show data<br/>in display</th>
                 <th>Store data<br/>in logger</th>
                 <th>Send data<br/>over USB</th>
             </tr>
-            <tr><td>yes</td><td>yes</td><td></td></tr>
-            <tr><td>yes</td><td></td><td></td></tr>
-            <tr><td>yes</td><td>yes</td><td>yes</td></tr>
-            <tr><td>yes</td><td></td><td>yes</td></tr>
+            <tr><td>1</td><td>yes</td><td>yes</td><td></td></tr>
+            <tr><td>2</td><td>yes</td><td></td><td></td></tr>
+            <tr><td>3</td><td>yes</td><td>yes</td><td>yes</td></tr>
+            <tr><td>4</td><td>yes</td><td></td><td>yes</td></tr>
             </tbody>
         </table>
 
-        <p>The AcuRite console must be set to USB mode 3 or 4. Communication
+        <p>The AcuRite console must be set to USB mode 3 or 4 in order to
+            work with the <span class="code">weewx</span> driver.</p>
+
+        <p>Communication
             via USB is disabled in modes 1 and 2. Mode 4 is more reliable than
             mode 3; mode 3 enables logging of data, mode 4 does not. When the
             console is logging it frequently causes USB communication
             problems.</p>
 
+        <p>The default mode is 2, so after a power failure one must use the
+            console controls to change the mode before
+            <span class="code">weewx</span> can resume data collection.</p>
+
         <p>The 02064 stations are always in USB mode 4.</p>
 
-        <h2 id='acurite_wee_device'><span class="code">wee_device</span></h2>
+        <h2 id='acurite_configuration'>Configuring the station</h2>
 
         <p>The <span class='code'>wee_device</span> utility cannot be used
             with AcuRite stations.</p>
@@ -994,31 +1012,45 @@ Version: 3.6.0a1
             or ENGLISH units. These are then mapped to the weewx unit groups
             METRICWX or US, respectively.</p>
 
-        <h2 id='cc3000_wee_device'><span class="code">wee_device</span></h2>
+        <h2 id='cc3000_configuration'>Configuring the station</h2>
 
         <p>Invoking <span class='code'>wee_device</span> with the
             <span class='code'>--help</span> option will produce
             something like this:</p>
 
-    <pre class="tty">CC3000 driver version 0.8
+    <pre class="tty">
+Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.11 (weewx.drivers.cc3000)
 Usage: wee_device [config_file] [options] [--debug] [--help]
 
 Configuration utility for weewx devices.
 
 Options:
--h, --help         show this help message and exit
---debug            display diagnostic information while running
--y                 answer yes to every prompt
---info             display weather station configuration
---current          display current weather readings
---history=N        display N records (0 for all records)
---history-since=N  display records since N minutes ago
---clear-memory     clear station memory
---set-clock        set station clock to computer time
---set-interval=N   set logging interval to N minutes
---set-units=UNITS  set units to METRIC or ENGLISH
+  -h, --help            show this help message and exit
+  --debug               display diagnostic information while running
+  -y                    answer yes to every prompt
+  --info                display weather station configuration
+  --current             display current weather readings
+  --history=N           display N records (0 for all records)
+  --history-since=N     display records since N minutes ago
+  --clear-memory        clear station memory
+  --reset-rain          reset the rain counter
+  --get-clock           display station clock
+  --set-clock           set station clock to computer time
+  --get-interval        display logger archive interval, in minutes
+  --set-interval=N      set logging interval to N minutes (0-60)
+  --get-units           show units of logger
+  --set-units=UNITS     set units to METRIC or ENGLISH
+  --get-dst             display daylight savings settings
+  --set-dst=mm/dd HH:MM,mm/dd HH:MM,MM
+                        set daylight savings start, end, and amount
+  --get-channel         display the station channel
+  --set-channel=CHANNEL
+                        set the station channel
 
-Mutating actions will request confirmation before proceeding.</pre>
+Be sure to stop weewx first before using. Mutating actions will request
+confirmation before proceeding.
+</pre>
 
         <h3>Action <span class="code">--info</span></h3>
 
@@ -1041,6 +1073,49 @@ interval: 1</pre>
             station's interval to 5 minutes, do the following:</p>
 
         <p class="tty cmd">wee_device --set-interval=5</p>
+
+        <h3>Action <span class="code">--history</span></h3>
+
+        <p>Display the latest <span class="code">N</span> records from the
+            CC3000 logger memory.  Use a value of <span class="code">0</span>
+            to display all records.</p>
+
+        <h3>Action <span class="code">--clear-memory</span></h3>
+
+        <p>Use <span class='code'>--clear-memory</span> to erase all records
+            from the logger memory.</p>
+
+        <h3>Action <span class="code">--set-units</span></h3>
+
+        <p>The CC3000 can display data in either ENGLISH or METRIC unit
+            systems.  Use <span class="code">--set-units</span> to specify
+            one or the other.</p>
+
+        <p>The CC3000 driver automatically converts the units to maintain
+            consistency with the units in <span class="code">weewx</span>.
+            </p>
+
+        <h3>Action <span class="code">--set-channel</span></h3>
+
+        <p>Rainwise stations transmit on one of four channels.  If you have
+            multiple instrument clusters within a kilometer or so of each
+            other, you should configure each to use a different channel.
+            In the instrument cluster, remove the cover and set the DIP
+            switches 0 and 1.  Use <span class="code">--set-channel</span>
+            to a value of 0-3 to match that of the instrument cluster.</p>
+
+        <h3>Action <span class="code">--reset-rain</span></h3>
+
+        <p>Use <span class="code">--reset-rain</span> to set the rain counter
+            to zero.</p>
+
+        <h3>Action <span class="code">--set-clock</span></h3>
+
+        <p>Set the station clock to match the date/time of the computer.</p>
+
+        <h3>Action <span class="code">--set-dst</span></h3>
+
+        <p>Set the station start, end, and amount of daylight savings.</p>
 
         <h2 id="cc3000_data">Station data</h2>
 
@@ -1227,7 +1302,7 @@ interval: 1</pre>
         </table>
 
 
-        <h2 id="fousb_wee_device"><span class="code">wee_device</span></h2>
+        <h2 id="fousb_configuration">Configuring the station</h2>
 
         <p>Invoking <span class='code'>wee_device</span> with the
             <span class='code'>--help</span> option will produce
@@ -1476,14 +1551,15 @@ Mutating actions will request confirmation before proceeding.</pre>
             weewx starts up, but it does not support hardware record
             generation.</p>
 
-        <h2 id="te923_configuration">Station configuration</h2>
+        <h2 id="te923_configuration">Configuring the station</h2>
 
         <p>Invoking <span class='code'>wee_device</span> with the
             <span class='code'>--help</span> option will produce output
             something like this:</p>
 
-    <pre class='tty'>Using configuration file /home/weewx/weewx.conf
-Using TE923 driver version 0.16 (weewx.drivers.te923)
+    <pre class='tty'>
+Using configuration file /home/weewx/weewx.conf
+Using TE923 driver version 0.20 (weewx.drivers.te923)
 Usage: wee_device [config_file] [options] [--debug] [--help]
 
 Configuration utility for weewx devices.
@@ -1500,6 +1576,7 @@ Options:
   --get-date            display station date
   --set-date=YEAR,MONTH,DAY
                         set station date
+  --sync-date           set station date using system clock
   --get-location-local  display local location and timezone
   --set-location-local=CITY|USR,LONG_DEG,LONG_MIN,E|W,LAT_DEG,LAT_MIN,N|S,TZ,DST
                         set local location and timezone
@@ -1507,24 +1584,24 @@ Options:
   --set-location-alt=CITY|USR,LONG_DEG,LONG_MIN,E|W,LAT_DEG,LAT_MIN,N|S,TZ,DST
                         set alternate location and timezone
   --get-altitude        display altitude
-  --set-altitude=ALT    set altitude
+  --set-altitude=ALT    set altitude (meters)
   --get-alarms          display alarms
   --set-alarms=WEEKDAY,SINGLE,PRE_ALARM,SNOOZE,MAXTEMP,MINTEMP,RAIN,WIND,GUST
                         set alarm state
   --get-interval        display archive interval
   --set-interval=INTERVAL
-                        set archive interval
+                        set archive interval (seconds)
   --format=FORMAT       formats include: table, dict
 
 Be sure to stop weewx first before using. Mutating actions will request
-confirmation before proceeding.</pre>
+confirmation before proceeding.
+</pre>
 
-        <h2 id="te923_options">Configuration options</h2>
+        <h3 id="te923_display_status">
+            Action <span class="code">--info</span></h3>
 
-        <h3 class="config_option" id="te923_display_status">
-            --info</h3>
-
-        <p>Use the <span class="code">--info</span> option to display the station configuration:</p>
+        <p>Use <span class="code">--info</span> to display the station
+            configuration:</p>
         <pre class="tty cmd">wee_device --info</pre>
         <p>This will result in something like:</p>
     <pre class="tty">Querying the station for the configuration...
@@ -1545,10 +1622,11 @@ confirmation before proceeding.</pre>
       version_uv: 20
     version_wind: 38</pre>
 
-        <h3 class="config_option" id="te923_display_current">
-            --current</h3>
+        <h3 id="te923_display_current">
+            Action <span class="code">--current</span></h3>
 
-        <p>Use the <span class="code">--current</span> option to display the current status of each sensor:</p>
+        <p>Use <span class="code">--current</span> to display the
+            current status of each sensor:</p>
         <pre class="tty cmd">wee_device --current</pre>
         <p>This will result in something like:</p>
     <pre class="tty">Querying the station for current weather data...
@@ -1594,8 +1672,8 @@ confirmation before proceeding.</pre>
        windspeed: None
  windspeed_state: invalid</pre>
 
-        <h3 class='config_option' id="te923_change_archive_interval">
-            --set-interval</h3>
+        <h3 id="te923_change_archive_interval">
+            Action <span class='code'>--set-interval</span></h3>
 
         <p>TE923 stations ship from the factory with an archive interval of 1
             hour (3600 seconds). To change the station's interval to 5 minutes
@@ -1603,16 +1681,21 @@ confirmation before proceeding.</pre>
 
         <p class="tty cmd">wee_device --set-interval=300</p>
 
-        <h3 class="config_option" id="te923_display_logger_memory">
-            --history</h3>
+        <h3 id="te923_display_logger_memory">
+            Action <span class="code">--history</span></h3>
 
-        <p>Use the <span class='code'>--history</span> option to display
+        <p>Use the <span class='code'>--history</span> action to display
             records from the logger in tabular or dictionary format.
         </p>
 
         <p>For example, to display the most recent 30 records in dictionary
             format:</p>
         <pre class="tty cmd">wee_device --history=30 --format=dict</pre>
+
+        <h3>Action <span class="code">--clear-memory</span></h3>
+
+        <p>Use <span class='code'>--clear-memory</span> to erase all records
+            from the logger memory.</p>
 
         <h2 id="te923_data">Station data</h2>
 
@@ -1821,7 +1904,7 @@ confirmation before proceeding.</pre>
         <p>The Ultimeter driver ignores the maximum, minimum, and average
             values recorded by the station.</p>
 
-        <h2 id="ultimeter_configuration">Station configuration</h2>
+        <h2 id='ultimeter_configuration'>Configuring the station</h2>
 
         <p>The <span class='code'>wee_device</span> utility cannot be used to
             configure Ultimeter stations.</p>
@@ -1936,7 +2019,12 @@ confirmation before proceeding.</pre>
 
         <h1 id='vantage_notes'>Vantage</h1>
 
-        <h2 id="vantage_configuration">Station configuration</h2>
+        <p>The Davis Vantage stations include a variety of models and
+            configurations.  The <span class="code">weewx</span> driver
+            can communicate with a console or envoy using serial, USB,
+            or TCP/IP interface.</p>
+
+        <h2 id="vantage_configuration">Configuring the station</h2>
 
         <p>Invoking <span class='code'>wee_device</span> with the
             <span class='code'>--help</span>
@@ -2007,10 +2095,8 @@ Options:
 Be sure to stop weewx first before using. Mutating actions will request
 confirmation before proceeding.</pre>
 
-        <h2 id="vantage_options">Configuration options</h2>
-
-        <h3 class="config_option" id="vantage_info">
-            --info</h3>
+        <h3 id="vantage_info">
+            Action <span class="code">--info</span></h3>
 
         <p>Use the <span class="code">--info</span> option to display the current EEPROM settings: </p>
         <pre class="tty cmd">wee_device --info</pre>
@@ -2086,12 +2172,12 @@ confirmation before proceeding.</pre>
         <p><span class="highlight">Highlighted</span> values can be modified using the various <span class="code">wee_device</span>
             commands below.</p>
 
-        <h3 class="config_option" id="vantage_clear_memory">
-            --clear-memory</h3>
+        <h3 id="vantage_clear_memory">
+            Action <span class="code">--clear-memory</span></h3>
         <p>This command will clear the logger memory after asking for confirmation.</p>
 
-        <h3 class="config_option" id="vantage_archive_interval">
-            --set-interval</h3>
+        <h3 id="vantage_archive_interval">
+            Action <span class="code">--set-interval</span></h3>
 
         <p>Use this command to change the archive interval of the internal logger. Valid intervals are 60, 300, 600,
             900, 1800, 3600, and 7200 seconds. However, if you are ftp&#39;ing lots of files to a server, setting it to
@@ -2105,12 +2191,12 @@ confirmation before proceeding.</pre>
         <p>Example: to change the archive interval to 10 minutes (600 seconds):</p>
         <pre class="tty cmd">wee_device --set-interval=600</pre>
 
-        <h3 class="config_option">--set-altitude</h3>
+        <h3>Action <span class="code">--set-altitude</span></h3>
 
         <p>Use this command to set the console's stored altitude. The altitude must be in <em>feet</em>. Example:</p>
         <pre class="tty cmd">wee_device --set-altitude=700</pre>
 
-        <h3 class="config_option">--set-barometer</h3>
+        <h3>Action <span class="code">--set-barometer</span></h3>
 
         <p>Use this command to calibrate the barometer in your Vantage weather station. To use it, you must have a known
             correct barometer reading <em>for your altitude</em>. In practice, you will either have to move your console
@@ -2118,22 +2204,21 @@ confirmation before proceeding.</pre>
             barometer reading to your altitude. Otherwise, specify the value zero and the station will pick a sensible
             value.</p>
 
-        <h3 class="config_option" id="vantage_rain_bucket_type">
-            --set-bucket</h3>
+        <h3 id="vantage_rain_bucket_type">
+            Action <span class="code">--set-bucket</span></h3>
 
         <p>Normally, this is set by Davis, but if you have replaced your bucket with a different kind, you might want to
             reconfigure. For example, to change to a 0.1 mm bucket (bucket code &quot;2&quot;), use the following:</p>
         <pre class="tty cmd">wee_device --set-bucket=2</pre>
 
-        <h3 class="config_option">
-            --set-rain-year-start</h3>
+        <h3>Action <span class="code">--set-rain-year-start</span></h3>
 
         <p>The Davis Vantage series allows the start of the rain year to be something other than 1 January. For example,
             to set it to 1 October:</p>
         <pre class="tty cmd">wee_device --set-rain-year-start=10</pre>
 
-        <h3 class="config_option" id="vantage_setting_offsets">
-            --set-offset</h3>
+        <h3 id="vantage_setting_offsets">
+            Action <span class="code">--set-offset</span></h3>
 
         <p>The Davis instruments can correct sensor errors by adding an <em>offset</em> to their emitted values. This is
             particularly useful for Southern Hemisphere users. Davis fits the wind vane to the Integrated Sensor Suite
@@ -2144,8 +2229,8 @@ confirmation before proceeding.</pre>
 
         <pre class="tty cmd">wee_device --set-offset=windDir,180</pre>
 
-        <h3 class="config_option" id="vantage_configuring_additional_sensors">
-            --set-transmitter-type</h3>
+        <h3 id="vantage_configuring_additional_sensors">
+            Action <span class="code">--set-transmitter-type</span></h3>
 
         <p>If you have additional sensors for your Vantage station, you can configure them using your console. However,
             if you have a <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis
@@ -2165,13 +2250,13 @@ confirmation before proceeding.</pre>
 
         <p>The <span class="code">--help</span> option will give you the code for each sensor type.</p>
 
-        <h3 class="config_option">--set-dst</h3>
+        <h3>Action <span class="code">--set-dst</span></h3>
 
         <p>Use the command to tell your console whether or not daylight savings time is in effect, or to have it set
             automatically based on the time zone.</p>
 
-        <h3 class="config_option" id="vantage_time_zone">
-            --set-tz-code</h3>
+        <h3 id="vantage_time_zone">
+            Action <span class="code">--set-tz-code</span></h3>
 
         <p>This command can be used to change the time zone. Consult the
             Vantage manual for the code that corresponds to
@@ -2184,7 +2269,7 @@ confirmation before proceeding.</pre>
             (code 20):</p>
         <pre class="tty cmd">wee_device --set-tz-code=20</pre>
 
-        <h3 class="config_option">--set-tz-offset</h3>
+        <h3>Action <span class="code">--set-tz-offset</span></h3>
 
         <p>If you live in an odd time zone that is perhaps not covered by the
             "canned" Davis time zones, you can set the
@@ -2197,23 +2282,23 @@ confirmation before proceeding.</pre>
             Time (UTC-03:30), use the following:</p>
         <pre class="tty cmd">wee_device --set-tz-offset=-0330</pre>
 
-        <h3 class="config_option">--set-lamp</h3>
+        <h3>Action <span class="code">--set-lamp</span></h3>
 
         <p>Use this command to turn the console lamp on or off.</p>
 
-        <h3 class="config_option">--start</h3>
+        <h3>Action <span class="code">--start</span></h3>
 
         <p>Use this command to start the logger. There are occasions when an
             out-of-the-box logger needs this command.</p>
 
-        <h3 class="config_option">--stop</h3>
+        <h3>Action <span class="code">--stop</span></h3>
 
         <p>Use this command to stop the logger. I can't think of a good reason
             why you would need to do this, but the
             command is included for completeness.</p>
 
-        <h3 class="config_option" id="vantage_dumping_the_logger_memory">
-            --dump</h3>
+        <h3 id="vantage_dumping_the_logger_memory">
+            Action <span class="code">--dump</span></h3>
 
         <p>Generally, <span class="code">weewx</span> downloads only new archive records from the on-board logger in the
             Vantage. However, occasionally the memory in the Vantage will get corrupted, making this impossible. See the
@@ -2227,7 +2312,7 @@ confirmation before proceeding.</pre>
             not they have been seen before. Because the command dumps <em>all</em> data, it may result in many duplicate
             primary key errors. These can be ignored.</p>
 
-        <h3 class="config_option">--logger-summary FILE</h3>
+        <h3>Action <span class="code">--logger-summary FILE</span></h3>
         <p>This command is useful for debugging the console logger. It will scan the logger memory, recording the
             timestamp in each page and index slot to the file <span class="code">FILE</span>.</p>
         <p>Example:</p>
@@ -2516,7 +2601,7 @@ confirmation before proceeding.</pre>
         <p>The station emits partial packets, which may confuse some online
             services.</p>
 
-        <h2 id="wmr100_configuration">Station configuration</h2>
+        <h2 id="wmr100_configuration">Configuring the station</h2>
 
         <p>The <span class='code'>wee_device</span> utility cannot be used to
             configure WMR100 stations.</p>
@@ -2686,7 +2771,7 @@ confirmation before proceeding.</pre>
             download all records from the console since
             the last record in the archive database. </p>
 
-        <h2 id="wmr200_configuration">Station configuration</h2>
+        <h2 id="wmr200_configuration">Configuring the station</h2>
 
         <p>The <span class='code'>wee_device</span> utility cannot be used to
             configure WMR200 stations.</p>
@@ -2859,6 +2944,25 @@ confirmation before proceeding.</pre>
 
         <h1 id='wmr300_notes'>WMR300</h1>
 
+        <p>A single WMR300 console supports 1 wind, 1 rain, 1 UV, and up to 8
+            temperature/humidity sensors.</p>
+
+        <p>The WMR300 sensors send at different rates:</p>
+
+
+        <table class='station_data'>
+            <caption>WMR300 transmission periods</caption>
+            <tbody>
+                <tr><th>sensor</th><th>period</th></tr>
+                <tr><td>Wind</td><td>2.5 to 3 seconds</td></tr>
+                <tr><td>T/H</td><td>10 to 12 seconds</td></tr>
+                <tr><td>Rain</td><td>20 to 24 seconds</td></tr>
+            </tbody>
+        </table>
+
+        <p>The console contains the pressure sensor.  The console reports
+            pressure every 15 minutes.</p>
+
         <p>The station emits partial packets, which may confuse some online
             services.</p>
 
@@ -2868,7 +2972,7 @@ confirmation before proceeding.</pre>
             depending on the number of records in the logger and the speed of
             the computer and disk.</p>
 
-        <h2 id="wmr300_configuration">Station configuration</h2>
+        <h2 id="wmr300_configuration">Configuring the station</h2>
 
         <p>The <span class='code'>wee_device</span> utility cannot be used to
             configure WMR300 stations.</p>
@@ -3017,7 +3121,7 @@ confirmation before proceeding.</pre>
         <p>The station emits partial packets, which may confuse some online
             services.</p>
 
-        <h2 id="wmr9x8_configuration">Station configuration</h2>
+        <h2 id="wmr9x8_configuration">Configuring the station</h2>
 
         <p>The <span class='code'>wee_device</span> utility cannot be used to
             configure WMR9x8 stations.</p>
@@ -3227,7 +3331,7 @@ confirmation before proceeding.</pre>
 
         <p>The WS1 stations produce data every 1/2 second or so.</p>
 
-        <h2 id="ws1_configuration">Station configuration</h2>
+        <h2 id="ws1_configuration">Configuring the station</h2>
 
         <p>The <span class='code'>wee_device</span> utility cannot be used to
             configure WS1 stations.</p>
@@ -3350,7 +3454,7 @@ confirmation before proceeding.</pre>
             download all records from the console since the last record in the
             archive database.</p>
 
-        <h2 id="ws23xx_configuration">Station configuration</h2>
+        <h2 id="ws23xx_configuration">Configuring the station</h2>
 
         <p>Invoking <span class='code'>wee_device</span> with the
             <span class='code'>--help</span> option will produce output
@@ -3375,9 +3479,7 @@ Options:
 
 Mutating actions will request confirmation before proceeding.</pre>
 
-        <h2 id="ws23xx_options">Configuration options</h2>
-
-        <h3 class="config_option">--info</h3>
+        <h3>Action <span class="code">--info</span></h3>
 
         <p>Display the station settings with the
             <span class='code'>--info</span> option.</p>
@@ -3407,7 +3509,7 @@ icon alarm active: 0
 in humidity: 48.0
 ...</pre>
 
-        <h3 class="config_option">--set-interval</h3>
+        <h3>Action <span class="code">--set-interval</span></h3>
 
         <p>WS23xx stations ship from the factory with an archive interval of
             60 minutes (3600 seconds). To change the
@@ -3419,7 +3521,7 @@ in humidity: 48.0
             interval will clear the station memory.
         </p>
 
-        <h3 class="config_option">--history</h3>
+        <h3>Action <span class="code">--history</span></h3>
 
         <p>WS23xx stations store records in a circular buffer &mdash; once the
             buffer fills, the oldest records are replaced by newer records.
@@ -3433,7 +3535,7 @@ in humidity: 48.0
             memory:</p>
         <pre class="tty cmd">wee_device --history=30</pre>
 
-        <h3 class="config_option">--clear-memory</h3>
+        <h3>Action <span class="code">--clear-memory</span></h3>
 
         <p>To clear the console memory:</p>
         <pre class="tty cmd">wee_device --clear-memory</pre>
@@ -3638,7 +3740,7 @@ Transceiver is paired to console</pre>
             to create alarms in weewx, and the <span class="code">weewx</span>
             alarms can do much more than the console alarms anyway.</p>
 
-        <h2 id="ws23xx_configuration">Station configuration</h2>
+        <h2 id="ws23xx_configuration">Configuring the station</h2>
 
         <p>Invoking <span class='code'>wee_device</span> with the
             <span class='code'>--help</span> option will produce output
@@ -3664,9 +3766,7 @@ Options:
 
 Mutating actions will request confirmation before proceeding.</pre>
 
-        <h2 id="ws23xx_options">Configuration options</h2>
-
-        <h3 class="config_option">--pair</h3>
+        <h3>Action <span class="code">--pair</span></h3>
         <p>The console and transceiver must be paired. This can be done either
             by using this command, or by running the program HeavyWeather on a
             Windows PC.</p>
@@ -3689,7 +3789,7 @@ Transceiver is paired to console</pre>
         <p>After pairing, the transceiver and console must be synchronized in
             order to communicate. This should happen automatically.</p>
 
-        <h3 class="config_option">--info</h3>
+        <h3>Action <span class="code">--info</span></h3>
 
         <p>Display the station settings with the
             <span class='code'>--info</span> option.</p>
