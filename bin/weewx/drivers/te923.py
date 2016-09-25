@@ -9,6 +9,8 @@
 #   http://te923.fukz.org/
 # Thanks to Mark Teel for the te923 implementation in wview:
 #   http://www.wviewweather.com/
+# Thanks to mrbalky:
+#   http://www.mrbalky.com/tag/te923/
 
 """Classes and functions for interfacing with te923 weather stations.
 
@@ -443,7 +445,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.19'
+DRIVER_VERSION = '0.20'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -1132,13 +1134,15 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         self.model = stn_dict.get('model', 'TE923')
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 3))
+        self.read_timeout = int(stn_dict.get('read_timeout', 10))
         self.polling_interval = int(stn_dict.get('polling_interval', 10))
         loginf('polling interval is %s' % str(self.polling_interval))
         self.obs_map = stn_dict.get('map', DEFAULT_OBSERVATION_MAP)
         loginf('observation map is %s' % self.obs_map)
 
         self.station = TE923Station(max_tries=self.max_tries,
-                                    retry_wait=self.retry_wait)
+                                    retry_wait=self.retry_wait,
+                                    read_timeout=self.read_timeout)
         self.station.open()
         loginf('logger capacity %s records' % self.station.get_memory_size())
         ts = self.station.get_date()
@@ -1364,6 +1368,7 @@ def decode_humid(byte):
             return None, STATE_INVALID
     return bcd2int(byte), STATE_OK
 
+# NB: te923tool does not include the 4-bit shift
 def decode_uv(buf):
     """decode data from uv sensor"""
     data = dict()
@@ -1379,7 +1384,7 @@ def decode_uv(buf):
     else:
         data['uv_state'] = STATE_OK
         data['uv'] = bcd2int(buf[18] & 0x0f) / 10.0 \
-            + bcd2int(buf[18] & 0xf0) \
+            + bcd2int((buf[18] & 0xf0) >> 4) \
             + bcd2int(buf[19] & 0x0f) * 10.0
     if DEBUG_DECODE:
         logdbg("UVX  %s %s" % (data['uv'], data['uv_state']))
@@ -1517,12 +1522,13 @@ class TE923Station(object):
         8: 10800, 9: 14400, 10: 21600, 11: 86400}
 
     def __init__(self, vendor_id=0x1130, product_id=0x6801,
-                 max_tries=10, retry_wait=5):
+                 max_tries=10, retry_wait=5, read_timeout=5):
         self.vendor_id = vendor_id
         self.product_id = product_id
         self.devh = None
         self.max_tries = max_tries
         self.retry_wait = retry_wait
+        self.read_timeout = read_timeout
 
         self._num_rec = None
         self._num_blk = None
@@ -1602,7 +1608,7 @@ class TE923Station(object):
 #        time.sleep(0.1)  # te923tool is 0.3
         start_ts = time.time()
         rbuf = []
-        while time.time() - start_ts < 5:
+        while time.time() - start_ts < self.read_timeout:
             try:
                 buf = self.devh.interruptRead(
                     self.ENDPOINT_IN, self.READ_LENGTH, self.TIMEOUT)
