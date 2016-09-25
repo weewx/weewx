@@ -1,0 +1,3994 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN">
+<html>
+<head>
+    <meta content="en-us" http-equiv="Content-Language"/>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+    <title>weewx: Hardware Guide</title>
+    <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>
+    <link href="css/jquery.tocify.css" rel="stylesheet"/>
+    <link href="css/weewx_docs.css" rel="stylesheet"/>
+    <style>
+#usbmode td {
+  text-align: center;
+}
+    </style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <div class="doclist">
+        <a href="usersguide.htm">User's Guide</a><br/>
+        <a href="customizing.htm">Customization Guide</a><br/>
+        <a href="hardware.htm">Hardware Guide</a><br/>
+        <a href="utilities.htm">Utilities Guide</a><br/>
+        <a href="upgrading.htm">Upgrade Guide</a>
+    </div>
+    <div id="toc_controls"></div>
+    <div id="toc_parent">
+        <div id="toc"></div>
+    </div>
+</div>
+
+<div class="main">
+
+    <div class="header">
+        <div class="logoref">
+            <a href='http://weewx.com'>
+                <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
+            </a>
+            <br/>
+            <span class="version">
+Version: 3.6.0a1
+            </span>
+        </div>
+        <div class="title"><span class="code">weewx</span> Hardware Guide</div>
+    </div>
+
+    <div id="technical_content" class="content">
+
+
+        <h1 id="driver_status">Driver status</h1>
+
+        <p>The following table enumerates many of the weather stations that
+            are known to work with <span class='code'>weewx</span>. If your
+            station is not in the table, check the pictures at the
+            <a href="http://weewx.com/hardware.html">supported hardware page</a> &mdash;
+            it could be a variation of one of the supported models. You can also
+            check the <a href="http://weewx.com/hwcmp.html">station comparison</a>
+            table &mdash; sometimes new models use the same communication protocols
+            as older hardware.
+        </p>
+
+        <p>The maturity column indicates the degree of confidence in the
+            driver. For stations marked <span class="code">Tested</span>,
+            the station is routinely tested as part of the release process
+            and should work as documented. For stations not marked at all,
+            they are "known to work" using the indicated driver, but are not
+            routinely tested. For stations marked
+            <span class="code">Experimental</span>, we are still working
+            on the driver. There can be problems.
+        </p>
+
+        <table class="indent">
+            <caption>Weather hardware supported by <span class='code'>weewx</span></caption>
+            <tr class="first_row">
+                <td>Vendor</td>
+                <td>Model</td>
+                <td>Hardware<br/>Interface</td>
+                <td>Required<br/>Package</td>
+                <td>Station<br/>Driver</td>
+                <td>Maturity</td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="6">AcuRite</td>
+                <td>01025</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>01035</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>01036</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>01525</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>02032</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>02064</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td class="text_highlight">Argent Data Systems</td>
+                <td>WS1</td>
+                <td>Serial</td>
+                <td class="code">pyusb</td>
+                <td>WS1<sup><a href='#ads'>10</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="2">Aercus</td>
+                <td>WS2083</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WS3083</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="5">Ambient Weather</td>
+                <td>WS1090</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td>Tested</td>
+            </tr>
+            <tr>
+                <td>WS2080</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td>Tested</td>
+            </tr>
+            <tr>
+                <td>WS2080A</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td>Tested</td>
+            </tr>
+            <tr>
+                <td>WS2090</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WS2095</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="2">Cresta</td>
+                <td>WRX815</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>PWS720</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="3">DAZA</td>
+                <td>DZ-WH1080</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>DZ-WS3101</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>DZ-WS3104</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="3">Davis</td>
+                <td>VantagePro2</td>
+                <td>Serial or USB</td>
+                <td class="code">pyserial</td>
+                <td>Vantage<sup><a href='#vantage'>1</a></sup></td>
+                <td>Tested</td>
+            </tr>
+            <tr>
+                <td>VantagePro2</td>
+                <td>WeatherLink IP</td>
+                <td class="code">&nbsp;</td>
+                <td>Vantage<sup><a href='#vantage'>1</a></sup></td>
+                <td>Tested</td>
+            </tr>
+            <tr>
+                <td>VantageVue</td>
+                <td>Serial or USB</td>
+                <td class="code">pyserial</td>
+                <td>Vantage<sup><a href='#vantage'>1</a></sup></td>
+                <td>Tested</td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="2">Elecsa</td>
+                <td>6975</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>6976</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="11">Fine Offset</td>
+                <td>WH1080</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WH1081</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WH1091</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WH1090</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WS1080</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WA2080</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WA2081</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WH2080</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WH2081</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WH3080</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WH3081</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="1">General Tools</td>
+                <td>WS831DL</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="6">Hideki</td>
+                <td>DV928</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>TE821</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>TE827</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>TE831</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>TE838</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>TE923</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td class="text_highlight">Huger</td>
+                <td>WM918</td>
+                <td>Serial</td>
+                <td class="code">pyserial</td>
+                <td>WMR9x8<sup><a href='#wmr9x8'>5</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight">IROX</td>
+                <td>Pro X</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="4">La Crosse</td>
+                <td>C86234</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WS28xx<sup><a href='#ws28xx'>8</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>WS-1640</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>WS-23XX</td>
+                <td>Serial</td>
+                <td class="code">fcntl/select</td>
+                <td>WS23xx<sup><a href='#ws23xx'>7</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>WS-28XX</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WS28xx<sup><a href='#ws28xx'>8</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="2">Maplin</td>
+                <td>N96GY</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>N96FY</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="3">Meade</td>
+                <td>TE923W</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>TE923W-M</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>TE924W</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td class="text_highlight">Mebus</td>
+                <td>TE923</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td class="text_highlight">National Geographic</td>
+                <td>265</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="14">Oregon Scientific</td>
+                <td>WMR88</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WMR88A</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WMR100</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WMR100N</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+                <td>Tested</td>
+            </tr>
+            <tr>
+                <td>WMR180</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WMR180A</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WMRS200</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WMR200</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR200<sup><a href="#wmr200">3</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>WMR200A</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR200<sup><a href="#wmr200">3</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>WMR300</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR300<sup><a href="#wmr300">4</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>WMR300A</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR300<sup><a href="#wmr300">4</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>WMR918</td>
+                <td>Serial</td>
+                <td class="code">pyserial</td>
+                <td>WMR9x8<sup><a href='#wmr9x8'>5</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WMR928N</td>
+                <td>Serial</td>
+                <td class="code">pyserial</td>
+                <td>WMR9x8<sup><a href='#wmr9x8'>5</a></sup></td>
+                <td>Tested</td>
+            </tr>
+            <tr>
+                <td>WMR968</td>
+                <td>Serial</td>
+                <td class="code">pyserial</td>
+                <td>WMR9x8<sup><a href='#wmr9x8'>5</a></sup></td>
+                <td>Tested</td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="4">PeetBros</td>
+                <td>Ultimeter 100</td>
+                <td>Serial</td>
+                <td class="code">pyserial</td>
+                <td>Ultimeter<sup><a href='#peetbros'>11</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>Ultimeter 800</td>
+                <td>Serial</td>
+                <td class="code">pyserial</td>
+                <td>Ultimeter<sup><a href='#peetbros'>11</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>Ultimeter 2000</td>
+                <td>Serial</td>
+                <td class="code">pyserial</td>
+                <td>Ultimeter<sup><a href='#peetbros'>11</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>Ultimeter 2100</td>
+                <td>Serial</td>
+                <td class="code">pyserial</td>
+                <td>Ultimeter<sup><a href='#peetbros'>11</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="2">RainWise</td>
+                <td>Mark III</td>
+                <td>Serial</td>
+                <td class="code">pyserial</td>
+                <td>CC3000<sup><a href='#rainwise'>12</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>CC3000</td>
+                <td>Serial</td>
+                <td class="code">pyserial</td>
+                <td>CC3000<sup><a href="#rainwise">12</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="3">Radio Shack</td>
+                <td>63-256</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR100<sup><a href='#wmr100'>2</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WX200</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WMR200<sup><a href="#wmr200">3</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>63-1016</td>
+                <td>Serial</td>
+                <td class="code">pyserial</td>
+                <td>WMR9x8<sup><a href='#wmr9x8'>5</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="2">Sinometer</td>
+                <td>WS1080 / WS1081</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WS3100 / WS3101</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan='2'>TechnoLine</td>
+                <td>WS-2300</td>
+                <td>Serial</td>
+                <td class="code">fcntl/select</td>
+                <td>WS23xx<sup><a href='#ws23xx'>7</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>WS-2350</td>
+                <td>Serial</td>
+                <td class="code">fcntl/select</td>
+                <td>WS23xx<sup><a href='#ws23xx'>7</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan='5'>TFA</td>
+                <td>Matrix</td>
+                <td>Serial</td>
+                <td class="code">fcntl/select</td>
+                <td>WS23xx<sup><a href='#ws23xx'>7</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>Nexus</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>Opus</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WS28xx<sup><a href='#ws28xx'>8</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>Primus</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>WS28xx<sup><a href='#ws28xx'>8</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>Sinus</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td class="text_highlight">Tycon</td>
+                <td>TP1080WC</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="2">Watson</td>
+                <td>W-8681</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>WX-2008</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight">Velleman</td>
+                <td>WS3080</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight" rowspan="2">Ventus</td>
+                <td>W831</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+            <tr>
+                <td>W928</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>TE923<sup><a href='#te923'>9</a></sup></td>
+                <td>Experimental</td>
+            </tr>
+        </table>
+
+        <ol>
+            <li><a id="vantage">Davis &quot;Vantage&quot; series</a> of weather
+                stations, including the
+                <a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">VantagePro2</a>&trade;
+                and
+                <a href="http://www.vantagevue.com/">VantageVue</a>&trade;,
+                using serial, USB, or
+                <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">WeatherLinkIP</a>&trade;
+                connections. Both the &quot;Rev A&quot; (firmware dated before
+                22 April 2002) and &quot;Rev B&quot; versions are supported.
+            </li>
+            <li><a id="wmr100">Oregon Scientific WMR-100 stations.</a> Tested on the
+                <a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">Oregon
+                    Scientific WMR100N</a>.
+            </li>
+            <li><a id="wmr200">Oregon Scientific WMR-200 stations.</a> Tested on the
+                <a href="http://www.oregonscientificstore.com/Oregon-Scientific-WMR200-Bundle-Complete-Weather-Bundle.data">Oregon
+                    Scientific WMR200</a>.
+            </li>
+            <li><a id="wmr200">Oregon Scientific WMR-300 stations.</a> Tested on the
+                <a href="http://www.oregonscientificstore.com/p-358-oregon-scientific-wmr300-ultra-precision-professional-weather-system.aspx">Oregon
+                    Scientific WMR300A</a>.
+            </li>
+            <li><a id="wmr9x8">Oregon Scientific WMR-9x8 stations.</a> Tested on the
+                <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon
+                    Scientific
+                    WMR968</a>.
+            </li>
+            <li><a id="fousb">Fine Offset 10xx, 20xx, and 30xx stations.</a>
+                Tested on the
+                <a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>.
+            </li>
+            <li><a id="ws23xx">La Crosse WS-23xx stations.</a> Tested on the
+                <a href="http://lacrossetechnologies.com/2317/">La Crosse 2317</a>.
+            </li>
+            <li><a id="ws28xx">La Crosse WS-28xx stations.</a> Tested on the
+                <a href="http://lacrossetechnologies.com/2814/">La Crosse C86234</a>.
+            </li>
+            <li><a id="te923">Hideki Professional Weather Stations.</a> Tested on the
+                <a href="http://www.ambientweather.com/hotewiwest.html">Meade TE923</a>.
+            </li>
+            <li><a id="ads">ADS WS1 Stations.</a> Tested on the
+                <a href="http://www.argentdata.com/catalog/product_info.php?products_id=135">WS1</a>.
+            </li>
+            <li><a id="peetbros">PeetBros Ultimeter Stations.</a> Tested on the
+                <a href="http://www.peetbros.com/">Ultimeter 2000</a>.
+            </li>
+            <li><a id="rainwise">RainWise Mark III Stations.</a> Tested on the
+                <a href="http://www.rainwise.com/">CC3000</a>.
+            </li>
+            <li><a id="acurite">AcuRite Weather Stations.</a> Tested on the
+                <a href="http://www.acurite.com/8-pro-digital-weather-station-with-pc-connect-01036.html">01036RX</a>.
+            </li>
+        </ol>
+
+
+
+        <!-- ********** -->
+
+
+        <h1 id='acurite_notes'>AcuRite</h1>
+
+        <p>The wind speed updates every 18 seconds. The wind direction updates
+            every 30 seconds. Other sensors update every 60 seconds.</p>
+
+        <p>The AcuRite stations do not record wind gusts.</p>
+
+        <p>The station emits partial packets, which may confuse some online
+            services.</p>
+
+        <p>Some consoles have a small internal logger.  Data in the logger
+            are erased when power is removed from the station.</p>
+
+        <p>The console has a sensor for inside humidity, but the values from
+            that sensor are available only by reading from the console logger.
+            Due to instability of the console firmware, the
+            <span class="code">weewx</span> driver does not read the console
+            logger.</p>
+
+        <h2 id="acurite_usb_mode">USB Mode</h2>
+
+        <p>The AcuRite stations have a setting called "USB Mode" that controls
+            how data are saved and communicated:</p>
+
+        <table id='usbmode' class='station_data'>
+            <caption>AcuRite USB mode</caption>
+            <tbody>
+            <tr>
+                <th>Mode</th>
+                <th>Show data<br/>in display</th>
+                <th>Store data<br/>in logger</th>
+                <th>Send data<br/>over USB</th>
+            </tr>
+            <tr><td>1</td><td>yes</td><td>yes</td><td></td></tr>
+            <tr><td>2</td><td>yes</td><td></td><td></td></tr>
+            <tr><td>3</td><td>yes</td><td>yes</td><td>yes</td></tr>
+            <tr><td>4</td><td>yes</td><td></td><td>yes</td></tr>
+            </tbody>
+        </table>
+
+        <p>The AcuRite console must be set to USB mode 3 or 4 in order to
+            work with the <span class="code">weewx</span> driver.</p>
+
+        <p>Communication
+            via USB is disabled in modes 1 and 2. Mode 4 is more reliable than
+            mode 3; mode 3 enables logging of data, mode 4 does not. When the
+            console is logging it frequently causes USB communication
+            problems.</p>
+
+        <p>The default mode is 2, so after a power failure one must use the
+            console controls to change the mode before
+            <span class="code">weewx</span> can resume data collection.</p>
+
+        <p>The 02064 stations are always in USB mode 4.</p>
+
+        <h2 id='acurite_configuration'>Configuring with <span class="code">wee_device</span></h2>
+
+        <p>The <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> utility
+            cannot be used to configure AcuRite stations.</p>
+
+        <h2 id="acurite_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewyes</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>AcuRite station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity</td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rxCheckPercent</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTempBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+        <p class='station_data_key'>
+            Each packet contains a subset of all possible readings. For example, one type of packet contains <span
+                class='code'>windSpeed</span>, <span class='code'>windDir</span> and <span class='code'>rain</span>. A
+            different type of packet contains <span class='code'>windSpeed</span>, <span class='code'>outTemp</span> and
+            <span class='code'>outHumidity</span>.
+        </p>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+
+        <!-- ********** -->
+
+
+        <h1 id='cc3000_notes'>CC3000</h1>
+
+        <p>The CC3000 data logger stores 2MB of records.</p>
+
+        <p>When the logger fills up, it stops recording.</p>
+
+        <p>When <span class='code'>weewx</span> starts up it will attempt to
+            download all records from the logger since the last record in the
+            archive database.</p>
+
+        <p>The driver does not support hardware record generation.</p>
+
+        <p>The CC3000 data logger may be configured to return data in METRIC
+            or ENGLISH units. These are then mapped to the weewx unit groups
+            METRICWX or US, respectively.</p>
+
+        <h2 id='cc3000_configuration'>Configuring with <span class="code">wee_device</span></h2>
+
+        <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
+            <span class='code'>--help</span> option will produce
+            something like this:</p>
+
+    <pre class="tty">
+Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.11 (weewx.drivers.cc3000)
+Usage: wee_device [config_file] [options] [--debug] [--help]
+
+Configuration utility for weewx devices.
+
+Options:
+  -h, --help            show this help message and exit
+  --debug               display diagnostic information while running
+  -y                    answer yes to every prompt
+  --info                display weather station configuration
+  --current             display current weather readings
+  --history=N           display N records (0 for all records)
+  --history-since=N     display records since N minutes ago
+  --clear-memory        clear station memory
+  --reset-rain          reset the rain counter
+  --get-clock           display station clock
+  --set-clock           set station clock to computer time
+  --get-interval        display logger archive interval, in minutes
+  --set-interval=N      set logging interval to N minutes (0-60)
+  --get-units           show units of logger
+  --set-units=UNITS     set units to METRIC or ENGLISH
+  --get-dst             display daylight savings settings
+  --set-dst=mm/dd HH:MM,mm/dd HH:MM,MM
+                        set daylight savings start, end, and amount
+  --get-channel         display the station channel
+  --set-channel=CHANNEL
+                        set the station channel
+
+Be sure to stop weewx first before using. Mutating actions will request
+confirmation before proceeding.
+</pre>
+
+        <h3>Action <span class="code">--info</span></h3>
+
+        <p>Display the station settings with
+            <span class='code'>--info</span></p>
+        <pre class="tty cmd">wee_device --info</pre>
+        <p>This will result in something like:</p>
+    <pre class='tty'>firmware: Rainwise CC-3000 Version: 1.3 Build 006 Sep 04 2013
+time: 2014/06/02 08:22:17
+units: ENGLISH
+memory: 251372 bytes, 4334 records, 12%
+interval: 1</pre>
+
+        <h3 id="cc3000_changing_the_archive_interval">
+            Action <span class="code">--set-interval</span></h3>
+
+        <p>Set the archive interval.
+            CC3000 loggers ship from the factory with an archive interval of
+            1 minutes (60 seconds). To change the
+            station's interval to 5 minutes, do the following:</p>
+
+        <p class="tty cmd">wee_device --set-interval=5</p>
+
+        <h3>Action <span class="code">--history</span></h3>
+
+        <p>Display the latest <span class="code">N</span> records from the
+            CC3000 logger memory.  Use a value of <span class="code">0</span>
+            to display all records.</p>
+
+        <h3>Action <span class="code">--clear-memory</span></h3>
+
+        <p>Use <span class='code'>--clear-memory</span> to erase all records
+            from the logger memory.</p>
+
+        <h3>Action <span class="code">--set-units</span></h3>
+
+        <p>The CC3000 can display data in either ENGLISH or METRIC unit
+            systems.  Use <span class="code">--set-units</span> to specify
+            one or the other.</p>
+
+        <p>The CC3000 driver automatically converts the units to maintain
+            consistency with the units in <span class="code">weewx</span>.
+            </p>
+
+        <h3>Action <span class="code">--set-channel</span></h3>
+
+        <p>Rainwise stations transmit on one of four channels.  If you have
+            multiple instrument clusters within a kilometer or so of each
+            other, you should configure each to use a different channel.
+            In the instrument cluster, remove the cover and set the DIP
+            switches 0 and 1.  Use <span class="code">--set-channel</span>
+            to a value of 0-3 to match that of the instrument cluster.</p>
+
+        <h3>Action <span class="code">--reset-rain</span></h3>
+
+        <p>Use <span class="code">--reset-rain</span> to set the rain counter
+            to zero.</p>
+
+        <h3>Action <span class="code">--set-clock</span></h3>
+
+        <p>Set the station clock to match the date/time of the computer.</p>
+
+        <h3>Action <span class="code">--set-dst</span></h3>
+
+        <p>Set the station start, end, and amount of daylight savings.</p>
+
+        <h2 id="cc3000_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewx</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>CC3000 station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>radiation<sup>1</sup></td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>UV<sup>1</sup></td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>consBatteryVoltage</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>bkupBatteryVoltage</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+        <p class='station_data_key'>
+            <sup>1</sup> The <span class='code'>radiation</span> and
+            <span class='code'>UV</span>
+            data are available only with the optional solar radiation sensor.
+        </p>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+
+        <!-- ********** -->
+
+
+        <h1 id='fousb_notes'>FineOffsetUSB</h1>
+
+        <p>The station clock can only be set manually via buttons on the console, or (if the station supports it) by
+            WWVB radio. The FineOffsetUSB driver ignores the station clock since it cannot be trusted.</p>
+
+        <p>The station reads data from the sensors every 48 seconds. The 30xx stations read UV data every 60
+            seconds.</p>
+
+        <p>The 10xx and 20xx stations can save up to 4080 historical readings. That is about 85 days of data with the
+            default recording interval of 30 minutes, or about 14 days with a recording interval of 5 minutes. The 30xx
+            stations can save up to 3264 historical readings.</p>
+
+        <p>When <span class='code'>weewx</span> starts up it will attempt to
+            download all records from the console since
+            the last record in the archive database.</p>
+
+        <h2 id="polling_mode_and_the_polling_interval">Polling mode and
+            interval</h2>
+
+        <p>When reading 'live' data, <span class='code'>weewx</span> can read
+            as fast as possible, or at a user-defined
+            period. This is controlled by the option
+            <span class='code'>polling_mode</span> in
+            <span class="code">weewx.conf</span>.</p>
+        <table class='indent'>
+            <caption>Polling modes for Fine Offset stations</caption>
+            <tr class="first_row">
+                <td width='15%'>Mode</td>
+                <td width='30%'><span class='code'>weewx.conf</span></td>
+                <td>Notes</td>
+            </tr>
+            <tr>
+                <td class="first_col">ADAPTIVE</td>
+                <td>
+                <pre class='tty' style='margin:0'>[FineOffsetUSB]
+    polling_mode = ADAPTIVE</pre>
+                </td>
+                <td>
+                    <p>In this mode, <span class='code'>weewx</span> reads data from the station as often as possible,
+                        but at intervals that avoid communication between the console and the sensors. Nominally this
+                        results in reading data every 48 seconds.</p>
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col">PERIODIC</td>
+                <td>
+                <pre class='tty' style='margin:0'>[FineOffsetUSB]
+    polling_mode = PERIODIC
+    polling_interval = 60</pre>
+                </td>
+                <td>
+                    <p>In this mode, <span class='code'>weewx</span> reads data from the station every <span
+                            class='code'>polling_interval</span> seconds.</p>
+
+                    <p>The console reads the sensors every 48 seconds (60 seconds for UV), so setting the <span
+                            class='code'>polling_interval</span> to a value less than 48 will result in duplicate
+                        readings. </p>
+                </td>
+            </tr>
+        </table>
+
+
+        <h2 id="fousb_configuration">Configuring with <span class="code">wee_device</span></h2>
+
+        <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
+            <span class='code'>--help</span> option will produce
+            something like this:</p>
+
+    <pre class="tty">FineOffsetUSB driver version 1.7
+Usage: wee_device [config_file] [options] [--debug] [--help]
+
+Configuration utility for weewx devices.
+
+Options:
+-h, --help           show this help message and exit
+--debug              display diagnostic information while running
+-y                   answer yes to every prompt
+--info               display weather station configuration
+--current            get the current weather conditions
+--history=N          display N records
+--history-since=N    display records since N minutes ago
+--clear-memory       clear station memory
+--set-time           set station clock to computer time
+--set-interval=N     set logging interval to N minutes
+--live               display live readings from the station
+--logged             display logged readings from the station
+--fixed-block        display the contents of the fixed block
+--check-usb          test the quality of the USB connection
+--check-fixed-block  monitor the contents of the fixed block
+--format=FORMAT      format for output, one of raw, table, or dict
+
+Mutating actions will request confirmation before proceeding.</pre>
+
+        <h3>Action <span class="code">--info</span></h3>
+
+        <p>Display the station settings with the
+            <span class='code'>--info</span> option.</p>
+        <pre class="tty cmd">wee_device --info</pre>
+        <p>This will result in something like:</p>
+    <pre class='tty'>Fine Offset station settings:
+                    local time: 2013.02.11 18:34:28 CET
+                  polling_mode: ADAPTIVE
+
+                  abs_pressure: 933.3
+                   current_pos: 592
+                  data_changed: 0
+                    <span class="highlight">data_count: 22</span>
+                     date_time: 2007-01-01 22:49
+                 hum_in_offset: 18722
+                hum_out_offset: 257
+                            id: None
+                 lux_wm2_coeff: 0
+                       magic_1: 0x55
+                       magic_2: 0xaa
+                         model: None
+                     rain_coef: None
+                   <span class="highlight">read_period: 30</span>
+                  <span class="highlight">rel_pressure: 1014.8</span>
+                temp_in_offset: 1792
+               temp_out_offset: 0
+                      timezone: 0
+                    unknown_01: 0
+                    unknown_18: 0
+                       version: 255
+                     wind_coef: None
+                     wind_mult: 0</pre>
+
+        <p><span class="highlight">Highlighted</span> values can be modified.
+        </p>
+
+        <h3>Action <span class="code">--set-interval</span></h3>
+
+        <p>Set the archive interval.  Fine Offset stations ship from the
+            factory with an archive interval (read_period) of 30 minutes (1800
+            seconds). To change the station's interval to 5 minutes, do the
+            following:</p>
+
+        <p class="tty cmd">wee_device --set-interval=5</p>
+
+        <h3>Action <span class="code">--history</span></h3>
+
+        <p>Fine Offset stations store records in a circular buffer &mdash; once the buffer fills, the oldest records are
+            replaced by newer records. The 1080 and 2080 consoles store up to 4080 records. The 3080 consoles store up
+            to 3264 records. The <span class='code'>data_count</span> indicates how many records are in memory. The
+            <span class='code'>read_period</span> indicates the number of minutes between records. <span class='code'>wee_device</span>
+            can display these records in space-delimited, raw bytes, or dictionary format.</p>
+
+        <p>For example, to display the most recent 30 records from the console memory:</p>
+        <pre class="tty cmd">wee_device --history=30</pre>
+
+        <h3 id="fo_clear_console_memory">
+            Action <span class="code">--clear-memory</span></h3>
+        <p>To clear the console memory:</p>
+        <pre class="tty cmd">wee_device --clear-memory</pre>
+
+        <h3>Action <span class="code">--check-usb</span></h3>
+
+        <p>This command can test the quality of the USB connection between the computer and console. Poor quality USB
+            cables, under-powered USB hubs, and other devices on the bus can interfere with communication.</p>
+
+        <p>To test the quality of the USB connection to the console:</p>
+        <pre class="tty cmd">wee_device --check-usb</pre>
+        <p>Let the utility run for at least a few minutes, or possibly an hour or two. It is not unusual to see a few
+            bad reads in an hour, but if you see many bad reads within a few minutes, consider replacing the USB cable,
+            USB hub, or removing other devices from the bus.</p>
+
+        <h2 id="fousb_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewx</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>Fine Offset station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGust</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGustDir</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>H/S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>H/S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>H/S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>radiation<sup>1</sup></td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rxCheckPercent</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTempBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+        <p class='station_data_key'>
+            <sup>1</sup> The <span class='code'>radiation</span> data are available
+            only from 30xx stations.
+            These stations include a luminosity sensor, from which the radiation is
+            approximated.
+        </p>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+
+        <!-- ********** -->
+
+
+        <h1 id='te923_notes'>TE923</h1>
+        <p>Some station models will recognize up to 5 remote
+            temperature/humidity sensor units. Use the hardware switch
+            in each sensor unit to identify sensors. Use the
+            <span class='code'>sensor_map</span> in
+            <span class='code'>weewx.conf</span>
+            to associate each sensor with a database field. </p>
+
+        <p>The station has either 208 or 3442 history records, depending on
+            the model. That is just over a day (208 records) or about 23 days
+            (3442 records) with an archive interval of 5 minutes.</p>
+
+        <p>The TE923 driver will read history records from the station when
+            weewx starts up, but it does not support hardware record
+            generation.</p>
+
+        <h2 id="te923_configuration">Configuring with <span class="code">wee_device</span></h2>
+
+        <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
+            <span class='code'>--help</span> option will produce output
+            something like this:</p>
+
+    <pre class='tty'>
+Using configuration file /home/weewx/weewx.conf
+Using TE923 driver version 0.20 (weewx.drivers.te923)
+Usage: wee_device [config_file] [options] [--debug] [--help]
+
+Configuration utility for weewx devices.
+
+Options:
+  -h, --help            show this help message and exit
+  --debug               display diagnostic information while running
+  -y                    answer yes to every prompt
+  --info                display weather station configuration
+  --current             get the current weather conditions
+  --history=N           display N history records
+  --history-since=N     display history records since N minutes ago
+  --minmax              display historical min/max data
+  --get-date            display station date
+  --set-date=YEAR,MONTH,DAY
+                        set station date
+  --sync-date           set station date using system clock
+  --get-location-local  display local location and timezone
+  --set-location-local=CITY|USR,LONG_DEG,LONG_MIN,E|W,LAT_DEG,LAT_MIN,N|S,TZ,DST
+                        set local location and timezone
+  --get-location-alt    display alternate location and timezone
+  --set-location-alt=CITY|USR,LONG_DEG,LONG_MIN,E|W,LAT_DEG,LAT_MIN,N|S,TZ,DST
+                        set alternate location and timezone
+  --get-altitude        display altitude
+  --set-altitude=ALT    set altitude (meters)
+  --get-alarms          display alarms
+  --set-alarms=WEEKDAY,SINGLE,PRE_ALARM,SNOOZE,MAXTEMP,MINTEMP,RAIN,WIND,GUST
+                        set alarm state
+  --get-interval        display archive interval
+  --set-interval=INTERVAL
+                        set archive interval (seconds)
+  --format=FORMAT       formats include: table, dict
+
+Be sure to stop weewx first before using. Mutating actions will request
+confirmation before proceeding.
+</pre>
+
+        <h3 id="te923_display_status">
+            Action <span class="code">--info</span></h3>
+
+        <p>Use <span class="code">--info</span> to display the station
+            configuration:</p>
+        <pre class="tty cmd">wee_device --info</pre>
+        <p>This will result in something like:</p>
+    <pre class="tty">Querying the station for the configuration...
+        altitude: 16
+           bat_1: True
+           bat_2: True
+           bat_3: True
+           bat_4: True
+           bat_5: True
+        bat_rain: True
+          bat_uv: False
+        bat_wind: True
+        latitude: 43.35
+       longitude: -72.0
+     version_bar: 23
+     version_rcc: 16
+     version_sys: 41
+      version_uv: 20
+    version_wind: 38</pre>
+
+        <h3 id="te923_display_current">
+            Action <span class="code">--current</span></h3>
+
+        <p>Use <span class="code">--current</span> to display the
+            current status of each sensor:</p>
+        <pre class="tty cmd">wee_device --current</pre>
+        <p>This will result in something like:</p>
+    <pre class="tty">Querying the station for current weather data...
+        dateTime: 1454615168
+        forecast: 5
+             h_1: 41
+       h_1_state: ok
+             h_2: 48
+       h_2_state: ok
+             h_3: None
+       h_3_state: no_link
+             h_4: None
+       h_4_state: no_link
+             h_5: None
+       h_5_state: no_link
+            h_in: 44
+      h_in_state: ok
+            rain: 2723
+      rain_state: ok
+             slp: 1012.4375
+       slp_state: ok
+           storm: 0
+             t_1: 13.9
+       t_1_state: ok
+             t_2: 21.5
+       t_2_state: ok
+             t_3: None
+       t_3_state: no_link
+             t_4: None
+       t_4_state: no_link
+             t_5: None
+       t_5_state: no_link
+            t_in: 22.85
+      t_in_state: ok
+              uv: None
+        uv_state: no_link
+       windchill: None
+ windchill_state: invalid
+         winddir: 12
+   winddir_state: invalid
+        windgust: None
+  windgust_state: invalid
+       windspeed: None
+ windspeed_state: invalid</pre>
+
+        <h3 id="te923_change_archive_interval">
+            Action <span class='code'>--set-interval</span></h3>
+
+        <p>TE923 stations ship from the factory with an archive interval of 1
+            hour (3600 seconds). To change the station's interval to 5 minutes
+            (300 seconds), do the following:</p>
+
+        <p class="tty cmd">wee_device --set-interval=300</p>
+
+        <h3 id="te923_display_logger_memory">
+            Action <span class="code">--history</span></h3>
+
+        <p>Use the <span class='code'>--history</span> action to display
+            records from the logger in tabular or dictionary format.
+        </p>
+
+        <p>For example, to display the most recent 30 records in dictionary
+            format:</p>
+        <pre class="tty cmd">wee_device --history=30 --format=dict</pre>
+
+        <h3>Action <span class="code">--clear-memory</span></h3>
+
+        <p>Use <span class='code'>--clear-memory</span> to erase all records
+            from the logger memory.</p>
+
+        <h2 id="te923_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewx</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>TE923 station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGust</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGustDir</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>H/S</td>
+                <td>H/S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>UV<sup>1</sup></td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp4</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid4</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>txBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTempBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus1</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus2</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus3</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus4</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+        <p class='station_data_key'>
+            Some stations support up to 5 remote temperature/humidity sensors.
+        </p>
+        <p class='station_data_key'>
+            <sup>1</sup> The <span class='code'>UV</span> data are available
+            only with the optional solar radiation sensor.
+        </p>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+
+        <!-- ********** -->
+
+
+        <h1 id='ultimeter_notes'>Ultimeter</h1>
+        <p>The Ultimeter driver operates the Ultimeter in Data Logger Mode,
+            which results in sensor readings every 1/2 second or so.</p>
+
+        <p>The Ultimeter driver ignores the maximum, minimum, and average
+            values recorded by the station.</p>
+
+        <h2 id='ultimeter_configuration'>Configuring with <span class="code">wee_device</span></h2>
+
+        <p>The <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> utility
+            cannot be used to configure Ultimeter stations.</p>
+
+        <h2 id="ultimeter_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewx</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>Ultimeter station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer<sup>2</sup></td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure<sup>2</sup></td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter<sup>2</sup></td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp<sup>2</sup></td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity<sup>2</sup></td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain<sup>1</sup></td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate<sup>1</sup></td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+        <p class='station_data_key'>
+            <sup>1</sup> The <span class='code'>rain</span> and
+            <span class='code'>rainRate</span> are
+            available only on stations with the optional rain sensor.
+        </p>
+
+        <p class='station_data_key'>
+            <sup>2</sup> Pressure, inside temperature, and inside humidity
+            data are not available on all types of Ultimeter stations.
+        </p>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+
+        <!-- ********** -->
+
+
+        <h1 id='vantage_notes'>Vantage</h1>
+
+        <p>The Davis Vantage stations include a variety of models and
+            configurations.  The <span class="code">weewx</span> driver
+            can communicate with a console or envoy using serial, USB,
+            or TCP/IP interface.</p>
+
+        <h2 id="vantage_configuration">Configuring with <span class="code">wee_device</span></h2>
+
+        <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
+            <span class='code'>--help</span>
+            option will produce output something like this:</p>
+
+    <pre class="tty">wee_device /home/weewx/weewx.conf --help
+Using configuration file /home/weewx/weewx.conf
+Using Vantage driver version 3.0.8 (weewx.drivers.vantage)
+Usage: wee_device [config_file] [--help] [--info] [--clear-memory]
+    [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg]
+    [--set-bucket=CODE] [--set-rain-year-start=MM]
+    [--set-offset=VARIABLE,OFFSET]
+    [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
+    [--set-time] [--set-dst=[AUTO|ON|OFF]]
+    [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
+    [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE]
+    [--start | --stop]
+
+Configures the Davis Vantage weather station.
+
+Options:
+  -h, --help            show this help message and exit
+  --debug               display diagnostic information while running
+  -y                    answer yes to every prompt
+  --info                To print configuration, reception, and barometer
+                        calibration information about your weather station.
+  --clear-memory        To clear the memory of your weather station.
+  --set-interval=SECONDS
+                        Sets the archive interval to the specified number of
+                        seconds. Valid values are 60, 300, 600, 900, 1800,
+                        3600, or 7200.
+  --set-altitude=FEET   Sets the altitude of the station to the specified
+                        number of feet.
+  --set-barometer=inHg  Sets the barometer reading of the station to a known
+                        correct value in inches of mercury. Specify 0 (zero)
+                        to have the console pick a sensible value.
+  --set-bucket=CODE     Set the type of rain bucket. Specify '0' for 0.01
+                        inches; '1' for 0.2 MM; '2' for 0.1 MM
+  --set-rain-year-start=MM
+                        Set the rain year start (1=Jan, 2=Feb, etc.).
+  --set-offset=VARIABLE,OFFSET
+                        Set the onboard offset for VARIABLE inTemp, outTemp,
+                        extraTemp[1-7], inHumid, outHumid, extraHumid[1-7],
+                        soilTemp[1-4], leafTemp[1-4], windDir) to OFFSET
+                        (Fahrenheit, %, degrees)
+  --set-transmitter-type=CHANNEL,TYPE,TEMP,HUM
+                        Set the transmitter type for CHANNEL (1-8), TYPE
+                        (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain,
+                        6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none),
+                        as extra TEMP station and extra HUM station (both 1-7,
+                        if applicable)
+  --set-time            Set the onboard clock to the current time.
+  --set-dst=AUTO|ON|OFF
+                        Set DST to 'ON', 'OFF', or 'AUTO'
+  --set-tz-code=TZCODE  Set timezone code to TZCODE. See your Vantage manual
+                        for valid codes.
+  --set-tz-offset=HHMM  Set timezone offset to HHMM. E.g. '-0800' for U.S.
+                        Pacific Time.
+  --set-lamp=ON|OFF     Turn the console lamp 'ON' or 'OFF'.
+  --start               Start the logger.
+  --stop                Stop the logger.
+  --dump                Dump all data to the archive. NB: This may result in
+                        many duplicate primary key errors.
+  --logger-summary=FILE
+                        Save diagnostic summary to FILE (for debugging the
+                        logger).
+
+Be sure to stop weewx first before using. Mutating actions will request
+confirmation before proceeding.</pre>
+
+        <h3 id="vantage_info">
+            Action <span class="code">--info</span></h3>
+
+        <p>Use the <span class="code">--info</span> option to display the current EEPROM settings: </p>
+        <pre class="tty cmd">wee_device --info</pre>
+        <p>This will result in something like:</p>
+    <pre class="tty">Davis Vantage EEPROM settings:
+
+    CONSOLE TYPE:                   VantagePro2
+
+    CONSOLE FIRMWARE:
+      Date:                         Dec 11 2012
+      Version:                      3.12
+
+    CONSOLE SETTINGS:
+      <span class="highlight">Archive interval:             300 (seconds)</span>
+      <span class="highlight">Altitude:                     700 (foot)</span>
+      Wind cup type:                large
+      <span class="highlight">Rain bucket type:             0.01 inches</span>
+      <span class="highlight">Rain year start:              10</span>
+      <span class="highlight">Onboard time:                 2014-09-25 07:41:14</span>
+
+    CONSOLE DISPLAY UNITS:
+      Barometer:                    inHg
+      Temperature:                  degree_F
+      Rain:                         inch
+      Wind:                         mile_per_hour
+
+    CONSOLE STATION INFO:
+      Latitude (onboard):           45.7
+      Longitude (onboard):          -121.6
+      <span class="highlight">Use manual or auto DST?       AUTO</span>
+      <span class="highlight">DST setting:                  N/A</span>
+      <span class="highlight">Use GMT offset or zone code?  ZONE_CODE</span>
+      <span class="highlight">Time zone code:               4</span>
+      <span class="highlight">GMT offset:                   N/A</span>
+
+    TRANSMITTERS:
+      <span class="highlight">Channel 1:                    iss</span>
+      <span class="highlight">Channel 2:                    (N/A)</span>
+      <span class="highlight">Channel 3:                    temp (as extra temperature 1)</span>
+      <span class="highlight">Channel 4:                    (N/A)</span>
+      <span class="highlight">Channel 5:                    (N/A)</span>
+      <span class="highlight">Channel 6:                    (N/A)</span>
+      <span class="highlight">Channel 7:                    (N/A)</span>
+      <span class="highlight">Channel 8:                    (N/A)</span>
+
+    RECEPTION STATS:
+      Total packets received:       10670
+      Total packets missed:         128
+      Number of resynchronizations: 0
+      Longest good stretch:         934
+      Number of CRC errors:         651
+
+    BAROMETER CALIBRATION DATA:
+      <span class="highlight">Current barometer reading:    29.834 inHg</span>
+      <span class="highlight">Altitude:                     700 feet</span>
+      Dew point:                    55 F
+      Virtual temperature:          59 F
+      Humidity correction factor:   27
+      Correction ratio:             1.025
+      Correction constant:          +0.000 inHg
+      Gain:                         0.000
+      Offset:                       -47.000
+
+    OFFSETS:
+      <span class="highlight">Wind direction:               +0 deg</span>
+      <span class="highlight">Inside Temperature:           +0.0 F</span>
+      <span class="highlight">Inside Humidity:              +0%</span>
+      <span class="highlight">Outside Temperature:          +0.0 F</span>
+      <span class="highlight">Outside Humidity:             +0%</span>
+      <span class="highlight">Extra Temperature 1:          +0.0 F</span></pre>
+        <p>The console version number is available only on consoles with firmware dates after about 2006.</p>
+
+        <p><span class="highlight">Highlighted</span> values can be modified using the
+            various <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a>
+            commands below.</p>
+
+        <h3 id="vantage_clear_memory">
+            Action <span class="code">--clear-memory</span></h3>
+        <p>This command will clear the logger memory after asking for confirmation.</p>
+
+        <h3 id="vantage_archive_interval">
+            Action <span class="code">--set-interval</span></h3>
+
+        <p>Use this command to change the archive interval of the internal logger. Valid intervals are 60, 300, 600,
+            900, 1800, 3600, and 7200 seconds. However, if you are ftp&#39;ing lots of files to a server, setting it to
+            60 seconds may not give enough time to have them all uploaded before the next archive record is due. If this
+            is the case, you should pick an archive interval of at least 300 seconds, or trim the number of files you
+            are using.</p>
+
+        <p>An archive interval of five minute (300 seconds) works well for the Vantage stations. Because of the large
+            amount of onboard memory they carry, going to a larger interval does not have any real advantages. </p>
+
+        <p>Example: to change the archive interval to 10 minutes (600 seconds):</p>
+        <pre class="tty cmd">wee_device --set-interval=600</pre>
+
+        <h3>Action <span class="code">--set-altitude</span></h3>
+
+        <p>Use this command to set the console's stored altitude. The altitude must be in <em>feet</em>. Example:</p>
+        <pre class="tty cmd">wee_device --set-altitude=700</pre>
+
+        <h3>Action <span class="code">--set-barometer</span></h3>
+
+        <p>Use this command to calibrate the barometer in your Vantage weather station. To use it, you must have a known
+            correct barometer reading <em>for your altitude</em>. In practice, you will either have to move your console
+            to a known-correct station (perhaps a nearby airport) and perform the calibration there, or reduce the
+            barometer reading to your altitude. Otherwise, specify the value zero and the station will pick a sensible
+            value.</p>
+
+        <h3 id="vantage_rain_bucket_type">
+            Action <span class="code">--set-bucket</span></h3>
+
+        <p>Normally, this is set by Davis, but if you have replaced your bucket with a different kind, you might want to
+            reconfigure. For example, to change to a 0.1 mm bucket (bucket code &quot;2&quot;), use the following:</p>
+        <pre class="tty cmd">wee_device --set-bucket=2</pre>
+
+        <h3>Action <span class="code">--set-rain-year-start</span></h3>
+
+        <p>The Davis Vantage series allows the start of the rain year to be something other than 1 January. For example,
+            to set it to 1 October:</p>
+        <pre class="tty cmd">wee_device --set-rain-year-start=10</pre>
+
+        <h3 id="vantage_setting_offsets">
+            Action <span class="code">--set-offset</span></h3>
+
+        <p>The Davis instruments can correct sensor errors by adding an <em>offset</em> to their emitted values. This is
+            particularly useful for Southern Hemisphere users. Davis fits the wind vane to the Integrated Sensor Suite
+            (ISS) in a position optimized for Northern Hemisphere users, who face the solar panel to the south. Users
+            south of the equator must orient the ISS's solar panel to the north to get maximal insolation, resulting in
+            a 180&deg; error in the wind direction. The solution is to add a 180&deg; offset correction. You can do this
+            with the following command:</p>
+
+        <pre class="tty cmd">wee_device --set-offset=windDir,180</pre>
+
+        <h3 id="vantage_configuring_additional_sensors">
+            Action <span class="code">--set-transmitter-type</span></h3>
+
+        <p>If you have additional sensors for your Vantage station, you can configure them using your console. However,
+            if you have a <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis
+                Weather Envoy receiver</a>, it will not have a console! As an alternative, <span
+                    class="code">wee_device</span> can do this using the command <span class="code">--set-transmitter-type</span>.
+        </p>
+
+        <p>For example, to add an extra temperature sensor to channel 3, do the following:</p>
+        <pre class="tty cmd">wee_device --set-transmitter-type=3,1,2</pre>
+        <p>This says to turn on channel 3, set its type to 1 ("Temperature only"), and have it show up in the database
+            as <span class="code">extraTemp2</span>. Here's another example, this time for a combined temperature /
+            humidity sensor:</p>
+        <pre class="tty cmd">wee_device --set-transmitter-type=5,3,2,4</pre>
+        <p>This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"), and it will
+            show up in the database as <span class="code">extraTemp2</span> and <span class="code">extraHumid4</span>.
+        </p>
+
+        <p>The <span class="code">--help</span> option will give you the code for each sensor type.</p>
+
+        <h3>Action <span class="code">--set-dst</span></h3>
+
+        <p>Use the command to tell your console whether or not daylight savings time is in effect, or to have it set
+            automatically based on the time zone.</p>
+
+        <h3 id="vantage_time_zone">
+            Action <span class="code">--set-tz-code</span></h3>
+
+        <p>This command can be used to change the time zone. Consult the
+            Vantage manual for the code that corresponds to
+            your time zone.</p>
+
+        <p class="warning">You can set either the time zone code <em>or</em>
+            the time zone offset, but not both. </p>
+
+        <p>For example, to set the time zone code to Central European Time
+            (code 20):</p>
+        <pre class="tty cmd">wee_device --set-tz-code=20</pre>
+
+        <h3>Action <span class="code">--set-tz-offset</span></h3>
+
+        <p>If you live in an odd time zone that is perhaps not covered by the
+            "canned" Davis time zones, you can set the
+            offset from UTC using this command.</p>
+
+        <p class="warning">You can set either the time zone code <em>or</em>
+            the time zone offset, but not both. </p>
+
+        <p>For example, to set the time zone offset for Newfoundland Standard
+            Time (UTC-03:30), use the following:</p>
+        <pre class="tty cmd">wee_device --set-tz-offset=-0330</pre>
+
+        <h3>Action <span class="code">--set-lamp</span></h3>
+
+        <p>Use this command to turn the console lamp on or off.</p>
+
+        <h3>Action <span class="code">--start</span></h3>
+
+        <p>Use this command to start the logger. There are occasions when an
+            out-of-the-box logger needs this command.</p>
+
+        <h3>Action <span class="code">--stop</span></h3>
+
+        <p>Use this command to stop the logger. I can't think of a good reason
+            why you would need to do this, but the
+            command is included for completeness.</p>
+
+        <h3 id="vantage_dumping_the_logger_memory">
+            Action <span class="code">--dump</span></h3>
+
+        <p>Generally, <span class="code">weewx</span> downloads only new archive records from the on-board logger in the
+            Vantage. However, occasionally the memory in the Vantage will get corrupted, making this impossible. See the
+            troubleshooting section <em><a href="usersguide.htm#html_generated_but_not_updated">Weewx generates HTML
+                pages, but it does not update them</a></em>. The fix involves clearing the memory but, unfortunately,
+            this means you may lose any data which might have accumulated in the logger memory, but not yet downloaded.
+            By using the <span class="code">--dump</span> command before clearing the memory, you might be able to save
+            these data. Stop <span class="code">weewx</span> first, then</p>
+        <pre class="tty cmd">wee_device --dump</pre>
+        <p>This will dump all data archived in the Vantage memory directly to the database, without regard to whether or
+            not they have been seen before. Because the command dumps <em>all</em> data, it may result in many duplicate
+            primary key errors. These can be ignored.</p>
+
+        <h3>Action <span class="code">--logger-summary FILE</span></h3>
+        <p>This command is useful for debugging the console logger. It will scan the logger memory, recording the
+            timestamp in each page and index slot to the file <span class="code">FILE</span>.</p>
+        <p>Example:</p>
+        <pre class="tty cmd">wee_device --logger-summary=/var/tmp/summary.txt</pre>
+
+        <h2 id="vantage_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewx</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>Vantage station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGust</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGustDir</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>radiation</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>UV</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp4</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp5</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp6</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp7</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>soilTemp1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>soilTemp2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>soilTemp3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>soilTemp4</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>leafTemp1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>leafTemp2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>leafTemp3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>leafTemp4</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid3</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid4</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid5</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid6</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid7</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>soilMoist1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>soilMoist2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>soilMoist3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>soilMoist4</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>leafWet1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>leafWet2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>leafWet3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>leafWet4</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>txBatteryStatus</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>consBatteryVoltage</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+
+        <!-- ********** -->
+
+
+        <h1 id='wmr100_notes'>WMR100</h1>
+
+        <p>The station emits partial packets, which may confuse some online
+            services.</p>
+
+        <h2 id="wmr100_configuration">Configuring with <span class="code">wee_device</span></h2>
+
+        <p>The <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> utility
+            cannot be used to configure WMR100 stations.</p>
+
+        <h2 id="wmr100_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewx</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>WMR100 station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGust</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp1</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp2</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp3</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>UV</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTempBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTempBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>uvBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+        <p class='station_data_key'>
+            Each packet contains a subset of all possible readings. For
+            example, a temperature packet contains
+            <span class='code'>extraTempN</span> and
+            <span class='code'>batteryStatusN</span>, a rain packet contains
+            <span class='code'>totalRain</span> and
+            <span class='code'>rainRate</span>.
+        </p>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+
+        <!-- ********** -->
+
+
+        <h1 id='wmr200_notes'>WMR200</h1>
+
+        <p>The station emits partial packets, which may confuse some online
+            services.</p>
+
+        <p>When <span class='code'>weewx</span> starts up it will attempt to
+            download all records from the console since
+            the last record in the archive database. </p>
+
+        <h2 id="wmr200_configuration">Configuring with <span class="code">wee_device</span></h2>
+
+        <p>The <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> utility
+            cannot be used to configure WMR200 stations.</p>
+
+        <h2 id="wmr200_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewx</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>WMR200 station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGust</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>H/S</td>
+                <td>H/S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>H/S</td>
+                <td>H/S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>UV</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTempBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>uvBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+        <p class='station_data_key'>
+            Each packet contains a subset of all possible readings. For
+            example, a temperature packet contains
+            <span class='code'>extraTempN</span> and
+            <span class='code'>batteryStatusN</span>, a rain packet contains
+            <span class='code'>totalRain</span> and
+            <span class='code'>rainRate</span>.
+        </p>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+
+        <!-- ********** -->
+
+
+        <h1 id='wmr300_notes'>WMR300</h1>
+
+        <p>A single WMR300 console supports 1 wind, 1 rain, 1 UV, and up to 8
+            temperature/humidity sensors.</p>
+
+        <p>The WMR300 sensors send at different rates:</p>
+
+
+        <table class='station_data'>
+            <caption>WMR300 transmission periods</caption>
+            <tbody>
+                <tr><th>sensor</th><th>period</th></tr>
+                <tr><td>Wind</td><td>2.5 to 3 seconds</td></tr>
+                <tr><td>T/H</td><td>10 to 12 seconds</td></tr>
+                <tr><td>Rain</td><td>20 to 24 seconds</td></tr>
+            </tbody>
+        </table>
+
+        <p>The console contains the pressure sensor.  The console reports
+            pressure every 15 minutes.</p>
+
+        <p>The station emits partial packets, which may confuse some online
+            services.</p>
+
+        <p>When <span class='code'>weewx</span> starts up it will attempt to
+            download all records from the console since the last record in the
+            archive database. This can take as much as couple of hours,
+            depending on the number of records in the logger and the speed of
+            the computer and disk.</p>
+
+        <h2 id="wmr300_configuration">Configuring with <span class="code">wee_device</span></h2>
+
+        <p>The <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> utility
+            cannot be used to configure WMR300 stations.</p>
+
+        <h2 id="wmr300_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewx</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>WMR300 station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGust</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            </tbody>
+        </table>
+        <p class='station_data_key'>
+            Each packet contains a subset of all possible readings.
+        </p>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+
+        <!-- ********** -->
+
+
+        <h1 id='wmr9x8_notes'>WMR9x8</h1>
+
+        <p>The station includes a data logger, but the driver does not read
+            records from the station.</p>
+
+        <p>The station emits partial packets, which may confuse some online
+            services.</p>
+
+        <h2 id="wmr9x8_configuration">Configuring with <span class="code">wee_device</span></h2>
+
+        <p>The <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> utility
+            cannot be used to configure WMR9x8 stations.</p>
+
+        <h2 id="wmr9x8_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewx</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>WMR9x8 station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGust</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGustDir</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp1</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp2</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp3</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid1</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid2</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid3</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>UV</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTempBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTempBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>batteryStatusTH1</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>batteryStatusTH2</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>batteryStatusTH3</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>batteryStatusT1</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>batteryStatusT2</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>batteryStatusT3</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+        <p class='station_data_key'>
+            Each packet contains a subset of all possible readings. For
+            example, a temperature packet contains
+            <span class='code'>extraTempN</span> and
+            <span class='code'>batteryStatusN</span>, a rain packet contains
+            <span class='code'>totalRain</span> and
+            <span class='code'>rainRate</span>.
+        </p>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+
+        <!-- ********** -->
+
+
+        <h1 id='ws1_notes'>WS1</h1>
+
+        <p>The WS1 stations produce data every 1/2 second or so.</p>
+
+        <h2 id="ws1_configuration">Configuring with <span class="code">wee_device</span></h2>
+
+        <p>The <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> utility
+            cannot be used to configure WS1 stations.</p>
+
+        <h2 id="ws1_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewx</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>WS1 station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>S</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+
+        <!-- ********** -->
+
+
+        <h1 id='ws23xx_notes'>WS23xx</h1>
+
+        <p>The hardware interface is a serial port, but USB-serial converters
+            can be used with computers that have no serial port. Beware that
+            not every type of USB-serial converter will work. Converters based
+            on ATEN UC-232A chipset are known to work.</p>
+
+        <p>The station does not record wind gust or wind gust direction.</p>
+
+        <p>The hardware calculates windchill and dewpoint.</p>
+
+        <p>The station has 175 history records. That is just over 7 days of
+            data with the factory default history recording interval of 60
+            minutes, or about 14 hours with a recording interval of 5
+            minutes.</p>
+
+        <p>When <span class='code'>weewx</span> starts up it will attempt to
+            download all records from the console since the last record in the
+            archive database.</p>
+
+        <h2 id="ws23xx_configuration">Configuring with <span class="code">wee_device</span></h2>
+
+        <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
+            <span class='code'>--help</span> option will produce output
+            something like this:</p>
+
+    <pre class="tty">WS23xx driver version 0.21
+Usage: wee_device [config_file] [options] [--debug] [--help]
+
+Configuration utility for weewx devices.
+
+Options:
+  -h, --help         show this help message and exit
+  --debug            display diagnostic information while running
+  -y                 answer yes to every prompt
+  --info             display weather station configuration
+  --current          get the current weather conditions
+  --history=N        display N history records
+  --history-since=N  display history records since N minutes ago
+  --clear-memory     clear station memory
+  --set-time         set the station clock to the current time
+  --set-interval=N   set the station archive interval to N minutes
+
+Mutating actions will request confirmation before proceeding.</pre>
+
+        <h3>Action <span class="code">--info</span></h3>
+
+        <p>Display the station settings with the
+            <span class='code'>--info</span> option.</p>
+        <pre class="tty cmd">wee_device --info </pre>
+        <p>This will result in something like:</p>
+    <pre class='tty'>buzzer: 0
+connection time till connect: 1.5
+connection type: 15
+dew point: 8.88
+dew point max: 18.26
+dew point max alarm: 20.0
+dew point max alarm active: 0
+dew point max alarm set: 0
+dew point max when: 978565200.0
+dew point min: -2.88
+dew point min alarm: 0.0
+dew point min alarm active: 0
+dew point min alarm set: 0
+dew point min when: 978757260.0
+forecast: 0
+history interval: 5.0
+history last record pointer: 8.0
+history last sample when: 1385564760.0
+history number of records: 175.0
+history time till sample: 5.0
+icon alarm active: 0
+in humidity: 48.0
+...</pre>
+
+        <h3>Action <span class="code">--set-interval</span></h3>
+
+        <p>WS23xx stations ship from the factory with an archive interval of
+            60 minutes (3600 seconds). To change the
+            station's interval to 5 minutes, do the following:</p>
+
+        <p class="tty cmd">wee_device --set-interval=5</p>
+
+        <p class="warning"><strong>Warning!</strong><br/> Changing the archive
+            interval will clear the station memory.
+        </p>
+
+        <h3>Action <span class="code">--history</span></h3>
+
+        <p>WS23xx stations store records in a circular buffer &mdash; once the
+            buffer fills, the oldest records are replaced by newer records.
+            The console stores up to 175 records. The
+            <span class='code'>history number of records</span> indicates how
+            many records are in memory. The <span class='code'>history
+                interval</span> indicates the number of minutes between
+            records.</p>
+
+        <p>For example, to display the latest 30 records from the console
+            memory:</p>
+        <pre class="tty cmd">wee_device --history=30</pre>
+
+        <h3>Action <span class="code">--clear-memory</span></h3>
+
+        <p>To clear the console memory:</p>
+        <pre class="tty cmd">wee_device --clear-memory</pre>
+
+        <h2 id="ws23xx_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewx</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>WS23xx station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGust</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGustDir</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>H/S</td>
+                <td>H/S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>H/S</td>
+                <td>H/S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+
+        <!-- ********** -->
+
+
+        <h1 id='ws28xx_notes'>WS28xx</h1>
+
+        <p><span class='code'>weewx</span> communicates with a USB transceiver,
+            which communicates with the station console, which in turn
+            communicates with the sensors. The transceiver and console must be
+            paired and synchronized.</p>
+
+        <p>The station has 1797 history records. That is just over 6 days of
+            data with an archive interval of 5 minutes.</p>
+
+        <p>When <span class='code'>weewx</span> starts up it will attempt to
+            download all records from the console since
+            the last record in the archive database. </p>
+
+        <p>The WS28xx driver sets the station archive interval to 5
+            minutes.</p>
+
+        <p>The WS28xx driver does not support hardware archive record
+            generation.</p>
+
+        <h2 id="ws28xx_pairing">Pairing</h2>
+
+        <p>The console and transceiver must be paired. Pairing ensures that
+            your transceiver is talking to your console, not your neighbor's
+            console. Pairing should only have to be done once, although you
+            might have to pair again after power cycling the console, for
+            example after you replace the batteries.</p>
+
+        <p>There are two ways to pair the console and the transceiver:</p>
+        <ol>
+            <li><strong>The weewx way.</strong> Be sure that
+                <span class='code'>weewx</span> is not running. Run the
+                configuration utility, press and hold the [v] button on the
+                console until you see 'PC' in the display, then release the
+                button. If the console pairs with the transceiver, 'PC' will
+                go away within a second or two.
+            <pre class='tty'><span class="cmd">wee_device --pair</span>
+
+Pairing transceiver with console...
+Press and hold the [v] key until "PC" appears (attempt 1 of 3)
+Transceiver is paired to console</pre>
+            </li>
+            <li><strong>The HeavyWeather way.</strong> Follow the pairing
+                instructions that came with the station. You will have to run
+                HeavyWeather on a windows computer with the USB transceiver.
+                After HeavyWeather indicates the devices are paired, put the
+                USB transceiver in your <span class="code">weewx</span>
+                computer and start weewx. Do not power cycle the station
+                console or you will have to start over.
+            </li>
+        </ol>
+
+        <p>If the console does not pair, you will see messages in the log such
+            as this:</p>
+        <pre class='tty'>ws28xx: RFComm: message from console contains unknown device ID (id=165a resp=80 req=6)</pre>
+        <p>Either approach to pairing may require multiple attempts.</p>
+
+        <h2 id="ws28xx_synchronizing">Synchronizing</h2>
+
+        <p>After pairing, the transceiver and console must be synchronized in
+            order to communicate. Synchronization will happen automatically at
+            the top of each hour, or you can force synchronization by pressing
+            the [SET] button momentarily. Do not press and hold the [SET]
+            button - that modifies the console alarms.</p>
+
+        <p>When the transceiver and console are synchronized, you will see
+            lots of '<span class="code">ws28xx: RFComm</span>' messages in the
+            log when <span class="code">debug=1</span>. When the devices are
+            not synchronized, you will see messages like this about every 10
+            minutes:</p>
+        <pre class='tty'>Nov  7 19:12:17 raspi weewx[2335]: ws28xx: MainThread: no contact with console</pre>
+        <p>If you see this, or if you see an extended gap in the weather data
+            in the <span class="code">weewx</span> plots, press momentarily
+            the [SET] button, or wait until the top of the hour.</p>
+
+        <p>When the transceiver has not received new data for awhile, you will
+            see messages like this in the log:</p>
+        <pre class='tty'>Nov  7 19:12:17 raspi weewx[2335]: ws28xx: MainThread: no new weather data</pre>
+        <p>If you see 'no new weather data' messages with the 'no contact with
+            console' messages, it simply means that the transceiver has not
+            been able to synchronize with the console. If you see only the
+            'no new weather data' messages, then the sensors are not
+            communicating with the console, or the console may be defective.
+        </p>
+
+        <h2>Alarms</h2>
+
+        <p>When an alarm goes off, communication with the transceiver stops.
+            The WS28xx driver clears all alarms in the station. It is better
+            to create alarms in weewx, and the <span class="code">weewx</span>
+            alarms can do much more than the console alarms anyway.</p>
+
+        <h2 id="ws23xx_configuration">Configuring with <span class="code">wee_device</span></h2>
+
+        <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
+            <span class='code'>--help</span> option will produce output
+            something like this:</p>
+
+    <pre class="tty">WS28xx driver version 0.33
+Usage: wee_device [config_file] [options] [--debug] [--help]
+
+Configuration utility for weewx devices.
+
+Options:
+  -h, --help           show this help message and exit
+  --debug              display diagnostic information while running
+  -y                   answer yes to every prompt
+  --check-transceiver  check USB transceiver
+  --pair               pair the USB transceiver with station console
+  --info               display weather station configuration
+  --set-interval=N     set logging interval to N minutes
+  --current            get the current weather conditions
+  --history=N          display N history records
+  --history-since=N    display history records since N minutes ago
+  --maxtries=MAXTRIES  maximum number of retries, 0 indicates no max
+
+Mutating actions will request confirmation before proceeding.</pre>
+
+        <h3>Action <span class="code">--pair</span></h3>
+        <p>The console and transceiver must be paired. This can be done either
+            by using this command, or by running the program HeavyWeather on a
+            Windows PC.</p>
+
+        <p>Be sure that <span class='code'>weewx</span> is not running. Run
+            the command:</p>
+            <pre class='tty'><span class="cmd">wee_device --pair</span>
+
+Pairing transceiver with console...
+Press and hold the [v] key until "PC" appears (attempt 1 of 3)
+Transceiver is paired to console</pre>
+
+        <p>Press and hold the [v] button on the console until you see 'PC' in
+            the display, then release the button. If the console pairs with
+            the transceiver, 'PC' will go away within a second or two.</p>
+        <p>If the console does not pair, you will see messages in the log such
+            as this:</p>
+        <pre class='tty'>ws28xx: RFComm: message from console contains unknown device ID (id=165a resp=80 req=6)</pre>
+        <p>Pairing may require multiple attempts.</p>
+        <p>After pairing, the transceiver and console must be synchronized in
+            order to communicate. This should happen automatically.</p>
+
+        <h3>Action <span class="code">--info</span></h3>
+
+        <p>Display the station settings with the
+            <span class='code'>--info</span> option.</p>
+
+        <p class="tty cmd">wee_device --info</p>
+
+        <p>This will result in something like:</p>
+
+    <pre class='tty'>alarm_flags_other: 0
+alarm_flags_wind_dir: 0
+checksum_in: 1327
+checksum_out: 1327
+format_clock: 1
+format_pressure: 0
+format_rain: 1
+format_temperature: 0
+format_windspeed: 4
+history_interval: 1
+indoor_humidity_max: 70
+indoor_humidity_max_time: None
+indoor_humidity_min: 45
+indoor_humidity_min_time: None
+indoor_temp_max: 40.0
+indoor_temp_max_time: None
+indoor_temp_min: 0.0
+indoor_temp_min_time: None
+lcd_contrast: 4
+low_battery_flags: 0
+outdoor_humidity_max: 70
+outdoor_humidity_max_time: None
+outdoor_humidity_min: 45
+outdoor_humidity_min_time: None
+outdoor_temp_max: 40.0
+outdoor_temp_max_time: None
+outdoor_temp_min: 0.0
+outdoor_temp_min_time: None
+pressure_max: 1040.0
+pressure_max_time: None
+pressure_min: 960.0
+pressure_min_time: None
+rain_24h_max: 50.0
+rain_24h_max_time: None
+threshold_storm: 5
+threshold_weather: 3
+wind_gust_max: 12.874765625
+wind_gust_max_time: None</pre>
+
+        <h2 id="ws23xx_data">Station data</h2>
+
+        <p>The following table shows which data are provided by the station
+            hardware and which are calculated by
+            <span class='code'>weewx</span>.
+        </p>
+
+        <table class='station_data'>
+            <caption>WS28xx station data</caption>
+            <tbody class='code'>
+            <tr class="first_row">
+                <td style='width:200px'>Observation</td>
+                <td>Loop</td>
+                <td>Archive</td>
+            </tr>
+            <tr>
+                <td class='first_col'>barometer</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>pressure</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>altimeter</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>inHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windSpeed</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windDir</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGust</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGustDir</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rain</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainRate</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>dewpoint</td>
+                <td>S</td>
+                <td>S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>H/S</td>
+                <td>H/S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>heatindex</td>
+                <td>H/S</td>
+                <td>H/S</td>
+            </tr>
+            <tr>
+                <td class='first_col'>rxCheckPercent</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTempBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inTempBatteryStatus</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p class='station_data_key'>
+            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
+            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
+            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+        </p>
+
+    </div>
+
+    <div class="footer">
+        <p class="copyright">
+            &copy; <a href="copyright.htm">Copyright</a> Tom Keffer
+        </p>
+    </div>
+
+</div>
+
+<!-- Our scripts load last so the content can load first -->
+<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
+<script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
+<script type="text/javascript" src="js/weewx.js"></script>
+<script type="text/javascript">
+ $(function () {
+     var level = get_default_level();
+     create_toc_control(level);
+     generate_toc(level);
+ });
+</script>
+
+</body>
+</html>

@@ -68,6 +68,9 @@ source = CSV
 
 ##############################################################################
 
+[CSV]
+    # Parameters used when importing from a CSV file
+
     # Path and name of our CSV source file. Format is:
     #   file = full path and filename
     file = /var/tmp/data.csv
@@ -93,7 +96,7 @@ source = CSV
 
     # Should the [StdQC] max/min limits in weewx.conf be applied to the
     # imported data. This may be useful if the source has extreme values that
-    # are clear incorrect for some observations. Available options are:
+    # are clearly incorrect for some observations. Available options are:
     #   True  - weewx.conf [StdQC] max/min limits are applied.
     #   False - weewx.conf [StdQC] max/min limits are not applied.
     # Format is:
@@ -186,14 +189,17 @@ source = CSV
     #                              conversions to the unit system used by the
     #                              weewx archive.
     # For example,
-    #   dewpoint = dew, degree_C
-    # would map the CSV field dew, in degrees C, to the archive field dewpoint.
+    #   outTemp = Temp, degree_C
+    # would map the CSV field Temp, in degrees C, to the archive field outTemp.
     #
-    # Archive fields that do not exist in the CSV data may be omitted. Any
+    # If a field mapping exists for the weewx usUnits archive field then the
+    # units option may be omitted for each mapped field.
+    #
+    # weewx archive fields that do not exist in the CSV data may be omitted. Any
     # omitted fields that are derived (eg dewpoint) may be calculated during
     # import using the equivalent of the weewx StdWXCalculate service through
     # setting the calc-missing parameter above.
-    [[Map]]
+    [[FieldMap]]
         dateTime    = timestamp, unix_epoch
         usUnits     =
         interval    =
@@ -293,7 +299,9 @@ source = CSV
 
     # Should the [StdQC] max/min limits in weewx.conf be applied to the
     # imported data. This may be useful if the source has extreme values that
-    # are clear incorrect for some observations. Available options are:
+    # are clearly incorrect for some observations. This is particulalrly useful
+    # for WU imports where WU often records clearly erroneous values against
+    # obs that are not reported. Available options are:
     #   True  - weewx.conf [StdQC] max/min limits are applied.
     #   False - weewx.conf [StdQC] max/min limits are not applied.
     # Format is:
@@ -406,7 +414,7 @@ source = CSV
 
     # Should the [StdQC] max/min limits in weewx.conf be applied to the
     # imported data. This may be useful if the source has extreme values that
-    # are clear incorrect for some observations. Available options are:
+    # are clearly incorrect for some observations. Available options are:
     #   True  - weewx.conf [StdQC] max/min limits are applied.
     #   False - weewx.conf [StdQC] max/min limits are not applied.
     # Format is:
@@ -482,6 +490,7 @@ source = CSV
         speed       = km_per_hour   # options are 'mile_per_hour',
                                     # 'km_per_hour', 'knot' or
                                     # 'meter_per_second'
+
 Adding a New Import Source
 
     To add a new import source:
@@ -601,11 +610,11 @@ def main():
                            "quotation marks.")
     parser.add_option("--log", dest="logging", type=str, metavar="-",
                       help="Control wee_import log output. By default log output "
-                           "is sent to the weewx log file. wee_import logging "
-                           "may be disabled by using '--log=-'. Some weewx API "
-                           "log output cannot be controlled by wee_import and "
-                           "will be sent to to the default log file irrespective "
-                           "of the '--log' option.")
+                           "is sent to the weewx log file. Log output may be "
+                           "disabled by using '--log=-'. Some weewx API log "
+                           "output cannot be controlled by wee_import and will "
+                           "be sent to the default log file irrespective of the "
+                           "'--log' option.")
     parser.add_option("--verbose", action="store_true", dest="verbose",
                       help="Print useful extra output.")
     parser.add_option("--version", dest="version", action="store_true",

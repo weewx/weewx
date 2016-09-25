@@ -20,12 +20,6 @@ import weewx.units
 
 from weeutil.weeutil import TimeSpan
 
-description = """Configure the weewx databases. Most of these functions are
-handled automatically by weewx, but they may be useful as a utility in special
-cases. In particular, the 'reconfigure' option can be useful if you decide to
-add or drop data types from the database schema or change unit systems and the
-'transfer' option is useful if converting from one database type to another."""
-
 usage = """wee_database --help
        wee_database --create-archive
             [CONFIG_FILE|--config=CONFIG_FILE]
@@ -48,7 +42,22 @@ usage = """wee_database --help
             [--binding=BINDING_NAME]
             --dest-binding=BINDING_NAME
             [--dry-run]
-"""
+
+Description:
+
+Configure the weewx databases. Most of these functions are
+handled automatically by weewx, but they may be useful in special cases.
+
+Actions:
+
+--create-archive  Create the archive database and initialize it with the schema.
+--drop-daily      Drop the daily summaries from the database.
+--backfill-daily  Rebuild the daily summaries from the archive database.
+--reconfigure     Create a new database using the schema in the configuration file.
+                  Copy over data from the old database.
+--string-check    Scan the archive database, looking for null strings that may have
+                  been introduced by a SQL editing program.
+--transfer        Move data from one database to another."""
 
 epilog = """If you are using a MySQL database it is assumed that you have the
 appropriate permissions for the requested operation."""
@@ -64,7 +73,7 @@ def main():
     syslog.openlog('wee_database', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
-    parser = optparse.OptionParser(description=description, usage=usage, epilog=epilog)
+    parser = optparse.OptionParser(usage=usage, epilog=epilog)
 
     # Add the various options:
     parser.add_option("--config", dest="config_path", type=str,

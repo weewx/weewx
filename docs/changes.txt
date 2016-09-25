@@ -11,6 +11,9 @@ Added the ability to easily import CSV, Weather Underground, and Cumulus
 data using a new utility, wee_import. Thanks again to über-user Gary Roderick.
 PR #148. Fixes issue #97.
 
+Refactored documentation so that executable utilities are now in their own
+document, utilities.htm.
+
 Fixed rpm package so that it will retain any changes to the user directory.
 Thanks to user Pat OBrien.
 
@@ -67,8 +70,13 @@ reading loop data.  Thanks to user EricG.
 
 Made wmr300 driver more robust against empty usb data buffers.
 
+Fixed pressure/barometer in wmr300 driver when reading historical records.
+
 Fixed problem with the Vantage driver where program could crash if a
 serial I/O error happens during write. Fixes issue #134.
+
+Changed name of command to clear the Vantage memory from --clear to
+--clear-memory to make it more consistent with other devices.
 
 Fixed problem that prevented channel 8 from being set by the Vantage driver.
 

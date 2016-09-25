@@ -346,13 +346,20 @@ class Source(object):
                     print "Confirm successful import in the weewx log file."
 
     def parseMap(self, source_type, source, import_config_dict):
-        """Produce a source field-to-weewx archive field data map.
+        """Produce a source field-to-weewx archive field map.
 
-        Data from an external source can be mapped to the weewx archive using a
-        fixed map (WU) or through a user defined map in the import config file.
-        First look for a map in the wee_import conf file, if the map is valid
-        then return it. If the map is not valid or not found then return the
-        default map.
+        Data from an external source can be mapped to the weewx archive using:
+        - a fixed field map (WU),
+        - a fixed field map with user specified source units (Cumulus), or
+        - a user defined field/units map.
+
+        All user defined mapping is specified in the import config file.
+
+        To generate the field map first look to see if we have a fixed map, if
+        we do validate it and return the resulting map. Otherwise look for user
+        specified mapping in the import config file, construct the field map
+        and return it. If there is neither a fixed map or user specified
+        mapping then raise an error.
 
         Input parameters:
 
@@ -363,64 +370,98 @@ class Source(object):
             source: Iterable holding the source data. Used if import field
                     names are included in the source data (eg CSV).
 
-            import_config_dict: wee_import config dict.
+            import_config_dict: config dict from import config file.
 
         Returns a map as a dictionary of elements with each element structured
         as follows:
 
-            'arch_filed_name': {'name': 'field_name', 'units': 'unit_name'}
+            'archive_field_name': {'field_name': 'source_field_name',
+                                   'units': 'unit_name'}
 
             where:
 
-                - arch_filed_name is an observation name in the weewx database
-                  schema
-                - field_name is the name of a field from the external source
+                - archive_field_name is an observation name in the weewx
+                  database schema
+                - source_field_name is the name of a field from the external
+                  source
                 - unit_name is the weewx unit name of the units used by
-                  field_name
+                  source_field_name
         """
 
         # start with the minimum map
         _map = dict(MINIMUM_MAP)
-        # look for a mapping for source in our config dict otherwise use the
-        # default
-        # do we have a [source_type] stanza?
-        if 'Map' in import_config_dict:
-            # we have a wee_import.conf map so lets get it
-            for _field in import_config_dict['Map']:
-                _entry = option_as_list(import_config_dict['Map'][_field])
-                # expect 2 parameters for each option
+
+        # Do the easy one first, do we have a fixed mapping, if so validate it
+        if self._header_map:
+            # We have a static map that maps header fields to weewx (eg WU).
+            # Our static map may have entries for fields that don't exist in our
+            # source data so step through each field name in our source data and
+            # only add those that exist to our resulting map.
+            for _key in source.fieldnames:
+                # if we know about the field name add it to our map
+                if _key in self._header_map:
+                    _map[self._header_map[_key]['map_to']] = {'field_name': _key,
+                                                              'units': self._header_map[_key]['units']}
+        # Do we have a user specified map, if so construct our field map
+        elif 'FieldMap' in import_config_dict:
+            # we have a user specified map so construct our map dict
+            for _key, _entry in import_config_dict['FieldMap'].iteritems():
+                # expect 2 parameters for each option: source field, units
                 if len(_entry) == 2:
-                    # we have 2 parameter so that's name and units
-                    _map[_field] = {'name': _entry[0], 'units': _entry[1]}
-                # if the entry is not empty then it might be valid
+                    # we have 2 parameter so that's field and units
+                    _map[_key] = {'field_name': _entry[0],
+                                  'units': _entry[1]}
+                # if the entry is not empty then it might be valid ie just a
+                # field name (eg if usUnits is specified)
                 elif _entry != [''] and len(_entry) == 1:
                     # we have 1 parameter so it must be just name
-                    _map[_field] = {'name': _entry[0]}
+                    _map[_key] = {'field_name': _entry[0]}
                 else:
                     # otherwise its invalid so ignore it
                     pass
-            # do some crude error checking
-            # we must have a dateTime entry
-            if _map['dateTime'] is not None:
-                # do we have a unit system specified (ie a 'usUnits' entry)
-                if 'usUnits' not in _map:
-                    # no unit system mapping do we have units specified for
-                    # each individual field
-                    for _field in _map:
-                        if _field not in ['dateTime', 'usUnits']:
-                            if 'units' in _map[_field]:
-                                # we have a units field, do we know about it
-                                if _map[_field]['units'] not in weewx.units.default_unit_format_dict:
-                                    # we have an invalid unit string so tell
-                                    # the user and exit
-                                    raise weewx.UnitError(
-                                        "Unknown units '%s' specified for field '%s' in %s." % (_map[_field]['units'],
-                                                                                                _field,
-                                                                                                self.import_config_path))
-            else:
-                # no dateTime map so tell the user and exit
+
+            # now do some crude error checking
+
+            # dateTime. We must have a dateTime mapping. Check for a 'field_name'
+            # field under 'dateTime' and be prepared to catch the error if it
+            # does not exist.
+            try:
+                if _map['dateTime']['field_name']:
+                    # we have a 'field_name' entry so continue
+                    pass
+                else:
+                    # something is wrong, we have a 'field_name' entry but it
+                    # is not valid so raise an error
+                    raise WeeImportMapError(
+                        "Invalid mapping specified in '%s' for field 'dateTime'." % self.import_config_path)
+            except KeyError:
                 raise WeeImportMapError(
-                    "'%s' field map found but no mapping specified for field 'dateTime'." % source_type)
+                    "No mapping specified in '%s' for field 'dateTime'." % self.import_config_path)
+
+            # usUnits. We don't have to have a mapping for usUnits but if we
+            # don't then we must have 'units' specified for each field mapping.
+            if 'usUnits' not in _map:
+                # no unit system mapping do we have units specified for
+                # each individual field
+                for _key,_val in _map.iteritems():
+                    # we don't need to check dateTime and usUnits
+                    if _key not in ['dateTime', 'usUnits']:
+                        if 'units' in _val:
+                            # we have a units field, do we know about it
+                            if _val['units'] not in weewx.units.default_unit_format_dict:
+                                # we have an invalid unit string so tell the
+                                # user and exit
+                                raise weewx.UnitError(
+                                    "Unknown units '%s' specified for field '%s' in %s." % (_map[_field]['units'],
+                                                                                            _field,
+                                                                                            self.import_config_path))
+                        else:
+                            # we don't have a units field, that's not allowed
+                            # so raise an error
+                            raise WeeImportMapError(
+                                "No units specified for source field '%s' in %s." % (_key,
+                                                                                     self.import_config_path))
+
             # if we got this far we have a usable map, advise the user what we
             # will use
             _msg = "The following imported field-to-weewx field map will be used:"
@@ -428,28 +469,20 @@ class Source(object):
                 self.wlog.verboselog(syslog.LOG_INFO, _msg)
             else:
                 self.wlog.logonly(syslog.LOG_INFO, _msg)
-            for key, entry in _map.iteritems():
-                if 'name' in entry:
+            for _key, _val in _map.iteritems():
+                if 'field_name' in _val:
                     _units_msg = ""
-                    if 'units' in entry:
-                        _units_msg = " in units '%s'" % entry['units']
-                    _msg = "     import field '%s'%s --> weewx field '%s'" % (key,
+                    if 'units' in _val:
+                        _units_msg = " in units '%s'" % _val['units']
+                    _msg = "     source field '%s'%s --> weewx field '%s'" % (_val['field_name'],
                                                                               _units_msg,
-                                                                              entry['name'])
+                                                                              _key)
                     if self.verbose:
                         self.wlog.verboselog(syslog.LOG_INFO, _msg)
                     else:
                         self.wlog.logonly(syslog.LOG_INFO, _msg)
-        elif self._header_map:
-            # We have a static map that maps header fields to weewx (eg WU).
-            # Step through each field name in our data.
-            for _key in source.fieldnames:
-                # if we know about the field name add it to our map
-                if _key in self._header_map:
-                    _map[self._header_map[_key]['map_to']] = {'name': _key,
-                                                              'units': self._header_map[_key]['units']}
         else:
-            # no [[Map]] stanza and no _header_map so raise an error as we
+            # no [[FieldMap]] stanza and no _header_map so raise an error as we
             # don't know what to map
             _msg = "No '%s' field map found in %s." % (source_type,
                                                        self.import_config_path)
@@ -487,13 +520,13 @@ class Source(object):
             _rec = {}
             # first off process the fields that require special processing
             # dateTime
-            if 'name' in self.map['dateTime']:
+            if 'field_name' in self.map['dateTime']:
                 # we have a map for dateTime
                 try:
-                    _raw_dateTime = _row[self.map['dateTime']['name']]
+                    _raw_dateTime = _row[self.map['dateTime']['field_name']]
                 except:
                     raise WeeImportFieldError(
-                        "Field '%s' not found in source data." % self.map['dateTime']['name'])
+                        "Field '%s' not found in source data." % self.map['dateTime']['field_name'])
                 # now process the raw date time data
                 if _raw_dateTime.isdigit():
                     # Our dateTime is a number, is it a timestamp already?
@@ -503,7 +536,7 @@ class Source(object):
                         _rec_dateTime = int(_raw_dateTime)
                     except:
                         raise ValueError(
-                            "Invalid '%s' field. Cannot convert '%s' to timestamp." % (self.map['dateTime']['name'],
+                            "Invalid '%s' field. Cannot convert '%s' to timestamp." % (self.map['dateTime']['field_name'],
                                                                                        _raw_dateTime))
                 else:
                     # it's a string so try to parse it and catch the error if
@@ -514,7 +547,7 @@ class Source(object):
                         _rec_dateTime = int(time.mktime(_datetm))
                     except:
                         raise ValueError(
-                            "Invalid '%s' field. Cannot convert '%s' to timestamp." % (self.map['dateTime']['name'],
+                            "Invalid '%s' field. Cannot convert '%s' to timestamp." % (self.map['dateTime']['field_name'],
                                                                                        _raw_dateTime))
                 # if we have a timeframe of concern does our record fall within
                 # it
@@ -530,15 +563,15 @@ class Source(object):
                 raise ValueError("No mapping for weewx field 'dateTime'.")
             # usUnits
             _units = None
-            if 'name' in self.map['usUnits']:
+            if 'field_name' in self.map['usUnits']:
                 # we have a field map for a unit system
                 try:
                     # The mapped field is in _row so try to get the raw data.
                     # If its not there then raise an error.
-                    _raw_units = int(_row[self.map['usUnits']['name']])
+                    _raw_units = int(_row[self.map['usUnits']['field_name']])
                 except:
                     raise WeeImportFieldError(
-                        "Field '%s' not found in source data." % self.map['usUnits']['name'])
+                        "Field '%s' not found in source data." % self.map['usUnits']['field_name'])
                 # we have a value but is it valid
                 if _raw_units in unit_nicknames:
                     # it is valid so use it
@@ -549,27 +582,27 @@ class Source(object):
                                                                                                                               _raw_units)
                     raise weewx.UnitError(_msg)
             # interval
-            if 'name' in self.map['interval']:
+            if 'field_name' in self.map['interval']:
                 # We have a map for interval so try to get the raw data. If
                 # its not there then raise an error.
                 try:
-                    _tfield = _row[self.map['interval']['name']]
+                    _tfield = _row[self.map['interval']['field_name']]
                 except:
                     raise WeeImportFieldError(
-                        "Field '%s' not found in source data." % self.map['interval']['name'])
+                        "Field '%s' not found in source data." % self.map['interval']['field_name'])
                 # now process the raw interval data
                 if _tfield is not None and _tfield != '':
                     try:
                         interval = int(_tfield)
                     except:
                         raise ValueError(
-                            "Invalid '%s' field. Cannot convert '%s' to an integer." % (self.map['interval']['name'],
+                            "Invalid '%s' field. Cannot convert '%s' to an integer." % (self.map['interval']['field_name'],
                                                                                         _tfield))
                 else:
                     # if it happens to be None then raise an error
                     raise ValueError(
                         "Invalid value '%s' for mapped field '%s' at timestamp '%s'." % (_tfield,
-                                                                                         self.map['interval']['name'],
+                                                                                         self.map['interval']['field_name'],
                                                                                          timestamp_to_string(_rec['dateTime'])))
             else:
                 # we have no mapping so try to calculate it
@@ -584,21 +617,21 @@ class Source(object):
                 # process everything else
                 else:
                     # is our mapped field in the record
-                    if self.map[_field]['name'] in _row:
+                    if self.map[_field]['field_name'] in _row:
 
                         # Yes it is. Try to get a value for the obs but if we
                         # can't catch the error
                         try:
-                            _temp = float(_row[self.map[_field]['name']].strip())
+                            _temp = float(_row[self.map[_field]['field_name']].strip())
                         except:
                             # perhaps we have a blank/empty entry
-                            if _row[self.map[_field]['name']].strip() == '':
+                            if _row[self.map[_field]['field_name']].strip() == '':
                                 # if so we will use None
                                 _temp = None
                             else:
                                 # otherwise we will raise an error
                                 _msg = "%s: cannot convert '%s' to float at timestamp '%s'." % (_field,
-                                                                                                _row[self.map[_field]['name']],
+                                                                                                _row[self.map[_field]['field_name']],
                                                                                                 timestamp_to_string(_rec['dateTime']))
                                 raise ValueError(_msg)
                         # some fields need some special processing
@@ -651,8 +684,8 @@ class Source(object):
                         _rec[_field] = None
                         # now warn the user about this field if we have not
                         # already done so
-                        if self.map[_field]['name'] not in _warned:
-                            _msg = "Warning: Import field '%s' is mapped to weewx field '%s'" % (self.map[_field]['name'],
+                        if self.map[_field]['field_name'] not in _warned:
+                            _msg = "Warning: Import field '%s' is mapped to weewx field '%s'" % (self.map[_field]['field_name'],
                                                                                                  _field)
                             self.wlog.printlog(syslog.LOG_INFO, _msg)
                             _msg = "         but the import field could not be found."
@@ -660,7 +693,7 @@ class Source(object):
                             _msg = "         weewx field '%s' will be set to 'None'." % _field
                             self.wlog.printlog(syslog.LOG_INFO, _msg)
                             # make sure we do this warning once only
-                            _warned.append(self.map[_field]['name'])
+                            _warned.append(self.map[_field]['field_name'])
             # if we have a mapped field for a unit system with a valid value,
             # then all we need do is set 'usUnits', bulk conversion is taken
             # care of by saveToArchive()

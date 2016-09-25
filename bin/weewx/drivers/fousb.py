@@ -220,7 +220,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'FineOffsetUSB'
-DRIVER_VERSION = '1.8'
+DRIVER_VERSION = '1.9'
 
 def loader(config_dict, engine):
     return FineOffsetUSB(**config_dict[DRIVER_NAME])
@@ -1001,25 +1001,29 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             while True:
                 try:
                     self.openPort()
-                    self._get_arcint()
+                    self._arcint = self._get_arcint()
                     break
                 except weewx.WeeWxIOError:
                     self.closePort()
                     power_cycle_station(self.pc_hub, self.pc_port)
         else:
-            self._get_arcint()
+            self._arcint = self._get_arcint()
         return self._arcint
 
     def _get_arcint(self):
+        ival = None
         for i in range(self.max_tries):
             try:
-                self._arcint = self.get_fixed_block(['read_period'])
-                return
+                ival = self.get_fixed_block(['read_period'])
+                break
             except usb.USBError, e:
                 logcrt("get archive interval failed attempt %d of %d: %s"
                        % (i+1, self.max_tries, e))
         else:
             raise weewx.WeeWxIOError("Unable to read archive interval after %d tries" % self.max_tries)
+        if ival is None:
+            raise weewx.WeeWxIOError("Cannot determine archive interval")
+        return ival
 
     def openPort(self):
         if self.devh is not None:

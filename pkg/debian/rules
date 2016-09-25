@@ -40,9 +40,11 @@ install: build
 	cp -r $(SRC)/docs/* $(DST_DOCDIR)
 	cp -r $(SRC)/skins $(DST_CFGDIR)
 	cp -r $(SRC)/util/apache $(DST_CFGDIR)
+	cp -r $(SRC)/util/import $(DST_CFGDIR)
 	cp -r $(SRC)/util/logrotate.d $(DST_CFGDIR)
 	cp -r $(SRC)/util/logwatch $(DST_CFGDIR)
 	cp -r $(SRC)/util/rsyslog.d $(DST_CFGDIR)
+	cp -r $(SRC)/util/udev $(DST_CFGDIR)
 	cp -r $(SRC)/extensions $(DST_BINDIR)
 
 # remove stuff that should not go out
@@ -75,6 +77,7 @@ install: build
 	ln -s ../share/weewx/wee_debug $(DST)/usr/bin/wee_debug
 	ln -s ../share/weewx/wee_device $(DST)/usr/bin/wee_device
 	ln -s ../share/weewx/wee_extension $(DST)/usr/bin/wee_extension
+	ln -s ../share/weewx/wee_import $(DST)/usr/bin/wee_import
 	ln -s ../share/weewx/wee_reports $(DST)/usr/bin/wee_reports
 	ln -s ../share/weewx/wunderfixer $(DST)/usr/bin/wunderfixer
 

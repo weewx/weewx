@@ -1757,7 +1757,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
 
     @property
     def usage(self):
-        return """%prog [config_file] [--help] [--info] [--clear]
+        return """%prog [config_file] [--help] [--info] [--clear-memory]
     [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
     [--set-bucket=CODE] [--set-rain-year-start=MM] 
     [--set-offset=VARIABLE,OFFSET]
@@ -1771,7 +1771,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         super(VantageConfigurator, self).add_options(parser)
         parser.add_option("--info", action="store_true", dest="info",
                           help="To print configuration, reception, and barometer calibration information about your weather station.")
-        parser.add_option("--clear", action="store_true", dest="clear",
+        parser.add_option("--clear-memory", action="store_true", dest="clear_memory",
                           help="To clear the memory of your weather station.")
         parser.add_option("--set-interval", type=int, dest="set_interval",
                           metavar="SECONDS",
@@ -1827,7 +1827,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         station = Vantage(**config_dict[DRIVER_NAME])
         if options.info:
             self.show_info(station)
-        if options.clear:
+        if options.clear_memory:
             self.clear_memory(station)
         if options.set_interval is not None:
             self.set_interval(station, options.set_interval)

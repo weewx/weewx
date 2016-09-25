@@ -700,7 +700,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.10'
+DRIVER_VERSION = '0.12'
 
 DEBUG_COMM = 0
 DEBUG_LOOP = 0
@@ -980,23 +980,6 @@ class Station(object):
     EP_IN = 0x81
     EP_OUT = 0x01
     MAX_RECORDS = 50000 # FIXME: what is maximum number of records?
-    COMPASS = {
-        32768: 337.5,
-        16384: 315.0,
-        8192: 292.5,
-        4096: 270.0,
-        2048: 247.5,
-        1024: 225.0,
-        512: 202.5,
-        256: 180.0,
-        128: 157.5,
-        64: 135.0,
-        32: 112.5,
-        16: 90.0,
-        8: 67.5,
-        4: 45.0,
-        2: 22.5,
-        1: 0.0}
 
     def __init__(self, vend_id=VENDOR_ID, prod_id=PRODUCT_ID):
         self.vendor_id = vend_id
@@ -1183,21 +1166,6 @@ class Station(object):
         return buf[0] * m
 
     @staticmethod
-    def _extract_heading(buf):
-        if buf[0] == 0x7f:
-            return None
-        x = (buf[0] << 8) + buf[1]
-        cnt = 0
-        v = 0
-        for c in Station.COMPASS:
-            if x & c != 0:
-                cnt += 1
-                v += Station.COMPASS[c]
-        if cnt:
-            return v / cnt
-        return None
-
-    @staticmethod
     def get_latest_index(buf):
         # get the index of the most recent history record
         if buf[0] != 0x57:
@@ -1280,7 +1248,7 @@ class Station(object):
         pkt['rain_total'] = Station._extract_value(buf[86:88], 0.254) # mm
         pkt['rain_start_dateTime'] = Station._extract_ts(buf[88:93])
         pkt['rain_rate'] = Station._extract_value(buf[93:95], 0.254) # mm/hour
-        pkt['pressure'] = Station._extract_value(buf[95:97], 0.1) # mbar
+        pkt['barometer'] = Station._extract_value(buf[95:97], 0.1) # mbar
         pkt['pressure_trend'] = Station._extract_value(buf[97:98], 1.0)
         return pkt
 
@@ -1313,8 +1281,7 @@ class Station(object):
         pkt['wind_gust'] = Station._extract_value(buf[8:10], 0.1) # m/s
         pkt['wind_gust_dir'] = Station._extract_value(buf[10:12], 1.0) # degree
         pkt['wind_avg'] = Station._extract_value(buf[12:14], 0.1) # m/s
-        pkt['wind_avg_dir'] = Station._extract_value(buf[14:16], 1.0) # degree
-        pkt['wind_dir'] = Station._extract_heading(buf[16:18])
+        pkt['wind_dir'] = Station._extract_value(buf[14:16], 1.0) # degree
         return pkt
 
     @staticmethod
