@@ -142,13 +142,15 @@ upload-readme: readme
 	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) README.txt)
 
 # update the version in all relevant places
-VDOCS=readme.htm customizing.htm usersguide.htm upgrading.htm utilities.htm
+VDOCS=readme.htm customizing.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
 version:
 	for f in $(VDOCS); do \
   sed -e 's/^Version: [0-9].*/Version: $(VERSION)/' docs/$$f > docs/$$f.tmp; \
   mv docs/$$f.tmp docs/$$f; \
 done
 	sed -e 's/version =.*/version = $(VERSION)/' weewx.conf > weewx.conf.tmp; mv weewx.conf.tmp weewx.conf
+	make deb-changelog
+	make rpm-changelog
 
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
