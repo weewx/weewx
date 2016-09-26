@@ -1559,7 +1559,7 @@ Mutating actions will request confirmation before proceeding.</pre>
 
     <pre class='tty'>
 Using configuration file /home/weewx/weewx.conf
-Using TE923 driver version 0.20 (weewx.drivers.te923)
+Using TE923 driver version 0.21 (weewx.drivers.te923)
 Usage: wee_device [config_file] [options] [--debug] [--help]
 
 Configuration utility for weewx devices.
@@ -1590,7 +1590,7 @@ Options:
                         set alarm state
   --get-interval        display archive interval
   --set-interval=INTERVAL
-                        set archive interval (seconds)
+                        set archive interval (minutes)
   --format=FORMAT       formats include: table, dict
 
 Be sure to stop weewx first before using. Mutating actions will request
@@ -2034,7 +2034,7 @@ confirmation before proceeding.
 Using configuration file /home/weewx/weewx.conf
 Using Vantage driver version 3.0.8 (weewx.drivers.vantage)
 Usage: wee_device [config_file] [--help] [--info] [--clear-memory]
-    [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg]
+    [--set-interval=MINUTES] [--set-altitude=FEET] [--set-barometer=inHg]
     [--set-bucket=CODE] [--set-rain-year-start=MM]
     [--set-offset=VARIABLE,OFFSET]
     [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
@@ -2052,10 +2052,10 @@ Options:
   --info                To print configuration, reception, and barometer
                         calibration information about your weather station.
   --clear-memory        To clear the memory of your weather station.
-  --set-interval=SECONDS
+  --set-interval=MINUTES
                         Sets the archive interval to the specified number of
-                        seconds. Valid values are 60, 300, 600, 900, 1800,
-                        3600, or 7200.
+                        minutes. Valid values are 1, 5, 10, 15, 30, 60, or
+                        1200.
   --set-altitude=FEET   Sets the altitude of the station to the specified
                         number of feet.
   --set-barometer=inHg  Sets the barometer reading of the station to a known
@@ -2180,17 +2180,17 @@ confirmation before proceeding.</pre>
         <h3 id="vantage_archive_interval">
             Action <span class="code">--set-interval</span></h3>
 
-        <p>Use this command to change the archive interval of the internal logger. Valid intervals are 60, 300, 600,
-            900, 1800, 3600, and 7200 seconds. However, if you are ftp&#39;ing lots of files to a server, setting it to
-            60 seconds may not give enough time to have them all uploaded before the next archive record is due. If this
-            is the case, you should pick an archive interval of at least 300 seconds, or trim the number of files you
+        <p>Use this command to change the archive interval of the internal logger. Valid intervals are 1, 5, 10,
+            15, 30, 60, or 120 minutes. However, if you are ftp&#39;ing lots of files to a server, setting it to
+            one minute may not give enough time to have them all uploaded before the next archive record is due. If this
+            is the case, you should pick a longer archive interval, or trim the number of files you
             are using.</p>
 
-        <p>An archive interval of five minute (300 seconds) works well for the Vantage stations. Because of the large
+        <p>An archive interval of five minutes works well for the Vantage stations. Because of the large
             amount of onboard memory they carry, going to a larger interval does not have any real advantages. </p>
 
-        <p>Example: to change the archive interval to 10 minutes (600 seconds):</p>
-        <pre class="tty cmd">wee_device --set-interval=600</pre>
+        <p>Example: to change the archive interval to 10 minutes:</p>
+        <pre class="tty cmd">wee_device --set-interval=10</pre>
 
         <h3>Action <span class="code">--set-altitude</span></h3>
 

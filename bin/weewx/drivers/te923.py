@@ -445,7 +445,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.20'
+DRIVER_VERSION = '0.21'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -756,7 +756,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
                           action="store_true", help="display archive interval")
         parser.add_option("--set-interval", dest="setinterval",
                           type=str, metavar="INTERVAL",
-                          help="set archive interval (seconds)")
+                          help="set archive interval (minutes)")
         parser.add_option("--format", dest="format",
                           type=str, metavar="FORMAT", default='table',
                           help="formats include: table, dict")
@@ -1072,11 +1072,11 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
 
     @staticmethod
     def set_interval(station, interval):
-        """accept 30s|2h|1d format or raw seconds, but only known intervals"""
+        """accept 30s|2h|1d format or raw minutes, but only known intervals"""
         idx = TE923Configurator.interval_to_idx.get(interval)
         if idx is None:
             try:
-                ival = int(interval)
+                ival = int(interval * 60)
                 for i in TE923Station.idx_to_interval_sec:
                     if ival == TE923Station.idx_to_interval_sec[i]:
                         idx = i
