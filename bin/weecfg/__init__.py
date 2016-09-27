@@ -746,6 +746,7 @@ def update_to_v32(config_dict):
     set_enable(config_dict, 'PWSweather', 'station')
     set_enable(config_dict, 'WOW', 'station')
     set_enable(config_dict, 'Wunderground', 'station')
+    set_enable(config_dict, 'Previmeteo', 'station')
     
     config_dict['version'] = '3.2.0'
         

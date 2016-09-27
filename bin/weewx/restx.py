@@ -593,6 +593,40 @@ class StdPWSWeather(StdRESTful):
 # For backwards compatibility with early alpha versions:
 StdPWSweather = StdPWSWeather
 
+class StdPrevimeteo(StdRESTful):
+    """Specialized version of the Ambient protocol for Previmeteo"""
+
+    archive_url = "http://www.previmeteo.com/scripts/stations/updateweatherstation.php"
+
+    def __init__(self, engine, config_dict):
+
+        super(StdPrevimeteo, self).__init__(engine, config_dict)
+
+        _ambient_dict = get_site_dict(
+            config_dict, 'Previmeteo', 'station', 'password')
+        if _ambient_dict is None:
+            return
+
+        _manager_dict = weewx.manager.get_manager_dict_from_config(
+            config_dict, 'wx_binding')
+
+        _ambient_dict.setdefault('server_url', StdPrevimeteo.archive_url)
+        self.archive_queue = Queue.Queue()
+        self.archive_thread = AmbientThread(self.archive_queue, _manager_dict,
+                                            protocol_name="Previmeteo",
+                                            **_ambient_dict)
+        self.archive_thread.start()
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        syslog.syslog(syslog.LOG_INFO, "restx: Previmeteo: "
+                                       "Data for station %s will be posted" %
+                      _ambient_dict['station'])
+
+    def new_archive_record(self, event):
+        self.archive_queue.put(event.record)
+
+# For backwards compatibility with early alpha versions:
+StdPrevimeteo = StdPrevimeteo
+
 class StdWOW(StdRESTful):
 
     """Upload using the UK Met Office's WOW protocol. 

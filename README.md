@@ -23,6 +23,7 @@
   <li>Weather Cloud</li>
   <li>Wetter</li>
   <li>Windfinder</li>
+  <li>Previmeteo</li>
 </ul>
 
 <p>Support for many data aggregation services, including:</p>
