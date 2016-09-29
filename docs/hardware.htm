@@ -824,13 +824,25 @@ Version: 3.6.0b2
 
         <h1 id='acurite_notes'>AcuRite</h1>
 
-        <p>The wind speed updates every 18 seconds. The wind direction updates
-            every 30 seconds. Other sensors update every 60 seconds.</p>
+        <p>According to Acurite, the wind speed updates every 18 seconds.
+            The wind direction updates every 30 seconds. Other sensors update
+            every 60 seconds.</p>
 
-        <p>The AcuRite stations do not record wind gusts.</p>
+        <p>In fact, because of the message structure and the data logging
+            design, these are the actual update frequencies:</p>
+
+        <ul>
+            <li>wind speed: 18 seconds</li>
+            <li>outdoor temperature, outdoor humidity: 36 seconds</li>
+            <li>wind direction, rain total: 36 seconds</li>
+            <li>indoor temperature, pressure: 60 seconds</li>
+            <li>indoor humidity: 12 minutes (only when in USB mode 3)</li>
+        </ul>
 
         <p>The station emits partial packets, which may confuse some online
             services.</p>
+
+        <p>The AcuRite stations do not record wind gusts.</p>
 
         <p>Some consoles have a small internal logger.  Data in the logger
             are erased when power is removed from the station.</p>
@@ -886,7 +898,7 @@ Version: 3.6.0b2
 
         <p>The following table shows which data are provided by the station
             hardware and which are calculated by
-            <span class='code'>weewyes</span>.
+            <span class='code'>weewx</span>.
         </p>
 
         <table class='station_data'>
@@ -1015,8 +1027,11 @@ Version: 3.6.0b2
         <h2 id='cc3000_configuration'>Configuring with <span class="code">wee_device</span></h2>
 
         <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
-            <span class='code'>--help</span> option will produce
-            something like this:</p>
+            <span class='code'>--help</span> option</p>
+
+<pre class="tty cmd">wee_device /home/weewx/weewx.conf --help</pre>
+
+        <p>will produce something like this:</p>
 
     <pre class="tty">
 Using configuration file /home/weewx/weewx.conf
@@ -1305,10 +1320,14 @@ interval: 1</pre>
         <h2 id="fousb_configuration">Configuring with <span class="code">wee_device</span></h2>
 
         <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
-            <span class='code'>--help</span> option will produce
-            something like this:</p>
+            <span class='code'>--help</span> option</p>
 
-    <pre class="tty">FineOffsetUSB driver version 1.7
+<pre class="tty cmd">wee_device /home/weewx/weewx.conf --help</pre>
+
+        <p>will produce something like this:</p>
+
+    <pre class="tty">
+FineOffsetUSB driver version 1.7
 Usage: wee_device [config_file] [options] [--debug] [--help]
 
 Configuration utility for weewx devices.
@@ -1554,8 +1573,11 @@ Mutating actions will request confirmation before proceeding.</pre>
         <h2 id="te923_configuration">Configuring with <span class="code">wee_device</span></h2>
 
         <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
-            <span class='code'>--help</span> option will produce output
-            something like this:</p>
+            <span class='code'>--help</span> option</p>
+
+<pre class="tty cmd">wee_device /home/weewx/weewx.conf --help</pre>
+
+        <p>will produce something like this:</p>
 
     <pre class='tty'>
 Using configuration file /home/weewx/weewx.conf
@@ -2027,10 +2049,13 @@ confirmation before proceeding.
         <h2 id="vantage_configuration">Configuring with <span class="code">wee_device</span></h2>
 
         <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
-            <span class='code'>--help</span>
-            option will produce output something like this:</p>
+            <span class='code'>--help</span> option</p>
 
-    <pre class="tty">wee_device /home/weewx/weewx.conf --help
+<pre class="tty cmd">wee_device /home/weewx/weewx.conf --help</pre>
+
+        <p>will produce something like this:</p>
+
+    <pre class="tty">
 Using configuration file /home/weewx/weewx.conf
 Using Vantage driver version 3.0.8 (weewx.drivers.vantage)
 Usage: wee_device [config_file] [--help] [--info] [--clear-memory]
@@ -3458,10 +3483,14 @@ confirmation before proceeding.</pre>
         <h2 id="ws23xx_configuration">Configuring with <span class="code">wee_device</span></h2>
 
         <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
-            <span class='code'>--help</span> option will produce output
-            something like this:</p>
+            <span class='code'>--help</span> option</p>
 
-    <pre class="tty">WS23xx driver version 0.21
+<pre class="tty cmd">wee_device /home/weewx/weewx.conf --help</pre>
+
+        <p>will produce something like this:</p>
+
+    <pre class="tty">
+WS23xx driver version 0.21
 Usage: wee_device [config_file] [options] [--debug] [--help]
 
 Configuration utility for weewx devices.
@@ -3744,10 +3773,14 @@ Transceiver is paired to console</pre>
         <h2 id="ws23xx_configuration">Configuring with <span class="code">wee_device</span></h2>
 
         <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
-            <span class='code'>--help</span> option will produce output
-            something like this:</p>
+            <span class='code'>--help</span> option</p>
 
-    <pre class="tty">WS28xx driver version 0.33
+<pre class="tty cmd">wee_device /home/weewx/weewx.conf --help</pre>
+
+        <p>will produce something like this:</p>
+
+    <pre class="tty">
+WS28xx driver version 0.33
 Usage: wee_device [config_file] [options] [--debug] [--help]
 
 Configuration utility for weewx devices.
