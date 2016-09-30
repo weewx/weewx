@@ -4480,10 +4480,11 @@ class MyPrint(StdPrint):
             the abstract base class <span class="code">StdService</span>, and then
             adding the functionality you need. Here is an example that implements an
             alarm, which sends off an email when an arbitrary expression evaluates <span
-                    class="code">True</span>. This example is included in the standard
-            distribution in directory <span class="code">/examples</span>.</p>
+                    class="code">True</span>.</p>
 
-        <p>File <span class="code">examples/alarm.py</span>: </p>
+        <p>This example is included in the standard
+            distribution as <span class="code">examples/alarm.py:</span></p>
+
       <pre class="tty">import time
 import smtplib
 from email.mime.text import MIMEText
@@ -4599,6 +4600,7 @@ class MyAlarm(StdService):
 
         # Log sending the email:
         syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO) </pre>
+
         <p>This service expects all the information it needs to be in the
             configuration file <span class="code">weewx.conf</span> in a new
             section called <span class="code">[Alarm]</span>. So, add the following
@@ -4665,7 +4667,8 @@ class MyAlarm(StdService):
             supplies may not satisfy its requirements. </p>
 
         <p>To make this all work, you must tell the engine to load this new
-            service. This is done by adding your service name to the list <span class="code">report_services</span>,
+            service by adding the service name to the
+            list <span class="code">report_services</span>,
             located in <span class="code">[Engine][[Services]]</span>: </p>
       <pre class="tty">[Engine]
    [[Services]]
