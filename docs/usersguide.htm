@@ -23,7 +23,7 @@
     <div id="toc_controls"></div>
     <div id="toc_parent">
         <div id="toc">
-	    <!-- The table of contents will be injected here -->
+            <!-- The table of contents will be injected here -->
         </div>
     </div>
 </div>
@@ -69,15 +69,15 @@ Version: 3.6.0b2
             downloads are available at
             <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.</p>
 
-        <p><span class="code">Weewx</span> is about 8,000 lines of code, plus
-            another 11,000 for the many drivers used by the supported hardware. </p>
+        <p><span class="code">Weewx</span> is about 13,000 lines of code, plus
+            another 13,000 for the drivers for all the types of supported hardware. </p>
 
         <h1 id="prerequisites">System requirements</h1>
 
         <h2 id="hardware">Station hardware</h2>
 
         <p><span class="code">Weewx</span> includes support for many types
-            of weather stations.   In addition to hardware
+            of weather stations. In addition to hardware
             support, <span class="code">weewx</span> comes with a software
             simulator, useful for testing and evaluation.
         </p>
@@ -85,7 +85,7 @@ Version: 3.6.0b2
             <a href="hardware.htm#driver_status">driver compatibility table</a>
             in the hardware guide has a detailed list of the manufacturers and
             models supported by the drivers that come with
-            <span class="code">weewx</span>.  If you do
+            <span class="code">weewx</span>. If you do
             not see your hardware in this table, check the list of
             <a href="http://weewx.com/hardware.html">supported hardware</a>;
             the pictures may help you identify the manufacturer and/or model.
@@ -113,7 +113,8 @@ Version: 3.6.0b2
             consumes about 5% of the CPU, 100 MB of virtual memory,
             and 20 MB of real memory. </p>
 
-        <p><span class="code">Weewx</span> also runs great on a Raspberry Pi, although report generation will take longer.
+        <p><span class="code">Weewx</span> also runs great on a Raspberry Pi, although report generation will take
+            longer.
             For example, the 12 "To Date" templates take about 5.1 seconds on the RPi,
             compared to 3.0 seconds on my Fit-PC, and a mere 0.9 seconds on my vintage
             Dell Optiplex 745.</p>
@@ -168,7 +169,35 @@ Version: 3.6.0b2
             help, but, please, try to solve the problem yourself before posting.
         </p>
 
-        <h2>Installation methods</h2>
+        <h2>Steps</h2>
+
+        <p>Here are the steps to follow to install, configure, and run <span class="code">weewx</span>.</p>
+
+        <ol>
+            <li>Read the <a href="hardware.htm">hardware notes</a>
+                for your weather station. This will let you know of any features,
+                limitations, or quirks of your hardware.
+            </li>
+            <li>Install <span class="weewx">weewx</span> using one of the <a href="#installation_methods">
+                installation methods</a> below.
+            </li>
+            <li>Configure your hardware. This involves setting things like the onboard archive
+                interval, rain bucket size, etc. You may have to follow directions given by your
+                hardware manufacturer, or you may be able to use the
+                utility <a href="utilities.htm#wee_device_utility"><span class="code">wee_device</span>.</a>
+            </li>
+            <li>Launch the program, either as a <a href="#Running_as_a_daemon">daemon</a>,
+                or <a href="#Running_directly">directly from the command line</a>.
+            </li>
+            <li>Tune, by changing settings in the <a href="#weewxconf"><span class="code">weewx.conf</span></a>
+                configuration file.
+            </li>
+            <li><a href="customizing.htm">Customize</a>. This is an advanced topic, which allows you to
+                shape <span class="code">weewx</span> exactly to your liking!
+            </li>
+        </ol>
+
+        <h2 id="installation_methods">Installation methods</h2>
 
         <p>
             <span class='code'>Weewx</span> can be installed from a DEB (Debian) or RPM
@@ -2306,26 +2335,26 @@ sudo /etc/init.d/weewx restart</pre>
                 <p>Configure Apache to see the <span class="code">weewx</span> reports.</p>
                 <ul>
                     <li>
-                <p>If <span class='code'>weewx</span> was installed from DEB or RPM
-                    package, no configuration should be necessary since the reports are placed
-                    in the directory <span class='code'>/var/www/html/weewx</span>,
-                    which is in the Apache DocumentRoot directory
-                    <span class='code'>/var/www/html</span></p>
+                        <p>If <span class='code'>weewx</span> was installed from DEB or RPM
+                            package, no configuration should be necessary since the reports are placed
+                            in the directory <span class='code'>/var/www/html/weewx</span>,
+                            which is in the Apache DocumentRoot directory
+                            <span class='code'>/var/www/html</span></p>
                     </li>
                     <li>
-                <p>If <span class='code'>weewx</span> was installed using
-                    <span class='code'>setup.py</span>, you must tell Apache
-                    where to find the <span class='code'>weewx</span> reports.
-                    One method is to install an Apache
-                    configuration snippet:</p>
+                        <p>If <span class='code'>weewx</span> was installed using
+                            <span class='code'>setup.py</span>, you must tell Apache
+                            where to find the <span class='code'>weewx</span> reports.
+                            One method is to install an Apache
+                            configuration snippet:</p>
 
-                <pre class='tty cmd'>sudo cp util/apache/conf.d/weewx.conf /etc/apache2/conf.d</pre>
+                        <pre class='tty cmd'>sudo cp util/apache/conf.d/weewx.conf /etc/apache2/conf.d</pre>
 
-                <p>Be sure that the path in the Apache configuration snippet matches the
-                    <span class='code'>HTML_ROOT</span> defined in the
-                    <span class='code'>weewx</span> configuration file. For example,
-                    the path for a default <span class='code'>setup.py</span> installation
-                    would look like this:</p>
+                        <p>Be sure that the path in the Apache configuration snippet matches the
+                            <span class='code'>HTML_ROOT</span> defined in the
+                            <span class='code'>weewx</span> configuration file. For example,
+                            the path for a default <span class='code'>setup.py</span> installation
+                            would look like this:</p>
 
     <pre class='tty'>Alias /weewx <span class="highlight">/home/weewx/public_html</span>
 &lt;Directory <span class="highlight">/home/weewx/public_html</span>&gt;
@@ -2333,8 +2362,8 @@ sudo /etc/init.d/weewx restart</pre>
     AllowOverride None
 &lt;/Directory&gt;</pre>
 
-                <p>Restart Apache to make the changes happen:</p>
-                <pre class='tty cmd'>sudo /etc/init.d/apache2 restart</pre>
+                        <p>Restart Apache to make the changes happen:</p>
+                        <pre class='tty cmd'>sudo /etc/init.d/apache2 restart</pre>
                     </li>
                 </ul>
             </li>
@@ -2615,9 +2644,10 @@ sudo /etc/init.d/weewx start</pre>
             <a href="images/ferrites.jpg"><img src="images/ferrites.jpg" width='200' border='1' alt="Ferrite coils"
                                                longdesc="Cable connection looped through a ferrite coil"/></a>
 
-            <div class='image_caption'>Ferrite coils on a Davis Envoy.  There are two
-            coils, one on the USB connection (top wire) and one on the power
-            supply. Both have loops. Click for larger picture.</div>
+            <div class='image_caption'>Ferrite coils on a Davis Envoy. There are two
+                coils, one on the USB connection (top wire) and one on the power
+                supply. Both have loops. Click for larger picture.
+            </div>
         </div>
         <ul>
             <li>Run on dedicated hardware. If you are using the server for other
@@ -2761,7 +2791,8 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
 
         <p>Or, at least, it should! </p>
 
-        <h3 id="html_generated_but_not_updated"><span class="code">weewx</span> generates HTML pages, but it does not update them</h3>
+        <h3 id="html_generated_but_not_updated"><span class="code">weewx</span> generates HTML pages, but it does not
+            update them</h3>
 
         <p>If you are getting a symptom that everything appears normal, that is
             image and HTML files are generated (<em>(look in the log to be sure</em>)
@@ -2887,7 +2918,8 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
             need to restart weewx.</p>
 
         <p>More details
-            about <a href="https://github.com/weewx/weewx/wiki/FineOffset%20USB%20lockup"><i>Fine Offset lockups</i></a> can be found in the
+            about <a href="https://github.com/weewx/weewx/wiki/FineOffset%20USB%20lockup"><i>Fine Offset lockups</i></a>
+            can be found in the
             <a href="https://github.com/weewx/weewx/wiki">Wiki</a>.</p>
 
         <h3 id='archive_interval'>Archive interval</h3>
@@ -3094,7 +3126,8 @@ Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</pre
             hardware interval, <span class="code">weewx</span> defers to the
             station's interval.</p>
 
-        <p>Use the <a href="utilities.htm#wee_device_utility"><span class="code">wee_device</span></a> utility to change the
+        <p>Use the <a href="utilities.htm#wee_device_utility"><span class="code">wee_device</span></a> utility to change
+            the
             station's interval.</p>
 
         <h3 id='spikes'>Spikes in the graphs</h3>
@@ -3136,8 +3169,9 @@ sqlite&gt; <span class="cmd">select dateTime,outTemp from archive where outTemp 
       <pre class='tty'>sqlite&gt; <span class="cmd">update archive set windSpeed=NULL where outTemp &gt; 1000;</span>
 sqlite&gt; <span class="cmd">update archive set outTemp=NULL where outTemp &gt; 1000;</span></pre>
             </li>
-            <li>Delete the aggregate statistics so that <span class='code'>weewx</span> can regenerate them without the anomalies
-      <pre class='tty cmd'>sudo wee_database --drop-daily</pre>
+            <li>Delete the aggregate statistics so that <span class='code'>weewx</span> can regenerate them without the
+                anomalies
+                <pre class='tty cmd'>sudo wee_database --drop-daily</pre>
             </li>
             <li>start <span class='code'>weewx</span></li>
         </ol>
