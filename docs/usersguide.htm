@@ -169,30 +169,33 @@ Version: 3.6.0b2
             help, but, please, try to solve the problem yourself before posting.
         </p>
 
-        <h2>Steps</h2>
+        <h2>Overview</h2>
 
-        <p>Here are the steps to follow to install, configure, and run <span class="code">weewx</span>.</p>
+        <p>This is an outline of the process to install, configure, and run
+            <span class="code">weewx</span>:</p>
 
         <ol>
             <li>Read the <a href="hardware.htm">hardware notes</a>
                 for your weather station. This will let you know of any features,
                 limitations, or quirks of your hardware.
             </li>
-            <li>Install <span class="weewx">weewx</span> using one of the <a href="#installation_methods">
-                installation methods</a> below.
+            <li>Install <span class="code">weewx</span>.  Use the step-by-step
+                instructions in one of the
+                <a href="#installation_methods">installation methods</a> below.
             </li>
-            <li>Configure your hardware. This involves setting things like the onboard archive
+            <li>Configure the hardware. This involves setting things like the onboard archive
                 interval, rain bucket size, etc. You may have to follow directions given by your
                 hardware manufacturer, or you may be able to use the
                 utility <a href="utilities.htm#wee_device_utility"><span class="code">wee_device</span>.</a>
             </li>
-            <li>Launch the program, either as a <a href="#Running_as_a_daemon">daemon</a>,
+            <li>Launch the <span class="code">weewxd</span> program. It can be
+                run either as a <a href="#Running_as_a_daemon">daemon</a>,
                 or <a href="#Running_directly">directly from the command line</a>.
             </li>
-            <li>Tune, by changing settings in the <a href="#weewxconf"><span class="code">weewx.conf</span></a>
+            <li>Tune the installation. Typically this is done by changing settings in the <a href="#weewxconf"><span class="code">weewx.conf</span></a>
                 configuration file.
             </li>
-            <li><a href="customizing.htm">Customize</a>. This is an advanced topic, which allows you to
+            <li><a href="customizing.htm">Customize</a> the installation. This is an advanced topic, which allows you to
                 shape <span class="code">weewx</span> exactly to your liking!
             </li>
         </ol>
