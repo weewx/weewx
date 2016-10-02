@@ -23,6 +23,10 @@ Fixed wee_config to handle config files that have no FTP or RSYNC.
 
 Fixed bug in StdWXCalculate that ignored setting of 'None' (#110).
 
+Which derived variables to be calculated are now in a separate of
+[StdWXCalculate] called [[Calculations]]. Upgrade process takes care of
+upgrading your config file.
+
 Reset weewx launchtime when waiting for sane system clock (thanks to user
 James Taylor).
 

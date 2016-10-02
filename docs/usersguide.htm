@@ -1757,7 +1757,31 @@ longitude = -77.0366</pre>
             hardware that does not provide them, and known algorithms for hardware
             that provides unreliable or antiquated calculations.</p>
 
-        <p>The calculation service can calculate the following values:</p>
+        <p>The section <span class="code">[StdWXCalculate]</span> consists of
+        a group of general options, followed by a
+            subsection <span class="code">[[Calculations]]</span> that specifies the calculation
+        strategy to be used for each derived quantity.</p>
+
+        <p class="config_option">ignore_zero_wind</p>
+
+        <p>
+            Indicates whether the wind direction should be undefined when the wind
+            speed is zero. The default value is <span class="code">True</span>: the wind
+            direction will be undefined when wind speed is zero.
+        </p>
+
+        <p>
+            To report the wind vane direction even when there is no wind speed,
+            change this to False:
+        </p>
+    <pre class="tty">[StdWXCalculate]
+    ...
+    ignore_zero_wind = False</pre>
+
+        <h3 class="config_section">[[Calculations]]</h3>
+
+        <p>This subsection specifies which strategy is to be used to provide values
+        for derived variables. The service can calculate the following values:</p>
         <ul>
             <li>pressure</li>
             <li>barometer</li>
@@ -1779,14 +1803,15 @@ longitude = -77.0366</pre>
             the default configuration:</p>
 
     <pre class="tty">[StdWXCalculate]
-    pressure = prefer_hardware
-    barometer = prefer_hardware
-    altimeter = prefer_hardware
-    windchill = prefer_hardware
-    heatindex = prefer_hardware
-    dewpoint = prefer_hardware
-    inDewpoint = prefer_hardware
-    rainRate = prefer_hardware</pre>
+    [[Calculations]]
+        pressure = prefer_hardware
+        barometer = prefer_hardware
+        altimeter = prefer_hardware
+        windchill = prefer_hardware
+        heatindex = prefer_hardware
+        dewpoint = prefer_hardware
+        inDewpoint = prefer_hardware
+        rainRate = prefer_hardware</pre>
 
         <p>The options for each quantity are <span class='code'>hardware</span>,
             <span class='code'>software</span>, or
@@ -1812,23 +1837,9 @@ longitude = -77.0366</pre>
 
     <pre class="tty">[StdWXCalculate]
     ...
-    windchill = software</pre>
-
-        <p class="config_option">ignore_zero_wind</p>
-
-        <p>
-            Indicates whether the wind direction should be undefined when the wind
-            speed is zero. The default value is True; by default, the wind
-            direction will be undefined when wind speed is zero.
-        </p>
-
-        <p>
-            To report the wind vane direction even when there is no wind speed,
-            change this to False:
-        </p>
-    <pre class="tty">[StdWXCalculate]
-    ...
-    ignore_zero_wind = False</pre>
+    [[Calculations]]
+        ...
+        windchill = software</pre>
 
         <h2 class="config_section" id="StdArchive">[StdArchive]</h2>
 

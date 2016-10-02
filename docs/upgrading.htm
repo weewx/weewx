@@ -209,6 +209,68 @@ Version: 3.6.0b2
     
     <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
     
+    <h2>From V3.5 or earlier</h2>
+
+    <h3>Changes to <span class="code">weewx.conf</span></h3>
+    <p>
+        In Version 3.6, the list of options that describe how derived variables are to
+        be calculated have been moved to a new subsection called <span class="code">[[Calculations]]</span>.
+        The upgrade process will automatically make this change for you.
+    </p>
+
+
+
+    <table>
+        <tr class="first_row">
+            <td style='width:50%'>3.5</td>
+            <td>3.6</td>
+        </tr>
+        <tr>
+            <td>
+                <pre class='tty'>[StdWXCalculate]
+    # Derived quantities are calculated by this service. Possible values are:
+    #  hardware        - use the value provided by hardware
+    #  software        - use the value calculated by weewx
+    #  prefer_hardware - use value provide by hardware if available,
+    #                      otherwise use value calculated by weewx
+
+    pressure = prefer_hardware
+    barometer = prefer_hardware
+    altimeter = prefer_hardware
+    windchill = prefer_hardware
+    heatindex = prefer_hardware
+    dewpoint = prefer_hardware
+    inDewpoint = prefer_hardware
+    rainRate = prefer_hardware
+
+
+</pre>
+            </td>
+            <td>
+                <pre class='tty'>[StdWXCalculate]
+
+    <span class="changed">[[Calculations]]</span>
+    # Derived quantities are calculated by this service. Possible values are:
+    #  hardware        - use the value provided by hardware
+    #  software        - use the value calculated by weewx
+    #  prefer_hardware - use value provide by hardware if available,
+    #                      otherwise use value calculated by weewx
+
+        pressure = prefer_hardware
+        barometer = prefer_hardware
+        altimeter = prefer_hardware
+        windchill = prefer_hardware
+        heatindex = prefer_hardware
+        dewpoint = prefer_hardware
+        inDewpoint = prefer_hardware
+        rainRate = prefer_hardware</pre>
+            </td>
+        </tr>
+    </table>
+
+
+
+
     <h2>From V3.1 or earlier</h2>
     
     <h3>New utilities</h3>
