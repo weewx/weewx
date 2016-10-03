@@ -103,7 +103,7 @@ class WXCalculate(object):
         """
         
         # get any configuration settings
-        svc_dict = config_dict.get('StdWXCalculate', {})
+        svc_dict = config_dict.get('StdWXCalculate', {'Calculations':{}})
         # database binding for any calculations that need database queries
         if db_binder is None:
             db_binder = weewx.manager.DBBinder(config_dict)
@@ -117,10 +117,12 @@ class WXCalculate(object):
         self.ignore_zero_wind = weeutil.weeutil.to_bool(svc_dict.get('ignore_zero_wind', True))
         # atmospheric transmission coefficient [0.7-0.91]
         self.atc = float(svc_dict.get('atc', 0.8))
-        if self.atc < 0.7:
-            self.atc = 0.7
-        elif self.atc > 0.91:
-            self.atc = 0.91
+        # Fail hard if out of range:
+        if not 0.7 <= self.atc <= 0.91:
+            raise weewx.ViolatedPrecondition("Atmospheric transmission "
+                                             "coefficient (%f) out of "
+                                             "range [.7-.91]" % self.atc)
+
         # height above ground at which wind is measured, in meters
         self.wind_height = float(svc_dict.get('wind_height', 2.0))
         # Time window to accept a record 12 hours ago:
@@ -135,16 +137,13 @@ class WXCalculate(object):
         # loop packets.  currently this applies only to pressure calculation.
         self.archive_interval = None
 
-        # find out which calculations should be performed
         self.calculations = dict()
-        # look in the 'Calculations' stanza. if no 'Calculations' stanza, then
-        # look directly in the service stanza.
-        where_to_look = svc_dict.get('Calculations', svc_dict)
-        # we recognize only the names in our dispatch list; others are ignored
-        for v in self._dispatch_list:
-            x = where_to_look.get(v, 'prefer_hardware')
+        # Find out which calculations should be performed.
+        # We recognize only the names in our dispatch list; others are ignored.
+        for k in self._dispatch_list:
+            x = svc_dict['Calculations'].get(k, 'prefer_hardware')
             if x.lower() in ('hardware', 'software', 'prefer_hardware', 'none'):
-                self.calculations[v] = x
+                self.calculations[k] = x
 
         # determine which algorithms to use for the calculations
         self.algorithms = svc_dict.get('Algorithms', {})
