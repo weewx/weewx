@@ -141,8 +141,8 @@ class WXCalculate(object):
         # Find out which calculations should be performed.
         # We recognize only the names in our dispatch list; others are ignored.
         for k in self._dispatch_list:
-            x = svc_dict['Calculations'].get(k, 'prefer_hardware')
-            if x.lower() in ('hardware', 'software', 'prefer_hardware', 'none'):
+            x = svc_dict['Calculations'].get(k, 'prefer_hardware').lower()
+            if x in ('hardware', 'software', 'prefer_hardware', 'none'):
                 self.calculations[k] = x
 
         # determine which algorithms to use for the calculations
