@@ -11,7 +11,7 @@ import time
 import weewx.uwxutils
 
 from weewx.units import INHG_PER_MBAR, METER_PER_FOOT, METER_PER_MILE, MM_PER_INCH 
-from weewx.units import CtoK, CtoF, FtoC, mps_to_mph, kph_to_mph
+from weewx.units import CtoK, CtoF, FtoC
 
 def dewpointF(T, R):
     """Calculate dew point. 
@@ -515,16 +515,16 @@ def beaufort(ws_kts):
     return 12
 
 def evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts=None):
-    """Calculate the evapotranspiration
+    """Calculate the rate of evapotranspiration during an arbitrary time period.
     http://edis.ifas.ufl.edu/ae459
 
-    tmax_C - maximum temperature in degrees Celsius
+    tmax_C - maximum temperature during the time period in degrees Celsius
 
-    tmin_C - minimum temperature in degrees Celsius
+    tmin_C - minimum temperature during the time period in degrees Celsius
 
-    sr_avg - mean daily/hourly solar radiation in watts per sq meter per day/hr
+    sr_avg - mean solar radiation during the time period in watts per sq meter
 
-    ws_mps - average daily/hourly wind speed in meters per second
+    ws_mps - average wind speed during the time period in meters per second
 
     z_m - height in meters at which windspeed is measured
 
@@ -532,7 +532,7 @@ def evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts=None)
 
     lat - latitude in degrees
 
-    returns evapotranspiration in mm per day/hour
+    returns evapotranspiration in mm per day
     """
     if tmax_C is None or tmin_C is None or sr_avg is None or ws_mps is None:
         return None
@@ -601,6 +601,7 @@ def evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts=None)
     return evt
 
 def evapotranspiration_US(tmax_F, tmin_F, sr_avg, ws_mph, z_ft, lat, ts=None):
+    """Returns ET rate in inches per day"""
     if tmax_F is None or tmin_F is None or sr_avg is None or ws_mph is None:
         return None
     tmax_C = FtoC(tmax_F)

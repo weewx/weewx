@@ -760,19 +760,35 @@ def update_to_v36(config_dict):
     if config_dict.get('StdWXCalculate'):
         # No need to update if it already has a 'Calculations' section:
         if not config_dict['StdWXCalculate'].get('Calculations'):
+            # Save the comment attached to the first scalar
+            try:
+                first = config_dict['StdWXCalculate'].scalars[0]
+                comment = config_dict['StdWXCalculate'].comments[first]
+                config_dict['StdWXCalculate'].comments[first] = ''
+            except IndexError:
+                comment = """    # Derived quantities are calculated by this service. Possible values are:
+    #  hardware        - use the value provided by hardware
+    #  software        - use the value calculated by weewx
+    #  prefer_hardware - use value provide by hardware if available,
+    #                      otherwise use value calculated by weewx"""
             # Create a new 'Calculations' section:
             config_dict['StdWXCalculate']['Calculations'] = {}
             # Now transfer over the options. Make a copy of them first: we will be 
             # deleting some of them.
             scalars = list(config_dict['StdWXCalculate'].scalars)
             for scalar in scalars:
-                config_dict['StdWXCalculate'].comments[scalar] = []
                 # These scalars don't get moved:
                 if not scalar in ['ignore_zero_wind', 'rain_period', 
                                   'et_period', 'wind_height', 'atc', 
                                   'nfac', 'max_delta_12h']:
                     config_dict['StdWXCalculate']['Calculations'][scalar] = config_dict['StdWXCalculate'][scalar]
                     config_dict['StdWXCalculate'].pop(scalar)
+            # Insert the old comment at the top of the new stanza:
+            try:
+                first = config_dict['StdWXCalculate']['Calculations'].scalars[0]
+                config_dict['StdWXCalculate']['Calculations'].comments[first] = comment
+            except IndexError:
+                pass
 
 def transfer_comments(config_dict, template_dict):
     

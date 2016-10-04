@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-X.X.X MM/DD/YYYY
+3.6.0 MM/DD/YYYY
 
 Added the ability to run reports using a cron-like notation, instead of with
 every report cycle. See User's Guide for details. Thanks to user Gary Roderick.
@@ -19,13 +19,16 @@ Thanks to user Pat OBrien.
 
 No ET when beyond the reach of the sun.
 
+Software calculated ET now returns the amount of evapotranspiration that
+occurred during the archive interval. Fixes issue #160
+
 Fixed wee_config to handle config files that have no FTP or RSYNC.
 
 Fixed bug in StdWXCalculate that ignored setting of 'None' (#110).
 
-Which derived variables to be calculated are now in a separate of
-[StdWXCalculate] called [[Calculations]]. Upgrade process takes care of
-upgrading your config file.
+Which derived variables are to be calculated are now in a separate 
+subsection of [StdWXCalculate] called [[Calculations]]. 
+Upgrade process takes care of upgrading your config file.
 
 Reset weewx launchtime when waiting for sane system clock (thanks to user
 James Taylor).

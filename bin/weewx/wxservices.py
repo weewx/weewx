@@ -328,14 +328,15 @@ class WXCalculate(object):
 
     def calc_ET(self, data, data_type):
         """Get maximum and minimum temperatures and average radiation and
-        wind speed for the indicated period then calculate the
-        evapotranspiration.  Convert to US units if necessary
+        wind speed for the indicated period then calculate the amount of
+        evapotranspiration during the interval.  Convert to US units if necessary
         since this service operates in US unit system."""
         # calculate ET only for archive packets
-        if data_type == 'loop':
+        if data_type != 'archive':
             return
         end_ts = data['dateTime']
         start_ts = end_ts - self.et_period
+        interval = self._get_archive_interval(data)
         try:
             dbmanager = self.db_binder.get_manager(self.binding)
             r = dbmanager.getSql(
@@ -354,10 +355,14 @@ class WXCalculate(object):
                         wind_avg = mps_to_mph(wind_avg)
                     else:
                         wind_avg = kph_to_mph(wind_avg)
-                data['ET'] = weewx.wxformulas.evapotranspiration_US(
+                # Rate will be in inches per day
+                ET_rate = weewx.wxformulas.evapotranspiration_US(
                     T_max, T_min, rad_avg, wind_avg,
                     self.wind_height, self.latitude,
                     data['dateTime'])
+                # Multiply the ET rate by the length of the interval in days.
+                # This will give the total amount of ET during the archive interval.
+                data['ET'] = ET_rate * interval / (24*3600.0)  
         except ValueError, e:
             weeutil.weeutil.log_traceback()
             syslog.syslog(syslog.LOG_ERR, "wxservices: Calculation of evapotranspiration failed: %s" % e)
