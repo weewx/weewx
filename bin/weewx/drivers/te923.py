@@ -445,7 +445,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.21'
+DRIVER_VERSION = '0.22rc1'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -1622,7 +1622,7 @@ class TE923Station(object):
             except usb.USBError, e:
                 errmsg = repr(e)
                 if not ('No data available' in errmsg or 'No error' in errmsg):
-                    raise weewx.WeeWxIOError(e)
+                    raise
 # sleeping seems to have no effect on the reads
 #            time.sleep(0.009) # te923tool is 0.15
         else:
@@ -1712,7 +1712,7 @@ class TE923Station(object):
             except usb.USBError, e:
                 errmsg = repr(e)
                 if not ('No data available' in errmsg or 'No error' in errmsg):
-                    raise weewx.WeeWxIOError(e)
+                    raise
             time.sleep(0.009)
         else:
             raise BadWrite("Timeout after %d bytes" % len(rbuf))
