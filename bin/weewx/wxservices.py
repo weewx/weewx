@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -14,6 +14,7 @@ import weewx.engine
 import weewx.wxformulas
 import weeutil.weeutil
 
+from weewx.units import CtoF, mps_to_mph, kph_to_mph
 
 class StdWXCalculate(weewx.engine.StdService):
     """Wrapper class for WXCalculate.
@@ -347,12 +348,12 @@ class WXCalculate(object):
             else:
                 T_max, T_min, rad_avg, wind_avg, std_unit = r
                 if std_unit == weewx.METRIC or std_unit == weewx.METRICWX:
-                    T_max = weewx.wxformulas.CtoF(T_max)
-                    T_min = weewx.wxformulas.CtoF(T_min)
+                    T_max = CtoF(T_max)
+                    T_min = CtoF(T_min)
                     if std_unit == weewx.METRICWX:
-                        wind_avg = weewx.wxformulas.mps_to_mph(wind_avg)
+                        wind_avg = mps_to_mph(wind_avg)
                     else:
-                        wind_avg = weewx.wxformulas.kph_to_mph(wind_avg)
+                        wind_avg = kph_to_mph(wind_avg)
                 data['ET'] = weewx.wxformulas.evapotranspiration_US(
                     T_max, T_min, rad_avg, wind_avg,
                     self.wind_height, self.latitude,
@@ -383,9 +384,9 @@ class WXCalculate(object):
                 if row[1]:
                     inc_hours = row[0] / 60.0
                     if row[2] == weewx.METRICWX:
-                        run += weewx.wxformulas.mps_to_mph(row[1]) * inc_hours
+                        run += mps_to_mph(row[1]) * inc_hours
                     elif row[2] == weewx.METRIC:
-                        run += weewx.wxformulas.kph_to_mph(row[1]) * inc_hours
+                        run += kph_to_mph(row[1]) * inc_hours
                     else:
                         run += row[1] * inc_hours
             data['windrun'] = run

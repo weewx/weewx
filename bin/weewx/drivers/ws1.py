@@ -17,6 +17,7 @@ from __future__ import with_statement
 import syslog
 import time
 
+from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 import weewx.drivers
 
 DRIVER_NAME = 'WS1'
@@ -29,10 +30,6 @@ def loader(config_dict, _):
 def confeditor_loader():
     return WS1ConfEditor()
 
-
-INHG_PER_MBAR = 0.0295299830714
-METER_PER_FOOT = 0.3048
-MILE_PER_KM = 0.621371
 
 DEFAULT_SER_PORT = '/dev/ttyS0'
 DEFAULT_TCP_ADDR = '192.168.36.25'

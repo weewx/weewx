@@ -10,28 +10,8 @@ import math
 import time
 import weewx.uwxutils
 
-INHG_PER_MBAR = 0.0295299830714
-METER_PER_FOOT = 0.3048
-METER_PER_MILE = 1609.34
-MM_PER_INCH = 25.4
-
-def CtoK(x):
-    return x + 273.15
-
-def CtoF(x):
-    return x * 1.8 + 32.0
-
-def FtoC(x):
-    return (x - 32.0) * 5.0 / 9.0
-
-def mps_to_mph(x):
-    return x * 3600.0 / METER_PER_MILE
-
-def kph_to_mph(x):
-    return x * 1000.0 / METER_PER_MILE
-
-def degtorad(x):
-    return x * math.pi / 180.0
+from weewx.units import INHG_PER_MBAR, METER_PER_FOOT, METER_PER_MILE, MM_PER_INCH 
+from weewx.units import CtoK, CtoF, FtoC, mps_to_mph, kph_to_mph
 
 def dewpointF(T, R):
     """Calculate dew point. 
@@ -299,7 +279,7 @@ def solar_rad_Bras(lat, lon, altitude_m, ts=None, nfac=2):
         # NREL solar constant W/m^2
         nrel = 1367.0
         # radiation on horizontal surface at top of atmosphere (bras eqn 2.9)
-        sinel = math.sin(degtorad(el))
+        sinel = math.sin(math.radians(el))
         io = sinel * nrel / (R * R)
         if sinel >= 0:
             # optical air mass (bras eqn 2.22)
@@ -366,7 +346,7 @@ def solar_rad_RS(lat, lon, altitude_m, ts=None, atc=0.8):
         R = alm.sun.earth_distance
         z = altitude_m
         nrel = 1367.0 # NREL solar constant, W/m^2
-        sinal = math.sin(degtorad(el))
+        sinal = math.sin(math.radians(el))
         if sinal >= 0: # sun must be above horizon
             rm = math.pow((288.0-0.0065*z)/288.0,5.256)/(sinal+0.15*math.pow(el+3.885,-1.253))
             toa = nrel * sinal / (R * R)
