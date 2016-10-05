@@ -341,28 +341,34 @@ class WXCalculate(object):
             dbmanager = self.db_binder.get_manager(self.binding)
             r = dbmanager.getSql(
                 "SELECT"
-                " MAX(outTemp),MIN(outTemp),AVG(radiation),AVG(windSpeed),usUnits"
+                " MAX(outTemp), MIN(outTemp), AVG(radiation), AVG(windSpeed),"
+                " MAX(outHumidity), MIN(outHumidity), usUnits"
                 " FROM %s WHERE dateTime>? AND dateTime <=?"
                 % dbmanager.table_name, (start_ts, end_ts))
-            if r is None or None in r:
+            if r is None:
                 data['ET'] = None
-            else:
-                T_max, T_min, rad_avg, wind_avg, std_unit = r
-                if std_unit == weewx.METRIC or std_unit == weewx.METRICWX:
-                    T_max = CtoF(T_max)
-                    T_min = CtoF(T_min)
-                    if std_unit == weewx.METRICWX:
-                        wind_avg = mps_to_mph(wind_avg)
-                    else:
-                        wind_avg = kph_to_mph(wind_avg)
-                # Rate will be in inches per day
-                ET_rate = weewx.wxformulas.evapotranspiration_US(
-                    T_max, T_min, rad_avg, wind_avg,
-                    self.wind_height, self.latitude,
-                    data['dateTime'])
-                # Multiply the ET rate by the length of the interval in days.
-                # This will give the total amount of ET during the archive interval.
-                data['ET'] = ET_rate * interval / (24*3600.0)  
+                return
+            # Unpack the results
+            T_max, T_min, rad_avg, wind_avg, rh_max, rh_min, std_unit = r
+            # Check for null values. Null relative humidity is OK.
+            if T_max is None or T_min is None or rad_avg is None or wind_avg is None or std_unit is None:
+                data['ET'] = None
+                return
+            if std_unit == weewx.METRIC or std_unit == weewx.METRICWX:
+                T_max = CtoF(T_max)
+                T_min = CtoF(T_min)
+                if std_unit == weewx.METRICWX:
+                    wind_avg = mps_to_mph(wind_avg)
+                else:
+                    wind_avg = kph_to_mph(wind_avg)
+            # Rate will be in inches per day
+            ET_rate = weewx.wxformulas.evapotranspiration_US(
+                          T_max, T_min, rad_avg, wind_avg,
+                          self.wind_height, self.latitude,
+                          data['dateTime'], rh_min, rh_max)
+            # Multiply the ET rate by the length of the interval in days.
+            # This will give the total amount of ET during the archive interval.
+            data['ET'] = ET_rate * interval / (24*3600.0) if ET_rate is not None else None
         except ValueError, e:
             weeutil.weeutil.log_traceback()
             syslog.syslog(syslog.LOG_ERR, "wxservices: Calculation of evapotranspiration failed: %s" % e)
