@@ -149,8 +149,6 @@ version:
   mv docs/$$f.tmp docs/$$f; \
 done
 	sed -e 's/version =.*/version = $(VERSION)/' weewx.conf > weewx.conf.tmp; mv weewx.conf.tmp weewx.conf
-	make deb-changelog
-	make rpm-changelog
 
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
