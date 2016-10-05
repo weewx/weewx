@@ -154,14 +154,13 @@ done
 
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
-DEBCHANGED=$(shell grep "$(DEBVER)" pkg/debian/changelog)
 # add a skeleton entry to deb changelog
 deb-changelog:
-ifeq ("$(DEBCHANGED)","")
-	pkg/mkchangelog.pl --action stub --format debian --release-version $(DEBVER) > pkg/debian/changelog.new
-	cat pkg/debian/changelog >> pkg/debian/changelog.new
-	mv pkg/debian/changelog.new pkg/debian/changelog
-endif
+	if [ "`grep $(DEBVER) pkg/debian/changelog`" = "" ]; then \
+  pkg/mkchangelog.pl --action stub --format debian --release-version $(DEBVER) > pkg/debian/changelog.new; \
+  cat pkg/debian/changelog >> pkg/debian/changelog.new; \
+  mv pkg/debian/changelog.new pkg/debian/changelog; \
+fi
 
 # use dpkg-buildpackage to create the debian package
 # -us -uc - skip gpg signature on .dsc and .changes
@@ -206,14 +205,13 @@ upload-deb:
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
-RPMCHANGED=$(shell grep "$(RPMVER)" pkg/changelog.rpm)
 # add a skeleton entry to rpm changelog
 rpm-changelog:
-ifeq ("$(RPMCHANGED)","")
-	pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.rpm.new
-	cat pkg/changelog.rpm >> pkg/changelog.rpm.new
-	mv pkg/changelog.rpm.new pkg/changelog.rpm
-endif
+	if [ "`grep $(RPMVER)1 pkg/changelog.rpm`" = "" ]; then \
+  pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.rpm.new; \
+  cat pkg/changelog.rpm >> pkg/changelog.rpm.new; \
+  mv pkg/changelog.rpm.new pkg/changelog.rpm; \
+fi
 
 # use rpmbuild to create the rpm package
 RPMARCH=noarch
