@@ -619,6 +619,17 @@ longitude = -77.0366</pre>
 
         <p>Set to the type of hardware you are using.</p>
         <pre class="tty">station_type = Simulator</pre>
+        <p>Whatever option you choose, you <strong>must have a matching section</strong>
+            in your configuration file. For example, if you choose
+            <span class="code">station_type = Simulator</span>, then you
+            will need a <span class="code">[Simulator]</span> section.
+            While you can do this by hand, it is tedious and error-prone. The better way
+            to add the needed section is by using the utility
+            <a href="utilities.htm#wee_config_utility"><span class="code">wee_config</span></a> with
+            the <span class="code">--reconfigure</span> option. If the needed section is missing,
+            this utility will automatically inject it into the configuration file.
+        </p>
+
         <p>Valid options include:</p>
         <table class="indent">
             <tr class="first_row">
@@ -684,6 +695,7 @@ longitude = -77.0366</pre>
                 <td>La Crosse 28xx stations</td>
             </tr>
         </table>
+
         <p id="station_url" class="config_option"><span class="config_important">station_url</span></p>
 
         <p>If you have a website, you may optionally specify an URL for
