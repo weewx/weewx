@@ -891,6 +891,7 @@ class CC3000(object):
                     cmd_cnt = 0
                     yield values
                 elif (values[0] == 'HDR' or values[0] == 'MSG' or
+                      values[0] == 'MIN' or values[0] == 'MAX' or
                       values[0].startswith('DOWNLOAD')):
                     pass
                 elif values[0] == '':
