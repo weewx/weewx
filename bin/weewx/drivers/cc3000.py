@@ -60,7 +60,9 @@ Logger uses the following units:
   pressure     inHg     mbar
   temperature  F        C
 
-This driver was tested with a CC3000 with firmware: 1.3 Build 006 Sep 04 2013
+This driver was tested with:
+  Rainwise CC-3000 Version: 1.3 Build 006 Sep 04 2013
+  Rainwise CC-3000 Version: 1.3 Build 016 Aug 21 2014
 """
 
 # FIXME: confirm that rain field in archive records is a total, not a delta
@@ -156,7 +158,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
         parser.add_option('--get-dst', dest='getdst', action='store_true',
                           help='display daylight savings settings')
         parser.add_option('--set-dst', dest='dst',
-                          metavar='mm/dd HH:MM,mm/dd HH:MM,MM',
+                          metavar='mm/dd HH:MM,mm/dd HH:MM,[MM]M',
                           help='set daylight savings start, end, and amount')
         parser.add_option("--get-channel", dest="getch", action="store_true",
                           help="display the station channel")
@@ -290,7 +292,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
     def set_dst(self, dst, prompt):
         if dst != '0' and len(dst.split(',')) != 3:
             raise ValueError("DST must be 0 (disabled) or start, stop, amount "
-                             "with the format mm/dd HH:MM, mm/dd HH:MM, MM")
+                             "with the format mm/dd HH:MM, mm/dd HH:MM, [MM]M")
         ans = None
         while ans not in ['y', 'n']:
             print "Station DST is", self.driver.station.get_dst()
@@ -782,6 +784,7 @@ class CC3000(object):
     def set_dst(self, dst):
         logdbg("set DST to %s" % dst)
         data = self.command("DST=%s" % dst)
+        # FIXME: firmware 1.3 Build 016 Aug 21 2014 does not return OK
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to set DST to %s: %s" %
                                      (dst, _fmt(data)))
@@ -847,6 +850,7 @@ class CC3000(object):
     def clear_memory(self):
         logdbg("clear memory")
         data = self.command("MEM=CLEAR")
+        # FIXME: firmware 1.3 Build 016 Aug 21 2014 does not return OK
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to clear memory: %s" % _fmt(data))
 
@@ -981,7 +985,7 @@ if __name__ == '__main__':
     parser.add_option('--get-dst', dest='getdst', action='store_true',
                       help='display daylight savings settings')
     parser.add_option('--set-dst', dest='setdst',
-                      metavar='mm/dd HH:MM,mm/dd HH:MM,MM',
+                      metavar='mm/dd HH:MM,mm/dd HH:MM,[MM]M',
                       help='set daylight savings start, end, and amount')
     parser.add_option('--get-interval', dest='getint', action='store_true',
                       help='display logging interval, in seconds')
