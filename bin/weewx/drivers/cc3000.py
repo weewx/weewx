@@ -79,7 +79,7 @@ from weeutil.weeutil import to_bool
 import weewx.drivers
 
 DRIVER_NAME = 'CC3000'
-DRIVER_VERSION = '0.11'
+DRIVER_VERSION = '0.12'
 
 def loader(config_dict, engine):
     return CC3000Driver(**config_dict[DRIVER_NAME])
@@ -106,12 +106,23 @@ def loginf(msg):
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
-class ChecksumMismatch(weewx.WeeWxIOError):
+class ChecksumError(weewx.WeeWxIOError):
+    def __init__(self, msg):
+        weewx.WeeWxIOError.__init__(self, msg)
+
+class ChecksumMismatch(ChecksumError):
     def __init__(self, a, b, buf=None):
-        msg = "Checksum mismatch: 0x%04x != 0x%04x" % (a,b)
+        msg = "Checksum mismatch: 0x%04x != 0x%04x" % (a, b)
         if buf is not None:
             msg = "%s (%s)" % (msg, _fmt(buf))
-        weewx.WeeWxIOError.__init__(self, msg)
+        ChecksumError.__init__(self, msg)
+
+class BadCRC(ChecksumError):
+    def __init__(self, a, b, buf=None):
+        msg = "Bad CRC: 0x%04x != '%s'" % (a, b)
+        if buf is not None:
+            msg = "%s (%s)" % (msg, _fmt(buf))
+        ChecksumError.__init__(self, msg)
 
 
 class CC3000Configurator(weewx.drivers.AbstractConfigurator):
@@ -598,15 +609,21 @@ def _check_crc(buf):
     idx = buf.find('!')
     if idx < 0:
         return
-    cs = buf[idx+1:idx+5]
-    if DEBUG_CHECKSUM:
-        logdbg("found checksum at %d: %s" % (idx, cs))
-    a = _crc16(buf[0:idx]) # calculate checksum
-    if DEBUG_CHECKSUM:
-        logdbg("calculated checksum %x" % a)
-    b = int(cs, 16) # checksum provided in data
-    if a != b:
-        raise ChecksumMismatch(a, b, buf)
+    a = 0
+    b = 0
+    cs = ''
+    try:
+        cs = buf[idx+1:idx+5]
+        if DEBUG_CHECKSUM:
+            logdbg("found checksum at %d: %s" % (idx, cs))
+        a = _crc16(buf[0:idx]) # calculate checksum
+        if DEBUG_CHECKSUM:
+            logdbg("calculated checksum %x" % a)
+        b = int(cs, 16) # checksum provided in data
+        if a != b:
+            raise ChecksumMismatch(a, b, buf)
+    except ValueError, e:
+        raise BadCRC(a, cs, buf)
 
 # for some reason we sometimes get null characters randomly mixed in with the
 # bytes we receive.  strip them out and let the checksum do the validation of
@@ -883,7 +900,7 @@ class CC3000(object):
                 else:
                     logerr("bad record %s '%s' (%s)" %
                            (n, _fmt(values[0]), _fmt(data)))
-            except ChecksumMismatch, e:
+            except ChecksumError, e:
                 logerr("download failed for record %s: %s" % (n, e))
 
 
