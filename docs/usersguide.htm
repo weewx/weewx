@@ -514,6 +514,446 @@ Version: 3.6.0b3
         <!-- Moved wee_config description to utilities.htm-->
 
 
+        <h1 id="running">Running <span class="code">weewx</span></h1>
+
+        <p><span class="code">Weewx</span> can be run either directly,
+            or as a daemon. When first trying
+            <span class="code">weewx</span>, it is best to run it directly
+            because you will be able to see sensor output and diagnostics, as well
+            as log messages. Once everything is working properly, run it as a
+            daemon.</p>
+
+        <h2>Running directly</h2>
+
+        <p>To run <span class="code">weewx</span> directly, invoke
+            the main program, <span class="code">weewxd</span>, giving
+            the configuration file as its only parameter: </p>
+        <pre class="tty cmd">sudo weewxd weewx.conf</pre>
+        <p>It should start by downloading any data stored in your weather station
+            (if the station has a data logger) into the archive database. For some
+            stations, such as the Davis Vantage with a couple thousand records, this
+            could take a minute or two. I have found this process particularly slow
+            on SuSE for some reason. </p>
+
+        <p><span class="code">Weewx</span> will then start monitoring live sensor
+            data (also referrred to as 'LOOP' data),
+            printing a short version of the received data on standard output, about
+            once every two seconds for a Vantage station, or considerably longer
+            for some other stations. </p>
+
+        <p>You can tell a running instance of <span class="code">weewx</span> to
+            reread its configuration file by sending it the
+            <span class="code">HUP</span> signal.
+            First run <span class="code">ps</span> to find out the Process ID (PID)
+            number of the instance, then send it the <span class="code">HUP</span> signal: </p>
+    <pre class="tty"><span class="cmd">ps -a</span>          # Note the PID of the weewxd process
+<span class="cmd">kill -HUP <em>pid</em></span>  # Send it a HUP signal</pre>
+        <p>Note that this <em>only</em> rereads the configuration file. It will
+            not reload any code.</p>
+
+        <h2>Running as a daemon</h2>
+
+        <p>For unattended operations it is best to have <span class="code">weewx</span>
+            run as a daemon, started automatically when the server is rebooted. </p>
+
+        <p>If you use a packaged install from a DEB or RPM distribution, this is
+            done automatically. You can ignore this section.</p>
+
+        <p>Start by selecting the appropriate run script. They can be found in the
+            source or installation under
+            <span class="code">util/init.d/</span>. </p>
+        <table class="locations" style="width:90%">
+            <tr>
+                <td style='width:30%'>Debian/Ubuntu/Mint:</td>
+                <td class='tty'><span class="cmd">util/init.d/weewx.debian</span></td>
+            </tr>
+            <tr>
+                <td>Redhat/CentOS/Mint:</td>
+                <td class='tty'><span class="cmd">util/init.d/weewx.redhat</span></td>
+            </tr>
+            <tr>
+                <td>SuSE:</td>
+                <td class='tty'><span class="cmd">util/init.d/weewx.suse</span></td>
+            </tr>
+        </table>
+        <p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span>
+            has been set to the proper root directory for your
+            <span class="code">weewx</span> installation (it should have been set to the correct value automatically
+            by the install process, but it is worth checking). </p>
+
+        <p>Copy it to the proper location for your system: </p>
+        <table class="locations" style="width:90%">
+            <tr>
+                <td style="width: 30%">Debian/Ubuntu/Mint:</td>
+                <td class='tty'><span class="cmd">cp util/init.d/weewx.debian /etc/init.d/weewx</span></td>
+            </tr>
+            <tr>
+                <td>Redhat/CentOS/Fedora:</td>
+                <td class='tty'><span class="cmd">cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx</span></td>
+            </tr>
+            <tr>
+                <td>SuSE:</td>
+                <td class='tty'><span class="cmd">cp util/init.d/weewx.suse /etc/init.d/weewx</span></td>
+            </tr>
+        </table>
+        <p>Make sure the script is executable: </p>
+        <table class="locations" style="width:90%">
+            <tr>
+                <td style="width: 30%">Debian/Ubuntu/Mint:</td>
+                <td class='tty'><span class="cmd">chmod +x /etc/init.d/weewx</span></td>
+            </tr>
+            <tr>
+                <td>Redhat/CentOS/Fedora:</td>
+                <td class='tty'><span class="cmd">chmod +x /etc/init.d/rc.d/weewx</span></td>
+            </tr>
+            <tr>
+                <td>SuSE:</td>
+                <td class='tty'><span class="cmd">chmod +x /etc/init.d/weewx</span></td>
+            </tr>
+        </table>
+        <p>Create symbolic links in the run level directories: </p>
+        <table class="locations" style="width:90%">
+            <tr>
+                <td style="width: 30%">Debian/Ubuntu/Mint:</td>
+                <td class='tty'><span class="cmd">update-rc.d weewx defaults 98</span></td>
+            </tr>
+            <tr>
+                <td>Redhat/CentOS/Fedora:</td>
+                <td class='tty'><span class="cmd">chkconfig weewx on</span></td>
+            </tr>
+            <tr>
+                <td>SuSE:</td>
+                <td class='tty'><span class="cmd">/usr/lib/lsb/install_initd /etc/init.d/weewx</span></td>
+            </tr>
+        </table>
+        <p><span class="code">Weewx</span> will now start automatically whenever your
+            system is booted. You can also manually start, stop, and restart the
+            <span class="code">weewx</span> daemon: </p>
+    <pre class="tty cmd">sudo /etc/init.d/weewx start
+sudo /etc/init.d/weewx stop
+sudo /etc/init.d/weewx restart</pre>
+        <p>By default, the scripts are designed to have <span class="code">weewx</span>
+            run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels
+            with Debian (Ubuntu, Mint) systems is
+            <a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>. It uses a curses
+            interface to allow you to change easily which run level any of your daemons
+            runs at. There is a similar tool on SuSE. From the start menu run the YAST Control
+            Center, then look for Systems Services (Runlevel). Pick &quot;Expert&quot; mode
+            to see the run levels. </p>
+
+        <p>You can also tell <span class="code">weewx</span> to reread its configuration
+            file without stopping by using the &#39;reload&#39; option: </p>
+        <pre class="tty cmd">sudo /etc/init.d/weewx reload </pre>
+
+
+        <h1 id="monitoring">Monitoring <span class="code">weewx</span></h1>
+
+        <p><span class="code">Weewx</span> logs many events to the system log.
+            On Debian systems, this is <span class="code">/var/log/syslog</span>,
+            on SuSE, <span class="code">/var/log/messages</span>. Your system may
+            use yet another place. When troubleshooting the system, be sure to check
+            it! </p>
+
+        <p class='tty cmd'>tail -f /var/log/syslog</p>
+
+        <p>Set the debug option in <span class='code'>weewx.conf</span> to
+            generate many more checks and output more information. This can be
+            useful for diagnosing problems and debugging.</p>
+
+        <p class='tty'>debug = 1</p>
+
+
+        <h1 id="integrating_with_webserver">Integrating with a web server</h1>
+
+        <h2>If the server is on the same machine</h2>
+
+        <p>The reports generated by <span class='code'>weewx</span> can be
+            served by a web server running on the same computer as
+            <span class='code'>weewx</span>. These are instructions for making
+            <span class='code'>weewx</span> reports available via the Apache
+            web server. The process is similar for other web servers such as
+            <span class='code'>nginx</span> or
+            <span class='code'>lighthttpd</span>.</p>
+
+        <ol>
+            <li>
+                <p>Install the Apache web server on the computer on which
+                    <span class='code'>weewx</span> is running. For example, on Debian
+                    systems:</p>
+
+                <p class='tty cmd'>sudo apt-get install apache2</p>
+            </li>
+
+            <li>
+                <p>Configure Apache to see the <span class="code">weewx</span> reports.</p>
+                <ul>
+                    <li>
+                        <p>If <span class='code'>weewx</span> was installed from DEB or RPM
+                            package, no configuration should be necessary since the reports are placed
+                            in the directory <span class='code'>/var/www/html/weewx</span>,
+                            which is in the Apache DocumentRoot directory
+                            <span class='code'>/var/www/html</span></p>
+                    </li>
+                    <li>
+                        <p>If <span class='code'>weewx</span> was installed using
+                            <span class='code'>setup.py</span>, you must tell Apache
+                            where to find the <span class='code'>weewx</span> reports.
+                            One method is to install an Apache
+                            configuration snippet:</p>
+
+                        <pre class='tty cmd'>sudo cp util/apache/conf.d/weewx.conf /etc/apache2/conf.d</pre>
+
+                        <p>Be sure that the path in the Apache configuration snippet matches the
+                            <span class='code'>HTML_ROOT</span> defined in the
+                            <span class='code'>weewx</span> configuration file. For example,
+                            the path for a default <span class='code'>setup.py</span> installation
+                            would look like this:</p>
+
+    <pre class='tty'>Alias /weewx <span class="highlight">/home/weewx/public_html</span>
+&lt;Directory <span class="highlight">/home/weewx/public_html</span>&gt;
+    Options FollowSymlinks
+    AllowOverride None
+&lt;/Directory&gt;</pre>
+
+                        <p>Restart Apache to make the changes happen:</p>
+                        <pre class='tty cmd'>sudo /etc/init.d/apache2 restart</pre>
+                    </li>
+                </ul>
+            </li>
+
+            <li>
+                <p>Open the <span class='code'>weewx</span> URL in a web browser:</p>
+                <p class='tty'>http://localhost/weewx</p>
+            </li>
+        </ol>
+
+        <h2>If the server is on a different machine</h2>
+
+        <p>Use the FTP or RSYNC 'reports' to upload to a web server. Either of
+            these will copy everything from the <span class='code'>HTML_ROOT</span>
+            directory to a location on the remote server on which the web server
+            is running.</p>
+
+
+        <h1 id="backup">Making backups</h1>
+
+        <p>
+            To backup a <span class='code'>weewx</span> installation, you will need to make a copy
+            of</p>
+        <ul>
+            <li>configuration information;</li>
+            <li>skins and templates;</li>
+            <li>any custom code or extensions you have installed;</li>
+            <li>the weewx database.</li>
+        </ul>
+        <p>
+            It is not necessary to backup the generated images, HTML files, or NOAA reports since weewx will easily
+            create these again.
+        </p>
+
+        <p>Individual instructions follow</p>
+
+        <h2>Configuration</h2>
+
+        <p>
+            Save the <span class='code'>weewx.conf</span> file.
+        </p>
+        <table class="locations" style="width:70%">
+            <tr>
+                <td style="width: 30%">setup.py:</td>
+                <td class='tty'>/home/weewx/weewx.conf</td>
+            </tr>
+            <tr>
+                <td>DEB/RPM:</td>
+                <td class='tty'>/etc/weewx/weewx.conf</td>
+            </tr>
+        </table>
+
+        <h2>Skins and templates</h2>
+
+        <p>
+            Save the contents of the skins directory if you have modified the default
+            skin or if you have added any new skins or template files.
+        </p>
+        <table class="locations" style="width:70%">
+            <tr>
+                <td style="width: 30%">setup.py:</td>
+                <td class='tty'>/home/weewx/skins</td>
+            </tr>
+            <tr>
+                <td>DEB/RPM:</td>
+                <td class='tty'>/etc/weewx/skins</td>
+            </tr>
+        </table>
+
+        <h2>Custom code or extensions</h2>
+
+        <p>
+            Save the contents of the
+            <span class='code'>user</span> directory if you have modified the
+            database schema or added any extensions. If the extensions save data
+            to a database you should backup those databases as well.
+        </p>
+        <table class="locations" style="width:70%">
+            <tr>
+                <td style="width: 30%">setup.py:</td>
+                <td class='tty'>/home/weewx/bin/user</td>
+            </tr>
+            <tr>
+                <td>DEB/RPM:</td>
+                <td class='tty'>/usr/share/weewx/user</td>
+            </tr>
+        </table>
+
+        <h2>Database</h2>
+
+        <p>
+            Finally, you will need to backup the database.
+        </p>
+        <p>
+            For a SQLite configuration, make a copy of the <span class='code'>weewx.sdb</span> file.
+        </p>
+
+        <table class="locations" style="width:70%">
+            <tr>
+                <td style="width: 30%">setup.py:</td>
+                <td class='tty'>/home/weewx/archive/weewx.sdb</td>
+            </tr>
+            <tr>
+                <td>DEB/RPM:</td>
+                <td class='tty'>/var/lib/weewx/weewx.sdb</td>
+            </tr>
+        </table>
+
+        <p class="note">
+            Do not make the copy of the SQLite database while in the middle of
+            a transaction! Schedule the backup for immediately after an
+            archive record is written, and then make sure the backup completes
+            before the next archive record arrives. Alternatively, stop weewx,
+            perform the backup, then restart weewx.
+        </p>
+
+        <p>
+            For a MySQL configuration, save a dump of the archive database.
+        </p>
+
+        <h2>Restoring from backup</h2>
+
+        <p>
+            To restore from backup, do a fresh install of
+            <span class='code'>weewx</span>, replace the default files with
+            those from a backup, then start <span class='code'>weewx</span>.
+        </p>
+
+
+        <h1 id="configuring_mysql">Configuring MySQL</h1>
+
+        <p>This section applies only to those who wish to use the MySQL
+            database, instead of the default SQLite database.</p>
+
+        <p>
+            First, you should change your <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a>
+            section to point to the MySQL database, <span class="code">archive_mysql</span>,
+            instead of the SQLite database <span class="code">archive_sqlite</span>. After the
+            change, it
+            will look something like this (change <span class="highlight">highlighted</span>):
+        </p>
+    <pre class="tty">
+    [[wx_binding]]
+        # The database should match one of the sections in [Databases]
+        <span class="highlight">database = archive_mysql</span>
+        # The name of the table within the database
+        table_name = archive
+        # The class to manage the database
+        manager = weewx.wxmanager.WXDaySummaryManager
+        # The schema defines to structure of the database contents
+        schema = schemas.wview.schema</pre>
+
+        <p>Assuming that you want to use the default database configuration, your
+            <span class="code"><a href="#Databases">[[MySQL]]</a></span> section
+            should look something like this:</p>
+    <pre class="tty">[[MySQL]]
+    driver = weedb.mysql
+    host = localhost
+    user = weewx
+    password = weewx
+</pre>
+        <p>This assumes user <span class="code">weewx</span> would have password <span class="code">weewx</span>.
+            Adjust as necessary.</p>
+
+        <p>You will need to give the necessary permissions for the database <span class="code">weewx</span>
+            to whatever MySQL user you choose, by
+            default, user <span class="code">weewx</span>. Here are the necessary minimum
+            permissions:</p>
+    <pre class="tty">mysql&gt; <span class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
+mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop ON weewx.* TO weewx@localhost;</span></pre>
+
+
+        <h1 id="wview_compatibility">Compatibility with <span class="code">wview</span></h1>
+
+        <h2>sqlite3</h2>
+
+        <p>The SQLite archive database used by <span class="code">weewx</span>
+            (nominally, <span class="code">weewx.sdb</span>) is completely
+            compatible with the database used by
+            <a href="http://www.wviewweather.com">wview</a> (usually called
+            <span class="code">wview-archive.sdb</span>), at least as of wview
+            Version 5.2.X. The schema, and its semantics, is identical.
+        </p>
+
+        <p>If you have data from <span class='code'>wview</span>, you can
+            'import' them into <span class='code'>weewx</span> by simply copying the
+            SQLite database file. Assuming that the <span class='code'>wview</span>
+            data are in file
+            <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
+
+    <pre class='tty cmd'>sudo /etc/init.d/weewx stop
+cd <span class="symcode">SQLITE_ROOT</span>
+mv weewx.sdb weewx.sdb.bak
+cp /var/wview/archive/wview-archive.sdb weewx.sdb
+sudo /etc/init.d/weewx start</pre>
+
+        <p>
+            Internally, within the <span class="code">weewx.sdb</span> database,
+            <span class="code">weewx</span> also maintains a "daily summary" of all the statistics. This
+            is done for performance reasons. The daily summary will
+            automatically be built on the first startup. This could take
+            a few minutes if the <span class='code'>wview</span> archive contains
+            more than a month or two of data.
+        </p>
+
+        <p>
+            On my modest 500 MHz <a href="http://www.fit-pc.com/">fit-PC
+            Slim</a> with 512 MB of memory it took a little over 4 minutes for a
+            year and a half (25 MB) of data.
+        </p>
+
+        <h2>MySQL</h2>
+
+        <p>The MySQL archive database used by wview is "almost" compatible with
+            <span class="code">weewx</span>. The one difference is that in wview, the column <span
+                    class="code">interval</span>
+            is named <span class="code">arcInt</span> (presumably because
+            <span class="code">interval</span> is a keyword in MySQL, although it can
+            still be used by surrounding the word with backquotes). </p>
+
+        <p>To change the column name to what <span class="code">weewx</span> uses, namely <span
+                class="code">interval</span>,
+            use the utility <span class="code">mysql</span> and issue the command:</p>
+        <pre class="tty">mysql> <span class="cmd">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt `interval` INTEGER NOT NULL;</span> </pre>
+        <p>where <span class="code"><em>your-wview-archive-name</em></span> is the
+            name of your wview archive database. Note that the word <span class="code">
+        interval</span> is surrounded by backquotes.</p>
+
+        <p>Then in the <span class="code">[Databases]</span> section of
+            <span class="code">weewx.conf</span>, replace the name of the database
+            with whatever your installation of wview used <span class="code"><em>your-wview-archive-name</em></span>:
+        </p>
+    <pre class="tty">[[archive_mysql]]
+    database_type = MySQL
+    database_name = <span class="highlight"><em>your-wview-archive-name</em></span></pre>
+
+
         <h1 id="weewxconf">The configuration file <span class="code">weewx.conf</span></h1>
 
         <p>The configuration file <span class="code">weewx.conf</span> is a big
@@ -1773,9 +2213,9 @@ longitude = -77.0366</pre>
             that provides unreliable or antiquated calculations.</p>
 
         <p>The section <span class="code">[StdWXCalculate]</span> consists of
-        a group of general options, followed by a
+            a group of general options, followed by a
             subsection <span class="code">[[Calculations]]</span> that specifies the calculation
-        strategy to be used for each derived quantity.</p>
+            strategy to be used for each derived quantity.</p>
 
         <p class="config_option">ignore_zero_wind</p>
 
@@ -1796,7 +2236,7 @@ longitude = -77.0366</pre>
         <h3 class="config_section">[[Calculations]]</h3>
 
         <p>This subsection specifies which strategy is to be used to provide values
-        for derived variables. The service can calculate the following values:</p>
+            for derived variables. The service can calculate the following values:</p>
         <ul>
             <li>pressure</li>
             <li>barometer</li>
@@ -2185,446 +2625,6 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
             use it, then you may also be the type who wants to pare this down
             to the bare minimum. However, this will only make a slight
             difference in execution speed and memory use.</p>
-
-
-        <h1 id="running">Running <span class="code">weewx</span></h1>
-
-        <p><span class="code">Weewx</span> can be run either directly,
-            or as a daemon. When first trying
-            <span class="code">weewx</span>, it is best to run it directly
-            because you will be able to see sensor output and diagnostics, as well
-            as log messages. Once everything is working properly, run it as a
-            daemon.</p>
-
-        <h2>Running directly</h2>
-
-        <p>To run <span class="code">weewx</span> directly, invoke
-            the main program, <span class="code">weewxd</span>, giving
-            the configuration file as its only parameter: </p>
-        <pre class="tty cmd">sudo weewxd weewx.conf</pre>
-        <p>It should start by downloading any data stored in your weather station
-            (if the station has a data logger) into the archive database. For some
-            stations, such as the Davis Vantage with a couple thousand records, this
-            could take a minute or two. I have found this process particularly slow
-            on SuSE for some reason. </p>
-
-        <p><span class="code">Weewx</span> will then start monitoring live sensor
-            data (also referrred to as 'LOOP' data),
-            printing a short version of the received data on standard output, about
-            once every two seconds for a Vantage station, or considerably longer
-            for some other stations. </p>
-
-        <p>You can tell a running instance of <span class="code">weewx</span> to
-            reread its configuration file by sending it the
-            <span class="code">HUP</span> signal.
-            First run <span class="code">ps</span> to find out the Process ID (PID)
-            number of the instance, then send it the <span class="code">HUP</span> signal: </p>
-    <pre class="tty"><span class="cmd">ps -a</span>          # Note the PID of the weewxd process
-<span class="cmd">kill -HUP <em>pid</em></span>  # Send it a HUP signal</pre>
-        <p>Note that this <em>only</em> rereads the configuration file. It will
-            not reload any code.</p>
-
-        <h2>Running as a daemon</h2>
-
-        <p>For unattended operations it is best to have <span class="code">weewx</span>
-            run as a daemon, started automatically when the server is rebooted. </p>
-
-        <p>If you use a packaged install from a DEB or RPM distribution, this is
-            done automatically. You can ignore this section.</p>
-
-        <p>Start by selecting the appropriate run script. They can be found in the
-            source or installation under
-            <span class="code">util/init.d/</span>. </p>
-        <table class="locations" style="width:90%">
-            <tr>
-                <td style='width:30%'>Debian/Ubuntu/Mint:</td>
-                <td class='tty'><span class="cmd">util/init.d/weewx.debian</span></td>
-            </tr>
-            <tr>
-                <td>Redhat/CentOS/Mint:</td>
-                <td class='tty'><span class="cmd">util/init.d/weewx.redhat</span></td>
-            </tr>
-            <tr>
-                <td>SuSE:</td>
-                <td class='tty'><span class="cmd">util/init.d/weewx.suse</span></td>
-            </tr>
-        </table>
-        <p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span>
-            has been set to the proper root directory for your
-            <span class="code">weewx</span> installation (it should have been set to the correct value automatically
-            by the install process, but it is worth checking). </p>
-
-        <p>Copy it to the proper location for your system: </p>
-        <table class="locations" style="width:90%">
-            <tr>
-                <td style="width: 30%">Debian/Ubuntu/Mint:</td>
-                <td class='tty'><span class="cmd">cp util/init.d/weewx.debian /etc/init.d/weewx</span></td>
-            </tr>
-            <tr>
-                <td>Redhat/CentOS/Fedora:</td>
-                <td class='tty'><span class="cmd">cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx</span></td>
-            </tr>
-            <tr>
-                <td>SuSE:</td>
-                <td class='tty'><span class="cmd">cp util/init.d/weewx.suse /etc/init.d/weewx</span></td>
-            </tr>
-        </table>
-        <p>Make sure the script is executable: </p>
-        <table class="locations" style="width:90%">
-            <tr>
-                <td style="width: 30%">Debian/Ubuntu/Mint:</td>
-                <td class='tty'><span class="cmd">chmod +x /etc/init.d/weewx</span></td>
-            </tr>
-            <tr>
-                <td>Redhat/CentOS/Fedora:</td>
-                <td class='tty'><span class="cmd">chmod +x /etc/init.d/rc.d/weewx</span></td>
-            </tr>
-            <tr>
-                <td>SuSE:</td>
-                <td class='tty'><span class="cmd">chmod +x /etc/init.d/weewx</span></td>
-            </tr>
-        </table>
-        <p>Create symbolic links in the run level directories: </p>
-        <table class="locations" style="width:90%">
-            <tr>
-                <td style="width: 30%">Debian/Ubuntu/Mint:</td>
-                <td class='tty'><span class="cmd">update-rc.d weewx defaults 98</span></td>
-            </tr>
-            <tr>
-                <td>Redhat/CentOS/Fedora:</td>
-                <td class='tty'><span class="cmd">chkconfig weewx on</span></td>
-            </tr>
-            <tr>
-                <td>SuSE:</td>
-                <td class='tty'><span class="cmd">/usr/lib/lsb/install_initd /etc/init.d/weewx</span></td>
-            </tr>
-        </table>
-        <p><span class="code">Weewx</span> will now start automatically whenever your
-            system is booted. You can also manually start, stop, and restart the
-            <span class="code">weewx</span> daemon: </p>
-    <pre class="tty cmd">sudo /etc/init.d/weewx start
-sudo /etc/init.d/weewx stop
-sudo /etc/init.d/weewx restart</pre>
-        <p>By default, the scripts are designed to have <span class="code">weewx</span>
-            run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels
-            with Debian (Ubuntu, Mint) systems is
-            <a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>. It uses a curses
-            interface to allow you to change easily which run level any of your daemons
-            runs at. There is a similar tool on SuSE. From the start menu run the YAST Control
-            Center, then look for Systems Services (Runlevel). Pick &quot;Expert&quot; mode
-            to see the run levels. </p>
-
-        <p>You can also tell <span class="code">weewx</span> to reread its configuration
-            file without stopping by using the &#39;reload&#39; option: </p>
-        <pre class="tty cmd">sudo /etc/init.d/weewx reload </pre>
-
-
-        <h1 id="monitoring">Monitoring <span class="code">weewx</span></h1>
-
-        <p><span class="code">Weewx</span> logs many events to the system log.
-            On Debian systems, this is <span class="code">/var/log/syslog</span>,
-            on SuSE, <span class="code">/var/log/messages</span>. Your system may
-            use yet another place. When troubleshooting the system, be sure to check
-            it! </p>
-
-        <p class='tty cmd'>tail -f /var/log/syslog</p>
-
-        <p>Set the debug option in <span class='code'>weewx.conf</span> to
-            generate many more checks and output more information. This can be
-            useful for diagnosing problems and debugging.</p>
-
-        <p class='tty'>debug = 1</p>
-
-
-        <h1 id="integrating_with_webserver">Integrating with a web server</h1>
-
-        <h2>If the server is on the same machine</h2>
-
-        <p>The reports generated by <span class='code'>weewx</span> can be
-            served by a web server running on the same computer as
-            <span class='code'>weewx</span>. These are instructions for making
-            <span class='code'>weewx</span> reports available via the Apache
-            web server. The process is similar for other web servers such as
-            <span class='code'>nginx</span> or
-            <span class='code'>lighthttpd</span>.</p>
-
-        <ol>
-            <li>
-                <p>Install the Apache web server on the computer on which
-                    <span class='code'>weewx</span> is running. For example, on Debian
-                    systems:</p>
-
-                <p class='tty cmd'>sudo apt-get install apache2</p>
-            </li>
-
-            <li>
-                <p>Configure Apache to see the <span class="code">weewx</span> reports.</p>
-                <ul>
-                    <li>
-                        <p>If <span class='code'>weewx</span> was installed from DEB or RPM
-                            package, no configuration should be necessary since the reports are placed
-                            in the directory <span class='code'>/var/www/html/weewx</span>,
-                            which is in the Apache DocumentRoot directory
-                            <span class='code'>/var/www/html</span></p>
-                    </li>
-                    <li>
-                        <p>If <span class='code'>weewx</span> was installed using
-                            <span class='code'>setup.py</span>, you must tell Apache
-                            where to find the <span class='code'>weewx</span> reports.
-                            One method is to install an Apache
-                            configuration snippet:</p>
-
-                        <pre class='tty cmd'>sudo cp util/apache/conf.d/weewx.conf /etc/apache2/conf.d</pre>
-
-                        <p>Be sure that the path in the Apache configuration snippet matches the
-                            <span class='code'>HTML_ROOT</span> defined in the
-                            <span class='code'>weewx</span> configuration file. For example,
-                            the path for a default <span class='code'>setup.py</span> installation
-                            would look like this:</p>
-
-    <pre class='tty'>Alias /weewx <span class="highlight">/home/weewx/public_html</span>
-&lt;Directory <span class="highlight">/home/weewx/public_html</span>&gt;
-    Options FollowSymlinks
-    AllowOverride None
-&lt;/Directory&gt;</pre>
-
-                        <p>Restart Apache to make the changes happen:</p>
-                        <pre class='tty cmd'>sudo /etc/init.d/apache2 restart</pre>
-                    </li>
-                </ul>
-            </li>
-
-            <li>
-                <p>Open the <span class='code'>weewx</span> URL in a web browser:</p>
-                <p class='tty'>http://localhost/weewx</p>
-            </li>
-        </ol>
-
-        <h2>If the server is on a different machine</h2>
-
-        <p>Use the FTP or RSYNC 'reports' to upload to a web server. Either of
-            these will copy everything from the <span class='code'>HTML_ROOT</span>
-            directory to a location on the remote server on which the web server
-            is running.</p>
-
-
-        <h1 id="backup">Making backups</h1>
-
-        <p>
-            To backup a <span class='code'>weewx</span> installation, you will need to make a copy
-            of</p>
-        <ul>
-            <li>configuration information;</li>
-            <li>skins and templates;</li>
-            <li>any custom code or extensions you have installed;</li>
-            <li>the weewx database.</li>
-        </ul>
-        <p>
-            It is not necessary to backup the generated images, HTML files, or NOAA reports since weewx will easily
-            create these again.
-        </p>
-
-        <p>Individual instructions follow</p>
-
-        <h2>Configuration</h2>
-
-        <p>
-            Save the <span class='code'>weewx.conf</span> file.
-        </p>
-        <table class="locations" style="width:70%">
-            <tr>
-                <td style="width: 30%">setup.py:</td>
-                <td class='tty'>/home/weewx/weewx.conf</td>
-            </tr>
-            <tr>
-                <td>DEB/RPM:</td>
-                <td class='tty'>/etc/weewx/weewx.conf</td>
-            </tr>
-        </table>
-
-        <h2>Skins and templates</h2>
-
-        <p>
-            Save the contents of the skins directory if you have modified the default
-            skin or if you have added any new skins or template files.
-        </p>
-        <table class="locations" style="width:70%">
-            <tr>
-                <td style="width: 30%">setup.py:</td>
-                <td class='tty'>/home/weewx/skins</td>
-            </tr>
-            <tr>
-                <td>DEB/RPM:</td>
-                <td class='tty'>/etc/weewx/skins</td>
-            </tr>
-        </table>
-
-        <h2>Custom code or extensions</h2>
-
-        <p>
-            Save the contents of the
-            <span class='code'>user</span> directory if you have modified the
-            database schema or added any extensions. If the extensions save data
-            to a database you should backup those databases as well.
-        </p>
-        <table class="locations" style="width:70%">
-            <tr>
-                <td style="width: 30%">setup.py:</td>
-                <td class='tty'>/home/weewx/bin/user</td>
-            </tr>
-            <tr>
-                <td>DEB/RPM:</td>
-                <td class='tty'>/usr/share/weewx/user</td>
-            </tr>
-        </table>
-
-        <h2>Database</h2>
-
-        <p>
-            Finally, you will need to backup the database.
-        </p>
-        <p>
-            For a SQLite configuration, make a copy of the <span class='code'>weewx.sdb</span> file.
-        </p>
-
-        <table class="locations" style="width:70%">
-            <tr>
-                <td style="width: 30%">setup.py:</td>
-                <td class='tty'>/home/weewx/archive/weewx.sdb</td>
-            </tr>
-            <tr>
-                <td>DEB/RPM:</td>
-                <td class='tty'>/var/lib/weewx/weewx.sdb</td>
-            </tr>
-        </table>
-
-        <p class="note">
-            Do not make the copy of the SQLite database while in the middle of
-            a transaction! Schedule the backup for immediately after an
-            archive record is written, and then make sure the backup completes
-            before the next archive record arrives. Alternatively, stop weewx,
-            perform the backup, then restart weewx.
-        </p>
-
-        <p>
-            For a MySQL configuration, save a dump of the archive database.
-        </p>
-
-        <h2>Restoring from backup</h2>
-
-        <p>
-            To restore from backup, do a fresh install of
-            <span class='code'>weewx</span>, replace the default files with
-            those from a backup, then start <span class='code'>weewx</span>.
-        </p>
-
-
-        <h1 id="configuring_mysql">Configuring MySQL</h1>
-
-        <p>This section applies only to those who wish to use the MySQL
-            database, instead of the default SQLite database.</p>
-
-        <p>
-            First, you should change your <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a>
-            section to point to the MySQL database, <span class="code">archive_mysql</span>,
-            instead of the SQLite database <span class="code">archive_sqlite</span>. After the
-            change, it
-            will look something like this (change <span class="highlight">highlighted</span>):
-        </p>
-    <pre class="tty">
-    [[wx_binding]]
-        # The database should match one of the sections in [Databases]
-        <span class="highlight">database = archive_mysql</span>
-        # The name of the table within the database
-        table_name = archive
-        # The class to manage the database
-        manager = weewx.wxmanager.WXDaySummaryManager
-        # The schema defines to structure of the database contents
-        schema = schemas.wview.schema</pre>
-
-        <p>Assuming that you want to use the default database configuration, your
-            <span class="code"><a href="#Databases">[[MySQL]]</a></span> section
-            should look something like this:</p>
-    <pre class="tty">[[MySQL]]
-    driver = weedb.mysql
-    host = localhost
-    user = weewx
-    password = weewx
-</pre>
-        <p>This assumes user <span class="code">weewx</span> would have password <span class="code">weewx</span>.
-            Adjust as necessary.</p>
-
-        <p>You will need to give the necessary permissions for the database <span class="code">weewx</span>
-            to whatever MySQL user you choose, by
-            default, user <span class="code">weewx</span>. Here are the necessary minimum
-            permissions:</p>
-    <pre class="tty">mysql&gt; <span class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
-mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop ON weewx.* TO weewx@localhost;</span></pre>
-
-
-        <h1 id="wview_compatibility">Compatibility with <span class="code">wview</span></h1>
-
-        <h2>sqlite3</h2>
-
-        <p>The SQLite archive database used by <span class="code">weewx</span>
-            (nominally, <span class="code">weewx.sdb</span>) is completely
-            compatible with the database used by
-            <a href="http://www.wviewweather.com">wview</a> (usually called
-            <span class="code">wview-archive.sdb</span>), at least as of wview
-            Version 5.2.X. The schema, and its semantics, is identical.
-        </p>
-
-        <p>If you have data from <span class='code'>wview</span>, you can
-            'import' them into <span class='code'>weewx</span> by simply copying the
-            SQLite database file. Assuming that the <span class='code'>wview</span>
-            data are in file
-            <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
-
-    <pre class='tty cmd'>sudo /etc/init.d/weewx stop
-cd <span class="symcode">SQLITE_ROOT</span>
-mv weewx.sdb weewx.sdb.bak
-cp /var/wview/archive/wview-archive.sdb weewx.sdb
-sudo /etc/init.d/weewx start</pre>
-
-        <p>
-            Internally, within the <span class="code">weewx.sdb</span> database,
-            <span class="code">weewx</span> also maintains a "daily summary" of all the statistics. This
-            is done for performance reasons. The daily summary will
-            automatically be built on the first startup. This could take
-            a few minutes if the <span class='code'>wview</span> archive contains
-            more than a month or two of data.
-        </p>
-
-        <p>
-            On my modest 500 MHz <a href="http://www.fit-pc.com/">fit-PC
-            Slim</a> with 512 MB of memory it took a little over 4 minutes for a
-            year and a half (25 MB) of data.
-        </p>
-
-        <h2>MySQL</h2>
-
-        <p>The MySQL archive database used by wview is "almost" compatible with
-            <span class="code">weewx</span>. The one difference is that in wview, the column <span
-                    class="code">interval</span>
-            is named <span class="code">arcInt</span> (presumably because
-            <span class="code">interval</span> is a keyword in MySQL, although it can
-            still be used by surrounding the word with backquotes). </p>
-
-        <p>To change the column name to what <span class="code">weewx</span> uses, namely <span
-                class="code">interval</span>,
-            use the utility <span class="code">mysql</span> and issue the command:</p>
-        <pre class="tty">mysql> <span class="cmd">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt `interval` INTEGER NOT NULL;</span> </pre>
-        <p>where <span class="code"><em>your-wview-archive-name</em></span> is the
-            name of your wview archive database. Note that the word <span class="code">
-        interval</span> is surrounded by backquotes.</p>
-
-        <p>Then in the <span class="code">[Databases]</span> section of
-            <span class="code">weewx.conf</span>, replace the name of the database
-            with whatever your installation of wview used <span class="code"><em>your-wview-archive-name</em></span>:
-        </p>
-    <pre class="tty">[[archive_mysql]]
-    database_type = MySQL
-    database_name = <span class="highlight"><em>your-wview-archive-name</em></span></pre>
 
 
         <h1 id="troubleshooting">Troubleshooting</h1>
@@ -3609,13 +3609,9 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
             <li>Minimal reliance on external packages, so the user does not have
                 to go chase them down all over the Web before getting started.
             </li>
-            <li>Support only the Davis VantagePro2 initially (that is what I have),
-                but make no architectural decisions that lock out other stations.
+            <li>A very simple data model that is likely to support many different types of hardware.
             </li>
-            <li>As &quot;pythonic&quot; as I know how to make it. I am a beginner
-                Python programmer with two decades of experience in C++. I tried hard to
-                not make the code base look like it was written by a C++ programmer who
-                stumbled across a Python manual!
+            <li>A &quot;pythonic&quot; code base, so others will find idioms that they recognize.
             </li>
         </ul>
         <h2>Strategies</h2>
