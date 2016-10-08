@@ -54,9 +54,6 @@ class WMR100(weewx.drivers.AbstractDevice):
         model: Which station model is this?
         [Optional. Default is 'WMR100']
 
-        stale_wind: Max time wind speed can be used to calculate wind chill
-        before being declared unusable. [Optional. Default is 30 seconds]
-        
         timeout: How long to wait, in seconds, before giving up on a response from the
         USB port. [Optional. Default is 15 seconds]
         
@@ -78,7 +75,6 @@ class WMR100(weewx.drivers.AbstractDevice):
         self.model             = stn_dict.get('model', 'WMR100')
         # TODO: Consider putting these in the driver loader instead:
         self.record_generation = stn_dict.get('record_generation', 'software')
-        self.stale_wind        = float(stn_dict.get('stale_wind', 30.0))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 5.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
@@ -276,15 +272,6 @@ class WMR100(weewx.drivers.AbstractDevice):
         elif channel == 1:
             _record['outTemp']     = T
             _record['outHumidity'] = R
-            # The WMR does not provide wind information in a temperature
-            # packet, so we have to use old wind data to calculate wind chill,
-            # provided it isn't too old and has gone stale. If no wind data has
-            # been seen yet, then this will raise an AttributeError exception.
-            try:
-                if _record['dateTime'] - self.last_wind_record['dateTime'] <= self.stale_wind:
-                    _record['windSpeed'] = self.last_wind_record['windSpeed']
-            except AttributeError:
-                pass
             _record['outTempBatteryStatus'] = (packet[0] & 0x40) >> 6
             # Save the record containing outside temperature to be used for calculating SLP barometer
             self.last_temperature_record = _record
@@ -312,15 +299,6 @@ class WMR100(weewx.drivers.AbstractDevice):
             _record['inTempBatteryStatus'] = (packet[0] & 0x40) >> 6
         elif channel == 1:
             _record['outTemp'] = T
-            # The WMR does not provide wind information in a temperature
-            # packet, so we have to use old wind data to calculate wind chill,
-            # provided it isn't too old and has gone stale. If no wind data has
-            # been seen yet, then this will raise an AttributeError exception.
-            try:
-                if _record['dateTime'] - self.last_wind_record['dateTime'] <= self.stale_wind:
-                    _record['windSpeed'] = self.last_wind_record['windSpeed']
-            except AttributeError:
-                pass
             _record['outTempBatteryStatus'] = (packet[0] & 0x40) >> 6
             # Save the record containing outside temperature to be used for calculating SLP barometer
             self.last_temperature_record = _record
@@ -374,8 +352,6 @@ class WMR100(weewx.drivers.AbstractDevice):
             # Otherwise, use the regular wind direction for the gust direction
             _record['windGustDir'] =_record['windDir']
 
-        # Save the wind record to be used for windchill and heat index
-        self.last_wind_record = _record
         return _record
     
     def _clock_packet(self, packet):
@@ -405,9 +381,6 @@ class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
 
     # The station model, e.g., WMR100, WMR100N, WMRS200
     model = WMR100
-
-    # How long a wind record can be used to calculate wind chill (in seconds)
-    stale_wind = 30
 
     # The driver to use:
     driver = weewx.drivers.wmr100
