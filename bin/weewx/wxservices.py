@@ -105,6 +105,9 @@ class WXCalculate(object):
         
         # get any configuration settings
         svc_dict = config_dict.get('StdWXCalculate', {'Calculations':{}})
+        # if there is no Calculations section, then make an empty one
+        if not 'Calculations' in svc_dict:
+            svc_dict['Calculations'] = dict()
         # database binding for any calculations that need database queries
         if db_binder is None:
             db_binder = weewx.manager.DBBinder(config_dict)
