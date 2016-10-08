@@ -1,6 +1,11 @@
 weewx change history
 --------------------
 
+3.6.1 mm/DD/YYYY
+
+Fixed bug in wunderfixer.
+
+
 3.6.0 10/07/2016
 
 Added the ability to run reports using a cron-like notation, instead of with
