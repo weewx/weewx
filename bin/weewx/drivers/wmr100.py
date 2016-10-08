@@ -416,4 +416,6 @@ class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
     def modify_config(self, config_dict):
         print """
 Setting rainRate calculation to hardware."""
-        config_dict['StdWXCalculate']['rainRate'] = 'hardware'
+        config_dict.setdefault('StdWXCalculate', {})
+        config_dict['StdWXCalculate'].setdefault('Calculatios', {})
+        config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'

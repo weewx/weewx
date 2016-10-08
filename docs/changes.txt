@@ -5,6 +5,9 @@ weewx change history
 
 Fixed bug in wunderfixer.
 
+Fixed handling of StdWXCalculate.Calculations in modify_config in the wmr100,
+wmr200, wmr300, and wmr9x8 drivers.
+
 
 3.6.0 10/07/2016
 
