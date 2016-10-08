@@ -238,6 +238,16 @@ ifeq ("$(SIGN)","1")
 #	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
 endif
 
+# add the latest version to the local apt repo using aptly
+update-apt-repo:
+	aptly repo add weewx $(DSTDIR)/$(DEBPKG)
+	aptly snapshot create weewx-$(VERSION) from repo weewx
+	aptly -architectures="all" publish switch squeeze weewx-$(VERSION)
+
+# publish apt repo changes to the public weewx apt repo
+publish-apt-repo:
+	rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly
+
 # run rpmlint on the redhat package
 check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
