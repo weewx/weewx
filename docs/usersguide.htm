@@ -200,6 +200,28 @@ Version: 3.6.0
             </li>
         </ol>
 
+        <h2 id="permissions">Permissions</h2>
+
+        <p>There are a few places where permissions affect
+            <span class="code">weewx</span>:
+        </p>
+        <ul>
+            <li>Installation/Configuration.  The user who does the installation
+                must have write permission in order to do the install.
+                Similarly, the user who modifies configuration files and skins
+                must have write permission on those files and directories.  The
+                specific folders are listed in the
+                <a href="#Where_to_find_things">layout table</a> below.
+            </li>
+            <li>Running.  Most USB and serial devices require administrative
+                (root) access.  Unless the device has been configured with a
+                udev rule or other mechanism that grants access to non-root
+                users, <span class="code">weewx</span> commands must be run as
+                root or must be prefaced with <span class="code">sudo</span>
+                for temporary administrative privileges.
+            </li>
+        </ul>
+
         <h2 id="installation_methods">Installation methods</h2>
 
         <p>
