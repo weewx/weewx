@@ -71,7 +71,6 @@ div.main {
 .title {
   font-size: 180%;
   font-weight: bold;
-  clear: left;
   margin-top: 0px;
 }
 
@@ -302,7 +301,7 @@ caption {
   font-weight: bold;
 }
 .thumbnail {
-  width: 14px;
+  width: 12px;
 }
 .locations {
   margin-left: 20px;
@@ -324,6 +323,7 @@ caption {
   width: 32px;
   padding-right: 0px;
   padding-top: 5px;
+  padding-bottom: 5px;
 }
 .logoref {
   float: right;
