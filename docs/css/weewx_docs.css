@@ -72,6 +72,7 @@ div.main {
   font-size: 180%;
   font-weight: bold;
   clear: left;
+  margin-top: 0px;
 }
 
 #toc_parent {
@@ -149,7 +150,7 @@ h2 {
   color: teal;
   font-size: 140%;
   font-weight: bold;
-  margin-top: 2em;
+  margin-top: 1.5em;
 }
 h3 {
   color: teal;

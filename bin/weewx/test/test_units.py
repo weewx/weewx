@@ -71,7 +71,7 @@ class ConverterTest(unittest.TestCase):
                 'barometer' : 1002.3,
                 'usUnits'   : weewx.METRIC}
         d_us = {'outTemp'   : 68.018,
-                'barometer' : 1002.3 / 33.86,
+                'barometer' : 1002.3 * weewx.units.INHG_PER_MBAR,
                 'usUnits'   : weewx.US}
         c = weewx.units.Converter()
         d_test = c.convertDict(d_m)

@@ -60,7 +60,9 @@ Logger uses the following units:
   pressure     inHg     mbar
   temperature  F        C
 
-This driver was tested with a CC3000 with firmware: 1.3 Build 006 Sep 04 2013
+This driver was tested with:
+  Rainwise CC-3000 Version: 1.3 Build 006 Sep 04 2013
+  Rainwise CC-3000 Version: 1.3 Build 016 Aug 21 2014
 """
 
 # FIXME: confirm that rain field in archive records is a total, not a delta
@@ -79,7 +81,7 @@ from weeutil.weeutil import to_bool
 import weewx.drivers
 
 DRIVER_NAME = 'CC3000'
-DRIVER_VERSION = '0.11'
+DRIVER_VERSION = '0.12'
 
 def loader(config_dict, engine):
     return CC3000Driver(**config_dict[DRIVER_NAME])
@@ -106,12 +108,23 @@ def loginf(msg):
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
-class ChecksumMismatch(weewx.WeeWxIOError):
+class ChecksumError(weewx.WeeWxIOError):
+    def __init__(self, msg):
+        weewx.WeeWxIOError.__init__(self, msg)
+
+class ChecksumMismatch(ChecksumError):
     def __init__(self, a, b, buf=None):
-        msg = "Checksum mismatch: 0x%04x != 0x%04x" % (a,b)
+        msg = "Checksum mismatch: 0x%04x != 0x%04x" % (a, b)
         if buf is not None:
             msg = "%s (%s)" % (msg, _fmt(buf))
-        weewx.WeeWxIOError.__init__(self, msg)
+        ChecksumError.__init__(self, msg)
+
+class BadCRC(ChecksumError):
+    def __init__(self, a, b, buf=None):
+        msg = "Bad CRC: 0x%04x != '%s'" % (a, b)
+        if buf is not None:
+            msg = "%s (%s)" % (msg, _fmt(buf))
+        ChecksumError.__init__(self, msg)
 
 
 class CC3000Configurator(weewx.drivers.AbstractConfigurator):
@@ -145,7 +158,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
         parser.add_option('--get-dst', dest='getdst', action='store_true',
                           help='display daylight savings settings')
         parser.add_option('--set-dst', dest='dst',
-                          metavar='mm/dd HH:MM,mm/dd HH:MM,MM',
+                          metavar='mm/dd HH:MM,mm/dd HH:MM,[MM]M',
                           help='set daylight savings start, end, and amount')
         parser.add_option("--get-channel", dest="getch", action="store_true",
                           help="display the station channel")
@@ -279,7 +292,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
     def set_dst(self, dst, prompt):
         if dst != '0' and len(dst.split(',')) != 3:
             raise ValueError("DST must be 0 (disabled) or start, stop, amount "
-                             "with the format mm/dd HH:MM, mm/dd HH:MM, MM")
+                             "with the format mm/dd HH:MM, mm/dd HH:MM, [MM]M")
         ans = None
         while ans not in ['y', 'n']:
             print "Station DST is", self.driver.station.get_dst()
@@ -598,15 +611,21 @@ def _check_crc(buf):
     idx = buf.find('!')
     if idx < 0:
         return
-    cs = buf[idx+1:idx+5]
-    if DEBUG_CHECKSUM:
-        logdbg("found checksum at %d: %s" % (idx, cs))
-    a = _crc16(buf[0:idx]) # calculate checksum
-    if DEBUG_CHECKSUM:
-        logdbg("calculated checksum %x" % a)
-    b = int(cs, 16) # checksum provided in data
-    if a != b:
-        raise ChecksumMismatch(a, b, buf)
+    a = 0
+    b = 0
+    cs = ''
+    try:
+        cs = buf[idx+1:idx+5]
+        if DEBUG_CHECKSUM:
+            logdbg("found checksum at %d: %s" % (idx, cs))
+        a = _crc16(buf[0:idx]) # calculate checksum
+        if DEBUG_CHECKSUM:
+            logdbg("calculated checksum %x" % a)
+        b = int(cs, 16) # checksum provided in data
+        if a != b:
+            raise ChecksumMismatch(a, b, buf)
+    except ValueError, e:
+        raise BadCRC(a, cs, buf)
 
 # for some reason we sometimes get null characters randomly mixed in with the
 # bytes we receive.  strip them out and let the checksum do the validation of
@@ -765,6 +784,7 @@ class CC3000(object):
     def set_dst(self, dst):
         logdbg("set DST to %s" % dst)
         data = self.command("DST=%s" % dst)
+        # FIXME: firmware 1.3 Build 016 Aug 21 2014 does not return OK
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to set DST to %s: %s" %
                                      (dst, _fmt(data)))
@@ -830,6 +850,7 @@ class CC3000(object):
     def clear_memory(self):
         logdbg("clear memory")
         data = self.command("MEM=CLEAR")
+        # FIXME: firmware 1.3 Build 016 Aug 21 2014 does not return OK
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to clear memory: %s" % _fmt(data))
 
@@ -874,6 +895,7 @@ class CC3000(object):
                     cmd_cnt = 0
                     yield values
                 elif (values[0] == 'HDR' or values[0] == 'MSG' or
+                      values[0] == 'MIN' or values[0] == 'MAX' or
                       values[0].startswith('DOWNLOAD')):
                     pass
                 elif values[0] == '':
@@ -883,7 +905,7 @@ class CC3000(object):
                 else:
                     logerr("bad record %s '%s' (%s)" %
                            (n, _fmt(values[0]), _fmt(data)))
-            except ChecksumMismatch, e:
+            except ChecksumError, e:
                 logerr("download failed for record %s: %s" % (n, e))
 
 
@@ -963,7 +985,7 @@ if __name__ == '__main__':
     parser.add_option('--get-dst', dest='getdst', action='store_true',
                       help='display daylight savings settings')
     parser.add_option('--set-dst', dest='setdst',
-                      metavar='mm/dd HH:MM,mm/dd HH:MM,MM',
+                      metavar='mm/dd HH:MM,mm/dd HH:MM,[MM]M',
                       help='set daylight savings start, end, and amount')
     parser.add_option('--get-interval', dest='getint', action='store_true',
                       help='display logging interval, in seconds')

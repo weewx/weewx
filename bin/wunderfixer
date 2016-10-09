@@ -384,7 +384,7 @@ class WunderStation(object):
         _liststr = ["action=updateraw", "ID=%s" % self.station, "PASSWORD=%s" % self.password ]
         
         # Go through each of the supported types, formatting it, then adding to _liststr:
-        for _key in weewx.restx.AmbientThread._formats:
+        for _key in weewx.restx.AmbientThread._FORMATS:
             # Get our value but first, if necessary, convert it to the appropriate WU units
             v = datarec.get(_key) 
             # Check to make sure the type is not null
@@ -396,7 +396,7 @@ class WunderStation(object):
                     # its reliability. But, I could be imagining things.
                     v = urllib.quote(str(datetime.datetime.utcfromtimestamp(v)))
                 # Format the value, and accumulate in _liststr:
-                _liststr.append(weewx.restx.AmbientThread._formats[_key] % v)
+                _liststr.append(weewx.restx.AmbientThread._FORMATS[_key] % v)
         # Add the software type and version:
         _liststr.append("softwaretype=wunderfixer-%s" % __version__)
         # Now stick all the little pieces together with an ampersand between them:

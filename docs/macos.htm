@@ -25,8 +25,11 @@
     Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</span> from <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
 </p>
 
-<h2>Install</h2>
-<p>Install pre-requisites:</p>
+<h2>Install prerequisites</h2>
+<p>Ensure that Python2 is installed. Python 2.6 or 2.7 will work,
+    but Python 3 will not.</p>
+<pre class='tty cmd'>python -V</pre>
+<p>Install the required Python packages using easy_install:</p>
 <pre class='tty cmd'>sudo easy_install pysqlite
 sudo easy_install configobj
 sudo easy_install Cheetah
@@ -35,8 +38,11 @@ sudo easy_install pyserial
 sudo easy_install pyusb
 sudo easy_install pyephem</pre>
 <p>Depending on the MacOS and Python versions, you might have to use <span class="code">Pillow</span> instead of <span class="code">PIL</span>.</p>
-<p>If the PIL or Cheetah installation fails, you might have to install xcode then try the easy_install again:</p>
+<p>If the PIL or Cheetah installation fails, you might have to install xcode:</p>
 <pre class='tty cmd'>xcode-select --install</pre>
+<p>then try the easy_install again.</p>
+
+<h2>Install <span class='code'>weewx</span></h2>
 <p>Expand the source archive:</p>
 <pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
 <p>Change directory:</p>

@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -14,6 +14,7 @@ import weewx.engine
 import weewx.wxformulas
 import weeutil.weeutil
 
+from weewx.units import CtoF, mps_to_mph, kph_to_mph
 
 class StdWXCalculate(weewx.engine.StdService):
     """Wrapper class for WXCalculate.
@@ -103,7 +104,10 @@ class WXCalculate(object):
         """
         
         # get any configuration settings
-        svc_dict = config_dict.get('StdWXCalculate', {})
+        svc_dict = config_dict.get('StdWXCalculate', {'Calculations':{}})
+        # if there is no Calculations section, then make an empty one
+        if not 'Calculations' in svc_dict:
+            svc_dict['Calculations'] = dict()
         # database binding for any calculations that need database queries
         if db_binder is None:
             db_binder = weewx.manager.DBBinder(config_dict)
@@ -117,10 +121,12 @@ class WXCalculate(object):
         self.ignore_zero_wind = weeutil.weeutil.to_bool(svc_dict.get('ignore_zero_wind', True))
         # atmospheric transmission coefficient [0.7-0.91]
         self.atc = float(svc_dict.get('atc', 0.8))
-        if self.atc < 0.7:
-            self.atc = 0.7
-        elif self.atc > 0.91:
-            self.atc = 0.91
+        # Fail hard if out of range:
+        if not 0.7 <= self.atc <= 0.91:
+            raise weewx.ViolatedPrecondition("Atmospheric transmission "
+                                             "coefficient (%f) out of "
+                                             "range [.7-.91]" % self.atc)
+
         # height above ground at which wind is measured, in meters
         self.wind_height = float(svc_dict.get('wind_height', 2.0))
         # Time window to accept a record 12 hours ago:
@@ -135,16 +141,13 @@ class WXCalculate(object):
         # loop packets.  currently this applies only to pressure calculation.
         self.archive_interval = None
 
-        # find out which calculations should be performed
         self.calculations = dict()
-        # look in the 'Calculations' stanza. if no 'Calculations' stanza, then
-        # look directly in the service stanza.
-        where_to_look = svc_dict.get('Calculations', svc_dict)
-        # we recognize only the names in our dispatch list; others are ignored
-        for v in self._dispatch_list:
-            x = where_to_look.get(v, 'prefer_hardware')
-            if x.lower() in ('hardware', 'software', 'prefer_hardware', 'none'):
-                self.calculations[v] = x
+        # Find out which calculations should be performed.
+        # We recognize only the names in our dispatch list; others are ignored.
+        for k in self._dispatch_list:
+            x = svc_dict['Calculations'].get(k, 'prefer_hardware').lower()
+            if x in ('hardware', 'software', 'prefer_hardware', 'none'):
+                self.calculations[k] = x
 
         # determine which algorithms to use for the calculations
         self.algorithms = svc_dict.get('Algorithms', {})
@@ -188,7 +191,8 @@ class WXCalculate(object):
         data_dict.update(data_x)
 
     def adjust_winddir(self, data):
-        """If there is no wind speed, then the wind direction is undefined."""
+        """If wind speed is zero, then the wind direction is undefined.
+        If there is no wind speed, then there is no wind direction."""
         if 'windSpeed' in data and not data['windSpeed']:
             data['windDir'] = None
         if 'windGust' in data and not data['windGust']:
@@ -202,28 +206,26 @@ class WXCalculate(object):
             data['dewpoint'] = None
 
     def calc_inDewpoint(self, data, data_type):  # @UnusedVariable
+        data['inDewpoint'] = None
         if 'inTemp' in data and 'inHumidity' in data:
             data['inDewpoint'] = weewx.wxformulas.dewpointF(
                 data['inTemp'], data['inHumidity'])
-        else:
-            data['inDewpoint'] = None
 
     def calc_windchill(self, data, data_type):  # @UnusedVariable
+        data['windchill'] = None
         if 'outTemp' in data and 'windSpeed' in data:
             data['windchill'] = weewx.wxformulas.windchillF(
                 data['outTemp'], data['windSpeed'])
-        else:
-            data['windchill'] = None
 
     def calc_heatindex(self, data, data_type):  # @UnusedVariable
+        data['heatindex'] = None
         if 'outTemp' in data and 'outHumidity' in data:
             data['heatindex'] = weewx.wxformulas.heatindexF(
                 data['outTemp'], data['outHumidity'])
-        else:
-            data['heatindex'] = None
 
     def calc_pressure(self, data, data_type):  # @UnusedVariable
         interval = self._get_archive_interval(data)
+        data['pressure'] = None
         if (interval is not None and 'barometer' in data and
             'outTemp' in data and 'outHumidity' in data):
             temperature_12h_ago = self._get_temperature_12h(
@@ -235,25 +237,21 @@ class WXCalculate(object):
                 data['pressure'] = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
                     data['barometer'], self.altitude_ft,
                     data['outTemp'], temperature_12h_ago, data['outHumidity'])
-            else:
-                data['pressure'] = None
 
     def calc_barometer(self, data, data_type):  # @UnusedVariable
+        data['barometer'] = None
         if 'pressure' in data and 'outTemp' in data:
             data['barometer'] = weewx.wxformulas.sealevel_pressure_US(
                 data['pressure'], self.altitude_ft, data['outTemp'])
-        else:
-            data['barometer'] = None
 
     def calc_altimeter(self, data, data_type):  # @UnusedVariable
+        data['altimeter'] = None
         if 'pressure' in data:
             algo = self.algorithms.get('altimeter', 'aaNOAA')
             if not algo.startswith('aa'):
                 algo = 'aa%s' % algo
             data['altimeter'] = weewx.wxformulas.altimeter_pressure_US(
                 data['pressure'], self.altitude_ft, algorithm=algo)
-        else:
-            data['altimeter'] = None
 
     # rainRate is simply the amount of rain in a period scaled to quantity/hr.
     # use a sliding window for the time period and the total rainfall in that
@@ -308,25 +306,22 @@ class WXCalculate(object):
                 data['dateTime'], self.atc)
 
     def calc_cloudbase(self, data, data_type):  # @UnusedVariable
+        data['cloudbase'] = None
         if 'outTemp' in data and 'outHumidity' in data:        
             data['cloudbase'] = weewx.wxformulas.cloudbase_US(
                 data['outTemp'], data['outHumidity'], self.altitude_ft)
-        else:
-            data['cloudbase'] = None
 
     def calc_humidex(self, data, data_type):  # @UnusedVariable
+        data['humidex'] = None
         if 'outTemp' in data and 'outHumidity' in data:
             data['humidex'] = weewx.wxformulas.humidexF(
                 data['outTemp'], data['outHumidity'])
-        else:
-            data['humidex'] = None
 
     def calc_appTemp(self, data, data_type):  # @UnusedVariable
+        data['appTemp'] = None
         if 'outTemp' in data and 'outHumidity' in data and 'windSpeed' in data:
             data['appTemp'] = weewx.wxformulas.apptempF(
                 data['outTemp'], data['outHumidity'], data['windSpeed'])
-        else:
-            data['appTemp'] = None
 
     def calc_beaufort(self, data, data_type):  # @UnusedVariable
         if 'windSpeed' in data:
@@ -336,36 +331,47 @@ class WXCalculate(object):
 
     def calc_ET(self, data, data_type):
         """Get maximum and minimum temperatures and average radiation and
-        wind speed for the indicated period then calculate the
-        evapotranspiration.  Convert to US units if necessary
+        wind speed for the indicated period then calculate the amount of
+        evapotranspiration during the interval.  Convert to US units if necessary
         since this service operates in US unit system."""
         # calculate ET only for archive packets
-        if data_type == 'loop':
+        if data_type != 'archive':
             return
         end_ts = data['dateTime']
         start_ts = end_ts - self.et_period
+        interval = self._get_archive_interval(data)
         try:
             dbmanager = self.db_binder.get_manager(self.binding)
             r = dbmanager.getSql(
                 "SELECT"
-                " MAX(outTemp),MIN(outTemp),AVG(radiation),AVG(windSpeed),usUnits"
+                " MAX(outTemp), MIN(outTemp), AVG(radiation), AVG(windSpeed),"
+                " MAX(outHumidity), MIN(outHumidity), usUnits"
                 " FROM %s WHERE dateTime>? AND dateTime <=?"
                 % dbmanager.table_name, (start_ts, end_ts))
-            if r is None or None in r:
+            if r is None:
                 data['ET'] = None
-            else:
-                T_max, T_min, rad_avg, wind_avg, std_unit = r
-                if std_unit == weewx.METRIC or std_unit == weewx.METRICWX:
-                    T_max = weewx.wxformulas.CtoF(T_max)
-                    T_min = weewx.wxformulas.CtoF(T_min)
-                    if std_unit == weewx.METRICWX:
-                        wind_avg = weewx.wxformulas.mps_to_mph(wind_avg)
-                    else:
-                        wind_avg = weewx.wxformulas.kph_to_mph(wind_avg)
-                data['ET'] = weewx.wxformulas.evapotranspiration_US(
-                    T_max, T_min, rad_avg, wind_avg,
-                    self.wind_height, self.latitude,
-                    data['dateTime'])
+                return
+            # Unpack the results
+            T_max, T_min, rad_avg, wind_avg, rh_max, rh_min, std_unit = r
+            # Check for null values. Null relative humidity is OK.
+            if T_max is None or T_min is None or rad_avg is None or wind_avg is None or std_unit is None:
+                data['ET'] = None
+                return
+            if std_unit == weewx.METRIC or std_unit == weewx.METRICWX:
+                T_max = CtoF(T_max)
+                T_min = CtoF(T_min)
+                if std_unit == weewx.METRICWX:
+                    wind_avg = mps_to_mph(wind_avg)
+                else:
+                    wind_avg = kph_to_mph(wind_avg)
+            # Rate will be in inches per day
+            ET_rate = weewx.wxformulas.evapotranspiration_US(
+                          T_max, T_min, rad_avg, wind_avg,
+                          self.wind_height, self.latitude,
+                          data['dateTime'], rh_min, rh_max)
+            # Multiply the ET rate by the length of the interval in days.
+            # This will give the total amount of ET during the archive interval.
+            data['ET'] = ET_rate * interval / (24*3600.0) if ET_rate is not None else None
         except ValueError, e:
             weeutil.weeutil.log_traceback()
             syslog.syslog(syslog.LOG_ERR, "wxservices: Calculation of evapotranspiration failed: %s" % e)
@@ -392,9 +398,9 @@ class WXCalculate(object):
                 if row[1]:
                     inc_hours = row[0] / 60.0
                     if row[2] == weewx.METRICWX:
-                        run += weewx.wxformulas.mps_to_mph(row[1]) * inc_hours
+                        run += mps_to_mph(row[1]) * inc_hours
                     elif row[2] == weewx.METRIC:
-                        run += weewx.wxformulas.kph_to_mph(row[1]) * inc_hours
+                        run += kph_to_mph(row[1]) * inc_hours
                     else:
                         run += row[1] * inc_hours
             data['windrun'] = run

@@ -1039,7 +1039,7 @@ def decode_temp(pkt, pkt_data):
             logdbg('  Humidity id:%d %d%% trend: %s'
                    % (sensor_id, humidity, TRENDS[hum_trend]))
             logdbg(('  Dew point id:%d: %.1f C' % (sensor_id, dew_point)))
-            if heat_index:
+            if heat_index is not None:
                 logdbg('  Heat id:%d index:%d' % (sensor_id, heat_index))
         return record
 
@@ -2005,5 +2005,8 @@ class WMR200ConfEditor(weewx.drivers.AbstractConfEditor):
     def modify_config(self, config_dict):
         print """
 Setting rainRate and windchill calculations to hardware."""
-        config_dict['StdWXCalculate']['rainRate'] = 'hardware'
-        config_dict['StdWXCalculate']['windchill'] = 'hardware'
+        config_dict.setdefault('StdWXCalculate', {})
+        config_dict['StdWXCalculate'].setdefault('Calculatios', {})
+        config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
+        config_dict['StdWXCalculate']['Calculations']['windchill'] = 'hardware'
+        config_dict['StdWXCalculate']['Calculations']['heatindex'] = 'hardware'

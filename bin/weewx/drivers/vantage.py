@@ -21,7 +21,7 @@ import weewx.units
 import weewx.engine
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.0.8'
+DRIVER_VERSION = '3.0.9'
 
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
@@ -1758,7 +1758,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     @property
     def usage(self):
         return """%prog [config_file] [--help] [--info] [--clear-memory]
-    [--set-interval=SECONDS] [--set-altitude=FEET] [--set-barometer=inHg] 
+    [--set-interval=MINUTES] [--set-altitude=FEET] [--set-barometer=inHg] 
     [--set-bucket=CODE] [--set-rain-year-start=MM] 
     [--set-offset=VARIABLE,OFFSET]
     [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
@@ -1774,8 +1774,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--clear-memory", action="store_true", dest="clear_memory",
                           help="To clear the memory of your weather station.")
         parser.add_option("--set-interval", type=int, dest="set_interval",
-                          metavar="SECONDS",
-                          help="Sets the archive interval to the specified number of seconds. Valid values are 60, 300, 600, 900, 1800, 3600, or 7200.")
+                          metavar="MINUTES",
+                          help="Sets the archive interval to the specified number of minutes. Valid values are 1, 5, 10, 15, 30, 60, or 1200.")
         parser.add_option("--set-altitude", type=float, dest="set_altitude",
                           metavar="FEET",
                           help="Sets the altitude of the station to the specified number of feet.") 
@@ -2019,11 +2019,12 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             raise
 
     @staticmethod
-    def set_interval(station, new_interval_seconds):
+    def set_interval(station, new_interval_minutes):
         """Set the console archive interval."""
     
-        print "Old archive interval is %d seconds, new one will be %d seconds." % (station.archive_interval, new_interval_seconds)
-        if station.archive_interval == new_interval_seconds:
+        old_interval_minutes = station.archive_interval/60
+        print "Old archive interval is %d minutes, new one will be %d minutes." % (station.archive_interval/60, new_interval_minutes)
+        if old_interval_minutes == new_interval_minutes:
             print "Old and new archive intervals are the same. Nothing done."
         else:
             ans = None
@@ -2032,7 +2033,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 ans = raw_input("Are you sure you want to proceed (y/n)? ")
                 if ans == 'y':
                     try:
-                        station.setArchiveInterval(new_interval_seconds)
+                        station.setArchiveInterval(new_interval_minutes * 60)
                     except StandardError, e:
                         print >> sys.stderr, "Unable to set new archive interval. Reason:\n\t****", e
                     else:

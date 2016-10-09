@@ -62,8 +62,10 @@ canonical_order = ('',
  ('StdConvert', [], ['target_unit']), ('StdCalibrate', [('Corrections', [], [])], []), 
  ('StdQC', [('MinMax', [], ['barometer', 'outTemp', 'inTemp',
                             'outHumidity', 'inHumidity', 'windSpeed'])], []),
- ('StdWXCalculate', [], ['pressure', 'barometer', 'altimeter', 'windchill',
-                         'heatindex', 'dewpoint', 'inDewpoint', 'rainRate']), 
+ ('StdWXCalculate', [('Calculations', [], ['pressure', 'barometer', 'altimeter', 'windchill',
+                                           'heatindex', 'dewpoint', 'inDewpoint', 'rainRate']),
+                     ('Algorithms', [], ['altimeter', 'maxSolarRad'])],
+  ['ignore_zero_wind', 'rain_period', 'et_period', 'wind_height', 'atc', 'nfac', 'max_delta_12h']),
  ('StdTimeSynch', [], ['clock_check', 'max_drift']), 
  ('StdArchive', [], ['archive_interval', 'archive_delay', 'record_generation',
                      'loop_hilo', 'data_binding']), 
@@ -391,6 +393,8 @@ def update_config(config_dict):
         update_to_v30(config_dict)
         
     update_to_v32(config_dict)
+    
+    update_to_v36(config_dict)
 
 def merge_config(config_dict, template_dict):
     """Merge the configuration dictionary into the template dictionary,
@@ -749,6 +753,43 @@ def update_to_v32(config_dict):
     
     config_dict['version'] = '3.2.0'
         
+def update_to_v36(config_dict):
+    """Update a configuration file to V3.6"""
+    
+    # Perform the following only if the dictionary has a StdWXCalculate section
+    if config_dict.get('StdWXCalculate'):
+        # No need to update if it already has a 'Calculations' section:
+        if not config_dict['StdWXCalculate'].get('Calculations'):
+            # Save the comment attached to the first scalar
+            try:
+                first = config_dict['StdWXCalculate'].scalars[0]
+                comment = config_dict['StdWXCalculate'].comments[first]
+                config_dict['StdWXCalculate'].comments[first] = ''
+            except IndexError:
+                comment = """    # Derived quantities are calculated by this service. Possible values are:
+    #  hardware        - use the value provided by hardware
+    #  software        - use the value calculated by weewx
+    #  prefer_hardware - use value provide by hardware if available,
+    #                      otherwise use value calculated by weewx"""
+            # Create a new 'Calculations' section:
+            config_dict['StdWXCalculate']['Calculations'] = {}
+            # Now transfer over the options. Make a copy of them first: we will be 
+            # deleting some of them.
+            scalars = list(config_dict['StdWXCalculate'].scalars)
+            for scalar in scalars:
+                # These scalars don't get moved:
+                if not scalar in ['ignore_zero_wind', 'rain_period', 
+                                  'et_period', 'wind_height', 'atc', 
+                                  'nfac', 'max_delta_12h']:
+                    config_dict['StdWXCalculate']['Calculations'][scalar] = config_dict['StdWXCalculate'][scalar]
+                    config_dict['StdWXCalculate'].pop(scalar)
+            # Insert the old comment at the top of the new stanza:
+            try:
+                first = config_dict['StdWXCalculate']['Calculations'].scalars[0]
+                config_dict['StdWXCalculate']['Calculations'].comments[first] = comment
+            except IndexError:
+                pass
+
 def transfer_comments(config_dict, template_dict):
     
     # If this is the top-level, transfer the initial comments
@@ -895,7 +936,7 @@ def prepend_path(a_dict, label, value):
         elif k == label:
             a_dict[k] = os.path.join(value, a_dict[k])
 
-#def replace_string(a_dict, label, value):
+# def replace_string(a_dict, label, value):
 #    for k in a_dict:
 #        if isinstance(a_dict[k], dict):
 #            replace_string(a_dict[k], label, value)

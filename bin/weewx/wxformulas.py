@@ -10,28 +10,8 @@ import math
 import time
 import weewx.uwxutils
 
-INHG_PER_MBAR = 0.0295299830714
-METER_PER_FOOT = 0.3048
-METER_PER_MILE = 1609.34
-MM_PER_INCH = 25.4
-
-def CtoK(x):
-    return x + 273.15
-
-def CtoF(x):
-    return x * 1.8 + 32.0
-
-def FtoC(x):
-    return (x - 32.0) * 5.0 / 9.0
-
-def mps_to_mph(x):
-    return x * 3600.0 / METER_PER_MILE
-
-def kph_to_mph(x):
-    return x * 1000.0 / METER_PER_MILE
-
-def degtorad(x):
-    return x * math.pi / 180.0
+from weewx.units import INHG_PER_MBAR, METER_PER_FOOT, METER_PER_MILE, MM_PER_INCH 
+from weewx.units import CtoK, CtoF, FtoC
 
 def dewpointF(T, R):
     """Calculate dew point. 
@@ -299,7 +279,7 @@ def solar_rad_Bras(lat, lon, altitude_m, ts=None, nfac=2):
         # NREL solar constant W/m^2
         nrel = 1367.0
         # radiation on horizontal surface at top of atmosphere (bras eqn 2.9)
-        sinel = math.sin(degtorad(el))
+        sinel = math.sin(math.radians(el))
         io = sinel * nrel / (R * R)
         if sinel >= 0:
             # optical air mass (bras eqn 2.22)
@@ -366,7 +346,7 @@ def solar_rad_RS(lat, lon, altitude_m, ts=None, atc=0.8):
         R = alm.sun.earth_distance
         z = altitude_m
         nrel = 1367.0 # NREL solar constant, W/m^2
-        sinal = math.sin(degtorad(el))
+        sinal = math.sin(math.radians(el))
         if sinal >= 0: # sun must be above horizon
             rm = math.pow((288.0-0.0065*z)/288.0,5.256)/(sinal+0.15*math.pow(el+3.885,-1.253))
             toa = nrel * sinal / (R * R)
@@ -534,25 +514,31 @@ def beaufort(ws_kts):
         return 11
     return 12
 
-def evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts=None):
-    """Calculate the evapotranspiration
+def evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts=None, 
+                              rh_min=None, rh_max=None):
+    """Calculate the rate of evapotranspiration during an arbitrary time period.
     http://edis.ifas.ufl.edu/ae459
 
-    tmax_C - maximum temperature in degrees Celsius
+    tmax_C: Maximum temperature during the time period in degrees Celsius
 
-    tmin_C - minimum temperature in degrees Celsius
+    tmin_C: Minimum temperature during the time period in degrees Celsius
 
-    sr_avg - mean daily/hourly solar radiation in watts per sq meter per day/hr
+    sr_avg: Mean solar radiation during the time period in watts per sq meter
 
-    ws_mps - average daily/hourly wind speed in meters per second
+    ws_mps: Average wind speed during the time period in meters per second
 
-    z_m - height in meters at which windspeed is measured
+    z_m: Height in meters at which windspeed is measured
 
-    ts - current timestamp as unix epoch
+    lat: Latitude in degrees
 
-    lat - latitude in degrees
+    ts: Current timestamp as unix epoch. Optional. If missing, the current time
+    will be used.
+    
+    rh_min: Minimum relative humidity during the time period in percent. Optional.
+    
+    rh_max: Maximum relative humidity during the time period in percent. Optional.
 
-    returns evapotranspiration in mm per day/hour
+    Returns: Evapotranspiration in mm per day
     """
     if tmax_C is None or tmin_C is None or sr_avg is None or ws_mps is None:
         return None
@@ -562,7 +548,7 @@ def evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts=None)
     doy = time.localtime(ts)[7]
     # step 1: calculate mean temperature
     tavg_C = 0.5 * (tmax_C + tmin_C)
-    # step 2: convert sr from W/m^2 per day to MJ/m^2 per day
+    # step 2: convert solar radiation from W/m^2 to MJ/m^2 per day
     rs = sr_avg * 0.0864
     # step 3: adjust windspeed for height
     u2 = 4.87 * ws_mps / math.log(67.8 * z_m - 5.42)
@@ -583,14 +569,13 @@ def evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts=None)
     etmax = 0.6108 * math.exp(17.27 * tmax_C / (tmax_C + 273.3))
     es = 0.5 * (etmax + etmin)
     # step 11: calculate actual vapor pressure
-    # a: if rhmax and rhmin are available
-#    ea = (etmin * rhmax + etmax * rhmin) / 200.0
-    # b: using only rhmax
-#    ea = etmin * rhmax / 100.0
-    # c: using rhavg
-#    ea = rhavg * (etmin + etmax) / 200.0
-    # d: with no humidity data
-    ea = 0.6108 * math.exp(17.27 * tmin_C / (tmin_C + 273.3))
+    if rh_max is not None:
+        if rh_min is not None:
+            ea = (etmin * rh_max + etmax * rh_min) / 200.0
+        else:
+            ea = etmin * rh_max / 100.0
+    else:
+        ea = 0.6108 * math.exp(17.27 * tmin_C / (tmin_C + 273.3))
     # step 12: earth-sun relative distance and solar declination
     dr = 1.0 + 0.033 * math.cos(doy * 2.0 * math.pi / 365.0)
     sd = 0.409 * math.sin(doy * 2.0 * math.pi / 365.0 - 1.39)
@@ -620,14 +605,17 @@ def evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts=None)
     evt = ev_rad + ev_wind
     return evt
 
-def evapotranspiration_US(tmax_F, tmin_F, sr_avg, ws_mph, z_ft, lat, ts=None):
+def evapotranspiration_US(tmax_F, tmin_F, sr_avg, ws_mph, z_ft, lat, ts=None, 
+                          rh_min=None, rh_max=None):
+    """Returns ET rate in inches per day"""
     if tmax_F is None or tmin_F is None or sr_avg is None or ws_mph is None:
         return None
     tmax_C = FtoC(tmax_F)
     tmin_C = FtoC(tmin_F)
     ws_mps = ws_mph * METER_PER_MILE / 3600.0
     z_m = z_ft * METER_PER_FOOT
-    evt = evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts)
+    evt = evapotranspiration_Metric(tmax_C, tmin_C, sr_avg, ws_mps, z_m, lat, ts,
+                                    rh_min, rh_max)
     return evt / MM_PER_INCH if evt is not None else None
 
 

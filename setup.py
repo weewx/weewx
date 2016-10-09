@@ -554,6 +554,10 @@ if __name__ == "__main__":
                         'skins/Standard/smartphone/icons/icon_iphone_x2.png']),
                       ('util/apache/conf.d',
                        ['util/apache/conf.d/weewx.conf']),
+                      ('util/import',
+                       ['util/import/csv-example.conf',
+                        'util/import/cumulus-example.conf',
+                        'util/import/wu-example.conf']),
                       ('util/init.d',
                        ['util/init.d/weewx.bsd',
                         'util/init.d/weewx.debian',
@@ -570,9 +574,17 @@ if __name__ == "__main__":
                        ['util/logwatch/conf/services/weewx.conf']),
                       ('util/logwatch/scripts/services',
                        ['util/logwatch/scripts/services/weewx']),
+                      ('util/newsyslog.d',
+                       ['util/newsyslog.d/weewx.conf']),
                       ('util/rsyslog.d',
                        ['util/rsyslog.d/weewx.conf']),
                       ('util/systemd',
-                       ['util/systemd/weewx.service'])
+                       ['util/systemd/weewx.service']),
+                      ('util/udev/rules.d',
+                       ['util/udev/rules.d/acurite.rules', 'util/udev/rules.d/cc3000.rules',
+                        'util/udev/rules.d/fousb.rules', 'util/udev/rules.d/te923.rules',
+                        'util/udev/rules.d/vantage.rules', 'util/udev/rules.d/wmr100.rules',
+                        'util/udev/rules.d/wmr200.rules', 'util/udev/rules.d/wmr300.rules',
+                        'util/udev/rules.d/ws28xx.rules'])
                       ]
           )

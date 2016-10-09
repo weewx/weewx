@@ -55,14 +55,11 @@ import syslog
 import time
 
 import weewx.drivers
+from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'Ultimeter'
 DRIVER_VERSION = '0.16'
-
-INHG_PER_MBAR = 0.0295299830714
-METER_PER_FOOT = 0.3048
-MILE_PER_KM = 0.621371
 
 DEBUG_SERIAL = 0
 

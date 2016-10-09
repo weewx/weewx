@@ -142,7 +142,7 @@ upload-readme: readme
 	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) README.txt)
 
 # update the version in all relevant places
-VDOCS=readme.htm customizing.htm usersguide.htm upgrading.htm utilities.htm
+VDOCS=readme.htm customizing.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
 version:
 	for f in $(VDOCS); do \
   sed -e 's/^Version: [0-9].*/Version: $(VERSION)/' docs/$$f > docs/$$f.tmp; \
@@ -154,9 +154,11 @@ DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
 # add a skeleton entry to deb changelog
 deb-changelog:
-	pkg/mkchangelog.pl --action stub --format debian --release-version $(DEBVER) > pkg/debian/changelog.new
-	cat pkg/debian/changelog >> pkg/debian/changelog.new
-	mv pkg/debian/changelog.new pkg/debian/changelog
+	if [ "`grep $(DEBVER) pkg/debian/changelog`" = "" ]; then \
+  pkg/mkchangelog.pl --action stub --format debian --release-version $(DEBVER) > pkg/debian/changelog.new; \
+  cat pkg/debian/changelog >> pkg/debian/changelog.new; \
+  mv pkg/debian/changelog.new pkg/debian/changelog; \
+fi
 
 # use dpkg-buildpackage to create the debian package
 # -us -uc - skip gpg signature on .dsc and .changes
@@ -203,9 +205,11 @@ RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
 # add a skeleton entry to rpm changelog
 rpm-changelog:
-	pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.rpm.new
-	cat pkg/changelog.rpm >> pkg/changelog.rpm.new
-	mv pkg/changelog.rpm.new pkg/changelog.rpm
+	if [ "`grep $(RPMVER)1 pkg/changelog.rpm`" = "" ]; then \
+  pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.rpm.new; \
+  cat pkg/changelog.rpm >> pkg/changelog.rpm.new; \
+  mv pkg/changelog.rpm.new pkg/changelog.rpm; \
+fi
 
 # use rpmbuild to create the rpm package
 RPMARCH=noarch
@@ -233,6 +237,16 @@ ifeq ("$(SIGN)","1")
 	rpm --addsign $(DSTDIR)/$(RPMPKG)
 #	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
 endif
+
+# add the latest version to the local apt repo using aptly
+update-apt-repo:
+	aptly repo add weewx $(DSTDIR)/$(DEBPKG)
+	aptly snapshot create weewx-$(VERSION) from repo weewx
+	aptly -architectures="all" publish switch squeeze weewx-$(VERSION)
+
+# publish apt repo changes to the public weewx apt repo
+publish-apt-repo:
+	rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly
 
 # run rpmlint on the redhat package
 check-rpm:

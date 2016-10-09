@@ -309,7 +309,7 @@ class Source(object):
                 # map the raw data to a weewx archive compatible dictionary
                 _msg = 'Mapping raw import data for period %d...' % self.period_no
                 self.wlog.verboselog(syslog.LOG_INFO, _msg)
-                _mapped_data = self.mapRawData(_raw_data, weewx.US)
+                _mapped_data = self.mapRawData(_raw_data, self.archive_unit_sys)
                 _msg = 'Raw import data mapped successfully for period %d.' % self.period_no
                 self.wlog.verboselog(syslog.LOG_INFO, _msg)
 
