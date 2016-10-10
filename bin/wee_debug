@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com> and
 #                            Matthew Wall
@@ -27,7 +27,7 @@ from weeutil.weeutil import TimeSpan, timestamp_to_string
 from weewx.manager import DaySummaryManager
 
 VERSION = weewx.__version__
-WEE_DEBUG_VERSION = '0.5'
+WEE_DEBUG_VERSION = '0.6'
 
 # keys/setting names to obfuscate in weewx.conf, key value will be obfuscated
 # if the key starts any element in the list. Can add additional string elements
@@ -42,7 +42,7 @@ OBFUSCATE_MAP = {
     }
 
 # weewx archive field to use as the basis of counting number of archive records
-# Can be any field but dateTime is preferred as it should be in every weewx 
+# Can be any field but dateTime is preferred as it should be in every weewx
 # archive
 COUNT_FIELD = 'dateTime'
 
@@ -51,6 +51,7 @@ sys.modules['setup'] = weecfg.extension
 
 usage = """wee_debug --help
        wee_debug --info
+            [CONFIG_FILE|--config=CONFIG_FILE]
             [--output|--output DEBUG_PATH]
             [--verbosity=0|1|2]
        wee_debug --version
@@ -82,6 +83,9 @@ def main():
                                    epilog = epilog)
 
     # Add the various options:
+    parser.add_option("--config", dest="config_path", type=str,
+                      metavar="CONFIG_FILE",
+                      help="Use configuration file CONFIG_FILE.")
     parser.add_option("--info", dest="info", action='store_true',
                       help="Generate weewx debug output.")
     parser.add_option('--output', action='callback',
@@ -107,6 +111,9 @@ def main():
         print "Nothing done, exiting."
         exit(1)
 
+    # get config_dict to use
+    config_path, config_dict = weecfg.read_config(options.config_path, args)
+
     # display wee_debug version info
     if options.version:
         print "wee_debug version: %s" % WEE_DEBUG_VERSION
@@ -130,7 +137,6 @@ def main():
         print
 
         # get some key weewx parameters
-        config_path, config_dict = weecfg.read_config(None, [])
         db_binding_wx = get_binding(config_dict)
         database_wx = config_dict['DataBindings'][db_binding_wx]['database']
 
@@ -360,9 +366,9 @@ def getManagerInfo(config_dict, db_binding_wx):
         # do we have any records in our archive?
         if first_ts and last_ts:
             # We have some records so proceed to count them.
-            # Since we are (more than likely) using archive field 'dateTime' for 
-            # our record count we need to call the getAggregate() method from our 
-            # parent class. Note that if we change to some other field the 'count' 
+            # Since we are (more than likely) using archive field 'dateTime' for
+            # our record count we need to call the getAggregate() method from our
+            # parent class. Note that if we change to some other field the 'count'
             # might take a while longer depending on the archive size.
             ts_count = super(DaySummaryManager, dbmanager_wx).getAggregate(TimeSpan(first_ts, last_ts),
                                                               COUNT_FIELD,
