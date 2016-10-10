@@ -922,7 +922,7 @@ def timestamp_to_string(ts, format_str="%Y-%m-%d %H:%M:%S %Z"):
     >>> print timestamp_to_string(None)
     ******* N/A *******     (    N/A   )
     """
-    if ts:
+    if ts is not None:
         return "%s (%d)" % (time.strftime(format_str, time.localtime(ts)), ts)
     else:
         return "******* N/A *******     (    N/A   )"

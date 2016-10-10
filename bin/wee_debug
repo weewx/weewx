@@ -29,12 +29,17 @@ from weewx.manager import DaySummaryManager
 VERSION = weewx.__version__
 WEE_DEBUG_VERSION = '0.6'
 
-# keys/setting names to obfuscate in weewx.conf, key value will be obfuscated if
-# the key starts any element in the list. Can add additional string elements to
-# list if required
-KEYS_TO_OBFUSCATE = ["apiKey", "api_key", "app_key", "archive_security_key",
-                     "id", "key", "oauth_token", "password", "raw_security_key",
-                     "server_url", "station", "token", "user"]
+# keys/setting names to obfuscate in weewx.conf, key value will be obfuscated
+# if the key starts any element in the list. Can add additional string elements
+# to list if required
+OBFUSCATE_MAP = {
+    "obfuscate": [
+        "apiKey", "api_key", "app_key", "archive_security_key", "id", "key",
+        "oauth_token", "password", "raw_security_key", "token", "user",
+        "server_url", "station"],
+    "do_not_obfuscate": [
+        "station_type"]
+    }
 
 # weewx archive field to use as the basis of counting number of archive records
 # Can be any field but dateTime is preferred as it should be in every weewx
@@ -286,7 +291,9 @@ def generateDebugConf(config_dict):
     """ Generate a parsed and obfuscated weewx.conf and write to sys.stdout """
 
     # obfuscate config_dict
-    _obs_config_dict = obfuscateKey(config_dict, KEYS_TO_OBFUSCATE)
+    _obs_config_dict = obfuscateKey(config_dict,
+                                    OBFUSCATE_MAP['obfuscate'],
+                                    OBFUSCATE_MAP['do_not_obfuscate'])
     # put obfuscated config_dict into weewx.conf form
     _obs_config_dict.write(sys.stdout)
 
@@ -312,7 +319,7 @@ def generateLinuxSysInfo(verbosity):
         print "  5 minute load average:  %s" % load5
         print "  15 minute load average: %s" % load15
 
-def obfuscateKey(src_dict, key_list):
+def obfuscateKey(src_dict, obfuscate_list, retain_list):
     """ Obfuscate any dictionary items whose key is contained in passed list.
         Uses recursion to obfuscate any nested keys.
     """
@@ -323,10 +330,11 @@ def obfuscateKey(src_dict, key_list):
     for k, v in src_dict.items():
         # if its a dict then recurse
         if isinstance(v, dict):
-            _dict[k] = obfuscateKey(v, key_list)
+            _dict[k] = obfuscateKey(v, obfuscate_list, retain_list)
         # must be a value so obfuscate if in our list or leave it if its not
         else:
-            if any(k.startswith(key) for key in key_list):
+            if (any(k.startswith(key) for key in obfuscate_list)
+                and not k in retain_list):
                 _dict[k] = "XXX obfuscated by wee_debug XXX"
             else:
                 _dict[k] = v

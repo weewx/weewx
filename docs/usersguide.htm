@@ -136,6 +136,35 @@ Version: 3.6.0
         <p>Python 2.5, 2.6, or 2.7 is required. Python 3 will not work. For Python 2.5, see
             <a href="#python2_5">the special instructions below</a>.</p>
 
+        <h2 id="permissions">Permissions</h2>
+
+        <p>There are a few places where permissions affect
+            <span class="code">weewx</span>:
+        </p>
+        <ul>
+            <li>Installation/Configuration.  The user who does the installation
+                must have write permission in order to do the install.
+                Similarly, the user who modifies configuration files and skins
+                must have write permission on those files and directories.  The
+                specific folders depend on the installation method, and are
+                listed in the <a href="#Where_to_find_things">layout table</a>
+                below.
+            </li>
+            <li>Running.  Most USB and serial devices require administrative
+                (root) access.  Unless the device has been configured with a
+                udev rule or other mechanism that grants access to non-root
+                users, <span class="code">weewx</span> commands must be run as
+                root or must be prefaced with <span class="code">sudo</span>
+                for temporary administrative privileges.
+            </li>
+        </ul>
+        <p>Normally <span class="code">weewx</span> is installed and run with
+            administrative (root) permissions.  However, it is not uncommon to
+            install and run <span class="code">weewx</span> as a generic
+            non-root user, or even as a user created specifically to run
+            <span class="code">weewx</span>.
+        </p>
+
         <h1 id="installing">Installing <span class="code">weewx</span></h1>
 
         <h2>Required skills</h2>
@@ -320,7 +349,7 @@ Version: 3.6.0
                     <tr>
                         <td>Web pages and images</td>
                         <td class="symcode">HTML_ROOT</td>
-                        <td class='tty'>/var/www/weewx/</td>
+                        <td class='tty'>/var/www/html/weewx/</td>
                     </tr>
                     <tr>
                         <td>Documentation</td>

@@ -11,18 +11,20 @@
 
 <body>
 
-<h1 class="title">weewx: Installation using setup.py</h1>
-
-<p class='os-icons'>
-    <img class='logo' src='images/logo-linux.png' alt=""/>
-    <img class='logo' src='images/logo-debian.png' alt=""/>
-    <img class='logo' src='images/logo-ubuntu.png' alt=""/>
-    <img class='logo' src='images/logo-mint.png' alt=""/><br/>
-    <img class='logo' src='images/logo-redhat.png' alt=""/>
-    <img class='logo' src='images/logo-centos.png' alt=""/>
-    <img class='logo' src='images/logo-fedora.png' alt=""/>
-    <img class='logo' src='images/logo-suse.png' alt=""/>
-</p>
+<h1 class="title">weewx: Installation using setup.py
+    <div class='os-icons'>
+        <img class='logo' src='images/logo-linux.png' alt=""/>
+        <img class='logo' src='images/logo-debian.png' alt=""/>
+        <img class='logo' src='images/logo-ubuntu.png' alt=""/>
+        <img class='logo' src='images/logo-mint.png' alt=""/>
+        <img class='logo' src='images/logo-rpi.png' alt=""/>
+        <img class='logo' src='images/logo-redhat.png' alt=""/>
+        <img class='logo' src='images/logo-centos.png' alt=""/>
+        <img class='logo' src='images/logo-fedora.png' alt=""/>
+        <img class='logo' src='images/logo-suse.png' alt=""/>
+    </div>
+    <div style="clear: both"></div>
+</h1>
 
 <p>These are generic instructions for installing
     <span class="code">weewx</span> using the Python utility
@@ -43,7 +45,7 @@
 <p>Then install required python packages using the package management software for your system (<em>e.g.</em>, <span class='code'>apt-get</span>, <span class='code'>yum</span>, <span class='code'>yast</span>) or the Python Package Management System (<span class='code'>pip</span>). Select the appropriate tab for specific instructions.</p>
 
 <div class='tabs'>
-    <div id='prereq-tab-debian' class='tab selected' onclick="showprereq('debian')">Debian <imge src='images/logo-debian.png' class='thumbnail' alt=""/> <img src='images/logo-ubuntu.png' class='thumbnail' alt=""/> <img src='images/logo-mint.png' class='thumbnail' alt=""/></div>
+    <div id='prereq-tab-debian' class='tab selected' onclick="showprereq('debian')">Debian <img src='images/logo-debian.png' class='thumbnail' alt=""/> <img src='images/logo-ubuntu.png' class='thumbnail' alt=""/> <img src='images/logo-mint.png' class='thumbnail' alt=""/></div>
     <div id='prereq-tab-redhat' class='tab' onclick="showprereq('redhat')">Redhat <img src='images/logo-redhat.png' class='thumbnail' alt=""/> <img src='images/logo-centos.png' class='thumbnail' alt=""/> <img src='images/logo-fedora.png' class='thumbnail' alt=""/></div>
     <div id='prereq-tab-suse' class='tab' onclick="showprereq('suse')">SuSE <img src='images/logo-suse.png' class='thumbnail' alt=""/></div>
     <div id='prereq-tab-pip' class='tab' onclick="showprereq('pip')">pip</div>
