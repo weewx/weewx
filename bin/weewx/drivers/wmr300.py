@@ -700,7 +700,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.13rc1'
+DRIVER_VERSION = '0.13'
 
 DEBUG_COMM = 0
 DEBUG_LOOP = 0

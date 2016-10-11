@@ -44,7 +44,7 @@ import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR200'
-DRIVER_VERSION = "3.1"
+DRIVER_VERSION = "3.1.1"
 
 
 def loader(config_dict, engine):  # @UnusedVariable
@@ -1030,8 +1030,8 @@ def decode_temp(pkt, pkt_data):
             # Extra temperature sensors.
             # If additional temperature sensors exist (channel>=2), then
             # use observation types 'extraTemp1', 'extraTemp2', etc.
-            record['extraTemp%d' % sensor_id] = temp
-            record['extraHumid%d' % sensor_id] = humidity
+            record['extraTemp%d' % (sensor_id-1)] = temp
+            record['extraHumid%d' % (sensor_id-1)] = humidity
 
         if DEBUG_PACKETS_TEMP:
             logdbg('  Temperature id:%d %.1f C trend: %s'

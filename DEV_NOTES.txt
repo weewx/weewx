@@ -153,8 +153,8 @@ synchronize local aptly changes with the published apt repo at godaddy:
   rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh ~/.aptly/ tomkeffer@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly
 
 for clients to use an apt repo at weewx.com:
-  sudo echo "deb [arch=all] http://weewx.com/apt/ squeeze main" > /etc/apt/sources.list.d/weewx.list
-  curl -s http://weewx.com/keys/mwall.gpg.key | sudo apt-key add -
+  curl -s http://weewx.com/keys.html | sudo apt-key add -
+  echo "deb [arch=all] http://weewx.com/apt/ squeeze main" | sudo tee /etc/apt/sources.list.d/weewx.list
 
 
 notes -------------------------------------------------------------------------
