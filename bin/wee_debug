@@ -58,11 +58,11 @@ usage = """wee_debug --help
 
 Description:
 
-Generate a standard suite of system/weewx information to aid
-in remote debugging. The wee_debug output consists of two parts, the first part
-containing a snapshot of relevant system/weewx information and the second part
-a parsed and obfuscated copy of weewx.conf. This output can be redirected to
-file and posted when seeking assistance via forums or email.
+Generate a standard suite of system/weewx information to aid in remote
+debugging. The wee_debug output consists of two parts, the first part containing
+a snapshot of relevant system/weewx information and the second part a parsed and
+obfuscated copy of weewx.conf. This output can be redirected to file and posted
+when seeking assistance via forums or email.
 
 Actions:
 
