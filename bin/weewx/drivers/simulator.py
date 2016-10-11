@@ -25,7 +25,7 @@ def loader(config_dict, engine):
     start_ts = resume_ts = None
     if 'start' in config_dict[DRIVER_NAME]:
         # A start has been specified. Extract the time stamp.
-        start_tt = time.strptime(config_dict[DRIVER_NAME]['start'], "%Y-%m-%d %H:%M")
+        start_tt = time.strptime(config_dict[DRIVER_NAME]['start'], "%Y-%m-%dT%H:%M")        
         start_ts = time.mktime(start_tt)
         # If the 'resume' keyword is present and True, then get the last
         # archive record out of the database and resume with that.
