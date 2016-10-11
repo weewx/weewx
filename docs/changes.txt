@@ -11,6 +11,8 @@ wmr200, wmr300, and wmr9x8 drivers.
 Eliminate the apache2, ftp, and rsync suggested dependencies from the deb
 package.  This keeps the weewx dependencies to a bare minimum.
 
+Added retries to usb read in wmr300 driver.
+
 
 3.6.0 10/07/2016
 
