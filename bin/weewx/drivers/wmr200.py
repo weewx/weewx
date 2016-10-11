@@ -44,7 +44,7 @@ import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR200'
-DRIVER_VERSION = "3.1"
+DRIVER_VERSION = "3.1.1"
 
 
 def loader(config_dict, engine):  # @UnusedVariable
