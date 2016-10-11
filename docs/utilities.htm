@@ -945,7 +945,7 @@ No extensions installed</pre>
        wee_import --version
        wee_import --import-config=IMPORT_CONFIG_FILE
             [--config=CONFIG_FILE]
-            [--date=YYYY/MM/DD|'YYYY/MM/DD hh:mm'|'YYYY/MM/DD (hh:mm)-YYYY/MM/DD (hh:mm)']
+            [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
             [--dry-run]
             [--verbose]
             [--log=-]
@@ -959,11 +959,13 @@ Options:
   --import-config=IMPORT_CONFIG_FILE
                         Use import configuration file IMPORT_CONFIG_FILE.
   --dry-run             Print what would happen but do not do it.
-  --date=YYYY-MM-DD     Date or time to import as a string of form YYYY/MM/DD
-                        or 'YYYY/MM/DD hh:mm'. A date range or date-time range
-                        may be specified by separating two date strings or two
-                        date-time strings with a hyphen. Arguments that
-                        include hh:mm must be enclosed in quotation marks.
+  --date=YYYY-mm-dd     Import data for this date. Format is YYYY-mm-dd.
+  --from=YYYY-mm-dd[THH:MM]
+                        Import data starting at this date or date-time. Format
+                        is YYYY-mm-dd[THH:MM].
+  --to=YYYY-mm-dd[THH:MM]
+                        Import data up until this date or date-time. Format is
+                        YYYY-mm-dd[THH:MM].
   --log=-               Control wee_import log output. By default log output
                         is sent to the weewx log file. Log output may be
                         disabled by using '--log=-'. Some weewx API log output
@@ -1015,15 +1017,13 @@ the daily summaries using the wee_database utility.</pre>
 
         <h3>Option <span class="code">--date</span></h3>
 
-        <p>The date-time range of records to be imported can be specified by use of the <span class="code">--date</span>
-            option. The <span class="code">--date</span> option can specify a single
-            date, as single date-time, a date range or a date-time range. The date format used is <span class="code">YYYY/MM/DD</span>
-            and the date-time format <span class="code">YYYY/MM/DD HH:MM</span>. A range is specified by separating two
-            date or date-time formats by a hyphen, e.g., <span class="code">'2015/12/1-2015/12/30'</span>. Note that the
-            date-time or date-time range string must be enclosed in single or double quotation marks. The effect of the
-            different <span class="code">--date</span> option values is shown in the following
-            table:</p>
-
+        <p>Records from a single date can be imported by use of the <span class="code">--date</span> option. 
+            The <span class="code">--date</span> option accepts strings of the format <span class="code">YYYY-mm-dd</span>. 
+            Whilst the use of the <span class="code">--date</span> option will limit the imported data to that of a single 
+            date, the default action if the <span class="code">--date</span> option (and the <span class="code">--from</span> 
+            and <span class="code">--to</span> options) is omitted may vary depending on the source. The operation of 
+            the <span class="code">--date</span> option is summarised in the following table:</p>
+        
         <table class="indent" summary="--date_option operation">
             <tbody>
             <tr class="first_row">
@@ -1037,32 +1037,84 @@ the daily summaries using the wee_database utility.</pre>
                 <td>Todays records only</td>
             </tr>
             <tr>
-                <td class="code first_col">--date 2015/12/22</td>
-                <td>All records from 2015/12/22 00:00 (inclusive) to 2015/12/23 00:00 (exclusive)</td>
-                <td>All records from 2015/12/22 00:00 (inclusive) to 2015/12/23 00:00 (exclusive)</td>
+                <td class="code first_col">--date=2015-12-22</td>
+                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-23 00:00 (exclusive)</td>
+                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-23 00:00 (exclusive)</td>
+            </tr>
+            </tbody>
+        </table>
+        
+        <p class="note">
+            <strong>Note</strong><br/>If the <span class="code">--date</span>, <span class="code">--from</span>
+            and <span class="code">--to</span> options are omitted the default is to import all available records 
+            when importing from a CSV or Cumulus source or to import today's records only when importing from 
+            Weather Underground. </p>
+
+        <h3>Options <span class="code">--from</span> and <span class="code">--to</span></h3>
+
+        <p>Whilst the <span class="code">--date</span> option allows imported data to be limited to a single 
+            date, the <span class="code">--from</span> and <span class="code">--to</span> options allow finer 
+            control by importing only the records that fall within the date or date-time range specified by the 
+            <span class="code">--from</span> and <span class="code">--to</span> options. 
+            The <span class="code">--from</span> option determines the earliest (inclusive), and 
+            the <span class="code">--to</span> option determines the latest (exclusive), date or date-time of 
+            the records being imported. The <span class="code">--from</span> and <span class="code">--to</span> 
+            options accept a string of the format <span class="code">YYYY-mm-dd[THH:MM]</span>. The T literal 
+            is mandatory if specifying a date-time.</p>
+        
+        <p class="note">
+            <strong>Note</strong><br/>The <span class="code">--from</span> and <span class="code">--to</span> 
+            options must be used as a pair, they cannot be used individually or in conjunction with 
+            the <span class="code">--date</span> option.</p>
+
+        <p>The operation of the <span class="code">--from</span> and <span class="code">--to</span> options is 
+            summarised in the following table:</p>
+      
+        <table class="indent" summary="--from_to_option operation">
+            <tbody>
+            <tr class="first_row">
+                <td colspan='2'>options</td>
+                <td>Records imported for a CSV or Cumulus import</td>
+                <td>Records imported for a Weather Underground import</td>
             </tr>
             <tr>
-                <td class="code first_col">--date "2015/12/22 22:30"</td>
-                <td>The record timestamped 2015/12/22 22:30 only</td>
-                <td>The record timestamped 2015/12/22 22:30 only</td>
+                <td class="code first_col">omitted<br>(i.e., the default)</td>
+                <td class="code first_col">omitted<br>(i.e., the default)</td>
+                <td>All available records</td>
+                <td>Todays records only</td>
             </tr>
             <tr>
-                <td class="code first_col">--date 2015/12/22-2016/02/20</td>
-                <td>All records from 2015/12/22 00:00 (inclusive) to 2016/2/21 00:00 (exclusive)</td>
-                <td>All records from 2015/12/22 00:00 (inclusive) to 2016/2/21 00:00 (exclusive)</td>
+                <td class="code first_col">--from=2015-12-22</td>
+                <td class="code first_col">--to=2015-12-29</td>
+                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-30 00:00 (exclusive)</td>
+                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-30 00:00 (exclusive)</td>
             </tr>
             <tr>
-                <td class="code first_col">--date "2016/3/18&nbsp15:29-2016/6/20&nbsp22:00"</td>
-                <td>All records from 2016/3/18 15:29 (inclusive) to 2016/6/20 22:00 (exclusive)</td>
-                <td>All records from 2016/3/18 15:29 (inclusive) to 2016/6/20 22:00 (exclusive)</td>
+                <td class="code first_col">--from=2016-7-18T15:29</td>
+                <td class="code first_col">--to=2016-7-25</td>
+                <td>All records from 2016-7-18 15:29 (inclusive) to 2016-7-26 22:00 (exclusive)</td>
+                <td>All records from 2016-7-18 15:29 (inclusive) to 2016-7-26 22:00 (exclusive)</td>
+            </tr>
+            <tr>
+                <td class="code first_col">--from=2016-5-12</td>
+                <td class="code first_col">--to=2016-7-22T22:15</td>
+                <td>All records from 2016-5-12 00:00 (inclusive) to 2016-7-22 22:15 (exclusive)</td>
+                <td>All records from 2016-5-12 00:00 (inclusive) to 2016-7-22 22:15 (exclusive)</td>
+            </tr>
+            <tr>
+                <td class="code first_col">--from=2016-3-18T15:29</td>
+                <td class="code first_col">--to=2016-6-20T22:00</td>
+                <td>All records from 2016-3-18 15:29 (inclusive) to 2016-6-20 22:00 (exclusive)</td>
+                <td>All records from 2016-3-18 15:29 (inclusive) to 2016-6-20 22:00 (exclusive)</td>
             </tr>
             </tbody>
         </table>
 
         <p class="note">
-            <strong>Note</strong><br/>If the <span class="code">--date</span> option is omitted the default
-            is to import all available records when importing from a CSV or Cumulus source or to import today's records
-            only when importing from Weather Underground. </p>
+            <strong>Note</strong><br/>If the <span class="code">--date</span>, <span class="code">--from</span>
+            and <span class="code">--to</span> options are omitted the default is to import all available records 
+            when importing from a CSV or Cumulus source or to import today's records only when importing from 
+            Weather Underground. </p>
 
         <h3>Option <span class="code">--log</span></h3>
 
