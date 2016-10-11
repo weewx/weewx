@@ -119,8 +119,8 @@ def main() :
     parser.add_option("-p", "--password", type="string", dest="password",
                       help="Weather Underground station password. Optional. "
                       "Default is to take from configuration file.")
-    parser.add_option("-d", "--date", type="string", dest="date", metavar="YYYY-MM-DD",
-                      help="Date to check as a string of form YYYY-MM-DD. Default is today.")
+    parser.add_option("-d", "--date", type="string", dest="date", metavar="YYYY-mm-dd",
+                      help="Date to check as a string of form YYYY-mm-dd. Default is today.")
     parser.add_option("-e", "--epsilon", type="int", dest="epsilon", metavar="SECONDS", default=120,
                       help="Timestamps within this value in seconds compare true (default 120)")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
