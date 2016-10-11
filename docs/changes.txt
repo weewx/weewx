@@ -13,6 +13,9 @@ package.  This keeps the weewx dependencies to a bare minimum.
 
 Added retries to usb read in wmr300 driver.
 
+Remapped sensor identifiers in wmr200 driver so that extraTemp1 and
+extraHumid1 are usable.
+
 
 3.6.0 10/07/2016
 
