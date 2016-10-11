@@ -126,7 +126,7 @@ class TestMySQL(Common):
         
 def _get_first_last(config_dict):
     """Get the first and last archive record timestamps."""
-    start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%d %H:%M")
+    start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%dT%H:%M")
     start_ts = time.mktime(start_tt)
     first_ts = start_ts + config_dict['StdArchive'].as_int('archive_interval')
     last_ts = start_ts + run_length *3600.0
@@ -136,7 +136,7 @@ def calc_stats(config_dict, start_ts, stop_ts):
     """Calculate the statistics directly from the simulator output."""
     global test_types
     
-    sim_start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%d %H:%M")
+    sim_start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%dT%H:%M")
     sim_start_ts = time.mktime(sim_start_tt)
             
     simulator = weewx.drivers.simulator.Simulator(loop_interval=config_dict['Simulator'].as_int('loop_interval'),
