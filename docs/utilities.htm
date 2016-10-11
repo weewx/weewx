@@ -475,29 +475,32 @@ wee_database --string-check --fix</pre>
 
         <pre class="tty">Usage: wee_debug --help
        wee_debug --info
+            [CONFIG_FILE|--config=CONFIG_FILE]
             [--output|--output DEBUG_PATH]
             [--verbosity=0|1|2]
        wee_debug --version
 
 Description:
 
-Generate a standard suite of system/weewx information to aid
-in remote debugging. The wee_debug output consists of two parts, the first part
-containing a snapshot of relevant system/weewx information and the second part
-a parsed and obfuscated copy of weewx.conf. This output can be redirected to
-file and posted when seeking assistance via forums or email.
+Generate a standard suite of system/weewx information to aid in remote
+debugging. The wee_debug output consists of two parts, the first part containing
+a snapshot of relevant system/weewx information and the second part a parsed and
+obfuscated copy of weewx.conf. This output can be redirected to file and posted
+when seeking assistance via forums or email.
 
 Actions:
 
 --info           Generate a debug report.
 
 Options:
-  -h, --help     show this help message and exit
-  --info         Generate weewx debug output.
-  --output       Write wee_debug output to DEBUG_PATH. DEBUG_PATH includes
-                 path and file name. Default is /var/tmp/weewx.debug.
-  --verbosity=N  How much detail to display, 0-2, default=1.
-  --version      Display wee_debug version number.
+  -h, --help            show this help message and exit
+  --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
+  --info                Generate weewx debug output.
+  --output              Write wee_debug output to DEBUG_PATH. DEBUG_PATH
+                        includes path and file name. Default is
+                        /var/tmp/weewx.debug.
+  --verbosity=N         How much detail to display, 0-2, default=1.
+  --version             Display wee_debug version number.
 
 wee_debug will attempt to obfuscate obvious personal/private information in
 weewx.conf such as user names, passwords and API keys; however, the user
@@ -506,6 +509,20 @@ before posting the information publicly.
 </pre>
 
         <h2><span id='wee_debug_details'>Actions and options</span></h2>
+
+        <h3>Option <span class="code">--config</span></h3>
+        <p>
+            The utility is pretty good about "guessing" where the configuration
+            file <span class="code">weewx.conf</span> is, but if you've done
+            an unusual install, you may have to tell it explicitly. You can do
+            this by either putting the location directly in the command line:
+        </p>
+
+        <pre class="tty cmd">wee_debug /home/weewx/weewx.conf --info</pre>
+
+        <p>or by using option <span class="code">--config</span>:</p>
+
+        <pre class="tty cmd">wee_debug --config=/home/weewx/weewx.conf --info</pre>
 
         <h3>Action <span class="code">--info</span></h3>
 
