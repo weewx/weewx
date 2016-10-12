@@ -16,6 +16,8 @@ Added retries to usb read in wmr300 driver.
 Remapped sensor identifiers in wmr200 driver so that extraTemp1 and
 extraHumid1 are usable.
 
+Standardized format to be used for times to YYYY-mm-ddTHH:MM.
+
 
 3.6.0 10/07/2016
 
