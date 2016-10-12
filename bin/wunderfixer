@@ -115,7 +115,8 @@ def main() :
                       help="Date to check as a string of form YYYY-mm-dd. Default is today.")
     parser.add_option("-e", "--epsilon", type="int", dest="epsilon", metavar="SECONDS", 
                       default=120,
-                      help="Timestamps within this value in seconds compare true (default 120)")
+                      help="Timestamps within this value in seconds compare true. Default "
+                      "is 120.")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
                       help="Print useful extra output.")
     parser.add_option("-l", "--log", type="string", dest="logging", metavar="LOG_FACILITY",
