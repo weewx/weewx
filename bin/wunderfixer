@@ -19,6 +19,7 @@ CHANGE HISTORY
 --------------------------------
 1.1.0 10/11/16
 Now uses restx API to publish the requests.
+Standardised option syntax.
 
 1.0.0 8/16/15
 Published version.
@@ -64,8 +65,8 @@ import weewx.restx
 
 usagestr = """%prog CONFIG_FILE|--config=CONFIG_FILE
                   [--binding=BINDING]
-                  [--station STATION] [--password PASSWORD]
-                  [--date YYYY-mm-dd] [--epsilon SECONDS]
+                  [--station=STATION] [--password=PASSWORD]
+                  [--date=YYYY-mm-dd] [--epsilon=SECONDS]
                   [--verbose] [--log LOG_FACILITY] [--test] [--query]
                   [--help]
 
@@ -79,13 +80,7 @@ longer supports wview. Wview users should use wunderfixer v0.5.2.
 Or, switch to weewx!
 
 Be sure to use the --test switch first to see whether you like what it 
-proposes !!
-
-       -->> Usage of this utility is at YOUR RISK ! <<-- 
-       -->>  The author assumes no responsibility   <<-- 
-       -->>      whatsoever for any problems        <<-- 
-       -->>      or corruption of your data !       <<-- 
-"""
+proposes !!"""
 
 __version__ = "1.1.0"
 
@@ -118,14 +113,16 @@ def main() :
                       "Default is to take from configuration file.")
     parser.add_option("-d", "--date", type="string", dest="date", metavar="YYYY-mm-dd",
                       help="Date to check as a string of form YYYY-mm-dd. Default is today.")
-    parser.add_option("-e", "--epsilon", type="int", dest="epsilon", metavar="SECONDS", default=120,
-                      help="Timestamps within this value in seconds compare true (default 120)")
+    parser.add_option("-e", "--epsilon", type="int", dest="epsilon", metavar="SECONDS", 
+                      default=120,
+                      help="Timestamps within this value in seconds compare true. Default "
+                      "is 120.")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
                       help="Print useful extra output.")
     parser.add_option("-l", "--log", type="string", dest="logging", metavar="LOG_FACILITY",
                       help="Log selected output to syslog. If omitted no syslog logging occurs. "
-                      "If LOG_FACILITY is 'weewx' then logs are written to the same log used by weewx. "
-                      "Any other parameter will log to syslog.")
+                      "If LOG_FACILITY is 'weewx' then logs are written to the same log used by "
+                      "weewx. Any other parameter will log to syslog.")
     parser.add_option("-t", "--test", action="store_true", dest="simulate",
                       help="Test what would happen, but don't do anything.")
     parser.add_option("-q", "--query", action="store_true", dest="query",
