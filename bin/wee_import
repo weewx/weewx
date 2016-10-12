@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 #    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick
@@ -562,7 +562,7 @@ import weeimport
 import weeimport.weeimport
 
 # wee_import version number
-WEE_IMPORT_VERSION = '0.1'
+WEE_IMPORT_VERSION = '0.2'
 # minimum weewx version required for this version of wee_import
 REQUIRED_WEEWX = "3.6.0"
 
@@ -572,7 +572,7 @@ usage = """wee_import --help
        wee_import --version
        wee_import --import-config=IMPORT_CONFIG_FILE
             [--config=CONFIG_FILE]
-            [--date=YYYY/MM/DD|'YYYY/MM/DD hh:mm'|'YYYY/MM/DD (hh:mm)-YYYY/MM/DD (hh:mm)']
+            [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
             [--dry-run]
             [--verbose]
             [--log=-]
@@ -601,13 +601,14 @@ def main():
                       help="Use import configuration file IMPORT_CONFIG_FILE.")
     parser.add_option("--dry-run", dest="dry_run", action="store_true",
                       help="Print what would happen but do not do it.")
-    parser.add_option("--date", dest="date", type=str, metavar="YYYY-MM-DD",
-                      help="Date or time to import as a string of form "
-                           "YYYY/MM/DD or 'YYYY/MM/DD hh:mm'. A date range or "
-                           "date-time range may be specified by separating two "
-                           "date strings or two date-time strings with a hyphen. "
-                           "Arguments that include hh:mm must be enclosed in "
-                           "quotation marks.")
+    parser.add_option("--date", dest="date", type=str, metavar="YYYY-mm-dd",
+                      help="Import data for this date. Format is YYYY-mm-dd.")
+    parser.add_option("--from", dest="date_from", type=str, metavar="YYYY-mm-dd[THH:MM]",
+                      help="Import data starting at this date or date-time. "
+                           "Format is YYYY-mm-dd[THH:MM].")
+    parser.add_option("--to", dest="date_to", type=str, metavar="YYYY-mm-dd[THH:MM]",
+                      help="Import data up until this date or date-time. Format "
+                           "is YYYY-mm-dd[THH:MM].")
     parser.add_option("--log", dest="logging", type=str, metavar="-",
                       help="Control wee_import log output. By default log output "
                            "is sent to the weewx log file. Log output may be "
@@ -650,6 +651,12 @@ def main():
                                                               args,
                                                               wlog)
         source_obj.run()
+    except weeimport.weeimport.WeeImportOptionError, e:
+        wlog.printlog(syslog.LOG_INFO, "**** Command line option error.")
+        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
+        print "**** Nothing done, exiting."
+        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
+        exit(1)
     except weeimport.weeimport.WeeImportIOError, e:
         wlog.printlog(syslog.LOG_INFO, "**** Unable to load source file.")
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
