@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #===============================================================================
-# Copyright (c) 2009, 2010, 2011, 2012 Tom Keffer <tkeffer@gmail.com>
+# Copyright (c) 2009, 2010, 2011, 2012, 2016 Tom Keffer <tkeffer@gmail.com>
 # 
 # This software may be used and redistributed under the
 # terms of the GNU General Public License version 3.0
@@ -17,6 +17,9 @@ Weather Underground with the missing data.
 
 CHANGE HISTORY
 --------------------------------
+1.1.0 10/11/16
+Now uses restx API to publish the requests.
+
 1.0.0 8/16/15
 Published version.
 
@@ -52,20 +55,17 @@ import socket
 import sys
 import syslog
 import time
-import urllib
 import urllib2
 
 import weecfg
-import weeutil.weeutil
 from weeutil.weeutil import timestamp_to_string
 import weewx.manager
-import weewx.units
 import weewx.restx
 
 usagestr = """%prog CONFIG_FILE|--config=CONFIG_FILE
                   [--binding=BINDING]
                   [--station STATION] [--password PASSWORD]
-                  [--date YYYY-MM-DD] [--epsilon SECONDS]
+                  [--date YYYY-mm-dd] [--epsilon SECONDS]
                   [--verbose] [--log LOG_FACILITY] [--test] [--query]
                   [--help]
 
@@ -87,7 +87,7 @@ proposes !!
        -->>      or corruption of your data !       <<-- 
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
@@ -97,9 +97,6 @@ epsilon = None
 wlog = None
 
 socket.setdefaulttimeout(10.0)
-
-class FailedPost(IOError):
-    pass
 
 def main() :
     global epsilon, wlog
@@ -200,7 +197,13 @@ def main() :
         print "Number of archive records:    ", len(archive_results)
 
     # Get a WunderStation object so we can interact with Weather Underground
-    wunder = WunderStation(options.station, options.password)
+    wunder = WunderStation(queue=None,  # Bogus queue. We will not be using it.
+                           manager_dict=dbmanager_t,
+                           station=options.station,
+                           password=options.password,
+                           server_url=weewx.restx.StdWunderground.pws_url,
+                           protocol_name = "wunderfixer",
+                           softwaretype = "wunderfixer-%s" % __version__)
 
     try:
         # Get all the time stamps on the Weather Underground for the given day:
@@ -240,21 +243,9 @@ def main() :
     # Loop through the missing time stamps:
     for time_TS in missing_records:
         ts = time_TS.ts
-        start_of_day = weeutil.weeutil.startOfDay(ts) 
         # Get the archive record for this timestamp:
-        raw_record = dbmanager_t.getRecord(ts)
-        # Calculate rain over the last 60 minutes and daily rain the WU way:
-        hourRain = dbmanager_t.getSql("SELECT SUM(rain) FROM %s "
-                                      "WHERE dateTime>? AND dateTime<=?" % dbmanager_t.table_name,
-                                      (ts - 3600.0, ts))
-        dayRain  = dbmanager_t.getSql("SELECT SUM(rain) FROM %s "
-                                      "WHERE dateTime>=? AND dateTime<=?" % dbmanager_t.table_name, 
-                                      (start_of_day, ts))
-        raw_record['hourRain'] = hourRain[0] if hourRain is not None else None
-        raw_record['dayRain'] = dayRain[0] if dayRain is not None else None
-        # Convert to US units
-        record = weewx.units.to_US(raw_record)
-        # Now print what we have
+        record = dbmanager_t.getRecord(ts)
+        # Print it out:
         print >>sys.stdout, print_record(record),
         sys.stdout.flush()
 
@@ -273,15 +264,19 @@ def main() :
         if _ans=='y' :
             try:
                 # Post the data to the WU:
-                wunder.postData(record)
+                wunder.process_record(record, dbmanager_t)
                 no_published += 1
                 print >>sys.stdout, " ...published."
                 wlog.slog(syslog.LOG_DEBUG, "%s ...published" % timestamp_to_string(record['dateTime']))
-            except FailedPost, e:
+            except weewx.restx.BadLogin, e:
+                print >>sys.stderr, "Bad login"
+                print >>sys.stderr, e
+                exit("Bad login")                
+            except weewx.restx.FailedPost, e:
                 print >>sys.stderr, e
                 print >>sys.stderr, "Aborted."
                 wlog.slog(syslog.LOG_ERR, "%s ...error %s. Aborting." % (timestamp_to_string(record['dateTime']), e))
-                exit()
+                exit("Failed post")
             except IOError, e:
                 print >>sys.stderr, " ... not published."
                 print "Reason: ", e
@@ -305,24 +300,12 @@ def main() :
 #                             class WunderStation
 #===============================================================================
 
-class WunderStation(object):
+class WunderStation(weewx.restx.AmbientThread):
     """Class to interact with the Weather Underground."""
     
     # match any HTML tag of the form <...>
     _tags = re.compile(r'\<.*\>')
     
-    def __init__(self, station, password, max_tries=3):
-        """Initialize with a given station.
-        
-        station: The name of the Weather Underground station (e.g., "KORHOODR3") as a string
-
-        password: Password for the station"""
-        
-        self.station  = station
-        self.password = password
-        self.max_tries = max_tries
-        self.site = "Weather Underground"
-        
     def getDayTimeStamps(self, dayRequested) :
         """Returns all time stamps for a given weather underground station for a given day
         
@@ -368,69 +351,6 @@ class WunderStation(object):
             _timeStamps.append(TimeStamp(_time_t))
             
         return _timeStamps
-    
-    def postData(self, datarec) :
-        """Posts a data record on the Weather Underground, using their upload protocol.
-        
-        datarec: A dictionary holding the data values
-        
-        For details of the Weather Underground upload protocol,
-        see http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
-        
-        For details on how urllib2 works, see "urllib2 - The Missing Manual"
-        at http://www.voidspace.org.uk/python/articles/urllib2.shtml
-        """
-    
-        _liststr = ["action=updateraw", "ID=%s" % self.station, "PASSWORD=%s" % self.password ]
-        
-        # Go through each of the supported types, formatting it, then adding to _liststr:
-        for _key in weewx.restx.AmbientThread._FORMATS:
-            # Get our value but first, if necessary, convert it to the appropriate WU units
-            v = datarec.get(_key) 
-            # Check to make sure the type is not null
-            if v is not None :
-                if _key == 'dateTime':
-                    # For dates, convert from time stamp to a string, using what
-                    # the Weather Underground calls "MySQL format." I've fiddled
-                    # with formatting, and it seems that escaping the colons helps
-                    # its reliability. But, I could be imagining things.
-                    v = urllib.quote(str(datetime.datetime.utcfromtimestamp(v)))
-                # Format the value, and accumulate in _liststr:
-                _liststr.append(weewx.restx.AmbientThread._FORMATS[_key] % v)
-        # Add the software type and version:
-        _liststr.append("softwaretype=wunderfixer-%s" % __version__)
-        # Now stick all the little pieces together with an ampersand between them:
-        _urlquery='&'.join(_liststr)
-        # This will be the complete URL for the HTTP GET:
-        _url="http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?" + _urlquery
-    
-        # Retry up to max_tries times:epsilon
-        for _count in range(self.max_tries):
-            # Now use an HTTP GET to post the data. Wrap in a try block
-            # in case there's a network problem.
-            try:
-                _response = urllib2.urlopen(_url)
-            except (urllib2.URLError, socket.error), e:
-                print >>sys.stderr, "Failed attempt #%d to upload to %s" % (_count+1, self.site)
-                print >>sys.stderr, "   ****  Reason: %s" % (e,)
-                wlog.slog(syslog.LOG_ERR, "Failed attempt #%d to upload to %s.   ****  Reason: %s" % (_count+1, self.site, e))
-            else:
-                # A bad station ID or password will not throw an exception, but
-                # it will have the error encoded in the return message:
-                for line in _response:
-                    # PWSweather signals with 'ERROR', WU with 'INVALID':
-                    if line.startswith('ERROR') or line.startswith('INVALID'):
-                        # Bad login. No reason to retry. Log it and raise an exception.
-                        print >>sys.stderr, "\n%s returns %s. Aborting." % (self.site, line)
-                        wlog.slog(syslog.LOG_ERR, "%s returns %s. Aborting." % (self.site, line))
-                        raise FailedPost, line
-                # If we get here, we have been successful.  Just return.
-                return
-        else:
-            # This is executed only if the loop terminates normally, meaning
-            # the upload failed max_tries times.
-            wlog.slog(syslog.LOG_ERR, "Failed to upload to %s" % self.site)
-            raise FailedPost("Failed to upload to %s" % self.site)
 
 #===============================================================================
 #                             class TimeStamp
@@ -507,8 +427,7 @@ _formats = (    ('barometer'    , ('%7.3f"',            '    N/A ')),
                 ('windDir'      , ('%4.0f deg',         ' N/A deg')),
                 ('windGust'     , ('%4.1f mph gust',    ' N/A mph gust')),
                 ('dewpoint'     , ('%6.1fF',            '   N/A ')),
-                ('hourRain'     , ('%5.2f" rain',       '  N/A  rain')),
-                ('dayRain'      , ('%5.2f" daily rain', ' N/A  daily rain')))
+                ('rain'         , ('%5.2f" rain',       '  N/A  rain')))
     
 def print_record(record):
     # Start with a formatted version of the time:
