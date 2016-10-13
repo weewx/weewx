@@ -56,6 +56,9 @@ h2 {
   border: 1px solid #dfdfdf;
   border-radius: 3px;
 }
+.weewx {
+  font-family: "Courier New", Courier, monospace;
+}
     </style>
 </head>
 
@@ -63,24 +66,24 @@ h2 {
 
 <h1 class="title">weewx: Installation using apt-get
     <div class='os-icons'>
-        <img class='logo' src='images/logo-debian.png' alt=""/>
-        <img class='logo' src='images/logo-ubuntu.png' alt=""/>
-        <img class='logo' src='images/logo-mint.png' alt=""/>
-        <img class='logo' src='images/logo-rpi.png' alt=""/>
+        <img class='logo' src='/docs/images/logo-debian.png' alt=""/>
+        <img class='logo' src='/docs/images/logo-ubuntu.png' alt=""/>
+        <img class='logo' src='/docs/images/logo-mint.png' alt=""/>
+        <img class='logo' src='/docs/images/logo-rpi.png' alt=""/>
     </div>
 </h1>
 
-<p>This is the fastest way to install <span class='code'>weewx</span> on Debian-based systems, including Ubuntu, Mint, and Raspbian.
+<p>This is the fastest way to install <span class='weewx'>weewx</span> on Debian-based systems, including Ubuntu, Mint, and Raspbian.
 </p>
 
 <h2>Configure apt</h2>
-<p>Tell <span class="code">apt</span> where to find the <span class="code">weewx</span> releases.  This only has to be done once - the first time you install.</p>
+<p>Tell <span class="code">apt</span> where to find the <span class="weewx">weewx</span> releases.  This only has to be done once - the first time you install.</p>
 
 <pre class='tty cmd'>curl -s http://weewx.com/keys.html | sudo apt-key add -
 echo "deb [arch=all] http://weewx.com/apt/ squeeze main" | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
 
 <h2>Install</h2>
-<p>Use <span class="code">apt-get</span> to install <span class="code">weewx</span>. When you are done, <span class="code">weewx</span> will be running in the background as a daemon.</p>
+<p>Use <span class="code">apt-get</span> to install <span class="weewx">weewx</span>. When you are done, <span class="weewx">weewx</span> will be running in the background as a daemon.</p>
 <pre class='tty cmd'>sudo apt-get update
 sudo apt-get install weewx</pre>
 
@@ -89,12 +92,12 @@ sudo apt-get install weewx</pre>
 <pre class='tty'><a href="file:///var/www/html/weewx/index.html">file:///var/www/html/weewx/index.html</a></pre>
 
 <h2>Uninstall</h2>
-<p>This will remove <span class="code">weewx</span>, leaving any data intact.</p>
+<p>This will remove <span class="weewx">weewx</span>, leaving any data intact.</p>
 <pre class='tty cmd'>sudo apt-get remove weewx</pre>
 
 <h2>Where to go from here...</h2>
 <ul>
-    <li><a href="http://weewx.com/docs/usersguide.htm">User's Guide</a> - configuration options and troubleshooting</li>
+    <li><a href="http://weewx.com/docs/usersguide.htm">User's Guide</a> - configuration options, <a href="http://weewx.com/docs/usersguide.htm#integrating_with_webserver">integrating with a web server</a>, and <a href="http://weewx.com/docs/usersguide.htm#troubleshooting">troubleshooting</a></li>
     <li><a href="http://weewx.com/docs/customizing.htm">Customization Guide</a> - instructions for modifying reports and adding extensions</li>
     <li><a href="http://weewx.com/docs/hardware.htm">Hardware Guide</a> - details about weather station capabilities and quirks</li>
     <li><a href="http://weewx.com/docs/utilities.htm">Utilities Guide</a> - reference for the command-line options and actions</li>
