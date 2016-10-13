@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.6.1 mm/DD/YYYY
+3.6.1 10/13/2016
 
 Fixed bug in wunderfixer.
 
