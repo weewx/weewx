@@ -46,6 +46,11 @@ MINIMUM_MAP = {'dateTime': {'units': 'unix_epoch'},
 # ============================================================================
 
 
+class WeeImportOptionError(Exception):
+    """Base class of exceptions thrown when encountering an error with a
+       command line option.
+    """
+
 class WeeImportMapError(Exception):
     """Base class of exceptions thrown when encountering an error with an
        external source-to-weewx field map.
@@ -180,45 +185,73 @@ class Source(object):
         # Process our command line options
         self.dry_run = options.dry_run
         self.verbose = options.verbose
-        # If a --date command line option was used then we need to determine
-        # the time span over which we will import any records. We will import
-        # records that have dateTime > self.first_ts and <=self.last_ts.
-        if options.date:
-            # do we have a date range or a single date only - look for the '-'
-            dates = options.date.split('-', 1)
-            if len(dates) > 1:
-                # we have a range
-                # first try to get a date and time for each
-                try:
-                    _first = dt.strptime(dates[0], "%Y/%m/%d %H:%M")
-                    _first_tt = _first.timetuple()
-                    _last = dt.strptime(dates[1], "%Y/%m/%d %H:%M")
-                    _last_tt = _last.timetuple()
-                    self.first_ts = time.mktime(_first_tt)
-                    self.last_ts = time.mktime(_last_tt)
-                except ValueError:
-                    # that did not work so try to get a date for each
-                    try:
-                        _first = dt.strptime(dates[0], "%Y/%m/%d")
-                        _first_tt = _first.timetuple()
-                        _last = (dt.strptime(dates[1], "%Y/%m/%d") +
-                                 datetime.timedelta(days=1))
-                        _last_tt = _last.timetuple()
-                        self.first_ts = time.mktime(_first_tt)
-                        self.last_ts = time.mktime(_last_tt)
-                    except:
-                        raise ValueError(
-                            "Cannot parse --date argument '%s'." % options.date)
+
+        # By processing any --date, --from and --to options we need to derive
+        # self.first_ts and self.last_ts; the earliest and latest (inclusive)
+        # timestamps of data to be imported. If we have no --date, --from or
+        # --to then set both to None (we then get the default action for each
+        # import type).
+        # First we see if we have a valid --date, if not then we look for
+        # --from and --to.
+        if options.date or options.date == "":
+            # there is a --date but is it valid
+            try:
+                _first_dt = dt.strptime(options.date, "%Y-%m-%d")
+            except ValueError:
+                # Could not convert --date. If we have a --date it must be
+                # valid otherwise we can't continue so raise it.
+                _msg = "Invalid --date option specified."
+                raise WeeImportOptionError(_msg)
             else:
-                # we have a date
-                _first_dt = dt.strptime(dates[0], "%Y/%m/%d")
-                _first_tt = _first_dt.timetuple()
+                # we have a valid date so do soem date arithmetic
                 _last_dt = _first_dt + datetime.timedelta(days=1)
-                _last_tt = _last_dt.timetuple()
-                self.first_ts = time.mktime(_first_tt)
-                self.last_ts = time.mktime(_last_tt)
+                self.first_ts = time.mktime(_first_dt.timetuple())
+                self.last_ts = time.mktime(_last_dt.timetuple())
+        elif options.date_from or options.date_to or options.date_from == '' or options.date_to == '':
+            # There is a --from and/or a --to, but do we have both and are
+            # they valid.
+            # try --from first
+            try:
+                if 'T' in options.date_from:
+                    _from_dt = dt.strptime(options.date_from, "%Y-%m-%dT%H:%M")
+                else:
+                    _from_dt = dt.strptime(options.date_from, "%Y-%m-%d")
+                _from_ts = time.mktime(_from_dt.timetuple())
+            except TypeError:
+                # --from not specified we can't continue so raise it
+                _msg = "Missing --from option. Both --from and --to must be specified."
+                raise WeeImportOptionError(_msg)
+            except ValueError:
+                # could not convert --from, we can't continue so raise it
+                _msg = "Invalid --from option."
+                raise WeeImportOptionError(_msg)
+            # try --to
+            try:
+                if 'T' in options.date_to:
+                    _to_dt = dt.strptime(options.date_to, "%Y-%m-%dT%H:%M")
+                else:
+                    _to_dt = dt.strptime(options.date_to, "%Y-%m-%d")
+                    # since it is just a date we want the end of the day
+                    _to_dt += datetime.timedelta(days=1)
+                _to_ts = time.mktime(_to_dt.timetuple())
+            except TypeError:
+                # --to not specified , we can't continue so raise it
+                _msg = "Missing --to option. Both --from and --to must be specified."
+                raise WeeImportOptionError(_msg)
+            except ValueError:
+                # could not convert --to, we can't continue so raise it
+                _msg = "Invalid --to option."
+                raise WeeImportOptionError(_msg)
+            # If we made it here we have a _from_ts and _to_ts. Do a simple
+            # error check first.
+            if _from_ts > _to_ts:
+                # from is later than to, raise it
+                _msg = "--from value is later than --to value."
+                raise WeeImportOptionError(_msg)
+            self.first_ts = _from_ts
+            self.last_ts = _to_ts
         else:
-            # no date on the command line so set our first/last ts to None
+            # no --date or --from/--to so we take the default, set all to None
             self.first_ts = None
             self.last_ts = None
 
@@ -342,8 +375,8 @@ class Source(object):
                                                                                                                                self.total_unique_rec,
                                                                                                                                self.tdiff)
                     self.wlog.printlog(syslog.LOG_INFO, _msg)
-                    print "Those records with a timestamp already in the archive will not have been imported."
-                    print "Confirm successful import in the weewx log file."
+                    print "Those records with a timestamp already in the archive will not have been"
+                    print "imported. Confirm successful import in the weewx log file."
 
     def parseMap(self, source_type, source, import_config_dict):
         """Produce a source field-to-weewx archive field map.
@@ -731,9 +764,9 @@ class Source(object):
                 # we had more than one unique value for interval, warn the user
                 self.wlog.printlog(syslog.LOG_INFO, "Warning: Records to be imported contain multiple different 'interval' values.")
                 print "         This may mean the imported data is missing some records and it may lead"
-                print "         to data integrity issues. If the raw data has a known, fixed interval value"
-                print "         setting the relevant 'interval' setting in wee_import config to this value"
-                print "         may give a better result."
+                print "         to data integrity issues. If the raw data has a known, fixed interval"
+                print "         value setting the relevant 'interval' setting in wee_import config to"
+                print "         this value may give a better result."
                 while self.interval_ans not in ['y', 'n']:
                     self.interval_ans = raw_input('Are you sure you want to proceed (y/n)? ')
                 if self.interval_ans == 'n':
@@ -742,14 +775,15 @@ class Source(object):
                     if self.dry_run:
                         print "Dry run import aborted by user. %d records were processed." % self.total_rec_proc
                     else:
-                        print "Those records with a timestamp already in the archive will not have been imported."
-                        print "Confirm successful import in syslog or weewx log file."
-                        _msg = "User chose to abort import. %d records were processed. Exiting." % self.total_rec_proc
-                        self.wlog.logonly(syslog.LOG_INFO, _msg)
                         if self.total_rec_proc > 0:
-                            print "As the import was aborted before completion refer to the weewx log"
+                            print "Those records with a timestamp already in the archive will not have been"
+                            print "imported. As the import was aborted before completion refer to the weewx log"
                             print "file to confirm which records were imported."
                             raise SystemExit('Exiting.')
+                        else:
+                            print "Import aborted by user. No records saved to archive."
+                        _msg = "User chose to abort import. %d records were processed. Exiting." % self.total_rec_proc
+                        self.wlog.logonly(syslog.LOG_INFO, _msg)
                         raise SystemExit('Exiting. Nothing done.')
             self.wlog.verboselog(syslog.LOG_INFO,
                                  "Mapped %d records." % len(_records))

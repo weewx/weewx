@@ -1,23 +1,24 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <meta content="en-us" http-equiv="Content-Language"/>
-    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
-    <title>weewx: Installation on MacOS systems</title>
-    <link href="css/weewx_docs.css" rel="stylesheet"/>
-    <link rel="icon" type="image/png" href="/docs/images/favicon.png">    
+    <title>weewx: Installation on macOS systems</title>
+    <meta http-equiv="Content-Language" content="en-us"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/weewx_docs.css"/>
+    <link rel="icon" href="images/favicon.png" type="image/png">
 </head>
-
 <body>
 
-<h1 class="title">weewx: Installation on MacOS systems</h1>
+<h1 class="title">weewx: Installation on macOS systems
+    <div class='os-icons'>
+        <img class='logo' src='images/logo-apple.png' alt=""/>
+    </div>
+    <div style="clear: both"></div>
+</h1>
 
-<p class='os-icons'>
-    <img class='logo' src='images/logo-apple.png' alt=""/>
-</p>
-
-<p>This is a guide to installing <span class='code'>weewx</span> on MacOS.</p>
+<p>This is a guide to installing <span class='code'>weewx</span> on macOS.</p>
 
 <h2>Download</h2>
 
@@ -37,7 +38,7 @@ sudo easy_install PIL
 sudo easy_install pyserial
 sudo easy_install pyusb
 sudo easy_install pyephem</pre>
-<p>Depending on the MacOS and Python versions, you might have to use <span class="code">Pillow</span> instead of <span class="code">PIL</span>.</p>
+<p>Depending on the macOS and Python versions, you might have to use <span class="code">Pillow</span> instead of <span class="code">PIL</span>.</p>
 <p>If the PIL or Cheetah installation fails, you might have to install xcode:</p>
 <pre class='tty cmd'>xcode-select --install</pre>
 <p>then try the easy_install again.</p>

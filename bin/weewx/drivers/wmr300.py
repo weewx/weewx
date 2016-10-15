@@ -700,7 +700,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.12'
+DRIVER_VERSION = '0.13'
 
 DEBUG_COMM = 0
 DEBUG_LOOP = 0
@@ -836,9 +836,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_7x = time.time()
             except usb.USBError, e:
-                errmsg = repr(e)
-                if not ('No data available' in errmsg or 'No error' in errmsg):
-                    raise weewx.WeeWxIOError(e)
+                logerr("usb failure: %s" % e)
+                raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
             time.sleep(0.001)
@@ -902,9 +901,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_65 = time.time()
             except usb.USBError, e:
-                errmsg = repr(e)
-                if not ('No data available' in errmsg or 'No error' in errmsg):
-                    raise weewx.WeeWxIOError(e)
+                logerr("usb failure: %s" % e)
+                raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
             time.sleep(0.001)        
@@ -989,6 +987,8 @@ class Station(object):
         self.interface = 0
         self.recv_counts = dict()
         self.send_counts = dict()
+        self.max_tries = 5
+        self.retry_wait = 3
 
     def __enter__(self):
         self.open()
@@ -1009,6 +1009,7 @@ class Station(object):
         if not self.handle:
             raise WMR300Error('Open USB device failed')
 
+        # FIXME: this reset should not be necessary
         self.handle.reset()
 
         # for HID devices on linux, be sure kernel does not claim the interface
@@ -1037,19 +1038,28 @@ class Station(object):
         self.handle.reset()
 
     def read(self, count=True):
-        buf = None
-        try:
-            buf = self.handle.interruptRead(
-                Station.EP_IN, self.MESSAGE_LENGTH, self.timeout)
-            if DEBUG_COMM:
-                logdbg("read: %s" % _fmt_bytes(buf))
-            if DEBUG_COUNTS and count:
-                self.update_count(buf, self.recv_counts)
-        except usb.USBError, e:
-            errmsg = repr(e)
-            if not ('No data available' in errmsg or 'No error' in errmsg):
-                raise
-        return buf
+        ntries = 0
+        while ntries < self.max_tries:
+            ntries += 1
+            try:
+                buf = self.handle.interruptRead(
+                    Station.EP_IN, self.MESSAGE_LENGTH, self.timeout)
+                if DEBUG_COMM:
+                    logdbg("read: %s" % _fmt_bytes(buf))
+                if DEBUG_COUNTS and count:
+                    self.update_count(buf, self.recv_counts)
+                return buf
+            except usb.USBError, e:
+                errmsg = repr(e)
+                if 'No data available' in errmsg or 'No error' in errmsg:
+                    ntries -= 1
+                else:
+                    logerr("read: failed attempt %d of %d: %s" %
+                           (ntries, self.max_tries, e))
+            time.sleep(self.retry_wait)
+        msg = "read failed: max retries (%d) exceeded" % self.max_tries
+        logerr(msg)
+        raise weewx.RetriesExceeded(msg)
 
     def write(self, buf):
         if DEBUG_COMM:
@@ -1057,10 +1067,22 @@ class Station(object):
         # pad with zeros up to the standard message length
         while len(buf) < self.MESSAGE_LENGTH:
             buf.append(0x00)
-        sent = self.handle.interruptWrite(Station.EP_OUT, buf, self.timeout)
-        if DEBUG_COUNTS:
-            self.update_count(buf, self.send_counts)
-        return sent
+        ntries = 0
+        while ntries < self.max_tries:
+            ntries += 1
+            try:
+                sent = self.handle.interruptWrite(
+                    Station.EP_OUT, buf, self.timeout)
+                if DEBUG_COUNTS:
+                    self.update_count(buf, self.send_counts)
+                return sent
+            except usb.USBError, e:
+                logerr("write: failed attempt %d of %d: %s" %
+                       (ntries, self.max_tries, e))
+            time.sleep(self.retry_wait)
+        msg = "write failed: max retries (%d) exceeded" % self.max_tries
+        logerr(msg)
+        raise weewx.RetriesExceeded(msg)
 
     # keep track of the message types for debugging purposes
     @staticmethod

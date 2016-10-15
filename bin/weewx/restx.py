@@ -145,7 +145,8 @@ class RESTThread(threading.Thread):
     def __init__(self, queue, protocol_name, manager_dict=None,
                  post_interval=None, max_backlog=sys.maxint, stale=None, 
                  log_success=True, log_failure=True, 
-                 timeout=10, max_tries=3, retry_wait=5):
+                 timeout=10, max_tries=3, retry_wait=5,
+                 softwaretype="weewx-%s" % weewx.__version__):
         """Initializer for the class RESTThread
         Required parameters:
 
@@ -182,6 +183,9 @@ class RESTThread(threading.Thread):
           
           retry_wait: How long to wait between retries when failures.
           Default is 5 seconds.
+          
+          softwaretype: Sent as field "softwaretype in the Ambient post. Default
+          is "weewx-x.y.z where x.y.z is the weewx version.
           """    
         # Initialize my superclass:
         threading.Thread.__init__(self, name=protocol_name)
@@ -198,6 +202,7 @@ class RESTThread(threading.Thread):
         self.post_interval = to_int(post_interval)
         self.timeout = to_int(timeout)
         self.retry_wait = to_int(retry_wait)
+        self.softwaretype = softwaretype
         self.lastpost = 0
 
     def get_record(self, record, dbmanager):
@@ -640,7 +645,9 @@ class AmbientThread(RESTThread):
                  protocol_name="Unknown-Ambient",
                  post_interval=None, max_backlog=sys.maxint, stale=None, 
                  log_success=True, log_failure=True,
-                 timeout=10, max_tries=3, retry_wait=5):
+                 timeout=10, max_tries=3, retry_wait=5,
+                 softwaretype="weewx-%s" % weewx.__version__):
+
         """
         Initializer for the AmbientThread class.
 
@@ -663,7 +670,8 @@ class AmbientThread(RESTThread):
                                             log_failure=log_failure,
                                             timeout=timeout,
                                             max_tries=max_tries,
-                                            retry_wait=retry_wait)
+                                            retry_wait=retry_wait,
+                                            softwaretype=softwaretype)
         self.station = station
         self.password = password
         self.server_url = server_url
@@ -711,7 +719,7 @@ class AmbientThread(RESTThread):
         _liststr = ["action=updateraw", 
                     "ID=%s" % self.station,
                     "PASSWORD=%s" % urllib.quote(self.password),
-                    "softwaretype=weewx-%s" % weewx.__version__]
+                    "softwaretype=%s" % self.softwaretype]
         
         # Go through each of the supported types, formatting it, then adding
         # to _liststr:

@@ -1,13 +1,15 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <meta content="en-us" http-equiv="Content-Language"/>
-    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <title>weewx: Customization Guide</title>
-    <link href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css" rel="stylesheet"/>
-    <link href="css/jquery.tocify.css" rel="stylesheet"/>
-    <link href="css/weewx_docs.css" rel="stylesheet"/>
+    <meta http-equiv="Content-Language" content="en-us"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
+    <link rel="stylesheet" href="css/jquery.tocify.css"/>
+    <link rel="stylesheet" href="css/weewx_docs.css"/>
+    <link rel="icon" href="images/favicon.png" type="image/png">
 </head>
 
 <body>
@@ -36,7 +38,7 @@
                 <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
             </a><br/>
 	<span class='version'>
-Version: 3.6.0
+Version: 3.6.1
         </span>
         </div>
         <div class="title"><span class="code">weewx</span> Customization Guide</div>
@@ -5099,15 +5101,6 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         <p>The summaries will automatically be rebuilt the next time <span class="code">weewx</span> starts,
             or they can be rebuilt with the tool:</p>
         <pre class="tty cmd">wee_database weewx.conf --backfill-daily</pre>
-
-        <h1 id="import">Importing observation data</h1>
-        <p>The utility <a href="utilities.htm#wee_import_utility"><span class="code">wee_import</span></a>
-            can import historical data from various data sources,
-            including CSV files, the Weather Underground, and Cumulus monthly log files.
-            See the <a href="utilities.htm#wee_import_utility">Utilities Guide</a>
-            for more information.</p>
-
-        <!-- wee_import moved to utilities.htm-->
 
 
         <h1 id="porting">Porting to new hardware</h1>

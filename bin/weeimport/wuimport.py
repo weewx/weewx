@@ -131,7 +131,13 @@ class WUSource(weeimport.Source):
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
-        _msg = "     station=%s, date=%s" % (self.station_id, options.date)
+        if options.date:
+            _msg = "     station=%s, date=%s" % (self.station_id, options.date)
+        else:
+            # we must have --from and --to
+            _msg = "     station=%s, from=%s, to=%s" % (self.station_id,
+                                                        options.date_from,
+                                                        options.date_to)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
                                                      self.calc_missing)
@@ -149,7 +155,7 @@ class WUSource(weeimport.Source):
         self.wlog.printlog(syslog.LOG_INFO, _msg)
         if self.calc_missing:
             print "Missing derived observations will be calculated."
-        if options.date:
+        if options.date or options.date_from:
             print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
             print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
         if self.dry_run:

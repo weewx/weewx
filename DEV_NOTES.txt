@@ -147,14 +147,14 @@ update debian repo using aptly:
 
 clone the published apt repo at godaddy to local space:
   mkdir -p ~/.aptly
-  rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh tomkeffer@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly/ ~/.aptly
+  rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh USER@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly/ ~/.aptly
 
 synchronize local aptly changes with the published apt repo at godaddy:
-  rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh ~/.aptly/ tomkeffer@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly
+  rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh ~/.aptly/ USER@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly
 
 for clients to use an apt repo at weewx.com:
-  sudo echo "deb [arch=all] http://weewx.com/apt/ squeeze main" > /etc/apt/sources.list.d/weewx.list
-  curl -s http://weewx.com/keys/mwall.gpg.key | sudo apt-key add -
+  curl -s http://weewx.com/keys.html | sudo apt-key add -
+  echo "deb [arch=all] http://weewx.com/apt/ squeeze main" | sudo tee /etc/apt/sources.list.d/weewx.list
 
 
 notes -------------------------------------------------------------------------
@@ -187,10 +187,10 @@ to do debian builds you must first install:
 to do repo updates you must first install aptly:
   https://www.aptly.info/download/
 for example, on debian:
-  echo "deb http://repo.aptly.info/ squeeze main" > /etc/apt/sources.list
+  echo "deb http://repo.aptly.info/ squeeze main" | sudo tee /etc/apt/sources.list.d/aptly.list
   wget -qO - https://www.aptly.info/pubkey.txt | sudo apt-key add -
-  apt-get update
-  apt-get install aptly
+  sudo apt-get update
+  sudo apt-get install aptly
 
 
 unit tests --------------------------------------------------------------------
