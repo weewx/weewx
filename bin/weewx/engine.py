@@ -781,13 +781,21 @@ def main(options, args, engine_class=StdEngine):
     # Set the logging facility.
     syslog.openlog(options.log_label, syslog.LOG_PID | syslog.LOG_CONS)
 
-    # Set up the signal handlers.
-    signal.signal(signal.SIGHUP, sigHUPhandler)
-    signal.signal(signal.SIGTERM, sigTERMhandler)
-
     syslog.syslog(syslog.LOG_INFO, "engine: Initializing weewx version %s" % weewx.__version__)
     syslog.syslog(syslog.LOG_INFO, "engine: Using Python %s" % sys.version)
     syslog.syslog(syslog.LOG_INFO, "engine: Platform %s" % platform.platform())
+
+    # Set up the signal handlers.
+    # Not all OS may have SIGHUP and SIGTERM
+    try:
+        signal.signal(signal.SIGHUP, sigHUPhandler)
+    except AttributeError:
+        syslog.syslog(syslog.LOG_WARNING, "engine: No SIGHUP on platform")
+
+    try:
+        signal.signal(signal.SIGTERM, sigTERMhandler)
+    except:
+        syslog.syslog(syslog.LOG_WARNING, "engine: No SIGTERM on platform")
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
