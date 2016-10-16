@@ -476,6 +476,9 @@ class StdArchive(StdService):
         if self.archive_delay <= 0:
             raise weewx.ViolatedPrecondition("Archive delay (%.1f) must be greater than zero." % 
                                              (self.archive_delay,))
+        if self.archive_delay >= self.archive_interval / 2:
+            syslog.syslog(syslog.LOG_WARNING, "engine: Archive delay (%d) is unusually long" % 
+                          (self.archive_delay,))
 
         syslog.syslog(syslog.LOG_DEBUG, "engine: Use LOOP data in hi/low calculations: %d" % 
                       (self.loop_hilo,))
