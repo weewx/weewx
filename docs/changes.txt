@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+x.y.z MM/dd/YYYY
+
+Fixed bug that crashed Cheetah if the weewx.conf configuration file included
+a BOM. Fixes issue #172.
+
+
 3.6.1 10/13/2016
 
 Fixed bug in wunderfixer.

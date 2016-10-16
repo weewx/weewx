@@ -383,10 +383,12 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         binding."""
 
         # -------- Template ---------
+        # Cheetah will crash if given a template file name in Unicode. So,
+        # convert to ascii, ignoring all characters that cannot be converted:
         template = os.path.join(self.config_dict['WEEWX_ROOT'],
                                 self.config_dict['StdReport']['SKIN_ROOT'],
                                 report_dict['skin'],
-                                report_dict['template'])
+                                report_dict['template']).encode('ascii', 'ignore')
         
         # ------ Destination directory --------
         destination_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
