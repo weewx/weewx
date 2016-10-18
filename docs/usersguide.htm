@@ -1309,6 +1309,18 @@ longitude = -77.0366</pre>
             when the <span class='code'>polling_mode</span> is
             <span class='code'>PERIODIC</span>.</p>
 
+        <p class='config_option'>data_format</p>
+
+        <p>There are two classes of hardware, the 10xx/20xx consoles and the
+            30xx consoles.  Unlike the 10xx/20xx consoles, the 30xx consoles
+            record luminosity and UV, so they have a different data format.
+            Use the <span class='code'>data_format</span> to
+            indicate which type of hardware you have.  Possible values are
+            <span class='code'>1080</span> (for the 10xx and 20xx consoles)
+            and <span class='code'>3080</span> (for the 30xx consoles).
+            Default is <span class='code'>1080</span>.
+        </p>
+
         <h3 class="config_section">[TE923]</h3>
 
         <p>This section is for options relating to the Hideki TE923 series of
