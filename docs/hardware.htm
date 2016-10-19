@@ -1338,6 +1338,31 @@ interval: 1</pre>
         </table>
 
 
+        <h2 id="fousb_data_format">Data format</h2>
+
+        <p>The 10xx/20xx consoles have a data format that is different from
+            the 30xx consoles.  All of the consoles recognize wind, rain,
+            temperature, and humidity from the same instrument clusters.
+            However, some instrument clusters also include a luminosity sensor.
+            Only the 30xx consoles recognize the luminosity and UV output
+            from these sensors.  As a consequence, the 30xx consoles also have
+            a different data format.
+        </p>
+        <p>Since <span class='code'>weewx</span> cannot reliably determine
+            the data format by communicating with the station, the
+            <span class='code'>data_format</span> configuration option
+            indicates the station type.  Possible values are
+            <span class='code'>1080</span> and <span class='code'>3080</span>.
+            Use <span class='code'>1080</span> for the 10xx and 20xx consoles.
+            The default value is <span class='code'>1080</span>.
+        </p>
+        <p>For example, this would indicate that the station is a 30xx
+            console:</p>
+        <pre class='tty'>[FineOffsetUSB]
+    ...
+    data_format = 3080
+</pre>
+
         <h2 id="fousb_configuration">Configuring with <span class="code">wee_device</span></h2>
 
         <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
