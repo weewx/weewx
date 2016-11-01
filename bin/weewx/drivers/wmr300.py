@@ -700,7 +700,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.13'
+DRIVER_VERSION = '0.14'
 
 DEBUG_COMM = 0
 DEBUG_LOOP = 0
@@ -749,29 +749,29 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
     DEFAULT_MAP = {
         'pressure': 'pressure',
         'barometer': 'barometer',
-        'wind_avg': 'windSpeed',
-        'wind_dir': 'windDir',
-        'wind_gust': 'windGust',
-        'wind_gust_dir': 'windGustDir',
-        'temperature_0': 'inTemp',
-        'temperature_1': 'outTemp',
-        'temperature_2': 'extraTemp1',
-        'temperature_3': 'extraTemp2',
-        'temperature_4': 'extraTemp3',
-        'humidity_0': 'inHumidity',
-        'humidity_1': 'outHumidity',
-        'humidity_2': 'extraHumid1',
-        'humidity_3': 'extraHumid2',
-        'dewpoint_1': 'dewpoint',
-        'heatindex_1': 'heatindex',
+        'windSpeed': 'wind_avg',
+        'windDir': 'wind_dir',
+        'windGust': 'wind_gust',
+        'windGustDir': 'wind_gust_dir',
+        'inTemp': 'temperature_0',
+        'outTemp': 'temperature_1',
+        'extraTemp1': 'temperature_2',
+        'extraTemp2': 'temperature_3',
+        'extraTemp3': 'temperature_4',
+        'inHumidity': 'humidity_0',
+        'outHumidity': 'humidity_1',
+        'extraHumid1': 'humidity_2',
+        'extraHumid2': 'humidity_3',
+        'dewpoint': 'dewpoint_1',
+        'heatindex': 'heatindex_1',
         'windchill': 'windchill',
-        'rain_rate': 'rainRate'
+        'rainRate': 'rain_rate'
         }
 
     def __init__(self, **stn_dict):
         loginf('driver version is %s' % DRIVER_VERSION)
         self.model = stn_dict.get('model', 'WMR300')
-        self.obs_map = stn_dict.get('map', self.DEFAULT_MAP)
+        self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_MAP)
         self.heartbeat = 20 # how often to send a6 messages, in seconds
         self.history_retry = 60 # how often to retry history, in seconds
         global DEBUG_COMM
@@ -909,9 +909,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
 
     def convert(self, pkt, ts):
         p = {'dateTime': ts, 'usUnits': weewx.METRICWX}
-        for label in self.obs_map:
-            if label in pkt:
-                p[self.obs_map[label]] = pkt[label]
+        for label in self.sensor_map:
+            if self.sensor_map[label] in pkt:
+                p[label] = pkt[self.sensor_map[label]]
         # single variable to track last_rain assumes that any historical reads
         # will happen before any loop reads, and no historical reads will
         # happen after any loop reads.  otherwise double-counting of rain
