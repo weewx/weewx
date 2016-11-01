@@ -256,7 +256,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.24'
+DRIVER_VERSION = '0.25'
 
 
 def loader(config_dict, _):
@@ -1004,14 +1004,14 @@ class Ws2300(object):
     #
     # Initialise ourselves.
     #
-    def __init__(self,serial_port):
+    def __init__(self, serial_port):
         self.log_buffer = []
         self.log_nest = 0
         self.serial_port = serial_port
     #
     # Write data to the device.
     #
-    def write_byte(self,data):
+    def write_byte(self, data):
         if self.log_mode != 'w':
             if self.log_mode != 'e':
                 self.log(' ')
@@ -1026,7 +1026,7 @@ class Ws2300(object):
             self.log_mode = 'r'
             self.log(':')
         result = self.serial_port.read_byte(timeout)
-        if result == None:
+        if not result:
             self.log("--")
         else:
             self.log("%02x" % ord(result))
