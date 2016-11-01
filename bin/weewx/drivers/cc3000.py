@@ -376,6 +376,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         # report the station configuration
         settings = self._init_station_with_retries(
             self.station, self.max_tries, self.retry_wait)
+        loginf('firmware: %s' % settings['firmware'])
         self.arcint = settings['arcint']
         loginf('archive_interval: %s' % self.arcint)
         self.header = settings['header']
@@ -510,6 +511,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         station.wakeup()
         station.set_echo()
         settings = dict()
+        settings['firmware'] = station.get_version()
         settings['arcint'] = station.get_interval() * 60 # arcint is in seconds
         settings['header'] = CC3000Driver._parse_header(station.get_header())
         settings['units'] = station.get_units()
