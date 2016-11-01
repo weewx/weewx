@@ -524,7 +524,7 @@ class TE923ConfEditor(weewx.drivers.AbstractConfEditor):
     # The default configuration associates the channel 1 sensor with outTemp
     # and outHumidity.  To change this, or to associate other channels with
     # specific columns in the database schema, use the following map.
-    [[map]]
+    [[sensor_map]]
 %s
 """ % "\n".join(["        %s = %s" % (x, DEFAULT_MAP[x]) for x in DEFAULT_MAP])
 
