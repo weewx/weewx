@@ -81,7 +81,7 @@ from weeutil.weeutil import to_bool
 import weewx.drivers
 
 DRIVER_NAME = 'CC3000'
-DRIVER_VERSION = '0.12'
+DRIVER_VERSION = '0.13'
 
 def loader(config_dict, engine):
     return CC3000Driver(**config_dict[DRIVER_NAME])
@@ -330,21 +330,21 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
 
     # map rainwise names to database schema names
     DEFAULT_SENSOR_MAP = {
-        'TIMESTAMP': 'dateTime',
-        'TEMP OUT': 'outTemp',
-        'HUMIDITY': 'outHumidity',
-        'WIND DIRECTION': 'windDir',
-        'WIND SPEED': 'windSpeed',
-        'WIND GUST': 'windGust',
-        'PRESSURE': 'pressure',
-        'TEMP IN': 'inTemp',
-        'TEMP 1': 'extraTemp1',
-        'TEMP 2': 'extraTemp2',
-        'RAIN': 'day_rain_total',
-        'STATION BATTERY': 'consBatteryVoltage',
-        'BATTERY BACKUP': 'bkupBatteryVoltage',
-        'SOLAR RADIATION': 'radiation',
-        'UV INDEX': 'UV',
+        'dateTime': 'TIMESTAMP',
+        'outTemp': 'TEMP OUT',
+        'outHumidity': 'HUMIDITY',
+        'windDir': 'WIND DIRECTION',
+        'windSpeed': 'WIND SPEED',
+        'windGust': 'WIND GUST',
+        'pressure': 'PRESSURE',
+        'inTemp': 'TEMP IN',
+        'extraTemp1': 'TEMP 1',
+        'extraTemp2': 'TEMP 2',
+        'day_rain_total': 'RAIN',
+        'consBatteryVoltage': 'STATION BATTERY',
+        'bkupBatteryVoltage': 'BATTERY BACKUP',
+        'radiation': 'SOLAR RADIATION',
+        'UV': 'UV INDEX',
     }
 
     def __init__(self, **stn_dict):
@@ -553,7 +553,10 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         for i, v in enumerate(values):
             if i >= len(header):
                 continue
-            label = sensor_map.get(header[i])
+            label = None
+            for m in sensor_map:
+                if sensor_map[m] == header[i]:
+                    label = m
             if label is None:
                 continue
             try:
