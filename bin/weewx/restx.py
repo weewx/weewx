@@ -565,11 +565,59 @@ class StdWunderground(StdRESTful):
 
     def new_loop_packet(self, event):
         """Puts new LOOP packets in the loop queue"""
-        self.loop_queue.put(event.packet)
+        syslog.syslog(syslog.LOG_DEBUG, "restx: raw packet: %s" % event.packet)
+        self.cached_values.update(event.packet, event.packet['dateTime'])
+        syslog.syslog(syslog.LOG_DEBUG, "restx: cached packet: %s" %
+                      self.cached_values.get_packet(event.packet['dateTime']))
+        self.loop_queue.put(
+            self.cached_values.get_packet(event.packet['dateTime']))
 
     def new_archive_record(self, event):
         """Puts new archive records in the archive queue"""
         self.archive_queue.put(event.record)
+
+
+class CachedValues():
+    """Dictionary of value-timestamp pairs.  Each timestamp indicates when the
+    corresponding value was last updated.  The unit system is specified when
+    the object is created.  Values are converted to that unit system when the
+    object is updated."""
+
+    def __init__(self, unit_system=weewx.US):
+        self.unit_system = unit_system
+        self.values = dict()
+
+    def update(self, packet, ts):
+        # update the cache with values from the specified packet, using the
+        # specified timestamp.
+        # FIXME: the cache should not check for values of None.  however, if
+        # values of None are included, that breaks the whole purpose of the
+        # cache.  the root cause of this is the StdWXCalculate service and the
+        # drivers themselves.  if a driver knows a sensor has a bad value, then
+        # it should use a value of None.  otherwise, it should not put the
+        # observation in the packet.  similarly for calculate service.  if the
+        # service does not have all the inputs for a given derived, it should
+        # not insert a derived with value of None.  it should insert a value of
+        # None only if all the inputs exist and the result is None.
+        packet = weewx.units.to_std_system(packet, self.unit_system)
+        for k in [i for i in packet if i not in ['dateTime', 'usUnits']]:
+            if packet[k] is not None:
+                self.values[k] = {'value': packet[k], 'ts': ts}
+
+    def get_value(self, k, ts, stale_age):
+        # get the value for the specified key.  if the value is older than
+        # stale_age (seconds) then return None.
+        if k in self.values and ts - self.values[k]['ts'] < stale_age:
+            return self.values[k]['value']
+        return None
+
+    def get_packet(self, ts=None, stale_age=960):
+        if ts is None:
+            ts = int(time.time() + 0.5)
+        pkt = {'dateTime': ts, 'usUnits': self.unit_system}
+        for k in self.values:
+            pkt[k] = self.get_value(k, ts, stale_age)
+        return pkt
 
 
 class StdPWSWeather(StdRESTful):
