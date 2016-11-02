@@ -521,9 +521,15 @@ class StdWunderground(StdRESTful):
         do_rapidfire_post = to_bool(_ambient_dict.pop('rapidfire', False))
         do_archive_post = to_bool(_ambient_dict.pop('archive_post',
                                                     not do_rapidfire_post))
+
+        # use the same staleness for every observation, loop or archive
+        self.stale_dict = dict()
+        for obs in AmbientThread._formats:
+            self.stale_dict[obs] = 900 # 15 minutes
         
         if do_archive_post:
             _ambient_dict.setdefault('server_url', StdWunderground.pws_url)
+            self.archive_cache = weeutil.weeutil.ObservationCache()
             self.archive_queue = Queue.Queue()
             self.archive_thread = AmbientThread(
                 self.archive_queue,
@@ -542,6 +548,7 @@ class StdWunderground(StdRESTful):
             _ambient_dict.setdefault('log_failure', False)
             _ambient_dict.setdefault('max_backlog', 0)
             _ambient_dict.setdefault('max_tries', 1)
+            self.loop_cache = weeutil.weeutil.ObservationCache()
             self.loop_queue = Queue.Queue()
             self.loop_thread = AmbientLoopThread(
                 self.loop_queue,
@@ -556,12 +563,17 @@ class StdWunderground(StdRESTful):
 
     def new_loop_packet(self, event):
         """Puts new LOOP packets in the loop queue"""
-        self.loop_queue.put(event.packet)
+        self.loop_cache.add_record(event.packet)
+        packet = self.loop_cache.get_most_recent(self.stale_dict)
+        self.loop_queue.put(packet)
 
     def new_archive_record(self, event):
         """Puts new archive records in the archive queue"""
-        self.archive_queue.put(event.record)
-                
+        self.archive_cache.add_record(event.record)
+        record = self.archive_cache.get_most_recent(self.stale_dict)
+        self.archive_queue.put(record)
+
+
 class StdPWSWeather(StdRESTful):
     """Specialized version of the Ambient protocol for PWSWeather"""
     
@@ -635,6 +647,7 @@ class StdWOW(StdRESTful):
         
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
+
 
 class AmbientThread(RESTThread):
     """Concrete class for threads posting from the archive queue,

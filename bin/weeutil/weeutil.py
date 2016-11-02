@@ -1275,6 +1275,50 @@ class ListOfDicts(dict):
     def extend(self, new_dict):
         self.dict_list.append(new_dict)
 
+
+class ObservationCache(object):
+    """Associate timestamps with observations.  Designed to be used with
+    packet/record dictionaries that include a 'dateTime' field that applies
+    to all values in the packet/record.
+
+    To create and populate a cache:
+    cache = ObservationCache()
+    cache.add_record(packet)
+
+    Update the cache values:
+    cache.add_record(packet)
+
+    To get the most recent cached observations:
+    record = cache.get_most_recent()
+
+    Optionally specify a staleness dictionary with per-observation ages:
+    packet = cache.get_most_recent(stale_dict={'UV': 10, 'pressure': 120})
+
+    Optionally specify a list of observations to exclude:
+    packet = cache.get_most_recent(excludes=['rain', 'hail'])
+    """
+
+    def __init__(self):
+        self.values = dict()
+        self.timestamps = dict()
+
+    def add_record(self, record):
+        for obs in record:
+            if record[obs] is not None:
+                self.values[obs] = record[obs]
+                self.timestamps[obs] = record['dateTime']
+
+    def get_most_recent(self, stale_dict=dict(), excludes=[]):
+        record = dict()
+        if 'dateTime' in self.values:
+            ref_time = self.values['dateTime']
+            for obs in list(set(self.values.keys()) - set(excludes)):
+                if (obs not in stale_dict or
+                    ref_time - self.timestamps[obs] <= stale_dict[obs]):
+                    record[obs] = self.values[obs]
+        return record
+
+
 # Supply an implementation of os.path.relpath, but it was not introduced
 # until Python v2.5
 try:
