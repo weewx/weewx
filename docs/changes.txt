@@ -11,6 +11,8 @@ extensible sensor suites, including the drivers for cc3000, wmr300
 
 Report the firmware version when initializing the cc3000 driver.
 
+Fixed usb initialization issues in the wmr300 driver.
+
 
 3.6.1 10/13/2016
 

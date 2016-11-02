@@ -19,6 +19,21 @@
 # TODO: altitude
 # TODO: archive interval
 
+# FIXME: the read/write logic is rather brittle.  it appears that communication
+# must be initiated with an interrupt write.  after that, the station will
+# spew data.  this implementation starts with a read, which will fail with
+# a 'No data available' usb error.  that results in an empty buffer (instead
+# of an exception popping up the stack) so that a heartbeat write is sent.
+# the genLoopPacket and genStartupRecords logic should be refactored to make
+# this behiavor explicit.
+
+# FIXME: if the operating system is localized, the check for the string
+# 'No data available' will probably fail.  we should check for a code instead,
+# but it is not clear whether such an element is available in a usb.USBError
+# object, or whether it is available across different pyusb versions.
+
+# FIXME: apparently the rain counter must be reset manually
+
 """Driver for Oregon Scientific WMR300 weather stations.
 
 Sensor data transmission frequencies:
@@ -700,14 +715,14 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.14'
+DRIVER_VERSION = '0.15rc1'
 
 DEBUG_COMM = 0
-DEBUG_LOOP = 0
+DEBUG_PACKET = 0
 DEBUG_COUNTS = 0
 DEBUG_DECODE = 0
 DEBUG_HISTORY = 0
-DEBUG_RAIN = 0
+DEBUG_RAIN = 1
 
 
 def loader(config_dict, _):
@@ -776,8 +791,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         self.history_retry = 60 # how often to retry history, in seconds
         global DEBUG_COMM
         DEBUG_COMM = int(stn_dict.get('debug_comm', DEBUG_COMM))
-        global DEBUG_LOOP
-        DEBUG_LOOP = int(stn_dict.get('debug_loop', DEBUG_LOOP))
+        global DEBUG_PACKET
+        DEBUG_PACKET = int(stn_dict.get('debug_packet', DEBUG_PACKET))
         global DEBUG_COUNTS
         DEBUG_COUNTS = int(stn_dict.get('debug_counts', DEBUG_COUNTS))
         global DEBUG_DECODE
@@ -836,8 +851,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_7x = time.time()
             except usb.USBError, e:
-                logerr("usb failure: %s" % e)
-                raise weewx.WeeWxIOError(e)
+                errmsg = repr(e)
+                if not ('No data available' in errmsg or 'No error' in errmsg):
+                    logerr("usb failure: %s" % e)
+                    raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
             time.sleep(0.001)
@@ -901,14 +918,21 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_65 = time.time()
             except usb.USBError, e:
-                logerr("usb failure: %s" % e)
-                raise weewx.WeeWxIOError(e)
+                errmsg = repr(e)
+                if not ('No data available' in errmsg or 'No error' in errmsg):
+                    logerr("usb failure: %s" % e)
+                    raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
             time.sleep(0.001)        
 
     def convert(self, pkt, ts):
+        # if debugging packets, log everything we got
+        if DEBUG_PACKET:
+            logdbg("raw packet: %s" % pkt)
+        # timestamp and unit system are the same no matter what
         p = {'dateTime': ts, 'usUnits': weewx.METRICWX}
+        # map hardware names to the requested database schema names
         for label in self.sensor_map:
             if self.sensor_map[label] in pkt:
                 p[label] = pkt[self.sensor_map[label]]
@@ -922,6 +946,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 logdbg("rain=%s rain_total=%s last_rain=%s" %
                        (p['rain'], pkt['rain_total'], self.last_rain))
             self.last_rain = pkt['rain_total']
+        if DEBUG_PACKET:
+            logdbg("converted packet: %s" % p)
         return p
 
     def convert_historical(self, pkt, ts, last_ts):
@@ -932,15 +958,6 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
 
     def convert_loop(self, pkt):
         p = self.convert(pkt, int(time.time() + 0.5))
-        # add all observations if we are debugging loop data.  ignore any
-        # observations that are non-numeric.
-        if DEBUG_LOOP:
-            for label in pkt:
-                if not label in p:
-                    try:
-                        p[label] = float(pkt[label])
-                    except (ValueError, TypeError):
-                        pass
         return p
 
     @staticmethod
@@ -987,8 +1004,6 @@ class Station(object):
         self.interface = 0
         self.recv_counts = dict()
         self.send_counts = dict()
-        self.max_tries = 5
-        self.retry_wait = 3
 
     def __enter__(self):
         self.open()
@@ -1009,7 +1024,6 @@ class Station(object):
         if not self.handle:
             raise WMR300Error('Open USB device failed')
 
-        # FIXME: this reset should not be necessary
         self.handle.reset()
 
         # for HID devices on linux, be sure kernel does not claim the interface
@@ -1038,28 +1052,19 @@ class Station(object):
         self.handle.reset()
 
     def read(self, count=True):
-        ntries = 0
-        while ntries < self.max_tries:
-            ntries += 1
-            try:
-                buf = self.handle.interruptRead(
-                    Station.EP_IN, self.MESSAGE_LENGTH, self.timeout)
-                if DEBUG_COMM:
-                    logdbg("read: %s" % _fmt_bytes(buf))
-                if DEBUG_COUNTS and count:
-                    self.update_count(buf, self.recv_counts)
-                return buf
-            except usb.USBError, e:
-                errmsg = repr(e)
-                if 'No data available' in errmsg or 'No error' in errmsg:
-                    ntries -= 1
-                else:
-                    logerr("read: failed attempt %d of %d: %s" %
-                           (ntries, self.max_tries, e))
-            time.sleep(self.retry_wait)
-        msg = "read failed: max retries (%d) exceeded" % self.max_tries
-        logerr(msg)
-        raise weewx.RetriesExceeded(msg)
+        buf = None
+        try:
+            buf = self.handle.interruptRead(
+                Station.EP_IN, self.MESSAGE_LENGTH, self.timeout)
+            if DEBUG_COMM:
+                logdbg("read: %s" % _fmt_bytes(buf))
+            if DEBUG_COUNTS and count:
+                self.update_count(buf, self.recv_counts)
+        except usb.USBError, e:
+            errmsg = repr(e)
+            if not ('No data available' in errmsg or 'No error' in errmsg):
+                raise
+        return buf
 
     def write(self, buf):
         if DEBUG_COMM:
@@ -1067,22 +1072,10 @@ class Station(object):
         # pad with zeros up to the standard message length
         while len(buf) < self.MESSAGE_LENGTH:
             buf.append(0x00)
-        ntries = 0
-        while ntries < self.max_tries:
-            ntries += 1
-            try:
-                sent = self.handle.interruptWrite(
-                    Station.EP_OUT, buf, self.timeout)
-                if DEBUG_COUNTS:
-                    self.update_count(buf, self.send_counts)
-                return sent
-            except usb.USBError, e:
-                logerr("write: failed attempt %d of %d: %s" %
-                       (ntries, self.max_tries, e))
-            time.sleep(self.retry_wait)
-        msg = "write failed: max retries (%d) exceeded" % self.max_tries
-        logerr(msg)
-        raise weewx.RetriesExceeded(msg)
+        sent = self.handle.interruptWrite(Station.EP_OUT, buf, self.timeout)
+        if DEBUG_COUNTS:
+            self.update_count(buf, self.send_counts)
+        return sent
 
     # keep track of the message types for debugging purposes
     @staticmethod
@@ -1403,7 +1396,7 @@ if __name__ == '__main__':
 
     stn_dict = {
         'debug_comm': 1,
-        'debug_loop': 0,
+        'debug_packet': 0,
         'debug_counts': 1,
         'debug_decode': 0
         }
