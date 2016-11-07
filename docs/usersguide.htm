@@ -1292,6 +1292,25 @@ longitude = -77.0366</pre>
             default is 1 second.
         </p>
 
+        <p class="config_option">sensor_map</p>
+
+        <p>This option defines the mapping between temperature values
+            in the database and the remote sensors.  Two additional temperature
+            sensors are supported.
+        </p>
+
+        <p>For example, this would associate extraTemp1 with the second
+            optional temperature sensor:
+        </p>
+
+    <pre class='tty'>[[sensor_map]]
+    extraTemp1 = TEMP 2</pre>
+
+        <p>See the <a href="hardware.htm#cc3000_data">Hardware Guide</a> for
+            a complete listing of sensor names and the default database fields
+            for each sensor.
+        </p>
+
         <h3 class="config_section">[FineOffsetUSB]</h3>
 
         <p>This section is for options relating to the Fine Offset series of
@@ -1356,48 +1375,28 @@ longitude = -77.0366</pre>
         <p>Set to the station model. For example, Meade TE923W or TFA Nexus.
             Default is "TE923".</p>
 
-        <p class="config_option">map</p>
+        <p class="config_option">sensor_map</p>
 
-        <p>This option defines the mapping between temperature/humidity values in
-            the database and the remote sensors. Up to 5 remote sensors are
-            supported. A switch on each sensor determines which of 5 channels that
-            sensor will use. For example, if the switch on the sensor is set to 3,
-            the temperature from that sensor will be t_3 and the humidity from that
-            sensor will be h_3.
+        <p>This option defines the mapping between temperature/humidity values
+            in the database and the remote sensors. Up to 5 remote sensors are
+            supported. A switch on each sensor determines which of 5 channels
+            that sensor will use. For example, if the switch on the sensor is
+            set to 3, the temperature from that sensor will be t_3 and the
+            humidity from that sensor will be h_3.
         </p>
 
-        <p>The default mapping is:
+        <p>For example, this would associate outTemp and outHumidity with
+            sensor 4:
         </p>
-    <pre class="tty">[[map]]
-    link_wind = windLinkStatus
-    bat_wind = windBatteryStatus
-    link_rain = rainLinkStatus
-    bat_rain = rainBatteryStatus
-    link_uv = uvLinkStatus
-    bat_uv = uvBatteryStatus
-    uv = UV
-    t_in = inTemp
-    h_in = inHumidity
-    t_1 = outTemp
-    h_1 = outHumidity
-    bat_1 = outBatteryStatus
-    link_1 = outLinkStatus
-    t_2 = extraTemp1
-    h_2 = extraHumid1
-    bat_2 = extraBatteryStatus1
-    link_2 = extraLinkStatus1
-    t_3 = extraTemp2
-    h_3 = extraHumid3
-    bat_3 = extraBatteryStatus2
-    link_3 = extraLinkStatus2
-    t_4 = extraTemp3
-    h_4 = extraHumid3
-    bat_4 = extraBatteryStatus3
-    link_4 = extraLinkStatus3
-    t_5 = extraTemp4
-    h_5 = extraHumid4
-    bat_5 = extraBatteryStatus4
-    link_5 = extraLinkStatus4</pre>
+
+    <pre class='tty'>[[sensor_map]]
+    outTemp = t_4
+    outHumidity = h_4</pre>
+
+        <p>See the <a href="hardware.htm#te923_data">Hardware Guide</a> for
+            a complete listing of sensor names and the default database fields
+            for each sensor.
+        </p>
 
         <h3 class="config_section">[Ultimeter]</h3>
 
@@ -1553,6 +1552,26 @@ longitude = -77.0366</pre>
         <p class="config_important">model</p>
 
         <p>Set to the station model. For example, WMR300 or WMR300A.</p>
+
+        <p class="config_option">sensor_map</p>
+
+        <p>This option defines the mapping between temperature/humidity values
+            in the database and the remote sensors. Up to 8 remote sensors are
+            supported.
+        </p>
+
+        <p>For example, this would associate outTemp and outHumidity with
+            sensor 4:
+        </p>
+
+    <pre class='tty'>[[sensor_map]]
+    outTemp = temperature_4
+    outHumidity = humidity_4</pre>
+
+        <p>See the <a href="hardware.htm#wmr300_data">Hardware Guide</a> for
+            a complete listing of sensor names and the default database fields
+            for each sensor.
+        </p>
 
         <h3 class="config_section">[WMR9x8]</h3>
 
