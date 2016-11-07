@@ -715,7 +715,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.15rc1'
+DRIVER_VERSION = '0.15rc2'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -773,12 +773,35 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         'extraTemp1': 'temperature_2',
         'extraTemp2': 'temperature_3',
         'extraTemp3': 'temperature_4',
+        'extraTemp4': 'temperature_5',
+        'extraTemp5': 'temperature_6',
+        'extraTemp6': 'temperature_7',
+        'extraTemp7': 'temperature_8',
         'inHumidity': 'humidity_0',
         'outHumidity': 'humidity_1',
         'extraHumid1': 'humidity_2',
         'extraHumid2': 'humidity_3',
+        'extraHumid3': 'humidity_4',
+        'extraHumid4': 'humidity_5',
+        'extraHumid5': 'humidity_6',
+        'extraHumid6': 'humidity_7',
+        'extraHumid7': 'humidity_8',
         'dewpoint': 'dewpoint_1',
+        'extraDewpoint1': 'dewpoint_2',
+        'extraDewpoint2': 'dewpoint_3',
+        'extraDewpoint3': 'dewpoint_4',
+        'extraDewpoint4': 'dewpoint_5',
+        'extraDewpoint5': 'dewpoint_6',
+        'extraDewpoint6': 'dewpoint_7',
+        'extraDewpoint7': 'dewpoint_8',
         'heatindex': 'heatindex_1',
+        'extraHeatindex1': 'heatindex_2',
+        'extraHeatindex2': 'heatindex_3',
+        'extraHeatindex3': 'heatindex_4',
+        'extraHeatindex4': 'heatindex_5',
+        'extraHeatindex5': 'heatindex_6',
+        'extraHeatindex6': 'heatindex_7',
+        'extraHeatindex7': 'heatindex_8',
         'windchill': 'windchill',
         'rainRate': 'rain_rate'
         }
@@ -1208,7 +1231,7 @@ class Station(object):
         try:
             pkt = getattr(Station, '_decode_%02x' % buf[0])(buf)
             if DEBUG_DECODE:
-                logdbg('%s %s' % (_fmt_bytes(buf), pkt))
+                logdbg('decode: %s %s' % (_fmt_bytes(buf), pkt))
             return pkt
         except IndexError, e:
             raise WMR300Error("cannot decode buffer: %s" % e)
