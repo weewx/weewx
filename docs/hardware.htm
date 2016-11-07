@@ -1200,12 +1200,6 @@ interval: 1</pre>
                 <td>H</td>
             </tr>
             <tr>
-                <td class='first_col'>inHumidity</td>
-                <td></td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
                 <td class='first_col'>outHumidity</td>
                 <td>HUMIDITY</td>
                 <td>H</td>
@@ -3146,7 +3140,6 @@ confirmation before proceeding.</pre>
 
         <p>The WMR300 sensors send at different rates:</p>
 
-
         <table class='station_data'>
             <caption>WMR300 transmission periods</caption>
             <tbody>
@@ -3802,6 +3795,29 @@ confirmation before proceeding.</pre>
 
         <p>The hardware calculates windchill and dewpoint.</p>
 
+        <p>Sensors can be connected to the console with a wire.  If not wired,
+            the sensors will communicate via a wireless interface.  When
+            connected by wire, some sensor data are transmitted every 8
+            seconds.  With wireless, data are transmitted every 16 to 128
+            seconds, depending on wind speed and rain activity.
+        </p>
+
+        <table class='station_data'>
+            <caption>WS23xx transmission periods</caption>
+            <tbody>
+                <tr><th>sensor</th><th>period</th></tr>
+                <tr><td>Wind</td>
+                    <td>32 seconds when wind > 22.36 mph (wireless)<br/>
+                        128 seconds when wind > 22.36 mph (wireless)<br/>
+                        10 minutes (wireless after 5 failed attempts)<br/>
+                        8 seconds (wired)
+                    </td></tr>
+                <tr><td>Temperature</td><td>15 seconds</td></tr>
+                <tr><td>Humidity</td><td>20 seconds</td></tr>
+                <tr><td>Pressure</td><td>15 seconds</td></tr>
+            </tbody>
+        </table>
+
         <p>The station has 175 history records. That is just over 7 days of
             data with the factory default history recording interval of 60
             minutes, or about 14 hours with a recording interval of 5
@@ -4015,6 +4031,25 @@ in humidity: 48.0
             which communicates with the station console, which in turn
             communicates with the sensors. The transceiver and console must be
             paired and synchronized.</p>
+
+        <p>The sensors send data at different rates:</p>
+
+        <table class='station_data'>
+            <caption>WS28xx transmission periods</caption>
+            <tbody>
+                <tr><th>sensor</th><th>period</th></tr>
+                <tr><td>Wind</td><td>17 seconds</td></tr>
+                <tr><td>T/H</td><td>13 seconds</td></tr>
+                <tr><td>Rain</td><td>19 seconds</td></tr>
+                <tr><td>Pressure</td><td>15 seconds</td></tr>
+            </tbody>
+        </table>
+
+        <p>The wind and rain sensors transmit to the temperature/humidity
+            device, then the temperature/humidity device retransmits to the
+            weather station console.  Pressure is measured by a sensor in the
+            console.
+        </p>
 
         <p>The station has 1797 history records. That is just over 6 days of
             data with an archive interval of 5 minutes.</p>
