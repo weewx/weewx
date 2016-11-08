@@ -68,7 +68,7 @@ class WUSource(weeimport.Source):
                                         'map_to': 'windGust'},
                    'Humidity': {'units': 'percent', 'map_to': 'outHumidity'},
                    'dailyrainMM': {'units': 'mm', 'map_to': 'rain'},
-                   'dailyrainIn': {'units': 'inch', 'map_to': 'rain'},
+                   'dailyrainin': {'units': 'inch', 'map_to': 'rain'},
                    'SolarRadiationWatts/m^2': {'units': 'watt_per_meter_squared',
                                                'map_to': 'radiation'}
                    }
