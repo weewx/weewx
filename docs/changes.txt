@@ -1,7 +1,9 @@
 weewx change history
 --------------------
 
-x.y.z MM/dd/YYYY
+3.6.2 11/08/2016
+
+Fixed incorrect WU daily rain field name
 
 Fixed bug that crashed Cheetah if the weewx.conf configuration file included
 a BOM. Fixes issue #172.
