@@ -8,6 +8,7 @@
 
 # Python imports
 import gc
+import locale
 import os.path
 import platform
 import signal
@@ -767,8 +768,8 @@ def sigHUPhandler(dummy_signum, dummy_frame):
 class Terminate(Exception):
     """Exception thrown when terminating the engine."""
 
-def sigTERMhandler(dummy_signum, dummy_frame):
-    syslog.syslog(syslog.LOG_DEBUG, "engine: Received signal TERM.")
+def sigTERMhandler(signum, dummy_frame):
+    syslog.syslog(syslog.LOG_DEBUG, "engine: Received signal TERM (%s)." % signum)
     raise Terminate
 
 #==============================================================================
@@ -791,6 +792,7 @@ def main(options, args, engine_class=StdEngine):
     syslog.syslog(syslog.LOG_INFO, "engine: Initializing weewx version %s" % weewx.__version__)
     syslog.syslog(syslog.LOG_INFO, "engine: Using Python %s" % sys.version)
     syslog.syslog(syslog.LOG_INFO, "engine: Platform %s" % platform.platform())
+    syslog.syslog(syslog.LOG_INFO, "engine: Locale is '%s'" % locale.setlocale(locale.LC_ALL))
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
@@ -895,7 +897,9 @@ def main(options, args, engine_class=StdEngine):
 
         except Terminate:
             syslog.syslog(syslog.LOG_INFO, "engine: Terminating weewx version %s" % weewx.__version__)
-            sys.exit()
+            weeutil.weeutil.log_traceback("    ****  ", syslog.LOG_DEBUG)
+            # Reraise the exception (this should cause the program to exit)
+            raise
 
         # Catch any keyboard interrupts and log them
         except KeyboardInterrupt:
