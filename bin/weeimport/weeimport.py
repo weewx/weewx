@@ -438,7 +438,8 @@ class Source(object):
         # Do we have a user specified map, if so construct our field map
         elif 'FieldMap' in import_config_dict:
             # we have a user specified map so construct our map dict
-            for _key, _entry in import_config_dict['FieldMap'].iteritems():
+            for _key, _item in import_config_dict['FieldMap'].iteritems():
+                _entry = option_as_list(_item)
                 # expect 2 parameters for each option: source field, units
                 if len(_entry) == 2:
                     # we have 2 parameter so that's field and units
