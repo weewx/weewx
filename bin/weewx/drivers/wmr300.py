@@ -19,6 +19,15 @@
 # TODO: altitude
 # TODO: archive interval
 
+# FIXME: warn if altitude in pressure packet does not match weewx altitude
+
+# FIXME: figure out unknown bytes in history packet
+
+# FIXME: decode the 0xdb packets
+
+# FIXME: figure out how to automatically reset the rain counter, otherwise
+# rain count is not recorded once the counter hits maximum value.
+
 # FIXME: the read/write logic is rather brittle.  it appears that communication
 # must be initiated with an interrupt write.  after that, the station will
 # spew data.  this implementation starts with a read, which will fail with
@@ -31,8 +40,6 @@
 # 'No data available' will probably fail.  we should check for a code instead,
 # but it is not clear whether such an element is available in a usb.USBError
 # object, or whether it is available across different pyusb versions.
-
-# FIXME: apparently the rain counter must be reset manually
 
 """Driver for Oregon Scientific WMR300 weather stations.
 
@@ -54,6 +61,11 @@ Internal observation names use the convention name_with_specifier.  These are
 mapped to the wview or other schema as needed with a configuration setting.
 For example, for the wview schema, wind_speed maps to windSpeed, temperature_0
 maps to inTemp, and humidity_1 maps to outHumidity.
+
+Maximum value for rain counter is 40000 mm (10160 in) (0x9c 0x40).  The counter
+does not wrap; it must be reset when it hits maximum value otherwise rain data
+will not be recorded.
+
 
 Message types -----------------------------------------------------------------
 
@@ -173,7 +185,7 @@ byte hex dec description                 decoded value
 14   00
 15   00
 16   2c  ,
-17   67      lastest history record      26391 (0x67 0x17)
+17   67      lastest history record      26391 (0x67*256 0x17)
 18   17
 19   2c  ,
 20   4b
@@ -259,8 +271,8 @@ byte hex dec description                 decoded value
 67   ff
 68   7f      wind chill                C
 69   fd        (a*256 + b)/10
-70   7f      unknown
-71   ff
+70   7f      ?
+71   ff      ?
 72   00      wind gust speed           0.0 m/s
 73   00        (a*256 + b)/10
 74   00      wind average speed        0.0 m/s
@@ -338,47 +350,47 @@ byte hex dec description                 decoded value
 14   FD 
 15   00      temperature trend
 16   00      humidity trend
-17   0E   14 max dewpoint last day year
+17   0E   14 max_dewpoint_last_day year
 18   05    5 month
 19   09    9 day
 20   0A   10 hour
 21   24   36 minute
-22   00      max dewpoint last day       13.0 C
+22   00      max_dewpoint_last_day       13.0 C
 23   82 
-24   0E   14 min dewpoint last day year
+24   0E   14 min_dewpoint_last_day year
 25   05    5 month
 26   09    9 day
 27   10   16 hour
 28   1F   31 minute
-29   00      min dewpoint last day       6.0 C
+29   00      min_dewpoint_last_day       6.0 C
 30   3C 
-31   0E   14 max dewpoint last month year
+31   0E   14 max_dewpoint_last_month year
 32   05    5 month
 33   01    1 day
 34   0F   15 hour
 35   1B   27 minute
-36   00      max dewpoint last month     13.0 C
+36   00      max_dewpoint_last_month     13.0 C
 37   82 
-38   0E   14 min dewpoint last month year
+38   0E   14 min_dewpoint_last_month year
 39   05    5 month
 40   04    4 day
 41   0B   11 hour
 42   08    8 minute
-43   FF      min dewpoint last month     -1.0 C
+43   FF      min_dewpoint_last_month     -1.0 C
 44   F6 
-45   0E   14 max heat index? year
+45   0E   14 max_heat_index? year
 46   05    5 month
 47   09    9 day
 48   00    0 hour
 49   00    0 minute
-50   7F      max heat index?             N/A
+50   7F      max_heat_index?             N/A
 51   FF 
-52   0E   14 min heat index?
+52   0E   14 min_heat_index? year
 53   05    5 month
 54   01    1 day
 55   00    0 hour
 56   00    0 minute
-57   7F      min heat index?             N/A
+57   7F      min_heat_index?             N/A
 58   FF 
 59   0B      checksum
 60   63 
@@ -1335,6 +1347,7 @@ class Station(object):
         pkt['rain_24_hour'] = Station._extract_value(buf[12:14], 0.254) # mm
         pkt['rain_total'] = Station._extract_value(buf[15:17], 0.254) # mm
         pkt['rain_rate'] = Station._extract_value(buf[17:19], 0.254) # mm/hour
+        pkt['rain_start_dateTime'] = Station._extract_ts(buf[19:24])
         return pkt
 
     @staticmethod
