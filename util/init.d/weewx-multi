@@ -11,6 +11,12 @@
 # and with the appropriate rsyslog and logrotate configurations:
 #   /var/log/weewx/a.log
 #   /var/log/weewx/b.log
+#
+# to configure the script, override variables in /etc/default/weewx-multi
+# for example:
+#
+#   WEEWX_INSTANCES="vantage acurite"
+#   WEEWX_ROOT=/opt/weewx
 
 ### BEGIN INIT INFO
 # Provides:          weewx-multi
@@ -22,13 +28,17 @@
 # Description:       Manages multiple instances of weewx
 ### END INIT INFO
 
-# this is a space-delimited string that contains all weewx instances
-ALL_INSTANCES="vantage acurite"
-
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+# this is a space-delimited string that contains all weewx instances
+WEEWX_INSTANCES="no_instances_specified"
 WEEWX_USER=root:root 
-WEEWX_ROOT=/opt/weewx
+WEEWX_ROOT=/home/weewx
 DESC=weewx
+
+# Read configuration variable file if it is present
+[ -r /etc/default/weewx-multi ] && . /etc/default/weewx-multi
+
 DAEMON=$WEEWX_ROOT/bin/weewxd
 
 # Exit if the package is not installed
@@ -37,9 +47,6 @@ if [ ! -x "$DAEMON" ]; then
     exit 0
 fi
 
-# Read configuration variable file if it is present
-[ -r /etc/default/weewx-multi ] && . /etc/default/weewx-multi
-
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
 
@@ -47,7 +54,7 @@ fi
 # Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
 . /lib/lsb/init-functions
 
-# start the daemon/service
+# start the daemon
 #   0 if daemon has been started
 #   1 if daemon was already running
 #   2 if daemon could not be started
@@ -71,7 +78,7 @@ do_start() {
     return 0
 }
 
-# stop the daemon/service
+# stop the daemon
 #   0 if daemon has been stopped
 #   1 if daemon was already stopped
 #   2 if daemon could not be stopped
@@ -112,7 +119,7 @@ do_stop() {
     return "$RETVAL"
 }
 
-# send a SIGHUP to the daemon/service
+# send a SIGHUP to the daemon
 do_reload() {
     INSTANCE=$1
     NAME=weewx-$INSTANCE
@@ -144,7 +151,7 @@ CMD=$1
 shift
 INSTANCES="$@"
 if [ "$INSTANCES" = "" ]; then
-    INSTANCES=$ALL_INSTANCES
+    INSTANCES=$WEEWX_INSTANCES
 fi
 
 case "$CMD" in
@@ -201,8 +208,7 @@ case "$CMD" in
         done
 	;;
     *)
-	echo "Usage: $0 {start|stop|restart|force-reload} [instance]" >&2
+	echo "Usage: $0 {start|stop|restart|reload} [instance]" >&2
 	exit 3
 	;;
 esac
-:
