@@ -830,6 +830,7 @@ def main(options, args, engine_class=StdEngine):
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
         else:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+        syslog.syslog(syslog.LOG_DEBUG, "engine: debug is %s" % weewx.debug)
 
         # See if there is a loop_on_init directive in the configuration, but
         # use it only if nothing was specified via command-line.
