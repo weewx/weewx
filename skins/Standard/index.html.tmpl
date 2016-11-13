@@ -1,7 +1,6 @@
 #errorCatcher Echo
-##
-## Specifying an encoding of UTF-8 is usually safe, but if your text is 
-## actually in Latin-1, then you should replace the string "UTF-8" with "latin-1"
+## An encoding of UTF-8 is usually safe, but if the text is actually
+## in Latin-1, then replace the string "UTF-8" with "latin-1"
 #encoding UTF-8
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -9,536 +8,175 @@
     #if $encoding == 'utf8'
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     #end if    
-    <title>$station.location Current Weather Conditions</title>
+    <title>$station.location Weather Conditions</title>
     <link rel="stylesheet" type="text/css" href="weewx.css"/>
     <link rel="icon" type="image/png" href="favicon.ico" />
     <script type="text/javascript">
-      function openURL(urlname)
-      {
-        window.location=urlname;
-      }
-      function openNoaaFile(date)
-      {
-        var url = "NOAA/NOAA-";
-        url = url + date;
-        url = url + ".txt";
-        window.location=url;
-      }
+function openNOAAFile(date) {
+  window.location = "NOAA/NOAA-" + date + ".txt";
+}
+var periods = ['day', 'week', 'month', 'year'];
+function choose_plot(id) {
+  for(var i=0; i<periods.length; i++) {
+    var c = document.getElementById('control_'+periods[i]);
+    if(c) c.className = (periods[i] == id) ? 'period_selected' : 'period';
+    var g = document.getElementById('plots_'+periods[i]);
+    if(g) g.style.display = (periods[i] == id) ? 'block' : 'none';
+  }
+}
     </script>
   </head>
 
   <body>
-    <div id="container">
-      <div id="masthead">
-        <h1>$station.location</h1>
-        <h2>Current Weather Conditions</h2>
-          <h2>$current.dateTime</h2>
+    <div id="title_bar">
+      <div id="title">
+        <h1 class="page_title">$station.location</h1>
+        <p class="lastupdate">$current.dateTime</p>
       </div>
-
-      <div id="stats_group">
-
-        <div class="stats">
-          <div class="stats_header">
-            Current Conditions
-          </div>
-
-          <table>
-            <tbody>
-              <tr>
-                <td class="stats_label">Outside Temperature</td>
-                <td class="stats_data">$current.outTemp</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Wind Chill</td>
-                <td class="stats_data">$current.windchill</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Heat Index</td>
-                <td class="stats_data">$current.heatindex</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Dewpoint</td>
-                <td class="stats_data">$current.dewpoint</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Humidity</td>
-                <td class="stats_data">$current.outHumidity</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Barometer</td>
-                <td class="stats_data">$current.barometer</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Barometer Trend ($trend.time_delta.hour.format("%.0f"))</td>
-                <td class="stats_data">$trend.barometer</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Wind</td>
-                <td class="stats_data">$current.windSpeed from $current.windDir ($current.windDir.ordinal_compass)</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Rain Rate</td>
-                <td class="stats_data">$current.rainRate</td>
-              </tr>
-              <tr>
-                <td class="stats_label">Inside Temperature</td>
-                <td class="stats_data">$current.inTemp</td>
-              </tr>
-              #if $day.extraTemp1.has_data
-              <tr>
-                <td class="stats_label">Pond Temperature</td>
-                <td class="stats_data">$current.extraTemp1</td>
-              </tr>
-              #end if
-              #if $day.UV.has_data
-              <tr>
-                <td class="stats_label">UV</td>
-                <td class="stats_data">$current.UV</td>
-              </tr>
-              #end if
-              #if $day.ET.has_data and $day.ET.sum.raw > 0.0
-              <tr>
-                <td class="stats_label">ET</td>
-                <td class="stats_data">$current.ET</td>
-              </tr>
-              #end if
-              #if $day.radiation.has_data
-              <tr>
-                <td class="stats_label">Solar Radiation</td>
-                <td class="stats_data">$current.radiation</td>
-              </tr>
-              #end if
-            </tbody>
-          </table>
-        </div>
-
-        <p>&nbsp;</p>
-
-        <div class="stats">
-          <div class="stats_header">
-            Since Midnight
-          </div>
-          <table>
-            <tbody>
-              <tr>
-                <td class="stats_label">
-                  High Temperature<br/>
-                  Low Temperature
-                </td>
-                <td class="stats_data">
-                  $day.outTemp.max at $day.outTemp.maxtime<br/>
-                  $day.outTemp.min at $day.outTemp.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Heat Index<br/>
-                  Low Wind Chill
-                </td>
-                <td class="stats_data">
-                  $day.heatindex.max at $day.heatindex.maxtime<br/>
-                  $day.windchill.min at $day.windchill.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Humidity<br/>
-                  Low Humidity
-                </td>
-                <td class="stats_data">
-                  $day.outHumidity.max at $day.outHumidity.maxtime<br/>
-                  $day.outHumidity.min at $day.outHumidity.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Dewpoint<br/>
-                  Low Dewpoint
-                </td>
-                <td class="stats_data">
-                  $day.dewpoint.max at $day.dewpoint.maxtime<br/>
-                  $day.dewpoint.min at $day.dewpoint.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Barometer<br/>
-                  Low Barometer
-                </td>
-                <td class="stats_data">
-                  $day.barometer.max at $day.barometer.maxtime<br/>
-                  $day.barometer.min at $day.barometer.mintime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">Today's Rain</td>
-                <td class="stats_data">$day.rain.sum</td>
-              </tr>
-              <tr>
-                <td class="stats_label">High Rain Rate</td>
-                <td class="stats_data">$day.rainRate.max at $day.rainRate.maxtime</td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  High Wind
-                </td>
-                <td class="stats_data">
-                  $day.wind.max from $day.wind.gustdir at $day.wind.maxtime
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  Average Wind
-                </td>
-                <td class="stats_data">
-                  $day.wind.avg
-                </td>
-              </tr>
-              <tr>
-                <td class="stats_label">
-                  RMS Wind
-                </td>
-                <td class="stats_data">
-                  $day.wind.rms
-                </td>
-              </tr>
-
-              <tr>
-                <td class="stats_label">
-                  Vector Average Speed<br/>
-                  Vector Average Direction
-                </td>
-                <td class="stats_data">
-                  $day.wind.vecavg<br/>
-                  $day.wind.vecdir
-                </td>
-              </tr>
-
-              <tr>
-                <td class="stats_label">
-                  High Inside Temperature<br/>
-                  Low Inside Temperature
-                </td>
-                <td class="stats_data">
-                  $day.inTemp.max at $day.inTemp.maxtime<br/>
-                  $day.inTemp.min at $day.inTemp.mintime
-                </td>
-              </tr>
-              #if $day.extraTemp1.has_data
-              <tr>
-                <td class="stats_label">
-                  High Pond Temperature<br/>
-                  Low Pond Temperature
-                </td>
-                <td class="stats_data">
-                  $day.extraTemp1.max at $day.extraTemp1.maxtime<br/>
-                  $day.extraTemp1.min at $day.extraTemp1.mintime
-                </td>
-              </tr>
-              #end if
-              #if $day.UV.has_data
-              <tr>
-                <td class="stats_label">
-                  High UV<br/>
-                  Low UV
-                </td>
-                <td class="stats_data">
-                  $day.UV.max at $day.UV.maxtime<br/>
-                  $day.UV.min at $day.UV.mintime
-                </td>
-              </tr>
-              #end if
-              #if $day.ET.has_data and $day.ET.sum.raw >0.0
-              <tr>
-                <td class="stats_label">
-                  High ET<br/>
-                  Low ET
-                </td>
-                <td class="stats_data">
-                  $day.ET.max at $day.ET.maxtime<br/>
-                  $day.ET.min at $day.ET.mintime
-                </td>
-              </tr>
-              #end if
-              #if $day.radiation.has_data
-              <tr>
-                <td class="stats_label">
-                  High Radiation<br/>
-                  Low Radiation
-                </td>
-                <td class="stats_data">
-                  $day.radiation.max at $day.radiation.maxtime<br/>
-                  $day.radiation.min at $day.radiation.mintime
-                </td>
-              </tr>
-              #end if
-            </tbody>
-          </table>
-        </div> <!--End class "stats" -->
-
-        <p>&nbsp;</p>
-
-        #if $Extras.has_key('radar_img')
-        <div id="radar_img">
-          #if $Extras.has_key('radar_url')
-          <a  href="$Extras.radar_url">
-          #end if
-            <img src="$Extras.radar_img" alt="Radar" />
-          #if $Extras.has_key('radar_url')
-          </a>
-          <p>Click image for expanded radar loop</p>
-          #end if
-        </div>
-        #end if
-
-      </div> <!--End class "stats_group" -->
-
-      <div id="content">
-        <div id="about">
-          <div class="header">
-            About this weather station:
-          </div>
-          <table>
-            <caption class="caption">Location</caption>
-            <tr>
-              <td class="label">Latitude:</td>
-              <td class="data">$station.latitude[0]&deg; $station.latitude[1]' $station.latitude[2]</td>
-            </tr>
-            <tr>
-              <td class="label">Longitude:</td>
-              <td class="data">$station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</td>
-            </tr>
-            <tr>
-              <td class="label">Altitude:</td>
-              <td class="data">$station.altitude</td>
-            </tr>
-          </table>
-          <p>
-            This station uses a $station.hardware, controlled by
-            <a href="http://www.weewx.com">'weewx'</a>, an experimental
-            weather software system written in Python. Weewx
-            was designed to be simple, fast, and easy to understand by
-            leveraging modern software concepts.
-          </p>
-          <p><a href="RSS/weewx_rss.xml">RSS feed</a></p>
-          <p><a href="mobile.html">Mobile formatted</a></p>
-          <p><a href="smartphone/index.html">Smartphone formatted</a></p>
-          <p>Weewx uptime:  $station.uptime<br/>
-             Server uptime: $station.os_uptime<br/>
-             weewx v$station.version</p>
-        </div> <!-- End id "about" -->
-        
-        <div id="almanac">
-          <div class="header">
-            Today's Almanac
-          </div>
-          <div class="celestial_group">
-            #if $almanac.hasExtras
-            ## Extended almanac information is available. Do the full set of tables.
-            #set $sun_altitude = $almanac.sun.alt
-            #if $sun_altitude < 0
-            #set $sun_None="<i>(Always down)</i>"
-            #else
-            #set $sun_None="<i>(Always up)</i>"
-            #end if
-            <div class="celestial_body">
-              <table>
-                <caption class="caption">Sun</caption>
-                <tr>
-                  <td class="label">Start civil twilight:</td>
-                  <td class="data">$almanac(horizon=-6).sun(use_center=1).rise</td>
-                </tr>
-                <tr>
-                  <td class="label">Sunrise:</td>
-                  <td class="data">$almanac.sun.rise.string($sun_None)</td>
-                </tr>
-                <tr>
-                  <td class="label">Transit:</td>
-                  <td class="data">$almanac.sun.transit</td>
-                </tr>
-                <tr>
-                  <td class="label">Sunset:</td>
-                  <td class="data">$almanac.sun.set.string($sun_None)</td>
-                </tr>
-                <tr>
-                  <td class="label">End civil twilight:</td>
-                  <td class="data">$almanac(horizon=-6).sun(use_center=1).set</td>
-                </tr>
-                <tr>
-                  <td class="label">Azimuth:</td>
-                  <td class="data">$("%.1f&deg;" % $almanac.sun.az)</td>
-                </tr>
-                <tr>
-                  <td class="label">Altitude:</td>
-                  <td class="data">$("%.1f&deg;" % $sun_altitude)</td>
-                </tr>
-                <tr>
-                  <td class="label">Right ascension:</td>
-                  <td class="data">$("%.1f&deg;" % $almanac.sun.ra)</td>
-                </tr>
-                <tr>
-                  <td class="label">Declination:</td>
-                  <td class="data">$("%.1f&deg;" % $almanac.sun.dec)</td>
-                </tr>
-                #if $almanac.next_equinox.raw < $almanac.next_solstice.raw
-                ## The equinox is before the solstice. Display them in order.
-                <tr>
-                  <td class="label">Equinox:</td>
-                  <td class="data">$almanac.next_equinox</td>
-                </tr>
-                <tr>
-                  <td class="label">Solstice:</td>
-                  <td class="data">$almanac.next_solstice</td>
-                </tr>
-                #else
-                ## The solstice is before the equinox. Display them in order.
-                <tr>
-                  <td class="label">Solstice:</td>
-                  <td class="data">$almanac.next_solstice</td>
-                </tr>
-                <tr>
-                  <td class="label">Equinox:</td>
-                  <td class="data">$almanac.next_equinox</td>
-                </tr>
-                #end if
-              </table>
-            </div> <!-- end class "celestial_body" -->
-            <div class="celestial_body">
-              <table>
-                <caption class="caption">Moon</caption>  
-                <tr>
-                  <td class="label">Rise:</td>
-                  <td class="data">$almanac.moon.rise</td>
-                </tr>
-                <tr>
-                  <td class="label">Transit:</td>
-                  <td class="data">$almanac.moon.transit</td>
-                </tr>
-                <tr>
-                  <td class="label">Set:</td>
-                  <td class="data">$almanac.moon.set</td>
-                </tr>
-                <tr>
-                  <td class="label">Azimuth:</td>
-                  <td class="data">$("%.1f&deg;" % $almanac.moon.az)</td>
-                </tr>
-                <tr>
-                  <td class="label">Altitude:</td>
-                  <td class="data">$("%.1f&deg;" % $almanac.moon.alt)</td>
-                </tr>
-                <tr>
-                  <td class="label">Right ascension:</td>
-                  <td class="data">$("%.1f&deg;" % $almanac.moon.ra)</td>
-                </tr>
-                <tr>
-                  <td class="label">Declination:</td>
-                  <td class="data">$("%.1f&deg;" % $almanac.moon.dec)</td>
-                </tr>
-                #if $almanac.next_full_moon.raw < $almanac.next_new_moon.raw
-                <tr>
-                  <td class="label">Full moon:</td>
-                  <td class="data">$almanac.next_full_moon</td>
-                </tr>
-                <tr>
-                  <td class="label">New moon:</td>
-                  <td class="data">$almanac.next_new_moon</td>
-                </tr>
-                #else
-                <tr>
-                  <td class="label">New moon:</td>
-                  <td class="data">$almanac.next_new_moon</td>
-                </tr>
-                <tr>
-                  <td class="label">Full moon:</td>
-                  <td class="data">$almanac.next_full_moon</td>
-                </tr>
-                #end if
-                <tr>
-                  <td class="label">Phase:</td>
-                  <td class="data">$almanac.moon_phase<br/>($almanac.moon_fullness% full)</td>
-                </tr>
-              </table>
-            </div> <!-- end class "celestial_body" -->
-            #else
-            ## No extended almanac information available. Fall back to a simple table.
-            <table>
-              <tr>
-                <td class="label">Sunrise:</td>
-                <td class="data">$almanac.sunrise</td>
-              </tr>
-              <tr>
-                <td class="label">Sunset:</td>
-                <td class="data">$almanac.sunset</td>
-              </tr>
-              <tr>
-                <td class="label">Moon Phase:</td>
-                <td class="data">$almanac.moon_phase<br/>($almanac.moon_fullness% full)</td>
-              </tr>
-            </table>
-            #end if
-          </div> <!-- end class "celestial_group" -->
-        </div> <!-- end id "almanac" -->
-        
-        <div id="plots">
-          <img src="daytempdew.png"   alt="temperatures" />
-          <img src="daytempchill.png" alt="heatchill" />
-          <img src="dayrain.png"      alt="rain" />
-          <img src="daywind.png"      alt="wind" />
-          <img src="daybarometer.png" alt="barometer"/>
-          <img src="daywinddir.png"   alt="Hi Wind" />
-          <img src="dayinside.png"    alt="Inside" />
-          <img src="daywindvec.png"   alt="Wind Vector" />
-          #if $day.radiation.has_data
-          <img src="dayradiation.png" alt="Radiation" />
-          #end if
-          #if $day.UV.has_data
-          <img src="dayuv.png" alt="UV Index" />
-          #end if
-          #if $day.rxCheckPercent.has_data
-          <img src="dayrx.png"        alt="day rx percent"/>
-          #end if
-          #if $day.extraTemp1.has_data
-          <img src="daypond.png"      alt="Pond Temperatures" />
-          #end if
-        </div> <!-- End id "plots" -->
-      </div> <!-- End id "content" -->
-
-      <div id="navbar">
-        <input type="button" value="   Current   " onclick="openURL('index.html')" />
-        <input type="button" value="    Week     " onclick="openURL('week.html')" />
-        <input type="button" value="    Month    " onclick="openURL('month.html')" />
-        <input type="button" value="    Year     " onclick="openURL('year.html')" />
-        <p>Monthly summary:&nbsp;
-        <select NAME=noaaselect onchange="openNoaaFile(value)">
-        #for $monthYear in $SummaryByMonth
-            <option value="$monthYear">$monthYear</option>
-        #end for
-	    <option selected>-Select month-</option>
+      <div id="rss_link"><a href="rss.xml">RSS</a></div>
+      <div id="reports">
+        Monthly Reports:
+        <select name="reports" onchange="openNOAAFile(value)">
+          #for $monthYear in $SummaryByMonth
+          <option value="$monthYear">$monthYear</option>
+          #end for
+          <option selected>- Select Month -</option>
         </select>
         <br/>
-        Yearly summary:&nbsp;
-        <select NAME=noaaselect onchange="openNoaaFile(value)">
-        #for $yr in $SummaryByYear
-            <option value="$yr">$yr</option>
-        #end for
-	    <option selected>-Select year-</option>
+        Yearly Reports:
+        <select name="reports" onchange="openNOAAFile(value)">
+          #for $yr in $SummaryByYear
+          <option value="$yr">$yr</option>
+          #end for
+          <option selected>- Select Year -</option>
         </select>
-        </p>
+      </div>
+    </div>
+    
+    <div id="contents">
+      <div id="widget_group">
+        #include "radar.inc"
+        #include "current.inc"
+        #include "celestial.inc"
+        #include "hilo.inc"
+        #include "about.inc"
+      </div>
+
+      <div id="plot_group">
+        <div id="plot_title" class="widget_title">History: 
+          <a class="period_selected" id="control_day"
+             onclick="choose_plot('day')">Day</a>
+          <a class="period" id="control_week"
+             onclick="choose_plot('week')">Week</a>
+          <a class="period" id="control_month"
+             onclick="choose_plot('month')">Month</a>
+          <a class="period" id="control_year"
+             onclick="choose_plot('year')">Year</a>
+        </div>
+        <div id="history_widget" class="widget">
+          <div id="plots_day" class="plots">
+            <img src="daybarometer.png" alt="Barometer"/>
+            <img src="daytempdew.png"   alt="Temperature" />
+            <img src="daytempfeel.png"  alt="Heat/Chill" />
+            <img src="daywind.png"      alt="Wind Speed" />
+            <img src="daywinddir.png"   alt="Wind Direction" />
+            <img src="daywindvec.png"   alt="Wind Vector" />
+            <img src="dayrain.png"      alt="Rain" />
+            #if $day.UV.has_data
+            <img src="dayuv.png" alt="UV Index" />
+            #end if
+            #if $day.radiation.has_data
+            <img src="dayradiation.png" alt="Radiation" />
+            #end if
+            #if $day.inTemp.has_data and $Extras.show_inTemp
+            <img src="daytempin.png"    alt="Inside Temperature" />
+            #end if
+            #if $day.extraTemp1.has_data and $Extras.show_extraTemp1
+            <img src="daytep1.png"      alt="Pond Temperatures" />
+            #end if
+            #if $day.rxCheckPercent.has_data
+            <img src="dayrx.png"        alt="Connectivity"/>
+            #end if
+          </div>
+          <div id="plots_week" class="plots" style="display:none">
+            <img src="weekbarometer.png" alt="Barometer"/>
+            <img src="weektempdew.png"   alt="Temperature" />
+            <img src="weektempfeel.png"  alt="Heat/Chill" />
+            <img src="weekwind.png"      alt="Wind Speed" />
+            <img src="weekwinddir.png"   alt="Wind Direction" />
+            <img src="weekwindvec.png"   alt="Wind Vector" />
+            <img src="weekrain.png"      alt="Rain" />
+            #if $week.UV.has_data
+            <img src="weekuv.png" alt="UV Index" />
+            #end if
+            #if $week.radiation.has_data
+            <img src="weekradiation.png" alt="Radiation" />
+            #end if
+            #if $week.inTemp.has_data and $Extras.show_inTemp
+            <img src="weektempin.png"    alt="Inside Temperature" />
+            #end if
+            #if $week.extraTemp1.has_data and $Extras.show_extraTemp1
+            <img src="weektep1.png"      alt="Pond Temperatures" />
+            #end if
+            #if $week.rxCheckPercent.has_data
+            <img src="weekrx.png"        alt="Connectivity"/>
+            #end if
+          </div>
+          <div id="plots_month" class="plots" style="display:none">
+            <img src="monthbarometer.png" alt="Barometer"/>
+            <img src="monthtempdew.png"   alt="Temperature" />
+            <img src="monthtempfeel.png"  alt="Heat/Chill" />
+            <img src="monthwind.png"      alt="Wind Speed" />
+            <img src="monthwinddir.png"   alt="Wind Direction" />
+            <img src="monthwindvec.png"   alt="Wind Vector" />
+            <img src="monthrain.png"      alt="Rain" />
+            #if $month.UV.has_data
+            <img src="monthuv.png" alt="UV Index" />
+            #end if
+            #if $month.radiation.has_data
+            <img src="monthradiation.png" alt="Radiation" />
+            #end if
+            #if $month.inTemp.has_data and $Extras.show_inTemp
+            <img src="monthtempin.png"    alt="Inside Temperature" />
+            #end if
+            #if $month.extraTemp1.has_data and $Extras.show_extraTemp1
+            <img src="monthtep1.png"      alt="Pond Temperatures" />
+            #end if
+            #if $month.rxCheckPercent.has_data
+            <img src="monthrx.png"        alt="Connectivity"/>
+            #end if
+          </div>
+          <div id="plots_year" class="plots" style="display:none">
+            <img src="yearbarometer.png" alt="Barometer"/>
+            <img src="yeartempdew.png"   alt="Temperature" />
+            <img src="yeartempfeel.png"  alt="Heat/Chill" />
+            <img src="yearwind.png"      alt="Wind Speed" />
+            <img src="yearwinddir.png"   alt="Wind Direction" />
+            <img src="yearwindvec.png"   alt="Wind Vector" />
+            <img src="yearrain.png"      alt="Rain" />
+            #if $year.UV.has_data
+            <img src="yearuv.png" alt="UV Index" />
+            #end if
+            #if $year.radiation.has_data
+            <img src="yearradiation.png" alt="Radiation" />
+            #end if
+            #if $year.inTemp.has_data and $Extras.show_inTemp
+            <img src="yeartempin.png"    alt="Inside Temperature" />
+            #end if
+            #if $year.extraTemp1.has_data and $Extras.show_extraTemp1
+            <img src="yeartep1.png"      alt="Pond Temperatures" />
+            #end if
+            #if $year.rxCheckPercent.has_data
+            <img src="yearrx.png"        alt="Connectivity"/>
+            #end if
+          </div>
+        </div>
       </div>
     </div>
 
     ## Include the Google Analytics code if the user has supplied an ID:
     #if $Extras.has_key('googleAnalyticsId')
-    <script type="text/javascript">
-        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-    </script>
-    <script type="text/javascript">
-        try{
-            var pageTracker = _gat._getTracker("$Extras.googleAnalyticsId");
-            pageTracker._trackPageview();
-        } catch(err) {}
-    </script>
+    #include analytics.inc
     #end if
 
 </body>
