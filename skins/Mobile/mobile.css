@@ -1,0 +1,48 @@
+/* weewx mobile CSS settings */
+
+body {
+    background-color: #75a1d0;
+    font-family: helvetica, arial;
+    text-align: center;
+    width: 305px;
+}	
+
+a {
+    text-decoration: none;
+    color: black;
+}
+
+table.readings {
+    font-size: 13px;
+    width: 100%;
+    border: 2px solid black;
+    border-collapse: collapse;
+}
+
+tr.alt {
+    background-color: #9bc4e2;
+}
+
+td {
+    text-align: right;
+    font-weight: 600;
+    border: 1px solid black;
+    width: 50%;
+    padding: 2px;
+}
+
+td.data {
+    text-align: left;
+    color: #990000;
+}
+
+img {
+    width: 301px;
+    border: 2px solid black;
+}
+
+.lastupdate {
+    font-size: 12px;
+    color: black;
+    text-align: center;
+}
