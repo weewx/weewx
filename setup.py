@@ -541,6 +541,7 @@ if __name__ == "__main__":
                         'skins/Standard/index.html.tmpl',
                         'skins/Standard/radar.inc',
                         'skins/Standard/rss.xml.tmpl',
+                        'skins/Standard/satellite.inc',
                         'skins/Standard/skin.conf',
                         'skins/Standard/weewx.css']),
                       ('skins/Standard/NOAA',

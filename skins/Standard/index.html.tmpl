@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" href="favicon.ico" />
     <script type="text/javascript">
 var cookie_prefix = "weewx.standard.";
-var widgets = ['radar', 'current', 'celestial', 'hilo', 'about'];
+var widgets = ['current', 'celestial', 'hilo', 'about', 'radar', 'satellite'];
 var periods = ['day', 'week', 'month', 'year'];
 
 function setup() {
@@ -106,6 +106,7 @@ function openNOAAFile(date) {
     <div id="contents">
       <div id="widget_group">
         #include "radar.inc"
+        #include "satellite.inc"
         #include "current.inc"
         #include "celestial.inc"
         #include "hilo.inc"

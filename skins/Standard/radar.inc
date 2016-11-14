@@ -3,7 +3,7 @@
   <div class="widget_title">
     Radar
     <a class="widget_control"
-      onclick="toggle_widget('radar')">XXX</a>
+      onclick="toggle_widget('radar')">&diams;</a>
   </div>
 
   <div class="widget_contents">
