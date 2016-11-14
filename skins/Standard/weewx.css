@@ -93,6 +93,7 @@ table.stats th {
 .data {
     font-weight: bold;
     font-size: 80%;
+    padding-right: 15px;
 }
 
 .units {
