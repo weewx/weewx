@@ -34,11 +34,13 @@
       <td class="label">WeeWX version</td>
       <td class="data">$station.version</td>
     </tr>
+    <tr>
+      <td colspan="2">
+This station is controlled by <a href="http://weewx.com">weeWX</a>, an
+experimental weather software system written in Python.
+      </td>
+    </tr>
   </table>
   </div>
 
-  <p>
-    This controlled by <a href="http://weewx.com">weewx</a>, an experimental
-    weather software system written in Python.
-  </p>
 </div>
