@@ -12,8 +12,10 @@ body {
 }	
 
 #widget_group {
-    float: left;
-    margin-right: 20px;
+    float: right;
+    margin-left: 20px;
+/*    float: left;      */
+/*    margin-right: 20px; */
     height: 100vh;
 }
 
@@ -142,7 +144,7 @@ table.stats th {
     margin-right: 5px;
 }
 
-#radar_widget img {
+.widget img {
     width: 400px;
     border: 1px solid #aaaaaa;
 }
