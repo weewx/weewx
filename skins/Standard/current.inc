@@ -55,13 +55,13 @@
         <td class="data">$current.radiation</td>
       </tr>
 #end if
-#if $day.inTemp.has_data and $Extras.show_inTemp
+#if $day.inTemp.has_data
       <tr>
         <td class="label">$obs.label.inTemp</td>
         <td class="data">$current.inTemp</td>
       </tr>
 #end if
-#if $day.extraTemp1.has_data and $Extras.show_extraTemp1
+#if $day.extraTemp1.has_data
       <tr>
         <td class="label">$obs.label.extraTemp1</td>
         <td class="data">$current.extraTemp1</td>
