@@ -14,6 +14,7 @@ body {
 #widget_group {
     float: left;
     margin-right: 20px;
+    height: 100vh;
 }
 
 #plot_group {
@@ -115,10 +116,6 @@ table.stats th {
     min-width: 450px;
 }
 
-#plot_nav {
-    float: right;
-}
-
 .period {
     padding-left: 15px;
     padding-right: 15px;
@@ -136,4 +133,16 @@ table.stats th {
     border-left: 1px solid #aaaaaa;
     border-right: 1px solid #aaaaaa;
     cursor: pointer;
+}
+
+.widget_control {
+    float: right;
+    cursor: pointer;
+    margin-left: 50px;
+    margin-right: 5px;
+}
+
+#radar_widget img {
+    width: 400px;
+    border: 1px solid #aaaaaa;
 }

@@ -1,8 +1,11 @@
 <div id='hilo_widget' class="widget">
   <div class="widget_title">
     $Extras.Labels.hilo_title
+    <a class="widget_control"
+      onclick="toggle_widget('hilo')">&diams;</a>
   </div>
 
+  <div class="widget_contents">
   <table class="stats">
     <tbody>
       <tr>
@@ -200,4 +203,5 @@
       #end if
     </tbody>
   </table>
+  </div>
 </div>

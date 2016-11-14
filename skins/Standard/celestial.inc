@@ -1,8 +1,10 @@
 <div id="celestial_widget" class="widget">
   <div class="widget_title">
     $Extras.Labels.celestial_title
+    <a class="widget_control"
+      onclick="toggle_widget('celestial')">&diams;</a>
   </div>
-
+  <div class="widget_contents">
   <div class="celestial_group">
     #if $almanac.hasExtras
     ## Extended almanac information is available. Do the full set of tables.
@@ -103,5 +105,6 @@
       </tr>
     </table>
     #end if
+  </div>
   </div>
 </div>

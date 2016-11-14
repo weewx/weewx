@@ -1,5 +1,10 @@
 <div id='about_widget' class="widget">
-  <div class="widget_title">About this weather station</div>
+  <div class="widget_title">
+    About this weather station
+    <a class="widget_control"
+      onclick="toggle_widget('about')">&diams;</a>
+  </div>
+  <div class="widget_contents">
   <table>
     <tr>
       <td class="label">Hardware</td>
@@ -30,4 +35,5 @@
       <td class="data">$station.version</td>
     </tr>
   </table>
+  </div>
 </div>
