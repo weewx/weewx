@@ -147,4 +147,5 @@ table.stats th {
 .widget img {
     width: 400px;
     border: 1px solid #aaaaaa;
+    margin-top: 4px;
 }

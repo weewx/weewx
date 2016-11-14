@@ -36,4 +36,9 @@
     </tr>
   </table>
   </div>
+
+  <p>
+    This controlled by <a href="http://weewx.com">weewx</a>, an experimental
+    weather software system written in Python.
+  </p>
 </div>
