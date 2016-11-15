@@ -10,7 +10,7 @@
     ## Extended almanac information is available. Do the full set of tables.
     <div class="celestial_body">
       <table class="celestial">
-	<tr><td>Sun</td><td></td></tr>
+	<tr><td class="label">Sun</td><td></td></tr>
 	<tr>
 	  <td class="label">Start civil twilight</td>
 	  <td class="data">$almanac(horizon=-6).sun(use_center=1).rise</td>
@@ -52,7 +52,7 @@
     </div>
     <div class="celestial_body">
       <table class="celestial">
-	<tr><td>Moon</td><td></td></tr>
+	<tr><td class="label">Moon</td><td></td></tr>
 	<tr>
 	  <td class="label">Rise</td>
 	  <td class="data">$almanac.moon.rise</td>
