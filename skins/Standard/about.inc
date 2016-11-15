@@ -27,11 +27,11 @@
       <td class="data">$station.os_uptime</td>
     </tr>
     <tr>
-      <td class="label">WeeWX uptime</td>
+      <td class="label">weeWX uptime</td>
       <td class="data">$station.uptime</td>
     </tr>
     <tr>
-      <td class="label">WeeWX version</td>
+      <td class="label">weeWX version</td>
       <td class="data">$station.version</td>
     </tr>
   </table>

@@ -53,6 +53,11 @@ body {
     text-align: right;
 }
 
+.footnote {
+    font-size: 80%;
+    font-style: italic;
+}
+
 .page_title {
     font-size: 140%;
     line-height: 50%;

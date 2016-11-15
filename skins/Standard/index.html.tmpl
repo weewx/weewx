@@ -229,7 +229,12 @@ function openNOAAFile(date) {
       </div>
     </div>
 
-    ## Include the Google Analytics code if the user has supplied an ID:
+    <p class="footnote">
+      This station is controlled by <a href="http://weewx.com/">weeWX</a>, an
+      experimental weather software system written in Python.
+    </p>
+
+    ## Include the Google Analytics code if one has been specified
     #if $Extras.has_key('googleAnalyticsId')
     #include analytics.inc
     #end if
