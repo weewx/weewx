@@ -11,6 +11,11 @@
   <script src="custom.js"></script>
   <script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+.radar {
+  width: 300px;
+}
+  </style>
 </head>
 <body>
   <div data-role="page" data-theme="a">
@@ -30,12 +35,12 @@
     </div>
     <div data-role="content">
       <a  href="$Extras.radar_url">
-        <img src="$Extras.radar_img" alt="Radar" />
+        <img src="$Extras.radar_img" class="radar" alt="Radar" />
       </a>
       #elif $Extras.has_key('radar_img')
     </div>
     <div data-role="content">
-      <img src="$Extras.radar_img" alt="Radar" />
+      <img src="$Extras.radar_img" class="radar" alt="Radar" />
       #elif $Extras.has_key('radar_url')
       <ul data-role="listview" data-inset="true" data-divider-theme="c">
         <li><a  href="$Extras.radar_url">Radar</a></li>
