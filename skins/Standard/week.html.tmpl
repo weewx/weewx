@@ -152,18 +152,6 @@
                   $week.inTemp.min at $week.inTemp.mintime
                 </td>
               </tr>
-			  #if $week.extraTemp1.has_data
-              <tr>
-                <td class="stats_label">
-                  High Pond Temperature<br/>
-                  Low Pond Temperature
-                </td>
-                <td class="stats_data">
-                  $week.extraTemp1.max at $week.extraTemp1.maxtime<br/>
-                  $week.extraTemp1.min at $week.extraTemp1.mintime
-                </td>
-              </tr>
-              #end if
               #if $week.UV.has_data
               <tr>
                 <td class="stats_label">
@@ -331,18 +319,6 @@
                   $month.inTemp.min at $month.inTemp.mintime
                 </td>
               </tr>
-              #if $month.extraTemp1.has_data
-              <tr>
-                <td class="stats_label">
-                  High Pond Temperature<br/>
-                  Low Pond Temperature
-                </td>
-                <td class="stats_data">
-                  $month.extraTemp1.max at $month.extraTemp1.maxtime<br/>
-                  $month.extraTemp1.min at $month.extraTemp1.mintime
-                </td>
-              </tr>
-              #end if
               #if $month.UV.has_data
               <tr>
                 <td class="stats_label">
@@ -407,9 +383,6 @@
           #end if
           #if $week.rxCheckPercent.has_data
           <img src="weekrx.png" alt="week rx percent"/>
-          #end if
-          #if $week.extraTemp1.has_data
-          <img src="weekpond.png" alt="Pond Temperatures" />
           #end if
         </div>
       </div> <!-- End id "content" -->

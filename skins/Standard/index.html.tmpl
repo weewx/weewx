@@ -84,12 +84,6 @@
                 <td class="stats_label">Inside Temperature</td>
                 <td class="stats_data">$current.inTemp</td>
               </tr>
-              #if $day.extraTemp1.has_data
-              <tr>
-                <td class="stats_label">Pond Temperature</td>
-                <td class="stats_data">$current.extraTemp1</td>
-              </tr>
-              #end if
               #if $day.UV.has_data
               <tr>
                 <td class="stats_label">UV</td>
@@ -224,18 +218,6 @@
                   $day.inTemp.min at $day.inTemp.mintime
                 </td>
               </tr>
-              #if $day.extraTemp1.has_data
-              <tr>
-                <td class="stats_label">
-                  High Pond Temperature<br/>
-                  Low Pond Temperature
-                </td>
-                <td class="stats_data">
-                  $day.extraTemp1.max at $day.extraTemp1.maxtime<br/>
-                  $day.extraTemp1.min at $day.extraTemp1.mintime
-                </td>
-              </tr>
-              #end if
               #if $day.UV.has_data
               <tr>
                 <td class="stats_label">
@@ -496,9 +478,6 @@
           #end if
           #if $day.rxCheckPercent.has_data
           <img src="dayrx.png"        alt="day rx percent"/>
-          #end if
-          #if $day.extraTemp1.has_data
-          <img src="daypond.png"      alt="Pond Temperatures" />
           #end if
         </div> <!-- End id "plots" -->
       </div> <!-- End id "content" -->
