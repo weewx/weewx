@@ -12,7 +12,7 @@ weewx.conf:
 
 [Alarm]
   time_wait = 3600
-  count_threshold = 50
+  count_threshold = 10
   smtp_host = smtp.mymailserver.com
   smtp_user = myusername
   smtp_password = mypassword
@@ -86,7 +86,7 @@ class BatteryAlarm(StdService):
             # If a critical option is missing, an exception will be thrown and
             # the alarm will not be set.
             self.time_wait       = int(config_dict['Alarm'].get('time_wait', 3600))
-            self.count_threshold = int(config_dict['Alarm'].get('count_threshold', 50))
+            self.count_threshold = int(config_dict['Alarm'].get('count_threshold', 10))
             self.smtp_host       = config_dict['Alarm']['smtp_host']
             self.smtp_user       = config_dict['Alarm'].get('smtp_user')
             self.smtp_password   = config_dict['Alarm'].get('smtp_password')
