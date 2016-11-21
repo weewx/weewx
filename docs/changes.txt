@@ -18,6 +18,8 @@ Removed the site-specific "Pond" extensions from the Standard skin.
 The Standard skin now includes plots of outside humidity. Fixes 
 issue #181.
 
+Fixed reference to index.html.tmpl in the xstats example.
+
 
 3.6.2 11/08/2016
 
