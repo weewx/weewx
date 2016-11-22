@@ -18,6 +18,8 @@ Removed the site-specific "Pond" extensions from the Standard skin.
 The Standard skin now includes plots of outside humidity. Fixes 
 issue #181.
 
+Fixed reference to index.html.tmpl in the xstats example.
+
 Changed algorithm for calculating ET to something more appropriate for
 hourly values (former algorithm assumed daily values). Fixes issue #160.
 
