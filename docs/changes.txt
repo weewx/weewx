@@ -18,6 +18,9 @@ Removed the site-specific "Pond" extensions from the Standard skin.
 The Standard skin now includes plots of outside humidity. Fixes 
 issue #181.
 
+Changed algorithm for calculating ET to something more appropriate for
+hourly values (former algorithm assumed daily values). Fixes issue #160.
+
 
 3.6.2 11/08/2016
 
