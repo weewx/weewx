@@ -51,19 +51,6 @@ class TimeBinder(object):
 
     # What follows is the list of time period attributes:
     
-    def current(self, timestamp=None, max_delta=None, data_binding=None):
-        """Return a CurrentObj"""
-        if timestamp is None:
-            timestamp = self.report_time
-        return CurrentObj(self.db_lookup, data_binding, current_time=timestamp, max_delta=max_delta,
-                          formatter=self.formatter, converter=self.converter, **self.option_dict)
-            
-    def latest(self, data_binding=None):
-        """Return a CurrentObj, using the last available timestamp."""
-        manager = self.db_lookup(data_binding)
-        timestamp = manager.lastGoodStamp()
-        return self.current(timestamp, data_binding=data_binding)
-    
     def trend(self, time_delta=None, time_grace=None, data_binding=None):
         """Returns a TrendObj that is bound to the trend parameters."""
         if time_delta is None:
@@ -338,6 +325,33 @@ class ObservationBinder(object):
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
         
 #===============================================================================
+#                             Class RecordBinder
+#===============================================================================
+
+class RecordBinder(object):
+
+    def __init__(self, db_lookup, report_time,
+                 formatter=weewx.units.Formatter(), converter=weewx.units.Converter(), record=None):
+        self.db_lookup   = db_lookup
+        self.report_time = report_time
+        self.formatter   = formatter
+        self.converter   = converter
+        self.record      = record
+        
+    def current(self, timestamp=None, max_delta=None, data_binding=None):
+        """Return a CurrentObj"""
+        if timestamp is None:
+            timestamp = self.report_time
+        return CurrentObj(self.db_lookup, data_binding, current_time=timestamp, max_delta=max_delta,
+                          formatter=self.formatter, converter=self.converter, record=self.record)
+
+    def latest(self, data_binding=None):
+        """Return a CurrentObj, using the last available timestamp."""
+        manager = self.db_lookup(data_binding)
+        timestamp = manager.lastGoodStamp()
+        return self.current(timestamp, data_binding=data_binding)
+    
+#===============================================================================
 #                             Class CurrentObj
 #===============================================================================
 
@@ -349,13 +363,14 @@ class CurrentObj(object):
     """
         
     def __init__(self, db_lookup, data_binding, current_time, 
-                 formatter, converter, max_delta=None, **option_dict):  # @UnusedVariable
+                 formatter, converter, max_delta=None, record=None):
         self.db_lookup    = db_lookup
         self.data_binding = data_binding
         self.current_time = current_time
         self.formatter    = formatter
         self.converter    = converter
         self.max_delta    = max_delta
+        self.record       = record
         
     def __getattr__(self, obs_type):
         """Return the given observation type."""

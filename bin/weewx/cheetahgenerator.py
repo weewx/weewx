@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -78,6 +78,7 @@ from weeutil.weeutil import to_bool, to_int, timestamp_to_string
 default_search_list = [
     "weewx.cheetahgenerator.Almanac",
     "weewx.cheetahgenerator.Station",
+    "weewx.cheetahgenerator.Current",
     "weewx.cheetahgenerator.Stats",
     "weewx.cheetahgenerator.UnitInfo",
     "weewx.cheetahgenerator.Extras"]
@@ -111,6 +112,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         gen_ts:           The generation time
         first_run:        Is this the first time the generator has been run?
         stn_info:         An instance of weewx.station.StationInfo
+        record:           A copy of the "current" record. May be None.
         formatter:        An instance of weewx.units.Formatter
         converter:        An instance of weewx.units.Converter
         search_list_objs: A list holding search list extensions
@@ -504,6 +506,15 @@ class Station(SearchList):
                                              generator.converter,
                                              generator.skin_dict)
         
+class Current(SearchList):
+    """Class that implements the $current tag"""
+     
+    def get_extension_list(self, timespan, db_lookup):
+        record_binder = weewx.tags.RecordBinder(db_lookup, timespan.stop,
+                                                self.generator.formatter, self.generator.converter, 
+                                                record=self.generator.record)
+        return [record_binder]
+    
 class Stats(SearchList):
     """Class that implements the time-based statistical tags, such
     as $day.outTemp.max"""

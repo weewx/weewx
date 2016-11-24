@@ -222,7 +222,8 @@ class StdReportEngine(threading.Thread):
                         skin_dict,
                         self.gen_ts,
                         self.first_run,
-                        self.stn_info)
+                        self.stn_info,
+                        self.record)
                 except Exception, e:
                     syslog.syslog(
                         syslog.LOG_CRIT, "reportengine: "
@@ -259,12 +260,13 @@ class StdReportEngine(threading.Thread):
 
 class ReportGenerator(object):
     """Base class for all report generators."""
-    def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info):
+    def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info, record):
         self.config_dict = config_dict
         self.skin_dict = skin_dict
         self.gen_ts = gen_ts
         self.first_run = first_run
         self.stn_info = stn_info
+        self.record = record
         self.db_binder = weewx.manager.DBBinder(self.config_dict)
 
     def start(self):
