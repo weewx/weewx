@@ -110,7 +110,7 @@ class Common(unittest.TestCase):
 
         stn_info = weewx.station.StationInfo(**self.config_dict['Station'])
         
-        t = weewx.reportengine.StdReportEngine(self.config_dict, stn_info, testtime_ts)
+        t = weewx.reportengine.StdReportEngine(self.config_dict, stn_info, gen_ts=testtime_ts)
 
         # Find the test skins and then have SKIN_ROOT point to it:
         test_dir = sys.path[0]

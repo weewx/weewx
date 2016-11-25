@@ -378,17 +378,23 @@ class CurrentObj(object):
         if obs_type in ['__call__', 'has_key']:
             raise AttributeError
 
-        try:
-            # Get the appropriate database manager ...
-            db_manager = self.db_lookup(self.data_binding)
-        except weewx.UnknownBinding:
-            vt = weewx.units.UnknownType(self.data_binding)
+        # Do we have a current record?
+        if self.record and obs_type in self.record and self.record['dateTime'] == self.current_time:
+            vt = weewx.units.as_value_tuple(self.record, obs_type)
         else:
-            # ... get the current record from it ...  
-            record  = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
-            # ... form a ValueTuple ...
-            vt = weewx.units.as_value_tuple(record, obs_type)
-        # ... and then finally, return a ValueHelper
+            # No. We have to retrieve the record from the database
+            try:
+                # Get the appropriate database manager ...
+                db_manager = self.db_lookup(self.data_binding)
+            except weewx.UnknownBinding:
+                vt = weewx.units.UnknownType(self.data_binding)
+            else:
+                # ... get the current record from it ...  
+                record  = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
+                # ... form a ValueTuple ...
+                vt = weewx.units.as_value_tuple(record, obs_type)
+            # ... and then finally, return a ValueHelper
+
         return weewx.units.ValueHelper(vt, 'current',
                                        self.formatter,
                                        self.converter)

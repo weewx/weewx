@@ -920,6 +920,11 @@ $month.outTemp.max</pre>
             barometric pressure:
         </p>
         <pre class="tty">$current.barometer</pre>
+
+        <p>Formally, weewx first looks for the observation type in the record emitted by the
+            <span class="code">NEW_ARCHIVE_RECORD</span> event. This is generally the data emitted by the
+        station console, augmented by any derived variables (<i>e.g.</i>wind chill) that you might have specified. If
+        the observation type cannot be found there, the most recent record in the database will be searched.</p>
         <p>The most general dot code for a "current" observation looks like: </p>
         <pre class="tty">$current($data_binding=<em>binding_name</em>).<em>obstype</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
         <p>Where:</p>
