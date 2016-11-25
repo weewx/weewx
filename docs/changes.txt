@@ -23,6 +23,9 @@ Fixed reference to index.html.tmpl in the xstats example.
 Changed algorithm for calculating ET to something more appropriate for
 hourly values (former algorithm assumed daily values). Fixes issue #160.
 
+Fixed bug that was introduced in v3.6.0, which prevented wee_reports for working
+at anything other than the current time.
+
 
 3.6.2 11/08/2016
 
