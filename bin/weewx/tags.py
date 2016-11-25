@@ -378,8 +378,9 @@ class CurrentObj(object):
         if obs_type in ['__call__', 'has_key']:
             raise AttributeError
 
-        # Do we have a current record?
-        if self.record and obs_type in self.record and self.record['dateTime'] == self.current_time:
+        # If we are not specifying a data binding, and we have a current record with the right
+        # timestamp at hand, we don't have to hit the database.
+        if not self.data_binding and self.record and obs_type in self.record and self.record['dateTime'] == self.current_time:
             vt = weewx.units.as_value_tuple(self.record, obs_type)
         else:
             # No. We have to retrieve the record from the database
