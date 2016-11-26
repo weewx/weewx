@@ -2912,7 +2912,7 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
             update them</h3>
 
         <p>If you are getting a symptom that everything appears normal, that is
-            image and HTML files are generated (<em>(look in the log to be sure</em>)
+            image and HTML files are generated (<em>look in the log to be sure</em>)
             and sent to your webserver (if you have configured FTP or rsync), but
             the values in the web pages are not being updated, it could be due to
             clock skew or corrupt station memory.</p>
@@ -2940,7 +2940,7 @@ sqlite> <span class="cmd">.exit</span></pre>
 
         <h4>Corrupt station memory</h4>
         <p>If you have a Vantage station, the problem might be because the data on
-            board your console has gotten garbled. The way the Davis Vantage series
+            board your console has become garbled. The way the Davis Vantage series
             works is that the software (<span class="code">weewx</span> in this case)
             asks the console for all archive data &quot;since&quot; some time. The
             console then downloads the records one at a time. After it gets to the
@@ -2951,10 +2951,32 @@ sqlite> <span class="cmd">.exit</span></pre>
         <p>However, if the internal memory gets garbled, the console will immediately
             return archives in the past, and so it looks like the timestamps have decreased
             in value and so <span class="code">weewx</span> figures that is it: there is
-            no more data.</p>
+            no more data. Here is what the log typically looks like (with <span class="code">debug=1</span>):</p>
 
-        <p>I have received reports from a couple of users who have had this problem.
-            There seems to be two fixes:</p>
+        <pre class="tty">Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: Getting archive packets since 2016-11-25 19:55:00 CET (1480100100)
+Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: gentle wake up of console successful
+Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: Retrieving 45 page(s); starting index= 1
+Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: DMPAFT complete: page timestamp 2016-11-02 19:25:00 CET (1478111100) less than final timestamp 2016-11-25 19:55:00 CET (1480100100)
+Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: Catch up complete.
+Nov 26 14:20:15 raspberrypi weewx[3849]: reportengine: Running reports for latest time in the database.
+Nov 26 14:20:15 raspberrypi weewx[3849]: reportengine: Running report StandardReport
+Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: Requesting 200 LOOP packets.
+Nov 26 14:20:15 raspberrypi weewx[3849]: reportengine: Found configuration file /etc/weewx/skins/Standard/skin.conf for report StandardReport
+Nov 26 14:20:15 raspberrypi weewx[3849]: cheetahgenerator: using search list ['weewx.cheetahgenerator.Almanac', 'weewx.cheetahgenerator.Station', 'weewx.cheetahgenerator.Stats', 'weewx.cheetahgenerator.UnitInfo', 'weewx.cheetahgenerator.Extras']
+Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: gentle wake up of console successful
+Nov 26 14:20:19 raspberrypi weewx[3849]: cheetahgenerator: Generated 14 files for report StandardReport in 4.16 seconds
+Nov 26 14:20:20 raspberrypi weewx[3849]: genimages: Generated 12 images for StandardReport in 0.62 seconds
+Nov 26 14:20:20 raspberrypi weewx[3849]: reportengine: copied 9 files to /var/www/html/weewx
+Nov 26 14:20:20 raspberrypi weewx[3849]: reportengine: Running report FTP
+Nov 26 14:20:20 raspberrypi weewx[3849]: reportengine: Found configuration file /etc/weewx/skins/Ftp/skin.conf for report FTP
+</pre>
+        <p>Note how weewx did a <span class="code">DMPAFT</span> command
+            ("<span class="code">Getting archive packets since 2016-11-25 19:55:00</span>"). The console responded
+            that it has lots of records after that time ("<span class="code">Retrieving 45 page(s);
+                starting index= 1</span>"),
+            but when weewx actually tries to retrieve them, they are all before the requested time.
+        </p>
+        <p>There seems to be two fixes:</p>
         <ol>
             <li>Unplug the console, take out the batteries, and wait a minute or two.
                 This will cause the console software to internally reboot. In one case this
