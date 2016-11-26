@@ -173,6 +173,13 @@ class TimespanBinder(object):
         self.converter   = converter
         self.option_dict = option_dict
 
+    # Iterate over all records in the time period:
+    def records(self, data_binding=None):
+        manager = self.db_lookup(data_binding)
+        for record in manager.genBatchRecords(self.timespan.start, self.timespan.stop):
+            yield CurrentObj(self.db_lookup, None, record['dateTime'], self.formatter, 
+                             self.converter, record=record)
+
     # Iterate over hours in the time period:
     def hours(self, data_binding=None):
         return TimespanBinder._seqGenerator(weeutil.weeutil.genHourSpans, self.timespan,

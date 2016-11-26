@@ -8,6 +8,9 @@ rather than retrieve the last record from the database. This means you can
 use the tag $current for observation types that are in the record, but not
 necessarily in the database. Fixes issue #13.
 
+It's now possible to iterate over every record within a timespan.
+Fixes issue #182.
+
 Use schema_name = hardware_name pattern in sensor map for drivers that support
 extensible sensor suites, including the drivers for cc3000, wmr300
 
