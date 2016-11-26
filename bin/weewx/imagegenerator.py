@@ -129,8 +129,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                             # Aggregation specified. Get the interval.
                             aggregate_interval = line_options.as_int('aggregate_interval')
                         except KeyError:
-                            syslog.syslog(syslog.LOG_ERR, "genimages: aggregate interval required for aggregate type %s" % aggregate_type)
-                            syslog.syslog(syslog.LOG_ERR, "genimages: line type %s skipped" % var_type)
+                            syslog.syslog(syslog.LOG_ERR, "imagegenerator: aggregate interval required for aggregate type %s" % aggregate_type)
+                            syslog.syslog(syslog.LOG_ERR, "imagegenerator: line type %s skipped" % var_type)
                             continue
 
                     # Now its time to find and hit the database:
@@ -189,7 +189,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                             gap_fraction = to_float(line_options.get('line_gap_fraction'))
                         if gap_fraction is not None:
                             if not 0 < gap_fraction < 1:
-                                syslog.syslog(syslog.LOG_ERR, "genimages: Gap fraction %5.3f outside range 0 to 1. Ignored." % gap_fraction)
+                                syslog.syslog(syslog.LOG_ERR, "imagegenerator: Gap fraction %5.3f outside range 0 to 1. Ignored." % gap_fraction)
                                 gap_fraction = None
 
                     # Get the type of line (only 'solid' or 'none' for now)
@@ -222,11 +222,11 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     image.save(img_file)
                     ngen += 1
                 except IOError, e:
-                    syslog.syslog(syslog.LOG_CRIT, "genimages: Unable to save to file '%s' %s:" % (img_file, e))
+                    syslog.syslog(syslog.LOG_CRIT, "imagegenerator: Unable to save to file '%s' %s:" % (img_file, e))
         t2 = time.time()
 
         if self.log_success:
-            syslog.syslog(syslog.LOG_INFO, "genimages: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
+            syslog.syslog(syslog.LOG_INFO, "imagegenerator: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
 
 def skipThisPlot(time_ts, aggregate_interval, img_file):
     """A plot can be skipped if it was generated recently and has not changed.

@@ -317,22 +317,22 @@ class FtpGenerator(ReportGenerator):
                 debug=int(self.skin_dict.get('debug', 0)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG,
-                          "reportengine: FTP upload not requested. Skipped.")
+                          "ftpgenerator: FTP upload not requested. Skipped.")
             return
 
         try:
             n = ftp_data.run()
         except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError), e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
-            syslog.syslog(syslog.LOG_ERR, "reportengine: "
-                          "Caught exception %s in FtpGenerator: %s." % (cl, e))
+            syslog.syslog(syslog.LOG_ERR, "ftpgenerator: "
+                          "Caught exception %s: %s" % (cl, e))
             weeutil.weeutil.log_traceback("        ****  ")
             return
 
         t2 = time.time()
         if log_success:
             syslog.syslog(syslog.LOG_INFO,
-                          "reportengine: ftp'd %d files in %0.2f seconds" %
+                          "ftpgenerator: ftp'd %d files in %0.2f seconds" %
                           (n, (t2 - t1)))
 
 
@@ -366,16 +366,15 @@ class RsyncGenerator(ReportGenerator):
                 log_success=to_bool(self.skin_dict.get('log_success', True)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG,
-                          "reportengine: rsync upload not requested. Skipped.")
+                          "rsyncgenerator: rsync upload not requested. Skipped.")
             return
 
         try:
             rsync_data.run()
         except IOError, e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
-            syslog.syslog(syslog.LOG_ERR, "reportengine: "
-                          "Caught exception %s in RsyncGenerator: %s." %
-                          (cl, e))
+            syslog.syslog(syslog.LOG_ERR, "rsyncgenerator: "
+                          "Caught exception %s: %s" % (cl, e))
 
 
 # =============================================================================
@@ -441,7 +440,8 @@ class CopyGenerator(ReportGenerator):
                 ncopy += 1
 
         if log_success:
-            syslog.syslog(syslog.LOG_INFO, "reportengine: copied %d files to %s" % (ncopy, html_dest_dir))
+            syslog.syslog(syslog.LOG_INFO, "copygenerator: "
+                          "copied %d files to %s" % (ncopy, html_dest_dir))
 
 # ===============================================================================
 #                    Class ReportTiming
