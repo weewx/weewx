@@ -126,103 +126,103 @@ function openNOAAFile(date) {
         </div>
         <div id="history_widget" class="widget">
           <div id="plots_day" class="plots">
-            <img src="daybarometer.png" alt="Barometer"/>
-            <img src="daytempdew.png"   alt="Temperature" />
-            <img src="daytempfeel.png"  alt="Heat/Chill" />
-            <img src="dayhum.png"       alt="Humidity" />
-            <img src="daywind.png"      alt="Wind Speed" />
-            <img src="daywinddir.png"   alt="Wind Direction" />
-            <img src="daywindvec.png"   alt="Wind Vector" />
-            <img src="dayrain.png"      alt="Rain" />
+            <img src="daybarometer.png" alt="$obs.label.barometer"/>
+            <img src="daytempdew.png"   alt="$obs.label.outTemp" />
+            <img src="daytempfeel.png"  alt="$obs.label.feel" />
+            <img src="dayhum.png"       alt="$obs.label.humidity" />
+            <img src="daywind.png"      alt="$obs.label.windSpeed" />
+            <img src="daywinddir.png"   alt="$obs.label.windDir" />
+            <img src="daywindvec.png"   alt="$obs.label.windvec" />
+            <img src="dayrain.png"      alt="$obs.label.rain" />
             #if $day.UV.has_data
-            <img src="dayuv.png"        alt="UV Index" />
+            <img src="dayuv.png"        alt="$obs.label.UV" />
             #end if
             #if $day.radiation.has_data
-            <img src="dayradiation.png" alt="Radiation" />
+            <img src="dayradiation.png" alt="$obs.label.radiation" />
             #end if
             #if $day.inTemp.has_data
-            <img src="daytempin.png"    alt="Inside Temperature" />
+            <img src="daytempin.png"    alt="$obs.label.inTemp" />
             #end if
             #if $day.extraTemp1.has_data
-            <img src="daytemp1.png"     alt="Pond Temperatures" />
+            <img src="daytemp1.png"     alt="$obs.label.extraTemp1" />
             #end if
             #if $day.rxCheckPercent.has_data
-            <img src="dayrx.png"        alt="Connectivity"/>
+            <img src="dayrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
           </div>
           <div id="plots_week" class="plots" style="display:none">
-            <img src="weekbarometer.png" alt="Barometer"/>
-            <img src="weektempdew.png"   alt="Temperature" />
-            <img src="weektempfeel.png"  alt="Heat/Chill" />
-            <img src="weekhum.png"       alt="Humidity" />
-            <img src="weekwind.png"      alt="Wind Speed" />
-            <img src="weekwinddir.png"   alt="Wind Direction" />
-            <img src="weekwindvec.png"   alt="Wind Vector" />
-            <img src="weekrain.png"      alt="Rain" />
+            <img src="weekbarometer.png" alt="$obs.label.barometer"/>
+            <img src="weektempdew.png"   alt="$obs.label.outTemp" />
+            <img src="weektempfeel.png"  alt="$obs.label.feel" />
+            <img src="weekhum.png"       alt="$obs.label.humidity" />
+            <img src="weekwind.png"      alt="$obs.label.windSpeed" />
+            <img src="weekwinddir.png"   alt="$obs.label.windDir" />
+            <img src="weekwindvec.png"   alt="$obs.label.windvec" />
+            <img src="weekrain.png"      alt="$obs.label.rain" />
             #if $week.UV.has_data
-            <img src="weekuv.png"        alt="UV Index" />
+            <img src="weekuv.png"        alt="$obs.label.UV" />
             #end if
             #if $week.radiation.has_data
-            <img src="weekradiation.png" alt="Radiation" />
+            <img src="weekradiation.png" alt="$obs.label.radiation" />
             #end if
             #if $week.inTemp.has_data
-            <img src="weektempin.png"    alt="Inside Temperature" />
+            <img src="weektempin.png"    alt="$obs.label.inTemp" />
             #end if
             #if $week.extraTemp1.has_data
-            <img src="weektemp1.png"     alt="Pond Temperatures" />
+            <img src="weektemp1.png"     alt="$obs.label.extraTemp1" />
             #end if
             #if $week.rxCheckPercent.has_data
-            <img src="weekrx.png"        alt="Connectivity"/>
+            <img src="weekrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
           </div>
           <div id="plots_month" class="plots" style="display:none">
-            <img src="monthbarometer.png" alt="Barometer"/>
-            <img src="monthtempdew.png"   alt="Temperature" />
-            <img src="monthtempfeel.png"  alt="Heat/Chill" />
-            <img src="monthhum.png"       alt="Humidity" />
-            <img src="monthwind.png"      alt="Wind Speed" />
-            <img src="monthwinddir.png"   alt="Wind Direction" />
-            <img src="monthwindvec.png"   alt="Wind Vector" />
-            <img src="monthrain.png"      alt="Rain" />
+            <img src="monthbarometer.png" alt="$obs.label.barometer"/>
+            <img src="monthtempdew.png"   alt="$obs.label.outTemp" />
+            <img src="monthtempfeel.png"  alt="$obs.label.feel" />
+            <img src="monthhum.png"       alt="$obs.label.humidity" />
+            <img src="monthwind.png"      alt="$obs.label.windSpeed" />
+            <img src="monthwinddir.png"   alt="$obs.label.windDir" />
+            <img src="monthwindvec.png"   alt="$obs.label.windvec" />
+            <img src="monthrain.png"      alt="$obs.label.rain" />
             #if $month.UV.has_data
-            <img src="monthuv.png"        alt="UV Index" />
+            <img src="monthuv.png"        alt="$obs.label.UV" />
             #end if
             #if $month.radiation.has_data
-            <img src="monthradiation.png" alt="Radiation" />
+            <img src="monthradiation.png" alt="$obs.label.radiation" />
             #end if
             #if $month.inTemp.has_data
-            <img src="monthtempin.png"    alt="Inside Temperature" />
+            <img src="monthtempin.png"    alt="$obs.label.inTemp" />
             #end if
             #if $month.extraTemp1.has_data
-            <img src="monthtemp1.png"     alt="Pond Temperatures" />
+            <img src="monthtemp1.png"     alt="$obs.label.extraTemp1" />
             #end if
             #if $month.rxCheckPercent.has_data
-            <img src="monthrx.png"        alt="Connectivity"/>
+            <img src="monthrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
           </div>
           <div id="plots_year" class="plots" style="display:none">
-            <img src="yearbarometer.png" alt="Barometer"/>
-            <img src="yeartempdew.png"   alt="Temperature" />
-            <img src="yeartempfeel.png"  alt="Heat/Chill" />
-            <img src="yearhum.png"       alt="Humidity" />
-            <img src="yearwind.png"      alt="Wind Speed" />
-            <img src="yearwinddir.png"   alt="Wind Direction" />
-            <img src="yearwindvec.png"   alt="Wind Vector" />
-            <img src="yearrain.png"      alt="Rain" />
+            <img src="yearbarometer.png" alt="$obs.label.barometer"/>
+            <img src="yeartempdew.png"   alt="$obs.label.outTemp" />
+            <img src="yeartempfeel.png"  alt="$obs.label.feel" />
+            <img src="yearhum.png"       alt="$obs.label.humidity" />
+            <img src="yearwind.png"      alt="$obs.label.windSpeed" />
+            <img src="yearwinddir.png"   alt="$obs.label.windDir" />
+            <img src="yearwindvec.png"   alt="$obs.label.windvec" />
+            <img src="yearrain.png"      alt="$obs.label.rain" />
             #if $year.UV.has_data
-            <img src="yearuv.png"        alt="UV Index" />
+            <img src="yearuv.png"        alt="$obs.label.UV" />
             #end if
             #if $year.radiation.has_data
-            <img src="yearradiation.png" alt="Radiation" />
+            <img src="yearradiation.png" alt="$obs.label.radiation" />
             #end if
             #if $year.inTemp.has_data
-            <img src="yeartempin.png"    alt="Inside Temperature" />
+            <img src="yeartempin.png"    alt="$obs.label.inTemp" />
             #end if
             #if $year.extraTemp1.has_data
-            <img src="yeartemp1.png"     alt="Pond Temperatures" />
+            <img src="yeartemp1.png"     alt="$obs.label.extraTemp1" />
             #end if
             #if $year.rxCheckPercent.has_data
-            <img src="yearrx.png"        alt="Connectivity"/>
+            <img src="yearrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
           </div>
         </div>
