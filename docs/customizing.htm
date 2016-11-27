@@ -3887,11 +3887,25 @@ UV      = UV Index</pre>
             <span class='code'>0xa0a0a0</span></p>
 
         <div class="image image-right" style="clear:right">
-            <img src="images/weektempdew.png" alt="Example of day/night bands"/>
+            <div class="image" >
+                <img src="images/antialias.gif" alt="Effect of anti_alias option"/>
 
-            <div class="image_caption">Example of day/night bands in a one
-            week image</div>
+                <div class="image_caption">A GIF showing the same image with
+                <span class="code">anti_alias=1</span>, <span class="code">2</span>, and
+                <span class="code">4</span>.</div>
+            </div>
+            <div class="image">
+                <img src="images/weektempdew.png" alt="Example of day/night bands"/>
+
+                <div class="image_caption">Example of day/night bands in a one
+                    week image</div>
+            </div>
         </div>
+        <p class="config_option">anti_alias</p>
+
+        <p>Setting to 2 or more might give a sharper image, with fewer jagged edges. Experimentation is
+            in order. Default is <span class="code">1</span>.</p>
+
         <p class="config_option">show_daynight</p>
 
         <p>
