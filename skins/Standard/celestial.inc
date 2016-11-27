@@ -1,6 +1,6 @@
 <div id="celestial_widget" class="widget">
   <div class="widget_title">
-    $Extras.Labels.celestial_title
+    Celestial
     <a class="widget_control"
       onclick="toggle_widget('celestial')">&diams;</a>
   </div>

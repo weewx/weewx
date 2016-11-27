@@ -1,6 +1,6 @@
 <div id='hilo_widget' class="widget">
   <div class="widget_title">
-    $Extras.Labels.hilo_title
+    Highs and Lows
     <a class="widget_control"
       onclick="toggle_widget('hilo')">&diams;</a>
   </div>
