@@ -174,9 +174,9 @@ table.celestial th {
 }
 
 
-@media (max-width:720px) {
+@media (max-width:750px) {
     #plot_group { overflow: visible; float: left; }
 }
-@media (min-width:720px) {
+@media (min-width:751px) {
     #plot_group { overflow: hidden; float: none; }
 }
