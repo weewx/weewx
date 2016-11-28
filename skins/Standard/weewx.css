@@ -155,3 +155,7 @@ table.stats th {
     border: 1px solid #aaaaaa;
     margin-top: 4px;
 }
+
+.new_row {
+    border-top: 1px solid #dddddd;
+}
