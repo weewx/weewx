@@ -120,7 +120,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                           data should be extracted
     """
 
-    generator_dict = {'SummaryByMonth': weeutil.weeutil.genMonthSpans,
+    generator_dict = {'SummaryByDay'  : weeutil.weeutil.genDaySpans,
+                      'SummaryByMonth': weeutil.weeutil.genMonthSpans,
                       'SummaryByYear' : weeutil.weeutil.genYearSpans}
 
     def run(self):
@@ -159,7 +160,10 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                    (ngen, self.skin_dict['REPORT_NAME'], elapsed_time))
 
     def setup(self):
-        self.outputted_dict = {'SummaryByMonth' : [], 'SummaryByYear'  : [] }
+        # This dictionary will hold the formatted dates of all generated files
+        self.outputted_dict = {}
+        for k in CheetahGenerator.generator_dict:
+            self.outputted_dict[k] = []; 
 
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
@@ -213,7 +217,9 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             # Sections 'SummaryByMonth' and 'SummaryByYear' imply summarize_by
             # certain time spans
             if not section[subsection].has_key('summarize_by'):
-                if subsection == 'SummaryByMonth':
+                if subsection == 'SummaryByDay':
+                    section[subsection]['summarize_by'] = 'SummaryByDay'
+                elif subsection == 'SummaryByMonth':
                     section[subsection]['summarize_by'] = 'SummaryByMonth'
                 elif subsection == 'SummaryByYear':
                     section[subsection]['summarize_by'] = 'SummaryByYear'
@@ -268,17 +274,15 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         # Use the generator function
         for timespan in _spangen(start_ts, stop_ts):
 
-            # Save YYYY-MM so they can be used within the document
+            # Save strings like YYYY-MM so they can be used within the document
             if summarize_by in CheetahGenerator.generator_dict:
-                timespan_start_tt = time.localtime(timespan.start)
-                _yr_str = "%4d" % timespan_start_tt[0]
-                if summarize_by == 'SummaryByMonth':
-                    _mo_str = "%02d" % timespan_start_tt[1]
-                    if _mo_str not in self.outputted_dict[summarize_by]:
-                        self.outputted_dict[summarize_by].append("%s-%s" % (_yr_str, _mo_str))
-                if summarize_by == 'SummaryByYear' and \
-                        _yr_str not in self.outputted_dict[summarize_by]:
-                    self.outputted_dict[summarize_by].append(_yr_str)
+                start_tt = time.localtime(timespan.start)
+                if summarize_by == 'SummaryByDay':
+                    self.outputted_dict[summarize_by].append(time.strftime("%Y-%m-%d", start_tt))
+                elif summarize_by == 'SummaryByMonth':
+                    self.outputted_dict[summarize_by].append(time.strftime("%Y-%m", start_tt))
+                elif summarize_by == 'SummaryByYear':
+                    self.outputted_dict[summarize_by].append(time.strftime("%Y", start_tt))
 
             # figure out the filename for this template
             _filename = self._getFileName(template, timespan)
@@ -362,21 +366,24 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
     def _getFileName(self, template, timespan):
         """Calculate a destination filename given a template filename.
-        Replace 'YYYY' with the year, 'MM' with the month.  Strip off any
-        trailing .tmpl"""
+        Replace 'YYYY' with the year, 'MM' with the month, 'DD' with the day.
+        Strip off any trailing .tmpl"""
 
         _filename = os.path.basename(template).replace('.tmpl', '')
 
-        if _filename.find('YYYY') >= 0 or _filename.find('MM') >= 0:
+        if 'YYYY' in _filename or 'MM' in _filename or 'DD' in _filename:
             # Start by getting the start time as a timetuple.
             timespan_start_tt = time.localtime(timespan.start)
-            # Get a string representing the year (e.g., '2009') and month
-            _yr_str = "%4d"  % timespan_start_tt[0]
-            _mo_str = "%02d" % timespan_start_tt[1]
+            # Get strings representing year, month, and day
+            _yr_str  = "%4d"  % timespan_start_tt[0]
+            _mo_str  = "%02d" % timespan_start_tt[1]
+            _day_str = "%02d"  % timespan_start_tt[2]
             # Replace any instances of 'YYYY' with the year string
             _filename = _filename.replace('YYYY', _yr_str)
-            # Do the same thing with the month
+            # Do the same thing with the month...
             _filename = _filename.replace('MM', _mo_str)
+            # ... and the day
+            _filename = _filename.replace('DD', _day_str)
 
         return _filename
 
