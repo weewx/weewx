@@ -8,6 +8,13 @@
   <div class="celestial_group">
     #if $almanac.hasExtras
     ## Extended almanac information is available. Do the full set of tables.
+#set $sun_altitude = $almanac.sun.alt
+#if $sun_altitude < 0
+#set $sun_None="<i>(Always down)</i>"
+#else
+#set $sun_None="<i>(Always up)</i>"
+#end if
+
     <div class="celestial_body">
       <table class="celestial">
 	<tr><th>Sun</th><th></th></tr>
@@ -17,16 +24,36 @@
 	</tr>
 	<tr>
 	  <td class="label">Sunrise</td>
-	  <td class="data">$almanac.sun.rise</td>
+	  <td class="data">$almanac.sun.rise.string($sun_None)</td>
 	</tr>
+        <tr>
+          <td class="label">Transit:</td>
+          <td class="data">$almanac.sun.transit</td>
+        </tr>
 	<tr>
 	  <td class="label">Sunset</td>
-	  <td class="data">$almanac.sun.set</td>
+	  <td class="data">$almanac.sun.set.string($sun_None)</td>
 	</tr>
 	<tr>
 	  <td class="label">End civil twilight</td>
 	  <td class="data">$almanac(horizon=-6).sun(use_center=1).set</td>
 	</tr>
+        <tr>
+          <td class="label">Azimuth:</td>
+          <td class="data">$("%.1f&deg;" % $almanac.sun.az)</td>
+        </tr>
+        <tr>
+          <td class="label">Altitude:</td>
+          <td class="data">$("%.1f&deg;" % $sun_altitude)</td>
+        </tr>
+        <tr>
+          <td class="label">Right ascension:</td>
+          <td class="data">$("%.1f&deg;" % $almanac.sun.ra)</td>
+        </tr>
+        <tr>
+          <td class="label">Declination:</td>
+          <td class="data">$("%.1f&deg;" % $almanac.sun.dec)</td>
+        </tr>
 	#if $almanac.next_equinox.raw < $almanac.next_solstice.raw
 	## The equinox is before the solstice. Display them in order.
 	<tr>
@@ -57,10 +84,30 @@
 	  <td class="label">Rise</td>
 	  <td class="data">$almanac.moon.rise</td>
 	</tr>
+        <tr>
+          <td class="label">Transit:</td>
+          <td class="data">$almanac.moon.transit</td>
+        </tr>
 	<tr>
 	  <td class="label">Set</td>
 	  <td class="data">$almanac.moon.set</td>
 	</tr>
+        <tr>
+          <td class="label">Azimuth:</td>
+          <td class="data">$("%.1f&deg;" % $almanac.moon.az)</td>
+        </tr>
+        <tr>
+          <td class="label">Altitude:</td>
+          <td class="data">$("%.1f&deg;" % $almanac.moon.alt)</td>
+        </tr>
+        <tr>
+          <td class="label">Right ascension:</td>
+          <td class="data">$("%.1f&deg;" % $almanac.moon.ra)</td>
+        </tr>
+        <tr>
+          <td class="label">Declination:</td>
+          <td class="data">$("%.1f&deg;" % $almanac.moon.dec)</td>
+        </tr>
 	#if $almanac.next_full_moon.raw < $almanac.next_new_moon.raw
         <tr>
 	  <td class="label">Full moon</td>
