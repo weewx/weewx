@@ -12,22 +12,20 @@ body {
 }	
 
 #widget_group {
-/*    float: right;*/
-/*    margin-left: 20px; */
     float: left;
     margin-right: 10px;
-/*    height: 100vh; */
 }
 
 #plot_group {
-    float: left;
+
+    overflow: hidden;
 }
 
 #title_bar {
     overflow: auto;
     margin-bottom: 5px;
     background-color: #dddddd;
-    border-bottom: 1px solid #aaaaaa;
+    border: 1px solid #aaaaaa;
 }
 
 #contents {
@@ -41,16 +39,16 @@ body {
 
 #rss_link {
     float: right;
-    margin-top: 10px;
+    margin-top: 5px;
     margin-left: 20px;
     margin-right: 20px;
 }
 
 #reports {
     float: right;
-    margin-top: 10px;
+    margin-top: 5px;
     margin-right: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     text-align: right;
 }
 
@@ -137,7 +135,6 @@ table.celestial th {
 }
 
 #plot_title {
-    overflow: auto;
     min-width: 450px;
 }
 
@@ -175,25 +172,4 @@ table.celestial th {
 
 .new_row {
     border-top: 1px solid #dddddd;
-}
-
-@media (min-width:320px) {
-/*    .plots img { width: 100px; }*/
-    .plots br { display: inline; }
-}
-@media (min-width:641px) {
-/*    .plots img { width: 200px; }*/
-    .plots br { display: inline; }
-}
-@media (min-width:961px) {
-/*    .plots img { width: 300px; }*/
-    .plots br { display: inline; }
-}
-@media (min-width:1025px) {
-/*    .plots img { width: 400px; }*/
-    .plots br { display: inline; }
-}
-@media (min-width:1281px) {
-/*    .plots img { width: 400px; }*/
-    .plots br { display: inline; }
 }
