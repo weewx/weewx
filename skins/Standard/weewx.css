@@ -100,7 +100,7 @@ table.stats th {
 .data {
     font-weight: bold;
     font-size: 80%;
-    padding-right: 15px;
+    text-align: left;
 }
 
 .units {
@@ -111,6 +111,21 @@ table.stats th {
 .timestamp {
     font-size: 60%;
     font-weight: normal;
+}
+
+table.celestial th {
+    text-align: left;
+}
+
+#hilo_widget table.stats th {
+    text-align: right;
+}
+
+#hilo_widget .data {
+    font-weight: bold;
+    font-size: 80%;
+    text-align: right;
+    padding-left: 10px;
 }
 
 .plots {
