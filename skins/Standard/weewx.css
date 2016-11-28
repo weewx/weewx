@@ -12,14 +12,15 @@ body {
 }	
 
 #widget_group {
-    float: right;
-    margin-left: 20px;
-/*    float: left;      */
-/*    margin-right: 20px; */
-    height: 100vh;
+/*    float: right;*/
+/*    margin-left: 20px; */
+    float: left;
+    margin-right: 10px;
+/*    height: 100vh; */
 }
 
 #plot_group {
+    float: left;
 }
 
 #title_bar {
@@ -56,6 +57,7 @@ body {
 .footnote {
     font-size: 80%;
     font-style: italic;
+    clear: both;
 }
 
 .page_title {
@@ -158,4 +160,25 @@ table.stats th {
 
 .new_row {
     border-top: 1px solid #dddddd;
+}
+
+@media (min-width:320px) {
+/*    .plots img { width: 100px; }*/
+    .plots br { display: inline; }
+}
+@media (min-width:641px) {
+/*    .plots img { width: 200px; }*/
+    .plots br { display: inline; }
+}
+@media (min-width:961px) {
+/*    .plots img { width: 300px; }*/
+    .plots br { display: inline; }
+}
+@media (min-width:1025px) {
+/*    .plots img { width: 400px; }*/
+    .plots br { display: inline; }
+}
+@media (min-width:1281px) {
+/*    .plots img { width: 400px; }*/
+    .plots br { display: inline; }
 }
