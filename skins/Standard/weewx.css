@@ -17,7 +17,6 @@ body {
 }
 
 #plot_group {
-
     overflow: hidden;
 }
 
@@ -172,4 +171,12 @@ table.celestial th {
 
 .new_row {
     border-top: 1px solid #dddddd;
+}
+
+
+@media (max-width:720px) {
+    #plot_group { overflow: visible; float: left; }
+}
+@media (min-width:720px) {
+    #plot_group { overflow: hidden; float: none; }
 }
