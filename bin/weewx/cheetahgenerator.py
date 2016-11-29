@@ -253,8 +253,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             return ngen
 
         if gen_ts:
-            record = default_archive.getRecord(
-                gen_ts, max_delta=to_int(report_dict.get('max_delta')))
+            record = default_archive.getRecord(gen_ts,
+                                               max_delta=to_int(report_dict.get('max_delta')))
             if record:
                 stop_ts = record['dateTime']
             else:
@@ -273,19 +273,26 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         # Use the generator function
         for timespan in _spangen(start_ts, stop_ts):
+            start_tt = time.localtime(timespan.start)
+            stop_tt  = time.localtime(timespan.stop)
 
             # Save strings like YYYY-MM so they can be used within the document
             if summarize_by in CheetahGenerator.generator_dict:
-                start_tt = time.localtime(timespan.start)
+                # This is a "SummaryBy" type generation. Save the time for target summary
                 if summarize_by == 'SummaryByDay':
                     self.outputted_dict[summarize_by].append(time.strftime("%Y-%m-%d", start_tt))
                 elif summarize_by == 'SummaryByMonth':
                     self.outputted_dict[summarize_by].append(time.strftime("%Y-%m", start_tt))
                 elif summarize_by == 'SummaryByYear':
                     self.outputted_dict[summarize_by].append(time.strftime("%Y", start_tt))
+                # For "Summary" generations, the file name comes from the start of the timespan:
+                _filename = self._getFileName(template, start_tt)
+            else:
+                # This is a "ToDate" generation. File name comes 
+                # from the stop (i.e., present) time:
+                _filename = self._getFileName(template, stop_tt)
 
-            # figure out the filename for this template
-            _filename = self._getFileName(template, timespan)
+            # Get the absolute path for the target of this template
             _fullname = os.path.join(dest_dir, _filename)
 
             # Skip summary files outside the timespan
@@ -364,20 +371,19 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         return searchList
 
-    def _getFileName(self, template, timespan):
+    def _getFileName(self, template, ref_tt):
         """Calculate a destination filename given a template filename.
         Replace 'YYYY' with the year, 'MM' with the month, 'DD' with the day.
         Strip off any trailing .tmpl"""
 
         _filename = os.path.basename(template).replace('.tmpl', '')
 
+        # If the filename contains YYYY, MM, or DD, then do the replacement
         if 'YYYY' in _filename or 'MM' in _filename or 'DD' in _filename:
-            # Start by getting the start time as a timetuple.
-            timespan_start_tt = time.localtime(timespan.start)
             # Get strings representing year, month, and day
-            _yr_str  = "%4d"  % timespan_start_tt[0]
-            _mo_str  = "%02d" % timespan_start_tt[1]
-            _day_str = "%02d"  % timespan_start_tt[2]
+            _yr_str  = "%4d"  % ref_tt[0]
+            _mo_str  = "%02d" % ref_tt[1]
+            _day_str = "%02d"  % ref_tt[2]
             # Replace any instances of 'YYYY' with the year string
             _filename = _filename.replace('YYYY', _yr_str)
             # Do the same thing with the month...
