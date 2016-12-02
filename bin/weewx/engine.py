@@ -443,12 +443,14 @@ class StdArchive(StdService):
             self.archive_delay = to_int(config_dict['StdArchive'].get('archive_delay', 15))
             software_interval = to_int(config_dict['StdArchive'].get('archive_interval', 300))
             self.loop_hilo = to_bool(config_dict['StdArchive'].get('loop_hilo', True))
+            self.record_augmentation = to_bool(config_dict['StdArchive'].get('record_augmentation', True))
         else:
             self.data_binding = 'wx_binding'
             self.record_generation = 'hardware'
             self.archive_delay = 15
             software_interval = 300
             self.loop_hilo = True
+            self.record_augmentation = True
             
         syslog.syslog(syslog.LOG_INFO, "engine: Archive will use data binding %s" % self.data_binding)
         
@@ -579,6 +581,11 @@ class StdArchive(StdService):
                     # Now ask the console for any new records since then. Not
                     # all consoles support this feature.
                     for record in self.engine.console.genArchiveRecords(lastgood_ts):
+                        # If the timestamp of the record off the console matches the
+                        # record in the accumulator, augment the record with any data that
+                        # can be squeezed out of the accumulator.
+                        if self.record_augmentation and record['dateTime'] == self.old_accumulator.timespan.stop:
+                            self.old_accumulator.augmentRecord(record)
                         self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
                                                               record=record,
                                                               origin='hardware'))
@@ -610,27 +617,6 @@ class StdArchive(StdService):
         # Back fill the daily summaries.
         _nrecs, _ndays = dbmanager.backfill_day_summary() # @UnusedVariable
 
-#     def _catchup(self, generator):
-#         """Pull any unarchived records off the console and archive them.
-#         
-#         If the hardware does not support hardware archives, an exception of
-#         type NotImplementedError will be thrown.""" 
-# 
-#         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
-#         # Find out when the database was last updated.
-#         lastgood_ts = dbmanager.lastGoodStamp()
-# 
-#         try:
-#             # Now ask the console for any new records since then.
-#             # (Not all consoles support this feature).
-#             for record in generator(lastgood_ts):
-#                 self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
-#                                                       record=record,
-#                                                       origin='hardware'))
-#         except weewx.HardwareError, e:
-#             syslog.syslog(syslog.LOG_ERR, "engine: Internal error detected. Catchup abandoned")
-#             syslog.syslog(syslog.LOG_ERR, "**** %s" % e)
-        
     def _software_catchup(self):
         # Extract a record out of the old accumulator. 
         record = self.old_accumulator.getRecord()

@@ -8,6 +8,10 @@ rather than retrieve the last record from the database. This means you can
 use the tag $current for observation types that are in the record, but not
 necessarily in the database. Fixes issue #13.
 
+When doing hardware record generation, the engine now augments the record with
+any additional observation types it can extract out of the accumulators.
+Fixes issue #15.
+
 It's now possible to iterate over every record within a timespan.
 Fixes issue #182.
 
