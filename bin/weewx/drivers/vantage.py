@@ -1314,8 +1314,11 @@ class Vantage(weewx.drivers.AbstractDevice):
             func = _loop_map.get(_type)
             # It it exists, apply it:
             if func:
-                # Call the function, with the value as an argument, storing the result:
-                loop_packet[_type] = func(raw_loop_packet[_type])
+                # Call the function, with the raw value as an argument:
+                val = func(raw_loop_packet[_type])
+                # Skip all null values
+                if val is not None:
+                    loop_packet[_type] = val
             
         # Adjust sunrise and sunset:
         start_of_day = weeutil.weeutil.startOfDay(loop_packet['dateTime'])
@@ -1368,8 +1371,11 @@ class Vantage(weewx.drivers.AbstractDevice):
             func = _archive_map.get(_type)
             # It it exists, apply it:
             if func:
-                # Call the function, with the value as an argument, storing the result:
-                archive_packet[_type] = func(raw_archive_packet[_type])
+                # Call the function, with the raw value as an argument:
+                val = func(raw_archive_packet[_type])
+                # Skip all null values
+                if val is not None:
+                    archive_packet[_type] = val
         
         # Divide archive interval by 60 to keep consistent with wview
         archive_packet['interval']   = int(self.archive_interval / 60) 
