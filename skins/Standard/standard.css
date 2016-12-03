@@ -69,6 +69,7 @@ body {
 
 .widget {
     margin-bottom: 10px;
+    clear: both;
 }
 
 .widget_title {
@@ -141,30 +142,35 @@ table.celestial th {
     min-width: 450px;
 }
 
-.period {
-    padding-left: 15px;
-    padding-right: 15px;
-    padding-top: 2px;
-    padding-bottom: 2px;
+.button {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
     border: 1px solid #aaaaaa;
     cursor: pointer;
+    webkit-radius: 3px;
+    moz-radius: 3px;
+    border-radius: 3px;
 }
 
-.period_selected {
-    padding-left: 15px;
-    padding-right: 15px;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    background-color: #aaaaaa;
-    border-left: 1px solid #aaaaaa;
-    border-right: 1px solid #aaaaaa;
+.button_selected {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    background-color: #bbbbbb;
+    border: 1px solid #aaaaaa;
     cursor: pointer;
+    webkit-radius: 3px;
+    moz-radius: 3px;
+    border-radius: 3px;
 }
 
 .widget_control {
     float: right;
     cursor: pointer;
-    margin-left: 50px;
+    margin-left: 20px;
     margin-right: 5px;
 }
 
