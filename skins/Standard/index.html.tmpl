@@ -9,72 +9,9 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     #end if    
     <title>$station.location Weather Conditions</title>
-    <link rel="stylesheet" type="text/css" href="weewx.css"/>
     <link rel="icon" type="image/png" href="favicon.ico" />
-    <script type="text/javascript">
-var cookie_prefix = "weewx.standard.";
-var widgets = ['current', 'celestial', 'hilo', 'about', 'radar', 'satellite'];
-var periods = ['day', 'week', 'month', 'year'];
-
-function setup() {
-  var pane = get_cookie('history', 'day');
-  choose_plot(pane);
-  for(var i=0; i<widgets.length; i++) {
-    var state = get_cookie(widgets[i]+'.state', 'expanded');
-    toggle_widget(widgets[i], state);
-  }
-}
-
-function choose_plot(id) {
-  set_cookie('history', id);
-  for(var i=0; i<periods.length; i++) {
-    var c = document.getElementById('control_'+periods[i]);
-    if(c) c.className = (periods[i] == id) ? 'period_selected' : 'period';
-    var g = document.getElementById('plots_'+periods[i]);
-    if(g) g.style.display = (periods[i] == id) ? 'block' : 'none';
-  }
-}
-
-function toggle_widget(id, state) {
-  var c = document.getElementById(id+'_widget');
-  if(c) {
-    for(var i=0; i<c.childNodes.length; i++) {
-      if(c.childNodes[i].className == 'widget_contents') {
-        if(state === undefined) {
-          // make it the opposite of the current state
-          state = c.childNodes[i].style.display == 'block' ? 'collapsed' : 'expanded';
-        }
-        c.childNodes[i].style.display = (state == 'expanded') ? 'block' : 'none';
-      }
-    }
-    set_cookie(id+'.state', state);
-  }
-}
-
-function set_cookie(name, value, dur) {
-  if(dur==null || dur==0) dur=30;
-  var today = new Date();
-  var expire = new Date();
-  expire.setTime(today.getTime() + 24*3600000*dur);
-  document.cookie = cookie_prefix+name+"="+escape(value)+";expires="+expire.toGMTString();
-}
-
-function get_cookie(name, default_value) {
-  if(name=="") return default_value;
-  var full_name = cookie_prefix+name;
-  var cookie = " "+document.cookie;
-  var i = cookie.indexOf(" "+full_name+"=");
-  if(i<0) i = cookie.indexOf(";"+full_name+"=");
-  if(i<0) return default_value;
-  var j = cookie.indexOf(";", i+1);
-  if(j<0) j = cookie.length;
-  return unescape(cookie.substring(i + full_name.length + 2, j));
-}
-
-function openNOAAFile(date) {
-  window.location = "NOAA/NOAA-" + date + ".txt";
-}
-    </script>
+    <link rel="stylesheet" type="text/css" href="standard.css"/>
+    <script type="text/javascript" src="standard.js"></script>
   </head>
 
   <body onload='setup();'>
@@ -114,18 +51,18 @@ function openNOAAFile(date) {
       </div>
 
       <div id="plot_group">
-        <div id="plot_title" class="widget_title">History: 
-          <a class="period_selected" id="control_day"
-             onclick="choose_plot('day')">Day</a>
-          <a class="period" id="control_week"
-             onclick="choose_plot('week')">Week</a>
-          <a class="period" id="control_month"
-             onclick="choose_plot('month')">Month</a>
-          <a class="period" id="control_year"
-             onclick="choose_plot('year')">Year</a>
+        <div id="plot_title" class="widget_title">History:&nbsp;&nbsp;
+          <a class="button_selected" id="button_history_day"
+             onclick="choose_history('day')">Day</a>
+          <a class="button" id="button_history_week"
+             onclick="choose_history('week')">Week</a>
+          <a class="button" id="button_history_month"
+             onclick="choose_history('month')">Month</a>
+          <a class="button" id="button_history_year"
+             onclick="choose_history('year')">Year</a>
         </div>
         <div id="history_widget" class="widget">
-          <div id="plots_day" class="plots">
+          <div id="history_day" class="plots">
             <img src="daybarometer.png" alt="$obs.label.barometer"/>
             <img src="daytempdew.png"   alt="$obs.label.outTemp" />
             <img src="daytempfeel.png"  alt="$obs.label.feel" />
@@ -150,7 +87,7 @@ function openNOAAFile(date) {
             <img src="dayrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
           </div>
-          <div id="plots_week" class="plots" style="display:none">
+          <div id="history_week" class="plots" style="display:none">
             <img src="weekbarometer.png" alt="$obs.label.barometer"/>
             <img src="weektempdew.png"   alt="$obs.label.outTemp" />
             <img src="weektempfeel.png"  alt="$obs.label.feel" />
@@ -175,7 +112,7 @@ function openNOAAFile(date) {
             <img src="weekrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
           </div>
-          <div id="plots_month" class="plots" style="display:none">
+          <div id="history_month" class="plots" style="display:none">
             <img src="monthbarometer.png" alt="$obs.label.barometer"/>
             <img src="monthtempdew.png"   alt="$obs.label.outTemp" />
             <img src="monthtempfeel.png"  alt="$obs.label.feel" />
@@ -200,7 +137,7 @@ function openNOAAFile(date) {
             <img src="monthrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
           </div>
-          <div id="plots_year" class="plots" style="display:none">
+          <div id="history_year" class="plots" style="display:none">
             <img src="yearbarometer.png" alt="$obs.label.barometer"/>
             <img src="yeartempdew.png"   alt="$obs.label.outTemp" />
             <img src="yeartempfeel.png"  alt="$obs.label.feel" />

@@ -1,20 +1,80 @@
-<div id="celestial_widget" class="widget">
-  <div class="widget_title">
-    Celestial
-    <a class="widget_control"
-      onclick="toggle_widget('celestial')">&diams;</a>
-  </div>
-  <div class="widget_contents">
-  <div class="celestial_group">
-    #if $almanac.hasExtras
-    ## Extended almanac information is available. Do the full set of tables.
+## If extended almanac information is available, do the full set of tables.
+#if $almanac.hasExtras
 #set $sun_altitude = $almanac.sun.alt
 #if $sun_altitude < 0
 #set $sun_None="<i>(Always down)</i>"
 #else
 #set $sun_None="<i>(Always up)</i>"
 #end if
+#end if
 
+<div id="celestial_widget" class="widget">
+  <div class="widget_title">
+    Celestial:&nbsp;&nbsp;
+    #if $almanac.hasExtras
+    <a class="button_selected" id="button_celestial_summary"
+       onclick="choose_celestial('summary')">Summary</a>
+    <a class="button" id="button_celestial_details"
+       onclick="choose_celestial('details')">Details</a>
+    #end if
+    <a class="widget_control"
+       onclick="toggle_widget('celestial')">&diams;</a>
+  </div>
+  <div class="widget_contents">
+  <div id="celestial_summary">
+    #if $almanac.hasExtras
+    <div class="celestial_body">
+      <table class="celestial">
+	<tr><th>Sun</th><th></th></tr>
+	<tr>
+	  <td class="label">Rise</td>
+	  <td class="data">$almanac.sun.rise.string($sun_None)</td>
+	</tr>
+	<tr>
+	  <td class="label">Set</td>
+	  <td class="data">$almanac.sun.set.string($sun_None)</td>
+	</tr>
+      </table>
+    </div>
+    <div class="celestial_body">
+      <table class="celestial">
+	<tr><th>Moon</th><th></th></tr>
+	<tr>
+	  <td class="label">Rise</td>
+	  <td class="data">$almanac.moon.rise</td>
+	</tr>
+	<tr>
+	  <td class="label">Set</td>
+	  <td class="data">$almanac.moon.set</td>
+	</tr>
+	<tr>
+	  <td class="label"></td>
+	  <td class="data">$almanac.moon_phase<br/>
+            $almanac.moon_fullness% full</td>
+	</tr>
+      </table>
+    </div>
+    #else
+    ## No extended almanac information available. Fall back to a simple table.
+    <table class="celestial">
+      <tr>
+	<td class="label">Sunrise</td>
+	<td class="data">$almanac.sunrise</td>
+      </tr>
+      <tr>
+	<td class="label">Sunset</td>
+	<td class="data">$almanac.sunset</td>
+      </tr>
+      <tr>
+	<td class="label">Moon Phase</td>
+	<td class="data">$almanac.moon_phase<br/>
+          $almanac.moon_fullness% full</td>
+      </tr>
+    </table>
+    #end if
+  </div>
+  #if $almanac.hasExtras
+  <div id="celestial_details" style="display:none">
     <div class="celestial_body">
       <table class="celestial">
 	<tr><th>Sun</th><th></th></tr>
@@ -23,7 +83,7 @@
 	  <td class="data">$almanac(horizon=-6).sun(use_center=1).rise</td>
 	</tr>
 	<tr>
-	  <td class="label">Sunrise</td>
+	  <td class="label">Rise</td>
 	  <td class="data">$almanac.sun.rise.string($sun_None)</td>
 	</tr>
         <tr>
@@ -31,7 +91,7 @@
           <td class="data">$almanac.sun.transit</td>
         </tr>
 	<tr>
-	  <td class="label">Sunset</td>
+	  <td class="label">Set</td>
 	  <td class="data">$almanac.sun.set.string($sun_None)</td>
 	</tr>
 	<tr>
@@ -134,24 +194,7 @@
 	</tr>
       </table>
     </div>
-    #else
-    ## No extended almanac information available. Fall back to a simple table.
-    <table class="celestial">
-      <tr>
-	<td class="label">Sunrise</td>
-	<td class="data">$almanac.sunrise</td>
-      </tr>
-      <tr>
-	<td class="label">Sunset</td>
-	<td class="data">$almanac.sunset</td>
-      </tr>
-      <tr>
-	<td class="label">Moon Phase</td>
-	<td class="data">$almanac.moon_phase<br/>
-          $almanac.moon_fullness% full</td>
-      </tr>
-    </table>
-    #end if
   </div>
+  #end if
   </div>
 </div>

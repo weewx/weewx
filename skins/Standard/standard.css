@@ -114,6 +114,10 @@ table.celestial th {
     text-align: left;
 }
 
+.celestial_body {
+    float: left;
+}
+
 #hilo_widget table.stats th {
     text-align: right;
 }
@@ -142,6 +146,7 @@ table.celestial th {
     padding-right: 15px;
     padding-top: 2px;
     padding-bottom: 2px;
+    border: 1px solid #aaaaaa;
     cursor: pointer;
 }
 

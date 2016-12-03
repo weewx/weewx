@@ -1,6 +1,14 @@
+#set $archive_data = [('day', $day), ('week', $week), ('month', $month), ('year', $year)]
+
 <div id='hilo_widget' class="widget">
   <div class="widget_title">
-    Highs and Lows
+    High/Low:&nbsp;&nbsp;
+    <a class="button_selected" id="button_hilo_week"
+       onclick="toggle('hilo', 'week')">Week</a>
+    <a class="button_selected" id="button_hilo_month"
+       onclick="toggle('hilo', 'month')">Month</a>
+    <a class="button_selected" id="button_hilo_year"
+       onclick="toggle('hilo', 'year')">Year</a>
     <a class="widget_control"
       onclick="toggle_widget('hilo')">&diams;</a>
   </div>
@@ -11,103 +19,104 @@
       <tr>
         <th></th>
         <th>Today</th>
-        <th>Week</th>
-        <th>Month</th>
-        <th>Year</th>
+        <th class="hilo_week">Week</th>
+        <th class="hilo_month">Month</th>
+        <th class="hilo_year">Year</th>
         <th></th>
       </tr>
       <tr>
         <td class="label">$obs.label.outTemp</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.outTemp.maxtime">
-            $archive.outTemp.max.formatted</span><br/>
-          <span title="$archive.outTemp.mintime">
-            $archive.outTemp.min.formatted</span>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].outTemp.maxtime">
+            $archive[1].outTemp.max.formatted</span><br/>
+          <span title="$archive[1].outTemp.mintime">
+            $archive[1].outTemp.min.formatted</span>
         </td>
         #end for
         <td class="units">$unit.label.outTemp</td>
       </tr>
       <tr>
         <td class="label">$obs.label.heatindex</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.heatindex.maxtime">
-            $archive.heatindex.max.formatted</span>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].heatindex.maxtime">
+            $archive[1].heatindex.max.formatted</span>
         </td>
         #end for
         <td class="units">$unit.label.heatindex</td>
       </tr>
       <tr>
         <td class="label">$obs.label.windchill</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.windchill.mintime">
-            $archive.windchill.min.formatted</span>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].windchill.mintime">
+            $archive[1].windchill.min.formatted</span>
         </td>
         #end for
         <td class="units">$unit.label.windchill</td>
       </tr>
       <tr>
         <td class="label">$obs.label.dewpoint</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.dewpoint.maxtime">
-            $archive.dewpoint.max.formatted</span><br/>
-          <span title="$archive.dewpoint.mintime">
-            $archive.dewpoint.min.formatted</span>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].dewpoint.maxtime">
+            $archive[1].dewpoint.max.formatted</span><br/>
+          <span title="$archive[1].dewpoint.mintime">
+            $archive[1].dewpoint.min.formatted</span>
         </td>
         #end for
         <td class="units">$unit.label.dewpoint</td>
       </tr>
       <tr>
         <td class="label">$obs.label.outHumidity</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.outHumidity.maxtime">
-            $archive.outHumidity.max.formatted</span><br/>
-          <span title="$archive.outHumidity.mintime">
-            $archive.outHumidity.min.formatted</span>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].outHumidity.maxtime">
+            $archive[1].outHumidity.max.formatted</span><br/>
+          <span title="$archive[1].outHumidity.mintime">
+            $archive[1].outHumidity.min.formatted</span>
         </td>
         #end for
         <td class="units">$unit.label.outHumidity</td>
       </tr>
       <tr>
         <td class="label">$obs.label.barometer</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.barometer.maxtime">
-            $archive.barometer.max.formatted</span><br/>
-          <span title="$archive.barometer.mintime">
-            $archive.barometer.min.formatted</span>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].barometer.maxtime">
+            $archive[1].barometer.max.formatted</span><br/>
+          <span title="$archive[1].barometer.mintime">
+            $archive[1].barometer.min.formatted</span>
         </td>
         #end for
         <td class="units">$unit.label.barometer</td>
       </tr>
       <tr>
         <td class="label">$obs.label.rain</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">$archive.rain.sum.formatted</td>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          $archive[1].rain.sum.formatted</td>
         #end for
         <td class="units">$unit.label.rain</td>
       </tr>
       <tr>
         <td class="label">$obs.label.rainRate</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.rainRate.maxtime">
-            $archive.rainRate.max.formatted</span>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].rainRate.maxtime">
+            $archive[1].rainRate.max.formatted</span>
         </td>
         #end for
         <td class="units">$unit.label.rainRate</td>
       </tr>
       <tr>
         <td class="label">$obs.label.wind_max</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.wind.maxtime">
-            $archive.wind.max.formatted</span><br/>
-          $archive.wind.gustdir.formatted
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].wind.maxtime">
+            $archive[1].wind.max.formatted</span><br/>
+          $archive[1].wind.gustdir.formatted
         </td>
         #end for
         <td class="units">
@@ -117,15 +126,17 @@
       </tr>
       <tr>
         <td class="label">$obs.label.wind_avg</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">$archive.wind.avg.formatted</td>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          $archive[1].wind.avg.formatted</td>
         #end for
         <td class="units">$unit.label.wind</td>
       </tr>
       <tr>
         <td class="label">$obs.label.wind_rms</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">$archive.wind.rms.formatted</td>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          $archive[1].wind.rms.formatted</td>
         #end for
         <td class="units">$unit.label.wind</td>
       </tr>
@@ -135,10 +146,10 @@
           $obs.label.vecavg<br/>
           $obs.label.vecdir
         </td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          $archive.wind.vecavg.formatted<br/>
-          $archive.wind.vecdir.formatted
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          $archive[1].wind.vecavg.formatted<br/>
+          $archive[1].wind.vecdir.formatted
         </td>
         #end for
         <td class="units">
@@ -150,12 +161,12 @@
       #if $day.inTemp.has_data
       <tr>
         <td class="label">$obs.label.inTemp</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.inTemp.maxtime">
-            $archive.inTemp.max.formatted</span><br/>
-          <span title="$archive.inTemp.mintime">
-            $archive.inTemp.min.formatted</span>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].inTemp.maxtime">
+            $archive[1].inTemp.max.formatted</span><br/>
+          <span title="$archive[1].inTemp.mintime">
+            $archive[1].inTemp.min.formatted</span>
         </td>
         #end for
         <td class="units">$unit.label.inTemp</td>
@@ -165,12 +176,12 @@
       #if $day.extraTemp1.has_data
       <tr>
         <td class="label">$obs.label.extraTemp1</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.extraTemp1.maxtime">
-            $archive.extraTemp1.max.formatted</span><br/>
-          <span title="$archive.extraTemp1.mintime">
-            $archive.extraTemp1.min.formatted</span>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].extraTemp1.maxtime">
+            $archive[1].extraTemp1.max.formatted</span><br/>
+          <span title="$archive[1].extraTemp1.mintime">
+            $archive[1].extraTemp1.min.formatted</span>
         </td>
         #end for
         <td class="units">$unit.label.extraTemp1</td>
@@ -180,12 +191,12 @@
       #if $day.UV.has_data
       <tr>
         <td class="label">$obs.label.UV</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.UV.maxtime">
-            $archive.UV.max.formatted</span><br/>
-          <span title="$archive.UV.mintime">
-            $archive.UV.min.formatted</span>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].UV.maxtime">
+            $archive[1].UV.max.formatted</span><br/>
+          <span title="$archive[1].UV.mintime">
+            $archive[1].UV.min.formatted</span>
         </td>
         #end for
         <td class="units">$unit.label.UV</td>
@@ -195,12 +206,12 @@
       #if $day.ET.has_data and $day.ET.sum.raw > 0.0
       <tr>
         <td class="label">$obs.label.ET</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.ET.maxtime">
-            $archive.ET.max.formatted</span><br/>
-          <span title="$archive.ET.mintime">
-            $archive.ET.min.formatted</span>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].ET.maxtime">
+            $archive[1].ET.max.formatted</span><br/>
+          <span title="$archive[1].ET.mintime">
+            $archive[1].ET.min.formatted</span>
         </td>
         #end for
         <td class="units">$unit.label.ET</td>
@@ -210,12 +221,12 @@
       #if $day.radiation.has_data
       <tr>
         <td class="label">$obs.label.radiation</td>
-        #for $archive in [$day, $week, $month, $year]
-        <td class="data new_row">
-          <span title="$archive.radiation.maxtime">
-            $archive.radiation.max.formatted</span><br/>
-          <span title="$archive.radiation.mintime">
-            $archive.radiation.min.formatted</span>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].radiation.maxtime">
+            $archive[1].radiation.max.formatted</span><br/>
+          <span title="$archive[1].radiation.mintime">
+            $archive[1].radiation.min.formatted</span>
         </td>
         #end for
         <td class="units">$unit.label.radiation</td>
