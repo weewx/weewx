@@ -1,3 +1,7 @@
+## radar module for standard skin
+## Copyright Tom Keffer, Matthew Wall
+## See LICENSE.txt for your rights
+
 #if $Extras.has_key('radar_img')
 <div id='radar_widget' class="widget">
   <div class="widget_title">

@@ -1,10 +1,25 @@
-## If extended almanac information is available, do the full set of tables.
+## celestial module for standard skin
+## Copyright Tom Keffer, Matthew Wall
+## See LICENSE.txt for your rights
+
+## If extended almanac information is available, do extra calculations.
 #if $almanac.hasExtras
 #set $sun_altitude = $almanac.sun.alt
 #if $sun_altitude < 0
 #set $sun_None="<i>(Always down)</i>"
+#set $daylight_str = "00:00"
 #else
 #set $sun_None="<i>(Always up)</i>"
+#set $daylight_str = "24:00"
+#end if
+
+#set $sunrise_ts = $almanac.sun.rise.raw
+#set $sunset_ts = $almanac.sun.set.raw
+#if $sunrise_ts and $sunset_ts
+#set $daylight_s = $sunset_ts - $sunrise_ts
+#set $daylight_hours = int($daylight_s / 3600)
+#set $daylight_minutes = int(($daylight_s % 3600) / 60)
+#set $daylight_str = "%02d:%02d" % ($daylight_hours, $daylight_minutes)
 #end if
 #end if
 
@@ -33,6 +48,10 @@
 	<tr>
 	  <td class="label">Set</td>
 	  <td class="data">$almanac.sun.set.string($sun_None)</td>
+	</tr>
+	<tr>
+	  <td class="label">Daylight</td>
+	  <td class="data">$daylight_str</td>
 	</tr>
       </table>
     </div>
@@ -135,11 +154,16 @@
 	  <td class="data">$almanac.next_equinox</td>
 	</tr>
 	#end if
+	<tr>
+	  <td class="label">Daylight</td>
+	  <td class="data">$daylight_str</td>
+	</tr>
       </table>
     </div>
     <div class="celestial_body">
       <table class="celestial">
 	<tr><th>Moon</th><th></th></tr>
+        <tr><td class="label">&nbsp;</td><td class="data">&nbsp;</td></tr>
 	<tr>
 	  <td class="label">Rise</td>
 	  <td class="data">$almanac.moon.rise</td>
@@ -152,6 +176,7 @@
 	  <td class="label">Set</td>
 	  <td class="data">$almanac.moon.set</td>
 	</tr>
+        <tr><td class="label">&nbsp;</td><td class="data">&nbsp;</td></tr>
         <tr>
           <td class="label">Azimuth:</td>
           <td class="data">$("%.1f&deg;" % $almanac.moon.az)</td>

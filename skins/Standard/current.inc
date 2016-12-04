@@ -1,3 +1,7 @@
+## current module for standard skin
+## Copyright Tom Keffer, Matthew Wall
+## See LICENSE.txt for your rights
+
 <div id='current_widget' class="widget">
   <div class="widget_title">
     Current

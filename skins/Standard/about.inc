@@ -1,3 +1,7 @@
+## about module for standard skin
+## Copyright Tom Keffer, Matthew Wall
+## See LICENSE.txt for your rights
+
 <div id='about_widget' class="widget">
   <div class="widget_title">
     About this weather station

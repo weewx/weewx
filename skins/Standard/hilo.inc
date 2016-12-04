@@ -1,8 +1,12 @@
+## hilo module for standard skin
+## Copyright Tom Keffer, Matthew Wall
+## See LICENSE.txt for your rights
+
 #set $archive_data = [('day', $day), ('week', $week), ('month', $month), ('year', $year)]
 
 <div id='hilo_widget' class="widget">
   <div class="widget_title">
-    High/Low:&nbsp;&nbsp;
+    <a href="statistics.html">High/Low</a>:&nbsp;&nbsp;
     <a class="button_selected" id="button_hilo_week"
        onclick="toggle('hilo', 'week')">Week</a>
     <a class="button_selected" id="button_hilo_month"

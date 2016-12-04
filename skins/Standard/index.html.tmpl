@@ -51,18 +51,18 @@
       </div>
 
       <div id="plot_group">
-        <div id="plot_title" class="widget_title">History:&nbsp;&nbsp;
-          <a class="button_selected" id="button_history_day"
-             onclick="choose_history('day')">Day</a>
-          <a class="button" id="button_history_week"
-             onclick="choose_history('week')">Week</a>
-          <a class="button" id="button_history_month"
-             onclick="choose_history('month')">Month</a>
-          <a class="button" id="button_history_year"
-             onclick="choose_history('year')">Year</a>
-        </div>
         <div id="history_widget" class="widget">
-          <div id="history_day" class="plots">
+          <div id="plot_title" class="widget_title">History:&nbsp;&nbsp;
+            <a class="button_selected" id="button_history_day"
+               onclick="choose_history('day')">Day</a>
+            <a class="button" id="button_history_week"
+               onclick="choose_history('week')">Week</a>
+            <a class="button" id="button_history_month"
+               onclick="choose_history('month')">Month</a>
+            <a class="button" id="button_history_year"
+               onclick="choose_history('year')">Year</a>
+          </div>
+          <div id="history_day" class="plot_containter">
             <img src="daybarometer.png" alt="$obs.label.barometer"/>
             <img src="daytempdew.png"   alt="$obs.label.outTemp" />
             <img src="daytempfeel.png"  alt="$obs.label.feel" />
@@ -87,7 +87,7 @@
             <img src="dayrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
           </div>
-          <div id="history_week" class="plots" style="display:none">
+          <div id="history_week" class="plot_containter" style="display:none">
             <img src="weekbarometer.png" alt="$obs.label.barometer"/>
             <img src="weektempdew.png"   alt="$obs.label.outTemp" />
             <img src="weektempfeel.png"  alt="$obs.label.feel" />
@@ -112,7 +112,7 @@
             <img src="weekrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
           </div>
-          <div id="history_month" class="plots" style="display:none">
+          <div id="history_month" class="plot_containter" style="display:none">
             <img src="monthbarometer.png" alt="$obs.label.barometer"/>
             <img src="monthtempdew.png"   alt="$obs.label.outTemp" />
             <img src="monthtempfeel.png"  alt="$obs.label.feel" />
@@ -137,7 +137,7 @@
             <img src="monthrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
           </div>
-          <div id="history_year" class="plots" style="display:none">
+          <div id="history_year" class="plot_containter" style="display:none">
             <img src="yearbarometer.png" alt="$obs.label.barometer"/>
             <img src="yeartempdew.png"   alt="$obs.label.outTemp" />
             <img src="yeartempfeel.png"  alt="$obs.label.feel" />

@@ -1,3 +1,7 @@
+## analytics module for standard skin
+## Copyright Tom Keffer, Matthew Wall
+## See LICENSE.txt for your rights
+
 ## Include the Google Analytics code if an Id has been specified
 
 #if $Extras.has_key('googleAnalyticsId')

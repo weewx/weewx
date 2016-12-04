@@ -11,6 +11,10 @@ body {
     background-color: #ffffff;
 }	
 
+a {
+    text-decoration: none;
+}
+
 #widget_group {
     float: left;
     margin-right: 10px;
@@ -107,39 +111,8 @@ table.stats th {
 }
 
 .timestamp {
-    font-size: 60%;
+    font-size: 90%;
     font-weight: normal;
-}
-
-table.celestial th {
-    text-align: left;
-}
-
-.celestial_body {
-    float: left;
-}
-
-#hilo_widget table.stats th {
-    text-align: right;
-}
-
-#hilo_widget .data {
-    font-weight: bold;
-    font-size: 80%;
-    text-align: right;
-    padding-left: 10px;
-}
-
-.plots {
-    margin-top: 4px;
-}
-
-#plot_group img {
-    border: 1px solid #aaaaaa;
-}
-
-#plot_title {
-    min-width: 450px;
 }
 
 .button {
@@ -182,6 +155,37 @@ table.celestial th {
 
 .new_row {
     border-top: 1px solid #dddddd;
+}
+
+table.celestial th {
+    text-align: left;
+}
+
+.celestial_body {
+    float: left;
+}
+
+#hilo_widget table.stats th {
+    text-align: right;
+}
+
+#hilo_widget .data {
+    font-weight: bold;
+    font-size: 80%;
+    text-align: right;
+    padding-left: 10px;
+}
+
+#history_widget img {
+    border: 1px solid #aaaaaa;
+}
+
+#history_widget.widget_title {
+    min-width: 450px;
+}
+
+.plot_container {
+    margin-top: 4px;
 }
 
 
