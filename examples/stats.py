@@ -1,10 +1,9 @@
-#
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
-#
-#    See the file LICENSE.txt for your full rights.
-#
+#    See the file LICENSE.txt for your rights.
 
 """Example of how to extend the search list used by the Cheetah generator.
+
+*******************************************************************************
 
 This search list extension offers two extra tags:
 
@@ -14,20 +13,24 @@ This search list extension offers two extra tags:
     'seven_day': Statistics for the last seven days.
                  That is, since midnight seven days ago.
 
-To use it, modify the option search_list in your skin.conf configuration file,
-adding the name of this extension. For this example, the name of the extension
-is examples.xsearch.MyXSearch. So, when you're done, it will look something
-like this:
+*******************************************************************************
+
+To use this search list extension:
+
+1) copy this file to the user directory
+
+2) modify the option search_list in the skin.conf configuration file, adding
+the name of this extension.  When you're done, it will look something like
+this:
 
 [CheetahGenerator]
-    search_list_extensions = examples.xsearch.MyXSearch
-
-Note that if your file skin.conf is from an older version of Weewx, this
-section may be named [FileGenerator]. It will work just fine.
+    search_list_extensions = user.stats.MyStats
 
 You can then use tags such as $alltime.outTemp.max for the all-time max
 temperature, or $seven_day.rain.sum for the total rainfall in the last
 seven days.
+
+*******************************************************************************
 """
 import datetime
 import time
@@ -36,8 +39,7 @@ from weewx.cheetahgenerator import SearchList
 from weewx.tags import TimespanBinder
 from weeutil.weeutil import TimeSpan
 
-class MyXSearch(SearchList):                                                 # 1
-    """My search list extension"""
+class MyStats(SearchList):                                                   # 1
 
     def __init__(self, generator):                                           # 2
         SearchList.__init__(self, generator)

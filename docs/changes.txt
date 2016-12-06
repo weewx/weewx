@@ -35,8 +35,8 @@ Fixed reference to index.html.tmpl in the xstats example.
 Changed algorithm for calculating ET to something more appropriate for
 hourly values (former algorithm assumed daily values). Fixes issue #160.
 
-Fixed bug that was introduced in v3.6.0, which prevented wee_reports from working
-for anything other than the current time.
+Fixed bug that was introduced in v3.6.0, which prevented wee_reports from
+working for anything other than the current time.
 
 Documented the experimental anti-alias feature, which has been in weewx
 since v3.1.0. Fixes issue #6.
@@ -44,6 +44,10 @@ since v3.1.0. Fixes issue #6.
 Can now do SummaryByDay (as well as SummaryByMonth and SummaryByYear).
 NB: This can generate *lots* of files --- one for every day in your database!
 Leaving this undocumented for now. Fixes issue #185.
+
+Moved examples out of bin directory.  Eliminated experimental directory.
+Reinforce the use of user directory, eliminate use of examples directory.
+Renamed xsearch.py to stats.py.
 
 
 3.6.2 11/08/2016

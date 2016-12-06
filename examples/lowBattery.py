@@ -1,60 +1,63 @@
-#
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
-#
-#    See the file LICENSE.txt for your full rights.
-#
+#    See the file LICENSE.txt for your rights.
+
 """Example of how to implement a low battery alarm in weewx. 
 
-********************************************************************************
+*******************************************************************************
 
 To use this alarm, add the following somewhere in your configuration file
 weewx.conf:
 
 [Alarm]
-  time_wait = 3600
-  count_threshold = 10
-  smtp_host = smtp.mymailserver.com
-  smtp_user = myusername
-  smtp_password = mypassword
-  from   = me@mydomain.com
-  mailto = auser@adomain.com, another@somewhere.com
-  subject = "Time to change the battery!"
+    time_wait = 3600
+    count_threshold = 10
+    smtp_host = smtp.example.com
+    smtp_user = myusername
+    smtp_password = mypassword
+    from   = sally@example.com
+    mailto = jane@example.com, bob@example.com
+    subject = "Time to change the battery!"
 
-In this example, an email will be sent to the comma separated list of recipients
-auser@domain.com, another@somewhere.com
+An email will be sent to each address in the comma separated list of recipients
 
-The example assumes that your SMTP email server is at smtp.mymailserver.com and
-that it uses secure logins. If it does not use secure logins, leave out the
-lines for smtp_user and smtp_password and no login will be attempted.
+The example assumes an SMTP email server at smtp.example.com that requires
+login.  If the SMTP server does not require login, leave out the lines for
+smtp_user and smtp_password.
 
-Setting an email "from" is optional. If not supplied, one will be filled in, but
-your SMTP server may or may not accept it.
+Setting an email "from" is optional. If not supplied, one will be filled in,
+but your SMTP server may or may not accept it.
 
 Setting an email "subject" is optional. If not supplied, one will be filled in.
 
-To avoid a flood of emails, one will only be sent every 3600 seconds (one hour).
+To avoid a flood of emails, one will only be sent every 3600 seconds (one
+hour).
 
 It will also not send an email unless the low battery indicator has been on
-greater than or equal to count_threshold times in an archive period. This avoids
-sending out an alarm if the battery is only occasionally being signaled as bad.
+greater than or equal to count_threshold times in an archive period. This
+avoids sending out an alarm if the battery is only occasionally being signaled
+as bad.
 
-********************************************************************************
+*******************************************************************************
 
-To specify that this new service be loaded and run, it must be added to the
-configuration option "report_services", located in sub-section [Engine][[Services]].
+To enable this service:
+
+1) copy this file to the user directory
+
+2) modify the weewx configuration file by adding this service to the option
+"report_services", located in section [Engine][[Services]].
 
 [Engine]
   [[Services]]
     ...
-    report_services = weewx.engine.StdPrint, weewx.engine.StdReport, examples.lowBattery.BatteryAlarm
+    report_services = weewx.engine.StdPrint, weewx.engine.StdReport, user.lowBattery.BatteryAlarm
 
-********************************************************************************
+*******************************************************************************
 
 If you wish to use both this example and the alarm.py example, simply merge the
 two configuration options together under [Alarm] and add both services to
 report_services.
 
-*****************************************************************************
+*******************************************************************************
 """
 
 import time
@@ -69,7 +72,7 @@ from weeutil.weeutil import timestamp_to_string, option_as_list
 
 # Inherit from the base class StdService:
 class BatteryAlarm(StdService):
-    """Custom service that sounds an alarm if one of the batteries is low"""
+    """Service that sends email if one of the batteries is low"""
     
     def __init__(self, engine, config_dict):
         # Pass the initialization information on to my superclass:
@@ -91,19 +94,18 @@ class BatteryAlarm(StdService):
             self.smtp_user       = config_dict['Alarm'].get('smtp_user')
             self.smtp_password   = config_dict['Alarm'].get('smtp_password')
             self.SUBJECT         = config_dict['Alarm'].get('subject', "Low battery alarm message from weewx")
-            self.FROM            = config_dict['Alarm'].get('from', 'alarm@weewx.com')
+            self.FROM            = config_dict['Alarm'].get('from', 'alarm@example.com')
             self.TO              = option_as_list(config_dict['Alarm']['mailto'])
-            syslog.syslog(syslog.LOG_INFO, "lowBattery: LowBattery alarm turned on. Count threshold is %d" % self.count_threshold)
+            syslog.syslog(syslog.LOG_INFO, "lowBattery: LowBattery alarm enabled. Count threshold is %d" % self.count_threshold)
 
             # If we got this far, it's ok to start intercepting events:
             self.bind(weewx.NEW_LOOP_PACKET,    self.newLoopPacket)
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)
-
         except KeyError, e:
-            syslog.syslog(syslog.LOG_INFO, "lowBattery: No alarm set. %s" % e)
+            syslog.syslog(syslog.LOG_INFO, "lowBattery: No alarm set.  Missing parameter: %s" % e)
 
     def newLoopPacket(self, event):
-        """This function is called with the arrival of every new LOOP packet."""
+        """This function is called on each new LOOP packet."""
 
         # If the Transmit Battery Status byte is non-zero, an alarm is on
         if event.packet['txBatteryStatus']:
@@ -114,27 +116,30 @@ class BatteryAlarm(StdService):
             # least count_threshold times before sounding the alarm.
             if self.alarm_count >= self.count_threshold:
                 # We've hit the threshold. However, to avoid a flood of nearly
-                # identical emails, send a new one only if it's been a long time
-                # since we sent the last one:
+                # identical emails, send a new one only if it's been a long
+                # time since we sent the last one:
                 if abs(time.time() - self.last_msg_ts) >= self.time_wait :
                     # Sound the alarm!
                     timestamp = event.packet['dateTime']
                     battery_status = event.packet['txBatteryStatus']
-                    # Launch in a separate thread so it doesn't block the main LOOP thread:
-                    t  = threading.Thread(target = BatteryAlarm.soundTheAlarm,
-                                          args=(self, timestamp, battery_status, self.alarm_count))
+                    # Launch in a separate thread so it does not block the
+                    # main LOOP thread:
+                    t  = threading.Thread(target=BatteryAlarm.soundTheAlarm,
+                                          args=(self, timestamp,
+                                                battery_status,
+                                                self.alarm_count))
                     t.start()
                     # Record when the message went out:
                     self.last_msg_ts = time.time()
         
     def newArchiveRecord(self, event):  # @UnusedVariable
-        """This function is called with the arrival of every new archive record."""
+        """This function is called on each new archive record."""
         
         # Reset the alarm counter
         self.alarm_count = 0
 
     def soundTheAlarm(self, timestamp, battery_status, alarm_count):
-        """This function is called when the low battery alarm has been sounded."""
+        """This function is called when the alarm has been triggered."""
         
         # Get the time and convert to a string:
         t_str = timestamp_to_string(timestamp)
@@ -162,15 +167,15 @@ class BatteryAlarm(StdService):
             s.ehlo()
             s.starttls()
             s.ehlo()
-            syslog.syslog(syslog.LOG_DEBUG, "  **** using encrypted transport")
+            syslog.syslog(syslog.LOG_DEBUG, "lowBattery: using encrypted transport")
         except smtplib.SMTPException:
-            syslog.syslog(syslog.LOG_DEBUG, "  **** using unencrypted transport")
+            syslog.syslog(syslog.LOG_DEBUG, "lowBattery: using unencrypted transport")
 
         try:
             # If a username has been given, assume that login is required for this host:
             if self.smtp_user:
                 s.login(self.smtp_user, self.smtp_password)
-                syslog.syslog(syslog.LOG_DEBUG, "  **** logged in with user name %s" % (self.smtp_user,))
+                syslog.syslog(syslog.LOG_DEBUG, "lowBattery: logged in with user name %s" % (self.smtp_user,))
 
             # Send the email:
             s.sendmail(msg['From'], self.TO,  msg.as_string())
@@ -181,4 +186,5 @@ class BatteryAlarm(StdService):
             raise
         
         # Log sending the email:
-        syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO)
+        syslog.syslog(syslog.LOG_INFO,
+                      "lowBattery: email sent to: %s" % self.TO)
