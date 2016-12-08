@@ -113,7 +113,8 @@ class VecStats(object):
          self.sum, self.count,
          self.wsum,self.sumtime,
          self.max_dir, self.xsum, self.ysum, 
-         self.dirsumtime, self.squaresum, self.wsquaresum) = stats_tuple if stats_tuple else VecStats.default_init
+         self.dirsumtime, self.squaresum, 
+         self.wsquaresum) = stats_tuple if stats_tuple else VecStats.default_init
         
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the gathered statistics."""
@@ -313,7 +314,11 @@ class Accum(dict):
         # Then add to highs/lows, and to the running sum:
         if add_hilo: 
             self[obs_type].addHiLo(val, record['dateTime'])
-        self[obs_type].addSum(val)
+        # Now add to the running sums/counts, passing a weight of 'interval' if 
+        # the value is an aggregate over some interval (eg archive record) and 
+        # 1 if its an 'instantaneous' value (eg loop packet)
+        _weight = record['interval'] * 60 if 'interval' in record else 1
+        self[obs_type].addSum(val, weight=_weight)
 
     def add_wind_value(self, record, obs_type, add_hilo):
         """Add a single observation of type wind to myself."""
@@ -331,9 +336,18 @@ class Accum(dict):
         self.init_type('wind')
         # Then add to highs/lows, and to the running sum:
         if add_hilo:
-            self['wind'].addHiLo((record.get('windGust'),  record.get('windGustDir')), record['dateTime'])
-            self['wind'].addHiLo((record.get('windSpeed'), record.get('windDir')),     record['dateTime'])
-        self['wind'].addSum((record['windSpeed'], record.get('windDir')))
+            self['wind'].addHiLo((record.get('windGust'), 
+                                 record.get('windGustDir')), 
+                                 record['dateTime'])
+            self['wind'].addHiLo((record.get('windSpeed'), 
+                                 record.get('windDir')),
+                                 record['dateTime'])
+        # Now add to the running sums/counts, passing a weight of 'interval' if 
+        # the value is an aggregate over some interval (eg archive record) and 
+        # 1 if its an 'instantaneous' value (eg loop packet)
+        _weight = record['interval'] * 60 if 'interval' in record else 1
+        self['wind'].addSum((record['windSpeed'], record.get('windDir')), 
+                            weight=_weight)
         
     def check_units(self, record, obs_type, add_hilo):  # @UnusedVariable
         if weewx.debug:
@@ -351,7 +365,8 @@ class Accum(dict):
         else:
             # Otherwise, make sure they match
             if self.unit_system != new_unit_system:
-                raise ValueError("Unit system mismatch %d v. %d" % (self.unit_system, new_unit_system))
+                raise ValueError("Unit system mismatch %d v. %d" % (self.unit_system, 
+                                                                    new_unit_system))
             
 #===============================================================================
 #                            Configuration dictionaries
