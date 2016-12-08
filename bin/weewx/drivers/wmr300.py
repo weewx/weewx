@@ -727,7 +727,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.15rc2'
+DRIVER_VERSION = '0.16rc1'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -767,6 +767,14 @@ def _lo(x):
 
 def _hi(x):
     return x >> 8
+
+def get_usb_info():
+    pyusb_version = '0.4.x'
+    try:
+        pyusb_version = usb.__version__
+    except AttributeError:
+        pass
+    return "pyusb_version=%s" % pyusb_version
 
 
 class WMR300Driver(weewx.drivers.AbstractDevice):
@@ -820,6 +828,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
 
     def __init__(self, **stn_dict):
         loginf('driver version is %s' % DRIVER_VERSION)
+        loginf('usb info: %s' % get_usb_info())
         self.model = stn_dict.get('model', 'WMR300')
         self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_MAP)
         self.heartbeat = 20 # how often to send a6 messages, in seconds
@@ -886,6 +895,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_7x = time.time()
             except usb.USBError, e:
+                logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                       (e.errno, e.strerror, e.message, repr(e)))
                 errmsg = repr(e)
                 if not ('No data available' in errmsg or 'No error' in errmsg):
                     logerr("usb failure: %s" % e)
@@ -953,6 +964,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_65 = time.time()
             except usb.USBError, e:
+                logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                       (e.errno, e.strerror, e.message, repr(e)))
                 errmsg = repr(e)
                 if not ('No data available' in errmsg or 'No error' in errmsg):
                     logerr("usb failure: %s" % e)
@@ -1096,6 +1109,8 @@ class Station(object):
             if DEBUG_COUNTS and count:
                 self.update_count(buf, self.recv_counts)
         except usb.USBError, e:
+            logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                   (e.errno, e.strerror, e.message, repr(e)))
             errmsg = repr(e)
             if not ('No data available' in errmsg or 'No error' in errmsg):
                 raise
