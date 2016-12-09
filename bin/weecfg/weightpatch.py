@@ -72,15 +72,11 @@ class WeightedSumPatchAccumError(IOError):
        accumulator.
     """
 
-class WeightedSumPatchDbError(IOError):
-    """Base class of exceptions thrown when encountering an error accessing the
-       database.
-    """
-
 
 # ============================================================================
 #                                 class WeightedSumPatch
 # ============================================================================
+
 
 class WeightedSumPatch(weecfg.patch.DatabasePatch):
     """Class to patch daily summaries with an interval based weight factor."""
@@ -113,12 +109,8 @@ class WeightedSumPatch(weecfg.patch.DatabasePatch):
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.binding,
                                                                                  self.dbm.database_name)
         self.plog.printlog(syslog.LOG_INFO, _msg)
-        # Number of days per db transaction, default to 50. Wrap in a try in 
-        # case we get a None.
-        try:
-            self.trans_days = int(patch_config_dict.get('trans_days', 50))
-        except TypeError:
-            self.trans_days = 50
+        # Number of days per db transaction, default to 50.
+        self.trans_days = int(patch_config_dict.get('trans_days', 50))
         _msg = "Database transactions will use %s days of data." % self.trans_days
         self.plog.logonly(syslog.LOG_DEBUG, _msg)
         # Pre-patch vacuum flag
@@ -158,13 +150,8 @@ class WeightedSumPatch(weecfg.patch.DatabasePatch):
                 # We have a homogeneous intervals for each day so we can patch
                 # the daily summaries.
 
-                # First do a vacuum if requested. If we can't vacuum that in
-                # itself is not reason to abort, just log the failure and
-                # continue.
-                try:
-                    self.do_vacuum()
-                except WeightedSumPatchDbError, e:
-                    self.plog.printlog(syslog.LOG_INFO, "**** %s" % e)
+                # First do a vacuum if requested.
+                self.do_vacuum()
 
                 # Now apply the patch but be prepared to catch any exceptions
                 try:
@@ -254,11 +241,13 @@ class WeightedSumPatch(weecfg.patch.DatabasePatch):
                                     _day_accum[_day_key].xsum *= _weight
                                     _day_accum[_day_key].ysum *= _weight
                                     _day_accum[_day_key].dirsumtime *= _weight
-                        except:
-                            _msg = "'%s' daily summary for %s could not be patched." % (_day_key,
-                                                                                       time.strftime("%Y-%m-%d",
-                                                                                                     time.localtime(_day_span.start)))
-                            raise WeightedSumPatchAccumError(_msg)
+                        except Exception, e:
+                            # log the exception and re-raise it
+                            _msg = "Patching '%s' daily summary for %s failed: %s" % (_day_key,
+                                                                                      timestamp_to_string(_day_span.start, format="%Y-%m-%d"),
+                                                                                      e)
+                            self.plog.printlog(syslog.LOG_INFO, _msg)
+                            raise
                         # Update the daily summary with the patched accumulator
                         if not self.dry_run:
                             self.dbm._set_day_summary(_day_accum,
@@ -355,7 +344,7 @@ class WeightedSumPatch(weecfg.patch.DatabasePatch):
         _row = self.dbm.getSql(_sql_stmt % interpolate_dict)
         try:
             return _row[0]
-        except:
+        except IndexError:
             _msg = "'interval' field not found in archive day %s." % (span, )
             raise weewx.ViolatedPrecondition(_msg)
 
@@ -394,7 +383,7 @@ class WeightedSumPatch(weecfg.patch.DatabasePatch):
                 # value. If the query returns nothing then that is fine too,
                 # probably no archive data for that day.
                 _result = _row[0] == _row[1] if _row else True
-            except:
+            except IndexError:
                 # Something is seriously amiss, raise an error
                 raise weewx.ViolatedPrecondition("Invalid 'interval' data detected in archive day %s." % (_day_span, ))
             _days += 1
@@ -485,9 +474,10 @@ class WeightedSumPatch(weecfg.patch.DatabasePatch):
                 self.plog.printlog(syslog.LOG_INFO, _msg)
                 return
             except Exception, e:
-                # Raise an error should we have any other issue
+                # log the error and re-raise it
                 _msg = "Vacuuming database '%s' failed: %s" % (self.dbm.database_name, e)
-                raise WeightedSumPatchDbError(_msg)
+                self.plog.printlog(syslog.LOG_INFO, _msg)
+                raise
             # If we are here then we have successfully vacuumed, log it and return
             _msg = "Database '%s' vacuumed in %0.1f seconds." % (self.dbm.database_name,
                                                                  (time.time() - t1))
