@@ -252,7 +252,7 @@ class WeightedSumPatch(DatabasePatch):
                 if not self.dry_run:
                     syslog.syslog(syslog.LOG_DEBUG,
                                   "weightedsumpatch: Multiple distinct 'interval' values found for at least one archive day.")
-                    syslog.syslog(syslog.LOG_DEBUG,
+                    syslog.syslog(syslog.LOG_INFO,
                                   "weightedsumpatch: '%s' patch will be applied by dropping and backfilling daily summaries." % self.name)
                     self.dbm.drop_daily()
                     self.dbm = weewx.manager.open_manager_with_config(self.config_dict,
