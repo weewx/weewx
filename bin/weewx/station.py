@@ -3,13 +3,12 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#$Id: station.py 1117 2016-12-13 01:30:53Z richterb $
 """Defines (mostly static) information about a station."""
 
 import time
 import weeutil.weeutil
 import weewx.units
-import os, sys, datetime
+import os
 
 # For MacOS:
 try:
@@ -107,34 +106,13 @@ class Station(object):
         os_uptime_secs = None
 
 	try:
-    	    import ctypes
-    	    class timespec(ctypes.Structure):
-     			_fields_ = [
-        		('tv_sec', ctypes.c_long), ('tv_nsec', ctypes.c_long)
-     			]
-
-    	    if sys.platform.startswith('freebsd'):
-                CLOCK_MONOTONIC = 4# see < time.h >
-                dylib = 'libc.so.7'
-    	    #else :
-    	    #    sys.platform.startswith('linux')
-    	    #    CLOCK_MONOTONIC = 1# see < linux / time.h >
-    	    #    dylib = 'librt.so.1'
-
-    	    syslib = ctypes.CDLL(dylib, use_errno = True)
-    	    clock_gettime = syslib.clock_gettime
-    	    clock_gettime.argtypes = [ctypes.c_int, ctypes.POINTER(timespec)]
-    	    t = timespec()
-
-    	    if clock_gettime(CLOCK_MONOTONIC, ctypes.pointer(t)) != 0:
-                errno_ = ctypes.get_errno()
-         	raise OSError(errno_, os.strerror(errno_))
-            os_uptime_secs = t.tv_sec + t.tv_nsec * 1e-9
-    
-	except ImportError:
-    	    try:
             # For Linux:
-                os_uptime_secs = float(open("/proc/uptime").read().split()[0])
+            os_uptime_secs = float(open("/proc/uptime").read().split()[0])
+	except (IOError, KeyError):
+    	    try:
+               #for FreeBSD
+               os_uptime_secs = time.time()-float(os.popen("/sbin/sysctl kern.boottime")\
+                    .read().split()[4].replace(',',''))
             except (IOError, KeyError):
                 try:
                 # For MacOs:
