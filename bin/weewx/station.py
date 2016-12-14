@@ -3,12 +3,17 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
+#$Id: station.py 1126 2016-12-14 07:09:18Z richterb $
 """Defines (mostly static) information about a station."""
 
 import time
 import weeutil.weeutil
 import weewx.units
 import os
+
+# For FreeBSD
+import ctypes
+from ctypes.util import find_library
 
 # For MacOS:
 try:
@@ -110,10 +115,14 @@ class Station(object):
             os_uptime_secs = float(open("/proc/uptime").read().split()[0])
 	except (IOError, KeyError):
     	    try:
-               #for FreeBSD
-               os_uptime_secs = time.time()-float(os.popen("/sbin/sysctl kern.boottime")\
-                    .read().split()[4].replace(',',''))
-            except (IOError, KeyError):
+                #for FreeBSD
+                libc = ctypes.CDLL(find_library('c'))
+                size = ctypes.c_size_t()
+                buf = ctypes.c_int()
+                size.value = ctypes.sizeof(buf)
+                libc.sysctlbyname("kern.boottime", ctypes.byref(buf), ctypes.byref(size), None, 0)
+                os_uptime_secs = time.time() - float(buf.value) 
+            except (IOError, NameError):
                 try:
                 # For MacOs:
                  os_uptime_secs = CACurrentMediaTime()
