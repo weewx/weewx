@@ -3,7 +3,6 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#$Id: station.py 1126 2016-12-14 07:09:18Z richterb $
 """Defines (mostly static) information about a station."""
 
 import time
@@ -110,11 +109,11 @@ class Station(object):
         # different strategies may have to be tried:
         os_uptime_secs = None
 
-	try:
+        try:
             # For Linux:
             os_uptime_secs = float(open("/proc/uptime").read().split()[0])
-	except (IOError, KeyError):
-    	    try:
+        except (IOError, KeyError):
+            try:
                 #for FreeBSD
                 libc = ctypes.CDLL(find_library('c'))
                 size = ctypes.c_size_t()
