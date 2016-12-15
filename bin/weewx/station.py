@@ -72,13 +72,13 @@ class Station(object):
         self.latitude  = weeutil.weeutil.latlon_string(stn_info.latitude_f,  
                                                        hemispheres[0:2],
                                                        'lat', latlon_formats)
-        self.longitude = weeutil.weeutil.latlon_string(stn_info.longitude_f, 
+        self.longitude = weeutil.weeutil.latlon_string(stn_info.longitude_f,
                                                        hemispheres[2:4],
                                                        'lon', latlon_formats)
         self.altitude = weewx.units.ValueHelper(value_t=stn_info.altitude_vt,
                                                 formatter=formatter,
                                                 converter=converter)
-        self.rain_year_str = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))
+        self.rain_year_str = time.strftime("%b", (0, self.rain_year_start, 1, 0, 0, 0, 0, 0, -1))
 
         self.version = weewx.__version__
 
@@ -107,7 +107,7 @@ class Station(object):
                 os_uptime_secs = CACurrentMediaTime()
             except ImportError:
                 try:
-                    #for FreeBSD
+                    # for FreeBSD
                     import ctypes
                     from ctypes.util import find_library
     
@@ -120,9 +120,9 @@ class Station(object):
                 except (IOError, NameError):
                     pass
 
-        return weewx.units.ValueHelper(value_t=(os_uptime_secs, "second", "group_deltatime"), 
-                                        formatter=self.formatter,
-                                        converter=self.converter)
+        return weewx.units.ValueHelper(value_t=(os_uptime_secs, "second", "group_deltatime"),
+                                       formatter=self.formatter,
+                                       converter=self.converter)
 
     def __getattr__(self, name):
         # This is to get around bugs in the Python version of Cheetah's namemapper:
