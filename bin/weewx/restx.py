@@ -683,7 +683,8 @@ class StdWOW(StdRESTful):
         _ambient_dict.setdefault('server_url', StdWOW.archive_url)
         self.archive_queue = Queue.Queue()
         self.archive_thread = WOWThread(self.archive_queue, _manager_dict, 
-                                        protocol_name="WOW",
+                                        protocol_name="WOW", 
+                                        post_interval=900,
                                         **_ambient_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
