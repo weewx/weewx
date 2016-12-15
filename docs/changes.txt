@@ -49,6 +49,9 @@ Moved examples out of bin directory.  Eliminated experimental directory.
 Reinforce the use of user directory, eliminate use of examples directory.
 Renamed xsearch.py to stats.py.
 
+OS uptime now works for freeBSD. Thanks to user Bill Richter!
+PR #188.
+
 
 3.6.2 11/08/2016
 
