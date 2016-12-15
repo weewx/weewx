@@ -45,6 +45,10 @@ Can now do SummaryByDay (as well as SummaryByMonth and SummaryByYear).
 NB: This can generate *lots* of files --- one for every day in your database!
 Leaving this undocumented for now. Fixes issue #185.
 
+Fixed problem where multiple subsections under [SummaryBy...] stanzas could
+cause multiple copies of their target date to be included in the Cheetah
+variable $SummaryByYear and $SummaryByMonth. Fixes issue #187.
+
 Moved examples out of bin directory.  Eliminated experimental directory.
 Reinforce the use of user directory, eliminate use of examples directory.
 Renamed xsearch.py to stats.py.
