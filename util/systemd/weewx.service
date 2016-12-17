@@ -2,10 +2,8 @@
 
 [Unit]
 Description=weewx weather system
-Requires=syslog.service
-Requires=ntp.service
-After=syslog.service
-After=ntp.service
+Requires=time-sync.target
+After=time-sync.target
 RequiresMountsFor=/home
 
 [Service]
