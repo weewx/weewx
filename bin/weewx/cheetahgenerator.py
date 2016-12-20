@@ -123,6 +123,10 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
     generator_dict = {'SummaryByDay'  : weeutil.weeutil.genDaySpans,
                       'SummaryByMonth': weeutil.weeutil.genMonthSpans,
                       'SummaryByYear' : weeutil.weeutil.genYearSpans}
+    
+    format_dict = {'SummaryByDay'  : "%Y-%m-%d",
+                   'SummaryByMonth': "%Y-%m",
+                   'SummaryByYear' : "%Y"}
 
     def run(self):
         """Main entry point for file generation using Cheetah Templates."""
@@ -276,16 +280,13 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             start_tt = time.localtime(timespan.start)
             stop_tt  = time.localtime(timespan.stop)
 
-            # Save strings like YYYY-MM so they can be used within the document
-            if summarize_by in CheetahGenerator.generator_dict:
-                # This is a "SummaryBy" type generation. Save the time for target summary
-                if summarize_by == 'SummaryByDay':
-                    self.outputted_dict[summarize_by].append(time.strftime("%Y-%m-%d", start_tt))
-                elif summarize_by == 'SummaryByMonth':
-                    self.outputted_dict[summarize_by].append(time.strftime("%Y-%m", start_tt))
-                elif summarize_by == 'SummaryByYear':
-                    self.outputted_dict[summarize_by].append(time.strftime("%Y", start_tt))
-                # For "Summary" generations, the file name comes from the start of the timespan:
+            if summarize_by in CheetahGenerator.format_dict:
+                # This is a "SummaryBy" type generation. If it hasn't been done already, save the
+                # date as a string, to be used inside the document
+                date_str = time.strftime(CheetahGenerator.format_dict[summarize_by], start_tt)
+                if date_str not in self.outputted_dict[summarize_by]:
+                    self.outputted_dict[summarize_by].append(date_str)
+                # For these "SummaryBy" generations, the file name comes from the start of the timespan:
                 _filename = self._getFileName(template, start_tt)
             else:
                 # This is a "ToDate" generation. File name comes 
