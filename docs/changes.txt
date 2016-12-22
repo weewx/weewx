@@ -56,6 +56,8 @@ Renamed xsearch.py to stats.py.
 OS uptime now works for freeBSD. Thanks to user Bill Richter!
 PR #188.
 
+Broke out developer's notes into a separate document.
+
 
 3.6.2 11/08/2016
 
