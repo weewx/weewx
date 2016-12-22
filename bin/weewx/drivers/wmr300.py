@@ -727,7 +727,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.16rc1'
+DRIVER_VERSION = '0.16rc2'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -767,6 +767,24 @@ def _lo(x):
 
 def _hi(x):
     return x >> 8
+
+# pyusb 0.4.x does not provide an errno or strerror with the usb errors that
+# it wraps into USBError.  so we have to compare strings to figure out exactly
+# what type of USBError we are dealing with.  unfortunately, those strings are
+# localized, so we must compare in every language.
+KNOWN_MESSAGES = [
+    'No data available', 'No error',
+    'Nessun dato disponibile', 'Nessun errore',
+    'Keine Daten verfügbar',
+    'No hay datos disponibles',
+    'Pas de données disponibles'
+    ]
+
+def known_usb_err(errmsg):
+    for msg in KNOWN_MESSAGES:
+        if msg in errmsg:
+            return True
+    return False
 
 def get_usb_info():
     pyusb_version = '0.4.x'
@@ -898,7 +916,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
                        (e.errno, e.strerror, e.message, repr(e)))
                 errmsg = repr(e)
-                if not ('No data available' in errmsg or 'No error' in errmsg):
+                if not known_usb_err(errmsg):
                     logerr("usb failure: %s" % e)
                     raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
@@ -967,7 +985,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
                        (e.errno, e.strerror, e.message, repr(e)))
                 errmsg = repr(e)
-                if not ('No data available' in errmsg or 'No error' in errmsg):
+                if not known_usb_err(errmsg):
                     logerr("usb failure: %s" % e)
                     raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
@@ -1112,7 +1130,7 @@ class Station(object):
             logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
                    (e.errno, e.strerror, e.message, repr(e)))
             errmsg = repr(e)
-            if not ('No data available' in errmsg or 'No error' in errmsg):
+            if not known_usb_err(errmsg):
                 raise
         return buf
 
