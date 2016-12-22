@@ -353,20 +353,30 @@ Usage: wee_database --help
             [--binding=BINDING_NAME]
             --dest-binding=BINDING_NAME
             [--dry-run]
+       wee_database --apply-weight-patch
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+            [--trans-days=DAYS]
+            [--dry-run]
+
+Description:
 
 Configure the weewx databases. Most of these functions are
 handled automatically by weewx, but they may be useful in special cases.
 
 Actions:
 
---create-archive  Create the archive database and initialize it with the schema.
---drop-daily      Drop the daily summaries from the database.
---backfill-daily  Rebuild the daily summaries from the archive database.
---reconfigure     Create a new database using the schema in the configuration file.
-                  Copy over data from the old database.
---string-check    Scan the archive database, looking for null strings that may have
-                  been introduced by a SQL editing program.
---transfer        Move data from one database to another.
+--create-archive      Create the archive database and initialize it with the
+                      schema.
+--drop-daily          Drop the daily summaries from the database.
+--backfill-daily      Rebuild the daily summaries from the archive database.
+--reconfigure         Create a new database using the schema in the configuration
+                      file. Copy over data from the old database.
+--string-check        Scan the archive database, looking for null strings that may
+                      have been introduced by a SQL editing program.
+--transfer            Move data from one database to another.
+--apply-weight-patch  Apply the weighted daily summaries patch to the weewx
+                      database.
 
 Options:
   -h, --help            show this help message and exit
@@ -385,13 +395,17 @@ Options:
   --fix                 Fix any embedded strings in a sqlite database.
   --transfer            Transfer the weewx archive from source database to
                         destination database.
+  --apply-weight-patch  Apply the weighted daily summary patch to the weewx
+                        database.
   --binding=BINDING_NAME
                         The data binding. Default is 'wx_binding'.
   --dest-binding=BINDING_NAME
                         The destination data binding.
-  --dry-run             Print what would happen but do not do it.
-  --trans-days=DAYS     Limit backfill transactions to no more than DAYS days
-                        of archive data at a time. Default value is 5. May be
+  --dry-run             Print what would happen but do not do it. Default is
+                        False.
+  --trans-days=DAYS     Limit database transactions to no more than DAYS days
+                        of data at a time. Default value is 5 for backfills
+                        and 50 when applying the weight patch. May be
                         increased for a slight speed increase or reduced to
                         reduce memory usage.
 
@@ -438,9 +452,9 @@ permissions for the requested operation.
 
         <h3>Action <span class="code">--string-check</span></h3>
         <p>Normally, all entries in the archive database are pure numbers. However, some visual SQLite database editors
-            use a null string instead of a null value when deleting entries. These nulls strings can crash weewx. This
-            action checks for them and, if the option <span class="code">--fix</span> is specified, substitutes a true
-            null value if it finds any.</p>
+            use a null string instead of a null value when deleting entries. These nulls strings can crash <span 
+                    class="code">weewx</span>. This action checks for them and, if the option <span 
+                    class="code">--fix</span> is specified, substitutes a true null value if it finds any.</p>
 
         <pre class="tty cmd">wee_database --string-check
 wee_database --string-check --fix</pre>
@@ -457,7 +471,22 @@ wee_database --string-check --fix</pre>
                 href="https://github.com/weewx/weewx/wiki/Transfer%20from%20MySQL%20to%20sqlite#using-wee_database">MySQL
             to SQLite</a>, using <span class="code">wee_database</span>.</p>
 
+        <h3>Action <span class="code">--apply-weight-patch</span></h3>
+        <p>This action will apply the weighted daily summaries patch to a <span class="code">weewx</span> database. 
+            Before <span class="code">weewx</span> v3.x.y the <span class="code">weewx</span> data model was predicated 
+            on a single homogenious archive interval i.e., the time period between archive records was constant throughout 
+            the <span class="code">weewx</span> archive. <span class="code">weewx</span> v3.x.y introduced support for a 
+            variable archive interval; however, to maintain the integrity of the <span class="code">weewx</span> data 
+            model historical <span class="code">weewx</span> data must be patched. This patch will normally be applied 
+            automatically during the first startup of <span class="code">weewx</span> v3.x.y or later and will be largely 
+            unnoticed by the user. For special cases where manual application of this patch is required the user should 
+            use the <span class="code">--apply-weight-patch</span> action.
+        </p>
 
+        <p class="note">
+            <strong>Note</strong><br/>The <span class="code">--apply-weight-patch</span> action is only applicable 
+            to <span class="code">weewx</span> v3.x.y or later.</p>
+        
         <!-- ======== -->
 
 
