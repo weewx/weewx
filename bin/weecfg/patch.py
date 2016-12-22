@@ -229,7 +229,7 @@ class WeightedSumPatch(DatabasePatch):
                     # a dry run then set the 'Version' metadata field to
                     # indicate we have patched to version 2.0.
                     if not self.dry_run:
-                        self.write_metadata('Version', 2.0)
+                        self.write_metadata('Version', '2.0')
                 except WeightedSumPatchAccumError, e:
                     syslog.syslog(syslog.LOG_INFO,
                                   "weightedsumpatch: **** Accumulator error.")
@@ -263,7 +263,7 @@ class WeightedSumPatch(DatabasePatch):
                     self.dbm.backfill_day_summary()
                     # Set the 'Version' metadata field to indicate we have
                     # patched to version 2.0
-                    self.write_metadata('Version', 2.0)
+                    self.write_metadata('Version', '2.0')
                     syslog.syslog(syslog.LOG_INFO,
                                   "weightedsumpatch: Successfully applied '%s' patch." % self.name)
         else:
@@ -508,7 +508,7 @@ class WeightedSumPatch(DatabasePatch):
                               """WHERE name = '%s';"""
         _row = self.dbm.getSql(select_patch_str % (self.dbm.table_name,
                                                    metadata))
-        return int(_row[0]) if _row else None
+        return float(_row[0]) if _row else None
 
     def write_metadata(self, metadata, value):
         """Write a value to a metadata field in the archive_day__metadata table.

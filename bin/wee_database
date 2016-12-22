@@ -123,7 +123,9 @@ def main():
                       metavar="BINDING_NAME",
                       help="The destination data binding.")
     parser.add_option('--dry-run', dest="dry_run", action='store_true',
-                      help='Print what would happen but do not do it.')
+                      default=False,
+                      help='Print what would happen but do not do it. Default'
+                      ' is False.')
     parser.add_option('--trans-days', dest='trans_days', metavar="DAYS",
                       help="Limit database transactions to no more than DAYS"
                       " days of data at a time. Default value is 5 for backfills"

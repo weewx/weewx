@@ -18,7 +18,7 @@ import tempfile
 import configobj
 
 import weeutil.weeutil
-from weewx.engine import all_service_groups
+from weewx import all_service_groups
 
 minor_comment_block = [""]
 major_comment_block = ["", "##############################################################################", ""]
