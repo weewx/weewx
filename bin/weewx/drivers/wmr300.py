@@ -14,19 +14,13 @@
 # No thanks to oregon scientific - repeated requests for hardware and/or
 # specifications resulted in no response at all.
 
-# TODO: battery level for each sensor
-# TODO: signal strength for each sensor
-# TODO: altitude
-# TODO: archive interval
-
-# FIXME: warn if altitude in pressure packet does not match weewx altitude
+# TODO: figure out battery level for each sensor
+# TODO: figure out signal strength for each sensor
+# TODO: figure out archive interval
 
 # FIXME: figure out unknown bytes in history packet
 
 # FIXME: decode the 0xdb packets
-
-# FIXME: figure out how to automatically reset the rain counter, otherwise
-# rain count is not recorded once the counter hits maximum value.
 
 # FIXME: the read/write logic is rather brittle.  it appears that communication
 # must be initiated with an interrupt write.  after that, the station will
@@ -36,10 +30,11 @@
 # the genLoopPacket and genStartupRecords logic should be refactored to make
 # this behiavor explicit.
 
-# FIXME: if the operating system is localized, the check for the string
-# 'No data available' will probably fail.  we should check for a code instead,
-# but it is not clear whether such an element is available in a usb.USBError
-# object, or whether it is available across different pyusb versions.
+# FIXME: deal with initial usb timeout when starting usb communications
+
+# FIXME: warn if altitude in pressure packet does not match weewx altitude
+
+# FIXME: make log notice when rain counter approaches maximum
 
 """Driver for Oregon Scientific WMR300 weather stations.
 
@@ -772,7 +767,7 @@ def _hi(x):
 # it wraps into USBError.  so we have to compare strings to figure out exactly
 # what type of USBError we are dealing with.  unfortunately, those strings are
 # localized, so we must compare in every language.
-KNOWN_MESSAGES = [
+KNOWN_USB_MESSAGES = [
     'No data available', 'No error',
     'Nessun dato disponibile', 'Nessun errore',
     'Keine Daten verfügbar',
@@ -780,8 +775,10 @@ KNOWN_MESSAGES = [
     'Pas de données disponibles'
     ]
 
-def known_usb_err(errmsg):
-    for msg in KNOWN_MESSAGES:
+# these are the usb 'errors' that should be ignored
+def known_usb_err(e):
+    errmsg = repr(e)
+    for msg in KNOWN_USB_MESSAGES:
         if msg in errmsg:
             return True
     return False
@@ -915,8 +912,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
             except usb.USBError, e:
                 logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
                        (e.errno, e.strerror, e.message, repr(e)))
-                errmsg = repr(e)
-                if not known_usb_err(errmsg):
+                if not known_usb_err(e):
                     logerr("usb failure: %s" % e)
                     raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
@@ -984,8 +980,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
             except usb.USBError, e:
                 logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
                        (e.errno, e.strerror, e.message, repr(e)))
-                errmsg = repr(e)
-                if not known_usb_err(errmsg):
+                if not known_usb_err(e):
                     logerr("usb failure: %s" % e)
                     raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
@@ -1129,8 +1124,7 @@ class Station(object):
         except usb.USBError, e:
             logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
                    (e.errno, e.strerror, e.message, repr(e)))
-            errmsg = repr(e)
-            if not known_usb_err(errmsg):
+            if not known_usb_err(e):
                 raise
         return buf
 
