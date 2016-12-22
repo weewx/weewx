@@ -93,7 +93,7 @@ class WeightedSumPatchAccumError(IOError):
 # ============================================================================
 
 
-def apply_patches(config_dict):
+def apply_patches(config_dict, **kwargs):
     """Apply any patches during weewx startup.
 
     Any patches that may need to be applied should be configured and run from
@@ -102,12 +102,15 @@ def apply_patches(config_dict):
     """
 
     # Weighted sums patch
-    patch_config_dict = {'name': 'Weighted Sum',
-                         'trans_days': 50,
-                         'dry_run': False,
-                         'reguired_weewx': '3.6.1'}
+
+    # Do we have a weighted sums patch config dict
+    if 'weight_patch_config_dict' not in kwargs:
+        weight_patch_config_dict = {'name': 'Weighted Sum',
+                                    'trans_days': 50,
+                                    'dry_run': False,
+                                    'reguired_weewx': '3.6.1'}
     patch_obj = WeightedSumPatch(config_dict,
-                                 patch_config_dict)
+                                 weight_patch_config_dict)
     patch_obj.run()
 
 
@@ -198,10 +201,10 @@ class WeightedSumPatch(DatabasePatch):
         backfill the daily summaries.
         """
 
-        # Check metadata dailySummaryVersion value, if its 1 or greater than
-        # we are already patched
-        _daily_summary_version = self.read_metadata('dailySummaryVersion')
-        if _daily_summary_version is None or _daily_summary_version < 1:
+        # Check metadata 'Version' value, if its greater than 1.0 we are
+        # already patched
+        _daily_summary_version = self.read_metadata('Version')
+        if _daily_summary_version is None or _daily_summary_version < 2.0:
             # Get the ts of the (start of the) next day to patch; it's the day
             # after the ts of the last successfully patched daily summary
             _last_patched_ts = self.read_metadata('lastSummaryPatched')
@@ -223,11 +226,10 @@ class WeightedSumPatch(DatabasePatch):
                 try:
                     self.do_patch(_next_day_to_patch_ts)
                     # If we arrive here the patch was applied, if this is not
-                    # a dry run then set the dailySummaryVersion field in the
-                    # daily summary meta data to indicate we have patched to
-                    # version 1.
+                    # a dry run then set the 'Version' metadata field to
+                    # indicate we have patched to version 2.0.
                     if not self.dry_run:
-                        self.write_metadata('dailySummaryVersion', 1)
+                        self.write_metadata('Version', 2.0)
                 except WeightedSumPatchAccumError, e:
                     syslog.syslog(syslog.LOG_INFO,
                                   "weightedsumpatch: **** Accumulator error.")
@@ -259,9 +261,9 @@ class WeightedSumPatch(DatabasePatch):
                                                                       self.binding,
                                                                       initialize=True)
                     self.dbm.backfill_day_summary()
-                    # Set the dailySummaryVersion field in the daily summary
-                    # meta data to indicate we have patched to version 1.
-                    self.write_metadata('dailySummaryVersion', 1)
+                    # Set the 'Version' metadata field to indicate we have
+                    # patched to version 2.0
+                    self.write_metadata('Version', 2.0)
                     syslog.syslog(syslog.LOG_INFO,
                                   "weightedsumpatch: Successfully applied '%s' patch." % self.name)
         else:

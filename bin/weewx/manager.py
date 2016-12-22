@@ -1047,7 +1047,7 @@ class DaySummaryManager(Manager):
     In addition to all the tables for each type, there is one additional table called
     'archive_day__metadata', which currently holds the time of the last update. """
     
-    version = "1.0"
+    version = "2.0"
 
     # The SQL statements used in the daily summary parts of the database
     
@@ -1127,7 +1127,7 @@ class DaySummaryManager(Manager):
         meta_name = '%s_day__metadata' % self.table_name
         self.daykeys = [x[Nprefix:] for x in all_tables if (x.startswith(prefix) and x != meta_name)]
         row = self.connection.execute("""SELECT value FROM %s_day__metadata WHERE name = 'Version';""" % self.table_name)
-        self.version = row[0] if row is not None else "1.0"
+        self.version = row[0] if row is not None else "2.0"
 
     def _initialize_day_tables(self, archiveSchema, cursor):  # @UnusedVariable
         """Initialize the tables needed for the daily summary."""

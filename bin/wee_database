@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
@@ -14,6 +14,7 @@ import time
 
 import user.extensions      #@UnusedImport
 import weecfg
+import weecfg.patch
 import weedb
 import weewx.manager
 import weewx.units
@@ -42,6 +43,11 @@ usage = """wee_database --help
             [--binding=BINDING_NAME]
             --dest-binding=BINDING_NAME
             [--dry-run]
+       wee_database --apply-weight-patch
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+            [--trans-days=DAYS]
+            [--dry-run]
 
 Description:
 
@@ -50,23 +56,26 @@ handled automatically by weewx, but they may be useful in special cases.
 
 Actions:
 
---create-archive  Create the archive database and initialize it with the schema.
---drop-daily      Drop the daily summaries from the database.
---backfill-daily  Rebuild the daily summaries from the archive database.
---reconfigure     Create a new database using the schema in the configuration file.
-                  Copy over data from the old database.
---string-check    Scan the archive database, looking for null strings that may have
-                  been introduced by a SQL editing program.
---transfer        Move data from one database to another."""
+--create-archive      Create the archive database and initialize it with the
+                      schema.
+--drop-daily          Drop the daily summaries from the database.
+--backfill-daily      Rebuild the daily summaries from the archive database.
+--reconfigure         Create a new database using the schema in the configuration
+                      file. Copy over data from the old database.
+--string-check        Scan the archive database, looking for null strings that may
+                      have been introduced by a SQL editing program.
+--transfer            Move data from one database to another.
+--apply-weight-patch  Apply the weighted daily summaries patch to the weewx
+                      database."""
 
 epilog = """If you are using a MySQL database it is assumed that you have the
 appropriate permissions for the requested operation."""
 
-# List of 'dest' settings used by our 'verbs', note 'dest' may be explicit or 
+# List of 'dest' settings used by our 'verbs', note 'dest' may be explicit or
 # implicit. If adding more 'verbs' need to add corresponding 'dest' here.
 dest_list = ['create_archive', 'drop_daily', 'backfill_daily',
-             'reconfigure', 'string_check', 'transfer']
-         
+             'reconfigure', 'string_check', 'transfer', 'weight_patch']
+
 def main():
 
     # Set defaults for the system logger:
@@ -103,31 +112,35 @@ def main():
     parser.add_option("--transfer", dest="transfer", action='store_true',
                       help="Transfer the weewx archive from source database to"
                       " destination database.")
+    parser.add_option("--apply-weight-patch", dest="weight_patch",
+                      action='store_true',
+                      help="Apply the weighted daily summary patch to the weewx"
+                      " database.")
     parser.add_option("--binding", dest="binding", metavar="BINDING_NAME",
                       default='wx_binding',
                       help="The data binding. Default is 'wx_binding'.")
     parser.add_option("--dest-binding", dest="dest_binding",
                       metavar="BINDING_NAME",
                       help="The destination data binding.")
-    parser.add_option('--dry-run', action='store_true',
+    parser.add_option('--dry-run', dest="dry_run", action='store_true',
                       help='Print what would happen but do not do it.')
-    parser.add_option('--trans-days', dest='trans_days', default=5,
-                      metavar="DAYS", 
-                      help="Limit backfill transactions to no more than"
-                      " DAYS days of archive data at a time. Default value is 5."
-                      " May be increased for a slight speed increase or reduced"
-                      " to reduce memory usage.")
+    parser.add_option('--trans-days', dest='trans_days', metavar="DAYS",
+                      help="Limit database transactions to no more than DAYS"
+                      " days of data at a time. Default value is 5 for backfills"
+                      " and 50 when applying the weight patch. May be increased"
+                      " for a slight speed increase or reduced to reduce memory"
+                      " usage.")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    
-    # Do a check to see if the user used more than 1 'verb' . More than 1 verb 
+
+    # Do a check to see if the user used more than 1 'verb' . More than 1 verb
     # should be avoided - what did the user really want to do?
     # first get a list of options actually used
     options_list = [opt for opt, val in options.__dict__.items() if val is not None]
     # now a list of the 'dest' settings used
     dest_used = [opt for opt in options_list if opt in dest_list]
-    # If we have more than 1 entry in dest_used then we have more than 1 'verb' 
+    # If we have more than 1 entry in dest_used then we have more than 1 'verb'
     # used. Then inform the user and exit. If only 1 'verb' then carry on.
     if len(dest_used) > 1:
         # generate the message but we need to speak 'options' (aka verbs)
@@ -139,11 +152,11 @@ def main():
         # get rid of the [ and ]
         verbs_str = ', '.join(verbs_used)
         # our exit message
-        exit_str = ("Multiple verbs found in command line %s. Only one verb permitted.\nNothing done. Aborting." % 
+        exit_str = ("Multiple verbs found in command line %s. Only one verb permitted.\nNothing done. Aborting." %
                     (verbs_str, ))
         # now exit with our message
         sys.exit(exit_str)
-    
+
     # get config_dict to use
     config_path, config_dict = weecfg.read_config(options.config_path, args)
     print "Using configuration file %s" % config_path
@@ -159,7 +172,7 @@ def main():
         dropDaily(config_dict, db_binding)
 
     if options.backfill_daily:
-        backfillDaily(config_dict, db_binding, int(options.trans_days))
+        backfillDaily(config_dict, db_binding, options)
 
     if options.reconfigure:
         reconfigMainDatabase(config_dict, db_binding)
@@ -169,6 +182,9 @@ def main():
 
     if options.transfer:
         transferDatabase(config_dict, db_binding, options)
+
+    if options.weight_patch:
+        applyWeightPatch(config_dict, db_binding, options)
 
 def createMainDatabase(config_dict, db_binding):
     """Create a weewx archive database"""
@@ -209,7 +225,7 @@ def dropDaily(config_dict, db_binding):
                 # No daily summaries. Nothing to be done.
                 print "No daily summaries found in database '%s'. Nothing done." % (database_name,)
 
-def backfillDaily(config_dict, db_binding, trans_days):
+def backfillDaily(config_dict, db_binding, options):
     """Backfill the daily summaries"""
 
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
@@ -220,6 +236,7 @@ def backfillDaily(config_dict, db_binding, trans_days):
     print "Backfilling daily summaries in database '%s' ..." % database_name
 
     t1 = time.time()
+    trans_days = int(options.trans_days) if options.trans_days else 5
     # Open up the archive. This will create the tables necessary for the daily summaries if they
     # don't already exist:
     with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
@@ -438,7 +455,7 @@ def transferDatabase(config_dict, db_binding, options):
                         print "Maybe it does not exist (MySQL) or is incorrectly defined in weewx.conf?"
                         print "Nothing done. Aborting."
                         return
-       
+
                 elif ans == 'n':
                     # we decided not to do the transfer
                     print "Nothing done."
@@ -448,6 +465,23 @@ def transferDatabase(config_dict, db_binding, options):
             print ("Transfer %s records from source database '%s' to destination database '%s'." %
                    (num_recs, src_manager.database_name, dest_manager_dict['database_dict']['database_name']))
             print "Dry run, nothing done."
+
+def applyWeightPatch(config_dict, db_binding, options):
+    """Apply the weight patch to the daily summaries."""
+
+    trans_days = int(options.trans_days) if options.trans_days else 50
+    # construct a patch config dict
+    weight_patch_config_dict = {'name': 'Weighted Sum',
+                                'binding': db_binding,
+                                'trans_days': trans_days,
+                                'dry_run': options.dry_run,
+                                'reguired_weewx': '3.6.1'}
+
+    # create a weighted sum patch object
+    patch_obj = weecfg.patch.WeightedSumPatch(config_dict,
+                                              weight_patch_config_dict)
+    # apply the patch
+    patch_obj.run()
 
 if __name__=="__main__" :
     main()
