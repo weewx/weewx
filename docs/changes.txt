@@ -3,6 +3,14 @@ weewx change history
 
 x.y.z MM/dd/YYYY
 
+Calculation of aggregates over a period of one day or longer now respect any 
+change in archive interval. Whilst the archive interval can change within a 
+one day or longer were calculated as if the archive interval was fixed. As a 
+consequence of this change the daily summaries must be patched when upgrading 
+to v3.7.0 or later. This patch is applied automatically when weewx first starts 
+after upgrade. wee_database also has the ability to manually apply this patch.
+Fixes issue #61.
+
 The tag $current now uses the record included in the event NEW_ARCHIVE_RECORD,
 rather than retrieve the last record from the database. This means you can
 use the tag $current for observation types that are in the record, but not

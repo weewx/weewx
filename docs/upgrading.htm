@@ -212,6 +212,8 @@ Version: 3.6.1
     <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
     
     <h2>From V3.6 or earlier</h2>
+    
+    <h3>Changes to sensor mapping</h3>
     <p>
         The mapping of sensors to database fields was formalized in Version
         3.7, resulting in changes to the configuration for some of the drivers.
@@ -292,6 +294,26 @@ Version: 3.6.1
         </tr>
     </table>
 
+    <h3>Changes to aggregate calculations</h3>
+    <p>
+        Whilst the archive interval in a database can change without consequence 
+        since Version 3.0.0, aggregates based on a period of one day or longer (
+        i.e, those using the daily summaries) were calculated as if the archive 
+        interval was fixed. To ensure that aggregates properly account for 
+        different archive intervals, the applicable daily summary data is now 
+        weighted by the archive interval of each record contributing to the 
+        daily summary. To ensure consistency with historical data it is necessary 
+        to patch all existing daily summaries. This patch is applied once during 
+        startup the first time <span class="code">weewx</span> is run after 
+        upgrading to Version 3.7.0 or later and no user input is required. The 
+        time taken to apply the patch depends on many factors but in most cases 
+        it should be no more than a few minutes. In some cases it may be 
+        necessary to rebuild the daily summaries in which case the application 
+        of the patch may take tens of minutes. The application of the patch is 
+        recorded in the <span class="code">weewx</span> log. Users should monitor 
+        the <span class="code">weewx</span> log when first starting 
+        <span class="code">weewx</span> after upgrading to Version 3.7.0.
+    </p>
 
     <h2>From V3.5 or earlier</h2>
 
