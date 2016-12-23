@@ -770,9 +770,9 @@ def _hi(x):
 KNOWN_USB_MESSAGES = [
     'No data available', 'No error',
     'Nessun dato disponibile', 'Nessun errore',
-    'Keine Daten verfügbar',
+    'Keine Daten verf',
     'No hay datos disponibles',
-    'Pas de données disponibles'
+    'Pas de donn'
     ]
 
 # these are the usb 'errors' that should be ignored
