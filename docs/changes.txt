@@ -5,6 +5,7 @@ x.y.z MM/dd/YYYY
 
 Calculation of aggregates over a period of one day or longer now respect any 
 change in archive interval. Whilst the archive interval can change within a 
+database without consequence since v3.0.0, any aggregates based on a period of 
 one day or longer were calculated as if the archive interval was fixed. As a 
 consequence of this change the daily summaries must be patched when upgrading 
 to v3.7.0 or later. This patch is applied automatically when weewx first starts 
