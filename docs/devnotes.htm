@@ -16,12 +16,9 @@
 
 <div class="sidebar">
     <div class="doclist">
-        <a href="usersguide.htm">User's Guide</a><br/>
-        <a href="customizing.htm">Customization Guide</a><br/>
-        <a href="hardware.htm">Hardware Guide</a><br/>
-        <a href="utilities.htm">Utilities Guide</a><br/>
-        <a href="upgrading.htm">Upgrade Guide</a><br/>
-        <a href="devnotes.htm">Notes for Developers</a>
+        <a href="usersguide.htm">User's Guide</a><br/> <a href="customizing.htm">Customization Guide</a><br/> <a
+            href="hardware.htm">Hardware Guide</a><br/> <a href="utilities.htm">Utilities Guide</a><br/> <a
+            href="upgrading.htm">Upgrade Guide</a><br/> <a href="devnotes.htm">Notes for Developers</a>
     </div>
     <div id="toc_controls"></div>
     <div id="toc_parent">
@@ -52,7 +49,7 @@ Version: 3.6.1
 
         <h1>Goals</h1>
 
-        <p>The primary design goals of <span class="code">weewx </span>are: </p>
+        <p>The primary design goals of <span class="code">weewx</span> are:</p>
         <ul>
             <li>Architectural simplicity. No semaphores, no named pipes, no inter-process communications, no complex
                 multi-threading to manage.
@@ -103,7 +100,7 @@ Version: 3.6.1
                 seems to be dead). Fortunately, Cheetah seems to be very robust, with only a few well-known bugs that
                 are easiy worked around, so we will likely continue to use it for the foreseeable future.
             </li>
-            <li>Pure Python. The code base is 100% Python &mdash no underlying C libraries need be built to install
+            <li>Pure Python. The code base is 100% Python &mdash; no underlying C libraries need be built to install
                 <span class="code">weewx</span>. This also means no Makefiles are needed.
             </li>
         </ul>
@@ -156,7 +153,11 @@ Version: 3.6.1
         <h1>Value &quot;<span class="code">None</span>&quot;</h1>
 
         <p>The Python special value <span class="code">None</span> is used throughout to signal a missing data point.
-            All functions expect it. </p>
+            All functions must be written to expect it. </p>
+
+        <p>Device drivers should be written to emit <span class="code">None</span> if a data value is bad (perhaps
+            because of a failed checksum). If the hardware simply doesn't support it, then the driver should not emit a
+            value at all.</p>
 
         <p>However, the time value must never be <span class="code">None</span>. This is because it is used as the
             primary key in the SQL database. </p>
@@ -186,6 +187,44 @@ delta = datetime.timedelta(seconds=10800)
 next_dt = time_dt + delta
 next_ts = int(time.mktime(next_dt.timetuple()))</pre>
         <p>Other time conversion problems are handled in a similar manner. </p>
+
+        <h1>Internationalization</h1>
+        <p>Generally, weewx does not make much use of Unicode. This is because the Python 2.x libraries do not always
+            handle it correctly. In particular, the function <span class="code">time.strftime()</span> completely fails
+            when handed a Unicode string with a non-ASCII character. As this function is often used by extensions,
+            working around this bug is an unfair expectation on extension writers. So, we generally avoid Unicode.</p>
+        <p>Instead, weewx mostly uses regular strings, with any non-ASCII characters encoded as UTF-8. </p>
+        <p>An exception to this general rule is the image generator, which holds labels internally in Unicode, because
+            that is the encoding expected by most fonts.</p>
+        <p>The document <i><a
+                href="https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/">The
+            Absolute Minimum Every Software Developer Absolutely, Positively Must Know About Unicode and Character
+            Sets</a></i> by Joel Spolsky, is highly recommended if you are just starting to work with UTF-8 and Unicode.
+        </p>
+
+        <h1>Exceptions</h1>
+        <p>In general, your code should not simply swallow an exception. For example, this is bad form:</p>
+        <pre class="tty">
+    try:
+        os.rename(oldname, newname)
+    except:
+        pass
+        </pre>
+        <p>While the odds are that if an exception happens it will be because the file <span class="code">oldname</span>
+            does not exist, that is not guaranteed. It could be because of a keyboard interrupt, or a corrupted file
+            system, or something else. Instead, you should test explicitly for any expected exception, and let the rest
+            go by:</p>
+        <pre class="tty">
+    try:
+        os.rename(oldname, newname)
+    except OSError:
+        pass
+        </pre>
+        <p>Weewx has a few specialized exception types, used to rationalized all the different types of exceptions that
+            could be thrown by the underlying libraries. In particular, low-level I/O code can raise a myriad of
+            exceptions, such as USB errors, serial errors, network connectivity errors, <i>etc.</i> All device drivers
+            should catch these exceptions and convert them into an exception of type <span
+                    class="code">WeeWxIOError</span> or one of its subclasses.</p>
 
         <h1>Glossary</h1>
 
