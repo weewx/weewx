@@ -34,6 +34,10 @@ body{
   .main { margin-left: 270px; }
 }
 
+@media (max-height:800px) {
+  .sidebar { max-height: 60%; }
+}
+
 div.sidebar {
   position: fixed;
   top: 4px;
@@ -82,7 +86,7 @@ div.main {
   border-radius: 3px;
   overflow-x: hidden;
   overflow-y: scroll;
-  max-height: 80%;
+  max-height: 75%;
 }
 #toc_controls {}
 /* prevent dancing toc by eliminating the default bold during mouseover */
