@@ -16,9 +16,12 @@
 
 <div class="sidebar">
     <div class="doclist">
-        <a href="usersguide.htm">User's Guide</a><br/> <a href="customizing.htm">Customization Guide</a><br/> <a
-            href="hardware.htm">Hardware Guide</a><br/> <a href="utilities.htm">Utilities Guide</a><br/> <a
-            href="upgrading.htm">Upgrade Guide</a><br/> <a href="devnotes.htm">Notes for Developers</a>
+        <a href="usersguide.htm">User's Guide</a><br/>
+        <a href="customizing.htm">Customization Guide</a><br/>
+        <a href="hardware.htm">Hardware Guide</a><br/>
+        <a href="utilities.htm">Utilities Guide</a><br/>
+        <a href="upgrading.htm">Upgrade Guide</a><br/>
+        <a href="devnotes.htm">Notes for Developers</a>
     </div>
     <div id="toc_controls"></div>
     <div id="toc_parent">
@@ -44,31 +47,36 @@ Version: 3.6.1
 
     <div id="technical_content" class="content">
 
-        <p>This guide is intended for developers contributing to the open source project weewx.</p>
+        <p>This guide is intended for developers contributing to the open source project <span class="code">weewx</span>.</p>
 
 
         <h1>Goals</h1>
 
         <p>The primary design goals of <span class="code">weewx</span> are:</p>
         <ul>
-            <li>Architectural simplicity. No semaphores, no named pipes, no inter-process communications, no complex
-                multi-threading to manage.
+            <li>Architectural simplicity. No semaphores, no named pipes, no
+                inter-process communications, no complex multi-threading to
+                manage.
             </li>
             <li>Extensibility. Make it easy for the user to add new features or to modify existing features.
             </li>
-            <li>&quot;Fast enough.&quot; In any design decision, architectural simplicity and elegance trump speed.
+            <li>&quot;Fast enough&quot; In any design decision, architectural simplicity and elegance trump speed.
             </li>
-            <li>One code base. The same code base should be used for all platforms, all weather stations, all reports,
+            <li>One code base. A single code base should be used for all platforms, all weather stations, all reports,
                 and any combination of features. Ample configuration and customization options should be provided so the
                 user does not feel tempted to start hacking code. At worse, the user may have to subclass, which is much
                 easier to port to newer versions of the code base, than customizing the base code.
             </li>
-            <li>Minimal reliance on external packages, so the user does not have to go chase them down all over the Web
-                before getting started.
+            <li>Minimal dependencies.  The code should rely on a minimal
+                number of external packages, so the user does not have to go
+                chase them down all over the Web before getting started.
             </li>
-            <li>A very simple data model that is likely to support many different types of hardware.
+            <li>Simple data model.  The implementation should use a very
+                simple data model that is likely to support many different
+                types of hardware.
             </li>
-            <li>A &quot;pythonic&quot; code base, so others will find idioms that they recognize.
+            <li>A &quot;pythonic&quot; code base. The code should be written
+                so others will find idioms that they recognize.
             </li>
         </ul>
         <h1>Strategies</h1>
@@ -85,16 +93,22 @@ Version: 3.6.1
                 through the database, where transactions are easily controlled. This greatly reduces the chances of
                 corrupting the data, making it much easier to understand and modify the code base.
             </li>
-            <li>Isolate the data collection and archiving code in a single thread that is simple enough that it is
-                unlikely to crash. The report processing is where most mistakes are likely to happen, so isolate that in
-                a separate thread. If it crashes, it will not affect the main data thread.
+            <li>Isolated data collection and archiving.  The code for
+                collecting and archiving data run in a single thread that is
+                simple enough that it is unlikely to crash. The report
+                processing is where most mistakes are likely to happen, so
+                isolate that in a separate thread. If it crashes, it will not
+                affect the main data thread.
             </li>
-            <li>A powerful configuration parser, <a
-                    href="http://www.voidspace.org.uk/python/configobj.html">ConfigObj</a>, by Michael Foord and Nicola
+            <li>A powerful configuration parser.  The
+                <a href="http://www.voidspace.org.uk/python/configobj.html">ConfigObj</a> module, by Michael Foord and Nicola
                 Larosa, was chosen to read the configuration file. This allows many options that might otherwise have to
                 go in the code to go instead in a configuration file.
             </li>
-            <li>A powerful templating engine, <a href="http://www.cheetahtemplate.org/">Cheetah</a>, was used. Cheetah
+            <li>A powerful templating engine.  The
+                <a href="http://www.cheetahtemplate.org/">Cheetah</a> module
+                was chosen for generating html and other types of files from
+                templates. Cheetah
                 allows <em>search list extensions</em> to be defined, making it easy to extend weewx with new template
                 tags. Unfortunately, as of 2016, Cheetah has not been updated in many years (indeed, the Cheetah website
                 seems to be dead). Fortunately, Cheetah seems to be very robust, with only a few well-known bugs that
@@ -136,7 +150,7 @@ Version: 3.6.1
 
         <h1>Units</h1>
 
-        <p>In general, there are three different areas where the unit system makes a difference.: </p>
+        <p>In general, there are three different areas where the unit system makes a difference: </p>
         <ol>
             <li>On the weather station hardware. Different manufacturers use different unit systems for their hardware.
                 The Davis Vantage series use U.S. Customary units exclusively, Fine Offset and LaCrosse stations use

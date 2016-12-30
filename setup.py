@@ -449,6 +449,7 @@ if __name__ == "__main__":
                         'docs/copyright.htm',
                         'docs/customizing.htm',
                         'docs/debian.htm',
+                        'docs/devnotes.htm',
                         'docs/hardware.htm',
                         'docs/macos.htm',
                         'docs/readme.htm',
