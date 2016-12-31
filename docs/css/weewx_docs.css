@@ -407,3 +407,114 @@ div .ui-widget-header {
 .ui-widget-content {
   background: white;
 }
+
+
+/* settings for printing */
+@media print {
+    /* Impose portrait printing with forced margins */
+    @page {
+        size: landscape;
+        margin-top: 1.8cm;
+        margin-bottom: 1.8cm;
+        margin-left: 1cm;
+        margin-right: 1cm;    
+    }
+    
+    body {
+        font-family: sans-serif;
+        font-size: 10pt;
+        background: none;
+    }
+
+    div.sidebar {
+        display: none; /* Delete the left menu */
+    }
+
+    div.main {
+        margin: 0; /* Do not make any margin for sidebar since there is none */
+    }
+
+    /* underline headers */
+    .header {
+        border: none;
+        border-bottom: 1px solid #999999;
+    }
+
+    .footer {
+        display: none;
+    }
+
+    .title {
+        text-align: center;
+        font-size: 250%;
+    }
+
+    .image {
+        max-width: 98%; /* To be responsive the size of the image must at most be in width that of the article container */
+        height: auto;   /* Keep the ratio when the image is resized */
+    }
+
+    .tty {
+        font-size: 80%
+    }
+
+    table {
+        max-width: 98%; /* To be responsive the size of the image must at most be in width that of the article container */
+        height: auto;   /* Keep the ratio when the image is resized */
+    }
+
+    p, blockquote {
+        orphans: 3; /* No orphan line down */
+        widows: 3;  /* No orphan line up */
+    }
+
+    /* No cut in these elements */
+    blockquote, ul, ol, table, .tty {
+        page-break-inside: avoid;
+    }
+
+    /* Justify text for paragraphs */
+    p, ul, ol {
+        text-align: justify;
+    }
+
+    /* No jump after these elements */
+    h1, h2, h3, h4, caption {
+        border: none;
+        border-radius: 0px;
+        page-break-after: avoid;
+    }
+
+    /* Each title begins on a new page */
+    h1 {
+        border: none;
+        border-radius: 0px;
+        border-bottom: 1px solid #999999;
+        page-break-before: always;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    table {
+        border: none;
+    }
+
+    td {
+        border: 1px solid #eeeeee;
+    }
+
+    caption {
+        border: none;
+    }
+
+    .note {
+        border: 4px solid #aac0b0;
+        background-color: #cce0d0 !important;
+    }
+    .warning {
+        border: 4px solid #ffdddd;
+        background-color: #ffeeee !important;
+    }
+}

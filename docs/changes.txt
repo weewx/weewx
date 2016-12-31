@@ -61,6 +61,9 @@ PR #188.
 
 Broke out developer's notes into a separate document.
 
+Added @media CSS for docs to improve printed/PDF formatting.  Thanks to user
+Tiouck!
+
 
 3.6.2 11/08/2016
 
