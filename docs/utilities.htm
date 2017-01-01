@@ -29,7 +29,8 @@
         <a href="customizing.htm">Customization Guide</a><br/>
         <a href="hardware.htm">Hardware Guide</a><br/>
         <a href="utilities.htm">Utilities Guide</a><br/>
-        <a href="upgrading.htm">Upgrade Guide</a>
+        <a href="upgrading.htm">Upgrade Guide</a><br/>
+        <a href="devnotes.htm">Notes for Developers</a>
     </div>
     <div id="toc_controls"></div>
     <div id="toc_parent">
@@ -894,7 +895,7 @@ wee_extension --install basic.tar.gz</pre>
 Request to install '/var/tmp/weewx-cmon-0.7.tgz'
 Extracting from tarball /var/tmp/weewx-cmon-0.7.tgz
 Added new service user.cmon.ComputerMonitor to process_services
-Saving installer file to /home/weewx/bin/weecfg/user/installer/cmon
+Saving installer file to /home/weewx/bin/user/installer/cmon
 Saved configuration dictionary. Backup copy at /home/weewx/weewx.conf.20150430130322
 Finished installing extension '/var/tmp/weewx-cmon-0.7.tgz'</pre>
 
@@ -1385,7 +1386,7 @@ the daily summaries using the wee_database utility.</pre>
             </tr>
             <tr>
                 <td>-45</td>
-                <td><span class="code">None/NULL</span>/td>
+                <td><span class="code">None/NULL</span></td>
             </tr>
             <tr>
                 <td>-9999</td>
@@ -1588,7 +1589,7 @@ the daily summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='cumulus_decimal'>decimal</h4>
 
-        <p>The character used as the decimal point in the Cumulus monthly log files A full stop is frequently used but
+        <p>The character used as the decimal point in the Cumulus monthly log files. A full stop is frequently used but
             it may be another character depending on the settings on the machine that produced the Cumulus monthly log
             files. This parameter must be included in quotation marks. Default is <span class="code">'.'</span>.
         </p>
@@ -1838,7 +1839,7 @@ Confirm successful import in the weewx log file.</pre>
                 <span class="code">weewx</span> log file covering the <span class="code">wee_import</span> session and
                 take note of any records that were not imported. The most common reason for imported records not being
                 saved to the database is because a record with that timestamp already exists in the database, in such
-                cases something similar to following will be found in the log:
+                cases something similar to the following will be found in the log:
 
         <pre class="tty">
 Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
@@ -2110,7 +2111,7 @@ Confirm successful import in the weewx log file.
                 <span class="code">weewx</span> log file covering the <span class="code">wee_import</span> session and
                 take note of any records that were not imported. The most common reason for imported records not being
                 saved to the database is because a record with that timestamp already exists in the database, in such
-                cases something similar to following will be found in the log:
+                cases something similar to the following will be found in the log:
 
         <pre class="tty">
 Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
@@ -2383,7 +2384,7 @@ Confirm successful import in the weewx log file.
                 <span class="code">weewx</span> log file covering the <span class="code">wee_import</span> session and
                 take note of any records that were not imported. The most common reason for imported records not being
                 saved to the database is because a record with that timestamp already exists in the database, in such
-                cases something similar to following will be found in the log:
+                cases something similar to the following will be found in the log:
 
         <pre class="tty">
 Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime

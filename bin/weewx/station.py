@@ -9,12 +9,6 @@ import time
 import weeutil.weeutil
 import weewx.units
 
-# For MacOS:
-try:
-    from Quartz.QuartzCore import CACurrentMediaTime
-except ImportError:
-    pass
-
 class StationInfo(object):
     """Readonly class with static station information. It has no formatting information. Just a POS.
     
@@ -78,13 +72,13 @@ class Station(object):
         self.latitude  = weeutil.weeutil.latlon_string(stn_info.latitude_f,  
                                                        hemispheres[0:2],
                                                        'lat', latlon_formats)
-        self.longitude = weeutil.weeutil.latlon_string(stn_info.longitude_f, 
+        self.longitude = weeutil.weeutil.latlon_string(stn_info.longitude_f,
                                                        hemispheres[2:4],
                                                        'lon', latlon_formats)
         self.altitude = weewx.units.ValueHelper(value_t=stn_info.altitude_vt,
                                                 formatter=formatter,
                                                 converter=converter)
-        self.rain_year_str = time.strftime("%b", (0, self.rain_year_start, 1, 0,0,0,0,0,-1))
+        self.rain_year_str = time.strftime("%b", (0, self.rain_year_start, 1, 0, 0, 0, 0, 0, -1))
 
         self.version = weewx.__version__
 
@@ -109,9 +103,22 @@ class Station(object):
         except (IOError, KeyError):
             try:
                 # For MacOs:
+                from Quartz.QuartzCore import CACurrentMediaTime
                 os_uptime_secs = CACurrentMediaTime()
-            except NameError:
-                pass
+            except ImportError:
+                try:
+                    # for FreeBSD
+                    import ctypes
+                    from ctypes.util import find_library
+    
+                    libc = ctypes.CDLL(find_library('c'))
+                    size = ctypes.c_size_t()
+                    buf = ctypes.c_int()
+                    size.value = ctypes.sizeof(buf)
+                    libc.sysctlbyname("kern.boottime", ctypes.byref(buf), ctypes.byref(size), None, 0)
+                    os_uptime_secs = time.time() - float(buf.value)
+                except (IOError, NameError):
+                    pass
 
         return weewx.units.ValueHelper(value_t=(os_uptime_secs, "second", "group_deltatime"),
                                        formatter=self.formatter,
