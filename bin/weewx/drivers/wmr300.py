@@ -34,8 +34,6 @@
 
 # FIXME: warn if altitude in pressure packet does not match weewx altitude
 
-# FIXME: make log notice when rain counter approaches maximum
-
 """Driver for Oregon Scientific WMR300 weather stations.
 
 Sensor data transmission frequencies:
@@ -57,9 +55,9 @@ mapped to the wview or other schema as needed with a configuration setting.
 For example, for the wview schema, wind_speed maps to windSpeed, temperature_0
 maps to inTemp, and humidity_1 maps to outHumidity.
 
-Maximum value for rain counter is 40000 mm (10160 in) (0x9c 0x40).  The counter
-does not wrap; it must be reset when it hits maximum value otherwise rain data
-will not be recorded.
+Maximum value for rain counter is 400 in (10160 mm) (40000 = 0x9c 0x40).  The
+counter does not wrap; it must be reset when it hits maximum value otherwise
+rain data will not be recorded.
 
 
 Message types -----------------------------------------------------------------
@@ -1007,6 +1005,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 logdbg("rain=%s rain_total=%s last_rain=%s" %
                        (p['rain'], pkt['rain_total'], self.last_rain))
             self.last_rain = pkt['rain_total']
+            if pkt['rain_total'] == Station.MAX_RAIN_MM:
+                loginf("rain counter maximum reached, counter reset required")
         if DEBUG_PACKET:
             logdbg("converted packet: %s" % p)
         return p
@@ -1056,6 +1056,7 @@ class Station(object):
     EP_IN = 0x81
     EP_OUT = 0x01
     MAX_RECORDS = 50000 # FIXME: what is maximum number of records?
+    MAX_RAIN_MM = 10160 # maximum value of rain counter, in mm
 
     def __init__(self, vend_id=VENDOR_ID, prod_id=PRODUCT_ID):
         self.vendor_id = vend_id
