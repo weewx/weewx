@@ -66,6 +66,9 @@ Tiouck!
 
 Added warning in wmr300 driver when rain counter reaches maximum value.
 
+Added a 0.01 second delay after each read_byte in ws23xx driver to reduce
+chance of data spikes caused by RS232 line contention.  Thanks lionel.sylvie!
+
 
 3.6.2 11/08/2016
 
