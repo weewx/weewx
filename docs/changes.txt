@@ -16,7 +16,8 @@ It's now possible to iterate over every record within a timespan.
 Fixes issue #182.
 
 Use schema_name = hardware_name pattern in sensor map for drivers that support
-extensible sensor suites, including the drivers for cc3000, wmr300
+extensible sensor suites, including the drivers for cc3000, te923, wmr300,
+wmr100
 
 Report the firmware version when initializing the cc3000 driver.
 
