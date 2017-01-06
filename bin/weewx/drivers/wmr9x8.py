@@ -181,8 +181,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         'rain24': 'rain_24',
         'yesterdayRain': 'rain_yesterday',
         'rainBatteryStatus': 'rain_battery_status',
-        'windchill': 'windchill'
-        }
+        'windchill': 'windchill'}
 
     def __init__(self, **stn_dict):
         """Initialize an object of type WMR9x8.
@@ -271,7 +270,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
                 if sent_checksum == calc_checksum:
                     syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Received WM-918 data packet.")
-                    payload = pdata[0:-1]  #send all of packet but crc
+                    payload = pdata[0:-1] # send all of packet but crc
                     _record = wm918_packet_type_decoder_map[ptype](self, payload)
                     _record = self._sensors_to_fields(_record, self.sensor_map)
                     if _record is not None:
@@ -325,7 +324,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
     def log_packet(self, packet):
         packet_str = ','.join(["x%x" % v for v in packet])
-        print "%d, %s, %s" % (int(time.time()+0.5), time.asctime(), packet_str)
+        print "%d, %s, %s" % (int(time.time() + 0.5), time.asctime(), packet_str)
 
     @wmr9x8_registerpackettype(typecode=0x00, size=11)
     def _wmr9x8_wind_packet(self, packet):
@@ -393,7 +392,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         _record = {
             'dateTime': int(time.time() + 0.5),
             'usUnits': weewx.METRIC,
-            'battery_status_%d' % chan : battery
+            'battery_status_%d' % chan :battery
         }
 
         _record['humidity_%d' % chan] = hum1 + (hum10 * 10)
@@ -488,7 +487,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         slpoff = (1000 + pre_slpoff) if pre_slpoff < 400.0 else pre_slpoff
         
         _record = {
-            'battery_status_in' : battery,
+            'battery_status_in': battery,
             'humidity_in': hum,
             'temperature_in': temp,
             'dewpoint_in': dew,
@@ -582,7 +581,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         # The console returns wind speeds in m/s. Our metric system requires
         # kph, so the result needs to be multiplied by 3.6
         _record = {
-            'wind_speed': ((avg10th / 10.0) + avg1 + (avg10*10)) * 3.6,
+            'wind_speed': ((avg10th / 10.0) + avg1 + (avg10 * 10)) * 3.6,
             'wind_dir': avgdir1 + (avgdir10 * 10) + (avgdir100 * 100),
             'wind_gust': ((gust10th / 10.0) + gust1 + (gust10 * 10)) * 3.6,
             'wind_gust_dir': dir1 + (dir10 * 10) + (dir100 * 100),
@@ -644,7 +643,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         tempout *= -1 if (tempout10 & 0x08) else 1
         _record = {
             'temperature_in': temp,
-            'temperature_out': tempout
+            'temperature_out': tempout,
             'dateTime': int(time.time() + 0.5),
             'usUnits': weewx.METRIC
         }
@@ -741,7 +740,7 @@ if __name__ == '__main__':
 
     if options.gen_packets:
         syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Running genLoopPackets()")
-        stn_dict={'port': options.port}
+        stn_dict = {'port': options.port}
         stn = WMR9x8(**stn_dict)
         
         for packet in stn.genLoopPackets():
