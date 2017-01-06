@@ -1479,6 +1479,7 @@ longitude = -77.0366</pre>
 
         <p>How many times to try again before giving up. Default is 4. </p>
 
+
         <h3 class="config_section">[WMR100]</h3>
 
         <p>This section is for options relating to the Oregon Scientific WMR100
@@ -1488,10 +1489,24 @@ longitude = -77.0366</pre>
 
         <p>Set to the station model. For example, WMR100 or WMRS200.</p>
 
-        <p class="config_option">stale_wind</p>
+        <p class="config_option">sensor_map</p>
 
-        <p>How long a wind record can be used to calculate wind chill (in seconds).
-            Default is 30.</p>
+        <p>This option defines the mapping between observations from remote
+            sensors and the fields in the database.
+        </p>
+
+        <p>For example, this would associate extraTemp1 with the remote T/H
+            sensor on channel 5:
+        </p>
+
+    <pre class='tty'>[[sensor_map]]
+    extraTemp1 = temperature_5</pre>
+
+        <p>See the <a href="hardware.htm#wmr100_data">Hardware Guide</a> for
+            a complete listing of sensor names and the default database fields
+            for each sensor.
+        </p>
+
 
         <h3 class="config_section">[WMR200]</h3>
 
@@ -1504,12 +1519,13 @@ longitude = -77.0366</pre>
 
         <p class="config_option">use_pc_time</p>
 
-        <p>If True, use the computer time, otherwise use the station time. Default
-            is True.</p>
+        <p>If True, use the computer time, otherwise use the station time.
+            Default is True.</p>
 
         <p class="config_option">archive_interval</p>
 
-        <p>Set the wmr200 archive interval in seconds. Default is 60 seconds.</p>
+        <p>Set the wmr200 archive interval in seconds. Default is 60
+            seconds.</p>
 
         <p>The wmr200 hardware records archive data at an immutable rate of 60
             seconds. This field may be set to a higher value enabling the weewx
@@ -1543,7 +1559,27 @@ longitude = -77.0366</pre>
 
         <p class="config_option">sensor_status</p>
 
-        <p>If True, emit sensor faults and failures to log. Default is True.</p>
+        <p>If True, emit sensor faults and failures to log. Default is
+            True.</p>
+
+        <p class="config_option">sensor_map</p>
+
+        <p>This option defines the mapping between observations from remote
+            sensors and the fields in the database.
+        </p>
+
+        <p>For example, this would associate extraTemp1 with the remote T/H
+            sensor on channel 5:
+        </p>
+
+    <pre class='tty'>[[sensor_map]]
+    extraTemp1 = temperature_5</pre>
+
+        <p>See the <a href="hardware.htm#wmr200_data">Hardware Guide</a> for
+            a complete listing of sensor names and the default database fields
+            for each sensor.
+        </p>
+
 
         <h3 class="config_section">[WMR300]</h3>
 
@@ -1576,14 +1612,15 @@ longitude = -77.0366</pre>
 
         <h3 class="config_section">[WMR9x8]</h3>
 
-        <p>This section is for options relating to the Oregon Scientific WMR-918/968
-            series of weather stations with serial connectors.</p>
+        <p>This section is for options relating to the Oregon Scientific
+            WMR-918/968 series of weather stations with serial connectors.</p>
 
         <p class="config_important">type</p>
 
-        <p>For the moment, only <span class="code">serial</span> is supported.</p>
+        <p>For the moment, only <span class="code">serial</span> is
+            supported.</p>
 
-        <p class="config_important">port </p>
+        <p class="config_important">port</p>
 
         <p>Along with the <span class="code">serial</span> option above, you
             must set the serial port name used by the station. For example,
@@ -1594,6 +1631,26 @@ longitude = -77.0366</pre>
         <p class="config_important">model</p>
 
         <p>Set to the station model. For example, WMR968 or WMR918.</p>
+
+        <p class="config_option">sensor_map</p>
+
+        <p>This option defines the mapping between observations from remote
+            sensors and the fields in the database.
+        </p>
+
+        <p>For example, this would associate extraTemp1 with the remote T/H
+            sensor on channel 5:
+        </p>
+
+    <pre class='tty'>[[sensor_map]]
+    extraTemp1 = temperature_5
+    extraHumid1 = humidity_5</pre>
+
+        <p>See the <a href="hardware.htm#wmr9x8_data">Hardware Guide</a> for
+            a complete listing of sensor names and the default database fields
+            for each sensor.
+        </p>
+
 
         <h3 class="config_section">[WS1]</h3>
 
