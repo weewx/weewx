@@ -450,7 +450,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
         _record = {'dateTime': int(time.time() + 0.5),
                    'usUnits': weewx.METRIC,
-                   'battery_status_%d' % chan : battery}
+                   'battery_status_%d' % chan: battery}
 
         temp = temp10th / 10.0 + temp1 + 10.0 * temp10 + 100.0 * (temp100etc & 0x03)
         if temp100etc & 0x08:
