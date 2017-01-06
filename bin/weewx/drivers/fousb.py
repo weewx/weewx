@@ -585,7 +585,6 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
 # map between the pywws keys and the weewx keys
 # 'weewx-key' : ( 'pywws-key', multiplier )
 # rain is total measure so must split into per-period and calculate rate
-# station has no separate windgustdir so use wind_dir
 keymap = {
     'inHumidity'  : ('hum_in',       1.0),
     'inTemp'      : ('temp_in',      1.0), # station is C
@@ -595,7 +594,6 @@ keymap = {
     'windSpeed'   : ('wind_ave',     3.6), # station is m/s, weewx wants km/h
     'windGust'    : ('wind_gust',    3.6), # station is m/s, weewx wants km/h
     'windDir'     : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
-    'windGustDir' : ('wind_dir',    22.5), # station is 0-15, weewx wants deg
     'rain'        : ('rain',         0.1), # station is mm, weewx wants cm
     'radiation'   : ('illuminance',  0.01075), # lux, weewx wants W/m^2
     'UV'          : ('uv',           1.0),

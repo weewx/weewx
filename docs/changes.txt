@@ -70,6 +70,12 @@ Added warning in wmr300 driver when rain counter reaches maximum value.
 Added a 0.01 second delay after each read_byte in ws23xx driver to reduce
 chance of data spikes caused by RS232 line contention.  Thanks lionel.sylvie!
 
+The observation windGustDir has been removed from wmr100, wmr200, and fousb
+drivers.  These drivers were simply assigning windGustDir to windDir, since
+none of the hardware reports an actual windGustDir.  For hardware that does
+not report a windGustDir, weewx will calculate windGustDir at each archive
+interval when it accumulates an archive record.
+
 
 3.6.2 11/08/2016
 
