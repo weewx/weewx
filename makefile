@@ -11,6 +11,10 @@ RELDIR=weewx.com:/downloads/development_versions/
 # destination for uploading docs
 DOCDST=weewx.com:/
 
+# home directory at weewx.com
+WEEWX_COM_HOME=/home/content/t/o/m/tomkeffer
+WEEWX_DOWNLOADS=$(WEEWX_COM_HOME)/html/downloads
+
 # extract version to be used in package controls and labels
 VERSION=$(shell grep "__version__.*=" bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
 
@@ -47,6 +51,8 @@ help: info
 	@echo " upload-readme  upload the README.txt"
 	@echo ""
 	@echo "   upload-docs  upload docs to weewx.com"
+	@echo ""
+	@echo "       release  rearrange files on the download server"
 	@echo ""
 	@echo "          test  run all unit tests"
 	@echo "                SUITE=path/to/foo.py to run only foo tests"
@@ -246,7 +252,7 @@ update-apt-repo:
 
 # publish apt repo changes to the public weewx apt repo
 publish-apt-repo:
-	rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly
+	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly
 
 # run rpmlint on the redhat package
 check-rpm:
@@ -254,6 +260,15 @@ check-rpm:
 
 upload-rpm:
 	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) $(RPMPKG))
+
+# move files from development_versions to previous_versions and set up the
+# symlinks to them from the download root directory
+ARTIFACTS=weewx-$(RPMVER).rhel.noarch.rpm weewx-$(RPMVER).suse.noarch.rpm weewx-$(VERSION).tar.gz weewx_$(DEBVER)_all.deb
+release:
+	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do mv $(WEEWX_DOWNLOADS)/development_versions/$$f $(WEEWX_DOWNLOADS)/previous_versions; done"
+	ssh $(USER)@weewx.com "rm $(WEEWX_DOWNLOADS)/weewx*"
+	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do ln -s $$f $(WEEWX_DOWNLOADS); done"
+	ssh $(USER)@weewx.com "mv $(WEEWX_DOWNLOADS)/README.txt $(WEEWX_DOWNLOADS)"
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
