@@ -17,7 +17,7 @@ Fixes issue #182.
 
 Use schema_name = hardware_name pattern in sensor map for drivers that support
 extensible sensor suites, including the drivers for cc3000, te923, wmr300,
-wmr100, wmr9x8
+wmr100, wmr200, wmr9x8
 
 Report the firmware version when initializing the cc3000 driver.
 

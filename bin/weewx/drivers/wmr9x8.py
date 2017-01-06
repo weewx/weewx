@@ -250,7 +250,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                     syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Received WMR9x8 data packet.")
                     payload = pdata[2:-1]
                     _record = wmr9x8_packet_type_decoder_map[ptype](self, payload)
-                    _record = self._map_to_fields(_record, self.sensor_map)
+                    _record = self._sensors_to_fields(_record, self.sensor_map)
                     if _record is not None:
                         yield _record
                     # Eliminate all packet data from the buffer
@@ -273,7 +273,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                     syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Received WM-918 data packet.")
                     payload = pdata[0:-1]  #send all of packet but crc
                     _record = wm918_packet_type_decoder_map[ptype](self, payload)
-                    _record = self._map_to_fields(_record, self.sensor_map)
+                    _record = self._sensors_to_fields(_record, self.sensor_map)
                     if _record is not None:
                         yield _record
                     # Eliminate all packet data from the buffer
