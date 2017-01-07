@@ -23,6 +23,7 @@ import configobj
 import daemon
 
 # weewx imports:
+import weecfg.patch
 import weedb
 import weewx.accum
 import weewx.manager
@@ -114,6 +115,8 @@ class StdEngine(object):
         
         self.stn_info = weewx.station.StationInfo(self.console, **config_dict['Station'])
         self.db_binder = weewx.manager.DBBinder(config_dict)
+        # check for and apply any weewx database patches that may be required
+        weecfg.patch.apply_patches(config_dict)
         
     def loadServices(self, config_dict):
         """Set up the services to be run."""
