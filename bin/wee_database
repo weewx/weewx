@@ -7,19 +7,31 @@
 """Configure the databases used by weewx"""
 from __future__ import with_statement
 
+# python imports
+import datetime
 import optparse
 import syslog
 import sys
 import time
 
+from datetime import datetime as dt
+from distutils.version import StrictVersion
+
+# weewx imports
 import user.extensions      #@UnusedImport
 import weecfg
 import weecfg.patch
 import weedb
+import weewx
 import weewx.manager
 import weewx.units
 
-from weeutil.weeutil import TimeSpan
+from weeutil.weeutil import TimeSpan, timestamp_to_string
+
+# minimum weewx version required for this version of wee_database
+REQUIRED_WEEWX = "3.2.0"
+# minimum weewx version required for --rebuild-daily
+REQUIRED_WEEWX_REBUILD = "3.7.0"
 
 usage = """wee_database --help
        wee_database --create-archive
@@ -28,9 +40,10 @@ usage = """wee_database --help
        wee_database --drop-daily
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
-       wee_database --backfill-daily
+       wee_database --rebuild-daily
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
+            [--date=YYYY-mm-dd | --from=YYYY-mm-dd --to=YYYY-mm-dd]
             [--trans-days=DAYS]
        wee_database --reconfigure
             [CONFIG_FILE|--config=CONFIG_FILE]
@@ -59,7 +72,7 @@ Actions:
 --create-archive      Create the archive database and initialize it with the
                       schema.
 --drop-daily          Drop the daily summaries from the database.
---backfill-daily      Rebuild the daily summaries from the archive database.
+--rebuild-daily       Rebuild the daily summaries for a database from the archive table.
 --reconfigure         Create a new database using the schema in the configuration
                       file. Copy over data from the old database.
 --string-check        Scan the archive database, looking for null strings that may
@@ -93,9 +106,18 @@ def main():
                       help="Create the archive database.")
     parser.add_option("--drop-daily", dest="drop_daily", action='store_true',
                       help="Drop the daily summary tables from a database.")
-    parser.add_option("--backfill-daily", dest="backfill_daily",
+    parser.add_option("--rebuild-daily", dest="rebuild_daily",
                       action='store_true',
-                      help="Backfill a database with daily summaries.")
+                      help="Rebuild the daily summaries for a database.")
+    parser.add_option("--date", dest="date", type=str, metavar="YYYY-mm-dd",
+                      help="Backfill the daily summaries for this date. Format"
+                      " is YYYY-mm-dd.")
+    parser.add_option("--from", dest="date_from", type=str, metavar="YYYY-mm-dd",
+                      help="Backfill the daily summaries starting at this date."
+                      " Format is YYYY-mm-dd.")
+    parser.add_option("--to", dest="date_to", type=str, metavar="YYYY-mm-dd",
+                      help="Backfill the daily summaries up until this date."
+                      " Format is YYYY-mm-dd.")
     parser.add_option("--reconfigure", action='store_true',
                       help="Create a new archive database using configuration"
                       " information found in the configuration file. In"
@@ -136,6 +158,14 @@ def main():
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
 
+    # check weewx version number for compatibility
+    if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX):
+        # our exit message
+        exit_str = "weewx %s or greater is required, found %s. Nothing done, exiting." % (REQUIRED_WEEWX,
+                                                                                          weewx.__version__)
+        # now exit with our message
+        sys.exit(exit_str)
+    
     # Do a check to see if the user used more than 1 'verb' . More than 1 verb
     # should be avoided - what did the user really want to do?
     # first get a list of options actually used
@@ -173,8 +203,15 @@ def main():
     if options.drop_daily:
         dropDaily(config_dict, db_binding)
 
-    if options.backfill_daily:
-        backfillDaily(config_dict, db_binding, options)
+    if options.rebuild_daily:
+        # check weewx version number for compatibility
+        if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX_REBUILD):
+            # our exit message
+            exit_str = "weewx %s or greater is required, found %s. Nothing done, exiting." % (REQUIRED_WEEWX_REBUILD,
+                                                                                              weewx.__version__)
+            # now exit with our message
+            sys.exit(exit_str)
+        rebuildDaily(config_dict, db_binding, options)
 
     if options.reconfigure:
         reconfigMainDatabase(config_dict, db_binding)
@@ -227,29 +264,60 @@ def dropDaily(config_dict, db_binding):
                 # No daily summaries. Nothing to be done.
                 print "No daily summaries found in database '%s'. Nothing done." % (database_name,)
 
-def backfillDaily(config_dict, db_binding, options):
-    """Backfill the daily summaries"""
+def rebuildDaily(config_dict, db_binding, options):
+    """Rebuild the daily summaries."""
+
+    t1 = time.time()
 
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
                                                               db_binding)
     database_name = manager_dict['database_dict']['database_name']
 
-    syslog.syslog(syslog.LOG_INFO, "Backfilling daily summaries in database '%s' ..." % database_name)
-    print "Backfilling daily summaries in database '%s' ..." % database_name
-
-    t1 = time.time()
-    trans_days = int(options.trans_days) if options.trans_days else 5
-    # Open up the archive. This will create the tables necessary for the daily summaries if they
-    # don't already exist:
+    # how many days per transaction
+    trans_days = int(options.trans_days)
+    
+    # Open up the archive. This will create the tables necessary for the daily 
+    # summaries if they don't already exist:
     with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
-        nrecs, ndays = dbmanager.backfill_day_summary(trans_days=trans_days)
+        # determine the period over which we are rebuilding from any command 
+        # line date parameters
+        start_ts, stop_ts = _parse_dates(options)
+        # advise the user/log what we will do
+        if start_ts is None and stop_ts is None:
+            start_ts = dbmanager.firstGoodStamp()
+            stop_ts = dbmanager.lastGoodStamp()
+            syslog.syslog(syslog.LOG_INFO, "All daily summaries will be rebuilt")
+            print "All daily summaries will be rebuilt"
+        else:
+            if options.date:
+                _msg = "Daily summaries for %s only will be rebuilt" % (timestamp_to_string(start_ts, 
+                                                                                            '%Y-%m-%d'))
+                syslog.syslog(syslog.LOG_INFO, _msg)
+                print _msg
+            if options.date_from:
+                _msg = "Daily summaries from %s to %s inclusive" % (timestamp_to_string(start_ts, '%Y-%m-%d'), 
+                                                                    timestamp_to_string(stop_ts-1, '%Y-%m-%d'))
+                _msg2 = "will be rebuilt"
+                syslog.syslog(syslog.LOG_INFO, _msg + " " + _msg2)
+                print _msg
+                print _msg2
+        
+        syslog.syslog(syslog.LOG_INFO, "Rebuilding daily summaries in database '%s' ..." % database_name)
+        print "Rebuilding daily summaries in database '%s' ..." % database_name
+        # now do the actual rebuild
+        nrecs, ndays = dbmanager.backfill_day_summary(trans_days=trans_days, 
+                                                      start_ts=start_ts, 
+                                                      stop_ts=stop_ts,
+                                                      rebuild=True)
     tdiff = time.time() - t1
-
-    syslog.syslog(syslog.LOG_INFO, "Backfill of daily summaries in database '%s' complete" % database_name)
+    # advise the user/log what we did
+    syslog.syslog(syslog.LOG_INFO, "Rebuild of daily summaries in database '%s' complete" % database_name)
     if nrecs:
         sys.stdout.flush()
-        print "Processed %d records to backfill %d day summaries in %.2f seconds      " % (nrecs, ndays, tdiff)
-        print "Backfill of daily summaries in database '%s' complete" % database_name
+        print "Processed %d records to rebuild %d day summaries in %.2f seconds      " % (nrecs, 
+                                                                                          ndays, 
+                                                                                          tdiff)
+        print "Rebuild of daily summaries in database '%s' complete" % database_name
     else:
         print "Daily summaries up to date in '%s'" % database_name
 
@@ -471,19 +539,108 @@ def transferDatabase(config_dict, db_binding, options):
 def applyWeightPatch(config_dict, db_binding, options):
     """Apply the weight patch to the daily summaries."""
 
-    trans_days = int(options.trans_days) if options.trans_days else 50
-    # construct a patch config dict
-    weight_patch_config_dict = {'name': 'Weighted Sum',
-                                'binding': db_binding,
-                                'trans_days': trans_days,
-                                'dry_run': options.dry_run,
-                                'reguired_weewx': '3.6.1'}
+    # this action is irreversible so check the user really wants to do this
+    while ans not in ['y', 'n']:
+        ans = raw_input("Applying the daily summary weight patch is irreversible. Continue (y/n)? ")
+        if ans == 'y':
+            trans_days = int(options.trans_days) if options.trans_days else 50
+            # construct a patch config dict
+            weight_patch_config_dict = {'name': 'Weighted Sum',
+                                        'binding': db_binding,
+                                        'trans_days': trans_days,
+                                        'dry_run': options.dry_run,
+                                        'reguired_weewx': '3.7.0'}
 
-    # create a weighted sum patch object
-    patch_obj = weecfg.patch.WeightedSumPatch(config_dict,
-                                              weight_patch_config_dict)
-    # apply the patch
-    patch_obj.run()
+            # create a weighted sum patch object
+            patch_obj = weecfg.patch.WeightedSumPatch(config_dict,
+                                                      weight_patch_config_dict)
+            # apply the patch
+            patch_obj.run()
+        elif ans == 'n':
+            # we decided not to apply the patch
+            print "Nothing done."
+            return
 
+def _parse_dates(options):
+    """Parse --date, --from and --to command line options.
+    
+        Any --date, --from and --to command line options need to be processed 
+        to derive a start and stop timestamp for any daily summary rebuild. 
+        DaySummaryManager.backfill_day_summary() accepts two timestamps; 
+        start_ts and stop_ts. Archive records timestamped greater than start_ts 
+        and less than or equal to stop_ts will be used in the rebuild. 
+        Therefore it is safe to return timestamps on the midnight boundary. 
+        
+        If --date is specified then --to and --from are ignored. If --date is 
+        not specified then --from and --to are used. An invalid date will 
+        raise a ValueError.
+
+        Inputs:
+            options: the optparse options
+        
+        Returns:
+            start_ts: Timestamp of the first archive record to be used for 
+                      rebuild. May be None.
+            stop_ts:  Timestamp of the last archive record to be used for 
+                      rebuild. May be None.
+    """
+    
+    # First we see if we have a valid --date, if not then we look for
+    # --from and --to.
+    if options.date or options.date == "":
+        # there is a --date but is it valid
+        try:
+            _first_dt = dt.strptime(options.date, "%Y-%m-%d")
+        except ValueError:
+            # Could not convert --date. If we have a --date it must be
+            # valid otherwise we can't continue so raise it.
+            _msg = "Invalid --date option specified."
+            raise ValueError(_msg)
+        else:
+            # we have a valid date so do some date arithmetic
+            _last_dt = _first_dt + datetime.timedelta(days=1)
+            return (int(time.mktime(_first_dt.timetuple())), 
+                    int(time.mktime(_last_dt.timetuple())))
+    elif options.date_from or options.date_to or options.date_from == '' or options.date_to == '':
+        # There is a --from and/or a --to, but do we have both and are
+        # they valid.
+        # try --from first
+        try:
+            _from_dt = dt.strptime(options.date_from, "%Y-%m-%d")
+            _from_ts = int(time.mktime(_from_dt.timetuple()))
+        except TypeError:
+            # --from not specified we can't continue so raise it
+            _msg = "Missing --from option. Both --from and --to must be specified."
+            raise TypeError(_msg)
+        except ValueError:
+            # could not convert --from, we can't continue so raise it
+            _msg = "Invalid --from option."
+            raise ValueError(_msg)
+        # try --to
+        try:
+            _to_dt = dt.strptime(options.date_to, "%Y-%m-%d")
+            # since it is just a date we want the end of the day
+            _to_dt += datetime.timedelta(days=1)
+            _to_ts = int(time.mktime(_to_dt.timetuple()))
+        except TypeError:
+            # --to not specified , we can't continue so raise it
+            _msg = "Missing --to option. Both --from and --to must be specified."
+            raise TypeError(_msg)
+        except ValueError:
+            # could not convert --to, we can't continue so raise it
+            _msg = "Invalid --to option."
+            raise ValueError(_msg)
+        # If we made it here we have a _from_ts and _to_ts. Do a simple
+        # error check first.
+        if _from_ts > _to_ts:
+            # from is later than to, raise it
+            _msg = "--from value is later than --to value."
+            raise weewx.ViolatedPrecondition(_msg)
+        return (_from_ts, _to_ts)
+    else:
+        # no --date or --from/--to so we take the default, set all to None
+        return (None, None)
+
+        
 if __name__=="__main__" :
     main()

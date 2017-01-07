@@ -1297,7 +1297,7 @@ class DaySummaryManager(Manager):
         return self.exists(obs_type) and self.getAggregate(timespan, obs_type, 'count')[0] != 0
 
     def backfill_day_summary(self, start_ts=None, stop_ts=None, 
-                             progress_fn=show_progress, trans_days=5):
+                             progress_fn=show_progress, trans_days=5, rebuild=False):
         """Fill the statistical database from an archive database.
         
         Normally, the daily summaries get filled by LOOP packets (to get maximum time
@@ -1319,6 +1319,10 @@ class DaySummaryManager(Manager):
         progress_fn: This function will be called after processing every 1000 records.
         
         trans_day: Number of days of archive data to be used for each daily summaries database transaction. [Optional. Default is 5.] 
+        
+        rebuild: Whether individual daily summary rows are being rebuilt from 
+        scratch (eg wee_database --rebuild-daily) or added to (eg during catchup 
+        as part of normal weewx startup). [Optional. Default is False.]
         
         returns: A 2-way tuple (nrecs, ndays) where 
           nrecs is the number of records backfilled;
@@ -1367,7 +1371,11 @@ class DaySummaryManager(Manager):
                     _sod_ts = weeutil.weeutil.startOfArchiveDay(_rec['dateTime'])
                     # If this is the very first record, fetch a new accumulator
                     if not _day_accum:
-                        _day_accum = self._get_day_summary(_sod_ts)
+                        if not rebuild:
+                            _day_accum = self._get_day_summary(_sod_ts)
+                        else:
+                            _timespan = weeutil.weeutil.archiveDaySpan(_sod_ts,0)
+                            _day_accum = weewx.accum.Accum(_timespan)
                     # Try updating. If the time is out of the accumulator's time 
                     # span, an exception will get raised.
                     try:
@@ -1378,7 +1386,11 @@ class DaySummaryManager(Manager):
                         self._set_day_summary(_day_accum, _rec['dateTime'], _cursor)
                         ndays += 1
                         # Get a new accumulator:
-                        _day_accum = self._get_day_summary(_sod_ts)
+                        if not rebuild:
+                            _day_accum = self._get_day_summary(_sod_ts)
+                        else:
+                            _timespan = weeutil.weeutil.archiveDaySpan(_sod_ts,0)
+                            _day_accum = weewx.accum.Accum(_timespan)
                         # try again
                         _day_accum.addRecord(_rec)
                      
