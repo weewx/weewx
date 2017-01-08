@@ -47,7 +47,8 @@ Version: 3.7
 
     <div id="technical_content" class="content">
 
-        <p>This guide is intended for developers contributing to the open source project <span class="code">weewx</span>.</p>
+        <p>This guide is intended for developers contributing to the open source project <span class="code">weewx</span>.
+        </p>
 
 
         <h1>Goals</h1>
@@ -67,11 +68,11 @@ Version: 3.7
                 user does not feel tempted to start hacking code. At worse, the user may have to subclass, which is much
                 easier to port to newer versions of the code base, than customizing the base code.
             </li>
-            <li>Minimal dependencies.  The code should rely on a minimal
+            <li>Minimal dependencies. The code should rely on a minimal
                 number of external packages, so the user does not have to go
                 chase them down all over the Web before getting started.
             </li>
-            <li>Simple data model.  The implementation should use a very
+            <li>Simple data model. The implementation should use a very
                 simple data model that is likely to support many different
                 types of hardware.
             </li>
@@ -93,19 +94,20 @@ Version: 3.7
                 through the database, where transactions are easily controlled. This greatly reduces the chances of
                 corrupting the data, making it much easier to understand and modify the code base.
             </li>
-            <li>Isolated data collection and archiving.  The code for
+            <li>Isolated data collection and archiving. The code for
                 collecting and archiving data run in a single thread that is
                 simple enough that it is unlikely to crash. The report
                 processing is where most mistakes are likely to happen, so
                 isolate that in a separate thread. If it crashes, it will not
                 affect the main data thread.
             </li>
-            <li>A powerful configuration parser.  The
-                <a href="http://www.voidspace.org.uk/python/configobj.html">ConfigObj</a> module, by Michael Foord and Nicola
+            <li>A powerful configuration parser. The
+                <a href="http://www.voidspace.org.uk/python/configobj.html">ConfigObj</a> module, by Michael Foord and
+                Nicola
                 Larosa, was chosen to read the configuration file. This allows many options that might otherwise have to
                 go in the code to go instead in a configuration file.
             </li>
-            <li>A powerful templating engine.  The
+            <li>A powerful templating engine. The
                 <a href="http://www.cheetahtemplate.org/">Cheetah</a> module
                 was chosen for generating html and other types of files from
                 templates. Cheetah
@@ -240,6 +242,22 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
             should catch these exceptions and convert them into an exception of type <span
                     class="code">WeeWxIOError</span> or one of its subclasses.</p>
 
+        <h1>Code style</h1>
+        <p>Generally, we try to follow the <a href="https://www.python.org/dev/peps/pep-0008/">PEP 8 style guide</a>,
+            but there are <em>many</em> exceptions. In particular, many older weewx function names use camelCase, but
+            PEP 8 calls for snake_case. Please use snake_case for new code.</p>
+        <p>Most modern code editors, such as Eclipse, or PyCharm, have the ability to automatically format code.
+            Resist the temptation and <em>don't use this feature!</em> Two reasons:</p>
+        <ul>
+            <li>Unless all developers use the same tool, using the same settings, we will just thrash back and
+                forth between slightly different versions.
+            </li>
+            <li>Automatic formatters play a useful role, but some of what they do are really trivial changes,
+                such as removing spaces in otherwise blank lines. Now if someone is trying to figure out what
+                real, syntactic changes you have made, s/he will have to wade through all those
+                extraneous "changed lines," trying to find the important stuff.
+            </li>
+        </ul>
         <h1>Glossary</h1>
 
         <p>This is a glossary of terminology used throughout the code. </p>
