@@ -41,8 +41,6 @@ class DatabasePatch(object):
                             name.           The name of the patch. String.
                             dry_run.        Perform all patch actions except
                                             for writing to database. Boolean.
-                            required_weewx. Minimum weewx version required in
-                                            order to apply the patch. String.
     """
 
     def __init__(self, config_dict, patch_config_dict):
@@ -58,9 +56,6 @@ class DatabasePatch(object):
         self.dry_run = tobool(patch_config_dict.get('dry_run', True)) == True
         if self.dry_run:
             syslog.syslog(syslog.LOG_INFO, "A dry run has been requested.")
-        # check if we have the required weewx version
-        _min_weewx = patch_config_dict.get('required_weewx', '3.6.0')
-        require_weewx_version('patch', _min_weewx)
 
     def run(self):
         raise NotImplementedError("Method 'run' not implemented")
@@ -78,7 +73,7 @@ class DatabasePatch(object):
 
 
 # ============================================================================
-#                         WeightedSumPatch Error Classes
+#                        IntervalWeighting Error Classes
 # ============================================================================
 
 
@@ -107,27 +102,26 @@ def apply_patches(config_dict, **kwargs):
     if 'weight_patch_config_dict' not in kwargs:
         weight_patch_config_dict = {'name': 'Weighted Sum',
                                     'trans_days': 50,
-                                    'dry_run': False,
-                                    'reguired_weewx': '3.6.1'}
-    patch_obj = WeightedSumPatch(config_dict,
-                                 weight_patch_config_dict)
+                                    'dry_run': False}
+    patch_obj = IntervalWeighting(config_dict,
+                                  weight_patch_config_dict)
     patch_obj.run()
 
 
 # ============================================================================
-#                                 class WeightedSumPatch
+#                                class IntervalWeighting
 # ============================================================================
 
 
-class WeightedSumPatch(DatabasePatch):
+class IntervalWeighting(DatabasePatch):
     """Class to patch daily summaries with an interval based weight factor.
     To apply the patch:
 
     1.  Create a dictionary of parameters required by the patch. The
-    WeightedSumPatch uses the following parameters as indicated:
+    IntervalWeighting uses the following parameters as indicated:
 
         patch:          Name of the class defining the patch, for the weighted
-                        sum patch this is 'WeightedSumPatch'. String.
+                        sum patch this is 'Interval Weighting'. String.
                         Mandatory.
 
         binding:        The binding of the database to be patched. Default is
@@ -143,21 +137,18 @@ class WeightedSumPatch(DatabasePatch):
         dry_run:        Process the patch as if it was being applied but do not
                         write to the database. Boolean, default is True. Optional.
 
-        required_weewx: Minimum weewx version required to apply this patch.
-                        String, eg '3.6.0'. Mandatory.
-
-    2.  Create a WeightedSumPatch object passing it a weewx config dict and a
+    2.  Create a IntervalWeighting object passing it a weewx config dict and a
     patch config dict.
 
     3.  Call the resulting objects run() method to apply the patch.
     """
 
     def __init__(self, config_dict, patch_config_dict):
-        """Initialise our WeightedSumPatch object."""
+        """Initialise our IntervalWeighting object."""
 
         # call our parents __init__
-        super(WeightedSumPatch, self).__init__(config_dict, patch_config_dict)
-        syslog.syslog(syslog.LOG_INFO, "weightedsumpatch: Preparing '%s' patch..." % self.name)
+        super(IntervalWeighting, self).__init__(config_dict, patch_config_dict)
+        syslog.syslog(syslog.LOG_INFO, "intervalweighting: Preparing '%s' patch..." % self.name)
 
         # Get the binding for the archive we are to use. If we received an
         # explicit binding then use that otherwise use the binding that
@@ -175,20 +166,20 @@ class WeightedSumPatch(DatabasePatch):
         self.dbm = weewx.manager.open_manager_with_config(config_dict,
                                                           self.binding)
         syslog.syslog(syslog.LOG_DEBUG,
-                      "weightedsumpatch: Using database binding '%s', which is bound to database '%s'" % (self.binding,
+                      "intervalweighting: Using database binding '%s', which is bound to database '%s'" % (self.binding,
                                                                                                           self.dbm.database_name))
         # Number of days per db transaction, default to 50.
         self.trans_days = int(patch_config_dict.get('trans_days', 50))
         syslog.syslog(syslog.LOG_DEBUG,
-                      "weightedsumpatch: Database transactions will use %s days of data." % self.trans_days)
+                      "intervalweighting: Database transactions will use %s days of data." % self.trans_days)
         # Pre-patch vacuum flag
         self.vacuum = patch_config_dict.get('vacuum', False) == True
         if self.vacuum:
             syslog.syslog(syslog.LOG_DEBUG,
-                          "weightedsumpatch: Database '%s' will be vacuumed before patch is applied." % self.dbm.database_name)
+                          "intervalweighting: Database '%s' will be vacuumed before patch is applied." % self.dbm.database_name)
         else:
             syslog.syslog(syslog.LOG_DEBUG,
-                          "weightedsumpatch: Database '%s' will not be vacuumed before patch is applied." % self.dbm.database_name)
+                          "intervalweighting: Database '%s' will not be vacuumed before patch is applied." % self.dbm.database_name)
 
     def run(self):
         """Main entry point for patching the daily summaries.
@@ -232,16 +223,16 @@ class WeightedSumPatch(DatabasePatch):
                         self.write_metadata('Version', '2.0')
                 except WeightedSumPatchAccumError, e:
                     syslog.syslog(syslog.LOG_INFO,
-                                  "weightedsumpatch: **** Accumulator error.")
+                                  "intervalweighting: **** Accumulator error.")
                     syslog.syslog(syslog.LOG_INFO,
-                                  "weightedsumpatch: **** %s" % e)
+                                  "intervalweighting: **** %s" % e)
                     # raise the error so our caller can deal with it if they want
                     raise
                 except weewx.ViolatedPrecondition, e:
                     syslog.syslog(syslog.LOG_INFO,
-                                  "weightedsumpatch: **** %s" % e)
+                                  "intervalweighting: **** %s" % e)
                     syslog.syslog(syslog.LOG_INFO,
-                                  "weightedsumpatch: **** '%s' patch not applied." % self.name)
+                                  "intervalweighting: **** '%s' patch not applied." % self.name)
                     # raise the error so our caller can deal with it if they want
                     raise
             else:
@@ -253,9 +244,9 @@ class WeightedSumPatch(DatabasePatch):
                 # dry run
                 if not self.dry_run:
                     syslog.syslog(syslog.LOG_DEBUG,
-                                  "weightedsumpatch: Multiple distinct 'interval' values found for at least one archive day.")
+                                  "intervalweighting: Multiple distinct 'interval' values found for at least one archive day.")
                     syslog.syslog(syslog.LOG_INFO,
-                                  "weightedsumpatch: '%s' patch will be applied by dropping and backfilling daily summaries." % self.name)
+                                  "intervalweighting: '%s' patch will be applied by dropping and backfilling daily summaries." % self.name)
                     self.dbm.drop_daily()
                     self.dbm = weewx.manager.open_manager_with_config(self.config_dict,
                                                                       self.binding,
@@ -265,11 +256,11 @@ class WeightedSumPatch(DatabasePatch):
                     # patched to version 2.0
                     self.write_metadata('Version', '2.0')
                     syslog.syslog(syslog.LOG_INFO,
-                                  "weightedsumpatch: Successfully applied '%s' patch." % self.name)
+                                  "intervalweighting: Successfully applied '%s' patch." % self.name)
         else:
             # daily summaries are already patched
             syslog.syslog(syslog.LOG_INFO,
-                          "weightedsumpatch: '%s' patch has already been applied." % self.name)
+                          "intervalweighting: '%s' patch has already been applied." % self.name)
 
     def do_patch(self, np_ts):
         """Patch the daily summaries using interval as weight."""
@@ -278,7 +269,7 @@ class WeightedSumPatch(DatabasePatch):
         # there are records in the archive from that day
         if np_ts is None or self.dbm.last_timestamp > np_ts :
             t1 = time.time()
-            syslog.syslog(syslog.LOG_INFO, "weightedsumpatch: Applying '%s' patch..." % self.name)
+            syslog.syslog(syslog.LOG_INFO, "intervalweighting: Applying '%s' patch..." % self.name)
             _days = 0
             # Get the earliest daily summary ts and the obs that it came from
             first_ts, obs = self.first_summary()
@@ -315,7 +306,7 @@ class WeightedSumPatch(DatabasePatch):
                         except Exception, e:
                             # log the exception and re-raise it
                             syslog.syslog(syslog.LOG_INFO,
-                                          "weightedsumpatch: Patching '%s' daily summary for %s failed: %s" % (_day_key,
+                                          "intervalweighting: Patching '%s' daily summary for %s failed: %s" % (_day_key,
                                                                                                                timestamp_to_string(_day_span.start, format="%Y-%m-%d"),
                                                                                                                e))
                             raise
@@ -350,19 +341,19 @@ class WeightedSumPatch(DatabasePatch):
             print
             # We are done so log and inform the user
             if self.dry_run:
-                _msg = "weightedsumpatch: %s daily summaries would have been patched in %0.1f seconds." % (_days,
+                _msg = "intervalweighting: %s daily summaries would have been patched in %0.1f seconds." % (_days,
                                                                                                            (time.time() - t1))
-                _msg1 = "weightedsumpatch: This was a dry run. '%s' patch was not applied." % self.name
+                _msg1 = "intervalweighting: This was a dry run. '%s' patch was not applied." % self.name
             else:
-                _msg = "weightedsumpatch: %s daily summaries patched in %0.1f seconds." % (_days,
+                _msg = "intervalweighting: %s daily summaries patched in %0.1f seconds." % (_days,
                                                                                            (time.time() - t1))
-                _msg1 = "weightedsumpatch: Successfully applied '%s' patch." % self.name
+                _msg1 = "intervalweighting: Successfully applied '%s' patch." % self.name
             syslog.syslog(syslog.LOG_DEBUG, _msg)
             syslog.syslog(syslog.LOG_INFO, _msg1)
         else:
             # we didn't need to patch so inform the user
             syslog.syslog(syslog.LOG_INFO,
-                          "weightedsumpatch: '%s' patch has already been applied. Patch not applied." % self.name_msg)
+                          "intervalweighting: '%s' patch has already been applied. Patch not applied." % self.name_msg)
 
     def genSummaryDaySpans(self, start_ts, stop_ts, obs='outTemp'):
         """Generator to generate a sequence of daily summary day TimeSpans.
@@ -439,7 +430,7 @@ class WeightedSumPatch(DatabasePatch):
 
         t1 = time.time()
         syslog.syslog(syslog.LOG_DEBUG,
-                      "weightedsumpatch: Checking table '%s' for multiple 'interval' values per day..." % self.dbm.table_name)
+                      "intervalweighting: Checking table '%s' for multiple 'interval' values per day..." % self.dbm.table_name)
         start_ts = timestamp if timestamp else self.dbm.first_timestamp
         _days = 0
         _result = True
@@ -462,7 +453,7 @@ class WeightedSumPatch(DatabasePatch):
                 break
         if _result:
             syslog.syslog(syslog.LOG_DEBUG,
-                          "weightedsumpatch: Successfully checked %s days for multiple 'interval' values in %0.2f seconds." % (_days,
+                          "intervalweighting: Successfully checked %s days for multiple 'interval' values in %0.2f seconds." % (_days,
                                                                                                                                (time.time() - t1)))
         return _result
 
@@ -536,25 +527,25 @@ class WeightedSumPatch(DatabasePatch):
         if self.vacuum:
             t1 = time.time()
             syslog.syslog(syslog.LOG_DEBUG,
-                          "weightedsumpatch: Performing vacuum of database '%s' (SQLite only)." % self.dbm.database_name)
+                          "intervalweighting: Performing vacuum of database '%s' (SQLite only)." % self.dbm.database_name)
             try:
                 self.dbm.getSql('vacuum')
             except weedb.ProgrammingError:
                 # Catch the error (usually) returned when we try to vacuum a non-SQLite db
                 syslog.syslog(syslog.LOG_DEBUG,
-                              "weightedsumpatch: Vacuuming database '%s' did not complete, most likely because it is not an SQLite database." % (self.dbm.database_name, ))
+                              "intervalweighting: Vacuuming database '%s' did not complete, most likely because it is not an SQLite database." % (self.dbm.database_name, ))
                 return
             except Exception, e:
                 # log the error and re-raise it
                 syslog.syslog(syslog.LOG_INFO,
-                              "weightedsumpatch: Vacuuming database '%s' failed: %s" % (self.dbm.database_name, e))
+                              "intervalweighting: Vacuuming database '%s' failed: %s" % (self.dbm.database_name, e))
                 raise
             # If we are here then we have successfully vacuumed, log it and return
             syslog.syslog(syslog.LOG_DEBUG,
-                          "weightedsumpatch: Database '%s' vacuumed in %0.1f seconds." % (self.dbm.database_name,
+                          "intervalweighting: Database '%s' vacuumed in %0.1f seconds." % (self.dbm.database_name,
                                                                                           (time.time() - t1)))
         else:
-            syslog.syslog(syslog.LOG_DEBUG, "weightedsumpatch: Vacuum not requested.")
+            syslog.syslog(syslog.LOG_DEBUG, "intervalweighting: Vacuum not requested.")
 
     @staticmethod
     def progress(ndays, last_time):

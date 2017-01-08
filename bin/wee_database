@@ -28,11 +28,6 @@ import weewx.units
 
 from weeutil.weeutil import TimeSpan, timestamp_to_string
 
-# minimum weewx version required for this version of wee_database
-REQUIRED_WEEWX = "3.2.0"
-# minimum weewx version required for --rebuild-daily
-REQUIRED_WEEWX_REBUILD = "3.7.0"
-
 usage = """wee_database --help
        wee_database --create-archive
             [CONFIG_FILE|--config=CONFIG_FILE]
@@ -48,46 +43,44 @@ usage = """wee_database --help
        wee_database --reconfigure
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
-       wee_database --string-check
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME] [--fix]
        wee_database --transfer
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
             --dest-binding=BINDING_NAME
             [--dry-run]
-       wee_database --apply-weight-patch
+       wee_database --check-strings
             [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
+            [--binding=BINDING_NAME] [--fix-strings]
+       wee_database --check-weighting
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME] [--fix-weighting]
             [--trans-days=DAYS]
             [--dry-run]
 
 Description:
 
-Configure the weewx databases. Most of these functions are
-handled automatically by weewx, but they may be useful in special cases.
+Configure the weewx databases. Most of these functions are handled automatically by 
+weewx, but they may be useful in special cases.
 
 Actions:
 
---create-archive      Create the archive database and initialize it with the
-                      schema.
---drop-daily          Drop the daily summaries from the database.
---rebuild-daily       Rebuild the daily summaries for a database from the archive table.
---reconfigure         Create a new database using the schema in the configuration
-                      file. Copy over data from the old database.
---string-check        Scan the archive database, looking for null strings that may
-                      have been introduced by a SQL editing program.
---transfer            Move data from one database to another.
---apply-weight-patch  Apply the weighted daily summaries patch to the weewx
-                      database."""
+--create-archive   Create a weewx database and initialize it with the schema.
+--drop-daily       Drop the daily summaries from the database.
+--rebuild-daily    Rebuild the daily summaries for a database from the archive table.
+--reconfigure      Create a new database using the schema in the configuration
+                   file. Copy over data from the old database.
+--transfer         Move data from one database to another.
+--check-strings    Scan the archive table, looking for null strings that may
+                   have been introduced by a SQL editing program.
+--check-weighting  Check whether the daily summaries have been interval weighted."""
 
 epilog = """If you are using a MySQL database it is assumed that you have the
 appropriate permissions for the requested operation."""
 
 # List of 'dest' settings used by our 'verbs', note 'dest' may be explicit or
 # implicit. If adding more 'verbs' need to add corresponding 'dest' here.
-dest_list = ['create_archive', 'drop_daily', 'backfill_daily',
-             'reconfigure', 'string_check', 'transfer', 'weight_patch']
+dest_list = ['create_archive', 'drop_daily', 'rebuild_daily',
+             'reconfigure', 'check_strings', 'transfer', 'check_weighting']
 
 def main():
 
@@ -110,13 +103,13 @@ def main():
                       action='store_true',
                       help="Rebuild the daily summaries for a database.")
     parser.add_option("--date", dest="date", type=str, metavar="YYYY-mm-dd",
-                      help="Backfill the daily summaries for this date. Format"
+                      help="Rebuild the daily summaries for this date. Format"
                       " is YYYY-mm-dd.")
     parser.add_option("--from", dest="date_from", type=str, metavar="YYYY-mm-dd",
-                      help="Backfill the daily summaries starting at this date."
+                      help="Rebuild the daily summaries starting at this date."
                       " Format is YYYY-mm-dd.")
     parser.add_option("--to", dest="date_to", type=str, metavar="YYYY-mm-dd",
-                      help="Backfill the daily summaries up until this date."
+                      help="Rebuild the daily summaries up until this date."
                       " Format is YYYY-mm-dd.")
     parser.add_option("--reconfigure", action='store_true',
                       help="Create a new archive database using configuration"
@@ -125,19 +118,21 @@ def main():
                       " unit system found in option [StdConvert][target_unit]."
                       " The new database will have the same name as the old"
                       " database, with a '_new' on the end.")
-    parser.add_option("--string-check", dest="string_check",
-                      action="store_true",
-                      help="Check a sqlite version of the archive database to"
-                      " see whether it contains embedded strings.")
-    parser.add_option("--fix", dest="fix", action="store_true",
-                      help="Fix any embedded strings in a sqlite database.")
     parser.add_option("--transfer", dest="transfer", action='store_true',
                       help="Transfer the weewx archive from source database to"
                       " destination database.")
-    parser.add_option("--apply-weight-patch", dest="weight_patch",
+    parser.add_option("--check-strings", dest="check_strings",
+                      action="store_true",
+                      help="Check a sqlite version of the archive database to"
+                      " see whether it contains embedded strings.")
+    parser.add_option("--fix-strings", dest="fix_strings", action="store_true",
+                      help="Fix any embedded strings in a sqlite database.")
+    parser.add_option("--check-weighting", dest="check_weighting",
                       action='store_true',
-                      help="Apply the weighted daily summary patch to the weewx"
-                      " database.")
+                      help="Check whether the daily summaries have been interval"
+                      " weighted.")
+    parser.add_option("--fix-weighting", dest="fix_weighting", action="store_true",
+                      help="Apply interval weighting to daily summaries.")
     parser.add_option("--binding", dest="binding", metavar="BINDING_NAME",
                       default='wx_binding',
                       help="The data binding. Default is 'wx_binding'.")
@@ -150,22 +145,14 @@ def main():
                       ' is False.')
     parser.add_option('--trans-days', dest='trans_days', metavar="DAYS",
                       help="Limit database transactions to no more than DAYS"
-                      " days of data at a time. Default value is 5 for backfills"
-                      " and 50 when applying the weight patch. May be increased"
-                      " for a slight speed increase or reduced to reduce memory"
-                      " usage.")
+                      " days of data at a time. Default value is 5 when" 
+                      " rebuilding daily summaries and 50 when interval weighting"
+                      " daily summaries weight. May be increased for a slight"
+                      " speed increase or reduced to reduce memory usage.")
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
 
-    # check weewx version number for compatibility
-    if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX):
-        # our exit message
-        exit_str = "weewx %s or greater is required, found %s. Nothing done, exiting." % (REQUIRED_WEEWX,
-                                                                                          weewx.__version__)
-        # now exit with our message
-        sys.exit(exit_str)
-    
     # Do a check to see if the user used more than 1 'verb' . More than 1 verb
     # should be avoided - what did the user really want to do?
     # first get a list of options actually used
@@ -204,29 +191,22 @@ def main():
         dropDaily(config_dict, db_binding)
 
     if options.rebuild_daily:
-        # check weewx version number for compatibility
-        if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX_REBUILD):
-            # our exit message
-            exit_str = "weewx %s or greater is required, found %s. Nothing done, exiting." % (REQUIRED_WEEWX_REBUILD,
-                                                                                              weewx.__version__)
-            # now exit with our message
-            sys.exit(exit_str)
         rebuildDaily(config_dict, db_binding, options)
 
     if options.reconfigure:
         reconfigMainDatabase(config_dict, db_binding)
 
-    if options.string_check:
-        string_check(config_dict, db_binding, options.fix)
-
     if options.transfer:
         transferDatabase(config_dict, db_binding, options)
 
-    if options.weight_patch:
-        applyWeightPatch(config_dict, db_binding, options)
+    if options.check_strings:
+        check_strings(config_dict, db_binding, options.fix_strings)
+
+    if options.check_weighting:
+        check_weighting(config_dict, db_binding, options)
 
 def createMainDatabase(config_dict, db_binding):
-    """Create a weewx archive database"""
+    """Create a weewx database"""
 
     # Try a simple open. If it succeeds, that means the database
     # exists and is initialized. Otherwise, an exception will be thrown.
@@ -274,7 +254,7 @@ def rebuildDaily(config_dict, db_binding, options):
     database_name = manager_dict['database_dict']['database_name']
 
     # how many days per transaction
-    trans_days = int(options.trans_days)
+    trans_days = int(options.trans_days) if options.trans_days else 5
     
     # Open up the archive. This will create the tables necessary for the daily 
     # summaries if they don't already exist:
@@ -373,16 +353,20 @@ def reconfigMainDatabase(config_dict, db_binding):
                                                                                         weewx.units.unit_nicknames[target_unit_system])
         ans = raw_input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
+            t1 = time.time()
             weewx.manager.reconfig(manager_dict['database_dict'],
                                    new_database_dict,
                                    new_unit_system=target_unit_system,
                                    new_schema=manager_dict['schema'])
+            tdiff = time.time() - t1
             print "Done."
         elif ans == 'n':
             print "Nothing done."
 
-def string_check(config_dict, db_binding, fix=False):
+def check_strings(config_dict, db_binding, fix=False):
+    """Scan the archive table for null strings."""
 
+    t1 = time.time()
     print "Checking archive database for strings..."
 
     # Open up the main database archive
@@ -405,6 +389,8 @@ def string_check(config_dict, db_binding, fix=False):
             # Save the Python type for this column (eg, 'int'):
             obs_pytype_list.append(schema_type)
 
+        found = 0
+        fixed = 0
         # Cycle through each row in the database
         for record in dbmanager.genBatchRows():
             # Now examine each column
@@ -412,6 +398,7 @@ def string_check(config_dict, db_binding, fix=False):
                 # Check to see if this column is an instance of the correct Python type
                 if record[icol] is not None and not isinstance(record[icol], obs_pytype_list[icol]):
                     # Oops. Found a bad one. Print it out
+                    found += 1
                     sys.stdout.write("Timestamp = %s; record['%s']= %r; ... " % (record[0], obs_list[icol], record[icol]))
 
                     if fix:
@@ -422,10 +409,16 @@ def string_check(config_dict, db_binding, fix=False):
                             corrected_value = None
                         # Update the database with the new value
                         dbmanager.updateValue(record[0], obs_list[icol], corrected_value)
+                        fixed += 1
                         # Inform the user
                         sys.stdout.write("changed to %r\n" % corrected_value)
                     else:
                         sys.stdout.write("ignored.\n")
+    tdiff = time.time() - t1
+    if fix:
+        print "String check complete. %d of %d null strings found were fixed in %.2f seconds" % (fixed, found, tdiff)
+    else:
+        print "String check complete. %d null strings found in %.2f seconds" % (found, tdiff)
 
 def transferDatabase(config_dict, db_binding, options):
     """Transfer 'archive' data from one database to another"""
@@ -488,6 +481,7 @@ def transferDatabase(config_dict, db_binding, options):
                 ans = raw_input("Transfer %s records from source database '%s' to destination database '%s' (y/n)? " %
                                 (num_recs, src_manager.database_name, dest_manager_dict['database_dict']['database_name']))
                 if ans == 'y':
+                    t1 = time.time()
                     # wrap in a try..except in case we have an error
                     try:
                         with weewx.manager.Manager.open_with_create(dest_manager_dict['database_dict'],
@@ -503,11 +497,13 @@ def transferDatabase(config_dict, db_binding, options):
                             # count the records transferred and display a message
                             first_ts = dest_manager.firstGoodStamp()
                             last_ts = dest_manager.lastGoodStamp()
+                            tdiff = time.time() - t1
                             if first_ts is not None and last_ts is not None:
                                 num_recs = dest_manager.getAggregate(TimeSpan(first_ts, last_ts),
                                                                      'dateTime', 'count')[0]
-                                print ("%s records transferred from source database '%s' to destination database '%s'." %
+                                print ("%s records transferred from source database '%s' to destination database '%s'" %
                                        (num_recs, src_manager.database_name, dest_manager.database_name))
+                                print "in %.2f seconds." % tdiff
                             else:
                                 print ("Error. No records were transferred from source database '%s' to destination database '%s'." %
                                        (src_manager.database_name, dest_manager.database_name))
@@ -536,31 +532,38 @@ def transferDatabase(config_dict, db_binding, options):
                    (num_recs, src_manager.database_name, dest_manager_dict['database_dict']['database_name']))
             print "Dry run, nothing done."
 
-def applyWeightPatch(config_dict, db_binding, options):
-    """Apply the weight patch to the daily summaries."""
+def check_weighting(config_dict, db_binding, options):
+    """Check whether the daily summaries have been interval weighted."""
 
-    # this action is irreversible so check the user really wants to do this
-    while ans not in ['y', 'n']:
-        ans = raw_input("Applying the daily summary weight patch is irreversible. Continue (y/n)? ")
-        if ans == 'y':
-            trans_days = int(options.trans_days) if options.trans_days else 50
-            # construct a patch config dict
-            weight_patch_config_dict = {'name': 'Weighted Sum',
-                                        'binding': db_binding,
-                                        'trans_days': trans_days,
-                                        'dry_run': options.dry_run,
-                                        'reguired_weewx': '3.7.0'}
+    trans_days = int(options.trans_days) if options.trans_days else 50
+    # construct an interval_weighting config dict
+    interval_weighting_config_dict = {'name': 'Interval Weighting',
+                                      'binding': db_binding,
+                                      'trans_days': trans_days,
+                                      'dry_run': options.dry_run}
 
-            # create a weighted sum patch object
-            patch_obj = weecfg.patch.WeightedSumPatch(config_dict,
-                                                      weight_patch_config_dict)
-            # apply the patch
-            patch_obj.run()
-        elif ans == 'n':
-            # we decided not to apply the patch
-            print "Nothing done."
-            return
-
+    # create an interval weighting object
+    weight_obj = weecfg.patch.IntervalWeighting(config_dict,
+                                                interval_weighting_config_dict)
+    _daily_summary_version = weight_obj.read_metadata('Version')
+    print "Daily summary version is %s" % _daily_summary_version
+    if _daily_summary_version is not None and _daily_summary_version >= 2.0:
+        print "Daily summary tables have been interval weighted."
+    else:
+        print "Daily summary tables have not been interval weighted."
+        if options.fix_weighting:
+            # this action is irreversible so check the user really wants to do 
+            # this
+            ans = None
+            while ans not in ['y', 'n']:
+                ans = raw_input("Applying interval weighting to the daily summaries is irreversible. Continue (y/n)? ")
+                if ans == 'y':
+                    # apply the interval weighting
+                    weight_obj.run()
+                elif ans == 'n':
+                    # we decided not to interval weight the summary tables
+                    print "Nothing done."
+            
 def _parse_dates(options):
     """Parse --date, --from and --to command line options.
     
