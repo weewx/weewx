@@ -440,7 +440,7 @@ if __name__ == "__main__":
                     'weeutil',
                     'weewx',
                     'weewx.drivers'],
-          py_modules=['daemon'],
+          py_modules=['daemon', 'syslog'],
           scripts=['bin/wee_config',
                    'bin/wee_database',
                    'bin/wee_debug',

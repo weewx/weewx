@@ -327,6 +327,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     filtersLib=weewx.cheetahgenerator)
                 with open(tmpname, mode='w') as _file:
                     print >> _file, text
+                os.remove(_fullname)
                 os.rename(tmpname, _fullname)
             except Exception, e:
                 # We would like to get better feedback when there are cheetah
