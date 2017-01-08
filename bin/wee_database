@@ -64,7 +64,7 @@ weewx, but they may be useful in special cases.
 
 Actions:
 
---create-archive   Create a weewx database and initialize it with the schema.
+--create-archive   Create the weewx database and initialize it with the schema.
 --drop-daily       Drop the daily summaries from the database.
 --rebuild-daily    Rebuild the daily summaries for a database from the archive table.
 --reconfigure      Create a new database using the schema in the configuration
@@ -96,7 +96,7 @@ def main():
                       help="Use configuration file CONFIG_FILE.")
     parser.add_option("--create-archive", dest="create_archive",
                       action='store_true',
-                      help="Create the archive database.")
+                      help="Create the weewx database.")
     parser.add_option("--drop-daily", dest="drop_daily", action='store_true',
                       help="Drop the daily summary tables from a database.")
     parser.add_option("--rebuild-daily", dest="rebuild_daily",
@@ -112,10 +112,10 @@ def main():
                       help="Rebuild the daily summaries up until this date."
                       " Format is YYYY-mm-dd.")
     parser.add_option("--reconfigure", action='store_true',
-                      help="Create a new archive database using configuration"
+                      help="Create a new database using configuration"
                       " information found in the configuration file. In"
-                      " particular, the new database will use the"
-                      " unit system found in option [StdConvert][target_unit]."
+                      " particular, the new database will use the unit system"
+                      " found in option [StdConvert][target_unit]."
                       " The new database will have the same name as the old"
                       " database, with a '_new' on the end.")
     parser.add_option("--transfer", dest="transfer", action='store_true',
@@ -123,7 +123,7 @@ def main():
                       " destination database.")
     parser.add_option("--check-strings", dest="check_strings",
                       action="store_true",
-                      help="Check a sqlite version of the archive database to"
+                      help="Check a sqlite version of the archive table to"
                       " see whether it contains embedded strings.")
     parser.add_option("--fix-strings", dest="fix_strings", action="store_true",
                       help="Fix any embedded strings in a sqlite database.")
@@ -206,7 +206,7 @@ def main():
         check_weighting(config_dict, db_binding, options)
 
 def createMainDatabase(config_dict, db_binding):
-    """Create a weewx database"""
+    """Create the weewx database"""
 
     # Try a simple open. If it succeeds, that means the database
     # exists and is initialized. Otherwise, an exception will be thrown.
@@ -230,7 +230,7 @@ def dropDaily(config_dict, db_binding):
         print "Proceeding will delete all your daily summaries from database '%s'" % database_name
         ans = raw_input("Are you sure you want to proceed (y/n)? ")
         if ans == 'y' :
-
+            t1 = time.time()
             print "Dropping daily summary tables from '%s' ... " % database_name
             try:
                 with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
@@ -239,7 +239,8 @@ def dropDaily(config_dict, db_binding):
                     except weedb.OperationalError, e:
                         print "Got error '%s'\nPerhaps there was no daily summary?" % e
                     else:
-                        print "Dropped daily summary tables from database '%s'" % (database_name,)
+                        tdiff = time.time() - t1
+                        print "Daily summary tables dropped from database '%s' in %.2f seconds" % (database_name, tdiff)
             except weedb.OperationalError:
                 # No daily summaries. Nothing to be done.
                 print "No daily summaries found in database '%s'. Nothing done." % (database_name,)
@@ -256,7 +257,7 @@ def rebuildDaily(config_dict, db_binding, options):
     # how many days per transaction
     trans_days = int(options.trans_days) if options.trans_days else 5
     
-    # Open up the archive. This will create the tables necessary for the daily 
+    # Open up the database. This will create the tables necessary for the daily 
     # summaries if they don't already exist:
     with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
         # determine the period over which we are rebuilding from any command 
@@ -310,7 +311,7 @@ def reconfigMainDatabase(config_dict, db_binding):
     new_database_dict = dict(manager_dict['database_dict'])
 
     # Now modify the database name
-    new_database_dict['database_name'] = manager_dict['database_dict']['database_name']+'_new'
+    new_database_dict['database_name'] = manager_dict['database_dict']['database_name'] + '_new'
 
     # First check and see if the new database already exists. If it does, check
     # with the user whether it's ok to delete it.
@@ -325,7 +326,7 @@ def reconfigMainDatabase(config_dict, db_binding):
             elif ans == 'n':
                 print "Nothing done."
                 return
-
+    
     # Get the unit system of the old archive:
     with weewx.manager.Manager.open(manager_dict['database_dict']) as old_dbmanager:
         old_unit_system = old_dbmanager.std_unit_system
@@ -345,12 +346,15 @@ def reconfigMainDatabase(config_dict, db_binding):
 
     ans = None
     while ans not in ['y', 'n']:
-        print "Copying archive database '%s' to '%s'" % (manager_dict['database_dict']['database_name'], new_database_dict['database_name'])
+        print "Copying database '%s' to '%s'" % (manager_dict['database_dict']['database_name'], 
+                                                 new_database_dict['database_name'])
         if target_unit_system is None or old_unit_system==target_unit_system:
-            print "The new archive will use the same unit system as the old ('%s')." % (weewx.units.unit_nicknames[old_unit_system],)
+            print ("The new database will use the same unit system as the old ('%s')." % 
+                   (weewx.units.unit_nicknames[old_unit_system],))
         else:
-            print "Units will be converted from the '%s' system to the '%s' system." % (weewx.units.unit_nicknames[old_unit_system],
-                                                                                        weewx.units.unit_nicknames[target_unit_system])
+            print ("Units will be converted from the '%s' system to the '%s' system." % 
+                   (weewx.units.unit_nicknames[old_unit_system], 
+                    weewx.units.unit_nicknames[target_unit_system]))
         ans = raw_input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
             t1 = time.time()
@@ -359,7 +363,9 @@ def reconfigMainDatabase(config_dict, db_binding):
                                    new_unit_system=target_unit_system,
                                    new_schema=manager_dict['schema'])
             tdiff = time.time() - t1
-            print "Done."
+            print "Database '%s' copied to '%s' in %.2f seconds." % (manager_dict['database_dict']['database_name'], 
+                                                                     new_database_dict['database_name'],
+                                                                     tdiff)
         elif ans == 'n':
             print "Nothing done."
 
@@ -367,9 +373,9 @@ def check_strings(config_dict, db_binding, fix=False):
     """Scan the archive table for null strings."""
 
     t1 = time.time()
-    print "Checking archive database for strings..."
+    print "Checking archive table for strings..."
 
-    # Open up the main database archive
+    # Open up the main database archive table
     with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
 
         obs_pytype_list = []
@@ -399,7 +405,9 @@ def check_strings(config_dict, db_binding, fix=False):
                 if record[icol] is not None and not isinstance(record[icol], obs_pytype_list[icol]):
                     # Oops. Found a bad one. Print it out
                     found += 1
-                    sys.stdout.write("Timestamp = %s; record['%s']= %r; ... " % (record[0], obs_list[icol], record[icol]))
+                    sys.stdout.write("Timestamp = %s; record['%s']= %r; ... " % (record[0], 
+                                                                                 obs_list[icol], 
+                                                                                 record[icol]))
 
                     if fix:
                         # Cooerce to the correct type. If it can't be done, then set it to None
@@ -416,9 +424,12 @@ def check_strings(config_dict, db_binding, fix=False):
                         sys.stdout.write("ignored.\n")
     tdiff = time.time() - t1
     if fix:
-        print "String check complete. %d of %d null strings found were fixed in %.2f seconds" % (fixed, found, tdiff)
+        print "String check complete. %d of %d null strings found were fixed in %.2f seconds" % (fixed, 
+                                                                                                 found, 
+                                                                                                 tdiff)
     else:
-        print "String check complete. %d null strings found in %.2f seconds" % (found, tdiff)
+        print "String check complete. %d null strings found in %.2f seconds" % (found, 
+                                                                                tdiff)
 
 def transferDatabase(config_dict, db_binding, options):
     """Transfer 'archive' data from one database to another"""
@@ -501,9 +512,10 @@ def transferDatabase(config_dict, db_binding, options):
                             if first_ts is not None and last_ts is not None:
                                 num_recs = dest_manager.getAggregate(TimeSpan(first_ts, last_ts),
                                                                      'dateTime', 'count')[0]
-                                print ("%s records transferred from source database '%s' to destination database '%s'" %
-                                       (num_recs, src_manager.database_name, dest_manager.database_name))
-                                print "in %.2f seconds." % tdiff
+                                print ("%s records transferred from source database '%s' to" %
+                                       (num_recs, src_manager.database_name))
+                                print ("destination database '%s' in %.2f seconds." %
+                                       (dest_manager.database_name, tdiff))
                             else:
                                 print ("Error. No records were transferred from source database '%s' to destination database '%s'." %
                                        (src_manager.database_name, dest_manager.database_name))
