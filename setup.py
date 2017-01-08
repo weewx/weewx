@@ -197,21 +197,32 @@ class weewx_install_data(install_data):
         # Finally, reorder it to the canonical form
         weecfg.reorder_to_ref(config_dict)
     
+        # NB: use mkstemp instead of NamedTemporaryFile because we need to
+        # do the delete (windows gets mad otherwise) and there is no delete
+        # parameter in NamedTemporaryFile in python 2.5.
+
         # Time to write it out. Get a temporary file:
-        with tempfile.NamedTemporaryFile("w") as tmpfile:
-            # Write the finished configuration file to it:
-            config_dict.write(tmpfile)
-            tmpfile.flush()
-            
-            # Save the old config file if it exists:
-            if not self.dry_run and os.path.exists(install_path):
-                backup_path = weeutil.weeutil.move_with_timestamp(install_path)
-                print "Saved old configuration file as %s" % backup_path
-                
-            # Now install the temporary file (holding the merged config data)
-            # into the proper place:
-            rv = install_data.copy_file(self, tmpfile.name, install_path, **kwargs)
-        
+        tmpfd, tmpfn = tempfile.mkstemp()
+        tmpfile = open(tmpfn, 'w')
+
+        # Write the finished configuration file to it:
+        config_dict.write(tmpfile)
+        tmpfile.flush()
+        tmpfile.close()
+        os.close(tmpfd)
+
+        # Save the old config file if it exists:
+        if not self.dry_run and os.path.exists(install_path):
+            backup_path = weeutil.weeutil.move_with_timestamp(install_path)
+            print "Saved old configuration file as %s" % backup_path
+
+        # Now install the temporary file (holding the merged config data)
+        # into the proper place:
+        rv = install_data.copy_file(self, tmpfn, install_path, **kwargs)
+
+        # Now get rid of the temporary file
+        os.remove(tmpfn)
+
         # Set the permission bits unless this is a dry run:
         if not self.dry_run:
             shutil.copymode(f, install_path)
@@ -231,8 +242,9 @@ class weewx_install_data(install_data):
                         else:
                             tmpfile.writelines(line)
                     tmpfile.flush()
+
                     rv = install_data.copy_file(self, tmpfile.name, outname, **kwargs)
-    
+
             # Set the permission bits unless this is a dry run:
             if not self.dry_run:
                 shutil.copymode(f, outname)
