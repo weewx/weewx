@@ -806,14 +806,11 @@ def main(options, args, engine_class=StdEngine):
     syslog.syslog(syslog.LOG_INFO, "engine: Locale is '%s'" % locale.setlocale(locale.LC_ALL))
 
     # Set up the signal handlers.
+    signal.signal(signal.SIGTERM, sigTERMhandler)
     try:
         signal.signal(signal.SIGHUP, sigHUPhandler)
     except AttributeError:
         syslog.syslog(syslog.LOG_INFO, "engine: SIGHUP not available")
-    try:
-        signal.signal(signal.SIGTERM, sigTERMhandler)
-    except AttributeError:
-        syslog.syslog(syslog.LOG_INFO, "engine: SIGTERM not available")
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
