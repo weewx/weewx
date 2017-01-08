@@ -375,7 +375,11 @@ def update_config(config_dict):
     # assume a very old version:
     config_version = config_dict.get('version') or '1.0.0'
 
-    major, minor, _ = config_version.split('.')
+    # Updates only care about the major and minor numbers
+    parts = config_version.split('.')
+    major = parts[0]
+    minor = parts[1]
+
     # Take care of the collation problem when comparing things like
     # version '1.9' to '1.10' by prepending a '0' to the former:
     if len(minor) < 2:
