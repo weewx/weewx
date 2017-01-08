@@ -2,6 +2,11 @@
 
 """Map syslog to the python logger for systems that have no syslog."""
 
+
+# WARNING: this is a shim for syslog to get weewx to run on windows.  this
+# shim is very much a work in progress.
+
+
 # FIXME: make the log default to a directory 'log' in the weewx directory
 
 import logging
