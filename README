@@ -7,3 +7,70 @@ weewx is licensed under the GNU Public License v3.
 Documentation: docs/readme.htm or http://weewx.com/docs.html
 Wiki: https://github.com/weewx/weewx/wiki
 Community support: https://groups.google.com/group/weewx-user
+
+===============================================================================
+Pre-requisites:
+
+supported hardware
+  http://weewx.com/hardware.htm
+
+python 2.5, 2.6, or 2.7
+  modules: ConfigObj Imaging Cheetah
+           possibly serial or usb, depending on hardware
+
+===============================================================================
+Installation (the pip approach, on any platform):
+
+pip install -i http://weewx.com/pypi weewx
+cd /home/weewx
+./bin/weewxd weewx.conf
+
+===============================================================================
+Installation (the setup.py approach, on any platform)
+
+pip install configobj Imaging Cheetah pyserial pyusb
+tar xvfz weewx-x.y.z.tgz
+cd weewx-x.y.z
+python setup.py install
+cd /home/weewx
+python ./bin/weewxd weewx.conf
+
+===============================================================================
+Installation (debian systems):
+
+curl -s http://weewx.com/keys.html | sudo apt-key add -
+curl -s http://weewx.com/apt/weewx.list | sudo tee /etc/apt/sources.list.d/weewx.list
+echo "deb [arch=all] http://weewx.com/apt/ squeeze main" | \
+  sudo tee /etc/apt/sources.list.d/weewx.list
+
+sudo apt-get update
+sudo apt-get install weewx
+
+===============================================================================
+Installation (redhat systems):
+
+sudo yum-config-manager --add-repo http://weewx.com/yum/weewx.repo
+sudo yum update
+sudo yum install weewx
+
+===============================================================================
+Installation (macos):
+
+easy_install configobj Image Cheetah
+tar xvfz weewx-x.y.z.zip
+cd weewx-x.y.z
+./setup.py install
+cd /Users/Shared/weewx
+./bin/weewxd weewx.conf
+
+===============================================================================
+Installation (windows):
+
+python -m pip install configobj Image Cheetah
+mkdir c:\users\weewx
+icacls "c:\users\weewx" /grant username:(OI)(CI)F /T
+unzip weewx-x.y.z.zip
+cd weewx-x.y.z
+python setup.py install
+cd c:\users\weewx
+python bin\weewxd weewx.conf
