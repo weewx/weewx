@@ -16,7 +16,8 @@ It's now possible to iterate over every record within a timespan.
 Fixes issue #182.
 
 Use schema_name = hardware_name pattern in sensor map for drivers that support
-extensible sensor suites, including the drivers for cc3000, wmr300
+extensible sensor suites, including the drivers for cc3000, te923, wmr300,
+wmr100, wmr200, wmr9x8
 
 Report the firmware version when initializing the cc3000 driver.
 
@@ -65,6 +66,15 @@ Added @media CSS for docs to improve printed/PDF formatting.  Thanks to user
 Tiouck!
 
 Added warning in wmr300 driver when rain counter reaches maximum value.
+
+Added a 0.01 second delay after each read_byte in ws23xx driver to reduce
+chance of data spikes caused by RS232 line contention.  Thanks lionel.sylvie!
+
+The observation windGustDir has been removed from wmr100, wmr200, te923, and
+fousb drivers.  These drivers were simply assigning windGustDir to windDir,
+since none of the hardware reports an actual windGustDir.  For hardware that
+does not report a windGustDir, weewx will calculate windGustDir at each archive
+interval when it accumulates an archive record.
 
 
 3.6.2 11/08/2016

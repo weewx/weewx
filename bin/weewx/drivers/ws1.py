@@ -129,10 +129,10 @@ class WS1Driver(weewx.drivers.AbstractDevice):
     def _augment_packet(self, packet):
         # calculate the rain delta from rain total
         if self.last_rain is not None:
-            packet['rain'] = packet['long_term_rain'] - self.last_rain
+            packet['rain'] = packet['rain_total'] - self.last_rain
         else:
             packet['rain'] = None
-        self.last_rain = packet['long_term_rain']
+        self.last_rain = packet['rain_total']
 
 
 # =========================================================================== #
@@ -185,7 +185,7 @@ class StationData(object):
         data['windSpeed'] = StationData._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
         data['windDir'] = StationData._decode(buf[6:8], 1.411764)  # compass deg
         data['outTemp'] = StationData._decode(buf[8:12], 0.1, True)  # degree_F
-        data['long_term_rain'] = StationData._decode(buf[12:16], 0.01)  # inch
+        data['rain_total'] = StationData._decode(buf[12:16], 0.01)  # inch
         data['pressure'] = StationData._decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
         data['inTemp'] = StationData._decode(buf[20:24], 0.1, True)  # degree_F
         data['outHumidity'] = StationData._decode(buf[24:28], 0.1)  # percent

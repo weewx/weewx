@@ -237,11 +237,11 @@ def save(config_dict, config_path, backup=False):
 
         # Now we can save the file. Get a temporary file:
         tmpfile = tempfile.NamedTemporaryFile("w")
-        
+
         # Write the configuration dictionary to it:
         config_dict.write(tmpfile)
         tmpfile.flush()
-    
+
         # Now move the temporary file into the proper place:
         shutil.copyfile(tmpfile.name, config_path)
 
