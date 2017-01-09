@@ -896,6 +896,16 @@ def main(options, args, engine_class=StdEngine):
             time.sleep(120)
             syslog.syslog(syslog.LOG_NOTICE, "engine: retrying...")
             
+        except weedb.CannotConnect, e:
+            # Unable to connect to the database server. Log it, wait 120 seconds, then try again
+            syslog.syslog(syslog.LOG_CRIT, "engine: Caught database CannotError: %s" % e)
+            if options.exit:
+                syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
+                sys.exit(weewx.DB_ERROR)
+            syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 2 minutes then retrying...")
+            time.sleep(120)
+            syslog.syslog(syslog.LOG_NOTICE, "engine: retrying...")
+            
         except OSError, e:
             # Caught an OS error. Log it, wait 10 seconds, then try again
             syslog.syslog(syslog.LOG_CRIT, "engine: Caught OSError: %s" % e)

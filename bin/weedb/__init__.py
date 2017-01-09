@@ -37,6 +37,9 @@ class NoDatabase(DatabaseError):
 class IntegrityError(DatabaseError):
     """Operation attempted involving the relational integrity of the database."""
 
+class CannotConnect(DatabaseError):
+    """Unable to connect to the database server."""
+
 # In what follows, the test whether a database dictionary has function "dict" is
 # to get around a bug in ConfigObj. It seems to be unable to unpack (using the
 # '**' notation) a ConfigObj dictionary into a function. By calling .dict() a
