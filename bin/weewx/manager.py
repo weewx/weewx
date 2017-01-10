@@ -1126,8 +1126,9 @@ class DaySummaryManager(Manager):
         Nprefix = len(prefix)
         meta_name = '%s_day__metadata' % self.table_name
         self.daykeys = [x[Nprefix:] for x in all_tables if (x.startswith(prefix) and x != meta_name)]
-        row = self.connection.execute("""SELECT value FROM %s_day__metadata WHERE name = 'Version';""" % self.table_name)
-        self.version = row[0] if row is not None else "2.0"
+        self.version = self._getVersion()
+        if self.version is None:
+            self.version = "2.0"
 
     def _initialize_day_tables(self, archiveSchema, cursor):  # @UnusedVariable
         """Initialize the tables needed for the daily summary."""
@@ -1481,6 +1482,10 @@ class DaySummaryManager(Manager):
         returns: A 2-way tuple (nrecs, ndays) where 
           nrecs is the number of records rebuilt;
           ndays is the number of days"""
+        
+        if self.version < '2.0':
+            raise weewx.ViolatedPrecondition("Need >= V2.0 for rebuild of daily summaries. You have '%s'" % self.version)
+
         nrecs = 0
         ndays = 0
         
@@ -1496,7 +1501,7 @@ class DaySummaryManager(Manager):
             stop_ts = weeutil.weeutil.startOfGregorianDay(stop_greg + 1)
         
         with weedb.Transaction(self.connection) as _cursor:
-            _maxTime  = self._getLastUpdate()
+            _maxTime = self._getLastUpdate()
             # Go through all the archive records in the time span, adding them to the
             # daily summaries
             for _rec in self.genBatchRecords(start_ts, stop_ts):
@@ -1613,6 +1618,17 @@ class DaySummaryManager(Manager):
             _row = self.getSql(DaySummaryManager.select_update_str % self.table_name)
         return int(_row[0]) if _row else None
     
+    def _getVersion(self):
+        """Returns a string holding the current version number. Returns None if there is no version number.
+        """
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute("""SELECT value FROM %s_day__metadata WHERE name = 'Version';""" % self.table_name)
+            row = cursor.fetchone()
+        finally:
+            cursor.close()
+        return str(row[0]) if row is not None else None
+        
     def drop_daily(self):
         """Drop the daily summaries."""
         
@@ -1634,6 +1650,13 @@ class DaySummaryManager(Manager):
                           "manager: Dropped daily summary tables from database '%s'" % (self.connection.database_name,))
 
 if __name__ == '__main__':
+    import configobj
+    config_dict = configobj.ConfigObj('/home/weewx/weewx.conf')
+    mgr = open_manager_with_config(config_dict, 'wx_binding', initialize=True)
+    start_greg = 736331
+    nrecs, ndays = mgr.rebuild_days(None, None)
+    print nrecs, ndays
+    
     import doctest
 
     if not doctest.testmod().failed:
