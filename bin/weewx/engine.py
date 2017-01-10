@@ -888,7 +888,7 @@ def main(options, args, engine_class=StdEngine):
             
         except weedb.OperationalError, e:
             # Caught a database error. Log it, wait 120 seconds, then try again
-            syslog.syslog(syslog.LOG_CRIT, "engine: Caught database OperationalError: %s" % e)
+            syslog.syslog(syslog.LOG_CRIT, "engine: Database OperationalError exception: %s" % e)
             if options.exit:
                 syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
                 sys.exit(weewx.DB_ERROR)
@@ -898,7 +898,7 @@ def main(options, args, engine_class=StdEngine):
             
         except weedb.CannotConnect, e:
             # Unable to connect to the database server. Log it, wait 120 seconds, then try again
-            syslog.syslog(syslog.LOG_CRIT, "engine: Caught database CannotError: %s" % e)
+            syslog.syslog(syslog.LOG_CRIT, "engine: Database CannotConnect exception: %s" % e)
             if options.exit:
                 syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
                 sys.exit(weewx.DB_ERROR)
