@@ -1431,7 +1431,7 @@ class DaySummaryManager(Manager):
         
         return (nrecs, ndays)
 
-    def rebuild_days(self, start_greg, stop_greg, progress_fn=show_progress):
+    def rebuild_days(self, start_greg, stop_greg, progress_fn=show_progress, trans_days=10):
         """Rebuild the daily summary for a set of inclusive days in a single transaction.
         
         start_greg: The starting day of the rebuild, as a Gregorian ordinal. If set to None,
@@ -1440,7 +1440,47 @@ class DaySummaryManager(Manager):
         stop_greg: The stopping day of the rebuild, as a Gregorian ordinal. If set to None,
         then end with the last day in the archive.
         
-        returns: A 2-way tuple: (# of processed records, # of processed days)"""
+        progress_fn: This function will be called after every transaction tranche.
+        
+        trans_day: Number of days of archive data to be used for each daily summaries
+        database transaction tranche. [Optional. Default is 10.] 
+
+        returns: A 2-way tuple (nrecs, ndays) where 
+          nrecs is the number of records rebuilt;
+          ndays is the number of days"""
+          
+        if start_greg is None:
+            start_greg = weeutil.weeutil.toGregorianDay(self.firstGoodStamp())
+        if stop_greg is None:
+            stop_greg = weeutil.weeutil.toGregorianDay(self.lastGoodStamp())
+        
+        day = start_greg
+        nrecs = ndays = 0
+        while day <= stop_greg:
+            dr, dd = self._rebuild_tranche(day, day + trans_days - 1, progress_fn=None)
+            if dr == 0:
+                break
+            nrecs += dr
+            ndays += dd
+            day += trans_days
+            if progress_fn:
+                progress_fn(nrecs, weeutil.weeutil.startOfGregorianDay(day))
+        return (nrecs, ndays)
+
+    def _rebuild_tranche(self, start_greg, stop_greg, progress_fn=show_progress):
+        """Rebuild the daily summary for a set of inclusive days in a single transaction.
+        
+        start_greg: The starting day of the rebuild, as a Gregorian ordinal. If set to None,
+        then start with the first day in the archive.
+        
+        stop_greg: The stopping day of the rebuild, as a Gregorian ordinal. If set to None,
+        then end with the last day in the archive.
+        
+        progress_fn: This function will be called after processing every 1000 records.
+        
+        returns: A 2-way tuple (nrecs, ndays) where 
+          nrecs is the number of records rebuilt;
+          ndays is the number of days"""
         nrecs = 0
         ndays = 0
         
@@ -1533,9 +1573,9 @@ class DaySummaryManager(Manager):
         
         day_accum: an accumulator with the daily summary. See weewx.accum
         
-        lastUpdate: the time of the last update will be set to this. Normally, this
-        is the timestamp of the last archive record added to the instance
-        day_accum."""
+        lastUpdate: the time of the last update will be set to this unless it is None. 
+        Normally, this is the timestamp of the last archive record added to the instance
+        day_accum. """
 
         # Make sure the new data uses the same unit system as the database.
         self._check_unit_system(day_accum.unit_system)
@@ -1558,10 +1598,11 @@ class DaySummaryManager(Manager):
                 cursor.execute(_sql_replace_str, _write_tuple)
             except weedb.OperationalError, e:
                 syslog.syslog(syslog.LOG_ERR, "manager: Operational error database %s; %s" % (self.database_name, e))
-                
-        # Update the time of the last daily summary update:
-        cursor.execute(DaySummaryManager.meta_replace_str % self.table_name, ('lastUpdate', str(int(lastUpdate))))
-            
+
+        # If requested, update the time of the last daily summary update:
+        if lastUpdate is not None:
+            cursor.execute(DaySummaryManager.meta_replace_str % self.table_name, ('lastUpdate', str(int(lastUpdate))))
+
     def _getLastUpdate(self, cursor=None):
         """Returns the time of the last update to the statistical database."""
 

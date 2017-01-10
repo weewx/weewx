@@ -856,6 +856,30 @@ def startOfGregorianDay(date_greg):
     sod_ts = int(time.mktime(date_tt)) 
     return sod_ts
     
+def toGregorianDay(time_ts):
+    """Return the Gregorian day a timestamp belongs to.
+    
+    time_ts: A time in unix epoch time.
+    
+    returns: The ordinal Gregorian day that contains that time
+    
+    Example:
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time_ts = 1452412800  # Midnight, 10-Jan-2016
+    >>> print toGregorianDay(time_ts)
+    735972
+    >>> time_ts = 1452412801  # Just after midnight, 10-Jan-2016
+    >>> print toGregorianDay(time_ts)
+    735973
+    """
+
+    date_dt = datetime.datetime.fromtimestamp(time_ts)
+    date_greg = date_dt.toordinal()
+    if date_dt.hour == date_dt.minute == date_dt.second == 0:
+        # Midnight actually belongs to the previous day
+        date_greg -= 1
+    return date_greg
+    
 def startOfDayUTC(time_ts):
     """Calculate the unix epoch time for the start of a UTC day.
     
