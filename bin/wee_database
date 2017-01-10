@@ -29,7 +29,7 @@ import weewx.units
 from weeutil.weeutil import TimeSpan, timestamp_to_string
 
 usage = """wee_database --help
-       wee_database --create-archive
+       wee_database --create-database
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
        wee_database --drop-daily
@@ -64,7 +64,7 @@ weewx, but they may be useful in special cases.
 
 Actions:
 
---create-archive   Create the weewx database and initialize it with the schema.
+--create-database  Create the weewx database and initialize it with the schema.
 --drop-daily       Drop the daily summaries from the database.
 --rebuild-daily    Rebuild the daily summaries for a database from the archive table.
 --reconfigure      Create a new database using the schema in the configuration
@@ -79,7 +79,7 @@ appropriate permissions for the requested operation."""
 
 # List of 'dest' settings used by our 'verbs', note 'dest' may be explicit or
 # implicit. If adding more 'verbs' need to add corresponding 'dest' here.
-dest_list = ['create_archive', 'drop_daily', 'rebuild_daily',
+dest_list = ['create_database', 'drop_daily', 'rebuild_daily',
              'reconfigure', 'check_strings', 'transfer', 'check_weighting']
 
 def main():
@@ -94,7 +94,7 @@ def main():
     parser.add_option("--config", dest="config_path", type=str,
                       metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
-    parser.add_option("--create-archive", dest="create_archive",
+    parser.add_option("--create-database", dest="create_database",
                       action='store_true',
                       help="Create the weewx database.")
     parser.add_option("--drop-daily", dest="drop_daily", action='store_true',
@@ -184,7 +184,7 @@ def main():
     database = config_dict['DataBindings'][db_binding]['database']
     print "Using database binding '%s', which is bound to database '%s'" % (db_binding, database)
 
-    if options.create_archive:
+    if options.create_database:
         createMainDatabase(config_dict, db_binding)
 
     if options.drop_daily:
