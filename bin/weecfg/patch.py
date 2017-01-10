@@ -103,9 +103,20 @@ def apply_patches(config_dict, **kwargs):
         weight_patch_config_dict = {'name': 'Weighted Sum',
                                     'trans_days': 50,
                                     'dry_run': False}
-    patch_obj = IntervalWeighting(config_dict,
-                                  weight_patch_config_dict)
-    patch_obj.run()
+    try:
+        patch_obj = IntervalWeighting(config_dict,
+                                      weight_patch_config_dict)
+    except weedb.CannotConnect:
+        # unable to connect to db server, raise it
+        raise
+    except weedb.OperationalError:
+        # runtime db error, almost certainly the db does not exist, so we can't 
+        # weight the summaries. Log it and move on
+        syslog.syslog(syslog.LOG_INFO, 
+                      "intervalweighting: Database does not exist. Interval weighting skipped.")
+    else:
+        # if we got here we were able to get a patch object so apply the patch
+        patch_obj.run()
 
 
 # ============================================================================
