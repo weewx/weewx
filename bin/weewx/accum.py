@@ -367,6 +367,10 @@ class Accum(dict):
             if self.unit_system != new_unit_system:
                 raise ValueError("Unit system mismatch %d v. %d" % (self.unit_system, 
                                                                     new_unit_system))
+
+    @property
+    def isEmpty(self):
+        return self.unit_system is None
             
 #===============================================================================
 #                            Configuration dictionaries

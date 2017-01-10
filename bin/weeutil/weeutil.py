@@ -837,6 +837,25 @@ def startOfDay(time_ts):
                             0, 0, 0, 0, 0, -1))
     return int(_bod_ts)
         
+def startOfGregorianDay(date_greg):
+    """Given a Gregorian day, returns the start of the day in unix epoch time.
+    
+    date_greg: A date as an ordinal Gregorian day.
+    
+    returns: The local start of the day as a unix epoch time.
+
+    Example:
+    
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> date_greg = 735973  # 10-Jan-2016
+    >>> print startOfGregorianDay(date_greg)
+    1452412800
+    """
+    date_dt = datetime.datetime.fromordinal(date_greg)
+    date_tt = date_dt.timetuple()
+    sod_ts = int(time.mktime(date_tt)) 
+    return sod_ts
+    
 def startOfDayUTC(time_ts):
     """Calculate the unix epoch time for the start of a UTC day.
     

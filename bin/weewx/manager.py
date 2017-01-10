@@ -1431,6 +1431,72 @@ class DaySummaryManager(Manager):
         
         return (nrecs, ndays)
 
+    def rebuild_days(self, start_greg, stop_greg, progress_fn=show_progress):
+        """Rebuild the daily summary for a set of inclusive days in a single transaction.
+        
+        start_greg: The starting day of the rebuild, as a Gregorian ordinal. If set to None,
+        then start with the first day in the archive.
+        
+        stop_greg: The stopping day of the rebuild, as a Gregorian ordinal. If set to None,
+        then end with the last day in the archive.
+        
+        returns: A 2-way tuple: (# of processed records, # of processed days)"""
+        nrecs = 0
+        ndays = 0
+        
+        _day_accum = None
+        
+        if start_greg is None:
+            start_ts = None
+        else:
+            start_ts = weeutil.weeutil.startOfGregorianDay(start_greg)
+        if stop_greg is None:
+            stop_ts = None
+        else:
+            stop_ts = weeutil.weeutil.startOfGregorianDay(stop_greg + 1)
+        
+        with weedb.Transaction(self.connection) as _cursor:
+            _maxTime  = self._getLastUpdate()
+            # Go through all the archive records in the time span, adding them to the
+            # daily summaries
+            for _rec in self.genBatchRecords(start_ts, stop_ts):
+                # If this is the very first record, fetch a new accumulator
+                if not _day_accum:
+                    # Get a TimeSpan that include's the record's timestamp:
+                    _timespan = weeutil.weeutil.archiveDaySpan(_rec['dateTime'])
+                    # Get an empty day accumulator:
+                    _day_accum = weewx.accum.Accum(_timespan)
+                # Try updating. If the time is out of the accumulator's time span, an
+                # exception will get raised.
+                try:
+                    _day_accum.addRecord(_rec)
+                except weewx.accum.OutOfSpan:
+                    # The record is out of the time span.
+                    # Save the old accumulator:
+                    self._set_day_summary(_day_accum, None, _cursor)
+                    ndays += 1
+                    # Get a new accumulator:
+                    _timespan = weeutil.weeutil.archiveDaySpan(_rec['dateTime'])
+                    _day_accum = weewx.accum.Accum(_timespan)
+                    # try again
+                    _day_accum.addRecord(_rec)
+                 
+                _maxTime = max(_maxTime, _rec['dateTime']) if _maxTime else _rec['dateTime']
+                nrecs += 1
+                if progress_fn and nrecs % 1000 == 0:
+                    progress_fn(nrecs, _rec['dateTime'])
+    
+            # We're done. Record the daily summary for the last day unless it is empty
+            if _day_accum and not _day_accum.isEmpty:
+                self._set_day_summary(_day_accum, None, _cursor)
+                ndays += 1
+            # Patch lastUpdate:
+            if _maxTime:
+                _cursor.execute(DaySummaryManager.meta_replace_str % self.table_name, 
+                                ('lastUpdate', str(int(_maxTime))))
+        
+        return (nrecs, ndays)
+
 
     #--------------------------- UTILITY FUNCTIONS -----------------------------------
 
