@@ -84,19 +84,18 @@ class BatteryAlarm(StdService):
         # a low battery alarm this archive period
         self.alarm_count = 0
 
-        alarm_dict = config_dict.get('Alarm', {})
         try:
             # Dig the needed options out of the configuration dictionary.
             # If a critical option is missing, an exception will be thrown and
             # the alarm will not be set.
-            self.time_wait       = int(alarm_dict.get('time_wait', 3600))
-            self.count_threshold = int(alarm_dict.get('count_threshold', 10))
-            self.smtp_host       = alarm_dict['smtp_host']
-            self.smtp_user       = alarm_dict.get('smtp_user')
-            self.smtp_password   = alarm_dict.get('smtp_password')
-            self.SUBJECT         = alarm_dict.get('subject', "Low battery alarm message from weewx")
-            self.FROM            = alarm_dict.get('from', 'alarm@example.com')
-            self.TO              = option_as_list(alarm_dict['mailto'])
+            self.time_wait       = int(config_dict['Alarm'].get('time_wait', 3600))
+            self.count_threshold = int(config_dict['Alarm'].get('count_threshold', 10))
+            self.smtp_host       = config_dict['Alarm']['smtp_host']
+            self.smtp_user       = config_dict['Alarm'].get('smtp_user')
+            self.smtp_password   = config_dict['Alarm'].get('smtp_password')
+            self.SUBJECT         = config_dict['Alarm'].get('subject', "Low battery alarm message from weewx")
+            self.FROM            = config_dict['Alarm'].get('from', 'alarm@example.com')
+            self.TO              = option_as_list(config_dict['Alarm']['mailto'])
             syslog.syslog(syslog.LOG_INFO, "lowBattery: LowBattery alarm enabled. Count threshold is %d" % self.count_threshold)
 
             # If we got this far, it's ok to start intercepting events:
