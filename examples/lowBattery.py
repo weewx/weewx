@@ -108,12 +108,12 @@ class BatteryAlarm(StdService):
         """This function is called on each new LOOP packet."""
 
         # If any battery status flag is non-zero, a battery is low
-        low_batteries = []
+        low_batteries = dict()
         for flag in ['txBatteryStatus', 'windBatteryStatus',
                      'rainBatteryStatus', 'inTempBatteryStatus',
                      'outTempBatteryStatus']:
             if flag in event.packet and event.packet[flag]:
-                low_batteries.append(flag)
+                low_batteries[flag] = event.packet[flag]
 
         # If there are any low batteries, see if we need to send an alarm
         if low_batteries:
@@ -128,14 +128,11 @@ class BatteryAlarm(StdService):
                 if abs(time.time() - self.last_msg_ts) >= self.time_wait :
                     # Sound the alarm!
                     timestamp = event.packet['dateTime']
-                    bat_dict = dict()
-                    for bat in low_batteries:
-                        bat_dict[bat] = event.packet[bat]
                     # Launch in a separate thread so it does not block the
                     # main LOOP thread:
                     t  = threading.Thread(target=BatteryAlarm.soundTheAlarm,
                                           args=(self, timestamp,
-                                                bat_dict,
+                                                low_batteries,
                                                 self.alarm_count))
                     t.start()
                     # Record when the message went out:
@@ -158,7 +155,7 @@ class BatteryAlarm(StdService):
 
         # Form the message text:
         indicator_strings = []
-        for bat in indicator_strings:
+        for bat in battery_flags:
             battery_status.append("%s: %04x" % (bat, battery_flags[bat]))
         msg_text = """
 The low battery indicator has been seen %d times since the last archive period.
