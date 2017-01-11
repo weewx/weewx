@@ -156,7 +156,7 @@ class BatteryAlarm(StdService):
         # Form the message text:
         indicator_strings = []
         for bat in battery_flags:
-            battery_status.append("%s: %04x" % (bat, battery_flags[bat]))
+            indicator_strings.append("%s: %04x" % (bat, battery_flags[bat]))
         msg_text = """
 The low battery indicator has been seen %d times since the last archive period.
 
