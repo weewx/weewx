@@ -14,7 +14,7 @@ weewx.conf:
     smtp_host = smtp.example.com
     smtp_user = myusername
     smtp_password = mypassword
-    from   = sally@example.com
+    from = sally@example.com
     mailto = jane@example.com, bob@example.com
     subject = "Time to change the battery!"
 
@@ -83,19 +83,20 @@ class BatteryAlarm(StdService):
         # This will hold the count of the number of times the VP2 has signaled
         # a low battery alarm this archive period
         self.alarm_count = 0
-        
+
+        alarm_dict = config_dict.get('Alarm', {})
         try:
             # Dig the needed options out of the configuration dictionary.
             # If a critical option is missing, an exception will be thrown and
             # the alarm will not be set.
-            self.time_wait       = int(config_dict['Alarm'].get('time_wait', 3600))
-            self.count_threshold = int(config_dict['Alarm'].get('count_threshold', 10))
-            self.smtp_host       = config_dict['Alarm']['smtp_host']
-            self.smtp_user       = config_dict['Alarm'].get('smtp_user')
-            self.smtp_password   = config_dict['Alarm'].get('smtp_password')
-            self.SUBJECT         = config_dict['Alarm'].get('subject', "Low battery alarm message from weewx")
-            self.FROM            = config_dict['Alarm'].get('from', 'alarm@example.com')
-            self.TO              = option_as_list(config_dict['Alarm']['mailto'])
+            self.time_wait       = int(alarm_dict.get('time_wait', 3600))
+            self.count_threshold = int(alarm_dict.get('count_threshold', 10))
+            self.smtp_host       = alarm_dict['smtp_host']
+            self.smtp_user       = alarm_dict.get('smtp_user')
+            self.smtp_password   = alarm_dict.get('smtp_password')
+            self.SUBJECT         = alarm_dict.get('subject', "Low battery alarm message from weewx")
+            self.FROM            = alarm_dict.get('from', 'alarm@example.com')
+            self.TO              = option_as_list(alarm_dict['mailto'])
             syslog.syslog(syslog.LOG_INFO, "lowBattery: LowBattery alarm enabled. Count threshold is %d" % self.count_threshold)
 
             # If we got this far, it's ok to start intercepting events:
@@ -107,9 +108,16 @@ class BatteryAlarm(StdService):
     def newLoopPacket(self, event):
         """This function is called on each new LOOP packet."""
 
-        # If the Transmit Battery Status byte is non-zero, an alarm is on
-        if event.packet['txBatteryStatus']:
+        # If any battery status flag is non-zero, a battery is low
+        low_batteries = []
+        for flag in ['txBatteryStatus', 'windBatteryStatus',
+                     'rainBatteryStatus', 'inTempBatteryStatus',
+                     'outTempBatteryStatus']:
+            if flag in event.packet and event.packet[flag]:
+                low_batteries.append(flag)
 
+        # If there are any low batteries, see if we need to send an alarm
+        if low_batteries:
             self.alarm_count += 1
 
             # Don't panic on the first occurrence. We must see the alarm at
@@ -121,12 +129,14 @@ class BatteryAlarm(StdService):
                 if abs(time.time() - self.last_msg_ts) >= self.time_wait :
                     # Sound the alarm!
                     timestamp = event.packet['dateTime']
-                    battery_status = event.packet['txBatteryStatus']
+                    bat_dict = dict()
+                    for bat in low_batteries:
+                        bat_dict[bat] = event.packet[bat]
                     # Launch in a separate thread so it does not block the
                     # main LOOP thread:
                     t  = threading.Thread(target=BatteryAlarm.soundTheAlarm,
                                           args=(self, timestamp,
-                                                battery_status,
+                                                bat_dict,
                                                 self.alarm_count))
                     t.start()
                     # Record when the message went out:
@@ -138,18 +148,28 @@ class BatteryAlarm(StdService):
         # Reset the alarm counter
         self.alarm_count = 0
 
-    def soundTheAlarm(self, timestamp, battery_status, alarm_count):
+    def soundTheAlarm(self, timestamp, battery_flags, alarm_count):
         """This function is called when the alarm has been triggered."""
         
         # Get the time and convert to a string:
         t_str = timestamp_to_string(timestamp)
 
         # Log it in the system log:
-        syslog.syslog(syslog.LOG_INFO, "lowBattery: Low battery alarm (0x%04x) sounded at %s." % (battery_status, t_str))
+        syslog.syslog(syslog.LOG_INFO, "lowBattery: Low battery status sounded at %s: %s" % (t_str, battery_flags))
 
         # Form the message text:
-        msg_text = """The low battery alarm (0x%04x) has been seen %d times since the last archive period.\n\n"""\
-                   """Alarm sounded at %s\n\n""" % (battery_status, alarm_count, t_str)
+        indicator_strings = []
+        for bat in indicator_strings:
+            battery_status.append("%s: %04x" % (bat, battery_flags[bat]))
+        msg_text = """
+The low battery indicator has been seen %d times since the last archive period.
+
+Alarm sounded at %s
+
+Low battery indicators:
+%s
+
+""" % (alarm_count, t_str, '\n'.join(indicator_strings))
         # Convert to MIME:
         msg = MIMEText(msg_text)
         
@@ -167,22 +187,27 @@ class BatteryAlarm(StdService):
             s.ehlo()
             s.starttls()
             s.ehlo()
-            syslog.syslog(syslog.LOG_DEBUG, "lowBattery: using encrypted transport")
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "lowBattery: using encrypted transport")
         except smtplib.SMTPException:
-            syslog.syslog(syslog.LOG_DEBUG, "lowBattery: using unencrypted transport")
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "lowBattery: using unencrypted transport")
 
         try:
-            # If a username has been given, assume that login is required for this host:
+            # If a username has been given, assume that login is required
+            # for this host:
             if self.smtp_user:
                 s.login(self.smtp_user, self.smtp_password)
-                syslog.syslog(syslog.LOG_DEBUG, "lowBattery: logged in with user name %s" % (self.smtp_user,))
+                syslog.syslog(syslog.LOG_DEBUG,
+                              "lowBattery: logged in as %s" % self.smtp_user)
 
             # Send the email:
             s.sendmail(msg['From'], self.TO,  msg.as_string())
             # Log out of the server:
             s.quit()
         except Exception, e:
-            syslog.syslog(syslog.LOG_ERR, "lowBattery: SMTP mailer refused message with error %s" % (e,))
+            syslog.syslog(syslog.LOG_ERR,
+                          "lowBattery: send email failed: %s" % (e,))
             raise
         
         # Log sending the email:
