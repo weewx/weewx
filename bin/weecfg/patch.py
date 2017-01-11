@@ -20,7 +20,6 @@ import weedb
 import weewx
 
 from weeutil.weeutil import archiveDaySpan, genDaySpans, timestamp_to_string, startOfDay, min_with_none, tobool
-from weewx import require_weewx_version
 
 
 # ============================================================================
@@ -325,7 +324,8 @@ class IntervalWeighting(DatabasePatch):
                         if not self.dry_run:
                             self.dbm._set_day_summary(_day_accum,
                                                       _day_span.stop,
-                                                      _cursor)
+                                                      _cursor,
+                                                      check_version=False)
                         _days += 1
                         # Save the ts of the patched daily summary as the
                         # 'lastSummaryPatched' value in the archive_day__metadata

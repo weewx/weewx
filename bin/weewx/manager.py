@@ -1127,8 +1127,8 @@ class DaySummaryManager(Manager):
         meta_name = '%s_day__metadata' % self.table_name
         self.daykeys = [x[Nprefix:] for x in all_tables if (x.startswith(prefix) and x != meta_name)]
         self.version = self._getVersion()
-        if self.version is None:
-            self.version = "2.0"
+        if weewx.debug:
+            assert(self.version is not None)
 
     def _initialize_day_tables(self, archiveSchema, cursor):  # @UnusedVariable
         """Initialize the tables needed for the daily summary."""
@@ -1573,7 +1573,7 @@ class DaySummaryManager(Manager):
             if not cursor:
                 _cursor.close()
 
-    def _set_day_summary(self, day_accum, lastUpdate, cursor):
+    def _set_day_summary(self, day_accum, lastUpdate, cursor, check_version=True):
         """Write all statistics for a day to the database in a single transaction.
         
         day_accum: an accumulator with the daily summary. See weewx.accum
@@ -1581,6 +1581,9 @@ class DaySummaryManager(Manager):
         lastUpdate: the time of the last update will be set to this unless it is None. 
         Normally, this is the timestamp of the last archive record added to the instance
         day_accum. """
+
+        if check_version and self.version < '2.0':
+            raise weewx.ViolatedPrecondition("DaySummaryManager requires >= V2.0. You have '%s'" % self.version)
 
         # Make sure the new data uses the same unit system as the database.
         self._check_unit_system(day_accum.unit_system)

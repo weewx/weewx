@@ -15,14 +15,11 @@ import sys
 import time
 
 from datetime import datetime as dt
-from distutils.version import StrictVersion
 
 # weewx imports
 import user.extensions      #@UnusedImport
-import weecfg
 import weecfg.patch
 import weedb
-import weewx
 import weewx.manager
 import weewx.units
 
