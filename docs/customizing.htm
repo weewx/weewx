@@ -436,14 +436,14 @@ Version: 3.7
                 class="code">.tmpl</span> extension.
         </p>
 
-        <h2 id="wee_reports">The tool wee_reports</h2>
+        <h2 id="wee_reports">The utility <span class="code">wee_reports</span></h2>
 
         <p>If you make changes, how do you know what the results will look like?
             You could just run weewx and wait until the next reporting cycle kicks
             off but, depending on your archive interval, that could be a 30 minute
             wait or more.</p>
 
-        <p>The tool <span class="code">wee_reports</span> allows you to run a
+        <p>The utility <span class="code">wee_reports</span> allows you to run a
             report whenever you like. To use it, just run it from a command line,
             with the location of your configuration file
             <span class="code">weewx.conf</span> as the first argument. Optionally,
@@ -3033,7 +3033,7 @@ class MyStats(SearchList):                                                   # 1
             report. For normal <span class="code">weewx</span> operation, the report
             time aligns with the <span class="code">dateTime</span> of the most recent
             archive record. When reports are run using the
-            <span class="code">wee_reports</span> tool, the report time is either
+            <span class="code">wee_reports</span> utility, the report time is either
             the <span class="code">dateTime</span> of the most recent archive record
             (the default) or the optional timestamp command line argument.
         </p>
@@ -3245,10 +3245,10 @@ class MyStats(SearchList):                                                   # 1
             </tbody>
         </table>
 
-        <h3>The <span class="code">wee_reports</span> tool and the <span class="code">report_timing</span> option</h3>
+        <h3>The <span class="code">wee_reports</span> utility and the <span class="code">report_timing</span> option</h3>
 
         <p>The <span class="code">report_timing</span> option is ignored when
-            using the <a href="#wee_reports">wee_reports</a> tool.
+            using the <a href="#wee_reports">wee_reports</a> utility.
         </p>
 
         <h1 id="standard_skin">The Standard <span class="code">skin.conf</span></h1>
@@ -3762,7 +3762,7 @@ UV      = UV Index</pre>
             show up in the log file. Many errors are obvious &mdash; Cheetah will
             display a line number and list the template file in which the error
             occurred. In some cases the error reporting is rather obscure. So
-            make small changes and test often. Use the tool
+            make small changes and test often. Use the utility
             <span class="code"><a href="#wee_reports">wee_reports</a></span>
             to test modifications to the generator configuration and/or the
             template contents.</p>
@@ -4922,13 +4922,13 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
             <li>
                 <p>
                     It's worth noting that there's actually a hidden, last step:
-                    recreating the daily summaries inside the new database. This will be
+                    rebuilding the daily summaries inside the new database. This will be
                     done automatically by <span class="code">weewx</span> at the next
                     startup. Alternatively, it can be done manually using the
                     <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>
-                    utility and the <span class="code">--backfill-daily</span> option:
+                    utility and the <span class="code">--rebuild-daily</span> option:
                 </p>
-                <pre class="tty cmd">wee_database weewx.conf --backfill-daily</pre>
+                <pre class="tty cmd">wee_database weewx.conf --rebuild-daily</pre>
             </li>
         </ol>
 
@@ -5108,24 +5108,33 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
             <li>
                 <p>
                     It's worth noting that there's actually a hidden, last step:
-                    recreating the daily summaries inside the new database. This will be
+                    rebuilding the daily summaries inside the new database. This will be
                     done automatically by <span class="code">weewx</span> at the next
                     startup. Alternatively, it can be done manually using the
                     <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> utility
-                    and the <span class="code">--backfill-daily</span> option:
+                    and the <span class="code">--rebuild-daily</span> option:
                 </p>
-                <pre class="tty cmd">wee_database weewx.conf --backfill-daily</pre>
+                <pre class="tty cmd">wee_database weewx.conf --rebuild-daily</pre>
             </li>
         </ol>
 
-        <h2>Dropping and rebuilding the daily summaries</h2>
+        <h2>Rebuilding the daily summaries</h2>
 
-        <p>The tool <span class="code">wee_database</span> can also be used to drop the daily
-            summaries:</p>
+        <p>The <span class="code">wee_database</span> utility can also be used to 
+            rebuild the daily summaries:</p>
+        
+        <pre class="tty cmd">wee_database weewx.conf --rebuild-daily</pre>
+        
+        <p>In most cases this will be sufficient; however, if anomalies remain 
+            in the daily summaries the daily summary tables may be dropped first 
+            before rebuilding:</p>
+            
         <pre class="tty cmd">wee_database weewx.conf --drop-daily</pre>
+        
         <p>The summaries will automatically be rebuilt the next time <span class="code">weewx</span> starts,
-            or they can be rebuilt with the tool:</p>
-        <pre class="tty cmd">wee_database weewx.conf --backfill-daily</pre>
+            or they can be rebuilt with the utility:</p>
+        
+        <pre class="tty cmd">wee_database weewx.conf --rebuild-daily</pre>
 
 
         <h1 id="porting">Porting to new hardware</h1>

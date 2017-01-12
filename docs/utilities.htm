@@ -324,7 +324,7 @@ Saved configuration to /home/weewx/weewx.conf
 
 
         <h1 id="wee_database_utility"><span class="code">wee_database</span></h1>
-        <p>This database utility simplifies typical database maintenance operations. For example, it can backfill the
+        <p>This database utility simplifies typical database maintenance operations. For example, it can rebuild the
             daily summaries or check a SQLite database for embedded strings where floats are expected.</p>
 
         <p>Run the utility with the <span class="code">--help</span> flag to see how it is used:</p>
@@ -332,71 +332,77 @@ Saved configuration to /home/weewx/weewx.conf
         <p>This will result in an output that looks something like this:</p>
         <pre class="tty">
 Usage: wee_database --help
-       wee_database --create-archive
+       wee_database --create-database
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
        wee_database --drop-daily
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
-       wee_database --backfill-daily
+       wee_database --rebuild-daily
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
+            [--date=YYYY-mm-dd | --from=YYYY-mm-dd --to=YYYY-mm-dd]
             [--trans-days=DAYS]
        wee_database --reconfigure
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
-       wee_database --string-check
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME] [--fix]
        wee_database --transfer
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
             --dest-binding=BINDING_NAME
             [--dry-run]
-       wee_database --apply-weight-patch
+       wee_database --check-strings
             [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
+            [--binding=BINDING_NAME] [--fix-strings]
+       wee_database --check-weighting
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME] [--fix-weighting]
             [--trans-days=DAYS]
             [--dry-run]
 
 Description:
 
-Configure the weewx databases. Most of these functions are
-handled automatically by weewx, but they may be useful in special cases.
+Configure the weewx databases. Most of these functions are handled automatically by
+weewx, but they may be useful in special cases.
 
 Actions:
 
---create-archive      Create the archive database and initialize it with the
-                      schema.
---drop-daily          Drop the daily summaries from the database.
---backfill-daily      Rebuild the daily summaries from the archive database.
---reconfigure         Create a new database using the schema in the configuration
-                      file. Copy over data from the old database.
---string-check        Scan the archive database, looking for null strings that may
-                      have been introduced by a SQL editing program.
---transfer            Move data from one database to another.
---apply-weight-patch  Apply the weighted daily summaries patch to the weewx
-                      database.
+--create-database  Create the weewx database and initialize it with the schema.
+--drop-daily       Drop the daily summaries from the database.
+--rebuild-daily    Rebuild the daily summaries for a database from the archive table.
+--reconfigure      Create a new database using the schema in the configuration
+                   file. Copy over data from the old database.
+--transfer         Move data from one database to another.
+--check-strings    Scan the archive table, looking for null strings that may
+                   have been introduced by a SQL editing program.
+--check-weighting  Check whether the daily summaries have been interval weighted.
 
 Options:
   -h, --help            show this help message and exit
   --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
-  --create-archive      Create the archive database.
+  --create-database     Create the weewx database.
   --drop-daily          Drop the daily summary tables from a database.
-  --backfill-daily      Backfill a database with daily summaries.
-  --reconfigure         Create a new archive database using configuration
-                        information found in the configuration file. In
-                        particular, the new database will use the unit system
-                        found in option [StdConvert][target_unit]. The new
-                        database will have the same name as the old database,
-                        with a '_new' on the end.
-  --string-check        Check a sqlite version of the archive database to see
-                        whether it contains embedded strings.
-  --fix                 Fix any embedded strings in a sqlite database.
+  --rebuild-daily       Rebuild the daily summaries for a database.
+  --date=YYYY-mm-dd     Rebuild the daily summaries for this date. Format is
+                        YYYY-mm-dd.
+  --from=YYYY-mm-dd     Rebuild the daily summaries starting at this date.
+                        Format is YYYY-mm-dd.
+  --to=YYYY-mm-dd       Rebuild the daily summaries up until this date. Format
+                        is YYYY-mm-dd.
+  --reconfigure         Create a new database using configuration information
+                        found in the configuration file. In particular, the
+                        new database will use the unit system found in option
+                        [StdConvert][target_unit]. The new database will have
+                        the same name as the old database, with a '_new' on
+                        the end.
   --transfer            Transfer the weewx archive from source database to
                         destination database.
-  --apply-weight-patch  Apply the weighted daily summary patch to the weewx
-                        database.
+  --check-strings       Check a sqlite version of the archive table to see
+                        whether it contains embedded strings.
+  --fix-strings         Fix any embedded strings in a sqlite database.
+  --check-weighting     Check whether the daily summaries have been interval
+                        weighted.
+  --fix-weighting       Apply interval weighting to daily summaries.
   --binding=BINDING_NAME
                         The data binding. Default is 'wx_binding'.
   --dest-binding=BINDING_NAME
@@ -404,10 +410,10 @@ Options:
   --dry-run             Print what would happen but do not do it. Default is
                         False.
   --trans-days=DAYS     Limit database transactions to no more than DAYS days
-                        of data at a time. Default value is 5 for backfills
-                        and 50 when applying the weight patch. May be
-                        increased for a slight speed increase or reduced to
-                        reduce memory usage.
+                        of data at a time. Default value is 5 when rebuilding
+                        daily summaries and 50 when interval weighting daily
+                        summaries weight. May be increased for a slight speed
+                        increase or reduced to reduce memory usage.
 
 If you are using a MySQL database it is assumed that you have the appropriate
 permissions for the requested operation.
@@ -415,77 +421,113 @@ permissions for the requested operation.
 
         <h2><span id='wee_database_details'>Actions and options</span></h2>
 
-        <h3>Action <span class="code">--create-archive</span></h3>
+        <h3>Action <span class="code">--create-database</span></h3>
         <p>If the database does not already exist, this action will create it
             and initialize it with the schema specified in the
             <span class="code">weewx</span> configuration file.
             Because <span class="code">weewx</span> does this
             automatically, this action is rarely needed.</p>
 
-        <pre class="tty cmd">wee_database --create-archive</pre>
+        <pre class="tty cmd">wee_database --create-database</pre>
 
         <h3>Action <span class="code">--drop-daily</span></h3>
-        <p>In addition to the regular archive data, every weewx database also includes a daily summary table for each
-            observation type. Because there can be dozens of observation types, there can be dozens of these daily
-            summaries. It doesn't happen very often, but there can be occasions when it's necessary to drop them all and
-            then rebuild them. Dropping them by hand would be very tedious! This action does them all at once.</p>
+        <p>In addition to the regular archive data, every weewx database also 
+            includes a daily summary table for each observation type. Because 
+            there can be dozens of observation types, there can be dozens of 
+            these daily summaries. It doesn't happen very often, but there can 
+            be occasions when it's necessary to drop them all and then rebuild 
+            them. Dropping them by hand would be very tedious! This action does 
+            them all at once.</p>
 
         <pre class="tty cmd">wee_database --drop-daily</pre>
 
-        <h3>Action <span class="code">--backfill-daily</span></h3>
-        <p>This action is the inverse of option <span class="code">--drop-daily</span> in that it rebuilds the
-            daily summaries from the archive data.</p>
+        <h3>Action <span class="code">--rebuild-daily</span></h3>
+        <p>This action is the inverse of action <span class="code">--drop-daily</span> in 
+            that it rebuilds the daily summaries from the archive data. In most 
+            cases it is not necessary to drop the daily summaries tables using 
+            the action <span class="code">--drop-daily</span> before rebuilding 
+            them. The action <span class="code">--rebuild-daily</span> accepts 
+            a number of date related options, <span class="code">--date</span>, 
+            <span class="code">--from</span> and <span class="code">--to</span>, 
+            that allow selective rebuilding of the daily summaries for one or 
+            more days rather than for the entire archive history. These options 
+            may be useful if  bogus data has been removed from the archive 
+            covering a single day or a period of few days. The daily summaries 
+            can then be rebuilt for this period only, meaning that detailed 
+            low/high values and the associated times for unaffected days are 
+            not lost. The <span class="code">--date</span> option limits the 
+            daily summary rebuild to the specified date, the <span class="code">--from</span> and 
+            <span class="code">--to</span> options must be used together and 
+            limit the daily summary rebuild to the specified inclusive period.</p>
 
-        <pre class="tty cmd">wee_database --backfill-daily</pre>
+        <pre class="tty cmd">wee_database --rebuild-daily
+wee_database --rebuild-daily --date=YYYY-mm-dd
+wee_database --rebuild-daily --from=YYYY-mm-dd --to=YYYY-mm-dd</pre>
 
         <h3>Action <span class="code">--reconfigure</span></h3>
         <p>This action is useful for changing the schema in your database.</p>
 
-        <p>It creates a new database with the same name as the old, except with the suffix <span
-                class="code">_new</span> attached at the end (nominally, <span class="code">weewx.sdb_new</span> if you
-            are using SQLite, <span class="code">weewx_new</span> if you are using MySQL). It then initializes it with
-            the schema specified in <span class="code">weewx.conf</span>. Finally, it copies over the data from your old
-            database into the new database.</p>
+        <p>It creates a new database with the same name as the old, except with 
+            the suffix <span class="code">_new</span> attached at the end 
+            (nominally, <span class="code">weewx.sdb_new</span> if you
+            are using SQLite, <span class="code">weewx_new</span> if you are 
+            using MySQL). It then initializes it with the schema specified 
+            in <span class="code">weewx.conf</span>. Finally, it copies over the 
+            data from your old database into the new database.</p>
+            
+        <pre class="tty cmd">wee_database --reconfigure</pre>
 
-        <p>See the section <a href="customizing.htm#Adding_a_new_observation_type">Adding a new observation type</a> in the Customization Guide
-            for step-by-step instructions that use this option.</p>
-
-        <h3>Action <span class="code">--string-check</span></h3>
-        <p>Normally, all entries in the archive database are pure numbers. However, some visual SQLite database editors
-            use a null string instead of a null value when deleting entries. These nulls strings can crash <span 
-                    class="code">weewx</span>. This action checks for them and, if the option <span 
-                    class="code">--fix</span> is specified, substitutes a true null value if it finds any.</p>
-
-        <pre class="tty cmd">wee_database --string-check
-wee_database --string-check --fix</pre>
+        <p>See the section <a href="customizing.htm#Adding_a_new_observation_type">Adding a new observation type</a> in 
+            the Customization Guide for step-by-step instructions that use this 
+            option.</p>
 
         <h3>Action <span class="code">--transfer</span></h3>
-        <p>This action is useful for moving your database from one type of database to another, such as from SQLite to
-            MySQL. To use it, you must have two bindings specified in your <span class="code">weewx.conf</span>
-            configuration file. One will serve as the source, the other as the destination. Specify the source binding
-            with option <span class="code">--binding</span>, the destination binding with option <span class="code">--dest-binding</span>.
+        <p>This action is useful for moving your database from one type of 
+            database to another, such as from SQLite to MySQL. To use it, you 
+            must have two bindings specified in your <span class="code">weewx.conf</span>
+            configuration file. One will serve as the source, the other as the 
+            destination. Specify the source binding with option <span class="code">--binding</span>, 
+            the destination binding with option <span class="code">--dest-binding</span>. 
+            The <span class="code">--binding</span> option may be omitted in 
+            which case the default <span class="code">wx-binding</span> will be 
+            used.
         </p>
+        
+        <pre class="tty cmd">wee_database --transfer --binding=source_binding --dest-binding=dest_binding
+wee_database --transfer --dest-binding=dest_binding</pre>
+        
         <p>See the Wiki for examples of moving data from <a
                 href="https://github.com/weewx/weewx/wiki/Transfer%20from%20sqlite%20to%20MySQL#using-wee_database">SQLite
             to MySQL</a>, and from <a
                 href="https://github.com/weewx/weewx/wiki/Transfer%20from%20MySQL%20to%20sqlite#using-wee_database">MySQL
             to SQLite</a>, using <span class="code">wee_database</span>.</p>
 
-        <h3>Action <span class="code">--apply-weight-patch</span></h3>
-        <p>This action will apply the weighted daily summaries patch to a <span class="code">weewx</span> database. 
-            Before <span class="code">weewx</span> v3.x.y the <span class="code">weewx</span> data model was predicated 
-            on a single homogenious archive interval i.e., the time period between archive records was constant throughout 
-            the <span class="code">weewx</span> archive. <span class="code">weewx</span> v3.x.y introduced support for a 
-            variable archive interval; however, to maintain the integrity of the <span class="code">weewx</span> data 
-            model historical <span class="code">weewx</span> data must be patched. This patch will normally be applied 
-            automatically during the first startup of <span class="code">weewx</span> v3.x.y or later and will be largely 
-            unnoticed by the user. For special cases where manual application of this patch is required the user should 
-            use the <span class="code">--apply-weight-patch</span> action.
-        </p>
+        <h3>Action <span class="code">--check-strings</span></h3>
+        <p>Normally, all entries in the archive are pure numbers. However, some 
+            visual SQLite database editors use a null string instead of a null 
+            value when deleting entries. These nulls strings can 
+            crash <span class="code">weewx</span>. This action checks for them
+            and, if the option <span class="code">--fix-strings</span> is 
+            specified, substitutes a true null value if it finds any.</p>
 
-        <p class="note">
-            <strong>Note</strong><br/>The <span class="code">--apply-weight-patch</span> action is only applicable 
-            to <span class="code">weewx</span> v3.x.y or later.</p>
+        <pre class="tty cmd">wee_database --check-strings
+wee_database --check-strings --fix-strings</pre>
+
+        <h3>Action <span class="code">--check-weighting</span></h3>
+        <p>This action will check the daily summaries and advise the user of the 
+        daily summary version number as well as whether the daily summaries have 
+        been interval weighted. The daily summaries will normally be interval 
+        weighted once only when weewx is first run after upgrading to Version 3.7 
+        or later. If the option <span class="code">--fix-weighting</span> is 
+        specified the daily summaries will be interval weighted if interval 
+        weighting has never been applied.
+        </p>
+    
+        <pre class="tty cmd">wee_database --check-weighting
+wee_database --check-weighting --fix-weighting</pre>
+
+        <p>See the section <a href="upgrading.htm#Changes_to_aggregate_calculations">Changes to aggregate calculations</a> in 
+            the Upgrade Guide for further information on interval weighting.</p>
         
         <!-- ======== -->
 
@@ -1026,8 +1068,8 @@ Options:
 
 wee_import will import data from an external source into a weewx
 archive. Daily summaries are updated as each archive record is
-imported so there should be no need to separately drop and rebuild
-the daily summaries using the wee_database utility.</pre>
+imported so there should be no need to separately rebuild the daily
+summaries using the wee_database utility.</pre>
 
         <h2><span id='wee_import_details'>Actions and options</span></h2>
 
@@ -2435,8 +2477,8 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <li>Manually delete the contaminated data. Use SQL commands to manipulate the data in the <span
                     class="code">weewx</span> archive database. The simplicity of this process will depend on your
                 ability to use SQL, the amount of data imported, and whether the imported data was dispersed amongst
-                existing. Once contaminated data have been removed the daily summary tables will need to be dropped and
-                rebuilt using the <span class="code">wee_database</span> utility.
+                existing. Once contaminated data have been removed the daily summary tables will need to be rebuilt using
+                the <span class="code">wee_database</span> utility.
             </li>
 
             <li>Delete the database and start over. For SQLite, simply delete the database file. For MySQL, drop the

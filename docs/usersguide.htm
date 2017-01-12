@@ -3441,10 +3441,10 @@ Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
         <p>The problem is that a unicode null string <span class='code'>u''</span>
             got entered where a <span class='code'>NULL</span> should be. The
             utility <span class='code'>wee_database</span> can fix this.
-            Run it with the option <span class='code'>--string-check</span> to
+            Run it with the option <span class='code'>--check-strings</span> to
             search for these embedded strings. Add the option
-            <span class='code'>--fix</span> to have the utility fix them:</p>
-        <pre class="tty cmd">wee_database weewx.conf --string-check --fix</pre>
+            <span class='code'>--fix-strings</span> to have the utility fix them:</p>
+        <pre class="tty cmd">wee_database weewx.conf --check-strings --fix-strings</pre>
 
         <h3 id="python2_5">Python 2.5</h3>
 
