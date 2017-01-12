@@ -562,7 +562,7 @@ class IntervalWeighting(DatabasePatch):
     def progress(ndays, last_time):
         """Utility function to show our progress while patching."""
 
-        print >>sys.stdout, "Days processed: %d; Timestamp: %s\r" % \
+        print >>sys.stdout, "Patching daily summary: %d; Timestamp: %s\r" % \
             (ndays, timestamp_to_string(last_time)),
         sys.stdout.flush()
 
