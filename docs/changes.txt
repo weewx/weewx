@@ -35,6 +35,10 @@ Fixed usb initialization issues in the wmr300 driver.
 Fixed bug in vantage driver that would prevent console wake up during
 retries when fetching EEPROM vales. Thanks to user Dan Begallie!
 
+The vantage driver no longer emits values for non-existent sensors. 
+As a result, LOOP and archive packets are now much smaller. If this works
+out, other drivers will follow suit. Partial fix of issue #175.
+
 The engine now logs locale. Additional information if a TERM signal is 
 received.
 
