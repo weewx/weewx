@@ -48,6 +48,9 @@ Fixed reference to index.html.tmpl in the xstats example.
 Changed algorithm for calculating ET to something more appropriate for
 hourly values (former algorithm assumed daily values). Fixes issue #160.
 
+Fixed bug in Celsius to Fahrenheit conversion that affected pressure
+conversions in uwxutils.py.
+
 Fixed bug that was introduced in v3.6.0, which prevented wee_reports from
 working for anything other than the current time.
 
