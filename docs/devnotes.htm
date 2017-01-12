@@ -258,6 +258,14 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
                 extraneous "changed lines," trying to find the important stuff.
             </li>
         </ul>
+
+        <p>When invoking functions or instantiating classes, use the fully qualified name. Don't do this:</p>
+        <pre class="tty" style="opacity: 0.5">from datetime import dt
+now = dt()</pre>
+        <p>Instead, do this:</p>
+        <pre class="tty">import datetime
+now = datetime.datetime()</pre>
+
         <h1>Glossary</h1>
 
         <p>This is a glossary of terminology used throughout the code. </p>

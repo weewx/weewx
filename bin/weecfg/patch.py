@@ -13,8 +13,6 @@ import sys
 import syslog
 import time
 
-from datetime import datetime as dt
-
 # weewx imports
 import weedb
 import weewx
@@ -210,7 +208,7 @@ class IntervalWeighting(DatabasePatch):
             # after the ts of the last successfully patched daily summary
             _last_patched_ts = self.read_metadata('lastSummaryPatched')
             if _last_patched_ts:
-                _next_day_to_patch_dt = dt.fromtimestamp(_last_patched_ts) + datetime.timedelta(days=1)
+                _next_day_to_patch_dt = datetime.datetime.fromtimestamp(_last_patched_ts) + datetime.timedelta(days=1)
                 _next_day_to_patch_ts = time.mktime(_next_day_to_patch_dt.timetuple())
             else:
                 _next_day_to_patch_ts = None
@@ -285,7 +283,7 @@ class IntervalWeighting(DatabasePatch):
             first_ts, obs = self.first_summary()
             # Get the start and stop ts for our first transaction days
             _tr_start_ts = np_ts if np_ts is not None else first_ts
-            _tr_stop_dt = dt.fromtimestamp(_tr_start_ts) + datetime.timedelta(days=self.trans_days)
+            _tr_stop_dt = datetime.datetime.fromtimestamp(_tr_start_ts) + datetime.timedelta(days=self.trans_days)
             _tr_stop_ts = time.mktime(_tr_stop_dt.timetuple())
             _tr_stop_ts = min(startOfDay(self.dbm.last_timestamp), _tr_stop_ts)
 
@@ -343,9 +341,9 @@ class IntervalWeighting(DatabasePatch):
                         break
                     # More to process so set our start and stop for the next
                     # transaction
-                    _tr_start_dt = dt.fromtimestamp(_tr_stop_ts) + datetime.timedelta(days=1)
+                    _tr_start_dt = datetime.datetime.fromtimestamp(_tr_stop_ts) + datetime.timedelta(days=1)
                     _tr_start_ts = time.mktime(_tr_start_dt.timetuple())
-                    _tr_stop_dt = dt.fromtimestamp(_tr_start_ts) + datetime.timedelta(days=self.trans_days)
+                    _tr_stop_dt = datetime.datetime.fromtimestamp(_tr_start_ts) + datetime.timedelta(days=self.trans_days)
                     _tr_stop_ts = time.mktime(_tr_stop_dt.timetuple())
                     _tr_stop_ts = min(self.dbm.last_timestamp, _tr_stop_ts)
 
@@ -364,7 +362,7 @@ class IntervalWeighting(DatabasePatch):
         else:
             # we didn't need to patch so inform the user
             syslog.syslog(syslog.LOG_INFO,
-                          "intervalweighting: '%s' patch has already been applied. Patch not applied." % self.name_msg)
+                          "intervalweighting: '%s' patch has already been applied. Patch not applied." % self.name)
 
     def genSummaryDaySpans(self, start_ts, stop_ts, obs='outTemp'):
         """Generator to generate a sequence of daily summary day TimeSpans.
