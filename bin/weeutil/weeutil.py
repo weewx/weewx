@@ -473,9 +473,10 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
     return TimeSpan(time.mktime(start_span_dt.timetuple()), 
                     time.mktime(stop_span_dt.timetuple()))
     
-def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta=0):
+def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta=0, month_delta=0, year_delta=0):
     """ Returns a TimeSpan for the last xxx seconds where xxx equals
-        time_delta sec + hour_delta hours + day_delta days + week_delta weeks
+        time_delta sec + hour_delta hours + day_delta days + week_delta weeks + month_delta months + year_delta years
+        Note: For month_delta, 1 month = 30 days, For year_delta, 1 year = 365 days
     
     Example:
     >>> os.environ['TZ'] = 'Australia/Brisbane'
@@ -490,6 +491,10 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
     [2015-07-20 08:05:35 AEST (1437343535) -> 2015-07-21 09:05:35 AEST (1437433535)]
     >>> print archiveSpanSpan(time_ts, week_delta=4)
     [2015-06-23 09:05:35 AEST (1435014335) -> 2015-07-21 09:05:35 AEST (1437433535)]
+    >>> print archiveSpanSpan(time_ts, month_delta=1)
+    [2015-06-21 09:05:35 AEST (1434841535) -> 2015-07-21 09:05:35 AEST (1437433535)]
+    >>> print archiveSpanSpan(time_ts, year_delta=1)
+    [2014-07-21 09:05:35 AEST (1405897535) -> 2015-07-21 09:05:35 AEST (1437433535)]
     >>> print archiveSpanSpan(time_ts)
     [2015-07-21 09:05:34 AEST (1437433534) -> 2015-07-21 09:05:35 AEST (1437433535)]
     """
@@ -497,7 +502,7 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
     if time_ts is None:
         return None
     start_ts = time_ts - time_delta - hour_delta * 3600 - day_delta * 86400 - \
-               week_delta * 604800
+               week_delta * 604800 - month_delta * 2592000 - year_delta * 31536000
     if start_ts == time_ts:
         start_ts -= 1
     return TimeSpan(start_ts, time_ts)
