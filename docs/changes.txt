@@ -76,6 +76,12 @@ since none of the hardware reports an actual windGustDir.  For hardware that
 does not report a windGustDir, weewx will calculate windGustDir at each archive
 interval when it accumulates an archive record.
 
+Timespan tags of $last_hour, $last_day, $last_week, $last_month and $last_year
+have been added. The $span timespan tag now accepts $month_delta and $year_delta.
+
+Timespan iterator .spans(interval=seconds) has been added to allow to iterate 
+over custom spans within a tag timespan.
+
 
 3.6.2 11/08/2016
 
