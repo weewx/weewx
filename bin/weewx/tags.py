@@ -82,9 +82,9 @@ class TimeBinder(object):
     def hour(self, data_binding=None):
         return self.hours_ago(data_binding)
 
-    def span(self, data_binding=None, time_delta=0, hour_delta=0, day_delta=0, week_delta=0, month_delta=0, year_delta=0):
+    def span(self, data_binding=None, time_delta=0, hour_delta=0, day_delta=0, week_delta=0):
         return TimespanBinder(weeutil.weeutil.archiveSpanSpan(self.report_time, time_delta=time_delta, 
-                              hour_delta=hour_delta, day_delta=day_delta, week_delta=week_delta, month_delta=month_delta, year_delta=year_delta), 
+                              hour_delta=hour_delta, day_delta=day_delta, week_delta=week_delta), 
                               self.db_lookup, data_binding=data_binding, 
                               context='day', formatter=self.formatter, converter=self.converter,
                               **self.option_dict)
@@ -124,17 +124,8 @@ class TimeBinder(object):
                               self.db_lookup, data_binding=data_binding,
                               context='rainyear',  formatter=self.formatter, converter=self.converter, 
                               **self.option_dict)
-    def last_hour(self, data_binding=None):
-        return self.span(data_binding, hour_delta=1)
-    def last_day(self, data_binding):
-        return self.span(data_binding, day_delta=1)
-    def last_week(self, data_binding=None):
-        return self.span(data_binding, week_delta=1)
-    def last_month(self, data_binding=None):
-        return self.span(data_binding, month_delta=1)
-    def last_year(self, data_binding=None):
-        return self.span(data_binding, year_delta=1)
-    
+
+
 #===============================================================================
 #                    Class TimespanBinder
 #===============================================================================

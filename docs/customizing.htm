@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -1078,31 +1078,6 @@ $month.outTemp.max</pre>
                     set by option <a href="usersguide.htm#rain_year_start"><span class="code">rain_year_start</span></a>.
                 </td>
             </tr>
-            <tr>
-                <td class="first_col code">$last_hour</td>
-                <td class="code">$last_hour.barometer.avg</td>
-                <td>The average barometer over the immediate last hour.</td>
-            </tr>
-            <tr>
-                <td class="first_col code">$last_day</td>
-                <td class="code">$last_day.dewpoint.max</td>
-                <td>The maximum dewpoint over the immediate last day (24 hours).</td>
-            </tr>
-            <tr>
-                <td class="first_col code">$last_week</td>
-                <td class="code">$last_week.outTemp.max</td>
-                <td>The maximum temperature over the immediate last week (7 days).</td>
-            </tr>
-            <tr>
-                <td class="first_col code">$last_month</td>
-                <td class="code">$last_month.outTemp.min</td>
-                <td>The minimum temperature over the immediate last month (30 days).</td>
-            </tr>
-            <tr>
-                <td class="first_col code">$last_year</td>
-                <td class="code">$last_year.rain.sum</td>
-                <td>The accumulated rain over the immediate last year (365 days).</td>
-            </tr>
             </tbody>
         </table>
         <h3 id="unit_conversion_options">Unit conversion options</h3>
@@ -1569,16 +1544,6 @@ or in foobar units: $day.barometer.min.foobar
                 <td class="first_col code">$week_delta=<i>weeks</i></td>
                 <td class="code">$span($week_delta=2).barometer.max</td>
                 <td>The maximum barometric pressure over the last immediate 2 weeks.</td>
-            </tr>
-            <tr>
-                <td class="first_col code">$month_delta=<i>months</i></td>
-                <td class="code">$span($month_delta=3).outTemp.min</td>
-                <td>The minimum temperture over the last immediate 3 months (90 days).</td>
-            </tr>
-            <tr>
-                <td class="first_col code">$year_delta=<i>years</i></td>
-                <td class="code">$span($year_delta=1).windchill.min</td>
-                <td>The minimum wind chill over the last immediate 1 year (365 days).</td>
             </tr>
             </tbody>
         </table>
