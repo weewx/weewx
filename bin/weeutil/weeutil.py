@@ -354,7 +354,14 @@ class TimeSpan(tuple):
             return - 1
         return 0 if self.start == other.start else 1
 
-def intervalgen(start_ts, stop_ts, interval):
+def intervalgenRoundTS(start_ts, stop_ts, interval):
+    """Generator function yielding a sequence of time spans whose boundaries
+    are on a constant local time, bounded to mutiples of the interval.
+    """
+
+    return intervalgen(start_ts, stop_ts, interval, True)
+
+def intervalgen(start_ts, stop_ts, interval, roundTS=False):
     """Generator function yielding a sequence of time spans whose boundaries
     are on constant local time.
     
@@ -410,7 +417,11 @@ def intervalgen(start_ts, stop_ts, interval):
     interval: The time length of an interval in seconds.
     
     yields: A sequence of TimeSpans. Both the start and end of the timespan
-    will be on the same time boundary as start_ts"""  
+    will be on the same time boundary as start_ts"""
+    
+    if roundTS :
+        start_ts = startOfInterval(start_ts, interval)
+        stop_ts = startOfInterval(stop_ts, interval) + interval
 
     dt1 = datetime.datetime.fromtimestamp(start_ts)
     stop_dt = datetime.datetime.fromtimestamp(stop_ts)
