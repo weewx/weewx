@@ -92,6 +92,12 @@ since none of the hardware reports an actual windGustDir.  For hardware that
 does not report a windGustDir, weewx will calculate windGustDir at each archive
 interval when it accumulates an archive record.
 
+Max value of windSpeed for the day is now the max archive value of windSpeed.
+Formerly, it was the max LOOP value. Fixes issue #195.
+
+The types of accumulators, and the strategies to put and extract records 
+out of them, can now be specified by config stanzas. See issue #115.
+
 Fixed battery status label in acurite driver: changed from txTempBatteryStatus
 to outTempBatteryStatus.  Thanks to user manos!
 
