@@ -113,7 +113,7 @@ class TimeBinder(object):
                               **self.option_dict)
     def last_hour(self, data_binding=None):
         return self.span(data_binding, hour_delta=1)
-    def last_day(self, data_binding):
+    def last_day(self, data_binding=None):
         return self.span(data_binding, day_delta=1)
     def last_week(self, data_binding=None):
         return self.span(data_binding, week_delta=1)
