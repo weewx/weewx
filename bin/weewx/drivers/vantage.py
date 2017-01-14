@@ -1245,7 +1245,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             try:
                 if not firsttime:
                     self.port.wakeup_console(max_tries=self.max_tries)
-                    firsttime = False
+                firsttime = False
                 self.port.send_data(command)
                 _buffer = self.port.get_data_with_crc16(nbytes + 2, max_tries=1)
                 _value = struct.unpack(v_format, _buffer[:-2])

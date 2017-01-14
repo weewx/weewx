@@ -14,10 +14,25 @@
 # No thanks to oregon scientific - repeated requests for hardware and/or
 # specifications resulted in no response at all.
 
-# TODO: battery level for each sensor
-# TODO: signal strength for each sensor
-# TODO: altitude
-# TODO: archive interval
+# TODO: figure out battery level for each sensor
+# TODO: figure out signal strength for each sensor
+# TODO: figure out archive interval
+
+# FIXME: figure out unknown bytes in history packet
+
+# FIXME: decode the 0xdb packets
+
+# FIXME: the read/write logic is rather brittle.  it appears that communication
+# must be initiated with an interrupt write.  after that, the station will
+# spew data.  this implementation starts with a read, which will fail with
+# a 'No data available' usb error.  that results in an empty buffer (instead
+# of an exception popping up the stack) so that a heartbeat write is sent.
+# the genLoopPacket and genStartupRecords logic should be refactored to make
+# this behiavor explicit.
+
+# FIXME: deal with initial usb timeout when starting usb communications
+
+# FIXME: warn if altitude in pressure packet does not match weewx altitude
 
 """Driver for Oregon Scientific WMR300 weather stations.
 
@@ -39,6 +54,11 @@ Internal observation names use the convention name_with_specifier.  These are
 mapped to the wview or other schema as needed with a configuration setting.
 For example, for the wview schema, wind_speed maps to windSpeed, temperature_0
 maps to inTemp, and humidity_1 maps to outHumidity.
+
+Maximum value for rain counter is 400 in (10160 mm) (40000 = 0x9c 0x40).  The
+counter does not wrap; it must be reset when it hits maximum value otherwise
+rain data will not be recorded.
+
 
 Message types -----------------------------------------------------------------
 
@@ -158,7 +178,7 @@ byte hex dec description                 decoded value
 14   00
 15   00
 16   2c  ,
-17   67      lastest history record      26391 (0x67 0x17)
+17   67      lastest history record      26391 (0x67*256 0x17)
 18   17
 19   2c  ,
 20   4b
@@ -244,8 +264,8 @@ byte hex dec description                 decoded value
 67   ff
 68   7f      wind chill                C
 69   fd        (a*256 + b)/10
-70   7f      unknown
-71   ff
+70   7f      ?
+71   ff      ?
 72   00      wind gust speed           0.0 m/s
 73   00        (a*256 + b)/10
 74   00      wind average speed        0.0 m/s
@@ -323,47 +343,47 @@ byte hex dec description                 decoded value
 14   FD 
 15   00      temperature trend
 16   00      humidity trend
-17   0E   14 max dewpoint last day year
+17   0E   14 max_dewpoint_last_day year
 18   05    5 month
 19   09    9 day
 20   0A   10 hour
 21   24   36 minute
-22   00      max dewpoint last day       13.0 C
+22   00      max_dewpoint_last_day       13.0 C
 23   82 
-24   0E   14 min dewpoint last day year
+24   0E   14 min_dewpoint_last_day year
 25   05    5 month
 26   09    9 day
 27   10   16 hour
 28   1F   31 minute
-29   00      min dewpoint last day       6.0 C
+29   00      min_dewpoint_last_day       6.0 C
 30   3C 
-31   0E   14 max dewpoint last month year
+31   0E   14 max_dewpoint_last_month year
 32   05    5 month
 33   01    1 day
 34   0F   15 hour
 35   1B   27 minute
-36   00      max dewpoint last month     13.0 C
+36   00      max_dewpoint_last_month     13.0 C
 37   82 
-38   0E   14 min dewpoint last month year
+38   0E   14 min_dewpoint_last_month year
 39   05    5 month
 40   04    4 day
 41   0B   11 hour
 42   08    8 minute
-43   FF      min dewpoint last month     -1.0 C
+43   FF      min_dewpoint_last_month     -1.0 C
 44   F6 
-45   0E   14 max heat index? year
+45   0E   14 max_heat_index? year
 46   05    5 month
 47   09    9 day
 48   00    0 hour
 49   00    0 minute
-50   7F      max heat index?             N/A
+50   7F      max_heat_index?             N/A
 51   FF 
-52   0E   14 min heat index?
+52   0E   14 min_heat_index? year
 53   05    5 month
 54   01    1 day
 55   00    0 hour
 56   00    0 minute
-57   7F      min heat index?             N/A
+57   7F      min_heat_index?             N/A
 58   FF 
 59   0B      checksum
 60   63 
@@ -700,14 +720,14 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.13'
+DRIVER_VERSION = '0.16rc3'
 
 DEBUG_COMM = 0
-DEBUG_LOOP = 0
+DEBUG_PACKET = 0
 DEBUG_COUNTS = 0
 DEBUG_DECODE = 0
 DEBUG_HISTORY = 0
-DEBUG_RAIN = 0
+DEBUG_RAIN = 1
 
 
 def loader(config_dict, _):
@@ -741,6 +761,34 @@ def _lo(x):
 def _hi(x):
     return x >> 8
 
+# pyusb 0.4.x does not provide an errno or strerror with the usb errors that
+# it wraps into USBError.  so we have to compare strings to figure out exactly
+# what type of USBError we are dealing with.  unfortunately, those strings are
+# localized, so we must compare in every language.
+KNOWN_USB_MESSAGES = [
+    'No data available', 'No error',
+    'Nessun dato disponibile', 'Nessun errore',
+    'Keine Daten verf',
+    'No hay datos disponibles',
+    'Pas de donn'
+    ]
+
+# these are the usb 'errors' that should be ignored
+def known_usb_err(e):
+    errmsg = repr(e)
+    for msg in KNOWN_USB_MESSAGES:
+        if msg in errmsg:
+            return True
+    return False
+
+def get_usb_info():
+    pyusb_version = '0.4.x'
+    try:
+        pyusb_version = usb.__version__
+    except AttributeError:
+        pass
+    return "pyusb_version=%s" % pyusb_version
+
 
 class WMR300Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with a WMR300 weather station."""
@@ -749,35 +797,59 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
     DEFAULT_MAP = {
         'pressure': 'pressure',
         'barometer': 'barometer',
-        'wind_avg': 'windSpeed',
-        'wind_dir': 'windDir',
-        'wind_gust': 'windGust',
-        'wind_gust_dir': 'windGustDir',
-        'temperature_0': 'inTemp',
-        'temperature_1': 'outTemp',
-        'temperature_2': 'extraTemp1',
-        'temperature_3': 'extraTemp2',
-        'temperature_4': 'extraTemp3',
-        'humidity_0': 'inHumidity',
-        'humidity_1': 'outHumidity',
-        'humidity_2': 'extraHumid1',
-        'humidity_3': 'extraHumid2',
-        'dewpoint_1': 'dewpoint',
-        'heatindex_1': 'heatindex',
+        'windSpeed': 'wind_avg',
+        'windDir': 'wind_dir',
+        'windGust': 'wind_gust',
+        'windGustDir': 'wind_gust_dir',
+        'inTemp': 'temperature_0',
+        'outTemp': 'temperature_1',
+        'extraTemp1': 'temperature_2',
+        'extraTemp2': 'temperature_3',
+        'extraTemp3': 'temperature_4',
+        'extraTemp4': 'temperature_5',
+        'extraTemp5': 'temperature_6',
+        'extraTemp6': 'temperature_7',
+        'extraTemp7': 'temperature_8',
+        'inHumidity': 'humidity_0',
+        'outHumidity': 'humidity_1',
+        'extraHumid1': 'humidity_2',
+        'extraHumid2': 'humidity_3',
+        'extraHumid3': 'humidity_4',
+        'extraHumid4': 'humidity_5',
+        'extraHumid5': 'humidity_6',
+        'extraHumid6': 'humidity_7',
+        'extraHumid7': 'humidity_8',
+        'dewpoint': 'dewpoint_1',
+        'extraDewpoint1': 'dewpoint_2',
+        'extraDewpoint2': 'dewpoint_3',
+        'extraDewpoint3': 'dewpoint_4',
+        'extraDewpoint4': 'dewpoint_5',
+        'extraDewpoint5': 'dewpoint_6',
+        'extraDewpoint6': 'dewpoint_7',
+        'extraDewpoint7': 'dewpoint_8',
+        'heatindex': 'heatindex_1',
+        'extraHeatindex1': 'heatindex_2',
+        'extraHeatindex2': 'heatindex_3',
+        'extraHeatindex3': 'heatindex_4',
+        'extraHeatindex4': 'heatindex_5',
+        'extraHeatindex5': 'heatindex_6',
+        'extraHeatindex6': 'heatindex_7',
+        'extraHeatindex7': 'heatindex_8',
         'windchill': 'windchill',
-        'rain_rate': 'rainRate'
+        'rainRate': 'rain_rate'
         }
 
     def __init__(self, **stn_dict):
         loginf('driver version is %s' % DRIVER_VERSION)
+        loginf('usb info: %s' % get_usb_info())
         self.model = stn_dict.get('model', 'WMR300')
-        self.obs_map = stn_dict.get('map', self.DEFAULT_MAP)
+        self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_MAP)
         self.heartbeat = 20 # how often to send a6 messages, in seconds
         self.history_retry = 60 # how often to retry history, in seconds
         global DEBUG_COMM
         DEBUG_COMM = int(stn_dict.get('debug_comm', DEBUG_COMM))
-        global DEBUG_LOOP
-        DEBUG_LOOP = int(stn_dict.get('debug_loop', DEBUG_LOOP))
+        global DEBUG_PACKET
+        DEBUG_PACKET = int(stn_dict.get('debug_packet', DEBUG_PACKET))
         global DEBUG_COUNTS
         DEBUG_COUNTS = int(stn_dict.get('debug_counts', DEBUG_COUNTS))
         global DEBUG_DECODE
@@ -836,8 +908,11 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_7x = time.time()
             except usb.USBError, e:
-                logerr("usb failure: %s" % e)
-                raise weewx.WeeWxIOError(e)
+                logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                       (e.errno, e.strerror, e.message, repr(e)))
+                if not known_usb_err(e):
+                    logerr("usb failure: %s" % e)
+                    raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
             time.sleep(0.001)
@@ -901,17 +976,25 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_65 = time.time()
             except usb.USBError, e:
-                logerr("usb failure: %s" % e)
-                raise weewx.WeeWxIOError(e)
+                logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                       (e.errno, e.strerror, e.message, repr(e)))
+                if not known_usb_err(e):
+                    logerr("usb failure: %s" % e)
+                    raise weewx.WeeWxIOError(e)
             except (WrongLength, BadChecksum), e:
                 loginf(e)
             time.sleep(0.001)        
 
     def convert(self, pkt, ts):
+        # if debugging packets, log everything we got
+        if DEBUG_PACKET:
+            logdbg("raw packet: %s" % pkt)
+        # timestamp and unit system are the same no matter what
         p = {'dateTime': ts, 'usUnits': weewx.METRICWX}
-        for label in self.obs_map:
-            if label in pkt:
-                p[self.obs_map[label]] = pkt[label]
+        # map hardware names to the requested database schema names
+        for label in self.sensor_map:
+            if self.sensor_map[label] in pkt:
+                p[label] = pkt[self.sensor_map[label]]
         # single variable to track last_rain assumes that any historical reads
         # will happen before any loop reads, and no historical reads will
         # happen after any loop reads.  otherwise double-counting of rain
@@ -922,6 +1005,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 logdbg("rain=%s rain_total=%s last_rain=%s" %
                        (p['rain'], pkt['rain_total'], self.last_rain))
             self.last_rain = pkt['rain_total']
+            if pkt['rain_total'] == Station.MAX_RAIN_MM:
+                loginf("rain counter maximum reached, counter reset required")
+        if DEBUG_PACKET:
+            logdbg("converted packet: %s" % p)
         return p
 
     def convert_historical(self, pkt, ts, last_ts):
@@ -932,15 +1019,6 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
 
     def convert_loop(self, pkt):
         p = self.convert(pkt, int(time.time() + 0.5))
-        # add all observations if we are debugging loop data.  ignore any
-        # observations that are non-numeric.
-        if DEBUG_LOOP:
-            for label in pkt:
-                if not label in p:
-                    try:
-                        p[label] = float(pkt[label])
-                    except (ValueError, TypeError):
-                        pass
         return p
 
     @staticmethod
@@ -978,6 +1056,7 @@ class Station(object):
     EP_IN = 0x81
     EP_OUT = 0x01
     MAX_RECORDS = 50000 # FIXME: what is maximum number of records?
+    MAX_RAIN_MM = 10160 # maximum value of rain counter, in mm
 
     def __init__(self, vend_id=VENDOR_ID, prod_id=PRODUCT_ID):
         self.vendor_id = vend_id
@@ -987,8 +1066,6 @@ class Station(object):
         self.interface = 0
         self.recv_counts = dict()
         self.send_counts = dict()
-        self.max_tries = 5
-        self.retry_wait = 3
 
     def __enter__(self):
         self.open()
@@ -1009,7 +1086,6 @@ class Station(object):
         if not self.handle:
             raise WMR300Error('Open USB device failed')
 
-        # FIXME: this reset should not be necessary
         self.handle.reset()
 
         # for HID devices on linux, be sure kernel does not claim the interface
@@ -1038,28 +1114,20 @@ class Station(object):
         self.handle.reset()
 
     def read(self, count=True):
-        ntries = 0
-        while ntries < self.max_tries:
-            ntries += 1
-            try:
-                buf = self.handle.interruptRead(
-                    Station.EP_IN, self.MESSAGE_LENGTH, self.timeout)
-                if DEBUG_COMM:
-                    logdbg("read: %s" % _fmt_bytes(buf))
-                if DEBUG_COUNTS and count:
-                    self.update_count(buf, self.recv_counts)
-                return buf
-            except usb.USBError, e:
-                errmsg = repr(e)
-                if 'No data available' in errmsg or 'No error' in errmsg:
-                    ntries -= 1
-                else:
-                    logerr("read: failed attempt %d of %d: %s" %
-                           (ntries, self.max_tries, e))
-            time.sleep(self.retry_wait)
-        msg = "read failed: max retries (%d) exceeded" % self.max_tries
-        logerr(msg)
-        raise weewx.RetriesExceeded(msg)
+        buf = None
+        try:
+            buf = self.handle.interruptRead(
+                Station.EP_IN, self.MESSAGE_LENGTH, self.timeout)
+            if DEBUG_COMM:
+                logdbg("read: %s" % _fmt_bytes(buf))
+            if DEBUG_COUNTS and count:
+                self.update_count(buf, self.recv_counts)
+        except usb.USBError, e:
+            logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                   (e.errno, e.strerror, e.message, repr(e)))
+            if not known_usb_err(e):
+                raise
+        return buf
 
     def write(self, buf):
         if DEBUG_COMM:
@@ -1067,22 +1135,10 @@ class Station(object):
         # pad with zeros up to the standard message length
         while len(buf) < self.MESSAGE_LENGTH:
             buf.append(0x00)
-        ntries = 0
-        while ntries < self.max_tries:
-            ntries += 1
-            try:
-                sent = self.handle.interruptWrite(
-                    Station.EP_OUT, buf, self.timeout)
-                if DEBUG_COUNTS:
-                    self.update_count(buf, self.send_counts)
-                return sent
-            except usb.USBError, e:
-                logerr("write: failed attempt %d of %d: %s" %
-                       (ntries, self.max_tries, e))
-            time.sleep(self.retry_wait)
-        msg = "write failed: max retries (%d) exceeded" % self.max_tries
-        logerr(msg)
-        raise weewx.RetriesExceeded(msg)
+        sent = self.handle.interruptWrite(Station.EP_OUT, buf, self.timeout)
+        if DEBUG_COUNTS:
+            self.update_count(buf, self.send_counts)
+        return sent
 
     # keep track of the message types for debugging purposes
     @staticmethod
@@ -1215,7 +1271,7 @@ class Station(object):
         try:
             pkt = getattr(Station, '_decode_%02x' % buf[0])(buf)
             if DEBUG_DECODE:
-                logdbg('%s %s' % (_fmt_bytes(buf), pkt))
+                logdbg('decode: %s %s' % (_fmt_bytes(buf), pkt))
             return pkt
         except IndexError, e:
             raise WMR300Error("cannot decode buffer: %s" % e)
@@ -1319,6 +1375,7 @@ class Station(object):
         pkt['rain_24_hour'] = Station._extract_value(buf[12:14], 0.254) # mm
         pkt['rain_total'] = Station._extract_value(buf[15:17], 0.254) # mm
         pkt['rain_rate'] = Station._extract_value(buf[17:19], 0.254) # mm/hour
+        pkt['rain_start_dateTime'] = Station._extract_ts(buf[19:24])
         return pkt
 
     @staticmethod
@@ -1403,7 +1460,7 @@ if __name__ == '__main__':
 
     stn_dict = {
         'debug_comm': 1,
-        'debug_loop': 0,
+        'debug_packet': 0,
         'debug_counts': 1,
         'debug_decode': 0
         }

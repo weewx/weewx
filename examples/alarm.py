@@ -1,57 +1,61 @@
-#
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
-#
-#    See the file LICENSE.txt for your full rights.
-#
+#    See the file LICENSE.txt for your rights.
+
 """Example of how to implement an alarm in weewx. 
 
-********************************************************************************
+*******************************************************************************
 
-To use this alarm, add the following somewhere in your configuration file
-weewx.conf:
+To use this alarm, add the following to the weewx configuration file:
 
 [Alarm]
-  expression = "outTemp < 40.0"
-  time_wait = 3600
-  smtp_host = smtp.mymailserver.com
-  smtp_user = myusername
-  smtp_password = mypassword
-  mailto = auser@adomain.com, anotheruser@someplace.com
-  from = me@mydomain.com
-  subject = "Alarm message from weewx!"
+    expression = "outTemp < 40.0"
+    time_wait = 3600
+    smtp_host = smtp.example.com
+    smtp_user = myusername
+    smtp_password = mypassword
+    from = sally@example.com
+    mailto = jane@example.com, bob@example.com
+    subject = "Alarm message from weewx!"
   
 In this example, if the outside temperature falls below 40, it will send an
-email to the the comma separated list specified in option "mailto", in this case
-auser@adomain.com, another@somewhere.com
+email to the users specified in the comma separated list specified in option
+"mailto", in this case:
 
-The example assumes that your SMTP email server is at smtp.mymailserver.com and
-that it uses secure logins. If it does not use secure logins, leave out the
-lines for smtp_user and smtp_password and no login will be attempted.
+jane@example.com, bob@example.com
 
-Setting an email "from" is optional. If not supplied, one will be filled in, but
-your SMTP server may or may not accept it.
+The example assumes an SMTP email server at smtp.example.com that requires
+login.  If the SMTP server does not require login, leave out the lines for
+smtp_user and smtp_password.
+
+Setting an email "from" is optional. If not supplied, one will be filled in,
+but your SMTP server may or may not accept it.
 
 Setting an email "subject" is optional. If not supplied, one will be filled in.
 
-To avoid a flood of emails, one will only be sent every 3600 seconds (one hour).
+To avoid a flood of emails, one will only be sent every 3600 seconds (one
+hour).
 
-********************************************************************************
+*******************************************************************************
 
-To specify that this new service be loaded and run, it must be added to the
-configuration option "report_services", located in sub-section [Engine][[Services]].
+To enable this service:
+
+1) copy this file to the user directory
+
+2) modify the weewx configuration file by adding this service to the option
+"report_services", located in section [Engine][[Services]].
 
 [Engine]
   [[Services]]
     ...
-    report_services = weewx.engine.StdPrint, weewx.engine.StdReport, examples.alarm.MyAlarm
+    report_services = weewx.engine.StdPrint, weewx.engine.StdReport, user.alarm.MyAlarm
 
-********************************************************************************
+*******************************************************************************
 
-If you wish to use both this example and the lowBattery.py example, simply merge
-the two configuration options together under [Alarm] and add both services to
-report_services.
+If you wish to use both this example and the lowBattery.py example, simply
+merge the two configuration options together under [Alarm] and add both
+services to report_services.
 
-********************************************************************************
+*******************************************************************************
 """
 
 import time
@@ -66,7 +70,7 @@ from weeutil.weeutil import timestamp_to_string, option_as_list
 
 # Inherit from the base class StdService:
 class MyAlarm(StdService):
-    """Custom service that sounds an alarm if an arbitrary expression evaluates true"""
+    """Service that sends email if an arbitrary expression evaluates true"""
     
     def __init__(self, engine, config_dict):
         # Pass the initialization information on to my superclass:
@@ -85,15 +89,14 @@ class MyAlarm(StdService):
             self.smtp_user     = config_dict['Alarm'].get('smtp_user')
             self.smtp_password = config_dict['Alarm'].get('smtp_password')
             self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weewx")
-            self.FROM          = config_dict['Alarm'].get('from', 'alarm@weewx.com')
+            self.FROM          = config_dict['Alarm'].get('from', 'alarm@example.com')
             self.TO            = option_as_list(config_dict['Alarm']['mailto'])
             syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: '%s'" % self.expression)
             
             # If we got this far, it's ok to start intercepting events:
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)    # NOTE 1
-            
         except KeyError, e:
-            syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set. %s" % e)
+            syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set.  Missing parameter: %s" % e)
             
     def newArchiveRecord(self, event):
         """Gets called on a new archive record event."""
@@ -127,7 +130,7 @@ class MyAlarm(StdService):
         # Get the time and convert to a string:
         t_str = timestamp_to_string(rec['dateTime'])
 
-        # Log it in the system log:
+        # Log it
         syslog.syslog(syslog.LOG_INFO, "alarm: Alarm expression \"%s\" evaluated True at %s" % (self.expression, t_str))
 
         # Form the message text:
@@ -149,15 +152,15 @@ class MyAlarm(StdService):
             s.ehlo()
             s.starttls()
             s.ehlo()
-            syslog.syslog(syslog.LOG_DEBUG, "  **** using encrypted transport")
+            syslog.syslog(syslog.LOG_DEBUG, "alarm: using encrypted transport")
         except smtplib.SMTPException:
-            syslog.syslog(syslog.LOG_DEBUG, "  **** using unencrypted transport")
+            syslog.syslog(syslog.LOG_DEBUG, "alarm: using unencrypted transport")
 
         try:
             # If a username has been given, assume that login is required for this host:
             if self.smtp_user:
                 s.login(self.smtp_user, self.smtp_password)
-                syslog.syslog(syslog.LOG_DEBUG, "  **** logged in with user name %s" % (self.smtp_user,))
+                syslog.syslog(syslog.LOG_DEBUG, "alarm: logged in with user name %s" % (self.smtp_user,))
             
             # Send the email:
             s.sendmail(msg['From'], self.TO,  msg.as_string())
@@ -168,14 +171,14 @@ class MyAlarm(StdService):
             raise
         
         # Log sending the email:
-        syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO)
+        syslog.syslog(syslog.LOG_INFO, "alarm: email sent to: %s" % self.TO)
+
 
 if __name__ == '__main__':
     """This section is used for testing the code. """
     import sys
     import configobj
     from optparse import OptionParser
-
 
     usage_string ="""Usage: 
     
@@ -215,4 +218,3 @@ if __name__ == '__main__':
 
     event = weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=rec)
     alarm.newArchiveRecord(event)
-    

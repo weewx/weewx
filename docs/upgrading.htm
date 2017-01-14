@@ -46,7 +46,8 @@
         <a href="customizing.htm">Customization Guide</a><br/>
         <a href="hardware.htm">Hardware Guide</a><br/>
         <a href="utilities.htm">Utilities Guide</a><br/>
-        <a href="upgrading.htm">Upgrade Guide</a>
+        <a href="upgrading.htm">Upgrade Guide</a><br/>
+        <a href="devnotes.htm">Notes for Developers</a>
     </div>
     <div id="toc_controls"></div>
     <div id="toc_parent">
@@ -69,7 +70,7 @@
       <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
         </a><br/>
         <span class='version'>
-Version: 3.6.1
+Version: 3.7.x
         </span>
     </div>
     <div class="title"><span class="code">weewx</span> Upgrade Guide</div>
@@ -210,6 +211,88 @@ Version: 3.6.1
     
     <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
     
+    <h2>From V3.6 or earlier</h2>
+    <p>
+        The mapping of sensors to database fields was formalized in Version
+        3.7, resulting in changes to the configuration for some of the drivers.
+    </p>
+
+    <table>
+        <tr class="first_row">
+            <td style='width:50%'>3.6</td><td>3.7</td>
+        </tr>
+        <tr>
+            <td>
+                <pre class='tty'>[TE923]
+    <span class="changed">[[map]]
+        link_wind = windLinkStatus
+        bat_wind = windBatteryStatus
+        link_rain = rainLinkStatus
+        bat_rain = rainBatteryStatus
+        link_uv = uvLinkStatus
+        bat_uv = uvBatteryStatus
+        uv = UV
+        t_in = inTemp
+        h_in = inHumidity
+        t_1 = outTemp
+        h_1 = outHumidity
+        bat_1 = outBatteryStatus
+        link_1 = outLinkStatus
+        t_2 = extraTemp1
+        h_2 = extraHumid1
+        bat_2 = extraBatteryStatus1
+        link_2 = extraLinkStatus1
+        t_3 = extraTemp2
+        h_3 = extraHumid3
+        bat_3 = extraBatteryStatus2
+        link_3 = extraLinkStatus2
+        t_4 = extraTemp3
+        h_4 = extraHumid3
+        bat_4 = extraBatteryStatus3
+        link_4 = extraLinkStatus3
+        t_5 = extraTemp4
+        h_5 = extraHumid4
+        bat_5 = extraBatteryStatus4
+        link_5 = extraLinkStatus4</span></pre>
+            </td>
+            <td>
+                <pre class='tty'>[TE923]
+    <span class="changed">[[sensor_map]]
+        windLinkStatus = link_wind
+        windBatteryStatus = bat_wind
+        rainLinkStatus = link_rain
+        rainBatteryStatus = bat_rain
+        uvLinkStatus = link_uv
+        uvBatteryStatus = bat_uv
+        inTemp = t_in
+        inHumidity = h_in
+        outTemp = t_1
+        outHumidity = h_1
+        outTempBatteryStatus = bat_1
+        outLinkStatus = link_1
+        extraTemp1 = t_2
+        extraHumid1 = h_2
+        extraBatteryStatus1 = bat_2
+        extraLinkStatus1 = link_2
+        extraTemp2 = t_3
+        extraHumid2 = h_3
+        extraBatteryStatus2 = bat_3
+        extraLinkStatus2 = link_3
+        extraTemp3 = t_4
+        extraHumid3 = h_4
+        extraBatteryStatus3 = bat_4
+        extraLinkStatus3 = link_4
+        extraTemp4 = t_5
+        extraHumid4 = h_5
+        extraBatteryStatus4 = bat_5
+        extraLinkStatus4 = link_5
+
+</span></pre>
+            </td>
+        </tr>
+    </table>
+
+
     <h2>From V3.5 or earlier</h2>
 
     <h3>Changes to <span class="code">weewx.conf</span></h3>
@@ -219,8 +302,6 @@ Version: 3.6.1
         The upgrade process will automatically make this change for you.
     </p>
 
-
-
     <table>
         <tr class="first_row">
             <td style='width:50%'>3.5</td>
@@ -229,12 +310,6 @@ Version: 3.6.1
         <tr>
             <td>
                 <pre class='tty'>[StdWXCalculate]
-    # Derived quantities are calculated by this service. Possible values are:
-    #  hardware        - use the value provided by hardware
-    #  software        - use the value calculated by weewx
-    #  prefer_hardware - use value provide by hardware if available,
-    #                      otherwise use value calculated by weewx
-
     pressure = prefer_hardware
     barometer = prefer_hardware
     altimeter = prefer_hardware
@@ -244,19 +319,11 @@ Version: 3.6.1
     inDewpoint = prefer_hardware
     rainRate = prefer_hardware
 
-
 </pre>
             </td>
             <td>
                 <pre class='tty'>[StdWXCalculate]
-
     <span class="changed">[[Calculations]]</span>
-    # Derived quantities are calculated by this service. Possible values are:
-    #  hardware        - use the value provided by hardware
-    #  software        - use the value calculated by weewx
-    #  prefer_hardware - use value provide by hardware if available,
-    #                      otherwise use value calculated by weewx
-
         pressure = prefer_hardware
         barometer = prefer_hardware
         altimeter = prefer_hardware
