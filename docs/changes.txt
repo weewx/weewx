@@ -98,6 +98,9 @@ to outTempBatteryStatus.  Thanks to user manos!
 Made the lowBattery example more robust - it now checks for any known low
 battery status, not just txBatteryStatus.  Thanks to user manos!
 
+Added info-level log message to calculate_rain so that any rain counter reset
+will be logged.
+
 
 3.6.2 11/08/2016
 
