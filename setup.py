@@ -198,7 +198,7 @@ class weewx_install_data(install_data):
         weecfg.reorder_to_ref(config_dict)
     
         # Time to write it out. Get a temporary file:
-        with tempfile.NamedTemporaryFile("w", delete=False) as tmpfile:
+        with tempfile.NamedTemporaryFile("w") as tmpfile:
             # Write the finished configuration file to it:
             config_dict.write(tmpfile)
             tmpfile.flush()
@@ -224,7 +224,7 @@ class weewx_install_data(install_data):
             sre = re.compile(r"WEEWX_ROOT\s*=")
     
             with open(f, 'r') as infile:
-                with tempfile.NamedTemporaryFile("w", delete=False) as tmpfile:
+                with tempfile.NamedTemporaryFile("w") as tmpfile:
                     for line in infile:
                         if sre.match(line):
                             tmpfile.writelines("WEEWX_ROOT=%s\n" % self.install_dir)
