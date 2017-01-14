@@ -25,7 +25,8 @@
         <a href="customizing.htm">Customization Guide</a><br/>
         <a href="hardware.htm">Hardware Guide</a><br/>
         <a href="utilities.htm">Utilities Guide</a><br/>
-        <a href="upgrading.htm">Upgrade Guide</a>
+        <a href="upgrading.htm">Upgrade Guide</a><br/>
+        <a href="devnotes.htm">Notes for Developers</a>
     </div>
     <div id="toc_controls"></div>
     <div id="toc_parent">
@@ -42,7 +43,7 @@
             </a>
             <br/>
             <span class="version">
-Version: 3.6.1
+Version: 3.7.x
             </span>
         </div>
         <div class="title"><span class="code">weewx</span> Hardware Guide</div>
@@ -84,47 +85,61 @@ Version: 3.6.1
                 <td>Maturity</td>
             </tr>
             <tr>
-                <td class="text_highlight" rowspan="6">AcuRite</td>
+                <td class="text_highlight" rowspan="8">AcuRite</td>
                 <td>01025</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>01035</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
-                <td>Experimental</td>
+                <td>Tested</td>
             </tr>
             <tr>
                 <td>01036</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>01525</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>02032</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>02064</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>06037</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>06039</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>AcuRite<sup><a href='#acurite'>13</a></sup></td>
+                <td></td>
             </tr>
             <tr>
                 <td class="text_highlight">Argent Data Systems</td>
@@ -191,14 +206,14 @@ Version: 3.6.1
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>PWS720</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td class="text_highlight" rowspan="3">DAZA</td>
@@ -254,6 +269,14 @@ Version: 3.6.1
             </tr>
             <tr>
                 <td>6976</td>
+                <td>USB</td>
+                <td class="code">pyusb</td>
+                <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text_highlight">Excelvan</td>
+                <td>Excelvan</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>FineOffsetUSB<sup><a href='#fousb'>6</a></sup></td>
@@ -343,7 +366,7 @@ Version: 3.6.1
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td class="text_highlight" rowspan="6">Hideki</td>
@@ -351,42 +374,42 @@ Version: 3.6.1
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>TE821</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>TE827</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>TE831</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>TE838</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>TE923</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td class="text_highlight">Huger</td>
@@ -402,7 +425,7 @@ Version: 3.6.1
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td class="text_highlight" rowspan="4">La Crosse</td>
@@ -410,28 +433,28 @@ Version: 3.6.1
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>WS28xx<sup><a href='#ws28xx'>8</a></sup></td>
-                <td>Experimental</td>
+                <td>Tested</td>
             </tr>
             <tr>
                 <td>WS-1640</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>WS-23XX</td>
                 <td>Serial</td>
                 <td class="code">fcntl/select</td>
                 <td>WS23xx<sup><a href='#ws23xx'>7</a></sup></td>
-                <td>Experimental</td>
+                <td>Tested</td>
             </tr>
             <tr>
                 <td>WS-28XX</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>WS28xx<sup><a href='#ws28xx'>8</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td class="text_highlight" rowspan="2">Maplin</td>
@@ -454,21 +477,21 @@ Version: 3.6.1
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td>Tested</td>
             </tr>
             <tr>
                 <td>TE923W-M</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>TE924W</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td class="text_highlight">Mebus</td>
@@ -476,7 +499,7 @@ Version: 3.6.1
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td class="text_highlight">National Geographic</td>
@@ -591,28 +614,28 @@ Version: 3.6.1
                 <td>Serial</td>
                 <td class="code">pyserial</td>
                 <td>Ultimeter<sup><a href='#peetbros'>11</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>Ultimeter 800</td>
                 <td>Serial</td>
                 <td class="code">pyserial</td>
                 <td>Ultimeter<sup><a href='#peetbros'>11</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>Ultimeter 2000</td>
                 <td>Serial</td>
                 <td class="code">pyserial</td>
                 <td>Ultimeter<sup><a href='#peetbros'>11</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>Ultimeter 2100</td>
                 <td>Serial</td>
                 <td class="code">pyserial</td>
                 <td>Ultimeter<sup><a href='#peetbros'>11</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td class="text_highlight" rowspan="2">RainWise</td>
@@ -620,14 +643,14 @@ Version: 3.6.1
                 <td>Serial</td>
                 <td class="code">pyserial</td>
                 <td>CC3000<sup><a href='#rainwise'>12</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>CC3000</td>
                 <td>Serial</td>
                 <td class="code">pyserial</td>
                 <td>CC3000<sup><a href="#rainwise">12</a></sup></td>
-                <td>Experimental</td>
+                <td>Tested</td>
             </tr>
             <tr>
                 <td class="text_highlight" rowspan="3">Radio Shack</td>
@@ -672,14 +695,14 @@ Version: 3.6.1
                 <td>Serial</td>
                 <td class="code">fcntl/select</td>
                 <td>WS23xx<sup><a href='#ws23xx'>7</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>WS-2350</td>
                 <td>Serial</td>
                 <td class="code">fcntl/select</td>
                 <td>WS23xx<sup><a href='#ws23xx'>7</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td class="text_highlight" rowspan='5'>TFA</td>
@@ -687,35 +710,35 @@ Version: 3.6.1
                 <td>Serial</td>
                 <td class="code">fcntl/select</td>
                 <td>WS23xx<sup><a href='#ws23xx'>7</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>Nexus</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>Opus</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>WS28xx<sup><a href='#ws28xx'>8</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>Primus</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>WS28xx<sup><a href='#ws28xx'>8</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>Sinus</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td class="text_highlight">Tycon</td>
@@ -754,14 +777,14 @@ Version: 3.6.1
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
             <tr>
                 <td>W928</td>
                 <td>USB</td>
                 <td class="code">pyusb</td>
                 <td>TE923<sup><a href='#te923'>9</a></sup></td>
-                <td>Experimental</td>
+                <td></td>
             </tr>
         </table>
 
@@ -908,97 +931,110 @@ Version: 3.6.1
             <caption>AcuRite station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>pressure</td>
+                <td>pressure</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp</td>
+                <td>temperature_in</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outTemp</td>
+                <td>temperature_out</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inHumidity</td>
+                <td>humidity_in</td>
                 <td></td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outHumidity</td>
+                <td>humidity_out</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>wind_speed</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>wind_dir</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
-                <td class='first_col'>windGust</td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>windGustDir</td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
                 <td class='first_col'>rain</td>
+                <td>rain_delta</td>
+                <td>D</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'></td>
+                <td>rain_total</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rainRate</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rxCheckPercent</td>
+                <td>rssi</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outTempBatteryStatus</td>
+                <td>battery</td>
                 <td>H</td>
                 <td></td>
             </tr>
@@ -1156,99 +1192,136 @@ interval: 1</pre>
             <caption>CC3000 station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>pressure</td>
+                <td>PRESSURE</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp</td>
+                <td>TEMP IN</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outTemp</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>inHumidity</td>
+                <td>TEMP OUT</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outHumidity</td>
+                <td>HUMIDITY</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>WIND SPEED</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>WIND DIRECTION</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGust</td>
+                <td>WIND GUST</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rain</td>
+                <td>RAIN</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'></td>
+                <td>rain_total</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rainRate</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>radiation<sup>1</sup></td>
+                <td>SOLAR RADIATION</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>UV<sup>1</sup></td>
+                <td>UV INDEX</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>consBatteryVoltage</td>
+                <td>STATION BATTERY</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>bkupBatteryVoltage</td>
+                <td>BATTERY BACKUP</td>
                 <td>H</td>
                 <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp1<sup>2</sup></td>
+                <td>TEMP 1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp2<sup>2</sup></td>
+                <td>TEMP 2</td>
+                <td>H</td>
+                <td>H</td>
             </tr>
             </tbody>
         </table>
@@ -1256,6 +1329,12 @@ interval: 1</pre>
             <sup>1</sup> The <span class='code'>radiation</span> and
             <span class='code'>UV</span>
             data are available only with the optional solar radiation sensor.
+        </p>
+        <p class='station_data_key'>
+            <sup>2</sup> The <span class='code'>extraTemp1</span> and
+            <span class='code'>extraTemp2</span>
+            data are available only with the optional additional temperature
+            sensors.
         </p>
 
         <p class='station_data_key'>
@@ -1329,6 +1408,31 @@ interval: 1</pre>
             </tr>
         </table>
 
+
+        <h2 id="fousb_data_format">Data format</h2>
+
+        <p>The 10xx/20xx consoles have a data format that is different from
+            the 30xx consoles.  All of the consoles recognize wind, rain,
+            temperature, and humidity from the same instrument clusters.
+            However, some instrument clusters also include a luminosity sensor.
+            Only the 30xx consoles recognize the luminosity and UV output
+            from these sensors.  As a consequence, the 30xx consoles also have
+            a different data format.
+        </p>
+        <p>Since <span class='code'>weewx</span> cannot reliably determine
+            the data format by communicating with the station, the
+            <span class='code'>data_format</span> configuration option
+            indicates the station type.  Possible values are
+            <span class='code'>1080</span> and <span class='code'>3080</span>.
+            Use <span class='code'>1080</span> for the 10xx and 20xx consoles.
+            The default value is <span class='code'>1080</span>.
+        </p>
+        <p>For example, this would indicate that the station is a 30xx
+            console:</p>
+        <pre class='tty'>[FineOffsetUSB]
+    ...
+    data_format = 3080
+</pre>
 
         <h2 id="fousb_configuration">Configuring with <span class="code">wee_device</span></h2>
 
@@ -1449,102 +1553,128 @@ Mutating actions will request confirmation before proceeding.</pre>
             <caption>Fine Offset station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>pressure</td>
+                <td>pressure</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp</td>
+                <td>temperature_in</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outTemp</td>
+                <td>temperature_out</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>inHumidity</td>
+                <td>humidity_in</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outHumidity</td>
+                <td>humidity_out</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>wind_speed</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>wind_dir</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windGust</td>
+                <td>wind_gust</td>
                 <td>H</td>
                 <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>windGustDir</td>
-                <td>D</td>
-                <td>D</td>
             </tr>
             <tr>
                 <td class='first_col'>rain</td>
+                <td>rain_delta</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'></td>
+                <td>rain_total</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rainRate</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
+                <td>dewpoint</td>
                 <td>H/S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
+                <td>windchill</td>
                 <td>H/S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td>heatindex</td>
                 <td>H/S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>radiation<sup>1</sup></td>
+                <td></td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'>luminosity<sup>1</sup></td>
+                <td>luminosity</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rxCheckPercent</td>
+                <td>signal</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outTempBatteryStatus</td>
+                <td>battery</td>
                 <td>H</td>
                 <td></td>
             </tr>
@@ -1743,172 +1873,254 @@ confirmation before proceeding.
             <caption>TE923 station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer</td>
+                <td>barometer</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>pressure</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>outTemp</td>
+                <td>t_in</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>inHumidity</td>
+                <td>h_in</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>t_1</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outHumidity</td>
+                <td>h_1</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
+                <td class='first_col'>outTempBatteryStatus</td>
+                <td>bat_1</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>outLinkStatus</td>
+                <td>link_1</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>windspeed</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>winddir</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windGust</td>
+                <td>windgust</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
-                <td class='first_col'>windGustDir</td>
-                <td>D</td>
-                <td>D</td>
+                <td class='first_col'>windBatteryStatus</td>
+                <td>bat_wind</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>windLinkStatus</td>
+                <td>link_wind</td>
+                <td>H</td>
+                <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rain</td>
+                <td>rain</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'></td>
+                <td>rain_total</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
+                <td class='first_col'>rainBatteryStatus</td>
+                <td>bat_rain</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>rainLinkStatus</td>
+                <td>link_rain</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
                 <td class='first_col'>rainRate</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
+                <td>windchill</td>
                 <td>H/S</td>
                 <td>H/S</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>UV<sup>1</sup></td>
+                <td>uv</td>
                 <td>H</td>
                 <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>uvBatteryStatus</td>
+                <td>bat_uv</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>uvLinkStatus</td>
+                <td>link_uv</td>
+                <td>H</td>
+                <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp1</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraTemp2</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraTemp3</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraTemp4</td>
+                <td>t_2</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid1</td>
+                <td>h_2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus1</td>
+                <td>bat_2</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraLinkStatus1</td>
+                <td>link_2</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp2</td>
+                <td>t_3</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid2</td>
+                <td>h_3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus2</td>
+                <td>bat_3</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraLinkStatus2</td>
+                <td>link_3</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp3</td>
+                <td>t_4</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid3</td>
+                <td>h_4</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus3</td>
+                <td>bat_4</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraLinkStatus3</td>
+                <td>link_4</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp4</td>
+                <td>t_5</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid4</td>
+                <td>h_5</td>
                 <td>H</td>
                 <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>txBatteryStatus</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>windBatteryStatus</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>rainBatteryStatus</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>outTempBatteryStatus</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraBatteryStatus1</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraBatteryStatus2</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraBatteryStatus3</td>
-                <td>H</td>
-                <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraBatteryStatus4</td>
+                <td>bat_5</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraLinkStatus4</td>
+                <td>link_5</td>
                 <td>H</td>
                 <td></td>
             </tr>
@@ -1955,77 +2167,98 @@ confirmation before proceeding.
             <caption>Ultimeter station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer<sup>2</sup></td>
+                <td>barometer</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>pressure<sup>2</sup></td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter<sup>2</sup></td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp<sup>2</sup></td>
+                <td>temperature_in</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outTemp</td>
+                <td>temperature_out</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inHumidity<sup>2</sup></td>
+                <td>humidity_in</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outHumidity</td>
+                <td>humidity_out</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>wind_speed</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>wind_dir</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rain<sup>1</sup></td>
+                <td>rain</td>
+                <td>D</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'></sup></td>
+                <td>rain_total</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rainRate<sup>1</sup></td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
@@ -2211,7 +2444,7 @@ confirmation before proceeding.</pre>
             various <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a>
             commands below.</p>
 
-        <h3 id="vantage_clear_memory">
+        <h3 id="vantage_clear_console_memory">
             Action <span class="code">--clear-memory</span></h3>
         <p>This command will clear the logger memory after asking for confirmation.</p>
 
@@ -2368,257 +2601,314 @@ confirmation before proceeding.</pre>
             <caption>Vantage station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer</td>
+                <td>barometer</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>pressure</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp</td>
+                <td>inTemp</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outTemp</td>
+                <td>outTemp</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>inHumidity</td>
+                <td>inHumidity</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outHumidity</td>
+                <td>outHumidity</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>windSpeed</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>windDir</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windGust</td>
+                <td>windGust</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windGustDir</td>
+                <td>windGustDir</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rain</td>
+                <td>rain</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'></td>
+                <td>monthRain</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rainRate</td>
+                <td>rainRate</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>radiation</td>
+                <td>radiation</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>UV</td>
+                <td>UV</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp1</td>
+                <td>extraTemp1</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp2</td>
+                <td>extraTemp2</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp3</td>
+                <td>extraTemp3</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp4</td>
+                <td>extraTemp4</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp5</td>
+                <td>extraTemp5</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp6</td>
+                <td>extraTemp6</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp7</td>
+                <td>extraTemp7</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>soilTemp1</td>
+                <td>soilTemp1</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>soilTemp2</td>
+                <td>soilTemp2</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>soilTemp3</td>
+                <td>soilTemp3</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>soilTemp4</td>
+                <td>soilTemp4</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>leafTemp1</td>
+                <td>leafTemp1</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>leafTemp2</td>
+                <td>leafTemp2</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>leafTemp3</td>
+                <td>leafTemp3</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>leafTemp4</td>
+                <td>leafTemp4</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid1</td>
+                <td>extraHumid1</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid2</td>
+                <td>extraHumid2</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid3</td>
+                <td>extraHumid3</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid4</td>
+                <td>extraHumid4</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid5</td>
+                <td>extraHumid5</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid6</td>
+                <td>extraHumid6</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid7</td>
+                <td>extraHumid7</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>soilMoist1</td>
+                <td>soilMoist1</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>soilMoist2</td>
+                <td>soilMoist2</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>soilMoist3</td>
+                <td>soilMoist3</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>soilMoist4</td>
+                <td>soilMoist4</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>leafWet1</td>
+                <td>leafWet1</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>leafWet2</td>
+                <td>leafWet2</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>leafWet3</td>
+                <td>leafWet3</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>leafWet4</td>
+                <td>leafWet4</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>txBatteryStatus</td>
+                <td>txBatteryStatus</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>consBatteryVoltage</td>
+                <td>consBatteryVoltage</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
@@ -2656,127 +2946,266 @@ confirmation before proceeding.</pre>
             <caption>WMR100 station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>pressure</td>
+                <td>pressure</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp</td>
+                <td>temperature_0</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outTemp</td>
+                <td>temperature_1</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inHumidity</td>
+                <td>humidity_0</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outHumidity</td>
+                <td>humidity_1</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>wind_speed</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>wind_dir</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windGust</td>
+                <td>wind_gust</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rain</td>
+                <td>rain</td>
+                <td>D</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'></td>
+                <td>rain_total</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rainRate</td>
+                <td>rain_rate</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp1</td>
+                <td>temperature_2</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp2</td>
+                <td>temperature_3</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp3</td>
+                <td>temperature_4</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp4</td>
+                <td>temperature_5</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp5</td>
+                <td>temperature_6</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp6</td>
+                <td>temperature_7</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp7</td>
+                <td>temperature_8</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid1</td>
+                <td>humidity_2</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid2</td>
+                <td>humidity_3</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid3</td>
+                <td>humidity_4</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid4</td>
+                <td>humidity_5</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid5</td>
+                <td>humidity_6</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid6</td>
+                <td>humidity_7</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid7</td>
+                <td>humidity_8</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>UV</td>
+                <td>uv</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inTempBatteryStatus</td>
+                <td>battery_status_0</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outTempBatteryStatus</td>
+                <td>battery_status_1</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rainBatteryStatus</td>
+                <td>rain_battery_status</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windBatteryStatus</td>
+                <td>wind_battery_status</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>uvBatteryStatus</td>
+                <td>uv_battery_status</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus1</td>
+                <td>battery_status_2</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus2</td>
+                <td>battery_status_3</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus3</td>
+                <td>battery_status_4</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus4</td>
+                <td>battery_status_5</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus5</td>
+                <td>battery_status_6</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus6</td>
+                <td>battery_status_7</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus7</td>
+                <td>battery_status_8</td>
                 <td>H</td>
                 <td></td>
             </tr>
@@ -2826,137 +3255,218 @@ confirmation before proceeding.</pre>
             <caption>WMR200 station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>pressure</td>
+                <td>pressure</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter</td>
+                <td>altimeter</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp</td>
+                <td>temperature_0</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outTemp</td>
+                <td>temperature_1</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>inHumidity</td>
+                <td>humidity_0</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outHumidity</td>
+                <td>humidity_1</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>wind_speed</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>wind_dir</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windGust</td>
+                <td>wind_gust</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rain</td>
+                <td>rain</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'></td>
+                <td>rain_total</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rainRate</td>
+                <td>rain_rate</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
+                <td>windchill</td>
                 <td>H/S</td>
                 <td>H/S</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td>heatindex</td>
                 <td>H/S</td>
                 <td>H/S</td>
             </tr>
             <tr>
+                <td class='first_col'>UV</td>
+                <td>uv</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
                 <td class='first_col'>extraTemp1</td>
+                <td>temperature_2</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp2</td>
+                <td>temperature_3</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp3</td>
+                <td>temperature_4</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp4</td>
+                <td>temperature_5</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp5</td>
+                <td>temperature_6</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp6</td>
+                <td>temperature_7</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp7</td>
+                <td>temperature_8</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid1</td>
+                <td>humidity_2</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid2</td>
+                <td>humidity_3</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid3</td>
+                <td>humidity_4</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
-                <td class='first_col'>UV</td>
+                <td class='first_col'>extraHumid4</td>
+                <td>humidity_5</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid5</td>
+                <td>humidity_6</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid6</td>
+                <td>humidity_7</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid7</td>
+                <td>humidity_8</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outTempBatteryStatus</td>
+                <td>battery_status_out</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rainBatteryStatus</td>
+                <td>rain_battery_status</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windBatteryStatus</td>
+                <td>wind_battery_status</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>uvBatteryStatus</td>
+                <td>uv_battery_status</td>
                 <td>H</td>
                 <td></td>
             </tr>
@@ -2987,7 +3497,6 @@ confirmation before proceeding.</pre>
             temperature/humidity sensors.</p>
 
         <p>The WMR300 sensors send at different rates:</p>
-
 
         <table class='station_data'>
             <caption>WMR300 transmission periods</caption>
@@ -3027,112 +3536,278 @@ confirmation before proceeding.</pre>
             <caption>WMR300 station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer</td>
+                <td>barometer</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>pressure</td>
+                <td>pressure</td>
                 <td>H</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>outTemp</td>
+                <td>temperature_0</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>inHumidity</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>outHumidity</td>
+                <td>humidity_0</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>wind_avg</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>wind_dir</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windGust</td>
+                <td>wind_gust</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windGustDir</td>
+                <td>wind_gust_dir</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rain</td>
+                <td>rain</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'></td>
+                <td>rain_total</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rainRate</td>
+                <td>rain_rate</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outTemp</td>
+                <td>temperature_1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>outHumidity</td>
+                <td>humidity_1</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>windchill</td>
+                <td>dewpoint_1</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td>heatindex_1</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>windchill</td>
+                <td>windchill</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp1</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraTemp2</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraTemp3</td>
+                <td>temperature_2</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid1</td>
+                <td>humidity_2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraDewpoint1</td>
+                <td>dewpoint_2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHeatindex1</td>
+                <td>heatindex_2</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp2</td>
+                <td>temperature_3</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid2</td>
+                <td>humidity_3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraDewpoint2</td>
+                <td>dewpoint_3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHeatindex2</td>
+                <td>heatindex_3</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp3</td>
+                <td>temperature_4</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid3</td>
+                <td>humidity_4</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraDewpoint3</td>
+                <td>dewpoint_4</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHeatindex3</td>
+                <td>heatindex_4</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp4</td>
+                <td>temperature_5</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid4</td>
+                <td>humidity_5</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraDewpoint4</td>
+                <td>dewpoint_5</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHeatindex4</td>
+                <td>heatindex_5</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp5</td>
+                <td>temperature_6</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid5</td>
+                <td>humidity_6</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraDewpoint5</td>
+                <td>dewpoint_6</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHeatindex5</td>
+                <td>heatindex_6</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp6</td>
+                <td>temperature_7</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid6</td>
+                <td>humidity_7</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraDewpoint6</td>
+                <td>dewpoint_7</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHeatindex6</td>
+                <td>heatindex_7</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp7</td>
+                <td>temperature_8</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid7</td>
+                <td>humidity_8</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraDewpoint7</td>
+                <td>dewpoint_8</td>
+                <td>H</td>
+                <td>H</td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHeatindex7</td>
+                <td>heatindex_8</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
@@ -3176,172 +3851,290 @@ confirmation before proceeding.</pre>
             <caption>WMR9x8 station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer</td>
+                <td>barometer</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>pressure</td>
+                <td>pressure</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp</td>
+                <td>temperature_in</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outTemp</td>
+                <td>temperature_out</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inHumidity</td>
+                <td>humidity_in</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outHumidity</td>
+                <td>humidity_out</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>wind_speed</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>wind_dir</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windGust</td>
+                <td>wind_gust</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windGustDir</td>
+                <td>wind_gust_dir</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rain</td>
+                <td>rain</td>
+                <td>D</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'></td>
+                <td>rain_total</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rainRate</td>
+                <td>rain_rate</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>inDewpoint</td>
+                <td>dewpoint_in</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
-                <td>S</td>
+                <td>dewpoint_out</td>
+                <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
+                <td>windchill</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
+                <td class='first_col'>UV</td>
+                <td>uv</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
                 <td class='first_col'>extraTemp1</td>
+                <td>temperature_1</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp2</td>
+                <td>temperature_2</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraTemp3</td>
+                <td>temperature_3</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp4</td>
+                <td>temperature_4</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp5</td>
+                <td>temperature_5</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp6</td>
+                <td>temperature_6</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp7</td>
+                <td>temperature_7</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraTemp8</td>
+                <td>temperature_8</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid1</td>
+                <td>humidity_1</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid2</td>
+                <td>humidity_3</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>extraHumid3</td>
+                <td>humidity_3</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
-                <td class='first_col'>UV</td>
+                <td class='first_col'>extraHumid4</td>
+                <td>humidity_4</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid5</td>
+                <td>humidity_5</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid6</td>
+                <td>humidity_6</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid7</td>
+                <td>humidity_7</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraHumid8</td>
+                <td>humidity_8</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inTempBatteryStatus</td>
+                <td>battery_status_in</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outTempBatteryStatus</td>
+                <td>battery_status_out</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rainBatteryStatus</td>
+                <td>rain_battery_status</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windBatteryStatus</td>
+                <td>wind_battery_status</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
-                <td class='first_col'>batteryStatusTH1</td>
+                <td class='first_col'>extraBatteryStatus1</td>
+                <td>battery_status_1</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
-                <td class='first_col'>batteryStatusTH2</td>
+                <td class='first_col'>extraBatteryStatus2</td>
+                <td>battery_status_2</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
-                <td class='first_col'>batteryStatusTH3</td>
+                <td class='first_col'>extraBatteryStatus3</td>
+                <td>battery_status_3</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
-                <td class='first_col'>batteryStatusT1</td>
+                <td class='first_col'>extraBatteryStatus4</td>
+                <td>battery_status_4</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
-                <td class='first_col'>batteryStatusT2</td>
+                <td class='first_col'>extraBatteryStatus5</td>
+                <td>battery_status_5</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
-                <td class='first_col'>batteryStatusT3</td>
+                <td class='first_col'>extraBatteryStatus6</td>
+                <td>battery_status_6</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus7</td>
+                <td>battery_status_7</td>
+                <td>H</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'>extraBatteryStatus8</td>
+                <td>battery_status_8</td>
                 <td>H</td>
                 <td></td>
             </tr>
@@ -3386,77 +4179,98 @@ confirmation before proceeding.</pre>
             <caption>WS1 station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>pressure</td>
+                <td>pressure</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp</td>
+                <td>temperature_in</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outTemp</td>
+                <td>temperature_out</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inHumidity</td>
+                <td>humidity_in</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outHumidity</td>
+                <td>humidity_out</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>wind_speed</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>wind_dir</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rain</td>
+                <td>rain</td>
+                <td>D</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class='first_col'></td>
+                <td>rain_total</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rainRate</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td></td>
                 <td>S</td>
                 <td></td>
             </tr>
@@ -3483,6 +4297,29 @@ confirmation before proceeding.</pre>
         <p>The station does not record wind gust or wind gust direction.</p>
 
         <p>The hardware calculates windchill and dewpoint.</p>
+
+        <p>Sensors can be connected to the console with a wire.  If not wired,
+            the sensors will communicate via a wireless interface.  When
+            connected by wire, some sensor data are transmitted every 8
+            seconds.  With wireless, data are transmitted every 16 to 128
+            seconds, depending on wind speed and rain activity.
+        </p>
+
+        <table class='station_data'>
+            <caption>WS23xx transmission periods</caption>
+            <tbody>
+                <tr><th>sensor</th><th>period</th></tr>
+                <tr><td>Wind</td>
+                    <td>32 seconds when wind > 22.36 mph (wireless)<br/>
+                        128 seconds when wind > 22.36 mph (wireless)<br/>
+                        10 minutes (wireless after 5 failed attempts)<br/>
+                        8 seconds (wired)
+                    </td></tr>
+                <tr><td>Temperature</td><td>15 seconds</td></tr>
+                <tr><td>Humidity</td><td>20 seconds</td></tr>
+                <tr><td>Pressure</td><td>15 seconds</td></tr>
+            </tbody>
+        </table>
 
         <p>The station has 175 history records. That is just over 7 days of
             data with the factory default history recording interval of 60
@@ -3578,7 +4415,7 @@ in humidity: 48.0
             memory:</p>
         <pre class="tty cmd">wee_device --history=30</pre>
 
-        <h3>Action <span class="code">--clear-memory</span></h3>
+        <h3 id="vantage_clear_memory">Action <span class="code">--clear-memory</span></h3>
 
         <p>To clear the console memory:</p>
         <pre class="tty cmd">wee_device --clear-memory</pre>
@@ -3594,87 +4431,98 @@ in humidity: 48.0
             <caption>WS23xx station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>pressure</td>
+                <td>pressure</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp</td>
+                <td>temperature_in</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outTemp</td>
+                <td>temperature_out</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>inHumidity</td>
+                <td>humidity_in</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outHumidity</td>
+                <td>humidity_out</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>wind_speed</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>wind_dir</td>
                 <td>H</td>
                 <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>windGust</td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>windGustDir</td>
-                <td></td>
-                <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rain</td>
+                <td>rain</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'></td>
+                <td>rain_total</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rainRate</td>
+                <td>rain_rate</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
+                <td>dewpoint</td>
                 <td>H/S</td>
                 <td>H/S</td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
+                <td>windchill</td>
                 <td>H/S</td>
                 <td>H/S</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
@@ -3697,6 +4545,25 @@ in humidity: 48.0
             which communicates with the station console, which in turn
             communicates with the sensors. The transceiver and console must be
             paired and synchronized.</p>
+
+        <p>The sensors send data at different rates:</p>
+
+        <table class='station_data'>
+            <caption>WS28xx transmission periods</caption>
+            <tbody>
+                <tr><th>sensor</th><th>period</th></tr>
+                <tr><td>Wind</td><td>17 seconds</td></tr>
+                <tr><td>T/H</td><td>13 seconds</td></tr>
+                <tr><td>Rain</td><td>19 seconds</td></tr>
+                <tr><td>Pressure</td><td>15 seconds</td></tr>
+            </tbody>
+        </table>
+
+        <p>The wind and rain sensors transmit to the temperature/humidity
+            device, then the temperature/humidity device retransmits to the
+            weather station console.  Pressure is measured by a sensor in the
+            console.
+        </p>
 
         <p>The station has 1797 history records. That is just over 6 days of
             data with an archive interval of 5 minutes.</p>
@@ -3895,112 +4762,140 @@ wind_gust_max_time: None</pre>
             <caption>WS28xx station data</caption>
             <tbody class='code'>
             <tr class="first_row">
-                <td style='width:200px'>Observation</td>
+                <td style='width:200px'>Database Field</td>
+                <td>Observation</td>
                 <td>Loop</td>
                 <td>Archive</td>
             </tr>
             <tr>
                 <td class='first_col'>barometer</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>pressure</td>
+                <td>pressure</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>altimeter</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>inTemp</td>
+                <td>temperature_in</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outTemp</td>
+                <td>temperature_out</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>inHumidity</td>
+                <td>humidity_in</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>outHumidity</td>
+                <td>humidity_out</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windSpeed</td>
+                <td>wind_speed</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windDir</td>
+                <td>wind_dir</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windGust</td>
+                <td>wind_gust</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windGustDir</td>
+                <td>wind_gust_dir</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rain</td>
+                <td>rain</td>
+                <td>D</td>
+                <td>D</td>
+            </tr>
+            <tr>
+                <td class='first_col'></td>
+                <td>rain_total</td>
                 <td>H</td>
                 <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rainRate</td>
+                <td>rain_rate</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>dewpoint</td>
+                <td></td>
                 <td>S</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
+                <td>windchill</td>
                 <td>H/S</td>
                 <td>H/S</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
+                <td>heatindex</td>
                 <td>H/S</td>
                 <td>H/S</td>
             </tr>
             <tr>
                 <td class='first_col'>rxCheckPercent</td>
+                <td>rssi</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>windBatteryStatus</td>
+                <td>wind_battery_status</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>rainBatteryStatus</td>
+                <td>rain_battery_status</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>outTempBatteryStatus</td>
+                <td>battery_status_out</td>
                 <td>H</td>
                 <td></td>
             </tr>
             <tr>
                 <td class='first_col'>inTempBatteryStatus</td>
+                <td>battery_status_in</td>
                 <td>H</td>
                 <td></td>
             </tr>

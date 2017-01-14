@@ -14,7 +14,7 @@ import weewx.engine
 import weewx.wxformulas
 import weeutil.weeutil
 
-from weewx.units import CtoF, mps_to_mph, kph_to_mph
+from weewx.units import CtoF, mps_to_mph, kph_to_mph, METER_PER_FOOT
 
 class StdWXCalculate(weewx.engine.StdService):
     """Wrapper class for WXCalculate.
@@ -89,7 +89,7 @@ class WXCalculate(object):
             ignore_zero_wind = True
             rain_period = 900           # for rain rate
             et_period = 3600            # for evapotranspiration
-            wind_height = 2.0           # for evapotranspiration
+            wind_height = 2.0           # for evapotranspiration. In meters.
             atc = 0.8                   # for solar radiation RS
             nfac = 2                    # for solar radiation Bras
             max_delta_12h = 1800
@@ -345,18 +345,21 @@ class WXCalculate(object):
             r = dbmanager.getSql(
                 "SELECT"
                 " MAX(outTemp), MIN(outTemp), AVG(radiation), AVG(windSpeed),"
-                " MAX(outHumidity), MIN(outHumidity), usUnits"
+                " MAX(outHumidity), MIN(outHumidity), MAX(usUnits), MIN(usUnits)"
                 " FROM %s WHERE dateTime>? AND dateTime <=?"
                 % dbmanager.table_name, (start_ts, end_ts))
-            if r is None:
+            # Make sure everything is there:
+            if r is None or None in r:
                 data['ET'] = None
                 return
             # Unpack the results
-            T_max, T_min, rad_avg, wind_avg, rh_max, rh_min, std_unit = r
-            # Check for null values. Null relative humidity is OK.
-            if T_max is None or T_min is None or rad_avg is None or wind_avg is None or std_unit is None:
+            T_max, T_min, rad_avg, wind_avg, rh_max, rh_min, std_unit_min, std_unit_max = r
+            # Check for mixed units
+            if std_unit_min != std_unit_max:
+                syslog.syslog(syslog.LOG_NOTICE, "wxservices: Mixed unit system not allowed in ET calculation")
                 data['ET'] = None
                 return
+            std_unit = std_unit_min
             if std_unit == weewx.METRIC or std_unit == weewx.METRICWX:
                 T_max = CtoF(T_max)
                 T_min = CtoF(T_min)
@@ -364,14 +367,17 @@ class WXCalculate(object):
                     wind_avg = mps_to_mph(wind_avg)
                 else:
                     wind_avg = kph_to_mph(wind_avg)
-            # Rate will be in inches per day
-            ET_rate = weewx.wxformulas.evapotranspiration_US(
-                          T_max, T_min, rad_avg, wind_avg,
-                          self.wind_height, self.latitude,
-                          data['dateTime'], rh_min, rh_max)
-            # Multiply the ET rate by the length of the interval in days.
-            # This will give the total amount of ET during the archive interval.
-            data['ET'] = ET_rate * interval / (24*3600.0) if ET_rate is not None else None
+            # Wind height is in meters, so convert it:
+            height_ft = self.wind_height / METER_PER_FOOT
+
+            ET_rate = weewx.wxformulas.evapotranspiration_US(T_min, T_max, 
+                                                             rh_min, rh_max, 
+                                                             rad_avg, wind_avg, height_ft, 
+                                                             self.latitude, self.longitude, self.altitude_ft, 
+                                                             end_ts)
+            # The formula returns inches/hour. We need the total ET over the archive
+            # interval, so multiply by the length of the archive interval in hours.
+            data['ET'] = ET_rate * interval / 3600.0 if ET_rate is not None else None
         except ValueError, e:
             weeutil.weeutil.log_traceback()
             syslog.syslog(syslog.LOG_ERR, "wxservices: Calculation of evapotranspiration failed: %s" % e)

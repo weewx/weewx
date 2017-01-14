@@ -51,19 +51,6 @@ class TimeBinder(object):
 
     # What follows is the list of time period attributes:
     
-    def current(self, timestamp=None, max_delta=None, data_binding=None):
-        """Return a CurrentObj"""
-        if timestamp is None:
-            timestamp = self.report_time
-        return CurrentObj(self.db_lookup, data_binding, current_time=timestamp, max_delta=max_delta,
-                          formatter=self.formatter, converter=self.converter, **self.option_dict)
-            
-    def latest(self, data_binding=None):
-        """Return a CurrentObj, using the last available timestamp."""
-        manager = self.db_lookup(data_binding)
-        timestamp = manager.lastGoodStamp()
-        return self.current(timestamp, data_binding=data_binding)
-    
     def trend(self, time_delta=None, time_grace=None, data_binding=None):
         """Returns a TrendObj that is bound to the trend parameters."""
         if time_delta is None:
@@ -194,6 +181,13 @@ class TimespanBinder(object):
         self.formatter   = formatter
         self.converter   = converter
         self.option_dict = option_dict
+
+    # Iterate over all records in the time period:
+    def records(self, data_binding=None):
+        manager = self.db_lookup(data_binding)
+        for record in manager.genBatchRecords(self.timespan.start, self.timespan.stop):
+            yield CurrentObj(self.db_lookup, None, record['dateTime'], self.formatter, 
+                             self.converter, record=record)
 
     # Iterate over hours in the time period:
     def hours(self, data_binding=None):
@@ -347,6 +341,33 @@ class ObservationBinder(object):
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
         
 #===============================================================================
+#                             Class RecordBinder
+#===============================================================================
+
+class RecordBinder(object):
+
+    def __init__(self, db_lookup, report_time,
+                 formatter=weewx.units.Formatter(), converter=weewx.units.Converter(), record=None):
+        self.db_lookup   = db_lookup
+        self.report_time = report_time
+        self.formatter   = formatter
+        self.converter   = converter
+        self.record      = record
+        
+    def current(self, timestamp=None, max_delta=None, data_binding=None):
+        """Return a CurrentObj"""
+        if timestamp is None:
+            timestamp = self.report_time
+        return CurrentObj(self.db_lookup, data_binding, current_time=timestamp, max_delta=max_delta,
+                          formatter=self.formatter, converter=self.converter, record=self.record)
+
+    def latest(self, data_binding=None):
+        """Return a CurrentObj, using the last available timestamp."""
+        manager = self.db_lookup(data_binding)
+        timestamp = manager.lastGoodStamp()
+        return self.current(timestamp, data_binding=data_binding)
+    
+#===============================================================================
 #                             Class CurrentObj
 #===============================================================================
 
@@ -358,13 +379,14 @@ class CurrentObj(object):
     """
         
     def __init__(self, db_lookup, data_binding, current_time, 
-                 formatter, converter, max_delta=None, **option_dict):  # @UnusedVariable
+                 formatter, converter, max_delta=None, record=None):
         self.db_lookup    = db_lookup
         self.data_binding = data_binding
         self.current_time = current_time
         self.formatter    = formatter
         self.converter    = converter
         self.max_delta    = max_delta
+        self.record       = record
         
     def __getattr__(self, obs_type):
         """Return the given observation type."""
@@ -372,17 +394,24 @@ class CurrentObj(object):
         if obs_type in ['__call__', 'has_key']:
             raise AttributeError
 
-        try:
-            # Get the appropriate database manager ...
-            db_manager = self.db_lookup(self.data_binding)
-        except weewx.UnknownBinding:
-            vt = weewx.units.UnknownType(self.data_binding)
+        # If we are not specifying a data binding, and we have a current record with the right
+        # timestamp at hand, we don't have to hit the database.
+        if not self.data_binding and self.record and obs_type in self.record and self.record['dateTime'] == self.current_time:
+            vt = weewx.units.as_value_tuple(self.record, obs_type)
         else:
-            # ... get the current record from it ...  
-            record  = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
-            # ... form a ValueTuple ...
-            vt = weewx.units.as_value_tuple(record, obs_type)
-        # ... and then finally, return a ValueHelper
+            # No. We have to retrieve the record from the database
+            try:
+                # Get the appropriate database manager ...
+                db_manager = self.db_lookup(self.data_binding)
+            except weewx.UnknownBinding:
+                vt = weewx.units.UnknownType(self.data_binding)
+            else:
+                # ... get the current record from it ...  
+                record  = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
+                # ... form a ValueTuple ...
+                vt = weewx.units.as_value_tuple(record, obs_type)
+            # ... and then finally, return a ValueHelper
+
         return weewx.units.ValueHelper(vt, 'current',
                                        self.formatter,
                                        self.converter)

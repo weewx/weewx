@@ -20,7 +20,8 @@
         <a href="customizing.htm">Customization Guide</a><br/>
         <a href="hardware.htm">Hardware Guide</a><br/>
         <a href="utilities.htm">Utilities Guide</a><br/>
-        <a href="upgrading.htm">Upgrade Guide</a>
+        <a href="upgrading.htm">Upgrade Guide</a><br/>
+        <a href="devnotes.htm">Notes for Developers</a>
     </div>
     <div id="toc_controls"></div>
     <div id="toc_parent">
@@ -38,7 +39,7 @@
                 <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
             </a><br/>
 	<span class='version'>
-Version: 3.6.1
+Version: 3.7.x
         </span>
         </div>
         <div class="title"><span class="code">weewx</span> Customization Guide</div>
@@ -920,6 +921,11 @@ $month.outTemp.max</pre>
             barometric pressure:
         </p>
         <pre class="tty">$current.barometer</pre>
+
+        <p>Formally, weewx first looks for the observation type in the record emitted by the
+            <span class="code">NEW_ARCHIVE_RECORD</span> event. This is generally the data emitted by the
+        station console, augmented by any derived variables (<i>e.g.</i>wind chill) that you might have specified. If
+        the observation type cannot be found there, the most recent record in the database will be searched.</p>
         <p>The most general dot code for a "current" observation looks like: </p>
         <pre class="tty">$current($data_binding=<em>binding_name</em>).<em>obstype</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
         <p>Where:</p>
@@ -1452,7 +1458,7 @@ or in foobar units: $day.barometer.min.foobar
 
         <p>The tag <span class="code">$trend</span> is available for time trends,
             such as changes in barometric pressure. Here are some examples:</p>
-        <table class="indent" style="width: 50%" summary="Examples of using unit formats">
+        <table class="indent" style="width:70%" summary="Examples of using unit formats">
             <tbody>
             <tr class="first_row">
                 <td>Tag</td>
@@ -1543,7 +1549,7 @@ or in foobar units: $day.barometer.min.foobar
             <em><a href="#formatting_options">Formatting Options</a></em>.
         </p>
         <p>There are several different delta settings that can be used:</p>
-        <table class="indent" style="width:80%">
+        <table class="indent" style="width:100%">
             <tbody>
             <tr class="first_row">
                 <td><em>Delta Setting</em></td>
@@ -1656,7 +1662,7 @@ or in foobar units: $day.barometer.min.foobar
 
         <h3>Iteration</h3>
 
-        <p>It is possible to iterate over the following time periods:</p>
+        <p>It is possible to iterate over the following:</p>
 
         <table class="indent" style="Width: 50%"
                summary="Iteration periods">
@@ -1664,6 +1670,10 @@ or in foobar units: $day.barometer.min.foobar
             <tr class="first_row">
                 <td>Tag suffix</td>
                 <td>Results</td>
+            </tr>
+            <tr>
+                <td class="code first_col">.records</td>
+                <td>Iterate over every record</td>
             </tr>
             <tr>
                 <td class="code first_col">.hours</td>
@@ -1974,7 +1984,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
 
         <p>Any of these can be used in your tags. Here are some examples:</p>
 
-        <table class="indent" style="width: 50%;">
+        <table class="indent" style="width: 90%;">
             <tbody>
             <tr class="first_row">
                 <td><i>Tag</i></td>
@@ -2255,7 +2265,7 @@ $station.altitude</pre>
             </li>
         </ul>
         <p>This example is included in the distribution as
-            <span class="code">examples/xsearch.py</span>: </p>
+            <span class="code">examples/stats.py</span>: </p>
         <pre class="tty">import datetime
 import time
 
@@ -2263,7 +2273,7 @@ from weewx.cheetahgenerator import SearchList
 from weewx.tags import TimespanBinder
 from weeutil.weeutil import TimeSpan
 
-class MyXSearch(SearchList):                                                 # 1
+class MyStats(SearchList):                                                   # 1
     """My search list extension"""
 
     def __init__(self, generator):                                           # 2
@@ -2313,7 +2323,7 @@ class MyXSearch(SearchList):                                                 # 1
 
         <p>Going through the example, line by line: </p>
         <ol>
-            <li>Create a new class called <span class="code">MyXSearch</span>,
+            <li>Create a new class called <span class="code">MyStats</span>,
                 which will inherit from class <span class="code">SearchList</span>. All
                 search list extensions inherit from this class.
             </li>
@@ -2409,7 +2419,7 @@ class MyXSearch(SearchList):                                                 # 1
 
     # Possible encodings are 'html_entities', 'utf8', or 'strict_ascii'
     encoding = html_entities
-    <span class="highlight">search_list_extensions = examples.xsearch.MyXSearch</span>
+    <span class="highlight">search_list_extensions = user.stats.MyStats</span>
 
     [[SummaryByMonth]]
     ...
@@ -2581,7 +2591,7 @@ class MyXSearch(SearchList):                                                 # 1
             drawn. Here's what a plot looks like without and
             with this option being specified:</p>
 
-        <div class="center" style="width:80%;margin:0;">
+        <div class="center" style="margin:0;">
             <div style="float:left">
                 <img src="images/day-gap-not-shown.png" alt="Gap not shown"/>
 
@@ -3709,7 +3719,7 @@ UV      = UV Index</pre>
         <p>This defines one or more search list objects that will be appended to
             the <span class="config_option">search_list</span>. For example, the
             following adds alltime and forecast variables to the search list.</p>
-        <pre class="tty">search_list_extensions = examples.xsearch.MyXSearch, user.forecast.ForecastVariables</pre>
+        <pre class="tty">search_list_extensions = user.stats.MyStats, user.forecast.ForecastVariables</pre>
         <p class="config_option">encoding </p>
 
         <p>This option controls which encoding is to be used for the generated
@@ -3913,11 +3923,25 @@ UV      = UV Index</pre>
             <span class='code'>0xa0a0a0</span></p>
 
         <div class="image image-right" style="clear:right">
-            <img src="images/weektempdew.png" alt="Example of day/night bands"/>
+            <div class="image" >
+                <img src="images/antialias.gif" alt="Effect of anti_alias option"/>
 
-            <div class="image_caption">Example of day/night bands in a one
-            week image</div>
+                <div class="image_caption">A GIF showing the same image with
+                <span class="code">anti_alias=1</span>, <span class="code">2</span>, and
+                <span class="code">4</span>.</div>
+            </div>
+            <div class="image">
+                <img src="images/weektempdew.png" alt="Example of day/night bands"/>
+
+                <div class="image_caption">Example of day/night bands in a one
+                    week image</div>
+            </div>
         </div>
+        <p class="config_option">anti_alias</p>
+
+        <p>Setting to 2 or more might give a sharper image, with fewer jagged edges. Experimentation is
+            in order. Default is <span class="code">1</span>.</p>
+
         <p class="config_option">show_daynight</p>
 
         <p>
@@ -4330,8 +4354,7 @@ UV      = UV Index</pre>
         windSpeed      = Wind Speed
         windchill      = Wind Chill
         windgustvec    = Gust Vector
-        windvec        = Wind Vector
-        extraTemp1     = Pond Temperature</pre>
+        windvec        = Wind Vector</pre>
         <p>The hemisphere abbreviations may have to be changed: </p>
       <pre class="tty">[Labels]
     hemispheres = N, S, E, W</pre>
@@ -4534,15 +4557,15 @@ from weeutil.weeutil import timestamp_to_string, option_as_list
 
 # Inherit from the base class StdService:
 class MyAlarm(StdService):
-    """Custom service that sounds an alarm if an arbitrary expression evaluates true"""
-
+    """Service that sends email if an arbitrary expression evaluates true"""
+    
     def __init__(self, engine, config_dict):
         # Pass the initialization information on to my superclass:
         super(MyAlarm, self).__init__(engine, config_dict)
-
+        
         # This will hold the time when the last alarm message went out:
         self.last_msg_ts = 0
-
+        
         try:
             # Dig the needed options out of the configuration dictionary.
             # If a critical option is missing, an exception will be raised and
@@ -4553,27 +4576,26 @@ class MyAlarm(StdService):
             self.smtp_user     = config_dict['Alarm'].get('smtp_user')
             self.smtp_password = config_dict['Alarm'].get('smtp_password')
             self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weewx")
-            self.FROM          = config_dict['Alarm'].get('from', 'alarm@weewx.com')
+            self.FROM          = config_dict['Alarm'].get('from', 'alarm@example.com')
             self.TO            = option_as_list(config_dict['Alarm']['mailto'])
             syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: '%s'" % self.expression)
-
+            
             # If we got this far, it's ok to start intercepting events:
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)    # NOTE 1
-
         except KeyError, e:
-            syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set. %s" % e)
-
+            syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set.  Missing parameter: %s" % e)
+            
     def newArchiveRecord(self, event):
         """Gets called on a new archive record event."""
-
+        
         # To avoid a flood of nearly identical emails, this will do
         # the check only if we have never sent an email, or if we haven't
         # sent one in the last self.time_wait seconds:
-        if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) &ge; self.time_wait :
+        if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) >= self.time_wait :
             # Get the new archive record:
             record = event.record
-
-            # Be prepared to catch an exception in the case that the expression contains
+            
+            # Be prepared to catch an exception in the case that the expression contains 
             # a variable that is not in the record:
             try:                                                              # NOTE 2
                 # Evaluate the expression in the context of the event archive record.
@@ -4591,23 +4613,23 @@ class MyAlarm(StdService):
 
     def soundTheAlarm(self, rec):
         """This function is called when the given expression evaluates True."""
-
+        
         # Get the time and convert to a string:
         t_str = timestamp_to_string(rec['dateTime'])
 
-        # Log it in the system log:
+        # Log it
         syslog.syslog(syslog.LOG_INFO, "alarm: Alarm expression \"%s\" evaluated True at %s" % (self.expression, t_str))
 
         # Form the message text:
         msg_text = "Alarm expression \"%s\" evaluated True at %s\nRecord:\n%s" % (self.expression, t_str, str(rec))
         # Convert to MIME:
         msg = MIMEText(msg_text)
-
+        
         # Fill in MIME headers:
         msg['Subject'] = self.SUBJECT
         msg['From']    = self.FROM
         msg['To']      = ','.join(self.TO)
-
+        
         # Create an instance of class SMTP for the given SMTP host:
         s = smtplib.SMTP(self.smtp_host)
         try:
@@ -4617,16 +4639,16 @@ class MyAlarm(StdService):
             s.ehlo()
             s.starttls()
             s.ehlo()
-            syslog.syslog(syslog.LOG_DEBUG, "  **** using encrypted transport")
+            syslog.syslog(syslog.LOG_DEBUG, "alarm: using encrypted transport")
         except smtplib.SMTPException:
-            syslog.syslog(syslog.LOG_DEBUG, "  **** using unencrypted transport")
+            syslog.syslog(syslog.LOG_DEBUG, "alarm: using unencrypted transport")
 
         try:
             # If a username has been given, assume that login is required for this host:
             if self.smtp_user:
                 s.login(self.smtp_user, self.smtp_password)
-                syslog.syslog(syslog.LOG_DEBUG, "  **** logged in with user name %s" % (self.smtp_user,))
-
+                syslog.syslog(syslog.LOG_DEBUG, "alarm: logged in with user name %s" % (self.smtp_user,))
+            
             # Send the email:
             s.sendmail(msg['From'], self.TO,  msg.as_string())
             # Log out of the server:
@@ -4634,9 +4656,10 @@ class MyAlarm(StdService):
         except Exception, e:
             syslog.syslog(syslog.LOG_ERR, "alarm: SMTP mailer refused message with error %s" % (e,))
             raise
-
+        
         # Log sending the email:
-        syslog.syslog(syslog.LOG_INFO, "  **** email sent to: %s" % self.TO) </pre>
+        syslog.syslog(syslog.LOG_INFO, "alarm: email sent to: %s" % self.TO)
+</pre>
 
         <p>This service expects all the information it needs to be in the
             configuration file <span class="code">weewx.conf</span> in a new
@@ -4645,11 +4668,11 @@ class MyAlarm(StdService):
       <pre class="tty">[Alarm]
     expression = "outTemp &lt; 40.0"
     time_wait = 3600
-    smtp_host = smtp.mymailserver.com
+    smtp_host = smtp.example.com
     smtp_user = myusername
     smtp_password = mypassword
-    mailto = auser@adomain.com, anotheruser@someplace.com
-    from   = me@mydomain.com
+    mailto = auser@example.com, anotheruser@example.com
+    from   = me@example.com
     subject = "Alarm message from weewx!"</pre>
         <p>There are three important points to be noted in this example, each marked
             with a <span class="code">NOTE</span> flag in the code.</p>
@@ -4703,14 +4726,16 @@ class MyAlarm(StdService):
             valid "from" email address and the one <span class="code">weewx</span>
             supplies may not satisfy its requirements. </p>
 
-        <p>To make this all work, you must tell the engine to load this new
-            service by adding the service name to the
+        <p>To make this all work, you must first copy the
+            <span class="code">alarm.py</span> file to the
+            <span class="code">user</span> directory.  Then tell the engine to
+            load this new service by adding the service name to the
             list <span class="code">report_services</span>,
             located in <span class="code">[Engine][[Services]]</span>: </p>
       <pre class="tty">[Engine]
    [[Services]]
         report_services = weewx.engine.StdPrint, weewx.engine.StdReport<span
-                  class="highlight">, examples.alarm.MyAlarm</span></pre>
+                  class="highlight">, user.alarm.MyAlarm</span></pre>
         <p>Again, note that the option <span class="code">report_services</span> must be all on
             one line &mdash; the parser <span class="code">ConfigObj</span>
             does not allow options to be continued on to following lines.</p>

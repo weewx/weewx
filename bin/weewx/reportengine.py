@@ -222,7 +222,8 @@ class StdReportEngine(threading.Thread):
                         skin_dict,
                         self.gen_ts,
                         self.first_run,
-                        self.stn_info)
+                        self.stn_info,
+                        self.record)
                 except Exception, e:
                     syslog.syslog(
                         syslog.LOG_CRIT, "reportengine: "
@@ -259,12 +260,13 @@ class StdReportEngine(threading.Thread):
 
 class ReportGenerator(object):
     """Base class for all report generators."""
-    def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info):
+    def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info, record):
         self.config_dict = config_dict
         self.skin_dict = skin_dict
         self.gen_ts = gen_ts
         self.first_run = first_run
         self.stn_info = stn_info
+        self.record = record
         self.db_binder = weewx.manager.DBBinder(self.config_dict)
 
     def start(self):
@@ -315,22 +317,22 @@ class FtpGenerator(ReportGenerator):
                 debug=int(self.skin_dict.get('debug', 0)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG,
-                          "reportengine: FTP upload not requested. Skipped.")
+                          "ftpgenerator: FTP upload not requested. Skipped.")
             return
 
         try:
             n = ftp_data.run()
         except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError), e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
-            syslog.syslog(syslog.LOG_ERR, "reportengine: "
-                          "Caught exception %s in FtpGenerator: %s." % (cl, e))
+            syslog.syslog(syslog.LOG_ERR, "ftpgenerator: "
+                          "Caught exception %s: %s" % (cl, e))
             weeutil.weeutil.log_traceback("        ****  ")
             return
 
         t2 = time.time()
         if log_success:
             syslog.syslog(syslog.LOG_INFO,
-                          "reportengine: ftp'd %d files in %0.2f seconds" %
+                          "ftpgenerator: ftp'd %d files in %0.2f seconds" %
                           (n, (t2 - t1)))
 
 
@@ -364,16 +366,15 @@ class RsyncGenerator(ReportGenerator):
                 log_success=to_bool(self.skin_dict.get('log_success', True)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG,
-                          "reportengine: rsync upload not requested. Skipped.")
+                          "rsyncgenerator: rsync upload not requested. Skipped.")
             return
 
         try:
             rsync_data.run()
         except IOError, e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
-            syslog.syslog(syslog.LOG_ERR, "reportengine: "
-                          "Caught exception %s in RsyncGenerator: %s." %
-                          (cl, e))
+            syslog.syslog(syslog.LOG_ERR, "rsyncgenerator: "
+                          "Caught exception %s: %s" % (cl, e))
 
 
 # =============================================================================
@@ -439,7 +440,8 @@ class CopyGenerator(ReportGenerator):
                 ncopy += 1
 
         if log_success:
-            syslog.syslog(syslog.LOG_INFO, "reportengine: copied %d files to %s" % (ncopy, html_dest_dir))
+            syslog.syslog(syslog.LOG_INFO, "copygenerator: "
+                          "copied %d files to %s" % (ncopy, html_dest_dir))
 
 # ===============================================================================
 #                    Class ReportTiming
@@ -520,7 +522,7 @@ class ReportTiming(object):
         elif len(fields) == 5:
             fields.append(None)
         # Extract individual line elements
-        minutes, hours, dom, months, dow, extra = fields
+        minutes, hours, dom, months, dow, _extra = fields
         # Save individual fields
         self.line = [minutes, hours, dom, months, dow]
         # Is DOM restricted ie is DOM not '*'
@@ -544,8 +546,8 @@ class ReportTiming(object):
         self.decode = []
         try:
             # step through each field and its associated range, names and maps
-            for field, span, names, map in zip(self.line, SPANS, NAMES, MAPS):
-                field_set = self.parse_field(field, span, names, map)
+            for field, span, names, mapp in zip(self.line, SPANS, NAMES, MAPS):
+                field_set = self.parse_field(field, span, names, mapp)
                 self.decode.append(field_set)
             # if we are this far then our line is valid so return True and no
             # error message
@@ -555,7 +557,7 @@ class ReportTiming(object):
             # and the error message
             return (False, e)
 
-    def parse_field(self, field, span, names, map, is_rorl=False):
+    def parse_field(self, field, span, names, mapp, is_rorl=False):
         """Return the set of valid values for a field.
 
         Parses and validates a field and if the field is valid returns a set
@@ -568,7 +570,7 @@ class ReportTiming(object):
                  field may take. Format is (lower, upper).
         names:   Tuple containing all valid named values for the field. For
                  numeric only fields the tuple is empty.
-        map:     Tuple of 2 way tuples mapping named values to numeric
+        mapp:    Tuple of 2 way tuples mapping named values to numeric
                  equivalents. Format is ((name1, numeric1), ..
                  (namex, numericx)). For numeric only fields the tuple is empty.
         is_rorl: Is field part of a range or list. Either True or False.
@@ -594,7 +596,7 @@ class ReportTiming(object):
             if not is_rorl:
                 # replace all named values with numbers
                 _field = field
-                for _name, _ord in map:
+                for _name, _ord in mapp:
                     _field = _field.replace(_name, str(_ord))
                 # its valid if its within our span
                 if span[0] <= int(_field) <= span[1]:
@@ -612,9 +614,9 @@ class ReportTiming(object):
             # get the first list item and the rest of the list
             _first, _rest = field.split(',', 1)
             # get _first as a set using a recursive call
-            _first_set = self.parse_field(_first, span, names, map, True)
+            _first_set = self.parse_field(_first, span, names, mapp, True)
             # get _rest as a set using a recursive call
-            _rest_set = self.parse_field(_rest, span, names, map, True)
+            _rest_set = self.parse_field(_rest, span, names, mapp, True)
             # return the union of the _first and _rest sets
             return _first_set | _rest_set
         elif '/' in field:  # a step
@@ -623,7 +625,7 @@ class ReportTiming(object):
             # step is valid if it is numeric
             if _step.isdigit():
                 # get _val as a set using a recursive call
-                _val_set = self.parse_field(_val, span, names, map, True)
+                _val_set = self.parse_field(_val, span, names, mapp, True)
                 # get the set of all possible values using _step
                 _lowest = min(_val_set)
                 _step_set = set([x for x in _val_set if ((x - _lowest) % int(_step) == 0)])
@@ -701,7 +703,7 @@ class ReportTiming(object):
                 # DOW but all other fields must match.
                 dom_match = False
                 dom_restricted_match = False
-                for period, field, field_span, decode in element_tuple:
+                for period, _field, field_span, decode in element_tuple:
                     if period in decode:
                         # we have a match
                         if field_span == DOM:
