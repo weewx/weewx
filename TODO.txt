@@ -13,5 +13,3 @@ Test partial rebuild of daily summaries on both sqlite and MySQL
 Decide whether backfill is still necessary. Is it sufficient to check on startup
 whether the daily summaries exist and, if not, do a rebuild.
 
-Update test suites to reflect the name change and movement of the old xsearch.py.
-bin/examples/xsearch.py -> examples/stats.py
