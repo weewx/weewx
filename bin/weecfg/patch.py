@@ -1,5 +1,6 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2017 Tom Keffer <tkeffer@gmail.com> and
+#                            Gary Roderick <gjroderick@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -57,28 +58,6 @@ class DatabasePatch(object):
     def run(self):
         raise NotImplementedError("Method 'run' not implemented")
 
-    @staticmethod
-    def progress(percent):
-        """Generic progress function.
-
-        Generic progress function. Patches that have different requirements
-        should override this method in their class definition.
-        """
-
-        print >>sys.stdout, "%d% complete..." % (percent, ),
-        sys.stdout.flush()
-
-
-# ============================================================================
-#                        IntervalWeighting Error Classes
-# ============================================================================
-
-
-class WeightedSumPatchAccumError(IOError):
-    """Base class of exceptions thrown when encountering an error with an
-       accumulator.
-    """
-
 
 # ============================================================================
 #                            Utility Functions
@@ -120,6 +99,12 @@ def apply_patches(config_dict, **kwargs):
 #                                class IntervalWeighting
 # ============================================================================
 
+def _patch_progress(ndays, last_time):
+    """Utility function to show our progress while patching."""
+
+    print >>sys.stdout, "Patching daily summary: %d; Timestamp: %s\r" % \
+        (ndays, timestamp_to_string(last_time)),
+    sys.stdout.flush()
 
 class IntervalWeighting(DatabasePatch):
     """Class to patch daily summaries with an interval based weight factor.
@@ -206,7 +191,7 @@ class IntervalWeighting(DatabasePatch):
         if _daily_summary_version is None or _daily_summary_version < 2.0:
             # Get the ts of the (start of the) next day to patch; it's the day
             # after the ts of the last successfully patched daily summary
-            _last_patched_ts = self.read_metadata('lastSummaryPatched')
+            _last_patched_ts = self.read_metadata('lastWeightPatch')
             if _last_patched_ts:
                 _next_day_to_patch_dt = datetime.datetime.fromtimestamp(_last_patched_ts) + datetime.timedelta(days=1)
                 _next_day_to_patch_ts = time.mktime(_next_day_to_patch_dt.timetuple())
@@ -229,13 +214,6 @@ class IntervalWeighting(DatabasePatch):
                     # indicate we have patched to version 2.0.
                     if not self.dry_run:
                         self.write_metadata('Version', '2.0')
-                except WeightedSumPatchAccumError, e:
-                    syslog.syslog(syslog.LOG_INFO,
-                                  "intervalweighting: **** Accumulator error.")
-                    syslog.syslog(syslog.LOG_INFO,
-                                  "intervalweighting: **** %s" % e)
-                    # raise the error so our caller can deal with it if they want
-                    raise
                 except weewx.ViolatedPrecondition, e:
                     syslog.syslog(syslog.LOG_INFO,
                                   "intervalweighting: **** %s" % e)
@@ -270,7 +248,7 @@ class IntervalWeighting(DatabasePatch):
             syslog.syslog(syslog.LOG_INFO,
                           "intervalweighting: '%s' patch has already been applied." % self.name)
 
-    def do_patch(self, np_ts):
+    def do_patch(self, np_ts, progress_fn=_patch_progress):
         """Patch the daily summaries using interval as weight."""
 
         # do we need to patch? Only patch if next day to patch ts is None or
@@ -314,9 +292,10 @@ class IntervalWeighting(DatabasePatch):
                         except Exception, e:
                             # log the exception and re-raise it
                             syslog.syslog(syslog.LOG_INFO,
-                                          "intervalweighting: Patching '%s' daily summary for %s failed: %s" % (_day_key,
-                                                                                                               timestamp_to_string(_day_span.start, format="%Y-%m-%d"),
-                                                                                                               e))
+                                          "intervalweighting: Patching '%s' daily summary "
+                                          "for %s failed: %s" % (_day_key,
+                                                                 timestamp_to_string(_day_span.start, format="%Y-%m-%d"),
+                                                                 e))
                             raise
                         # Update the daily summary with the patched accumulator
                         if not self.dry_run:
@@ -326,14 +305,15 @@ class IntervalWeighting(DatabasePatch):
                                                       check_version=False)
                         _days += 1
                         # Save the ts of the patched daily summary as the
-                        # 'lastSummaryPatched' value in the archive_day__metadata
+                        # 'lastWeightPatch' value in the archive_day__metadata
                         # table
                         if not self.dry_run:
-                            self.write_metadata('lastSummaryPatched',
-                                                _day_span.start)
+                            self.write_metadata('lastWeightPatch',
+                                                _day_span.start,
+                                                _cursor)
                         # Give the user some information on progress
                         if _days % 50 == 0:
-                            self.progress(_days, _day_span.start)
+                            progress_fn(_days, _day_span.start)
 
                     # Setup our next tranche
                     # Have we reached the end, if so break to finish
@@ -408,11 +388,8 @@ class IntervalWeighting(DatabasePatch):
             are found then a weewx.ViolatedPrecondition error is raised.
         """
 
-        interpolate_dict = {'start' : span.start,
-                            'stop'  : span.stop}
-        _sql_stmt = "SELECT `interval` FROM archive "\
-                        "WHERE dateTime > %(start)s AND dateTime <= %(stop)s;"
-        _row = self.dbm.getSql(_sql_stmt % interpolate_dict)
+        _row = self.dbm.getSql("SELECT `interval` FROM %s "
+                        "WHERE dateTime > ? AND dateTime <= ?;" % self.dbm.table_name, span)
         try:
             return _row[0]
         except IndexError:
@@ -439,16 +416,14 @@ class IntervalWeighting(DatabasePatch):
 
         t1 = time.time()
         syslog.syslog(syslog.LOG_DEBUG,
-                      "intervalweighting: Checking table '%s' for multiple 'interval' values per day..." % self.dbm.table_name)
+                      "intervalweighting: Checking table '%s' for multiple "
+                      "'interval' values per day..." % self.dbm.table_name)
         start_ts = timestamp if timestamp else self.dbm.first_timestamp
         _days = 0
         _result = True
         for _day_span in genDaySpans(start_ts, self.dbm.last_timestamp):
-            interpolate_dict = {'start' : _day_span.start,
-                                'stop'  : _day_span.stop}
-            _sql_stmt = "SELECT MIN(`interval`),MAX(`interval`) FROM archive "\
-                            "WHERE dateTime > %(start)s AND dateTime <= %(stop)s;"
-            _row = self.dbm.getSql(_sql_stmt % interpolate_dict)
+            _row = self.dbm.getSql("SELECT MIN(`interval`),MAX(`interval`) FROM %s "
+                                   "WHERE dateTime > ? AND dateTime <= ?;" % self.dbm.table_name, _day_span)
             try:
                 # If MIN and MAX are the same then we only have 1 distinct
                 # value. If the query returns nothing then that is fine too,
@@ -462,8 +437,8 @@ class IntervalWeighting(DatabasePatch):
                 break
         if _result:
             syslog.syslog(syslog.LOG_DEBUG,
-                          "intervalweighting: Successfully checked %s days for multiple 'interval' values in %0.2f seconds." % (_days,
-                                                                                                                               (time.time() - t1)))
+                          "intervalweighting: Successfully checked %s days "
+                          "for multiple 'interval' values in %0.2f seconds." % (_days, (time.time() - t1)))
         return _result
 
     def first_summary(self):
@@ -485,7 +460,7 @@ class IntervalWeighting(DatabasePatch):
                 observation: The observation whose daily summary table has the
                              earliest timestamp
 
-            (None, None) is returned if no dateTime values where found.
+            (None, None) is returned if no dateTime values were found.
         """
 
         _res = (None, None)
@@ -510,17 +485,20 @@ class IntervalWeighting(DatabasePatch):
                                                    metadata))
         return float(_row[0]) if _row else None
 
-    def write_metadata(self, metadata, value):
+    def write_metadata(self, metadata, value, cursor=None):
         """Write a value to a metadata field in the archive_day__metadata table.
 
         Input parameters:
             metadata: The name of the metadata field to be written to.
             value:    The value to be written to the metadata field.
         """
+        _cursor = cursor or self.dbm.connection.cursor()
 
         meta_replace_str = """REPLACE INTO %s_day__metadata VALUES(?, ?)"""
-        _row = self.dbm.getSql(meta_replace_str % self.dbm.table_name,
+        _cursor.execute(meta_replace_str % self.dbm.table_name,
                                (metadata, value))
+        if cursor is None:
+            _cursor.close()
 
     def do_vacuum(self):
         """Vacuum the database.
@@ -555,12 +533,4 @@ class IntervalWeighting(DatabasePatch):
                                                                                           (time.time() - t1)))
         else:
             syslog.syslog(syslog.LOG_DEBUG, "intervalweighting: Vacuum not requested.")
-
-    @staticmethod
-    def progress(ndays, last_time):
-        """Utility function to show our progress while patching."""
-
-        print >>sys.stdout, "Patching daily summary: %d; Timestamp: %s\r" % \
-            (ndays, timestamp_to_string(last_time)),
-        sys.stdout.flush()
 
