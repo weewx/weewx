@@ -108,7 +108,7 @@ class BatteryAlarm(StdService):
         """This function is called on each new LOOP packet."""
 
         # If the Transmit Battery Status byte is non-zero, an alarm is on
-        if event.packet['txBatteryStatus']:
+        if event.packet.get('txTempBatteryStatus', 0):
 
             self.alarm_count += 1
 
@@ -121,7 +121,7 @@ class BatteryAlarm(StdService):
                 if abs(time.time() - self.last_msg_ts) >= self.time_wait :
                     # Sound the alarm!
                     timestamp = event.packet['dateTime']
-                    battery_status = event.packet['txBatteryStatus']
+                    battery_status = event.packet['txTempBatteryStatus']
                     # Launch in a separate thread so it does not block the
                     # main LOOP thread:
                     t  = threading.Thread(target=BatteryAlarm.soundTheAlarm,
