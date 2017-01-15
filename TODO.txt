@@ -1,0 +1,17 @@
+             ---- Before the V3.7 release ----
+
+Add the ability to patch windSpeed to wee_database.
+
+The accumulators need to be aware whether this is a V1 or V2 daily summary.
+
+Remove invoking the weighting patch from engine.py
+
+Document the existence of both the windSpeed and weighting patches in upgrading.htm
+
+Test partial rebuild of daily summaries on both sqlite and MySQL
+
+Decide whether backfill is still necessary. Is it sufficient to check on startup
+whether the daily summaries exist and, if not, do a rebuild.
+
+Update test suites to reflect the name change and movement of the old xsearch.py.
+bin/examples/xsearch.py -> examples/stats.py
