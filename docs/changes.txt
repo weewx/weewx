@@ -69,6 +69,14 @@ Fixed problem where multiple subsections under [SummaryBy...] stanzas could
 cause multiple copies of their target date to be included in the Cheetah
 variable $SummaryByYear and $SummaryByMonth. Fixes issue #187.
 
+Timespan tags of $last_hour, $last_day, $last_week, $last_month and $last_year
+have been added. The $span timespan tag now accepts $month_delta and 
+$year_delta. Thanks to user 'dcapslock'! PR #196.
+
+Timespan iterator .spans(interval=seconds) has been added to allow to iterate 
+over custom spans within a tag timespan. Another thanks to user 'dcapslock'!
+PR #199.
+
 Moved examples out of bin directory.  Eliminated experimental directory.
 Reinforce the use of user directory, eliminate use of examples directory.
 Renamed xsearch.py to stats.py.

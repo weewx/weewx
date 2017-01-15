@@ -189,6 +189,12 @@ class TimespanBinder(object):
             yield CurrentObj(self.db_lookup, None, record['dateTime'], self.formatter, 
                              self.converter, record=record)
 
+    # Iterate over custom span
+    def spans(self, data_binding=None, context='day', interval=10800):
+        for span in weeutil.weeutil.intervalgenRoundTS(self.timespan.start, self.timespan.stop, interval):
+            yield TimespanBinder(span, self.db_lookup, data_binding,
+                                 context, self.formatter, self.converter, **self.option_dict)
+    
     # Iterate over hours in the time period:
     def hours(self, data_binding=None):
         return TimespanBinder._seqGenerator(weeutil.weeutil.genHourSpans, self.timespan,

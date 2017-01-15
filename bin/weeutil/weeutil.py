@@ -354,7 +354,14 @@ class TimeSpan(tuple):
             return - 1
         return 0 if self.start == other.start else 1
 
-def intervalgen(start_ts, stop_ts, interval):
+def intervalgenRoundTS(start_ts, stop_ts, interval):
+    """Generator function yielding a sequence of time spans whose boundaries
+    are on a constant local time, rounded to mutiples of the interval.
+    """
+
+    return intervalgen(start_ts, stop_ts, interval, True)
+
+def intervalgen(start_ts, stop_ts, interval, roundTS=False):
     """Generator function yielding a sequence of time spans whose boundaries
     are on constant local time.
     
@@ -401,6 +408,27 @@ def intervalgen(start_ts, stop_ts, interval):
     [2009-11-01 02:00:00 PST (1257069600) -> 2009-11-01 03:00:00 PST (1257073200)]
     [2009-11-01 03:00:00 PST (1257073200) -> 2009-11-01 04:00:00 PST (1257076800)]
     [2009-11-01 04:00:00 PST (1257076800) -> 2009-11-01 05:00:00 PST (1257080400)]
+
+    An example setting roundTS = True
+
+    >>> startstamp = 1484352960
+    >>> timestamp_to_string(startstamp)
+    '2017-01-14 11:16:00 AEDT (1484352960)'
+    >>> stopstamp = 1484439360
+    >>> timestamp_to_string(stopstamp)
+    '2017-01-15 11:16:00 AEDT (1484439360)'
+    >>> for span in intervalgen(startstamp, stopstamp, 10800, True):
+    ...     print span
+    ...
+    [2017-01-14 09:00:00 AEDT (1484344800) -> 2017-01-14 12:00:00 AEDT (1484355600)]
+    [2017-01-14 12:00:00 AEDT (1484355600) -> 2017-01-14 15:00:00 AEDT (1484366400)]
+    [2017-01-14 15:00:00 AEDT (1484366400) -> 2017-01-14 18:00:00 AEDT (1484377200)]
+    [2017-01-14 18:00:00 AEDT (1484377200) -> 2017-01-14 21:00:00 AEDT (1484388000)]
+    [2017-01-14 21:00:00 AEDT (1484388000) -> 2017-01-15 00:00:00 AEDT (1484398800)]
+    [2017-01-15 00:00:00 AEDT (1484398800) -> 2017-01-15 03:00:00 AEDT (1484409600)]
+    [2017-01-15 03:00:00 AEDT (1484409600) -> 2017-01-15 06:00:00 AEDT (1484420400)]
+    [2017-01-15 06:00:00 AEDT (1484420400) -> 2017-01-15 09:00:00 AEDT (1484431200)]
+    [2017-01-15 09:00:00 AEDT (1484431200) -> 2017-01-15 12:00:00 AEDT (1484442000)]
     
     start_ts: The start of the first interval in unix epoch time. In unix epoch time.
     
@@ -408,9 +436,16 @@ def intervalgen(start_ts, stop_ts, interval):
     In unix epoch time.
     
     interval: The time length of an interval in seconds.
+
+    roundTS: If True then round start_ts down and stop_ts up such that 
+    they are on multiples of the interval
     
     yields: A sequence of TimeSpans. Both the start and end of the timespan
-    will be on the same time boundary as start_ts"""  
+    will be on the same time boundary as start_ts"""
+    
+    if roundTS :
+        start_ts = startOfInterval(start_ts, interval)
+        stop_ts = startOfInterval(stop_ts, interval) + interval
 
     dt1 = datetime.datetime.fromtimestamp(start_ts)
     stop_dt = datetime.datetime.fromtimestamp(stop_ts)
