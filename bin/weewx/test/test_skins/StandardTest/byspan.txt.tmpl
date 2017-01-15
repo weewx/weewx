@@ -1,0 +1,15 @@
+Daily Top Temperatures
+#for $iterDay in $last_week.days
+$iterDay.dateTime.format("%A %-d %B"): $iterDay.outTemp.max at $iterDay.outTemp.maxtime
+#end for
+
+3 hour averages over last day
+DateTime,outTemp
+#for $span in $last_day.spans(interval=10800)
+$span.dateTime.format("%d/%m %H:%M:%S"),$span.outTemp.avg
+#end for
+
+All Day Values
+#for $record in $last_day.records
+$record.dateTime.format("%d/%m %H:%M:%S"),$record.outTemp
+#end for
