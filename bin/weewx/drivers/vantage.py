@@ -21,7 +21,7 @@ import weewx.units
 import weewx.engine
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.0.9'
+DRIVER_VERSION = '3.0.10'
 
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
@@ -1300,10 +1300,10 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Detect the kind of LOOP packet. Type 'A' has the character 'P' in this
         # position. Type 'B' contains the 3-hour barometer trend in this position.
         if raw_loop_packet['loop_type'] == ord('P'):
-            raw_loop_packet['trend'] = None
+            raw_loop_packet['trendIcon'] = None
             raw_loop_packet['loop_type'] = 'A'
         else:
-            raw_loop_packet['trend'] = raw_loop_packet['loop_type']
+            raw_loop_packet['trendIcon'] = raw_loop_packet['loop_type']
             raw_loop_packet['loop_type'] = 'B'
     
         loop_packet = {'dateTime': int(time.time() + 0.5),
@@ -1650,7 +1650,8 @@ _loop_map = {'barometer'       : _val1000Zero,
              'forecastIcon'    : _null,
              'forecastRule'    : _null,
              'sunrise'         : _stime,
-             'sunset'          : _stime}
+             'sunset'          : _stime,
+             'trendIcon'       : _null_int}
 
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the archive packet in the internal, Davis form into US

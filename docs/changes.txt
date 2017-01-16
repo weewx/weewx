@@ -39,6 +39,9 @@ The vantage driver no longer emits values for non-existent sensors.
 As a result, LOOP and archive packets are now much smaller. If this works
 out, other drivers will follow suit. Partial fix of issue #175.
 
+The vantage driver now emits the barometer trend in LOOP packets as 
+field 'trendIcon'.
+
 The engine now logs locale. Additional information if a TERM signal is 
 received.
 

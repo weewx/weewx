@@ -1,10 +1,13 @@
              ---- Before the V3.7 release ----
 
-Add the ability to patch windSpeed to wee_database.
+Decide on strategy for updating daily summaries. Two options:
+1. User patches at his leisure, using wee_database. Weewxd is aware of V1 and V2 summaries. Refuses 
+to run on partial update.  
+2. Weewxd refuses to run until database has been updated. User would do this using wee_database.
 
-The accumulators need to be aware whether this is a V1 or V2 daily summary.
+Either way, we can remove invoking the weighting patch from engine.py
 
-Remove invoking the weighting patch from engine.py
+Add support for fixing windSpeed to patch module 
 
 Document the existence of both the windSpeed and weighting patches in upgrading.htm
 
