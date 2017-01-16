@@ -115,6 +115,8 @@ battery status, not just txBatteryStatus.  Thanks to user manos!
 Added info-level log message to calculate_rain so that any rain counter reset
 will be logged.
 
+Added debug logging to indicate when calibrations are ignored.
+
 
 3.6.2 11/08/2016
 

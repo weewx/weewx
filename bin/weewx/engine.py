@@ -376,8 +376,8 @@ class StdCalibrate(StdService):
         for obs_type in self.corrections:
             try:
                 event.packet[obs_type] = eval(self.corrections[obs_type], None, event.packet)
-            except (TypeError, NameError):
-                pass
+            except (TypeError, NameError), e:
+                syslog.syslog(syslog.LOG_DEBUG, "engine: calibration for '%s' ignored in loop: %s" % (obs_type, e))
             except ValueError, e:
                 syslog.syslog(syslog.LOG_ERR, "engine: StdCalibration loop error %s" % e)
 
@@ -389,8 +389,8 @@ class StdCalibrate(StdService):
             for obs_type in self.corrections:
                 try:
                     event.record[obs_type] = eval(self.corrections[obs_type], None, event.record)
-                except (TypeError, NameError):
-                    pass
+                except (TypeError, NameError), e:
+                    syslog.syslog(syslog.LOG_DEBUG, "engine: calibration for '%s' ignored in archive: %s" % (obs_type, e))
                 except ValueError, e:
                     syslog.syslog(syslog.LOG_ERR, "engine: StdCalibration archive error %s" % e)
 
