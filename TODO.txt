@@ -1,18 +1,26 @@
              ---- Before the V3.7 release ----
 
-Decide on strategy for updating daily summaries. Two options:
-1. User patches at his leisure, using wee_database. Weewxd is aware of V1 and V2 summaries. Refuses 
-to run on partial update.  
-2. Weewxd refuses to run until database has been updated. User would do this using wee_database.
+engine.py:
+  - Remove invoking the weighting patch from engine.py
+  - Switch from backfill to rebuild.
 
-Either way, we can remove invoking the weighting patch from engine.py
+patch.py:
+  - Add support for fixing windSpeed.
+  
+manager.py:
+  - Be aware of both V1 and V2 daily summaries. Raise exception if a 
+    partially patched daily summary is encountered.
+  - Pass appropriate weighting on to accumulators.
+  - Remove backfilling code.
+  - Add c 
+  - Test partial rebuild of daily summaries on both sqlite and MySQL
 
-Add support for fixing windSpeed to patch module 
+wee_database:
+  - Single "--update" option. This fixes weights and windSpeed.
+  - Single "--check-database" option. This checks for strings, weights, and windSpeed.
+  - Single "--fix" option. This fixes strings.
 
-Document the existence of both the windSpeed and weighting patches in upgrading.htm
-
-Test partial rebuild of daily summaries on both sqlite and MySQL
-
-Decide whether backfill is still necessary. Is it sufficient to check on startup
-whether the daily summaries exist and, if not, do a rebuild.
+Documentation
+  - Document new options for wee_database in the utilities guide.
+  - Update upgrading guide.
 
