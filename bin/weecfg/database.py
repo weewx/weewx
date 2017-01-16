@@ -34,7 +34,7 @@ def _fix_progress(ndays, last_time):
         (ndays, timestamp_to_string(last_time)),
     sys.stdout.flush()
 
-    
+
 # ============================================================================
 #                             class DatabaseFix
 # ============================================================================
@@ -99,14 +99,14 @@ class DatabaseFix(object):
             _cursor.close
 
     def first_summary_ts(self, obs_type):
-        """Obtain the timestamp of the earliest daily summary entry for an 
+        """Obtain the timestamp of the earliest daily summary entry for an
         observation type.
 
         Imput:
             obs_type: The observation type whose daily summary is to be checked.
-        
+
         Returns:
-            The timestamp of the earliest daily summary entry for obs_tpye 
+            The timestamp of the earliest daily summary entry for obs_tpye
             observation. None is returned if no record culd be found.
         """
 
@@ -135,7 +135,7 @@ class DatabaseFix(object):
             try:
                 self.dbm.getSql('vacuum')
             except weedb.ProgrammingError:
-                # Catch the error (usually) returned when we try to vacuum a 
+                # Catch the error (usually) returned when we try to vacuum a
                 # non-SQLite db
                 syslog.syslog(syslog.LOG_DEBUG,
                               "Vacuuming database '%s' did not complete, most likely because it is not an SQLite database." % (self.dbm.database_name, ))
@@ -143,7 +143,7 @@ class DatabaseFix(object):
             except Exception, e:
                 # log the error and re-raise it
                 syslog.syslog(syslog.LOG_INFO,
-                              "Vacuuming database '%s' failed: %s" % (self.dbm.database_name, 
+                              "Vacuuming database '%s' failed: %s" % (self.dbm.database_name,
                                                                       e))
                 raise
             # If we are here then we have successfully vacuumed, log it and return
@@ -153,44 +153,50 @@ class DatabaseFix(object):
         else:
             syslog.syslog(syslog.LOG_DEBUG, "Vacuum not requested.")
 
+    @staticmethod
+    def _progress(record, ts):
+        """Utility function to show our progress while processing the fix.
+
+            Override in derived class to provide a different progress display.
+            To do nothing override with a pass statement.
+        """
+
+        print >>sys.stdout, "Fixing database record: %d; Timestamp: %s\r" % \
+            (record, timestamp_to_string(ts)),
+        sys.stdout.flush()
+
 
 # ============================================================================
 #                        class WindSpeedRecalculation
 # ============================================================================
 
-def _fix_progress(ndays, last_time):
-    """Utility function to show our progress while processing the fix."""
-
-    print >>sys.stdout, "Fixing daily summary: %d; Timestamp: %s\r" % \
-        (ndays, timestamp_to_string(last_time)),
-    sys.stdout.flush()
 
 class WindSpeedRecalculation(DatabaseFix):
-    """Class to recalculate windSpeed daily maximum value. To recalculate the 
+    """Class to recalculate windSpeed daily maximum value. To recalculate the
     windSpeed daily maximum values:
 
     1.  Create a dictionary of parameters required by the fix. The
     WindSpeedRecalculation class uses the following parameters as indicated:
 
-        name:           Name of the fix, for the windSpeed recalculation fix  
+        name:           Name of the fix, for the windSpeed recalculation fix
                         this is 'windSpeed Recalculation'. String. Mandatory.
 
         binding:        The binding of the database to be fixed. Default is
-                        the binding specified in weewx.conf [StdArchive]. 
+                        the binding specified in weewx.conf [StdArchive].
                         String, eg 'binding_name'. Optional.
 
         vacuum:         Whether to vacuum the database before applying the fix.
-                        SQLite databases only. Boolean, default is False. 
+                        SQLite databases only. Boolean, default is False.
                         Optional.
 
         trans_days:     Number of days of data used in each database
                         transaction. Integer, default is 50. Optional.
 
         dry_run:        Process the fix as if it was being applied but do not
-                        write to the database. Boolean, default is True. 
+                        write to the database. Boolean, default is True.
                         Optional.
 
-    2.  Create an WindSpeedRecalculation object passing it a weewx config dict 
+    2.  Create an WindSpeedRecalculation object passing it a weewx config dict
     and a fix config dict.
 
     3.  Call the resulting object's run() method to apply the fix.
@@ -201,7 +207,7 @@ class WindSpeedRecalculation(DatabaseFix):
 
         # call our parents __init__
         super(WindSpeedRecalculation, self).__init__(config_dict, fix_config_dict)
-        syslog.syslog(syslog.LOG_INFO, 
+        syslog.syslog(syslog.LOG_INFO,
                       "windspeedrecalc: Preparing '%s' fix..." % self.name)
 
         # Get the binding for the archive we are to use. If we received an
@@ -238,9 +244,9 @@ class WindSpeedRecalculation(DatabaseFix):
     def run(self):
         """Main entry point for applying the windSpeed Calculation fix.
 
-        Recalculating the windSpeed daily sumamry max field from archive data 
-        is idempotent so there is no need to check wheteher the fix has already 
-        been applied. Just go ahead and do it catching any exceptions we know 
+        Recalculating the windSpeed daily sumamry max field from archive data
+        is idempotent so there is no need to check wheteher the fix has already
+        been applied. Just go ahead and do it catching any exceptions we know
         may be raised.
         """
 
@@ -255,11 +261,11 @@ class WindSpeedRecalculation(DatabaseFix):
             # raise the error so our caller can deal with it if they want
             raise
 
-    def do_fix(self, progress_fn=_fix_progress):
+    def do_fix(self):
         """Recalculate windSpeed daily sumamry max field from archive data.
-        
-        Step through each row in the windSpeed daily summary table and replace 
-        the max field with the max value for that day based on archive data. 
+
+        Step through each row in the windSpeed daily summary table and replace
+        the max field with the max value for that day based on archive data.
         Database transactions are done in self.trans_days days at a time.
         """
 
@@ -282,22 +288,26 @@ class WindSpeedRecalculation(DatabaseFix):
                 for day_span in self.genSummaryDaySpans(tr_start_ts,
                                                         tr_stop_ts,
                                                         'windSpeed'):
-                    # get the days max windSpeed from the archive
-                    day_max = self.get_archive_day_max(day_span, 
-                                                       'windSpeed')
-                    # now save that value in the applicable row in the 
-                    # windSpeed daily summary but only if its not a dry run
+                    # get the days max windSpeed and the time it occurred from
+                    # the archive
+                    (day_max_ts, day_max) = self.get_archive_span_max(day_span,
+                                                                      'windSpeed')
+                    # now save the value and time in the applicable row in the
+                    # windSpeed daily summary, but only if its not a dry run
                     if not self.dry_run:
-                        self.write_summary('windSpeed', day_span.start, 
-                                           'max', day_max)
+                        self.write_max('windSpeed', day_span.start,
+                                       day_max, day_max_ts)
                     # increment our days done counter
                     n_days += 1
                     # give the user some information on progress
                     if n_days % 50 == 0:
-                        progress_fn(n_days, day_span.start)
+                        self._progress(n_days, day_span.start)
             # advance to the next tranche
             day += self.trans_days
 
+        # we have finished, give the user some final information on progress,
+        # mainly so the total tallies with the log
+        self._progress(n_days, day_span.start)
         print
         # We are done so log and inform the user
         if self.dry_run:
@@ -311,12 +321,14 @@ class WindSpeedRecalculation(DatabaseFix):
         syslog.syslog(syslog.LOG_DEBUG, _msg)
         syslog.syslog(syslog.LOG_INFO, _msg1)
 
-    def get_archive_day_max(self, span, obs):
-        """Return the day max value of an observation from archive data.
+    def get_archive_span_max(self, span, obs):
+        """Find the max value of an obs and its timestamp in a span based on
+           archive data.
 
-        Gets the max value of an observation from a TimeSpan of archive records.
-        Raises a weewx.ViolatedPrecondition error if the max value of the 
-        observation field could not be determined.
+        Gets the max value of an observation and the timestamp at which it
+        occurred from a TimeSpan of archive records. Raises a
+        weewx.ViolatedPrecondition error if the max value of the observation
+        field could not be determined.
 
         Input parameters:
             span: TimesSpan object of the period from which to determine
@@ -324,32 +336,50 @@ class WindSpeedRecalculation(DatabaseFix):
             obs:  The observation to be used.
 
         Returns:
-            The max value of the observation over the day of archive records, 
-            if no observation field values are found then a 
+            A tuple of the format:
+
+                (timestamp, value)
+
+            where:
+                timestamp is the epoch timestamp when the max value occurred
+                value is the max value of the observation over the time span
+
+            If no observation field values are found then a
             weewx.ViolatedPrecondition error is raised.
         """
 
-        select_str = "SELECT max(%s) FROM %s WHERE dateTime > ? AND dateTime <= ?;" % (obs, 
-                                                                                       self.dbm.table_name)
-        _row = self.dbm.getSql(select_str, span)
-        try:
-            return _row[0]
-        except IndexError:
-            _msg = "'%s' field not found in archive day %s." % (obs, span)
-            raise weewx.ViolatedPrecondition(_msg)
+        select_str = "SELECT dateTime, %(obs_type)s FROM %(table_name)s "\
+                        "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "\
+                        "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s "\
+                        "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND "\
+                        "%(obs_type)s IS NOT NULL"
+        interpolate_dict = {'obs_type'       : obs,
+                            'table_name'     : self.dbm.table_name,
+                            'start'          : span.start,
+                            'stop'           : span.stop}
 
-    def write_summary(self, obs, ts, field, value, cursor=None):
-        """Update a field in an existing daily summary row.
+        _row = self.dbm.getSql(select_str % interpolate_dict)
+        if _row:
+            try:
+                return (_row[0], _row[1])
+            except IndexError:
+                _msg = "'%s' field not found in archive day %s." % (obs, span)
+                raise weewx.ViolatedPrecondition(_msg)
+        else:
+            return (None, None)
 
-        Updates the value of a single field in a row in a daily sumamry table.
+    def write_max(self, obs, row_ts, value, when_ts, cursor=None):
+        """Update the max and maxtime fields in an existing daily summary row.
+
+        Updates the max and maxtime fields in a row in a daily summary table.
 
         Input parameters:
-            obs:    The observation to be used. the daily sumamry updated will 
-                    be xxx_day_obs where xxx is the database archive table name.
-            ts:     Timestamp of the row to be uodated.
-            field:  Name of the field to be updated.
-            value:  The value to be saved
-            cursor: Cursor object for the database connection being used.
+            obs:     The observation to be used. the daily sumamry updated will
+                     be xxx_day_obs where xxx is the database archive table name.
+            row_ts:  Timestamp of the row to be uodated.
+            value:   The value to be saved in field max
+            when_ts: The timestamp to be saved in field maxtime
+            cursor:  Cursor object for the database connection being used.
 
         Returns:
             Nothing.
@@ -357,14 +387,23 @@ class WindSpeedRecalculation(DatabaseFix):
 
         _cursor = cursor or self.dbm.connection.cursor()
 
-        max_update_str = "UPDATE %s_day_%s SET %s=? WHERE datetime=?" % (self.dbm.table_name, 
-                                                                         obs,
-                                                                         field)
-        _cursor.execute(max_update_str, (value, ts))
+        max_update_str = "UPDATE %s_day_%s SET %s=?,%s=? WHERE datetime=?" % (self.dbm.table_name,
+                                                                              obs,
+                                                                              'max',
+                                                                              'maxtime')
+        _cursor.execute(max_update_str, (value, when_ts, row_ts))
         if cursor is None:
             _cursor.close()
 
-            
+    @staticmethod
+    def _progress(ndays, last_time):
+        """Utility function to show our progress while processing the fix."""
+
+        print >>sys.stdout, "Daily summaries fixed: %d; Timestamp: %s\r" % \
+            (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")),
+        sys.stdout.flush()
+
+
 # ============================================================================
 #                          class IntervalWeighting
 # ============================================================================
@@ -383,23 +422,23 @@ class IntervalWeighting(DatabaseFix):
     1.  Create a dictionary of parameters required by the fix. The
     IntervalWeighting class uses the following parameters as indicated:
 
-        patch:          Name of the class defining the fix, for the interval 
+        patch:          Name of the class defining the fix, for the interval
                         weighting fix this is 'Interval Weighting'. String.
                         Mandatory.
 
         binding:        The binding of the database to be fixed. Default is
-                        the binding specified in weewx.conf [StdArchive]. 
+                        the binding specified in weewx.conf [StdArchive].
                         String, eg 'binding_name'. Optional.
 
         vacuum:         Whether to vacuum the database before applying the fix.
-                        SQLite databases only. Boolean, default is False. 
+                        SQLite databases only. Boolean, default is False.
                         Optional.
 
         trans_days:     Number of days to be fixed in each database
                         transaction. Integer, default is 50. Optional.
 
         dry_run:        Process the fix as if it was being applied but do not
-                        write to the database. Boolean, default is True. 
+                        write to the database. Boolean, default is True.
                         Optional.
 
     2.  Create an IntervalWeighting object passing it a weewx config dict and a
@@ -665,7 +704,7 @@ class IntervalWeighting(DatabaseFix):
         start_ts = timestamp if timestamp else self.dbm.first_timestamp
         _days = 0
         _result = True
-        for _day_span in weeutil.weeutil.genDaySpans(start_ts, 
+        for _day_span in weeutil.weeutil.genDaySpans(start_ts,
                                                      self.dbm.last_timestamp):
             _row = self.dbm.getSql("SELECT MIN(`interval`),MAX(`interval`) FROM %s "
                                    "WHERE dateTime > ? AND dateTime <= ?;" % self.dbm.table_name, _day_span)
@@ -714,7 +753,7 @@ class IntervalWeighting(DatabaseFix):
             if _ts:
                 _res = (weeutil.weeutil.min_with_none(_res[0], _ts), _key)
         return _res
-        
+
     def read_metadata(self, metadata):
         """Obtain a metadata value from the archive_day__metadata table.
 
@@ -742,3 +781,20 @@ class IntervalWeighting(DatabaseFix):
                                (metadata, value))
         if cursor is None:
             _cursor.close()
+
+
+#   Include a __main__ to facilitate testing of the windSpeed fix without the 
+#   need for weewx to be running. Usage:
+#
+#       PYTHONPATH=/home/weewx/bin python /home/weewx/bin/weecfg/database.py
+#
+if __name__=="__main__" :
+
+    import weecfg.database
+    import weecfg
+    cp, cd = weecfg.read_config(None)
+    fcd = {'name': 'windSpeed Recalculation',
+           'dry_run': 'False',
+           'trans_days': 200}
+    wind_obj = weecfg.database.WindSpeedRecalculation(cd, fcd)
+    wind_obj.run()
