@@ -1126,7 +1126,7 @@ class DaySummaryManager(Manager):
         Nprefix = len(prefix)
         meta_name = '%s_day__metadata' % self.table_name
         self.daykeys = [x[Nprefix:] for x in all_tables if (x.startswith(prefix) and x != meta_name)]
-        self.version = self._getVersion()
+        self.version = self._read_metadata('Version')
         if weewx.debug:
             assert(self.version is not None)
 
@@ -1641,11 +1641,6 @@ class DaySummaryManager(Manager):
         """Returns the time of the last update to the statistical database."""
         
         return int(self._read_metadata('lastUpdate', cursor))
-    
-    def _getVersion(self, cursor=None):
-        """Returns a string holding the current version number. Returns None if there is no version number.
-        """
-        return self._read_metadata('Version', cursor)
     
     def drop_daily(self):
         """Drop the daily summaries."""
