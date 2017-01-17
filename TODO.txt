@@ -12,7 +12,6 @@ manager.py:
     partially patched daily summary is encountered.
   - Pass appropriate weighting on to accumulators.
   - Remove backfilling code.
-  - Add c 
   - Test partial rebuild of daily summaries on both sqlite and MySQL
 
 wee_database:

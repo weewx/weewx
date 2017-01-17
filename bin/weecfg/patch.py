@@ -187,13 +187,13 @@ class IntervalWeighting(DatabasePatch):
 
         # Check metadata 'Version' value, if its greater than 1.0 we are
         # already patched
-        _daily_summary_version = self.read_metadata('Version')
-        if _daily_summary_version is None or _daily_summary_version < 2.0:
+        _daily_summary_version = self.dbm._read_metadata('Version')
+        if _daily_summary_version is None or _daily_summary_version < '2.0':
             # Get the ts of the (start of the) next day to patch; it's the day
             # after the ts of the last successfully patched daily summary
-            _last_patched_ts = self.read_metadata('lastWeightPatch')
+            _last_patched_ts = self.dbm._read_metadata('lastWeightPatch')
             if _last_patched_ts:
-                _next_day_to_patch_dt = datetime.datetime.fromtimestamp(_last_patched_ts) + datetime.timedelta(days=1)
+                _next_day_to_patch_dt = datetime.datetime.fromtimestamp(int(_last_patched_ts)) + datetime.timedelta(days=1)
                 _next_day_to_patch_ts = time.mktime(_next_day_to_patch_dt.timetuple())
             else:
                 _next_day_to_patch_ts = None
@@ -213,7 +213,7 @@ class IntervalWeighting(DatabasePatch):
                     # a dry run then set the 'Version' metadata field to
                     # indicate we have patched to version 2.0.
                     if not self.dry_run:
-                        self.write_metadata('Version', '2.0')
+                        self.dbm._write_metadata('Version', '2.0')
                 except weewx.ViolatedPrecondition, e:
                     syslog.syslog(syslog.LOG_INFO,
                                   "intervalweighting: **** %s" % e)
@@ -240,7 +240,7 @@ class IntervalWeighting(DatabasePatch):
                     self.dbm.backfill_day_summary()
                     # Set the 'Version' metadata field to indicate we have
                     # patched to version 2.0
-                    self.write_metadata('Version', '2.0')
+                    self.dbm._write_metadata('Version', '2.0')
                     syslog.syslog(syslog.LOG_INFO,
                                   "intervalweighting: Successfully applied '%s' patch." % self.name)
         else:
@@ -308,7 +308,7 @@ class IntervalWeighting(DatabasePatch):
                         # 'lastWeightPatch' value in the archive_day__metadata
                         # table
                         if not self.dry_run:
-                            self.write_metadata('lastWeightPatch',
+                            self.dbm._write_metadata('lastWeightPatch',
                                                 _day_span.start,
                                                 _cursor)
                         # Give the user some information on progress
@@ -471,34 +471,6 @@ class IntervalWeighting(DatabasePatch):
             if _row:
                 _res = (min_with_none((_res[0], _row[0])), _key)
         return _res
-
-    def read_metadata(self, metadata):
-        """Obtain a metadata value from the archive_day__metadata table.
-
-        Returns:
-            Value of the metadata field. Returns None if no value was found.
-        """
-
-        select_patch_str = """SELECT value FROM %s_day__metadata """\
-                              """WHERE name = '%s';"""
-        _row = self.dbm.getSql(select_patch_str % (self.dbm.table_name,
-                                                   metadata))
-        return float(_row[0]) if _row else None
-
-    def write_metadata(self, metadata, value, cursor=None):
-        """Write a value to a metadata field in the archive_day__metadata table.
-
-        Input parameters:
-            metadata: The name of the metadata field to be written to.
-            value:    The value to be written to the metadata field.
-        """
-        _cursor = cursor or self.dbm.connection.cursor()
-
-        meta_replace_str = """REPLACE INTO %s_day__metadata VALUES(?, ?)"""
-        _cursor.execute(meta_replace_str % self.dbm.table_name,
-                               (metadata, value))
-        if cursor is None:
-            _cursor.close()
 
     def do_vacuum(self):
         """Vacuum the database.
