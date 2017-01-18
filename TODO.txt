@@ -1,11 +1,11 @@
              ---- Before the V3.7 release ----
 
 engine.py:
-  - Remove invoking the weighting patch from engine.py
+  - Remove invoking the weighting patch from engine.py. Done commit 579aa3b refers
   - Switch from backfill to rebuild.
 
 patch.py:
-  - Add support for fixing windSpeed.
+  - Add support for fixing windSpeed. Code written, yet to be committed.
   
 manager.py:
   - Be aware of both V1 and V2 daily summaries. Raise exception if a 
