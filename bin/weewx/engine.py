@@ -371,6 +371,7 @@ class StdCalibrate(StdService):
     def new_loop_packet(self, event):
         """Apply a calibration correction to a LOOP packet"""
         for obs_type in self.corrections:
+            if obs_type == 'foo': continue
             try:
                 event.packet[obs_type] = eval(self.corrections[obs_type], None, event.packet)
             except (TypeError, NameError), e:
@@ -384,6 +385,7 @@ class StdCalibrate(StdService):
         # already been applied in the LOOP packet.
         if event.origin != 'software':
             for obs_type in self.corrections:
+                if obs_type == 'foo': continue
                 try:
                     event.record[obs_type] = eval(self.corrections[obs_type], None, event.record)
                 except (TypeError, NameError), e:

@@ -226,7 +226,7 @@ class Accum(dict):
         # The unit system is left unspecified until the first observation comes in.
         self.unit_system = None
         
-    def addRecord(self, record, add_hilo=True):
+    def addRecord(self, record, add_hilo=True, weight=1):
         """Add a record to my running statistics. 
         
         The record must have keys 'dateTime' and 'usUnits'."""
@@ -239,7 +239,7 @@ class Accum(dict):
             # Get the proper function ...
             func = get_add_function(obs_type)
             # ... then call it.
-            func(self, record, obs_type, add_hilo)
+            func(self, record, obs_type, add_hilo, weight)
                             
     def updateHiLo(self, accumulator):
         """Merge the high/low stats of another accumulator into me."""
@@ -288,7 +288,7 @@ class Accum(dict):
     # Begin add functions. These add a record to the accumulator.
     #
             
-    def add_value(self, record, obs_type, add_hilo):
+    def add_value(self, record, obs_type, add_hilo, weight):
         """Add a single observation to myself."""
 
         val = record[obs_type]
@@ -298,13 +298,9 @@ class Accum(dict):
         # Then add to highs/lows, and to the running sum:
         if add_hilo: 
             self[obs_type].addHiLo(val, record['dateTime'])
-        # Now add to the running sums/counts, passing a weight of 'interval' if 
-        # the value is an aggregate over some interval (eg archive record) and 
-        # 1 if its an 'instantaneous' value (eg loop packet)
-        _weight = record['interval'] * 60 if 'interval' in record else 1
-        self[obs_type].addSum(val, weight=_weight)
+        self[obs_type].addSum(val, weight=weight)
 
-    def add_wind_value(self, record, obs_type, add_hilo):
+    def add_wind_value(self, record, obs_type, add_hilo, weight):
         """Add a single observation of type wind to myself."""
 
         if obs_type in ['windDir', 'windGust', 'windGustDir']:
@@ -314,7 +310,7 @@ class Accum(dict):
         
         # First add it to regular old 'windSpeed', then
         # treat it like a vector.
-        self.add_value(record, obs_type, add_hilo)
+        self.add_value(record, obs_type, add_hilo, weight)
         
         # If the type has not been seen before, initialize it
         self._init_type('wind')
@@ -322,14 +318,14 @@ class Accum(dict):
         if add_hilo:
             self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir')), record['dateTime'])
             self['wind'].addHiLo((record.get('windSpeed'), record.get('windDir')), record['dateTime'])
-        self['wind'].addSum((record['windSpeed'], record.get('windDir')))
+        self['wind'].addSum((record['windSpeed'], record.get('windDir')), weight=weight)
         
-    def check_units(self, record, obs_type, add_hilo):  # @UnusedVariable
+    def check_units(self, record, obs_type, add_hilo, weight):  # @UnusedVariable
         if weewx.debug:
             assert(obs_type == 'usUnits')
         self._check_units(record['usUnits'])
 
-    def noop(self, record, obs_type, add_hilo=True):
+    def noop(self, record, obs_type, add_hilo=True, weight=None):
         pass
 
     #
