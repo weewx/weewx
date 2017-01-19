@@ -1352,6 +1352,12 @@ class DaySummaryManager(Manager):
         #
 
         syslog.syslog(syslog.LOG_INFO, "manager: Starting backfill of daily summaries")
+
+        firstRecord= self.firstGoodStamp()
+        if firstRecord is None:
+            # Nothing in the archive database, so there's nothing to do.
+            return (0, 0)
+
         t1 = time.time()
 
         lastUpdate = to_int(self._read_metadata('lastUpdate'))
@@ -1361,7 +1367,7 @@ class DaySummaryManager(Manager):
             # We are either building the daily summary from scratch, or restarting from
             # an aborted build.
             if not start_d:
-                start_ts = lastUpdate or self.firstGoodStamp()
+                start_ts = lastUpdate or firstRecord
                 start_d = datetime.date.fromtimestamp(start_ts)
             if not stop_d:
                 stop_d = datetime.date.fromtimestamp(lastRecord)
@@ -1372,10 +1378,10 @@ class DaySummaryManager(Manager):
             if start_d == stop_d == None:
                 # Nothing to do
                 return (0, 0)
+            if start_d is None:
+                start_d = datetime.date.fromtimestamp(firstRecord)
             if stop_d is None:
                 stop_d = datetime.date.fromtimestamp(lastRecord)
-            if start_d is None:
-                start_d = datetime.date.fromtimestamp(self.firstGoodStamp())
         else:
             raise weewx.ViolatedPrecondition("lastUpdate(%s) > lastRecord(%s)" %
                                              (timestamp_to_string(lastUpdate), 
