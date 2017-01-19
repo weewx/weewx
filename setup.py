@@ -555,7 +555,7 @@ if __name__ == "__main__":
                         'skins/Standard/rss.xml.tmpl',
                         'skins/Standard/satellite.inc',
                         'skins/Standard/skin.conf',
-                        'skins/Standard/weewx.css']),
+                        'skins/Standard/standard.css']),
                       ('skins/Standard/NOAA',
                        ['skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl',
                         'skins/Standard/NOAA/NOAA-YYYY.txt.tmpl']),
