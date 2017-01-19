@@ -21,7 +21,11 @@
 #   pylint: disable-msg=R0915
 # suppress unused arguments   e.g. loader(...,engine)
 #   pylint: disable-msg=W0613
-"""Classes and functions to interfacing with an Oregon Scientific WMR200 station
+"""Classes and functions to interface with an Oregon Scientific WMR200 station
+
+WMR200:
+ - logger
+ - up to 10 channels
 
 Oregon Scientific
   http://us.oregonscientific.com/ulimages/manuals2/WMR200.pdf

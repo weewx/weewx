@@ -10,6 +10,17 @@ is a different beast).
 The wind sensor reports wind speed, wind direction, and wind gust.  It does
 not report wind gust direction.
 
+WMR89:
+ - data logger
+ - up to 3 channels
+ - protocol 3 sensors
+ - THGN800, PRCR800, WTG800
+
+WMR86:
+ - no data logger
+ - protocol 3 sensors
+ - THGR800, WGR800, PCR800, UVN800
+
 The following references were useful for figuring out the WMR protocol:
     
 From Per Ejeklint:
