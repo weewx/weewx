@@ -14,8 +14,6 @@ import syslog
 import sys
 import time
 
-from datetime import datetime as dt
-
 # weewx imports
 import user.extensions      #@UnusedImport
 import weecfg.database
@@ -23,7 +21,7 @@ import weedb
 import weewx.manager
 import weewx.units
 
-from weeutil.weeutil import TimeSpan, timestamp_to_string
+from weeutil.weeutil import TimeSpan
 
 usage = """wee_database --help
        wee_database --create
@@ -110,14 +108,11 @@ def main():
                       action='store_true',
                       help="Rebuild the daily summaries for a database.")
     parser.add_option("--date", dest="date", type=str, metavar="YYYY-mm-dd",
-                      help="Rebuild the daily summaries for this date. Format"
-                      " is YYYY-mm-dd.")
-    parser.add_option("--from", dest="date_from", type=str, metavar="YYYY-mm-dd",
-                      help="Rebuild the daily summaries starting at this date."
-                      " Format is YYYY-mm-dd.")
-    parser.add_option("--to", dest="date_to", type=str, metavar="YYYY-mm-dd",
-                      help="Rebuild the daily summaries up until this date."
-                      " Format is YYYY-mm-dd.")
+                      help="Rebuild the daily summaries for this date only.")
+    parser.add_option("--from", dest="from_date", type=str, metavar="YYYY-mm-dd",
+                      help="Rebuild the daily summaries starting with this date.")
+    parser.add_option("--to", dest="to_date", type=str, metavar="YYYY-mm-dd",
+                      help="Rebuild the daily summaries through this date.")
     parser.add_option("--reconfigure", action='store_true',
                       help="Create a new database using configuration"
                       " information found in the configuration file. In"
@@ -265,8 +260,6 @@ def dropDaily(config_dict, db_binding):
 def rebuildDaily(config_dict, db_binding, options):
     """Rebuild the daily summaries."""
 
-    t1 = time.time()
-
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
                                                               db_binding)
     database_name = manager_dict['database_dict']['database_name']
@@ -274,39 +267,49 @@ def rebuildDaily(config_dict, db_binding, options):
     # how many days per transaction
     trans_days = int(options.trans_days) if options.trans_days else 5
 
+    # determine the period over which we are rebuilding from any command
+    # line date parameters
+    start_d, stop_d = _parse_dates(options)
+    # advise the user/log what we will do
+    if start_d is None and stop_d is None:
+        _msg = "All daily summaries will be rebuilt."
+    elif start_d and not stop_d:
+        _msg = "Daily summaries from %s through the end will be rebuilt." % start_d
+    elif not start_d and stop_d:
+        _msg = "Daily summaries from the begining through date %s will be rebuilt." % stop_d
+    elif start_d == stop_d:
+        _msg = "Daily summary for date %s will be rebuilt" % start_d
+    else:
+        _msg = "Daily summaries from %s through %s inclusive will be rebuilt." % (start_d, stop_d)
+
+    syslog.syslog(syslog.LOG_INFO, _msg)
+    print _msg
+
+    ans = None
+    while ans not in ['y', 'n']:
+        ans = raw_input("Proceed (y/n)? ")
+        if ans == 'y':
+            break
+        elif ans == 'n':
+            print "Nothing done."
+            return
+
+    t1 = time.time()
+
     # Open up the database. This will create the tables necessary for the daily
     # summaries if they don't already exist:
     with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
-        # determine the period over which we are rebuilding from any command
-        # line date parameters
-        start_ts, stop_ts = _parse_dates(options)
-        # advise the user/log what we will do
-        if start_ts is None and stop_ts is None:
-            start_ts = dbmanager.firstGoodStamp()
-            stop_ts = dbmanager.lastGoodStamp()
-            syslog.syslog(syslog.LOG_INFO, "All daily summaries will be rebuilt")
-            print "All daily summaries will be rebuilt"
-        else:
-            if options.date:
-                _msg = "Daily summaries for %s only will be rebuilt" % (timestamp_to_string(start_ts,
-                                                                                            '%Y-%m-%d'))
-                syslog.syslog(syslog.LOG_INFO, _msg)
-                print _msg
-            if options.date_from:
-                _msg = "Daily summaries from %s to %s inclusive" % (timestamp_to_string(start_ts, '%Y-%m-%d'),
-                                                                    timestamp_to_string(stop_ts-1, '%Y-%m-%d'))
-                _msg2 = "will be rebuilt"
-                syslog.syslog(syslog.LOG_INFO, _msg + " " + _msg2)
-                print _msg
-                print _msg2
 
         syslog.syslog(syslog.LOG_INFO, "Rebuilding daily summaries in database '%s' ..." % database_name)
         print "Rebuilding daily summaries in database '%s' ..." % database_name
-        # now do the actual rebuild
-        nrecs, ndays = dbmanager.backfill_day_summary(trans_days=trans_days,
-                                                      start_ts=start_ts,
-                                                      stop_ts=stop_ts,
-                                                      rebuild=True)
+        if options.dry_run:
+            print "Dry run. Nothing done."
+            return
+        else:
+            # now do the actual rebuild
+            nrecs, ndays = dbmanager.backfill_day_summary(start_d=start_d,
+                                                          stop_d=stop_d,
+                                                          trans_days=trans_days)
     tdiff = time.time() - t1
     # advise the user/log what we did
     syslog.syslog(syslog.LOG_INFO, "Rebuild of daily summaries in database '%s' complete" % database_name)
@@ -751,82 +754,51 @@ def check_strings(config_dict, db_binding, options, fix=False):
 def _parse_dates(options):
     """Parse --date, --from and --to command line options.
 
-        Any --date, --from and --to command line options need to be processed
-        to derive a start and stop timestamp for any daily summary rebuild.
-        DaySummaryManager.backfill_day_summary() accepts two timestamps;
-        start_ts and stop_ts. Archive records timestamped greater than start_ts
-        and less than or equal to stop_ts will be used in the rebuild.
-        Therefore it is safe to return timestamps on the midnight boundary.
-
-        If --date is specified then --to and --from are ignored. If --date is
-        not specified then --from and --to are used. An invalid date will
-        raise a ValueError.
-
         Inputs:
             options: the optparse options
 
-        Returns:
-            start_ts: Timestamp of the first archive record to be used for
-                      rebuild. May be None.
-            stop_ts:  Timestamp of the last archive record to be used for
-                      rebuild. May be None.
+        Returns: A two-way tuple (start_d, stop_d), where 
+            start_d: A datetime.date object holding the first date. May be None
+            stop_d:  A dateimte.date object holding the last date. May be None
     """
 
-    # First we see if we have a valid --date, if not then we look for
-    # --from and --to.
-    if options.date or options.date == "":
+    # Default is None, unless user has specified an option        
+    _first_d = None
+    _last_d = None
+
+    if options.date:
+        # Make sure we are not overspecified
+        if options.from_date or options.to_date:
+            raise ValueError("Specify either --date or a --from and --to combination; not both")
+
         # there is a --date but is it valid
         try:
-            _first_dt = dt.strptime(options.date, "%Y-%m-%d")
+            _first_d = datetime.datetime.strptime(options.date, "%Y-%m-%d").date()
         except ValueError:
-            # Could not convert --date. If we have a --date it must be
-            # valid otherwise we can't continue so raise it.
-            _msg = "Invalid --date option specified."
-            raise ValueError(_msg)
+            raise ValueError("Invalid --date option specified.")
         else:
-            # we have a valid date so do some date arithmetic
-            _last_dt = _first_dt + datetime.timedelta(days=1)
-            return (int(time.mktime(_first_dt.timetuple())),
-                    int(time.mktime(_last_dt.timetuple())))
-    elif options.date_from or options.date_to or options.date_from == '' or options.date_to == '':
-        # There is a --from and/or a --to, but do we have both and are
-        # they valid.
-        # try --from first
+            _last_d = _first_d
+            return (_first_d, _last_d)
+
+    if options.from_date:
         try:
-            _from_dt = dt.strptime(options.date_from, "%Y-%m-%d")
-            _from_ts = int(time.mktime(_from_dt.timetuple()))
-        except TypeError:
-            # --from not specified we can't continue so raise it
-            _msg = "Missing --from option. Both --from and --to must be specified."
-            raise TypeError(_msg)
+            _first_d = datetime.datetime.strptime(options.from_date, "%Y-%m-%d").date()
         except ValueError:
-            # could not convert --from, we can't continue so raise it
-            _msg = "Invalid --from option."
-            raise ValueError(_msg)
-        # try --to
+            raise ValueError("Invalid --from option specified.")
+    
+    if options.to_date:
         try:
-            _to_dt = dt.strptime(options.date_to, "%Y-%m-%d")
-            # since it is just a date we want the end of the day
-            _to_dt += datetime.timedelta(days=1)
-            _to_ts = int(time.mktime(_to_dt.timetuple()))
-        except TypeError:
-            # --to not specified , we can't continue so raise it
-            _msg = "Missing --to option. Both --from and --to must be specified."
-            raise TypeError(_msg)
+            _last_d = datetime.datetime.strptime(options.to_date, "%Y-%m-%d").date()
         except ValueError:
-            # could not convert --to, we can't continue so raise it
-            _msg = "Invalid --to option."
-            raise ValueError(_msg)
-        # If we made it here we have a _from_ts and _to_ts. Do a simple
-        # error check first.
-        if _from_ts > _to_ts:
-            # from is later than to, raise it
-            _msg = "--from value is later than --to value."
-            raise weewx.ViolatedPrecondition(_msg)
-        return (_from_ts, _to_ts)
-    else:
-        # no --date or --from/--to so we take the default, set all to None
-        return (None, None)
+            raise ValueError("Invalid --to option specified.")
+
+    if _first_d and _last_d:
+        # If both --from and --to have been specified, make sure the latter is greater
+        # than the former
+        if _last_d < _first_d:
+            raise weewx.ViolatedPrecondition("--from value is later than --to value.")
+
+    return (_first_d, _last_d)
 
 
 if __name__=="__main__" :

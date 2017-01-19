@@ -1394,7 +1394,6 @@ class DaySummaryManager(Manager):
                 # daily summaries
                 start_batch = time.mktime(start_d.timetuple())
                 stop_batch  = time.mktime((stop_transaction + datetime.timedelta(days=1)).timetuple())
-                print "-----batch runs from", datetime.datetime.fromtimestamp(start_batch), "to", datetime.datetime.fromtimestamp(stop_batch)
                 for rec in self.genBatchRecords(start_batch, stop_batch):
                     # If this is the very first record, fetch a new accumulator
                     if not day_accum:
@@ -1412,7 +1411,6 @@ class DaySummaryManager(Manager):
                         # Save the old accumulator:
                         self._set_day_summary(day_accum, None, cursor)
                         ndays += 1
-                        print "writing day ", ndays, day_accum.timespan
                         # Get a new accumulator:
                         timespan = weeutil.weeutil.archiveDaySpan(rec['dateTime'])
                         day_accum = weewx.accum.Accum(timespan)
@@ -1428,7 +1426,6 @@ class DaySummaryManager(Manager):
                 if day_accum and not day_accum.isEmpty:
                     self._set_day_summary(day_accum, None, cursor)
                     ndays += 1
-                    print "Finish ", ndays, day_accum.timespan
                 # Patch lastUpdate:
                 if lastUpdate:
                     self._write_metadata('lastUpdate', str(int(lastUpdate)), cursor)
