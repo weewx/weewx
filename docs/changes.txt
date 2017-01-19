@@ -120,6 +120,8 @@ will be logged.
 
 Added debug logging to indicate when calibrations are ignored.
 
+Added write timeout to ultimeter driver to better report serial issues.
+
 
 3.6.2 11/08/2016
 
