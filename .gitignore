@@ -12,3 +12,4 @@ junk*
 *.user
 *.pyproj
 *.suo
+.DS_Store

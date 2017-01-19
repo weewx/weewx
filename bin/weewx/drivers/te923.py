@@ -445,7 +445,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.22'
+DRIVER_VERSION = '0.23'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -1257,9 +1257,6 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         packet['windGust'] = data.get('windgust')
         if packet['windGust'] is not None:
             packet['windGust'] *= 1.60934 # speed is mph; weewx wants km/h
-        packet['windGustDir'] = data.get('winddir')
-        if packet['windGustDir'] is not None:
-            packet['windGustDir'] *= 22.5 # weewx wants degrees
 
         packet['rainTotal'] = data['rain']
         if packet['rainTotal'] is not None:

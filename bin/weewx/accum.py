@@ -257,12 +257,18 @@ class Accum(dict):
         record = {'dateTime': self.timespan.stop,
                   'usUnits' : self.unit_system}
         
+        return self.augmentRecord(record)
+    
+    def augmentRecord(self, record):
+        
         # Go through all observation types.
         for obs_type in self:
-            # Get the proper extraction function...
-            func = extract_dict.get(obs_type, Accum.avg_extract)
-            # ... then call it
-            func(self, record, obs_type)
+            # If the type does not appear in the record, then add it:
+            if obs_type not in record:
+                # Get the proper extraction function...
+                func = extract_dict.get(obs_type, Accum.avg_extract)
+                # ... then call it
+                func(self, record, obs_type)
 
         return record
 

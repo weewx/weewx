@@ -3,15 +3,84 @@ weewx change history
 
 x.y.z MM/dd/YYYY
 
+The tag $current now uses the record included in the event NEW_ARCHIVE_RECORD,
+rather than retrieve the last record from the database. This means you can
+use the tag $current for observation types that are in the record, but not
+necessarily in the database. Fixes issue #13.
+
+When doing hardware record generation, the engine now augments the record with
+any additional observation types it can extract out of the accumulators.
+Fixes issue #15.
+
+It's now possible to iterate over every record within a timespan.
+Fixes issue #182.
+
 Use schema_name = hardware_name pattern in sensor map for drivers that support
-extensible sensor suites, including the drivers for cc3000, wmr300
+extensible sensor suites, including the drivers for cc3000, te923, wmr300,
+wmr100, wmr200, wmr9x8
 
 Report the firmware version when initializing the cc3000 driver.
 
 Fixed usb initialization issues in the wmr300 driver.
 
+Fixed bug in vantage driver that would prevent console wake up during
+retries when fetching EEPROM vales. Thanks to user Dan Begallie!
+
 The engine now logs locale. Additional information if a TERM signal is 
 received.
+
+Removed the site-specific "Pond" extensions from the Standard skin.
+
+The Standard skin now includes plots of outside humidity. Fixes 
+issue #181.
+
+Fixed reference to index.html.tmpl in the xstats example.
+
+Changed algorithm for calculating ET to something more appropriate for
+hourly values (former algorithm assumed daily values). Fixes issue #160.
+
+Fixed bug that was introduced in v3.6.0, which prevented wee_reports from
+working for anything other than the current time.
+
+Documented the experimental anti-alias feature, which has been in weewx
+since v3.1.0. Fixes issue #6.
+
+Can now do SummaryByDay (as well as SummaryByMonth and SummaryByYear).
+NB: This can generate *lots* of files --- one for every day in your database!
+Leaving this undocumented for now. Fixes issue #185.
+
+Fixed problem where multiple subsections under [SummaryBy...] stanzas could
+cause multiple copies of their target date to be included in the Cheetah
+variable $SummaryByYear and $SummaryByMonth. Fixes issue #187.
+
+Moved examples out of bin directory.  Eliminated experimental directory.
+Reinforce the use of user directory, eliminate use of examples directory.
+Renamed xsearch.py to stats.py.
+
+OS uptime now works for freeBSD. Thanks to user Bill Richter!
+PR #188.
+
+Broke out developer's notes into a separate document.
+
+Added @media CSS for docs to improve printed/PDF formatting.  Thanks to user
+Tiouck!
+
+Added warning in wmr300 driver when rain counter reaches maximum value.
+
+Added a 0.01 second delay after each read_byte in ws23xx driver to reduce
+chance of data spikes caused by RS232 line contention.  Thanks lionel.sylvie!
+
+The observation windGustDir has been removed from wmr100, wmr200, te923, and
+fousb drivers.  These drivers were simply assigning windGustDir to windDir,
+since none of the hardware reports an actual windGustDir.  For hardware that
+does not report a windGustDir, weewx will calculate windGustDir at each archive
+interval when it accumulates an archive record.
+
+Timespan tags of $last_hour, $last_day, $last_week, $last_month and $last_year
+have been added. The $span timespan tag now accepts $month_delta and $year_delta.
+
+Timespan iterator .spans(interval=seconds) has been added to allow to iterate 
+over custom spans within a tag timespan.
 
 
 3.6.2 11/08/2016

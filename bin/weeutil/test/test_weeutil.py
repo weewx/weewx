@@ -108,6 +108,16 @@ class WeeutilTest(unittest.TestCase):
                                                                (1383462000, 1383476400),(1383476400, 1383487200),
                                                                (1383487200, 1383498000),(1383498000, 1383508800)]):
             self.assertEqual(s, TimeSpan(check_s[0], check_s[1]))
+
+        # Test roundTS = True
+        start = time.mktime((2017,1,14,10,38,35,0,0,-1))
+        stop  = time.mktime((2017,1,15,10,37,36,0,0,-1))
+        for s, check_s in zip(intervalgen(start, stop, 10800, True), [(1484413200, 1484424000), (1484424000, 1484434800), 
+                                                                      (1484434800, 1484445600), (1484445600, 1484456400),
+                                                                      (1484456400, 1484467200), (1484467200, 1484478000),
+                                                                      (1484478000, 1484488800), (1484488800, 1484499600), 
+                                                                      (1484499600, 1484510400)]):
+            self.assertEqual(s, TimeSpan(check_s[0], check_s[1]))
     
     def test_archiveHoursAgoSpan(self):
         os.environ['TZ'] = 'America/Los_Angeles'
