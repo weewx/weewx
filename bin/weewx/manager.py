@@ -8,6 +8,7 @@ from __future__ import with_statement
 import math
 import syslog
 import sys
+import datetime
 import time
 
 import weewx.accum
@@ -15,6 +16,7 @@ from weewx.units import ValueTuple
 import weewx.units
 import weeutil.weeutil
 import weedb
+from weeutil.weeutil import timestamp_to_string, isMidnight, to_int
 
 #==============================================================================
 #                         class Manager
@@ -1197,9 +1199,9 @@ class DaySummaryManager(Manager):
         # We can use the day summary optimizations if the starting and ending times of
         # the aggregation interval sit on midnight boundaries, or are the first or last
         # records in the database.
-        if aggregate_type in ['last', 'lasttime'] or not (weeutil.weeutil.isMidnight(timespan.start) or \
+        if aggregate_type in ['last', 'lasttime'] or not (isMidnight(timespan.start) or \
                                                           timespan.start == self.first_timestamp) \
-                                                  or not (weeutil.weeutil.isMidnight(timespan.stop)  or \
+                                                  or not (isMidnight(timespan.stop)  or \
                                                           timespan.stop  == self.last_timestamp):
             
             # Cannot use the day summaries. We'll have to calculate the aggregate
@@ -1300,278 +1302,149 @@ class DaySummaryManager(Manager):
 
         return self.exists(obs_type) and self.getAggregate(timespan, obs_type, 'count')[0] != 0
 
-#     def backfill_day_summary(self, start_ts=None, stop_ts=None, 
-#                              progress_fn=show_progress, trans_days=5, rebuild=False):
-#         """Fill the statistical database from an archive database.
-#          
-#         Normally, the daily summaries get filled by LOOP packets (to get maximum time
-#         resolution), but if the database gets corrupted, or if a new user is
-#         starting up with imported wview data, it's necessary to recreate it from
-#         straight archive data. The Hi/Lows will all be there, but the times won't be
-#         any more accurate than the archive period.
-#          
-#         To help prevent database errors for large archives database transactions 
-#         are limited to trans_days days of archive data. This is a trade-off between 
-#         speed and memory usage.
-#          
-#         start_ts: Archive data with a timestamp greater than this will be
-#         used. [Optional. Default is to start with the first datum in the archive.]
-#          
-#         stop_ts: Archive data with a timestamp less than or equal to this will be
-#         used. [Optional. Default is to end with the last datum in the archive.]
-#          
-#         progress_fn: This function will be called after processing every 1000 records.
-#          
-#         trans_day: Number of days of archive data to be used for each daily summaries database transaction. [Optional. Default is 5.] 
-#          
-#         rebuild: Whether individual daily summary rows are being rebuilt from 
-#         scratch (eg wee_database --rebuild-daily) or added to (eg during catchup 
-#         as part of normal weewx startup). [Optional. Default is False.]
-#          
-#         returns: A 2-way tuple (nrecs, ndays) where 
-#           nrecs is the number of records backfilled;
-#           ndays is the number of days
-#         """
-#          
-#         syslog.syslog(syslog.LOG_INFO, "manager: Starting backfill of daily summaries")
-#         t1 = time.time()
-#          
-#         nrecs = 0
-#         ndays = 0
-#          
-#         _day_accum = None
-#         _lastTime  = None
-#          
-#         # If a start time for the backfill wasn't given, then start with the time of
-#         # the last statistics recorded:
-#         tranche_start_ts = start_ts or self._getLastUpdate()
-#         # Calculate the stop time for our first tranche of data
-#         if tranche_start_ts:
-#             # have a start ts so we stop trans_days after the start of archive 
-#             # day containing our start ts
-#             tranche_stop_ts = weeutil.weeutil.startOfArchiveDay(tranche_start_ts) + \
-#                 trans_days * 86400
-#         else:
-#             # don't have a start ts; could be because there are no archive 
-#             # records or there are no daily summaries
-#             if self.firstGoodStamp():
-#                 # we have archive records but don't know how many so set a stop ts
-#                 tranche_stop_ts = weeutil.weeutil.startOfArchiveDay(self.firstGoodStamp()) + \
-#                     trans_days * 86400
-#             else:
-#                 # we have no archive records so set our stop ts to None and let 
-#                 # weewx take its course
-#                 tranche_stop_ts = None
-#         # If we have a stop time then make sure our tranche does not go past it
-#         if stop_ts:
-#             tranche_stop_ts = min(stop_ts, tranche_stop_ts)
-#         
-#         while True:
-#             with weedb.Transaction(self.connection) as _cursor:
-#                 # Go through all the archive records in the tranche, adding 
-#                 # them to the accumulator and then the daily summary tables
-#                 start = tranche_start_ts + 1 if tranche_start_ts else None
-#                 for _rec in self.genBatchRecords(start, tranche_stop_ts):
-#                     # Get the start-of-day for the record:
-#                     _sod_ts = weeutil.weeutil.startOfArchiveDay(_rec['dateTime'])
-#                     # If this is the very first record, fetch a new accumulator
-#                     if not _day_accum:
-#                         if not rebuild:
-#                             _day_accum = self._get_day_summary(_sod_ts)
-#                         else:
-#                             _timespan = weeutil.weeutil.archiveDaySpan(_sod_ts,0)
-#                             _day_accum = weewx.accum.Accum(_timespan)
-#                     # Calculate the weighting
-#                     _weight = self._calc_weight(_rec)
-#                     # Try updating. If the time is out of the accumulator's time 
-#                     # span, an exception will get raised.
-#                     try:
-#                         _day_accum.addRecord(_rec, weight=_weight)
-#                     except weewx.accum.OutOfSpan:
-#                         # The record is out of the time span.
-#                         # Save the old accumulator:
-#                         self._set_day_summary(_day_accum, _rec['dateTime'], _cursor)
-#                         ndays += 1
-#                         # Get a new accumulator:
-#                         if not rebuild:
-#                             _day_accum = self._get_day_summary(_sod_ts)
-#                         else:
-#                             _timespan = weeutil.weeutil.archiveDaySpan(_sod_ts,0)
-#                             _day_accum = weewx.accum.Accum(_timespan)
-#                         # try again
-#                         _day_accum.addRecord(_rec, weight=_weight)
-#                       
-#                     # Remember the timestamp for this record.
-#                     _lastTime = _rec['dateTime']
-#                     nrecs += 1
-#                     if progress_fn and nrecs%1000 == 0:
-#                         progress_fn(nrecs, _lastTime)
-#          
-#                 # Tranche complete; but are we done?
-#                 if tranche_stop_ts:
-#                     if tranche_stop_ts >= max(stop_ts, self.lastGoodStamp()):
-#                         # We had a stop time and we have reached it so we are done
-#                         # First record the daily summary for the last day then break
-#                         if _day_accum:
-#                             self._set_day_summary(_day_accum, _lastTime, _cursor)
-#                             ndays += 1
-#                         break
-#                 else:
-#                     # we had no stop time so we are done, break out of the loop
-#                     break
-#             # Still have more tranches to do so get the start and stop times of 
-#             # our next tranche
-#             tranche_start_ts = tranche_stop_ts
-#             tranche_stop_ts = weeutil.weeutil.startOfArchiveDay(tranche_start_ts + 1) + \
-#                 trans_days * 86400
-#             # If we have a stop time then make sure the next tranche does not go
-#             # past it
-#             if stop_ts:
-#                 tranche_stop_ts = min(stop_ts, tranche_stop_ts)
-#         tdiff = time.time() - t1
-#         if nrecs:
-#             syslog.syslog(syslog.LOG_INFO, 
-#                           "manager: Processed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
-#         else:
-#             syslog.syslog(syslog.LOG_INFO,
-#                           "manager: Daily summaries up to date")
-#          
-#         return (nrecs, ndays)
-
-    def backfill_day_summary(self, progress_fn=show_progress):
+    def backfill_day_summary(self, start_d=None, stop_d=None,
+                             progress_fn=show_progress, trans_days=5):
         
-        last_added = self._read_metadata('lastUpdate')
-        if last_added is None:
-            syslog.syslog(syslog.LOG_INFO, "manager: No daily summaries yet. Building...")
-            t1 = time.time()
-            nrecs, ndays = self.rebuild_days(progress_fn=progress_fn)
-            t2 = time.time()
-            syslog.syslog(syslog.LOG_INFO, "manager: Build of daily summaries complete.")
-            syslog.syslog(syslog.LOG_INFO, " ****    %d records and %d days in %.1f seconds" (nrecs, ndays, t2-t1))
-        else:
-            last_archive= self.lastGoodStamp()
-            if last_added < last_archive:
-                syslog.syslog(syslog.LOG_ERR, "manager: Daily summaries not up to date (%d vs %d)" % (last_added, last_archive))
-                syslog.syslog(syslog.LOG_ERR, " ****    Please notify us weewx-user@googlegroups.com, including this log")
-                syslog.syslog(syslog.LOG_ERR, " ****    Attempting recovery...")
-                start_greg = weeutil.weeutil.toGregorianDay(last_added)
-                nrecs, ndays = self.rebuild_days(start_greg=start_greg, progress_fn=progress_fn)
-                syslog.syslog(syslog.LOG_ERR, " ****    ...recovery complete")
-            else:
-                nrecs = ndays = 0
-        return (nrecs, ndays)
-
-    def rebuild_days(self, start_greg=None, stop_greg=None, progress_fn=show_progress, trans_days=10):
-        """Rebuild the daily summary for a set of inclusive days in a single transaction.
-        
-        start_greg: The starting day of the rebuild, as a Gregorian ordinal. If set to None,
-        then start with the first day in the archive.
-        
-        stop_greg: The stopping day of the rebuild, as a Gregorian ordinal. If set to None,
-        then end with the last day in the archive.
-        
-        progress_fn: This function will be called after every transaction tranche.
-        
-        trans_day: Number of days of archive data to be used for each daily summaries
-        database transaction tranche. [Optional. Default is 10.] 
-
-        returns: A 2-way tuple (nrecs, ndays) where 
-          nrecs is the number of records rebuilt;
-          ndays is the number of days"""
+        """Fill the daily summaries from an archive database.
           
-        if start_greg is None:
-            start_greg = weeutil.weeutil.toGregorianDay(self.firstGoodStamp())
-        if stop_greg is None:
-            stop_greg = weeutil.weeutil.toGregorianDay(self.lastGoodStamp())
-        
-        day = start_greg
-        nrecs = ndays = 0
-        while day <= stop_greg:
-            dr, dd = self._rebuild_tranche(day, day + trans_days - 1, progress_fn=None)
-            if dr == 0:
-                break
-            nrecs += dr
-            ndays += dd
-            day += trans_days
-            if progress_fn:
-                progress_fn(nrecs, weeutil.weeutil.startOfGregorianDay(day))
-        return (nrecs, ndays)
-
-    def _rebuild_tranche(self, start_greg, stop_greg, progress_fn=show_progress):
-        """Rebuild the daily summary for a set of inclusive days in a single transaction.
-        
-        start_greg: The starting day of the rebuild, as a Gregorian ordinal. If set to None,
-        then start with the first day in the archive.
-        
-        stop_greg: The stopping day of the rebuild, as a Gregorian ordinal. If set to None,
-        then end with the last day in the archive.
-        
+        Normally, the daily summaries get filled by LOOP packets (to get maximum time
+        resolution), but if the database gets corrupted, or if a new user is
+        starting up with imported wview data, it's necessary to recreate it from
+        straight archive data. The Hi/Lows will all be there, but the times won't be
+        any more accurate than the archive period.
+          
+        To help prevent database errors for large archives database transactions 
+        are limited to trans_days days of archive data. This is a trade-off between 
+        speed and memory usage.
+          
+        start_d: The first day to be included, specified as a datetime.date object
+        [Optional. Default is to start with the first datum in the archive.]
+          
+        stop_d: The last day to be included, specified as a datetime.date object
+        [Optional. Default is to include the date of the last archive record.]
+          
         progress_fn: This function will be called after processing every 1000 records.
-        
+          
+        trans_day: Number of days of archive data to be used for each daily
+        summaries database transaction. [Optional. Default is 5.] 
+          
         returns: A 2-way tuple (nrecs, ndays) where 
-          nrecs is the number of records rebuilt;
-          ndays is the number of days"""
-        
-        if self.version < '2.0':
-            raise weewx.ViolatedPrecondition("Need >= V2.0 for rebuild of daily summaries. You have '%s'" % self.version)
+          nrecs is the number of records backfilled;
+          ndays is the number of days
+        """
+        # Table of actions.
+        #
+        # State                  start_ts    stop_ts     Action
+        # -----                  --------    -------     ------
+        # lastUpdate==None       any         any         No summary. Rebuild all
+        # lastUpdate <lastRecord any         any         Aborted rebuild. lastUpdate should 
+        #                                                be on day boundary. Restart from there.
+        # lastUpdate==lastRecord None        None        No action.
+        #          ""            X           None        Rebuild from X to end
+        #          ""            None        Y           Rebuild from beginning through Y, inclusively
+        #          ""            X           Y           Rebuild from X through Y, inclusively
+        #
+        # Definitions:
+        #   lastUpdate: last update to the daily summary
+        #   lastRecord: last update to the archive table
+        #   X:          A start time that falls on a day boundary
+        #   Y:          A stop  time that falls on a day boundary
+        #
 
+        syslog.syslog(syslog.LOG_INFO, "manager: Starting backfill of daily summaries")
+        t1 = time.time()
+
+        lastUpdate = to_int(self._read_metadata('lastUpdate'))
+        lastRecord = self.last_timestamp
+        
+        if lastUpdate is None or lastUpdate < lastRecord:
+            # We are either building the daily summary from scratch, or restarting from
+            # an aborted build.
+            if not start_d:
+                start_ts = lastUpdate or self.firstGoodStamp()
+                start_d = datetime.date.fromtimestamp(start_ts)
+            if not stop_d:
+                stop_d = datetime.date.fromtimestamp(lastRecord)
+                
+        elif lastUpdate == lastRecord:
+            # This is the normal state of affairs. If a value for start_d or stop_d
+            # has been passed in, a rebuild has been requested.
+            if start_d == stop_d == None:
+                # Nothing to do
+                return (0, 0)
+            if stop_d is None:
+                stop_d = datetime.date.fromtimestamp(lastRecord)
+            if start_d is None:
+                start_d = datetime.date.fromtimestamp(self.firstGoodStamp())
+        else:
+            raise weewx.ViolatedPrecondition("lastUpdate(%s) > lastRecord(%s)" %
+                                             (timestamp_to_string(lastUpdate), 
+                                              timestamp_to_string(lastRecord)))
+    
         nrecs = 0
         ndays = 0
-        
-        _day_accum = None
-        
-        if start_greg is None:
-            start_ts = None
-        else:
-            start_ts = weeutil.weeutil.startOfGregorianDay(start_greg)
-        if stop_greg is None:
-            stop_ts = None
-        else:
-            stop_ts = weeutil.weeutil.startOfGregorianDay(stop_greg + 1)
-        
-        with weedb.Transaction(self.connection) as _cursor:
-            _maxTime = self._getLastUpdate()
-            # Go through all the archive records in the time span, adding them to the
-            # daily summaries
-            for _rec in self.genBatchRecords(start_ts, stop_ts):
-                # If this is the very first record, fetch a new accumulator
-                if not _day_accum:
-                    # Get a TimeSpan that include's the record's timestamp:
-                    _timespan = weeutil.weeutil.archiveDaySpan(_rec['dateTime'])
-                    # Get an empty day accumulator:
-                    _day_accum = weewx.accum.Accum(_timespan)
-                _weight = self._calc_weight(_rec)
-                # Try updating. If the time is out of the accumulator's time span, an
-                # exception will get raised.
-                try:
-                    _day_accum.addRecord(_rec, weight=_weight)
-                except weewx.accum.OutOfSpan:
-                    # The record is out of the time span.
-                    # Save the old accumulator:
-# TODO: Is passing on setting the last update really necessary here?
-                    self._set_day_summary(_day_accum, None, _cursor)
+         
+        while start_d <= stop_d:
+            # Calculate the last date included in this transaction
+            stop_transaction = min(stop_d, start_d + datetime.timedelta(days=(trans_days-1)))
+            day_accum = None
+
+            with weedb.Transaction(self.connection) as cursor:
+                # Go through all the archive records in the time span, adding them to the
+                # daily summaries
+                start_batch = time.mktime(start_d.timetuple())
+                stop_batch  = time.mktime((stop_transaction + datetime.timedelta(days=1)).timetuple())
+                print "-----batch runs from", datetime.datetime.fromtimestamp(start_batch), "to", datetime.datetime.fromtimestamp(stop_batch)
+                for rec in self.genBatchRecords(start_batch, stop_batch):
+                    # If this is the very first record, fetch a new accumulator
+                    if not day_accum:
+                        # Get a TimeSpan that include's the record's timestamp:
+                        timespan = weeutil.weeutil.archiveDaySpan(rec['dateTime'])
+                        # Get an empty day accumulator:
+                        day_accum = weewx.accum.Accum(timespan)
+                    weight = self._calc_weight(rec)
+                    # Try updating. If the time is out of the accumulator's time span, an
+                    # exception will get raised.
+                    try:
+                        day_accum.addRecord(rec, weight=weight)
+                    except weewx.accum.OutOfSpan:
+                        # The record is out of the time span.
+                        # Save the old accumulator:
+                        self._set_day_summary(day_accum, None, cursor)
+                        ndays += 1
+                        print "writing day ", ndays, day_accum.timespan
+                        # Get a new accumulator:
+                        timespan = weeutil.weeutil.archiveDaySpan(rec['dateTime'])
+                        day_accum = weewx.accum.Accum(timespan)
+                        # try again
+                        day_accum.addRecord(rec, weight=weight)
+                      
+                    lastUpdate = max(lastUpdate, rec['dateTime']) if lastUpdate else rec['dateTime']
+                    nrecs += 1
+                    if progress_fn and nrecs % 1000 == 0:
+                        progress_fn(nrecs, rec['dateTime'])
+         
+                # We're done with this transaction. Record the daily summary for the last day unless it is empty
+                if day_accum and not day_accum.isEmpty:
+                    self._set_day_summary(day_accum, None, cursor)
                     ndays += 1
-                    # Get a new accumulator:
-                    _timespan = weeutil.weeutil.archiveDaySpan(_rec['dateTime'])
-                    _day_accum = weewx.accum.Accum(_timespan)
-                    # try again
-                    _day_accum.addRecord(_rec, weight=_weight)
-                 
-                _maxTime = max(_maxTime, _rec['dateTime']) if _maxTime else _rec['dateTime']
-                nrecs += 1
-                if progress_fn and nrecs % 1000 == 0:
-                    progress_fn(nrecs, _rec['dateTime'])
-    
-            # We're done. Record the daily summary for the last day unless it is empty
-            if _day_accum and not _day_accum.isEmpty:
-                self._set_day_summary(_day_accum, None, _cursor)
-                ndays += 1
-            # Patch lastUpdate:
-            if _maxTime:
-                self._write_metadata('lastUpdate', str(int(_maxTime)), _cursor)
+                    print "Finish ", ndays, day_accum.timespan
+                # Patch lastUpdate:
+                if lastUpdate:
+                    self._write_metadata('lastUpdate', str(int(lastUpdate)), cursor)
+                
+            # Advance
+            start_d += datetime.timedelta(days=trans_days)
+
+        tdiff = time.time() - t1             
+        if nrecs:
+            syslog.syslog(syslog.LOG_INFO, 
+                          "manager: Processed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
+        else:
+            syslog.syslog(syslog.LOG_INFO,
+                          "manager: Daily summaries up to date")
         
         return (nrecs, ndays)
-
 
     #--------------------------- UTILITY FUNCTIONS -----------------------------------
 
@@ -1698,9 +1571,11 @@ if __name__ == '__main__':
     import configobj
     config_dict = configobj.ConfigObj('/home/weewx/weewx.conf')
     mgr = open_manager_with_config(config_dict, 'wx_binding', initialize=True)
-    start_greg = 736331
+    start_d = datetime.date(2016,10,1)
+    stop_d = datetime.date(2016,10,8)
     t1 = time.time()
-    nrecs, ndays = mgr.rebuild_days(None, None)
+#     nrecs, ndays = mgr.backfill_day_summary(start_d, stop_d)
+    nrecs, ndays = mgr.backfill_day_summary(None, None)
     t2 = time.time()
     print nrecs, ndays, t2-t1
     
