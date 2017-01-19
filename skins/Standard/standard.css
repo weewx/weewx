@@ -148,7 +148,7 @@ table.stats th {
 }
 
 .widget img {
-    width: 400px;
+    width: 600px;
     border: 1px solid #aaaaaa;
     margin-top: 4px;
 }
@@ -177,7 +177,8 @@ table.celestial th {
 }
 
 #history_widget img {
-    border: 1px solid #aaaaaa;
+    border: none;
+    margin-bottom: 10px;
 }
 
 #history_widget.widget_title {
