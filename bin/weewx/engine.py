@@ -616,6 +616,10 @@ class StdArchive(StdService):
         dbmanager = self.engine.db_binder.get_manager(self.data_binding, initialize=True)
         syslog.syslog(syslog.LOG_INFO, "engine: Using binding '%s' to database '%s'" % (self.data_binding, dbmanager.database_name))
         
+        # Make sure the daily summaries have not been partially updated
+        if dbmanager._read_metadata('lastWeightPatch'):
+            raise weewx.ViolatedPrecondition("This daily summary has been partially updated. Finish the update first.")
+        
         # Back fill the daily summaries.
         _nrecs, _ndays = dbmanager.backfill_day_summary() # @UnusedVariable
 
