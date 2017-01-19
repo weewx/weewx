@@ -17,7 +17,6 @@ import time
 # weewx imports
 import weedb
 import weeutil.weeutil
-import weewx
 import weewx.manager
 
 from weeutil.weeutil import timestamp_to_string, startOfDay, tobool
@@ -530,13 +529,13 @@ class IntervalWeighting(DatabaseFix):
                     syslog.syslog(syslog.LOG_INFO,
                                   "intervalweighting: '%s' fix will be applied by dropping and backfilling daily summaries." % self.name)
                     self.dbm.drop_daily()
+                    self.dbm.close()
+                    # Reopen to force rebuilding of the schema
                     self.dbm = weewx.manager.open_manager_with_config(self.config_dict,
                                                                       self.binding,
                                                                       initialize=True)
+                    # This will rebuild to a V2 daily summary
                     self.dbm.backfill_day_summary()
-                    # Set the 'Version' metadata field to indicate we have
-                    # updated to version 2.0
-                    self.dbm._write_metadata('Version', '2.0')
         else:
             # daily summaries are already weighted
             syslog.syslog(syslog.LOG_INFO,
@@ -594,9 +593,8 @@ class IntervalWeighting(DatabaseFix):
                         # Update the daily summary with the weighted accumulator
                         if not self.dry_run:
                             self.dbm._set_day_summary(_day_accum,
-                                                      _day_span.stop,
-                                                      _cursor,
-                                                      check_version=False)
+                                                      None,
+                                                      _cursor)
                         _days += 1
                         # Save the ts of the weighted daily summary as the
                         # 'lastWeightPatch' value in the archive_day__metadata
@@ -621,7 +619,10 @@ class IntervalWeighting(DatabaseFix):
                     _tr_stop_ts = time.mktime(_tr_stop_dt.timetuple())
                     _tr_stop_ts = min(self.dbm.last_timestamp, _tr_stop_ts)
 
-            # we have finished, give the user some final information on progress,
+            # We have finished. Get rid of the no longer needed lastWeightPatch
+            self.dbm.getSql("DELETE FROM %s_day__metadata WHERE name=?" % self.dbm.table_name, ('lastWeightPatch',))
+             
+            # Give the user some final information on progress,
             # mainly so the total tallies with the log
             self._progress(_days, _day_span.start)
             print

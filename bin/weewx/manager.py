@@ -1131,6 +1131,11 @@ class DaySummaryManager(Manager):
         self.version = self._read_metadata('Version')
         if weewx.debug:
             assert(self.version in ['1.0', '2.0'])
+    
+    def close(self):
+        del self.version
+        del self.daykeys
+        super(DaySummaryManager, self).close()
 
     def _initialize_day_tables(self, archiveSchema, cursor):  # @UnusedVariable
         """Initialize the tables needed for the daily summary."""
@@ -1543,13 +1548,6 @@ class DaySummaryManager(Manager):
             if cursor is None:
                 _cursor.close()
 
-
-    def _getLastUpdate(self, cursor=None):
-        """Returns the time of the last update to the statistical database."""
-        
-        value = self._read_metadata('lastUpdate', cursor)
-        return int(value) if value else None
-    
     def drop_daily(self):
         """Drop the daily summaries."""
         
