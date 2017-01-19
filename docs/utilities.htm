@@ -332,7 +332,7 @@ Saved configuration to /home/weewx/weewx.conf
         <p>This will result in an output that looks something like this:</p>
         <pre class="tty">
 Usage: wee_database --help
-       wee_database --create-database
+       wee_database --create
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--binding=BINDING_NAME]
        wee_database --drop-daily
@@ -351,36 +351,47 @@ Usage: wee_database --help
             [--binding=BINDING_NAME]
             --dest-binding=BINDING_NAME
             [--dry-run]
+       wee_database --check
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+       wee_database --update
+            [CONFIG_FILE|--config=CONFIG_FILE]
+            [--binding=BINDING_NAME]
+            [--trans-days=DAYS]
+            [--dry-run]
        wee_database --check-strings
             [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME] [--fix-strings]
-       wee_database --check-weighting
+            [--binding=BINDING_NAME]
+       wee_database --fix
             [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME] [--fix-weighting]
+            [--binding=BINDING_NAME]
             [--trans-days=DAYS]
             [--dry-run]
 
 Description:
 
-Configure the weewx databases. Most of these functions are handled automatically by
+Configure the weewx database. Most of these functions are handled automatically by
 weewx, but they may be useful in special cases.
 
 Actions:
 
---create-database  Create the weewx database and initialize it with the schema.
---drop-daily       Drop the daily summaries from the database.
+--create           Create the weewx database and initialize it with the schema.
+--drop-daily       Drop the daily summaries from a database.
 --rebuild-daily    Rebuild the daily summaries for a database from the archive table.
 --reconfigure      Create a new database using the schema in the configuration
                    file. Copy over data from the old database.
 --transfer         Move data from one database to another.
---check-strings    Scan the archive table, looking for null strings that may
-                   have been introduced by a SQL editing program.
---check-weighting  Check whether the daily summaries have been interval weighted.
+--check            Check if the daily summary tables are at the latest version.
+--update           Update the daily summary tables if required and recalculate
+                   the daily summary maximum windSpeed values.
+--check-strings    Check the archive table for null strings that may have been
+                   introduced by a SQL editing program.
+--fix              Fix any null strings in a SQLite database.
 
 Options:
   -h, --help            show this help message and exit
   --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
-  --create-database     Create the weewx database.
+  --create              Create the weewx database.
   --drop-daily          Drop the daily summary tables from a database.
   --rebuild-daily       Rebuild the daily summaries for a database.
   --date=YYYY-mm-dd     Rebuild the daily summaries for this date. Format is
@@ -397,12 +408,13 @@ Options:
                         the end.
   --transfer            Transfer the weewx archive from source database to
                         destination database.
-  --check-strings       Check a sqlite version of the archive table to see
-                        whether it contains embedded strings.
-  --fix-strings         Fix any embedded strings in a sqlite database.
-  --check-weighting     Check whether the daily summaries have been interval
-                        weighted.
-  --fix-weighting       Apply interval weighting to daily summaries.
+  --check               Check the daily summary tables version.
+  --update              Update the daily summary tables if required and
+                        recalculate the daily summary maximum windSpeed
+                        values.
+  --check-strings       Check the archive table for null strings that may have
+                        been introduced by a SQL editing program.
+  --fix                 Fix any null strings in a SQLite database.
   --binding=BINDING_NAME
                         The data binding. Default is 'wx_binding'.
   --dest-binding=BINDING_NAME
@@ -410,10 +422,10 @@ Options:
   --dry-run             Print what would happen but do not do it. Default is
                         False.
   --trans-days=DAYS     Limit database transactions to no more than DAYS days
-                        of data at a time. Default value is 5 when rebuilding
-                        daily summaries and 50 when interval weighting daily
-                        summaries weight. May be increased for a slight speed
-                        increase or reduced to reduce memory usage.
+                        of data at a time. Default value is 5 when using
+                        --rebuild-daily and 50 when using --update. May be
+                        increased for a slight speed increase or reduced to
+                        reduce memory usage.
 
 If you are using a MySQL database it is assumed that you have the appropriate
 permissions for the requested operation.
@@ -421,14 +433,14 @@ permissions for the requested operation.
 
         <h2><span id='wee_database_details'>Actions and options</span></h2>
 
-        <h3>Action <span class="code">--create-database</span></h3>
+        <h3>Action <span class="code">--create</span></h3>
         <p>If the database does not already exist, this action will create it
             and initialize it with the schema specified in the
             <span class="code">weewx</span> configuration file.
             Because <span class="code">weewx</span> does this
             automatically, this action is rarely needed.</p>
 
-        <pre class="tty cmd">wee_database --create-database</pre>
+        <pre class="tty cmd">wee_database --create</pre>
 
         <h3>Action <span class="code">--drop-daily</span></h3>
         <p>In addition to the regular archive data, every weewx database also 
@@ -502,33 +514,52 @@ wee_database --transfer --dest-binding=dest_binding</pre>
                 href="https://github.com/weewx/weewx/wiki/Transfer%20from%20MySQL%20to%20sqlite#using-wee_database">MySQL
             to SQLite</a>, using <span class="code">wee_database</span>.</p>
 
+        <h3>Action <span class="code">--check</span></h3>
+        <p>This action will check the version number of the daily summary tables 
+            as well as performing a null string check (refer to 
+            the <em><a href="utilities.htm#Action_--check-strings"><span class="code">--check-strings</span></a></em> action) of
+            the archive table. If the daily summary tables are found to be using 
+            an old version the user is advised to update the daily summary tables 
+            using the <span class="code">--update</span> action. If null strings 
+            are found in the archive table the user is advised to use 
+            the <span class="code">--fix</span> action to fix the null strings.
+        </p>
+
+        <pre class="tty cmd">wee_database --check</pre>
+        
+        <h3>Action <span class="code">--update</span></h3>
+        <p>This action updates the daily summary tables to the latest version. 
+            This update involves applying interval weighting to the daily summaries, 
+            if not previously applied, and recalculating the maximum daily windSpeed 
+            value and time. The update process is irreversible and users are 
+            recommended to backup their database before 
+            the <span class="code">--update</span> action is applied.
+        </p>
+
+        <pre class="tty cmd">wee_database --update</pre>
+        
+        <p>See the section <a href="upgrading.htm#Changes_to_aggregate_calculations">Changes to aggregate calculations</a> in 
+            the Upgrade Guide for further information on interval weighting.</p>
+        
         <h3>Action <span class="code">--check-strings</span></h3>
         <p>Normally, all entries in the archive are pure numbers. However, some 
             visual SQLite database editors use a null string instead of a null 
             value when deleting entries. These nulls strings can 
             crash <span class="code">weewx</span>. This action checks for them
-            and, if the option <span class="code">--fix-strings</span> is 
-            specified, substitutes a true null value if it finds any.</p>
+            and advises the user whether the <span class="code">--fix</span> action 
+            should be used to substitute a true null value in place of a null 
+            string.
+        </p>
 
-        <pre class="tty cmd">wee_database --check-strings
-wee_database --check-strings --fix-strings</pre>
+        <pre class="tty cmd">wee_database --check-strings</pre>
 
-        <h3>Action <span class="code">--check-weighting</span></h3>
-        <p>This action will check the daily summaries and advise the user of the 
-        daily summary version number as well as whether the daily summaries have 
-        been interval weighted. The daily summaries will normally be interval 
-        weighted once only when weewx is first run after upgrading to Version 3.7 
-        or later. If the option <span class="code">--fix-weighting</span> is 
-        specified the daily summaries will be interval weighted if interval 
-        weighting has never been applied.
+        <h3>Action <span class="code">--fix</span></h3>
+        <p>This action will check for any null strings in a SQLite database and 
+            if found substitute a true null value.
         </p>
     
-        <pre class="tty cmd">wee_database --check-weighting
-wee_database --check-weighting --fix-weighting</pre>
+        <pre class="tty cmd">wee_database --fix</pre>
 
-        <p>See the section <a href="upgrading.htm#Changes_to_aggregate_calculations">Changes to aggregate calculations</a> in 
-            the Upgrade Guide for further information on interval weighting.</p>
-        
         <!-- ======== -->
 
 
