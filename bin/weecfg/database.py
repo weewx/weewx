@@ -24,18 +24,6 @@ from weeutil.weeutil import timestamp_to_string, startOfDay, tobool
 
 
 # ============================================================================
-#                             Utility Functions
-# ============================================================================
-
-def _fix_progress(ndays, last_time):
-    """Utility function to show our progress while processing the fix."""
-
-    print >>sys.stdout, "Fixing daily summary: %d; Timestamp: %s\r" % \
-        (ndays, timestamp_to_string(last_time)),
-    sys.stdout.flush()
-
-
-# ============================================================================
 #                             class DatabaseFix
 # ============================================================================
 
@@ -64,8 +52,6 @@ class DatabaseFix(object):
         self.name = fix_config_dict['name']
         # is this a dry run
         self.dry_run = tobool(fix_config_dict.get('dry_run', True)) == True
-        if self.dry_run:
-            syslog.syslog(syslog.LOG_INFO, "A dry run has been requested.")
 
     def run(self):
         raise NotImplementedError("Method 'run' not implemented")
@@ -131,27 +117,25 @@ class DatabaseFix(object):
         if self.vacuum:
             t1 = time.time()
             syslog.syslog(syslog.LOG_DEBUG,
-                          "Performing vacuum of database '%s' (SQLite only)." % self.dbm.database_name)
+                          "databasefix: Performing vacuum of database '%s' (SQLite only)." % self.dbm.database_name)
             try:
                 self.dbm.getSql('vacuum')
             except weedb.ProgrammingError:
                 # Catch the error (usually) returned when we try to vacuum a
                 # non-SQLite db
                 syslog.syslog(syslog.LOG_DEBUG,
-                              "Vacuuming database '%s' did not complete, most likely because it is not an SQLite database." % (self.dbm.database_name, ))
+                              "databasefix: Vacuuming database '%s' did not complete, most likely because it is not an SQLite database." % (self.dbm.database_name, ))
                 return
             except Exception, e:
                 # log the error and re-raise it
                 syslog.syslog(syslog.LOG_INFO,
-                              "Vacuuming database '%s' failed: %s" % (self.dbm.database_name,
-                                                                      e))
+                              "databasefix: Vacuuming database '%s' failed: %s" % (self.dbm.database_name,
+                                                                                   e))
                 raise
             # If we are here then we have successfully vacuumed, log it and return
             syslog.syslog(syslog.LOG_DEBUG,
-                          "Database '%s' vacuumed in %0.1f seconds." % (self.dbm.database_name,
-                                                                        (time.time() - t1)))
-        else:
-            syslog.syslog(syslog.LOG_DEBUG, "Vacuum not requested.")
+                          "databasefix: Database '%s' vacuumed in %0.1f seconds." % (self.dbm.database_name,
+                                                                                     (time.time() - t1)))
 
     @staticmethod
     def _progress(record, ts):
@@ -207,8 +191,11 @@ class WindSpeedRecalculation(DatabaseFix):
 
         # call our parents __init__
         super(WindSpeedRecalculation, self).__init__(config_dict, fix_config_dict)
-        syslog.syslog(syslog.LOG_INFO,
-                      "windspeedrecalc: Preparing '%s' fix..." % self.name)
+        
+        # log if a dry run
+        if self.dry_run:
+            syslog.syslog(syslog.LOG_INFO, "maxwindspeed: This is a dry run. Maximum windSpeed will be recalculated but not saved.")
+
 
         # Get the binding for the archive we are to use. If we received an
         # explicit binding then use that otherwise use the binding that
@@ -226,20 +213,20 @@ class WindSpeedRecalculation(DatabaseFix):
         self.dbm = weewx.manager.open_manager_with_config(config_dict,
                                                           self.binding)
         syslog.syslog(syslog.LOG_DEBUG,
-                      "windspeedrecalc: Using database binding '%s', which is bound to database '%s'" % (self.binding,
+                      "maxwindspeed: Using database binding '%s', which is bound to database '%s'." % (self.binding,
                                                                                                           self.dbm.database_name))
         # number of days per db transaction, default to 50.
         self.trans_days = int(fix_config_dict.get('trans_days', 50))
         syslog.syslog(syslog.LOG_DEBUG,
-                      "windspeedrecalc: Database transactions will use %s days of data." % self.trans_days)
+                      "maxwindspeed: Database transactions will use %s days of data." % self.trans_days)
         # pre-fix vacuum flag
         self.vacuum = fix_config_dict.get('vacuum', False) == True
         if self.vacuum:
             syslog.syslog(syslog.LOG_DEBUG,
-                          "windspeedrecalc: Database '%s' will be vacuumed before fix is applied." % self.dbm.database_name)
+                          "maxwindspeed: Database '%s' will be vacuumed before fix is applied." % self.dbm.database_name)
         else:
             syslog.syslog(syslog.LOG_DEBUG,
-                          "windspeedrecalc: Database '%s' will not be vacuumed before fix is applied." % self.dbm.database_name)
+                          "maxwindspeed: Database '%s' will not be vacuumed before fix is applied." % self.dbm.database_name)
 
     def run(self):
         """Main entry point for applying the windSpeed Calculation fix.
@@ -250,14 +237,16 @@ class WindSpeedRecalculation(DatabaseFix):
         may be raised.
         """
 
+        # First do a vacuum if requested.
+        self.do_vacuum()
         # apply the fix but be prepared to catch any exceptions
         try:
             self.do_fix()
         except weewx.ViolatedPrecondition, e:
             syslog.syslog(syslog.LOG_ERR,
-                          "windspeedrecalc: **** %s" % e)
+                          "maxwindspeed: **** %s" % e)
             syslog.syslog(syslog.LOG_ERR,
-                          "windspeedrecalc: **** '%s' fix not applied." % self.name)
+                          "maxwindspeed: **** '%s' fix not applied." % self.name)
             # raise the error so our caller can deal with it if they want
             raise
 
@@ -270,7 +259,7 @@ class WindSpeedRecalculation(DatabaseFix):
         """
 
         t1 = time.time()
-        syslog.syslog(syslog.LOG_INFO, "windspeedrecalc: Applying '%s' fix..." % self.name)
+        syslog.syslog(syslog.LOG_INFO, "maxwindspeed: Applying '%s' fix..." % self.name)
         # get the start and stop Gregorian day number
         start_ts = self.first_summary_ts('windSpeed')
         start_greg = weeutil.weeutil.toGregorianDay(start_ts)
@@ -309,17 +298,19 @@ class WindSpeedRecalculation(DatabaseFix):
         # mainly so the total tallies with the log
         self._progress(n_days, day_span.start)
         print
+        tdiff = time.time() - t1
         # We are done so log and inform the user
         if self.dry_run:
-            _msg = "windspeedrecalc: max windSpeed would have been recalculated for %s daily summaries in %0.1f seconds." % (n_days,
-                                                                                                                             (time.time() - t1))
-            _msg1 = "windspeedrecalc: This was a dry run. '%s' fix was not applied." % self.name
+            syslog.syslog(syslog.LOG_INFO,
+                          "maxwindspeed: Maximum windSpeed would have been calculated for %s days in %0.2f seconds." % (n_days,
+                                                                                                                        tdiff))
+            syslog.syslog(syslog.LOG_INFO,
+                          "maxwindspeed: This was a dry run. '%s' fix was not applied." % self.name)
         else:
-            _msg = "windspeedrecalc: max windSpeed was recalculated for %s daily summaries in %0.1f seconds." % (n_days,
-                                                                                                                 (time.time() - t1))
-            _msg1 = "windspeedrecalc: Successfully applied '%s' fix." % self.name
-        syslog.syslog(syslog.LOG_DEBUG, _msg)
-        syslog.syslog(syslog.LOG_INFO, _msg1)
+            syslog.syslog(syslog.LOG_INFO,
+                          "maxwindspeed: Successfully applied '%s' fix to %s days in %0.2f seconds." % (self.name,
+                                                                                                        n_days,
+                                                                                                        tdiff))
 
     def get_archive_span_max(self, span, obs):
         """Find the max value of an obs and its timestamp in a span based on
@@ -399,7 +390,7 @@ class WindSpeedRecalculation(DatabaseFix):
     def _progress(ndays, last_time):
         """Utility function to show our progress while processing the fix."""
 
-        print >>sys.stdout, "Daily summaries fixed: %d; Timestamp: %s\r" % \
+        print >>sys.stdout, "Updating 'windSpeed' daily summary: %d; Timestamp: %s\r" % \
             (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")),
         sys.stdout.flush()
 
@@ -408,12 +399,6 @@ class WindSpeedRecalculation(DatabaseFix):
 #                          class IntervalWeighting
 # ============================================================================
 
-def _fix_progress(ndays, last_time):
-    """Utility function to show our progress while processing the fix."""
-
-    print >>sys.stdout, "Fixing daily summary: %d; Timestamp: %s\r" % \
-        (ndays, timestamp_to_string(last_time)),
-    sys.stdout.flush()
 
 class IntervalWeighting(DatabaseFix):
     """Class to apply an interval based weight factor to the daily summaries.
@@ -422,7 +407,7 @@ class IntervalWeighting(DatabaseFix):
     1.  Create a dictionary of parameters required by the fix. The
     IntervalWeighting class uses the following parameters as indicated:
 
-        patch:          Name of the class defining the fix, for the interval
+        name:           Name of the class defining the fix, for the interval
                         weighting fix this is 'Interval Weighting'. String.
                         Mandatory.
 
@@ -452,7 +437,6 @@ class IntervalWeighting(DatabaseFix):
 
         # call our parents __init__
         super(IntervalWeighting, self).__init__(config_dict, fix_config_dict)
-        syslog.syslog(syslog.LOG_INFO, "intervalweighting: Preparing '%s' fix..." % self.name)
 
         # Get the binding for the archive we are to use. If we received an
         # explicit binding then use that otherwise use the binding that
@@ -469,104 +453,103 @@ class IntervalWeighting(DatabaseFix):
         # Get a database manager object
         self.dbm = weewx.manager.open_manager_with_config(config_dict,
                                                           self.binding)
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "intervalweighting: Using database binding '%s', which is bound to database '%s'" % (self.binding,
-                                                                                                          self.dbm.database_name))
         # Number of days per db transaction, default to 50.
         self.trans_days = int(fix_config_dict.get('trans_days', 50))
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "intervalweighting: Database transactions will use %s days of data." % self.trans_days)
-        # Pre-patch vacuum flag
+        # Pre-fix vacuum flag
         self.vacuum = fix_config_dict.get('vacuum', False) == True
-        if self.vacuum:
-            syslog.syslog(syslog.LOG_DEBUG,
-                          "intervalweighting: Database '%s' will be vacuumed before patch is applied." % self.dbm.database_name)
-        else:
-            syslog.syslog(syslog.LOG_DEBUG,
-                          "intervalweighting: Database '%s' will not be vacuumed before patch is applied." % self.dbm.database_name)
 
     def run(self):
-        """Main entry point for patching the daily summaries.
+        """Main entry point for applying the interval weighting fix.
 
-        Check archive records of unpatched days to see if each day of records
+        Check archive records of unweighted days to see if each day of records
         has a unique interval value. If interval value is unique then vacuum
-        the database if requested and finally apply the patch. Catch any
+        the database if requested and finally apply the weighting. Catch any
         exceptions and raise as necessary. If any one day has multiple interval
-        value then we cannot patch the daily summaries, instead drop then
-        backfill the daily summaries.
+        value then we cannot weight the daily summaries, instead rebuild the
+        daily summaries.
         """
 
+        # first do some logging about what we will do
+        if self.dry_run:
+            syslog.syslog(syslog.LOG_INFO, "intervalweighting: This is a dry run. Interval weighting will be applied but not saved.")
+
+        syslog.syslog(syslog.LOG_INFO,
+                      "intervalweighting: Using database binding '%s', which is bound to database '%s'." % (self.binding,
+                                                                                                           self.dbm.database_name))
+        syslog.syslog(syslog.LOG_DEBUG,
+                      "intervalweighting: Database transactions will use %s days of data." % self.trans_days)
+        if self.vacuum:
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "intervalweighting: Database '%s' will be vacuumed before fix is applied." % self.dbm.database_name)
         # Check metadata 'Version' value, if its greater than 1.0 we are
-        # already patched
-        _daily_summary_version = self.read_metadata('Version')
-        if _daily_summary_version is None or _daily_summary_version < 2.0:
-            # Get the ts of the (start of the) next day to patch; it's the day
-            # after the ts of the last successfully patched daily summary
-            _last_patched_ts = self.read_metadata('lastWeightPatch')
+        # already weighted
+        _daily_summary_version = self.dbm._read_metadata('Version')
+        if _daily_summary_version is None or _daily_summary_version < '2.0':
+            # Get the ts of the (start of the) next day to weight; it's the day
+            # after the ts of the last successfully weighted daily summary
+            _last_patched_ts = self.dbm._read_metadata('lastWeightPatch')
             if _last_patched_ts:
-                _next_day_to_patch_dt = datetime.datetime.fromtimestamp(_last_patched_ts) + datetime.timedelta(days=1)
+                _next_day_to_patch_dt = datetime.datetime.fromtimestamp(int(_last_patched_ts)) + datetime.timedelta(days=1)
                 _next_day_to_patch_ts = time.mktime(_next_day_to_patch_dt.timetuple())
             else:
                 _next_day_to_patch_ts = None
-            # Check to see if any days that need to be patched have multiple
+            # Check to see if any days that need to be weighted have multiple
             # distinct interval values
             if self.unique_day_interval(_next_day_to_patch_ts):
-                # We have a homogeneous intervals for each day so we can patch
+                # We have a homogeneous intervals for each day so we can weight
                 # the daily summaries.
 
                 # First do a vacuum if requested.
                 self.do_vacuum()
 
-                # Now apply the patch but be prepared to catch any exceptions
+                # Now apply the weighting but be prepared to catch any
+                # exceptions
                 try:
-                    self.do_patch(_next_day_to_patch_ts)
-                    # If we arrive here the patch was applied, if this is not
+                    self.do_fix(_next_day_to_patch_ts)
+                    # If we arrive here the fix was applied, if this is not
                     # a dry run then set the 'Version' metadata field to
-                    # indicate we have patched to version 2.0.
+                    # indicate we have updated to version 2.0.
                     if not self.dry_run:
-                        self.write_metadata('Version', '2.0')
+                        self.dbm._write_metadata('Version', '2.0')
                 except weewx.ViolatedPrecondition, e:
                     syslog.syslog(syslog.LOG_INFO,
                                   "intervalweighting: **** %s" % e)
                     syslog.syslog(syslog.LOG_INFO,
-                                  "intervalweighting: **** '%s' patch not applied." % self.name)
+                                  "intervalweighting: **** '%s' fix not applied." % self.name)
                     # raise the error so our caller can deal with it if they want
                     raise
             else:
-                # At least one day that needs to be patched has multiple
-                # distinct interval values. We cannot apply the patch by
-                # manipulating the existing daily summaries so we will patch by
-                # dropping the daily summaries and then rebuilding them.
-                # Drop/backfill is destructive so only do it if this is not a
-                # dry run
+                # At least one day that needs to be weighted has multiple
+                # distinct interval values. We cannot apply the weighting by
+                # manipulating the existing daily summaries so we will weight
+                # by rebuilding the daily summaries. Rebuild is destructive so
+                # only do it if this is not a dry run
                 if not self.dry_run:
                     syslog.syslog(syslog.LOG_DEBUG,
                                   "intervalweighting: Multiple distinct 'interval' values found for at least one archive day.")
                     syslog.syslog(syslog.LOG_INFO,
-                                  "intervalweighting: '%s' patch will be applied by dropping and backfilling daily summaries." % self.name)
+                                  "intervalweighting: '%s' fix will be applied by dropping and backfilling daily summaries." % self.name)
                     self.dbm.drop_daily()
                     self.dbm = weewx.manager.open_manager_with_config(self.config_dict,
                                                                       self.binding,
                                                                       initialize=True)
                     self.dbm.backfill_day_summary()
                     # Set the 'Version' metadata field to indicate we have
-                    # patched to version 2.0
-                    self.write_metadata('Version', '2.0')
-                    syslog.syslog(syslog.LOG_INFO,
-                                  "intervalweighting: Successfully applied '%s' patch." % self.name)
+                    # updated to version 2.0
+                    self.dbm._write_metadata('Version', '2.0')
         else:
-            # daily summaries are already patched
+            # daily summaries are already weighted
             syslog.syslog(syslog.LOG_INFO,
-                          "intervalweighting: '%s' patch has already been applied." % self.name)
+                          "intervalweighting: '%s' fix has already been applied." % self.name)
 
-    def do_patch(self, np_ts, progress_fn=_fix_progress):
-        """Patch the daily summaries using interval as weight."""
+    def do_fix(self, np_ts):
+        """Apply the interval weighting fix to the daily summaries."""
 
-        # do we need to patch? Only patch if next day to patch ts is None or
+        # do we need to weight? Only weight if next day to weight ts is None or
         # there are records in the archive from that day
         if np_ts is None or self.dbm.last_timestamp > np_ts :
             t1 = time.time()
-            syslog.syslog(syslog.LOG_INFO, "intervalweighting: Applying '%s' patch..." % self.name)
+            syslog.syslog(syslog.LOG_INFO, "intervalweighting: Applying '%s' fix..." % self.name)
             _days = 0
             # Get the earliest daily summary ts and the obs that it came from
             first_ts, obs = self.first_summary()
@@ -587,8 +570,8 @@ class IntervalWeighting(DatabaseFix):
                         _day_accum = self.dbm._get_day_summary(_day_span.start)
                         # Set the unit system for the accumulator
                         _day_accum.unit_system = self.dbm.std_unit_system
-                        # Patch the necessary accumulator stats, use a try..except
-                        # in case something goes wrong
+                        # Weight the necessary accumulator stats, use a
+                        # try..except in case something goes wrong
                         try:
                             for _day_key in self.dbm.daykeys:
                                 _day_accum[_day_key].wsum *= _weight
@@ -603,28 +586,28 @@ class IntervalWeighting(DatabaseFix):
                         except Exception, e:
                             # log the exception and re-raise it
                             syslog.syslog(syslog.LOG_INFO,
-                                          "intervalweighting: Patching '%s' daily summary "
+                                          "intervalweighting: Interval weighting of '%s' daily summary "
                                           "for %s failed: %s" % (_day_key,
                                                                  timestamp_to_string(_day_span.start, format="%Y-%m-%d"),
                                                                  e))
                             raise
-                        # Update the daily summary with the patched accumulator
+                        # Update the daily summary with the weighted accumulator
                         if not self.dry_run:
                             self.dbm._set_day_summary(_day_accum,
                                                       _day_span.stop,
                                                       _cursor,
                                                       check_version=False)
                         _days += 1
-                        # Save the ts of the patched daily summary as the
+                        # Save the ts of the weighted daily summary as the
                         # 'lastWeightPatch' value in the archive_day__metadata
                         # table
                         if not self.dry_run:
-                            self.write_metadata('lastWeightPatch',
-                                                _day_span.start,
-                                                _cursor)
+                            self.dbm._write_metadata('lastWeightPatch',
+                                                     _day_span.start,
+                                                     _cursor)
                         # Give the user some information on progress
                         if _days % 50 == 0:
-                            progress_fn(_days, _day_span.start)
+                            self._progress(_days, _day_span.start)
 
                     # Setup our next tranche
                     # Have we reached the end, if so break to finish
@@ -638,22 +621,26 @@ class IntervalWeighting(DatabaseFix):
                     _tr_stop_ts = time.mktime(_tr_stop_dt.timetuple())
                     _tr_stop_ts = min(self.dbm.last_timestamp, _tr_stop_ts)
 
+            # we have finished, give the user some final information on progress,
+            # mainly so the total tallies with the log
+            self._progress(_days, _day_span.start)
             print
+            tdiff = time.time() - t1
             # We are done so log and inform the user
             if self.dry_run:
-                _msg = "intervalweighting: %s daily summaries would have been patched in %0.1f seconds." % (_days,
-                                                                                                           (time.time() - t1))
-                _msg1 = "intervalweighting: This was a dry run. '%s' patch was not applied." % self.name
+                syslog.syslog(syslog.LOG_INFO, 
+                              "intervalweighting: %s days would have been weighted in %0.2f seconds." % (_days,
+                                                                                                         tdiff))
+                syslog.syslog(syslog.LOG_INFO, "intervalweighting: This was a dry run. '%s' fix was not applied." % self.name)
             else:
-                _msg = "intervalweighting: %s daily summaries patched in %0.1f seconds." % (_days,
-                                                                                           (time.time() - t1))
-                _msg1 = "intervalweighting: Successfully applied '%s' patch." % self.name
-            syslog.syslog(syslog.LOG_DEBUG, _msg)
-            syslog.syslog(syslog.LOG_INFO, _msg1)
+                syslog.syslog(syslog.LOG_INFO, 
+                              "intervalweighting: Successfully applied '%s' fix to %s days in %0.2f seconds." % (self.name, 
+                                                                                                                 _days, 
+                                                                                                                 tdiff))
         else:
-            # we didn't need to patch so inform the user
-            syslog.syslog(syslog.LOG_INFO,
-                          "intervalweighting: '%s' patch has already been applied. Patch not applied." % self.name)
+            # we didn't need to weight so inform the user
+            syslog.syslog(syslog.LOG_INFO, 
+                                 "intervalweighting: '%s' fix has already been applied. Fix not applied." % self.name)
 
     def get_interval(self, span):
         """Return the interval field value used in a span.
@@ -751,50 +738,13 @@ class IntervalWeighting(DatabaseFix):
         for _key in self.dbm.daykeys:
             _ts = self.first_summary_ts(_key)
             if _ts:
-                _res = (weeutil.weeutil.min_with_none(_res[0], _ts), _key)
+                _res = (weeutil.weeutil.min_with_none((_res[0], _ts)), _key)
         return _res
 
-    def read_metadata(self, metadata):
-        """Obtain a metadata value from the archive_day__metadata table.
+    @staticmethod
+    def _progress(ndays, last_time):
+        """Utility function to show our progress while processing the fix."""
 
-        Returns:
-            Value of the metadata field. Returns None if no value was found.
-        """
-
-        select_patch_str = """SELECT value FROM %s_day__metadata """\
-                              """WHERE name = '%s';"""
-        _row = self.dbm.getSql(select_patch_str % (self.dbm.table_name,
-                                                   metadata))
-        return float(_row[0]) if _row else None
-
-    def write_metadata(self, metadata, value, cursor=None):
-        """Write a value to a metadata field in the archive_day__metadata table.
-
-        Input parameters:
-            metadata: The name of the metadata field to be written to.
-            value:    The value to be written to the metadata field.
-        """
-        _cursor = cursor or self.dbm.connection.cursor()
-
-        meta_replace_str = """REPLACE INTO %s_day__metadata VALUES(?, ?)"""
-        _cursor.execute(meta_replace_str % self.dbm.table_name,
-                               (metadata, value))
-        if cursor is None:
-            _cursor.close()
-
-
-#   Include a __main__ to facilitate testing of the windSpeed fix without the 
-#   need for weewx to be running. Usage:
-#
-#       PYTHONPATH=/home/weewx/bin python /home/weewx/bin/weecfg/database.py
-#
-if __name__=="__main__" :
-
-    import weecfg.database
-    import weecfg
-    cp, cd = weecfg.read_config(None)
-    fcd = {'name': 'windSpeed Recalculation',
-           'dry_run': 'False',
-           'trans_days': 200}
-    wind_obj = weecfg.database.WindSpeedRecalculation(cd, fcd)
-    wind_obj.run()
+        print >>sys.stdout, "Weighting daily summary: %d; Timestamp: %s\r" % \
+            (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")),
+        sys.stdout.flush()
