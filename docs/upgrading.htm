@@ -296,36 +296,65 @@ Version: 3.7
 
     <h3>Changes to aggregate calculations</h3>
     <p>
-        Whilst the archive interval in a database can change without consequence 
-        since Version 3.0, aggregates based on a period of one day or longer 
-        (i.e, those using the daily summaries) were calculated as if the archive 
-        interval was fixed. To ensure that aggregates properly account for 
-        multiple different archive intervals in a database, the applicable daily 
-        summary data is now weighted by the archive interval of each record 
-        contributing to the daily summary. To ensure consistency with historical 
-        data it is necessary to weight all existing daily summaries. This weighting 
-        is applied once during startup the first time <span class="code">weewx</span> 
-        is run after upgrading to Version 3.7 or later and no user input is required. 
-        The time taken to apply the weighting depends on many factors, but in most 
-        cases it should be no more than a few minutes. In some cases it may be 
-        necessary to rebuild the daily summaries in which case the weighting of 
-        the daily summaries may take tens of minutes. The weighting of the daily 
-        summaries is recorded in the <span class="code">weewx</span> log. Users 
-        should monitor the <span class="code">weewx</span> log when first starting 
-        <span class="code">weewx</span> after upgrading.
+        Whilst the archive interval in a <span class="code">weewx</span> database 
+        can change without consequence since Version 3.0, aggregates based on a 
+        period of one day or longer (i.e, those using the daily summaries) were
+        calculated as if the archive interval was fixed. All Version 3.7 aggregates 
+        now fully support a variable interval; however, to utilise this capability 
+        the daily summary tables must be updated to Version 2.0. This update entails 
+        interval weighting of all existing daily summary rows and is managed through 
+        the <span class="code">--check</span> and <span class="code">--update</span> 
+        actions of the <span class="code">wee_database</span> utility.
+    </p>
+    
+    <p>
+        The update of the daily summary tables to Version 2.0 is at the discretion 
+        of the user and <span class="code">weewx</span> will continue to operate 
+        whether the update is applied or not. However, users that have multiple 
+        distinct intervals in their archive (e.g, possibly those users importing 
+        data from another application or service) and do not update the daily 
+        summary tables will likely have inconsistent or incorrect aggregate values 
+        for some observations.
+    </p>
+    
+    <h3>Recalculation of <span class="code">windSpeed</span> maximum values</h3>
+
+    <p> 
+        A flaw exists in the calculation of the daily maximum field in 
+        the <span class="code">windSpeed</span> daily summary table for Version 3.6.2 
+        and earlier. The effect of this flaw has been that the daily 
+        maximum <span class="code">windSpeed</span> and daily 
+        maximum <span class="code">windGust</span> values in the daily summary 
+        tables are identical when <span class="code">use_hilo = True</span> is 
+        included in the <span class="code">[StdArchive]</span> section 
+        of <span class="code">weewx.conf</span>. This issue has been corrected 
+        in Version 3.7; however, the historical daily maximum data in 
+        the <span class="code">windSpeed</span> daily summary table will need to 
+        be recalculated. This can be achieved without loss of accuracy by 
+        recalculating the daily maximum <span class="code">windSpeed</span> from 
+        the archive data. This recalculation has been included as part of 
+        the <span class="code">wee_database</span> <span class="code">--update</span> 
+        action. The <span class="code">--update</span> action will correctly calculate 
+        the historical daily maximum and time of daily maximum fields in 
+        the <span class="code">windSpeed</span> daily summary table from archive 
+        data. This recalculation involves no loss of accuracy and affects no 
+        other fields or daily summary tables.
     </p>
     
     <h3>Changes to <span class="code">wee_database</span></h3>
     <p>
-        The <span class="code">wee_database</span> utility has been revised. 
-        Whilst the v3.6 functionality has been retained, a number of the 
-        <span class="code">wee_database</span> actions have renamed. A new action 
-        has been added to support the weighting of daily summaries and new options 
-        have been added so support selective rebuilding of daily summaries. Full 
-        details on the revised <span class="code">wee_database</span> utility can 
-        be found in the <a href="utilities.htm#wee_database_utility"><i><span class="code">wee_database</span></i></a> 
+        The <span class="code">wee_database</span> utility has been revised. Whilst 
+        the v3.6 functionality has been retained, a number of 
+        the <span class="code">wee_database</span> actions have been renamed and 
+        new options have been added to support the weighting of daily summaries 
+        and the recalculation of portions of the windSpeed daily summary table. 
+        The rebuilding of the daily summaries (formerly backfilling the daily 
+        summaries) now supports selective rebuilding. Full details on the 
+        revised <span class="code">wee_database</span> utility can be found in 
+        the <a href="utilities.htm#wee_database_utility"><i><span class="code">wee_database</span></i></a> 
         section in the <i>Utilities Guide</i>.
     </p>
+
     
     <h2>From V3.5 or earlier</h2>
 
