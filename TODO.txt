@@ -5,7 +5,7 @@ engine.py:
   - Switch from backfill to rebuild.
 
 patch.py:
-  - Add support for fixing windSpeed. Code written, yet to be committed.
+  - Add support for fixing windSpeed. Now database.py, finalised at commit fcf90e4.
   
 manager.py:
   - Be aware of both V1 and V2 daily summaries. Raise exception if a 
@@ -15,11 +15,11 @@ manager.py:
   - Test partial rebuild of daily summaries on both sqlite and MySQL
 
 wee_database:
-  - Single "--update" option. This fixes weights and windSpeed.
-  - Single "--check-database" option. This checks for strings, weights, and windSpeed.
-  - Single "--fix" option. This fixes strings.
+  - Single "--update" option. This fixes weights and windSpeed. Done, refer commit fcf90e4
+  - Single "--check-database" option. This checks for strings, weights, and windSpeed. Partially done, but does not check windSpeed, refer commit fcf90e4
+  - Single "--fix" option. This fixes strings. Done, refer commit fcf90e4
 
 Documentation
-  - Document new options for wee_database in the utilities guide.
-  - Update upgrading guide.
+  - Document new options for wee_database in the utilities guide. Done, refer commit 5e1dfe7. Requires review.
+  - Update upgrading guide. Done, refer commit 1227ca4. Requires review.
 
