@@ -102,40 +102,6 @@ class DatabaseFix(object):
             return _row[0]
         return None
 
-    def do_vacuum(self):
-        """Vacuum the database.
-
-        Vacuuming an SQLite database compacts the database file and will also
-        result in a speed increase for some transactions. Vacuuming also helps
-        to prevent an SQLite database file from continually growing in size
-        even though we prune records from the database. Vacuum will only work
-        on SQLite databases. It should be OK to run this on a MySQL database,
-        it will fail but we catch the error and continue.
-        """
-
-        if self.vacuum:
-            t1 = time.time()
-            syslog.syslog(syslog.LOG_DEBUG,
-                          "databasefix: Performing vacuum of database '%s' (SQLite only)." % self.dbm.database_name)
-            try:
-                self.dbm.getSql('vacuum')
-            except weedb.ProgrammingError:
-                # Catch the error (usually) returned when we try to vacuum a
-                # non-SQLite db
-                syslog.syslog(syslog.LOG_DEBUG,
-                              "databasefix: Vacuuming database '%s' did not complete, most likely because it is not an SQLite database." % (self.dbm.database_name, ))
-                return
-            except Exception, e:
-                # log the error and re-raise it
-                syslog.syslog(syslog.LOG_INFO,
-                              "databasefix: Vacuuming database '%s' failed: %s" % (self.dbm.database_name,
-                                                                                   e))
-                raise
-            # If we are here then we have successfully vacuumed, log it and return
-            syslog.syslog(syslog.LOG_DEBUG,
-                          "databasefix: Database '%s' vacuumed in %0.1f seconds." % (self.dbm.database_name,
-                                                                                     (time.time() - t1)))
-
     @staticmethod
     def _progress(record, ts):
         """Utility function to show our progress while processing the fix.
@@ -168,10 +134,6 @@ class WindSpeedRecalculation(DatabaseFix):
                         the binding specified in weewx.conf [StdArchive].
                         String, eg 'binding_name'. Optional.
 
-        vacuum:         Whether to vacuum the database before applying the fix.
-                        SQLite databases only. Boolean, default is False.
-                        Optional.
-
         trans_days:     Number of days of data used in each database
                         transaction. Integer, default is 50. Optional.
 
@@ -190,7 +152,7 @@ class WindSpeedRecalculation(DatabaseFix):
 
         # call our parents __init__
         super(WindSpeedRecalculation, self).__init__(config_dict, fix_config_dict)
-        
+
         # log if a dry run
         if self.dry_run:
             syslog.syslog(syslog.LOG_INFO, "maxwindspeed: This is a dry run. Maximum windSpeed will be recalculated but not saved.")
@@ -218,14 +180,6 @@ class WindSpeedRecalculation(DatabaseFix):
         self.trans_days = int(fix_config_dict.get('trans_days', 50))
         syslog.syslog(syslog.LOG_DEBUG,
                       "maxwindspeed: Database transactions will use %s days of data." % self.trans_days)
-        # pre-fix vacuum flag
-        self.vacuum = fix_config_dict.get('vacuum', False) == True
-        if self.vacuum:
-            syslog.syslog(syslog.LOG_DEBUG,
-                          "maxwindspeed: Database '%s' will be vacuumed before fix is applied." % self.dbm.database_name)
-        else:
-            syslog.syslog(syslog.LOG_DEBUG,
-                          "maxwindspeed: Database '%s' will not be vacuumed before fix is applied." % self.dbm.database_name)
 
     def run(self):
         """Main entry point for applying the windSpeed Calculation fix.
@@ -236,8 +190,6 @@ class WindSpeedRecalculation(DatabaseFix):
         may be raised.
         """
 
-        # First do a vacuum if requested.
-        self.do_vacuum()
         # apply the fix but be prepared to catch any exceptions
         try:
             self.do_fix()
@@ -414,10 +366,6 @@ class IntervalWeighting(DatabaseFix):
                         the binding specified in weewx.conf [StdArchive].
                         String, eg 'binding_name'. Optional.
 
-        vacuum:         Whether to vacuum the database before applying the fix.
-                        SQLite databases only. Boolean, default is False.
-                        Optional.
-
         trans_days:     Number of days to be fixed in each database
                         transaction. Integer, default is 50. Optional.
 
@@ -454,18 +402,15 @@ class IntervalWeighting(DatabaseFix):
                                                           self.binding)
         # Number of days per db transaction, default to 50.
         self.trans_days = int(fix_config_dict.get('trans_days', 50))
-        # Pre-fix vacuum flag
-        self.vacuum = fix_config_dict.get('vacuum', False) == True
 
     def run(self):
         """Main entry point for applying the interval weighting fix.
 
         Check archive records of unweighted days to see if each day of records
-        has a unique interval value. If interval value is unique then vacuum
-        the database if requested and finally apply the weighting. Catch any
-        exceptions and raise as necessary. If any one day has multiple interval
-        value then we cannot weight the daily summaries, instead rebuild the
-        daily summaries.
+        has a unique interval value. If interval value is unique then apply the
+        weighting. Catch any exceptions and raise as necessary. If any one day
+        has multiple interval value then we cannot weight the daily summaries,
+        instead rebuild the daily summaries.
         """
 
         # first do some logging about what we will do
@@ -477,9 +422,6 @@ class IntervalWeighting(DatabaseFix):
                                                                                                            self.dbm.database_name))
         syslog.syslog(syslog.LOG_DEBUG,
                       "intervalweighting: Database transactions will use %s days of data." % self.trans_days)
-        if self.vacuum:
-            syslog.syslog(syslog.LOG_DEBUG,
-                          "intervalweighting: Database '%s' will be vacuumed before fix is applied." % self.dbm.database_name)
         # Check metadata 'Version' value, if its greater than 1.0 we are
         # already weighted
         _daily_summary_version = self.dbm._read_metadata('Version')
@@ -497,9 +439,6 @@ class IntervalWeighting(DatabaseFix):
             if self.unique_day_interval(_next_day_to_patch_ts):
                 # We have a homogeneous intervals for each day so we can weight
                 # the daily summaries.
-
-                # First do a vacuum if requested.
-                self.do_vacuum()
 
                 # Now apply the weighting but be prepared to catch any
                 # exceptions
@@ -621,7 +560,7 @@ class IntervalWeighting(DatabaseFix):
 
             # We have finished. Get rid of the no longer needed lastWeightPatch
             self.dbm.getSql("DELETE FROM %s_day__metadata WHERE name=?" % self.dbm.table_name, ('lastWeightPatch',))
-             
+
             # Give the user some final information on progress,
             # mainly so the total tallies with the log
             self._progress(_days, _day_span.start)
@@ -629,18 +568,18 @@ class IntervalWeighting(DatabaseFix):
             tdiff = time.time() - t1
             # We are done so log and inform the user
             if self.dry_run:
-                syslog.syslog(syslog.LOG_INFO, 
+                syslog.syslog(syslog.LOG_INFO,
                               "intervalweighting: %s days would have been weighted in %0.2f seconds." % (_days,
                                                                                                          tdiff))
                 syslog.syslog(syslog.LOG_INFO, "intervalweighting: This was a dry run. '%s' fix was not applied." % self.name)
             else:
-                syslog.syslog(syslog.LOG_INFO, 
-                              "intervalweighting: Successfully applied '%s' fix to %s days in %0.2f seconds." % (self.name, 
-                                                                                                                 _days, 
+                syslog.syslog(syslog.LOG_INFO,
+                              "intervalweighting: Successfully applied '%s' fix to %s days in %0.2f seconds." % (self.name,
+                                                                                                                 _days,
                                                                                                                  tdiff))
         else:
             # we didn't need to weight so inform the user
-            syslog.syslog(syslog.LOG_INFO, 
+            syslog.syslog(syslog.LOG_INFO,
                                  "intervalweighting: '%s' fix has already been applied. Fix not applied." % self.name)
 
     def get_interval(self, span):
