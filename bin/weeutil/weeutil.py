@@ -354,14 +354,7 @@ class TimeSpan(tuple):
             return - 1
         return 0 if self.start == other.start else 1
 
-def intervalgenRoundTS(start_ts, stop_ts, interval):
-    """Generator function yielding a sequence of time spans whose boundaries
-    are on a constant local time, rounded to mutiples of the interval.
-    """
-
-    return intervalgen(start_ts, stop_ts, interval, True)
-
-def intervalgen(start_ts, stop_ts, interval, roundTS=False):
+def intervalgen(start_ts, stop_ts, interval):
     """Generator function yielding a sequence of time spans whose boundaries
     are on constant local time.
     
@@ -408,28 +401,6 @@ def intervalgen(start_ts, stop_ts, interval, roundTS=False):
     [2009-11-01 02:00:00 PST (1257069600) -> 2009-11-01 03:00:00 PST (1257073200)]
     [2009-11-01 03:00:00 PST (1257073200) -> 2009-11-01 04:00:00 PST (1257076800)]
     [2009-11-01 04:00:00 PST (1257076800) -> 2009-11-01 05:00:00 PST (1257080400)]
-
-    An example setting roundTS = True
-
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> startstamp = 1484352960
-    >>> timestamp_to_string(startstamp)
-    '2017-01-13 16:16:00 PST (1484352960)'
-    >>> stopstamp = 1484439360
-    >>> timestamp_to_string(stopstamp)
-    '2017-01-14 16:16:00 PST (1484439360)'
-    >>> for span in intervalgen(startstamp, stopstamp, 10800, True):
-    ...     print span
-    ...
-    [2017-01-13 15:00:00 PST (1484348400) -> 2017-01-13 18:00:00 PST (1484359200)]
-    [2017-01-13 18:00:00 PST (1484359200) -> 2017-01-13 21:00:00 PST (1484370000)]
-    [2017-01-13 21:00:00 PST (1484370000) -> 2017-01-14 00:00:00 PST (1484380800)]
-    [2017-01-14 00:00:00 PST (1484380800) -> 2017-01-14 03:00:00 PST (1484391600)]
-    [2017-01-14 03:00:00 PST (1484391600) -> 2017-01-14 06:00:00 PST (1484402400)]
-    [2017-01-14 06:00:00 PST (1484402400) -> 2017-01-14 09:00:00 PST (1484413200)]
-    [2017-01-14 09:00:00 PST (1484413200) -> 2017-01-14 12:00:00 PST (1484424000)]
-    [2017-01-14 12:00:00 PST (1484424000) -> 2017-01-14 15:00:00 PST (1484434800)]
-    [2017-01-14 15:00:00 PST (1484434800) -> 2017-01-14 18:00:00 PST (1484445600)]
     
     start_ts: The start of the first interval in unix epoch time. In unix epoch time.
     
@@ -437,16 +408,9 @@ def intervalgen(start_ts, stop_ts, interval, roundTS=False):
     In unix epoch time.
     
     interval: The time length of an interval in seconds.
-
-    roundTS: If True then round start_ts down and stop_ts up such that 
-    they are on multiples of the interval
     
     yields: A sequence of TimeSpans. Both the start and end of the timespan
-    will be on the same time boundary as start_ts"""
-    
-    if roundTS :
-        start_ts = startOfInterval(start_ts, interval)
-        stop_ts = startOfInterval(stop_ts, interval) + interval
+    will be on the same time boundary as start_ts"""  
 
     dt1 = datetime.datetime.fromtimestamp(start_ts)
     stop_dt = datetime.datetime.fromtimestamp(stop_ts)
@@ -588,18 +552,38 @@ def isMidnight(time_ts):
     
     time_tt = time.localtime(time_ts)
     return time_tt.tm_hour==0 and time_tt.tm_min==0 and time_tt.tm_sec==0
+
+def archiveDaySpan(time_ts, grace=1, days_ago=0):
+    """Returns a TimeSpan representing a day that includes a given time.
     
-def archiveDaysAgoSpan(time_ts, days_ago=0, grace=1):
-    """Returns a TimeSpan for x days ago
+    Midnight is considered to actually belong in the previous day if
+    grace is greater than zero.
     
-    Example:
+    time_ts: The day will include this timestamp. 
+    
+    grace: This many seconds past midnight marks the start of the next
+    day. Set to zero to have midnight be included in the
+    following day.  [Optional. Default is 1 second.]
+    
+    days_ago: Which day we want. 0=today, 1=yesterday, etc.
+    
+    returns: A TimeSpan object one day long. 
+    
+    Example, which spans the end-of-year boundary
     >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
-    >>> print archiveDaysAgoSpan(time_ts, days_ago=2)
-    [2013-07-02 00:00:00 PDT (1372748400) -> 2013-07-03 00:00:00 PDT (1372834800)]
-    >>> time_ts = time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))
-    >>> print archiveDaysAgoSpan(time_ts, days_ago=2)
-    [2013-07-01 00:00:00 PDT (1372662000) -> 2013-07-02 00:00:00 PDT (1372748400)]
+    >>> time_ts = time.mktime(time.strptime("2014-01-01 01:57:35", "%Y-%m-%d %H:%M:%S"))
+    
+    As for today:
+    >>> print archiveDaySpan(time_ts)
+    [2014-01-01 00:00:00 PST (1388563200) -> 2014-01-02 00:00:00 PST (1388649600)]
+
+    Ask for yesterday:
+    >>> print archiveDaySpan(time_ts, days_ago=1)
+    [2013-12-31 00:00:00 PST (1388476800) -> 2014-01-01 00:00:00 PST (1388563200)]
+
+    Day before yesterday
+    >>> print archiveDaySpan(time_ts, days_ago=2)
+    [2013-12-30 00:00:00 PST (1388390400) -> 2013-12-31 00:00:00 PST (1388476800)]
     """
     if time_ts is None:
         return None
@@ -608,28 +592,8 @@ def archiveDaysAgoSpan(time_ts, days_ago=0, grace=1):
     _day_ord = _day_date.toordinal()
     return TimeSpan(_ord_to_ts(_day_ord - days_ago), _ord_to_ts(_day_ord - days_ago + 1))
 
-def archiveDaySpan(time_ts, grace=1):
-    """Returns a TimeSpan representing a day that includes a given time.
-    
-    Midnight is considered to actually belong in the previous day if
-    grace is greater than zero.
-    
-    Examples: (Assume grace is 1; printed times are given below, but
-    the variables are actually in unix epoch timestamps)
-        2007-12-3 18:12:05 returns (2007-12-3 00:00:00 to 2007-12-4 00:00:00)
-        2007-12-3 00:00:00 returns (2007-12-2 00:00:00 to 2007-12-3 00:00:00)
-        2007-12-3 00:00:01 returns (2007-12-3 00:00:00 to 2007-12-4 00:00:00)
-    
-    time_ts: The day will include this timestamp. 
-    
-    grace: This many seconds past midnight marks the start of the next
-    day. Set to zero to have midnight be included in the
-    following day.  [Optional. Default is 1 second.]
-    
-    returns: A TimeSpan object one day long that contains time_ts. It
-    will begin and end at midnight.
-    """
-    return archiveDaysAgoSpan(time_ts, days_ago=0, grace=grace)
+# For backwards compatibility. Not sure if anyone is actually using this
+archiveDaysAgoSpan = archiveDaySpan
 
 def archiveWeekSpan(time_ts, startOfWeek=6, grace=1, weeks_ago=0):
     """Returns a TimeSpan representing a week that includes a given time.
