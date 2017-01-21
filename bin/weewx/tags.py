@@ -112,15 +112,29 @@ class TimeBinder(object):
                               context='rainyear',  formatter=self.formatter, converter=self.converter, 
                               **self.option_dict)
     def last_hour(self, data_binding=None):
-        return self.span(data_binding, hour_delta=1)
-    def last_day(self, data_binding=None):
-        return self.span(data_binding, day_delta=1)
+        return self.hours_ago(data_binding, hours_ago=1)
+
+    # Alias for yesterday    
+    last_day = yesterday
+    
     def last_week(self, data_binding=None):
-        return self.span(data_binding, week_delta=1)
+        week_start = to_int(self.option_dict.get('week_start', 6))
+        return TimespanBinder(weeutil.weeutil.archiveWeekSpan(self.report_time, week_start, weeks_ago=1),
+                              self.db_lookup, data_binding=data_binding,
+                              context='week', formatter=self.formatter, converter=self.converter,
+                              **self.option_dict)
+    
     def last_month(self, data_binding=None):
-        return self.span(data_binding, month_delta=1)
+        return TimespanBinder(weeutil.weeutil.archiveMonthSpan(self.report_time, months_ago=1),
+                              self.db_lookup, data_binding=data_binding,
+                              context='month', formatter=self.formatter, converter=self.converter, 
+                              **self.option_dict)
+    
     def last_year(self, data_binding=None):
-        return self.span(data_binding, year_delta=1)
+        return TimespanBinder(weeutil.weeutil.archiveYearSpan(self.report_time, years_ago=1),
+                              self.db_lookup, data_binding=data_binding,
+                              context='year', formatter=self.formatter, converter=self.converter,
+                              **self.option_dict)
     
 #===============================================================================
 #                    Class TimespanBinder
