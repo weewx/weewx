@@ -59,6 +59,7 @@ Installation (macos):
 easy_install configobj Image Cheetah
 tar xvfz weewx-x.y.z.zip
 cd weewx-x.y.z
+cp util/macos/setup.cfg .
 ./setup.py install
 cd /Users/Shared/weewx
 ./bin/weewxd weewx.conf
@@ -72,6 +73,7 @@ icacls "c:\users\weewx" /grant username:(OI)(CI)F /T
 cacls c:\users\weewx /t /e /g Everyone:f
 unzip weewx-x.y.z.zip
 cd weewx-x.y.z
+cp util/windows/setup.cfg .
 python setup.py install
 cd c:\users\weewx
 python bin\weewxd weewx.conf
