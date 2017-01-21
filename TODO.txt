@@ -22,4 +22,6 @@ wee_database:
 Documentation
   - Document new options for wee_database in the utilities guide. Done, refer commit 5e1dfe7. Requires review.
   - Update upgrading guide. Done, refer commit 1227ca4. Requires review.
-  - Document new "ago" tags, including start and stop times for time spans
+  - Document new "ago" tags. DONE
+  - Document start and stop times for time spans
+  

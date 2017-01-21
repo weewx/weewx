@@ -980,7 +980,7 @@ $month.outTemp.max</pre>
         </p>
 
         <p>The most general dot code for an aggregation over time looks like:</p>
-        <pre class="tty">$<em>period</em>($data_binding=<em>binding_name</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
+        <pre class="tty">$<em>period</em>($data_binding=<em>binding_name</em>, <em>$optional_ago</em>=<em>delta</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
         <p>Where:</p>
 
         <p class="indent">
@@ -993,6 +993,19 @@ $month.outTemp.max</pre>
             to a database. An example would be <span class="code">wx_binding</span>.
             See the section <em><a href="#binding_names">Binding names</a></em>
             for more details.
+        </p>
+
+        <p class="indent">
+            <span class="code"><em>optional_ago</em></span> is a keyword that depends on the aggregation period. For example,
+            for <span class="code">week</span>, it would be <span class="code">weeks_ago</span>, for
+            <span class="code">day</span>, it would be <span class="code">days_ago</span>, <i>etc.</i>
+        </p>
+
+        <p class="indent">
+            <span class="code">delta</span> is an integer indicating which aggregation period is desired.
+            For example <span class="code">$week($weeks_ago=1)</span> indicates last week,
+            <span class="code">$day($days_ago=2)</span> would be the day-before-yesterday, <i>etc</i>. The default
+            is zero: that is, this aggregation period.
         </p>
 
         <p class="indent">
@@ -1033,84 +1046,88 @@ $month.outTemp.max</pre>
             <tbody>
             <tr class="first_row">
                 <td><em>Aggregation period</em></td>
-                <td>Example</td>
                 <td>Meaning</td>
-            </tr>
-            <tr>
-                <td class="first_col code">$hours_ago($hours_ago=<i>h</i>)</td>
-                <td class="code">$hours_ago($hours_ago=1).outTemp.avg</td>
-                <td>The average temperature last hour (1 hour ago).</td>
+                <td>Example</td>
+                <td>Meaning of example</td>
             </tr>
             <tr>
                 <td class="first_col code">$hour</td>
+                <td>This hour.</td>
                 <td class="code">$hour.outTemp.maxtime</td>
-                <td>The time of the maximum temperature this hour.</td>
+                <td>The time of the max temperature this hour.</td>
             </tr>
             <tr>
                 <td class="first_col code">$day</td>
+                <td>Today (since midnight).</td>
                 <td class="code">$day.outTemp.max</td>
-                <td>Max temperature since midnight today.</td>
-            </tr>
-            <tr>
-                <td class="first_col code">$days_ago($days_ago=<i>d</i>)</td>
-                <td class="code">$days_ago($days_ago=2).outTemp.avg</td>
-                <td>The average temperature day before yesterday (2 days ago).</td>
+                <td>The max temperature since midnight</td>
             </tr>
             <tr>
                 <td class="first_col code">$yesterday</td>
+                <td>Yesterday. Synonym for <span class="code">$day($days_ago=1)</span>.</td>
                 <td class="code">$yesterday.outTemp.maxtime</td>
-                <td>The time of yesterday's maximum temperature.</td>
+                <td>The time of the max temperature yesterday.</td>
             </tr>
             <tr>
                 <td class="first_col code">$week</td>
+                <td>This week. The start of the week is set by option
+                    <a href="usersguide.htm#week_start"><span class="code">week_start</span></a>.</td>
                 <td class="code">$week.outTemp.max</td>
-                <td>This week's max temperature. The start of the week is set by option
-                    <a href="usersguide.htm#week_start"><span class="code">week_start</span></a></td>
+                <td>The max temperature this week.</td>
             </tr>
             <tr>
                 <td class="first_col code">$month</td>
+                <td>This month.</td>
                 <td class="code">$month.outTemp.min</td>
-                <td>The minimum temperature since the start of the month.</td>
+                <td>The minimum temperature this month.</td>
             </tr>
             <tr>
                 <td class="first_col code">$year</td>
+                <td>This year.</td>
                 <td class="code">$year.outTemp.max</td>
                 <td>The max temperature since the start of the year.</td>
             </tr>
             <tr>
                 <td class="first_col code">$rainyear</td>
+                <td>This rain year. The start of the rain year is
+                    set by option <a href="usersguide.htm#rain_year_start"><span class="code">rain_year_start</span></a>.
+                </td>
                 <td class="code">$rainyear.rain.sum</td>
                 <td>The total rainfall for this rain year. The start of the rain year is
                     set by option <a href="usersguide.htm#rain_year_start"><span class="code">rain_year_start</span></a>.
                 </td>
             </tr>
-            <tr>
-                <td class="first_col code">$last_hour</td>
-                <td class="code">$last_hour.barometer.avg</td>
-                <td>The average barometer over the immediate last hour.</td>
-            </tr>
-            <tr>
-                <td class="first_col code">$last_day</td>
-                <td class="code">$last_day.dewpoint.max</td>
-                <td>The maximum dewpoint over the immediate last day (24 hours).</td>
-            </tr>
-            <tr>
-                <td class="first_col code">$last_week</td>
-                <td class="code">$last_week.outTemp.max</td>
-                <td>The maximum temperature over the immediate last week (7 days).</td>
-            </tr>
-            <tr>
-                <td class="first_col code">$last_month</td>
-                <td class="code">$last_month.outTemp.min</td>
-                <td>The minimum temperature over the immediate last month (30 days).</td>
-            </tr>
-            <tr>
-                <td class="first_col code">$last_year</td>
-                <td class="code">$last_year.rain.sum</td>
-                <td>The accumulated rain over the immediate last year (365 days).</td>
-            </tr>
+
             </tbody>
         </table>
+
+        <p>The <em>$optional_ago</em> parameters can be useful for statistics farther in the past. Here are some examples:</p>
+
+        <table class="indent" style="width:80%">
+            <tbody>
+            <tr class="first_row">
+                <td><em>Aggregation period</em></td>
+                <td>Example</td>
+                <td>Meaning</td>
+            </tr>
+            </tbody>
+            <tr>
+                <td class="first_col code">$hour($hours_ago=<i>h</i>)</td>
+                <td class="code">$hour($hours_ago=1).outTemp.avg</td>
+                <td>The average temperature last hour (1 hour ago).</td>
+            </tr>
+            <tr>
+                <td class="first_col code">$day($days_ago=<i>d</i>)</td>
+                <td class="code">$day($days_ago=2).outTemp.avg</td>
+                <td>The average temperature day before yesterday (2 days ago).</td>
+            </tr>
+            <tr>
+                <td class="first_col code">$month($months_ago=<i>m</i>)</td>
+                <td class="code">$month($months_ago=1).outTemp.max</td>
+                <td>The maximum temperature last month.</td>
+            </tr>
+        </table>
+
         <h3 id="unit_conversion_options">Unit conversion options</h3>
 
         <p>The tag <span class="code">optional_unit_conversion</span>
@@ -1507,7 +1524,7 @@ or in foobar units: $day.barometer.min.foobar
             period up to and including the current time. The most general dot code for a <span class="code">$span</span>
             tag looks like:</p>
 
-        <pre class="tty">$<em>span</em>([$data_binding=<em>binding_name</em>][,$optional_delta=<em>delta</em>]).<em>obstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
+        <pre class="tty">$<em>span</em>([$data_binding=<em>binding_name</em>][,<em>$optional_delta</em>=<em>delta</em>]).<em>obstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
 
         <p>Where:</p>
         <p class="indent">
@@ -1518,7 +1535,7 @@ or in foobar units: $day.barometer.min.foobar
         </p>
 
         <p class="indent">
-            <span class="code">$optional_delta=<em>delta</em></span> is one or more comma separated delta settings from
+            <span class="code"><em>$optional_delta</em>=<em>delta</em></span> is one or more comma separated delta settings from
             the table below. If more than one delta setting is included then the period used for the aggregate is the
             sum of the individual delta settings. If no delta setting is included, or all included delta settings are
             zero, the returned aggregate is based on the current <span class="code">obstype</span> only.
