@@ -618,7 +618,8 @@ class StdArchive(StdService):
         
         # Make sure the daily summaries have not been partially updated
         if dbmanager._read_metadata('lastWeightPatch'):
-            raise weewx.ViolatedPrecondition("This daily summary has been partially updated. Finish the update first.")
+            raise weewx.ViolatedPrecondition("engine: Update of daily summary for database '%s' not complete. "
+                                             "Finish the update first." % dbmanager.database_name)
         
         # Back fill the daily summaries.
         _nrecs, _ndays = dbmanager.backfill_day_summary() # @UnusedVariable
