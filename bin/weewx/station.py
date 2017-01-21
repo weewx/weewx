@@ -117,7 +117,7 @@ class Station(object):
                     size.value = ctypes.sizeof(buf)
                     libc.sysctlbyname("kern.boottime", ctypes.byref(buf), ctypes.byref(size), None, 0)
                     os_uptime_secs = time.time() - float(buf.value)
-                except (IOError, NameError):
+                except (AttributeError, IOError, NameError):
                     pass
 
         return weewx.units.ValueHelper(value_t=(os_uptime_secs, "second", "group_deltatime"),
