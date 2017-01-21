@@ -67,7 +67,7 @@ cd /Users/Shared/weewx
 ===============================================================================
 Installation (windows):
 
-python -m pip install configobj Image Cheetah
+python -m pip install configobj Image Cheetah uptime pyephem
 mkdir c:\users\weewx
 cacls c:\users\weewx /t /e /g Everyone:f
 unzip weewx-x.y.z.zip
