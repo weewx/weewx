@@ -210,6 +210,10 @@ caption {
   font-family: "Courier New", Courier, monospace;
   font-style: italic;
 }
+.indent {
+    margin-left: 40px;
+    margin-right: 40px;
+}
 .station_data {
   margin-left: 40px;
   margin-right: 80px;
