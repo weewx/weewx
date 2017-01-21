@@ -97,7 +97,8 @@ class Connection(weedb.Connection):
             database_name: The database to be used. (required)
             port: Its port number (optional; default is 3306)
             engine: The MySQL database engine to use (optional; default is 'INNODB')
-            kwargs:   Any extra arguments you may wish to pass on to MySQL (optional)
+            kwargs:   Any extra arguments you may wish to pass on to MySQL 
+              connect statement. See the file MySQLdb/connections.py for a list (optional).
             
         If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
@@ -117,9 +118,8 @@ class Connection(weedb.Connection):
         # Set the storage engine to be used
         set_engine(self.connection, engine)
 
-        # Allowing threads other than the main thread to see any transactions
-        # seems to require an isolation level of READ UNCOMMITTED.
-        self.connection.query("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED")
+        # Set the transaction isolation level.
+        self.connection.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED")
 
     def cursor(self):
         """Return a cursor object."""
