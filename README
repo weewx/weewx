@@ -69,6 +69,7 @@ Installation (windows):
 python -m pip install configobj Image Cheetah
 mkdir c:\users\weewx
 icacls "c:\users\weewx" /grant username:(OI)(CI)F /T
+cacls c:\users\weewx /t /e /g Everyone:f
 unzip weewx-x.y.z.zip
 cd weewx-x.y.z
 python setup.py install
