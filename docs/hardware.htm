@@ -883,7 +883,7 @@ Version: 3.7
 
         <h2 id="acurite_usb_mode">USB Mode</h2>
 
-        <p>The AcuRite stations have a setting called "USB Mode" that controls
+        <p>Some AcuRite consoles have a setting called "USB Mode" that controls
             how data are saved and communicated:</p>
 
         <table id='usbmode' class='station_data'>
@@ -902,8 +902,9 @@ Version: 3.7
             </tbody>
         </table>
 
-        <p>The AcuRite console must be set to USB mode 3 or 4 in order to
-            work with the <span class="code">weewx</span> driver.</p>
+        <p>If the AcuRite console has multiple USB modes, it must be set to
+            USB mode 3 or 4 in order to work with the
+            <span class="code">weewx</span> driver.</p>
 
         <p>Communication
             via USB is disabled in modes 1 and 2. Mode 4 is more reliable than
@@ -915,7 +916,11 @@ Version: 3.7
             console controls to change the mode before
             <span class="code">weewx</span> can resume data collection.</p>
 
-        <p>The 02064 stations are always in USB mode 4.</p>
+        <p>The 01025, 01035, 01036, 01525, and 02032 consoles have a USB mode
+            setting.</p>
+
+        <p>The 02064 and 01536 consoles do not have a mode setting; these
+            consoles are always in USB mode 4.</p>
 
         <h2 id='acurite_configuration'>Configuring with <span class="code">wee_device</span></h2>
 
