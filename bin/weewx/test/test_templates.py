@@ -152,9 +152,9 @@ class Common(unittest.TestCase):
                     expected_line = expected.readline()
                     if actual_line == '' or expected_line == '':
                         break
+                    n += 1
                     self.assertEqual(actual_line, expected_line, msg="%s[%d]:\n%r vs\n%r" % 
                                      (actual_filename_abs, n, actual_line, expected_line))
-                    n += 1
                 
                 print "Checked %d lines" % (n,)
 
@@ -174,7 +174,8 @@ class TestMySQL(Common):
     
 def suite():
     tests = ['test_report_engine']
-    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
+#     return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
+    return unittest.TestSuite(map(TestSqlite, tests))
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())
