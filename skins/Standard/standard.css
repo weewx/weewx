@@ -152,7 +152,7 @@ table.stats th {
 }
 
 .widget img {
-    width: 600px;
+    width: 500px;
     border: 1px solid #aaaaaa;
     margin-top: 4px;
 }
@@ -194,7 +194,7 @@ table.celestial th {
 }
 
 #history_widget.widget_title {
-    min-width: 450px;
+    min-width: 500px;
 }
 
 .plot_container {
@@ -202,9 +202,9 @@ table.celestial th {
 }
 
 
-@media (max-width:750px) {
+@media (max-width:800px) {
     #plot_group { overflow: visible; float: left; }
 }
-@media (min-width:751px) {
+@media (min-width:801px) {
     #plot_group { overflow: hidden; float: none; }
 }
