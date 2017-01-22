@@ -99,8 +99,8 @@ does not report a windGustDir, weewx will calculate windGustDir at each archive
 interval when it accumulates an archive record.
 
 Max value of windSpeed for the day is now the max archive value of windSpeed.
-Formerly, it was the max LOOP value. If you wish to patch your
-daily summaries to interpret max windSpeed, use the tool wee_database
+Formerly, it was the max LOOP value. If you wish to patch your older
+daily summaries to interpret max windSpeed this way, use the tool wee_database
 with option --update. Fixes issue #195.
 
 The types of accumulators, and the strategies to put and extract records 
