@@ -81,7 +81,7 @@ import weeutil.weeutil
 import weewx.drivers
 
 DRIVER_NAME = 'CC3000'
-DRIVER_VERSION = '0.14'
+DRIVER_VERSION = '0.15'
 
 def loader(config_dict, engine):
     return CC3000Driver(**config_dict[DRIVER_NAME])
@@ -368,7 +368,11 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                ('station' if self.use_station_time else 'computer'))
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 60))
-        self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_SENSOR_MAP)
+        # start with the default sensormap, then augment with user-specified
+        self.sensor_map = dict(self.DEFAULT_SENSOR_MAP)
+        if 'sensor_map' in stn_dict:
+            self.sensor_map.update(stn_dict['sensor_map'])
+        loginf('sensor map is %s' % self.sensor_map)
         self.last_rain = None
 
         self.station = CC3000(port)
