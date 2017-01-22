@@ -7,9 +7,9 @@ body {
     margin: 0;
     padding: 0;
     border: 0;
-    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-family: Lato, arial, sans-serif;
     background-color: #ffffff;
-}	
+}
 
 a {
     text-decoration: none;
@@ -17,7 +17,7 @@ a {
 
 #widget_group {
     float: left;
-    margin-right: 10px;
+    margin-right: 30px;
 }
 
 #plot_group {
@@ -33,6 +33,7 @@ a {
 
 #contents {
     clear: both;
+    margin: 20px;
 }
 
 #title {
@@ -96,18 +97,21 @@ table.stats th {
     font-size: 80%;
     vertical-align: top;
     text-align: right;
-    padding-right: 2px;
+    padding-top: 4px;
+    padding-right: 5px;
 }
 
 .data {
     font-weight: bold;
     font-size: 80%;
     text-align: left;
+    padding-top: 4px;
 }
 
 .units {
     font-size: 80%;
     vertical-align: top;
+    padding-top: 4px;
 }
 
 .timestamp {
@@ -174,6 +178,14 @@ table.celestial th {
     font-size: 80%;
     text-align: right;
     padding-left: 10px;
+}
+
+.hival {
+    color: #aa4444;
+}
+
+.loval {
+    color: #4444aa;
 }
 
 #history_widget img {

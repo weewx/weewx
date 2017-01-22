@@ -44,7 +44,7 @@
         <td class="label">$obs.label.heatindex</td>
         #for $archive in $archive_data
         <td class="data new_row hilo_$archive[0]">
-          <span title="$archive[1].heatindex.maxtime">
+          <span title="$archive[1].heatindex.maxtime" class="hival">
             $archive[1].heatindex.max.formatted</span>
         </td>
         #end for
@@ -54,7 +54,7 @@
         <td class="label">$obs.label.windchill</td>
         #for $archive in $archive_data
         <td class="data new_row hilo_$archive[0]">
-          <span title="$archive[1].windchill.mintime">
+          <span title="$archive[1].windchill.mintime" class="loval">
             $archive[1].windchill.min.formatted</span>
         </td>
         #end for
