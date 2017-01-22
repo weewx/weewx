@@ -1,16 +1,14 @@
 weewx change history
 --------------------
 
-x.y.z MM/dd/YYYY
+3.7.0 MM/dd/YYYY
 
-Calculation of aggregates over a period of one day or longer now respect any 
-change in archive interval. Whilst the archive interval can change within a 
-database without consequence since v3.0.0, any aggregates based on a period of 
-one day or longer were calculated as if the archive interval was fixed. As a 
-consequence of this change the daily summaries must be patched when upgrading 
-to v3.7.0 or later. This patch is applied automatically when weewx first starts 
-after upgrade. wee_database also has the ability to manually apply this patch.
-Fixes issue #61.
+Calculation of aggregates over a period of one day or longer can now
+respect any change in archive interval. To take advantage of this
+feature, you will have to apply an update to your daily
+summaries. This can be done using the tool wee_database, option
+--update. The only reason to do this is you plan on changing your
+archive interval. Otherwise, you can ignore.  Fixes issue #61.
 
 The tag $current now uses the record included in the event NEW_ARCHIVE_RECORD,
 rather than retrieve the last record from the database. This means you can
@@ -77,14 +75,6 @@ Fixed problem where multiple subsections under [SummaryBy...] stanzas could
 cause multiple copies of their target date to be included in the Cheetah
 variable $SummaryByYear and $SummaryByMonth. Fixes issue #187.
 
-Timespan tags of $last_hour, $last_day, $last_week, $last_month and $last_year
-have been added. The $span timespan tag now accepts $month_delta and 
-$year_delta. Thanks to user 'dcapslock'! PR #196.
-
-Timespan iterator .spans(interval=seconds) has been added to allow to iterate 
-over custom spans within a tag timespan. Another thanks to user 'dcapslock'!
-PR #199.
-
 Moved examples out of bin directory.  Eliminated experimental directory.
 Reinforce the use of user directory, eliminate use of examples directory.
 Renamed xsearch.py to stats.py.
@@ -109,7 +99,9 @@ does not report a windGustDir, weewx will calculate windGustDir at each archive
 interval when it accumulates an archive record.
 
 Max value of windSpeed for the day is now the max archive value of windSpeed.
-Formerly, it was the max LOOP value. Fixes issue #195.
+Formerly, it was the max LOOP value. If you wish to patch your
+daily summaries to interpret max windSpeed, use the tool wee_database
+with option --update. Fixes issue #195.
 
 The types of accumulators, and the strategies to put and extract records 
 out of them, can now be specified by config stanzas. See issue #115.
