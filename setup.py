@@ -555,6 +555,7 @@ if __name__ == "__main__":
                         'skins/Standard/rss.xml.tmpl',
                         'skins/Standard/satellite.inc',
                         'skins/Standard/skin.conf',
+                        'skins/Standard/sensors.inc',
                         'skins/Standard/standard.css',
                         'skins/Standard/standard.js']),
                       ('skins/Standard/NOAA',
@@ -594,10 +595,14 @@ if __name__ == "__main__":
                       ('util/systemd',
                        ['util/systemd/weewx.service']),
                       ('util/udev/rules.d',
-                       ['util/udev/rules.d/acurite.rules', 'util/udev/rules.d/cc3000.rules',
-                        'util/udev/rules.d/fousb.rules', 'util/udev/rules.d/te923.rules',
-                        'util/udev/rules.d/vantage.rules', 'util/udev/rules.d/wmr100.rules',
-                        'util/udev/rules.d/wmr200.rules', 'util/udev/rules.d/wmr300.rules',
+                       ['util/udev/rules.d/acurite.rules',
+                        'util/udev/rules.d/cc3000.rules',
+                        'util/udev/rules.d/fousb.rules',
+                        'util/udev/rules.d/te923.rules',
+                        'util/udev/rules.d/vantage.rules',
+                        'util/udev/rules.d/wmr100.rules',
+                        'util/udev/rules.d/wmr200.rules',
+                        'util/udev/rules.d/wmr300.rules',
                         'util/udev/rules.d/ws28xx.rules'])
                       ]
           )
