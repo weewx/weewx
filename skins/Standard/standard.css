@@ -82,6 +82,7 @@ a:hover {
     font-size: 80%;
     font-style: italic;
     clear: both;
+    padding-left: 20px;
 }
 
 .page_title {
@@ -142,7 +143,7 @@ table.stats th {
 }
 
 .timestamp {
-    font-size: 90%;
+    font-size: 80%;
     font-weight: normal;
 }
 
