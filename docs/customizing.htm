@@ -1435,32 +1435,38 @@ or in foobar units: $day.barometer.min.foobar
             default value of <span class="code">NONE_string</span>. They produce
             the same results.</p>
 
-        <h3>Type <span class="code">dateTime</span></h3>
+        <h3>Start, end, and <span class="code">dateTime</span></h3>
 
         <p>While not an observation type, in many ways the time of an observation,
             <span class="code">dateTime</span>, can be treated as one. A tag such as</p>
         <pre class="tty">$current.dateTime</pre>
         <p>represents the <em>current time</em> (more properly, the time as of the end of the last archive
             interval) and would produce something like</p>
-        <pre class="example_output">09-Jan-2010 12:50</pre>
-        <p> Similarly, a tag such as <span class="code">$month.dateTime</span>
-            represents the start time of the month. Like true observation types,
+        <pre class="example_output">01/09/2010 12:30:00</pre>
+        <p>Like true observation types,
             explicit formats can be specified, except that they require a <a
                     href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior">
                 strftime() <em>time format</em></a>, rather than a <em>string format</em>.</p>
 
-        <p> For example, </p>
-        <pre class="tty">$month.dateTime</pre>
+        <p> For example, adding a format descriptor like this:</p>
+        <pre class="tty">$current.dateTime.format("%d-%b-%Y %H:%M")</pre>
         <p>produces</p>
 
-        <pre class="example_output">09-Jan-2010</pre>
-        <p>while</p>
-        <pre class="tty">$month.dateTime.format("%B %Y")</pre>
-        <p>produces</p>
+        <p class="example_output">09-Jan-2010 12:30</p>
 
-        <p class="example_output">January 2010</p>
+        <p>For <em>aggregation periods</em>, such as <span class="code">$month</span>, you can
+            request the <em>start</em> or <em>end</em> of the period, by using suffixes
+            <span class="code">.start</span> or <span class="code">.end</span>, respectively. For example,</p>
+        <pre class="tty">The current month runs from $month.start to $month.end.</pre>
+        <p>results in</p>
+        <pre class="example_output">The current month runs from 01/01/2010 12:00:00 AM to 02/01/2017 12:00:00 AM.</pre>
 
-        <p>The returned string value will always be in <em>local time</em>. However, if you ask
+        <p>In addition to the suffixes <span class="code">.start</span> and <span class="code">.end</span>,
+            the suffix <span class="code">.dateTime</span> is provided for backwards compatibility. Like
+            <span class="code">.start</span>, it refers
+         to the start of the interval.</p>
+
+        <p>The returned string values will always be in <em>local time</em>. However, if you ask
             for the raw value</p>
         <pre class="tty">$current.dateTime.raw</pre>
 
@@ -1471,11 +1477,12 @@ or in foobar units: $day.barometer.min.foobar
             worry have to worry about handling a <span class="code">None</span>
             value. </p>
 
+
         <h3>Tag <span class="code">$trend</span></h3>
 
         <p>The tag <span class="code">$trend</span> is available for time trends,
             such as changes in barometric pressure. Here are some examples:</p>
-        <table class="indent" style="width:70%" summary="Examples of using unit formats">
+        <table class="indent" style="width:50%" summary="Examples of using unit formats">
             <tbody>
             <tr class="first_row">
                 <td>Tag</td>

@@ -17,6 +17,11 @@ rather than retrieve the last record from the database. This means you can
 use the tag $current for observation types that are in the record, but not
 necessarily in the database. Fixes issue #13.
 
+Most aggregation periods now allow you to go farther in the past. For
+example, the tag $week($weeks_ago=1) would give you last week. You
+can also now specify the start and end of an aggregation period, such
+as $week.start and $week.end.
+
 When doing hardware record generation, the engine now augments the record with
 any additional observation types it can extract out of the accumulators.
 Fixes issue #15.
