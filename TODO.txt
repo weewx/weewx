@@ -1,27 +1,14 @@
              ---- Before the V3.7 release ----
 
-engine.py:
-  - Remove invoking the weighting patch from engine.py. DONE commit 579aa3b refers
-  - Switch from backfill to rebuild. DONE
-
 database.py:
-  - Add support for fixing windSpeed. DONE. Now database.py, finalised at commit fcf90e4.
   - Get the interval patch to work for MySQL.
   
 manager.py:
-  - Be aware of both V1 and V2 daily summaries. Raise exception if a 
-    partially patched daily summary is encountered. DONE, although in weewxd.
-  - Pass appropriate weighting on to accumulators. DONE.
   - Test partial rebuild of daily summaries on both sqlite and MySQL.  
 
 wee_database:
-  - Single "--update" option. This fixes weights and windSpeed. DONE, refer commit fcf90e4
   - Single "--check-database" option. This checks for strings, weights, and windSpeed. Partially done, but does not check windSpeed, refer commit fcf90e4
-  - Single "--fix" option. This fixes strings. DONE, refer commit fcf90e4
 
 Documentation
   - Document new options for wee_database in the utilities guide. Done, refer commit 5e1dfe7. Requires review.
-  - Update upgrading guide. Done, refer commit 1227ca4. Requires review.
-  - Document new "ago" tags. DONE
-  - Document start and stop times for time spans
-  
+  - Document iterating by record.
