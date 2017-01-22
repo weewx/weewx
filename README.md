@@ -87,20 +87,20 @@ The WeeWX website includes a [showcase](http://weewx.com/showcase.html) of
 sample web sites, a [map](http://weewx.com/stations.html) of stations using
 WeeWX, and [announcements](http://weewx.com/news.html).
 
-    [http://weewx.com](http://weewx.com/)
+[http://weewx.com](http://weewx.com/)
 
 The documentation includes guides for installation, upgrading, customization,
 and hardware in `docs/readme.htm` or at:
 
-    [http://weewx.com/docs.html](http://weewx.com/docs.html)
+[http://weewx.com/docs.html](http://weewx.com/docs.html)
 
 The wiki includes user-contributed extensions and suggestions at:
 
-    [https://github.com/weewx/weewx/wiki](https://github.com/weewx/weewx/wiki)
+[https://github.com/weewx/weewx/wiki](https://github.com/weewx/weewx/wiki)
 
 Community support can be found at:
 
-    [https://groups.google.com/group/weewx-user](https://groups.google.com/group/weewx-user)
+[https://groups.google.com/group/weewx-user](https://groups.google.com/group/weewx-user)
 
 <h2>Licensing</h2>
 
