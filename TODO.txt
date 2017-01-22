@@ -12,3 +12,4 @@ wee_database:
 Documentation
   - Document new options for wee_database in the utilities guide. Done, refer commit 5e1dfe7. Requires review.
   - Document iterating by record.
+  - Remove jQuery-ui CSS and js files.

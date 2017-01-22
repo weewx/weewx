@@ -342,30 +342,22 @@ Version: 3.7
 
         <p>Skins live in their own directory called
             <span class='code'>skins</span> and referred to as
-            <a href="#" id="skin-root-description-target">
+            <a href="#skin-root-description">
                 <span class="symcode">SKIN_ROOT</span></a>.
-        </p>
 
-        <div id="skin-root-description" title="SKIN_ROOT" style="display:none">
-            <p>The symbol <span class='code'>SKIN_ROOT</span> is a symbolic name
+        <div id="skin-root-description" class="modal-dialog">
+            <div>
+                <a href="#close" title="Close" class="close-dialog">X</a>
+                <h4>SKIN_ROOT</h4>
+              <p>The symbol <span class='code'>SKIN_ROOT</span> is a symbolic name
                 to the location of the directory where
                 your skins are located. It is not to be taken literally. Consult the
                 <a href="usersguide.htm#dir-layout-table">directory layout table</a>
                 in the User's Guide for its exact location, dependent on how you
-                installed weewx and what operating system you are using</p></div>
-        <script type="text/javascript">
-            $("#skin-root-description-target").click(
-                    function () {
-                        $("#skin-root-description").dialog({
-                            position: {
-                                my: "left top",
-                                at: "right bottom",
-                                of: "#skin-root-description-target"
-                            }
-                        });
-                        return false; // Insures that the "link" isn't followed
-                    });
-        </script>
+                installed weewx and what operating system you are using</p>
+            </div>
+        </div>
+        </p>
 
         <h3>Generators</h3>
 
@@ -2113,6 +2105,43 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             </tbody>
         </table>
 
+        <h3>One final example</h3>
+        <p>This example is designed to put together a lot of the elements above, including
+            iteration, aggregation period starts and ends, formatting, and overriding units.
+            <a href="examples/tag.htm">Click here</a> for the results.</p>
+
+        <pre class="tty">
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;style&gt;
+      td { border: 1px solid #cccccc; padding: 5px; }
+    &lt;/style&gt;
+  &lt;/head&gt;
+
+  &lt;body&gt;
+    &lt;table border=1 style="border-collapse:collapse;"&gt;
+      &lt;tr style="font-weight:bold"&gt;
+	&lt;td&gt;Time interval&lt;/td&gt;
+	&lt;td&gt;Max temperature&lt;/td&gt;
+	&lt;td&gt;Time&lt;/td&gt;
+      &lt;/tr&gt;
+#for $hour in $day($days_ago=1).hours
+      &lt;tr&gt;
+	&lt;td&gt;$hour.start.format("%H:%M")-$hour.end.format("%H:%M")&lt;/td&gt;
+	&lt;td&gt;$hour.outTemp.max ($hour.outTemp.max.degree_C)&lt;/td&gt;
+	&lt;td&gt;$hour.outTemp.maxtime.format("%H:%M")&lt;/td&gt;
+      &lt;/tr&gt;
+#end for
+      &lt;caption&gt;
+	&lt;p&gt;
+	  Hourly max temperatures yesterday&lt;br/&gt;
+	  $day($days_ago=1).start.format("%d-%b-%Y")
+	&lt;/p&gt;
+      &lt;/caption&gt;
+    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
         <h2 id="defining_new_tags">Defining new tags</h2>
 
         <p>
