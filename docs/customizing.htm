@@ -1755,8 +1755,8 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
         </p>
         <pre class="tty">3 hour averages over last day
 DateTime,outTemp,outHumidity,appTemp
-<span class="highlight">#for $span in $last_day.spans(interval=10800)</span>
-$span.dateTime.format("%d/%m %H:%M:%S"),$span.outTemp.avg,$span.outHumidity.avg,$span.appTemp.avg
+<span class="highlight">#for $_span in $span($day_delta=1).spans(interval=10800)</span>
+$_span.start.format("%d/%m %H:%M"),$_span.outTemp.avg,$_span.outHumidity.avg,$_span.appTemp.avg
 <span class="highlight">#end for</span></pre>
         <p>The result is:</p>
 
