@@ -119,18 +119,6 @@ Version: 3.7
             calculations using the data. These actions are called services.
         </p>
 
-        <p>There are two
-            categories of data: LOOP and RECORD. The names are based on
-            conventions used by Davis Instruments. LOOP data are the sensor
-            readings, as fast as they can be obtained from the hardware. Usually
-            this means defining a polling interval, or doing a blocking
-            socket/serial read on the hardware so that the hardware itself
-            dictates the data collection interval. Each archive RECORD is an
-            aggregate of LOOP readings. If the hardware has a data logger, then
-            it generates the RECORD data. If not, then
-            <span class="code">weewx</span> generates each RECORD from LOOP data.
-        </p>
-
         <p>A driver is Python code that communicates with the hardware. The driver
             reads data from a serial port or a device on the USB or a network
             interface. It handles any decoding of raw bits and bytes, and puts
@@ -143,7 +131,7 @@ Version: 3.7
         <p>In many cases there are useful dependent variables that use the
             primary variables emitted by the driver. For example, rain rate,
             windchill, heatindex, humidex, apptemp, ET are all dependent
-            quantities - they require primary observations such as wind speed,
+            quantities &mdash; they require primary observations such as wind speed,
             temperature, solar radiation. The firmware for some hardware
             calculates dependent quantities. The <span class="code">weewx</span>
             service <span class="code">StdWXCalculate</span> fills in the gaps and
@@ -162,8 +150,8 @@ Version: 3.7
             Davis Vantage series, for others, irregularly, every 20 or 30 seconds
             or so. LOOP packets may or may not contain all the data types. For
             example, a packet may contain only temperature data, another only
-            barometric data, <em>etc.</em>. This kind of packet is called a
-            <em>partial record packet</em>. For other types of hardware (notably
+            barometric data, <em>etc</em>. These kinds of packet are called
+            <em>partial record packets</em>. By contrast, other types of hardware (notably
             the Vantage series), every LOOP packet contains every data type.</p>
 
         <p>In summary, LOOP packets can be highly irregular, but they come in
@@ -181,14 +169,12 @@ Version: 3.7
             interval.</p>
 
         <p>Some hardware is capable of generating its own archive records (the
-            Davis Vantage and Oregon Scientific WMR200 for example), but for
+            Davis Vantage and Oregon Scientific WMR200, for example), but for
             hardware that does not archive data, weewx generates them.</p>
 
         <p>It is the archive data that is put in the SQL database, although,
             occasionally, the LOOP packets can be useful (such as for the Weather
-            Underground's "Rapidfire" mode, or for the
-            <a href="https://bitbucket.org/lirpa/mesowx">mesowx</a> realtime
-            display system.</p>
+            Underground's "Rapidfire" mode).</p>
 
         <h2>The weewx service architecture</h2>
 
@@ -341,7 +327,7 @@ Version: 3.7
             include a skin configuration file, although they are quite minimal.</p>
 
         <p>Skins live in their own directory called
-            <span class='code'>skins</span> and referred to as
+            <span class='code'>skins</span>, whose location is referred to as
             <a href="#skin-root-description">
                 <span class="symcode">SKIN_ROOT</span></a>.
 
@@ -412,7 +398,7 @@ Version: 3.7
         <p>
             A template is a text file that is processed by a <em>template engine</em>
             to create a new file. <span class="code">Weewx</span>
-            uses the <a href="http://www.cheetahtemplate.org">Cheetah</a>
+            uses the <a href="https://pythonhosted.org/Cheetah/">Cheetah</a>
             template engine. The generator <span class="code">weewx.cheetahgenerator.CheetahGenerator</span>
             is responsible for running Cheetah at appropriate times.
         </p>
@@ -853,23 +839,22 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             everything in the <span class="code">skins</span> directory is
             preserved), so you don't have to worry about losing changes after an upgrade.</p>
 
-        <p>Template generation is done using the <a href="http://www.cheetahtemplate.org/">Cheetah</a>
+        <p>Template generation is done using the <a href="https://pythonhosted.org/Cheetah/">Cheetah</a>
             templating engine. This is a very powerful engine, which essentially
             lets you have the full semantics of Python available in your templates.
             As this would make the templates incomprehensible to anyone but a Python
             programmer, <span class="code">weewx</span> adopts a very small subset
             of its power. </p>
 
-        <h3>The dot code</h3>
+        <h3>Tags</h3>
 
-        <p>The key construct is a 'dot' code, specifying what value you want. For
+        <p>The key construct is a 'tag', specifying what value you want. For
             example: </p>
-      <pre class="tty">$month.outTemp.max
-$month.outTemp.maxtime
-$current.outTemp</pre>
-        <p>would code the max outside temperature for the month, the time it
-            occurred, and the current outside temperature, respectively. So a
-            template file that contains:</p>
+      <pre class="tty">$current.outTemp
+$month.outTemp.max
+$month.outTemp.maxtime</pre>
+        <p>would code the current outside temperature, the maximum outside temperature for the month, and the time
+            that maximum temperature occurred, respectively. So a template file that contains:</p>
       <pre class="tty">&lt;html&gt;
     &lt;head&gt;
         &lt;title&gt;Current conditions&lt;/title&gt;
@@ -893,16 +878,16 @@ $current.outTemp</pre>
             format is from <span class="code"><a href="#Units_TimeFormats">[Units][[TimeFormats]]</a></span>.
         </p>
 
-        <p>As we saw above, the dot codes can be very simple: </p>
+        <p>As we saw above, the tags can be very simple: </p>
       <pre class="tty">## Output max outside temperature using an appropriate format and label:
 $month.outTemp.max</pre>
-        <p>Most of the time, the dot code will "do the right thing" and is all you
+        <p>Most of the time, tags will "do the right thing" and are all you
             will need. However, <span class="code">weewx</span> offers extensive
             customization of the generated output for specialized applications such
             as XML RSS feeds, or ridgidly formatted reports (such as the NOAA
             reports). This section specifies the various options available. </p>
 
-        <p>There are two different versions of the dot code, depending on whether
+        <p>There are two different versions of the tags, depending on whether
             the data is "current", or an aggregation over time. However, both
             versions are similar.</p>
 
@@ -918,7 +903,7 @@ $month.outTemp.max</pre>
             <span class="code">NEW_ARCHIVE_RECORD</span> event. This is generally the data emitted by the
         station console, augmented by any derived variables (<i>e.g.</i>wind chill) that you might have specified. If
         the observation type cannot be found there, the most recent record in the database will be searched.</p>
-        <p>The most general dot code for a "current" observation looks like: </p>
+        <p>The most general tag for a "current" observation looks like: </p>
         <pre class="tty">$current($data_binding=<em>binding_name</em>).<em>obstype</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
         <p>Where:</p>
 
@@ -964,14 +949,14 @@ $month.outTemp.max</pre>
 
         <h3 id="general_aggregation_periods">Aggregation periods</h3>
 
-        <p>A dot code such as</p>
+        <p>Aggregation periods is the other kind of tag. For example,</p>
         <pre class="tty">$week.rain.sum</pre>
         <p>represents an <em>aggregation over time</em>, using a certain <em>aggregation type</em>.
             In this example, the aggregation time is a week, and the aggregation type is summation.
             So, this tag represents the total rainfall over a week.
         </p>
 
-        <p>The most general dot code for an aggregation over time looks like:</p>
+        <p>The most general tag for an aggregation over time looks like:</p>
         <pre class="tty">$<em>period</em>($data_binding=<em>binding_name</em>, <em>$optional_ago</em>=<em>delta</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
         <p>Where:</p>
 
@@ -1114,9 +1099,19 @@ $month.outTemp.max</pre>
                 <td>The average temperature day before yesterday (2 days ago).</td>
             </tr>
             <tr>
+                <td class="first_col code">$week($weeks_ago=<i>d</i>)</td>
+                <td class="code">$week($weeks_ago=1).outTemp.max</td>
+                <td>The maximum temperature last week.</td>
+            </tr>
+            <tr>
                 <td class="first_col code">$month($months_ago=<i>m</i>)</td>
                 <td class="code">$month($months_ago=1).outTemp.max</td>
                 <td>The maximum temperature last month.</td>
+            </tr>
+            <tr>
+                <td class="first_col code">$year($years_ago=<i>m</i>)</td>
+                <td class="code">$year($years_ago=1).outTemp.max</td>
+                <td>The maximum temperature last year.</td>
             </tr>
         </table>
 
@@ -1520,8 +1515,7 @@ or in foobar units: $day.barometer.min.foobar
         <h3>Tag <span class="code">$span</span></h3>
 
         <p>The tag <span class="code">$span</span> allows aggregation over a user defined
-            period up to and including the current time. The most general dot code for a <span class="code">$span</span>
-            tag looks like:</p>
+            period up to and including the current time. Its most general form looks like:</p>
 
         <pre class="tty">$<em>span</em>([$data_binding=<em>binding_name</em>][,<em>$optional_delta</em>=<em>delta</em>]).<em>obstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
 
@@ -2232,9 +2226,9 @@ $station.altitude</pre>
             you specified in your configuration file. Its job is to make sure
             that the final output reflects these preferences. Cheetah doesn't know
             anything about this class. What it needs, when it has finished
-            evaluating the expression <span class="code">$day.outTemp.max</span>
+            evaluating the expression <span class="code">$station.altitude</span>,
             is a <em>string</em>. In order to convert the <span class="code">ValueHelper</span>
-            it has into a string, it does what every other Python object does when
+            it has in hand into a string, it does what every other Python object does when
             faced with this problem: it calls the special method <span
                 class="code"><a style="text-decoration: none"
                                 href="https://docs.python.org/2/reference/datamodel.html#object.__str__">__str__</a></span>.
@@ -2574,7 +2568,7 @@ class MyStats(SearchList):                                                   # 1
             pixels in height, and will have an RGB background color of 0xf5f5f5, a
             very light gray (HTML color "WhiteSmoke"). The chart itself will have a
             background color of 0xd8d8d8 (a little darker gray), and the gridlines
-            will be 0xa0a0a0 (still darker). The other options farther (not shown)
+            will be 0xa0a0a0 (still darker). The other options farther down (not shown)
             will also apply to all plots.
         </p>
 
@@ -2602,7 +2596,7 @@ class MyStats(SearchList):                                                   # 1
             type format for the x-axis. In this example, it will only show days
             (format option <span class="code">%d</span>). The <span class="code">bottom_label_format</span>
             is the format used to time stamp the image at the bottom. In this example,
-            it will show the time as something like<span class="code">10/25/09
+            it will show the time as something like <span class="code">10/25/09
         15:35</span>. A plot will cover a nominal 30 days, and all items included in it
             will use an aggregate type of averaging over 3 hours. Finally, by setting
             option <span class="code">show_daynight</span> to <span class="code">false</span>,
@@ -4547,15 +4541,15 @@ weewx.units.conversionDict['mm'] = {'inch': lambda x : x * .0393700787,
 weewx.units.obs_group_dict['snow_depth'] = 'group_depth'</pre>
         <p>
             Once the observation has been associated with a unit group, the unit
-            labels and other dot-code syntax will work for that observation.
+            labels and other tag syntax will work for that observation.
         </p>
 
 
         <h1 id="service_engine">Customizing the <span class="code">weewx</span> service engine</h1>
 
         <p>This is an advanced topic intended for those who wish to try their hand
-            at extending the internal engine in weewx. You should have a passing
-            familiarity with Python or, at least, be willing to learn it. </p>
+            at extending the internal engine in weewx. Before attempting these examples, you should be reasonably
+            proficient with Python.</p>
 
         <p class="warning">Please note that the API to the service engine may change in future versions!</p>
 
@@ -4765,7 +4759,7 @@ class MyAlarm(StdService):
                 member function, <span class="code">self.newArchiveRecord</span>. When
                 the event <span class='code'>NEW_ARCHIVE_RECORD</span> occurs,
                 the function <span class="code">self.newArchiveRecord</span> will be called. There
-                are many other events that can be interecepted. Look in the file
+                are many other events that can be intercepted. Look in the file
                 <span class="code">weewx/__init__.py</span>.
             </li>
             <li>Some hardware does not emit all possible observation types in every record. So,
