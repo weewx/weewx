@@ -720,7 +720,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.18rc1'
+DRIVER_VERSION = '0.18rc2'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -1027,7 +1027,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         p = self.convert(pkt, int(time.time() + 0.5))
         if 'pressure' in p:
             # cache any pressure-related values
-            for x in ['pressure', 'barometer', 'altimeter']:
+            for x in ['pressure', 'barometer']:
                 self.pressure_cache[x] = p[x]
         else:
             # apply any cached pressure-related values
