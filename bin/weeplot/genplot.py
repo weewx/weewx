@@ -7,6 +7,7 @@
 """
 import colorsys
 import locale
+import os
 import time
 try:
     from PIL import Image, ImageDraw
@@ -102,6 +103,25 @@ class GeneralPlot(object):
         self.daynight_night_color   = weeplot.utilities.tobgr(config_dict.get('daynight_night_color', '0xf0f0f0'))
         self.daynight_edge_color    = weeplot.utilities.tobgr(config_dict.get('daynight_edge_color', '0xefefef'))
         self.daynight_gradient      = int(config_dict.get('daynight_gradient', 20))
+
+        # normalize the font paths relative to the skin directory
+        skin_dir = config_dict.get('skin_dir', '')
+        self.top_label_font_path = self.normalize_path(
+            skin_dir, self.top_label_font_path)
+        self.bottom_label_font_path = self.normalize_path(
+            skin_dir, self.bottom_label_font_path)
+        self.unit_label_font_path = self.normalize_path(
+            skin_dir, self.unit_label_font_path)
+        self.axis_label_font_path = self.normalize_path(
+            skin_dir, self.axis_label_font_path)
+        self.rose_label_font_path = self.normalize_path(
+            skin_dir, self.rose_label_font_path)
+
+    @staticmethod
+    def normalize_path(skin_dir, path):
+        if os.path.isabs(path):
+            return path
+        return os.path.join(skin_dir, path)
 
     def setBottomLabel(self, bottom_label):
         """Set the label to be put at the bottom of the plot.
