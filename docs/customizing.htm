@@ -5,11 +5,11 @@
     <title>weewx: Customization Guide</title>
     <meta http-equiv="Content-Language" content="en-us"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
     <link rel="stylesheet" href="css/jquery.tocify.css"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
-    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link rel="icon" href="images/favicon.png" type="image/png"/>
 </head>
 
 <body>
@@ -331,6 +331,7 @@ Version: 3.7
             <a href="#skin-root-description">
                 <span class="symcode">SKIN_ROOT</span></a>.
 
+        </p>
         <div id="skin-root-description" class="modal-dialog">
             <div>
                 <a href="#close" title="Close" class="close-dialog">X</a>
@@ -343,7 +344,6 @@ Version: 3.7
                 installed weewx and what operating system you are using</p>
             </div>
         </div>
-        </p>
 
         <h3>Generators</h3>
 
@@ -3043,30 +3043,30 @@ class MyStats(SearchList):                                                   # 1
             <tr>
                 <td class="code first_col">minutes</td>
                 <td>Specifies the minutes of the hour when the report will be run</td>
-                <td>*, or<br>numbers in the range 0..59 inclusive</td>
+                <td>*, or<br/>numbers in the range 0..59 inclusive</td>
             </tr>
             <tr>
                 <td class="code first_col">hours</td>
                 <td>Specifies the hours of the day when the report will be run</td>
-                <td>*, or<br>numbers in the range 0..23 inclusive</td>
+                <td>*, or<br/>numbers in the range 0..23 inclusive</td>
             </tr>
             <tr>
                 <td class="code first_col">day_of_month</td>
                 <td>Specifies the days of the month when the report will be run</td>
-                <td>*, or<br>numbers in the range 1..31 inclusive</td>
+                <td>*, or<br/>numbers in the range 1..31 inclusive</td>
             </tr>
             <tr>
                 <td class="code first_col">months</td>
                 <td>Specifies the months of the year when the report will be run</td>
-                <td>*, or<br>numbers in the range 1..12 inclusive, or<br>abbreviated names
+                <td>*, or<br/>numbers in the range 1..12 inclusive, or<br/>abbreviated names
                     in the range jan..dec inclusive
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">day_of_week</td>
                 <td>Specifies the days of the week when the report will be run</td>
-                <td>*, or<br>numbers in the range 0..7 inclusive (0,7 = Sunday, 1 =
-                    Monday etc), or<br>abbreviated names in the range sun..sat inclusive
+                <td>*, or<br/>numbers in the range 0..7 inclusive (0,7 = Sunday, 1 =
+                    Monday etc), or<br/>abbreviated names in the range sun..sat inclusive
                 </td>
             </tr>
             </tbody>
@@ -3154,8 +3154,8 @@ class MyStats(SearchList):                                                   # 1
             <b>Note</b><br/>The day a report is to be run can be specified by two
             parameters; day of month and/or day of week. If both parameters
             are restricted (i.e., not an asterisk), the report will be run when either
-            field matches the current time. For example,<br>
-            <span class="code">report_timing = 30 4 1,15 * 5</span><br> would cause
+            field matches the current time. For example,<br/>
+            <span class="code">report_timing = 30 4 1,15 * 5</span><br/> would cause
             the report to be run at 4:30am on the 1st and 15th of each month as well
             as 4:30am every Friday.
         </p>
@@ -3221,6 +3221,7 @@ class MyStats(SearchList):                                                   # 1
                 values of the parameter. For example, */3 can be used in the hours parameter
                 to, subject to other parameter in the <span class="code">report_timing</span>
                 option, run the report at hours 0,3,6,9,12,15,18 and 21.
+            </li>
         </ul>
 
         <h4>Nicknames</h4>
@@ -3240,7 +3241,7 @@ class MyStats(SearchList):                                                   # 1
                 <td>When the report will be run</td>
             </tr>
             <tr>
-                <td class="code first_col">@yearly<br>@annually</td>
+                <td class="code first_col">@yearly<br/>@annually</td>
                 <td>0 0 1 1 *</td>
                 <td>Once per year at midnight on 1 January.</td>
             </tr>
@@ -5258,7 +5259,7 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
             my roof to look like a weather station farm!</p>
 
         <h2>General guidelines</h2>
-        <p>
+
         <ul>
             <li>The driver should emit data as it receives it from the hardware (no caching).</li>
             <li>The driver should emit only data it receives from the hardware (no "filling in the gaps").</li>
@@ -5273,7 +5274,6 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
             </li>
             <li>However, if the hardware emits a derived variable, then the driver should emit it.</li>
         </ul>
-        </p>
 
         <h2>Implement the driver</h2>
 
