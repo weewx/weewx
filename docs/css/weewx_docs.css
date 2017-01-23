@@ -152,19 +152,23 @@ h1 {
   moz-border-radius: 3px;
   border-radius: 3px;
   margin-top: 2em;
+  margin-bottom: 0;
 }
 h2 {
   color: teal;
   font-family: 'Roboto', sans-serif;
   font-size: 140%;
   font-weight: bold;
+  border-bottom: 1px solid #999999;
   margin-top: 1.5em;
+  margin-bottom: 0;
 }
 h3 {
   color: teal;
   font-family: 'Roboto', sans-serif;
   font-size: 120%;
   font-weight: bold;
+  margin-bottom: 0;
 }
 h4 {
   color: teal;
