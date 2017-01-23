@@ -418,7 +418,10 @@ div .ui-widget-header {
 .ui-widget-content {
   background: white;
 }
-
+/* eliminate jquery-ui overrides to trebuchet */
+.ui-widget {
+  font-family: 'Noto Sans', sans-serif;
+}
 
 /* settings for printing */
 @media print {
