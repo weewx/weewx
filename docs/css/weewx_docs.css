@@ -4,9 +4,11 @@
  * 
  *  See the file LICENSE.txt for your rights.
  */ 
- 
+
+@import url('https://fonts.googleapis.com/css?family=Roboto:700|Noto+Sans|Inconsolata');
+
 body{
-  font-family: Verdana,arial,sans-serif;
+  font-family: 'Noto Sans', sans-serif;
   font-size: 90%;
   margin-top: 4px;
 }
@@ -73,6 +75,7 @@ div.main {
   border-radius: 3px;
 }
 .title {
+  font-family: 'Roboto', sans-serif;
   font-size: 180%;
   font-weight: bold;
   margin-top: 0px;
@@ -138,6 +141,7 @@ dd {
 }
 h1 {
   color: black;
+  font-family: 'Roboto', sans-serif;
   font-size: 160%;
   font-weight: bold;
   border: 1px solid #999999;
@@ -151,17 +155,20 @@ h1 {
 }
 h2 {
   color: teal;
+  font-family: 'Roboto', sans-serif;
   font-size: 140%;
   font-weight: bold;
   margin-top: 1.5em;
 }
 h3 {
   color: teal;
+  font-family: 'Roboto', sans-serif;
   font-size: 120%;
   font-weight: bold;
 }
 h4 {
   color: teal;
+  font-family: 'Roboto', sans-serif;
   font-size: 100%;
   font-weight: bold;
 }
@@ -204,10 +211,10 @@ caption {
 
 
 .code {
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Inconsolata', monospace;
 }
 .symcode {
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Inconsolata', monospace;
   font-style: italic;
 }
 .indent {
@@ -230,7 +237,7 @@ caption {
   font-weight: bold;
 }
 .tty {
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Inconsolata', monospace;
   font-size: 90%;
   background-color: #FFFFe0;
   border: 1px solid #ddddaa;
@@ -241,7 +248,7 @@ caption {
 }
 .config_section {}
 .config_option, .config_important {
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Inconsolata', monospace;
   font-weight: bold;
   color: black;
   margin-top: 1.5em;
@@ -263,7 +270,7 @@ caption {
   text-align: center;
 }
 .example_output {
-  font-family: "Times New Roman", Times, serif;
+  font-family: 'Quattrocento', serif;
   padding: 3px 8px 3px 8px;
   margin: 5px 15px 5px 15px;
   border: 1px solid #cccccc;
@@ -383,7 +390,7 @@ caption {
  * output so that examples in the docs match those of the standard template.
  */
 .stats {
-  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-family: 'Noto Sans', sans-serif;
   padding: 13px 58px 13px 58px;
 }
 .stats table {
@@ -528,7 +535,6 @@ div .ui-widget-header {
  */
 .modal-dialog {
     position: fixed;
-    font-family: Arial, Helvetica, sans-serif;
     top: 0;
     right: 0;
     bottom: 0;
@@ -552,9 +558,6 @@ div .ui-widget-header {
     padding: 5px 20px 13px 20px;
     border-radius: 10px;
     background: #fff;
-    background: -moz-linear-gradient(#fff, #999);
-    background: -webkit-linear-gradient(#fff, #999);
-    background: -o-linear-gradient(#fff, #999);
 }
 .close-dialog {
     background: #606061;

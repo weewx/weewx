@@ -51,7 +51,8 @@ Support for over 70 types of hardware including, but not limited to:
 * Oregon Scientific WMR100, WMR200, WMR300, WMR9x8, and other variants;
 * Oregon Scientific LW300/LW301/LW302;
 * Fine Offset WH10xx, WH20xx, and WH30xx series (including Ambient, Elecsa, Maplin, Tycon, Watson, and others);
-* Fine Offset WH2600, HP1000 (including Ambient Observer);
+* Fine Offset WH23xx, WH4000 (including Tycon TP2700, MiSol WH2310);
+* Fine Offset WH2600, HP1000 (including Ambient Observer, Aercus WeatherSleuth, XC0422);
 * LaCrosse WS-23XX and WS-28XX (including TFA);
 * LaCrosse GW1000U bridge;
 * Hideki TE923, TE831, TE838, DV928 (including TFA, Cresta, Honeywell, and others);
