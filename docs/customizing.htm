@@ -1989,34 +1989,104 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
 
       <p>
         The following template again uses a Cheetah <span class="code">for</span>
-        loop, this time to iterate over 3 hourly spans over the last day
-        and display 3 hourly averages. The iteration loop is <span
+        loop, this time to iterate over 3-hour spans over the last 24 hours,
+        displaying the averages in each span. The iteration loop is <span
           class="highlight">&nbsp;highlighted&nbsp;</span>.
       </p>
-      <pre class="tty">3 hour averages over last day
-DateTime,outTemp,outHumidity,appTemp
+      <pre class="tty">&lt;p&gt;3 hour averages over the last 24 hours&lt;/p&gt;
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;td&gt;Date/time&lt;/td&gt;&lt;td&gt;outTemp&lt;/td&gt;&lt;td&gt;outHumidity&lt;/td&gt;
+  &lt;/tr&gt;
 <span class="highlight">#for $_span in $span($day_delta=1).spans(interval=10800)</span>
-$_span.start.format("%d/%m %H:%M"),$_span.outTemp.avg,$_span.outHumidity.avg,$_span.appTemp.avg
+  &lt;tr&gt;
+    &lt;td&gt;$_span.start.format("%d/%m %H:%M")&lt;/td&gt;&lt;td&gt;$_span.outTemp.avg&lt;/td&gt;&lt;td&gt;$_span.outHumidity.avg&lt;/td&gt;
+  &lt;/tr&gt;
 <span class="highlight">#end for</span>
-      </pre>
+&lt;/table&gt;      
+</pre>
       <p>The result is:</p>
 
-      <p class="example_output">
-        3 hour averages over last day<br />
-        DateTime,outTemp,outHumidity,appTemp<br /> 14/01
-        09:00:00,31.0C,53%,34.2C<br /> 14/01 12:00:00,34.8C,38%,36.4C<br />
-        14/01 15:00:00,32.6C,48%,35.2C<br /> 14/01
-        18:00:00,26.7C,68%,29.4C<br /> 14/01 21:00:00,24.4C,76%,27.2C<br />
-        15/01 00:00:00,23.3C,73%,25.5C<br /> 15/01
-        03:00:00,22.7C,72%,24.7C<br /> 15/01 06:00:00,23.4C,69%,25.4C<br />
-        15/01 09:00:00,24.5C,59%,25.9C
-      </p>
+      <div class="example_output">
+        <p>3 hour averages over the last 24 hours</p>
+        <table>
+            <tr>
+                <td>Date/time</td><td>outTemp</td><td>outHumidity</td>
+            </tr>
+            <tr>
+                <td>21/01 18:50</td><td>33.4&#176;F</td><td>95%</td>
+            </tr>
+            <tr>
+              <td>21/01 21:50</td><td>32.8&#176;F</td><td>96%</td>
+            </tr>
+            <tr>
+              <td>22/01 00:50</td><td>33.2&#176;F</td><td>96%</td>
+            </tr>
+            <tr>
+              <td>22/01 03:50</td><td>33.2&#176;F</td><td>96%</td>
+            </tr>
+            <tr>
+              <td>22/01 06:50</td><td>33.8&#176;F</td><td>96%</td>
+            </tr>
+            <tr>
+              <td>22/01 09:50</td><td>36.8&#176;F</td><td>95%</td>
+            </tr>
+            <tr>
+              <td>22/01 12:50</td><td>39.4&#176;F</td><td>91%</td>
+            </tr>
+            <tr>
+              <td>22/01 15:50</td><td>35.4&#176;F</td><td>93%</td>
+            </tr>
+        </table>     
+
+      </div>
 
       <p>
         See the NOAA template files <span class="code">NOAA/NOAA-YYYY.txt.tmpl</span>
         and <span class="code">NOAA/NOAA-YYYY-MM.txt.tmpl</span> for
-        examples using iteration, as well as explicit formatting.
+        other examples using iteration, as well as explicit formatting.
       </p>
+
+      <h3>Comprehensive example</h3>
+      <p>
+        This example is designed to put together a lot of the elements
+        above, including iteration, aggregation period starts and ends,
+        formatting, and overriding units.
+      </p>
+
+      <pre class="tty">
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;style&gt;
+      td { border: 1px solid #cccccc; padding: 5px; }
+    &lt;/style&gt;
+  &lt;/head&gt;
+
+  &lt;body&gt;
+    &lt;table border=1 style="border-collapse:collapse;"&gt;
+      &lt;tr style="font-weight:bold"&gt;
+    &lt;td&gt;Time interval&lt;/td&gt;
+    &lt;td&gt;Max temperature&lt;/td&gt;
+    &lt;td&gt;Time&lt;/td&gt;
+      &lt;/tr&gt;
+#for $hour in $day($days_ago=1).hours
+      &lt;tr&gt;
+    &lt;td&gt;$hour.start.format("%H:%M")-$hour.end.format("%H:%M")&lt;/td&gt;
+    &lt;td&gt;$hour.outTemp.max ($hour.outTemp.max.degree_C)&lt;/td&gt;
+    &lt;td&gt;$hour.outTemp.maxtime.format("%H:%M")&lt;/td&gt;
+      &lt;/tr&gt;
+#end for
+      &lt;caption&gt;
+    &lt;p&gt;
+      Hourly max temperatures yesterday&lt;br/&gt;
+      $day($days_ago=1).start.format("%d-%b-%Y")
+    &lt;/p&gt;
+      &lt;/caption&gt;
+    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+      <p><a href="examples/tag.htm">Click here</a> for the results.</p>
 
       <h3>Almanac</h3>
 
@@ -2376,46 +2446,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
         </tbody>
       </table>
 
-      <h3>One final example</h3>
-      <p>
-        This example is designed to put together a lot of the elements
-        above, including iteration, aggregation period starts and ends,
-        formatting, and overriding units. <a href="examples/tag.htm">Click
-          here</a> for the results.
-      </p>
 
-      <pre class="tty">
-&lt;html&gt;
-  &lt;head&gt;
-    &lt;style&gt;
-      td { border: 1px solid #cccccc; padding: 5px; }
-    &lt;/style&gt;
-  &lt;/head&gt;
-
-  &lt;body&gt;
-    &lt;table border=1 style="border-collapse:collapse;"&gt;
-      &lt;tr style="font-weight:bold"&gt;
-	&lt;td&gt;Time interval&lt;/td&gt;
-	&lt;td&gt;Max temperature&lt;/td&gt;
-	&lt;td&gt;Time&lt;/td&gt;
-      &lt;/tr&gt;
-#for $hour in $day($days_ago=1).hours
-      &lt;tr&gt;
-	&lt;td&gt;$hour.start.format("%H:%M")-$hour.end.format("%H:%M")&lt;/td&gt;
-	&lt;td&gt;$hour.outTemp.max ($hour.outTemp.max.degree_C)&lt;/td&gt;
-	&lt;td&gt;$hour.outTemp.maxtime.format("%H:%M")&lt;/td&gt;
-      &lt;/tr&gt;
-#end for
-      &lt;caption&gt;
-	&lt;p&gt;
-	  Hourly max temperatures yesterday&lt;br/&gt;
-	  $day($days_ago=1).start.format("%d-%b-%Y")
-	&lt;/p&gt;
-      &lt;/caption&gt;
-    &lt;/table&gt;
-  &lt;/body&gt;
-&lt;/html&gt;
-</pre>
       <h2 id="defining_new_tags">Defining new tags</h2>
 
       <p>
