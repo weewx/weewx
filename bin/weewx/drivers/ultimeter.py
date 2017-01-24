@@ -60,7 +60,7 @@ from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'Ultimeter'
-DRIVER_VERSION = '0.17'
+DRIVER_VERSION = '0.18'
 
 
 def loader(config_dict, _):
@@ -154,7 +154,6 @@ class Station(object):
         self.port = port
         self.baudrate = 2400
         self.timeout = 3 # seconds
-        self.write_timeout = 3 # seconds
         self.serial_port = None
         # setting the year works only for models 2004 and later
         self.can_set_year = True
@@ -172,8 +171,7 @@ class Station(object):
     def open(self):
         logdbg("open serial port %s" % self.port)
         self.serial_port = serial.Serial(self.port, self.baudrate,
-                                         timeout=self.timeout,
-                                         write_timeout=self.write_timeout)
+                                         timeout=self.timeout)
 
     def close(self):
         if self.serial_port is not None:
