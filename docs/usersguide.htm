@@ -320,14 +320,19 @@ Version: 3.7
 
         <div id='layout' style='clear:both; width: 80%;'>
             <div id='layout-deb'>
-                <table class='locations' width='100%'>
+                <table class='locations'>
                     <tr class='selected'>
                         <td colspan='3' class='locations_banner'>Application layout for install using DEB package</td>
                     </tr>
-                    <tr class="first_row" style="background-color: inherit">
+                    <tr class="first_row">
                         <td>Role</td>
                         <td>Symbolic Name</td>
                         <td>Nominal Location</td>
+                    </tr>
+                    <tr>
+                        <td><span class='code'>weewx</span> root directory</td>
+                        <td class="symcode">WEEWX_ROOT</td>
+                        <td class="tty">/</td>
                     </tr>
                     <tr>
                         <td>Executables</td>
@@ -372,14 +377,19 @@ Version: 3.7
                 </table>
             </div>
             <div id='layout-rpm' style='display:none'>
-                <table class='locations' width='100%'>
+                <table class='locations'>
                     <tr class='selected'>
                         <td colspan='3' class='locations_banner'>Application layout for install using RPM package</td>
                     </tr>
-                    <tr class="first_row" style="background-color: inherit">
+                    <tr class="first_row">
                         <td>Role</td>
                         <td>Symbolic Name</td>
                         <td>Nominal Location</td>
+                    </tr>
+                    <tr>
+                        <td><span class='code'>weewx</span> root directory</td>
+                        <td class="symcode">WEEWX_ROOT</td>
+                        <td class="tty">/</td>
                     </tr>
                     <tr>
                         <td>Executables</td>
@@ -424,12 +434,12 @@ Version: 3.7
                 </table>
             </div>
             <div id='layout-macos' style='display:none'>
-                <table class='locations' width='100%'>
+                <table class='locations'>
                     <tr class='selected'>
                         <td colspan='3' class='locations_banner'>Application layout for install on MacOS
                         </td>
                     </tr>
-                    <tr class="first_row" style="background-color: inherit">
+                    <tr class="first_row">
                         <td>Role</td>
                         <td>Symbolic Name</td>
                         <td>Nominal Location</td>
@@ -482,13 +492,13 @@ Version: 3.7
                 </table>
             </div>
             <div id='layout-setup' style='display:none'>
-                <table class='locations' width='100%'>
+                <table class='locations'>
                     <tr class='selected'>
                         <td colspan='3' class='locations_banner'>Application layout for install using <span
                                 class='code'>setup.py</span>
                         </td>
                     </tr>
-                    <tr class="first_row" style="background-color: inherit">
+                    <tr class="first_row">
                         <td>Role</td>
                         <td>Symbolic Name</td>
                         <td>Nominal Location</td>
@@ -3678,6 +3688,35 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
             pressure that matches those reported by other stations in your area.
         </p>
 
+        <h3 id='pressure_calibration'>Calibrating <span class='code'>barometer</span> does not change the pressure
+            displayed by <span class='code'>weewx</span></h3>
+
+        <p>
+            Be sure that the calibration is applied to the correct quantity.
+        </p>
+
+        <p>
+            The corrections in the <span class='code'>StdCalibrate</span> section
+            apply only to raw values from the hardware; corrections are not applied
+            to derived quantities.
+        </p>
+
+        <p>
+            The station hardware matters. Some stations report gauge pressure
+            (<span class='code'>pressure</span>) while other stations report
+            sea-level pressure (<span class='code'>barometer</span>). For example,
+            if the hardware is a Vantage station, the correction must be applied
+            to <span class='code'>barometer</span> since the Vantage station
+            reports <span class='code'>barometer</span> and
+            <span class='code'>weewx</span> calculates
+            <span class='code'>pressure</span>. However, if the hardware
+            is a FineOffset station, the correction must be applied to
+            <span class='code'>pressure</span> since the FineOffset stations
+            report <span class='code'>pressure</span> and
+            <span class='code'>weewx</span> calculates
+            <span class='code'>barometer</span>.
+        </p>
+
         <h3 id='rain_mismatch'>The rainfall and/or rain rate reported by <span class='code'>weewx</span> do not match
             the console</h3>
 
@@ -3714,35 +3753,6 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
             and REC archive record. Tip the bucket to verify that each bucket tip is detected and reported by <span
                 class='code'>weewx</span>. Verify that each bucket tip is converted to the correct rainfall amount. Then
             check the database to verify that the values are properly added and recorded.
-        </p>
-
-        <h3 id='pressure_calibration'>Calibrating <span class='code'>barometer</span> does not change the pressure
-            displayed by <span class='code'>weewx</span></h3>
-
-        <p>
-            Be sure that the calibration is applied to the correct quantity.
-        </p>
-
-        <p>
-            The corrections in the <span class='code'>StdCalibrate</span> section
-            apply only to raw values from the hardware; corrections are not applied
-            to derived quantities.
-        </p>
-
-        <p>
-            The station hardware matters. Some stations report gauge pressure
-            (<span class='code'>pressure</span>) while other stations report
-            sea-level pressure (<span class='code'>barometer</span>). For example,
-            if the hardware is a Vantage station, the correction must be applied
-            to <span class='code'>barometer</span> since the Vantage station
-            reports <span class='code'>barometer</span> and
-            <span class='code'>weewx</span> calculates
-            <span class='code'>pressure</span>. However, if the hardware
-            is a FineOffset station, the correction must be applied to
-            <span class='code'>pressure</span> since the FineOffset stations
-            report <span class='code'>pressure</span> and
-            <span class='code'>weewx</span> calculates
-            <span class='code'>barometer</span>.
         </p>
 
         <h3 id="zero_windspeed">There is no wind direction when wind speed is zero</h3>
