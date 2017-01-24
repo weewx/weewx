@@ -10,4 +10,4 @@ wee_database:
 Documentation
   - Document new options for wee_database in the utilities guide. Done, refer commit 5e1dfe7. Requires review.
   - Document iterating by record.
-  - Rewrite the section "Customizing the Units" and "Specifying units for the new type" in the Customizing Guide.
+  - Double check the units used in the 'electricity' example. Watt-hours? Or kW-hours?
