@@ -1174,7 +1174,7 @@ $month.outTemp.max</pre>
       <table class="indent" style="width: 80%">
         <tbody>
           <tr class="first_row">
-            <td><em>Aggregation period</em></td>
+            <td>Aggregation period</td>
             <td>Meaning</td>
             <td>Example</td>
             <td>Meaning of example</td>
@@ -1243,7 +1243,7 @@ $month.outTemp.max</pre>
       <table class="indent" style="width: 80%">
         <tbody>
           <tr class="first_row">
-            <td><em>Aggregation period</em></td>
+            <td>Aggregation period</td>
             <td>Example</td>
             <td>Meaning</td>
           </tr>
@@ -1799,10 +1799,10 @@ or in foobar units: $day.barometer.min.foobar
       </p>
       <p>There are several different delta settings that can be
         used:</p>
-      <table class="indent" style="width: 100%">
+      <table class="indent">
         <tbody>
           <tr class="first_row">
-            <td><em>Delta Setting</em></td>
+            <td>Delta Setting</td>
             <td>Example</td>
             <td>Meaning</td>
           </tr>
@@ -2237,7 +2237,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
       <table class="indent">
         <tbody>
           <tr class="first_row">
-            <td><em>Archive type</em></td>
+            <td>Archive type</td>
             <td>Meaning</td>
             <td>Valid contexts</td>
           </tr>
@@ -2275,7 +2275,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
       <table class="indent">
         <tbody>
           <tr class="first_row">
-            <td><em>Daily summary type</em></td>
+            <td>Daily&nbsp;summary&nbsp;type</td>
             <td>Meaning</td>
             <td>Valid contexts</td>
           </tr>
@@ -2305,7 +2305,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
       <table class="indent" style="width: 90%;">
         <tbody>
           <tr class="first_row">
-            <td><i>Tag</i></td>
+            <td>Tag</td>
             <td>Meaning</td>
           </tr>
           <tr>
@@ -5692,8 +5692,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
           <p>For SQLite:</p> <pre class="tty cmd">cd <span
               class="symcode">SQLITE_ROOT</span>
 mv weewx.sdb_new weewx.sdb</pre>
-          <p>For MySQL:</p> <pre class="tty">
-            <span class="cmd">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;</span>
+          <p>For MySQL:</p> <pre class="tty"><span class="cmd">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;</span>
 mysql&gt;<span class="cmd"> DROP DATABASE weewx;</span>                             # Delete the old database
 mysql&gt;<span class="cmd"> CREATE DATABASE weewx;</span>                           # Create a new one with the same name
 mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</span> # Rename to the nominal name</pre>
@@ -6860,7 +6859,7 @@ xstats/bin/user/xstats.py</pre>
       <p>The table below lists all the unit groups, their members,
         which units are options for the group, and what the defaults are
         for each standard unit system.</p>
-      <table class="indent" style="width: 90%">
+      <table class="indent">
         <caption>Unit groups, members and options</caption>
         <tbody class="code">
           <tr class="first_row">

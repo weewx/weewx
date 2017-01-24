@@ -194,6 +194,7 @@ tr {
 td {
   border: 1px solid #cccccc;
   padding: 2px;
+  padding-left: 8px;
 }
 table .first_row {
   font-weight: bold;
@@ -202,7 +203,7 @@ table .first_row {
   padding-right: 10px;
 }
 table.fixed_width td {
-  width:10%;
+  width: 10%;
 }
 caption {
   background-color: #aacccc;
@@ -222,8 +223,8 @@ caption {
   font-style: italic;
 }
 .indent {
-    margin-left: 40px;
-    margin-right: 40px;
+    margin-left: 30px;
+    width: 95%;
 }
 .station_data {
   margin-left: 40px;
