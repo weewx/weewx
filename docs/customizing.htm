@@ -481,8 +481,7 @@ Version: 3.7
         will be used. Here is an example, using 1 May 2014 00:00 PDT as
         the "Current" time.
       </p>
-      <pre class="tty">
-        <span class="cmd">wee_reports weewx.conf 1398927600</span>
+      <pre class="tty"><span class="cmd">wee_reports weewx.conf 1398927600</span>
       </pre>
 
       <p>
@@ -5447,8 +5446,7 @@ class MyAlarm(StdService):
       <pre class="tty">[Engine]
    [[Services]]
         report_services = weewx.engine.StdPrint, weewx.engine.StdReport<span
-          class="highlight">, user.alarm.MyAlarm</span>
-      </pre>
+          class="highlight">, user.alarm.MyAlarm</span></pre>
       <p>
         Again, note that the option <span class="code">report_services</span>
         must be all on one line &mdash; the parser <span class="code">ConfigObj</span>
@@ -5636,8 +5634,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
         database = archive_sqlite
         table_name = archive
         manager = weewx.wxmanager.WXDaySummaryManager
-        <span class="highlight">schema = user.electricity.schema_with_electricity</span>
-          </pre>
+        <span class="highlight">schema = user.electricity.schema_with_electricity</span></pre>
         </li>
 
         <li>
@@ -5649,8 +5646,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
             permissions to create it. In particular, if you are using
             MySQL, you will need <span class="code">CREATE</span>
             privileges:
-          </p> <pre class="tty">mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert ON weewx_new.* TO weewx@localhost;</span>
-          </pre>
+          </p> <pre class="tty">mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert ON weewx_new.* TO weewx@localhost;</span></pre>
         </li>
         <li>
           <p>
