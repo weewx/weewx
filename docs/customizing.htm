@@ -5507,7 +5507,8 @@ class AddElectricity(StdService):
         record dictionary and sets it equal to the difference between
         the amount of power currently consumed and the amount consumed
         at the last archive record. Hence, it will be the amount
-        of power consumed over the archive interval.
+        of power consumed over the archive interval. The unit should
+        be Watt-hours.
       </p>
 
       <p>
@@ -5934,20 +5935,21 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         In the examples above, we created a new observation type, <span
           class='code'>electricity</span>, and added it to the database
         schema. Now we would like to recognize that it is a member of
-        the unit group <span class='code'>group_amp</span> (which
+        the unit group <span class='code'>group_energy</span> (which
         already exists), so it can enjoy the labels and formats
         already provided for this group. This is done by extending the dictionary <span
           class='code'>weewx.units.obs_group_dict</span>, typically by
         adding Python code to the file <span class='code'>user/extensions.py</span>:
       </p>
       <pre class='tty'>import weewx.units
-weewx.units.obs_group_dict['electricity'] = 'group_amp'</pre>
+weewx.units.obs_group_dict['electricity'] = 'group_energy'</pre>
 
       <p>Once the observation has been associated with a unit group,
         the unit labels and other tag syntax will work for that
         observation. So, now a tag like:</p>
       <pre class='tty'>$month.electricity.sum</pre>
-      <p>will return the total amount of electricity consumed for the month.</p>
+      <p>will return the total amount of electricity consumed for 
+        the month, in Watt-hours.</p>
 
       <h2>Creating a new unit group</h2>
       <p>
@@ -6048,8 +6050,8 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
             <td>The day it happened.</td>
           </tr>
           <tr>
-            <td class="code">$year.electricity.sum_ge(5.0)</td>
-            <td>The number of days where more than 5.0 kWH of
+            <td class="code">$year.electricity.sum_ge(5000.0)</td>
+            <td>The number of days of the year where more than 5.0 kWh of
               energy was consumed.</td>
           </tr>
         </tbody>
