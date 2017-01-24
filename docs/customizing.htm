@@ -5414,12 +5414,16 @@ class MyAlarm(StdService):
 
       <p>A very common problem is wanting to augment the data from
         your weather station with data from some other device.
-        Generally, you have two approaches on how to handle this:</p>
+        Generally, you have two approaches for how to handle this:</p>
       <ul>
         <li>Run two instances of weewx, each using its own
-          database. The results are then combined in a final report,
+          database and <span class='code'>weewx.conf</span>
+          configuration file. The results are then combined in a final report,
           using weewx's ability <a href="#Using_multiple_bindings">to
-            use more than one database</a>.
+            use more than one database</a>. See the Wiki entry
+            <a href="https://github.com/weewx/weewx/wiki/weewx-multi">
+            <em>How to run multiple instances of weewx</em></a> for details
+            on how to do this.
         </li>
         <li>Run one instance, but use a custom weewx service to
           augment the records coming from your weather station with data
@@ -5431,13 +5435,16 @@ class MyAlarm(StdService):
       <p>Suppose you have installed an electric meter at your house
         and you wish to correlate electrical usage with the weather. The
         meter has some sort of connection to your computer, allowing you
-        to download the amperage]. At the end of every archive interval
-        you want to sample the meter for the electricity consumed during
-        the interval, then add the results to the record coming off your
+        to download the total power consumed. At the end of every archive interval
+        you want to calculate the amount of power consumed during the interval, 
+        then add the results to the record coming off your
         weather station. How would you do this?</p>
 
       <p>Here is the outline of a service that retrieves the
-        electrical consumption data and adds it to the archive record:</p>
+        electrical consumption data and adds it to the archive record. It 
+        assumes that you already have a function 
+        <span class='code'>download_total_power()</span> that, somehow, downloads
+        the amount of power consumed since time zero.</p>
 
       <p>
         File <span class="code">user/electricity.py</span>
@@ -5454,18 +5461,31 @@ class AddElectricity(StdService):
 
       # Bind to any new archive record events:
       self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_packet)
+      
+      self.last_total = None
 
     def new_archive_packet(self, event):
 
-        (code that downloads the consumption data from the connection to the meter)
+        total_power = download_total_power()
+        
+        if self.last_total:
+            net_consumed = total_power - self.last_total
+            event.record['electricity'] = net_consumed
 
-        event.record['electricity'] = retrieved_value</pre>
+        self.last_total = total_power</pre>
       <p>
         This adds a new key <span class="code">electricity</span> to the
-        record dictionary and sets it equal to some value. As an aside,
-        if you do something like this, you would want to make sure that
-        the code to retrieve the current electrical consumption does not
-        delay very long so it does not slow down the main loop. If it's
+        record dictionary and sets it equal to the difference between
+        the amount of power currently consumed and the amount consumed
+        at the last archive record. Hence, it will be the amount
+        of power consumed over the archive interval.
+      </p>
+
+      <p>
+        As an aside, it is important that the function
+        <span class='code'>download_total_power()</span> does not
+        delay very long because it will sit right in the main loop of
+        the weewx engine. If it's
         going to cause a delay of more than a couple seconds you might
         want to put it in a separate thread and feed the results to <span
           class="code">AddElectricity</span> through a queue.
@@ -5872,23 +5892,12 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
 
       <h1 id="customizing_units">Customizing units and unit groups</h1>
 
-      <p>In this section, we cover</p>
-      <ul>
-        <li>Assigning a new observation type to a unit group.</li>
-        <li>Creating a new unit group.</li>
-        <li>Creating a new unit.</li>
-        <li>Defining conversions between units.</li>
-        <li>Adding it to the existing <em>standard unit
-            systems</em>.
-        </li>
-      </ul>
-
       <p class="warning">
-        <em>Warning!</em><br />
-        <br />This is an area that is rapidly changing in weewx.
+        <strong>Warning!</strong><br />
+        This is an area that is rapidly changing in weewx.
         Presently, new units and unit groups are added by manipulating
-        the internal dictionaries in weewx. We will be moving to a
-        system where they will be specified in <span class='code'>weewx.conf</span>
+        the internal dictionaries in weewx (as described below). In the future,
+        they may be specified in <span class='code'>weewx.conf</span>.
       </p>
 
       <h2>Assigning a unit group</h2>
@@ -5897,7 +5906,8 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
           class='code'>electricity</span>, and added it to the database
         schema. Now we would like to recognize that it is a member of
         the unit group <span class='code'>group_amp</span> (which
-        already exists). This is done by extending the dictionary <span
+        already exists), so it can enjoy the labels and formats
+        already provided for this group. This is done by extending the dictionary <span
           class='code'>weewx.units.obs_group_dict</span>, typically by
         adding Python code to the file <span class='code'>user/extensions.py</span>:
       </p>
@@ -5907,14 +5917,14 @@ weewx.units.obs_group_dict['electricity'] = 'group_amp'</pre>
       <p>Once the observation has been associated with a unit group,
         the unit labels and other tag syntax will work for that
         observation. So, now a tag like:</p>
-      <pre class='tty'>$month.electricity.avg</pre>
-      <p>will return the average amperage for the month.</p>
+      <pre class='tty'>$month.electricity.sum</pre>
+      <p>will return the total amount of electricity consumed for the month.</p>
 
       <h2>Creating a new unit group</h2>
       <p>
         That was an easy one, because there was already an existing
         group, <span class='code'>group_amp</span>, that covered our new
-        observation type. But, what if we are measuring something like
+        observation type. But, what if we are measuring something entirely new, like
         force with time? There is nothing in the existing system of
         units that covers things like newtons or pounds. We will have to
         define these new units, as well as the unit group they can
