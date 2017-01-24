@@ -38,10 +38,9 @@
       <div class="logoref">
         <a href='http://weewx.com'> <img src='images/logo-weewx.png'
           class='logo' align='right' alt="weewx logo" />
-        </a><br />
-      <span class='version'>
-Version: 3.7 
-      </span>
+        </a><br /> <span class='version'> 
+Version: 3.7
+    </span>
       </div>
       <div class="title">
         <span class="code">weewx</span> Customization Guide
@@ -481,7 +480,8 @@ Version: 3.7
         will be used. Here is an example, using 1 May 2014 00:00 PDT as
         the "Current" time.
       </p>
-      <pre class="tty"><span class="cmd">wee_reports weewx.conf 1398927600</span>
+      <pre class="tty">
+        <span class="cmd">wee_reports weewx.conf 1398927600</span>
       </pre>
 
       <p>
@@ -988,8 +988,8 @@ $month.outTemp.maxtime</pre>
       </p>
 
       <p class="example_output">
-        Current temperature = 51.0°F <br /> Max for the month is 68.8°F,
-        which occurred at 07-Oct-2009 15:15
+        Current temperature = 51.0°F <br /> Max for the month is
+        68.8°F, which occurred at 07-Oct-2009 15:15
       </p>
 
       <p>
@@ -1329,8 +1329,8 @@ or in foobar units: $day.barometer.min.foobar
       <p>then the offending tag(s) will be put in the output:</p>
 
       <p class="example_output">
-        Today's minimum pressure in mbars: 1015.3<br /> or in degrees C:
-        $day.barometer.min.degree_C<br /> or in foobar units:
+        Today's minimum pressure in mbars: 1015.3<br /> or in degrees
+        C: $day.barometer.min.degree_C<br /> or in foobar units:
         $day.barometer.min.foobar
       </p>
 
@@ -1981,11 +1981,12 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
         temperatures: 24.4°F 58.6°F<br /> March: Min, max temperatures:
         27.3°F 64.1°F<br /> April: Min, max temperatures: 33.2°F 52.5°F<br />
         May: Min, max temperatures: N/A N/A<br /> June: Min, max
-        temperatures: N/A N/A<br /> July: Min, max temperatures: N/A N/A<br />
-        August: Min, max temperatures: N/A N/A<br /> September: Min, max
-        temperatures: N/A N/A<br /> October: Min, max temperatures: N/A
-        N/A<br /> November: Min, max temperatures: N/A N/A<br />
-        December: Min, max temperatures: N/A N/A
+        temperatures: N/A N/A<br /> July: Min, max temperatures: N/A
+        N/A<br /> August: Min, max temperatures: N/A N/A<br />
+        September: Min, max temperatures: N/A N/A<br /> October: Min,
+        max temperatures: N/A N/A<br /> November: Min, max
+        temperatures: N/A N/A<br /> December: Min, max temperatures:
+        N/A N/A
       </p>
 
       <p>
@@ -3180,7 +3181,7 @@ class MyStats(SearchList):                                                   # 1
     [[[[barometer]]]]</pre>
 
 
-      <h2>Using multiple bindings</h2>
+      <h2 id="#Using_multiple_bindings">Using multiple bindings</h2>
 
       <p>
         It's easy to use more than one database in your reports. Here's
@@ -3435,17 +3436,17 @@ class MyStats(SearchList):                                                   # 1
             <td class="code first_col">months</td>
             <td>Specifies the months of the year when the report
               will be run</td>
-            <td>*, or<br />numbers in the range 1..12 inclusive, or<br />abbreviated
-              names in the range jan..dec inclusive
+            <td>*, or<br />numbers in the range 1..12 inclusive,
+              or<br />abbreviated names in the range jan..dec inclusive
             </td>
           </tr>
           <tr>
             <td class="code first_col">day_of_week</td>
             <td>Specifies the days of the week when the report will
               be run</td>
-            <td>*, or<br />numbers in the range 0..7 inclusive (0,7
-              = Sunday, 1 = Monday etc), or<br />abbreviated names in
-              the range sun..sat inclusive
+            <td>*, or<br />numbers in the range 0..7 inclusive
+              (0,7 = Sunday, 1 = Monday etc), or<br />abbreviated names
+              in the range sun..sat inclusive
             </td>
           </tr>
         </tbody>
@@ -3524,16 +3525,17 @@ class MyStats(SearchList):                                                   # 1
       </p>
 
       <p class="note" style="display: inline-block; width: 70%">
-        <b>Note</b><br />Report time does not refer to the time at which
-        the report is run, but rather the date and time of the latest
-        data the report is based upon. If you like, it is the effective
-        date and time of the report. For normal <span class="code">weewx</span>
-        operation, the report time aligns with the <span class="code">dateTime</span>
-        of the most recent archive record. When reports are run using
-        the <span class="code">wee_reports</span> utility, the report
-        time is either the <span class="code">dateTime</span> of the
-        most recent archive record (the default) or the optional
-        timestamp command line argument.
+        <b>Note</b><br />Report time does not refer to the time at
+        which the report is run, but rather the date and time of the
+        latest data the report is based upon. If you like, it is the
+        effective date and time of the report. For normal <span
+          class="code">weewx</span> operation, the report time aligns
+        with the <span class="code">dateTime</span> of the most recent
+        archive record. When reports are run using the <span
+          class="code">wee_reports</span> utility, the report time is
+        either the <span class="code">dateTime</span> of the most recent
+        archive record (the default) or the optional timestamp command
+        line argument.
       </p>
 
       <p class="note" style="display: inline-block; width: 70%">
@@ -5076,63 +5078,7 @@ UV      = UV Index</pre>
       </p>
 
 
-      <h1 id="customizing_units">Customizing the Units</h1>
 
-      <h2>Defining new units and unit groups</h2>
-      <p>
-        To define new units and unit groups, extend the units
-        dictionary. This is typically done by adding Python code to the
-        file <span class='code'>user/extensions.py</span>
-      </p>
-      <p>
-        For example, to add the unit group <span class='code'>group_depth</span>
-        with unit <span class='code'>inch</span> in US unit system and
-        unit <span class='code'>cm</span> in Metric and MetricWX unit
-        systems:
-      </p>
-      <pre class='tty'>import weewx.units
-weewx.units.USUnits['group_depth'] = 'inch'
-weewx.units.MetricUnits['group_depth'] = 'cm'
-weewx.units.MetricWXUnits['group_depth'] = 'cm'</pre>
-      <p>
-        In this case, it is not necessary to specify the conversions for
-        inch, cm, and mm since those are already defined and used by the
-        unit groups <span class='code'>group_rain</span> and <span
-          class='code'>group_length</span>. But if the new units do not
-        yet exist in weewx.units, this is how they would be defined:
-      </p>
-      <pre class='tty'>import weewx.units
-weewx.units.default_unit_format_dict['inch'] = '%.2f'
-weewx.units.default_unit_format_dict['cm'] = '%.2f'
-weewx.units.default_unit_format_dict['mm'] = '%.2f'
-weewx.units.default_unit_label_dict['inch'] = ' in'
-weewx.units.default_unit_label_dict['cm'] = ' cm'
-weewx.units.default_unit_label_dict['mm'] = ' mm'
-weewx.units.conversionDict['inch'] = {'cm': lambda x : x * 2.54,
-                                      'mm': lambda x : x * 25.4}
-weewx.units.conversionDict['cm'] = {'inch': lambda x : x * 0.393700787,
-                                    'mm': lambda x : x * 10.0}
-weewx.units.conversionDict['mm'] = {'inch': lambda x : x * .0393700787,
-                                    'cm': lambda x : x * 0.10}</pre>
-      <p>Each unit requires a default format, a default label, and
-        possibly a conversion function that specifies how the units are
-        converted between unit systems.</p>
-
-      <h2>Assigning units to an observation</h2>
-      <p>
-        To associate an observation with a unit group, extend the units
-        observation group dictionary. This is typically done by adding
-        Python code to the file <span class='code'>user/extensions.py</span>
-      </p>
-      <p>
-        For example, to associate the observation <span class='code'>snow_depth</span>
-        with the group <span class='code'>group_depth</span>:
-      </p>
-      <pre class='tty'>import weewx.units
-weewx.units.obs_group_dict['snow_depth'] = 'group_depth'</pre>
-      <p>Once the observation has been associated with a unit group,
-        the unit labels and other tag syntax will work for that
-        observation.</p>
 
 
       <h1 id="service_engine">
@@ -5166,7 +5112,7 @@ weewx.units.obs_group_dict['snow_depth'] = 'group_depth'</pre>
         above for a list of the services that are normally run.
       </p>
 
-      <h2 id="Customizing_a_service">Customizing a service</h2>
+      <h2 id="Customizing_a_service">Modifying an existing service</h2>
 
       <p>
         The service <span class="code">weewx.engine.StdPrint</span>
@@ -5219,7 +5165,8 @@ class MyPrint(StdPrint):
         does not allow options to be continued on to following lines.
       </p>
 
-      <h2 id="Adding_a_service">Adding a service</h2>
+
+      <h2 id="Adding_a_service">Creating a new service</h2>
 
       <p>
         Suppose there is no service that can be easily customized for
@@ -5446,7 +5393,8 @@ class MyAlarm(StdService):
       <pre class="tty">[Engine]
    [[Services]]
         report_services = weewx.engine.StdPrint, weewx.engine.StdReport<span
-          class="highlight">, user.alarm.MyAlarm</span></pre>
+          class="highlight">, user.alarm.MyAlarm</span>
+      </pre>
       <p>
         Again, note that the option <span class="code">report_services</span>
         must be all on one line &mdash; the parser <span class="code">ConfigObj</span>
@@ -5460,47 +5408,36 @@ class MyAlarm(StdService):
         of archiving events).
       </p>
 
-      <h1 id="archive_database">Customizing the database</h1>
-
-      <p>For most users the default database will work just fine. It
-        has the added advantage of being compatible with the wview
-        database. Nevertheless, there may be occasions where you may
-        want to add a SQL type to your database, or change its unit
-        system. This section shows you how to do this.</p>
 
 
-      <!-- Moved to utilities.htm -->
+      <h2 id="Adding_2nd_source">Adding a second data source</h2>
 
+      <p>A very common problem is wanting to augment the data from
+        your weather station with data from some other device.
+        Generally, you have two approaches on how to handle this:</p>
+      <ul>
+        <li>Run two instances of weewx, each using its own
+          database. The results are then combined in a final report,
+          using weewx's ability <a href="#Using_multiple_bindings">to
+            use more than one database</a>.
+        </li>
+        <li>Run one instance, but use a custom weewx service to
+          augment the records coming from your weather station with data
+          from the other device.</li>
+      </ul>
 
-      <h2>Adding a new observation type</h2>
+      <p>This section covers the latter approach.</p>
 
       <p>Suppose you have installed an electric meter at your house
         and you wish to correlate electrical usage with the weather. The
         meter has some sort of connection to your computer, allowing you
-        to download the consumption. At the end of every archive
-        interval you want to sample the meter for the electricity
-        consumed during the interval, then store the results in the
-        archive database, along with the weather data. How would you do
-        this?</p>
+        to download the amperage]. At the end of every archive interval
+        you want to sample the meter for the electricity consumed during
+        the interval, then add the results to the record coming off your
+        weather station. How would you do this?</p>
 
-      <p>The steps include:</p>
-      <ol>
-        <li>Create a custom service that retrieves the data</li>
-        <li>Add the new type to the archive database</li>
-        <li>Specify units for the new type</li>
-        <li>Use the new type in templates and plots</li>
-      </ol>
-
-      <h3>Create a custom service</h3>
-
-      <p>
-        First, you would write a custom service that retrieves the
-        electrical consumption data and adds it to the archive record.
-        See the section <a href="#service_engine">Customizing the
-          weewx service engine</a> for details on how to write a custom
-        service. However, when you are done it will look something like
-        this:
-      </p>
+      <p>Here is the outline of a service that retrieves the
+        electrical consumption data and adds it to the archive record:</p>
 
       <p>
         File <span class="code">user/electricity.py</span>
@@ -5511,8 +5448,10 @@ from weewx.engine import StdService
 class AddElectricity(StdService):
 
     def __init__(self, engine, config_dict):
+
       # Initialize my superclass first:
       super(AddElectricity, self).__init__(engine, config_dict)
+
       # Bind to any new archive record events:
       self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_packet)
 
@@ -5534,34 +5473,104 @@ class AddElectricity(StdService):
 
       <p>
         To make sure your service gets run, you need to add it to one of
-        the service lists in section <span class="code">[Engine]</span>
-        in <span class="code">weewx.conf</span>. But where? You want to
-        make sure it runs before the archiving service, so it must be
-        before option <span class="code">archive_services</span>. You do
-        not want it to run before the main loop runs, so it can't be in
-        <span class="code">prep_services</span>. Probably the best place
-        is at the end of <span class="code">process_services</span>.
-        When you're done, your section <span class="code">[Engine]</span>
-        will look something like this:
+        the service lists in <span class="code">weewx.conf</span>,
+        section <span class="code">[Engine]</span>, subsection <span
+          class="code">[[Services]]</span>. This subsection lists all
+        the services to be run, broken up into different <em>service
+          lists</em>. Here's a description of them:
       </p>
-      <pre class="tty">
-[Engine]
-    # This section configures the maine engine. It is for advanced customization.
 
-    [[Services]]
-        # These are the services the main engine should run:
-        prep_services = weewx.engine.StdTimeSynch
-        process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.wxservices.StdWXCalculate<span
-          class="highlight">, user.electricity.AddElectricity</span>
-        archive_services = weewx.engine.StdArchive
-        restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW, weewx.restx.StdAWEKAS
-        report_services = weewx.engine.StdPrint, weewx.engine.StdReport</pre>
 
-      <h3 id="add_archive_type">Add a new type to the archive
-        database</h3>
+      <table id='service_lists' class="indent" style="width: 70%"
+        summary="Service lists">
+        <tbody>
+          <tr class="first_row">
+            <td>Service list</td>
+            <td>Function</td>
+          </tr>
+          <tr>
+            <td class="code first_col">prep_services</td>
+            <td>Perform any actions before the main loop is run.</td>
+          </tr>
+          <tr>
+            <td class="code first_col">data_services</td>
+            <td>Augment data, before it is processed.</td>
+          </tr>
+          <tr>
+            <td class="code first_col">process_services</td>
+            <td>Process, filter, and massage the data.</td>
+          </tr>
+          <tr>
+            <td class="code first_col">archive_services</td>
+            <td>Record the data in a database.</td>
+          </tr>
+          <tr>
+            <td class="code first_col">restful_services</td>
+            <td>Upload processed data to an external RESTful
+              service.</td>
+          </tr>
+          <tr>
+            <td class="code first_col">report_services</td>
+            <td>Run any reports.</td>
+          </tr>
+        </tbody>
+      </table>
 
       <p>
-        So, now you have created a new observation type, <span
+        These lists are designed to orchestrate the data as it flows
+        through the weewx engine. For example, you want to make sure
+        data has been processed by, for example, running it through the
+        quality control service, <span class="code">StdQC</span>, before
+        putting them in the database. Similarly, the reporting system
+        must come <em>after</em> the archiving service. These groups
+        insure that things happen in the proper sequence.
+      </p>
+
+
+
+
+      <p>
+        In our case, the obvious place for our new service is in <span
+          class="code">data_services</span>. When you're done, your
+        section <span class="code">[Engine]</span> will look something
+        like this:
+      </p>
+      <pre class="tty">
+#   This section configures the internal weewx engine.
+
+[Engine]
+    
+    [[Services]]
+        # This section specifies the services that should be run. They are
+        # grouped by type, and the order of services within each group
+        # determines the order in which the services will be run.
+        prep_services = weewx.engine.StdTimeSynch
+        data_services = <span class="highlight">user.electricity.AddElectricity</span>
+        process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.wxservices.StdWXCalculate
+        archive_services = weewx.engine.StdArchive
+        restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW, weewx.restx.StdAWEKAS
+        report_services = weewx.engine.StdPrint, weewx.engine.StdReport
+</pre>
+
+
+
+
+
+      <h1 id="archive_database">Customizing the database</h1>
+
+      <p>For most users the default database will work just fine. It
+        has the added advantage of being compatible with the wview
+        database. Nevertheless, there may be occasions where you may
+        want to add a new SQL type to your database, or change its unit
+        system. This section shows you how to do this.</p>
+
+
+      <h2 id="add_archive_type">Add a new type to the archive
+        database</h2>
+
+      <p>
+        If you followed the example above, <a href="#Adding_2nd_source"><em>Adding
+            a second data source</em></a>, you created a new observation type, <span
           class="code">electricity</span>. Trouble is, there is no
         corresponding type in the schema of the SQL database and,
         therefore, <span class="code">weewx</span> won't know where to
@@ -5634,7 +5643,8 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
         database = archive_sqlite
         table_name = archive
         manager = weewx.wxmanager.WXDaySummaryManager
-        <span class="highlight">schema = user.electricity.schema_with_electricity</span></pre>
+        <span class="highlight">schema = user.electricity.schema_with_electricity</span>
+          </pre>
         </li>
 
         <li>
@@ -5646,7 +5656,8 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
             permissions to create it. In particular, if you are using
             MySQL, you will need <span class="code">CREATE</span>
             privileges:
-          </p> <pre class="tty">mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert ON weewx_new.* TO weewx@localhost;</span></pre>
+          </p> <pre class="tty">mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert ON weewx_new.* TO weewx@localhost;</span>
+          </pre>
         </li>
         <li>
           <p>
@@ -5688,7 +5699,8 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
           <p>For SQLite:</p> <pre class="tty cmd">cd <span
               class="symcode">SQLITE_ROOT</span>
 mv weewx.sdb_new weewx.sdb</pre>
-          <p>For MySQL:</p> <pre class="tty"><span class="cmd">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;</span>
+          <p>For MySQL:</p> <pre class="tty">
+            <span class="cmd">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;</span>
 mysql&gt;<span class="cmd"> DROP DATABASE weewx;</span>                             # Delete the old database
 mysql&gt;<span class="cmd"> CREATE DATABASE weewx;</span>                           # Create a new one with the same name
 mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</span> # Rename to the nominal name</pre>
@@ -5706,83 +5718,6 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         </li>
       </ol>
 
-      <h3>Specify units for the new type</h3>
-
-      <p>To make unit conversions and formatting work automatically
-        for the new data type, the data type must be assigned a unit
-        group.</p>
-
-      <p>
-        Extend the units dictionary by adding entries in the file <span
-          class='code'>user/extensions.py</span>
-      </p>
-      <pre class='tty'>import weewx.units
-weewx.units.obs_group_dict['voltage'] = 'group_volt'
-weewx.units.obs_group_dict['electricity'] = 'group_power'</pre>
-      <p>
-        This will make reports and plots use formats and conversions
-        defined for <span class='code'>group_volt</span> whenever they
-        encounter data with type <span class='code'>voltage</span>, and
-        <span class='code'>group_power</span> whenever they encounter
-        data with type <span class='code'>electricity</span>.
-      </p>
-
-      <h3>Use the new type</h3>
-
-      <p>Now you've added a new type. How do you use it?</p>
-
-      <p>
-        Pretty much like any other type. For example, to do a plot of
-        the month's electric consumption, totaled by day, add this
-        section to the <span class="code">[[month_images]]</span>
-        section of <span class="code">skin.conf</span>:
-      </p>
-      <pre class="tty">[[[monthelectric]]]
-    [[[[electricity]]]]
-        aggregate_type = sum
-        aggregate_interval = 86400
-        label = Electric consumption (daily total)</pre>
-      <p>
-        This will cause the generation of an image <span class="code">monthelectric.png</span>,
-        showing a plot of each day's consumption for the past month.
-      </p>
-
-      <p>If you wish to use the new type in the templates, it will
-        be available using the same syntax as any other type. Here are
-        some other tags that might be useful:</p>
-      <table class="indent">
-        <tbody>
-          <tr class="first_row">
-            <td>Tag</td>
-            <td>Meaning</td>
-          </tr>
-          <tr>
-            <td class="code">$day.electricity.sum</td>
-            <td>Total consumption since midnight</td>
-          </tr>
-          <tr>
-            <td class="code">$year.electricity.sum</td>
-            <td>Total consumption since the first of the year</td>
-          </tr>
-          <tr>
-            <td class="code">$year.electricity.max</td>
-            <td>The most consumed during any archive period</td>
-          </tr>
-          <tr>
-            <td class="code">$year.electricity.maxsum</td>
-            <td>The most consumed during a day</td>
-          </tr>
-          <tr>
-            <td class="code">$year.electricity.maxsumtime</td>
-            <td>The day it happened.</td>
-          </tr>
-          <tr>
-            <td class="code">$year.electricity.sum_ge(5.0)</td>
-            <td>The number of days where more than 5.0 kWH of
-              energy was consumed.</td>
-          </tr>
-        </tbody>
-      </table>
 
       <h2 id="Changing_the_unit_system">Changing the unit system</h2>
 
@@ -5930,6 +5865,156 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
       </p>
 
       <pre class="tty cmd">wee_database weewx.conf --rebuild-daily</pre>
+
+
+
+
+
+      <h1 id="customizing_units">Customizing units and unit groups</h1>
+
+      <p>In this section, we cover</p>
+      <ul>
+        <li>Assigning a new observation type to a unit group.</li>
+        <li>Creating a new unit group.</li>
+        <li>Creating a new unit.</li>
+        <li>Defining conversions between units.</li>
+        <li>Adding it to the existing <em>standard unit
+            systems</em>.
+        </li>
+      </ul>
+
+      <p class="warning">
+        <em>Warning!</em><br />
+        <br />This is an area that is rapidly changing in weewx.
+        Presently, new units and unit groups are added by manipulating
+        the internal dictionaries in weewx. We will be moving to a
+        system where they will be specified in <span class='code'>weewx.conf</span>
+      </p>
+
+      <h2>Assigning a unit group</h2>
+      <p>
+        In the examples above, we created a new observation type, <span
+          class='code'>electricity</span>, and added it to the database
+        schema. Now we would like to recognize that it is a member of
+        the unit group <span class='code'>group_amp</span> (which
+        already exists). This is done by extending the dictionary <span
+          class='code'>weewx.units.obs_group_dict</span>, typically by
+        adding Python code to the file <span class='code'>user/extensions.py</span>:
+      </p>
+      <pre class='tty'>import weewx.units
+weewx.units.obs_group_dict['electricity'] = 'group_amp'</pre>
+
+      <p>Once the observation has been associated with a unit group,
+        the unit labels and other tag syntax will work for that
+        observation. So, now a tag like:</p>
+      <pre class='tty'>$month.electricity.avg</pre>
+      <p>will return the average amperage for the month.</p>
+
+      <h2>Creating a new unit group</h2>
+      <p>
+        That was an easy one, because there was already an existing
+        group, <span class='code'>group_amp</span>, that covered our new
+        observation type. But, what if we are measuring something like
+        force with time? There is nothing in the existing system of
+        units that covers things like newtons or pounds. We will have to
+        define these new units, as well as the unit group they can
+        belong to.
+      </p>
+      <p>
+        We assume we have a new observation type, <span class='code'>force</span>,
+        that we are measuing over time. We will create a new unit group,
+        <span class='code'>group_force</span>, and new units, <span
+          class='code'>newton</span> and <span class='code'>pound</span>.
+        Our new observation, <span class='code'>force</span>, will
+        belong to <span class='code'>group_force</span>, and will be
+        measured in units of <span class='code'>newton</span> or <span
+          class='code'>pound</span>.
+      </p>
+      <ol>
+        <li>As before, we start by specifying what group our new
+          observation type belongs to: <pre class='tty'>
+import weewx.units
+weewx.units.obs_group_dict['force'] = 'group_force'</pre>
+        </li>
+        <li>Next, we specify what unit is used to measure force in
+          the three standard unit systems used by weewx. <pre class='tty'>
+weewx.units.USUnits['group_force'] = 'pound'
+weewx.units.MetricUnits['group_force'] = 'newton'
+weewx.units.MetricWXUnits['group_force'] = 'newton'</pre>
+        </li>
+        <li>Then we specify what formats and labels to use for <span
+          class='code'>newton</span> and <span class='code'>pound</span>:
+          <pre class='tty'>
+weewx.units.default_unit_format_dict['newton'] = '%.1f'
+weewx.units.default_unit_format_dict['pound']  = '%.1f'
+
+weewx.units.default_unit_label_dict['newton'] = ' newton'
+weewx.units.default_unit_label_dict['pound']  = ' pound'</pre>
+        </li>
+        <li>Finally, we specify how to convert between them:<pre class='tty'>
+weewx.units.conversionDict['newton'] = {'pound':  lambda x : x * 0.224809}
+weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
+</pre>
+
+        </li>
+      </ol>
+
+      <h2>Use the new types</h2>
+
+      <p>Now you've added a new type. How do you use it?</p>
+
+      <p>
+        Pretty much like any other type. For example, to do a plot of
+        the month's electric consumption, totaled by day, add this
+        section to the <span class="code">[[month_images]]</span>
+        section of <span class="code">skin.conf</span>:
+      </p>
+      <pre class="tty">[[[monthelectric]]]
+    [[[[electricity]]]]
+        aggregate_type = sum
+        aggregate_interval = 86400
+        label = Electric consumption (daily total)</pre>
+      <p>
+        This will cause the generation of an image <span class="code">monthelectric.png</span>,
+        showing a plot of each day's consumption for the past month.
+      </p>
+
+      <p>If you wish to use the new type in the templates, it will
+        be available using the same syntax as any other type. Here are
+        some other tags that might be useful:</p>
+      <table class="indent">
+        <tbody>
+          <tr class="first_row">
+            <td>Tag</td>
+            <td>Meaning</td>
+          </tr>
+          <tr>
+            <td class="code">$day.electricity.sum</td>
+            <td>Total consumption since midnight</td>
+          </tr>
+          <tr>
+            <td class="code">$year.electricity.sum</td>
+            <td>Total consumption since the first of the year</td>
+          </tr>
+          <tr>
+            <td class="code">$year.electricity.max</td>
+            <td>The most consumed during any archive period</td>
+          </tr>
+          <tr>
+            <td class="code">$year.electricity.maxsum</td>
+            <td>The most consumed during a day</td>
+          </tr>
+          <tr>
+            <td class="code">$year.electricity.maxsumtime</td>
+            <td>The day it happened.</td>
+          </tr>
+          <tr>
+            <td class="code">$year.electricity.sum_ge(5.0)</td>
+            <td>The number of days where more than 5.0 kWH of
+              energy was consumed.</td>
+          </tr>
+        </tbody>
+      </table>
 
 
       <h1 id="porting">Porting to new hardware</h1>
@@ -6959,8 +7044,8 @@ xstats/bin/user/xstats.py</pre>
           </tr>
           <tr>
             <td class="first_col">group_percent</td>
-            <td>extraHumid1 <br /> extraHumid2 <br /> inHumidity <br />
-              outHumidity <br /> rxCheckPercent
+            <td>extraHumid1 <br /> extraHumid2 <br /> inHumidity
+              <br /> outHumidity <br /> rxCheckPercent
             </td>
             <td>percent</td>
             <td>percent</td>
@@ -7007,7 +7092,8 @@ xstats/bin/user/xstats.py</pre>
             <td class="first_col">group_rainrate</td>
             <td>rainRate <br /> hailRate
             </td>
-            <td>inch_per_hour <br /> cm_per_hour <br /> mm_per_hour
+            <td>inch_per_hour <br /> cm_per_hour <br />
+              mm_per_hour
             </td>
             <td>inch_per_hour</td>
             <td>mm_per_hour</td>
@@ -7040,10 +7126,10 @@ xstats/bin/user/xstats.py</pre>
             <td class="first_col">group_temperature</td>
             <td>appTemp <br /> dewpoint <br /> extraTemp1 <br />
               extraTemp2 <br /> extraTemp3 <br /> heatindex <br />
-              heatingTemp <br /> humidex <br /> inTemp <br /> leafTemp1
-              <br /> leafTemp2 <br /> outTemp <br /> soilTemp1 <br />
-              soilTemp2 <br /> soilTemp3 <br /> soilTemp4 <br />
-              windchill
+              heatingTemp <br /> humidex <br /> inTemp <br />
+              leafTemp1 <br /> leafTemp2 <br /> outTemp <br />
+              soilTemp1 <br /> soilTemp2 <br /> soilTemp3 <br />
+              soilTemp4 <br /> windchill
             </td>
             <td>degree_F <br /> degree_C
             </td>
