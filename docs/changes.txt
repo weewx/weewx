@@ -118,8 +118,6 @@ will be logged.
 
 Added debug logging to indicate when calibrations are ignored.
 
-Added write timeout to ultimeter driver to better report serial issues.
-
 Added better logging for cc3000 when the cc3000 loses contact with sensors
 for extended periods of time.
 
