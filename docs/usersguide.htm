@@ -5,11 +5,11 @@
     <title>weewx: User's Guide</title>
     <meta http-equiv="Content-Language" content="en-us"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
     <link rel="stylesheet" href="css/jquery.tocify.css"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
-    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link rel="icon" href="images/favicon.png" type="image/png"/>
 </head>
 
 <body>
@@ -192,8 +192,8 @@ Version: 3.7
                 permissions and running commands;
             </li>
             <li>No programming experience is necessary unless you wish
-                to extend weewx. In this case, you should have some
-                familiarity with Python.
+                to extend weewx. In this case, you should be comfortable
+                programming in Python. 
             </li>
         </ul>
         <p>If you get stuck, there is a very active
@@ -2796,7 +2796,7 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
         <h1 id="troubleshooting">Troubleshooting</h1>
 
         <p>This section lists some common problems installing and running
-            <span class="code">weewx</span>. If you are still stuck, be sure to: </p>
+            <span class="code">weewx</span>. If you are stuck, be sure to: </p>
         <ul>
             <li style="margin-bottom: 1em">Set the option <span
                     class="code">debug</span> to <span class="code">1</span> in <span
@@ -2805,8 +2805,8 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
                 troubleshooting and debugging!
                 <p class='tty'>debug = 1</p>
             </li>
-            <li style="margin-bottom: 1em">Look at the <a href="#monitoring">log file</a>. I am
-                always happy to take questions, but the first thing I will ask
+            <li style="margin-bottom: 1em">Look at the <a href="#monitoring">log file</a>. We are
+                always happy to take questions, but the first thing someone will ask
                 is, &quot;Did you look at the log file?&quot;
                 <p class='tty cmd'>sudo tail -f /var/log/syslog</p>
             </li>
@@ -2821,7 +2821,10 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
         </ul>
 
 
-        <!-- wee_debug documentation moved to utilities.htm -->
+        <p>If you are still stuck, post your problem to the 
+        <a href="https://groups.google.com/forum/#!forum/weewx-user">weewx-user group</a>. The Wiki
+        has some guidelines on <a href="https://github.com/weewx/weewx/wiki/Help!-Posting-to-weewx-user">
+        how to do an effective post</a>.</p>
 
 
         <h2>Hardware problems</h2>
@@ -3522,13 +3525,6 @@ Which gives here an output like:
 uslcom0: &lt;CP2102 USB to UART Bridge Controller&gt; on usbus1
 And put in <span class="code">weewx.conf</span>:
 port = /dev/cuaU0</pre>
-
-        <h3>Apple OSX 10.9 (Mavericks)</h3>
-
-        <p>User Mike has written a
-            <a href='http://www.cougar.eu.com/useful-guides/weewx-installation-on-osx.html'>
-                very nice guide</a> on how to install <span class='code'>
-        weewx</span> on Apple's Mavericks operating sytem.</p>
 
         <h3 id="funky_symbols">Funky symbols in plots</h3>
 
