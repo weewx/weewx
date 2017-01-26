@@ -1,4 +1,4 @@
-## statistics format a for standard skin
+## statistics module for standard skin
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
 

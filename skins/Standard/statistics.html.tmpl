@@ -1,11 +1,11 @@
+## Copyright 2017 Tom Keffer, Matthew Wall
+## Distributed under terms of GPLv3.  See the LICENSE.txt for your rights.
 #errorCatcher Echo
-## An encoding of UTF-8 is usually safe, but if the text is actually
-## in Latin-1, then replace the string "UTF-8" with "latin-1"
 #encoding UTF-8
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head profile="http://www.w3.org/2005/10/profile">
-    #if $encoding == 'utf8'
+    #if $encoding == 'UTF-8'
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     #end if    
     <title>$station.location Statistics</title>
