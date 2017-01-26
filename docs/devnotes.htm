@@ -41,7 +41,7 @@ Version: 3.7
         </span>
         </div>
         <div class="title">
-            Notes for Developers of the <span class="code">weewx</span> Weather System
+            Notes for Developers of the weeWX Weather System
         </div>
     </div>
 
@@ -224,8 +224,7 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
     try:
         os.rename(oldname, newname)
     except:
-        pass
-        </pre>
+        pass</pre>
         <p>While the odds are that if an exception happens it will be because the file <span class="code">oldname</span>
             does not exist, that is not guaranteed. It could be because of a keyboard interrupt, or a corrupted file
             system, or something else. Instead, you should test explicitly for any expected exception, and let the rest
@@ -234,8 +233,7 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
     try:
         os.rename(oldname, newname)
     except OSError:
-        pass
-        </pre>
+        pass</pre>
         <p>Weewx has a few specialized exception types, used to rationalized all the different types of exceptions that
             could be thrown by the underlying libraries. In particular, low-level I/O code can raise a myriad of
             exceptions, such as USB errors, serial errors, network connectivity errors, <i>etc.</i> All device drivers

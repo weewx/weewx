@@ -5,11 +5,10 @@
  *  See the file LICENSE.txt for your rights.
  */ 
 
-@import url('https://fonts.googleapis.com/css?family=Roboto:700|Noto+Sans|Inconsolata');
+@import url('https://fonts.googleapis.com/css?family=Roboto:700|Noto+Sans|Inconsolata:400,700');
 
 body{
   font-family: 'Noto Sans', sans-serif;
-  font-size: 90%;
   margin-top: 4px;
 }
 
@@ -217,10 +216,24 @@ caption {
 
 .code {
   font-family: 'Inconsolata', monospace;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+p .code, td .code, li .code {
+  background-color: #eeeee0;
+  border: 1px solid #ddddaa;
+  border-radius: 3px;
 }
 .symcode {
   font-family: 'Inconsolata', monospace;
   font-style: italic;
+}
+p .symcode {
+  padding-left: 4px;
+  padding-right: 4px;
+  background-color: #eeeee0;
+  border: 1px solid #ddddaa;
+  border-radius: 3px;
 }
 .indent {
     margin-left: 30px;
@@ -243,7 +256,6 @@ caption {
 }
 .tty {
   font-family: 'Inconsolata', monospace;
-  font-size: 90%;
   background-color: #FFFFe0;
   border: 1px solid #ddddaa;
   padding: 3px 8px 3px 8px;
