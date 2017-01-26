@@ -333,67 +333,30 @@ Saved configuration to /home/weewx/weewx.conf
         <pre class="tty">
 Usage: wee_database --help
        wee_database --create
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-       wee_database --drop-daily
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-       wee_database --rebuild-daily
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-            [--date=YYYY-mm-dd | --from=YYYY-mm-dd --to=YYYY-mm-dd]
-            [--trans-days=DAYS]
        wee_database --reconfigure
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-       wee_database --transfer
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-            --dest-binding=BINDING_NAME
-            [--dry-run]
+       wee_database --transfer --dest-binding=BINDING_NAME [--dry-run]
        wee_database --check
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-       wee_database --update
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-            [--trans-days=DAYS]
-            [--dry-run]
+       wee_database --update [--transaction-limit=DAYS] [--dry-run]
        wee_database --check-strings
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-       wee_database --fix
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-            [--trans-days=DAYS]
-            [--dry-run]
+       wee_database --fix-strings [--transaction-limit=DAYS] [--dry-run]
+       wee_database --drop-daily
+       wee_database --rebuild-daily
+            [--date=YYYY-mm-dd | --from=YYYY-mm-dd --to=YYYY-mm-dd]
+            [--transaction-limit=DAYS]
 
 Description:
 
-Configure the weewx database. Most of these functions are handled automatically by
-weewx, but they may be useful in special cases.
-
-Actions:
-
---create           Create the weewx database and initialize it with the schema.
---drop-daily       Drop the daily summaries from a database.
---rebuild-daily    Rebuild the daily summaries for a database from the archive table.
---reconfigure      Create a new database using the schema in the configuration
-                   file. Copy over data from the old database.
---transfer         Move data from one database to another.
---check            Check if the daily summary tables are at the latest version.
---update           Update the daily summary tables if required and recalculate
-                   the daily summary maximum windSpeed values.
---check-strings    Check the archive table for null strings that may have been
-                   introduced by a SQL editing program.
---fix              Fix any null strings in a SQLite database.
+Manipulate the weewx database. Most of these operations are handled automatically
+by weewx, but they may be useful in special cases.
 
 Options:
   -h, --help            show this help message and exit
   --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
-  --create              Create the weewx database.
+  --create              Create the weewx database and initialize it with the
+                        schema.
   --drop-daily          Drop the daily summary tables from a database.
-  --rebuild-daily       Rebuild the daily summaries for a database.
+  --rebuild-daily       Rebuild the daily summaries from data in the archive
+                        table.
   --date=YYYY-mm-dd     Rebuild the daily summaries for this date. Format is
                         YYYY-mm-dd.
   --from=YYYY-mm-dd     Rebuild the daily summaries starting at this date.
@@ -408,27 +371,23 @@ Options:
                         the end.
   --transfer            Transfer the weewx archive from source database to
                         destination database.
-  --check               Check the daily summary tables version.
+  --check               Check the calculations in the daily summary tables.
   --update              Update the daily summary tables if required and
                         recalculate the daily summary maximum windSpeed
                         values.
   --check-strings       Check the archive table for null strings that may have
                         been introduced by a SQL editing program.
-  --fix                 Fix any null strings in a SQLite database.
+  --fix-string          Fix any null strings in a SQLite database.
   --binding=BINDING_NAME
                         The data binding. Default is 'wx_binding'.
   --dest-binding=BINDING_NAME
                         The destination data binding.
   --dry-run             Print what would happen but do not do it. Default is
                         False.
-  --trans-days=DAYS     Limit database transactions to no more than DAYS days
-                        of data at a time. Default value is 5 when using
-                        --rebuild-daily and 50 when using --update. May be
-                        increased for a slight speed increase or reduced to
-                        reduce memory usage.
-
-If you are using a MySQL database it is assumed that you have the appropriate
-permissions for the requested operation.
+  --transaction-limit=DAYS
+                        Limit database transactions to no more than DAYS days
+                        of data at a time. Increase the limit to speed up the
+                        calculations, decrease to reduce the memory usage.
 </pre>
 
         <h2><span id='wee_database_details'>Actions and options</span></h2>
@@ -515,25 +474,21 @@ wee_database --transfer --dest-binding=dest_binding</pre>
             to SQLite</a>, using <span class="code">wee_database</span>.</p>
 
         <h3>Action <span class="code">--check</span></h3>
-        <p>This action will check the version number of the daily summary tables 
-            as well as performing a null string check (refer to 
-            the <em><a href="utilities.htm#Action_--check-strings"><span class="code">--check-strings</span></a></em> action) of
-            the archive table. If the daily summary tables are found to be using 
-            an old version the user is advised to update the daily summary tables 
-            using the <span class="code">--update</span> action. If null strings 
-            are found in the archive table the user is advised to use 
-            the <span class="code">--fix</span> action to fix the null strings.
+        <p>This action will check the calculations in the daily summary tables.
+            If the daily summary tables contain summaries calculated using
+            an old algorithm, the user is advised to update the daily summary
+            tables using the <span class="code">--update</span> action.
         </p>
 
         <pre class="tty cmd">wee_database --check</pre>
         
         <h3 id="wee_database_utility_update">Action <span class="code">--update</span></h3>
-        <p>This action updates the daily summary tables to the latest version. 
-            This update involves applying interval weighting to the daily summaries, 
-            if not previously applied, and recalculating the maximum daily windSpeed 
-            value and time. The update process is irreversible and users are 
-            recommended to backup their database before 
-            the <span class="code">--update</span> action is applied.
+        <p>This action updates the daily summary tables to use the weight sum
+            calculations. The calculation applies interval weighting to the
+            daily summaries, if not previously applied, and recalculates the
+            maximum daily windSpeed value and time. The update process is
+            irreversible and users are advised to backup their database before 
+            performing this action.
         </p>
 
         <pre class="tty cmd">wee_database --update</pre>
@@ -542,23 +497,21 @@ wee_database --transfer --dest-binding=dest_binding</pre>
             the Upgrade Guide for further information on interval weighting.</p>
         
         <h3>Action <span class="code">--check-strings</span></h3>
-        <p>Normally, all entries in the archive are pure numbers. However, some 
-            visual SQLite database editors use a null string instead of a null 
-            value when deleting entries. These nulls strings can 
-            crash <span class="code">weewx</span>. This action checks for them
-            and advises the user whether the <span class="code">--fix</span> action 
-            should be used to substitute a true null value in place of a null 
-            string.
+        <p>Normally, all entries in the archive are numbers. However, some 
+            SQLite database editors use a null string instead of a null 
+            value when deleting entries. These null strings can cause problems.
+            This action checks the database to see if it contains any null
+            strings.
         </p>
 
         <pre class="tty cmd">wee_database --check-strings</pre>
 
-        <h3>Action <span class="code">--fix</span></h3>
-        <p>This action will check for any null strings in a SQLite database and 
-            if found substitute a true null value.
+        <h3>Action <span class="code">--fix-strings</span></h3>
+        <p>This action will check for any null strings in a SQLite database
+            and if found substitute a true null value.
         </p>
     
-        <pre class="tty cmd">wee_database --fix</pre>
+        <pre class="tty cmd">wee_database --fix-strings</pre>
 
         <!-- ======== -->
 
