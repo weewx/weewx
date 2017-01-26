@@ -5,11 +5,11 @@
     <title>weewx: Upgrade Guide</title>
     <meta http-equiv="Content-Language" content="en-us"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
     <link rel="stylesheet" href="css/jquery.tocify.css"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
-    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link rel="icon" href="images/favicon.png" type="image/png"/>
     <style>
         #toc_parent {
             overflow-y: hidden;
@@ -96,7 +96,7 @@ Version: 3.7
         <p class="warning"><strong>Warning!</strong><br/>
             You must use the same upgrade technique as your initial install!
             For example, if you used <span class="code">setup.py</span> to install
-            <span class='code'>weewx</span>, you should use
+            <span class='code'>weewx</span>, then you should use
             <span class="code">setup.py</span> to upgrade.
             If you used a DEB or RPM package to install, then you should upgrade
             using the same package type.
@@ -115,12 +115,15 @@ Version: 3.7
         <pre class="tty cmd">cd weewx-X.Y.Z </pre>
         <p>Build the distribution:</p>
         <pre class="tty cmd">./setup.py build </pre>
-        <p>Install <span class='code'>weewx</span>:</p>
         <p class='warning'><strong>Warning!</strong><br/>
             Before doing the next step, be sure that <span class="code">home</span>
             in the file <span class="code">setup.cfg</span> is set to the location
             of the previous <span class='code'>weewx</span> installation.
         </p>
+
+        <p>
+          After checking <span class='code'>setup.cfg</span>, install your new
+          version of <span class='code'>weewx</span>:</p>
 
         <pre class="tty cmd">sudo ./setup.py install </pre>
 
@@ -222,8 +225,9 @@ Version: 3.7
         <h3 id="change_to_daily_summaries">Changes to daily summaries</h3>
         <p>Perhaps the most significant change in V3.7 is a fix for how daily summary values are calculated
             and stored.</p>
-        <p>Daily summaries were introduced in V3.0, in December, 2014. They were designed to "weight" values
-            depending on the time length of the archive record that contributed to them. For example,
+        <p>Daily summaries were introduced in V3.0 (December, 2014), to speed up 
+            certain kinds of aggregation calculations. They were designed to "weight" values
+            depending on the time length of the archive record that contributed them. For example,
             shorter intervals contributed less than longer intervals. This was intended to allow
             users to change the length of their archive interval, should they wish to.</p>
         <p>Unfortunately, a bug caused the weightings to all be one (1), irregardless of what the actual
@@ -233,7 +237,7 @@ Version: 3.7
             averages would be calculated incorrectly.</p>
         <p class="warning">
             This bug will only affect you if you have changed the length of your archive interval,
-            or if you plan to.</em>
+            or if you plan to.
         </p>
         <p>If you have not changed your archive interval length, and have no plans to do so, there
             is nothing you need to do.</p>
@@ -258,7 +262,7 @@ $day.windGust.max</pre>
         <p>In Version 3.7, this has been changed so the maximum <span class="code">windSpeed</span> is now
             set to the maximum <em>archive</em> value seen during
             the day &mdash; usually a slightly smaller number. However, older daily max values will still
-            contain the max LOOP packet values. If you wish to update them and have them recalculated to use the max
+            contain the max LOOP packet values. If you wish to update your older values and have them use the max
             archive record value, use the utility
             <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>, with
             option <a href="utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>.
