@@ -4340,11 +4340,13 @@ UV      = UV Index</pre>
         to the search list.
       </p>
       <pre class="tty">search_list_extensions = user.stats.MyStats, user.forecast.ForecastVariables</pre>
-      <p class="config_option">encoding</p>
+      <p class="config_option" id='option_encoding'>encoding</p>
 
-      <p>This option controls which encoding is to be used for the
-        generated output. The encoding can be specified for individual
-        files. There are 3 possible choices:</p>
+      <p>
+        As Cheetah goes through the template, it substitutes strings for all tag values. 
+        This option controls which encoding to use for the new strings. The encoding
+        can be chosen on a per file basis. There are 3 possible choices:
+      </p>
       <table class="indent">
         <tbody>
           <tr class="first_row">
@@ -5089,6 +5091,45 @@ UV      = UV Index</pre>
         ephem_day  = %X
         ephem_year = %x %X</pre>
 
+      <h2>Encodings</h2>
+      <p>You may have to specify the encoding used</p>
+      <ul>
+        <li>by a template;</li>
+        <li>in any strings substituted by Cheetah.</li>
+      </ul>
+
+      <h3>Encoding used in a template</h3>
+      <p>
+        If you use an encoding other than ASCII in a template, then you must
+        include a <span class='code'>#encoding</span>
+        directive at the top of the file, informing Cheetah of your choice. 
+        If your template includes other templates (by using the <span class='code'>#include</span>
+        directive), and those templates use an encoding, then they must include their
+        own <span class='code'>#encoding</span> directive as well.
+      </p>
+        
+      <p>
+        For example, if you use <span class='code'>UTF-8</span>
+        (the default used by all the standard weeWX templates), then the top of 
+        your template should look something like this:
+      </p>
+      <pre class='tty'>#errorCatcher Echo
+##
+## Specifying an encoding of UTF-8 is usually safe, but if your text is
+## actually in Latin-1, then you should replace the string "UTF-8" with "latin-1"
+<span class='highlight'>#encoding UTF-8</span>
+
+&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"&gt;
+</pre>
+
+      <h3>Encoding used in substituted strings</h3>
+      <p>
+        The other place where encoding matters is in the strings substituted by Cheetah.
+        The encoding for these is specified by the 
+        <a href="#option_encoding"><span class='code'>encoding</span></a> option
+        in the skin configuration file, <span class='code'>skin.conf</span>.
+      </p>
+      
       <h2 id="environment_variable_LANG">
         Environment variable <span class="code">LANG</span>
       </h2>
@@ -5105,9 +5146,6 @@ UV      = UV Index</pre>
         be used. The decimal point for numbers will also be modified
         appropriately.
       </p>
-
-
-
 
 
       <h1 id="service_engine">
