@@ -5,7 +5,7 @@
  *  See the file LICENSE.txt for your rights.
  */ 
 
-@import url('https://fonts.googleapis.com/css?family=Roboto:700|Noto+Sans|Inconsolata:400,700');
+@import url('https://fonts.googleapis.com/css?family=Roboto:700|Noto+Sans|Inconsolata:400,700|Droid+Serif');
 
 body{
   font-family: 'Noto Sans', sans-serif;
@@ -287,11 +287,11 @@ p .symcode {
   text-align: center;
 }
 .example_output {
-  font-family: 'Quattrocento', serif;
-  padding: 3px 8px 3px 8px;
+  font-family: 'Droid Serif', serif;
+  padding: 15px 20px 15px 20px;
   margin: 5px 15px 5px 15px;
   border: 1px solid #cccccc;
-  box-shadow: 2px 2px 3px #dddddd;
+  box-shadow: 2px 2px 2px #dddddd;
   display:inline-block;
 }
 .image {
