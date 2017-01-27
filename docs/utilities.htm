@@ -336,11 +336,11 @@ Usage: wee_database --help
        wee_database --reconfigure
        wee_database --transfer --dest-binding=BINDING_NAME [--dry-run]
        wee_database --check
-       wee_database --update [--transaction-limit=DAYS] [--dry-run]
+       wee_database --update [--dry-run]
        wee_database --check-strings
        wee_database --fix-strings
        wee_database --drop-daily
-       wee_database --rebuild-daily [--transaction-limit=DAYS]
+       wee_database --rebuild-daily
             [--date=YYYY-mm-dd | --from=YYYY-mm-dd --to=YYYY-mm-dd]
 
 Description:
@@ -383,12 +383,6 @@ Options:
                         The destination data binding.
   --dry-run             Print what would happen but do not do it. Default is
                         False.
-  --transaction-limit=DAYS
-                        Limit database transactions to no more than DAYS days
-                        of data at a time. Increase the limit to speed up the
-                        calculations, decrease to reduce the memory usage. The
-                        default is 5 days for rebuild-daily and 50 days for
-                        update.
 </pre>
 
         <h2><span id='wee_database_details'>Actions and options</span></h2>
