@@ -96,7 +96,7 @@ Version: 3.7
         <p class="warning"><strong>Warning!</strong><br/>
             You must use the same upgrade technique as your initial install!
             For example, if you used <span class="code">setup.py</span> to install
-            <span class='code'>weewx</span>, you should use
+            weeWX, you should use
             <span class="code">setup.py</span> to upgrade.
             If you used a DEB or RPM package to install, then you should upgrade
             using the same package type.
@@ -104,7 +104,7 @@ Version: 3.7
 
         <h1><a name="Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></h1>
 
-        <p>Before upgrading <span class="code">weewx</span>, check the section <em>
+        <p>Before upgrading weeWX, check the section <em>
             <a href="#Instructions_for_specific_versions">Instructions for
                 Specific Versions</a></em> to see if any specific
             actions are
@@ -115,11 +115,11 @@ Version: 3.7
         <pre class="tty cmd">cd weewx-X.Y.Z </pre>
         <p>Build the distribution:</p>
         <pre class="tty cmd">./setup.py build </pre>
-        <p>Install <span class='code'>weewx</span>:</p>
+        <p>Install weeWX:</p>
         <p class='warning'><strong>Warning!</strong><br/>
             Before doing the next step, be sure that <span class="code">home</span>
             in the file <span class="code">setup.cfg</span> is set to the location
-            of the previous <span class='code'>weewx</span> installation.
+            of the previous weeWX installation.
         </p>
 
         <pre class="tty cmd">sudo ./setup.py install </pre>
@@ -154,11 +154,11 @@ Version: 3.7
 
         <pre class='tty cmd'>sudo dpkg -i weewx_X.Y.Z-R.deb</pre>
 
-        <p>The upgrade process will not modify the <span class='code'>weewx</span>
+        <p>The upgrade process will not modify the weeWX
             databases.</p>
 
         <p>Unmodified files will be upgraded. If modifications have been made to
-            the weewx configuration, you will be prompted as to whether you want to
+            the weeWX configuration, you will be prompted as to whether you want to
             keep the existing configuration or accept the new configuration. Either
             way, <span class='code'>dpkg</span> will save a copy of the option you
             did not choose.</p>
@@ -198,7 +198,7 @@ Version: 3.7
 
         <pre class='tty cmd'>sudo rpm -U weewx-X.Y.Z-R.rpm</pre>
 
-        <p>The upgrade process will not modify the <span class='code'>weewx</span>
+        <p>The upgrade process will not modify the weeWX
             databases.</p>
 
         <p>Unmodified files will be upgraded. If modifications have been made to
@@ -635,7 +635,7 @@ extraHumid8 = humidity_8</pre>
             the archive data &mdash; everything is under one name. For example,
             if you are using sqlite, both the archive data and the daily summaries
             will be inside file <span class="code">weewx.sdb</span>. With MySQL,
-            everything is inside the database <span class="code">weewx</span>. This
+            everything is inside the database weeWX. This
             makes it easier to keep all data together when working with multiple
             databases.
         </p>
@@ -1173,7 +1173,7 @@ with weewx.archive.Archive.open(self.database_dict) as archive:
 
         <p>The <span class='code'>setup.py</span> utility is now included in the
             installation; it is no longer necessary to keep a copy of the
-            <span class='code'>weewx</span> source tree just for the
+            weeWX source tree just for the
             <span class='code'>setup.py</span> utility.</p>
 
         <p>For .deb and .rpm installations, the command
@@ -1252,7 +1252,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
         <p>Version 2.6 is backwards compatible with earlier versions, with a couple
             of small exceptions.</p>
         <ul>
-            <li>If you have written a custom <span class="code">weewx</span>
+            <li>If you have written a custom weeWX
                 service, the install routine will try to insert its name into
                 an appropriate place in one of the five new lists of services
                 to be run. You should check
@@ -1262,7 +1262,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
             <li>If you have written a custom RESTful service, the
                 architecture for these services has completely changed. They
                 are now first class services, and are treated like any other
-                <span class="code">weewx</span> service. There are some guides
+                weeWX service. There are some guides
                 to writing RESTful services using the new architecture at the
                 top of the file <span class='code'>bin/weewx/restx.py</span>.
                 I can also help you with the transition.
@@ -1332,7 +1332,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
         <p>That is, a second parameter, <span class="code">engine</span>, has been
             added. This is a reference to the
-            <span class="code">weewx</span> engine.</p>
+            weeWX engine.</p>
 
         <p>This change will affect only those who have written their own device
             driver. </p>
@@ -1343,7 +1343,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
         bin/user/schemas.py</span>, for the stats database. This schema is used
             only when initially creating the database. If you have a specialized
             stats database, that is, one that saves types other than the default
-            that comes with <span class="code">weewx</span>, you should edit this
+            that comes with weeWX, you should edit this
             file to reflect your changes before attempting to rebuild the database.
         </p>
 
