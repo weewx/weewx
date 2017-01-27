@@ -1130,7 +1130,7 @@ class DaySummaryManager(Manager):
         self.daykeys = [x[Nprefix:] for x in all_tables if (x.startswith(prefix) and x != meta_name)]
         self.version = self._read_metadata('Version')
         if weewx.debug:
-            assert(self.version in ['1.0', '2.0'])
+            syslog.syslog(syslog.LOG_DEBUG, 'manager: Daily summary version is %s' % self.version)
     
     def close(self):
         del self.version
