@@ -11,7 +11,7 @@
 </head>
 <body>
 
-<h1 class="title">weewx: Installation on Debian-based systems
+<h1 class="title">weeWX: Installation on Debian-based systems
     <div class='os-icons'>
         <img class='logo' src='images/logo-debian.png' alt=""/>
         <img class='logo' src='images/logo-ubuntu.png' alt=""/>
@@ -21,7 +21,7 @@
     <div style="clear: both"></div>
 </h1>
 
-<p>This is a guide to installing <span class='code'>weewx</span> from a DEB package on Debian-based systems, including Ubuntu, Mint, and Raspbian.
+<p>This is a guide to installing weeWX from a DEB package on Debian-based systems, including Ubuntu, Mint, and Raspbian.
 </p>
 
 <h2>Download</h2>
@@ -43,7 +43,7 @@ sudo apt-get -f install</pre>
 </p>
 
 <h2>Status</h2>
-<p>To make sure things are running properly look in the system log for messages from <span class='code'>weewx</span>.
+<p>To make sure things are running properly look in the system log for messages from weeWX.
 </p>
 <pre class='tty cmd'>sudo tail -f /var/log/syslog</pre>
 
@@ -58,19 +58,19 @@ sudo apt-get -f install</pre>
 <p>To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span class='code'>/etc/weewx/weewx.conf</span>. See the <a href="usersguide.htm">User Guide</a> and <a href="customizing.htm">Customization Guide</a> for details.
 </p>
 
-<p><span class='code'>weewx</span> must be restarted for configuration file changes to take effect.
+<p>WeeWX must be restarted for configuration file changes to take effect.
 </p>
 
 <h2>Start/Stop</h2>
-<p>To start/stop <span class='code'>weewx</span>:</p>
+<p>To start/stop weeWX:</p>
 <pre class='tty cmd'>sudo /etc/init.d/weewx start
 sudo /etc/init.d/weewx stop</pre>
 
 <h2>Uninstall</h2>
-<p>To uninstall <span class='code'>weewx</span> but retain configuration files and data:
+<p>To uninstall weeWX but retain configuration files and data:
 </p>
 <pre class='tty cmd'>sudo dpkg -r weewx</pre>
-<p>To uninstall <span class='code'>weewx</span>, removing configuration files but retaining data:
+<p>To uninstall weeWX, removing configuration files but retaining data:
 </p>
 <pre class='tty cmd'>sudo dpkg --purge weewx</pre>
 <p>To remove data:</p>
