@@ -658,8 +658,8 @@ class Source(object):
                         try:
                             _temp = float(_row[self.map[_field]['field_name']].strip())
                         except:
-                            # perhaps we have a blank/empty entry
-                            if _row[self.map[_field]['field_name']].strip() == '':
+                            # perhaps we have a None or a blank/empty entry
+                            if _row[self.map[_field]['field_name']] is None or _row[self.map[_field]['field_name']].strip() == '':
                                 # if so we will use None
                                 _temp = None
                             else:
