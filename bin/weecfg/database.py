@@ -448,7 +448,8 @@ class IntervalWeighting(DatabaseFix):
                     # a dry run then set the 'Version' metadata field to
                     # indicate we have updated to version 2.0.
                     if not self.dry_run:
-                        self.dbm._write_metadata('Version', '2.0')
+                        with weedb.Transaction(self.dbm.connection) as _cursor:
+                            self.dbm._write_metadata('Version', '2.0', _cursor)
                 except weewx.ViolatedPrecondition, e:
                     syslog.syslog(syslog.LOG_INFO,
                                   "intervalweighting: **** %s" % e)
@@ -559,7 +560,8 @@ class IntervalWeighting(DatabaseFix):
                     _tr_stop_ts = min(self.dbm.last_timestamp, _tr_stop_ts)
 
             # We have finished. Get rid of the no longer needed lastWeightPatch
-            self.dbm.getSql("DELETE FROM %s_day__metadata WHERE name=?" % self.dbm.table_name, ('lastWeightPatch',))
+            with weedb.Transaction(self.dbm.connection) as _cursor:
+                _cursor.execute("DELETE FROM %s_day__metadata WHERE name=?" % self.dbm.table_name, ('lastWeightPatch',))
 
             # Give the user some final information on progress,
             # mainly so the total tallies with the log

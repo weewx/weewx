@@ -4,10 +4,11 @@
  * 
  *  See the file LICENSE.txt for your rights.
  */ 
- 
+
+@import url('https://fonts.googleapis.com/css?family=Roboto:700|Noto+Sans|Inconsolata:400,700|Droid+Serif');
+
 body{
-  font-family: Verdana,arial,sans-serif;
-  font-size: 90%;
+  font-family: 'Noto Sans', sans-serif;
   margin-top: 4px;
 }
 
@@ -73,6 +74,7 @@ div.main {
   border-radius: 3px;
 }
 .title {
+  font-family: 'Roboto', sans-serif;
   font-size: 180%;
   font-weight: bold;
   margin-top: 0px;
@@ -138,6 +140,7 @@ dd {
 }
 h1 {
   color: black;
+  font-family: 'Roboto', sans-serif;
   font-size: 160%;
   font-weight: bold;
   border: 1px solid #999999;
@@ -148,20 +151,27 @@ h1 {
   moz-border-radius: 3px;
   border-radius: 3px;
   margin-top: 2em;
+  margin-bottom: 0;
 }
 h2 {
   color: teal;
+  font-family: 'Roboto', sans-serif;
   font-size: 140%;
   font-weight: bold;
+  border-bottom: 1px solid #999999;
   margin-top: 1.5em;
+  margin-bottom: 0;
 }
 h3 {
   color: teal;
+  font-family: 'Roboto', sans-serif;
   font-size: 120%;
   font-weight: bold;
+  margin-bottom: 0;
 }
 h4 {
   color: teal;
+  font-family: 'Roboto', sans-serif;
   font-size: 100%;
   font-weight: bold;
 }
@@ -183,6 +193,7 @@ tr {
 td {
   border: 1px solid #cccccc;
   padding: 2px;
+  padding-left: 8px;
 }
 table .first_row {
   font-weight: bold;
@@ -191,7 +202,7 @@ table .first_row {
   padding-right: 10px;
 }
 table.fixed_width td {
-  width:10%;
+  width: 10%;
 }
 caption {
   background-color: #aacccc;
@@ -204,15 +215,29 @@ caption {
 
 
 .code {
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Inconsolata', monospace;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+p .code, td .code, li .code {
+  background-color: #eeeee0;
+  border: 1px solid #ddddaa;
+  border-radius: 3px;
 }
 .symcode {
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Inconsolata', monospace;
   font-style: italic;
 }
+p .symcode {
+  padding-left: 4px;
+  padding-right: 4px;
+  background-color: #eeeee0;
+  border: 1px solid #ddddaa;
+  border-radius: 3px;
+}
 .indent {
-    margin-left: 40px;
-    margin-right: 40px;
+    margin-left: 30px;
+    width: 95%;
 }
 .station_data {
   margin-left: 40px;
@@ -230,8 +255,7 @@ caption {
   font-weight: bold;
 }
 .tty {
-  font-family: "Courier New", Courier, monospace;
-  font-size: 90%;
+  font-family: 'Inconsolata', monospace;
   background-color: #FFFFe0;
   border: 1px solid #ddddaa;
   padding: 3px 8px 3px 8px;
@@ -241,7 +265,7 @@ caption {
 }
 .config_section {}
 .config_option, .config_important {
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Inconsolata', monospace;
   font-weight: bold;
   color: black;
   margin-top: 1.5em;
@@ -263,11 +287,11 @@ caption {
   text-align: center;
 }
 .example_output {
-  font-family: "Times New Roman", Times, serif;
-  padding: 3px 8px 3px 8px;
+  font-family: 'Droid Serif', serif;
+  padding: 15px 20px 15px 20px;
   margin: 5px 15px 5px 15px;
   border: 1px solid #cccccc;
-  box-shadow: 2px 2px 3px #dddddd;
+  box-shadow: 2px 2px 2px #dddddd;
   display:inline-block;
 }
 .image {
@@ -325,7 +349,6 @@ caption {
 }
 .version {
   font-size: 60%;
-  padding-right: 10px;
 }
 .logo {
   width: 32px;
@@ -383,7 +406,7 @@ caption {
  * output so that examples in the docs match those of the standard template.
  */
 .stats {
-  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-family: 'Noto Sans', sans-serif;
   padding: 13px 58px 13px 58px;
 }
 .stats table {
@@ -411,7 +434,10 @@ div .ui-widget-header {
 .ui-widget-content {
   background: white;
 }
-
+/* eliminate jquery-ui overrides to trebuchet */
+.ui-widget {
+  font-family: 'Noto Sans', sans-serif;
+}
 
 /* settings for printing */
 @media print {
@@ -522,3 +548,53 @@ div .ui-widget-header {
         background-color: #ffeeee !important;
     }
 }
+
+/*
+ * The following dialog CSS was stolen from http://bit.ly/1cYAqTr
+ */
+.modal-dialog {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 99999;
+    opacity:0;
+    -webkit-transition: opacity 400ms ease-in;
+    -moz-transition: opacity 400ms ease-in;
+    transition: opacity 400ms ease-in;
+    pointer-events: none;
+}
+.modal-dialog:target {
+    opacity:1;
+    pointer-events: auto;
+}
+.modal-dialog > div {
+    width: 400px;
+    position: relative;
+    margin: 10% auto;
+    padding: 5px 20px 13px 20px;
+    border-radius: 10px;
+    background: #fff;
+}
+.close-dialog {
+    background: #606061;
+    color: #FFFFFF;
+    line-height: 25px;
+    position: absolute;
+    right: -12px;
+    text-align: center;
+    top: -10px;
+    width: 24px;
+    text-decoration: none;
+    font-weight: bold;
+    -webkit-border-radius: 12px;
+    -moz-border-radius: 12px;
+    border-radius: 12px;
+    -moz-box-shadow: 1px 1px 3px #000;
+    -webkit-box-shadow: 1px 1px 3px #000;
+    box-shadow: 1px 1px 3px #000;
+}
+
+.close-dialog:hover { background: #00d9ff; }

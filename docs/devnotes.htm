@@ -41,19 +41,19 @@ Version: 3.7
         </span>
         </div>
         <div class="title">
-            Notes for Developers of the <span class="code">weewx</span> Weather System
+            Notes for Developers of the weeWX Weather System
         </div>
     </div>
 
     <div id="technical_content" class="content">
 
-        <p>This guide is intended for developers contributing to the open source project <span class="code">weewx</span>.
+        <p>This guide is intended for developers contributing to the open source project weeWX.
         </p>
 
 
         <h1>Goals</h1>
 
-        <p>The primary design goals of <span class="code">weewx</span> are:</p>
+        <p>The primary design goals of weeWX are:</p>
         <ul>
             <li>Architectural simplicity. No semaphores, no named pipes, no
                 inter-process communications, no complex multi-threading to
@@ -84,7 +84,7 @@ Version: 3.7
 
         <p>To meet these goals, the following strategies were used: </p>
         <ul>
-            <li>A &quot;micro-kernel&quot; design. The <span class="code">weewx</span> engine actually does very little.
+            <li>A &quot;micro-kernel&quot; design. The weeWX engine actually does very little.
                 Its primary job is to load and run <em> services</em> at runtime, making it easy for users to add or
                 subtract features.
             </li>
@@ -111,17 +111,17 @@ Version: 3.7
                 <a href="http://www.cheetahtemplate.org/">Cheetah</a> module
                 was chosen for generating html and other types of files from
                 templates. Cheetah
-                allows <em>search list extensions</em> to be defined, making it easy to extend weewx with new template
+                allows <em>search list extensions</em> to be defined, making it easy to extend weeWX with new template
                 tags. Unfortunately, as of 2016, Cheetah has not been updated in many years (indeed, the Cheetah website
                 seems to be dead). Fortunately, Cheetah seems to be very robust, with only a few well-known bugs that
                 are easiy worked around, so we will likely continue to use it for the foreseeable future.
             </li>
             <li>Pure Python. The code base is 100% Python &mdash; no underlying C libraries need be built to install
-                <span class="code">weewx</span>. This also means no Makefiles are needed.
+                weeWX. This also means no Makefiles are needed.
             </li>
         </ul>
-        <p>While <span class="code">weewx</span> is nowhere near as fast at generating images and HTML as its
-            predecessor, <span class="code">wview</span> (this is partially because <span class="code">weewx</span> uses
+        <p>While weeWX is nowhere near as fast at generating images and HTML as its
+            predecessor, <span class="code">wview</span> (this is partially because weeWX uses
             fancier fonts and a much more powerful templating engine), it is fast enough for all platforms but the
             slowest. I run it regularly on a 500 MHz machine where generating the 9 images used in the &quot;Current
             Conditions&quot; page takes just under 2 seconds (compared with 0.4 seconds for <span
@@ -131,7 +131,7 @@ Version: 3.7
             V3.X. It has so many changes that are not backwards compatible with V2.X, that a separate code base will
             most likely be needed. My intention is to stick with the V2.X versions until V3.X is so widespread it cannot
             be ignored, then make a permanent switch. Given the slow adoption rate of V3.X this is unlikely to happen
-            anytime soon. In any case, I doubt the transition will affect the average <span class="code">weewx</span>
+            anytime soon. In any case, I doubt the transition will affect the average weeWX
             user. </p>
 
         <p>All writes to the databases are protected by transactions. You can kill the program at any time (either
@@ -180,11 +180,11 @@ Version: 3.7
 
         <h1>Time</h1>
 
-        <p><span class="code">Weewx</span> stores all data in UTC (roughly, &quot;Greenwich&quot; or &quot;Zulu&quot;)
+        <p>WeeWX stores all data in UTC (roughly, &quot;Greenwich&quot; or &quot;Zulu&quot;)
             time. However, usually one is interested in weather events in local time and want image and HTML generation
             to reflect that. Furthermore, most weather stations are configured in local time. This requires that many
             data times be converted back and forth between UTC and local time. To avoid tripping up over time zones and
-            daylight savings time, <span class="code">weewx</span> generally uses Python routines to do this conversion.
+            daylight savings time, weeWX generally uses Python routines to do this conversion.
             Nowhere in the code base is there any explicit recognition of DST. Instead, its presence is implicit in the
             conversions. At times, this can cause the code to be relatively inefficient. </p>
 
@@ -195,7 +195,7 @@ Version: 3.7
             etc.), despite a possible DST change in the middle, then things get a bit more complicated. One could modify
             the above to recognize whether a DST transition occurs sometime between <span class="code">last_ts</span>
             and the next three hours and, if so, make the necessary adjustments. This is generally what <span
-                    class="code">wview</span> does. <span class="code">Weewx</span> takes a different approach and
+                    class="code">wview</span> does. WeeWX takes a different approach and
             converts from UTC to local, does the arithmetic, then converts back. This is inefficient, but bulletproof
             against changes in DST algorithms, etc: </p>
         <pre class="tty">time_dt = datetime.datetime.fromtimestamp(last_ts)
@@ -209,7 +209,7 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
             handle it correctly. In particular, the function <span class="code">time.strftime()</span> completely fails
             when handed a Unicode string with a non-ASCII character. As this function is often used by extensions,
             working around this bug is an unfair expectation on extension writers. So, we generally avoid Unicode.</p>
-        <p>Instead, weewx mostly uses regular strings, with any non-ASCII characters encoded as UTF-8. </p>
+        <p>Instead, weeWX mostly uses regular strings, with any non-ASCII characters encoded as UTF-8. </p>
         <p>An exception to this general rule is the image generator, which holds labels internally in Unicode, because
             that is the encoding expected by most fonts.</p>
         <p>The document <i><a
@@ -224,8 +224,7 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
     try:
         os.rename(oldname, newname)
     except:
-        pass
-        </pre>
+        pass</pre>
         <p>While the odds are that if an exception happens it will be because the file <span class="code">oldname</span>
             does not exist, that is not guaranteed. It could be because of a keyboard interrupt, or a corrupted file
             system, or something else. Instead, you should test explicitly for any expected exception, and let the rest
@@ -234,9 +233,8 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
     try:
         os.rename(oldname, newname)
     except OSError:
-        pass
-        </pre>
-        <p>Weewx has a few specialized exception types, used to rationalized all the different types of exceptions that
+        pass</pre>
+        <p>WeeWX has a few specialized exception types, used to rationalized all the different types of exceptions that
             could be thrown by the underlying libraries. In particular, low-level I/O code can raise a myriad of
             exceptions, such as USB errors, serial errors, network connectivity errors, <i>etc.</i> All device drivers
             should catch these exceptions and convert them into an exception of type <span
@@ -244,7 +242,7 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
 
         <h1>Code style</h1>
         <p>Generally, we try to follow the <a href="https://www.python.org/dev/peps/pep-0008/">PEP 8 style guide</a>,
-            but there are <em>many</em> exceptions. In particular, many older weewx function names use camelCase, but
+            but there are <em>many</em> exceptions. In particular, many older weeWX function names use camelCase, but
             PEP 8 calls for snake_case. Please use snake_case for new code.</p>
         <p>Most modern code editors, such as Eclipse, or PyCharm, have the ability to automatically format code.
             Resist the temptation and <em>don't use this feature!</em> Two reasons:</p>
@@ -270,14 +268,14 @@ now = datetime.datetime()</pre>
 
         <p>This is a glossary of terminology used throughout the code. </p>
         <table style="width: 95%" class='indent'>
-            <caption>Terminology used in weewx</caption>
+            <caption>Terminology used in weeWX</caption>
             <tr class="first_row">
                 <td>Name</td>
                 <td>Description</td>
             </tr>
             <tr>
                 <td class="text_highlight">archive interval</td>
-                <td>Weewx does not store the raw data that comes off a weather station. Instead, it aggregates the data
+                <td>WeeWX does not store the raw data that comes off a weather station. Instead, it aggregates the data
                     over a length of time, the <em>archive interval</em>, and then stores that.
                 </td>
             </tr>
@@ -289,8 +287,8 @@ now = datetime.datetime()</pre>
                 </td>
             </tr>
             <tr>
-                <td class="text_highlight"><span class="code">config_dict</span></td>
-                <td>All configuration information used by weewx is stored in the <em>configuration file</em>, usually
+                <td class="text_highlight code">config_dict</td>
+                <td>All configuration information used by weeWX is stored in the <em>configuration file</em>, usually
                     with the name <span class="code">weewx.conf</span>. By convention, when this file is read into the
                     program, it is called <span class="code">config_dict</span>, an instance of the class <span
                             class="code">configobj.ConfigObj</span>.
@@ -341,7 +339,7 @@ now = datetime.datetime()</pre>
                 </td>
             </tr>
             <tr>
-                <td class="text_highlight"><span class="code">skin_dict</span></td>
+                <td class="text_highlight code">skin_dict</td>
                 <td>All configuration information used by a particular skin is stored in the <em>skin configuration
                     file</em>, usually with the name <span class="code">skin.conf</span>. By convention, when this file
                     is read into the program, it is called <span class="code">skin_dict</span>, an instance of the class

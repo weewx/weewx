@@ -720,7 +720,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.16rc3'
+DRIVER_VERSION = '0.18rc2'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -843,7 +843,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('usb info: %s' % get_usb_info())
         self.model = stn_dict.get('model', 'WMR300')
-        self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_MAP)
+        self.sensor_map = dict(self.DEFAULT_MAP)
+        if 'sensor_map' in stn_dict:
+            self.sensor_map.update(stn_dict['sensor_map'])
+        loginf('sensor map is %s' % self.sensor_map)
         self.heartbeat = 20 # how often to send a6 messages, in seconds
         self.history_retry = 60 # how often to retry history, in seconds
         global DEBUG_COMM
@@ -863,6 +866,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         self.last_65 = 0
         self.last_7x = 0
         self.last_record = 0
+        # FIXME: make the cache values age
+        # FIXME: do this generically so it can be used in other drivers
+        self.pressure_cache = dict()
         self.station = Station()
         self.station.open()
 
@@ -1019,6 +1025,13 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
 
     def convert_loop(self, pkt):
         p = self.convert(pkt, int(time.time() + 0.5))
+        if 'pressure' in p:
+            # cache any pressure-related values
+            for x in ['pressure', 'barometer']:
+                self.pressure_cache[x] = p[x]
+        else:
+            # apply any cached pressure-related values
+            p.update(self.pressure_cache)
         return p
 
     @staticmethod
