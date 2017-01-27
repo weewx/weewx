@@ -1134,7 +1134,11 @@ class DaySummaryManager(Manager):
     
     def close(self):
         del self.version
-        del self.daykeys
+        # There will be no daykeys if the daily summaries have been dropped.
+        try:
+            del self.daykeys
+        except AttributeError:
+            pass
         super(DaySummaryManager, self).close()
 
     def _initialize_day_tables(self, archiveSchema, cursor):  # @UnusedVariable
