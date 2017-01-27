@@ -1,11 +1,5 @@
              ---- Before the V3.7 release ----
 
 manager.py:
-  - Test partial rebuild of daily summaries on both sqlite and MySQL.  
+  - Extend test suites to test partial rebuild of daily summaries on both sqlite and MySQL.  
 
-wee_database:
-  - Single "--check-database" option. This checks for strings, weights, and windSpeed. 
-    Partially done, but does not check windSpeed, refer commit fcf90e4
-
-Documentation
-  - Document new options for wee_database in the utilities guide. Done, refer commit 5e1dfe7. Requires review.

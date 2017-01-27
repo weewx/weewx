@@ -18,34 +18,18 @@ Offer tags to support JSON. In particular, vectors. A tag like
 $day.outTemp.vector would offer a vector of temperatures for the day.
 Aggregation would be nice.
 
-Allow new derived types to be created by the user. Right now, things like
-heating and cooling degree days are hardwired in, but it ought to be possible
-to add things like that modularly. 
-
-The Davis console could intercept new archive record events and add
-rxcheckpercent and rain to software generated records.
-
-Consider breaking the rule that reporting can only be done through the 
-databases and, instead, offer up the last record when the reporting thread
-starts.
-
 A QC "Spike" detector.
 
 Harden up the MySQL database connection.
-
-Allow reporting services to be fired off at something other than every
-archive period. In particular, FTP.
 
 Offer "cumulative" as an aggregation type.
 
 Allow rain-to-date to be added to a partial rainyear.
 
-Current ET for the VP2 should show the value it emitted at the top of the hour.
-
 Fix scaling for aggregate interval of a week, so it starts on a Sunday.
 
 More dynamic access to the database. Check out
-Werkzeug. http://werkzeug.pocoo.org
+Werkzeug. http://werkzeug.pocoo.org [1/27/2017. This is essentially weeRT]
 
 Dynamic web updates, using AJAX, or Meteor.
 
