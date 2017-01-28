@@ -187,7 +187,8 @@ def syslog_with_pri(priority, message):
     _syslog.syslog(priority, message)
 
 def openlog(ident=sys.argv[0], logoptions=0, facility=LOG_USER):
-    if _syslog.is_open():
+    # Handle multiple calls to openlog as happens in test suites
+    if _syslog.isOpen():
         _syslog.closelog()
     _syslog.openlog(ident, logoptions, facility)
 
