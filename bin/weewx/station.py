@@ -94,38 +94,45 @@ class Station(object):
     @property
     def os_uptime(self):
         """Lazy evaluation of the server uptime."""
-        # Get the OS uptime. Because this is highly operating system dependent, several
-        # different strategies may have to be tried:
+        # Get the OS uptime. Because this is highly operating system dependent,
+        # several different strategies may have to be tried:
         os_uptime_secs = None
         try:
-            # For Linux:
-            os_uptime_secs = float(open("/proc/uptime").read().split()[0])
-        except (IOError, KeyError):
+            # systems with the uptime module installed
+            import uptime
+            os_uptime_secs = uptime.uptime()
+        except ImportError:
             try:
-                # For MacOs:
-                from Quartz.QuartzCore import CACurrentMediaTime
-                os_uptime_secs = CACurrentMediaTime()
-            except ImportError:
+                # For Linux:
+                os_uptime_secs = float(open("/proc/uptime").read().split()[0])
+            except (IOError, KeyError):
                 try:
-                    # for FreeBSD
-                    import ctypes
-                    from ctypes.util import find_library
-    
-                    libc = ctypes.CDLL(find_library('c'))
-                    size = ctypes.c_size_t()
-                    buf = ctypes.c_int()
-                    size.value = ctypes.sizeof(buf)
-                    libc.sysctlbyname("kern.boottime", ctypes.byref(buf), ctypes.byref(size), None, 0)
-                    os_uptime_secs = time.time() - float(buf.value)
-                except (AttributeError, IOError, NameError):
-                    pass
+                    # For MacOs:
+                    from Quartz.QuartzCore import CACurrentMediaTime
+                    os_uptime_secs = CACurrentMediaTime()
+                except ImportError:
+                    try:
+                        # for FreeBSD
+                        import ctypes
+                        from ctypes.util import find_library
+                        libc = ctypes.CDLL(find_library('c'))
+                        size = ctypes.c_size_t()
+                        buf = ctypes.c_int()
+                        size.value = ctypes.sizeof(buf)
+                        libc.sysctlbyname("kern.boottime", ctypes.byref(buf),
+                                          ctypes.byref(size), None, 0)
+                        os_uptime_secs = time.time() - float(buf.value)
+                    except (AttributeError, IOError, NameError):
+                        pass
 
-        return weewx.units.ValueHelper(value_t=(os_uptime_secs, "second", "group_deltatime"),
+        return weewx.units.ValueHelper(value_t=(os_uptime_secs,
+                                                "second", "group_deltatime"),
                                        formatter=self.formatter,
                                        converter=self.converter)
 
     def __getattr__(self, name):
-        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        # This is to get around bugs in the Python version of Cheetah's
+        # namemapper:
         if name in ['__call__', 'has_key']:
             raise AttributeError
         # For anything that is not an explicit attribute of me, try
