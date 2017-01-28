@@ -328,6 +328,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 with open(tmpname, mode='w') as _file:
                     print >> _file, text
                 if os.path.exists(_fullname):
+                    # windows requires an explicit remove before rename
                     os.remove(_fullname)
                 os.rename(tmpname, _fullname)
             except Exception, e:

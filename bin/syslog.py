@@ -2,10 +2,8 @@
 
 """Map syslog to the python logger for systems that have no syslog."""
 
-
 # WARNING: this is a shim for syslog to get weewx to run on windows.  this
 # shim is very much a work in progress.
-
 
 # FIXME: make the log default to a directory 'log' in the weewx directory
 
@@ -186,10 +184,11 @@ def syslog_no_pri(message):
 def syslog_with_pri(priority, message):
     if not _syslog.isOpen():
         _syslog.openlog()
-
     _syslog.syslog(priority, message)
 
 def openlog(ident=sys.argv[0], logoptions=0, facility=LOG_USER):
+    if _syslog.is_open():
+        _syslog.closelog()
     _syslog.openlog(ident, logoptions, facility)
 
 def closelog():
