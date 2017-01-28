@@ -19,7 +19,7 @@ import urllib2
 
 from datetime import datetime as dt
 
-# weewx imports
+# weeWX imports
 import weeimport
 import weewx
 
@@ -44,10 +44,10 @@ class WUSource(weeimport.Source):
     return different results to the same request being made from another
     location. This requires a mechanism to both determine the units in use from
     returned data as well as mapping a number of different possible field names
-    to a given weewx archive field name.
+    to a given weeWX archive field name.
     """
 
-    # Dict to map all possible WU field names to weewx archive field names and
+    # Dict to map all possible WU field names to weeWX archive field names and
     # units
     _header_map = {'Time': {'units': 'unix_epoch', 'map_to': 'dateTime'},
                    'TemperatureC': {'units': 'degree_C', 'map_to': 'outTemp'},
@@ -111,7 +111,7 @@ class WUSource(weeimport.Source):
         # We use the latter so force 'cumulative' for rain.
         self.rain = 'cumulative'
 
-        # initialise our import field-to-weewx archive field map
+        # initialise our import field-to-weeWX archive field map
         self.map = None
         # For a WU import we might have to import multiple days but we can only
         # get one day at a time from WU. So our start and end properties
@@ -162,7 +162,7 @@ class WUSource(weeimport.Source):
             print "This is a dry run, imported data will not be saved to archive."
 
     def getRawData(self, period):
-        """Get raw observation data and construct a map from WU to weewx
+        """Get raw observation data and construct a map from WU to weeWX
             archive fields.
 
         Obtain raw observational data from WU using a http WXDailyHistory
@@ -174,7 +174,7 @@ class WUSource(weeimport.Source):
         complication is that WU appends the unit abbreviation to the end of the
         returned field name for fields that can have different units. So once
         we have the data have received the response we need to determine the
-        units and create a dict to map the WU fields to weewx archive fields.
+        units and create a dict to map the WU fields to weeWX archive fields.
 
         Input parameters:
 
