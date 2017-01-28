@@ -14,16 +14,12 @@
                   visited:        4248b4 b44842
                     hover:        4248b4 b44842
 */
+
 @font-face {
     font-family: 'NotoSans';
-    src: url('font/NotoSans-Regular.ttf') format('truetype');
+    src: local('font/NotoSans.woff2'), url('https://fonts.googleapis.com/css?family=Noto+Sans'), format('woff2');
 }
-/*
-@font-face {
-    font-family: 'DroidSans';
-    src: url('font/DroidSans.ttf') format('truetype');
-}
-*/
+
 body {
     margin: 0;
     padding: 0;
