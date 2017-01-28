@@ -15,16 +15,21 @@
                     hover:        4248b4 b44842
 */
 
+/* use the fonts from google */
+/* @import url('https://fonts.googleapis.com/css?family=Open+Sans'); */
+
+/* use the local fonts */
 @font-face {
-    font-family: 'NotoSans';
-    src: local('font/NotoSans.woff2'), url('https://fonts.googleapis.com/css?family=Noto+Sans'), format('woff2');
+    font-family: 'Open Sans';
+    src: url('font/OpenSans.woff') format('woff'),
+    url('font/OpenSans.woff2') format('woff2');
 }
 
 body {
     margin: 0;
     padding: 0;
     border: 0;
-    font-family: NotoSans, arial, sans-serif;
+    font-family: 'Open Sans', arial, sans-serif;
     background-color: #ffffff;
 }
 
