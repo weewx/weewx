@@ -1373,12 +1373,13 @@ class DaySummaryManager(Manager):
         
         if lastUpdate is None or lastUpdate < lastRecord:
             # We are either building the daily summary from scratch, or restarting from
-            # an aborted build.
-            if not start_d:
-                start_ts = lastUpdate or firstRecord
-                start_d = datetime.date.fromtimestamp(start_ts)
-            if not stop_d:
-                stop_d = datetime.date.fromtimestamp(lastRecord)
+            # an aborted build. Must finish the rebuild first.
+            if start_d or stop_d:
+                raise weewx.ViolatedPrecondition("Daily summaries not complete. Try again without from/to dates.")
+
+            start_ts = lastUpdate or firstRecord
+            start_d = datetime.date.fromtimestamp(start_ts)
+            stop_d = datetime.date.fromtimestamp(lastRecord)
                 
         elif lastUpdate == lastRecord:
             # This is the normal state of affairs. If a value for start_d or stop_d
