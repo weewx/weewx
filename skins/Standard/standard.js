@@ -1,16 +1,17 @@
 /* javascript for weewx standard report */
 
 var cookie_prefix = "weewx.standard.";
-var widgets = ['current', 'celestial', 'hilo', 'about', 'radar', 'satellite'];
 
-function setup() {
+function setup(widgets) {
   var id = get_cookie('history', 'day');
   choose_history(id);
   id = get_cookie('celestial', 'summary');
   choose_celestial(id);
-  for(var i=0; i<widgets.length; i++) {
-    var state = get_cookie(widgets[i]+'.state', 'expanded');
-    toggle_widget(widgets[i], state);
+  if(widgets) {
+    for(var i=0; i<widgets.length; i++) {
+      var state = get_cookie(widgets[i]+'.state', 'expanded');
+      toggle_widget(widgets[i], state);
+    }
   }
 }
 
@@ -40,15 +41,15 @@ function toggle_widget(id, state) {
 }
 
 function choose_col(group, selected_id, all_ids) { 
-    for(var i=0; i<all_ids.length; i++) {
-        var items = document.getElementsByClassName(group + '_' + all_ids[i]);
-        if(items) {
-            var display = selected_id == all_ids[i] ? '' : 'none';
-            for(var j=0; j<items.length; j++) {
-                items[j].style.display = display;
-            }
-        }
+  for(var i=0; i<all_ids.length; i++) {
+    var items = document.getElementsByClassName(group + '_' + all_ids[i]);
+    if(items) {
+      var display = selected_id == all_ids[i] ? '' : 'none';
+      for(var j=0; j<items.length; j++) {
+        items[j].style.display = display;
+      }
     }
+  }
 }
 
 function choose_div(group, selected_id, all_ids) {
