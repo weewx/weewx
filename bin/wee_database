@@ -67,14 +67,11 @@ def main():
                       help="Rebuild the daily summaries from data in the archive"
                       " table.")
     parser.add_option("--date", dest="date", type=str, metavar="YYYY-mm-dd",
-                      help="Rebuild the daily summaries for this date only."
-                      " Format is YYYY-mm-dd.")
+                      help="This date only (option --rebuild-daily only).")
     parser.add_option("--from", dest="from_date", type=str, metavar="YYYY-mm-dd",
-                      help="Rebuild the daily summaries starting at this date."
-                      " Format is YYYY-mm-dd.")
+                      help="Start with this date (option --rebuild-daily only).")
     parser.add_option("--to", dest="to_date", type=str, metavar="YYYY-mm-dd",
-                      help="Rebuild the daily summaries up until this date."
-                      " Format is YYYY-mm-dd.")
+                      help="End with this date (option --rebuild-daily only).")
     parser.add_option("--reconfigure", action='store_true',
                       help="Create a new database using configuration"
                       " information found in the configuration file. In"
@@ -97,10 +94,10 @@ def main():
                       help="Fix any null strings in a SQLite database.")
     parser.add_option("--binding", dest="binding", metavar="BINDING_NAME",
                       default='wx_binding',
-                      help="The data binding. Default is 'wx_binding'.")
+                      help="The data binding to use. Default is 'wx_binding'.")
     parser.add_option("--dest-binding", dest="dest_binding",
                       metavar="BINDING_NAME",
-                      help="The destination data binding.")
+                      help="The destination data binding (option --transfer only).")
     parser.add_option('--dry-run', dest="dry_run", action='store_true',
                       default=False,
                       help='Print what would happen but do not do it. Default'
