@@ -1,5 +1,5 @@
 ## Copyright 2009-2017 Tom Keffer, Matthew Wall
-## Distributed under terms of GPLv3.  See the LICENSE.txt for your rights.
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
 #errorCatcher Echo
 ## An encoding of UTF-8 is usually safe, but if the text is actually
 ## in Latin-1, then replace the string "UTF-8" with "latin-1"
@@ -10,37 +10,14 @@
     #if $encoding == 'UTF-8'
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     #end if    
-    <title>$station.location Weather Conditions</title>
+    <title>$station.location</title>
     <link rel="icon" type="image/png" href="favicon.ico" />
     <link rel="stylesheet" type="text/css" href="standard.css"/>
     <script type="text/javascript" src="standard.js"></script>
   </head>
 
   <body onload='setup();'>
-    <div id="title_bar">
-      <div id="title">
-        <h1 class="page_title">$station.location</h1>
-        <p class="lastupdate">$current.dateTime</p>
-      </div>
-      <div id="rss_link"><a href="rss.xml">RSS</a></div>
-      <div id="reports">
-        Monthly Reports:
-        <select name="reports" onchange="openNOAAFile(value)">
-          #for $monthYear in $SummaryByMonth
-          <option value="$monthYear">$monthYear</option>
-          #end for
-          <option selected>- Select Month -</option>
-        </select>
-        <br/>
-        Yearly Reports:
-        <select name="reports" onchange="openNOAAFile(value)">
-          #for $yr in $SummaryByYear
-          <option value="$yr">$yr</option>
-          #end for
-          <option selected>- Select Year -</option>
-        </select>
-      </div>
-    </div>
+    #include "titlebar.inc"
     
     <div id="contents">
       <div id="widget_group">
