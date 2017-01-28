@@ -1,6 +1,7 @@
 recursive-include docs *
 recursive-include util *
 recursive-include skins *
+recursive-include examples *
 recursive-include extensions *
 include LICENSE.txt
 include README
