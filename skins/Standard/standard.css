@@ -10,9 +10,9 @@
  element background color: dddddd d2e8ef ffe8d2
      section border color: aaaaaa
         cell border color: dddddd
-                     link:        4248b4 b44842
-                  visited:        4248b4 b44842
-                    hover:        4248b4 b44842
+                     link:        ff8800 4248b4
+                  visited:        ff8800 4248b4
+                    hover:        ff8800 b44842
 */
 
 /* use the fonts from google */
@@ -38,13 +38,13 @@ a {
 }
 
 a:link {
-    color: #4248b4;
+    color: #ff8800;
 }
 a:visited {
-    color: #4248b4;
+    color: #ff8800;
 }
 a:hover {
-    color: #4248b4;
+    color: #ff8800;
 }
 
 #widget_group {
@@ -75,9 +75,15 @@ a:hover {
 
 #rss_link {
     float: right;
-    margin-top: 5px;
-    margin-left: 20px;
+    margin-top: 6px;
     margin-right: 20px;
+    padding-left: 8px;
+    padding-right: 8px;
+    background-color: #ffffff;
+    border: 1px solid #aaaaaa;
+    webkit-radius: 5px;
+    moz-radius: 5px;
+    border-radius: 5px;
 }
 
 #reports {
@@ -179,7 +185,7 @@ table.stats th {
     padding-top: 0px;
     padding-bottom: 0px;
     /* underlined buttons */
-    border-bottom: 5px solid #4248b4;
+    border-bottom: 5px solid #ff8800;
     /* rounded box buttons */
 /*
     background-color: #bbbbbb;
