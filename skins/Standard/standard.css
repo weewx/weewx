@@ -204,7 +204,7 @@ table.stats th {
 }
 
 .widget img {
-    width: 500px;
+    width: 350px;
     border: 1px solid #aaaaaa;
     margin-top: 4px;
 }
@@ -243,6 +243,7 @@ table.celestial th {
 #history_widget img {
     border: none;
     margin-bottom: 10px;
+    width: 500px; /* should match the image width in skin.conf */
 }
 
 #history_widget.widget_title {
