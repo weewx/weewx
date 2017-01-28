@@ -1629,6 +1629,13 @@ summaries using the wee_database utility.</pre>
             identical in operation to the CSV <em><a href="#csv_calc_missing">calc_missing</a></em> option but applies
             to Cumulus imports only. The default is <span class="code">True</span>. </p>
 
+        <h4 class='config_option' id='cumulus_separator'>separator</h4>
+
+        <p>The character used as the date field separator in the Cumulus monthly log file. A solidus (/) is frequently
+            used but it may be another character depending on the settings on the machine that produced the Cumulus monthly
+            log files. This parameter must be included in quotation marks. Default is <span class="code">'/'</span>.
+        </p>
+
         <h4 class='config_option' id='cumulus_delimiter'>delimiter</h4>
 
         <p>The character used as the field delimiter in the Cumulus monthly log file. A comma is frequently used but it
@@ -2286,6 +2293,9 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     </li>
                     <li><a href="#cumulus_calc_missing"><strong><span class="code">calc_missing</span></strong></a>.
                         Determines whether missing derived observations will be calculated from the imported data.
+                    </li>
+                    <li><a href="#cumulus_separator"><strong><span class="code">separator</span></strong></a>. The date
+                        field separator used in the Cumulus monthly log files.
                     </li>
                     <li><a href="#cumulus_delimiter"><strong><span class="code">delimiter</span></strong></a>. The field
                         delimiter used in the Cumulus monthly log files.
