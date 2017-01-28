@@ -6,13 +6,13 @@
 /* these are the elements in the color scheme
 
                              grey   blue orange
-          highlight color: 222222 4248b4 b44842
+          highlight color: 222222 4282b4 b44842
  element background color: dddddd d2e8ef ffe8d2
      section border color: aaaaaa
         cell border color: dddddd
-                     link:        ff8800 4248b4
-                  visited:        ff8800 4248b4
-                    hover:        ff8800 b44842
+                     link:        4282b4 ff8800
+                  visited:        4282b4 ff8800
+                    hover:        4282b4 ff8800
 */
 
 /* use the fonts from google */
@@ -38,13 +38,13 @@ a {
 }
 
 a:link {
-    color: #ff8800;
+    color: #4282b4;
 }
 a:visited {
-    color: #ff8800;
+    color: #4282b4;
 }
 a:hover {
-    color: #ff8800;
+    color: #4282b4;
 }
 
 #widget_group {
@@ -185,7 +185,7 @@ table.stats th {
     padding-top: 0px;
     padding-bottom: 0px;
     /* underlined buttons */
-    border-bottom: 5px solid #ff8800;
+    border-bottom: 5px solid #4282b4;
     /* rounded box buttons */
 /*
     background-color: #bbbbbb;
