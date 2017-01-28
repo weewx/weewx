@@ -11,7 +11,7 @@
 </head>
 <body>
 
-<h1 class="title">weewx: Installation on SuSE-based systems
+<h1 class="title">weeWX: Installation on SuSE-based systems
     <div class='os-icons'>      
         <img class='logo' src='images/logo-suse.png' alt=""/>
         <img class='logo' src='images/logo-opensuse.png' alt=""/>
@@ -20,7 +20,7 @@
 </h1>
 
 <p>
-    This is a guide to installing <span class='code'>weewx</span>
+    This is a guide to installing weeWX
     from an RPM package on systems such as SuSE or OpenSUSE.
 </p>
 
@@ -52,7 +52,7 @@ sudo zypper install python-usb</pre>
 
 <h2>Status</h2>
 <p>
-    Look in the system log for messages from <span class='code'>weewx</span>.
+    Look in the system log for messages from weeWX.
 </p>
 <pre class='tty cmd'>sudo tail -f /var/log/messages</pre>
 
@@ -64,7 +64,7 @@ sudo zypper install python-usb</pre>
 
 <h2>Configure</h2>
 <p>
-    The default installation uses Simulator as the <span class='code'>station_type</span>.  To use real hardware, stop <span class='code'>weewx</span>, change to the actual station type and station parameters, delete the simulation data, then restart <span class='code'>weewx</span>:
+    The default installation uses Simulator as the <span class='code'>station_type</span>.  To use real hardware, stop weeWX, change to the actual station type and station parameters, delete the simulation data, then restart weeWX:
 </p>
 <pre class='tty cmd'>sudo /etc/init.d/weewx stop
 sudo wee_config --reconfigure
@@ -72,7 +72,7 @@ sudo rm /var/lib/weewx/weewx.sdb
 sudo /etc/init.d/weewx start</pre>
 
 <h2>Start/Stop</h2>
-<p>To start/stop <span class='code'>weewx</span>:</p>
+<p>To start/stop weeWX:</p>
 <pre class='tty cmd'>sudo /etc/init.d/weewx start
 sudo /etc/init.d/weewx stop</pre>
 
@@ -81,11 +81,11 @@ sudo /etc/init.d/weewx stop</pre>
     To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span class='code'>/etc/weewx/weewx.conf</span>.  See the <a href="usersguide.htm">User Guide</a> and <a href="customizing.htm">Customization Guide</a> for details.
 </p>
 <p>
-    <span class='code'>weewx</span> must be restarted for configuration file changes to take effect.
+    WeeWX must be restarted for configuration file changes to take effect.
 </p>
 
 <h2>Uninstall</h2>
-<p>To uninstall <span class='code'>weewx</span>, removing configuration files but retaining data:</p>
+<p>To uninstall weeWX, removing configuration files but retaining data:</p>
 <pre class='tty cmd'>sudo rpm -e weewx</pre>
 <p>To remove data:</p>
 <pre class='tty cmd'>sudo rm -r /var/lib/weewx

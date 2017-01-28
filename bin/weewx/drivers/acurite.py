@@ -536,9 +536,9 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         # map raw data to observations in the default database schema
         if 'sensor_battery' in packet:
             if packet['sensor_battery'] is not None:
-                packet['txTempBatteryStatus'] = 1 if packet['sensor_battery'] else 0
+                packet['outTempBatteryStatus'] = 1 if packet['sensor_battery'] else 0
             else:
-                packet['txTempBatteryStatus'] = None
+                packet['outTempBatteryStatus'] = None
         if 'rssi' in packet and packet['rssi'] is not None:
             packet['rxCheckPercent'] = 100 * packet['rssi'] / Station.MAX_RSSI
 

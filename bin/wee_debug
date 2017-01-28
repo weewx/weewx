@@ -19,6 +19,7 @@ from configobj import ConfigObj
 
 # weewx imports
 import weecfg
+import weedb
 import weewx.manager
 import weewx.units
 
@@ -235,35 +236,44 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
     print
 
     # weewx archive info
-    manager_info_dict = getManagerInfo(config_dict, db_binding_wx)
-    if manager_info_dict['units'] in weewx.units.unit_nicknames:
-        units_nickname = weewx.units.unit_nicknames[manager_info_dict['units']]
+    try:
+        manager_info_dict = getManagerInfo(config_dict, db_binding_wx)
+    except weedb.CannotConnect, e:
+        print "Unable to connect to database:", e
+        print
+    except weedb.OperationalError, e:
+        print "Error hitting database. It may not be properly initialized:"
+        print e
+        print
     else:
-        units_nickname = "Unknown unit constant"
-    print "Archive info"
-    print "  Database name:        %s" % manager_info_dict['db_name']
-    print "  Table name:           %s" % manager_info_dict['table_name']
-    print "  Unit system:          %s (%s)" % (manager_info_dict['units'],
-                                              units_nickname)
-    print "  First good timestamp: %s" % timestamp_to_string(manager_info_dict['first_ts'])
-    print "  Last good timestamp:  %s" % timestamp_to_string(manager_info_dict['last_ts'])
-    if manager_info_dict['ts_count']:
-        print "  Number of records:    %s" % manager_info_dict['ts_count'].value
-    else:
-        print "  Number of records:    %s (no archive records found)" % \
-            manager_info_dict['ts_count']
-    # if we have a database and a table but no start or stop ts and no records
-    # inform the user that the database/table exists but appears empty
-    if (manager_info_dict['db_name'] and manager_info_dict['table_name']) and \
-    not (manager_info_dict['ts_count'] or manager_info_dict['units'] or \
-    manager_info_dict['first_ts'] or manager_info_dict['last_ts']):
-        print "                        It is likely that the database (%s) archive table (%s)" % \
-            (manager_info_dict['db_name'], manager_info_dict['table_name'])
-        print "                        exists but contains no data."
-    print "  weewx (weewx.conf) is set to use an archive interval of %s seconds." % \
-        config_dict['StdArchive']['archive_interval']
-    print "  The station hardware was not interrogated in determining archive interval."
-    print
+        if manager_info_dict['units'] in weewx.units.unit_nicknames:
+            units_nickname = weewx.units.unit_nicknames[manager_info_dict['units']]
+        else:
+            units_nickname = "Unknown unit constant"
+        print "Archive info"
+        print "  Database name:        %s" % manager_info_dict['db_name']
+        print "  Table name:           %s" % manager_info_dict['table_name']
+        print "  Unit system:          %s (%s)" % (manager_info_dict['units'],
+                                                  units_nickname)
+        print "  First good timestamp: %s" % timestamp_to_string(manager_info_dict['first_ts'])
+        print "  Last good timestamp:  %s" % timestamp_to_string(manager_info_dict['last_ts'])
+        if manager_info_dict['ts_count']:
+            print "  Number of records:    %s" % manager_info_dict['ts_count'].value
+        else:
+            print "  Number of records:    %s (no archive records found)" % \
+                manager_info_dict['ts_count']
+        # if we have a database and a table but no start or stop ts and no records
+        # inform the user that the database/table exists but appears empty
+        if (manager_info_dict['db_name'] and manager_info_dict['table_name']) and \
+        not (manager_info_dict['ts_count'] or manager_info_dict['units'] or \
+        manager_info_dict['first_ts'] or manager_info_dict['last_ts']):
+            print "                        It is likely that the database (%s) archive table (%s)" % \
+                (manager_info_dict['db_name'], manager_info_dict['table_name'])
+            print "                        exists but contains no data."
+        print "  weewx (weewx.conf) is set to use an archive interval of %s seconds." % \
+            config_dict['StdArchive']['archive_interval']
+        print "  The station hardware was not interrogated in determining archive interval."
+        print
 
     # weewx database info
     if verbosity > 0:

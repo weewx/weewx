@@ -371,10 +371,11 @@ class StdCalibrate(StdService):
     def new_loop_packet(self, event):
         """Apply a calibration correction to a LOOP packet"""
         for obs_type in self.corrections:
+            if obs_type == 'foo': continue
             try:
                 event.packet[obs_type] = eval(self.corrections[obs_type], None, event.packet)
-            except (TypeError, NameError):
-                pass
+            except (TypeError, NameError), e:
+                syslog.syslog(syslog.LOG_DEBUG, "engine: calibration for '%s' ignored in loop: %s" % (obs_type, e))
             except ValueError, e:
                 syslog.syslog(syslog.LOG_ERR, "engine: StdCalibration loop error %s" % e)
 
@@ -384,10 +385,11 @@ class StdCalibrate(StdService):
         # already been applied in the LOOP packet.
         if event.origin != 'software':
             for obs_type in self.corrections:
+                if obs_type == 'foo': continue
                 try:
                     event.record[obs_type] = eval(self.corrections[obs_type], None, event.record)
-                except (TypeError, NameError):
-                    pass
+                except (TypeError, NameError), e:
+                    syslog.syslog(syslog.LOG_DEBUG, "engine: calibration for '%s' ignored in archive: %s" % (obs_type, e))
                 except ValueError, e:
                     syslog.syslog(syslog.LOG_ERR, "engine: StdCalibration archive error %s" % e)
 
@@ -613,6 +615,11 @@ class StdArchive(StdService):
         # opened instance of the database manager. 
         dbmanager = self.engine.db_binder.get_manager(self.data_binding, initialize=True)
         syslog.syslog(syslog.LOG_INFO, "engine: Using binding '%s' to database '%s'" % (self.data_binding, dbmanager.database_name))
+        
+        # Make sure the daily summaries have not been partially updated
+        if dbmanager._read_metadata('lastWeightPatch'):
+            raise weewx.ViolatedPrecondition("engine: Update of daily summary for database '%s' not complete. "
+                                             "Finish the update first." % dbmanager.database_name)
         
         # Back fill the daily summaries.
         _nrecs, _ndays = dbmanager.backfill_day_summary() # @UnusedVariable
@@ -885,7 +892,17 @@ def main(options, args, engine_class=StdEngine):
             
         except weedb.OperationalError, e:
             # Caught a database error. Log it, wait 120 seconds, then try again
-            syslog.syslog(syslog.LOG_CRIT, "engine: Caught database OperationalError: %s" % e)
+            syslog.syslog(syslog.LOG_CRIT, "engine: Database OperationalError exception: %s" % e)
+            if options.exit:
+                syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
+                sys.exit(weewx.DB_ERROR)
+            syslog.syslog(syslog.LOG_CRIT, "    ****  Waiting 2 minutes then retrying...")
+            time.sleep(120)
+            syslog.syslog(syslog.LOG_NOTICE, "engine: retrying...")
+            
+        except weedb.CannotConnect, e:
+            # Unable to connect to the database server. Log it, wait 120 seconds, then try again
+            syslog.syslog(syslog.LOG_CRIT, "engine: Database CannotConnect exception: %s" % e)
             if options.exit:
                 syslog.syslog(syslog.LOG_CRIT, "    ****  Exiting...")
                 sys.exit(weewx.DB_ERROR)

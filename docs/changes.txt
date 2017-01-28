@@ -1,12 +1,21 @@
 weewx change history
 --------------------
 
-x.y.z MM/dd/YYYY
+3.7.0 MM/dd/YYYY
 
 The tag $current now uses the record included in the event NEW_ARCHIVE_RECORD,
 rather than retrieve the last record from the database. This means you can
 use the tag $current for observation types that are in the record, but not
 necessarily in the database. Fixes issue #13.
+
+Most aggregation periods now allow you to go farther in the past. For
+example, the tag $week($weeks_ago=1) would give you last week. You
+can also now specify the start and end of an aggregation period, such
+as $week.start and $week.end.
+
+Can now do SummaryByDay (as well as SummaryByMonth and SummaryByYear).
+NB: This can generate *lots* of files --- one for every day in your database!
+Leaving this undocumented for now. Fixes issue #185.
 
 When doing hardware record generation, the engine now augments the record with
 any additional observation types it can extract out of the accumulators.
@@ -26,6 +35,13 @@ Fixed usb initialization issues in the wmr300 driver.
 Fixed bug in vantage driver that would prevent console wake up during
 retries when fetching EEPROM vales. Thanks to user Dan Begallie!
 
+The vantage driver no longer emits values for non-existent sensors. 
+As a result, LOOP and archive packets are now much smaller. If this works
+out, other drivers will follow suit. Partial fix of issue #175.
+
+The vantage driver now emits the barometer trend in LOOP packets as 
+field 'trendIcon'.
+
 The engine now logs locale. Additional information if a TERM signal is 
 received.
 
@@ -39,15 +55,14 @@ Fixed reference to index.html.tmpl in the xstats example.
 Changed algorithm for calculating ET to something more appropriate for
 hourly values (former algorithm assumed daily values). Fixes issue #160.
 
+Fixed bug in Celsius to Fahrenheit conversion that affected pressure
+conversions in uwxutils.py, none of which were actually used.
+
 Fixed bug that was introduced in v3.6.0, which prevented wee_reports from
 working for anything other than the current time.
 
 Documented the experimental anti-alias feature, which has been in weewx
 since v3.1.0. Fixes issue #6.
-
-Can now do SummaryByDay (as well as SummaryByMonth and SummaryByYear).
-NB: This can generate *lots* of files --- one for every day in your database!
-Leaving this undocumented for now. Fixes issue #185.
 
 Fixed problem where multiple subsections under [SummaryBy...] stanzas could
 cause multiple copies of their target date to be included in the Cheetah
@@ -76,11 +91,35 @@ since none of the hardware reports an actual windGustDir.  For hardware that
 does not report a windGustDir, weewx will calculate windGustDir at each archive
 interval when it accumulates an archive record.
 
-Timespan tags of $last_hour, $last_day, $last_week, $last_month and $last_year
-have been added. The $span timespan tag now accepts $month_delta and $year_delta.
+Calculation of aggregates over a period of one day or longer can now
+respect any change in archive interval. To take advantage of this
+feature, you will have to apply an update to your daily
+summaries. This can be done using the tool wee_database, option
+--update. The only reason to do this is you plan on changing your
+archive interval. Otherwise, you can ignore.  Fixes issue #61.
 
-Timespan iterator .spans(interval=seconds) has been added to allow to iterate 
-over custom spans within a tag timespan.
+Max value of windSpeed for the day is now the max archive value of windSpeed.
+Formerly, it was the max LOOP value. If you wish to patch your older
+daily summaries to interpret max windSpeed this way, use the tool wee_database
+with option --update. Fixes issue #195.
+
+The types of accumulators, and the strategies to put and extract records 
+out of them, can now be specified by config stanzas. This will be of
+interest to extension writers. See issue #115.
+
+Fixed battery status label in acurite driver: changed from txTempBatteryStatus
+to outTempBatteryStatus.  Thanks to user manos!
+
+Made the lowBattery example more robust - it now checks for any known low
+battery status, not just txBatteryStatus.  Thanks to user manos!
+
+Added info-level log message to calculate_rain so that any rain counter reset
+will be logged.
+
+Added debug logging to indicate when calibrations are ignored.
+
+Added better logging for cc3000 when the cc3000 loses contact with sensors
+for extended periods of time.
 
 
 3.6.2 11/08/2016

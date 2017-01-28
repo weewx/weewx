@@ -7,6 +7,7 @@
 """Various weather related formulas and utilities."""
 
 import math
+import syslog
 import time
 import weewx.uwxutils
 
@@ -222,6 +223,7 @@ def calculate_rain(newtotal, oldtotal):
         if newtotal >= oldtotal:
             delta = newtotal - oldtotal
         else:
+            syslog.syslog(syslog.LOG_INFO, "wxformulas: rain counter reset detected: new=%s old=%s" % (newtotal, oldtotal))
             delta = None
     else:
         delta = None

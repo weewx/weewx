@@ -21,7 +21,11 @@
 #   pylint: disable-msg=R0915
 # suppress unused arguments   e.g. loader(...,engine)
 #   pylint: disable-msg=W0613
-"""Classes and functions to interfacing with an Oregon Scientific WMR200 station
+"""Classes and functions to interface with an Oregon Scientific WMR200 station
+
+WMR200:
+ - logger
+ - up to 10 channels
 
 Oregon Scientific
   http://us.oregonscientific.com/ulimages/manuals2/WMR200.pdf
@@ -44,7 +48,7 @@ import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR200'
-DRIVER_VERSION = "3.2"
+DRIVER_VERSION = "3.3"
 
 
 def loader(config_dict, engine):  # @UnusedVariable
@@ -1432,10 +1436,16 @@ class WMR200(weewx.drivers.AbstractDevice):
         """
         super(WMR200, self).__init__()
 
+        loginf('driver version is %s' % DRIVER_VERSION)
+
         # User configurable options
         self._model = stn_dict.get('model', 'WMR200')
 
-        self._sensor_map = stn_dict.get('sensor_map', self.DEFAULT_MAP)
+        # get default mapping, override with user-specified
+        self._sensor_map = dict(self.DEFAULT_MAP)
+        if 'sensor_map' in stn_dict:
+            self._sensor_map.update(stn_dict['sensor_map'])
+        loginf('sensor map is %s' % self._sensor_map)
 
         # Provide sensor faults in syslog.
         self._sensor_stat = \

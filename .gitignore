@@ -13,3 +13,4 @@ junk*
 *.pyproj
 *.suo
 .DS_Store
+*.config

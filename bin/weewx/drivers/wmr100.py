@@ -10,6 +10,17 @@ is a different beast).
 The wind sensor reports wind speed, wind direction, and wind gust.  It does
 not report wind gust direction.
 
+WMR89:
+ - data logger
+ - up to 3 channels
+ - protocol 3 sensors
+ - THGN800, PRCR800, WTG800
+
+WMR86:
+ - no data logger
+ - protocol 3 sensors
+ - THGR800, WGR800, PCR800, UVN800
+
 The following references were useful for figuring out the WMR protocol:
     
 From Per Ejeklint:
@@ -37,7 +48,7 @@ import weewx.wxformulas
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR100'
-DRIVER_VERSION = "3.2"
+DRIVER_VERSION = "3.3"
 
 def loader(config_dict, engine):  # @UnusedVariable
     return WMR100(**config_dict[DRIVER_NAME])    
@@ -121,7 +132,8 @@ class WMR100(weewx.drivers.AbstractDevice):
         IN_endpoint: The IN USB endpoint used by the WMR.
         [Optional. Default is usb.ENDPOINT_IN + 1]
         """
-        
+
+        loginf('driver version is %s' % DRIVER_VERSION)
         self.model = stn_dict.get('model', 'WMR100')
         # TODO: Consider putting these in the driver loader instead:
         self.record_generation = stn_dict.get('record_generation', 'software')
@@ -132,7 +144,10 @@ class WMR100(weewx.drivers.AbstractDevice):
         self.product_id = int(stn_dict.get('product_id', '0xca01'), 0)
         self.interface = int(stn_dict.get('interface', 0))
         self.IN_endpoint = int(stn_dict.get('IN_endpoint', usb.ENDPOINT_IN + 1))
-        self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_MAP)
+        self.sensor_map = dict(self.DEFAULT_MAP)
+        if 'sensor_map' in stn_dict:
+            self.sensor_map.update(stn_dict['sensor_map'])
+        loginf('sensor map is %s' % self.sensor_map)
         self.last_rain_total = None
         self.devh = None
         self.openPort()
