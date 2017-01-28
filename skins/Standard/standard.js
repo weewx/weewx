@@ -8,11 +8,6 @@ function setup() {
   choose_history(id);
   id = get_cookie('celestial', 'summary');
   choose_celestial(id);
-  var hilo_periods = ['week', 'month', 'year'];
-  for(var i=0; i<hilo_periods.length; i++) {
-    var showing = get_cookie('hilo.' + hilo_periods[i], 'false');
-    toggle('hilo', hilo_periods[i], showing);
-  }
   for(var i=0; i<widgets.length; i++) {
     var state = get_cookie(widgets[i]+'.state', 'expanded');
     toggle_widget(widgets[i], state);
@@ -21,6 +16,7 @@ function setup() {
 
 function choose_history(id) {
   choose_div('history', id, ['day', 'week', 'month', 'year']);
+  choose_col('hilo', id, ['week', 'month', 'year']);
 }
 
 function choose_celestial(id) {
@@ -43,31 +39,16 @@ function toggle_widget(id, state) {
   }
 }
 
-// if showing is specified, set state to match.  if not, then toggle state
-// based on current state.
-function toggle(group, id, showing) { 
-  if(showing === undefined) {
-    showing = 'false';
-  }
-  var c = document.getElementById('button_' + group + '_' + id);
-  if(c) {
-    var cl = ' ' + c.className + ' ';
-    if(cl.indexOf(' button ') >= 0) {
-      showing = 'true';
+function choose_col(group, selected_id, all_ids) { 
+    for(var i=0; i<all_ids.length; i++) {
+        var items = document.getElementsByClassName(group + '_' + all_ids[i]);
+        if(items) {
+            var display = selected_id == all_ids[i] ? '' : 'none';
+            for(var j=0; j<items.length; j++) {
+                items[j].style.display = display;
+            }
+        }
     }
-    c.className = (showing == 'true') ? 'button_selected' : 'button';
-  }
-  var items = document.getElementsByClassName(group + '_' + id);
-  if(items) {
-    for(var i=0; i<items.length; i++) {
-      if(showing == 'true') {
-        items[i].style.display = '';
-      } else {
-        items[i].style.display = 'none';
-      }
-    }
-  }
-  set_cookie(group + '.' + id, showing);
 }
 
 function choose_div(group, selected_id, all_ids) {

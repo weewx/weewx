@@ -6,13 +6,7 @@
 
 <div id='hilo_widget' class="widget">
   <div class="widget_title">
-    <a href="statistics.html">High/Low</a>:&nbsp;&nbsp;
-    <a class="button_selected" id="button_hilo_week"
-       onclick="toggle('hilo', 'week')">Week</a>
-    <a class="button_selected" id="button_hilo_month"
-       onclick="toggle('hilo', 'month')">Month</a>
-    <a class="button_selected" id="button_hilo_year"
-       onclick="toggle('hilo', 'year')">Year</a>
+    <a href="statistics.html">High/Low</a>
     <a class="widget_control"
       onclick="toggle_widget('hilo')">&diams;</a>
   </div>

@@ -34,7 +34,7 @@
       </tr>
       <tr>
         <td class="label">$obs.label.barometer</td>
-        <td class="data">$current.barometer ($trend.barometer)</td>
+        <td class="data">$current.barometer ($trend.barometer.formatted)</td>
       </tr>
       <tr>
         <td class="label">$obs.label.wind</td>

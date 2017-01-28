@@ -7,7 +7,7 @@
 
                              grey   blue orange
           highlight color: 222222 4248b4 b44842
- element background color: dddddd d2e8ff ffe8d2
+ element background color: dddddd d2e8ef ffe8d2
      section border color: aaaaaa
         cell border color: dddddd
                      link:        4248b4 b44842
@@ -59,7 +59,7 @@ a:hover {
 #title_bar {
     overflow: auto;
     margin-bottom: 5px;
-    background-color: #d2e8ff;
+    background-color: #b2d8e8;
     border: 1px solid #aaaaaa;
 }
 

@@ -7,8 +7,6 @@
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
     Statistics
-    <a class="widget_control"
-       onclick="toggle_widget('statistics')">&diams;</a>
   </div>
   <div class="widget_contents">
 

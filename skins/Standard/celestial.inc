@@ -25,8 +25,9 @@
 
 <div id="celestial_widget" class="widget">
   <div class="widget_title">
-    Celestial:&nbsp;&nbsp;
+    Celestial
     #if $almanac.hasExtras
+    :&nbsp;&nbsp;
     <a class="button_selected" id="button_celestial_summary"
        onclick="choose_celestial('summary')">Summary</a>
     <a class="button" id="button_celestial_details"
