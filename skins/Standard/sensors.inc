@@ -6,6 +6,9 @@
 ## battery status, and various voltages.  if there are no data available,
 ## then this degenerates to nothing displayed.
 
+#def get_battery_status($x)
+#if $x == 0 then OK else LOW
+#end def
 
 ## first see what sensor data are available
 
@@ -47,7 +50,7 @@
     <tr><td colspan="2">Connectivity</td></tr>
 #if $day.rxCheckPercent.has_data
     <tr>
-      <td class="label">Transmitter</td>
+      <td class="label">$obs.rxCheckPercent</td>
       <td class="data">$current.rxCheckPercent</td>
     </tr>
 #end if
@@ -57,32 +60,32 @@
     <tr><td colspan="2">Battery Status</td></tr>
 #if $day.txBatteryStatus.has_data
     <tr>
-      <td class="label">Transmitter</td>
-      <td class="data">$current.txBatteryStatus</td>
+      <td class="label">$obs.txBatteryStatus</td>
+      <td class="data">#get_battery_status($current.txBatteryStatus)</td>
     </tr>
 #end if
 #if $day.windBatteryStatus.has_data
     <tr>
-      <td class="label">Wind</td>
-      <td class="data">$current.windBatteryStatus</td>
+      <td class="label">$obs.windBatteryStatus</td>
+      <td class="data">#get_battery_status($current.windBatteryStatus)</td>
     </tr>
 #end if
 #if $day.rainBatteryStatus.has_data
     <tr>
-      <td class="label">Rain</td>
-      <td class="data">$current.rainBatteryStatus</td>
+      <td class="label">$obs.rainBatteryStatus</td>
+      <td class="data">#get_battery_status($current.rainBatteryStatus)</td>
     </tr>
 #end if
 #if $day.outTempBatteryStatus.has_data
     <tr>
-      <td class="label">Outside Temperature</td>
-      <td class="data">$current.outTempBatteryStatus</td>
+      <td class="label">$obs.outTempBatteryStatus</td>
+      <td class="data">#get_battery_status($current.outTempBatteryStatus)</td>
     </tr>
 #end if
 #if $day.inTempBatteryStatus.has_data
     <tr>
-      <td class="label">Inside Temperature</td>
-      <td class="data">$current.inTempBatteryStatus</td>
+      <td class="label">$obs.inTempBatteryStatus</td>
+      <td class="data">#get_battery_status($current.inTempBatteryStatus)</td>
     </tr>
 #end if
 #end if
@@ -91,25 +94,25 @@
     <tr><td colspan="2">Voltages</td></tr>
 #if $day.consBatteryVoltage.has_data
     <tr>
-      <td class="label">Console</td>
+      <td class="label">$obs.consBatteryVoltage</td>
       <td class="data">$current.consBatteryVoltage</td>
     </tr>
 #end if
 #if $day.heatingVoltage.has_data
     <tr>
-      <td class="label">Heating</td>
+      <td class="label">$obs.heatingVoltage</td>
       <td class="data">$current.heatingVoltage</td>
     </tr>
 #end if
 #if $day.supplyVoltage.has_data
     <tr>
-      <td class="label">Supply</td>
+      <td class="label">$obs.supplyVoltage</td>
       <td class="data">$current.supplyVoltage</td>
     </tr>
 #end if
 #if $day.referenceVoltage.has_data
     <tr>
-      <td class="label">Reference</td>
+      <td class="label">$obs.referenceVoltage</td>
       <td class="data">$current.referenceVoltage</td>
     </tr>
 #end if
