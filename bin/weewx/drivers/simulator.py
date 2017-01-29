@@ -265,7 +265,7 @@ class BatteryStatus(object):
         min_recovery_time - minimum time until the battery recovers, seconds
         """
         if chance_of_failure is None:
-            chance_of_failure = 0.1
+            chance_of_failure = 0.01
         if min_recovery_time is None:
             min_recovery_time = random.randint(300, 1800)
         self.chance_of_failure = chance_of_failure
@@ -299,7 +299,7 @@ class BatteryVoltage(object):
         self.variance = max_variance
 
     def value_at(self, time_ts):
-        return self.nominal + self.variance * random.random()
+        return self.nominal + self.variance * random.random() * random.randint(-1, 1)
 
 
 class SignalStrength(object):
@@ -313,7 +313,7 @@ class SignalStrength(object):
         self.value = self.minval + random.random() * (self.maxval - self.minval)
 
     def value_at(self, time_ts):
-        newval = self.value + random.random() * self.max_variance
+        newval = self.value + self.max_variance * random.random() * random.randint(-1, 1)
         newval = min(self.minval, newval)
         newval = max(self.maxval, newval)
         self.value = newval
