@@ -5,11 +5,11 @@
     <title>weewx: Developer's Notes</title>
     <meta http-equiv="Content-Language" content="en-us"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
     <link rel="stylesheet" href="css/jquery.tocify.css"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
-    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link rel="icon" href="images/favicon.png" type="image/png"/>
 </head>
 
 <body>
@@ -256,6 +256,9 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
                 extraneous "changed lines," trying to find the important stuff.
             </li>
         </ul>
+        <p>If you are working with a file where the formatting is so ragged that you really must do
+        a reformat, then do it as a separate commit. This allows the formatting changes to be clearly
+        distinguished from more functional changes.</p>
 
         <p>When invoking functions or instantiating classes, use the fully qualified name. Don't do this:</p>
         <pre class="tty" style="opacity: 0.5">from datetime import dt
@@ -263,6 +266,25 @@ now = dt()</pre>
         <p>Instead, do this:</p>
         <pre class="tty">import datetime
 now = datetime.datetime()</pre>
+
+        <h1>Tools</h1>
+        <h2>Python</h2>
+        <p><a href="http://www.eclipse.org/">Eclipse</a>, with the 
+        <a href="http://pydev.org/">PyDev Python extension</a>, is highly recommended. 
+        It's free, easy to customize and extremely powerful. </p>
+        <p><a href="http://www.jetbrains.com/pycharm/">JetBrain's PyCharm</a> is also good, 
+        but it costs money. Where it really shines is if you use a framework
+        such as Django, or Backbone, but weeWX does not use any of these, so there is no real need
+        for PyCharm's extra functionality when working with weeWX.</p>
+
+        <h2>HTML and Javascript</h2>
+        <p>For HTML, <a href="http://www.jetbrains.com/webstorm/?fromMenu">JetBrain's WebStorm</a>
+        used to be the undisputed master. However, in recent years, I've found
+        that Eclipse's <a href="https://eclipse.org/webtools/">"Web Development Tools"</a>
+        to be its equal, or even better, particularly when working with
+        long HTML documents like the Customizing Guide.</p>
+        <p>However, if you are working with Javascript, particularly if you're using a framework
+        like NodeJS or ExpressJS, there is no contest: WebStorm is the way to go.</p>
 
         <h1>Glossary</h1>
 
