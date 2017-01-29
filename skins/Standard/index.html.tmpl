@@ -15,13 +15,13 @@
     <script type="text/javascript" src="standard.js"></script>
   </head>
 
-  <body onload="setup(['radar', 'satellite', 'current', 'celestial', 'hilo', 'sensors', 'about']);">
+  <body onload="setup(['current', 'sunmoon', 'hilo', 'sensors', 'about','radar', 'satellite']);">
     #include "titlebar.inc"
     
     <div id="contents">
       <div id="widget_group">
         #include "current.inc"
-        #include "celestial.inc"
+        #include "sunmoon.inc"
         #include "hilo.inc"
         #include "sensors.inc"
         #include "about.inc"

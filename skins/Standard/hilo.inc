@@ -15,12 +15,12 @@
   <table>
     <tbody>
       <tr>
-        <th></th>
+        <td></td>
         <th>Today</th>
         <th class="hilo_week">Week</th>
         <th class="hilo_month">Month</th>
         <th class="hilo_year">Year</th>
-        <th></th>
+        <td></td>
       </tr>
       <tr>
         <td class="label">$obs.label.outTemp</td>

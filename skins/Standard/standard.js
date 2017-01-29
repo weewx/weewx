@@ -5,8 +5,6 @@ var cookie_prefix = "weewx.standard.";
 function setup(widgets) {
   var id = get_cookie('history', 'day');
   choose_history(id);
-  id = get_cookie('celestial', 'summary');
-  choose_celestial(id);
   if(widgets) {
     for(var i=0; i<widgets.length; i++) {
       var state = get_cookie(widgets[i]+'.state', 'expanded');
@@ -18,10 +16,6 @@ function setup(widgets) {
 function choose_history(id) {
   choose_div('history', id, ['day', 'week', 'month', 'year']);
   choose_col('hilo', id, ['week', 'month', 'year']);
-}
-
-function choose_celestial(id) {
-  choose_div('celestial', id, ['summary', 'details']);
 }
 
 function toggle_widget(id, state) {

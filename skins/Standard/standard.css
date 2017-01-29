@@ -162,6 +162,14 @@ a:hover {
     color: #4444aa;
 }
 
+.status_ok {
+    color: #448844;
+}
+
+.status_low {
+    color: #884444;
+}
+
 .button {
     cursor: pointer;
     padding-left: 10px;
@@ -217,16 +225,16 @@ a:hover {
     float: left;
 }
 
-#celestial_widget table th {
+.widget table th {
     font-weight: normal;
     text-align: right;
     border-bottom: 1px solid #dddddd;
 }
 
 #hilo_widget table th {
-    font-weight: normal;
     font-size: 80%;
     text-align: right;
+    border-bottom: none;
 }
 
 #hilo_widget .data {
@@ -237,10 +245,7 @@ a:hover {
 }
 
 #sensors_widget table th {
-    font-weight: normal;
-    text-align: right;
     padding-top: 10px;
-    border-bottom: 1px solid #dddddd;
 }
 
 #history_widget img {

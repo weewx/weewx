@@ -8,9 +8,9 @@
 
 #def get_battery_status($x)
 #if $x == 0
-OK
+<span class="status_ok">OK</span>
 #else
-LOW
+<span class="status_low">LOW</span>
 #end if
 #end def
 

@@ -13,8 +13,8 @@
     <table>
       <tbody>
         <tr>
-          <th></th>
-          <th></th>
+          <td></td>
+          <td></td>
           <th>Today</th>
           <th class="hilo_week">Week</th>
           <th class="hilo_month">Month</th>
