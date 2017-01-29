@@ -1,6 +1,7 @@
 ## sensors module for standard skin
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
+#errorCatcher Echo
 
 ## this is a conditional display of sensor data, including connectivity,
 ## battery status, and various voltages.  if there are no data available,

@@ -1,6 +1,7 @@
 ## statistics module for standard skin
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
+#errorCatcher Echo
 
 #set $archive_data = [$day, $week, $month, $year]
 

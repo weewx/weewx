@@ -1,6 +1,7 @@
 ## map module for standard skin
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
+#errorCatcher Echo
 
 #if $Extras.has_key('google_map_apikey')
 <div id='map_widget' class="widget">

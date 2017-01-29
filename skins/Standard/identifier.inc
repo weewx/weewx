@@ -1,6 +1,7 @@
 ## identifier for standard skin
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
+#errorCatcher Echo
 
 <div id='identifier_widget' class="widget">
   <div class="widget_title">

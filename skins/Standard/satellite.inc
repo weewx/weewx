@@ -1,6 +1,7 @@
 ## satellite module for standard skin
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
+#errorCatcher Echo
 
 #if $Extras.has_key('satellite_img')
 <div id='satellite_widget' class="widget">
