@@ -137,6 +137,12 @@ table.stats th {
     text-align: left;
 }
 
+.rowhead {
+    text-align: right;
+    padding-top: 10px;
+    border-bottom: 1px solid #dddddd;
+}
+
 .label {
     font-size: 80%;
     vertical-align: top;
