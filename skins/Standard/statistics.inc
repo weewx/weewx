@@ -10,7 +10,7 @@
   </div>
   <div class="widget_contents">
 
-    <table class="stats">
+    <table>
       <tbody>
         <tr>
           <th></th>

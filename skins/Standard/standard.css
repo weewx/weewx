@@ -128,21 +128,6 @@ a:hover {
 */
 }
 
-.stats {
-}
-
-table.stats th {
-    font-weight: normal;
-    font-size: 80%;
-    text-align: left;
-}
-
-.rowhead {
-    text-align: right;
-    padding-top: 10px;
-    border-bottom: 1px solid #dddddd;
-}
-
 .label {
     font-size: 80%;
     vertical-align: top;
@@ -167,6 +152,14 @@ table.stats th {
 .timestamp {
     font-size: 80%;
     font-weight: normal;
+}
+
+.hival {
+    color: #aa4444;
+}
+
+.loval {
+    color: #4444aa;
 }
 
 .button {
@@ -219,15 +212,20 @@ table.stats th {
     border-top: 1px solid #dddddd;
 }
 
-table.celestial th {
-    text-align: left;
-}
-
 .celestial_body {
+    margin-bottom: 30px;
     float: left;
 }
 
-#hilo_widget table.stats th {
+#celestial_widget table th {
+    font-weight: normal;
+    text-align: right;
+    border-bottom: 1px solid #dddddd;
+}
+
+#hilo_widget table th {
+    font-weight: normal;
+    font-size: 80%;
     text-align: right;
 }
 
@@ -238,12 +236,11 @@ table.celestial th {
     padding-left: 10px;
 }
 
-.hival {
-    color: #aa4444;
-}
-
-.loval {
-    color: #4444aa;
+#sensors_widget table th {
+    font-weight: normal;
+    text-align: right;
+    padding-top: 10px;
+    border-bottom: 1px solid #dddddd;
 }
 
 #history_widget img {

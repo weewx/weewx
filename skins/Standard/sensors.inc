@@ -51,7 +51,7 @@ LOW
   <table>
 
 #if $have_conn
-    <tr><td class="rowhead">Connectivity</td><td></td></tr>
+    <tr><th>Connectivity</th></tr>
 #if $day.rxCheckPercent.has_data
     <tr>
       <td class="label">$obs.label.rxCheckPercent</td>
@@ -61,7 +61,7 @@ LOW
 #end if
 
 #if $have_battery_status
-    <tr><td class="rowhead">Battery Status</td><td></td></tr>
+    <tr><th>Battery Status</th></tr>
 #if $day.txBatteryStatus.has_data
     <tr>
       <td class="label">$obs.label.txBatteryStatus</td>
@@ -95,7 +95,7 @@ LOW
 #end if
 
 #if $have_voltage
-    <tr><td class="rowhead">Voltage</td><td></td></tr>
+    <tr><th>Voltage</th></tr>
 #if $day.consBatteryVoltage.has_data
     <tr>
       <td class="label">$obs.label.consBatteryVoltage</td>

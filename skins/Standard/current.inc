@@ -4,13 +4,13 @@
 
 <div id='current_widget' class="widget">
   <div class="widget_title">
-    Current
+    Current Conditions
     <a class="widget_control"
       onclick="toggle_widget('current')">&diams;</a>
   </div>
 
   <div class="widget_contents">
-  <table class="stats">
+  <table>
     <tbody>
       <tr>
         <td class="label">$obs.label.outTemp</td>

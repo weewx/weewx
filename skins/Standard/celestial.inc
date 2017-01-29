@@ -41,7 +41,7 @@
     #if $almanac.hasExtras
     <div class="celestial_body">
       <table class="celestial">
-	<tr><th>Sun</th><th></th></tr>
+	<tr><th>Sun</th></tr>
 	<tr>
 	  <td class="label">Rise</td>
 	  <td class="data">$almanac.sun.rise.string($sun_None)</td>
@@ -58,7 +58,7 @@
     </div>
     <div class="celestial_body">
       <table class="celestial">
-	<tr><th>Moon</th><th></th></tr>
+	<tr><th>Moon</th></tr>
 	<tr>
 	  <td class="label">Rise</td>
 	  <td class="data">$almanac.moon.rise</td>
@@ -97,7 +97,7 @@
   <div id="celestial_details" style="display:none">
     <div class="celestial_body">
       <table class="celestial">
-	<tr><th>Sun</th><th></th></tr>
+	<tr><th>Sun</th></tr>
 	<tr>
 	  <td class="label">Start civil twilight</td>
 	  <td class="data">$almanac(horizon=-6).sun(use_center=1).rise</td>
@@ -163,7 +163,7 @@
     </div>
     <div class="celestial_body">
       <table class="celestial">
-	<tr><th>Moon</th><th></th></tr>
+	<tr><th>Moon</th></tr>
         <tr><td class="label">&nbsp;</td><td class="data">&nbsp;</td></tr>
 	<tr>
 	  <td class="label">Rise</td>
