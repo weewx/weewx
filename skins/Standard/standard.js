@@ -3,13 +3,29 @@
 var cookie_prefix = "weewx.standard.";
 
 function setup(widgets) {
+  // set the state of the history widget
   var id = get_cookie('history', 'day');
   choose_history(id);
-  if(widgets) {
-    for(var i=0; i<widgets.length; i++) {
-      var state = get_cookie(widgets[i]+'.state', 'expanded');
-      toggle_widget(widgets[i], state);
+  // if we got a list of widget names, then use it.  otherwise, query the doc
+  // for every object with an id of *_widget, and use that as the name list.
+  if(! widgets) {
+    widgets = [];
+    var items = document.getElementsByClassName('widget');
+    if(items) {
+      for(var i=0; i<items.length; i++) {
+        if(items[i].id) {
+          var widget_name = items[i].id.replace('_widget', '');
+          if(widget_name) {
+            widgets.push(widget_name);
+          }
+        }
+      }
     }
+  }
+  // now set the toggle state for each widget based on what the cookies say
+  for(var i=0; i<widgets.length; i++) {
+    var state = get_cookie(widgets[i]+'.state', 'expanded');
+    toggle_widget(widgets[i], state);
   }
 }
 

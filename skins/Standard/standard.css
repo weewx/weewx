@@ -262,6 +262,12 @@ a:hover {
     margin-top: 4px;
 }
 
+#map_canvas {
+    width: 350px;
+    height: 350px;
+    margin-top: 4px;
+}
+
 
 @media (max-width:800px) {
     #plot_group { overflow: visible; float: left; }
