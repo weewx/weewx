@@ -551,6 +551,7 @@ if __name__ == "__main__":
                         'skins/Standard/current.inc',
                         'skins/Standard/favicon.ico',
                         'skins/Standard/hilo.inc',
+                        'skins/Standard/identifier.inc',
                         'skins/Standard/index.html.tmpl',
                         'skins/Standard/radar.inc',
                         'skins/Standard/rss.xml.tmpl',
