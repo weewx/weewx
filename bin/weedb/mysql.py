@@ -134,7 +134,7 @@ class Connection(weedb.Connection):
             except (AttributeError, KeyError):
                 # Maybe it's a PyMySQL implementation?
                 errno = e[0]
-            if errno == 2002:
+            if errno == 2002 or errno == 2003:
                 raise weedb.CannotConnect(msg)
             else:
                 raise weedb.OperationalError(msg)
