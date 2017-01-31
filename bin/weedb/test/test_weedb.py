@@ -3,7 +3,11 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Test the weedb package"""
+"""Test the weedb package.
+
+For this test to work, user 'weewx' must have full access to database 'test':
+    mysql> grant select, update, create, delete, drop, insert on test.* to weewx@localhost;
+"""
 
 from __future__ import with_statement
 import unittest
@@ -54,7 +58,6 @@ class Common(unittest.TestCase):
 
     def test_drop(self):
         self.assertRaises(weedb.NoDatabase, weedb.drop, self.db_dict)
-        weedb.create(self.db_dict)
 
     def test_double_create(self):
         weedb.create(self.db_dict)

@@ -102,6 +102,7 @@ class Common(unittest.TestCase):
         self.assertEqual(archive.lastGoodStamp(), None)
         self.assertEqual(archive.getRecord(123456789), None)
         self.assertEqual(archive.getRecord(123456789, max_delta=1800), None)
+        archive.close()
         
     def test_add_archive_records(self):
         # Test adding records using a 'with' statement:

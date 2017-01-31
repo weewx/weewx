@@ -7,9 +7,18 @@
 
 import decimal
 
-import MySQLdb
-import _mysql_exceptions
-
+try:
+    import MySQLdb
+    from _mysql_exceptions import IntegrityError, ProgrammingError, OperationalError
+    class InternalError(Exception):
+        "Dummy error. Not used for MySQLdb implementation"
+except ImportError:
+    # Try PyMySQL
+    import pymysql
+    pymysql.install_as_MySQLdb()
+    # Try it again.
+    import MySQLdb
+    from pymysql import IntegrityError, ProgrammingError, OperationalError, InternalError
 from weeutil.weeutil import to_bool
 import weedb
 
@@ -21,12 +30,17 @@ def guard(fn):
     def guarded_fn(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except _mysql_exceptions.IntegrityError, e:
+        except IntegrityError, e:
             raise weedb.IntegrityError(e)
-        except _mysql_exceptions.ProgrammingError, e:
+        except ProgrammingError, e:
             raise weedb.ProgrammingError(e)
-        except _mysql_exceptions.OperationalError, e:
+        except OperationalError, e:
             raise weedb.OperationalError(e)
+        except InternalError, e:
+            if e[0] == 1054:
+                # Unknown column error.
+                raise weedb.OperationalError(e)
+            raise
 
     return guarded_fn
 
@@ -54,12 +68,13 @@ def create(host='localhost', user='', password='', database_name='',
         try:
             # Now create the database.
             cursor.execute("CREATE DATABASE %s" % (database_name,))
-        except _mysql_exceptions.ProgrammingError:
+        except ProgrammingError:
             # The database already exists. Change the type of exception.
             raise weedb.DatabaseExists("Database %s already exists" % (database_name,))
         finally:
             cursor.close()
-    except _mysql_exceptions.OperationalError, e:
+            connect.close()
+    except OperationalError, e:
         raise weedb.OperationalError(e)
 
 
@@ -75,11 +90,17 @@ def drop(host='localhost', user='', password='', database_name='',
         cursor = connect.cursor()
         try:
             cursor.execute("DROP DATABASE %s" % database_name)
-        except _mysql_exceptions.OperationalError:
+        except OperationalError:
             raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (database_name,))
+        except InternalError, e:
+            # PyMySQL implementation uses InternalError with code 1008 to signal a non-existent database.
+            if e[0] == 1008:
+                raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (database_name,))
+            raise
         finally:
             cursor.close()
-    except _mysql_exceptions.OperationalError, e:
+            connect.close()
+    except OperationalError, e:
         raise weedb.OperationalError(e)
 
 
@@ -104,11 +125,16 @@ class Connection(weedb.Connection):
         """
         try:
             connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database_name, port=int(port), **kwargs)
-        except _mysql_exceptions.OperationalError, e:
+        except (OperationalError, InternalError), e:
             # The MySQL driver does not include the database in the
             # exception information. Tack it on, in case it might be useful.
             msg = str(e) + " while opening database '%s'" % (database_name,)
-            if e.args[0] == 2002:
+            try:
+                errno = e.args[0]
+            except (AttributeError, KeyError):
+                # Maybe it's a PyMySQL implementation?
+                errno = e[0]
+            if errno == 2002:
                 raise weedb.CannotConnect(msg)
             else:
                 raise weedb.OperationalError(msg)
@@ -277,7 +303,11 @@ def massage(seq):
 
 def set_engine(connect, engine):
     """Set the default MySQL storage engine."""
-    if connect._server_version >= (5, 5):
-        connect.query("SET default_storage_engine=%s" % engine)
-    else:
-        connect.query("SET storage_engine=%s;" % engine)
+    try:
+        if connect._server_version >= (5, 5):
+            connect.query("SET default_storage_engine=%s" % engine)
+        else:
+            connect.query("SET storage_engine=%s;" % engine)
+    except AttributeError:
+        # PyMySQL implementations do not have _server_version, so accept the default. 
+        pass
