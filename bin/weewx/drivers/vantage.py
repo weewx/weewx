@@ -622,9 +622,25 @@ class Vantage(weewx.drivers.AbstractDevice):
                                      weeutil.weeutil.timestamp_to_string(_last_good_ts)))
                     syslog.syslog(syslog.LOG_DEBUG, "vantage: Catch up complete.")
                     return
-                # Set the last time to the current time, and yield the packet
-                _last_good_ts = _record['dateTime']
-                yield _record
+                # Fix for start summertime problem
+                # When the system clock is changed to summer time and the vantage console present the data of a record
+                # with a time stamp in winter time, the first hour of the summer time the hour presented by the console
+                # doesn't match with the hour presented by the system (console hour = system hour - 1)
+                # When such a record would be stored in the database the DMPAFT mechanism won't be working anymore
+                # until all 2560 records are flushed because the console can't find a record with the requested
+                # time stamp. Instead the console sends all records with the eldest record first which causes the
+                # DMPAFT routine to end. The time check itself is done in routine _archive_datetime which will
+                # return 0 when a 'hour mismatch' is detected.
+                # Check for 'hour mismatch'
+                if _record['dateTime'] == 0:
+                    # First hour of summertime time stamps
+                    syslog.syslog(syslog.LOG_ERR, "vantage: DMPAFT got record with first hour of summertime; skip record")
+                    # set the time of the console clock (both systems then will have the same DST flag again)
+                    self.setTime()
+                else:
+                    # Set the last time to the current time, and yield the packet
+                    _last_good_ts = _record['dateTime']
+                    yield _record
 
             # The starting index for pages other than the first is always zero
             _start_index = 0
@@ -709,11 +725,16 @@ class Vantage(weewx.drivers.AbstractDevice):
                     # Extract the date and time from the raw buffer:
                     datestamp, timestamp = struct.unpack("<HH", _record_string[0:4])
                     time_ts = _archive_datetime(datestamp, timestamp)
-                    y  = (0xfe00 & datestamp) >> 9    # year
-                    mo = (0x01e0 & datestamp) >> 5    # month
-                    d  = (0x001f & datestamp)         # day
-                    h  = timestamp // 100             # hour
-                    mn = timestamp % 100              # minute
+                    if time_ts == 0:
+                        # First hour of summertime time stamps
+                        syslog.syslog(syslog.LOG_ERR, "Vantage: Skip record with first hour of summertime")
+                        continue
+                    else:
+                        y  = (0xfe00 & datestamp) >> 9    # year
+                        mo = (0x01e0 & datestamp) >> 5    # month
+                        d  = (0x001f & datestamp)         # day
+                        h  = timestamp // 100             # hour
+                        mn = timestamp % 100              # minute
                 yield (_ipage, _index, y, mo, d, h, mn, time_ts)
         syslog.syslog(syslog.LOG_DEBUG, "Vantage: Finished logger summary.")
 
@@ -1494,6 +1515,14 @@ def _archive_datetime(datestamp, timestamp):
                       0, 0, -1)                     # have OS guess DST
         # Convert to epoch time:
         ts = int(time.mktime(time_tuple))
+        # fix for hour mismatches at begin of summertime
+        # calculate a time tuple from the UTC time stamp
+        utc_time_tuple = time.localtime(ts)
+        # now check if the hours are the same
+        if utc_time_tuple[3] != time_tuple[3]:
+            # It is the first hour at start summer time
+            # Flag the time stamp with 0 ('hour mismatch')
+            ts = 0
     except (OverflowError, ValueError, TypeError):
         ts = None
     return ts
