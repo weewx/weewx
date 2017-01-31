@@ -1,0 +1,50 @@
+#errorCatcher Echo
+
+#set global $title_label = 'Monthly Weather Conditions'
+#include "headerCompact.tmpl"
+
+<div id="container" class="row">
+		<div id="sidebar" class="column column-3">
+			
+			#set global $archive = $month
+			#set global $stats_label = 'This Month'
+			#include "stats_table.tmpl"
+			
+			#set global $archive = $year
+			#set global $stats_label = 'This Year'
+			#include "stats_table.tmpl"
+			
+			<div id="about" class="widget">
+        #include "about.tmpl"
+			</div>
+			
+		</div> <!-- End Sidebar -->
+
+		<div id="main" class="column column-9">
+        
+        <div class="header">
+          <h3>Monthly Statistics and Plots</h3>
+        </div>
+        <div id="plots">
+          <img src="monthtempdew.png" alt="temperatures" />
+          <img src="monthtempchill.png" alt="heatchill" />
+          <img src="monthrain.png" alt="rain" />
+          <img src="monthwind.png" alt="wind" />
+          <img src="monthbarometer.png" alt="barometer"/>
+          <img src="monthwinddir.png" alt="Hi Wind" />
+          <img src="monthinside.png" alt="Inside" />
+          <img src="monthwindvec.png" alt="Wind Vector" />
+          #if $month.radiation.has_data
+          <img src="monthradiation.png" alt="Radiation" />
+          #end if
+          #if $month.rxCheckPercent.has_data
+          <img src="monthrx.png" alt="month rx percent"/>
+          #end if
+          #if $month.extraTemp1.has_data
+          <img src="monthpond.png" alt="Pond Temperatures" />
+          #end if
+					</div> <!--  End Plots -->
+			</div> <!-- End Main -->
+		</div><!-- End Row "container: -->
+
+				#include "footer.tmpl"

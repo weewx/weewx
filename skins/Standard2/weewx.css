@@ -1,0 +1,312 @@
+/*
+ * $Revision: 732 $
+ * $Author: tkeffer $
+ * $Date: 2012-11-03 13:59:51 -0700 (Sat, 03 Nov 2012) $
+ */
+
+/*************** Header Compact Variations ***************/
+ .headerCompact #logo {
+   margin-top:6px;
+ }
+ .headerCompact #logo img { 
+   background:white;
+   border:1px solid black; 
+   margin-left:10px;
+   height:60px; width:auto;
+ }
+ 
+.headerCompact #header h1, .headerCompact #header h2 {
+  font-size:0.8em;
+  color:white;
+}
+.headerCompact #nav ul { 
+  float:right;
+}
+
+
+/*************** Global Styles ***************/
+body {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 90%;
+	background-color: #f2f2f7;
+	background-image: url('backgrounds/band.gif');
+	background-repeat: repeat;
+	background-attachment: scroll;
+}
+
+#main { 
+	margin-top: 10px;				
+	min-height: 500px;
+	padding: 5px;
+	border-top: 1px solid #dcdcdc;
+	border-right: 1px solid #a9a9a9;
+	border-bottom: 1px solid #808080;
+	border-left: 1px solid #a9a9a9;
+	background-color: #fafaff;
+	text-align: center;
+}
+	 
+#sidebar {
+	padding: 5px;
+	background: #fff;	 
+	min-height: 500px;
+	border-top: 1px solid #dcdcdc;
+	border-right: 1px solid #a9a9a9;
+	border-bottom: 1px solid #808080;
+	border-left: 1px solid #a9a9a9;
+	background-color: #fafaff; 
+	margin-top: 10px;	
+}
+
+h2, h3, h4, h5, h6 {
+  color: #3d6c87;
+}
+
+.align-left { text-align:left; }
+.align-center { text-align:center; }
+.align-right { text-align:right; }
+
+
+/***** WIDGETS - stats, almanac etc. *****/
+.widget {
+  margin-bottom:10px;
+}
+
+.widget_header	 {
+		background-color: #3D3D3D;
+		color: #a8b8c8;
+		font-size: 1.0em;
+		font-style: italic;
+		font-weight: bolder;
+		padding:4px;
+}
+
+/***** CELESTIAL - the almanac *****/
+#almanac {
+  margin-top:10px;
+  padding-top:10px;
+}
+
+.celestial_body {
+  margin-top:10px;
+  margin-bottom:10px;
+  width: 48%;
+	vertical-align: top;
+	display:inline-block;
+}
+.celestial_body table { border: thin solid #000000; }
+.celestial_body table caption { font-weight:bold; }
+
+
+/***** ABOUT *****/
+#about { margin-top:10px; }
+#about p { font-style:italic; }
+
+
+/***** MASTHEAD (and Footer) - for the big header at the top *****/
+#masthead, #footer {
+		padding: 5px;
+		text-align:left;
+		border-top: 1px solid #dcdcdc;
+		border-right: 1px solid #a9a9a9;
+		border-bottom: 1px solid #808080;
+		border-left: 1px solid #a9a9a9;
+		background-color: #fafaff;
+}
+
+#masthead h1 {
+		color: #3d6c87;
+}
+#masthead h3 {
+		color: #5f8ea9;
+}
+
+#logo { margin-top:20px }
+
+#footer { margin-top:10px; }
+#footer .column {
+  font-size:80%;
+  font-style:italic;
+}
+
+
+/***** STATS TABLE - This holds the statistics (daily high/low, etc.) on the left: *****/
+table.stats {
+		border: thin solid #000000;
+		width: 100%;
+}
+table.stats td {
+		border: thin solid #000000;
+		padding: 2px;
+		font-size:90%;
+}
+table td.stats_label {
+		color: green;
+}
+table td.stats_data {
+		color: red;
+}
+@media only screen and (max-width: 700px) {
+table.stats td { font-size:70%; }
+#plots img { width:90%; height:auto; }
+}
+
+
+/***** PLOTS IMAGE *****/
+#plots {
+		display: block;
+		margin-left: auto;
+		margin-right: auto;
+}
+		
+#plots img {
+		border: thin solid #3d6c87;
+		margin: 3px;
+		padding: 3px;
+}
+
+
+/*****  RADAR IMAGE *****/
+#radar_img {
+		width: 100%;
+		display: block;
+		margin-left: auto;
+		margin-right: auto;
+		margin: 3px;
+		padding: 3px;
+}
+
+#radar_img img {
+		margin-left: auto;
+		margin-right: auto;
+		width: 90%;
+		margin: 3px;
+		padding: 3px;
+}
+
+#radar_img p {
+		width: 90%;
+		font-style: italic;
+		font-size: smaller;
+		text-align: center;
+		margin-top: 0;
+}
+
+
+/***** MENU *****/
+/* Based on http://codepen.io/philhoyt/pen/ujHzd */
+#navwrapper, #nav {
+  margin-top:4px;
+	padding-top:4px;
+	padding-bottom:4px;
+	background-color:#333;
+}
+
+#nav {
+	z-index:999;
+}
+
+#nav ul {
+	list-style:none;
+	position:relative;
+	float:left;
+	margin:0;
+	padding:0;
+}
+
+#nav ul a {
+	display:block;
+	color:#ddd;
+	text-decoration:none;
+	font-weight:700;
+	font-size:90%;
+	line-height:32px;
+	padding:0 15px;
+	font-family:"HelveticaNeue","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
+#nav ul li {
+	position:relative;
+	float:left;
+	margin:0;
+	padding:0;
+}
+
+#nav ul li.current-menu-item {
+	background:#ddd;
+}
+
+#nav ul li:hover {
+	background:#f6f6f6;
+}
+
+#nav ul li:hover a {
+	color:#333;
+}
+
+#nav ul ul {
+	display:none;
+	position:absolute;
+	top:100%;
+	left:0;
+	background:#fff;
+	padding:0;
+}
+
+#nav ul ul li {
+	float:none;
+	width:200px;
+}
+
+#nav ul ul a {
+	line-height:120%;
+	padding:10px 15px;
+}
+
+#nav ul ul ul {
+	top:0;
+	left:100%;
+}
+
+#nav ul li:hover > ul {
+	display:block;
+}
+
+/***** GRID SYSTEM *****/
+.container {
+	width:100%;
+	margin-left: auto;
+	margin-right: auto;
+	height: auto;
+	overflow: hidden;
+}
+
+/* Taken from http://www.sitepoint.com/understanding-css-grid-systems/ */
+.row, .column { box-sizing: border-box; }
+.row:before, .row:after { content: " "; display: table; }
+.row:after { clear: both; }
+.column { position: relative; float: left; }
+.column + .column { margin-left: 1.6%; }
+.column-1 { width: 6.86666666667%; }
+.column-2 { width: 15.3333333333%; }
+.column-3 { width: 23.8%; }
+.column-4 { width: 32.2666666667%; }
+.column-5 { width: 40.7333333333%; }
+.column-6 { width: 49.2%; }
+.column-7 { width: 57.6666666667%; }
+.column-8 { width: 66.1333333333%; }
+.column-9 { width: 74.6%; }
+.column-10 { width: 83.0666666667%; }
+.column-11 { width: 91.5333333333%; }
+.column-12 { width: 100%; }
+
+@media only screen and (max-width: 550px) {
+  .column-1, .column-2, .column-3, .column-4, .column-5, .column-6, 
+  .column-7, .column-8, .column-9, .column-10, .column-11, .column-12 { width: auto; float: none; }
+  .column + .column { margin-left: 0; }
+  
+  .headerCompact #nav ul { float:left; }
+  #header, #logo, #footer .column { text-align:center; }
+
+}
+/**** END OF GRID SYSTEM *****/
