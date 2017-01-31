@@ -219,6 +219,10 @@ class Common(unittest.TestCase):
                             stats_value_helper = getattr(getattr(getattr(tagStats, span)(), stats_type), aggregate +'time')
                             self.assertEqual(stats_value_helper.raw, res2[0])
     
+            # Do the tests for a report time of midnight, 1-Apr-2010
+            tagStats = weewx.tags.TimeBinder(db_lookup, spans['month'].stop,
+                                             rain_year_start=1,
+                                             skin_dict=skin_dict)
             self.assertEqual(str(tagStats.day().barometer.avg), "30.675 inHg")
             self.assertEqual(str(tagStats.day().barometer.min), "30.065 inHg")
             self.assertEqual(str(tagStats.day().barometer.max), "31.000 inHg")
