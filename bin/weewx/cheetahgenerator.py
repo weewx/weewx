@@ -320,13 +320,13 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             tmpname = _fullname + '.tmp'
             
             try:
-                text = Cheetah.Template.Template(
+                compiled_template = Cheetah.Template.Template(
                     file=template,
                     searchList=searchList,
                     filter=encoding,
                     filtersLib=weewx.cheetahgenerator)
                 with open(tmpname, mode='w') as _file:
-                    print >> _file, text
+                    print >> _file, compiled_template.respond()
                 os.rename(tmpname, _fullname)
             except Exception, e:
                 # We would like to get better feedback when there are cheetah
