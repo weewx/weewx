@@ -3,7 +3,22 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Driver for the MySQL database"""
+"""weedb driver for the MySQL database.
+
+It can use either MySQLdb or pymysql as its underlying implementation.
+
+However, if you are using pymysql on localhost, you will need to specify the
+location of the unix socket file in your database dictionary
+to whatever is appropriate for your OS.
+
+For example, on Debian systems, a typical database dictionary might look
+like:
+
+mysql_db_dict  = {'database_name': 'test', 
+                  'user':'weewx', 'password':'weewx', 
+                  'driver':'weedb.mysql',
+                  'unix_socket' : '/var/run/mysqld/mysqld.sock'}
+"""
 
 import decimal
 
@@ -46,25 +61,25 @@ def guard(fn):
 
 
 def connect(host='localhost', user='', password='', database_name='', 
-            driver='', port=3306, engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
+            driver='', engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
     """Connect to the specified database"""
-    if host=='localhost':
-        kwargs.setdefault('unix_socket', '/var/run/mysqld/mysqld.sock')
+    if host not in ('localhost', '127.0.0.1'):
+        kwargs.setdefault('port', 3306)
     return Connection(host=host, user=user, password=password, 
-                      database_name=database_name, port=int(port), engine=engine, **kwargs)
+                      database_name=database_name, engine=engine, **kwargs)
 
 def create(host='localhost', user='', password='', database_name='', 
-           driver='', port=3306, engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
+           driver='', engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
     """Create the specified database. If it already exists,
     an exception of type weedb.DatabaseExists will be thrown."""
     # Open up a connection w/o specifying the database.
-    if host=='localhost':
-        kwargs.setdefault('unix_socket', '/var/run/mysqld/mysqld.sock')
+    if host not in ('localhost', '127.0.0.1'):
+        kwargs.setdefault('port', 3306)
     try:
         connect = MySQLdb.connect(host=host,
                                   user=user,
                                   passwd=password, 
-                                  port=int(port), **kwargs)
+                                  **kwargs)
         set_engine(connect, engine)
         cursor = connect.cursor()
         # An exception will get thrown if the database already exists.
@@ -82,16 +97,16 @@ def create(host='localhost', user='', password='', database_name='',
 
 
 def drop(host='localhost', user='', password='', database_name='', 
-         driver='', port=3306, engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
+         driver='', engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
     """Drop (delete) the specified database."""
-    if host=='localhost':
-        kwargs.setdefault('unix_socket', '/var/run/mysqld/mysqld.sock')
+    if host not in ('localhost', '127.0.0.1'):
+        kwargs.setdefault('port', 3306)
     # Open up a connection
     try:
         connect = MySQLdb.connect(host=host,
                                   user=user,
                                   passwd=password, 
-                                  port=int(port), **kwargs)
+                                  **kwargs)
         cursor = connect.cursor()
         try:
             cursor.execute("DROP DATABASE %s" % database_name)
@@ -112,7 +127,7 @@ def drop(host='localhost', user='', password='', database_name='',
 class Connection(weedb.Connection):
     """A wrapper around a MySQL connection object."""
 
-    def __init__(self, host='localhost', user='', password='', database_name='', port=3306, engine=DEFAULT_ENGINE, **kwargs):
+    def __init__(self, host='localhost', user='', password='', database_name='', engine=DEFAULT_ENGINE, **kwargs):
         """Initialize an instance of Connection.
 
         Parameters:
@@ -121,17 +136,18 @@ class Connection(weedb.Connection):
             user: User name (required)
             password: The password for the username (required)
             database_name: The database to be used. (required)
-            port: Its port number (optional; default is 3306)
+            unix_socket: The unix socket file to use (required for pymysql driver, otherwise optional)
             engine: The MySQL database engine to use (optional; default is 'INNODB')
+            port: Its port number (optional; default is 3306)
             kwargs:   Any extra arguments you may wish to pass on to MySQL 
               connect statement. See the file MySQLdb/connections.py for a list (optional).
             
         If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
-        if host=='localhost':
-            kwargs.setdefault('unix_socket', '/var/run/mysqld/mysqld.sock')
+        if host not in ('localhost', '127.0.0.1'):
+            kwargs.setdefault('port', 3306)
         try:
-            connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database_name, port=int(port), **kwargs)
+            connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database_name, **kwargs)
         except (OperationalError, InternalError), e:
             # The MySQL driver does not include the database in the
             # exception information. Tack it on, in case it might be useful.
