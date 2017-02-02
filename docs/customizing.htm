@@ -3399,6 +3399,15 @@ class MyStats(SearchList):                                                   # 1
           class="code">report_timing</span> option can be used to
         control when individual reports are run.
       </p>
+      
+      <p class="note" style="display: inline-block; width: 70%">
+        <b>Note</b><br />Whilst the <span class="code">report_timing</span> 
+        option allows the user to specify when a given report is generated, it 
+        should be noted that the generation of reports is still controlled by 
+        the weeWX report cycle and as such the <span class="code">report_timing</span> 
+        option does not allow reports to be generated more frequently than once 
+        every archive period.
+      </p>
 
       <h3>
         The <span class="code">report_timing</span> option
@@ -3512,10 +3521,10 @@ class MyStats(SearchList):                                                   # 1
 
       <p>
         In the above case, the <span class="code">[[AReport]]</span>
-        report would be generated under under control of the <span
+        report would be run under under control of the <span
           class="code">0 * * * *</span> setting (on the hour) under <span
           class="code">[StdReport]</span> and the <span class="code">[[AnotherReport]]</span>
-        report would be generated under control of the <span
+        report would be run under control of the <span
           class="code">*/10 * * * *</span> setting (every 10 minutes)
         which has overriden the <span class="code">[StdReport]</span>
         setting.
@@ -3575,31 +3584,64 @@ class MyStats(SearchList):                                                   # 1
       </h4>
 
       <p>
-        A traditional CRON service has a resolution of one minute,
-        meaning that the CRON service checks each minute as to whether
-        to execute any commands. On the other hand, the weeWX
-        report system checks which reports
-        are to be run once per archive period, where the archive period
-        may be one minute, five minutes or some other user defined
-        period. Consequently, the <span class="code">report_timing</span>
-        option may specify a report to be run at some time that does not
-        align with the weeWX archive period.
-        In cases where the weeWX archive
-        period is greater than one minute, and provided a <span
-          class="code">report_timing</span> option is set, weeWX
-        will check each minute boundary from
-        the current report time back until the report time of the
-        previous report cycle. If a match is found on <b>any</b> of
-        these times the report will be run. For example, on a weeWX
-        system with a <b>five minute</b>
-        archive period the following <span class="code">report_timing</span>
-        setting:
+        A traditional CRON service has a resolution of one minute, meaning that 
+        the CRON service checks each minute as to whether to execute any 
+        commands. On the other hand, the weeWX report system checks which 
+        reports are to be run once per archive period, where the archive period
+        may be one minute, five minutes or some other user defined period. 
+        Consequently, the <span class="code">report_timing</span> option may
+        specify a report to be run at some time that does not align with the 
+        weeWX archive period. In such cases cases the 
+        <span class="code">report_timing</span> option does not cause a report 
+        to be run outside of the normal weeWX report cycle, rather it will
+        cause the report to be run during the next report cycle. At the start
+        of each report cycle, and provided a <span class="code">report_timing</span> 
+        option is set, weeWX will check each minute boundary from the current 
+        report time back until the report time of the previous report cycle. If 
+        a match is found on <b>any</b> of these one minute boundaries the 
+        report will be run during the report cycle. This may be best described 
+        through some examples:
       </p>
-
-      <pre class="tty">report_timing = 22 * * * *</pre>
-
-      <p>would cause the report to be run during the report cycle
-        occurring at 25 minutes past each hour.</p>
+        
+      <table class="indent" summary="archive period relationship">
+        <tbody>
+          <tr class="first_row">
+            <td class="code">report_timing</td>
+            <td>Archive period</td>
+            <td>When the report will be run</td>
+          </tr>
+          <tr>
+            <td class="code first_col">0 * * * *</td>
+            <td>5 minutes</td>
+            <td>The report will be run only during the report cycle commencing on the hour.</td>
+          </tr>
+          <tr>
+            <td class="code first_col">5 * * * *</td>
+            <td>5 minutes</td>
+            <td>The report will be run only during the report cycle commencing at 5 minutes past the hour.</td>
+          </tr>
+          <tr>
+            <td class="code first_col">3 * * * *</td>
+            <td>5 minutes</td>
+            <td>The report will be run only during the report cycle commencing at 5 minutes past the hour.</td>
+          </tr>
+          <tr>
+            <td class="code first_col">10 * * * *</td>
+            <td>15 minutes</td>
+            <td>The report will be run only during the report cycle commencing at 15 minutes past the hour</td>
+          </tr>
+          <tr>
+            <td class="code first_col">10,40 * * * *</td>
+            <td>15 minutes</td>
+            <td>The report will be run only during the report cycles commencing at 15 minutes past the hour and 45 minutes past the hour.</td>
+          </tr>
+          <tr>
+            <td class="code first_col">5,10 * * * *</td>
+            <td>15 minutes</td>
+            <td>The report will be run once only during the report cycle commencing at 15 minutes past the hour.</td>
+          </tr>
+        </tbody>
+      </table>
 
       <h4>Lists, ranges and steps</h4>
 
