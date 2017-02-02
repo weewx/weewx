@@ -556,8 +556,6 @@ class StdArchive(StdService):
         # the archive interval and the end of the archive delay period, then
         # there will be no old accumulator.
         if hasattr(self, 'old_accumulator'):
-            dbmanager = self.engine.db_binder.get_manager(self.data_binding)
-            dbmanager.updateHiLo(self.old_accumulator)
             # If the user has requested software generation, then do that:
             if self.record_generation == 'software':
                 self._software_catchup()
@@ -571,6 +569,7 @@ class StdArchive(StdService):
                     self._software_catchup()
             else:
                 raise ValueError("Unknown station record generation value %s" % self.record_generation)
+            self.old_accumulator = None
 
         # Set the time of the next break loop:
         self.end_archive_delay_ts = self.end_archive_period_ts + self.archive_delay
@@ -578,12 +577,16 @@ class StdArchive(StdService):
     def new_archive_record(self, event):
         """Called when a new archive record has arrived. 
         Put it in the archive database."""
-        if self.record_augmentation and \
-                hasattr(self, 'old_accumulator') and \
-                event.record['dateTime'] == self.old_accumulator.timespan.stop:
+
+        # If requested, extract any extra information we can out of the 
+        # accumulator and put it in the record.
+        if self.old_accumulator \
+                and event.record['dateTime'] == self.old_accumulator.timespan.stop \
+                and self.record_augmentation:
             self.old_accumulator.augmentRecord(event.record)
+
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
-        dbmanager.addRecord(event.record)
+        dbmanager.addRecord(event.record, accumulator=self.old_accumulator)
 
     def setup_database(self, config_dict):  # @UnusedVariable
         """Setup the main database archive"""
@@ -600,6 +603,8 @@ class StdArchive(StdService):
         
         # Back fill the daily summaries.
         _nrecs, _ndays = dbmanager.backfill_day_summary() # @UnusedVariable
+        
+        self.old_accumulator = None
 
     def _catchup(self, generator):
         """Pull any unarchived records off the console and archive them.
