@@ -3,37 +3,13 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""weedb driver for the MySQL database.
-
-It can use either MySQLdb or pymysql as its underlying implementation.
-
-However, if you are using pymysql on localhost, you will need to specify the
-location of the unix socket file in your database dictionary
-to whatever is appropriate for your OS.
-
-For example, on Debian systems, a typical database dictionary might look
-like:
-
-mysql_db_dict  = {'database_name': 'test', 
-                  'user':'weewx', 'password':'weewx', 
-                  'driver':'weedb.mysql',
-                  'unix_socket' : '/var/run/mysqld/mysqld.sock'}
-"""
+"""Driver for the MySQL database"""
 
 import decimal
 
-try:
-    import MySQLdb
-    from _mysql_exceptions import IntegrityError, ProgrammingError, OperationalError
-    class InternalError(Exception):
-        "Dummy error. Not used for MySQLdb implementation"
-except ImportError:
-    # Try PyMySQL
-    import pymysql
-    pymysql.install_as_MySQLdb()
-    # Try it again.
-    import MySQLdb
-    from pymysql import IntegrityError, ProgrammingError, OperationalError, InternalError
+import MySQLdb
+from _mysql_exceptions import IntegrityError, ProgrammingError, OperationalError
+
 from weeutil.weeutil import to_bool
 import weedb
 
@@ -51,17 +27,12 @@ def guard(fn):
             raise weedb.ProgrammingError(e)
         except OperationalError, e:
             raise weedb.OperationalError(e)
-        except InternalError, e:
-            if e[0] == 1054:
-                # Unknown column error.
-                raise weedb.OperationalError(e)
-            raise
 
     return guarded_fn
 
 
 def connect(host='localhost', user='', password='', database_name='', 
-            driver='', engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
+            driver='', engine=DEFAULT_ENGINE, **kwargs):
     """Connect to the specified database"""
     if host not in ('localhost', '127.0.0.1'):
         kwargs.setdefault('port', 3306)
@@ -69,7 +40,7 @@ def connect(host='localhost', user='', password='', database_name='',
                       database_name=database_name, engine=engine, **kwargs)
 
 def create(host='localhost', user='', password='', database_name='', 
-           driver='', engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
+           driver='', engine=DEFAULT_ENGINE, **kwargs):
     """Create the specified database. If it already exists,
     an exception of type weedb.DatabaseExists will be thrown."""
     # Open up a connection w/o specifying the database.
@@ -112,11 +83,6 @@ def drop(host='localhost', user='', password='', database_name='',
             cursor.execute("DROP DATABASE %s" % database_name)
         except OperationalError:
             raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (database_name,))
-        except InternalError, e:
-            # PyMySQL implementation uses InternalError with code 1008 to signal a non-existent database.
-            if e[0] == 1008:
-                raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (database_name,))
-            raise
         finally:
             cursor.close()
             connect.close()
@@ -136,9 +102,8 @@ class Connection(weedb.Connection):
             user: User name (required)
             password: The password for the username (required)
             database_name: The database to be used. (required)
-            unix_socket: The unix socket file to use (required for pymysql driver, otherwise optional)
-            engine: The MySQL database engine to use (optional; default is 'INNODB')
             port: Its port number (optional; default is 3306)
+            engine: The MySQL database engine to use (optional; default is 'INNODB')
             kwargs:   Any extra arguments you may wish to pass on to MySQL 
               connect statement. See the file MySQLdb/connections.py for a list (optional).
             
@@ -148,16 +113,11 @@ class Connection(weedb.Connection):
             kwargs.setdefault('port', 3306)
         try:
             connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database_name, **kwargs)
-        except (OperationalError, InternalError), e:
+        except OperationalError, e:
             # The MySQL driver does not include the database in the
             # exception information. Tack it on, in case it might be useful.
             msg = str(e) + " while opening database '%s'" % (database_name,)
-            try:
-                errno = e.args[0]
-            except (AttributeError, KeyError):
-                # Maybe it's a PyMySQL implementation?
-                errno = e[0]
-            if errno == 2002 or errno == 2003:
+            if e.args[0] == 2002:
                 raise weedb.CannotConnect(msg)
             else:
                 raise weedb.OperationalError(msg)
@@ -299,7 +259,7 @@ class Cursor(object):
         try:
             self.cursor.close()
             del self.cursor
-        except:
+        except AttributeError:
             pass
 
     #
@@ -326,11 +286,7 @@ def massage(seq):
 
 def set_engine(connect, engine):
     """Set the default MySQL storage engine."""
-    try:
-        if connect._server_version >= (5, 5):
-            connect.query("SET default_storage_engine=%s" % engine)
-        else:
-            connect.query("SET storage_engine=%s;" % engine)
-    except AttributeError:
-        # PyMySQL implementations do not have _server_version, so accept the default. 
-        pass
+    if connect._server_version >= (5, 5):
+        connect.query("SET default_storage_engine=%s" % engine)
+    else:
+        connect.query("SET storage_engine=%s;" % engine)
