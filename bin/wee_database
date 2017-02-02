@@ -428,12 +428,11 @@ def transferDatabase(config_dict, db_binding, options):
                                 print ("Error. No records were transferred from source database '%s' to destination database '%s'." %
                                        (src_manager.database_name, dest_manager.database_name))
                     except ImportError:
-                        # probaly when trying to load db driver
+                        # Probably when trying to load db driver
                         print ("Error accessing destination database '%s'." %
                                (dest_manager_dict['database_dict']['database_name'], ))
-                        print "Maybe the database driver is incorrectly specified in weewx.conf?"
                         print "Nothing done. Aborting."
-                        return
+                        raise
                     except (OSError, weedb.OperationalError):
                         # probably a weewx.conf typo or MySQL db not created
                         print ("Error accessing destination database '%s'." %
