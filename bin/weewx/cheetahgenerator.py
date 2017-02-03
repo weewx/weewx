@@ -326,7 +326,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     filter=encoding,
                     filtersLib=weewx.cheetahgenerator)
                 with open(tmpname, mode='w') as _file:
-                    print >> _file, compiled_template.respond()
+                    print >> _file, compiled_template
                 os.rename(tmpname, _fullname)
             except Exception, e:
                 # We would like to get better feedback when there are cheetah
