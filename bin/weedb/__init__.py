@@ -22,20 +22,20 @@ import sys
 class DatabaseError(StandardError):
     """Base class of all weedb exceptions."""
 
-class OperationalError(DatabaseError):
-    """Runtime database errors."""
+class IntegrityError(DatabaseError):
+    """Operation attempted involving the relational integrity of the database."""
 
 class ProgrammingError(DatabaseError):
     """SQL or other programming error."""
     
+class OperationalError(DatabaseError):
+    """Runtime database errors."""
+
 class DatabaseExists(DatabaseError):
     """Attempt to create a database that already exists"""
 
 class NoDatabase(DatabaseError):
     """Operation attempted on a database that does not exist."""
-
-class IntegrityError(DatabaseError):
-    """Operation attempted involving the relational integrity of the database."""
 
 class CannotConnect(DatabaseError):
     """Unable to connect to the database server."""
