@@ -14,7 +14,7 @@ import weedb
 import weeutil.weeutil
 
 archive_sqlite = {'database_name': '/var/tmp/weewx_test/weedb.sdb', 'driver':'weedb.sqlite'}
-archive_mysql  = {'database_name': 'test_weedb', 'user':'weewx', 'password':'weewx', 'driver':'weedb.mysql'}
+archive_mysql  = {'database_name': 'test_weedb', 'user':'weewx1', 'password':'weewx1', 'driver':'weedb.mysql'}
 
 archive_schema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
                   ('usUnits',              'INTEGER NOT NULL'),

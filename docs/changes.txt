@@ -124,6 +124,9 @@ for extended periods of time.
 How long to wait before retrying after a bad uploader login is now settable
 with option retry_login. Fixes issue #212. 
 
+The test suites now use dedicated users 'weewx1' and 'weewx2'. A shell script
+has been included to setup these users.
+
 
 3.6.2 11/08/2016
 
