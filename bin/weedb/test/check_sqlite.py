@@ -6,6 +6,7 @@
 # It uses two MySQL users, weewx1 and weewx2. The companion
 # script "setup_mysql" will set them up with the necessary permissions.
 #
+from __future__ import with_statement
 import unittest
 import sys
 import os

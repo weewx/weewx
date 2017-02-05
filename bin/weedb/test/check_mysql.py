@@ -6,6 +6,7 @@
 # It uses two MySQL users, weewx1 and weewx2. The companion
 # script "setup_mysql" will set them up with the necessary permissions.
 #
+from __future__ import with_statement
 import unittest
 
 import MySQLdb
@@ -59,10 +60,12 @@ class TestMySQL(unittest.TestCase):
             self.assertEqual(e.exception[0], 1008)
     
     def test_drop_nopermission(self):
-        with Cursor(user='weewx2', passwd='weewx2') as cursor:
-            with self.assertRaises(OperationalError) as e:
-                cursor.execute("DROP DATABASE test_weewx1")
-            self.assertEqual(e.exception[0], 1044)
+        with Cursor(user='weewx1', passwd='weewx1') as cursor1:
+            cursor1.execute("CREATE DATABASE test_weewx1")
+            with Cursor(user='weewx2', passwd='weewx2') as cursor2:
+                with self.assertRaises(OperationalError) as e:
+                    cursor2.execute("DROP DATABASE test_weewx1")
+                self.assertEqual(e.exception[0], 1044)
 
     def test_create_nopermission(self):
         with Cursor(user='weewx2', passwd='weewx2') as cursor:
