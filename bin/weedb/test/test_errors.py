@@ -67,15 +67,13 @@ class Common(unittest.TestCase):
     def test_bad_host(self):
         mysql_dict = dict(mysql1_dict)
         mysql_dict['host'] = 'foohost'
-        # TODO: SHould be CannotConnect, which inherits from OperationalError
-        with self.assertRaises(weedb.OperationalError):
+        with self.assertRaises(weedb.CannotConnectError):
             weedb.connect(mysql_dict)
 
     def test_bad_password(self):
         mysql_dict = dict(mysql1_dict)
         mysql_dict['password'] = 'badpw'
-        #TODO: Should be PasswordError, which inherits from OperationalError
-        with self.assertRaises(weedb.OperationalError):
+        with self.assertRaises(weedb.BadPasswordError):
             weedb.connect(mysql_dict)
             
     def test_drop_nonexistent_database(self):
@@ -86,18 +84,15 @@ class Common(unittest.TestCase):
      
     def test_drop_nopermission(self):
         weedb.create(mysql1_dict)
-        #TODO: Should be NoPermission
-        with self.assertRaises(weedb.NoDatabase):
+        with self.assertRaises(weedb.PermissionError):
             weedb.drop(mysql2_dict)
-        with self.assertRaises(weedb.NoDatabase):
+        with self.assertRaises(weedb.PermissionError):
             weedb.drop(sqdb2_dict)
  
     def test_create_nopermission(self):
-        with self.assertRaises(weedb.OperationalError):
+        with self.assertRaises(weedb.PermissionError):
             weedb.create(mysql2_dict)
-        # TODO: The following test fails. It should return weedb.OperationalError
-        import sqlite3
-        with self.assertRaises(sqlite3.OperationalError):
+        with self.assertRaises(weedb.PermissionError):
             weedb.create(sqdb2_dict)
 
     def test_double_db_create(self):
@@ -119,7 +114,7 @@ class Common(unittest.TestCase):
         mysql_dict.pop('database_name')
         connect = weedb.connect(mysql_dict)
         cursor = connect.cursor()
-        with self.assertRaises(weedb.ProgrammingError):
+        with self.assertRaises(weedb.NoDatabaseError):
             cursor.execute("SELECT foo from test_weewx1.bar")
         cursor.close()
         connect.close()
@@ -133,7 +128,7 @@ class Common(unittest.TestCase):
             connect = weedb.connect(db_dict)
             cursor = connect.cursor()
             cursor.execute("CREATE TABLE bar (col1 int, col2 int)")
-            with self.assertRaises(weedb.ProgrammingError) as e:
+            with self.assertRaises(weedb.NoTableError) as e:
                 cursor.execute("SELECT foo from fubar")
             cursor.close()
             connect.close()
@@ -147,7 +142,7 @@ class Common(unittest.TestCase):
             connect = weedb.connect(db_dict)
             cursor = connect.cursor()
             cursor.execute("CREATE TABLE bar (col1 int, col2 int)")
-            with self.assertRaises(weedb.OperationalError) as e:
+            with self.assertRaises(weedb.TableExistsError) as e:
                 cursor.execute("CREATE TABLE bar (col1 int, col2 int)")
             cursor.close()
             connect.close()
@@ -161,7 +156,7 @@ class Common(unittest.TestCase):
             connect = weedb.connect(db_dict)
             cursor = connect.cursor()
             cursor.execute("CREATE TABLE bar (col1 int, col2 int)")
-            with self.assertRaises(weedb.OperationalError) as e:
+            with self.assertRaises(weedb.NoColumnError) as e:
                 cursor.execute("SELECT foo from bar")
             cursor.close()
             connect.close()
