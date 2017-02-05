@@ -4,7 +4,7 @@ This table shows how the various MySQLdb and sqlite exceptions are mapped to a w
 
 | weedb class        | Sqlite class       | MySQLdb class      | MySQLdb error number | Description                     |
 |--------------------|--------------------|--------------------|:--------------------:|---------------------------------|
-| `CannotConnect`    | *N/A*              | `OperationalError` |         2002         | Server down                     |
+| `OperationalError` | *N/A*              | `OperationalError` |         2002         | Server down                     |
 | `OperationalError` | *N/A*              | `OperationalError` |         2005         | Unknown host                    |
 | `OperationalError` | *N/A*              | `OperationalError` |         1045         | Bad or non-existent password    |
 | `NoDatabase`       | *N/A*              | `OperationalError` |         1008         | Drop non-existent database      |
@@ -17,13 +17,43 @@ This table shows how the various MySQLdb and sqlite exceptions are mapped to a w
 | `ProgrammingError` | *N/A*              | `ProgrammingError` |         1146         | SELECT on non-existing database |
 | `IntegrityError`   | `IntegrityError`   | `IntegrityError`   |         1062         | Duplicate key                   |
 
-Exception hierarchy
+V3.6 Exception hierarchy
 
 ~~~
 StandardError -> weedb.DatabaseError -> weedb.IntegrityError
                                         weedb.ProgrammingError
                                         weedb.OperationalError
                                         weedb.DatabaseExists
-                                        weedb.CannotConnect
                                         weedb.NoDatabase
+~~~
+
+
+#weewx Version 3.7 and later:
+
+| weedb class           | Sqlite class       | MySQLdb class      | MySQLdb error number | Description                     |
+|-----------------------|--------------------|--------------------|:--------------------:|---------------------------------|
+| `CannotConnectError`  | *N/A*              | `OperationalError` |         2002         | Server down                     |
+| `CannotConnectError`  | *N/A*              | `OperationalError` |         2005         | Unknown host                    |
+| `BadPasswordError`    | *N/A*              | `OperationalError` |         1045         | Bad or non-existent password    |
+| `NoDatabaseError`     | *N/A*              | `OperationalError` |         1008         | Drop non-existent database      |
+| `NoDatabaseError`     | `OperationalError` | `OperationalError` |         1044         | No permission                   |
+| `NoDatabaseError`     | *N/A*              | `OperationalError` |         1049         | Open non-existent database      |
+| `DatabaseExistsError` | *N/A*              | `ProgrammingError` |         1007         | Database already exists         |
+| `TableExistsError`    | `OperationalError` | `OperationalError` |         1050         | Table already exists            |
+| `NoTableError`        | `OperationalError` | `ProgrammingError` |         1146         | SELECT non-existing table       |
+| `NoColumnError`       | `OperationalError` | `OperationalError` |         1054         | SELECT non-existing column      |
+| `ProgrammingError`    | *N/A*              | `ProgrammingError` |         1146         | SELECT on non-existing database |
+| `IntegrityError`      | `IntegrityError`   | `IntegrityError`   |         1062         | Duplicate key                   |
+
+V3.7 Exception hierarchy
+
+~~~
+StandardError -> weedb.DatabaseError -> weedb.IntegrityError
+                                        weedb.ProgrammingError -> weedb.DatabaseExistsError
+                                                                  weedb.NoTableError
+                                        weedb.OperationalError -> weedb.CannotConnectError
+                                                                  weedb.NoDatabaseError
+                                                                  weedb.TableExistsError
+                                                                  weedb.NoColumnError
+                                                                  weedb.BadPasswordError
 ~~~
