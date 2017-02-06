@@ -12,9 +12,9 @@ This table shows how the various MySQLdb and sqlite exceptions are mapped to a w
 | `OperationalError` | *N/A*              | `OperationalError` |         1049         | Open non-existent database      |
 | `DatabaseExists`   | *N/A*              | `ProgrammingError` |         1007         | Database already exists         |
 | `OperationalError` | `OperationalError` | `OperationalError` |         1050         | Table already exists            |
+| `ProgrammingError` | *N/A*              | `ProgrammingError` |         1146         | SELECT on non-existing database |
 | `ProgrammingError` | `OperationalError` | `ProgrammingError` |         1146         | SELECT non-existing table       |
 | `OperationalError` | `OperationalError` | `OperationalError` |         1054         | SELECT non-existing column      |
-| `ProgrammingError` | *N/A*              | `ProgrammingError` |         1146         | SELECT on non-existing database |
 | `IntegrityError`   | `IntegrityError`   | `IntegrityError`   |         1062         | Duplicate key                   |
 
 ###V3.6 Exception hierarchy
@@ -42,9 +42,9 @@ StandardError
 | `NoDatabaseError`     | *N/A*              | `OperationalError` |         1049         | Open non-existent database      |
 | `DatabaseExistsError` | *N/A*              | `ProgrammingError` |         1007         | Database already exists         |
 | `TableExistsError`    | `OperationalError` | `OperationalError` |         1050         | Table already exists            |
+| `NoTableError`        | *N/A*              | `ProgrammingError` |         1146         | SELECT on non-existing database |
 | `NoTableError`        | `OperationalError` | `ProgrammingError` |         1146         | SELECT non-existing table       |
 | `NoColumnError`       | `OperationalError` | `OperationalError` |         1054         | SELECT non-existing column      |
-| `ProgrammingError`    | *N/A*              | `ProgrammingError` |         1146         | SELECT on non-existing database |
 | `IntegrityError`      | `IntegrityError`   | `IntegrityError`   |         1062         | Duplicate key                   |
 
 ###V3.7 Exception hierarchy

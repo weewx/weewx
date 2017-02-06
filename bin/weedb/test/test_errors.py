@@ -1,5 +1,7 @@
 """Test the weedb exception hierarchy"""
 from __future__ import with_statement
+import os
+import stat
 import unittest
 
 import MySQLdb
@@ -47,20 +49,13 @@ class Cursor(object):
 class Common(unittest.TestCase):
  
     def setUp(self):
+        """Drop the old databases, in preparation for running a test."""
         try:
             weedb.drop(mysql1_dict)
         except weedb.NoDatabase:
             pass
         try:
-            weedb.drop(mysql2_dict)
-        except weedb.NoDatabase:
-            pass
-        try:
             weedb.drop(sqdb1_dict)
-        except weedb.NoDatabase:
-            pass
-        try:
-            weedb.drop(sqdb2_dict)
         except weedb.NoDatabase:
             pass
 
@@ -86,7 +81,10 @@ class Common(unittest.TestCase):
         weedb.create(mysql1_dict)
         with self.assertRaises(weedb.PermissionError):
             weedb.drop(mysql2_dict)
-        with self.assertRaises(weedb.PermissionError):
+        weedb.create(sqdb1_dict)
+        # Can't really test this one without setting up a file where
+        # we have no write permission
+        with self.assertRaises(weedb.NoDatabaseError):
             weedb.drop(sqdb2_dict)
  
     def test_create_nopermission(self):
@@ -114,7 +112,7 @@ class Common(unittest.TestCase):
         mysql_dict.pop('database_name')
         connect = weedb.connect(mysql_dict)
         cursor = connect.cursor()
-        with self.assertRaises(weedb.NoDatabaseError):
+        with self.assertRaises(weedb.NoTableError):
             cursor.execute("SELECT foo from test_weewx1.bar")
         cursor.close()
         connect.close()
