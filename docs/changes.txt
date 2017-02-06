@@ -128,7 +128,9 @@ The test suites now use dedicated users 'weewx1' and 'weewx2'. A shell script
 has been included to setup these users.
 
 A more formal exception hierarchy has been adopted for the internal
-database library weedb. See weedb/NOTES.md
+database library weedb. See weedb/NOTES.md.
+
+The weedb Connection object can now be used in a "with" clause.
 
 
 3.6.2 11/08/2016

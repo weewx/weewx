@@ -169,6 +169,14 @@ class Connection(object):
         except DatabaseError:
             pass
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, etyp, einst, etb):  # @UnusedVariable
+        try:
+            self.close()
+        except DatabaseError:
+            pass
 
 class Transaction(object):
     """Class to be used to wrap transactions in a 'with' clause."""
