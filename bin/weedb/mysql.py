@@ -270,6 +270,11 @@ class Cursor(object):
             raise StopIteration
         return result
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, etyp, einst, etb):  # @UnusedVariable
+        self.close()
 
 #
 # This is a utility function for converting a result set that might contain

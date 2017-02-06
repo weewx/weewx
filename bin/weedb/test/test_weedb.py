@@ -95,63 +95,57 @@ class Common(unittest.TestCase):
     def test_select(self):
         self.populate_db()
         with weedb.connect(self.db_dict) as _connect:
-            _cursor = _connect.cursor()
-            _cursor.execute("SELECT dateTime, min FROM test1")
-            for i, _row in enumerate(_cursor):
-                self.assertEqual(_row[0], i)
-    
-            # SELECT with wild card, using a result set
-            _result = _cursor.execute("SELECT * from test1")
-            for i, _row in enumerate(_result):
-                self.assertEqual(_row[0], i)
-            
-            # Find a matching result set
-            _cursor.execute("SELECT dateTime, min FROM test1 WHERE dateTime = 5")
-            _row = _cursor.fetchone()
-            self.assertEqual(_row[0], 5)
-            self.assertEqual(_row[1], 50)
-    
-            # Now test where there is no matching result:
-            _cursor.execute("SELECT dateTime, min FROM test1 WHERE dateTime = -1")
-            _row = _cursor.fetchone()
-            self.assertEqual(_row, None)
-            
-            _cursor.close()
+            with _connect.cursor() as _cursor:
+                _cursor.execute("SELECT dateTime, min FROM test1")
+                for i, _row in enumerate(_cursor):
+                    self.assertEqual(_row[0], i)
         
+                # SELECT with wild card, using a result set
+                _result = _cursor.execute("SELECT * from test1")
+                for i, _row in enumerate(_result):
+                    self.assertEqual(_row[0], i)
+                
+                # Find a matching result set
+                _cursor.execute("SELECT dateTime, min FROM test1 WHERE dateTime = 5")
+                _row = _cursor.fetchone()
+                self.assertEqual(_row[0], 5)
+                self.assertEqual(_row[1], 50)
+        
+                # Now test where there is no matching result:
+                _cursor.execute("SELECT dateTime, min FROM test1 WHERE dateTime = -1")
+                _row = _cursor.fetchone()
+                self.assertEqual(_row, None)
+            
     def test_bad_select(self):
         self.populate_db()
         with weedb.connect(self.db_dict) as _connect:
-            _cursor = _connect.cursor()
+            with _connect.cursor() as _cursor:
             
-            # Test SELECT on a bad table name
-            self.assertRaises(weedb.ProgrammingError, _cursor.execute, "SELECT dateTime, min FROM foo")
-    
-            # Test SELECT on a bad column name
-            self.assertRaises(weedb.OperationalError, _cursor.execute, "SELECT dateTime, foo FROM test1")
-            
-            _cursor.close()
+                # Test SELECT on a bad table name
+                self.assertRaises(weedb.ProgrammingError, _cursor.execute, "SELECT dateTime, min FROM foo")
+        
+                # Test SELECT on a bad column name
+                self.assertRaises(weedb.OperationalError, _cursor.execute, "SELECT dateTime, foo FROM test1")
         
     def test_rollback(self):
         # Create the database and schema
         weedb.create(self.db_dict)
         with weedb.connect(self.db_dict) as _connect:
-            _cursor = _connect.cursor()
-            _cursor.execute("""CREATE TABLE test1 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, x REAL );""")
-    
-            # Now start the transaction
-            _connect.begin()
-            for i in range(10):
-                _cursor.execute("""INSERT INTO test1 (dateTime, x) VALUES (?, ?)""", (i, i+1))
-            # Roll it back
-            _connect.rollback()
-            _cursor.close()
+            with _connect.cursor() as _cursor:
+                _cursor.execute("""CREATE TABLE test1 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, x REAL );""")
+        
+                # Now start the transaction
+                _connect.begin()
+                for i in range(10):
+                    _cursor.execute("""INSERT INTO test1 (dateTime, x) VALUES (?, ?)""", (i, i+1))
+                # Roll it back
+                _connect.rollback()
 
         # Make sure nothing is in the database
         with weedb.connect(self.db_dict) as _connect:
-            _cursor = _connect.cursor()
-            _cursor.execute("SELECT dateTime, x from test1")
-            _row = _cursor.fetchone()
-            _cursor.close()
+            with _connect.cursor() as _cursor:
+                _cursor.execute("SELECT dateTime, x from test1")
+                _row = _cursor.fetchone()
         self.assertEqual(_row, None)
 
     def test_transaction(self):
@@ -176,10 +170,9 @@ class Common(unittest.TestCase):
 
         # Now make sure nothing is in the database
         with weedb.connect(self.db_dict) as _connect:
-            _cursor = _connect.cursor()
-            _cursor.execute("SELECT dateTime, x from test1")
-            _row = _cursor.fetchone()
-            _cursor.close()
+            with _connect.cursor() as _cursor:
+                _cursor.execute("SELECT dateTime, x from test1")
+                _row = _cursor.fetchone()
         self.assertEqual(_row, None)
 
 

@@ -222,3 +222,11 @@ class Cursor(sqlite3.Cursor):
     def fetchmany(self, size=None):
         if size is None: size = self.arraysize
         return sqlite3.Cursor.fetchmany(self, size)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, etyp, einst, etb):  # @UnusedVariable
+        # It is not an error to close a sqlite3 cursor multiple times,
+        # so there's no reason to guard it with a "try" clause:
+        self.close()

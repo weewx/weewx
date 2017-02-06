@@ -130,7 +130,7 @@ has been included to setup these users.
 A more formal exception hierarchy has been adopted for the internal
 database library weedb. See weedb/NOTES.md.
 
-The weedb Connection object can now be used in a "with" clause.
+The weedb Connection and Cursor objects can now be used in a "with" clause.
 
 
 3.6.2 11/08/2016
