@@ -154,12 +154,14 @@ Version: 3.7
         <h1><a name="Upgrading_using_DEB_package">Upgrading using DEB package</a></h1>
 
         <p>If you have specified the weeWX apt repository in
-            <span class="code">/etc/apt/sources.list.d/weewx.list</span>,
+            <span class="code">/etc/apt/sources.list.d/weewx.list</span>, then
             upgrade to the latest version like this:</p>
 
         <pre class='tty cmd'>sudo apt-get install weewx</pre>
 
-        <p>Otherwise, upgrade to X.Y.Z like this:</p>
+        <p>Otherwise, download the latest X.Y.Z DEB package from the 
+        <a href="http://weewx.com/downloads/">Download page</a> on weewx.com,
+        then upgrade like this:</p>
 
         <pre class='tty cmd'>sudo dpkg -i weewx_X.Y.Z-R.deb</pre>
 
@@ -242,7 +244,7 @@ Version: 3.7
             This bug will only affect you if you have changed the length of your archive interval,
             or if you plan to.
         </p>
-        <p>If you have not changed your archive interval length, and have no plans to do so, there
+        <p>If you have not changed your archive interval length, and have no plans to do so, then there
             is nothing you need to do.</p>
 
         <p>Otherwise, the <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>, with
