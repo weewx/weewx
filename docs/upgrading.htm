@@ -153,22 +153,25 @@ Version: 3.7
 
         <h1><a name="Upgrading_using_DEB_package">Upgrading using DEB package</a></h1>
 
-        <p>Upgrade to X.Y.Z like this:</p>
+        <p>If you have specified the weeWX apt repository in
+            <span class="code">/etc/apt/sources.list.d/weewx.list</span>,
+            upgrade to the latest version like this:</p>
+
+        <pre class='tty cmd'>sudo apt-get install weewx</pre>
+
+        <p>Otherwise, upgrade to X.Y.Z like this:</p>
 
         <pre class='tty cmd'>sudo dpkg -i weewx_X.Y.Z-R.deb</pre>
 
-        <p>The upgrade process will not modify the weeWX
-            databases.</p>
+        <p>The upgrade process will not modify the weeWX databases.</p>
 
         <p>Unmodified files will be upgraded. If modifications have been made to
             the weeWX configuration, you will be prompted as to whether you want to
             keep the existing configuration or accept the new configuration. Either
-            way, <span class='code'>dpkg</span> will save a copy of the option you
-            did not choose.</p>
+            way, a copy of the option you did not choose will be saved.</p>
 
         <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was
-            modified, <span class='code'>dpkg</span> will present a message
-            something like this:</p>
+            modified, you will see a message something like this:</p>
 
         <pre class='tty'>Configuration file `/etc/weewx/weewx.conf'
   ==&gt; Modified (by you or by a script) since installation.
