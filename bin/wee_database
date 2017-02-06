@@ -265,6 +265,7 @@ def rebuildDaily(config_dict, db_binding, options):
     syslog.syslog(syslog.LOG_INFO, "Rebuild of daily summaries in database '%s' complete" % database_name)
     if nrecs:
         sys.stdout.flush()
+        print
         print "Processed %d records to rebuild %d day summaries in %.2f seconds      " % (nrecs,
                                                                                           ndays,
                                                                                           tdiff)
@@ -476,7 +477,7 @@ def check(config_dict, db_binding, options):
         # interval weighting fix has not been applied so advise the user and
         # then apply the interval weighting fix
         print "Daily summary tables are version %s. Recommend running 'wee_database --update'." % _daily_summary_version
-    print "Daily summary tables version check completed in %0.3f seconds." % (time.time() - t1)
+    print "Daily summary tables version check completed in %0.2f seconds." % (time.time() - t1)
 
     # now check for null strings
     check_strings(config_dict, db_binding, options, fix=False)
@@ -492,6 +493,8 @@ def update(config_dict, db_binding, options):
     """
 
     t1 = time.time()
+    if options.dry_run:
+        _log_level = syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_WARNING))
     syslog.syslog(syslog.LOG_INFO, "Preparing 'Interval Weighting' fix...")
     print "Preparing 'Interval Weighting' fix..."
     # notify if this is a dry run
@@ -537,16 +540,19 @@ def update(config_dict, db_binding, options):
             if ans == 'y':
                 # apply the interval weighting
                 weight_obj.run()
+                print
+                print "Applied 'Interval Weighting' fix in %0.2f seconds." % (time.time() - t1)
             elif ans == 'n':
                 # we decided not to update the summary tables
                 syslog.syslog(syslog.LOG_INFO,
-                              "Cancelled by user. No changes were made to the database.")
-                print "Cancelled by user. No changes were made to the database."
-                return
-        print "Applied 'Interval Weighting' fix in %0.2f seconds." % (time.time() - t1)
+                              "'Interval Weighting' fix cancelled by user. No changes were made to the database.")
+                print "'Interval Weighting' fix cancelled by user. No changes were made to the database."
 
     # recalc the max/maxtime windSpeed values
     _fix_wind(config_dict, db_binding, options)
+    # just in case, set the syslog level back where we found it
+    if options.dry_run:
+        syslog.setlogmask(_log_level)
 
 def _fix_wind(config_dict, db_binding, options):
     """Recalculate the windSpeed daily summary max and maxtime fields.
@@ -570,9 +576,18 @@ def _fix_wind(config_dict, db_binding, options):
 
     # create a windSpeedRecalculation object
     wind_obj = weecfg.database.WindSpeedRecalculation(config_dict, wind_config_dict)
-    # perform the recalculation
-    wind_obj.run()
-    print "Applied 'Maximum windSpeed' fix in %0.2f seconds." % (time.time() - t1)
+    # perform the recalculation, wrap in a try..except to catch any db errors
+    try:
+        wind_obj.run()
+    except weedb.NoTableError, e:
+        _msg = "No 'windSpeed' found to fix. 'Maximum windSpeed' fix not applied."
+        syslog.syslog(syslog.LOG_INFO, _msg)
+        print _msg
+    else:
+        if options.dry_run:
+            print "'Maximum windSpeed' fix would have been applied in %0.2f seconds." % (time.time() - t1)
+        else:
+            print "Applied 'Maximum windSpeed' fix in %0.2f seconds." % (time.time() - t1)
 
 def check_strings(config_dict, db_binding, options, fix=False):
     """Scan the archive table for null strings.
@@ -705,11 +720,11 @@ def check_strings(config_dict, db_binding, options, fix=False):
 
     # and finally details on time taken
     if fix:
-        syslog.syslog(syslog.LOG_INFO, "Applied 'Null String' fix in %0.3f seconds." % tdiff)
-        print "Applied 'Null String' fix in %0.3f seconds." % tdiff
+        syslog.syslog(syslog.LOG_INFO, "Applied 'Null String' fix in %0.2f seconds." % tdiff)
+        print "Applied 'Null String' fix in %0.2f seconds." % tdiff
     else:
         # it was a check not a fix so just display to screen
-        print "Completed 'Null String' check in %0.3f seconds." % tdiff
+        print "Completed 'Null String' check in %0.2f seconds." % tdiff
     # just in case, set the syslog level back where we found it
     if options.dry_run or not fix:
         syslog.setlogmask(_log_level)
