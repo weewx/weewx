@@ -44,7 +44,7 @@
 #if $have_conn or $have_battery_status or $have_voltage
 <div id='sensors_widget' class="widget">
   <div class="widget_title">
-    Sensor Status
+    <a href="telemetry.html">Sensor Status</a>
     <a class="widget_control"
       onclick="toggle_widget('sensors')">&diams;</a>
   </div>
@@ -66,31 +66,31 @@
 #if $day.txBatteryStatus.has_data
     <tr>
       <td class="label">$obs.label.txBatteryStatus</td>
-      <td class="data">$get_battery_status($current.txBatteryStatus)</td>
+      <td class="data">$get_battery_status($current.txBatteryStatus.raw)</td>
     </tr>
 #end if
 #if $day.windBatteryStatus.has_data
     <tr>
       <td class="label">$obs.label.windBatteryStatus</td>
-      <td class="data">$get_battery_status($current.windBatteryStatus)</td>
+      <td class="data">$get_battery_status($current.windBatteryStatus.raw)</td>
     </tr>
 #end if
 #if $day.rainBatteryStatus.has_data
     <tr>
       <td class="label">$obs.label.rainBatteryStatus</td>
-      <td class="data">$get_battery_status($current.rainBatteryStatus)</td>
+      <td class="data">$get_battery_status($current.rainBatteryStatus.raw)</td>
     </tr>
 #end if
 #if $day.outTempBatteryStatus.has_data
     <tr>
       <td class="label">$obs.label.outTempBatteryStatus</td>
-      <td class="data">$get_battery_status($current.outTempBatteryStatus)</td>
+      <td class="data">$get_battery_status($current.outTempBatteryStatus.raw)</td>
     </tr>
 #end if
 #if $day.inTempBatteryStatus.has_data
     <tr>
       <td class="label">$obs.label.inTempBatteryStatus</td>
-      <td class="data">$get_battery_status($current.inTempBatteryStatus)</td>
+      <td class="data">$get_battery_status($current.inTempBatteryStatus.raw)</td>
     </tr>
 #end if
 #end if
