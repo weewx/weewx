@@ -212,7 +212,7 @@ class Manager(object):
         _row = self.getSql("SELECT MIN(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
 
-    def addRecord(self, record_obj, log_level=syslog.LOG_NOTICE):
+    def addRecord(self, record_obj, log_level=syslog.LOG_NOTICE, accumulator=None):
         """Commit a single record or a collection of records to the archive.
         
         record_obj: Either a data record, or an iterable that can return data
@@ -234,7 +234,13 @@ class Manager(object):
 
             for record in record_list:
                 try:
+                    # First add the record to the archives:
                     self._addSingleRecord(record, cursor, log_level)
+                    # Then update the highs and lows with the accumulator,
+                    # if its time matches the record we're working with:
+                    if accumulator and record_obj['dateTime'] == accumulator.timespan.stop:
+                        self._updateHiLo(accumulator, cursor)
+
                     min_ts = min(min_ts, record['dateTime']) if min_ts is not None else record['dateTime']
                     max_ts = max(max_ts, record['dateTime'])
                 except (weedb.IntegrityError, weedb.OperationalError), e:
@@ -282,6 +288,9 @@ class Manager(object):
         syslog.syslog(log_level, "manager: added record %s to database '%s'" % 
                       (weeutil.weeutil.timestamp_to_string(record['dateTime']),
                        self.database_name))
+
+    def _updateHiLo(self, accumulator, cursor):
+        pass
 
     def genBatchRows(self, startstamp=None, stopstamp=None):
         """Generator function that yields raw rows from the archive database
@@ -1171,19 +1180,18 @@ class DaySummaryManager(Manager):
                       (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
                        self.database_name))
         
-    def updateHiLo(self, accumulator):
+    def _updateHiLo(self, accumulator, cursor):
         """Use the contents of an accumulator to update the daily hi/lows."""
         
         # Get the start-of-day for the timespan in the accumulator
         _sod_ts = weeutil.weeutil.startOfArchiveDay(accumulator.timespan.stop)
 
-        with weedb.Transaction(self.connection) as _cursor:
-            # Retrieve the daily summaries seen so far:
-            _stats_dict = self._get_day_summary(_sod_ts, _cursor)
-            # Update them with the contents of the accumulator:
-            _stats_dict.updateHiLo(accumulator)
-            # Then save the results:
-            self._set_day_summary(_stats_dict, accumulator.timespan.stop, _cursor)
+        # Retrieve the daily summaries seen so far:
+        _stats_dict = self._get_day_summary(_sod_ts, cursor)
+        # Update them with the contents of the accumulator:
+        _stats_dict.updateHiLo(accumulator)
+        # Then save the results:
+        self._set_day_summary(_stats_dict, accumulator.timespan.stop, cursor)
         
     def getAggregate(self, timespan, obs_type, aggregate_type, **option_dict):
         """Returns an aggregation of a statistical type for a given time period.

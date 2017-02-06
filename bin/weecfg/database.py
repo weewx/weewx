@@ -193,6 +193,8 @@ class WindSpeedRecalculation(DatabaseFix):
         # apply the fix but be prepared to catch any exceptions
         try:
             self.do_fix()
+        except weedb.NoTableError, e:
+            raise
         except weewx.ViolatedPrecondition, e:
             syslog.syslog(syslog.LOG_ERR,
                           "maxwindspeed: **** %s" % e)
@@ -467,7 +469,7 @@ class IntervalWeighting(DatabaseFix):
                     syslog.syslog(syslog.LOG_DEBUG,
                                   "intervalweighting: Multiple distinct 'interval' values found for at least one archive day.")
                     syslog.syslog(syslog.LOG_INFO,
-                                  "intervalweighting: '%s' fix will be applied by dropping and backfilling daily summaries." % self.name)
+                                  "intervalweighting: '%s' fix will be applied by dropping and rebuilding daily summaries." % self.name)
                     self.dbm.drop_daily()
                     self.dbm.close()
                     # Reopen to force rebuilding of the schema
@@ -566,7 +568,6 @@ class IntervalWeighting(DatabaseFix):
             # Give the user some final information on progress,
             # mainly so the total tallies with the log
             self._progress(_days, _day_span.start)
-            print
             tdiff = time.time() - t1
             # We are done so log and inform the user
             if self.dry_run:

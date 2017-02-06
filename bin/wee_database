@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
@@ -21,7 +21,7 @@ import weedb
 import weewx.manager
 import weewx.units
 
-from weeutil.weeutil import TimeSpan
+from weeutil.weeutil import TimeSpan, timestamp_to_string
 
 usage = """wee_database --help
        wee_database --create
@@ -265,6 +265,7 @@ def rebuildDaily(config_dict, db_binding, options):
     syslog.syslog(syslog.LOG_INFO, "Rebuild of daily summaries in database '%s' complete" % database_name)
     if nrecs:
         sys.stdout.flush()
+        print
         print "Processed %d records to rebuild %d day summaries in %.2f seconds      " % (nrecs,
                                                                                           ndays,
                                                                                           tdiff)
@@ -428,12 +429,11 @@ def transferDatabase(config_dict, db_binding, options):
                                 print ("Error. No records were transferred from source database '%s' to destination database '%s'." %
                                        (src_manager.database_name, dest_manager.database_name))
                     except ImportError:
-                        # probaly when trying to load db driver
+                        # Probably when trying to load db driver
                         print ("Error accessing destination database '%s'." %
                                (dest_manager_dict['database_dict']['database_name'], ))
-                        print "Maybe the database driver is incorrectly specified in weewx.conf?"
                         print "Nothing done. Aborting."
-                        return
+                        raise
                     except (OSError, weedb.OperationalError):
                         # probably a weewx.conf typo or MySQL db not created
                         print ("Error accessing destination database '%s'." %
@@ -477,7 +477,7 @@ def check(config_dict, db_binding, options):
         # interval weighting fix has not been applied so advise the user and
         # then apply the interval weighting fix
         print "Daily summary tables are version %s. Recommend running 'wee_database --update'." % _daily_summary_version
-    print "Daily summary tables version check completed in %0.3f seconds." % (time.time() - t1)
+    print "Daily summary tables version check completed in %0.2f seconds." % (time.time() - t1)
 
     # now check for null strings
     check_strings(config_dict, db_binding, options, fix=False)
@@ -493,6 +493,8 @@ def update(config_dict, db_binding, options):
     """
 
     t1 = time.time()
+    if options.dry_run:
+        _log_level = syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_WARNING))
     syslog.syslog(syslog.LOG_INFO, "Preparing 'Interval Weighting' fix...")
     print "Preparing 'Interval Weighting' fix..."
     # notify if this is a dry run
@@ -538,16 +540,19 @@ def update(config_dict, db_binding, options):
             if ans == 'y':
                 # apply the interval weighting
                 weight_obj.run()
+                print
+                print "Applied 'Interval Weighting' fix in %0.2f seconds." % (time.time() - t1)
             elif ans == 'n':
                 # we decided not to update the summary tables
                 syslog.syslog(syslog.LOG_INFO,
-                              "Cancelled by user. No changes were made to the database.")
-                print "Cancelled by user. No changes were made to the database."
-                return
-        print "Applied 'Interval Weighting' fix in %0.2f seconds." % (time.time() - t1)
+                              "'Interval Weighting' fix cancelled by user. No changes were made to the database.")
+                print "'Interval Weighting' fix cancelled by user. No changes were made to the database."
 
     # recalc the max/maxtime windSpeed values
     _fix_wind(config_dict, db_binding, options)
+    # just in case, set the syslog level back where we found it
+    if options.dry_run:
+        syslog.setlogmask(_log_level)
 
 def _fix_wind(config_dict, db_binding, options):
     """Recalculate the windSpeed daily summary max and maxtime fields.
@@ -571,9 +576,18 @@ def _fix_wind(config_dict, db_binding, options):
 
     # create a windSpeedRecalculation object
     wind_obj = weecfg.database.WindSpeedRecalculation(config_dict, wind_config_dict)
-    # perform the recalculation
-    wind_obj.run()
-    print "Applied 'Maximum windSpeed' fix in %0.2f seconds." % (time.time() - t1)
+    # perform the recalculation, wrap in a try..except to catch any db errors
+    try:
+        wind_obj.run()
+    except weedb.NoTableError, e:
+        _msg = "No 'windSpeed' found to fix. 'Maximum windSpeed' fix not applied."
+        syslog.syslog(syslog.LOG_INFO, _msg)
+        print _msg
+    else:
+        if options.dry_run:
+            print "'Maximum windSpeed' fix would have been applied in %0.2f seconds." % (time.time() - t1)
+        else:
+            print "Applied 'Maximum windSpeed' fix in %0.2f seconds." % (time.time() - t1)
 
 def check_strings(config_dict, db_binding, options, fix=False):
     """Scan the archive table for null strings.
@@ -583,23 +597,24 @@ def check_strings(config_dict, db_binding, options, fix=False):
     """
 
     t1 = time.time()
+    if options.dry_run or not fix:
+        _log_level = syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_WARNING))
     if fix:
         syslog.syslog(syslog.LOG_INFO, "Preparing 'Null String' fix...")
-        print "Preparing 'Null String' fix..."
+        print "Preparing 'Null String' fix, this may take a while..."
         # notify if this is a dry run
         if options.dry_run:
-            syslog.syslog(syslog.LOG_INFO, "This is a dry run. Null strings will be found but not fixed.")
             print "This is a dry run. Null strings will be found but not fixed."
     else:
-        print "Preparing 'Null String' check..."
+        print "Preparing 'Null String' check, this may take a while..."
 
-    # Open up the main database archive table
+    # open up the main database archive table
     with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
 
         obs_pytype_list = []
         obs_list = []
 
-        # Get the schema and extract the Python type each observation type should be
+        # get the schema and extract the Python type each observation type should be
         for column in dbmanager.connection.genSchemaOf('archive'):
             schema_type = column[2]
             if schema_type == 'INTEGER':
@@ -608,93 +623,111 @@ def check_strings(config_dict, db_binding, options, fix=False):
                 schema_type = float
             elif schema_type == 'STR':
                 schema_type = str
-            # Save the observation type for this column (eg, 'outTemp'):
+            # save the observation type for this column (eg, 'outTemp'):
             obs_list.append(column[1])
-            # Save the Python type for this column (eg, 'int'):
+            # save the Python type for this column (eg, 'int'):
             obs_pytype_list.append(schema_type)
 
-        found = 0
-        fixed = 0
-        # Cycle through each row in the database
+        records = 0
+        _found = []
+        # cycle through each row in the database
         for record in dbmanager.genBatchRows():
-            # Now examine each column
+            records += 1
+            # now examine each column
             for icol in range(len(record)):
-                # Check to see if this column is an instance of the correct Python type
+                # check to see if this column is an instance of the correct
+                # Python type
                 if record[icol] is not None and not isinstance(record[icol], obs_pytype_list[icol]):
-                    # Oops. Found a bad one. Print it out
-                    found += 1
+                    # Oops. Found a bad one. Print it out.
                     if fix:
                         syslog.syslog(syslog.LOG_INFO,
                                       "Timestamp = %s; record['%s']= %r; ... " % (record[0],
                                                                                  obs_list[icol],
                                                                                  record[icol]))
-                    sys.stdout.write("Timestamp = %s; record['%s']= %r; ... " % (record[0],
-                                                                                 obs_list[icol],
-                                                                                 record[icol]))
 
                     if fix:
-                        # Cooerce to the correct type. If it can't be done, then set it to None
+                        # coerce to the correct type. If it can't be done, then
+                        # set it to None.
                         try:
                             corrected_value = obs_pytype_list[icol](record[icol])
                         except ValueError:
                             corrected_value = None
-                        # Update the database with the new value but only if
+                        # update the database with the new value but only if
                         # it's not a dry run
                         if not options.dry_run:
                             dbmanager.updateValue(record[0], obs_list[icol], corrected_value)
-                        fixed += 1
-                        # Log it and inform the user
-                        if options.dry_run:
-                            syslog.syslog(syslog.LOG_INFO, "     would have been changed to %r\n" % corrected_value)
-                            sys.stdout.write("would have been changed to %r\n" % corrected_value)
-                        else:
-                            syslog.syslog(syslog.LOG_INFO, "     changed to %r\n" % corrected_value)
-                            sys.stdout.write("changed to %r\n" % corrected_value)
+                        _found.append((record[0], obs_list[icol], record[icol], corrected_value))
+                        # log it
+                        syslog.syslog(syslog.LOG_INFO, "     changed to %r\n" % corrected_value)
                     else:
-                        sys.stdout.write("ignored.\n")
+                        _found.append((record[0], obs_list[icol], record[icol]))
+            # notify the user of progress
+            if records % 1000 == 0:
+                print >>sys.stdout, "Checking record: %d; Timestamp: %s\r" % \
+                    (records, timestamp_to_string(record[0])),
+                sys.stdout.flush()
+    # update our final count now that we have finished
+    print >>sys.stdout, "Checking record: %d; Timestamp: %s\r" % \
+        (records, timestamp_to_string(record[0])),
+    print
     tdiff = time.time() - t1
-    if found == 0:
-        # found no strings
-        if fix:
-            syslog.syslog(syslog.LOG_INFO, "No null strings found.")
+    # now display details of what we found if we found any null strings
+    if len(_found) > 0:
+        print "The following null strings were found:"
+        for item in _found:
+            if len(item) == 4:
+                print "Timestamp = %s; record['%s'] = %r; ... changed to %r" % item
+            else:
+                print "Timestamp = %s; record['%s'] = %r; ... ignored" % item
+    # how many did we fix?
+    fixed = len([a for a in _found if len(a)==4])
+    # summarise our results
+    if len(_found) == 0:
+        # found no null strings, log it and display on screen
+        syslog.syslog(syslog.LOG_INFO, "No null strings found.")
         print "No null strings found."
-    elif fixed == found:
+    elif fixed == len(_found):
         # fixed all we found
         if options.dry_run:
-            syslog.syslog(syslog.LOG_INFO,
-                          "%d of %d null strings found would have been fixed." % (fixed,
-                                                                                  found))
-            print "%d of %d null strings found would hav ebeen fixed." % (fixed,
-                                                                          found)
+            # its a dry run so display to screen but not to log
+            print "%d of %d null strings found would have been fixed." % (fixed,
+                                                                          len(_found))
         else:
+            # really did fix so log and display to screen
             syslog.syslog(syslog.LOG_INFO,
                           "%d of %d null strings found were fixed." % (fixed,
-                                                                       found))
-            print "%d of %d null strings found were fixed." % (fixed, found)
+                                                                       len(_found)))
+            print "%d of %d null strings found were fixed." % (fixed, len(_found))
     elif fix:
         # this should never occur - found some but didn't fix them all when we
-        # should have.
+        # should have
         if options.dry_run:
-            syslog.syslog(syslog.LOG_INFO,
-                          "Could not fix all null strings. %d of %d null strings would have been fixed." % (fixed,
-                                                                                                            found))
+            # its a dry run so say what would have happened
             print "Could not fix all null strings. %d of %d null strings found would have been fixed." % (fixed,
-                                                                                                          found)
+                                                                                                          len(_found))
         else:
+            # really did fix so log and display to screen
             syslog.syslog(syslog.LOG_INFO,
                           "Could not fix all null strings. %d of %d null strings found were fixed." % (fixed,
-                                                                                                       found))
+                                                                                                       len(_found)))
             print "Could not fix all null strings. %d of %d null strings found were fixed." % (fixed,
-                                                                                               found)
+                                                                                               len(_found))
     else:
-        # this is just a check
+        # found some null string but it was only a check not a fix, just
+        # display to screen
         print ("%d null strings were found.\r\n"
-               "Recommend running 'wee_database --fix' to fix these strings." % found)
+               "Recommend running 'wee_database --fix-strings' to fix these strings." % len(_found))
+
+    # and finally details on time taken
     if fix:
         syslog.syslog(syslog.LOG_INFO, "Applied 'Null String' fix in %0.2f seconds." % tdiff)
         print "Applied 'Null String' fix in %0.2f seconds." % tdiff
     else:
-        print "Completed 'Null String' check in %0.3f seconds." % tdiff
+        # it was a check not a fix so just display to screen
+        print "Completed 'Null String' check in %0.2f seconds." % tdiff
+    # just in case, set the syslog level back where we found it
+    if options.dry_run or not fix:
+        syslog.setlogmask(_log_level)
 
 def _parse_dates(options):
     """Parse --date, --from and --to command line options.

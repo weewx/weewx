@@ -14,7 +14,7 @@ import weedb
 import weeutil.weeutil
 
 archive_sqlite = {'database_name': '/var/tmp/weewx_test/weedb.sdb', 'driver':'weedb.sqlite'}
-archive_mysql  = {'database_name': 'test_weedb', 'user':'weewx', 'password':'weewx', 'driver':'weedb.mysql'}
+archive_mysql  = {'database_name': 'test_weedb', 'user':'weewx1', 'password':'weewx1', 'driver':'weedb.mysql'}
 
 archive_schema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
                   ('usUnits',              'INTEGER NOT NULL'),
@@ -102,6 +102,7 @@ class Common(unittest.TestCase):
         self.assertEqual(archive.lastGoodStamp(), None)
         self.assertEqual(archive.getRecord(123456789), None)
         self.assertEqual(archive.getRecord(123456789, max_delta=1800), None)
+        archive.close()
         
     def test_add_archive_records(self):
         # Test adding records using a 'with' statement:

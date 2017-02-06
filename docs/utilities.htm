@@ -1629,6 +1629,13 @@ summaries using the wee_database utility.</pre>
             identical in operation to the CSV <em><a href="#csv_calc_missing">calc_missing</a></em> option but applies
             to Cumulus imports only. The default is <span class="code">True</span>. </p>
 
+        <h4 class='config_option' id='cumulus_separator'>separator</h4>
+
+        <p>The character used as the date field separator in the Cumulus monthly log file. A solidus (/) is frequently
+            used but it may be another character depending on the settings on the machine that produced the Cumulus monthly
+            log files. This parameter must be included in quotation marks. Default is <span class="code">'/'</span>.
+        </p>
+
         <h4 class='config_option' id='cumulus_delimiter'>delimiter</h4>
 
         <p>The character used as the field delimiter in the Cumulus monthly log file. A comma is frequently used but it
@@ -2033,24 +2040,31 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <li>When first importing data it is prudent to do a dry run import before any data are actually imported. A
                 dry run import will perform all steps of the import without actually writing imported data to the
                 weeWX database. In addition, consideration should be given to any additional
-                options to be used such as <span class="code">--date</span>.
+                options to be used such as <span class="code">--date</span>, <span class="code">--from</span> 
+                or <span class="code">--to</span>.
                 <p>To perform a dry run enter the following command:</p>
 
-            <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00" --dry-run
+            <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --from=2016/01/20T22:30 --to=2016/01/23T06:00 --dry-run
 </pre>
 
+                <p>
+                    In this case the <span class="code">--from</span> and <span class="code">--to</span> options have 
+                    been used to import Weather Underground records from 10:30pm on 20 January 2016 to 6:00am on 
+                    23 January 2016 inclusive.</p>
+
                 <p class="note">
-                    <strong>Note</strong><br/>If the <span class="code">--date</span> option is omitted or a date
-                    (not date-time) range is used during a Weather Underground import, then the current days history
-                    data will be imported. This includes records timestamped from <span class="code">00:00</span>
+                    <strong>Note</strong><br/>If the <span class="code">--date</span> option is omitted, or a date
+                    (not date-time) range is specified using the <span class="code">--from</span> and 
+                    <span class="code">--to</span> options during a Weather Underground import, then one or more full 
+                    days of history data will be imported. This includes records timestamped from <span class="code">00:00</span>
                     (inclusive) at the start of the day up to but NOT including the <span class="code">00:00</span>
                     record at the end of the last day. As the timestamped record refers to observations of the previous
                     interval, such an import actually includes one record with observations from the previous day (the
                     <span class="code">00:00</span> record at the start of the day). Whilst this will not present a
                     problem for <span class="code">wee_import</span> as any records being imported with a timestamp that
                     already exists in the weeWX database are ignored, you may wish to use
-                    the <span class="code">--date</span> option with a suitable date-time range to precisely control
-                    which records are imported. </p>
+                    the <span class="code">--from</span> and <span class="code">--to</span> options with a suitable 
+                    date-time range to precisely control which records are imported.</p>
 
                 <p class="note">
                     <strong>Note</strong><br/><span class="code">wee_import</span> obtains Weather Underground daily history data
@@ -2094,7 +2108,7 @@ Finished dry run import. 607 records were processed and 607 unique records would
 
             <li>Once the dry run results are satisfactory the source data can be imported using the following command:
 
-        <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --date="2016/01/20 22:30-2016/01/23 06:00"
+        <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --from=2016/01/20T22:30 --to=2016/01/23T06:00
 </pre>
 
                 <p>This will result in a short preamble similar to that of a dry run. At the end of the preamble there
@@ -2201,8 +2215,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     <li><span class="code">outHumidity</span></li>
                     <li><span class="code">outTemp</span></li>
                     <li><span class="code">radiation</span></li>
-                    <li><span class="code">rain</span> (Cumulus 1.9.4 or later)
-                    </li>
+                    <li><span class="code">rain</span></li>
                     <li><span class="code">rainRate</span></li>
                     <li><span class="code">UV</span></li>
                     <li><span class="code">windDir</span></li>
@@ -2286,6 +2299,9 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     </li>
                     <li><a href="#cumulus_calc_missing"><strong><span class="code">calc_missing</span></strong></a>.
                         Determines whether missing derived observations will be calculated from the imported data.
+                    </li>
+                    <li><a href="#cumulus_separator"><strong><span class="code">separator</span></strong></a>. The date
+                        field separator used in the Cumulus monthly log files.
                     </li>
                     <li><a href="#cumulus_delimiter"><strong><span class="code">delimiter</span></strong></a>. The field
                         delimiter used in the Cumulus monthly log files.

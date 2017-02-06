@@ -137,9 +137,9 @@ class Source(object):
         # when a sensor or observation does not exist. Record whether UV and/or
         # solar radiation sensor was present.
         # UV, default to True
-        self.UV_sensor = tobool(import_config_dict.get('UV', True))
+        self.UV_sensor = tobool(import_config_dict.get('UV_sensor', True))
         # solar, default to True
-        self.solar_sensor = tobool(import_config_dict.get('radiation', True))
+        self.solar_sensor = tobool(import_config_dict.get('solar_sensor', True))
 
         # get some weeWX database info
         self.db_binding_wx = get_binding(config_dict)

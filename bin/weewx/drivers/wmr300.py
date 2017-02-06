@@ -720,7 +720,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.18rc2'
+DRIVER_VERSION = '0.18rc3'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -914,8 +914,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_7x = time.time()
             except usb.USBError, e:
-                logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                       (e.errno, e.strerror, e.message, repr(e)))
+                if DEBUG_COMM:
+                    logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                           (e.errno, e.strerror, e.message, repr(e)))
                 if not known_usb_err(e):
                     logerr("usb failure: %s" % e)
                     raise weewx.WeeWxIOError(e)
@@ -982,8 +983,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_65 = time.time()
             except usb.USBError, e:
-                logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                       (e.errno, e.strerror, e.message, repr(e)))
+                if DEBUG_COMM:
+                    logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                           (e.errno, e.strerror, e.message, repr(e)))
                 if not known_usb_err(e):
                     logerr("usb failure: %s" % e)
                     raise weewx.WeeWxIOError(e)
@@ -1099,6 +1101,7 @@ class Station(object):
         if not self.handle:
             raise WMR300Error('Open USB device failed')
 
+        # FIXME: reset is actually a no-op for some versions of libusb/pyusb?
         self.handle.reset()
 
         # for HID devices on linux, be sure kernel does not claim the interface
@@ -1120,26 +1123,19 @@ class Station(object):
             try:
                 self.handle.releaseInterface()
             except (ValueError, usb.USBError), e:
-                loginf("Release interface failed: %s" % e)
+                logdbg("Release interface failed: %s" % e)
             self.handle = None
 
     def reset(self):
         self.handle.reset()
 
     def read(self, count=True):
-        buf = None
-        try:
-            buf = self.handle.interruptRead(
-                Station.EP_IN, self.MESSAGE_LENGTH, self.timeout)
-            if DEBUG_COMM:
-                logdbg("read: %s" % _fmt_bytes(buf))
-            if DEBUG_COUNTS and count:
-                self.update_count(buf, self.recv_counts)
-        except usb.USBError, e:
-            logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                   (e.errno, e.strerror, e.message, repr(e)))
-            if not known_usb_err(e):
-                raise
+        buf = self.handle.interruptRead(
+            Station.EP_IN, self.MESSAGE_LENGTH, self.timeout)
+        if DEBUG_COMM:
+            logdbg("read: %s" % _fmt_bytes(buf))
+        if DEBUG_COUNTS and count:
+            self.update_count(buf, self.recv_counts)
         return buf
 
     def write(self, buf):
