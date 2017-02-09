@@ -489,6 +489,7 @@ class StdArchive(StdService):
                       (self.loop_hilo,))
         
         self.setup_database(config_dict)
+        weewx.accum.initialize(config_dict)
         
         self.bind(weewx.STARTUP, self.startup)
         self.bind(weewx.PRE_LOOP, self.pre_loop)
