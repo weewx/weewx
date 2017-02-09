@@ -145,7 +145,7 @@ class RESTThread(threading.Thread):
     def __init__(self, queue, protocol_name, manager_dict=None,
                  post_interval=None, max_backlog=sys.maxint, stale=None, 
                  log_success=True, log_failure=True, 
-                 timeout=10, max_tries=3, retry_wait=5,
+                 timeout=10, max_tries=3, retry_wait=5, retry_login=3600,
                  softwaretype="weewx-%s" % weewx.__version__,
                  skip_upload=False):
         """Initializer for the class RESTThread
@@ -185,6 +185,9 @@ class RESTThread(threading.Thread):
           retry_wait: How long to wait between retries when failures.
           Default is 5 seconds.
           
+          retry_login: How long to wait before retrying a login. Default
+          is 3600 seconds (one hour).
+          
           softwaretype: Sent as field "softwaretype in the Ambient post.
           Default is "weewx-x.y.z where x.y.z is the weewx version.
 
@@ -207,6 +210,7 @@ class RESTThread(threading.Thread):
         self.post_interval = to_int(post_interval)
         self.timeout = to_int(timeout)
         self.retry_wait = to_int(retry_wait)
+        self.retry_login = to_int(retry_login)
         self.softwaretype = softwaretype
         self.lastpost = 0
         self.skip_upload = to_bool(skip_upload)
@@ -335,10 +339,10 @@ class RESTThread(threading.Thread):
                                   "restx: %s: Skipped record %s" %
                                   (self.protocol_name, _time_str))
             except BadLogin:
-                syslog.syslog(syslog.LOG_ERR, "restx: %s: bad login; "
-                              "waiting 60 minutes then retrying" %
-                              self.protocol_name)
-                time.sleep(3600)
+                syslog.syslog(syslog.LOG_ERR, "restx: %s: Bad login; "
+                              "waiting %s minutes then retrying" %
+                              (self.protocol_name, self.retry_login/60.0))
+                time.sleep(self.retry_login)
             except FailedPost, e:
                 if self.log_failure:
                     _time_str = timestamp_to_string(_record['dateTime'])
@@ -705,7 +709,7 @@ class AmbientThread(RESTThread):
                  protocol_name="Unknown-Ambient",
                  post_interval=None, max_backlog=sys.maxint, stale=None, 
                  log_success=True, log_failure=True,
-                 timeout=10, max_tries=3, retry_wait=5,
+                 timeout=10, max_tries=3, retry_wait=5, retry_login=3600,
                  softwaretype="weewx-%s" % weewx.__version__,
                  skip_upload=False):
 
@@ -732,6 +736,7 @@ class AmbientThread(RESTThread):
                                             timeout=timeout,
                                             max_tries=max_tries,
                                             retry_wait=retry_wait,
+                                            retry_login=retry_login,
                                             softwaretype=softwaretype,
                                             skip_upload=skip_upload)
         self.station = station
@@ -1491,7 +1496,7 @@ class AWEKASThread(RESTThread):
                  language='de', server_url=_SERVER_URL,
                  post_interval=300, max_backlog=sys.maxint, stale=None,
                  log_success=True, log_failure=True, 
-                 timeout=60, max_tries=3, retry_wait=5, skip_upload=False):
+                 timeout=60, max_tries=3, retry_wait=5, retry_login=3600, skip_upload=False):
         """Initialize an instances of AWEKASThread.
 
         Parameters specific to this class:
@@ -1533,6 +1538,7 @@ class AWEKASThread(RESTThread):
                                            timeout=timeout,
                                            max_tries=max_tries,
                                            retry_wait=retry_wait,
+                                           retry_login=retry_login,
                                            skip_upload=skip_upload)
         self.username = username
         self.password = password

@@ -16,7 +16,7 @@ import csv
 import os
 import syslog
 
-# weewx imports
+# weeWX imports
 import weeimport
 import weewx
 
@@ -36,7 +36,7 @@ class CSVSource(weeimport.Source):
     names.
     """
 
-    # Define a dict to map CSV fields to weewx archive fields. For a CSV import
+    # Define a dict to map CSV fields to weeWX archive fields. For a CSV import
     # these details are specified by the user in the wee_import config file.
     _header_map = None
 
@@ -75,7 +75,7 @@ class CSVSource(weeimport.Source):
             self.source = csv_config_dict['file']
         except KeyError:
             raise weewx.ViolatedPrecondition("CSV source file not specified in '%s'." % import_config_path)
-        # initialise our import field-to-weewx archive field map
+        # initialise our import field-to-weeWX archive field map
         self.map = None
         # initialise some other properties we will need
         self.start = 1
@@ -119,9 +119,9 @@ class CSVSource(weeimport.Source):
         if self.calc_missing:
             print "Missing derived observations will be calculated."
         if not self.UV_sensor:
-            print "All weewx UV fields will be set to None."
+            print "All weeWX UV fields will be set to None."
         if not self.solar_sensor:
-            print "All weewx radiation fields will be set to None."
+            print "All weeWX radiation fields will be set to None."
         if options.date or options.date_from:
             print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
             print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
@@ -134,7 +134,7 @@ class CSVSource(weeimport.Source):
         Raw data is read and any clean-up/pre-processing carried out before the
         iterable is returned. In this case we will use csv.Dictreader(). The
         iterable should be of a form where the field names in the field map can
-        be used to map the data to the weewx archive record format.
+        be used to map the data to the weeWX archive record format.
 
         Input parameters:
 

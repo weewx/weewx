@@ -1,7 +1,7 @@
 recursive-include docs *
 recursive-include util *
 recursive-include skins *
-recursive-include extensions *
+recursive-include examples *
 include LICENSE.txt
 include README
 include weewx.conf

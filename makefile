@@ -17,6 +17,8 @@ WEEWX_DOWNLOADS=$(WEEWX_COM_HOME)/html/downloads
 
 # extract version to be used in package controls and labels
 VERSION=$(shell grep "__version__.*=" bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
+# just the major.minor part of the version
+MMVERSION:=$(shell echo "$(VERSION)" | sed -E 's%.[0-9a-z]+$$%%')
 
 CWD = $(shell pwd)
 BLDDIR=build
@@ -59,6 +61,7 @@ help: info
 
 info:
 	@echo "     VERSION: $(VERSION)"
+	@echo "   MMVERSION: $(MMVERSION)"
 	@echo "         CWD: $(CWD)"
 	@echo "      RELDIR: $(RELDIR)"
 	@echo "      DOCDST: $(DOCDST)"
@@ -82,7 +85,7 @@ test:
 	@for f in $(SUITE); do \
   echo running $$f; \
   echo $$f >> $(BLDDIR)/test-results; \
-  PYTHONPATH=bin $(PYTHON) $$f >> $(BLDDIR)/test-results 2>&1; \
+  PYTHONPATH="bin:examples" $(PYTHON) $$f >> $(BLDDIR)/test-results 2>&1; \
   echo >> $(BLDDIR)/test-results; \
 done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
@@ -151,7 +154,7 @@ upload-readme: readme
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
 version:
 	for f in $(VDOCS); do \
-  sed -e 's/^Version: [0-9].*/Version: $(VERSION)/' docs/$$f > docs/$$f.tmp; \
+  sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' docs/$$f > docs/$$f.tmp; \
   mv docs/$$f.tmp docs/$$f; \
 done
 	sed -e 's/version =.*/version = $(VERSION)/' weewx.conf > weewx.conf.tmp; mv weewx.conf.tmp weewx.conf

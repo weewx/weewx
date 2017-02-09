@@ -720,7 +720,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.16rc3'
+DRIVER_VERSION = '0.18rc3'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -843,7 +843,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('usb info: %s' % get_usb_info())
         self.model = stn_dict.get('model', 'WMR300')
-        self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_MAP)
+        self.sensor_map = dict(self.DEFAULT_MAP)
+        if 'sensor_map' in stn_dict:
+            self.sensor_map.update(stn_dict['sensor_map'])
+        loginf('sensor map is %s' % self.sensor_map)
         self.heartbeat = 20 # how often to send a6 messages, in seconds
         self.history_retry = 60 # how often to retry history, in seconds
         global DEBUG_COMM
@@ -863,6 +866,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         self.last_65 = 0
         self.last_7x = 0
         self.last_record = 0
+        # FIXME: make the cache values age
+        # FIXME: do this generically so it can be used in other drivers
+        self.pressure_cache = dict()
         self.station = Station()
         self.station.open()
 
@@ -908,8 +914,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_7x = time.time()
             except usb.USBError, e:
-                logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                       (e.errno, e.strerror, e.message, repr(e)))
+                if DEBUG_COMM:
+                    logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                           (e.errno, e.strerror, e.message, repr(e)))
                 if not known_usb_err(e):
                     logerr("usb failure: %s" % e)
                     raise weewx.WeeWxIOError(e)
@@ -976,8 +983,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_65 = time.time()
             except usb.USBError, e:
-                logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                       (e.errno, e.strerror, e.message, repr(e)))
+                if DEBUG_COMM:
+                    logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                           (e.errno, e.strerror, e.message, repr(e)))
                 if not known_usb_err(e):
                     logerr("usb failure: %s" % e)
                     raise weewx.WeeWxIOError(e)
@@ -1019,6 +1027,13 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
 
     def convert_loop(self, pkt):
         p = self.convert(pkt, int(time.time() + 0.5))
+        if 'pressure' in p:
+            # cache any pressure-related values
+            for x in ['pressure', 'barometer']:
+                self.pressure_cache[x] = p[x]
+        else:
+            # apply any cached pressure-related values
+            p.update(self.pressure_cache)
         return p
 
     @staticmethod
@@ -1086,6 +1101,7 @@ class Station(object):
         if not self.handle:
             raise WMR300Error('Open USB device failed')
 
+        # FIXME: reset is actually a no-op for some versions of libusb/pyusb?
         self.handle.reset()
 
         # for HID devices on linux, be sure kernel does not claim the interface
@@ -1107,26 +1123,19 @@ class Station(object):
             try:
                 self.handle.releaseInterface()
             except (ValueError, usb.USBError), e:
-                loginf("Release interface failed: %s" % e)
+                logdbg("Release interface failed: %s" % e)
             self.handle = None
 
     def reset(self):
         self.handle.reset()
 
     def read(self, count=True):
-        buf = None
-        try:
-            buf = self.handle.interruptRead(
-                Station.EP_IN, self.MESSAGE_LENGTH, self.timeout)
-            if DEBUG_COMM:
-                logdbg("read: %s" % _fmt_bytes(buf))
-            if DEBUG_COUNTS and count:
-                self.update_count(buf, self.recv_counts)
-        except usb.USBError, e:
-            logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                   (e.errno, e.strerror, e.message, repr(e)))
-            if not known_usb_err(e):
-                raise
+        buf = self.handle.interruptRead(
+            Station.EP_IN, self.MESSAGE_LENGTH, self.timeout)
+        if DEBUG_COMM:
+            logdbg("read: %s" % _fmt_bytes(buf))
+        if DEBUG_COUNTS and count:
+            self.update_count(buf, self.recv_counts)
         return buf
 
     def write(self, buf):

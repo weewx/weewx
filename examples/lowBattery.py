@@ -14,7 +14,7 @@ weewx.conf:
     smtp_host = smtp.example.com
     smtp_user = myusername
     smtp_password = mypassword
-    from   = sally@example.com
+    from = sally@example.com
     mailto = jane@example.com, bob@example.com
     subject = "Time to change the battery!"
 
@@ -83,7 +83,7 @@ class BatteryAlarm(StdService):
         # This will hold the count of the number of times the VP2 has signaled
         # a low battery alarm this archive period
         self.alarm_count = 0
-        
+
         try:
             # Dig the needed options out of the configuration dictionary.
             # If a critical option is missing, an exception will be thrown and
@@ -107,9 +107,16 @@ class BatteryAlarm(StdService):
     def newLoopPacket(self, event):
         """This function is called on each new LOOP packet."""
 
-        # If the Transmit Battery Status byte is non-zero, an alarm is on
-        if event.packet['txBatteryStatus']:
+        # If any battery status flag is non-zero, a battery is low
+        low_batteries = dict()
+        for flag in ['txBatteryStatus', 'windBatteryStatus',
+                     'rainBatteryStatus', 'inTempBatteryStatus',
+                     'outTempBatteryStatus']:
+            if flag in event.packet and event.packet[flag]:
+                low_batteries[flag] = event.packet[flag]
 
+        # If there are any low batteries, see if we need to send an alarm
+        if low_batteries:
             self.alarm_count += 1
 
             # Don't panic on the first occurrence. We must see the alarm at
@@ -121,12 +128,11 @@ class BatteryAlarm(StdService):
                 if abs(time.time() - self.last_msg_ts) >= self.time_wait :
                     # Sound the alarm!
                     timestamp = event.packet['dateTime']
-                    battery_status = event.packet['txBatteryStatus']
                     # Launch in a separate thread so it does not block the
                     # main LOOP thread:
                     t  = threading.Thread(target=BatteryAlarm.soundTheAlarm,
                                           args=(self, timestamp,
-                                                battery_status,
+                                                low_batteries,
                                                 self.alarm_count))
                     t.start()
                     # Record when the message went out:
@@ -138,18 +144,28 @@ class BatteryAlarm(StdService):
         # Reset the alarm counter
         self.alarm_count = 0
 
-    def soundTheAlarm(self, timestamp, battery_status, alarm_count):
+    def soundTheAlarm(self, timestamp, battery_flags, alarm_count):
         """This function is called when the alarm has been triggered."""
         
         # Get the time and convert to a string:
         t_str = timestamp_to_string(timestamp)
 
         # Log it in the system log:
-        syslog.syslog(syslog.LOG_INFO, "lowBattery: Low battery alarm (0x%04x) sounded at %s." % (battery_status, t_str))
+        syslog.syslog(syslog.LOG_INFO, "lowBattery: Low battery status sounded at %s: %s" % (t_str, battery_flags))
 
         # Form the message text:
-        msg_text = """The low battery alarm (0x%04x) has been seen %d times since the last archive period.\n\n"""\
-                   """Alarm sounded at %s\n\n""" % (battery_status, alarm_count, t_str)
+        indicator_strings = []
+        for bat in battery_flags:
+            indicator_strings.append("%s: %04x" % (bat, battery_flags[bat]))
+        msg_text = """
+The low battery indicator has been seen %d times since the last archive period.
+
+Alarm sounded at %s
+
+Low battery indicators:
+%s
+
+""" % (alarm_count, t_str, '\n'.join(indicator_strings))
         # Convert to MIME:
         msg = MIMEText(msg_text)
         
@@ -167,22 +183,27 @@ class BatteryAlarm(StdService):
             s.ehlo()
             s.starttls()
             s.ehlo()
-            syslog.syslog(syslog.LOG_DEBUG, "lowBattery: using encrypted transport")
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "lowBattery: using encrypted transport")
         except smtplib.SMTPException:
-            syslog.syslog(syslog.LOG_DEBUG, "lowBattery: using unencrypted transport")
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "lowBattery: using unencrypted transport")
 
         try:
-            # If a username has been given, assume that login is required for this host:
+            # If a username has been given, assume that login is required
+            # for this host:
             if self.smtp_user:
                 s.login(self.smtp_user, self.smtp_password)
-                syslog.syslog(syslog.LOG_DEBUG, "lowBattery: logged in with user name %s" % (self.smtp_user,))
+                syslog.syslog(syslog.LOG_DEBUG,
+                              "lowBattery: logged in as %s" % self.smtp_user)
 
             # Send the email:
             s.sendmail(msg['From'], self.TO,  msg.as_string())
             # Log out of the server:
             s.quit()
         except Exception, e:
-            syslog.syslog(syslog.LOG_ERR, "lowBattery: SMTP mailer refused message with error %s" % (e,))
+            syslog.syslog(syslog.LOG_ERR,
+                          "lowBattery: send email failed: %s" % (e,))
             raise
         
         # Log sending the email:

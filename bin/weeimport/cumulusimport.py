@@ -17,7 +17,7 @@ import os
 import syslog
 import time
 
-# weewx imports
+# weeWX imports
 import weeimport
 import weewx
 
@@ -38,8 +38,9 @@ class CumulusSource(weeimport.Source):
 
     Handles the import of data from Cumulus monthly log files.Cumulus stores
     observation data in monthly log files. Each log file contains a month of
-    data in CSV format. The format of the CSV data (eg field delimiter, decimal
-    point character) depends upon the settings used in Cumulus.
+    data in CSV format. The format of the CSV data (eg date separator, field
+    delimiter, decimal point character) depends upon the settings used in
+    Cumulus.
 
     Data is imported from all month log files found in the source directory one
     log file at a time. Units of measure are not specified in the monthly log
@@ -63,7 +64,7 @@ class CumulusSource(weeimport.Source):
                    'cur_uv', 'cur_solar', 'cur_et', 'annual_et',
                    'cur_app_temp', 'cur_tmax_solar', 'day_sunshine_hours',
                    'cur_wind_bearing', 'day_rain_rg11', 'midnight_rain']
-    # Dict to map all possible Cumulus field names (refer _field_list) to weewx
+    # Dict to map all possible Cumulus field names (refer _field_list) to weeWX
     # archive field names and units.
     _header_map = {'datetime': {'units': 'unix_epoch', 'map_to': 'dateTime'},
                    'cur_out_temp': {'map_to': 'outTemp'},
@@ -102,22 +103,36 @@ class CumulusSource(weeimport.Source):
         # wind dir bounds
         self.wind_dir = [0, 360]
 
-        # Decimal separator used in monthly log files, default to decimal point
-        self.decimal = cumulus_config_dict.get('decimal', '.')
-        # Field delimiter used in monthly log files, default to comma
+        # field delimiter used in monthly log files, default to comma
         self.delimiter = cumulus_config_dict.get('delimiter', ',')
+        # decimal separator used in monthly log files, default to decimal point
+        self.decimal = cumulus_config_dict.get('decimal', '.')
 
-        # We combine Cumulus date and time fields to give a fixed format
+        # date separator used in monthly log files, default to solidus
+        separator = cumulus_config_dict.get('separator', '/')
+        # we combine Cumulus date and time fields to give a fixed format
         # date-time string
-        self.raw_datetime_format = '%d/%m/%y %H:%M'
+        self.raw_datetime_format = separator.join(('%d', '%m', '%y %H:%M'))
+
         # Cumulus log files provide a number of cumulative rainfall fields. We
         # cannot use the daily rainfall as this may reset at some time of day
-        # other than midnight (as required by weewx). So we use field 26, total
+        # other than midnight (as required by weeWX). So we use field 26, total
         # rainfall since midnight and treat it as a cumulative value.
         self.rain = 'cumulative'
 
-        # initialise our import field-to-weewx archive field map
+        # initialise our import field-to-weeWX archive field map
         self.map = None
+
+        # Cumulus log files have a number of 'rain' fields that can be used to
+        # derive the weeWX rain field. Which one is available depends on the
+        # Cumulus version that created the logs. The preferred field is field
+        # 26(AA) - total rainfall since midnight but it is only available in
+        # Cumulus v1.9.4 or later. If that field is not available then the
+        # preferred field in field 09(J) - total rainfall today then field
+        # 11(L) - total rainfall counter. Initialise the rain_source_confirmed
+        # property now and we will deal with it later when we have some source
+        # data.
+        self.rain_source_confirmed = None
 
         # Units of measure for some obs (eg temperatures) cannot be derived from
         # the Cumulus monthly log files. These units must be specified by the
@@ -233,9 +248,9 @@ class CumulusSource(weeimport.Source):
         if self.calc_missing:
             print "Missing derived observations will be calculated."
         if not self.UV_sensor:
-            print "All weewx UV fields will be set to None."
+            print "All weeWX UV fields will be set to None."
         if not self.solar_sensor:
-            print "All weewx radiation fields will be set to None."
+            print "All weeWX radiation fields will be set to None."
         if options.date or options.date_from:
             print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
             print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
@@ -244,7 +259,7 @@ class CumulusSource(weeimport.Source):
 
     def getRawData(self, period):
         """Get raw observation data and construct a map from Cumulus monthly
-            log fields to weewx archive fields.
+            log fields to weeWX archive fields.
 
         Obtain raw observational data from Cumulus monthly logs. This raw data
         needs to be cleaned of unnecessary characters/codes, a date-time field
@@ -281,6 +296,20 @@ class CumulusSource(weeimport.Source):
                 # Save what's left
                 _clean_data.append(_datetime_line)
 
+        # if we haven't confirmed our source for the weeWX rain field we need
+        # to do so now
+        if self.rain_source_confirmed is None:
+            # The Cumulus source field depends on the Cumulus version that
+            # created the log files. Unfortunately, we can only determine
+            # which field to use by looking at the mapped Cumulus data. If we
+            # look at our DictReader we have no way to reset it, so we create
+            # a one off DictReader to use instead.
+            _rain_reader = csv.DictReader(_clean_data, fieldnames=self._field_list,
+                                          delimiter=self.delimiter)
+            # now that we know what Cumulus fields are available we can set our
+            # rain source appropriately
+            self.set_rain_source(_rain_reader)
+
         # Now create a dictionary CSV reader
         _reader = csv.DictReader(_clean_data, fieldnames=self._field_list,
                                  delimiter=self.delimiter)
@@ -305,3 +334,28 @@ class CumulusSource(weeimport.Source):
             self.last_period = (month == self.log_list[-1])
             # Yield the file name
             yield month
+
+    def set_rain_source(self, _data):
+        """Set the Cumulus field to be used as the weeWX rain field source."""
+
+        _row = _data.next()
+        if _row['midnight_rain'] is not None:
+            # we have data in midnight_rain, our default source, so leave
+            # things as they are and return
+            pass
+        elif _row['day_rain'] is not None:
+            # we have data in day_rain so use that as our rain source
+            self._header_map['day_rain'] = self._header_map['midnight_rain']
+            del self._header_map['midnight_rain']
+        elif _row['rain_counter'] is not None:
+            # we have data in rain_counter so use that as our rain source
+            self._header_map['rain_counter'] = self._header_map['midnight_rain']
+            del self._header_map['midnight_rain']
+        else:
+            # We should never end up in this state but....
+            # We have no suitable rain source so we can't import so remove the
+            # rain field entry from the header map.
+            del self._header_map['midnight_rain']
+        # we only need to do this once so set our flag to True
+        self.rain_source_confirmed = True
+        return

@@ -1,9 +1,9 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2017 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Driver for sqlite"""
+"""weedb driver for sqlite"""
 
 from __future__ import with_statement
 import os.path
@@ -30,11 +30,19 @@ def guard(fn):
         except sqlite3.IntegrityError, e:
             raise weedb.IntegrityError(e)
         except sqlite3.OperationalError, e:
-            # Change no such table errors into a ProgrammingError
-            # (this is what MySQL does).
-            if e.message.lower().startswith("no such table"):
-                raise weedb.ProgrammingError(e)
-            raise weedb.OperationalError(e)
+            msg = str(e).lower()
+            if msg.startswith("unable to open"):
+                raise weedb.PermissionError(e)
+            elif msg.startswith("no such table"):
+                raise weedb.NoTableError(e)
+            elif msg.endswith("already exists"):
+                raise weedb.TableExistsError(e)
+            elif msg.startswith("no such column"):
+                raise weedb.NoColumnError(e)
+            else:
+                raise weedb.OperationalError(e)
+        except sqlite3.ProgrammingError, e:
+            raise weedb.ProgrammingError(e)
 
     return guarded_fn
 
@@ -43,41 +51,50 @@ def connect(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVari
     """Factory function, to keep things compatible with DBAPI. """
     return Connection(database_name=database_name, SQLITE_ROOT=SQLITE_ROOT, **argv)
 
-
+@guard
 def create(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariable
     """Create the database specified by the db_dict. If it already exists,
-    an exception of type DatabaseExists will be thrown."""
-    file_path = get_filepath(SQLITE_ROOT, database_name, **argv)
+    an exception of type DatabaseExistsError will be thrown."""
+    file_path = _get_filepath(SQLITE_ROOT, database_name, **argv)
     # Check whether the database file exists:
     if os.path.exists(file_path):
-        raise weedb.DatabaseExists("Database %s already exists" % (file_path,))
+        raise weedb.DatabaseExistsError("Database %s already exists" % (file_path,))
     else:
         # If it doesn't exist, create the parent directories
         fileDirectory = os.path.dirname(file_path)
         if not os.path.exists(fileDirectory):
-            os.makedirs(fileDirectory)
+            try:
+                os.makedirs(fileDirectory)
+            except OSError:
+                raise weedb.PermissonError("No permission to create %s" % fileDirectory)
         timeout = to_int(argv.get('timeout', 5))
         isolation_level = argv.get('isolation_level')
+        # Open, then immediately close the database.
         connection = sqlite3.connect(file_path, timeout=timeout, isolation_level=isolation_level)
         connection.close()
 
-def get_filepath(SQLITE_ROOT, database_name, **argv):
+def drop(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariable
+    file_path = _get_filepath(SQLITE_ROOT, database_name, **argv)
+    try:
+        os.remove(file_path)
+    except OSError, e:
+        errno = getattr(e, 'errno', 2)
+        if errno == 13:
+            raise weedb.PermissionError("No permission to drop database %s" % file_path)
+        else:
+            raise weedb.NoDatabaseError("Attempt to drop non-existent database %s" % file_path)
+
+def _get_filepath(SQLITE_ROOT, database_name, **argv):
+    """Utility function to calculate the path to the sqlite database file."""
     # For backwards compatibility, allow the keyword 'root', if 'SQLITE_ROOT' is
     # not defined:
     root_dir = SQLITE_ROOT or argv.get('root', '')
     return os.path.join(root_dir, database_name)
     
-def drop(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariable
-    file_path = get_filepath(SQLITE_ROOT, database_name, **argv)
-    try:
-        os.remove(file_path)
-    except OSError:
-        raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (file_path,))
-
-
 class Connection(weedb.Connection):
     """A wrapper around a sqlite3 connection object."""
 
+    @guard
     def __init__(self, database_name='', SQLITE_ROOT='', pragmas=None, **argv):
         """Initialize an instance of Connection.
 
@@ -95,17 +112,12 @@ class Connection(weedb.Connection):
         If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
 
-        self.file_path = get_filepath(SQLITE_ROOT, database_name, **argv)
+        self.file_path = _get_filepath(SQLITE_ROOT, database_name, **argv)
         if not os.path.exists(self.file_path):
-            raise weedb.OperationalError("Attempt to open a non-existent database %s" % self.file_path)
+            raise weedb.NoDatabaseError("Attempt to open a non-existent database %s" % self.file_path)
         timeout = to_int(argv.get('timeout', 5))
         isolation_level = argv.get('isolation_level')
-        try:
-            connection = sqlite3.connect(self.file_path, timeout=timeout, isolation_level=isolation_level)
-        except sqlite3.OperationalError:
-            # The Pysqlite driver does not include the database file path.
-            # Include it in case it might be useful.
-            raise weedb.OperationalError("Unable to open database '%s'" % (self.file_path,))
+        connection = sqlite3.connect(self.file_path, timeout=timeout, isolation_level=isolation_level)
 
         if pragmas is not None:
             for pragma in pragmas:
@@ -210,3 +222,11 @@ class Cursor(sqlite3.Cursor):
     def fetchmany(self, size=None):
         if size is None: size = self.arraysize
         return sqlite3.Cursor.fetchmany(self, size)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, etyp, einst, etb):  # @UnusedVariable
+        # It is not an error to close a sqlite3 cursor multiple times,
+        # so there's no reason to guard it with a "try" clause:
+        self.close()
