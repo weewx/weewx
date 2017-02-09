@@ -68,7 +68,7 @@ class QC(object):
                 spiketime = float(spike_dict[obs_type][1])
                 if len(spike_dict[obs_type]) == 3:
                     group = weewx.units._getUnitGroup(obs_type)
-                    vt = (spikeval, mm_dict[obs_type][2], group)
+                    vt = (spikeval, spike_dict[obs_type][2], group)
                     spikeval = converter.convert(vt)[0]
                 # Quantise spike to 1 second
                 try:
