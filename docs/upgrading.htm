@@ -230,22 +230,29 @@ Version: 3.7
         <h3 id="change_to_daily_summaries">Changes to daily summaries</h3>
         <p>Perhaps the most significant change in V3.7 is a fix for how daily summary values are calculated
             and stored.</p>
+        
         <p>Daily summaries were introduced in V3.0 (December, 2014), to speed up 
             certain kinds of aggregation calculations. They were designed to "weight" values
             depending on the time length of the archive record that contributed them. For example,
             shorter intervals contributed less than longer intervals. This was intended to allow
             users to change the length of their archive interval, should they wish to.</p>
+        
         <p>Unfortunately, a bug caused the weightings to all be one (1), irregardless of what the actual
             archive interval length
             might be. This means all archive records, long and short, contribute the same amount,
             instead of being weighted by their length. So, if the archive interval were to change,
             averages would be calculated incorrectly.</p>
+        
         <p class="warning">
             This bug will only affect you if you have changed the length of your archive interval,
             or if you plan to.
         </p>
-        <p>If you have not changed your archive interval length, and have no plans to do so, then there
-            is nothing you need to do.</p>
+        
+        <p>If you have not changed your archive interval length, and have no plans to do so, then 
+            there is nothing you need to do. Note that if you have imported data 
+            using <span class="code">wee_import</span> your archive may have multiple different 
+            interval values depending on the import settings and the characteristics of the data 
+            that was imported.</p>
 
         <p>Otherwise, the <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>, with
             option <a href="utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>, can
@@ -254,6 +261,15 @@ Version: 3.7
             minutes to fix a database with 10 years of data. On faster machines, it takes much less.
         </p>
 
+        <p>Users with multiple databases should also consider the need to recalculate the weights in 
+            these databases as well. Interval weighting will only need to be applied to databases that 
+            have daily summaries (i.e., the applicable binding 
+            uses <span class="code">manager = manager weewx.wxmanager.WXDaySummaryManager</span> 
+            in <span class="code">weewx.conf</span>). If interval weighting is required this can be done 
+            by using the <span class="code">--binding=BINDING_NAME</span> option in conjunction with 
+            the <span class="code">wee_database --update</span> command.
+        </p>
+        
         <h3 id="recalculation_of_windspeed">Recalculation of <span class="code">windSpeed</span> maximum values</h3>
 
         <p>Version 3.7 changes how maximum <span class="code">windSpeed</span> is calculated for aggregations
@@ -262,8 +278,10 @@ Version: 3.7
             for a day was set to the maximum value seen in the LOOP packets for
             the day. In practice this is the same value as <span class="code">windGust</span>. That is, these
             two tags would supply the same value:</p>
+        
         <pre class="tty">$day.windSpeed.max
 $day.windGust.max</pre>
+        
         <p>In Version 3.7, this has been changed so the maximum <span class="code">windSpeed</span> is now
             set to the maximum <em>archive</em> value seen during
             the day &mdash; usually a slightly smaller number. However, older daily max values will still
