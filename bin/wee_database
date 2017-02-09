@@ -492,7 +492,6 @@ def update(config_dict, db_binding, options):
         archive
     """
 
-    t1 = time.time()
     if options.dry_run:
         _log_level = syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_WARNING))
     syslog.syslog(syslog.LOG_INFO, "Preparing 'Interval Weighting' fix...")
@@ -539,6 +538,7 @@ def update(config_dict, db_binding, options):
                             "You should backup the '%s' database before proceeding. Continue (y/n)? " % database_name)
             if ans == 'y':
                 # apply the interval weighting
+                t1 = time.time()
                 weight_obj.run()
                 print
                 print "Applied 'Interval Weighting' fix in %0.2f seconds." % (time.time() - t1)
