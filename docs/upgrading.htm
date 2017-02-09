@@ -153,22 +153,27 @@ Version: 3.7
 
         <h1><a name="Upgrading_using_DEB_package">Upgrading using DEB package</a></h1>
 
-        <p>Upgrade to X.Y.Z like this:</p>
+        <p>If you have specified the weeWX apt repository in
+            <span class="code">/etc/apt/sources.list.d/weewx.list</span>, then
+            upgrade to the latest version like this:</p>
+
+        <pre class='tty cmd'>sudo apt-get install weewx</pre>
+
+        <p>Otherwise, download the latest X.Y.Z DEB package from the 
+        <a href="http://weewx.com/downloads/">Download page</a> on weewx.com,
+        then upgrade like this:</p>
 
         <pre class='tty cmd'>sudo dpkg -i weewx_X.Y.Z-R.deb</pre>
 
-        <p>The upgrade process will not modify the weeWX
-            databases.</p>
+        <p>The upgrade process will not modify the weeWX databases.</p>
 
         <p>Unmodified files will be upgraded. If modifications have been made to
             the weeWX configuration, you will be prompted as to whether you want to
             keep the existing configuration or accept the new configuration. Either
-            way, <span class='code'>dpkg</span> will save a copy of the option you
-            did not choose.</p>
+            way, a copy of the option you did not choose will be saved.</p>
 
         <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was
-            modified, <span class='code'>dpkg</span> will present a message
-            something like this:</p>
+            modified, you will see a message something like this:</p>
 
         <pre class='tty'>Configuration file `/etc/weewx/weewx.conf'
   ==&gt; Modified (by you or by a script) since installation.
@@ -239,7 +244,7 @@ Version: 3.7
             This bug will only affect you if you have changed the length of your archive interval,
             or if you plan to.
         </p>
-        <p>If you have not changed your archive interval length, and have no plans to do so, there
+        <p>If you have not changed your archive interval length, and have no plans to do so, then there
             is nothing you need to do.</p>
 
         <p>Otherwise, the <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>, with
@@ -249,7 +254,7 @@ Version: 3.7
             minutes to fix a database with 10 years of data. On faster machines, it takes much less.
         </p>
 
-        <h3>Recalculation of <span class="code">windSpeed</span> maximum values</h3>
+        <h3 id="recalculation_of_windspeed">Recalculation of <span class="code">windSpeed</span> maximum values</h3>
 
         <p>Version 3.7 changes how maximum <span class="code">windSpeed</span> is calculated for aggregations
             of a day or more. Previously, if option <span class="code">use_hilo</span> was set
