@@ -132,6 +132,8 @@ database library weedb. See weedb/NOTES.md.
 
 The weedb Connection and Cursor objects can now be used in a "with" clause.
 
+Slightly more robust mechanism for decoding last time a file was FTP'd.
+
 
 3.6.2 11/08/2016
 
