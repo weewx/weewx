@@ -32,13 +32,13 @@ usage = """wee_database --help
        wee_database --check-strings
        wee_database --fix-strings [--dry-run]
        wee_database --drop-daily
-       wee_database --rebuild-daily
-            [--date=YYYY-mm-dd | --from=YYYY-mm-dd --to=YYYY-mm-dd]
+       wee_database --rebuild-daily [--date=YYYY-mm-dd |
+                                     --from=YYYY-mm-dd --to=YYYY-mm-dd]
 
 Description:
 
-Manipulate the weeWX database. Most of these operations are handled automatically
-by weeWX, but they may be useful in special cases."""
+Manipulate the weeWX database. Most of these operations are handled
+automatically by weeWX, but they may be useful in special cases."""
 
 # List of 'dest' settings used by our 'verbs', note 'dest' may be explicit or
 # implicit. If adding more 'verbs' need to add corresponding 'dest' here.
@@ -470,13 +470,17 @@ def check(config_dict, db_binding, options):
 
     # check the daily summary version
     _daily_summary_version = dbm._read_metadata('Version')
+    msg = "Daily summary tables are at version %s" % _daily_summary_version
+    syslog.syslog(syslog.LOG_INFO, msg)
+    print msg
+
     if _daily_summary_version is not None and _daily_summary_version >= '2.0':
-        # interval weighting fix has been applied so advise the user
-        print "Daily summary tables are already the latest version. No action required."
+        # interval weighting fix has been applied
+        msg = "Interval Weighting Fix is not required." % msg
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
     else:
-        # interval weighting fix has not been applied so advise the user and
-        # then apply the interval weighting fix
-        print "Daily summary tables are version %s. Recommend running 'wee_database --update'." % _daily_summary_version
+        print "Recommend running --update to recalculate interval weightings."
     print "Daily summary tables version check completed in %0.2f seconds." % (time.time() - t1)
 
     # now check for null strings
@@ -492,13 +496,28 @@ def update(config_dict, db_binding, options):
         archive
     """
 
+    # prompt for confirmation if it is not a dry run
+    ans = 'y' if options.dry_run else None
+    while ans not in ['y', 'n']:
+        ans = raw_input("The update process does not affect archive data, but does alter the database.\nContinue (y/n)? ")
+    if ans == 'n':
+        # we decided not to update the summary tables
+        msg = "Update cancelled"
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
+        return
+
     if options.dry_run:
         _log_level = syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_WARNING))
-    syslog.syslog(syslog.LOG_INFO, "Preparing 'Interval Weighting' fix...")
-    print "Preparing 'Interval Weighting' fix..."
+
+    msg = "Preparing Interval Weighting Fix..."
+    syslog.syslog(syslog.LOG_INFO, msg)
+    print msg
+
     # notify if this is a dry run
     if options.dry_run:
-        print "This is a dry run. Interval weighting will be applied but not saved."
+        print "This is a dry run: weighted intervals will be calculated but not saved."
+
     # Get a database manager object
     dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
     database_name = dbm.database_name
@@ -513,40 +532,27 @@ def update(config_dict, db_binding, options):
     # create an interval weighting fix object
     weight_obj = weecfg.database.IntervalWeighting(config_dict,
                                                    weighting_config_dict)
-    # check the daily sumamry version
+    # check the daily summary version
     _daily_summary_version = dbm._read_metadata('Version')
-    syslog.syslog(syslog.LOG_INFO,
-                  "Daily summary version is %s" % _daily_summary_version)
-    print "Daily summary version is %s" % _daily_summary_version
+    msg = "Daily summary tables are at version %s" % _daily_summary_version
+    syslog.syslog(syslog.LOG_INFO, msg)
+    print msg
+
     if _daily_summary_version is not None and _daily_summary_version >= '2.0':
-        # interval weighting fix has been applied so advise the user
-        syslog.syslog(syslog.LOG_INFO,
-                      "Daily summary tables are already using the latest version.")
-        print "Daily summary tables are already using the latest version."
-        syslog.syslog(syslog.LOG_INFO, "'Interval Weighting' fix not required.")
-        print "'Interval Weighting' fix not required."
+        # interval weighting fix has been applied
+        msg = "Interval Weighting Fix is not required." % msg
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
     else:
-        # interval weighting fix has not been applied so advise the user and
-        # then apply the interval weighting fix
-        syslog.syslog(syslog.LOG_INFO,
-                      "Daily summary tables are not using the latest version and will be upgraded.")
-        print "Daily summary tables are not using the latest version and will be upgraded."
-        # this action is irreversible so check the user really wants to do this
-        ans = None
-        while ans not in ['y', 'n']:
-            ans = raw_input("The update process is not destructive but will irreversibly alter the database.\r\n"
-                            "You should backup the '%s' database before proceeding. Continue (y/n)? " % database_name)
-            if ans == 'y':
-                # apply the interval weighting
-                t1 = time.time()
-                weight_obj.run()
-                print
-                print "Applied 'Interval Weighting' fix in %0.2f seconds." % (time.time() - t1)
-            elif ans == 'n':
-                # we decided not to update the summary tables
-                syslog.syslog(syslog.LOG_INFO,
-                              "'Interval Weighting' fix cancelled by user. No changes were made to the database.")
-                print "'Interval Weighting' fix cancelled by user. No changes were made to the database."
+        # apply the interval weighting
+        msg = "Calculating interval weights..."
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
+        t1 = time.time()
+        weight_obj.run()
+        msg = "Interval Weighting Fix completed in %0.2f seconds." % (time.time() - t1)
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
 
     # recalc the max/maxtime windSpeed values
     _fix_wind(config_dict, db_binding, options)
@@ -563,11 +569,14 @@ def _fix_wind(config_dict, db_binding, options):
     """
 
     t1 = time.time()
-    syslog.syslog(syslog.LOG_INFO, "Preparing 'Maximum windSpeed' fix...")
-    print "Preparing 'Maximum windSpeed' fix..."
+    msg = "Preparing Maximum windSpeed Fix..."
+    syslog.syslog(syslog.LOG_INFO, msg)
+    print msg
+
     # notify if this is a dry run
     if options.dry_run:
-        print "This is a dry run. Maximum windSpeed will be calculated but not saved."
+        print "This is a dry run: maximum windSpeed will be calculated but not saved."
+
     # construct a windSpeed recalculation config dict
     wind_config_dict = {'name': 'Maximum windSpeed',
                         'binding': db_binding,
@@ -575,19 +584,19 @@ def _fix_wind(config_dict, db_binding, options):
                         'dry_run': options.dry_run}
 
     # create a windSpeedRecalculation object
-    wind_obj = weecfg.database.WindSpeedRecalculation(config_dict, wind_config_dict)
+    wind_obj = weecfg.database.WindSpeedRecalculation(config_dict,
+                                                      wind_config_dict)
     # perform the recalculation, wrap in a try..except to catch any db errors
     try:
         wind_obj.run()
     except weedb.NoTableError, e:
-        _msg = "No 'windSpeed' found to fix. 'Maximum windSpeed' fix not applied."
-        syslog.syslog(syslog.LOG_INFO, _msg)
-        print _msg
+        msg = "Maximum windSpeed Fix applied: no windSpeed found"
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
     else:
-        if options.dry_run:
-            print "'Maximum windSpeed' fix would have been applied in %0.2f seconds." % (time.time() - t1)
-        else:
-            print "Applied 'Maximum windSpeed' fix in %0.2f seconds." % (time.time() - t1)
+        msg = "Maximum windSpeed Fix completed in %0.2f seconds" % (time.time() - t1)
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
 
 def check_strings(config_dict, db_binding, options, fix=False):
     """Scan the archive table for null strings.
@@ -600,13 +609,13 @@ def check_strings(config_dict, db_binding, options, fix=False):
     if options.dry_run or not fix:
         _log_level = syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_WARNING))
     if fix:
-        syslog.syslog(syslog.LOG_INFO, "Preparing 'Null String' fix...")
-        print "Preparing 'Null String' fix, this may take a while..."
+        syslog.syslog(syslog.LOG_INFO, "Preparing Null String Fix")
+        print "Preparing Null String Fix, this may take a while..."
         # notify if this is a dry run
         if options.dry_run:
-            print "This is a dry run. Null strings will be found but not fixed."
+            print "This is a dry run: null strings will be detected but not fixed"
     else:
-        print "Preparing 'Null String' check, this may take a while..."
+        print "Preparing Null String Check, this may take awhile..."
 
     # open up the main database archive table
     with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
@@ -641,9 +650,10 @@ def check_strings(config_dict, db_binding, options, fix=False):
                     # Oops. Found a bad one. Print it out.
                     if fix:
                         syslog.syslog(syslog.LOG_INFO,
-                                      "Timestamp = %s; record['%s']= %r; ... " % (record[0],
-                                                                                 obs_list[icol],
-                                                                                 record[icol]))
+                                      "Timestamp = %s; record['%s']= %r; ... "
+                                      % (record[0],
+                                         obs_list[icol],
+                                         record[icol]))
 
                     if fix:
                         # coerce to the correct type. If it can't be done, then
@@ -716,15 +726,15 @@ def check_strings(config_dict, db_binding, options, fix=False):
         # found some null string but it was only a check not a fix, just
         # display to screen
         print ("%d null strings were found.\r\n"
-               "Recommend running 'wee_database --fix-strings' to fix these strings." % len(_found))
+               "Recommend running --fix-strings to fix these strings." % len(_found))
 
     # and finally details on time taken
     if fix:
-        syslog.syslog(syslog.LOG_INFO, "Applied 'Null String' fix in %0.2f seconds." % tdiff)
-        print "Applied 'Null String' fix in %0.2f seconds." % tdiff
+        syslog.syslog(syslog.LOG_INFO, "Applied Null String Fix in %0.2f seconds." % tdiff)
+        print "Applied Null String Fix in %0.2f seconds." % tdiff
     else:
         # it was a check not a fix so just display to screen
-        print "Completed 'Null String' check in %0.2f seconds." % tdiff
+        print "Completed Null String Check in %0.2f seconds." % tdiff
     # just in case, set the syslog level back where we found it
     if options.dry_run or not fix:
         syslog.setlogmask(_log_level)
