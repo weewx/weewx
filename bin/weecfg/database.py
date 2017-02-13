@@ -250,7 +250,7 @@ class WindSpeedRecalculation(DatabaseFix):
         # we have finished, give the user some final information on progress,
         # mainly so the total tallies with the log
         self._progress(n_days, day_span.start)
-        print
+        print >>sys.stdout
         tdiff = time.time() - t1
         # We are done so log and inform the user
         if self.dry_run:
@@ -568,6 +568,7 @@ class IntervalWeighting(DatabaseFix):
             # Give the user some final information on progress,
             # mainly so the total tallies with the log
             self._progress(_days, _day_span.start)
+            print >>sys.stdout
             tdiff = time.time() - t1
             # We are done so log and inform the user
             if self.dry_run:
