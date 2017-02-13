@@ -731,7 +731,7 @@ class StdReport(StdService):
     
     def __init__(self, engine, config_dict):
         super(StdReport, self).__init__(engine, config_dict)
-        self.max_wait = int(config_dict['StdReport'].get('max_wait', 60))
+        self.max_wait = int(config_dict['StdReport'].get('max_wait', 600))
         self.thread = None
         self.launch_time = None
         self.record = None
@@ -748,8 +748,18 @@ class StdReport(StdService):
         # Do not launch the reporting thread if an old one is still alive.
         # To guard against a zombie thread (alive, but doing nothing) launch
         # anyway if enough time has passed.
-        if self.thread and self.thread.isAlive() and time.time() - self.launch_time < self.max_wait:
-            return
+        if self.thread and self.thread.isAlive():
+            thread_age = time.time() - self.launch_time
+            if thread_age < self.max_wait:
+                syslog.syslog(syslog.LOG_INFO,
+                              "engine: Launch of report thread aborted: "
+                              "existing report thread still running")
+                return
+            else:
+                syslog.syslog(syslog.LOG_WARNING,
+                              "engine: Previous report thread has been running"
+                              " %s seconds.  Launching report thread anyway."
+                              % thread_age)
             
         try:
             self.thread = weewx.reportengine.StdReportEngine(self.config_dict,
