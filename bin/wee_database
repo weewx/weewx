@@ -476,7 +476,7 @@ def check(config_dict, db_binding, options):
 
     if _daily_summary_version is not None and _daily_summary_version >= '2.0':
         # interval weighting fix has been applied
-        msg = "Interval Weighting Fix is not required." % msg
+        msg = "Interval Weighting Fix is not required."
         syslog.syslog(syslog.LOG_INFO, msg)
         print msg
     else:
