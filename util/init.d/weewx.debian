@@ -36,11 +36,11 @@ DAEMON=$WEEWX_BIN
 DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_CFG" 
 SCRIPTNAME=/etc/init.d/$NAME
 
-# Exit if the package is not installed
-[ -x "$WEEWX_BIN" ] || exit 0
-
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+# Exit if the package is not installed
+[ -x "$WEEWX_BIN" ] || exit 0
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
