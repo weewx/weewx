@@ -524,7 +524,7 @@ def update(config_dict, db_binding, options):
 
     # Interval weighting
     # first construct an interval weighting config dict
-    weighting_config_dict = {'name': 'Interval Weighting',
+    weighting_config_dict = {'name': 'Interval Weighting Fix',
                              'binding': db_binding,
                              'trans_days': 100,
                              'dry_run': options.dry_run}
@@ -578,7 +578,7 @@ def _fix_wind(config_dict, db_binding, options):
         print "This is a dry run: maximum windSpeed will be calculated but not saved."
 
     # construct a windSpeed recalculation config dict
-    wind_config_dict = {'name': 'Maximum windSpeed',
+    wind_config_dict = {'name': 'Maximum windSpeed Fix',
                         'binding': db_binding,
                         'trans_days': 100,
                         'dry_run': options.dry_run}

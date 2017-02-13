@@ -50,7 +50,7 @@ class DatabaseFix(object):
         # get our name
         self.name = fix_config_dict['name']
         # is this a dry run
-        self.dry_run = tobool(fix_config_dict.get('dry_run', True)) == True
+        self.dry_run = tobool(fix_config_dict.get('dry_run', True))
 
     def run(self):
         raise NotImplementedError("Method 'run' not implemented")
@@ -74,14 +74,14 @@ class DatabaseFix(object):
         """
 
         _sql = "SELECT dateTime FROM %s_day_%s "\
-                   "WHERE dateTime >= ? AND dateTime <= ?" % (self.dbm.table_name,
-                                                              obs)
+            " WHERE dateTime >= ? AND dateTime <= ?" % (self.dbm.table_name, obs)
+
         _cursor = self.dbm.connection.cursor()
         try:
             for _row in _cursor.execute(_sql, (start_ts, stop_ts)):
                 yield weeutil.weeutil.archiveDaySpan(_row[0], grace=0)
         finally:
-            _cursor.close
+            _cursor.close()
 
     def first_summary_ts(self, obs_type):
         """Obtain the timestamp of the earliest daily summary entry for an
@@ -155,8 +155,8 @@ class WindSpeedRecalculation(DatabaseFix):
 
         # log if a dry run
         if self.dry_run:
-            syslog.syslog(syslog.LOG_INFO, "maxwindspeed: This is a dry run. Maximum windSpeed will be recalculated but not saved.")
-
+            syslog.syslog(syslog.LOG_INFO,
+                          "maxwindspeed: This is a dry run. Maximum windSpeed will be recalculated but not saved.")
 
         # Get the binding for the archive we are to use. If we received an
         # explicit binding then use that otherwise use the binding that
@@ -174,8 +174,9 @@ class WindSpeedRecalculation(DatabaseFix):
         self.dbm = weewx.manager.open_manager_with_config(config_dict,
                                                           self.binding)
         syslog.syslog(syslog.LOG_DEBUG,
-                      "maxwindspeed: Using database binding '%s', which is bound to database '%s'." % (self.binding,
-                                                                                                          self.dbm.database_name))
+                      "maxwindspeed: Using database binding '%s', "
+                      "which is bound to database '%s'." %
+                      (self.binding, self.dbm.database_name))
         # number of days per db transaction, default to 50.
         self.trans_days = int(fix_config_dict.get('trans_days', 50))
         syslog.syslog(syslog.LOG_DEBUG,
@@ -193,7 +194,7 @@ class WindSpeedRecalculation(DatabaseFix):
         # apply the fix but be prepared to catch any exceptions
         try:
             self.do_fix()
-        except weedb.NoTableError, e:
+        except weedb.NoTableError:
             raise
         except weewx.ViolatedPrecondition, e:
             syslog.syslog(syslog.LOG_ERR,
@@ -219,6 +220,7 @@ class WindSpeedRecalculation(DatabaseFix):
         # initialise a few things
         day = start_greg
         n_days = 0
+        last_start = None
         while day <= stop_greg:
             # get the start and stop timestamps for this tranche
             tr_start_ts = weeutil.weeutil.startOfGregorianDay(day)
@@ -226,13 +228,10 @@ class WindSpeedRecalculation(DatabaseFix):
             # start the transaction
             with weedb.Transaction(self.dbm.connection) as _cursor:
                 # iterate over the rows in the windSpeed daily summary table
-                for day_span in self.genSummaryDaySpans(tr_start_ts,
-                                                        tr_stop_ts,
-                                                        'windSpeed'):
+                for day_span in self.genSummaryDaySpans(tr_start_ts, tr_stop_ts, 'windSpeed'):
                     # get the days max windSpeed and the time it occurred from
                     # the archive
-                    (day_max_ts, day_max) = self.get_archive_span_max(day_span,
-                                                                      'windSpeed')
+                    (day_max_ts, day_max) = self.get_archive_span_max(day_span, 'windSpeed')
                     # now save the value and time in the applicable row in the
                     # windSpeed daily summary, but only if its not a dry run
                     if not self.dry_run:
@@ -243,12 +242,13 @@ class WindSpeedRecalculation(DatabaseFix):
                     # give the user some information on progress
                     if n_days % 50 == 0:
                         self._progress(n_days, day_span.start)
+                    last_start = day_span.start
             # advance to the next tranche
             day += self.trans_days
 
         # we have finished, give the user some final information on progress,
         # mainly so the total tallies with the log
-        self._progress(n_days, day_span.start)
+        self._progress(n_days, last_start)
         print >>sys.stdout
         tdiff = time.time() - t1
         # We are done so log and inform the user
@@ -286,24 +286,24 @@ class WindSpeedRecalculation(DatabaseFix):
         """
 
         select_str = "SELECT dateTime, %(obs_type)s FROM %(table_name)s "\
-                        "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "\
-                        "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s "\
-                        "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND "\
-                        "%(obs_type)s IS NOT NULL"
-        interpolate_dict = {'obs_type'       : obs,
-                            'table_name'     : self.dbm.table_name,
-                            'start'          : span.start,
-                            'stop'           : span.stop}
+            "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "\
+            "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s "\
+            "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND "\
+            "%(obs_type)s IS NOT NULL"
+        interpolate_dict = {'obs_type': obs,
+                            'table_name': self.dbm.table_name,
+                            'start': span.start,
+                            'stop': span.stop}
 
         _row = self.dbm.getSql(select_str % interpolate_dict)
         if _row:
             try:
-                return (_row[0], _row[1])
+                return _row[0], _row[1]
             except IndexError:
                 _msg = "'%s' field not found in archive day %s." % (obs, span)
                 raise weewx.ViolatedPrecondition(_msg)
         else:
-            return (None, None)
+            return None, None
 
     def write_max(self, obs, row_ts, value, when_ts, cursor=None):
         """Update the max and maxtime fields in an existing daily summary row.
@@ -410,11 +410,13 @@ class IntervalWeighting(DatabaseFix):
 
         # first do some logging about what we will do
         if self.dry_run:
-            syslog.syslog(syslog.LOG_INFO, "intervalweighting: This is a dry run. Interval weighting will be applied but not saved.")
+            syslog.syslog(syslog.LOG_INFO,
+                          "intervalweighting: This is a dry run. Interval weighting will be applied but not saved.")
 
         syslog.syslog(syslog.LOG_INFO,
-                      "intervalweighting: Using database binding '%s', which is bound to database '%s'." % (self.binding,
-                                                                                                           self.dbm.database_name))
+                      "intervalweighting: Using database binding '%s', "
+                      "which is bound to database '%s'." %
+                      (self.binding, self.dbm.database_name))
         syslog.syslog(syslog.LOG_DEBUG,
                       "intervalweighting: Database transactions will use %s days of data." % self.trans_days)
         # Check metadata 'Version' value, if its greater than 1.0 we are
@@ -480,7 +482,7 @@ class IntervalWeighting(DatabaseFix):
 
         # do we need to weight? Only weight if next day to weight ts is None or
         # there are records in the archive from that day
-        if np_ts is None or self.dbm.last_timestamp > np_ts :
+        if np_ts is None or self.dbm.last_timestamp > np_ts:
             t1 = time.time()
             syslog.syslog(syslog.LOG_INFO, "intervalweighting: Applying %s..." % self.name)
             _days = 0
@@ -491,12 +493,10 @@ class IntervalWeighting(DatabaseFix):
             _tr_stop_dt = datetime.datetime.fromtimestamp(_tr_start_ts) + datetime.timedelta(days=self.trans_days)
             _tr_stop_ts = time.mktime(_tr_stop_dt.timetuple())
             _tr_stop_ts = min(startOfDay(self.dbm.last_timestamp), _tr_stop_ts)
-
+            last_start = None
             while True:
                 with weedb.Transaction(self.dbm.connection) as _cursor:
-                    for _day_span in self.genSummaryDaySpans(_tr_start_ts,
-                                                             _tr_stop_ts,
-                                                             obs):
+                    for _day_span in self.genSummaryDaySpans(_tr_start_ts, _tr_stop_ts, obs):
                         # Get the weight to be applied for the day
                         _weight = self.get_interval(_day_span) * 60
                         # Get the current day stats in an accumulator
@@ -505,8 +505,10 @@ class IntervalWeighting(DatabaseFix):
                         _day_accum.unit_system = self.dbm.std_unit_system
                         # Weight the necessary accumulator stats, use a
                         # try..except in case something goes wrong
+                        last_key = None
                         try:
                             for _day_key in self.dbm.daykeys:
+                                last_key = _day_key
                                 _day_accum[_day_key].wsum *= _weight
                                 _day_accum[_day_key].sumtime *= _weight
                                 # Do we have a vecstats accumulator?
@@ -520,15 +522,12 @@ class IntervalWeighting(DatabaseFix):
                             # log the exception and re-raise it
                             syslog.syslog(syslog.LOG_INFO,
                                           "intervalweighting: Interval weighting of '%s' daily summary "
-                                          "for %s failed: %s" % (_day_key,
-                                                                 timestamp_to_string(_day_span.start, format="%Y-%m-%d"),
-                                                                 e))
+                                          "for %s failed: %s" %
+                                          (last_key, timestamp_to_string(_day_span.start, format="%Y-%m-%d"), e))
                             raise
                         # Update the daily summary with the weighted accumulator
                         if not self.dry_run:
-                            self.dbm._set_day_summary(_day_accum,
-                                                      None,
-                                                      _cursor)
+                            self.dbm._set_day_summary(_day_accum, None, _cursor)
                         _days += 1
                         # Save the ts of the weighted daily summary as the
                         # 'lastWeightPatch' value in the archive_day__metadata
@@ -540,6 +539,7 @@ class IntervalWeighting(DatabaseFix):
                         # Give the user some information on progress
                         if _days % 50 == 0:
                             self._progress(_days, _day_span.start)
+                        last_start = _day_span.start
 
                     # Setup our next tranche
                     # Have we reached the end, if so break to finish
@@ -559,7 +559,7 @@ class IntervalWeighting(DatabaseFix):
 
             # Give the user some final information on progress,
             # mainly so the total tallies with the log
-            self._progress(_days, _day_span.start)
+            self._progress(_days, last_start)
             print >>sys.stdout
             tdiff = time.time() - t1
             # We are done so log and inform the user
@@ -589,8 +589,9 @@ class IntervalWeighting(DatabaseFix):
             are found then a weewx.ViolatedPrecondition error is raised.
         """
 
-        _row = self.dbm.getSql("SELECT `interval` FROM %s "
-                        "WHERE dateTime > ? AND dateTime <= ?;" % self.dbm.table_name, span)
+        _row = self.dbm.getSql(
+            "SELECT `interval` FROM %s WHERE dateTime > ? AND dateTime <= ?;"
+            % self.dbm.table_name, span)
         try:
             return _row[0]
         except IndexError:
