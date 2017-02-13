@@ -271,6 +271,8 @@ Version: 3.7
             minutes to fix a database with 10 years of data. On faster machines, it takes much less time.
         </p>
 
+        <pre class="tty cmd">wee_database /etc/weewx/weewx.conf --update</pre>
+
         <p>
             If you have multiple databases, consider recalculating the weights
             in each database. Interval weighting will only need to be applied
@@ -283,6 +285,7 @@ Version: 3.7
             <span class="code">--binding=BINDING_NAME</span> option in
             conjunction with the <span class="code">--update</span> action.
         </p>
+        <pre class="tty cmd">wee_database /etc/weewx/weewx.conf --update --binding=cmon_binding</pre>
         
         <h3 id="recalculation_of_windspeed">Recalculation of <span class="code">windSpeed</span> maximum values</h3>
 
