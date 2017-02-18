@@ -24,7 +24,7 @@ class QC(object):
         # Save our 'parent' - for use when logging
         self.parent = parent
         # Last record cache
-        self.last_records = {'LOOP':None,'Archive':None}
+        self.last_records = {'LOOP': {},'Archive': {}}
 
         # If the 'StdQC', 'MinMax', 'Spike' sections do not exist in the configuration
         # dictionary, then an exception will get thrown and nothing will be
@@ -91,36 +91,37 @@ class QC(object):
                     data_dict[obs_type] = None
         
         # If no data_type we will not do spike detection
-        # On first time for each data_type last_record will be None 
+        # On first time for each data_type last_record will be an empty dict
         if data_type is not '':
             last_record = self.last_records[data_type]
-            # Save a copy of the current record as we will patch any 
-            # spike values before with last record values before caching
-            current_record = data_dict
-            if last_record is not None:
-                for obs_type in self.spike_dict:
-                    # Observation may not be in record or MinMax QC may have set to None
-                    if data_dict.has_key(obs_type) and data_dict[obs_type] is not None:
-                        # Observation may not be in the cached last record
-                        if last_record.has_key(obs_type) and last_record[obs_type] is not None:
-                            spikecheck = data_dict[obs_type] - last_record[obs_type]
-                            try:
-                                spikecheck = abs(spikecheck / (data_dict['dateTime'] - last_record['dateTime']))
-                            except ZeroDivisionError:
-                                continue
-                            # If spike detected then report and set observation value to None
-                            if spikecheck > self.spike_dict[obs_type]:
-                                syslog.syslog(syslog.LOG_NOTICE, "%s: %s %s value '%s' %s (last: %s) outside spike limit (%s)" %
-                                                (self.parent,
-                                                weeutil.weeutil.timestamp_to_string(data_dict['dateTime']),
-                                                data_type, obs_type, data_dict[obs_type],
-                                                last_record[obs_type], self.spike_dict[obs_type]))
-                                # Save the last record for observation as our cache for spike checking
-                                current_record[obs_type] = last_record[obs_type]
-                                # Set the spike value for observation to None
-                                data_dict[obs_type] = None
-            # Cache the current record
-            self.last_records[data_type] = current_record
+            # Build cache record based on the last record
+            cache_record = last_record
+            cache_record['dateTime'] = data_dict['dateTime']
+            for obs_type in self.spike_dict:
+                # Observation may not be in record or MinMax QC may have set to None
+                if data_dict.has_key(obs_type) and data_dict[obs_type] is not None:
+                    # build cache. Will be updated with last value if spike detected
+                    cache_record[obs_type] = data_dict[obs_type]
+                    # Observation may not be in the cached last record
+                    if last_record.has_key(obs_type) and last_record[obs_type] is not None:
+                        spikecheck = data_dict[obs_type] - last_record[obs_type]
+                        try:
+                            spikecheck = abs(spikecheck / (data_dict['dateTime'] - last_record['dateTime']))
+                        except ZeroDivisionError:
+                            continue
+                        # If spike detected then report and set observation value to None
+                        if spikecheck > self.spike_dict[obs_type]:
+                            syslog.syslog(syslog.LOG_NOTICE, "%s: %s %s value '%s' %s (last: %s) outside spike limit (%s)" %
+                                            (self.parent,
+                                            weeutil.weeutil.timestamp_to_string(data_dict['dateTime']),
+                                            data_type, obs_type, data_dict[obs_type],
+                                            last_record[obs_type], self.spike_dict[obs_type]))
+                            # Save the last record for observation as our cache for spike checking
+                            cache_record[obs_type] = last_record[obs_type]
+                            # Set the spike value for observation to None
+                            data_dict[obs_type] = None
+            # Save the cache record
+            self.last_records[data_type] = cache_record
 
 
 
