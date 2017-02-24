@@ -1002,8 +1002,7 @@ def decode_temp(pkt, pkt_data):
         # The first low nibble is the high byte of the temperature.
         # The second byte is low byte of the temperature. The value is in 1/10
         # degrees centigrade.
-        dew_point = (((pkt_data[5] & 0x0f) << 8)
-                     | pkt_data[4]) / 10.0
+        dew_point = (((pkt_data[5] & 0x0f) << 8) | pkt_data[4]) / 10.0
         if pkt_data[5] & 0x80:
             dew_point *= -1
 

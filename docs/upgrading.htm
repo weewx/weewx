@@ -153,22 +153,28 @@ Version: 3.7
 
         <h1><a name="Upgrading_using_DEB_package">Upgrading using DEB package</a></h1>
 
-        <p>Upgrade to X.Y.Z like this:</p>
+        <p>If you have specified the weeWX apt repository in
+            <span class="code">/etc/apt/sources.list.d/weewx.list</span>, then
+            upgrade to the latest version like this:</p>
+
+        <pre class='tty cmd'>sudo apt-get update
+sudo apt-get install weewx</pre>
+
+        <p>Otherwise, download the latest X.Y.Z DEB package from the 
+        <a href="http://weewx.com/downloads/">Download page</a> on weewx.com,
+        then upgrade like this:</p>
 
         <pre class='tty cmd'>sudo dpkg -i weewx_X.Y.Z-R.deb</pre>
 
-        <p>The upgrade process will not modify the weeWX
-            databases.</p>
+        <p>The upgrade process will not modify the weeWX databases.</p>
 
         <p>Unmodified files will be upgraded. If modifications have been made to
             the weeWX configuration, you will be prompted as to whether you want to
             keep the existing configuration or accept the new configuration. Either
-            way, <span class='code'>dpkg</span> will save a copy of the option you
-            did not choose.</p>
+            way, a copy of the option you did not choose will be saved.</p>
 
         <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was
-            modified, <span class='code'>dpkg</span> will present a message
-            something like this:</p>
+            modified, you will see a message something like this:</p>
 
         <pre class='tty'>Configuration file `/etc/weewx/weewx.conf'
   ==&gt; Modified (by you or by a script) since installation.
@@ -225,31 +231,64 @@ Version: 3.7
         <h3 id="change_to_daily_summaries">Changes to daily summaries</h3>
         <p>Perhaps the most significant change in V3.7 is a fix for how daily summary values are calculated
             and stored.</p>
+        
         <p>Daily summaries were introduced in V3.0 (December, 2014), to speed up 
             certain kinds of aggregation calculations. They were designed to "weight" values
             depending on the time length of the archive record that contributed them. For example,
-            shorter intervals contributed less than longer intervals. This was intended to allow
-            users to change the length of their archive interval, should they wish to.</p>
-        <p>Unfortunately, a bug caused the weightings to all be one (1), irregardless of what the actual
+            shorter intervals contributed less than longer intervals. This was intended to enable
+            changes to the length of the archive interval.</p>
+        
+        <p>Unfortunately, a bug caused the weightings to all be one (1), regardless of what the actual
             archive interval length
             might be. This means all archive records, long and short, contribute the same amount,
             instead of being weighted by their length. So, if the archive interval were to change,
             averages would be calculated incorrectly.</p>
-        <p class="warning">
-            This bug will only affect you if you have changed the length of your archive interval,
-            or if you plan to.
+        
+        <p>
+            This bug will only affect you if you have changed the length of
+            your archive interval, or if you plan to.  If you have not changed
+            your archive interval length, and have no plans to do so, then 
+            there is nothing you need to do.
         </p>
-        <p>If you have not changed your archive interval length, and have no plans to do so, there
-            is nothing you need to do.</p>
 
-        <p>Otherwise, the <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>, with
+        <p class="note">
+            Your archive may have interval values of different sizes if...<br/>
+            <br/>
+            ... you have imported data using <span class="code">wee_import</span>.<br/>
+            <br/>
+            ... your hardware has a data logger, your configuration uses
+            <span class="code">record_generation=software</span>,
+            and the <span class="code">archive_interval</span> is
+            different from that in the hardware.<br/>
+            <br/>
+            ... your archive contains data from more than one type of
+            hardware.
+        </p>
+
+        <p>The <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> utility, with
             option <a href="utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>, can
             fix this problem by recalculating the weights in the daily summary, on the basis
             of the actual archive interval lengths. On a Raspberry Pi 1, model B, it takes about 10
-            minutes to fix a database with 10 years of data. On faster machines, it takes much less.
+            minutes to fix a database with 10 years of data. On faster machines, it takes much less time.
         </p>
 
-        <h3>Recalculation of <span class="code">windSpeed</span> maximum values</h3>
+        <pre class="tty cmd">wee_database /etc/weewx/weewx.conf --update</pre>
+
+        <p>
+            If you have multiple databases, consider recalculating the weights
+            in each database. Interval weighting will only need to be applied
+            to databases that have daily summaries, i.e., the binding uses
+        </p>
+        <pre class="tty">manager = weewx.wxmanager.WXDaySummaryManager</pre>
+        <p>
+            To apply interval weighting to a database other than the default
+            <span class="code">wx_binding</span>, use the
+            <span class="code">--binding=BINDING_NAME</span> option in
+            conjunction with the <span class="code">--update</span> action.
+        </p>
+        <pre class="tty cmd">wee_database /etc/weewx/weewx.conf --update --binding=cmon_binding</pre>
+        
+        <h3 id="recalculation_of_windspeed">Recalculation of <span class="code">windSpeed</span> maximum values</h3>
 
         <p>Version 3.7 changes how maximum <span class="code">windSpeed</span> is calculated for aggregations
             of a day or more. Previously, if option <span class="code">use_hilo</span> was set
@@ -257,8 +296,10 @@ Version: 3.7
             for a day was set to the maximum value seen in the LOOP packets for
             the day. In practice this is the same value as <span class="code">windGust</span>. That is, these
             two tags would supply the same value:</p>
+        
         <pre class="tty">$day.windSpeed.max
 $day.windGust.max</pre>
+        
         <p>In Version 3.7, this has been changed so the maximum <span class="code">windSpeed</span> is now
             set to the maximum <em>archive</em> value seen during
             the day &mdash; usually a slightly smaller number. However, older daily max values will still

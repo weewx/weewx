@@ -116,8 +116,6 @@ battery status, not just txBatteryStatus.  Thanks to user manos!
 Added info-level log message to calculate_rain so that any rain counter reset
 will be logged.
 
-Added debug logging to indicate when calibrations are ignored.
-
 Added better logging for cc3000 when the cc3000 loses contact with sensors
 for extended periods of time.
 
@@ -131,6 +129,8 @@ A more formal exception hierarchy has been adopted for the internal
 database library weedb. See weedb/NOTES.md.
 
 The weedb Connection and Cursor objects can now be used in a "with" clause.
+
+Slightly more robust mechanism for decoding last time a file was FTP'd.
 
 
 3.6.2 11/08/2016

@@ -4,7 +4,7 @@
 <head>
     <meta http-equiv="Content-Language" content="en-us"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>weewx: Installation using apt-get</title>
     <style> 
 body{
@@ -76,8 +76,8 @@ h2 {
 <h2>Configure apt</h2>
 <p>Tell <span class="code">apt</span> where to find the weeWX releases.  This only has to be done once - the first time you install.</p>
 
-<pre class='tty cmd'>curl -s http://weewx.com/keys.html | sudo apt-key add -
-echo "deb [arch=all] http://weewx.com/apt/ squeeze main" | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+<pre class='tty cmd'>wget -qO - http://weewx.com/keys.html | sudo apt-key add -
+wget -qO - http://weewx.com/apt/weewx.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
 
 <h2>Install</h2>
 <p>Use <span class="code">apt-get</span> to install weeWX. When you are done, weeWX will be running in the background as a daemon.</p>

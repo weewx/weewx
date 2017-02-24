@@ -375,7 +375,7 @@ class StdCalibrate(StdService):
             try:
                 event.packet[obs_type] = eval(self.corrections[obs_type], None, event.packet)
             except (TypeError, NameError), e:
-                syslog.syslog(syslog.LOG_DEBUG, "engine: calibration for '%s' ignored in loop: %s" % (obs_type, e))
+                pass
             except ValueError, e:
                 syslog.syslog(syslog.LOG_ERR, "engine: StdCalibration loop error %s" % e)
 
@@ -389,7 +389,7 @@ class StdCalibrate(StdService):
                 try:
                     event.record[obs_type] = eval(self.corrections[obs_type], None, event.record)
                 except (TypeError, NameError), e:
-                    syslog.syslog(syslog.LOG_DEBUG, "engine: calibration for '%s' ignored in archive: %s" % (obs_type, e))
+                    pass
                 except ValueError, e:
                     syslog.syslog(syslog.LOG_ERR, "engine: StdCalibration archive error %s" % e)
 
@@ -489,6 +489,7 @@ class StdArchive(StdService):
                       (self.loop_hilo,))
         
         self.setup_database(config_dict)
+        weewx.accum.initialize(config_dict)
         
         self.bind(weewx.STARTUP, self.startup)
         self.bind(weewx.PRE_LOOP, self.pre_loop)
@@ -730,7 +731,7 @@ class StdReport(StdService):
     
     def __init__(self, engine, config_dict):
         super(StdReport, self).__init__(engine, config_dict)
-        self.max_wait = int(config_dict['StdReport'].get('max_wait', 60))
+        self.max_wait = int(config_dict['StdReport'].get('max_wait', 600))
         self.thread = None
         self.launch_time = None
         self.record = None
@@ -747,8 +748,18 @@ class StdReport(StdService):
         # Do not launch the reporting thread if an old one is still alive.
         # To guard against a zombie thread (alive, but doing nothing) launch
         # anyway if enough time has passed.
-        if self.thread and self.thread.isAlive() and time.time() - self.launch_time < self.max_wait:
-            return
+        if self.thread and self.thread.isAlive():
+            thread_age = time.time() - self.launch_time
+            if thread_age < self.max_wait:
+                syslog.syslog(syslog.LOG_INFO,
+                              "engine: Launch of report thread aborted: "
+                              "existing report thread still running")
+                return
+            else:
+                syslog.syslog(syslog.LOG_WARNING,
+                              "engine: Previous report thread has been running"
+                              " %s seconds.  Launching report thread anyway."
+                              % thread_age)
             
         try:
             self.thread = weewx.reportengine.StdReportEngine(self.config_dict,

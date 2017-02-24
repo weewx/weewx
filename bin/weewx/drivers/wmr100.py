@@ -445,49 +445,6 @@ class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
 
     # The station model, e.g., WMR100, WMR100N, WMRS200
     model = WMR100
-
-    # Mapping from sensor names to database fields
-#    [[sensor_map]]
-#        pressure = pressure
-#        windSpeed = wind_speed
-#        windDir = wind_dir
-#        windGust = wind_gust
-#        windBatteryStatus = wind_battery_status
-#        inTemp = temperature_0
-#        outTemp = temperature_1
-#        extraTemp1 = temperature_2
-#        extraTemp2 = temperature_3
-#        extraTemp3 = temperature_4
-#        extraTemp4 = temperature_5
-#        extraTemp5 = temperature_6
-#        extraTemp6 = temperature_7
-#        extraTemp7 = temperature_8
-#        inHumidity = humidity_0
-#        outHumidity = humidity_1
-#        extraHumid1 = humidity_2
-#        extraHumid2 = humidity_3
-#        extraHumid3 = humidity_4
-#        extraHumid4 = humidity_5
-#        extraHumid5 = humidity_6
-#        extraHumid6 = humidity_7
-#        extraHumid7 = humidity_8
-#        inTempBatteryStatus = battery_status_0
-#        outTempBatteryStatus = battery_status_1
-#        extraBatteryStatus1 = battery_status_2
-#        extraBatteryStatus2 = battery_status_3
-#        extraBatteryStatus3 = battery_status_4
-#        extraBatteryStatus4 = battery_status_5
-#        extraBatteryStatus5 = battery_status_6
-#        extraBatteryStatus6 = battery_status_7
-#        extraBatteryStatus7 = battery_status_8
-#        rain = rain
-#        rainTotal = rain_total
-#        rainRate = rain_rate
-#        hourRain = rain_hour
-#        rain24 = rain_24
-#        rainBatteryStatus = rain_battery_status
-#        UV = uv
-#        uvBatteryStatus = uv_battery_status 
 """
 
     def modify_config(self, config_dict):
