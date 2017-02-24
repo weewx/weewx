@@ -22,20 +22,43 @@ import sys
 class DatabaseError(StandardError):
     """Base class of all weedb exceptions."""
 
-class OperationalError(DatabaseError):
-    """Runtime database errors."""
+class IntegrityError(DatabaseError):
+    """Operation attempted involving the relational integrity of the database."""
 
 class ProgrammingError(DatabaseError):
     """SQL or other programming error."""
     
-class DatabaseExists(DatabaseError):
+class DatabaseExistsError(ProgrammingError):
     """Attempt to create a database that already exists"""
 
-class NoDatabase(DatabaseError):
+class TableExistsError(ProgrammingError):
+    """Attempt to create a table that already exists."""
+    
+class NoTableError(ProgrammingError):
+    """Attempt to operate on a non-existing table."""
+    
+class OperationalError(DatabaseError):
+    """Runtime database errors."""
+
+class NoDatabaseError(OperationalError):
     """Operation attempted on a database that does not exist."""
 
-class IntegrityError(DatabaseError):
-    """Operation attempted involving the relational integrity of the database."""
+class CannotConnectError(OperationalError):
+    """Unable to connect to the database server."""
+
+class NoColumnError(OperationalError):
+    """Attempt to operate on a column that does not exist."""
+
+class BadPasswordError(OperationalError):
+    """Bad or missing password."""
+    
+class PermissionError(OperationalError):
+    """Lacking necessary permissions."""
+
+# For backwards compatibility:
+DatabaseExists = DatabaseExistsError
+NoDatabase = NoDatabaseError
+CannotConnect = CannotConnectError
 
 # In what follows, the test whether a database dictionary has function "dict" is
 # to get around a bug in ConfigObj. It seems to be unable to unpack (using the
@@ -44,7 +67,7 @@ class IntegrityError(DatabaseError):
 
 def create(db_dict):
     """Create a database. If it already exists, an exception of type
-    weedb.DatabaseExists will be raised."""
+    weedb.DatabaseExistsError will be raised."""
     __import__(db_dict['driver'])
     driver_mod = sys.modules[db_dict['driver']]
     # See note above
@@ -56,7 +79,7 @@ def create(db_dict):
 
 def connect(db_dict):
     """Return a connection to a database. If the database does not
-    exist, an exception of type weedb.OperationalError will be raised."""
+    exist, an exception of type weedb.NoDatabaseError will be raised."""
     __import__(db_dict['driver'])
     driver_mod = sys.modules[db_dict['driver']]
     # See note above
@@ -68,7 +91,7 @@ def connect(db_dict):
 
 def drop(db_dict):
     """Drop (delete) a database. If the database does not exist,
-    the exception weedb.NoDatabase will be raised."""
+    the exception weedb.NoDatabaseError will be raised."""
     __import__(db_dict['driver'])
     driver_mod = sys.modules[db_dict['driver']]
     # See note above
@@ -146,6 +169,14 @@ class Connection(object):
         except DatabaseError:
             pass
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, etyp, einst, etb):  # @UnusedVariable
+        try:
+            self.close()
+        except DatabaseError:
+            pass
 
 class Transaction(object):
     """Class to be used to wrap transactions in a 'with' clause."""

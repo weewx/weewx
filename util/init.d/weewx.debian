@@ -28,19 +28,19 @@
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 WEEWX_BIN=/home/weewx/bin/weewxd
 WEEWX_CFG=/home/weewx/weewx.conf
+WEEWX_USER=root:root 
 DESC="weewx weather system"
 NAME=weewx
-WEEWX_USER=root:root 
 PIDFILE=/var/run/$NAME.pid
-DAEMON=$WEEWX_BIN
-DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_CFG" 
-SCRIPTNAME=/etc/init.d/$NAME
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
 # Exit if the package is not installed
 [ -x "$WEEWX_BIN" ] || exit 0
 
-# Read configuration variable file if it is present
-[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+DAEMON=$WEEWX_BIN
+DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_CFG" 
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
@@ -170,7 +170,7 @@ case "$1" in
 	esac
 	;;
     *)
-	echo "Usage: $SCRIPTNAME {start|stop|status|restart|reload}"
+	echo "Usage: $0 {start|stop|status|restart|reload}"
 	exit 3
 	;;
 esac

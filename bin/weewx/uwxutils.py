@@ -57,7 +57,7 @@ def FToC(value):
     return (value - 32.0) * (5.0 / 9.0)
 
 def CToF(value): 
-    return (5.0/9.0)*value + 32.0
+    return (9.0/5.0)*value + 32.0
 
 def CToK(value): 
     return value + 273.15

@@ -10,6 +10,17 @@ is a different beast).
 The wind sensor reports wind speed, wind direction, and wind gust.  It does
 not report wind gust direction.
 
+WMR89:
+ - data logger
+ - up to 3 channels
+ - protocol 3 sensors
+ - THGN800, PRCR800, WTG800
+
+WMR86:
+ - no data logger
+ - protocol 3 sensors
+ - THGR800, WGR800, PCR800, UVN800
+
 The following references were useful for figuring out the WMR protocol:
     
 From Per Ejeklint:
@@ -37,7 +48,7 @@ import weewx.wxformulas
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR100'
-DRIVER_VERSION = "3.2"
+DRIVER_VERSION = "3.3"
 
 def loader(config_dict, engine):  # @UnusedVariable
     return WMR100(**config_dict[DRIVER_NAME])    
@@ -121,7 +132,8 @@ class WMR100(weewx.drivers.AbstractDevice):
         IN_endpoint: The IN USB endpoint used by the WMR.
         [Optional. Default is usb.ENDPOINT_IN + 1]
         """
-        
+
+        loginf('driver version is %s' % DRIVER_VERSION)
         self.model = stn_dict.get('model', 'WMR100')
         # TODO: Consider putting these in the driver loader instead:
         self.record_generation = stn_dict.get('record_generation', 'software')
@@ -132,7 +144,10 @@ class WMR100(weewx.drivers.AbstractDevice):
         self.product_id = int(stn_dict.get('product_id', '0xca01'), 0)
         self.interface = int(stn_dict.get('interface', 0))
         self.IN_endpoint = int(stn_dict.get('IN_endpoint', usb.ENDPOINT_IN + 1))
-        self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_MAP)
+        self.sensor_map = dict(self.DEFAULT_MAP)
+        if 'sensor_map' in stn_dict:
+            self.sensor_map.update(stn_dict['sensor_map'])
+        loginf('sensor map is %s' % self.sensor_map)
         self.last_rain_total = None
         self.devh = None
         self.openPort()
@@ -430,49 +445,6 @@ class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
 
     # The station model, e.g., WMR100, WMR100N, WMRS200
     model = WMR100
-
-    # Mapping from sensor names to database fields
-#    [[sensor_map]]
-#        pressure = pressure
-#        windSpeed = wind_speed
-#        windDir = wind_dir
-#        windGust = wind_gust
-#        windBatteryStatus = wind_battery_status
-#        inTemp = temperature_0
-#        outTemp = temperature_1
-#        extraTemp1 = temperature_2
-#        extraTemp2 = temperature_3
-#        extraTemp3 = temperature_4
-#        extraTemp4 = temperature_5
-#        extraTemp5 = temperature_6
-#        extraTemp6 = temperature_7
-#        extraTemp7 = temperature_8
-#        inHumidity = humidity_0
-#        outHumidity = humidity_1
-#        extraHumid1 = humidity_2
-#        extraHumid2 = humidity_3
-#        extraHumid3 = humidity_4
-#        extraHumid4 = humidity_5
-#        extraHumid5 = humidity_6
-#        extraHumid6 = humidity_7
-#        extraHumid7 = humidity_8
-#        inTempBatteryStatus = battery_status_0
-#        outTempBatteryStatus = battery_status_1
-#        extraBatteryStatus1 = battery_status_2
-#        extraBatteryStatus2 = battery_status_3
-#        extraBatteryStatus3 = battery_status_4
-#        extraBatteryStatus4 = battery_status_5
-#        extraBatteryStatus5 = battery_status_6
-#        extraBatteryStatus6 = battery_status_7
-#        extraBatteryStatus7 = battery_status_8
-#        rain = rain
-#        rainTotal = rain_total
-#        rainRate = rain_rate
-#        hourRain = rain_hour
-#        rain24 = rain_24
-#        rainBatteryStatus = rain_battery_status
-#        UV = uv
-#        uvBatteryStatus = uv_battery_status 
 """
 
     def modify_config(self, config_dict):

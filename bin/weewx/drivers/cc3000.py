@@ -77,11 +77,11 @@ import string
 import syslog
 import time
 
-from weeutil.weeutil import to_bool
+import weeutil.weeutil
 import weewx.drivers
 
 DRIVER_NAME = 'CC3000'
-DRIVER_VERSION = '0.13'
+DRIVER_VERSION = '0.15'
 
 def loader(config_dict, engine):
     return CC3000Driver(**config_dict[DRIVER_NAME])
@@ -362,12 +362,17 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         loginf('using serial port %s' % port)
         self.polling_interval = float(stn_dict.get('polling_interval', 1))
         loginf('polling interval is %s seconds' % self.polling_interval)
-        self.use_station_time = to_bool(stn_dict.get('use_station_time', True))
+        self.use_station_time = weeutil.weeutil.to_bool(
+            stn_dict.get('use_station_time', True))
         loginf('using %s time for loop packets' %
                ('station' if self.use_station_time else 'computer'))
         self.max_tries = int(stn_dict.get('max_tries', 5))
         self.retry_wait = int(stn_dict.get('retry_wait', 60))
-        self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_SENSOR_MAP)
+        # start with the default sensormap, then augment with user-specified
+        self.sensor_map = dict(self.DEFAULT_SENSOR_MAP)
+        if 'sensor_map' in stn_dict:
+            self.sensor_map.update(stn_dict['sensor_map'])
+        loginf('sensor map is %s' % self.sensor_map)
         self.last_rain = None
 
         self.station = CC3000(port)
@@ -391,28 +396,43 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         if self.polling_interval == 0:
             self.station.set_auto()
             cmd_mode = False
+        # if logger loses contact with sensors, log it periodically
+        last_data_ts = int(time.time())
+        nodata_cnt = -1
+        nodata_interval = 1800 # seconds
+        # get data from the logger, with retries
         ntries = 0
         while ntries < self.max_tries:
             ntries += 1
             try:
                 values = self.station.get_current_data(cmd_mode)
+                now = int(time.time())
                 ntries = 0
                 logdbg("values: %s" % values)
-                packet = self._parse_current(
-                    values, self.header, self.sensor_map)
-                logdbg("parsed: %s" % packet)
-                if packet and 'dateTime' in packet:
-                    if not self.use_station_time:
-                        packet['dateTime'] = int(time.time() + 0.5)
-                    packet['usUnits'] = self.units
-                    if 'day_rain_total' in packet:
-                        packet['rain'] = self._rain_total_to_delta(
-                            packet['day_rain_total'], self.last_rain)
-                        self.last_rain = packet['day_rain_total']
-                    else:
-                        loginf("no rain in loop values: %s" % values)
-                    logdbg("packet: %s" % packet)
-                    yield packet
+                if values:
+                    last_data_ts = now
+                    nodata_cnt = -1
+                    packet = self._parse_current(
+                        values, self.header, self.sensor_map)
+                    logdbg("parsed: %s" % packet)
+                    if packet and 'dateTime' in packet:
+                        if not self.use_station_time:
+                            packet['dateTime'] = int(time.time() + 0.5)
+                        packet['usUnits'] = self.units
+                        if 'day_rain_total' in packet:
+                            packet['rain'] = self._rain_total_to_delta(
+                                packet['day_rain_total'], self.last_rain)
+                            self.last_rain = packet['day_rain_total']
+                        else:
+                            logdbg("no rain in packet: %s" % packet)
+                        logdbg("packet: %s" % packet)
+                        yield packet
+                else:
+                    cnt = (now - last_data_ts) / nodata_interval
+                    if cnt > nodata_cnt:
+                        loginf("no data from sensors since %s" %
+                               weeutil.weeutil.timestamp_to_string(last_data_ts))
+                    nodata_cnt = cnt
                 if self.polling_interval:
                     time.sleep(self.polling_interval)
             except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
@@ -469,7 +489,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                         pkt['day_rain_total'], last_rain)
                     last_rain = pkt['day_rain_total']
                 else:
-                    loginf("no rain in record: %s" % r)
+                    logdbg("no rain in record: %s" % r)
                 logdbg("packet: %s" % pkt)
                 yield pkt
 
@@ -522,6 +542,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
     @staticmethod
     def _rain_total_to_delta(rain_total, last_rain):
         # calculate the rain delta from rain total
+        # FIXME: replace with wxformulas.calculate_rain
         rain_delta = None
         if last_rain is not None:
             if rain_total >= last_rain:
@@ -550,7 +571,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         a failure for any one value, then the entire record fails."""
         pkt = dict()
         if len(values) != len(header) + 1:
-            logdbg("values/header mismatch: %s %s" % (values, header))
+            loginf("values/header mismatch: %s %s" % (values, header))
             return pkt
         for i, v in enumerate(values):
             if i >= len(header):
@@ -756,7 +777,7 @@ class CC3000(object):
         else:
             data = self.read()
         if data == 'NO DATA' or data == 'NO DATA RECEIVED':
-            loginf("No data from sensors")
+            logdbg("No data from sensors")
             return []
         return data.split(',')
 

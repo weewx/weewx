@@ -5,11 +5,11 @@
     <title>weewx: User's Guide</title>
     <meta http-equiv="Content-Language" content="en-us"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
     <link rel="stylesheet" href="css/jquery.tocify.css"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
-    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link rel="icon" href="images/favicon.png" type="image/png"/>
 </head>
 
 <body>
@@ -39,11 +39,11 @@
                 <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
             </a><br/>
 	<span class='version'>
-Version: 3.7.x
+Version: 3.7
         </span>
         </div>
         <div class="title">
-            User's Guide to the <span class="code">weewx</span> Weather System
+            User's Guide to the weeWX Weather System
         </div>
     </div>
 
@@ -51,12 +51,12 @@ Version: 3.7.x
 
         <p>
             This is the complete guide to installing, configuring, and
-            troubleshooting <span class="code">weewx</span>.
+            troubleshooting weeWX.
         </p>
 
-        <h1 id="about">About <span class="code">weewx</span></h1>
+        <h1 id="about">About weeWX</h1>
 
-        <p><span class="code"><a href="http://www.weewx.com">Weewx</a></span> is
+        <p><a href="http://www.weewx.com">WeeWX</a> is
             software, written in <a href="http://www.python.org">Python</a>, that
             interacts with a weather station to produce plots, reports, and HTML
             pages. It can optionally upload the reports to a remote Web server as
@@ -72,23 +72,23 @@ Version: 3.7.x
             downloads are available at
             <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.</p>
 
-        <p><span class="code">Weewx</span> is about 13,000 lines of code, plus
+        <p>WeeWX is about 13,000 lines of code, plus
             another 13,000 for the drivers for all the types of supported hardware. </p>
 
         <h1 id="prerequisites">System requirements</h1>
 
         <h2 id="hardware">Station hardware</h2>
 
-        <p><span class="code">Weewx</span> includes support for many types
+        <p>WeeWX includes support for many types
             of weather stations. In addition to hardware
-            support, <span class="code">weewx</span> comes with a software
+            support, weeWX comes with a software
             simulator, useful for testing and evaluation.
         </p>
         <p>The
             <a href="hardware.htm#driver_status">driver compatibility table</a>
             in the hardware guide has a detailed list of the manufacturers and
             models supported by the drivers that come with
-            <span class="code">weewx</span>. If you do
+            weeWX. If you do
             not see your hardware in this table, check the list of
             <a href="http://weewx.com/hardware.html">supported hardware</a>;
             the pictures may help you identify the manufacturer and/or model.
@@ -107,16 +107,16 @@ Version: 3.7.x
 
         <h2>Computer hardware</h2>
 
-        <p><span class="code">Weewx</span> is written in Python, so it has the overhead associated with that
+        <p>WeeWX is written in Python, so it has the overhead associated with that
             language. Nevertheless, it is "fast enough" on just about any hardware. It
             has been run on everything from an early MacBook to a router!</p>
 
-        <p>I run <span class="code">weewx</span> on a Fit-PC with a 500 MHz AMD
+        <p>I run weeWX on a Fit-PC with a 500 MHz AMD
             Geode processor and 512 MB of memory. Configured this way, it
             consumes about 5% of the CPU, 100 MB of virtual memory,
             and 20 MB of real memory. </p>
 
-        <p><span class="code">Weewx</span> also runs great on a Raspberry Pi, although report generation will take
+        <p>WeeWX also runs great on a Raspberry Pi, although report generation will take
             longer.
             For example, the 12 "To Date" templates take about 5.1 seconds on the RPi,
             compared to 3.0 seconds on my Fit-PC, and a mere 0.9 seconds on my vintage
@@ -130,7 +130,7 @@ Version: 3.7.x
             as the Weather Underground. </p>
 
         <p>The time on some stations is automatically synchronized with the
-            <span class="code">weewx</span> server nominally every four hours.
+            weeWX server nominally every four hours.
             The synchronization frequency can be adjusted in the
             <span class='code'>weewx</span> configuration.</p>
 
@@ -141,8 +141,7 @@ Version: 3.7.x
 
         <h2 id="permissions">Permissions</h2>
 
-        <p>There are a few places where permissions affect
-            <span class="code">weewx</span>:
+        <p>There are a few places where permissions affect weeWX:
         </p>
         <ul>
             <li>Installation/Configuration.  The user who does the installation
@@ -156,25 +155,24 @@ Version: 3.7.x
             <li>Running.  Most USB and serial devices require administrative
                 (root) access.  Unless the device has been configured with a
                 udev rule or other mechanism that grants access to non-root
-                users, <span class="code">weewx</span> commands must be run as
+                users, weeWX commands must be run as
                 root or must be prefaced with <span class="code">sudo</span>
                 for temporary administrative privileges.
             </li>
         </ul>
-        <p>Normally <span class="code">weewx</span> is installed and run with
+        <p>Normally weeWX is installed and run with
             administrative (root) permissions.  However, it is not uncommon to
-            install and run <span class="code">weewx</span> as a generic
-            non-root user, or even as a user created specifically to run
-            <span class="code">weewx</span>.
+            install and run weeWX as a generic
+            non-root user, or even as a user created specifically to run weeWX.
         </p>
 
-        <h1 id="installing">Installing <span class="code">weewx</span></h1>
+        <h1 id="installing">Installing weeWX</h1>
 
         <h2>Required skills</h2>
 
         <p>
             In the world of open-source hobbyist software,
-            <span class="code"> weewx</span> is pretty easy to install and
+            weeWX is pretty easy to install and
             configure. There are not many package dependencies, the
             configuration is simple, and this guide includes extensive
             instructions.
@@ -192,8 +190,8 @@ Version: 3.7.x
                 permissions and running commands;
             </li>
             <li>No programming experience is necessary unless you wish
-                to extend weewx. In this case, you should have some
-                familiarity with Python.
+                to extend weeWX. In this case, you should be comfortable
+                programming in Python. 
             </li>
         </ul>
         <p>If you get stuck, there is a very active
@@ -204,14 +202,14 @@ Version: 3.7.x
         <h2>Overview</h2>
 
         <p>This is an outline of the process to install, configure, and run
-            <span class="code">weewx</span>:</p>
+            weeWX:</p>
 
         <ol>
             <li>Read the <a href="hardware.htm">hardware notes</a>
                 for your weather station. This will let you know of any features,
                 limitations, or quirks of your hardware.
             </li>
-            <li>Install <span class="code">weewx</span>.  Use the step-by-step
+            <li>Install weeWX.  Use the step-by-step
                 instructions in one of the
                 <a href="#installation_methods">installation methods</a> below.
             </li>
@@ -228,14 +226,14 @@ Version: 3.7.x
                 configuration file.
             </li>
             <li><a href="customizing.htm">Customize</a> the installation. This is an advanced topic, which allows you to
-                shape <span class="code">weewx</span> exactly to your liking!
+                shape weeWX exactly to your liking!
             </li>
         </ol>
 
         <h2 id="installation_methods">Installation methods</h2>
 
         <p>
-            <span class='code'>Weewx</span> can be installed from a DEB (Debian) or RPM
+            Weewx can be installed from a DEB (Debian) or RPM
             (Redhat, SUSE) package, or it can be installed using the standard Python utility
             <span class='code'>setup.py</span>.
         </p>
@@ -243,7 +241,7 @@ Version: 3.7.x
         <p>
             The DEB or RPM package approach is simpler and is the recommended method for
             beginners. However, it requires root privileges, and will install the
-            bits and pieces of <span class="code">weewx</span> in standard
+            bits and pieces of weeWX in standard
             operating system locations across the file system instead of in a
             single directory. The net effect is that configuration files,
             templates, and code will all be installed in separate locations, most
@@ -253,14 +251,13 @@ Version: 3.7.x
         <p>
             Installation using <span class="code">setup.py</span> is the
             recommended method for those who plan to write custom services and
-            reports for <span class='code'>weewx</span>. It will put everything
+            reports for weeWX. It will put everything
             in a single directory, specified by the parameter <span class='code'>home</span>
             in the <span class='code'>setup.cfg</span> file, making it
-            easier to modify <span class="code">weewx</span>. This file is not
-            used by the other installation methods. If the user installing <span
-                class='code'>weewx</span> has permission to write to the directory,
-            root privileges will not be required to install, run, or modify <span
-                class='code'>weewx</span>.
+            easier to modify weeWX. This file is not
+            used by the other installation methods. If the user installing
+            weeWX has permission to write to the directory, root privileges
+            will not be required to install, run, or modify weeWX.
         </p>
 
         <h2><a href='debian.htm'>Installing from DEB package</a></h2>
@@ -288,7 +285,7 @@ Version: 3.7.x
         <p>For all other operating systems, follow the
             <a href='setup.htm'><span class="code">setup.py</span> instructions</a>. This method
             can also be used on Debian-, Redhat-, and SUSE-based operating systems as well,
-            and may be a better choice if you intend to heavily customize <span class="code">weewx</span>.
+            and may be a better choice if you intend to heavily customize weeWX.
         </p>
 
         <h2 id="Where_to_find_things">Where to find things</h2>
@@ -320,14 +317,19 @@ Version: 3.7.x
 
         <div id='layout' style='clear:both; width: 80%;'>
             <div id='layout-deb'>
-                <table class='locations' width='100%'>
+                <table class='locations'>
                     <tr class='selected'>
                         <td colspan='3' class='locations_banner'>Application layout for install using DEB package</td>
                     </tr>
-                    <tr class="first_row" style="background-color: inherit">
+                    <tr class="first_row">
                         <td>Role</td>
                         <td>Symbolic Name</td>
                         <td>Nominal Location</td>
+                    </tr>
+                    <tr>
+                        <td>weeWX root directory</td>
+                        <td class="symcode">WEEWX_ROOT</td>
+                        <td class="tty">/</td>
                     </tr>
                     <tr>
                         <td>Executables</td>
@@ -372,14 +374,19 @@ Version: 3.7.x
                 </table>
             </div>
             <div id='layout-rpm' style='display:none'>
-                <table class='locations' width='100%'>
+                <table class='locations'>
                     <tr class='selected'>
                         <td colspan='3' class='locations_banner'>Application layout for install using RPM package</td>
                     </tr>
-                    <tr class="first_row" style="background-color: inherit">
+                    <tr class="first_row">
                         <td>Role</td>
                         <td>Symbolic Name</td>
                         <td>Nominal Location</td>
+                    </tr>
+                    <tr>
+                        <td>weeWX root directory</td>
+                        <td class="symcode">WEEWX_ROOT</td>
+                        <td class="tty">/</td>
                     </tr>
                     <tr>
                         <td>Executables</td>
@@ -424,18 +431,18 @@ Version: 3.7.x
                 </table>
             </div>
             <div id='layout-macos' style='display:none'>
-                <table class='locations' width='100%'>
+                <table class='locations'>
                     <tr class='selected'>
                         <td colspan='3' class='locations_banner'>Application layout for install on MacOS
                         </td>
                     </tr>
-                    <tr class="first_row" style="background-color: inherit">
+                    <tr class="first_row">
                         <td>Role</td>
                         <td>Symbolic Name</td>
                         <td>Nominal Location</td>
                     </tr>
                     <tr>
-                        <td><span class='code'>weewx</span> root directory</td>
+                        <td>weeWX root directory</td>
                         <td class="symcode">WEEWX_ROOT</td>
                         <td class="tty">/Users/Shared/weewx</td>
                     </tr>
@@ -482,19 +489,19 @@ Version: 3.7.x
                 </table>
             </div>
             <div id='layout-setup' style='display:none'>
-                <table class='locations' width='100%'>
+                <table class='locations'>
                     <tr class='selected'>
                         <td colspan='3' class='locations_banner'>Application layout for install using <span
                                 class='code'>setup.py</span>
                         </td>
                     </tr>
-                    <tr class="first_row" style="background-color: inherit">
+                    <tr class="first_row">
                         <td>Role</td>
                         <td>Symbolic Name</td>
                         <td>Nominal Location</td>
                     </tr>
                     <tr>
-                        <td><span class='code'>weewx</span> root directory</td>
+                        <td>weeWX root directory</td>
                         <td class="symcode">WEEWX_ROOT</td>
                         <td class="tty">/home/weewx</td>
                     </tr>
@@ -546,18 +553,18 @@ Version: 3.7.x
         <!-- Moved wee_config description to utilities.htm-->
 
 
-        <h1 id="running">Running <span class="code">weewx</span></h1>
+        <h1 id="running">Running weeWX</h1>
 
-        <p><span class="code">Weewx</span> can be run either directly,
+        <p>WeeWX can be run either directly,
             or as a daemon. When first trying
-            <span class="code">weewx</span>, it is best to run it directly
+            weeWX, it is best to run it directly
             because you will be able to see sensor output and diagnostics, as well
             as log messages. Once everything is working properly, run it as a
             daemon.</p>
 
         <h2>Running directly</h2>
 
-        <p>To run <span class="code">weewx</span> directly, invoke
+        <p>To run weeWX directly, invoke
             the main program, <span class="code">weewxd</span>, giving
             the configuration file as its only parameter: </p>
         <pre class="tty cmd">sudo weewxd weewx.conf</pre>
@@ -567,13 +574,13 @@ Version: 3.7.x
             could take a minute or two. I have found this process particularly slow
             on SuSE for some reason. </p>
 
-        <p><span class="code">Weewx</span> will then start monitoring live sensor
+        <p>WeeWX will then start monitoring live sensor
             data (also referrred to as 'LOOP' data),
             printing a short version of the received data on standard output, about
             once every two seconds for a Vantage station, or considerably longer
             for some other stations. </p>
 
-        <p>You can tell a running instance of <span class="code">weewx</span> to
+        <p>You can tell a running instance of weeWX to
             reread its configuration file by sending it the
             <span class="code">HUP</span> signal.
             First run <span class="code">ps</span> to find out the Process ID (PID)
@@ -585,7 +592,7 @@ Version: 3.7.x
 
         <h2>Running as a daemon</h2>
 
-        <p>For unattended operations it is best to have <span class="code">weewx</span>
+        <p>For unattended operations it is best to have weeWX
             run as a daemon, started automatically when the server is rebooted. </p>
 
         <p>If you use a packaged install from a DEB or RPM distribution, this is
@@ -597,20 +604,20 @@ Version: 3.7.x
         <table class="locations" style="width:90%">
             <tr>
                 <td style='width:30%'>Debian/Ubuntu/Mint:</td>
-                <td class='tty'><span class="cmd">util/init.d/weewx.debian</span></td>
+                <td class='tty'>util/init.d/weewx.debian</td>
             </tr>
             <tr>
                 <td>Redhat/CentOS/Mint:</td>
-                <td class='tty'><span class="cmd">util/init.d/weewx.redhat</span></td>
+                <td class='tty'>util/init.d/weewx.redhat</td>
             </tr>
             <tr>
                 <td>SuSE:</td>
-                <td class='tty'><span class="cmd">util/init.d/weewx.suse</span></td>
+                <td class='tty'>util/init.d/weewx.suse</td>
             </tr>
         </table>
         <p>Check the chosen script to make sure the variable <span class="code">WEEWX_ROOT</span>
             has been set to the proper root directory for your
-            <span class="code">weewx</span> installation (it should have been set to the correct value automatically
+            weeWX installation (it should have been set to the correct value automatically
             by the install process, but it is worth checking). </p>
 
         <p>Copy it to the proper location for your system: </p>
@@ -658,13 +665,13 @@ Version: 3.7.x
                 <td class='tty'><span class="cmd">/usr/lib/lsb/install_initd /etc/init.d/weewx</span></td>
             </tr>
         </table>
-        <p><span class="code">Weewx</span> will now start automatically whenever your
-            system is booted. You can also manually start, stop, and restart the
-            <span class="code">weewx</span> daemon: </p>
+        <p>WeeWX will now start automatically whenever your system is booted.
+            You can also manually start, stop, and restart the weeWX daemon:
+        </p>
     <pre class="tty cmd">sudo /etc/init.d/weewx start
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx restart</pre>
-        <p>By default, the scripts are designed to have <span class="code">weewx</span>
+        <p>By default, the scripts are designed to have weeWX
             run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels
             with Debian (Ubuntu, Mint) systems is
             <a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>. It uses a curses
@@ -673,14 +680,14 @@ sudo /etc/init.d/weewx restart</pre>
             Center, then look for Systems Services (Runlevel). Pick &quot;Expert&quot; mode
             to see the run levels. </p>
 
-        <p>You can also tell <span class="code">weewx</span> to reread its configuration
+        <p>You can also tell weeWX to reread its configuration
             file without stopping by using the &#39;reload&#39; option: </p>
         <pre class="tty cmd">sudo /etc/init.d/weewx reload </pre>
 
 
-        <h1 id="monitoring">Monitoring <span class="code">weewx</span></h1>
+        <h1 id="monitoring">Monitoring weeWX</h1>
 
-        <p><span class="code">Weewx</span> logs many events to the system log.
+        <p>WeeWX logs many events to the system log.
             On Debian systems, this is <span class="code">/var/log/syslog</span>,
             on SuSE, <span class="code">/var/log/messages</span>. Your system may
             use yet another place. When troubleshooting the system, be sure to check
@@ -699,10 +706,10 @@ sudo /etc/init.d/weewx restart</pre>
 
         <h2>If the server is on the same machine</h2>
 
-        <p>The reports generated by <span class='code'>weewx</span> can be
+        <p>The reports generated by weeWX can be
             served by a web server running on the same computer as
-            <span class='code'>weewx</span>. These are instructions for making
-            <span class='code'>weewx</span> reports available via the Apache
+            weeWX. These are instructions for making
+            weeWX reports available via the Apache
             web server. The process is similar for other web servers such as
             <span class='code'>nginx</span> or
             <span class='code'>lighthttpd</span>.</p>
@@ -710,35 +717,37 @@ sudo /etc/init.d/weewx restart</pre>
         <ol>
             <li>
                 <p>Install the Apache web server on the computer on which
-                    <span class='code'>weewx</span> is running. For example, on Debian
-                    systems:</p>
+                    weeWX is running. For example, on Debian systems:</p>
 
                 <p class='tty cmd'>sudo apt-get install apache2</p>
             </li>
 
             <li>
-                <p>Configure Apache to see the <span class="code">weewx</span> reports.</p>
+                <p>Configure Apache to see the weeWX reports.</p>
                 <ul>
                     <li>
-                        <p>If <span class='code'>weewx</span> was installed from DEB or RPM
-                            package, no configuration should be necessary since the reports are placed
-                            in the directory <span class='code'>/var/www/html/weewx</span>,
+                        <p>If weeWX was installed from DEB or RPM package, no
+                            configuration should be necessary since the reports
+                            are placed in the directory
+                            <span class='code'>/var/www/html/weewx</span>,
                             which is in the Apache DocumentRoot directory
                             <span class='code'>/var/www/html</span></p>
                     </li>
                     <li>
-                        <p>If <span class='code'>weewx</span> was installed using
-                            <span class='code'>setup.py</span>, you must tell Apache
-                            where to find the <span class='code'>weewx</span> reports.
+                        <p>If weeWX was installed using
+                            <span class='code'>setup.py</span>, you must tell
+                            Apache where to find the weeWX reports.
                             One method is to install an Apache
                             configuration snippet:</p>
 
                         <pre class='tty cmd'>sudo cp util/apache/conf.d/weewx.conf /etc/apache2/conf.d</pre>
 
-                        <p>Be sure that the path in the Apache configuration snippet matches the
+                        <p>Be sure that the path in the Apache configuration
+                            snippet matches the
                             <span class='code'>HTML_ROOT</span> defined in the
-                            <span class='code'>weewx</span> configuration file. For example,
-                            the path for a default <span class='code'>setup.py</span> installation
+                            weeWX configuration file. For example,
+                            the path for a default
+                            <span class='code'>setup.py</span> installation
                             would look like this:</p>
 
     <pre class='tty'>Alias /weewx <span class="highlight">/home/weewx/public_html</span>
@@ -754,18 +763,18 @@ sudo /etc/init.d/weewx restart</pre>
             </li>
 
             <li>
-                <p>Open the <span class='code'>weewx</span> URL in a web browser:</p>
+                <p>Open the weeWX URL in a web browser:</p>
                 <p class='tty'>http://localhost/weewx</p>
             </li>
         </ol>
 
         <h2>If the server is on a different machine</h2>
 
-        <p>Use FTP or RSYNC to transfer the files generated by weewx to your
-            remote server.  In <span class="code">weewx</span>, FTP and RSYNC
+        <p>Use FTP or RSYNC to transfer the files generated by weeWX to your
+            remote server.  In weeWX, FTP and RSYNC
             are implemented as reports.  They are configured in the
             <span class="code">[StdReport]</span> section of the
-            <span class="code">weewx</span> configuration file.</p>
+            weeWX configuration file.</p>
         <p>For example, the following configuration would use RSYNC to copy
             the html and images files from the standard report to a folder
             <span class="code">/var/www/html/weewx</span> on the server
@@ -797,17 +806,17 @@ sudo /etc/init.d/weewx restart</pre>
         <h1 id="backup">Making backups</h1>
 
         <p>
-            To backup a <span class='code'>weewx</span> installation, you will
-            need to make a copy of</p>
+            To backup a weeWX installation, you will need to make a copy of
+        </p>
         <ul>
             <li>configuration information;</li>
             <li>skins and templates;</li>
             <li>any custom code or extensions you have installed;</li>
-            <li>the weewx database.</li>
+            <li>the weeWX database.</li>
         </ul>
         <p>
             It is not necessary to backup the generated images, HTML files, or
-            NOAA reports since <span class="code">weewx</span> will easily
+            NOAA reports since weeWX will easily
             create these again.
         </p>
 
@@ -889,8 +898,8 @@ sudo /etc/init.d/weewx restart</pre>
             Do not make the copy of the SQLite database while in the middle of
             a transaction! Schedule the backup for immediately after an
             archive record is written, and then make sure the backup completes
-            before the next archive record arrives. Alternatively, stop weewx,
-            perform the backup, then restart weewx.
+            before the next archive record arrives. Alternatively, stop weeWX,
+            perform the backup, then restart weeWX.
         </p>
 
         <p>
@@ -901,8 +910,8 @@ sudo /etc/init.d/weewx restart</pre>
 
         <p>
             To restore from backup, do a fresh install of
-            <span class='code'>weewx</span>, replace the default files with
-            those from a backup, then start <span class='code'>weewx</span>.
+            weeWX, replace the default files with
+            those from a backup, then start weeWX.
         </p>
 
 
@@ -938,12 +947,12 @@ sudo /etc/init.d/weewx restart</pre>
     user = weewx
     password = weewx
 </pre>
-        <p>This assumes user <span class="code">weewx</span> would have password <span class="code">weewx</span>.
+        <p>This assumes user weeWX would have password weeWX.
             Adjust as necessary.</p>
 
-        <p>You will need to give the necessary permissions for the database <span class="code">weewx</span>
-            to whatever MySQL user you choose, by
-            default, user <span class="code">weewx</span>. Here are the necessary minimum
+        <p>You will need to give the necessary permissions for the database
+            weeWX to whatever MySQL user you choose, by
+            default, user weeWX. Here are the necessary minimum
             permissions:</p>
     <pre class="tty">mysql&gt; <span class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
 mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop ON weewx.* TO weewx@localhost;</span></pre>
@@ -953,7 +962,7 @@ mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop O
 
         <h2>sqlite3</h2>
 
-        <p>The SQLite archive database used by <span class="code">weewx</span>
+        <p>The SQLite archive database used by weeWX
             (nominally, <span class="code">weewx.sdb</span>) is completely
             compatible with the database used by
             <a href="http://www.wviewweather.com">wview</a> (usually called
@@ -962,7 +971,7 @@ mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop O
         </p>
 
         <p>If you have data from <span class='code'>wview</span>, you can
-            'import' them into <span class='code'>weewx</span> by simply copying the
+            'import' them into weeWX by simply copying the
             SQLite database file. Assuming that the <span class='code'>wview</span>
             data are in file
             <span class='code'>/var/wview/archive/wview-archive.sdb</span>,</p>
@@ -975,7 +984,7 @@ sudo /etc/init.d/weewx start</pre>
 
         <p>
             Internally, within the <span class="code">weewx.sdb</span> database,
-            <span class="code">weewx</span> also maintains a "daily summary" of all the statistics. This
+            weeWX also maintains a "daily summary" of all the statistics. This
             is done for performance reasons. The daily summary will
             automatically be built on the first startup. This could take
             a few minutes if the <span class='code'>wview</span> archive contains
@@ -991,13 +1000,13 @@ sudo /etc/init.d/weewx start</pre>
         <h2>MySQL</h2>
 
         <p>The MySQL archive database used by wview is "almost" compatible with
-            <span class="code">weewx</span>. The one difference is that in wview, the column <span
+            weeWX. The one difference is that in wview, the column <span
                     class="code">interval</span>
             is named <span class="code">arcInt</span> (presumably because
             <span class="code">interval</span> is a keyword in MySQL, although it can
             still be used by surrounding the word with backquotes). </p>
 
-        <p>To change the column name to what <span class="code">weewx</span> uses, namely <span
+        <p>To change the column name to what weeWX uses, namely <span
                 class="code">interval</span>,
             use the utility <span class="code">mysql</span> and issue the command:</p>
         <pre class="tty">mysql> <span class="cmd">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt `interval` INTEGER NOT NULL;</span> </pre>
@@ -1018,8 +1027,7 @@ sudo /etc/init.d/weewx start</pre>
 
         <p>The configuration file <span class="code">weewx.conf</span> is a big
             text file that holds the configuration information about your
-            installation of <span class="code">weewx.</span> This includes things
-            such as:</p>
+            installation of weeWX. This includes things such as:</p>
         <ul>
             <li>The type of hardware you have;</li>
             <li>The name of your station;</li>
@@ -1052,7 +1060,7 @@ sudo /etc/init.d/weewx start</pre>
 
         <p>Default values are provided for many options, meaning that if they are
             not listed in the configuration file <em>at all</em>,
-            <span class="code">weewx</span> will pick sensible values. When the
+            weeWX will pick sensible values. When the
             documentation below gives a &quot;default value&quot; this is what it
             means.</p>
 
@@ -1073,8 +1081,8 @@ sudo /etc/init.d/weewx start</pre>
 
         <p class="config_option">WEEWX_ROOT </p>
 
-        <p>Set to the root directory of the <span class="code">weewx</span> file
-            hierarchy for this station. Normally, this is set automatically by the
+        <p>Set to the root directory of the weeWX file hierarchy for this
+            station. Normally, this is set automatically by the
             installation process. Required. No default.
         </p>
 
@@ -1200,7 +1208,7 @@ longitude = -77.0366</pre>
 
         <p>If you have a website, you may optionally specify an URL for
             its HTML server. It will be included in the RSS file generated
-            by weewx and, if you choose to opt into the <a href="#station_registry">station
+            by weeWX and, if you choose to opt into the <a href="#station_registry">station
                 registry</a>, it will also be included in the
             <a href="http://weewx.com/stations.html">map of weewx stations</a>.</p>
 
@@ -1222,8 +1230,8 @@ longitude = -77.0366</pre>
 
         <h3 class="config_section">[Simulator]</h3>
 
-        <p>This section is for options relating to the software weather station simulator
-            that comes with <span class="code">weewx</span>.</p>
+        <p>This section is for options relating to the software weather
+            station simulator that comes with weeWX.</p>
 
         <p class="config_option">loop_interval</p>
 
@@ -1289,8 +1297,7 @@ longitude = -77.0366</pre>
         <p class='config_option'>polling_interval</p>
 
         <p>The <span class="code">polling_interval</span> determines how often
-            <span class="code">weewx</span> will query the station for data. The
-            default is 1 second.
+            weeWX will query the station for data. The default is 1 second.
         </p>
 
         <p class="config_option">sensor_map</p>
@@ -1338,10 +1345,10 @@ longitude = -77.0366</pre>
         <p>One of <span class='code'>PERIODIC</span> or
             <span class='code'>ADAPTIVE</span>. In
             <span class='code'>PERIODIC</span> mode,
-            <span class='code'>weewx</span> queries the console at regular intervals
+            weeWX queries the console at regular intervals
             determined by the <span class='code'>polling_interval</span>.
             In <span class='code'>ADAPTIVE</span> mode,
-            <span class='code'>weewx</span> attempts to query the
+            weeWX attempts to query the
             console at times when it is not reading data from the sensors or writing
             data to memory. See the section <a href="#polling_mode_and_the_polling_interval">
                 Polling Mode and the Polling Interval</a>
@@ -1349,7 +1356,7 @@ longitude = -77.0366</pre>
 
         <p class='config_option'>polling_interval</p>
 
-        <p>The frequency, in seconds, at which <span class='code'>weewx</span> will
+        <p>The frequency, in seconds, at which weeWX will
             poll the console for data. Default is 60. This setting applies only
             when the <span class='code'>polling_mode</span> is
             <span class='code'>PERIODIC</span>.</p>
@@ -1528,9 +1535,9 @@ longitude = -77.0366</pre>
             seconds.</p>
 
         <p>The wmr200 hardware records archive data at an immutable rate of 60
-            seconds. This field may be set to a higher value enabling the weewx
+            seconds. This field may be set to a higher value enabling the weeWX
             engine to coalesce live data packets. However, when the wmr200 is not
-            connected to a system via USB or if the weewx software is not running,
+            connected to a system via USB or if the weeWX software is not running,
             the wmr200 console will continue to store weather data in onboard
             console memory at a fixed rate of 60 seconds.</p>
 
@@ -1667,7 +1674,7 @@ longitude = -77.0366</pre>
         <p class='config_option'>polling_interval</p>
 
         <p>The <span class="code">polling_interval</span> determines how often
-            <span class="code">weewx</span> will query the station for data. The
+            weeWX will query the station for data. The
             default is 1 second.
         </p>
 
@@ -1691,9 +1698,9 @@ longitude = -77.0366</pre>
         <p class='config_option'>polling_interval</p>
 
         <p>The <span class="code">polling_interval</span> determines how often
-            <span class="code">weewx</span> will query the station for data. If no
+            weeWX will query the station for data. If no
             <span class="code">polling_interval</span> is specified (the default),
-            <span class="code">weewx</span> will automatically use a polling interval
+            weeWX will automatically use a polling interval
             based on the type of connection between the station and the sensors
             (wired or wireless). When connected with a wire, the console updates
             sensor data every 8 seconds. When connected wirelessly, the console
@@ -1727,7 +1734,7 @@ longitude = -77.0366</pre>
 
         <h3 class="config_section" id="station_registry">[[StationRegistry]]</h3>
 
-        <p> A registry of <span class="code">weewx</span> weather stations
+        <p> A registry of weeWX weather stations
             is maintained at <span class="code">weewx.com</span>. Stations are
             displayed on a map and a list at
             <a href="http://weewx.com/stations.html">http://weewx.com/stations.html</a>
@@ -1735,8 +1742,8 @@ longitude = -77.0366</pre>
 
         <p>How does the registry work? Individual weather stations
             periodically contact the registry. Each station provides a URL to
-            identify itself, plus other information such as the station type and
-            <span class="code">weewx</span> version. No personal information, nor
+            identify itself, plus other information such as the station type
+            and weeWX version. No personal information, nor
             any meteorological data, is sent.</p>
 
         <p>To add your station to this list, you must do two things:</p>
@@ -1789,7 +1796,7 @@ longitude = -77.0366</pre>
 
         <h3 class="config_section">[[AWEKAS]]</h3>
 
-        <p class="config_section"><span class="code">weewx</span> can send your
+        <p class="config_section">WeeWX can send your
             current data to the <a href="http://www.awekas.at/">Automatisches
                 Wetterkarten System</a> (AWEKAS). If you wish
             to do this, set the option <span class='code'>enable</span> to
@@ -1828,9 +1835,13 @@ longitude = -77.0366</pre>
 
         <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
 
+        <p class='config_option'>retry_login</p>
+
+        <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
+
         <h3 class="config_section">[[CWOP]]</h3>
 
-        <p><span class="code">Weewx</span> can send your current data to the
+        <p>WeeWX can send your current data to the
             <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>. If you
             wish to do this, set the option
             <span class='code'>enable</span> to <span class='code'>true</span>,
@@ -1876,7 +1887,7 @@ longitude = -77.0366</pre>
         <p>How old a record can be before it will not be used for a catch up. CWOP
             does not use the timestamp on a posted record. Instead, they use the wall
             clock time that it came in. This means that if your station is off the
-            air for a long period of time, then when <span class="code">weewx</span>
+            air for a long period of time, then when weeWX
             attempts a catch up, old data could be interpreted as the current
             conditions. Optional. Default is 1800 seconds.</p>
 
@@ -1896,7 +1907,7 @@ longitude = -77.0366</pre>
 
         <h3 class="config_section">[[PWSweather]]</h3>
 
-        <p><span class="code">Weewx</span> can send your current data to the
+        <p>WeeWX can send your current data to the
             <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you
             wish to do this, set the option
             <span class='code'>enable</span> to <span class='code'>true</span>,
@@ -1931,10 +1942,14 @@ longitude = -77.0366</pre>
 
         <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
 
+        <p class='config_option'>retry_login</p>
+
+        <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
+
 
         <h3 class="config_section">[[WOW]]</h3>
 
-        <p class="config_section"><span class="code">Weewx</span> can send your
+        <p class="config_section">WeeWX can send your
             current data to the <a href="http://wow.metoffice.gov.uk/">British
                 Weather Observations Website (WOW)</a> service. If you wish
             to do this, set the option <span class='code'>enable</span> to
@@ -1971,10 +1986,14 @@ longitude = -77.0366</pre>
 
         <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
 
+        <p class='config_option'>retry_login</p>
+
+        <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
+
         <h3 class="config_section">[[Wunderground]]</h3>
 
         <p>
-            <span class="code">Weewx</span> can send your current data to the
+            WeeWX can send your current data to the
             <a href="http://www.wunderground.com/">Weather Underground</a>. If
             you wish to do this, set the option <span class="code">enable</span> to
             <span class="code">true</span>, then set the options
@@ -2008,7 +2027,7 @@ longitude = -77.0366</pre>
         <p class="config_option">rapidfire</p>
 
         <p>
-            Set to <span class="code">True</span> to have <span class="code">weewx</span>
+            Set to <span class="code">True</span> to have weeWX
             post using the <a href="http://www.wunderground.com/weatherstation/rapidfirehelp.asp">Weather Underground's
             "Rapidfire" protocol</a>.
             This will send a post to the
@@ -2020,7 +2039,7 @@ longitude = -77.0366</pre>
         <p class="config_option">archive_post</p>
 
         <p>
-            This option tells <span class="code">weewx</span> to post on every
+            This option tells weeWX to post on every
             archive record, which is the normal "PWS" mode for the Weather
             Underground. Because they prefer that you either use their
             "Rapidfire" protocol, or their PWS mode, but not both, the default
@@ -2041,6 +2060,10 @@ longitude = -77.0366</pre>
         <p>In case of failure, make a note in the system log. The default is
             <span class='code'>False</span> for Rapidfire mode,
             <span class='code'>True</span> for PWS mode.</p>
+
+        <p class='config_option'>retry_login</p>
+
+        <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
 
 
         <h2 class="config_section">[StdReport]</h2>
@@ -2159,7 +2182,7 @@ longitude = -77.0366</pre>
 
         <p class="config_option">max_tries </p>
 
-        <p><span class="code">Weewx</span> will try up to this many times to FTP a file
+        <p>WeeWX will try up to this many times to FTP a file
             up to your server before giving up. Default is 3. </p>
 
         <h3 class="config_section" id="config_RSYNC">[[RSYNC]]</h3>
@@ -2181,7 +2204,7 @@ longitude = -77.0366</pre>
         <p class="config_important">user </p>
 
         <p>Set to the ssh username you use for your rsync connection to your web server.
-            The local user that <span class="code">weewx</span> runs as must have passwordless ssh configured for
+            The local user that weeWX runs as must have passwordless ssh configured for
             user@server. Required. No default. </p>
 
         <p class="config_important">path </p>
@@ -2207,7 +2230,7 @@ longitude = -77.0366</pre>
             unit system. Hence, your data will be stored in the database
             using whatever unit system you specify here. </p>
 
-        <p><em>Once chosen, it cannot be changed!</em> <span class="code">weewx</span> does not allow you to
+        <p><em>Once chosen, it cannot be changed!</em> WeeWX does not allow you to
             mix unit systems within the databases. You must chose a unit system
             and then stick with it. This means that users coming from wview (which
             uses US Customary) should not change the default setting. Having said
@@ -2438,7 +2461,7 @@ longitude = -77.0366</pre>
         </table>
         <p>For example, if your weather station calculates windchill using the
             pre-2001 algorithm, and you prefer to have
-            <span class='code'>weewx</span> calculate it using a current algorithm,
+            weeWX calculate it using a current algorithm,
             specify the following:</p>
 
     <pre class="tty">[StdWXCalculate]
@@ -2471,9 +2494,9 @@ longitude = -77.0366</pre>
 
         <p>Set to whether records should be downloaded off the hardware (recommended),
             or generated in software. If set to <span class="code">hardware</span>, then
-            <span class="code">weewx</span> tries to download archive records from your
+            weeWX tries to download archive records from your
             station. However, not all types of stations support this, in which case
-            <span class="code">weewx</span> falls back to software generation. A setting
+            weeWX falls back to software generation. A setting
             of <span class="code">hardware</span> will work for most users. A notable
             exception is <a href="http://www.wxforum.net/index.php?topic=10315.0">users
                 who have cobbled together homebrew serial interfaces</a> for the Vantage stations
@@ -2706,27 +2729,27 @@ longitude = -77.0366</pre>
         <h2 class="config_section">[Engine]</h2>
 
         <p>
-            This section is used to configure the internal service engine in <span
-                class="code">weewx</span>. It is for advanced customization. Details
-            on how to do this can be found in the section <em> <a
-                href="customizing.htm#service_engine">Customizing the weewx
-            service engine</a></em> of the <a href="customizing.htm">Customization
-            Guide</a>.
+            This section is used to configure the internal service engine in
+            weeWX. It is for advanced customization. Details
+            on how to do this can be found in the section
+            <em> <a href="customizing.htm#service_engine">Customizing the weeWX
+            service engine</a></em> of the
+            <a href="customizing.htm">Customization Guide</a>.
         </p>
 
 
         <h3 class="config_section">[[Services]]</h3>
 
         <p>
-            Internally, <span class="code">weewx</span> consists of many <em>services</em>,
+            Internally, weeWX consists of many <em>services</em>,
             each responsible for some aspect of the program's functionality.
             After an event happens, such as
             the arrival of a new LOOP packet, any interested service gets a
             chance to do some useful work on the event. For example, a service
             might manipulate the packet, print it out, store it in a database,
             etc. This section controls which services are loaded and in what
-            order they get their opportunity to do that work. Before <span
-                class="code">weewx</span> v2.6, this section held one, looong
+            order they get their opportunity to do that work. Before weeWX
+            v2.6, this section held one, looong
             option called <span class="code">service_list</span>, which held
             the names of all the services that should be run. Since then, this
             list has been broken down into five, smaller, lists, given below.
@@ -2786,7 +2809,7 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
         <h1 id="troubleshooting">Troubleshooting</h1>
 
         <p>This section lists some common problems installing and running
-            <span class="code">weewx</span>. If you are still stuck, be sure to: </p>
+            weeWX. If you are stuck, be sure to: </p>
         <ul>
             <li style="margin-bottom: 1em">Set the option <span
                     class="code">debug</span> to <span class="code">1</span> in <span
@@ -2795,14 +2818,14 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
                 troubleshooting and debugging!
                 <p class='tty'>debug = 1</p>
             </li>
-            <li style="margin-bottom: 1em">Look at the <a href="#monitoring">log file</a>. I am
-                always happy to take questions, but the first thing I will ask
+            <li style="margin-bottom: 1em">Look at the <a href="#monitoring">log file</a>. We are
+                always happy to take questions, but the first thing someone will ask
                 is, &quot;Did you look at the log file?&quot;
                 <p class='tty cmd'>sudo tail -f /var/log/syslog</p>
             </li>
             <li style="margin-bottom: 1em">Run <span class="code">weewxd</span>
                 directly from the command line, rather than as a
-                daemon. Generally, <span class="code">weewx</span> will catch
+                daemon. Generally, weeWX will catch
                 and log any unrecoverable exceptions. But if you are getting
                 strange results, it is worth running directly and looking for
                 any clues.
@@ -2811,7 +2834,10 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
         </ul>
 
 
-        <!-- wee_debug documentation moved to utilities.htm -->
+        <p>If you are still stuck, post your problem to the 
+        <a href="https://groups.google.com/forum/#!forum/weewx-user">weewx-user group</a>. The Wiki
+        has some guidelines on <a href="https://github.com/weewx/weewx/wiki/Help!-Posting-to-weewx-user">
+        how to do an effective post</a>.</p>
 
 
         <h2>Hardware problems</h2>
@@ -2861,7 +2887,7 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
 
         <h3>Establishing connectivity</h3>
 
-        <p>If you are unable to get anything out of <span class="code">weewx</span>
+        <p>If you are unable to get anything out of weeWX
             first check that you have connectivity to your weather station. For the
             Davis stations, you can use a terminal emulator to run a simple test.
             Set it up to communicate using the appropriate port and baudrate. I
@@ -2884,7 +2910,7 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
         <p>The USB converter used in the Davis VantagePro is known to have some &quot;noise&quot;
             problems. The symptom is that the Linux kernel will disconnect from your old
             USB port claiming &quot;EMI noise&quot;, and reconnect to a new and different
-            port, where <span class="code">weewx</span> cannot find it. Here is a
+            port, where weeWX cannot find it. Here is a
             typical log output: </p>
 
     <pre class='tty'>Nov 29 10:40:21 hummingbird kernel: [6661624.786792] hub 2-0:1.0: port 3 disabled by hub (EMI?) re-enabling...
@@ -2968,12 +2994,12 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
 
         <p>I have tested this system many times. You can yank the USB port out of the
             machine and then plug it back in while also pulling out the network connection
-            in the middle of an FTP upload: <span class="code">weewx</span> will recover.
+            in the middle of an FTP upload: weeWX will recover.
         </p>
 
         <p>Or, at least, it should! </p>
 
-        <h3 id="html_generated_but_not_updated"><span class="code">weewx</span> generates HTML pages, but it does not
+        <h3 id="html_generated_but_not_updated">WeeWX generates HTML pages, but it does not
             update them</h3>
 
         <p>If you are getting a symptom that everything appears normal, that is
@@ -2987,7 +3013,7 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
             in the future, then records from the station that are older than that
             future date will be ignored. How can the database contain records from
             the future? Sometimes the computer clock is not set correctly. For
-            example, the raspberry pi has no clock, so if weewx saves data before
+            example, the raspberry pi has no clock, so if weeWX saves data before
             the pi has synchronized its clock with internet time servers, the
             records will have incorrect time stamps, some of which might be in the
             future.</p>
@@ -3006,7 +3032,7 @@ sqlite> <span class="cmd">.exit</span></pre>
         <h4>Corrupt station memory</h4>
         <p>If you have a Vantage station, the problem might be because the data on
             board your console has become garbled. The way the Davis Vantage series
-            works is that the software (<span class="code">weewx</span> in this case)
+            works is that the software (weeWX in this case)
             asks the console for all archive data &quot;since&quot; some time. The
             console then downloads the records one at a time. After it gets to the
             very last one, the memory wraps around, and the timestamp will suddenly
@@ -3015,7 +3041,7 @@ sqlite> <span class="cmd">.exit</span></pre>
 
         <p>However, if the internal memory gets garbled, the console will immediately
             return archives in the past, and so it looks like the timestamps have decreased
-            in value and so <span class="code">weewx</span> figures that is it: there is
+            in value and so weeWX figures that is it: there is
             no more data. Here is what the log typically looks like (with <span class="code">debug=1</span>):</p>
 
         <pre class="tty">Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: Getting archive packets since 2016-11-25 19:55:00 CET (1480100100)
@@ -3035,11 +3061,11 @@ Nov 26 14:20:20 raspberrypi weewx[3849]: reportengine: copied 9 files to /var/ww
 Nov 26 14:20:20 raspberrypi weewx[3849]: reportengine: Running report FTP
 Nov 26 14:20:20 raspberrypi weewx[3849]: reportengine: Found configuration file /etc/weewx/skins/Ftp/skin.conf for report FTP
 </pre>
-        <p>Note how weewx did a <span class="code">DMPAFT</span> command
+        <p>Note how weeWX did a <span class="code">DMPAFT</span> command
             ("<span class="code">Getting archive packets since 2016-11-25 19:55:00</span>"). The console responded
             that it has lots of records after that time ("<span class="code">Retrieving 45 page(s);
                 starting index= 1</span>"),
-            but when weewx actually tries to retrieve them, they are all before the requested time.
+            but when weeWX actually tries to retrieve them, they are all before the requested time.
         </p>
         <p>There seems to be two fixes:</p>
         <ol>
@@ -3066,7 +3092,7 @@ Nov 26 14:20:20 raspberrypi weewx[3849]: reportengine: Found configuration file 
         </p>
 
         <p>For these interfaces, you must set record generation to <em>software</em>.
-            Without this information, <span class="code">weewx</span> is unable to detect
+            Without this information, weeWX is unable to detect
             the absence of onboard memory. If you do not do this, you will get errors that
             look like the following in your syslog:</p>
     <pre class="tty">Nov 27 20:30:21 rpi weewx[5607]: reportengine: Caught unrecoverable exception in generator weewx.filegenerator.FileGenerator
@@ -3094,7 +3120,7 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
 
         <h3>Raspberry Pi</h3>
 
-        <p><span class="code">Weewx</span> runs very well on the Raspberry Pi,
+        <p>WeeWX runs very well on the Raspberry Pi,
             from the original Model A and Model B, to the latest incarnations.
             However, the Pi does have some quirks, including issues with USB
             power and lack of a clock.</p>
@@ -3102,7 +3128,7 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
         <p>
             See the <a href="https://github.com/weewx/weewx/wiki">Wiki</a>
             for up-to-date information on
-            <a href="https://github.com/weewx/weewx/wiki/Raspberry%20Pi"><i>Running weewx on a Raspberry Pi</i></a>.
+            <a href="https://github.com/weewx/weewx/wiki/Raspberry%20Pi"><i>Running weeWX on a Raspberry Pi</i></a>.
         </p>
 
         <h3>Fine Offset USB lockups</h3>
@@ -3120,7 +3146,7 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
             message. Unfortunately, we have not found a software cure for
             this. Instead, you must power cycle the unit. Remove the
             batteries and unplug the USB, then put it back together. No
-            need to restart weewx.</p>
+            need to restart weeWX.</p>
 
         <p>More details
             about <a href="https://github.com/weewx/weewx/wiki/FineOffset%20USB%20lockup"><i>Fine Offset lockups</i></a>
@@ -3131,9 +3157,9 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
 
         <p>Most hardware with data-logging includes a parameter to specify
             the archive interval used by the logger. If the hardware and driver
-            support it, <span class='code'>weewx</span> will use this interval
+            support it, weeWX will use this interval
             as the <span class='code'><em>archive_interval</em></span>. If not,
-            <span class='code'>weewx</span> will fall back to the
+            weeWX will fall back to the
             <span class='code'>archive_interval</span> specified in
             <a href='#StdArchive'><span class='code'>[StdArchive]</span></a>.
             The default fallback value is 300 seconds (5 minutes).
@@ -3141,10 +3167,10 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
 
         <p>If the hardware archive interval is large, it will take a
             long time before anything shows up in the
-            <span class='code'>weewx</span> reports. For example, WS23xx stations
+            weeWX reports. For example, WS23xx stations
             ship with an archive interval of 60 minutes, and Fine Offset stations
             ship with an archive interval of 30 minutes.
-            If you run <span class='code'>weewx</span> with a WS23xx station in
+            If you run weeWX with a WS23xx station in
             its factory default configuration, it will take 60 minutes before the
             first data point shows up, then another 60 minutes until the next one,
             and so on.
@@ -3167,7 +3193,7 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
 
         <h3>Nothing in the log file</h3>
 
-        <p>As it is running, <span class='code'>weewx</span> periodically sends
+        <p>As it is running, weeWX periodically sends
             status information, failures, and other things to your system's logging
             facility. They typically look something like this:</p>
     <pre class='tty'>-DATE- --TIME-- HOST weewx[-PID-]: LOG_MESSAGE
@@ -3183,7 +3209,7 @@ Jan  1 09:46:32 saga weewx[15292]: wxengine: pid file is /var/run/weewx.pid</pre
 
         <p>However, some systems default to saving only warning or
             critical information, so the <span class="code">info</span>
-            messages from <span class="code">weewx</span> may not appear.
+            messages from weeWX may not appear.
             If this happens to you, check your system logging configuration.
             On Debian systems, look
             in <span class="code">/etc/rsyslog.conf</span>. On Redhat
@@ -3193,7 +3219,7 @@ Jan  1 09:46:32 saga weewx[15292]: wxengine: pid file is /var/run/weewx.pid</pre
 
         <p>These are errors in the configuration file. Two are very common.
             Incidentally, these errors are far easier to diagnose when
-            <span class="code">weewx</span> is run directly than when it is run
+            weeWX is run directly than when it is run
             as a daemon. </p>
         <h4><span class="code">configobj.DuplicateError</span> exception</h4>
 
@@ -3269,7 +3295,7 @@ Apr 24 12:09:15 raven weewx[11480]: **** Exiting. </pre>
 Apr 12 05:12:32 raven reportengine[3074]: **** Message: &quot;cannot find &#39;fubar&#39; in template /home/weewx/skins/Standard/index.html.tmpl&quot;
 Apr 12 05:12:32 raven reportengine[3074]: **** Ignoring template and continuing.</pre>
 
-        <p>you have a tag in your template that <span class="code">weewx</span>
+        <p>you have a tag in your template that weeWX
             does not recognize. In this example, it is the tag
             <span class="code">$fubar</span> in the template
             <span class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
@@ -3296,14 +3322,14 @@ Jan 18 20:39:09 rpi weewx[5977]:       ****  Expected to read 99 chars; got 2 in
 Jan 18 20:39:14 rpi weewx[5977]: VantagePro: LOOP #15; read error. Try #4
 Jan 18 20:39:14 rpi weewx[5977]:       ****  Expected to read 99 chars; got 2 instead</pre>
         <p>If you look closely at the log above, you'll see that there are
-            multiple instances of <span class="code">weewx</span> running
+            multiple instances of weeWX running
             simultaneously (process IDs 5977, 6024, and 7543). They are
             contending with each other for control of the console, resulting
             in missed packets and records.
         </p>
 
         <p>The cure is simple: kill all but one of them. Or, better yet,
-            kill them all, then start <span class="code">weewx</span>.</p>
+            kill them all, then start weeWX.</p>
 
         <h3 id='dots_in_plots'>Dots in the plots</h3>
 
@@ -3320,7 +3346,7 @@ Jan 18 20:39:14 rpi weewx[5977]:       ****  Expected to read 99 chars; got 2 in
             to control how much time is considered a break in data.</p>
 
         <p>As for the archive interval, check the log file for an entry like this
-            soon after <span class='code'>weewx</span> starts up:</p>
+            soon after weeWX starts up:</p>
 
     <pre class='tty'>Dec 30 10:54:17 saga weewx[10035]: wxengine: The archive interval in the configuration file (300) does not match the station hardware interval (1800).
 Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</pre>
@@ -3328,7 +3354,7 @@ Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</pre
         <p>In this example, interval in <span class="code">weewx.conf</span> is 5
             minutes, but the station interval is 30 minutes. When the interval
             in <span class="code">weewx.conf</span> does not match the station's
-            hardware interval, <span class="code">weewx</span> defers to the
+            hardware interval, weeWX defers to the
             station's interval.</p>
 
         <p>Use the <a href="utilities.htm#wee_device_utility"><span class="code">wee_device</span></a> utility to change
@@ -3359,7 +3385,7 @@ Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</pre
             high temperatures and wind speeds for one or two readings. This is
             how to remove them:</p>
         <ol>
-            <li>stop <span class='code'>weewx</span></li>
+            <li>stop weeWX</li>
             <li>Make a copy of the archive database
                 <pre class='tty cmd'>cp weewx.sdb weewx-YYMMDD.sdb</pre>
             </li>
@@ -3374,11 +3400,11 @@ sqlite&gt; <span class="cmd">select dateTime,outTemp from archive where outTemp 
       <pre class='tty'>sqlite&gt; <span class="cmd">update archive set windSpeed=NULL where outTemp &gt; 1000;</span>
 sqlite&gt; <span class="cmd">update archive set outTemp=NULL where outTemp &gt; 1000;</span></pre>
             </li>
-            <li>Delete the aggregate statistics so that <span class='code'>weewx</span> can regenerate them without the
+            <li>Delete the aggregate statistics so that weeWX can regenerate them without the
                 anomalies
                 <pre class='tty cmd'>sudo wee_database --drop-daily</pre>
             </li>
-            <li>start <span class='code'>weewx</span></li>
+            <li>start weeWX</li>
         </ol>
 
         <h3>'Database is locked' error</h3>
@@ -3419,7 +3445,7 @@ Feb 12 07:11:06 rpi weewx[20930]: ****      raise weedb.OperationalError(e)
 
         <p>If you modify the SQLite archive database using an editing tool,
             occasionally strings will get embedded in it, causing
-            <span class='code'>weewx</span> to raise
+            weeWX to raise
             an exception. <strong>This is only a problem with SQLite</strong>.
             There is no analogous problem with MySQL databases. You will see errors in the system log that
             look something like this:</p>
@@ -3441,16 +3467,16 @@ Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
         <p>The problem is that a unicode null string <span class='code'>u''</span>
             got entered where a <span class='code'>NULL</span> should be. The
             utility <span class='code'>wee_database</span> can fix this.
-            Run it with the option <span class='code'>--string-check</span> to
+            Run it with the option <span class='code'>--check-strings</span> to
             search for these embedded strings. Add the option
-            <span class='code'>--fix</span> to have the utility fix them:</p>
-        <pre class="tty cmd">wee_database weewx.conf --string-check --fix</pre>
+            <span class='code'>--fix-strings</span> to have the utility fix them:</p>
+        <pre class="tty cmd">wee_database weewx.conf --check-strings --fix-strings</pre>
 
         <h3 id="python2_5">Python 2.5</h3>
 
-        <p><span class="code">Weewx</span> should work with Python version 2.5, but it will take some fiddling.</p>
+        <p>WeeWX should work with Python version 2.5, but it will take some fiddling.</p>
         <p>The version of pysqlite that comes with Python 2.5 does not support the "with"
-            statement, which is required by weewx. Unfortunately, the most modern version
+            statement, which is required by weeWX. Unfortunately, the most modern version
             of pysqlite no longer supports Python 2.5, so you will have to install an
             "intermediate" version. I found that <a href="https://pypi.python.org/pypi/pysqlite/2.5.6">version 2.5.6</a>,
             which can be downloaded from PyPI, works well. Download it, unpack the tarball, then use the included
@@ -3466,7 +3492,7 @@ Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
 apt-get install libsqlite3-dev</pre>
                 Then rerun the installation of <span class='code'>pysqlite</span>.
             </li>
-            <li>When you run <span class='code'>weewx</span>, you may get an error that looks like this
+            <li>When you run weeWX, you may get an error that looks like this
 <pre class="tty">
 File "/usr/lib/python2.5/site-packages/PIL-1.1.7-py2.5-linux-x86_64.egg/ImageFont.py", line 218, in truetype
      return FreeTypeFont(filename, size, index, encoding)
@@ -3513,13 +3539,6 @@ uslcom0: &lt;CP2102 USB to UART Bridge Controller&gt; on usbus1
 And put in <span class="code">weewx.conf</span>:
 port = /dev/cuaU0</pre>
 
-        <h3>Apple OSX 10.9 (Mavericks)</h3>
-
-        <p>User Mike has written a
-            <a href='http://www.cougar.eu.com/useful-guides/weewx-installation-on-osx.html'>
-                very nice guide</a> on how to install <span class='code'>
-        weewx</span> on Apple's Mavericks operating sytem.</p>
-
         <h3 id="funky_symbols">Funky symbols in plots</h3>
 
         <p>If your plots have strange looking symbols for units, such as
@@ -3530,7 +3549,7 @@ port = /dev/cuaU0</pre>
             specified for the option
             <span class="code">unit_label_font_path</span> in your
             <span class="code">skin.conf</span> file and, instead,
-            <span class="code">weewx</span> is substituting a default font, which does not
+            weeWX is substituting a default font, which does not
             support the UTF-8 character necessary to make a degree sign. Look in
             section <span class="code">[ImageGenerator]</span> for a line
             that looks like:</p>
@@ -3583,7 +3602,7 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
 
         <h3>Data is archived but some/all reports do not run</h3>
 
-        <p>If <span class="code">weewx</span> appears to be running normally but
+        <p>If weeWX appears to be running normally but
             some or all reports are not being run, either all the time or
             periodically, the problem could be the inadvertant use or incorrect
             setting of the <span class="code">report_timing</span> option in
@@ -3635,7 +3654,7 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
 
         <h2>Meteorological problems</h2>
 
-        <h3 id='pressure_mismatch'>The pressure reported by <span class='code'>weewx</span> does not match the pressure
+        <h3 id='pressure_mismatch'>The pressure reported by weeWX does not match the pressure
             on the console</h3>
 
         <p>
@@ -3647,21 +3666,21 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
                 The <em>Station Pressure</em> (SP), which is the raw, absolute
                 pressure measured by the station.
                 This is <span class='code'>pressure</span> in
-                <span class='code'>weewx</span> packets and archive records.
+                weeWX packets and archive records.
             </dd>
             <dt>Sea Level Pressure</dt>
             <dd>
                 The <em>Sea Level Pressure</em> (SLP) is obtained by correcting
                 the <em>Station Pressure</em> for altitude and local temperature.
                 This is <span class='code'>barometer</span> in
-                <span class='code'>weewx</span> packets and archive records.
+                weeWX packets and archive records.
             </dd>
             <dt>Altimeter</dt>
             <dd>
                 The <em>Altimeter Setting</em> (AS) is obtained by correcting the
                 <em>Station Pressure</em> for altitude.
                 This is <span class='code'>altimeter</span> in
-                <span class='code'>weewx</span> packets and archive records.
+                weeWX packets and archive records.
             </dd>
         </dl>
 
@@ -3678,46 +3697,8 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
             pressure that matches those reported by other stations in your area.
         </p>
 
-        <h3 id='rain_mismatch'>The rainfall and/or rain rate reported by <span class='code'>weewx</span> do not match
-            the console</h3>
-
-        <p>
-            First of all, be sure that you are comparing the right quantities. The value <span class='code'>rain</span>
-            is the amount of rainfall observed in a period of time. The period of time might be a LOOP interval, in
-            which case the <span class='code'>rain</span> is the amount of rain since the last LOOP packet. Or the
-            period of time might be an archive interval, in which case the <span class='code'>rain</span> is the total
-            of rain reported in each LOOP packet since the last archive record.
-        </p>
-
-        <p>
-            Some consoles report the amount of rain in the past hour, or the amount of rain since midnight.
-        </p>
-
-        <p>
-            The rain rate is a derived quantity. Some stations report a rain rate, but for those that do not, <span
-                class='code'>weewx</span> will calculate the rain rate.
-        </p>
-
-        <p>
-            Be sure that the units are correct.
-        </p>
-
-        <p>
-            Finally, beware of calibration factors specific to the hardware. For example, the bucket type on a Vantage
-            station must be specified when you set up the weather station. If you modify the rain bucket with a larger
-            collection area, then you will have to add a multiplier in the <span class='code'>StdCalibrate</span>
-            section.
-        </p>
-
-        <p>
-            To diagnose rain issues, run <span class='code'>weewx</span> directly so that you can see each LOOP packet
-            and REC archive record. Tip the bucket to verify that each bucket tip is detected and reported by <span
-                class='code'>weewx</span>. Verify that each bucket tip is converted to the correct rainfall amount. Then
-            check the database to verify that the values are properly added and recorded.
-        </p>
-
         <h3 id='pressure_calibration'>Calibrating <span class='code'>barometer</span> does not change the pressure
-            displayed by <span class='code'>weewx</span></h3>
+            displayed by weeWX</h3>
 
         <p>
             Be sure that the calibration is applied to the correct quantity.
@@ -3736,13 +3717,56 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
             if the hardware is a Vantage station, the correction must be applied
             to <span class='code'>barometer</span> since the Vantage station
             reports <span class='code'>barometer</span> and
-            <span class='code'>weewx</span> calculates
+            weeWX calculates
             <span class='code'>pressure</span>. However, if the hardware
             is a FineOffset station, the correction must be applied to
             <span class='code'>pressure</span> since the FineOffset stations
             report <span class='code'>pressure</span> and
-            <span class='code'>weewx</span> calculates
+            weeWX calculates
             <span class='code'>barometer</span>.
+        </p>
+
+        <h3 id='rain_mismatch'>The rainfall and/or rain rate reported by weeWX
+            do not match the console</h3>
+
+        <p>
+            First of all, be sure that you are comparing the right quantities. The value <span class='code'>rain</span>
+            is the amount of rainfall observed in a period of time. The period of time might be a LOOP interval, in
+            which case the <span class='code'>rain</span> is the amount of rain since the last LOOP packet. Or the
+            period of time might be an archive interval, in which case the <span class='code'>rain</span> is the total
+            of rain reported in each LOOP packet since the last archive record.
+        </p>
+
+        <p>
+            Some consoles report the amount of rain in the past hour, or the amount of rain since midnight.
+        </p>
+
+        <p>
+            The rain rate is a derived quantity. Some stations report a rain
+            rate, but for those that do not, weeWX will calculate the rain
+            rate.
+        </p>
+
+        <p>
+            Be sure that the units are correct.
+        </p>
+
+        <p>
+            Finally, beware of calibration factors specific to the hardware.
+            For example, the bucket type on a Vantage station must be
+            specified when you set up the weather station. If you modify the
+            rain bucket with a larger collection area, then you will have to
+            add a multiplier in the <span class='code'>StdCalibrate</span>
+            section.
+        </p>
+
+        <p>
+            To diagnose rain issues, run weeWX directly so that you can see
+            each LOOP packet and REC archive record. Tip the bucket to verify
+            that each bucket tip is detected and reported by weeWX. Verify
+            that each bucket tip is converted to the correct rainfall amount.
+            Then check the database to verify that the values are properly
+            added and recorded.
         </p>
 
         <h3 id="zero_windspeed">There is no wind direction when wind speed is zero</h3>
@@ -3754,7 +3778,7 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
                 href="#StdWXCalculate"><span class='code'>StdWXCalculate</span></a> section for instructions.
         </p>
         <p>
-            <span class='code'>weewx</span> distinguishes between a value of zero and no value (NULL or None). However,
+            WeeWX distinguishes between a value of zero and no value (NULL or None). However,
             some services do not make this distinction and replace a NULL or None with a clearly invalid value such as
             -999.
         </p>

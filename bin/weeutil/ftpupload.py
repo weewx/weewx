@@ -189,7 +189,7 @@ class FtpUpload(object):
             with open(timeStampFile, "r") as f:
                 timestamp = cPickle.load(f)
                 fileset   = cPickle.load(f) 
-        except (IOError, EOFError, cPickle.PickleError):
+        except (IOError, EOFError, cPickle.PickleError, AttributeError):
             timestamp = 0
             fileset = set()
             # Either the file does not exist, or it is garbled.

@@ -30,7 +30,7 @@ import weewx.drivers
 from math import exp
 
 DRIVER_NAME = 'WMR9x8'
-DRIVER_VERSION = "3.1"
+DRIVER_VERSION = "3.2"
 
 
 def loader(config_dict, engine):  # @UnusedVariable
@@ -202,8 +202,12 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         [Optional. Default is 5]
         """
 
+        loginf('driver version is %s' % DRIVER_VERSION)
         self.model = stn_dict.get('model', 'WMR968')
-        self.sensor_map = stn_dict.get('sensor_map', self.DEFAULT_MAP)
+        self.sensor_map = dict(self.DEFAULT_MAP)
+        if 'sensor_map' in stn_dict:
+            self.sensor_map.update(stn_dict['sensor_map'])
+        loginf('sensor map is %s' % self.sensor_map)
         self.last_rain_total = None
 
         # Create the specified port

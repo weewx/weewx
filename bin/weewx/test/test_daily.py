@@ -7,6 +7,7 @@
 """Unit test module weewx.wxstats"""
 
 from __future__ import with_statement
+import datetime
 import math
 import os.path
 import shutil
@@ -152,6 +153,30 @@ class Common(unittest.TestCase):
             rms = math.sqrt(squaresum/count) if count else None
             self.assertAlmostEqual(allStats['wind'].rms, rms)
 
+    def testRebuild(self):
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
+            # Pick a random day, say 15 March:
+            start_d = datetime.date(2010, 3, 15)
+            stop_d  = datetime.date(2010, 3, 15)
+            start_ts = int(time.mktime(start_d.timetuple()))
+
+            # Get the day's statistics:
+            origStats = manager._get_day_summary(start_ts)
+
+            # Rebuild that day:
+            manager.backfill_day_summary(start_d=start_d, stop_d=stop_d)
+            
+            # Get the new statistics
+            newStats = manager._get_day_summary(start_ts)
+            
+            # Check for equality
+            for obstype in ('outTemp', 'barometer', 'windSpeed'):
+                self.assertTrue(all([getattr(origStats[obstype], prop) == \
+                                     getattr(newStats[obstype],  prop) \
+                                     for prop in ('min', 'mintime', 'max', 'maxtime', 
+                                                  'sum', 'count', 'wsum', 'sumtime', 
+                                                  'last', 'lasttime')]))
+            
     def testTags(self):
         """Test common tags."""
         global skin_dict
@@ -194,6 +219,10 @@ class Common(unittest.TestCase):
                             stats_value_helper = getattr(getattr(getattr(tagStats, span)(), stats_type), aggregate +'time')
                             self.assertEqual(stats_value_helper.raw, res2[0])
     
+            # Do the tests for a report time of midnight, 1-Apr-2010
+            tagStats = weewx.tags.TimeBinder(db_lookup, spans['month'].stop,
+                                             rain_year_start=1,
+                                             skin_dict=skin_dict)
             self.assertEqual(str(tagStats.day().barometer.avg), "30.675 inHg")
             self.assertEqual(str(tagStats.day().barometer.min), "30.065 inHg")
             self.assertEqual(str(tagStats.day().barometer.max), "31.000 inHg")
@@ -323,7 +352,7 @@ class TestMySQL(Common):
         
     
 def suite():
-    tests = ['test_create_stats', 'testScalarTally', 'testWindTally', 
+    tests = ['test_create_stats', 'testScalarTally', 'testWindTally', 'testRebuild',
              'testTags', 'test_rainYear', 'test_agg_intervals', 'test_agg', 'test_heatcool']
     
     # Test both sqlite and MySQL:
