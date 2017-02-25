@@ -55,7 +55,8 @@ canonical_order = ('',
                  ('PWSweather', [], ['enable', 'station', 'password']), 
                  ('WOW', [], ['enable', 'station', 'password']), 
                  ('Wunderground', [], ['enable', 'station', 'password', 'rapidfire'])], []), 
- ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 'group_rain', 'group_rainrate', 'group_temperature', 'group_degree_day', 'group_speed'])], [])], ['skin']), 
+ ('StdReport', [('default_options', [('Units', [('Groups', [], ['group_altitude', 'group_speed', 'group_speed2', 'group_pressure', 'group_rain', 'group_rainrate', 'group_temperature', 'group_degree_day'])], [])], []),
+                ('StandardReport', [], ['skin']), 
                 ('FTP', [], ['skin', 'secure_ftp', 'port', 'passive']), 
                 ('RSYNC', [], ['skin', 'delete'])], 
   ['SKIN_ROOT', 'HTML_ROOT', 'data_binding']), 
@@ -334,21 +335,21 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                     logger.log("Using %s for %s" % (stn_info[p], p), level=2)
                 config_dict['Station'][p] = stn_info[p]
         # Update units display with any stn_info overrides
-        if (stn_info.get('units') is not None and
-            'StdReport' in config_dict and
-            'StandardReport' in config_dict['StdReport']):
+        if stn_info.get('units') is not None and 'StdReport' in config_dict:
+            if 'default_options' not in config_dict['StdReport']:
+                config_dict['StdReport']['default_options'] = dict()
             if stn_info.get('units') in ['metric', 'metricwx']:
                 if debug:
                     logger.log("Using Metric units for display", level=2)
-                config_dict['StdReport']['StandardReport'].update({
-                        'Units': {
-                            'Groups': metricwx_group}})
+                config_dict['StdReport']['default_options'].update({
+                    'Units': {
+                        'Groups': metricwx_group}})
             elif stn_info.get('units') == 'us':
                 if debug:
                     logger.log("Using US units for display", level=2)
-                config_dict['StdReport']['StandardReport'].update({
-                        'Units': {
-                            'Groups': us_group}})
+                config_dict['StdReport']['default_options'].update({
+                    'Units': {
+                        'Groups': us_group}})
 
 #==============================================================================
 #              Utilities that update and merge ConfigObj objects
@@ -839,9 +840,17 @@ def get_station_info(config_dict):
     return stn_info
 
 def get_unit_info(config_dict):
-    """Intuit what unit system the reports are in."""
+    """
+    Intuit the default unit system for this installation.  First check the
+    default_options, then fall back to the StandardReport.
+    """
+    if 'StdReport' not in config_dict:
+        return None
+    section_dict = config_dict['StdReport'].get('default_options', {})
+    if not section_dict:
+        section_dict = config_dict['StdReport'].get('StandardReport', {})
     try:
-        group_dict = config_dict['StdReport']['StandardReport']['Units']['Groups']
+        group_dict = section_dict['Units']['Groups']
         # Look for a strict superset of the group settings:
         if all(group_dict[group] == us_group[group] for group in us_group):
             return 'us'
