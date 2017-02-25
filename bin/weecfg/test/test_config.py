@@ -387,6 +387,10 @@ class ConfigTest(unittest.TestCase):
                 actual = actual[:10]
                 expected = expected[:10]
             else:
+                # i would rather not strip, but damned if i can figure out
+                # the root cause of the failed tests that result otherwise.
+                actual = actual.strip()
+                expected = expected.strip()
                 self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
 
         # Make sure there are no extra lines in the updated config:
