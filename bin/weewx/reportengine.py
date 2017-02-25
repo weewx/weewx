@@ -216,12 +216,10 @@ class StdReportEngine(threading.Thread):
                         if timing.is_triggered(_ts, _ts - _interval) is False:
                             # report timing was valid but not triggered so do
                             # not run the report.
-                            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Report %s skipped due to report_timing setting" %
-                                          (report, ))
+                            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Report %s skipped due to report_timing setting" % (report, ))
                             continue
                     else:
-                        syslog.syslog(syslog.LOG_DEBUG, "reportengine: Invalid report_timing setting for report '%s', running report anyway" % report)
-                        syslog.syslog(syslog.LOG_DEBUG, "        ****  %s" % timing.validation_error)
+                        syslog.syslog(syslog.LOG_DEBUG, "reportengine: Invalid report_timing setting for report %s (%s), running report anyway" % (report, timing.validation_error))
 
             for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
 
@@ -237,8 +235,8 @@ class StdReportEngine(threading.Thread):
                 except Exception, e:
                     syslog.syslog(
                         syslog.LOG_CRIT, "reportengine: "
-                        "Unable to instantiate generator %s" % generator)
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                        "Unable to instantiate generator %s: %s"
+                        % (generator, e))
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored")
                     traceback.print_exc()
@@ -253,9 +251,8 @@ class StdReportEngine(threading.Thread):
                     # next generator.
                     syslog.syslog(
                         syslog.LOG_CRIT, "reportengine: "
-                        "Caught unrecoverable exception in generator %s"
-                        % generator)
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % str(e))
+                        "Caught unrecoverable exception in generator %s: %s"
+                        % (generator, e))
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated")
                     traceback.print_exc()
