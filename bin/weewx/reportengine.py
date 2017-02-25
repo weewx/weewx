@@ -142,7 +142,9 @@ class StdReportEngine(threading.Thread):
                 'skin.conf')
 
             # Retrieve the configuration dictionary for the skin. Wrap it in
-            # a try block in case we fail
+            # a try block in case we fail.  It is ok if there is no skin
+            # configuration file - everything for a skin might be defined
+            # in the weewx configuration.
             try:
                 skin_dict = configobj.ConfigObj(skin_config_path, file_error=True)
                 syslog.syslog(
@@ -151,11 +153,10 @@ class StdReportEngine(threading.Thread):
                     (skin_config_path, report))
             except IOError, e:
                 syslog.syslog(
-                    syslog.LOG_ERR, "reportengine: "
+                    syslog.LOG_DEBUG, "reportengine: "
                     "Cannot read skin configuration file %s for report %s: %s"
                     % (skin_config_path, report, e))
-                syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored")
-                continue
+                skin_dict = configobj.ConfigObj()
             except SyntaxError, e:
                 syslog.syslog(
                     syslog.LOG_ERR, "reportengine: "
@@ -193,8 +194,8 @@ class StdReportEngine(threading.Thread):
             # Default action is to run the report. Only reason to not run it is
             # if we have a valid report report_timing and it did not trigger.
             if self.record is not None:
-                # StdReport called us not wee_reports so look for a report_timing
-                # entry if we have one.
+                # StdReport called us not wee_reports so look for a
+                # report_timing entry if we have one.
                 timing_line = skin_dict.get('report_timing', None)
                 # The report_timing entry might have one or more comma separated
                 # values which ConfigObj would interpret as a list. If so then
