@@ -3512,6 +3512,14 @@ confirmation before proceeding.</pre>
         <p>The station emits partial packets, which may confuse some online
             services.</p>
 
+        <p>The rain counter has a limit of 400 inches (10160 mm).  The
+            counter does not wrap around; it must be reset when it hits
+            the limit, otherwise additional rain data will not be recorded.
+        </p>
+
+        <p>The logger stores about 50,000 records.  When the logger fills
+            up, it stops recording data.</p>
+
         <p>When weeWX starts up it will attempt to
             download all records from the console since the last record in the
             archive database. This can take as much as couple of hours,
