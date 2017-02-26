@@ -720,7 +720,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.18rc4'
+DRIVER_VERSION = '0.18rc5'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -770,7 +770,8 @@ KNOWN_USB_MESSAGES = [
     'Nessun dato disponibile', 'Nessun errore',
     'Keine Daten verf',
     'No hay datos disponibles',
-    'Pas de donn']
+    'Pas de donn',
+    'Ingen data er tilgjengelige']
 
 # these are the usb 'errors' that should be ignored
 def known_usb_err(e):
