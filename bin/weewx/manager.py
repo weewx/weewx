@@ -75,7 +75,7 @@ class Manager(object):
             # a schema?
             if schema is None:
                 # No. Nothing to be done.
-                syslog.syslog(syslog.LOG_ERR, "manager: cannot get columns of table %s, and no schema specified" % self.table_name)
+                syslog.syslog(syslog.LOG_ERR, "manager: Cannot get columns of table %s, and no schema specified" % self.table_name)
                 raise
             # Database exists, but has not been initialized. Initialize it.
             self._initialize_database(schema)
@@ -129,7 +129,7 @@ class Manager(object):
             # Database does not exist. Did the caller supply a schema?
             if schema is None:
                 # No. Nothing to be done.
-                syslog.syslog(syslog.LOG_ERR, "manager: cannot open database, and no schema specified")
+                syslog.syslog(syslog.LOG_ERR, "manager: Cannot open database, and no schema specified")
                 raise
             # Yes. Create the database:
             weedb.create(database_dict)
@@ -177,11 +177,13 @@ class Manager(object):
             with weedb.Transaction(self.connection) as _cursor:
                 _cursor.execute("CREATE TABLE %s (%s);" % (self.table_name, _sqltypestr, ))
         except weedb.DatabaseError, e:
-            syslog.syslog(syslog.LOG_ERR, "manager: Unable to create table '%s' in database '%s': %s" % 
+            syslog.syslog(syslog.LOG_ERR, "manager: "
+                          "Unable to create table '%s' in database '%s': %s" % 
                           (self.table_name, self.database_name, e))
             raise
     
-        syslog.syslog(syslog.LOG_NOTICE, "manager: Created and initialized table '%s' in database '%s'" % 
+        syslog.syslog(syslog.LOG_NOTICE, "manager: "
+                      "Created and initialized table '%s' in database '%s'" % 
                       (self.table_name, self.database_name))
 
     def _sync(self):
@@ -244,10 +246,10 @@ class Manager(object):
                     min_ts = min(min_ts, record['dateTime']) if min_ts is not None else record['dateTime']
                     max_ts = max(max_ts, record['dateTime'])
                 except (weedb.IntegrityError, weedb.OperationalError), e:
-                    syslog.syslog(syslog.LOG_ERR, "manager: unable to add record %s to database '%s': %s" %
+                    syslog.syslog(syslog.LOG_ERR, "manager: "
+                                  "Unable to add record %s to database '%s': %s" %
                                   (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
-                                   self.database_name,
-                                   e))
+                                   self.database_name, e))
 
         # Update the cached timestamps. This has to sit outside the
         # transaction context, in case an exception occurs.
@@ -258,7 +260,8 @@ class Manager(object):
         """Internal function for adding a single record to the database."""
         
         if record['dateTime'] is None:
-            syslog.syslog(syslog.LOG_ERR, "manager: archive record with null time encountered")
+            syslog.syslog(syslog.LOG_ERR,
+                          "manager: Archive record with null time encountered")
             raise weewx.ViolatedPrecondition("Manager record with null time encountered.")
 
         # Check to make sure the incoming record is in the same unit
@@ -285,7 +288,7 @@ class Manager(object):
         # Form the SQL insert statement:
         sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str) 
         cursor.execute(sql_insert_stmt, value_list)
-        syslog.syslog(log_level, "manager: added record %s to database '%s'" % 
+        syslog.syslog(log_level, "manager: Added record %s to database '%s'" % 
                       (weeutil.weeutil.timestamp_to_string(record['dateTime']),
                        self.database_name))
 
@@ -1129,7 +1132,8 @@ class DaySummaryManager(Manager):
             # There is a schema. Create all the daily summary tables as one transaction:
             with weedb.Transaction(self.connection) as _cursor:
                 self._initialize_day_tables(schema, _cursor)
-            syslog.syslog(syslog.LOG_NOTICE, "manager: Created daily summary tables")
+            syslog.syslog(syslog.LOG_NOTICE,
+                          "manager: Created daily summary tables")
         
         # Get a list of all the observation types which have daily summaries
         all_tables = self.connection.tables()
@@ -1138,7 +1142,8 @@ class DaySummaryManager(Manager):
         meta_name = '%s_day__metadata' % self.table_name
         self.daykeys = [x[Nprefix:] for x in all_tables if (x.startswith(prefix) and x != meta_name)]
         self.version = self._read_metadata('Version')
-        syslog.syslog(syslog.LOG_DEBUG, 'manager: Daily summary version is %s' % self.version)
+        syslog.syslog(syslog.LOG_DEBUG,
+                      'manager: Daily summary version is %s' % self.version)
     
     def close(self):
         del self.version
@@ -1176,7 +1181,7 @@ class DaySummaryManager(Manager):
         _day_summary = self._get_day_summary(_sod_ts, cursor)
         _day_summary.addRecord(record, weight=_weight)
         self._set_day_summary(_day_summary, record['dateTime'], cursor)
-        syslog.syslog(log_level, "manager: added record %s to daily summary in '%s'" % 
+        syslog.syslog(log_level, "manager: Added record %s to daily summary in '%s'" % 
                       (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
                        self.database_name))
         
@@ -1525,7 +1530,9 @@ class DaySummaryManager(Manager):
             try:
                 cursor.execute(_sql_replace_str, _write_tuple)
             except weedb.OperationalError, e:
-                syslog.syslog(syslog.LOG_ERR, "manager: Operational error database %s; %s" % (self.database_name, e))
+                syslog.syslog(syslog.LOG_ERR, "manager: "
+                              "Replace failed for database %s: %s"
+                              % (self.database_name, e))
 
         # If requested, update the time of the last daily summary update:
         if lastUpdate is not None:
@@ -1574,11 +1581,13 @@ class DaySummaryManager(Manager):
 
             del self.daykeys
         except weedb.OperationalError, e:
-            syslog.syslog(syslog.LOG_ERR, 
-                          "manager: Operational error database '%s'; %s" % (self.connection.database_name, e))
+            syslog.syslog(syslog.LOG_ERR, "manager: "
+                          "Drop summaries failed for database '%s': %s"
+                          % (self.connection.database_name, e))
         else:
-            syslog.syslog(syslog.LOG_INFO,
-                          "manager: Dropped daily summary tables from database '%s'" % (self.connection.database_name,))
+            syslog.syslog(syslog.LOG_INFO, "manager: "
+                          "Dropped daily summary tables from database '%s'"
+                          % (self.connection.database_name,))
 
 if __name__ == '__main__':
     import configobj
