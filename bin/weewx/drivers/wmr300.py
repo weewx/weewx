@@ -720,7 +720,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.18rc6'
+DRIVER_VERSION = '0.18rc7'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -1380,7 +1380,7 @@ class Station(object):
         pkt['wind_gust_dir'] = Station._extract_value(buf[10:12], 1.0) # degree
         pkt['wind_avg'] = Station._extract_value(buf[12:14], 0.1) # m/s
         pkt['wind_dir'] = Station._extract_value(buf[14:16], 1.0) # degree
-        pkt['windchill'] = Station._extract_signed(buf[18:20], 0.1) # C
+        pkt['windchill'] = Station._extract_signed(buf[18], buf[19], 0.1) # C
         return pkt
 
     @staticmethod
