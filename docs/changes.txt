@@ -32,6 +32,10 @@ Report the firmware version when initializing the cc3000 driver.
 
 Fixed usb initialization issues in the wmr300 driver.
 
+Added warning in wmr300 driver when rain counter reaches maximum value.
+
+Decode heatindex and windchill from wmr300 sensor outputs.
+
 Fixed bug in vantage driver that would prevent console wake up during
 retries when fetching EEPROM vales. Thanks to user Dan Begallie!
 
@@ -79,8 +83,6 @@ Broke out developer's notes into a separate document.
 
 Added @media CSS for docs to improve printed/PDF formatting.  Thanks to user
 Tiouck!
-
-Added warning in wmr300 driver when rain counter reaches maximum value.
 
 Added a 0.01 second delay after each read_byte in ws23xx driver to reduce
 chance of data spikes caused by RS232 line contention.  Thanks lionel.sylvie!
