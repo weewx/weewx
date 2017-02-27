@@ -1448,7 +1448,7 @@ class WMR300ConfEditor(weewx.drivers.AbstractConfEditor):
         print """
 Setting rainRate, windchill, heatindex, and dewpoint calculations to hardware."""
         config_dict.setdefault('StdWXCalculate', {})
-        config_dict['StdWXCalculate'].setdefault('Calculatios', {})
+        config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['windchill'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['heatindex'] = 'hardware'
