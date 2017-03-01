@@ -2972,7 +2972,7 @@ ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Contr
         <p>This rule says that when the USB port is plugged in (action
             <span class="code">add</span>), and it has an attribute with name
             <span class="code">interface</span> that is equal to
-            &quot;<span class="code">CP2102 to UART Bridge Controller</span>&quot;,
+            <span class="code">CP2102 to UART Bridge Controller</span>,
             then add a symbolic link for its physical port to
             <span class="code">/dev/vpro</span>. </p>
 
@@ -2994,7 +2994,7 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
 
         <p class='tty cmd'>udevadm info --attribute-walk --path $(udevadm info --query=path --name=/dev/ttyUSB0) </p>
 
-        <p>where<span class="code"> /dev/ttyUSB0</span> is the port (substitute
+        <p>where <span class="code">/dev/ttyUSB0</span> is the port (substitute
             your real USB port) the weather station is attached to. It will print
             out various identifiers that can be useful in identifying your weather
             station to <span class="code">udev</span>.
