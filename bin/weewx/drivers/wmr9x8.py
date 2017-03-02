@@ -30,7 +30,7 @@ import weewx.drivers
 from math import exp
 
 DRIVER_NAME = 'WMR9x8'
-DRIVER_VERSION = "3.2"
+DRIVER_VERSION = "3.2.1"
 
 
 def loader(config_dict, engine):  # @UnusedVariable
@@ -706,7 +706,7 @@ class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
         print """
 Setting rainRate, windchill, and dewpoint calculations to hardware."""
         config_dict.setdefault('StdWXCalculate', {})
-        config_dict['StdWXCalculate'].setdefault('Calculatios', {})
+        config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['windchill'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['dewpoint'] = 'hardware'

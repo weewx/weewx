@@ -48,7 +48,7 @@ import weewx.wxformulas
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR100'
-DRIVER_VERSION = "3.3"
+DRIVER_VERSION = "3.3.1"
 
 def loader(config_dict, engine):  # @UnusedVariable
     return WMR100(**config_dict[DRIVER_NAME])    
@@ -345,18 +345,9 @@ class WMR100(weewx.drivers.AbstractDevice):
             T = -T
         R = float(packet[5])
         channel = packet[2] & 0x0f
-        if channel == 0:
-            _record['temperature_0'] = T
-            _record['humidity_0'] = R
-            _record['battery_status_0'] = (packet[0] & 0x40) >> 6
-        elif channel == 1:
-            _record['temperature_1'] = T
-            _record['humidity_1'] = R
-            _record['battery_status_1'] = (packet[0] & 0x40) >> 6
-        elif channel >= 2:
-            _record['temperature_%d' % (channel - 1)] = T
-            _record['humidity_%d' % (channel - 1)] = R
-            _record['battery_status_%d' % (channel - 1)] = (packet[0] & 0x40) >> 6
+        _record['temperature_%d' % channel] = T
+        _record['humidity_%d' % channel] = R
+        _record['battery_status_%d' % channel] = (packet[0] & 0x40) >> 6
         return _record
         
     def _temperatureonly_packet(self, packet):
@@ -369,16 +360,8 @@ class WMR100(weewx.drivers.AbstractDevice):
         if packet[4] & 0x80:
             T = -T
         channel = packet[2] & 0x0f
-
-        if channel == 0:
-            _record['temperature_0'] = T
-            _record['battery_status_0'] = (packet[0] & 0x40) >> 6
-        elif channel == 1:
-            _record['temperature_1'] = T
-            _record['battery_status_1'] = (packet[0] & 0x40) >> 6
-        elif channel >= 2:
-            _record['temperature_%d' % (channel - 1)] = T
-            _record['battery_status_%d' % (channel - 1)] = (packet[0] & 0x40) >> 6
+        _record['temperature_%d' % channel] = T
+        _record['battery_status_%d' % channel] = (packet[0] & 0x40) >> 6
         return _record
 
     def _pressure_packet(self, packet):
@@ -451,5 +434,5 @@ class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
         print """
 Setting rainRate calculation to hardware."""
         config_dict.setdefault('StdWXCalculate', {})
-        config_dict['StdWXCalculate'].setdefault('Calculatios', {})
+        config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
