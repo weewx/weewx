@@ -378,7 +378,7 @@ class WMR100(weewx.drivers.AbstractDevice):
             _record['battery_status_1'] = (packet[0] & 0x40) >> 6
         elif channel >= 2:
             _record['temperature_%d' % (channel - 1)] = T
-            # FIXME: is there a battery status for channels > 1?
+            _record['battery_status_%d' % (channel - 1)] = (packet[0] & 0x40) >> 6
         return _record
 
     def _pressure_packet(self, packet):
