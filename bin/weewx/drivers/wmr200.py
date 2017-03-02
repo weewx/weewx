@@ -1080,10 +1080,10 @@ class PacketStatus(PacketLive):
                              'uv_fault': 0,
                              'rain_fault': 0,
                              'clock_unsynchronized': 0,
-                             'battery_status_out': 1.0,
-                             'wind_battery_status': 1.0,
-                             'uv_battery_status': 1.0,
-                             'rain_battery_status': 1.0})
+                             'battery_status_out': 0,
+                             'wind_battery_status': 0,
+                             'uv_battery_status': 0,
+                             'rain_battery_status': 0})
         # This information may be sent to syslog
         msg_status = []
         if self._pkt_data[2] & 0x02:
@@ -1108,19 +1108,19 @@ class PacketStatus(PacketLive):
 
         if self._pkt_data[4] & 0x02:
             msg_status.append('Temp outdoor sensor: Battery low')
-            self._record['battery_status_out'] = 0.0
+            self._record['battery_status_out'] = 1
 
         if self._pkt_data[4] & 0x01:
             msg_status.append('Wind sensor: Battery low')
-            self._record['wind_battery_status'] = 0.0
+            self._record['wind_battery_status'] = 1
 
         if self._pkt_data[5] & 0x20:
             msg_status.append('UV sensor: Battery low')
-            self._record['uv_battery_status'] = 0.0
+            self._record['uv_battery_status'] = 1
 
         if self._pkt_data[5] & 0x10:
             msg_status.append('Rain sensor: Battery low')
-            self._record['rain_battery_status'] = 0.0
+            self._record['rain_battery_status'] = 1
 
         if self.wmr200.sensor_stat:
             while msg_status:
