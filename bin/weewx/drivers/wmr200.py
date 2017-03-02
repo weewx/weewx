@@ -1075,7 +1075,7 @@ class PacketStatus(PacketLive):
         to make it fit."""
         super(PacketStatus, self).packet_process()
         # Setup defaults as good status.
-        self._record.update({'fault_out': 0,
+        self._record.update({'out_fault': 0,
                              'wind_fault': 0,
                              'uv_fault': 0,
                              'rain_fault': 0,
@@ -1088,7 +1088,7 @@ class PacketStatus(PacketLive):
         msg_status = []
         if self._pkt_data[2] & 0x02:
             msg_status.append('Temp outdoor sensor fault')
-            self._record['fault_out'] = 1
+            self._record['out_fault'] = 1
 
         if self._pkt_data[2] & 0x01:
             msg_status.append('Wind sensor fault')
@@ -1406,7 +1406,7 @@ class WMR200(weewx.drivers.AbstractDevice):
         'uvBatteryStatus': 'uv_battery_status',
         'windchill': 'windchill',
         'forecastIcon': 'forecast_icon',
-        'outTempFault': 'fault_out',
+        'outTempFault': 'out_fault',
         'windFault': 'wind_fault',
         'uvFault': 'uv_fault',
         'rainFault': 'rain_fault',
