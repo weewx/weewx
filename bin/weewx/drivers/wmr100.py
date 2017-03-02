@@ -65,7 +65,7 @@ class WMR100(weewx.drivers.AbstractDevice):
         'windSpeed': 'wind_speed',
         'windDir': 'wind_dir',
         'windGust': 'wind_gust',
-        'windBatteryStatus': 'wind_battery_status',
+        'windBatteryStatus': 'battery_status_wind',
         'inTemp': 'temperature_0',
         'outTemp': 'temperature_1',
         'extraTemp1': 'temperature_2',
@@ -98,9 +98,9 @@ class WMR100(weewx.drivers.AbstractDevice):
         'rainRate': 'rain_rate',
         'hourRain': 'rain_hour',
         'rain24': 'rain_24',
-        'rainBatteryStatus': 'rain_battery_status',
+        'rainBatteryStatus': 'battery_status_rain',
         'UV': 'uv',
-        'uvBatteryStatus': 'uv_battery_status'}
+        'uvBatteryStatus': 'battery_status_uv'}
     
     def __init__(self, **stn_dict):
         """Initialize an object of type WMR100.
@@ -321,7 +321,7 @@ class WMR100(weewx.drivers.AbstractDevice):
             'rain_hour'          : ((packet[5] << 8) + packet[4]) / 100.0,
             'rain_24'            : ((packet[7] << 8) + packet[6]) / 100.0,
             'rain_total'         : ((packet[9] << 8) + packet[8]) / 100.0,
-            'rain_battery_status': packet[0] >> 4,
+            'battery_status_rain': packet[0] >> 4,
             'dateTime': int(time.time() + 0.5),
             'usUnits': weewx.US}
 
@@ -376,7 +376,7 @@ class WMR100(weewx.drivers.AbstractDevice):
         
     def _uv_packet(self, packet):
         _record = {'uv': float(packet[3]),
-                   'uv_battery_status': packet[0] >> 4,
+                   'battery_status_uv': packet[0] >> 4,
                    'dateTime': int(time.time() + 0.5),
                    'usUnits': weewx.METRIC}
         return _record
@@ -388,7 +388,7 @@ class WMR100(weewx.drivers.AbstractDevice):
             'wind_speed': ((packet[6] << 4) + ((packet[5]) >> 4)) / 10.0,
             'wind_gust': (((packet[5] & 0x0f) << 8) + packet[4]) / 10.0,
             'wind_dir': (packet[2] & 0x0f) * 360.0 / 16.0,
-            'wind_battery_status': (packet[0] >> 4),
+            'battery_status_wind': (packet[0] >> 4),
             'dateTime': int(time.time() + 0.5),
             'usUnits': weewx.METRICWX}
 

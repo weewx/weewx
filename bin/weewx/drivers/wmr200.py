@@ -1081,9 +1081,9 @@ class PacketStatus(PacketLive):
                              'rain_fault': 0,
                              'clock_unsynchronized': 0,
                              'battery_status_out': 0,
-                             'wind_battery_status': 0,
-                             'uv_battery_status': 0,
-                             'rain_battery_status': 0})
+                             'battery_status_wind': 0,
+                             'battery_status_uv': 0,
+                             'battery_status_rain': 0})
         # This information may be sent to syslog
         msg_status = []
         if self._pkt_data[2] & 0x02:
@@ -1112,15 +1112,15 @@ class PacketStatus(PacketLive):
 
         if self._pkt_data[4] & 0x01:
             msg_status.append('Wind sensor: Battery low')
-            self._record['wind_battery_status'] = 1
+            self._record['battery_status_wind'] = 1
 
         if self._pkt_data[5] & 0x20:
             msg_status.append('UV sensor: Battery low')
-            self._record['uv_battery_status'] = 1
+            self._record['battery_status_uv'] = 1
 
         if self._pkt_data[5] & 0x10:
             msg_status.append('Rain sensor: Battery low')
-            self._record['rain_battery_status'] = 1
+            self._record['battery_status_rain'] = 1
 
         if self.wmr200.sensor_stat:
             while msg_status:
@@ -1367,7 +1367,7 @@ class WMR200(weewx.drivers.AbstractDevice):
         'windSpeed': 'wind_speed',
         'windDir': 'wind_dir',
         'windGust': 'wind_gust',
-        'windBatteryStatus': 'wind_battery_status',
+        'windBatteryStatus': 'battery_status_wind',
         'inTemp': 'temperature_0',
         'outTemp': 'temperature_1',
         'extraTemp1': 'temperature_2',
@@ -1401,9 +1401,9 @@ class WMR200(weewx.drivers.AbstractDevice):
         'rainRate': 'rain_rate',
         'hourRain': 'rain_hour',
         'rain24': 'rain_24',
-        'rainBatteryStatus': 'rain_battery_status',
+        'rainBatteryStatus': 'battery_status_rain',
         'UV': 'uv',
-        'uvBatteryStatus': 'uv_battery_status',
+        'uvBatteryStatus': 'battery_status_uv',
         'windchill': 'windchill',
         'forecastIcon': 'forecast_icon',
         'outTempFault': 'out_fault',
