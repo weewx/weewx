@@ -393,7 +393,7 @@ p .symcode {
   border-right: 1px solid #cccccc;
 }
 .selected {
-  background-color: #f0f0e8;
+  background-color: #aacccc;
   color: black;
   border-top: 1px solid #447777;
   border-left: 1px solid #447777;
