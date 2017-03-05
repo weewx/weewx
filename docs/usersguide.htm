@@ -920,12 +920,29 @@ sudo /etc/init.d/weewx restart</pre>
         <p>This section applies only to those who wish to use the MySQL
             database, instead of the default SQLite database.</p>
 
-        <p>
-            First, you should change your <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a>
-            section to point to the MySQL database, <span class="code">archive_mysql</span>,
-            instead of the SQLite database <span class="code">archive_sqlite</span>. After the
-            change, it
-            will look something like this (change <span class="highlight">highlighted</span>):
+        <p>First, verify that the MySQLdb python package is installed:</p>
+
+        <pre class="tty">python -c "import MySQLdb"</pre>
+
+        <p>If this results in an import error</p>
+
+        <pre class="tty">ImportError: No module named MySQLdb</pre>
+
+        <p>then install the MySQLdb package.  For example, on Debian systems:
+        </p>
+
+        <pre class="tty">sudo apt-get install python-mysqldb</pre>
+
+        <p>Next, change the weeWX configuration to use MySQL instead of
+            SQLite.  In the weeWX configuration file, change the
+            <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a>
+            section to point to the MySQL database,
+            <span class="code">archive_mysql</span>,
+            instead of the SQLite database
+            <span class="code">archive_sqlite</span>.
+        </p>
+        <p> After the change, it will look something like this (change
+            <span class="highlight">highlighted</span>):
         </p>
     <pre class="tty">
     [[wx_binding]]
@@ -938,22 +955,22 @@ sudo /etc/init.d/weewx restart</pre>
         # The schema defines to structure of the database contents
         schema = schemas.wview.schema</pre>
 
-        <p>Assuming that you want to use the default database configuration, your
+        <p>Assuming that you want to use the default database configuration, the
             <span class="code"><a href="#Databases">[[MySQL]]</a></span> section
             should look something like this:</p>
-    <pre class="tty">[[MySQL]]
-    driver = weedb.mysql
-    host = localhost
-    user = weewx
-    password = weewx
+    <pre class="tty">    [[MySQL]]
+        driver = weedb.mysql
+        host = localhost
+        user = weewx
+        password = weewx
 </pre>
-        <p>This assumes user weeWX would have password weeWX.
-            Adjust as necessary.</p>
+        <p>This assumes user <span class="code">weewx</span> has the password
+            <span class="code">weewx</span>.  Adjust as necessary.</p>
 
         <p>You will need to give the necessary permissions for the database
-            weeWX to whatever MySQL user you choose, by
-            default, user weeWX. Here are the necessary minimum
-            permissions:</p>
+            <span class="code">weewx</span> to whatever MySQL user you choose,
+            by default, user <span class="code">weewx</span>. Here are the
+            necessary minimum permissions:</p>
     <pre class="tty">mysql&gt; <span class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
 mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop ON weewx.* TO weewx@localhost;</span></pre>
 
@@ -2955,7 +2972,7 @@ ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Contr
         <p>This rule says that when the USB port is plugged in (action
             <span class="code">add</span>), and it has an attribute with name
             <span class="code">interface</span> that is equal to
-            &quot;<span class="code">CP2102 to UART Bridge Controller</span>&quot;,
+            <span class="code">CP2102 to UART Bridge Controller</span>,
             then add a symbolic link for its physical port to
             <span class="code">/dev/vpro</span>. </p>
 
@@ -2977,7 +2994,7 @@ ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLI
 
         <p class='tty cmd'>udevadm info --attribute-walk --path $(udevadm info --query=path --name=/dev/ttyUSB0) </p>
 
-        <p>where<span class="code"> /dev/ttyUSB0</span> is the port (substitute
+        <p>where <span class="code">/dev/ttyUSB0</span> is the port (substitute
             your real USB port) the weather station is attached to. It will print
             out various identifiers that can be useful in identifying your weather
             station to <span class="code">udev</span>.

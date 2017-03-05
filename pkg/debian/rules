@@ -45,7 +45,6 @@ install: build
 	cp -r $(SRC)/util/logwatch $(DST_CFGDIR)
 	cp -r $(SRC)/util/rsyslog.d $(DST_CFGDIR)
 	cp -r $(SRC)/util/udev $(DST_CFGDIR)
-	cp -r $(SRC)/extensions $(DST_BINDIR)
 
 # remove stuff that should not go out
 	rm $(DST_CFGDIR)/skins/Standard/backgrounds/butterfly.jpg

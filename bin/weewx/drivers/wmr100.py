@@ -48,7 +48,7 @@ import weewx.wxformulas
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR100'
-DRIVER_VERSION = "3.3"
+DRIVER_VERSION = "3.3.1"
 
 def loader(config_dict, engine):  # @UnusedVariable
     return WMR100(**config_dict[DRIVER_NAME])    
@@ -65,7 +65,7 @@ class WMR100(weewx.drivers.AbstractDevice):
         'windSpeed': 'wind_speed',
         'windDir': 'wind_dir',
         'windGust': 'wind_gust',
-        'windBatteryStatus': 'wind_battery_status',
+        'windBatteryStatus': 'battery_status_wind',
         'inTemp': 'temperature_0',
         'outTemp': 'temperature_1',
         'extraTemp1': 'temperature_2',
@@ -98,9 +98,9 @@ class WMR100(weewx.drivers.AbstractDevice):
         'rainRate': 'rain_rate',
         'hourRain': 'rain_hour',
         'rain24': 'rain_24',
-        'rainBatteryStatus': 'rain_battery_status',
+        'rainBatteryStatus': 'battery_status_rain',
         'UV': 'uv',
-        'uvBatteryStatus': 'uv_battery_status'}
+        'uvBatteryStatus': 'battery_status_uv'}
     
     def __init__(self, **stn_dict):
         """Initialize an object of type WMR100.
@@ -321,7 +321,7 @@ class WMR100(weewx.drivers.AbstractDevice):
             'rain_hour'          : ((packet[5] << 8) + packet[4]) / 100.0,
             'rain_24'            : ((packet[7] << 8) + packet[6]) / 100.0,
             'rain_total'         : ((packet[9] << 8) + packet[8]) / 100.0,
-            'rain_battery_status': packet[0] >> 4,
+            'battery_status_rain': packet[0] >> 4,
             'dateTime': int(time.time() + 0.5),
             'usUnits': weewx.US}
 
@@ -345,18 +345,9 @@ class WMR100(weewx.drivers.AbstractDevice):
             T = -T
         R = float(packet[5])
         channel = packet[2] & 0x0f
-        if channel == 0:
-            _record['temperature_0'] = T
-            _record['humidity_0'] = R
-            _record['battery_status_0'] = (packet[0] & 0x40) >> 6
-        elif channel == 1:
-            _record['temperature_1'] = T
-            _record['humidity_1'] = R
-            _record['battery_status_1'] = (packet[0] & 0x40) >> 6
-        elif channel >= 2:
-            _record['temperature_%d' % (channel - 1)] = T
-            _record['humidity_%d' % (channel - 1)] = R
-            # FIXME: is there a battery status for channels > 1?
+        _record['temperature_%d' % channel] = T
+        _record['humidity_%d' % channel] = R
+        _record['battery_status_%d' % channel] = (packet[0] & 0x40) >> 6
         return _record
         
     def _temperatureonly_packet(self, packet):
@@ -369,16 +360,8 @@ class WMR100(weewx.drivers.AbstractDevice):
         if packet[4] & 0x80:
             T = -T
         channel = packet[2] & 0x0f
-
-        if channel == 0:
-            _record['temperature_0'] = T
-            _record['battery_status_0'] = (packet[0] & 0x40) >> 6
-        elif channel == 1:
-            _record['temperature_1'] = T
-            _record['battery_status_1'] = (packet[0] & 0x40) >> 6
-        elif channel >= 2:
-            _record['temperature_%d' % (channel - 1)] = T
-            # FIXME: is there a battery status for channels > 1?
+        _record['temperature_%d' % channel] = T
+        _record['battery_status_%d' % channel] = (packet[0] & 0x40) >> 6
         return _record
 
     def _pressure_packet(self, packet):
@@ -393,7 +376,7 @@ class WMR100(weewx.drivers.AbstractDevice):
         
     def _uv_packet(self, packet):
         _record = {'uv': float(packet[3]),
-                   'uv_battery_status': packet[0] >> 4,
+                   'battery_status_uv': packet[0] >> 4,
                    'dateTime': int(time.time() + 0.5),
                    'usUnits': weewx.METRIC}
         return _record
@@ -405,7 +388,7 @@ class WMR100(weewx.drivers.AbstractDevice):
             'wind_speed': ((packet[6] << 4) + ((packet[5]) >> 4)) / 10.0,
             'wind_gust': (((packet[5] & 0x0f) << 8) + packet[4]) / 10.0,
             'wind_dir': (packet[2] & 0x0f) * 360.0 / 16.0,
-            'wind_battery_status': (packet[0] >> 4),
+            'battery_status_wind': (packet[0] >> 4),
             'dateTime': int(time.time() + 0.5),
             'usUnits': weewx.METRICWX}
 
@@ -445,54 +428,11 @@ class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
 
     # The station model, e.g., WMR100, WMR100N, WMRS200
     model = WMR100
-
-    # Mapping from sensor names to database fields
-#    [[sensor_map]]
-#        pressure = pressure
-#        windSpeed = wind_speed
-#        windDir = wind_dir
-#        windGust = wind_gust
-#        windBatteryStatus = wind_battery_status
-#        inTemp = temperature_0
-#        outTemp = temperature_1
-#        extraTemp1 = temperature_2
-#        extraTemp2 = temperature_3
-#        extraTemp3 = temperature_4
-#        extraTemp4 = temperature_5
-#        extraTemp5 = temperature_6
-#        extraTemp6 = temperature_7
-#        extraTemp7 = temperature_8
-#        inHumidity = humidity_0
-#        outHumidity = humidity_1
-#        extraHumid1 = humidity_2
-#        extraHumid2 = humidity_3
-#        extraHumid3 = humidity_4
-#        extraHumid4 = humidity_5
-#        extraHumid5 = humidity_6
-#        extraHumid6 = humidity_7
-#        extraHumid7 = humidity_8
-#        inTempBatteryStatus = battery_status_0
-#        outTempBatteryStatus = battery_status_1
-#        extraBatteryStatus1 = battery_status_2
-#        extraBatteryStatus2 = battery_status_3
-#        extraBatteryStatus3 = battery_status_4
-#        extraBatteryStatus4 = battery_status_5
-#        extraBatteryStatus5 = battery_status_6
-#        extraBatteryStatus6 = battery_status_7
-#        extraBatteryStatus7 = battery_status_8
-#        rain = rain
-#        rainTotal = rain_total
-#        rainRate = rain_rate
-#        hourRain = rain_hour
-#        rain24 = rain_24
-#        rainBatteryStatus = rain_battery_status
-#        UV = uv
-#        uvBatteryStatus = uv_battery_status 
 """
 
     def modify_config(self, config_dict):
         print """
 Setting rainRate calculation to hardware."""
         config_dict.setdefault('StdWXCalculate', {})
-        config_dict['StdWXCalculate'].setdefault('Calculatios', {})
+        config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
