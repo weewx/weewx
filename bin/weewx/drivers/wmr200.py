@@ -48,7 +48,7 @@ import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR200'
-DRIVER_VERSION = "3.3"
+DRIVER_VERSION = "3.3.1"
 
 
 def loader(config_dict, engine):  # @UnusedVariable
@@ -1005,6 +1005,7 @@ def decode_temp(pkt, pkt_data):
         dew_point = (((pkt_data[5] & 0x0f) << 8) | pkt_data[4]) / 10.0
         if pkt_data[5] & 0x80:
             dew_point *= -1
+        # ignore the dewpoint and let weewx calculate it.
 
         # Heat index reported by console.
         heat_index = None
@@ -1012,20 +1013,10 @@ def decode_temp(pkt, pkt_data):
             # For some strange reason it's reported in degF so convert
             # to metric.
             heat_index = (pkt_data[6] - 32) / (9.0 / 5.0)
-        record['heatindex'] = heat_index
+        record['heatindex_%d' % sensor_id] = heat_index
 
-        if sensor_id == 0:
-            # Indoor temperature sensor.
-            record['temperature_0'] = temp
-            record['humidity_0'] = humidity
-        elif sensor_id == 1:
-            # Outdoor temperature sensor.
-            record['temperature_1'] = temp
-            record['humidity_1'] = humidity
-        elif sensor_id >= 2:
-            # Extra temperature sensors.
-            record['temperature_%d' % (sensor_id - 1)] = temp
-            record['humidity_%d' % (sensor_id - 1)] = humidity
+        record['temperature_%d' % sensor_id] = temp
+        record['humidity_%d' % sensor_id] = humidity
 
         if DEBUG_PACKETS_TEMP:
             logdbg('  Temperature id:%d %.1f C trend: %s'
@@ -1084,20 +1075,20 @@ class PacketStatus(PacketLive):
         to make it fit."""
         super(PacketStatus, self).packet_process()
         # Setup defaults as good status.
-        self._record.update({'fault_out': 0,
+        self._record.update({'out_fault': 0,
                              'wind_fault': 0,
                              'uv_fault': 0,
                              'rain_fault': 0,
                              'clock_unsynchronized': 0,
-                             'battery_status_out': 1.0,
-                             'wind_battery_status': 1.0,
-                             'uv_battery_status': 1.0,
-                             'rain_battery_status': 1.0})
+                             'battery_status_out': 0,
+                             'battery_status_wind': 0,
+                             'battery_status_uv': 0,
+                             'battery_status_rain': 0})
         # This information may be sent to syslog
         msg_status = []
         if self._pkt_data[2] & 0x02:
             msg_status.append('Temp outdoor sensor fault')
-            self._record['fault_out'] = 1
+            self._record['out_fault'] = 1
 
         if self._pkt_data[2] & 0x01:
             msg_status.append('Wind sensor fault')
@@ -1117,19 +1108,19 @@ class PacketStatus(PacketLive):
 
         if self._pkt_data[4] & 0x02:
             msg_status.append('Temp outdoor sensor: Battery low')
-            self._record['battery_status_out'] = 0.0
+            self._record['battery_status_out'] = 1
 
         if self._pkt_data[4] & 0x01:
             msg_status.append('Wind sensor: Battery low')
-            self._record['wind_battery_status'] = 0.0
+            self._record['battery_status_wind'] = 1
 
         if self._pkt_data[5] & 0x20:
             msg_status.append('UV sensor: Battery low')
-            self._record['uv_battery_status'] = 0.0
+            self._record['battery_status_uv'] = 1
 
         if self._pkt_data[5] & 0x10:
             msg_status.append('Rain sensor: Battery low')
-            self._record['rain_battery_status'] = 0.0
+            self._record['battery_status_rain'] = 1
 
         if self.wmr200.sensor_stat:
             while msg_status:
@@ -1376,7 +1367,7 @@ class WMR200(weewx.drivers.AbstractDevice):
         'windSpeed': 'wind_speed',
         'windDir': 'wind_dir',
         'windGust': 'wind_gust',
-        'windBatteryStatus': 'wind_battery_status',
+        'windBatteryStatus': 'battery_status_wind',
         'inTemp': 'temperature_0',
         'outTemp': 'temperature_1',
         'extraTemp1': 'temperature_2',
@@ -1395,19 +1386,27 @@ class WMR200(weewx.drivers.AbstractDevice):
         'extraHumid5': 'humidity_6',
         'extraHumid6': 'humidity_7',
         'extraHumid7': 'humidity_8',
+        'inHeatindex': 'heatindex_0',
+        'heatindex': 'heatindex_1',
+        'heatindex1': 'heatindex_2',
+        'heatindex2': 'heatindex_3',
+        'heatindex3': 'heatindex_4',
+        'heatindex4': 'heatindex_5',
+        'heatindex5': 'heatindex_6',
+        'heatindex6': 'heatindex_7',
+        'heatindex7': 'heatindex_8',
         'outTempBatteryStatus': 'battery_status_out',
         'rain': 'rain',
         'rainTotal': 'rain_total',
         'rainRate': 'rain_rate',
         'hourRain': 'rain_hour',
         'rain24': 'rain_24',
-        'rainBatteryStatus': 'rain_battery_status',
+        'rainBatteryStatus': 'battery_status_rain',
         'UV': 'uv',
-        'uvBatteryStatus': 'uv_battery_status',
+        'uvBatteryStatus': 'battery_status_uv',
         'windchill': 'windchill',
-        'heatindex': 'heatindex',
         'forecastIcon': 'forecast_icon',
-        'outTempFault': 'fault_out',
+        'outTempFault': 'out_fault',
         'windFault': 'wind_fault',
         'uvFault': 'uv_fault',
         'rainFault': 'rain_fault',
@@ -2070,7 +2069,7 @@ class WMR200ConfEditor(weewx.drivers.AbstractConfEditor):
         print """
 Setting rainRate and windchill calculations to hardware."""
         config_dict.setdefault('StdWXCalculate', {})
-        config_dict['StdWXCalculate'].setdefault('Calculatios', {})
+        config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['windchill'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['heatindex'] = 'hardware'

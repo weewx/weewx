@@ -2564,16 +2564,20 @@ Options:
 
         <h1 id="wunderfixer_utility"><span class="code">wunderfixer</span></h1>
 
-        <p>For a number of reasons posting of weather observation data to Weather Underground often results in missing 
-            observations. This section details the use of the <span class="code">wunderfixer</span> utility which allows 
-            such missing observations to be re-posted to Weather Underground.
+        <p>For a number of reasons, posting weather observation data to
+            Weather Underground often results in missing observations.  The
+            <span class="code">wunderfixer</span> utility can re-post such
+            missing observations.  This section explains how to do it.
         </p>
 
         <p class="warning">
-            <strong>Warning!</strong><br/>Once published, Weather Underground observation data can only be deleted and 
-            not otherwise changed or corrected. Even when observation data is deleted on Weather Underground the 
-            underlying record remains, albeit with one or more blank observation fields. Accordingly, you should 
-            carefully use <span class="code">wunderfixer</span> ensuring the correct and valid source data is being used.
+            <strong>Warning!</strong><br/>Once published, Weather Underground
+            observation data can only be deleted; data cannot be modified.
+            Even when observations are deleted on Weather Underground, the 
+            underlying record remains, albeit with one or more blank
+            observation fields. Accordingly, you should carefully use
+            <span class="code">wunderfixer</span> to ensure that
+            the correct data source data is used.
         </p>
         
         <p class="note">
@@ -2604,12 +2608,8 @@ all the records in a weewx archive for a given day, comparing to see whether a
 corresponding record exists on the Weather Underground. If not, it will publish
 a new record on the Weather Underground with the missing data.
 
-Because this version of wunderfixer now uses the weewx API this version no
-longer supports wview. Wview users should use wunderfixer v0.5.2.
-Or, switch to weewx!
-
 Be sure to use the --test switch first to see whether you like what it
-proposes !!
+proposes!
 
 Options:
   -h, --help            show this help message and exit
@@ -2647,9 +2647,10 @@ Options:
 
         <h3>Option <span class="code" id="wunderfixer_config">--config</span></h3>
 
-        <p>The utility is pretty good at "guessing" where your configuration file <span class="code">weewx.conf</span>
-            is, but if you've done an unusual install, you may have to tell it explicitly. You can do this by using the
-                    <span class="code">--config</span> option:
+        <p>The utility is pretty good at "guessing" where the weewx
+            configuration file is, but if you've done an unusual install, you
+            may have to tell it explicitly. You can do this by using the
+            <span class="code">--config</span> option:
         </p>
 
         <pre class="tty cmd">wunderfixer --config=/this/folder/weewx.conf
@@ -2666,29 +2667,29 @@ Options:
 
         <h3>Option <span class="code" id="wunderfixer_station">--station</span></h3>
 
-        <p>Optional weather station ID of the Weather Underground PWS to be checked. The default is to use the  station 
-            specified in the <a href="usersguide.htm#[[Wunderground]]">[StdRESTful][[Wunderground]]</a> section of <span 
-                    class="code">weewx.conf</span> (or the configuration file  specified using the <span class="code">--config</span>
-            option). The <span class="code">--station</span> option is used as follows:
+        <p>The weather station ID of the Weather Underground PWS. The default
+            is the  station specified in the <a href="usersguide.htm#[[Wunderground]]">[StdRESTful][[Wunderground]]</a> section of the configuration file.
+            The <span class="code">--station</span> option is used as follows:
         </p>
 
         <pre class="tty cmd">wunderfixer --station=AB123456789</pre>
 
         <h3>Option <span class="code" id="wunderfixer_password">--password</span></h3>
 
-        <p>Optional password for the weather station ID to be checked. The default is to use the password specified in 
-            the <a href="usersguide.htm#[[Wunderground]]">[StdRESTful][[Wunderground]]</a> section of <span class="code">--config</span>
-            option). The <span class="code">--password</span> option is used as follows:
+        <p>The password corresponding to the weather station ID. The default
+            is the password specified in the <a href="usersguide.htm#[[Wunderground]]">[StdRESTful][[Wunderground]]</a> section of the configuration file.
+            The <span class="code">--password</span> option is used as follows:
         </p>
 
         <pre class="tty cmd">wunderfixer --station=AB123456789 --password=hardtoguess</pre>
 
         <h3>Option <span class="code" id="wunderfixer_date">--date</span></h3>
 
-        <p>Optional date to check. By default <span class="code">wunderfixer</span> checks the current date according to 
-            the system date-time. This feature is useful if running <span class="code">wunderfixer</span> as a cron job. 
-            The <span class="code">--date</span> option accepts date strings in the format <span 
-                    class="code">YYYY-mm-dd</span> as follows:
+        <p>By default <span class="code">wunderfixer</span> checks the current
+            date according to the system date-time. Use this option to specify
+            a different date.  This feature is useful when running as a cron
+            job.  The <span class="code">--date</span> option accepts dates
+            in the format <span class="code">YYYY-mm-dd</span>.  For example:
         </p>
 
         <pre class="tty cmd">wunderfixer --date=2016-04-20</pre>
@@ -2748,30 +2749,36 @@ Options:
         
         <h2 id='wunderfixer_direct'>Running directly</h2>
 
-        <p><span class="code">Wunderfixer</span> can be run directly to publish missing
-            data for a single day. This may be useful if you wish to recover from an outage or if for some other reason 
-            you have missing Weather Underground data. Running <span class="code">wunderfixer</span> directly
-            is also a useful exercise in the lead up to setting <span 
-                    class="code">wunderfixer</span> to run as a  <a href="#wunderfixer_cron">cron job</a> as it allows you to verify correct operation 
-            of <span class="code">wunderfixer</span> through the on screen reporting.
+        <p>Run <span class="code">wunderfixer</span> directly to publish
+            missing data for a single day. This may be useful if you wish to
+            restore data from a short network outage or similar problems that
+            resulted in missing Weather Underground data. Running
+            <span class="code">wunderfixer</span> directly is also a useful
+            exercise in the lead up to running as a
+            <a href="#wunderfixer_cron">cron job</a>, as it allows you to
+            verify correct operation before automating the process.
+        </p>
+
+        <p>
+            The following instructions will publish data for the current day
+            for the station whose credentials appear in the <a href="usersguide.htm#[[Wunderground]]">[StdRESTful][[Wunderground]]</a>
+            section of <span class="code">weewx.conf</span>.
         </p>
 
         <p class="note">
-            <strong>Note</strong><br/>Most users will use <span class="code">wunderfixer</span> to publish missing data for the 
-            Weather Underground station to which weeWX posts observation data. Accordingly, 
-            these instructions will publish today's data for the station whose credentials appear in the <a 
-                    href="usersguide.htm#[[Wunderground]]">[StdRESTful][[Wunderground]]</a> section of <span 
-                    class="code">weewx.conf</span>. Data for another station or date could be published by using the <span class="code">--station</span>, <span class="code">--password</span> and <span class="code">--date</span> options.
+            <strong>Note</strong><br/>
+            Data for another station or date could be published by using the
+            <span class="code">--station</span>,
+            <span class="code">--password</span> and
+            <span class="code">--date</span> options.
         </p>
 
         <p>To run <span class="code">wunderfixer</span> directly:</p>
 
         <ol>
-            <li>Before publishing missing data for the first time it may be
-                prudent to run <span class="code">wunderfixer</span> with the
-                <span class="code">--test</span> option to confirm operation
-                before running <span class="code">wunderfixer</span> a second
-                time to publish any missing data:
+            <li>Before publishing missing data for the first time,
+                do a test run by specifying the
+                <span class="code">--test</span> option.
             </li>
 
             <pre class="tty cmd">wunderfixer --test</pre>
@@ -2792,13 +2799,14 @@ Using database binding 'wx_binding', which is bound to database 'archive_sqlite'
                 </p>
                 
                 <p class="note">
-                    <strong>Note</strong><br/>Use of the <span class="code">--verbose</span> option will display additional information 
-                    on the station being used, the date being checked and numbers of records.
+                    <strong>Note</strong><br/>
+                    Use of the <span class="code">--verbose</span> option will
+                    display additional information including the station,
+                    the date, and the number of records.
                 </p>
 
-            <li>Once the results using the <span class="code">--test</span>
-                option are satisfactory the missing records 
-                can be published using the command:
+            <li>Once the test results are satisfactory, publish the missing
+                records using the command:
             </li>
             
             <pre class="tty cmd">wunderfixer</pre>
@@ -2842,10 +2850,14 @@ Missing records:
 </pre>
         
             <p class="note">
-                <strong>Note</strong><br/>At times two <span class="code">wunderfixer</span> sessions for the same station and date 
-                may return two different sets of missing records. This is a vagary of Weather Underground and is not a 
-                cause for concern. If you are concerned that not all missing records were published you can run <span 
-                        class="code">wunderfixer</span> again with the same settings. Re-publishing records that already 
+                <strong>Note</strong><br/>
+                It is possible that two <span class="code">wunderfixer</span>
+                sessions for the same station and date may return two different
+                sets of missing records. This is a vagary of Weather
+                Underground and is not a cause for concern. If you are
+                concerned that not all missing records were published you can
+                run <span class="code">wunderfixer</span> again with the same
+                settings. Re-publishing records that already 
                 exist on Weather Underground has no known adverse effects.
             </p>
 
@@ -2862,16 +2874,18 @@ Missing records:
         <ol>
             <li>Ensure that <span class="code">wunderfixer</span> operates as
                 intended when <a href="#wunderfixer_direct">run directly</a>.
-                To ensure <span class="code">wunderfixer</span> runs correctly
-                you must publish data (i.e, run
-                <span class="code">wunderfixer</span> without the
-                <span class="code">--test</span> option) as running
-                <span class="code">wunderfixer</span> with the
-                <span class="code">--test</span> option
-                does not utilise the station password.
+                <p class="note">
+                    <strong>Note</strong><br/>
+                    Beware that running <span class="code">wunderfixer</span>
+                    with the <span class="code">--test</span> option does not
+                    utilise the station password.  So be sure to run at least
+                    once without the <span class="code">--test</span> option
+                    to ensure that the correct station and password parameters
+                    have been specified.
+                </p>
             </li>
 
-            <li>Decide on how often and when you wish to run <span class="code">wunderfixer</span>. Given the use of the 
+            <li>Decide how often and when to run <span class="code">wunderfixer</span>. Given the use of the 
                 midnight to midnight day, it may be prudent to run <span class="code">wunderfixer</span> close to midnight 
                 at the end of the day after the second last archive record of the day (remember the last archive record 
                 of the day is at midnight). For an installation that uses a five minute archive period this would be 

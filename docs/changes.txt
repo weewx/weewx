@@ -28,9 +28,30 @@ Use schema_name = hardware_name pattern in sensor map for drivers that support
 extensible sensor suites, including the drivers for cc3000, te923, wmr300,
 wmr100, wmr200, wmr9x8
 
-Report the firmware version when initializing the cc3000 driver.
+Simplified sensor mapping implementation for wmr100 and wmr200 drivers.  For
+recent weewx releases, these are the default mappings for wmr200:
+  3.6.0: in:0, out:1, e2:2, e3:3, ..., e8:8   hard-coded
+  3.6.1: in:0, out:1, e1:2, e2:3, ..., e7:8   hard-coded
+  3.7.0: in:0, out:1, e1:2, e2:3, ..., e7:8   sensor_map
+and these are default mappings for wmr100:
+  3.6.2: in:0, out:1, e1:2, e2:3, ..., e7:8   hard-coded
+  3.7.0: in:0, out:1, e1:2, e2:3, ..., e7:8   sensor_map
+
+Enabled battery status for every remote T/H and T sensor in wmr100 driver.
+
+Enabled heatindex for each remote T/H sensor in wmr200 driver.
+
+Fixed inverted battery status indicator in wmr200 driver.
+
+Fixed 'Calculatios' typo in wmr100, wmr200, wmr9x8, and wmr300 drivers.
 
 Fixed usb initialization issues in the wmr300 driver.
+
+Added warning in wmr300 driver when rain counter reaches maximum value.
+
+Decode heatindex and windchill from wmr300 sensor outputs.
+
+Report the firmware version when initializing the cc3000 driver.
 
 Fixed bug in vantage driver that would prevent console wake up during
 retries when fetching EEPROM vales. Thanks to user Dan Begallie!
@@ -79,8 +100,6 @@ Broke out developer's notes into a separate document.
 
 Added @media CSS for docs to improve printed/PDF formatting.  Thanks to user
 Tiouck!
-
-Added warning in wmr300 driver when rain counter reaches maximum value.
 
 Added a 0.01 second delay after each read_byte in ws23xx driver to reduce
 chance of data spikes caused by RS232 line contention.  Thanks lionel.sylvie!

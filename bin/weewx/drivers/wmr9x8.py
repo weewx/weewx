@@ -30,7 +30,7 @@ import weewx.drivers
 from math import exp
 
 DRIVER_NAME = 'WMR9x8'
-DRIVER_VERSION = "3.2"
+DRIVER_VERSION = "3.2.1"
 
 
 def loader(config_dict, engine):  # @UnusedVariable
@@ -132,7 +132,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         'windDir': 'wind_dir',
         'windGust': 'wind_gust',
         'windGustDir': 'wind_gust_dir',
-        'windBatteryStatus': 'wind_battery_status',
+        'windBatteryStatus': 'battery_status_wind',
         'inTemp': 'temperature_in',
         'outTemp': 'temperature_out',
         'extraTemp1': 'temperature_1',
@@ -180,7 +180,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         'hourRain': 'rain_hour',
         'rain24': 'rain_24',
         'yesterdayRain': 'rain_yesterday',
-        'rainBatteryStatus': 'rain_battery_status',
+        'rainBatteryStatus': 'battery_status_rain',
         'windchill': 'windchill'}
 
     def __init__(self, **stn_dict):
@@ -340,7 +340,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         # The console returns wind speeds in m/s. Our metric system requires
         # kph, so the result needs to be multiplied by 3.6
         _record = {
-            'wind_battery_status': battery,
+            'battery_status_wind': battery,
             'wind_speed': ((avg10th / 10.0) + avg1 + (avg10 * 10)) * 3.6,
             'wind_dir': dir1 + (dir10 * 10) + (dir100 * 100),
             'dateTime': int(time.time() + 0.5),
@@ -372,7 +372,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         # station units are mm and mm/hr while the internal metric units are
         # cm and cm/hr. It is reported that total rainfall is biased by +0.5 mm
         _record = {
-            'rain_battery_status': battery,
+            'battery_status_rain': battery,
             'rain_rate': (cur1 + (cur10 * 10) + (cur100 * 100)) / 10.0,
             'rain_yesterday': (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000)) / 10.0,
             'rain_total': (tot10th / 10.0 + tot1 + 10.0 * tot10 + 100.0 * tot100 + 1000.0 * tot1000) / 10.0,
@@ -706,7 +706,7 @@ class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
         print """
 Setting rainRate, windchill, and dewpoint calculations to hardware."""
         config_dict.setdefault('StdWXCalculate', {})
-        config_dict['StdWXCalculate'].setdefault('Calculatios', {})
+        config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['windchill'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['dewpoint'] = 'hardware'
