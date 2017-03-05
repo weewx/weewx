@@ -409,7 +409,7 @@ class StdQC(StdService):
         super(StdQC, self).__init__(engine, config_dict)
 
         # Get a QC object to apply the QC checks to our data
-        self.qc = weewx.qc.QC(config_dict)
+        self.qc = weewx.qc.QC(config_dict, db_binder=engine.db_binder)
         
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
