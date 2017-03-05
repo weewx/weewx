@@ -859,13 +859,17 @@ Version: 3.7
         <p>In fact, because of the message structure and the data logging
             design, these are the actual update frequencies:</p>
 
-        <ul>
-            <li>wind speed: 18 seconds</li>
-            <li>outdoor temperature, outdoor humidity: 36 seconds</li>
-            <li>wind direction, rain total: 36 seconds</li>
-            <li>indoor temperature, pressure: 60 seconds</li>
-            <li>indoor humidity: 12 minutes (only when in USB mode 3)</li>
-        </ul>
+        <table class='station_data'>
+            <caption>AcuRite transmission periods</caption>
+            <tbody>
+                <tr><th>sensor</th><th>period</th></tr>
+                <tr><td>Wind speed</td><td>18 seconds</td></tr>
+                <tr><td>Outdoor temperature, outdoor humidity</td><td>36 seconds</td></tr>
+                <tr><td>Wind direction, rain total</td><td>36 seconds</td></tr>
+                <tr><td>Indoor temperature, pressure</td><td>60 seconds</td></tr>
+                <tr><td>Indoor humidity</td><td>12 minutes (only when in USB mode 3)</td></tr>
+            </tbody>
+        </table>
 
         <p>The station emits partial packets, which may confuse some online
             services.</p>
@@ -1379,7 +1383,7 @@ interval: 1</pre>
             <caption>Polling modes for Fine Offset stations</caption>
             <tr class="first_row">
                 <td width='15%'>Mode</td>
-                <td width='30%'><span class='code'>weewx.conf</span></td>
+                <td width='30%'>Configuration</td>
                 <td>Notes</td>
             </tr>
             <tr>
@@ -1642,19 +1646,19 @@ Mutating actions will request confirmation before proceeding.</pre>
             <tr>
                 <td class='first_col'>dewpoint</td>
                 <td>dewpoint</td>
-                <td>H/S</td>
+                <td>H</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
                 <td>windchill</td>
-                <td>H/S</td>
+                <td>H</td>
                 <td>S</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
                 <td>heatindex</td>
-                <td>H/S</td>
+                <td>H</td>
                 <td>S</td>
             </tr>
             <tr>
@@ -2003,8 +2007,8 @@ confirmation before proceeding.
             <tr>
                 <td class='first_col'>windchill</td>
                 <td>windchill</td>
-                <td>H/S</td>
-                <td>H/S</td>
+                <td>H</td>
+                <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
@@ -3213,10 +3217,10 @@ confirmation before proceeding.</pre>
         <p class='station_data_key'>
             Each packet contains a subset of all possible readings. For
             example, a temperature packet contains
-            <span class='code'>extraTempN</span> and
-            <span class='code'>batteryStatusN</span>, a rain packet contains
-            <span class='code'>totalRain</span> and
-            <span class='code'>rainRate</span>.
+            <span class='code'>temperature_N</span> and
+            <span class='code'>battery_status_N</span>, a rain packet contains
+            <span class='code'>rain_total</span> and
+            <span class='code'>rain_rate</span>.
         </p>
 
         <p class='station_data_key'>
@@ -3345,14 +3349,14 @@ confirmation before proceeding.</pre>
             <tr>
                 <td class='first_col'>windchill</td>
                 <td>windchill</td>
-                <td>H/S</td>
-                <td>H/S</td>
+                <td>H</td>
+                <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
                 <td>heatindex</td>
-                <td>H/S</td>
-                <td>H/S</td>
+                <td>H</td>
+                <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>UV</td>
@@ -3473,10 +3477,10 @@ confirmation before proceeding.</pre>
         <p class='station_data_key'>
             Each packet contains a subset of all possible readings. For
             example, a temperature packet contains
-            <span class='code'>extraTempN</span> and
-            <span class='code'>batteryStatusN</span>, a rain packet contains
-            <span class='code'>totalRain</span> and
-            <span class='code'>rainRate</span>.
+            <span class='code'>temperature_N</span> and
+            <span class='code'>battery_status_N</span>, a rain packet contains
+            <span class='code'>rain_total</span> and
+            <span class='code'>rain_rate</span>.
         </p>
 
         <p class='station_data_key'>
@@ -3511,6 +3515,14 @@ confirmation before proceeding.</pre>
 
         <p>The station emits partial packets, which may confuse some online
             services.</p>
+
+        <p>The rain counter has a limit of 400 inches (10160 mm).  The
+            counter does not wrap around; it must be reset when it hits
+            the limit, otherwise additional rain data will not be recorded.
+        </p>
+
+        <p>The logger stores about 50,000 records.  When the logger fills
+            up, it stops recording data.</p>
 
         <p>When weeWX starts up it will attempt to
             download all records from the console since the last record in the
@@ -4139,10 +4151,10 @@ confirmation before proceeding.</pre>
         <p class='station_data_key'>
             Each packet contains a subset of all possible readings. For
             example, a temperature packet contains
-            <span class='code'>extraTempN</span> and
-            <span class='code'>batteryStatusN</span>, a rain packet contains
-            <span class='code'>totalRain</span> and
-            <span class='code'>rainRate</span>.
+            <span class='code'>temperature_N</span> and
+            <span class='code'>battery_status_N</span>, a rain packet contains
+            <span class='code'>rain_total</span> and
+            <span class='code'>rain_rate</span>.
         </p>
 
         <p class='station_data_key'>
@@ -4505,14 +4517,14 @@ in humidity: 48.0
             <tr>
                 <td class='first_col'>dewpoint</td>
                 <td>dewpoint</td>
-                <td>H/S</td>
-                <td>H/S</td>
+                <td>H</td>
+                <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>windchill</td>
                 <td>windchill</td>
-                <td>H/S</td>
-                <td>H/S</td>
+                <td>H</td>
+                <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
@@ -4853,14 +4865,14 @@ wind_gust_max_time: None</pre>
             <tr>
                 <td class='first_col'>windchill</td>
                 <td>windchill</td>
-                <td>H/S</td>
-                <td>H/S</td>
+                <td>H</td>
+                <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>heatindex</td>
                 <td>heatindex</td>
-                <td>H/S</td>
-                <td>H/S</td>
+                <td>H</td>
+                <td>H</td>
             </tr>
             <tr>
                 <td class='first_col'>rxCheckPercent</td>
