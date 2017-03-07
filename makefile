@@ -6,7 +6,7 @@
 SIGN=1
 
 # destination for uploading releases
-RELDIR=weewx.com:/downloads/development_versions/
+UPLOADDIR=weewx.com:/downloads/development_versions/
 
 # destination for uploading docs
 DOCDST=weewx.com:/
@@ -63,7 +63,7 @@ info:
 	@echo "     VERSION: $(VERSION)"
 	@echo "   MMVERSION: $(MMVERSION)"
 	@echo "         CWD: $(CWD)"
-	@echo "      RELDIR: $(RELDIR)"
+	@echo "   UPLOADDIR: $(UPLOADDIR)"
 	@echo "      DOCDST: $(DOCDST)"
 	@echo "        USER: $(USER)"
 
@@ -113,7 +113,7 @@ src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
 	./setup.py sdist
 
 upload-src:
-	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) $(SRCPKG))
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(SRCPKG))
 
 # upload docs to the weewx web site
 upload-docs:
@@ -148,7 +148,7 @@ readme: docs/changes.txt
 	pkg/mkchangelog.pl --ifile docs/changes.txt >> $(DSTDIR)/README.txt
 
 upload-readme: readme
-	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) README.txt)
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) README.txt)
 
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
@@ -208,7 +208,7 @@ check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
 upload-deb:
-	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) $(DEBPKG))
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(DEBPKG))
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
@@ -262,13 +262,13 @@ check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
 
 upload-rpm:
-	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) $(RPMPKG))
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(RPMPKG))
 
-# move files from development_versions to previous_versions and set up the
+# move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
 ARTIFACTS=weewx-$(RPMVER).rhel.noarch.rpm weewx-$(RPMVER).suse.noarch.rpm weewx-$(VERSION).tar.gz weewx_$(DEBVER)_all.deb
 release:
-	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do mv $(WEEWX_DOWNLOADS)/development_versions/$$f $(WEEWX_DOWNLOADS)/previous_versions; done"
+	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do mv $(WEEWX_DOWNLOADS)/development_versions/$$f $(WEEWX_DOWNLOADS)/released_versions; done"
 	ssh $(USER)@weewx.com "rm $(WEEWX_DOWNLOADS)/weewx*"
 	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do ln -s $$f $(WEEWX_DOWNLOADS); done"
 	ssh $(USER)@weewx.com "mv $(WEEWX_DOWNLOADS)/README.txt $(WEEWX_DOWNLOADS)"
