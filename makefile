@@ -266,12 +266,14 @@ upload-rpm:
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
+DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
+RELDIR=$(WEEWX_DOWNLOADS)/released_versions
 ARTIFACTS=weewx-$(RPMVER).rhel.noarch.rpm weewx-$(RPMVER).suse.noarch.rpm weewx-$(VERSION).tar.gz weewx_$(DEBVER)_all.deb
 release:
-	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do mv $(WEEWX_DOWNLOADS)/development_versions/$$f $(WEEWX_DOWNLOADS)/released_versions; done"
-	ssh $(USER)@weewx.com "rm $(WEEWX_DOWNLOADS)/weewx*"
-	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do ln -s $$f $(WEEWX_DOWNLOADS); done"
-	ssh $(USER)@weewx.com "mv $(WEEWX_DOWNLOADS)/README.txt $(WEEWX_DOWNLOADS)"
+	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/$$f ]; then mv $(DEVDIR)/$$f $(RELDIR); fi; done"
+	ssh $(USER)@weewx.com "rm -f $(WEEWX_DOWNLOADS)/weewx*"
+	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(RELDIR)/$$f ]; then ln -s released_versions/$$f $(WEEWX_DOWNLOADS); fi; done"
+	ssh $(USER)@weewx.com "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
