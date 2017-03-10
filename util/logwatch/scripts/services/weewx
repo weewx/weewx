@@ -135,7 +135,7 @@ while(defined($_ = <STDIN>)) {
         $clockmin = $1 if $1 < $clockmin;
         $clockmax = $1 if $1 > $clockmax;
         $clockcount += 1;
-    } elsif (/manager: added record/ || /archive: added record/) {
+    } elsif (/manager: Added record/ || /archive: added record/) {
         $counts{$ARCHIVE_RECORDS_ADDED} += 1;
     } elsif (/imagegenerator: Generated (\d+) images/) {
         $counts{$IMAGES_GENERATED} += $1;
