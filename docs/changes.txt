@@ -106,9 +106,7 @@ chance of data spikes caused by RS232 line contention.  Thanks lionel.sylvie!
 
 The observation windGustDir has been removed from wmr100, wmr200, te923, and
 fousb drivers.  These drivers were simply assigning windGustDir to windDir,
-since none of the hardware reports an actual windGustDir.  For hardware that
-does not report a windGustDir, weewx will calculate windGustDir at each archive
-interval when it accumulates an archive record.
+since none of the hardware reports an actual windGustDir.
 
 Calculation of aggregates over a period of one day or longer can now
 respect any change in archive interval. To take advantage of this
