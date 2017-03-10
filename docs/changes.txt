@@ -114,8 +114,8 @@ Calculation of aggregates over a period of one day or longer can now
 respect any change in archive interval. To take advantage of this
 feature, you will have to apply an update to your daily
 summaries. This can be done using the tool wee_database, option
---update. The only reason to do this is you plan on changing your
-archive interval. Otherwise, you can ignore.  Fixes issue #61.
+--update. Refer to the ‘Changes to daily summaries’ section in the
+Upgrade Guide to determine whether you should update or not. Fixes issue #61.
 
 Max value of windSpeed for the day is now the max archive value of windSpeed.
 Formerly, it was the max LOOP value. If you wish to patch your older
