@@ -148,7 +148,9 @@ count_procs() {
 }
 
 CMD=$1
-shift
+if [ "$1" != "" ]; then
+    shift
+fi
 INSTANCES="$@"
 if [ "$INSTANCES" = "" ]; then
     INSTANCES=$WEEWX_INSTANCES
