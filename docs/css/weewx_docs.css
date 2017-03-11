@@ -181,7 +181,7 @@ table {
   border-collapse: collapse;
   border: 1px solid #cccccc;
   width: 98%;
-  margin:1%;
+  margin: 1%;
 }
 table .tty {
   margin: 0;
@@ -220,7 +220,7 @@ caption {
   padding-right: 4px;
 }
 p .code, td .code, li .code {
-  background-color: #eeeee0;
+  background-color: #f0f0e8;
   border: 1px solid #ddddaa;
   border-radius: 3px;
 }
@@ -231,7 +231,7 @@ p .code, td .code, li .code {
 p .symcode {
   padding-left: 4px;
   padding-right: 4px;
-  background-color: #eeeee0;
+  background-color: #f0f0e8;
   border: 1px solid #ddddaa;
   border-radius: 3px;
 }
@@ -256,7 +256,7 @@ p .symcode {
 }
 .tty {
   font-family: 'Inconsolata', monospace;
-  background-color: #FFFFe0;
+  background-color: #f0f0e8;
   border: 1px solid #ddddaa;
   padding: 3px 8px 3px 8px;
   margin: 5px 15px 5px 15px;
@@ -308,8 +308,8 @@ p .symcode {
   padding: 5px;
 }
 .note {
-  background-color: #cce0d0;
-  border: 1px solid #aac0b0;
+  background-color: #ddf0e0;
+  border: 1px solid #bbd0c0;
   margin: 10px 30px 10px 30px;
   padding: 10px;
   webkit-border-radius: 6px;
@@ -393,7 +393,7 @@ p .symcode {
   border-right: 1px solid #cccccc;
 }
 .selected {
-  background-color: #ffffe0;
+  background-color: #aacccc;
   color: black;
   border-top: 1px solid #447777;
   border-left: 1px solid #447777;
@@ -484,10 +484,6 @@ div .ui-widget-header {
         height: auto;   /* Keep the ratio when the image is resized */
     }
 
-    .tty {
-        font-size: 80%
-    }
-
     table {
         max-width: 98%; /* To be responsive the size of the image must at most be in width that of the article container */
         height: auto;   /* Keep the ratio when the image is resized */
@@ -546,6 +542,10 @@ div .ui-widget-header {
     .warning {
         border: 4px solid #ffdddd;
         background-color: #ffeeee !important;
+    }
+    p .code, td .code, li .code {
+        background-color: #f0f0e8;
+        border: none;
     }
 }
 
