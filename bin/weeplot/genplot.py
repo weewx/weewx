@@ -74,6 +74,9 @@ class GeneralPlot(object):
         self.x_label_format         = to_unicode(config_dict.get('x_label_format'))
         self.y_label_format         = to_unicode(config_dict.get('y_label_format'))
         
+        self.x_label_spacing        = int(config_dict.get('x_label_spacing', 2))
+        self.y_label_spacing        = int(config_dict.get('y_label_spacing', 2))
+        
         # Calculate sensible margins for the given image and font sizes.
         self.lmargin = int(4.0 * self.axis_label_font_size)
         self.rmargin = 20 * self.anti_alias
@@ -266,18 +269,18 @@ class GeneralPlot(object):
         axis_label_font = weeplot.utilities.get_font_handle(self.axis_label_font_path,
                                                             self.axis_label_font_size)
 
-        drawlabel = False
+        drawlabelcount = 0
         for x in weeutil.weeutil.stampgen(self.xscale[0], self.xscale[1], self.xscale[2]) :
             sdraw.line((x, x), (self.yscale[0], self.yscale[1]), fill=self.chart_gridline_color,
                        width=self.anti_alias)
             drawlabel = not drawlabel
-            if drawlabel:
+            if drawlabelcount % self.x_label_spacing == 0 :
                 xlabel = self._genXLabel(x)
                 axis_label_size = sdraw.draw.textsize(xlabel, font=axis_label_font)
                 xpos = sdraw.xtranslate(x)
                 sdraw.draw.text((xpos - axis_label_size[0]/2, self.image_height - self.bmargin + 2),
                                 xlabel, fill=self.axis_label_font_color, font=axis_label_font)
-                
+            drawlabelcount += 1
 
     def _renderYAxes(self, sdraw):
         """Draws the y axis and horizontal constant-y lines, as well as the labels.
@@ -294,7 +297,7 @@ class GeneralPlot(object):
             sdraw.line((self.xscale[0], self.xscale[1]), (y, y), fill=self.chart_gridline_color,
                        width=self.anti_alias)
             # Draw a label on every other line:
-            if i%2 == 0 :
+            if i % self.y_label_spacing == 0 :
                 ylabel = self._genYLabel(y)
                 axis_label_size = sdraw.draw.textsize(ylabel, font=axis_label_font)
                 ypos = sdraw.ytranslate(y)
@@ -551,20 +554,23 @@ class PlotLine(object):
     """
     def __init__(self, x, y, label='', color=None, width=None, plot_type='line',
                  line_type='solid', marker_type=None, marker_size=10, 
-                 bar_width=None, vector_rotate = None, gap_fraction=None):
-        self.x           = x
-        self.y           = y
-        self.label       = to_unicode(label)
-        self.plot_type   = plot_type
-        self.line_type   = line_type
-        self.marker_type = marker_type
-        self.marker_size = marker_size
-        self.color       = color
-        self.fill_color  = color
-        self.width       = width
-        self.bar_width   = bar_width
-        self.vector_rotate = vector_rotate
-        self.gap_fraction = gap_fraction
+                 bar_width=None, vector_rotate = None, gap_fraction=None,
+                 x_label_spacing=2, y_label_spacing=2):
+        self.x               = x
+        self.y               = y
+        self.label           = to_unicode(label)
+        self.plot_type       = plot_type
+        self.line_type       = line_type
+        self.marker_type     = marker_type
+        self.marker_size     = marker_size
+        self.color           = color
+        self.fill_color      = color
+        self.width           = width
+        self.bar_width       = bar_width
+        self.vector_rotate   = vector_rotate
+        self.gap_fraction    = gap_fraction
+        self.x_label_spacing = x_label_spacing
+        self.y_label_spacing = y_label_spacing
 
 class UniDraw(ImageDraw.ImageDraw):
     """Supports non-Unicode fonts
