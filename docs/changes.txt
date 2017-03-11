@@ -106,16 +106,14 @@ chance of data spikes caused by RS232 line contention.  Thanks lionel.sylvie!
 
 The observation windGustDir has been removed from wmr100, wmr200, te923, and
 fousb drivers.  These drivers were simply assigning windGustDir to windDir,
-since none of the hardware reports an actual windGustDir.  For hardware that
-does not report a windGustDir, weewx will calculate windGustDir at each archive
-interval when it accumulates an archive record.
+since none of the hardware reports an actual windGustDir.
 
 Calculation of aggregates over a period of one day or longer can now
 respect any change in archive interval. To take advantage of this
 feature, you will have to apply an update to your daily
 summaries. This can be done using the tool wee_database, option
---update. The only reason to do this is you plan on changing your
-archive interval. Otherwise, you can ignore.  Fixes issue #61.
+--update. Refer to the ‘Changes to daily summaries’ section in the
+Upgrade Guide to determine whether you should update or not. Fixes issue #61.
 
 Max value of windSpeed for the day is now the max archive value of windSpeed.
 Formerly, it was the max LOOP value. If you wish to patch your older

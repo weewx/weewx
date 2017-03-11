@@ -517,6 +517,7 @@ class StdArchive(StdService):
             self.end_archive_period_ts = \
                 (int(self.engine._get_console_time() / self.archive_interval) + 1) * self.archive_interval
             self.end_archive_delay_ts  =  self.end_archive_period_ts + self.archive_delay
+        self.old_accumulator = None
 
     def new_loop_packet(self, event):
         """Called when A new LOOP record has arrived."""
@@ -555,8 +556,8 @@ class StdArchive(StdService):
         """The main packet loop has ended, so process the old accumulator."""
         # If weewx happens to startup in the small time interval between the end of
         # the archive interval and the end of the archive delay period, then
-        # there will be no old accumulator.
-        if hasattr(self, 'old_accumulator'):
+        # there will be no old accumulator. Check for this.
+        if self.old_accumulator:
             # If the user has requested software generation, then do that:
             if self.record_generation == 'software':
                 self._software_catchup()
