@@ -7,6 +7,9 @@ The ordinal increment between x- and y-axis labels can now be chosen.
 The increment between x-axis tick marks can now be chosen. Thanks
 to user paolobenve!
 
+Bar chart fill colors can now be specified for individual observation
+types. Fixes issue #227.
+
 
 3.7.0 03/11/2017
 

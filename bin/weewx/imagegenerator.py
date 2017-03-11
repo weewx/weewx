@@ -169,6 +169,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # See if a color has been explicitly requested.
                     color = line_options.get('color')
                     if color is not None: color = weeplot.utilities.tobgr(color)
+                    fill_color = line_options.get('fill_color')
+                    if fill_color is not None: fill_color = weeplot.utilities.tobgr(fill_color)
                     
                     # Get the line width, if explicitly requested.
                     width = to_int(line_options.get('width'))
@@ -212,6 +214,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         new_stop_vec_t[0], new_data_vec_t[0],
                         label         = label, 
                         color         = color,
+                        fill_color    = fill_color,
                         width         = width,
                         plot_type     = plot_type,
                         line_type     = line_type,

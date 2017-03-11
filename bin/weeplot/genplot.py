@@ -273,7 +273,6 @@ class GeneralPlot(object):
         for x in weeutil.weeutil.stampgen(self.xscale[0], self.xscale[1], self.xscale[2]) :
             sdraw.line((x, x), (self.yscale[0], self.yscale[1]), fill=self.chart_gridline_color,
                        width=self.anti_alias)
-            drawlabel = not drawlabel
             if drawlabelcount % self.x_label_spacing == 0 :
                 xlabel = self._genXLabel(x)
                 axis_label_size = sdraw.draw.textsize(xlabel, font=axis_label_font)
@@ -552,7 +551,7 @@ class PlotLine(object):
     """Represents a single line (or bar) in a plot.
     
     """
-    def __init__(self, x, y, label='', color=None, width=None, plot_type='line',
+    def __init__(self, x, y, label='', color=None, fill_color=None, width=None, plot_type='line',
                  line_type='solid', marker_type=None, marker_size=10, 
                  bar_width=None, vector_rotate = None, gap_fraction=None,
                  x_label_spacing=2, y_label_spacing=2):
@@ -564,7 +563,7 @@ class PlotLine(object):
         self.marker_type     = marker_type
         self.marker_size     = marker_size
         self.color           = color
-        self.fill_color      = color
+        self.fill_color      = fill_color
         self.width           = width
         self.bar_width       = bar_width
         self.vector_rotate   = vector_rotate
