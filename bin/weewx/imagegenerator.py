@@ -204,6 +204,10 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     marker_type = line_options.get('marker_type')
                     marker_size = to_int(line_options.get('marker_size', 8))
                     
+                    # Get the spacings between labels, i.e. every how many lines a label is drawn
+                    x_label_spacing = plot_options.get('x_label_spacing', 2)
+                    y_label_spacing = plot_options.get('y_label_spacing', 2)
+
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(
                         new_stop_vec_t[0], new_data_vec_t[0],
@@ -216,7 +220,9 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         marker_size   = marker_size,
                         bar_width     = interval_vec,
                         vector_rotate = vector_rotate,
-                        gap_fraction  = gap_fraction))
+                        gap_fraction  = gap_fraction,
+                        x_label_spacing = x_label_spacing,
+                        y_label_spacing = y_label_spacing))
 
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()
