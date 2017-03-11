@@ -3,6 +3,9 @@ weewx change history
 
 3.X.X MM/dd/YYYY
 
+The `stats.py` example now works with heating and cooling degree days.
+Fixes issue #224.
+
 The ordinal increment between x- and y-axis labels can now be chosen.
 The increment between x-axis tick marks can now be chosen. Thanks
 to user paolobenve! PR #226.
