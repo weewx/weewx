@@ -5,7 +5,7 @@ weewx change history
 
 The ordinal increment between x- and y-axis labels can now be chosen.
 The increment between x-axis tick marks can now be chosen. Thanks
-to user paolobenve!
+to user paolobenve! PR #226.
 
 Bar chart fill colors can now be specified for individual observation
 types. Fixes issue #227.
