@@ -1,7 +1,14 @@
 weewx change history
 --------------------
 
-3.7.0 MM/dd/YYYY
+3.X.X MM/dd/YYYY
+
+The ordinal increment between x- and y-axis labels can now be chosen.
+The increment between x-axis tick marks can now be chosen. Thanks
+to user paolobenve!
+
+
+3.7.0 03/11/2017
 
 The tag $current now uses the record included in the event NEW_ARCHIVE_RECORD,
 rather than retrieve the last record from the database. This means you can
