@@ -1,7 +1,20 @@
 weewx change history
 --------------------
 
-3.7.0 MM/dd/YYYY
+3.X.X MM/dd/YYYY
+
+The `stats.py` example now works with heating and cooling degree days.
+Fixes issue #224.
+
+The ordinal increment between x- and y-axis labels can now be chosen.
+The increment between x-axis tick marks can now be chosen. Thanks
+to user paolobenve! PR #226.
+
+Bar chart fill colors can now be specified for individual observation
+types. Fixes issue #227.
+
+
+3.7.0 03/11/2017
 
 The tag $current now uses the record included in the event NEW_ARCHIVE_RECORD,
 rather than retrieve the last record from the database. This means you can
@@ -106,9 +119,7 @@ chance of data spikes caused by RS232 line contention.  Thanks lionel.sylvie!
 
 The observation windGustDir has been removed from wmr100, wmr200, te923, and
 fousb drivers.  These drivers were simply assigning windGustDir to windDir,
-since none of the hardware reports an actual windGustDir.  For hardware that
-does not report a windGustDir, weewx will calculate windGustDir at each archive
-interval when it accumulates an archive record.
+since none of the hardware reports an actual windGustDir.
 
 Calculation of aggregates over a period of one day or longer can now
 respect any change in archive interval. To take advantage of this

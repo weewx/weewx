@@ -569,10 +569,12 @@ class StdWunderground(StdRESTful):
 
     def new_loop_packet(self, event):
         """Puts new LOOP packets in the loop queue"""
-        syslog.syslog(syslog.LOG_DEBUG, "restx: raw packet: %s" % event.packet)
+        if weewx.debug >= 3:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: raw packet: %s" % event.packet)
         self.cached_values.update(event.packet, event.packet['dateTime'])
-        syslog.syslog(syslog.LOG_DEBUG, "restx: cached packet: %s" %
-                      self.cached_values.get_packet(event.packet['dateTime']))
+        if weewx.debug >= 3:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: cached packet: %s" %
+                          self.cached_values.get_packet(event.packet['dateTime']))
         self.loop_queue.put(
             self.cached_values.get_packet(event.packet['dateTime']))
 
