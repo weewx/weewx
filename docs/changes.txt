@@ -1,6 +1,10 @@
 weewx change history
 --------------------
 
+3.7.1 XX/XX/XXXX
+
+Fixed log syntax in wmr100 and wmr9x8 drivers.
+
 3.7.0 03/11/2017
 
 The tag $current now uses the record included in the event NEW_ARCHIVE_RECORD,
