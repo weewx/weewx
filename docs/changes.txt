@@ -5,7 +5,11 @@ weewx change history
 
 Fixed log syntax in wmr100 and wmr9x8 drivers.
 
-Emit rapidfire cache info only when debug is level 3 or higher.
+Emit rapidfire cache info only when debug is level 3 or higher.  Thanks to
+user Darryn Capes-Davis.
+
+Set WOW post_interval in config dict instead of thread arguments so that
+overrides are possible.  Thanks to user Kenneth Baker.
 
 3.7.0 03/11/2017
 
