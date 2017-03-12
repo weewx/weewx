@@ -48,7 +48,7 @@ import weewx.wxformulas
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR100'
-DRIVER_VERSION = "3.3.2"
+DRIVER_VERSION = "3.3.3"
 
 def loader(config_dict, engine):  # @UnusedVariable
     return WMR100(**config_dict[DRIVER_NAME])    
@@ -307,7 +307,7 @@ class WMR100(weewx.drivers.AbstractDevice):
                     yield report[i]
                 nerrors = 0
             except (IndexError, usb.USBError), e:
-                logerr("Bad USB report received: %s" % e)
+                logdbg("Bad USB report received: %s" % e)
                 nerrors += 1
                 if nerrors > self.max_tries:
                     logerr("Max retries exceeded while fetching USB reports")
