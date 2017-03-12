@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.7.0 MM/dd/YYYY
+3.7.0 03/11/2017
 
 The tag $current now uses the record included in the event NEW_ARCHIVE_RECORD,
 rather than retrieve the last record from the database. This means you can
