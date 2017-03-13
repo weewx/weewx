@@ -141,6 +141,10 @@ class StdRESTful(weewx.engine.StdService):
                 syslog.syslog(syslog.LOG_DEBUG,
                               "restx: Shut down %s thread." % t.name)
 
+# For backwards compatibility with early v2.6 alphas. In particular, the WeatherCloud uploader depends on it.
+StdRESTbase = StdRESTful
+
+
 class RESTThread(threading.Thread):
     """Abstract base class for RESTful protocol threads.
     
