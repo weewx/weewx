@@ -143,6 +143,14 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     if weewx.debug:
                         assert(len(start_vec_t) == len(stop_vec_t))
 
+                    # Get the type of plot ("bar', 'line', or 'vector')
+                    plot_type = line_options.get('plot_type', 'line')
+
+                    if aggregate_type not in (None, '', 'None', 'none') and plot_type != 'bar':
+                        # put the point in the middle of the aggregate_interval
+                        start_vec_t = start_vec_t.__sub__((aggregate_interval / 2, start_vec_t[1], start_vec_t[2]))
+                        stop_vec_t = stop_vec_t.__sub__((aggregate_interval / 2, stop_vec_t[1], stop_vec_t[2]))
+                    
                     # Do any necessary unit conversions:
                     new_start_vec_t = self.converter.convert(start_vec_t)
                     new_stop_vec_t  = self.converter.convert(stop_vec_t)
@@ -170,9 +178,6 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Get the line width, if explicitly requested.
                     width = to_int(line_options.get('width'))
                     
-                    # Get the type of plot ("bar', 'line', or 'vector')
-                    plot_type = line_options.get('plot_type', 'line')
-
                     interval_vec = None                        
 
                     # Some plot types require special treatments:
