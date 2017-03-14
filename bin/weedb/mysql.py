@@ -48,18 +48,19 @@ def guard(fn):
     return guarded_fn
 
 
-def connect(host='localhost', user='', password='', database_name='', 
-            driver='', engine=DEFAULT_ENGINE, **kwargs):
+def connect(host='localhost', user='', password='', database_name='',
+            driver='', port=3306, engine=DEFAULT_ENGINE, **kwargs):
     """Connect to the specified database"""
-    return Connection(host=host, user=user, password=password, 
+    return Connection(host=host, port=int(port), user=user, password=password,
                       database_name=database_name, engine=engine, **kwargs)
 
-def create(host='localhost', user='', password='', database_name='', 
-           driver='', engine=DEFAULT_ENGINE, **kwargs):
+def create(host='localhost', user='', password='', database_name='',
+           driver='', port=3306, engine=DEFAULT_ENGINE, **kwargs):
     """Create the specified database. If it already exists,
     an exception of type weedb.DatabaseExistsError will be thrown."""
     # Open up a connection w/o specifying the database.
     connect = Connection(host=host,
+                         port=int(port),
                          user=user,
                          password=password, 
                          **kwargs)
@@ -74,12 +75,11 @@ def create(host='localhost', user='', password='', database_name='',
 
 
 def drop(host='localhost', user='', password='', database_name='', 
-         driver='', engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
+         driver='', port=3306, engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
     """Drop (delete) the specified database."""
-    if host not in ('localhost', '127.0.0.1'):
-        kwargs.setdefault('port', 3306)
     # Open up a connection
     connect = Connection(host=host,
+                         port=int(port),
                          user=user,
                          password=password, 
                          **kwargs)
@@ -95,7 +95,8 @@ def drop(host='localhost', user='', password='', database_name='',
 class Connection(weedb.Connection):
     """A wrapper around a MySQL connection object."""
 
-    def __init__(self, host='localhost', user='', password='', database_name='', engine=DEFAULT_ENGINE, **kwargs):
+    def __init__(self, host='localhost', user='', password='', database_name='',
+                 port=3306, engine=DEFAULT_ENGINE, **kwargs):
         """Initialize an instance of Connection.
 
         Parameters:
@@ -109,12 +110,7 @@ class Connection(weedb.Connection):
             kwargs:   Any extra arguments you may wish to pass on to MySQL 
               connect statement. See the file MySQLdb/connections.py for a list (optional).
         """
-        if 'port' in kwargs:
-            kwargs['port'] = int(kwargs['port'])
-        if host not in ('localhost', '127.0.0.1'):
-            kwargs.setdefault('port', 3306)
-
-        connection = MySQLdb.connect(host=host, user=user, passwd=password, 
+        connection = MySQLdb.connect(host=host, port=int(port), user=user, passwd=password,
                                      db=database_name, **kwargs)
 
         weedb.Connection.__init__(self, connection, database_name, 'mysql')

@@ -19,6 +19,8 @@ Fixed problem that prevented a MySQL port from being specified.
 Distribute example code and example extensions in a single examples directory.
 Ensure that the examples directory is included in the rpm and deb packages.
 
+Fixed issue that prevented a port from being specified for MySQL installations.
+
 
 3.7.0 03/11/2017
 
