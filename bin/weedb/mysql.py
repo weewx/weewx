@@ -108,9 +108,9 @@ class Connection(weedb.Connection):
             engine: The MySQL database engine to use (optional; default is 'INNODB')
             kwargs:   Any extra arguments you may wish to pass on to MySQL 
               connect statement. See the file MySQLdb/connections.py for a list (optional).
-            
-        If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
+        if 'port' in kwargs:
+            kwargs['port'] = int(kwargs['port'])
         if host not in ('localhost', '127.0.0.1'):
             kwargs.setdefault('port', 3306)
 
