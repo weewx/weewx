@@ -14,8 +14,6 @@ metric units. Fixes issue #230.
 Set WOW `post_interval` in config dict instead of thread arguments so that
 overrides are possible.  Thanks to user Kenneth Baker.
 
-Fixed problem that prevented a MySQL port from being specified.
-
 Distribute example code and example extensions in a single examples directory.
 Ensure that the examples directory is included in the rpm and deb packages.
 
