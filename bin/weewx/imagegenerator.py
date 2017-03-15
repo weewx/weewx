@@ -149,13 +149,13 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
 
                     if aggregate_type != None and aggregate_type.lower() in ('avg', 'max', 'min') and plot_type != 'bar':
                         # put the point in the middle of the aggregate_interval
-                        if isinstance(start_vec_t[0], (list, tuple)):
+                        try:
                             start_vec_t = ValueTuple([x - aggregate_interval / 2 for x in start_vec_t[0]], start_vec_t[1], start_vec_t[2])
-                        else:
+                        except TypeError:
                             start_vec_t = ValueTuple(start_vec_t[0] - aggregate_interval / 2, start_vec_t[1], start_vec_t[2])
-                        if isinstance(stop_vec_t[0], (list, tuple)):
+                        try:
                             stop_vec_t = ValueTuple([x - aggregate_interval / 2 for x in stop_vec_t[0]], stop_vec_t[1], stop_vec_t[2])
-                        else:
+                        except TypeError:
                             stop_vec_t = ValueTuple(stop_vec_t[0] - aggregate_interval / 2, stop_vec_t[1], stop_vec_t[2])
                     
                     # Do any necessary unit conversions:
