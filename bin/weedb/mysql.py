@@ -26,6 +26,7 @@ exception_map = {
     1062: weedb.IntegrityError,
     1146: weedb.NoTableError,
     2002: weedb.CannotConnectError,
+    2003: weedb.CannotConnectError,
     2005: weedb.CannotConnectError,
     None: weedb.DatabaseError
     }

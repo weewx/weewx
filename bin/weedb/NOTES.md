@@ -35,6 +35,7 @@ StandardError
 | weedb class           | Sqlite class       | MySQLdb class      | MySQLdb error number | Description                     |
 |-----------------------|--------------------|--------------------|:--------------------:|---------------------------------|
 | `CannotConnectError`  | *N/A*              | `OperationalError` |         2002         | Server down                     |
+| `CannotConnectError`  | *N/A*              | `OperationalError` |         2003         | Host error                      |
 | `CannotConnectError`  | *N/A*              | `OperationalError` |         2005         | Unknown host                    |
 | `BadPasswordError`    | *N/A*              | `OperationalError` |         1045         | Bad or non-existent password    |
 | `NoDatabaseError`     | *N/A*              | `OperationalError` |         1008         | Drop non-existent database      |
