@@ -18,6 +18,7 @@ import weeutil.weeutil
 import weewx.reportengine
 import weewx.units
 from weeutil.weeutil import to_bool, to_int, to_float
+from weewx.units import ValueTuple
 
 #===============================================================================
 #                    Class ImageGenerator
@@ -146,10 +147,16 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Get the type of plot ("bar', 'line', or 'vector')
                     plot_type = line_options.get('plot_type', 'line')
 
-                    if aggregate_type not in (None, '', 'None', 'none') and plot_type != 'bar':
+                    if aggregate_type != None and aggregate_type.lower() in ('avg', 'max', 'min') and plot_type != 'bar':
                         # put the point in the middle of the aggregate_interval
-                        start_vec_t = start_vec_t.__sub__((aggregate_interval / 2, start_vec_t[1], start_vec_t[2]))
-                        stop_vec_t = stop_vec_t.__sub__((aggregate_interval / 2, stop_vec_t[1], stop_vec_t[2]))
+                        if isinstance(start_vec_t[0], (list, tuple)):
+                            start_vec_t = ValueTuple([x - aggregate_interval / 2 for x in start_vec_t[0]], start_vec_t[1], start_vec_t[2])
+                        else:
+                            start_vec_t = ValueTuple(start_vec_t[0] - aggregate_interval / 2, start_vec_t[1], start_vec_t[2])
+                        if isinstance(stop_vec_t[0], (list, tuple)):
+                            stop_vec_t = ValueTuple([x - aggregate_interval / 2 for x in stop_vec_t[0]], stop_vec_t[1], stop_vec_t[2])
+                        else:
+                            stop_vec_t = ValueTuple(stop_vec_t[0] - aggregate_interval / 2, stop_vec_t[1], stop_vec_t[2])
                     
                     # Do any necessary unit conversions:
                     new_start_vec_t = self.converter.convert(start_vec_t)
