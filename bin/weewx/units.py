@@ -445,10 +445,7 @@ class ValueTuple(tuple):
     def __sub__(self, other):
         if self[1] != other[1] or self[2] != other[2]:
             raise TypeError("unsupported operand error for subtraction: %s and %s" % (self[1], other[1]))
-        if isinstance(self[0], (list, tuple)):
-            return ValueTuple([x - other[0] for x in self[0]], self[1], self[2])
-        else:
-            return ValueTuple(self[0] - other[0], self[1], self[2])
+        return ValueTuple(self[0] - other[0], self[1], self[2])
     def __add__(self, other):
         if self[1] != other[1] or self[2] != other[2]:
             raise TypeError("unsupported operand error for addition: %s and %s" % (self[1], other[1]))
