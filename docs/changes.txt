@@ -13,6 +13,10 @@ to user paolobenve! PR #226.
 Bar chart fill colors can now be specified for individual observation
 types. Fixes issue #227.
 
+For aggregation types of `avg`, `min` and `max`, plots now locate the x-
+coordinate in the middle of the aggregation interval (instead of the end).
+Thanks again to user paolobenve! PR #232.
+
 
 3.7.1 XX/XX/XXXX
 
