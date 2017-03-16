@@ -85,6 +85,13 @@ import weedb
 import weeutil.weeutil
 import weewx.engine
 from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, accumulateLeaves
+# TODO: This is to support early testing. It can be removed in a released version:
+try:
+    from weeutil.weeutil import to_sorted_string
+except ImportError:
+    def to_sorted_string(rec):
+        return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
+
 import weewx.manager
 import weewx.units
 
@@ -134,8 +141,9 @@ class StdRESTful(weewx.engine.StdService):
                 syslog.syslog(syslog.LOG_DEBUG,
                               "restx: Shut down %s thread." % t.name)
 
-# For backwards compatibility with early v2.6 alphas:
+# For backwards compatibility with early v2.6 alphas. In particular, the WeatherCloud uploader depends on it.
 StdRESTbase = StdRESTful
+
 
 class RESTThread(threading.Thread):
     """Abstract base class for RESTful protocol threads.
@@ -375,11 +383,10 @@ class RESTThread(threading.Thread):
 
         # Get the full record by querying the database ...
         _full_record = self.get_record(record, dbmanager)
-        # ... convert to US if necessary ...
-        _us_record = weewx.units.to_US(_full_record)
         # ... format the URL, using the relevant protocol ...
-        _url = self.format_url(_us_record)
-        _data = self.format_data(_us_record)
+        _url = self.format_url(_full_record)
+        #  ... and any POST payload.
+        _data = self.format_data(_full_record)
         if self.skip_upload:
             raise AbortedPost()
         # ... convert to a Request object ...
@@ -570,11 +577,11 @@ class StdWunderground(StdRESTful):
     def new_loop_packet(self, event):
         """Puts new LOOP packets in the loop queue"""
         if weewx.debug >= 3:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: raw packet: %s" % event.packet)
+            syslog.syslog(syslog.LOG_DEBUG, "restx: raw packet: %s" % to_sorted_string(event.packet))
         self.cached_values.update(event.packet, event.packet['dateTime'])
         if weewx.debug >= 3:
             syslog.syslog(syslog.LOG_DEBUG, "restx: cached packet: %s" %
-                          self.cached_values.get_packet(event.packet['dateTime']))
+                          to_sorted_string(self.cached_values.get_packet(event.packet['dateTime'])))
         self.loop_queue.put(
             self.cached_values.get_packet(event.packet['dateTime']))
 
@@ -583,14 +590,12 @@ class StdWunderground(StdRESTful):
         self.archive_queue.put(event.record)
 
 
-class CachedValues():
+class CachedValues(object):
     """Dictionary of value-timestamp pairs.  Each timestamp indicates when the
-    corresponding value was last updated.  The unit system is specified when
-    the object is created.  Values are converted to that unit system when the
-    object is updated."""
+    corresponding value was last updated."""
 
-    def __init__(self, unit_system=weewx.US):
-        self.unit_system = unit_system
+    def __init__(self):
+        self.unit_system = None
         self.values = dict()
 
     def update(self, packet, ts):
@@ -605,9 +610,15 @@ class CachedValues():
         # service does not have all the inputs for a given derived, it should
         # not insert a derived with value of None.  it should insert a value of
         # None only if all the inputs exist and the result is None.
-        packet = weewx.units.to_std_system(packet, self.unit_system)
-        for k in [i for i in packet if i not in ['dateTime', 'usUnits']]:
-            if packet[k] is not None:
+        for k in packet:
+            if k is None or k == 'dateTime':
+                continue
+            elif k == 'usUnits':
+                if self.unit_system is None:
+                    self.unit_system = packet['usUnits']
+                elif packet['usUnits'] != self.unit_system:
+                    raise ValueError("Mixed units encountered in cache. %s vs %s" (self.unit_sytem, packet['usUnits']))
+            else:
                 self.values[k] = {'value': packet[k], 'ts': ts}
 
     def get_value(self, k, ts, stale_age):
@@ -687,10 +698,10 @@ class StdWOW(StdRESTful):
             config_dict, 'wx_binding')
                 
         _ambient_dict.setdefault('server_url', StdWOW.archive_url)
+        _ambient_dict.setdefault('post_interval', 900)
         self.archive_queue = Queue.Queue()
         self.archive_thread = WOWThread(self.archive_queue, _manager_dict, 
-                                        protocol_name="WOW", 
-                                        post_interval=900,
+                                        protocol_name="WOW",
                                         **_ambient_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
@@ -779,13 +790,12 @@ class AmbientThread(RESTThread):
         'inTemp' : 'intempf=%.1f',
         'inHumidity' : 'indoorhumidity=%03.0f'}
 
-    def format_url(self, record):
+    def format_url(self, incoming_record):
         """Return an URL for posting using the Ambient protocol."""
-        
-        if weewx.debug:
-            assert(record['usUnits'] == weewx.US)
-    
-        _liststr = ["action=updateraw", 
+
+        record = weewx.units.to_US(incoming_record)
+
+        _liststr = ["action=updateraw",
                     "ID=%s" % self.station,
                     "PASSWORD=%s" % urllib.quote(self.password),
                     "softwaretype=%s" % self.softwaretype]
@@ -854,9 +864,11 @@ class WOWThread(AmbientThread):
                 'hourRain'    : 'rainin=%.2f',
                 'dayRain'     : 'dailyrainin=%.2f'}
     
-    def format_url(self, record):
+    def format_url(self, incoming_record):
         """Return an URL for posting using WOW's version of the Ambient
         protocol."""
+
+        record = weewx.units.to_US(incoming_record)
 
         _liststr = ["action=updateraw",
                     "siteid=%s" % self.station,
@@ -1260,7 +1272,7 @@ class StdStationRegistry(StdRESTful):
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
-        
+
 class StationRegistryThread(RESTThread):
     """Concrete threaded class for posting to the weewx station registry."""
     
