@@ -209,6 +209,10 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     x_label_spacing = plot_options.get('x_label_spacing', 2)
                     y_label_spacing = plot_options.get('y_label_spacing', 2)
 
+                    # Get the spacing of the bold lines(every how many lines a bold line is drawn)
+                    chart_gridline_bold_x_spacing = int(plot_options.get('chart_gridline_bold_x_spacing', 1))
+                    chart_gridline_bold_y_spacing = int(plot_options.get('chart_gridline_bold_y_spacing', 1))
+                    
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(
                         new_stop_vec_t[0], new_data_vec_t[0],
@@ -223,6 +227,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         bar_width     = interval_vec,
                         vector_rotate = vector_rotate,
                         gap_fraction  = gap_fraction,
+                        chart_gridline_bold_x_spacing = chart_gridline_bold_x_spacing,
+                        chart_gridline_bold_y_spacing = chart_gridline_bold_y_spacing,
                         x_label_spacing = x_label_spacing,
                         y_label_spacing = y_label_spacing))
 
