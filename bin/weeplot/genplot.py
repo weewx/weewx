@@ -45,9 +45,9 @@ class GeneralPlot(object):
 
         self.chart_background_color = weeplot.utilities.tobgr(config_dict.get('chart_background_color', '0xd8d8d8'))
         self.chart_gridline_color        = weeplot.utilities.tobgr(config_dict.get('chart_gridline_color',   '0xa0a0a0'))
-        self.chart_gridline_bold_color   = weeplot.utilities.tobgr(config_dict.get('chart_gridline_bold_color',   '0x545454'))
-        self.chart_gridline_bold_x_spacing = int(config_dict.get('chart_gridline_bold_x_spacing', 1))
-        self.chart_gridline_bold_y_spacing = int(config_dict.get('chart_gridline_bold_y_spacing', 1))
+        self.chart_gridline_major_color   = weeplot.utilities.tobgr(config_dict.get('chart_gridline_major_color',   '0x545454'))
+        self.chart_gridline_major_x_spacing = int(config_dict.get('chart_gridline_major_x_spacing', 1))
+        self.chart_gridline_major_y_spacing = int(config_dict.get('chart_gridline_major_y_spacing', 1))
 
         color_list                  = config_dict.get('chart_line_colors', ['0xff0000', '0x00ff00', '0x0000ff'])
         fill_color_list             = config_dict.get('chart_fill_colors', color_list)
@@ -277,8 +277,8 @@ class GeneralPlot(object):
         for x in weeutil.weeutil.stampgen(self.xscale[0], self.xscale[1], self.xscale[2]) :
             # plot bold color lines if requested
             fill=self.chart_gridline_color
-            if self.chart_gridline_bold_color and self.chart_gridline_bold_x_spacing > 1 and drawlabelcount % self.chart_gridline_bold_x_spacing == 0 :
-                fill=self.chart_gridline_bold_color
+            if self.chart_gridline_major_color and self.chart_gridline_major_x_spacing > 1 and drawlabelcount % self.chart_gridline_major_x_spacing == 0 :
+                fill=self.chart_gridline_major_color
             
             sdraw.line((x, x), (self.yscale[0], self.yscale[1]), fill=fill, width=self.anti_alias)
             if drawlabelcount % self.x_label_spacing == 0 :
@@ -302,8 +302,8 @@ class GeneralPlot(object):
         for i in xrange(nygridlines) :
             # plot bold color lines if requested
             fill=self.chart_gridline_color
-            if self.chart_gridline_bold_color and self.chart_gridline_bold_y_spacing > 1 and i % self.chart_gridline_bold_y_spacing == 0 :
-                fill=self.chart_gridline_bold_color
+            if self.chart_gridline_major_color and self.chart_gridline_major_y_spacing > 1 and i % self.chart_gridline_major_y_spacing == 0 :
+                fill=self.chart_gridline_major_color
             
             y = self.yscale[0] + i * self.yscale[2]
             sdraw.line((self.xscale[0], self.xscale[1]), (y, y), fill=fill, width=self.anti_alias)
@@ -567,7 +567,7 @@ class PlotLine(object):
     def __init__(self, x, y, label='', color=None, fill_color=None, width=None, plot_type='line',
                  line_type='solid', marker_type=None, marker_size=10, 
                  bar_width=None, vector_rotate = None, gap_fraction=None,
-                 chart_gridline_bold_x_spacing=1, chart_gridline_bold_y_spacing=1,
+                 chart_gridline_major_x_spacing=1, chart_gridline_major_y_spacing=1,
                  x_label_spacing=2, y_label_spacing=2):
         self.x               = x
         self.y               = y
@@ -582,8 +582,8 @@ class PlotLine(object):
         self.bar_width       = bar_width
         self.vector_rotate   = vector_rotate
         self.gap_fraction    = gap_fraction
-        self.chart_gridline_bold_x_spacing = chart_gridline_bold_x_spacing
-        self.chart_gridline_bold_y_spacing = chart_gridline_bold_y_spacing
+        self.chart_gridline_major_x_spacing = chart_gridline_major_x_spacing
+        self.chart_gridline_major_y_spacing = chart_gridline_major_y_spacing
         self.x_label_spacing = x_label_spacing
         self.y_label_spacing = y_label_spacing
 
