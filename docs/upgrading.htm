@@ -335,7 +335,27 @@ $day.windGust.max</pre>
             an example, you should copy it to the <span class="code">user</span> subdirectory, modify it if necessary,
             then use it there. Your copy will be retained across version upgrades.
         </p>
-        <p>Finally, the name of one example has been changed:</p>
+
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>3.6</td>
+                <td>3.7</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'><span class="changed">examples.alarm.MyAlarm
+examples.lowBattery.MyAlarm
+examples.xsearch.MyXSearch</span></pre>
+                </td>
+                <td>
+                    <pre class='tty'><span class="changed">user.alarm.MyAlarm
+user.lowBattery.BatteryAlarm
+user.stats.MyStats</span></pre>
+                </td>
+            </tr>
+        </table>
+
+        <p>Finally, note that the name of one example has been changed:</p>
 
         <table>
             <tr class="first_row">
