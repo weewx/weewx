@@ -279,7 +279,7 @@ class GeneralPlot(object):
 
         drawlabelcount = 0
         for x in weeutil.weeutil.stampgen(self.xscale[0], self.xscale[1], self.xscale[2]) :
-            # plot bold color lines if requested
+            # select major color if requested
             fill=self.chart_gridline_color
             if self.gridline_major_color and self.gridline_major_x_spacing > 1 and drawlabelcount % self.gridline_major_x_spacing == 0 :
                 fill=self.gridline_major_color
@@ -304,7 +304,7 @@ class GeneralPlot(object):
         
         # Draw the (constant y) grid lines 
         for i in xrange(nygridlines) :
-            # plot bold color lines if requested
+            # select major color if requested
             fill=self.chart_gridline_color
             if self.gridline_major_color and self.gridline_major_y_spacing > 1 and i % self.gridline_major_y_spacing == 0 :
                 fill=self.gridline_major_color
