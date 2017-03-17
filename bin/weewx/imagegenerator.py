@@ -209,9 +209,13 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     x_label_spacing = plot_options.get('x_label_spacing', 2)
                     y_label_spacing = plot_options.get('y_label_spacing', 2)
 
-                    # Get the spacing of the bold lines(every how many lines a bold line is drawn)
-                    chart_gridline_major_x_spacing = int(plot_options.get('chart_gridline_major_x_spacing', 1))
-                    chart_gridline_major_y_spacing = int(plot_options.get('chart_gridline_major_y_spacing', 1))
+                    # Get the spacing of the major lines(every how many lines a major line is drawn)
+                    gridline_major_x_spacing = plot_options.get('gridline_major_x_spacing', None)
+                    if gridline_major_x_spacing:
+                        gridline_major_x_spacing = int(gridline_major_x_spacing)
+                    gridline_major_y_spacing = plot_options.get('gridline_major_y_spacing', None)
+                    if gridline_major_y_spacing:
+                        gridline_major_y_spacing = int(gridline_major_y_spacing)
                     
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(
