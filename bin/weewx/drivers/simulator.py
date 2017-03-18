@@ -368,7 +368,7 @@ class SimulatorConfEditor(weewx.drivers.AbstractConfEditor):
     #start = 2011-01-01 00:00
 
     # Are we generating spikes?
-    # A non-zero value will generate spikes at the multipler of the simulated
+    # A non-zero value will generate spikes at the multiplier of the simulated
     # observation magnitude
     #spike=2
 

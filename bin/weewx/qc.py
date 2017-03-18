@@ -12,6 +12,7 @@ from copy import deepcopy
 # weewx imports
 import weeutil.weeutil
 import weewx.units
+import weedb
 
 #==============================================================================
 #                    Class QC
@@ -56,7 +57,11 @@ class QC(object):
         self.min_max_dict = {}
         self.spike_dict = {}
 
-        target_unit_name = config_dict['StdConvert']['target_unit']
+        try:
+            target_unit_name = config_dict['StdConvert']['target_unit']
+        except KeyError:
+            target_unit_name = 'US'
+
         target_unit = weewx.units.unit_constants[target_unit_name.upper()]
         converter = weewx.units.StdUnitConverters[target_unit]
 
@@ -74,10 +79,19 @@ class QC(object):
                 syslog.syslog(syslog.LOG_DEBUG, "%s: StdQC: MinMax %s < %s < %s" % (self.parent, minval, obs_type, maxval))
 
         if spike_dict is not None:
+            manager = None
+            db_record = None
+
             # Get database record to build cache
-            manager = self.db_binder.get_manager(self.binding)
-            timestamp = manager.lastGoodStamp()
-            db_record = manager.getRecord(timestamp, max_delta=self.max_delta)
+            try:
+                manager = self.db_binder.get_manager(self.binding)
+            except weedb.NoDatabaseError:
+                pass
+
+            if manager is not None:
+                timestamp = manager.lastGoodStamp()
+                db_record = manager.getRecord(timestamp, max_delta=self.max_delta)
+
             # Empty cache record
             cache_record = {}
 
