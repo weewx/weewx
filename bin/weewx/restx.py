@@ -84,13 +84,7 @@ import urllib2
 import weedb
 import weeutil.weeutil
 import weewx.engine
-from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, accumulateLeaves
-# TODO: This is to support early testing. It can be removed in a released version:
-try:
-    from weeutil.weeutil import to_sorted_string
-except ImportError:
-    def to_sorted_string(rec):
-        return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
+from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, accumulateLeaves, to_sorted_string
 
 import weewx.manager
 import weewx.units
