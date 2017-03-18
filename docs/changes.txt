@@ -39,6 +39,8 @@ Fixed issue that prevented a port from being specified for MySQL installations.
 MySQL error 2003 ("Can't connect to MySQL server...") now gets mapped to
 `weedb.CannotConnectError`. PR #234.
 
+By default, autocommit is now enabled for the MySQL driver. Fixes issue #237.
+
 
 3.7.0 03/11/2017
 
