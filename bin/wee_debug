@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python
 #
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com> and
 #                            Matthew Wall
@@ -198,15 +198,7 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
     """ Generate system/weewx debug info """
 
     # system/OS info
-    print "System info"
-    _system = platform.system()
-    if _system == 'Linux':
-        generateLinuxSysInfo(verbosity)
-    elif _system.find ("BSD") != -1:
-        generateFreeBSDSysInfo(verbosity)
-    else:
-        print "System info could not be provided, unsupported operating system(%s)." % _system
-    print
+    generateSysInfo(verbosity)
 
     # weewx version info
     print "General Weewx info"
@@ -307,47 +299,29 @@ def generateDebugConf(config_dict):
     # put obfuscated config_dict into weewx.conf form
     _obs_config_dict.write(sys.stdout)
 
-def generateFreeBSDSysInfo(verbosity):
+def generateSysInfo(verbosity):
     # % string operator deprecated Python 3.1 and up.
-    """ Generate system info for a *BSD system """
+    print "System info"
+
     if verbosity > 0:
-       print "\n  Operating system: " + str(platform.uname())
-       print "  Release:        " + platform.release()
        print "  Platform:       " + platform.platform()
-       print "  Processor:      " + platform.processor()
-       print "  System:         " + platform.system()
        print "  Python Version: " + platform.python_version()
 
-    # load info
-    if verbosity > 0:
+       # environment 
+       if verbosity > 1:
+          print "\nEnvironment"
+          for n in os.environ:
+             print "  %s=%s" % (n, os.environ[n])
+
+       # load info
        loadavg =  '%.2f %.2f %.2f' % os.getloadavg()
        (load1, load5, load15) = loadavg.split(" ")
    
-       print "  1 minute load average:  " + load1
+       print "\nLoad Information\n  1 minute load average:  " + load1
        print "  5 minute load average:  " + load5
        print "  15 minute load average: " + load15
 
-def generateLinuxSysInfo(verbosity):
-    """ Generate system info for a Linux system """
-
-    # get cpu info
-    cpuinfo = _readproc_dict('/proc/cpuinfo')
-    if verbosity > 0:
-        for key in cpuinfo:
-            print "  {0: <23}".format(key + ":"), cpuinfo[key]
-
-    # os info
     print
-    print "  Operating system:       %s" % ' '.join(platform.linux_distribution())
-    print "                          %s" % ' '.join(os.uname())
-
-    # load info
-    if verbosity > 0:
-        loadstr = _readproc_line('/proc/loadavg')
-        (load1, load5, load15, nproc) = loadstr.split()[0:4]  # @UnusedVariable
-        print "  1 minute load average:  %s" % load1
-        print "  5 minute load average:  %s" % load5
-        print "  15 minute load average: %s" % load15
 
 def obfuscateKey(src_dict, obfuscate_list, retain_list):
     """ Obfuscate any dictionary items whose key is contained in passed list.
