@@ -28,7 +28,7 @@ from weeutil.weeutil import TimeSpan, timestamp_to_string
 from weewx.manager import DaySummaryManager
 
 VERSION = weewx.__version__
-WEE_DEBUG_VERSION = '0.6'
+WEE_DEBUG_VERSION = '0.7'
 
 # keys/setting names to obfuscate in weewx.conf, key value will be obfuscated
 # if the key starts any element in the list. Can add additional string elements
