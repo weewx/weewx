@@ -256,7 +256,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.25'
+DRIVER_VERSION = '0.26rc1'
 
 
 def loader(config_dict, _):
@@ -1030,6 +1030,7 @@ class Ws2300(object):
             self.log("--")
         else:
             self.log("%02x" % ord(result))
+        time.sleep(0.01) # reduce chance of data spike by avoiding contention
         return result
     #
     # Remove all pending incoming characters.

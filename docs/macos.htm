@@ -5,20 +5,20 @@
     <title>weewx: Installation on macOS systems</title>
     <meta http-equiv="Content-Language" content="en-us"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
-    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link rel="icon" href="images/favicon.png" type="image/png"/>
 </head>
 <body>
 
-<h1 class="title">weewx: Installation on macOS systems
+<h1 class="title">weeWX: Installation on macOS systems
     <div class='os-icons'>
         <img class='logo' src='images/logo-apple.png' alt=""/>
     </div>
     <div style="clear: both"></div>
 </h1>
 
-<p>This is a guide to installing <span class='code'>weewx</span> on macOS.</p>
+<p>This is a guide to installing weeWX on macOS.</p>
 
 <h2>Download</h2>
 
@@ -43,7 +43,7 @@ sudo easy_install pyephem</pre>
 <pre class='tty cmd'>xcode-select --install</pre>
 <p>then try the easy_install again.</p>
 
-<h2>Install <span class='code'>weewx</span></h2>
+<h2>Install weeWX</h2>
 <p>Expand the source archive:</p>
 <pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
 <p>Change directory:</p>
@@ -66,7 +66,7 @@ sudo easy_install pyephem</pre>
 sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
 
 <h2>Status</h2>
-<p>To make sure things are running properly, look in the system log for messages from <span class='code'>weewx</span>.  Run the <span class="code">Console</span> application and select <span class="code">All Messages</span>.
+<p>To make sure things are running properly, look in the system log for messages from weeWX.  Run the <span class="code">Console</span> application and select <span class="code">All Messages</span>.
 </p>
 
 <h2>Verify</h2>
@@ -80,22 +80,22 @@ sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
 <p>To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span class='code'>/Users/Shared/weewx/weewx.conf</span>. See the <a href="usersguide.htm">User Guide</a> and <a href="customizing.htm">Customization Guide</a> for details.
 </p>
 
-<p><span class='code'>weewx</span> must be restarted for configuration file changes to take effect.
+<p>WeeWX must be restarted for configuration file changes to take effect.
 </p>
 
 <h2>Start/Stop</h2>
-<p>To start/stop <span class='code'>weewx</span>:</p>
+<p>To start/stop weeWX:</p>
 <pre class='tty cmd'>sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
 sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
 
 <h2>Uninstall</h2>
-<p>To uninstall, simply delete the directory <span class='code'>/Users/Shared/weewx</span>.  This will delete weewx, configuration files, and data.</p>
+<p>To uninstall, simply delete the directory <span class='code'>/Users/Shared/weewx</span>.  This will delete weeWX, configuration files, and data.</p>
 <pre class='tty cmd'>rm -r /Users/Shared/weewx
 sudo rm /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
 
 <h2>Layout</h2>
 <p>The instructions above will result in the following layout:</p>
-<table class='locations' style="width:50%">
+<table class='locations' style="width: auto;">
     <tr>
         <td align='right'>executable:</td>
         <td class='tty'>/Users/Shared/weewx/bin/weewxd</td>
@@ -119,6 +119,10 @@ sudo rm /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
     <tr>
         <td align='right'>documentation:</td>
         <td class='tty'>/Users/Shared/weewx/docs/</td>
+    </tr>
+    <tr>
+        <td align='right'>examples:</td>
+        <td class='tty'>/Users/Shared/weewx/examples/</td>
     </tr>
     <tr>
         <td align='right'>utilities:</td>

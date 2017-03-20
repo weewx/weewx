@@ -445,7 +445,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.22'
+DRIVER_VERSION = '0.24'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -524,9 +524,9 @@ class TE923ConfEditor(weewx.drivers.AbstractConfEditor):
     # The default configuration associates the channel 1 sensor with outTemp
     # and outHumidity.  To change this, or to associate other channels with
     # specific columns in the database schema, use the following map.
-    [[sensor_map]]
+    #[[sensor_map]]
 %s
-""" % "\n".join(["        %s = %s" % (x, DEFAULT_MAP[x]) for x in DEFAULT_MAP])
+""" % "\n".join(["    #   %s = %s" % (x, DEFAULT_MAP[x]) for x in DEFAULT_MAP])
 
 
 class TE923Configurator(weewx.drivers.AbstractConfigurator):
@@ -1136,7 +1136,9 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         self.read_timeout = int(stn_dict.get('read_timeout', 10))
         self.polling_interval = int(stn_dict.get('polling_interval', 10))
         loginf('polling interval is %s' % str(self.polling_interval))
-        self.sensor_map = stn_dict.get('sensor_map', DEFAULT_MAP)
+        self.sensor_map = dict(DEFAULT_MAP)
+        if 'sensor_map' in stn_dict:
+            self.sensor_map.update(stn_dict['sensor_map'])
         loginf('sensor map is %s' % self.sensor_map)
 
         self.station = TE923Station(max_tries=self.max_tries,
@@ -1209,8 +1211,7 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         loginf("read %s records from logger" % cnt)
 
     @staticmethod
-    def data_to_packet(data, status=None, last_rain=None,
-                       sensor_map=DEFAULT_MAP):
+    def data_to_packet(data, status, last_rain, sensor_map):
         """convert raw data to format and units required by weewx
 
                     station      weewx (metric)
@@ -1257,9 +1258,6 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         packet['windGust'] = data.get('windgust')
         if packet['windGust'] is not None:
             packet['windGust'] *= 1.60934 # speed is mph; weewx wants km/h
-        packet['windGustDir'] = data.get('winddir')
-        if packet['windGustDir'] is not None:
-            packet['windGustDir'] *= 22.5 # weewx wants degrees
 
         packet['rainTotal'] = data['rain']
         if packet['rainTotal'] is not None:

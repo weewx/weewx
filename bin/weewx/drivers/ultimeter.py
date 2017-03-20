@@ -55,22 +55,20 @@ import syslog
 import time
 
 import weewx.drivers
+import weewx.wxformulas
 from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'Ultimeter'
-DRIVER_VERSION = '0.16'
+DRIVER_VERSION = '0.18'
 
-DEBUG_SERIAL = 0
 
 def loader(config_dict, _):
-    return Ultimeter(**config_dict[DRIVER_NAME])
+    return UltimeterDriver(**config_dict[DRIVER_NAME])
 
 def confeditor_loader():
     return UltimeterConfEditor()
 
-
-DEFAULT_PORT = '/dev/ttyS0'
 
 def logmsg(level, msg):
     syslog.syslog(level, 'ultimeter: %s' % msg)
@@ -85,31 +83,33 @@ def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
 
 
-class Ultimeter(weewx.drivers.AbstractDevice):
+def _fmt(x):
+    return ' '.join(["%0.2X" % ord(c) for c in x])
+
+
+class UltimeterDriver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with a Peet Bros Ultimeter station
 
     model: station model, e.g., 'Ultimeter 2000' or 'Ultimeter 100'
     [Optional. Default is 'Ultimeter']
 
     port - serial port
-    [Required. Default is /dev/ttyS0]
+    [Required. Default is /dev/ttyUSB0]
 
     max_tries - how often to retry serial communication before giving up
-    [Optional. Default is 10]
+    [Optional. Default is 5]
     """
     def __init__(self, **stn_dict):
         self.model = stn_dict.get('model', 'Ultimeter')
-        self.port = stn_dict.get('port', DEFAULT_PORT)
-        self.max_tries = int(stn_dict.get('max_tries', 10))
-        self.retry_wait = int(stn_dict.get('retry_wait', 10))
+        self.port = stn_dict.get('port', Station.DEFAULT_PORT)
+        self.max_tries = int(stn_dict.get('max_tries', 5))
+        self.retry_wait = int(stn_dict.get('retry_wait', 3))
+        debug_serial = int(stn_dict.get('debug_serial', 0))
         self.last_rain = None
-
-        global DEBUG_SERIAL
-        DEBUG_SERIAL = int(stn_dict.get('debug_serial', DEBUG_SERIAL))
 
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('using serial port %s' % self.port)
-        self.station = Station(self.port)
+        self.station = Station(self.port, debug_serial=debug_serial)
         self.station.open()
 
     def closePort(self):
@@ -140,16 +140,17 @@ class Ultimeter(weewx.drivers.AbstractDevice):
             yield packet
 
     def _augment_packet(self, packet):
-        # calculate the rain delta from rain total
-        if self.last_rain is not None:
-            packet['rain'] = packet['long_term_rain'] - self.last_rain
-        else:
-            packet['rain'] = None
-        self.last_rain = packet['long_term_rain']
+        packet['rain'] = weewx.wxformulas.calculate_rain(
+            packet['rain_total'], self.last_rain)
+        self.last_rain = packet['rain_total']
 
 
 class Station(object):
-    def __init__(self, port):
+
+    DEFAULT_PORT = '/dev/ttyUSB0'
+
+    def __init__(self, port, debug_serial=0):
+        self._debug_serial = debug_serial
         self.port = port
         self.baudrate = 2400
         self.timeout = 3 # seconds
@@ -188,7 +189,7 @@ class Station(object):
             tt = time.localtime()
             y = tt.tm_year
             s = tt.tm_sec
-            ts = time.mktime((y,1,1,0,0,s,0,0,-1)) + d * 86400 + m * 60
+            ts = time.mktime((y, 1, 1, 0, 0, s, 0, 0, -1)) + d * 86400 + m * 60
             logdbg("station time: day:%s min:%s (%s)" %
                    (d, m, timestamp_to_string(ts)))
             return ts
@@ -215,33 +216,33 @@ class Station(object):
 
     def set_logger_mode(self):
         # in logger mode, station sends logger mode records continuously
-        if DEBUG_SERIAL:
+        if self._debug_serial:
             logdbg("set station to logger mode")
         self.serial_port.write(">I\r")
 
     def set_modem_mode(self):
         # setting to modem mode should stop data logger output
         if self.has_modem_mode:
-            if DEBUG_SERIAL:
+            if self._debug_serial:
                 logdbg("set station to modem mode")
             self.serial_port.write(">\r")
 
     def get_readings(self):
         buf = self.serial_port.readline()
-        if DEBUG_SERIAL:
-            logdbg("station said: %s" %
-                   ' '.join(["%0.2X" % ord(c) for c in buf]))
+        if self._debug_serial:
+            logdbg("station said: %s" % _fmt(buf))
         buf = buf.strip() # FIXME: is this necessary?
         return buf
 
-    def validate_string(self, buf):
+    @staticmethod
+    def validate_string(buf):
         if len(buf) not in [42, 46, 50]:
             raise weewx.WeeWxIOError("Unexpected buffer length %d" % len(buf))
         if buf[0:2] != '!!':
             raise weewx.WeeWxIOError("Unexpected header bytes '%s'" % buf[0:2])
         return buf
 
-    def get_readings_with_retry(self, max_tries=5, retry_wait=10):
+    def get_readings_with_retry(self, max_tries=5, retry_wait=3):
         for ntries in range(0, max_tries):
             try:
                 buf = self.get_readings()
@@ -291,7 +292,7 @@ class Station(object):
         data['windSpeed'] = Station._decode(buf[0:4], 0.1 * MILE_PER_KM)  # mph
         data['windDir'] = Station._decode(buf[6:8], 1.411764)  # compass deg
         data['outTemp'] = Station._decode(buf[8:12], 0.1, neg=True)  # degree_F
-        data['long_term_rain'] = Station._decode(buf[12:16], 0.01)  # inch
+        data['rain_total'] = Station._decode(buf[12:16], 0.01)  # inch
         data['barometer'] = Station._decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
         data['inTemp'] = Station._decode(buf[20:24], 0.1, neg=True)  # degree_F
         data['outHumidity'] = Station._decode(buf[24:28], 0.1)  # percent
@@ -335,20 +336,20 @@ class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
 [Ultimeter]
     # This section is for the PeetBros Ultimeter series of weather stations.
 
-    # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cuaU0
-    port = /dev/ttyUSB0
+    # Serial port such as /dev/ttyS0, /dev/ttyUSB0, or /dev/cua0
+    port = %s
 
     # The station model, e.g., Ultimeter 2000, Ultimeter 100
     model = Ultimeter
 
     # The driver to use:
     driver = weewx.drivers.ultimeter
-"""
+""" % Station.DEFAULT_PORT
 
     def prompt_for_settings(self):
         print "Specify the serial port on which the station is connected, for"
-        print "example /dev/ttyUSB0 or /dev/ttyS0."
-        port = self._prompt('port', '/dev/ttyUSB0')
+        print "example: /dev/ttyUSB0 or /dev/ttyS0 or /dev/cua0."
+        port = self._prompt('port', Station.DEFAULT_PORT)
         return {'port': port}
 
 
@@ -367,16 +368,18 @@ if __name__ == '__main__':
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--version', dest='version', action='store_true',
                       help='display driver version')
+    parser.add_option('--debug', dest='debug', action='store_true',
+                      help='provide additional debug output in log')
     parser.add_option('--port', dest='port', metavar='PORT',
                       help='serial port to which the station is connected',
-                      default=DEFAULT_PORT)
+                      default=Station.DEFAULT_PORT)
     (options, args) = parser.parse_args()
 
     if options.version:
         print "ultimeter driver version %s" % DRIVER_VERSION
         exit(0)
 
-    with Station(options.port) as s:
-        s.set_logger_mode()
+    with Station(options.port, debug_serial=options.debug) as station:
+        station.set_logger_mode()
         while True:
-            print time.time(), s.get_readings()
+            print time.time(), _fmt(station.get_readings())

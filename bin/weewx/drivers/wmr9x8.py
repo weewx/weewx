@@ -1,18 +1,22 @@
-#
 # Copyright (c) 2012 Will Page <compenguy@gmail.com>
 # See the file LICENSE.txt for your full rights.
 #
 # Derivative of vantage.py and wmr100.py, credit to Tom Keffer
 
-"""Classes and functions for interfacing with Oregon Scientific WM-918, WMR9x8 and WMR-968 weather stations
+"""Classes and functions for interfacing with Oregon Scientific WM-918, WMR9x8,
+and WMR-968 weather stations
 
-    See http://wx200.planetfall.com/wx200.txt or http://www.qsl.net/zl1vfo/wx200/wx200.txt or
-    http://ed.toton.org/projects/weather/station-protocol.txt for documentation on the WM-918 / WX-200 serial protocol
+See 
+  http://wx200.planetfall.com/wx200.txt
+  http://www.qsl.net/zl1vfo/wx200/wx200.txt
+  http://ed.toton.org/projects/weather/station-protocol.txt
+for documentation on the WM-918 / WX-200 serial protocol
 
-    See http://www.netsky.org/WMR/Protocol.htm for documentation on the WMR9x8 serial protocol,
-    and http://code.google.com/p/wmr968/source/browse/trunk/src/edu/washington/apl/weather/packet/
-    for sample (java) code.
-
+See
+   http://www.netsky.org/WMR/Protocol.htm
+for documentation on the WMR9x8 serial protocol, and
+   http://code.google.com/p/wmr968/source/browse/trunk/src/edu/washington/apl/weather/packet/
+for sample (java) code.
 """
 
 import time
@@ -26,8 +30,8 @@ import weewx.drivers
 from math import exp
 
 DRIVER_NAME = 'WMR9x8'
-DRIVER_VERSION = "3.0"
-
+DRIVER_VERSION = "3.2.2"
+DEFAULT_PORT = '/dev/ttyS0'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return WMR9x8(**config_dict[DRIVER_NAME])
@@ -35,7 +39,18 @@ def loader(config_dict, engine):  # @UnusedVariable
 def confeditor_loader():
     return WMR9x8ConfEditor()
 
-DEFAULT_PORT = '/dev/ttyS0'
+def logmsg(level, msg):
+    syslog.syslog(level, 'wmr9x8: %s' % msg)
+
+def logdbg(msg):
+    logmsg(syslog.LOG_DEBUG, msg)
+
+def loginf(msg):
+    logmsg(syslog.LOG_INFO, msg)
+
+def logerr(msg):
+    logmsg(syslog.LOG_ERR, msg)
+
 
 class WMR9x8ProtocolError(weewx.WeeWxIOError):
     """Used to signal a protocol error condition"""
@@ -107,7 +122,7 @@ class SerialWrapper(object):
     def openPort(self):
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, **self.serialconfig)
-        syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Opened up serial port %s" % self.port)
+        logdbg("Opened up serial port %s" % self.port)
 
     def closePort(self):
         self.serial_port.close()
@@ -117,9 +132,67 @@ class SerialWrapper(object):
 #==============================================================================
 
 class WMR9x8(weewx.drivers.AbstractDevice):
-    """Class that represents a connection to a Oregon Scientific WMR9x8 console.
+    """Driver for the Oregon Scientific WMR9x8 console.
 
     The connection to the console will be open after initialization"""
+
+    DEFAULT_MAP = {
+        'barometer': 'barometer',
+        'pressure': 'pressure',
+        'windSpeed': 'wind_speed',
+        'windDir': 'wind_dir',
+        'windGust': 'wind_gust',
+        'windGustDir': 'wind_gust_dir',
+        'windBatteryStatus': 'battery_status_wind',
+        'inTemp': 'temperature_in',
+        'outTemp': 'temperature_out',
+        'extraTemp1': 'temperature_1',
+        'extraTemp2': 'temperature_2',
+        'extraTemp3': 'temperature_3',
+        'extraTemp4': 'temperature_4',
+        'extraTemp5': 'temperature_5',
+        'extraTemp6': 'temperature_6',
+        'extraTemp7': 'temperature_7',
+        'extraTemp8': 'temperature_8',
+        'inHumidity': 'humidity_in',
+        'outHumidity': 'humidity_out',
+        'extraHumid1': 'humidity_1',
+        'extraHumid2': 'humidity_2',
+        'extraHumid3': 'humidity_3',
+        'extraHumid4': 'humidity_4',
+        'extraHumid5': 'humidity_5',
+        'extraHumid6': 'humidity_6',
+        'extraHumid7': 'humidity_7',
+        'extraHumid8': 'humidity_8',
+        'inTempBatteryStatus': 'battery_status_in',
+        'outTempBatteryStatus': 'battery_status_out',
+        'extraBatteryStatus1': 'battery_status_1', # was batteryStatusTHx
+        'extraBatteryStatus2': 'battery_status_2', # or batteryStatusTx
+        'extraBatteryStatus3': 'battery_status_3',
+        'extraBatteryStatus4': 'battery_status_4',
+        'extraBatteryStatus5': 'battery_status_5',
+        'extraBatteryStatus6': 'battery_status_6',
+        'extraBatteryStatus7': 'battery_status_7',
+        'extraBatteryStatus8': 'battery_status_8',
+        'inDewpoint': 'dewpoint_in',
+        'dewpoint': 'dewpoint_out',
+        'dewpoint0': 'dewpoint_0',
+        'dewpoint1': 'dewpoint_1',
+        'dewpoint2': 'dewpoint_2',
+        'dewpoint3': 'dewpoint_3',
+        'dewpoint4': 'dewpoint_4',
+        'dewpoint5': 'dewpoint_5',
+        'dewpoint6': 'dewpoint_6',
+        'dewpoint7': 'dewpoint_7',
+        'dewpoint8': 'dewpoint_8',
+        'rain': 'rain',
+        'rainTotal': 'rain_total',
+        'rainRate': 'rain_rate',
+        'hourRain': 'rain_hour',
+        'rain24': 'rain_24',
+        'yesterdayRain': 'rain_yesterday',
+        'rainBatteryStatus': 'battery_status_rain',
+        'windchill': 'windchill'}
 
     def __init__(self, **stn_dict):
         """Initialize an object of type WMR9x8.
@@ -132,14 +205,21 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         port: The serial port of the WM918/WMR918/WMR968.
         [Required if serial communication]
 
-        baudrate: Baudrate of the port. [Optional. Default 9600]
+        baudrate: Baudrate of the port.
+        [Optional. Default 9600]
 
         timeout: How long to wait before giving up on a response from the
-        serial port. [Optional. Default is 5]
+        serial port.
+        [Optional. Default is 5]
         """
 
+        loginf('driver version is %s' % DRIVER_VERSION)
         self.model = stn_dict.get('model', 'WMR968')
-        self.last_totalRain = None
+        self.sensor_map = dict(self.DEFAULT_MAP)
+        if 'sensor_map' in stn_dict:
+            self.sensor_map.update(stn_dict['sensor_map'])
+        loginf('sensor map is %s' % self.sensor_map)
+        self.last_rain_total = None
 
         # Create the specified port
         self.port = WMR9x8._port_factory(stn_dict)
@@ -181,15 +261,16 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                 sent_checksum = pdata[-1]
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
                 if sent_checksum == calc_checksum:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Received WMR9x8 data packet.")
+                    logdbg("Received WMR9x8 data packet.")
                     payload = pdata[2:-1]
                     _record = wmr9x8_packet_type_decoder_map[ptype](self, payload)
+                    _record = self._sensors_to_fields(_record, self.sensor_map)
                     if _record is not None:
                         yield _record
                     # Eliminate all packet data from the buffer
                     buf = buf[psize:]
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Invalid data packet (%s)." % pdata)
+                    logdbg("Invalid data packet (%s)." % pdata)
                     # Drop the first byte of the buffer and start scanning again
                     buf.pop(0)
             # WM-918 packets have no framing
@@ -203,20 +284,35 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                 sent_checksum = pdata[-1]
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
                 if sent_checksum == calc_checksum:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Received WM-918 data packet.")
-                    payload = pdata[0:-1]  #send all of packet but crc
+                    logdbg("Received WM-918 data packet.")
+                    payload = pdata[0:-1] # send all of packet but crc
                     _record = wm918_packet_type_decoder_map[ptype](self, payload)
+                    _record = self._sensors_to_fields(_record, self.sensor_map)
                     if _record is not None:
                         yield _record
                     # Eliminate all packet data from the buffer
                     buf = buf[psize:]
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Invalid data packet (%s)." % pdata)
+                    logdbg("Invalid data packet (%s)." % pdata)
                     # Drop the first byte of the buffer and start scanning again
                     buf.pop(0)
             else:
-                syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Advancing buffer by one for the next potential packet")
+                logdbg("Advancing buffer by one for the next potential packet")
                 buf.pop(0)
+
+    @staticmethod
+    def _sensors_to_fields(oldrec, sensor_map):
+        # map a record with observation names to a record with db field names
+        if oldrec:
+            newrec = dict()
+            for k in sensor_map:
+                if sensor_map[k] in oldrec:
+                    newrec[k] = oldrec[sensor_map[k]]
+            if newrec:
+                newrec['dateTime'] = oldrec['dateTime']
+                newrec['usUnits'] = oldrec['usUnits']
+                return newrec
+        return None
 
     #==========================================================================
     #              Oregon Scientific WMR9x8 utility functions
@@ -243,7 +339,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
     def log_packet(self, packet):
         packet_str = ','.join(["x%x" % v for v in packet])
-        print "%d, %s, %s" % (int(time.time()+0.5), time.asctime(), packet_str)
+        print "%d, %s, %s" % (int(time.time() + 0.5), time.asctime(), packet_str)
 
     @wmr9x8_registerpackettype(typecode=0x00, size=11)
     def _wmr9x8_wind_packet(self, packet):
@@ -252,20 +348,20 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
         battery = (status & 0x04) >> 2
 
-        # The console returns wind speeds in m/s. Our metric system requires kph,
-        # so the result needs to be multiplied by 3.6
+        # The console returns wind speeds in m/s. Our metric system requires
+        # kph, so the result needs to be multiplied by 3.6
         _record = {
-            'windBatteryStatus' : battery,
-            'windSpeed'         : ((avg10th / 10.0) + avg1 + (avg10 * 10)) * 3.6,
-            'windDir'           : dir1 + (dir10 * 10) + (dir100 * 100),
-            'dateTime'          : int(time.time() + 0.5),
-            'usUnits'           : weewx.METRIC
+            'battery_status_wind': battery,
+            'wind_speed': ((avg10th / 10.0) + avg1 + (avg10 * 10)) * 3.6,
+            'wind_dir': dir1 + (dir10 * 10) + (dir100 * 100),
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC
         }
-        # Sometimes the station emits a wind gust that is less than the average wind.
-        # Ignore it if this is the case.
+        # Sometimes the station emits a wind gust that is less than the
+        # average wind. Ignore it if this is the case.
         windGustSpeed = ((gust10th / 10.0) + gust1 + (gust10 * 10)) * 3.6
-        if windGustSpeed >= _record['windSpeed']:
-            _record['windGust'] = windGustSpeed
+        if windGustSpeed >= _record['wind_speed']:
+            _record['wind_gust'] = windGustSpeed
 
         # Bit 1 of chillstatus is on if there is no wind chill data;
         # Bit 2 is on if it has overflowed. Check them both:
@@ -284,21 +380,21 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         null, status, cur1, cur10, cur100, tot10th, tot1, tot10, tot100, tot1000, yest1, yest10, yest100, yest1000, totstartmin1, totstartmin10, totstarthr1, totstarthr10, totstartday1, totstartday10, totstartmonth1, totstartmonth10, totstartyear1, totstartyear10 = self._get_nibble_data(packet[1:]) # @UnusedVariable
         battery = (status & 0x04) >> 2
 
-        # station units are mm and mm/hr while the internal metric units are cm and cm/hr
-        # It is reported that total rainfall is biased by +0.5 mm
+        # station units are mm and mm/hr while the internal metric units are
+        # cm and cm/hr. It is reported that total rainfall is biased by +0.5 mm
         _record = {
-            'rainBatteryStatus' : battery,
-            'rainRate'          : (cur1 + (cur10 * 10) + (cur100 * 100)) / 10.0,
-            'yesterdayRain'     : (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000)) / 10.0,
-            'totalRain'         : (tot10th / 10.0 + tot1 + 10.0 * tot10 + 100.0 * tot100 + 1000.0 * tot1000) / 10.0,
-            'dateTime'          : int(time.time() + 0.5),
-            'usUnits'           : weewx.METRIC
+            'battery_status_rain': battery,
+            'rain_rate': (cur1 + (cur10 * 10) + (cur100 * 100)) / 10.0,
+            'rain_yesterday': (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000)) / 10.0,
+            'rain_total': (tot10th / 10.0 + tot1 + 10.0 * tot10 + 100.0 * tot100 + 1000.0 * tot1000) / 10.0,
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC
         }
         # Because the WMR does not offer anything like bucket tips, we must
-        # calculate it by looking for the change in total rain. Of course, this
-        # won't work for the very first rain packet.
-        _record['rain'] = (_record['totalRain'] - self.last_totalRain) if self.last_totalRain is not None else None
-        self.last_totalRain = _record['totalRain']
+        # calculate it by looking for the change in total rain. Of course,
+        # this won't work for the very first rain packet.
+        _record['rain'] = (_record['rain_total'] - self.last_rain_total) if self.last_rain_total is not None else None
+        self.last_rain_total = _record['rain_total']
         return _record
 
     @wmr9x8_registerpackettype(typecode=0x02, size=9)
@@ -309,26 +405,26 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
         battery = (status & 0x04) >> 2
         _record = {
-            'dateTime' : int(time.time() + 0.5),
-            'usUnits'  : weewx.METRIC,
-            'batteryStatusTH%d' % chan : battery
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC,
+            'battery_status_%d' % chan :battery
         }
 
-        _record['extraHumid%d' % chan] = hum1 + (hum10 * 10)
+        _record['humidity_%d' % chan] = hum1 + (hum10 * 10)
 
         tempoverunder = temp100etc & 0x04
         if not tempoverunder:
             temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc & 0x03) * 100)
             if temp100etc & 0x08:
                 temp = -temp
-            _record['extraTemp%d' % chan] = temp
+            _record['temperature_%d' % chan] = temp
         else:
-            _record['extraTemp%d' % chan] = None
+            _record['temperature_%d' % chan] = None
 
         dewunder = bool(status & 0x01)
         # If dew point is valid, save it.
         if not dewunder:
-            _record['dewpoint%d' % chan] = dew1 + (dew10 * 10)
+            _record['dewpoint_%d' % chan] = dew1 + (dew10 * 10)
 
         return _record
 
@@ -338,10 +434,10 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
         battery = (status & 0x04) >> 2
         _record = {
-            'dateTime'             : int(time.time() + 0.5),
-            'usUnits'              : weewx.METRIC,
-            'outTempBatteryStatus' : battery,
-            'outHumidity'          : hum1 + (hum10 * 10)
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC,
+            'battery_status_out': battery,
+            'humidity_out': hum1 + (hum10 * 10)
         }
 
         tempoverunder = temp100etc & 0x04
@@ -349,14 +445,14 @@ class WMR9x8(weewx.drivers.AbstractDevice):
             temp = (temp10th / 10.0) + temp1 + (temp10 * 10) + ((temp100etc & 0x03) * 100)
             if temp100etc & 0x08:
                 temp = -temp
-            _record['outTemp'] = temp
+            _record['temperature_out'] = temp
         else:
-            _record['outTemp'] = None
+            _record['temperature_out'] = None
             
         dewunder = bool(status & 0x01)
         # If dew point is valid, save it.
         if not dewunder:
-            _record['dewpoint'] = dew1 + (dew10 * 10)
+            _record['dewpoint_out'] = dew1 + (dew10 * 10)
 
         return _record
 
@@ -367,15 +463,15 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         chan = channel_decoder(chan)
         battery = (status & 0x04) >> 2
 
-        _record = {'dateTime' : int(time.time() + 0.5),
-                   'usUnits'  : weewx.METRIC,
-                   'batteryStatusT%d' % chan : battery}
+        _record = {'dateTime': int(time.time() + 0.5),
+                   'usUnits': weewx.METRIC,
+                   'battery_status_%d' % chan: battery}
 
         temp = temp10th / 10.0 + temp1 + 10.0 * temp10 + 100.0 * (temp100etc & 0x03)
         if temp100etc & 0x08:
             temp = -temp
         tempoverunder = temp100etc & 0x04
-        _record['extraTemp%d' % chan] = temp if not tempoverunder else None
+        _record['temperature_%d' % chan] = temp if not tempoverunder else None
 
         return _record
 
@@ -406,14 +502,14 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         slpoff = (1000 + pre_slpoff) if pre_slpoff < 400.0 else pre_slpoff
         
         _record = {
-            'inTempBatteryStatus' : battery,
-            'inHumidity'  : hum,
-            'inTemp'      : temp,
-            'dewpoint'    : dew,
-            'barometer'   : rawsp + slpoff,
-            'pressure'    : sp,
-            'dateTime'    : int(time.time() + 0.5),
-            'usUnits'     : weewx.METRIC
+            'battery_status_in': battery,
+            'humidity_in': hum,
+            'temperature_in': temp,
+            'dewpoint_in': dew,
+            'barometer': rawsp + slpoff,
+            'pressure': sp,
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC
         }
 
         return _record
@@ -444,14 +540,14 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         slpoff = (slpoff10th / 10.0) + slpoff1 + (slpoff10 * 10) + (slpoff100 * 100) + (slpoff1000 * 1000)
         
         _record = {
-            'inTempBatteryStatus' : battery,
-            'inHumidity'  : hum,
-            'inTemp'      : temp,
-            'inDewpoint'  : dew,
-            'barometer'   : rawsp+slpoff,
-            'pressure'    : sp,
-            'dateTime'    : int(time.time() + 0.5),
-            'usUnits'     : weewx.METRIC
+            'battery_status_in': battery,
+            'humidity_in': hum,
+            'temperature_in': temp,
+            'dewpoint_in': dew,
+            'barometer': rawsp + slpoff,
+            'pressure': sp,
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC
         }
 
         return _record
@@ -497,22 +593,20 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         gust10th, gust1, gust10, dir1, dir10, dir100, avg10th, avg1, avg10, avgdir1, avgdir10, avgdir100 = self._get_nibble_data(packet[1:7])
         _chill10, _chill1 = self._get_nibble_data(packet[16:17])
 
-        # The console returns wind speeds in m/s. Our metric system requires kph,
-        # so the result needs to be multiplied by 3.6
+        # The console returns wind speeds in m/s. Our metric system requires
+        # kph, so the result needs to be multiplied by 3.6
         _record = {
-            'windSpeed'         : ((avg10th / 10.0) + avg1 + (avg10*10)) * 3.6,
-            'windDir'           : avgdir1 + (avgdir10 * 10) + (avgdir100 * 100),
-            'windGust'          : ((gust10th / 10.0) + gust1 + (gust10 * 10)) * 3.6,
-            'windGustDir'       : dir1 + (dir10 * 10) + (dir100 * 100),
-            'dateTime'          : int(time.time() + 0.5),
-            'usUnits'           : weewx.METRIC
+            'wind_speed': ((avg10th / 10.0) + avg1 + (avg10 * 10)) * 3.6,
+            'wind_dir': avgdir1 + (avgdir10 * 10) + (avgdir100 * 100),
+            'wind_gust': ((gust10th / 10.0) + gust1 + (gust10 * 10)) * 3.6,
+            'wind_gust_dir': dir1 + (dir10 * 10) + (dir100 * 100),
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC
         }
-        # Sometimes the station emits a wind gust that is less than the average wind.
-        # Ignore it if this is the case.
-        if _record['windGust'] < _record['windSpeed']:
-            _record['windGust'] = _record['windSpeed']
-        # Save the windspeed to be used for windchill and apparent temperature
-        self.last_windSpeed = _record['windSpeed']
+        # Sometimes the station emits a wind gust that is less than the
+        # average wind. Ignore it if this is the case.
+        if _record['wind_gust'] < _record['wind_speed']:
+            _record['wind_gust'] = _record['wind_speed']
         return _record
 
     @wm918_registerpackettype(typecode=0xbf, size=14)
@@ -521,19 +615,21 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
         # It is reported that total rainfall is biased by +0.5 mm
         _record = {
-            'rainRate'          : (cur1 + (cur10 * 10) + (cur100 * 100)) / 10.0,
-            'yesterdayRain'     : (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000)) / 10.0,
-            'totalRain'         : (tot1 + (tot10 * 10) + (tot100 * 100) + (tot1000 * 1000)) / 10.0,
-            'dateTime'          : int(time.time() + 0.5),
-            'usUnits'           : weewx.METRIC
+            'rain_rate': (cur1 + (cur10 * 10) + (cur100 * 100)) / 10.0,
+            'rain_yesterday': (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000)) / 10.0,
+            'rain_total': (tot1 + (tot10 * 10) + (tot100 * 100) + (tot1000 * 1000)) / 10.0,
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC
         }
         # Because the WM does not offer anything like bucket tips, we must
         # calculate it by looking for the change in total rain. Of course, this
         # won't work for the very first rain packet.
-        # the WM reports rain rate as rain_rate, rain yesterday (updated by wm at midnight) and total rain since last reset
-        # weewx needs rain since last packet we need to divide by 10 to mimic Vantage reading
-        _record['rain'] = (_record['totalRain'] - self.last_totalRain) if self.last_totalRain is not None else None
-        self.last_totalRain = _record['totalRain']
+        # the WM reports rain rate as rain_rate, rain yesterday (updated by
+        # wm at midnight) and total rain since last reset
+        # weewx needs rain since last packet we need to divide by 10 to mimic
+        # Vantage reading
+        _record['rain'] = (_record['rain_total'] - self.last_rain_total) if self.last_rain_total is not None else None
+        self.last_rain_total = _record['rain_total']
         return _record
 
     @wm918_registerpackettype(typecode=0x8f, size=35)
@@ -544,12 +640,11 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         hum = hum1 + (hum10 * 10)
         humout = humout1 + (humout10 * 10)
         _record = {
-            'outHumidity'       : humout,
-            'inHumidity'        : hum,
-            'dateTime'          : int(time.time() + 0.5),
-            'usUnits'           : weewx.METRIC
+            'humidity_out': humout,
+            'humidity_in': hum,
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC
         }
-        self.last_outHumidity = _record['outHumidity']    # save the humidity for the heat index and apparent temp calculation
         return _record
 
     @wm918_registerpackettype(typecode=0x9f, size=34)
@@ -562,17 +657,12 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         tempout = (tempout10th / 10.0) + tempout1 + ((tempout10 & 0x7) * 10)
         tempout *= -1 if (tempout10 & 0x08) else 1
         _record = {
-            'inTemp'           : temp,
-            'outTemp'          : tempout
+            'temperature_in': temp,
+            'temperature_out': tempout,
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC
         }
 
-        try:
-            _record['apparentTemp'] = tempout + 0.33 * ((self.last_outHumidity / 100.0) * 6.105 * exp(17.27 * tempout / (237.7 + tempout))) -0.70 * (self.last_windSpeed / 3.6) - 4.00
-        except AttributeError:
-            _record['apparentTemp'] = None
-
-        _record['dateTime'] = int(time.time() + 0.5)
-        _record['usUnits'] = weewx.METRIC
         return _record
 
     @wm918_registerpackettype(typecode=0xaf, size=31)
@@ -585,13 +675,13 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         sp = baro1 + (baro10 * 10) + (baro100 * 100) + (baro1000 * 1000)
         slp = (slp10th / 10.0) + slp1 + (slp10 * 10) + (slp100 * 100) + (slp1000 * 1000)
         _record = {
-            'barometer'   : slp,
-            'pressure'    : sp,
-            #'inDewpoint'  : dew,
-            #'outDewpoint' : dewout,
-            #'dewpoint'    : dewout,
-            'dateTime'    : int(time.time() + 0.5),
-            'usUnits'     : weewx.METRIC
+            'barometer': slp,
+            'pressure': sp,
+            #'inDewpoint': dew,
+            #'outDewpoint': dewout,
+            #'dewpoint': dewout,
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC
         }
 
         return _record
@@ -627,7 +717,7 @@ class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
         print """
 Setting rainRate, windchill, and dewpoint calculations to hardware."""
         config_dict.setdefault('StdWXCalculate', {})
-        config_dict['StdWXCalculate'].setdefault('Calculatios', {})
+        config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['windchill'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['dewpoint'] = 'hardware'
@@ -665,7 +755,7 @@ if __name__ == '__main__':
 
     if options.gen_packets:
         syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Running genLoopPackets()")
-        stn_dict={'port': options.port}
+        stn_dict = {'port': options.port}
         stn = WMR9x8(**stn_dict)
         
         for packet in stn.genLoopPackets():

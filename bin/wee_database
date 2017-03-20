@@ -4,130 +4,115 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Configure the databases used by weewx"""
+"""Configure databases used by weeWX"""
 from __future__ import with_statement
 
+# python imports
+import datetime
 import optparse
 import syslog
 import sys
 import time
 
+# weewx imports
 import user.extensions      #@UnusedImport
-import weecfg
+import weecfg.database
 import weedb
 import weewx.manager
 import weewx.units
 
-from weeutil.weeutil import TimeSpan
+from weeutil.weeutil import TimeSpan, timestamp_to_string
 
 usage = """wee_database --help
-       wee_database --create-archive
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-       wee_database --drop-daily
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-       wee_database --backfill-daily
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-            [--trans-days=DAYS]
+       wee_database --create
        wee_database --reconfigure
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-       wee_database --string-check
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME] [--fix]
-       wee_database --transfer
-            [CONFIG_FILE|--config=CONFIG_FILE]
-            [--binding=BINDING_NAME]
-            --dest-binding=BINDING_NAME
-            [--dry-run]
+       wee_database --transfer --dest-binding=BINDING_NAME [--dry-run]
+       wee_database --check
+       wee_database --update [--dry-run]
+       wee_database --check-strings
+       wee_database --fix-strings [--dry-run]
+       wee_database --drop-daily
+       wee_database --rebuild-daily [--date=YYYY-mm-dd |
+                                     --from=YYYY-mm-dd --to=YYYY-mm-dd]
 
 Description:
 
-Configure the weewx databases. Most of these functions are
-handled automatically by weewx, but they may be useful in special cases.
+Manipulate the weeWX database. Most of these operations are handled
+automatically by weeWX, but they may be useful in special cases."""
 
-Actions:
-
---create-archive  Create the archive database and initialize it with the schema.
---drop-daily      Drop the daily summaries from the database.
---backfill-daily  Rebuild the daily summaries from the archive database.
---reconfigure     Create a new database using the schema in the configuration file.
-                  Copy over data from the old database.
---string-check    Scan the archive database, looking for null strings that may have
-                  been introduced by a SQL editing program.
---transfer        Move data from one database to another."""
-
-epilog = """If you are using a MySQL database it is assumed that you have the
-appropriate permissions for the requested operation."""
-
-# List of 'dest' settings used by our 'verbs', note 'dest' may be explicit or 
+# List of 'dest' settings used by our 'verbs', note 'dest' may be explicit or
 # implicit. If adding more 'verbs' need to add corresponding 'dest' here.
-dest_list = ['create_archive', 'drop_daily', 'backfill_daily',
-             'reconfigure', 'string_check', 'transfer']
-         
+dest_list = ['create', 'drop_daily', 'rebuild_daily', 'reconfigure', 'transfer',
+             'check', 'update', 'check_strings', 'fix']
+
 def main():
 
     # Set defaults for the system logger:
     syslog.openlog('wee_database', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
-    parser = optparse.OptionParser(usage=usage, epilog=epilog)
+    parser = optparse.OptionParser(usage=usage)
 
     # Add the various options:
     parser.add_option("--config", dest="config_path", type=str,
                       metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
-    parser.add_option("--create-archive", dest="create_archive",
-                      action='store_true',
-                      help="Create the archive database.")
+    parser.add_option("--create", dest="create_database", action='store_true',
+                      help="Create the weeWX database and initialize it with the"
+                      " schema.")
     parser.add_option("--drop-daily", dest="drop_daily", action='store_true',
                       help="Drop the daily summary tables from a database.")
-    parser.add_option("--backfill-daily", dest="backfill_daily",
+    parser.add_option("--rebuild-daily", dest="rebuild_daily",
                       action='store_true',
-                      help="Backfill a database with daily summaries.")
+                      help="Rebuild the daily summaries from data in the archive"
+                      " table.")
+    parser.add_option("--date", dest="date", type=str, metavar="YYYY-mm-dd",
+                      help="This date only (option --rebuild-daily only).")
+    parser.add_option("--from", dest="from_date", type=str, metavar="YYYY-mm-dd",
+                      help="Start with this date (option --rebuild-daily only).")
+    parser.add_option("--to", dest="to_date", type=str, metavar="YYYY-mm-dd",
+                      help="End with this date (option --rebuild-daily only).")
     parser.add_option("--reconfigure", action='store_true',
-                      help="Create a new archive database using configuration"
+                      help="Create a new database using configuration"
                       " information found in the configuration file. In"
-                      " particular, the new database will use the"
-                      " unit system found in option [StdConvert][target_unit]."
+                      " particular, the new database will use the unit system"
+                      " found in option [StdConvert][target_unit]."
                       " The new database will have the same name as the old"
                       " database, with a '_new' on the end.")
-    parser.add_option("--string-check", dest="string_check",
-                      action="store_true",
-                      help="Check a sqlite version of the archive database to"
-                      " see whether it contains embedded strings.")
-    parser.add_option("--fix", dest="fix", action="store_true",
-                      help="Fix any embedded strings in a sqlite database.")
     parser.add_option("--transfer", dest="transfer", action='store_true',
-                      help="Transfer the weewx archive from source database to"
+                      help="Transfer the weeWX archive from source database to"
                       " destination database.")
+    parser.add_option("--check", dest="check", action="store_true",
+                      help="Check the calculations in the daily summary tables.")
+    parser.add_option("--update", dest="update", action="store_true",
+                      help="Update the daily summary tables if required and"
+                      " recalculate the daily summary maximum windSpeed values.")
+    parser.add_option("--check-strings", dest="check_strings", action="store_true",
+                      help="Check the archive table for null strings that may"
+                      " have been introduced by a SQL editing program.")
+    parser.add_option("--fix-strings", dest="fix", action='store_true',
+                      help="Fix any null strings in a SQLite database.")
     parser.add_option("--binding", dest="binding", metavar="BINDING_NAME",
                       default='wx_binding',
-                      help="The data binding. Default is 'wx_binding'.")
+                      help="The data binding to use. Default is 'wx_binding'.")
     parser.add_option("--dest-binding", dest="dest_binding",
                       metavar="BINDING_NAME",
-                      help="The destination data binding.")
-    parser.add_option('--dry-run', action='store_true',
-                      help='Print what would happen but do not do it.')
-    parser.add_option('--trans-days', dest='trans_days', default=5,
-                      metavar="DAYS", 
-                      help="Limit backfill transactions to no more than"
-                      " DAYS days of archive data at a time. Default value is 5."
-                      " May be increased for a slight speed increase or reduced"
-                      " to reduce memory usage.")
+                      help="The destination data binding (option --transfer only).")
+    parser.add_option('--dry-run', dest="dry_run", action='store_true',
+                      default=False,
+                      help='Print what would happen but do not do it. Default'
+                      ' is False.')
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
-    
-    # Do a check to see if the user used more than 1 'verb' . More than 1 verb 
+
+    # Do a check to see if the user used more than 1 'verb' . More than 1 verb
     # should be avoided - what did the user really want to do?
     # first get a list of options actually used
     options_list = [opt for opt, val in options.__dict__.items() if val is not None]
     # now a list of the 'dest' settings used
     dest_used = [opt for opt in options_list if opt in dest_list]
-    # If we have more than 1 entry in dest_used then we have more than 1 'verb' 
+    # If we have more than 1 entry in dest_used then we have more than 1 'verb'
     # used. Then inform the user and exit. If only 1 'verb' then carry on.
     if len(dest_used) > 1:
         # generate the message but we need to speak 'options' (aka verbs)
@@ -139,39 +124,54 @@ def main():
         # get rid of the [ and ]
         verbs_str = ', '.join(verbs_used)
         # our exit message
-        exit_str = ("Multiple verbs found in command line %s. Only one verb permitted.\nNothing done. Aborting." % 
+        exit_str = ("Multiple verbs found in command line %s. Only one verb permitted.\nNothing done. Aborting." %
                     (verbs_str, ))
         # now exit with our message
         sys.exit(exit_str)
-    
+
     # get config_dict to use
     config_path, config_dict = weecfg.read_config(options.config_path, args)
     print "Using configuration file %s" % config_path
+
+    # set syslog level based
+    if int(config_dict.get('debug', 0)):
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    else:
+        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
     db_binding = options.binding
     database = config_dict['DataBindings'][db_binding]['database']
     print "Using database binding '%s', which is bound to database '%s'" % (db_binding, database)
 
-    if options.create_archive:
+    if options.create_database:
         createMainDatabase(config_dict, db_binding)
 
     if options.drop_daily:
         dropDaily(config_dict, db_binding)
 
-    if options.backfill_daily:
-        backfillDaily(config_dict, db_binding, int(options.trans_days))
+    if options.rebuild_daily:
+        rebuildDaily(config_dict, db_binding, options)
 
     if options.reconfigure:
         reconfigMainDatabase(config_dict, db_binding)
 
-    if options.string_check:
-        string_check(config_dict, db_binding, options.fix)
-
     if options.transfer:
         transferDatabase(config_dict, db_binding, options)
 
+    if options.check:
+        check(config_dict, db_binding, options)
+
+    if options.update:
+        update(config_dict, db_binding, options)
+
+    if options.check_strings:
+        check_strings(config_dict, db_binding, options, fix=False)
+
+    if options.fix:
+        check_strings(config_dict, db_binding, options, fix=True)
+
 def createMainDatabase(config_dict, db_binding):
-    """Create a weewx archive database"""
+    """Create the weeWX database"""
 
     # Try a simple open. If it succeeds, that means the database
     # exists and is initialized. Otherwise, an exception will be thrown.
@@ -184,7 +184,7 @@ def createMainDatabase(config_dict, db_binding):
             print "Created database '%s'" % (dbmanager.database_name,)
 
 def dropDaily(config_dict, db_binding):
-    """Drop the daily summaries from a weewx database"""
+    """Drop the daily summaries from a weeWX database"""
 
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
                                                               db_binding)
@@ -195,7 +195,7 @@ def dropDaily(config_dict, db_binding):
         print "Proceeding will delete all your daily summaries from database '%s'" % database_name
         ans = raw_input("Are you sure you want to proceed (y/n)? ")
         if ans == 'y' :
-
+            t1 = time.time()
             print "Dropping daily summary tables from '%s' ... " % database_name
             try:
                 with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
@@ -204,33 +204,72 @@ def dropDaily(config_dict, db_binding):
                     except weedb.OperationalError, e:
                         print "Got error '%s'\nPerhaps there was no daily summary?" % e
                     else:
-                        print "Dropped daily summary tables from database '%s'" % (database_name,)
+                        tdiff = time.time() - t1
+                        print "Daily summary tables dropped from database '%s' in %.2f seconds" % (database_name, tdiff)
             except weedb.OperationalError:
                 # No daily summaries. Nothing to be done.
                 print "No daily summaries found in database '%s'. Nothing done." % (database_name,)
 
-def backfillDaily(config_dict, db_binding, trans_days):
-    """Backfill the daily summaries"""
+def rebuildDaily(config_dict, db_binding, options):
+    """Rebuild the daily summaries."""
 
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
                                                               db_binding)
     database_name = manager_dict['database_dict']['database_name']
 
-    syslog.syslog(syslog.LOG_INFO, "Backfilling daily summaries in database '%s' ..." % database_name)
-    print "Backfilling daily summaries in database '%s' ..." % database_name
+    # determine the period over which we are rebuilding from any command
+    # line date parameters
+    start_d, stop_d = _parse_dates(options)
+    # advise the user/log what we will do
+    if start_d is None and stop_d is None:
+        _msg = "All daily summaries will be rebuilt."
+    elif start_d and not stop_d:
+        _msg = "Daily summaries from %s through the end will be rebuilt." % start_d
+    elif not start_d and stop_d:
+        _msg = "Daily summaries from the begining through date %s will be rebuilt." % stop_d
+    elif start_d == stop_d:
+        _msg = "Daily summary for date %s will be rebuilt" % start_d
+    else:
+        _msg = "Daily summaries from %s through %s inclusive will be rebuilt." % (start_d, stop_d)
+
+    syslog.syslog(syslog.LOG_INFO, _msg)
+    print _msg
+
+    ans = None
+    while ans not in ['y', 'n']:
+        ans = raw_input("Proceed (y/n)? ")
+        if ans == 'y':
+            break
+        elif ans == 'n':
+            print "Nothing done."
+            return
 
     t1 = time.time()
-    # Open up the archive. This will create the tables necessary for the daily summaries if they
-    # don't already exist:
-    with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
-        nrecs, ndays = dbmanager.backfill_day_summary(trans_days=trans_days)
-    tdiff = time.time() - t1
 
-    syslog.syslog(syslog.LOG_INFO, "Backfill of daily summaries in database '%s' complete" % database_name)
+    # Open up the database. This will create the tables necessary for the daily
+    # summaries if they don't already exist:
+    with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
+
+        syslog.syslog(syslog.LOG_INFO, "Rebuilding daily summaries in database '%s' ..." % database_name)
+        print "Rebuilding daily summaries in database '%s' ..." % database_name
+        if options.dry_run:
+            print "Dry run. Nothing done."
+            return
+        else:
+            # now do the actual rebuild
+            nrecs, ndays = dbmanager.backfill_day_summary(start_d=start_d,
+                                                          stop_d=stop_d,
+                                                          trans_days=20)
+    tdiff = time.time() - t1
+    # advise the user/log what we did
+    syslog.syslog(syslog.LOG_INFO, "Rebuild of daily summaries in database '%s' complete" % database_name)
     if nrecs:
         sys.stdout.flush()
-        print "Processed %d records to backfill %d day summaries in %.2f seconds      " % (nrecs, ndays, tdiff)
-        print "Backfill of daily summaries in database '%s' complete" % database_name
+        print
+        print "Processed %d records to rebuild %d day summaries in %.2f seconds      " % (nrecs,
+                                                                                          ndays,
+                                                                                          tdiff)
+        print "Rebuild of daily summaries in database '%s' complete" % database_name
     else:
         print "Daily summaries up to date in '%s'" % database_name
 
@@ -243,7 +282,7 @@ def reconfigMainDatabase(config_dict, db_binding):
     new_database_dict = dict(manager_dict['database_dict'])
 
     # Now modify the database name
-    new_database_dict['database_name'] = manager_dict['database_dict']['database_name']+'_new'
+    new_database_dict['database_name'] = manager_dict['database_dict']['database_name'] + '_new'
 
     # First check and see if the new database already exists. If it does, check
     # with the user whether it's ok to delete it.
@@ -278,67 +317,28 @@ def reconfigMainDatabase(config_dict, db_binding):
 
     ans = None
     while ans not in ['y', 'n']:
-        print "Copying archive database '%s' to '%s'" % (manager_dict['database_dict']['database_name'], new_database_dict['database_name'])
+        print "Copying database '%s' to '%s'" % (manager_dict['database_dict']['database_name'],
+                                                 new_database_dict['database_name'])
         if target_unit_system is None or old_unit_system==target_unit_system:
-            print "The new archive will use the same unit system as the old ('%s')." % (weewx.units.unit_nicknames[old_unit_system],)
+            print ("The new database will use the same unit system as the old ('%s')." %
+                   (weewx.units.unit_nicknames[old_unit_system],))
         else:
-            print "Units will be converted from the '%s' system to the '%s' system." % (weewx.units.unit_nicknames[old_unit_system],
-                                                                                        weewx.units.unit_nicknames[target_unit_system])
+            print ("Units will be converted from the '%s' system to the '%s' system." %
+                   (weewx.units.unit_nicknames[old_unit_system],
+                    weewx.units.unit_nicknames[target_unit_system]))
         ans = raw_input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
+            t1 = time.time()
             weewx.manager.reconfig(manager_dict['database_dict'],
                                    new_database_dict,
                                    new_unit_system=target_unit_system,
                                    new_schema=manager_dict['schema'])
-            print "Done."
+            tdiff = time.time() - t1
+            print "Database '%s' copied to '%s' in %.2f seconds." % (manager_dict['database_dict']['database_name'],
+                                                                     new_database_dict['database_name'],
+                                                                     tdiff)
         elif ans == 'n':
             print "Nothing done."
-
-def string_check(config_dict, db_binding, fix=False):
-
-    print "Checking archive database for strings..."
-
-    # Open up the main database archive
-    with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
-
-        obs_pytype_list = []
-        obs_list = []
-
-        # Get the schema and extract the Python type each observation type should be
-        for column in dbmanager.connection.genSchemaOf('archive'):
-            schema_type = column[2]
-            if schema_type == 'INTEGER':
-                schema_type = int
-            elif schema_type == 'REAL':
-                schema_type = float
-            elif schema_type == 'STR':
-                schema_type = str
-            # Save the observation type for this column (eg, 'outTemp'):
-            obs_list.append(column[1])
-            # Save the Python type for this column (eg, 'int'):
-            obs_pytype_list.append(schema_type)
-
-        # Cycle through each row in the database
-        for record in dbmanager.genBatchRows():
-            # Now examine each column
-            for icol in range(len(record)):
-                # Check to see if this column is an instance of the correct Python type
-                if record[icol] is not None and not isinstance(record[icol], obs_pytype_list[icol]):
-                    # Oops. Found a bad one. Print it out
-                    sys.stdout.write("Timestamp = %s; record['%s']= %r; ... " % (record[0], obs_list[icol], record[icol]))
-
-                    if fix:
-                        # Cooerce to the correct type. If it can't be done, then set it to None
-                        try:
-                            corrected_value = obs_pytype_list[icol](record[icol])
-                        except ValueError:
-                            corrected_value = None
-                        # Update the database with the new value
-                        dbmanager.updateValue(record[0], obs_list[icol], corrected_value)
-                        # Inform the user
-                        sys.stdout.write("changed to %r\n" % corrected_value)
-                    else:
-                        sys.stdout.write("ignored.\n")
 
 def transferDatabase(config_dict, db_binding, options):
     """Transfer 'archive' data from one database to another"""
@@ -401,6 +401,7 @@ def transferDatabase(config_dict, db_binding, options):
                 ans = raw_input("Transfer %s records from source database '%s' to destination database '%s' (y/n)? " %
                                 (num_recs, src_manager.database_name, dest_manager_dict['database_dict']['database_name']))
                 if ans == 'y':
+                    t1 = time.time()
                     # wrap in a try..except in case we have an error
                     try:
                         with weewx.manager.Manager.open_with_create(dest_manager_dict['database_dict'],
@@ -416,21 +417,23 @@ def transferDatabase(config_dict, db_binding, options):
                             # count the records transferred and display a message
                             first_ts = dest_manager.firstGoodStamp()
                             last_ts = dest_manager.lastGoodStamp()
+                            tdiff = time.time() - t1
                             if first_ts is not None and last_ts is not None:
                                 num_recs = dest_manager.getAggregate(TimeSpan(first_ts, last_ts),
                                                                      'dateTime', 'count')[0]
-                                print ("%s records transferred from source database '%s' to destination database '%s'." %
-                                       (num_recs, src_manager.database_name, dest_manager.database_name))
+                                print ("%s records transferred from source database '%s' to" %
+                                       (num_recs, src_manager.database_name))
+                                print ("destination database '%s' in %.2f seconds." %
+                                       (dest_manager.database_name, tdiff))
                             else:
                                 print ("Error. No records were transferred from source database '%s' to destination database '%s'." %
                                        (src_manager.database_name, dest_manager.database_name))
                     except ImportError:
-                        # probaly when trying to load db driver
+                        # Probably when trying to load db driver
                         print ("Error accessing destination database '%s'." %
                                (dest_manager_dict['database_dict']['database_name'], ))
-                        print "Maybe the database driver is incorrectly specified in weewx.conf?"
                         print "Nothing done. Aborting."
-                        return
+                        raise
                     except (OSError, weedb.OperationalError):
                         # probably a weewx.conf typo or MySQL db not created
                         print ("Error accessing destination database '%s'." %
@@ -438,7 +441,7 @@ def transferDatabase(config_dict, db_binding, options):
                         print "Maybe it does not exist (MySQL) or is incorrectly defined in weewx.conf?"
                         print "Nothing done. Aborting."
                         return
-       
+
                 elif ans == 'n':
                     # we decided not to do the transfer
                     print "Nothing done."
@@ -448,6 +451,343 @@ def transferDatabase(config_dict, db_binding, options):
             print ("Transfer %s records from source database '%s' to destination database '%s'." %
                    (num_recs, src_manager.database_name, dest_manager_dict['database_dict']['database_name']))
             print "Dry run, nothing done."
+
+def check(config_dict, db_binding, options):
+    """Check database and report outstanding fixes/issues.
+
+    Performs the following checks:
+    -   checks database version
+    -   checks for null strings in SQLite database
+    """
+
+    t1 = time.time()
+
+    # Check interval weighting
+    print "Checking daily summary tables version..."
+
+    # Get a database manager object
+    dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
+
+    # check the daily summary version
+    _daily_summary_version = dbm._read_metadata('Version')
+    msg = "Daily summary tables are at version %s" % _daily_summary_version
+    syslog.syslog(syslog.LOG_INFO, msg)
+    print msg
+
+    if _daily_summary_version is not None and _daily_summary_version >= '2.0':
+        # interval weighting fix has been applied
+        msg = "Interval Weighting Fix is not required."
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
+    else:
+        print "Recommend running --update to recalculate interval weightings."
+    print "Daily summary tables version check completed in %0.2f seconds." % (time.time() - t1)
+
+    # now check for null strings
+    check_strings(config_dict, db_binding, options, fix=False)
+
+def update(config_dict, db_binding, options):
+    """Apply any required database fixes.
+
+    Applies the following fixes:
+    -   checks if database version is 2.0, if not interval weighting fix is
+        applied
+    -   recalculates windSpeed daily summary max and maxtime fields from
+        archive
+    """
+
+    # prompt for confirmation if it is not a dry run
+    ans = 'y' if options.dry_run else None
+    while ans not in ['y', 'n']:
+        ans = raw_input("The update process does not affect archive data, but does alter the database.\nContinue (y/n)? ")
+    if ans == 'n':
+        # we decided not to update the summary tables
+        msg = "Update cancelled"
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
+        return
+
+    if options.dry_run:
+        _log_level = syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_WARNING))
+
+    msg = "Preparing Interval Weighting Fix..."
+    syslog.syslog(syslog.LOG_INFO, msg)
+    print msg
+
+    # notify if this is a dry run
+    if options.dry_run:
+        print "This is a dry run: weighted intervals will be calculated but not saved."
+
+    # Get a database manager object
+    dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
+    database_name = dbm.database_name
+
+    # Interval weighting
+    # first construct an interval weighting config dict
+    weighting_config_dict = {'name': 'Interval Weighting Fix',
+                             'binding': db_binding,
+                             'trans_days': 100,
+                             'dry_run': options.dry_run}
+
+    # create an interval weighting fix object
+    weight_obj = weecfg.database.IntervalWeighting(config_dict,
+                                                   weighting_config_dict)
+    # check the daily summary version
+    _daily_summary_version = dbm._read_metadata('Version')
+    msg = "Daily summary tables are at version %s" % _daily_summary_version
+    syslog.syslog(syslog.LOG_INFO, msg)
+    print msg
+
+    if _daily_summary_version is not None and _daily_summary_version >= '2.0':
+        # interval weighting fix has been applied
+        msg = "Interval Weighting Fix is not required."
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
+    else:
+        # apply the interval weighting
+        msg = "Calculating interval weights..."
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
+        t1 = time.time()
+        weight_obj.run()
+        msg = "Interval Weighting Fix completed in %0.2f seconds." % (time.time() - t1)
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
+
+    # recalc the max/maxtime windSpeed values
+    _fix_wind(config_dict, db_binding, options)
+    # just in case, set the syslog level back where we found it
+    if options.dry_run:
+        syslog.setlogmask(_log_level)
+
+def _fix_wind(config_dict, db_binding, options):
+    """Recalculate the windSpeed daily summary max and maxtime fields.
+
+    Create a WindSpeedRecalculation object and call its run() method to
+    recalculate the max and maxtime fields from archive data. This process is
+    idempotent so it can be called repeatedly with no ill effect.
+    """
+
+    t1 = time.time()
+    msg = "Preparing Maximum windSpeed Fix..."
+    syslog.syslog(syslog.LOG_INFO, msg)
+    print msg
+
+    # notify if this is a dry run
+    if options.dry_run:
+        print "This is a dry run: maximum windSpeed will be calculated but not saved."
+
+    # construct a windSpeed recalculation config dict
+    wind_config_dict = {'name': 'Maximum windSpeed Fix',
+                        'binding': db_binding,
+                        'trans_days': 100,
+                        'dry_run': options.dry_run}
+
+    # create a windSpeedRecalculation object
+    wind_obj = weecfg.database.WindSpeedRecalculation(config_dict,
+                                                      wind_config_dict)
+    # perform the recalculation, wrap in a try..except to catch any db errors
+    try:
+        wind_obj.run()
+    except weedb.NoTableError, e:
+        msg = "Maximum windSpeed Fix applied: no windSpeed found"
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
+    else:
+        msg = "Maximum windSpeed Fix completed in %0.2f seconds" % (time.time() - t1)
+        syslog.syslog(syslog.LOG_INFO, msg)
+        print msg
+
+def check_strings(config_dict, db_binding, options, fix=False):
+    """Scan the archive table for null strings.
+
+    Identifies and lists any null string occurrences in the archive table. If
+    fix is True then any null strings that are found are fixed.
+    """
+
+    t1 = time.time()
+    if options.dry_run or not fix:
+        _log_level = syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_WARNING))
+    if fix:
+        syslog.syslog(syslog.LOG_INFO, "Preparing Null String Fix")
+        print "Preparing Null String Fix, this may take a while..."
+        # notify if this is a dry run
+        if options.dry_run:
+            print "This is a dry run: null strings will be detected but not fixed"
+    else:
+        print "Preparing Null String Check, this may take awhile..."
+
+    # open up the main database archive table
+    with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
+
+        obs_pytype_list = []
+        obs_list = []
+
+        # get the schema and extract the Python type each observation type should be
+        for column in dbmanager.connection.genSchemaOf('archive'):
+            schema_type = column[2]
+            if schema_type == 'INTEGER':
+                schema_type = int
+            elif schema_type == 'REAL':
+                schema_type = float
+            elif schema_type == 'STR':
+                schema_type = str
+            # save the observation type for this column (eg, 'outTemp'):
+            obs_list.append(column[1])
+            # save the Python type for this column (eg, 'int'):
+            obs_pytype_list.append(schema_type)
+
+        records = 0
+        _found = []
+        # cycle through each row in the database
+        for record in dbmanager.genBatchRows():
+            records += 1
+            # now examine each column
+            for icol in range(len(record)):
+                # check to see if this column is an instance of the correct
+                # Python type
+                if record[icol] is not None and not isinstance(record[icol], obs_pytype_list[icol]):
+                    # Oops. Found a bad one. Print it out.
+                    if fix:
+                        syslog.syslog(syslog.LOG_INFO,
+                                      "Timestamp = %s; record['%s']= %r; ... "
+                                      % (record[0],
+                                         obs_list[icol],
+                                         record[icol]))
+
+                    if fix:
+                        # coerce to the correct type. If it can't be done, then
+                        # set it to None.
+                        try:
+                            corrected_value = obs_pytype_list[icol](record[icol])
+                        except ValueError:
+                            corrected_value = None
+                        # update the database with the new value but only if
+                        # it's not a dry run
+                        if not options.dry_run:
+                            dbmanager.updateValue(record[0], obs_list[icol], corrected_value)
+                        _found.append((record[0], obs_list[icol], record[icol], corrected_value))
+                        # log it
+                        syslog.syslog(syslog.LOG_INFO, "     changed to %r\n" % corrected_value)
+                    else:
+                        _found.append((record[0], obs_list[icol], record[icol]))
+            # notify the user of progress
+            if records % 1000 == 0:
+                print >>sys.stdout, "Checking record: %d; Timestamp: %s\r" % \
+                    (records, timestamp_to_string(record[0])),
+                sys.stdout.flush()
+    # update our final count now that we have finished
+    print >>sys.stdout, "Checking record: %d; Timestamp: %s\r" % \
+        (records, timestamp_to_string(record[0])),
+    print
+    tdiff = time.time() - t1
+    # now display details of what we found if we found any null strings
+    if len(_found) > 0:
+        print "The following null strings were found:"
+        for item in _found:
+            if len(item) == 4:
+                print "Timestamp = %s; record['%s'] = %r; ... changed to %r" % item
+            else:
+                print "Timestamp = %s; record['%s'] = %r; ... ignored" % item
+    # how many did we fix?
+    fixed = len([a for a in _found if len(a)==4])
+    # summarise our results
+    if len(_found) == 0:
+        # found no null strings, log it and display on screen
+        syslog.syslog(syslog.LOG_INFO, "No null strings found.")
+        print "No null strings found."
+    elif fixed == len(_found):
+        # fixed all we found
+        if options.dry_run:
+            # its a dry run so display to screen but not to log
+            print "%d of %d null strings found would have been fixed." % (fixed,
+                                                                          len(_found))
+        else:
+            # really did fix so log and display to screen
+            syslog.syslog(syslog.LOG_INFO,
+                          "%d of %d null strings found were fixed." % (fixed,
+                                                                       len(_found)))
+            print "%d of %d null strings found were fixed." % (fixed, len(_found))
+    elif fix:
+        # this should never occur - found some but didn't fix them all when we
+        # should have
+        if options.dry_run:
+            # its a dry run so say what would have happened
+            print "Could not fix all null strings. %d of %d null strings found would have been fixed." % (fixed,
+                                                                                                          len(_found))
+        else:
+            # really did fix so log and display to screen
+            syslog.syslog(syslog.LOG_INFO,
+                          "Could not fix all null strings. %d of %d null strings found were fixed." % (fixed,
+                                                                                                       len(_found)))
+            print "Could not fix all null strings. %d of %d null strings found were fixed." % (fixed,
+                                                                                               len(_found))
+    else:
+        # found some null string but it was only a check not a fix, just
+        # display to screen
+        print ("%d null strings were found.\r\n"
+               "Recommend running --fix-strings to fix these strings." % len(_found))
+
+    # and finally details on time taken
+    if fix:
+        syslog.syslog(syslog.LOG_INFO, "Applied Null String Fix in %0.2f seconds." % tdiff)
+        print "Applied Null String Fix in %0.2f seconds." % tdiff
+    else:
+        # it was a check not a fix so just display to screen
+        print "Completed Null String Check in %0.2f seconds." % tdiff
+    # just in case, set the syslog level back where we found it
+    if options.dry_run or not fix:
+        syslog.setlogmask(_log_level)
+
+def _parse_dates(options):
+    """Parse --date, --from and --to command line options.
+
+        Inputs:
+            options: the optparse options
+
+        Returns: A two-way tuple (start_d, stop_d), where
+            start_d: A datetime.date object holding the first date. May be None
+            stop_d:  A dateimte.date object holding the last date. May be None
+    """
+
+    # Default is None, unless user has specified an option
+    _first_d = None
+    _last_d = None
+
+    if options.date:
+        # Make sure we are not overspecified
+        if options.from_date or options.to_date:
+            raise ValueError("Specify either --date or a --from and --to combination; not both")
+
+        # there is a --date but is it valid
+        try:
+            _first_d = datetime.datetime.strptime(options.date, "%Y-%m-%d").date()
+        except ValueError:
+            raise ValueError("Invalid --date option specified.")
+        else:
+            _last_d = _first_d
+            return (_first_d, _last_d)
+
+    if options.from_date:
+        try:
+            _first_d = datetime.datetime.strptime(options.from_date, "%Y-%m-%d").date()
+        except ValueError:
+            raise ValueError("Invalid --from option specified.")
+
+    if options.to_date:
+        try:
+            _last_d = datetime.datetime.strptime(options.to_date, "%Y-%m-%d").date()
+        except ValueError:
+            raise ValueError("Invalid --to option specified.")
+
+    if _first_d and _last_d:
+        # If both --from and --to have been specified, make sure the latter is greater
+        # than the former
+        if _last_d < _first_d:
+            raise weewx.ViolatedPrecondition("--from value is later than --to value.")
+
+    return (_first_d, _last_d)
+
 
 if __name__=="__main__" :
     main()

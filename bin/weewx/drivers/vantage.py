@@ -21,7 +21,7 @@ import weewx.units
 import weewx.engine
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.0.9'
+DRIVER_VERSION = '3.0.10'
 
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
@@ -1245,7 +1245,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             try:
                 if not firsttime:
                     self.port.wakeup_console(max_tries=self.max_tries)
-                    firsttime = False
+                firsttime = False
                 self.port.send_data(command)
                 _buffer = self.port.get_data_with_crc16(nbytes + 2, max_tries=1)
                 _value = struct.unpack(v_format, _buffer[:-2])
@@ -1300,10 +1300,10 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Detect the kind of LOOP packet. Type 'A' has the character 'P' in this
         # position. Type 'B' contains the 3-hour barometer trend in this position.
         if raw_loop_packet['loop_type'] == ord('P'):
-            raw_loop_packet['trend'] = None
+            raw_loop_packet['trendIcon'] = None
             raw_loop_packet['loop_type'] = 'A'
         else:
-            raw_loop_packet['trend'] = raw_loop_packet['loop_type']
+            raw_loop_packet['trendIcon'] = raw_loop_packet['loop_type']
             raw_loop_packet['loop_type'] = 'B'
     
         loop_packet = {'dateTime': int(time.time() + 0.5),
@@ -1314,8 +1314,11 @@ class Vantage(weewx.drivers.AbstractDevice):
             func = _loop_map.get(_type)
             # It it exists, apply it:
             if func:
-                # Call the function, with the value as an argument, storing the result:
-                loop_packet[_type] = func(raw_loop_packet[_type])
+                # Call the function, with the raw value as an argument:
+                val = func(raw_loop_packet[_type])
+                # Skip all null values
+                if val is not None:
+                    loop_packet[_type] = val
             
         # Adjust sunrise and sunset:
         start_of_day = weeutil.weeutil.startOfDay(loop_packet['dateTime'])
@@ -1368,8 +1371,11 @@ class Vantage(weewx.drivers.AbstractDevice):
             func = _archive_map.get(_type)
             # It it exists, apply it:
             if func:
-                # Call the function, with the value as an argument, storing the result:
-                archive_packet[_type] = func(raw_archive_packet[_type])
+                # Call the function, with the raw value as an argument:
+                val = func(raw_archive_packet[_type])
+                # Skip all null values
+                if val is not None:
+                    archive_packet[_type] = val
         
         # Divide archive interval by 60 to keep consistent with wview
         archive_packet['interval']   = int(self.archive_interval / 60) 
@@ -1644,7 +1650,8 @@ _loop_map = {'barometer'       : _val1000Zero,
              'forecastIcon'    : _null,
              'forecastRule'    : _null,
              'sunrise'         : _stime,
-             'sunset'          : _stime}
+             'sunset'          : _stime,
+             'trendIcon'       : _null_int}
 
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the archive packet in the internal, Davis form into US

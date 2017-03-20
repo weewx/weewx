@@ -6,13 +6,19 @@
 SIGN=1
 
 # destination for uploading releases
-RELDIR=weewx.com:/downloads/development_versions/
+UPLOADDIR=weewx.com:/downloads/development_versions/
 
 # destination for uploading docs
 DOCDST=weewx.com:/
 
+# home directory at weewx.com
+WEEWX_COM_HOME=/home/content/t/o/m/tomkeffer
+WEEWX_DOWNLOADS=$(WEEWX_COM_HOME)/html/downloads
+
 # extract version to be used in package controls and labels
 VERSION=$(shell grep "__version__.*=" bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
+# just the major.minor part of the version
+MMVERSION:=$(shell echo "$(VERSION)" | sed -E 's%.[0-9a-z]+$$%%')
 
 CWD = $(shell pwd)
 BLDDIR=build
@@ -48,13 +54,16 @@ help: info
 	@echo ""
 	@echo "   upload-docs  upload docs to weewx.com"
 	@echo ""
+	@echo "       release  rearrange files on the download server"
+	@echo ""
 	@echo "          test  run all unit tests"
 	@echo "                SUITE=path/to/foo.py to run only foo tests"
 
 info:
 	@echo "     VERSION: $(VERSION)"
+	@echo "   MMVERSION: $(MMVERSION)"
 	@echo "         CWD: $(CWD)"
-	@echo "      RELDIR: $(RELDIR)"
+	@echo "   UPLOADDIR: $(UPLOADDIR)"
 	@echo "      DOCDST: $(DOCDST)"
 	@echo "        USER: $(USER)"
 
@@ -76,7 +85,7 @@ test:
 	@for f in $(SUITE); do \
   echo running $$f; \
   echo $$f >> $(BLDDIR)/test-results; \
-  PYTHONPATH=bin $(PYTHON) $$f >> $(BLDDIR)/test-results 2>&1; \
+  PYTHONPATH="bin:examples" $(PYTHON) $$f >> $(BLDDIR)/test-results 2>&1; \
   echo >> $(BLDDIR)/test-results; \
 done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
@@ -104,11 +113,11 @@ src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
 	./setup.py sdist
 
 upload-src:
-	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) $(SRCPKG))
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(SRCPKG))
 
 # upload docs to the weewx web site
 upload-docs:
-	ftp -u $(USER)@$(DOCDST) $(DOCSRC)/*.htm $(DOCSRC)/changes.txt $(DOCSRC)/images/*.png $(DOCSRC)/images/*.jpg $(DOCSRC)/js/*.js $(DOCSRC)/css/weewx_$(DOCSRC).css $(DOCSRC)/css/jquery.tocify.css $(DOCSRC)/css/ui-lightness/*.css $(DOCSRC)/css/ui-lightness/images/*.png $(DOCSRC)/css/ui-lightness/images/*.gif
+	ftp -u $(USER)@$(DOCDST) $(DOCSRC)/*.htm $(DOCSRC)/changes.txt $(DOCSRC)/images/*.png $(DOCSRC)/images/*.jpg $(DOCSRC)/images/*.gif $(DOCSRC)/js/*.js $(DOCSRC)/css/weewx_$(DOCSRC).css $(DOCSRC)/css/jquery.tocify.css $(DOCSRC)/css/ui-lightness/*.css $(DOCSRC)/css/ui-lightness/images/*.png $(DOCSRC)/css/ui-lightness/images/*.gif
 
 # create the README.txt for uploading
 README_HEADER="\
@@ -139,13 +148,13 @@ readme: docs/changes.txt
 	pkg/mkchangelog.pl --ifile docs/changes.txt >> $(DSTDIR)/README.txt
 
 upload-readme: readme
-	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) README.txt)
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) README.txt)
 
 # update the version in all relevant places
-VDOCS=readme.htm customizing.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
+VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
 version:
 	for f in $(VDOCS); do \
-  sed -e 's/^Version: [0-9].*/Version: $(VERSION)/' docs/$$f > docs/$$f.tmp; \
+  sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' docs/$$f > docs/$$f.tmp; \
   mv docs/$$f.tmp docs/$$f; \
 done
 	sed -e 's/version =.*/version = $(VERSION)/' weewx.conf > weewx.conf.tmp; mv weewx.conf.tmp weewx.conf
@@ -199,7 +208,7 @@ check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
 upload-deb:
-	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) $(DEBPKG))
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(DEBPKG))
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
@@ -246,14 +255,25 @@ update-apt-repo:
 
 # publish apt repo changes to the public weewx apt repo
 publish-apt-repo:
-	rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly
+	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly
 
 # run rpmlint on the redhat package
 check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
 
 upload-rpm:
-	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) $(RPMPKG))
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(RPMPKG))
+
+# move files from the upload directory to the release directory and set up the
+# symlinks to them from the download root directory
+DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
+RELDIR=$(WEEWX_DOWNLOADS)/released_versions
+ARTIFACTS=weewx-$(RPMVER).rhel.noarch.rpm weewx-$(RPMVER).suse.noarch.rpm weewx-$(VERSION).tar.gz weewx_$(DEBVER)_all.deb
+release:
+	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
+	ssh $(USER)@weewx.com "rm -f $(WEEWX_DOWNLOADS)/weewx*"
+	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(RELDIR)/\$$f ]; then ln -s released_versions/\$$f $(WEEWX_DOWNLOADS); fi; done"
+	ssh $(USER)@weewx.com "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]

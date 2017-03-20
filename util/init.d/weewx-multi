@@ -16,7 +16,7 @@
 # for example:
 #
 #   WEEWX_INSTANCES="vantage acurite"
-#   WEEWX_ROOT=/opt/weewx
+#   WEEWX_BINDIR=/opt/weewx/bin
 
 ### BEGIN INIT INFO
 # Provides:          weewx-multi
@@ -32,14 +32,14 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 # this is a space-delimited string that contains all weewx instances
 WEEWX_INSTANCES="no_instances_specified"
-WEEWX_USER=root:root 
-WEEWX_ROOT=/home/weewx
+WEEWX_USER=root:root
+WEEWX_BINDIR=/home/weewx/bin
 DESC=weewx
 
 # Read configuration variable file if it is present
 [ -r /etc/default/weewx-multi ] && . /etc/default/weewx-multi
 
-DAEMON=$WEEWX_ROOT/bin/weewxd
+DAEMON=$WEEWX_BINDIR/weewxd
 
 # Exit if the package is not installed
 if [ ! -x "$DAEMON" ]; then
@@ -148,7 +148,9 @@ count_procs() {
 }
 
 CMD=$1
-shift
+if [ "$1" != "" ]; then
+    shift
+fi
 INSTANCES="$@"
 if [ "$INSTANCES" = "" ]; then
     INSTANCES=$WEEWX_INSTANCES

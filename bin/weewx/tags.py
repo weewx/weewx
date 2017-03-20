@@ -60,48 +60,33 @@ class TimeBinder(object):
         return TrendObj(time_delta, time_grace, self.db_lookup, data_binding, self.report_time, 
                  self.formatter, self.converter, **self.option_dict)
 
-    def hours_ago(self, data_binding=None, hours_ago=0):
+    def hour(self, data_binding=None, hours_ago=0):
         return TimespanBinder(weeutil.weeutil.archiveHoursAgoSpan(self.report_time, hours_ago=hours_ago), 
                               self.db_lookup, data_binding=data_binding, 
                               context='day', formatter=self.formatter, converter=self.converter,
                               **self.option_dict)
-
-    def hour(self, data_binding=None):
-        return self.hours_ago(data_binding)
-
-    def span(self, data_binding=None, time_delta=0, hour_delta=0, day_delta=0, week_delta=0):
-        return TimespanBinder(weeutil.weeutil.archiveSpanSpan(self.report_time, time_delta=time_delta, 
-                              hour_delta=hour_delta, day_delta=day_delta, week_delta=week_delta), 
-                              self.db_lookup, data_binding=data_binding, 
-                              context='day', formatter=self.formatter, converter=self.converter,
-                              **self.option_dict)
-
-    def day(self, data_binding=None):
-        return TimespanBinder(weeutil.weeutil.archiveDaySpan(self.report_time), 
+        
+    def day(self, data_binding=None, days_ago=0):
+        return TimespanBinder(weeutil.weeutil.archiveDaySpan(self.report_time, days_ago=days_ago), 
                               self.db_lookup, data_binding=data_binding, 
                               context='day', formatter=self.formatter, converter=self.converter,
                               **self.option_dict)
     def yesterday(self, data_binding=None):
-        return self.days_ago(data_binding, days_ago=1)
+        return self.day(data_binding, days_ago=1)
     
-    def days_ago(self, data_binding=None, days_ago=0):
-        return TimespanBinder(weeutil.weeutil.archiveDaysAgoSpan(self.report_time, days_ago=days_ago), 
-                              self.db_lookup, data_binding=data_binding, 
-                              context='day', formatter=self.formatter, converter=self.converter,
-                              **self.option_dict)
-    def week(self, data_binding=None):
+    def week(self, data_binding=None, weeks_ago=0):
         week_start = to_int(self.option_dict.get('week_start', 6))
-        return TimespanBinder(weeutil.weeutil.archiveWeekSpan(self.report_time, week_start),
+        return TimespanBinder(weeutil.weeutil.archiveWeekSpan(self.report_time, week_start, weeks_ago=weeks_ago),
                               self.db_lookup, data_binding=data_binding,
                               context='week', formatter=self.formatter, converter=self.converter,
                               **self.option_dict)
-    def month(self, data_binding=None):
-        return TimespanBinder(weeutil.weeutil.archiveMonthSpan(self.report_time),
+    def month(self, data_binding=None, months_ago=0):
+        return TimespanBinder(weeutil.weeutil.archiveMonthSpan(self.report_time, months_ago=months_ago),
                               self.db_lookup, data_binding=data_binding,
                               context='month', formatter=self.formatter, converter=self.converter, 
                               **self.option_dict)
-    def year(self, data_binding=None):
-        return TimespanBinder(weeutil.weeutil.archiveYearSpan(self.report_time),
+    def year(self, data_binding=None, years_ago=0):
+        return TimespanBinder(weeutil.weeutil.archiveYearSpan(self.report_time, years_ago=years_ago),
                               self.db_lookup, data_binding=data_binding,
                               context='year', formatter=self.formatter, converter=self.converter,
                               **self.option_dict)
@@ -111,7 +96,16 @@ class TimeBinder(object):
                               self.db_lookup, data_binding=data_binding,
                               context='rainyear',  formatter=self.formatter, converter=self.converter, 
                               **self.option_dict)
+    def span(self, data_binding=None, time_delta=0, hour_delta=0, day_delta=0, week_delta=0, month_delta=0, year_delta=0):
+        return TimespanBinder(weeutil.weeutil.archiveSpanSpan(self.report_time, time_delta=time_delta, 
+                              hour_delta=hour_delta, day_delta=day_delta, week_delta=week_delta, month_delta=month_delta, year_delta=year_delta), 
+                              self.db_lookup, data_binding=data_binding, 
+                              context='day', formatter=self.formatter, converter=self.converter,
+                              **self.option_dict)
 
+    # For backwards compatiblity
+    hours_ago = hour
+    days_ago = day
 
 #===============================================================================
 #                    Class TimespanBinder
@@ -180,6 +174,12 @@ class TimespanBinder(object):
             yield CurrentObj(self.db_lookup, None, record['dateTime'], self.formatter, 
                              self.converter, record=record)
 
+    # Iterate over custom span
+    def spans(self, data_binding=None, context='day', interval=10800):
+        for span in weeutil.weeutil.intervalgen(self.timespan.start, self.timespan.stop, interval):
+            yield TimespanBinder(span, self.db_lookup, data_binding,
+                                 context, self.formatter, self.converter, **self.option_dict)
+    
     # Iterate over hours in the time period:
     def hours(self, data_binding=None):
         return TimespanBinder._seqGenerator(weeutil.weeutil.genHourSpans, self.timespan,
@@ -213,9 +213,18 @@ class TimespanBinder(object):
 
     # Return the start time of the time period as a ValueHelper
     @property
-    def dateTime(self):
+    def start(self):
         val = weewx.units.ValueTuple(self.timespan.start, 'unix_epoch', 'group_time')
         return weewx.units.ValueHelper(val, self.context, self.formatter, self.converter)
+
+    # Return the ending time:
+    @property
+    def end(self):
+        val = weewx.units.ValueTuple(self.timespan.stop, 'unix_epoch', 'group_time')
+        return weewx.units.ValueHelper(val, self.context, self.formatter, self.converter)
+    
+    # Alias for the start time:
+    dateTime = start
 
     def __getattr__(self, obs_type):
         """Return a helper object that binds the database, a time period,

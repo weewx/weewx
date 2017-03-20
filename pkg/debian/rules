@@ -38,6 +38,7 @@ install: build
 # copy files from the source tree
 	cp -r $(SRC)/bin/* $(DST_BINDIR)
 	cp -r $(SRC)/docs/* $(DST_DOCDIR)
+	cp -r $(SRC)/examples $(DST_DOCDIR)
 	cp -r $(SRC)/skins $(DST_CFGDIR)
 	cp -r $(SRC)/util/apache $(DST_CFGDIR)
 	cp -r $(SRC)/util/import $(DST_CFGDIR)
@@ -45,7 +46,6 @@ install: build
 	cp -r $(SRC)/util/logwatch $(DST_CFGDIR)
 	cp -r $(SRC)/util/rsyslog.d $(DST_CFGDIR)
 	cp -r $(SRC)/util/udev $(DST_CFGDIR)
-	cp -r $(SRC)/extensions $(DST_BINDIR)
 
 # remove stuff that should not go out
 	rm $(DST_CFGDIR)/skins/Standard/backgrounds/butterfly.jpg

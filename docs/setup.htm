@@ -5,14 +5,14 @@
     <title>weewx: Installation using setup.py</title>
     <meta http-equiv="Content-Language" content="en-us"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
-    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link rel="icon" href="images/favicon.png" type="image/png"/>
 </head>
 
 <body>
 
-<h1 class="title">weewx: Installation using setup.py
+<h1 class="title">weeWX: Installation using setup.py
     <div class='os-icons'>
         <img class='logo' src='images/logo-linux.png' alt=""/>
         <img class='logo' src='images/logo-debian.png' alt=""/>
@@ -27,8 +27,7 @@
     <div style="clear: both"></div>
 </h1>
 
-<p>These are generic instructions for installing
-    <span class="code">weewx</span> using the Python utility
+<p>These are generic instructions for installing weeWX using the Python utility
     <span class="code">setup.py</span>.
 </p>
 
@@ -38,7 +37,7 @@
     Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</span> from <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
 </p>
 
-<h2>Install Prerequisites</h2>
+<h2 id="setup_prerequisites">Install Prerequisites</h2>
 
 <p>Ensure that Python2 is installed. Python 2.6 or 2.7 will work,
     but Python 3 will not.</p>
@@ -135,7 +134,7 @@ sudo pip install pyusb</span>
     </div>
 </div>
 
-<h2>Install <span class='code'>weewx</span></h2>
+<h2>Install weeWX</h2>
 
 <p>Expand the source archive:</p>
 <pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
@@ -192,7 +191,7 @@ sudo /etc/init.d/weewx start</pre>
 <h2>Status</h2>
 
 <p>
-    Look in the system log for messages from <span class='code'>weewx</span>.
+    Look in the system log for messages from weeWX.
     For example, on Debian systems:
 </p>
 <pre class='tty cmd'>sudo tail -f /var/log/syslog</pre>
@@ -221,15 +220,14 @@ sudo /etc/init.d/weewx start</pre>
 </p>
 
 <p>
-    <span class='code'>weewx</span> must be restarted for configuration file
-    changes to take effect.
+    WeeWX must be restarted for configuration file changes to take effect.
 </p>
 
 <h2>Uninstall</h2>
 
 <p>
     To uninstall, simply delete the directory
-    <span class='code'>/home/weewx</span>. This will delete weewx,
+    <span class='code'>/home/weewx</span>. This will delete weeWX,
     configuration files, and data.
 </p>
 <pre class='tty cmd'>sudo rm -r /home/weewx
@@ -237,10 +235,10 @@ sudo rm /etc/init.d/weewx</pre>
 
 <h2>Layout</h2>
 
-<p>The installation will place <span class="code">weewx</span> in the
+<p>The installation will place weeWX in the
     <span class="code">/home/weewx</span> directory with the following
     layout: </p>
-<table class='locations' style="width:50%">
+<table class='locations' style="width: auto;">
     <tr>
         <td align='right'>executable:</td>
         <td class='tty'>/home/weewx/bin/weewxd</td>
@@ -264,6 +262,10 @@ sudo rm /etc/init.d/weewx</pre>
     <tr>
         <td align='right'>documentation:</td>
         <td class='tty'>/home/weewx/docs/</td>
+    </tr>
+    <tr>
+        <td align='right'>examples:</td>
+        <td class='tty'>/home/weewx/examples/</td>
     </tr>
     <tr>
         <td align='right'>utilities:</td>

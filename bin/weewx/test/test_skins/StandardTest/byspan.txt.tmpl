@@ -1,0 +1,36 @@
+Current time is $current.dateTime ($current.dateTime.raw)
+
+Half Hour Averages in Last Hour
+#for $_span in $hour(hours_ago=1).spans(interval=1800)
+$_span.dateTime.format("%a %H:%M")-$_span.end.format("%H:%M"): $_span.outTemp.avg
+#end for
+
+Hourly Top Temperatures in Last Day
+#for $_hour in $day(days_ago=1).hours
+$_hour.dateTime.format("%a %m/%d %H:%M"): $_hour.outTemp.max at $_hour.outTemp.maxtime
+#end for
+
+Daily Top Temperatures in Last Week
+#for $_day in $week(weeks_ago=1).days
+$_day.dateTime.format("%a %m/%d"): $_day.outTemp.max at $_day.outTemp.maxtime
+#end for
+
+Daily Top Temperatures in Last Month
+#for $_day in $month(months_ago=1).days
+$_day.dateTime.format("%a %m/%d"): $_day.outTemp.max at $_day.outTemp.maxtime
+#end for
+
+Monthly Top Temperatures this Year
+#for $_month in $year.months
+$_month.dateTime.format("%b %Y"): $_month.outTemp.max at $_month.outTemp.maxtime
+#end for
+
+3 hour averages over yesterday
+#for $span in $yesterday.spans(interval=10800)
+$span.dateTime.format("%m/%d %H:%M")-$span.end.format("%H:%M"): $span.outTemp.avg
+#end for
+
+All temperature records for yesterday
+#for $record in $yesterday.records
+$record.dateTime.format("%m/%d %H:%M"): $record.outTemp
+#end for
