@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python
 #
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com> and
 #                            Matthew Wall
@@ -314,12 +314,15 @@ def generateSysInfo(verbosity):
              print "  %s=%s" % (n, os.environ[n])
 
        # load info
-       loadavg =  '%.2f %.2f %.2f' % os.getloadavg()
-       (load1, load5, load15) = loadavg.split(" ")
+       try:
+           loadavg =  '%.2f %.2f %.2f' % os.getloadavg()
+           (load1, load5, load15) = loadavg.split(" ")
    
-       print "\nLoad Information\n  1 minute load average:  " + load1
-       print "  5 minute load average:  " + load5
-       print "  15 minute load average: " + load15
+           print "\nLoad Information\n  1 minute load average:  " + load1
+           print "  5 minute load average:  " + load5
+           print "  15 minute load average: " + load15
+       except OSError:
+           print "Sorry, the load average not available on this platform"
 
     print
 
