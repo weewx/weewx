@@ -24,6 +24,9 @@ MySQL error 2003 ("Can't connect to MySQL server...") now gets mapped to
 
 By default, autocommit is now enabled for the MySQL driver. Fixes issue #237.
 
+Highs and lows from LOOP packets were not being used in preference to archive
+records in daily summaries. Fixed issue #239.
+
 
 3.7.0 03/11/2017
 
