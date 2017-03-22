@@ -16,6 +16,7 @@ except ImportError:
 import weeplot.utilities
 import weeutil.weeutil
 from weeutil.weeutil import to_unicode
+from weeutil.weeutil import to_int
 
 # NB: All labels passed in should be in UTF-8. They are then converted to Unicode, which
 # some fonts support, others don't. If the chosen font does not support Unicode, then the label
@@ -44,15 +45,10 @@ class GeneralPlot(object):
         self.image_background_color = weeplot.utilities.tobgr(config_dict.get('image_background_color', '0xf5f5f5'))
 
         self.chart_background_color = weeplot.utilities.tobgr(config_dict.get('chart_background_color', '0xd8d8d8'))
-        self.chart_gridline_color        = weeplot.utilities.tobgr(config_dict.get('chart_gridline_color',   '0xa0a0a0'))
-        self.gridline_major_color   = weeplot.utilities.tobgr(config_dict.get('gridline_major_color',   '0x545454'))
-        self.gridline_major_x_spacing = config_dict.get('gridline_major_x_spacing', None)
-        if self.gridline_major_x_spacing:
-            self.gridline_major_x_spacing = int(self.gridline_major_x_spacing)
-        self.gridline_major_y_spacing = config_dict.get('gridline_major_y_spacing', None)
-        if self.gridline_major_y_spacing:
-            self.gridline_major_y_spacing = int(self.gridline_major_y_spacing)
-
+        self.chart_gridline_color   = weeplot.utilities.tobgr(config_dict.get('chart_gridline_color',   '0xa0a0a0'))
+        self.chart_gridline_major_color     = weeplot.utilities.tobgr(config_dict.get('chart_gridline_major_color',   '0x545454'))
+        self.chart_gridline_major_x_spacing = to_int(config_dict.get('chart_gridline_major_x_spacing', None))
+        self.chart_gridline_major_y_spacing = to_int(config_dict.get('chart_gridline_major_y_spacing', None))
         color_list                  = config_dict.get('chart_line_colors', ['0xff0000', '0x00ff00', '0x0000ff'])
         fill_color_list             = config_dict.get('chart_fill_colors', color_list)
         width_list                  = config_dict.get('chart_line_width',  [1, 1, 1])
@@ -281,9 +277,9 @@ class GeneralPlot(object):
         for x in weeutil.weeutil.stampgen(self.xscale[0], self.xscale[1], self.xscale[2]) :
             # select major color if requested
             fill=self.chart_gridline_color
-            if self.gridline_major_color and self.gridline_major_x_spacing > 1 and drawlabelcount % self.gridline_major_x_spacing == 0 :
-                fill=self.gridline_major_color
-            
+            if self.chart_gridline_major_color and self.chart_gridline_major_x_spacing > 1 and drawlabelcount % self.chart_gridline_major_x_spacing == 0 :
+                fill=self.chart_gridline_major_color
+ 
             sdraw.line((x, x), (self.yscale[0], self.yscale[1]), fill=fill, width=self.anti_alias)
             if drawlabelcount % self.x_label_spacing == 0 :
                 xlabel = self._genXLabel(x)
@@ -306,12 +302,11 @@ class GeneralPlot(object):
         for i in xrange(nygridlines) :
             # select major color if requested
             fill=self.chart_gridline_color
-            if self.gridline_major_color and self.gridline_major_y_spacing > 1 and i % self.gridline_major_y_spacing == 0 :
-                fill=self.gridline_major_color
+            if self.chart_gridline_major_color and self.chart_gridline_major_y_spacing > 1 and i % self.chart_gridline_major_y_spacing == 0 :
+                fill=self.chart_gridline_major_color
             
             y = self.yscale[0] + i * self.yscale[2]
             sdraw.line((self.xscale[0], self.xscale[1]), (y, y), fill=fill, width=self.anti_alias)
-
             # Draw a label on every other line:
             if i % self.y_label_spacing == 0 :
                 ylabel = self._genYLabel(y)
@@ -570,9 +565,7 @@ class PlotLine(object):
     """
     def __init__(self, x, y, label='', color=None, fill_color=None, width=None, plot_type='line',
                  line_type='solid', marker_type=None, marker_size=10, 
-                 bar_width=None, vector_rotate = None, gap_fraction=None,
-                 gridline_major_x_spacing=None, gridline_major_y_spacing=None,
-                 x_label_spacing=2, y_label_spacing=2):
+                 bar_width=None, vector_rotate = None, gap_fraction=None):
         self.x               = x
         self.y               = y
         self.label           = to_unicode(label)
@@ -586,10 +579,6 @@ class PlotLine(object):
         self.bar_width       = bar_width
         self.vector_rotate   = vector_rotate
         self.gap_fraction    = gap_fraction
-        self.gridline_major_x_spacing = gridline_major_x_spacing
-        self.gridline_major_y_spacing = gridline_major_y_spacing
-        self.x_label_spacing = x_label_spacing
-        self.y_label_spacing = y_label_spacing
 
 class UniDraw(ImageDraw.ImageDraw):
     """Supports non-Unicode fonts
