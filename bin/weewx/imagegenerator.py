@@ -18,6 +18,7 @@ import weeutil.weeutil
 import weewx.reportengine
 import weewx.units
 from weeutil.weeutil import to_bool, to_int, to_float
+from weewx.units import ValueTuple
 
 #===============================================================================
 #                    Class ImageGenerator
@@ -146,6 +147,16 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     if weewx.debug:
                         assert(len(start_vec_t) == len(stop_vec_t))
 
+                    # Get the type of plot ("bar', 'line', or 'vector')
+                    plot_type = line_options.get('plot_type', 'line')
+
+                    if aggregate_type and aggregate_type.lower() in ('avg', 'max', 'min') and plot_type != 'bar':
+                        # Put the point in the middle of the aggregate_interval for these aggregation types
+                        start_vec_t = ValueTuple([x - aggregate_interval / 2.0 for x in start_vec_t[0]],
+                                                 start_vec_t[1], start_vec_t[2])
+                        stop_vec_t = ValueTuple([x - aggregate_interval / 2.0 for x in stop_vec_t[0]],
+                                                stop_vec_t[1], stop_vec_t[2])
+
                     # Do any necessary unit conversions:
                     new_start_vec_t = self.converter.convert(start_vec_t)
                     new_stop_vec_t  = self.converter.convert(stop_vec_t)
@@ -175,9 +186,6 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Get the line width, if explicitly requested.
                     width = to_int(line_options.get('width'))
                     
-                    # Get the type of plot ("bar', 'line', or 'vector')
-                    plot_type = line_options.get('plot_type', 'line')
-
                     interval_vec = None                        
 
                     # Some plot types require special treatments:
@@ -205,18 +213,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     marker_type = line_options.get('marker_type')
                     marker_size = to_int(line_options.get('marker_size', 8))
                     
-                    # Get the spacings between labels, i.e. every how many lines a label is drawn
-                    x_label_spacing = plot_options.get('x_label_spacing', 2)
-                    y_label_spacing = plot_options.get('y_label_spacing', 2)
 
-                    # Get the spacing of the major lines(every how many lines a major line is drawn)
-                    gridline_major_x_spacing = plot_options.get('gridline_major_x_spacing', None)
-                    if gridline_major_x_spacing:
-                        gridline_major_x_spacing = int(gridline_major_x_spacing)
-                    gridline_major_y_spacing = plot_options.get('gridline_major_y_spacing', None)
-                    if gridline_major_y_spacing:
-                        gridline_major_y_spacing = int(gridline_major_y_spacing)
-                    
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(
                         new_stop_vec_t[0], new_data_vec_t[0],
@@ -230,11 +227,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         marker_size   = marker_size,
                         bar_width     = interval_vec,
                         vector_rotate = vector_rotate,
-                        gap_fraction  = gap_fraction,
-                        chart_gridline_major_x_spacing = chart_gridline_major_x_spacing,
-                        chart_gridline_major_y_spacing = chart_gridline_major_y_spacing,
-                        x_label_spacing = x_label_spacing,
-                        y_label_spacing = y_label_spacing))
+                        gap_fraction  = gap_fraction))
 
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()
