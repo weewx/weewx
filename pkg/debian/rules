@@ -38,6 +38,7 @@ install: build
 # copy files from the source tree
 	cp -r $(SRC)/bin/* $(DST_BINDIR)
 	cp -r $(SRC)/docs/* $(DST_DOCDIR)
+	cp -r $(SRC)/examples $(DST_DOCDIR)
 	cp -r $(SRC)/skins $(DST_CFGDIR)
 	cp -r $(SRC)/util/apache $(DST_CFGDIR)
 	cp -r $(SRC)/util/import $(DST_CFGDIR)

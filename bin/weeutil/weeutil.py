@@ -1418,6 +1418,10 @@ except AttributeError:
             return curdir
         return join(*rel_list)
 
+def to_sorted_string(rec):
+    return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
+
+
 if __name__ == '__main__':
     import sys
     reload(sys)

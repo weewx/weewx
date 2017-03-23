@@ -48,13 +48,25 @@ import weewx.wxformulas
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR100'
-DRIVER_VERSION = "3.3.1"
+DRIVER_VERSION = "3.3.3"
 
 def loader(config_dict, engine):  # @UnusedVariable
     return WMR100(**config_dict[DRIVER_NAME])    
 
 def confeditor_loader():
     return WMR100ConfEditor()
+
+def logmsg(level, msg):
+    syslog.syslog(level, 'wmr100: %s' % msg)
+
+def logdbg(msg):
+    logmsg(syslog.LOG_DEBUG, msg)
+
+def loginf(msg):
+    logmsg(syslog.LOG_INFO, msg)
+
+def logerr(msg):
+    logmsg(syslog.LOG_ERR, msg)
 
 
 class WMR100(weewx.drivers.AbstractDevice):
@@ -155,7 +167,8 @@ class WMR100(weewx.drivers.AbstractDevice):
     def openPort(self):
         dev = self._findDevice()
         if not dev:
-            syslog.syslog(syslog.LOG_ERR, "wmr100: Unable to find USB device (0x%04x, 0x%04x)" % (self.vendor_id, self.product_id))
+            logerr("Unable to find USB device (0x%04x, 0x%04x)" %
+                   (self.vendor_id, self.product_id))
             raise weewx.WeeWxIOError("Unable to find USB device")
         self.devh = dev.open()
         # Detach any old claimed interfaces
@@ -167,7 +180,7 @@ class WMR100(weewx.drivers.AbstractDevice):
             self.devh.claimInterface(self.interface)
         except usb.USBError, e:
             self.closePort()
-            syslog.syslog(syslog.LOG_CRIT, "wmr100: Unable to claim USB interface. Reason: %s" % e)
+            logerr("Unable to claim USB interface: %s" % e)
             raise weewx.WeeWxIOError(e)
         
     def closePort(self):
@@ -204,8 +217,7 @@ class WMR100(weewx.drivers.AbstractDevice):
                                 _record[k] = _raw[k]
                             yield _record
             except IndexError:
-                syslog.syslog(syslog.LOG_ERR,
-                              "wmr100: Malformed packet. %s" % _packet)
+                logerr("Malformed packet: %s" % _packet)
                 
     def genPackets(self):
         """Generate measurement packets. These are 8 to 17 byte long packets containing
@@ -235,16 +247,14 @@ class WMR100(weewx.drivers.AbstractDevice):
                 try:
                     computed_checksum = reduce(operator.iadd, buff[:-2])
                 except TypeError, e:
-                    if weewx.debug:
-                        syslog.syslog(syslog.LOG_DEBUG, "wmr100: Exception while calculating checksum.")
-                        syslog.syslog(syslog.LOG_DEBUG, "****  %s" % e)
+                    logdbg("Exception while calculating checksum: %s" % e)
                 else:
                     actual_checksum = (buff[-1] << 8) + buff[-2]
                     if computed_checksum == actual_checksum:
                         # Looks good. Yield the packet
                         yield buff
-                    elif weewx.debug:
-                        syslog.syslog(syslog.LOG_DEBUG, "wmr100: Bad checksum on buffer of length %d" % len(buff))
+                    else:
+                        logdbg("Bad checksum on buffer of length %d" % len(buff))
                 # Throw away the next character (which will be 0xff):
                 genBytes.next()
                 # Start with a fresh buffer
@@ -279,8 +289,7 @@ class WMR100(weewx.drivers.AbstractDevice):
                                  0x0000000,                                  # index
                                  1000)                                       # timeout
         except usb.USBError, e:
-            syslog.syslog(syslog.LOG_ERR, "wmr100: Unable to send USB control message")
-            syslog.syslog(syslog.LOG_ERR, "****  %s" % e)
+            logerr("Unable to send USB control message: %s" % e)
             # Convert to a Weewx error:
             raise weewx.WakeupError(e)
             
@@ -298,11 +307,10 @@ class WMR100(weewx.drivers.AbstractDevice):
                     yield report[i]
                 nerrors = 0
             except (IndexError, usb.USBError), e:
-                syslog.syslog(syslog.LOG_DEBUG, "wmr100: Bad USB report received.")
-                syslog.syslog(syslog.LOG_DEBUG, "***** %s" % e)
+                logdbg("Bad USB report received: %s" % e)
                 nerrors += 1
                 if nerrors > self.max_tries:
-                    syslog.syslog(syslog.LOG_ERR, "wmr100: Max retries exceeded while fetching USB reports")
+                    logerr("Max retries exceeded while fetching USB reports")
                     raise weewx.RetriesExceeded("Max retries exceeded while fetching USB reports")
                 time.sleep(self.wait_before_retry)
     
