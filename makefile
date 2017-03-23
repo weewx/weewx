@@ -275,7 +275,7 @@ release:
 # make local copy of the published apt repository
 pull-apt-repo:
 	mkdir -p ~/.aptly
-	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly/ ~/.aptly
+	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly-test/ ~/.aptly
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
@@ -285,7 +285,8 @@ update-apt-repo:
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:
-	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly
+	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly-test
+
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
