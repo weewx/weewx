@@ -174,7 +174,7 @@ fi
 # the latest version in the debian changelog must match the packaging version
 DEBARCH=all
 DEBBLDDIR=$(BLDDIR)/weewx-$(VERSION)
-DEBPKG=weewx_$(VERSION)-$(DEBREVISION)_$(DEBARCH).deb
+DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
@@ -264,11 +264,18 @@ check-rpm:
 upload-rpm:
 	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(RPMPKG))
 
+# shortcut to upload all packages from a single machine
+DEB_PKG=weewx_$(DEBVER)_$(DEBARCH).deb
+RHEL_PKG=weewx-$(RPMVER).rhel.$(RPMARCH).rpm
+SUSE_PKG=weewx-$(RPMVER).suse.$(RPMARCH).rpm
+upload-pkgs:
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(DEB_PKG) $(RHEL_PKG) $(SUSE_PKG))
+
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
 DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
-ARTIFACTS=weewx-$(RPMVER).rhel.noarch.rpm weewx-$(RPMVER).suse.noarch.rpm weewx-$(VERSION).tar.gz weewx_$(DEBVER)_all.deb
+ARTIFACTS=$(DEB_PKG) $(RHEL_PKG) $(SUSE_PKG) $(SRCPKG)
 release:
 	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@weewx.com "rm -f $(WEEWX_DOWNLOADS)/weewx*"
