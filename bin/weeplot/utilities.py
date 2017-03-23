@@ -74,6 +74,12 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
             fmx = fmn + .01*abs(fmn)
 
     frange = fmx - fmn
+    if min_interval :
+        newNsteps = math.ceil(frange / min_interval)
+        if newNsteps > 20 :
+            nsteps = 20
+        else :
+            nsteps = newNsteps
     steps = frange / nsteps
     
     mag = math.floor(math.log10(steps))
