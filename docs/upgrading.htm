@@ -324,6 +324,55 @@ $day.windGust.max</pre>
         </p>
 
 
+        <h3>Change in the name and locations of examples</h3>
+        <p>
+            In earlier versions, examples were located with the weeWX code base, and packaged as a Python
+            module. This is categorically and semantically incorrect.
+        </p>
+        <p>
+            The examples now live in their own directory, <a href="usersguide.htm#Where_to_find_things">whose location
+            is dependent on the installation method</a>. If you use
+            an example, you should copy it to the <span class="code">user</span> subdirectory, modify it if necessary,
+            then use it there. Your copy will be retained across version upgrades.
+        </p>
+
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>3.6</td>
+                <td>3.7</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'><span class="changed">examples.alarm.MyAlarm
+examples.lowBattery.MyAlarm
+examples.xsearch.MyXSearch</span></pre>
+                </td>
+                <td>
+                    <pre class='tty'><span class="changed">user.alarm.MyAlarm
+user.lowBattery.BatteryAlarm
+user.stats.MyStats</span></pre>
+                </td>
+            </tr>
+        </table>
+
+        <p>Finally, note that the name of one example has been changed:</p>
+
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>3.6</td>
+                <td>3.7</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'><span class="changed">xsearch.py</span></pre>
+                </td>
+                <td>
+                    <pre class='tty'><span class="changed">stats.py</span></pre>
+                </td>
+            </tr>
+        </table>
+
+
         <h3>Changes to sensor mapping</h3>
         <p>
             The mapping of sensors to database fields was formalized in Version
@@ -499,6 +548,7 @@ extraHumid8 = humidity_8</pre>
                 </td>
             </tr>
         </table>
+
 
         <h2>From V3.5 or earlier</h2>
 

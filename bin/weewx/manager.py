@@ -236,12 +236,13 @@ class Manager(object):
 
             for record in record_list:
                 try:
-                    # First add the record to the archives:
-                    self._addSingleRecord(record, cursor, log_level)
-                    # Then update the highs and lows with the accumulator,
-                    # if its time matches the record we're working with:
+                    # If the accumulator time matches the record we are working with,
+                    # use it to update the highs and lows.
                     if accumulator and record_obj['dateTime'] == accumulator.timespan.stop:
                         self._updateHiLo(accumulator, cursor)
+
+                    # Then add the record to the archives:
+                    self._addSingleRecord(record, cursor, log_level)
 
                     min_ts = min(min_ts, record['dateTime']) if min_ts is not None else record['dateTime']
                     max_ts = max(max_ts, record['dateTime'])

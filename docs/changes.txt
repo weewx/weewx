@@ -1,7 +1,34 @@
 weewx change history
 --------------------
 
-3.7.0 MM/dd/YYYY
+3.7.1 03/22/2017
+
+Fixed log syntax in wmr100 and wmr9x8 drivers.
+
+Emit Rapidfire cache info only when debug is level 3 or higher.  Thanks to
+user Darryn Capes-Davis.
+
+Fixed problem that prevented Rapidfire from being used with databases in
+metric units. Fixes issue #230.
+
+Set WOW `post_interval` in config dict instead of thread arguments so that
+overrides are possible.  Thanks to user Kenneth Baker.
+
+Distribute example code and example extensions in a single examples directory.
+Ensure that the examples directory is included in the rpm and deb packages.
+
+Fixed issue that prevented a port from being specified for MySQL installations.
+
+MySQL error 2003 ("Can't connect to MySQL server...") now gets mapped to
+`weedb.CannotConnectError`. PR #234.
+
+By default, autocommit is now enabled for the MySQL driver. Fixes issue #237.
+
+Highs and lows from LOOP packets were not being used in preference to archive
+records in daily summaries. Fixed issue #239.
+
+
+3.7.0 03/11/2017
 
 The tag $current now uses the record included in the event NEW_ARCHIVE_RECORD,
 rather than retrieve the last record from the database. This means you can
