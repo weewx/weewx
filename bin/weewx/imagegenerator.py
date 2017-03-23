@@ -90,9 +90,12 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 # Create a new instance of a time plot and start adding to it
                 plot = weeplot.genplot.TimePlot(plot_options)
                 
-                # Calculate a suitable min, max time for the requested time
-                # span and set it
+                # Calculate a suitable min, max time for the requested time.
                 (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(plotgen_ts - int(plot_options.get('time_length', 86400)), plotgen_ts)
+                # Override the x interval if the user has given an explicit interval:
+                timeinc_user = to_int(plot_options.get('x_interval'))
+                if timeinc_user is not None:
+                    timeinc = timeinc_user
                 plot.setXScaling((minstamp, maxstamp, timeinc))
                 
                 # Set the y-scaling, using any user-supplied hints: 
@@ -147,21 +150,13 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Get the type of plot ("bar', 'line', or 'vector')
                     plot_type = line_options.get('plot_type', 'line')
 
-                    try:
-                        if aggregate_type.lower() in ('avg', 'max', 'min') and plot_type != 'bar':
-                            # put the point in the middle of the aggregate_interval
-                            try:
-                                start_vec_t = ValueTuple([x - aggregate_interval / 2 for x in start_vec_t[0]], start_vec_t[1], start_vec_t[2])
-                            except TypeError:
-                                start_vec_t = ValueTuple(start_vec_t[0] - aggregate_interval / 2, start_vec_t[1], start_vec_t[2])
-                            try:
-                                stop_vec_t = ValueTuple([x - aggregate_interval / 2 for x in stop_vec_t[0]], stop_vec_t[1], stop_vec_t[2])
-                            except TypeError:
-                                stop_vec_t = ValueTuple(stop_vec_t[0] - aggregate_interval / 2, stop_vec_t[1], stop_vec_t[2])
-                    except AttributeError:
-                        # aggregate_type was none: exception raised, anyway no moving needed
-                        pass
-                    
+                    if aggregate_type and aggregate_type.lower() in ('avg', 'max', 'min') and plot_type != 'bar':
+                        # Put the point in the middle of the aggregate_interval for these aggregation types
+                        start_vec_t = ValueTuple([x - aggregate_interval / 2.0 for x in start_vec_t[0]],
+                                                 start_vec_t[1], start_vec_t[2])
+                        stop_vec_t = ValueTuple([x - aggregate_interval / 2.0 for x in stop_vec_t[0]],
+                                                stop_vec_t[1], stop_vec_t[2])
+
                     # Do any necessary unit conversions:
                     new_start_vec_t = self.converter.convert(start_vec_t)
                     new_stop_vec_t  = self.converter.convert(stop_vec_t)
@@ -185,6 +180,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # See if a color has been explicitly requested.
                     color = line_options.get('color')
                     if color is not None: color = weeplot.utilities.tobgr(color)
+                    fill_color = line_options.get('fill_color')
+                    if fill_color is not None: fill_color = weeplot.utilities.tobgr(fill_color)
                     
                     # Get the line width, if explicitly requested.
                     width = to_int(line_options.get('width'))
@@ -216,11 +213,16 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     marker_type = line_options.get('marker_type')
                     marker_size = to_int(line_options.get('marker_size', 8))
                     
+                    # Get the spacings between labels, i.e. every how many lines a label is drawn
+                    x_label_spacing = plot_options.get('x_label_spacing', 2)
+                    y_label_spacing = plot_options.get('y_label_spacing', 2)
+
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(
                         new_stop_vec_t[0], new_data_vec_t[0],
                         label         = label, 
                         color         = color,
+                        fill_color    = fill_color,
                         width         = width,
                         plot_type     = plot_type,
                         line_type     = line_type,
@@ -228,7 +230,9 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         marker_size   = marker_size,
                         bar_width     = interval_vec,
                         vector_rotate = vector_rotate,
-                        gap_fraction  = gap_fraction))
+                        gap_fraction  = gap_fraction,
+                        x_label_spacing = x_label_spacing,
+                        y_label_spacing = y_label_spacing))
 
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()
