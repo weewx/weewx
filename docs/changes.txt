@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.7.1 XX/XX/XXXX
+3.7.1 03/22/2017
 
 Fixed log syntax in wmr100 and wmr9x8 drivers.
 
