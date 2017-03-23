@@ -247,16 +247,6 @@ ifeq ("$(SIGN)","1")
 #	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
 endif
 
-# add the latest version to the local apt repo using aptly
-update-apt-repo:
-	aptly repo add weewx $(DSTDIR)/$(DEBPKG)
-	aptly snapshot create weewx-$(VERSION) from repo weewx
-	aptly -architectures="all" publish switch squeeze weewx-$(VERSION)
-
-# publish apt repo changes to the public weewx apt repo
-publish-apt-repo:
-	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly
-
 # run rpmlint on the redhat package
 check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
@@ -281,6 +271,21 @@ release:
 	ssh $(USER)@weewx.com "rm -f $(WEEWX_DOWNLOADS)/weewx*"
 	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(RELDIR)/\$$f ]; then ln -s released_versions/\$$f $(WEEWX_DOWNLOADS); fi; done"
 	ssh $(USER)@weewx.com "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
+
+# make local copy of the published apt repository
+pull-apt-repo:
+	mkdir -p ~/.aptly
+	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly/ ~/.aptly
+
+# add the latest version to the local apt repo using aptly
+update-apt-repo:
+	aptly repo add weewx $(DSTDIR)/$(DEBPKG)
+	aptly snapshot create weewx-$(VERSION) from repo weewx
+	aptly -architectures="all" publish switch squeeze weewx-$(VERSION)
+
+# publish apt repo changes to the public weewx apt repo
+push-apt-repo:
+	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
