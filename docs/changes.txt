@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+3.7.2 MM/DD/YYYY
+
+MySQL error 2006 ("MySQL server has gone away") now gets mapped to
+`weedb.CannotConnectError`. PR #246
+
+
 3.7.1 03/22/2017
 
 Fixed log syntax in wmr100 and wmr9x8 drivers.
