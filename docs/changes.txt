@@ -13,6 +13,34 @@ to user paolobenve! PR #226.
 Bar chart fill colors can now be specified for individual observation
 types. Fixes issue #227.
 
+For aggregation types of `avg`, `min` and `max`, plots now locate the x-
+coordinate in the middle of the aggregation interval (instead of the end).
+Thanks again to user paolobenve! PR #232.
+
+
+3.7.1 XX/XX/XXXX
+
+Fixed log syntax in wmr100 and wmr9x8 drivers.
+
+Emit Rapidfire cache info only when debug is level 3 or higher.  Thanks to
+user Darryn Capes-Davis.
+
+Fixed problem that prevented Rapidfire from being used with databases in
+metric units. Fixes issue #230.
+
+Set WOW `post_interval` in config dict instead of thread arguments so that
+overrides are possible.  Thanks to user Kenneth Baker.
+
+Distribute example code and example extensions in a single examples directory.
+Ensure that the examples directory is included in the rpm and deb packages.
+
+Fixed issue that prevented a port from being specified for MySQL installations.
+
+MySQL error 2003 ("Can't connect to MySQL server...") now gets mapped to
+`weedb.CannotConnectError`. PR #234.
+
+By default, autocommit is now enabled for the MySQL driver. Fixes issue #237.
+
 
 3.7.0 03/11/2017
 

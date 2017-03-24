@@ -74,6 +74,11 @@ class Common(unittest.TestCase):
         except:
             pass
         
+    def populate_database(self):
+        # Use a 'with' statement:
+        with weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema) as archive:
+            archive.addRecord(genRecords())
+
     def test_no_archive(self):
         # Attempt to open a non-existent database results in an exception:
         self.assertRaises(weedb.OperationalError, weewx.manager.Manager.open, self.archive_db_dict)
@@ -105,9 +110,8 @@ class Common(unittest.TestCase):
         archive.close()
         
     def test_add_archive_records(self):
-        # Test adding records using a 'with' statement:
-        with weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema) as archive:
-            archive.addRecord(genRecords())
+        # Add a bunch of records
+        self.populate_database()
 
         # Now test to see what's in there:            
         with weewx.manager.Manager.open(self.archive_db_dict) as archive:
@@ -134,9 +138,8 @@ class Common(unittest.TestCase):
             self.assertRaises(weewx.UnitError, archive.addRecord, metric_record)
 
     def test_get_records(self):
-        # Add a bunch of records:
-        with weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema) as archive:
-            archive.addRecord(genRecords())
+        # Add a bunch of records
+        self.populate_database()
 
         # Now fetch them:
         with weewx.manager.Manager.open(self.archive_db_dict) as archive:
@@ -216,12 +219,24 @@ class Common(unittest.TestCase):
                 # Compare them.
                 self.assertAlmostEqual(expected_avg, barvec[2][0][irec])
 
+    def test_update(self):
+        # Add a bunch of records
+        self.populate_database()
+        expected_rec = expected_record(3)
+        with weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema) as archive:
+            archive.updateValue(expected_rec['dateTime'], 'outTemp', -1.0)
+        with weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema) as archive:
+            rec = archive.getRecord(expected_rec['dateTime'])
+        self.assertEqual(rec['outTemp'], -1.0)
+
+
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
         self.archive_db_dict = archive_sqlite
         super(TestSqlite, self).__init__(*args, **kwargs)
-        
+
+
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
@@ -231,7 +246,7 @@ class TestMySQL(Common):
     
 def suite():
     tests = ['test_no_archive', 'test_create_archive', 
-             'test_empty_archive', 'test_add_archive_records', 'test_get_records']
+             'test_empty_archive', 'test_add_archive_records', 'test_get_records', 'test_update']
     return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
             
 if __name__ == '__main__':
