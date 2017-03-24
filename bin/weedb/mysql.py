@@ -115,7 +115,7 @@ class Connection(weedb.Connection):
               connect statement. See the file MySQLdb/connections.py for a list (optional).
         """
         connection = MySQLdb.connect(host=host, port=int(port), user=user, passwd=password,
-                                     db=database_name, autocommit=autocommit, **kwargs)
+                                     db=database_name, **kwargs)
 
         weedb.Connection.__init__(self, connection, database_name, 'mysql')
 
@@ -124,6 +124,7 @@ class Connection(weedb.Connection):
 
         # Set the transaction isolation level.
         self.connection.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED")
+        self.connection.autocommit(to_bool(autocommit))
 
     def cursor(self):
         """Return a cursor object."""

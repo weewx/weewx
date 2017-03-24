@@ -325,7 +325,7 @@ class Accum(dict):
             assert(obs_type == 'usUnits')
         self._check_units(record['usUnits'])
 
-    def noop(self, record, obs_type, add_hilo=True, weight=None):
+    def noop(self, record, obs_type, add_hilo=True, weight=1):
         pass
 
     #
