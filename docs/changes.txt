@@ -21,7 +21,16 @@ The nominal number of ticks on the y-axis can now be specified using
 option `y_nticks`.
 
 
-3.7.1 XX/XX/XXXX
+3.7.2 MM/DD/YYYY
+
+MySQL error 2006 ("MySQL server has gone away") now gets mapped to
+`weedb.CannotConnectError`. PR #246
+
+Corrected formatting used to report indoor temp and humidity to the
+Weather Underground.
+
+
+3.7.1 03/22/2017
 
 Fixed log syntax in wmr100 and wmr9x8 drivers.
 
@@ -43,6 +52,9 @@ MySQL error 2003 ("Can't connect to MySQL server...") now gets mapped to
 `weedb.CannotConnectError`. PR #234.
 
 By default, autocommit is now enabled for the MySQL driver. Fixes issue #237.
+
+Highs and lows from LOOP packets were not being used in preference to archive
+records in daily summaries. Fixed issue #239.
 
 
 3.7.0 03/11/2017
