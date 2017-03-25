@@ -6,6 +6,9 @@ weewx change history
 MySQL error 2006 ("MySQL server has gone away") now gets mapped to
 `weedb.CannotConnectError`. PR #246
 
+Corrected formatting used to report indoor temp and humidity to the
+Weather Underground.
+
 
 3.7.1 03/22/2017
 
