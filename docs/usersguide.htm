@@ -3063,8 +3063,9 @@ sqlite3 /home/weewx/archive/weewx.sdb</span>
 sqlite> <span class="cmd">delete from archive where dateTime > X;</span>
 sqlite> <span class="cmd">.exit</span></pre>
 
-        <p>The timestamp X is the current time as unix epoch (number of seconds
-            since 1 January 1970), or a time a minute or two in the future.</p>
+        <p>The timestamp X is the current time in unix epoch time (number of seconds
+            since 1 January 1970). <a href="https://www.epochconverter.com/">This website</a>
+            is useful for determining the current unix epoch time.</p>
 
         <h4>Corrupt station memory</h4>
         <p>If you have a Vantage station, the problem might be because the data on
@@ -3073,7 +3074,7 @@ sqlite> <span class="cmd">.exit</span></pre>
             asks the console for all archive data &quot;since&quot; some time. The
             console then downloads the records one at a time. After it gets to the
             very last one, the memory wraps around, and the timestamp will suddenly
-            jump backwards in time a couple weeks &mdash; this how the software
+            jump backwards in time a couple weeks &mdash; this is how the software
             knows it has downloaded the last record and so it stops.</p>
 
         <p>However, if the internal memory gets garbled, the console will immediately
