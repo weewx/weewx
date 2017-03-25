@@ -17,6 +17,9 @@ For aggregation types of `avg`, `min` and `max`, plots now locate the x-
 coordinate in the middle of the aggregation interval (instead of the end).
 Thanks again to user paolobenve! PR #232.
 
+The nominal number of ticks on the y-axis can now be specified using
+option `y_nticks`.
+
 
 3.7.1 XX/XX/XXXX
 

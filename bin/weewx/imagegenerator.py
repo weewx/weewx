@@ -75,8 +75,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 # Get the path that the image is going to be saved to:
                 img_file = os.path.join(image_root, '%s.png' % plotname)
                 
+                ai = to_int(plot_options.get('aggregate_interval'))
                 # Check whether this plot needs to be done at all:
-                ai = plot_options.as_int('aggregate_interval') if plot_options.has_key('aggregate_interval') else None
                 if skipThisPlot(plotgen_ts, ai, img_file) :
                     continue
                 
@@ -164,7 +164,6 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
 
                     # Add a unit label. NB: all will get overwritten except the
                     # last. Get the label from the configuration dictionary. 
-                    # TODO: Allow multiple unit labels, one for each plot line?
                     unit_label = line_options.get('y_label', weewx.units.get_label_string(self.formatter, self.converter, var_type))
                     # Strip off any leading and trailing whitespace so it's
                     # easy to center
@@ -230,9 +229,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         marker_size   = marker_size,
                         bar_width     = interval_vec,
                         vector_rotate = vector_rotate,
-                        gap_fraction  = gap_fraction,
-                        x_label_spacing = x_label_spacing,
-                        y_label_spacing = y_label_spacing))
+                        gap_fraction  = gap_fraction))
 
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()
