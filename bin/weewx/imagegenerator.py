@@ -150,7 +150,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Get the type of plot ("bar', 'line', or 'vector')
                     plot_type = line_options.get('plot_type', 'line')
 
-                    if aggregate_type and aggregate_type.lower() in ('avg', 'max', 'min') and plot_type != 'bar':
+                    if aggregate_type and aggregate_type.lower() in ('avg', 'max', 'min', 'sum', 'count', 'rms') and plot_type != 'bar':
                         # Put the point in the middle of the aggregate_interval for these aggregation types
                         start_vec_t = ValueTuple([x - aggregate_interval / 2.0 for x in start_vec_t[0]],
                                                  start_vec_t[1], start_vec_t[2])
@@ -212,9 +212,6 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     marker_type = line_options.get('marker_type')
                     marker_size = to_int(line_options.get('marker_size', 8))
                     
-                    # Get the spacings between labels, i.e. every how many lines a label is drawn
-                    x_label_spacing = plot_options.get('x_label_spacing', 2)
-                    y_label_spacing = plot_options.get('y_label_spacing', 2)
 
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(

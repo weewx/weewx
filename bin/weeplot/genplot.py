@@ -16,6 +16,7 @@ except ImportError:
 import weeplot.utilities
 import weeutil.weeutil
 from weeutil.weeutil import to_unicode
+from weeutil.weeutil import to_int
 
 # NB: All labels passed in should be in UTF-8. They are then converted to Unicode, which
 # some fonts support, others don't. If the chosen font does not support Unicode, then the label
@@ -45,6 +46,9 @@ class GeneralPlot(object):
 
         self.chart_background_color = weeplot.utilities.tobgr(config_dict.get('chart_background_color', '0xd8d8d8'))
         self.chart_gridline_color   = weeplot.utilities.tobgr(config_dict.get('chart_gridline_color',   '0xa0a0a0'))
+        self.chart_gridline_major_color     = weeplot.utilities.tobgr(config_dict.get('chart_gridline_major_color',   '0x545454'))
+        self.chart_gridline_major_x_spacing = to_int(config_dict.get('chart_gridline_major_x_spacing', None))
+        self.chart_gridline_major_y_spacing = to_int(config_dict.get('chart_gridline_major_y_spacing', None))
         color_list                  = config_dict.get('chart_line_colors', ['0xff0000', '0x00ff00', '0x0000ff'])
         fill_color_list             = config_dict.get('chart_fill_colors', color_list)
         width_list                  = config_dict.get('chart_line_width',  [1, 1, 1])
@@ -274,8 +278,12 @@ class GeneralPlot(object):
 
         drawlabelcount = 0
         for x in weeutil.weeutil.stampgen(self.xscale[0], self.xscale[1], self.xscale[2]) :
-            sdraw.line((x, x), (self.yscale[0], self.yscale[1]), fill=self.chart_gridline_color,
-                       width=self.anti_alias)
+            # select major color if requested
+            fill=self.chart_gridline_color
+            if self.chart_gridline_major_color and self.chart_gridline_major_x_spacing > 1 and drawlabelcount % self.chart_gridline_major_x_spacing == 0 :
+                fill=self.chart_gridline_major_color
+ 
+            sdraw.line((x, x), (self.yscale[0], self.yscale[1]), fill=fill, width=self.anti_alias)
             if drawlabelcount % self.x_label_spacing == 0 :
                 xlabel = self._genXLabel(x)
                 axis_label_size = sdraw.draw.textsize(xlabel, font=axis_label_font)
@@ -295,9 +303,13 @@ class GeneralPlot(object):
         
         # Draw the (constant y) grid lines 
         for i in xrange(nygridlines) :
+            # select major color if requested
+            fill=self.chart_gridline_color
+            if self.chart_gridline_major_color and self.chart_gridline_major_y_spacing > 1 and i % self.chart_gridline_major_y_spacing == 0 :
+                fill=self.chart_gridline_major_color
+            
             y = self.yscale[0] + i * self.yscale[2]
-            sdraw.line((self.xscale[0], self.xscale[1]), (y, y), fill=self.chart_gridline_color,
-                       width=self.anti_alias)
+            sdraw.line((self.xscale[0], self.xscale[1]), (y, y), fill=fill, width=self.anti_alias)
             # Draw a label on every other line:
             if i % self.y_label_spacing == 0 :
                 ylabel = self._genYLabel(y)
