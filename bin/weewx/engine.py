@@ -30,7 +30,7 @@ import weewx.qc
 import weewx.station
 import weewx.reportengine
 import weeutil.weeutil
-from weeutil.weeutil import to_bool, to_int
+from weeutil.weeutil import to_bool, to_int, to_sorted_string
 from weewx import all_service_groups
 
 class BreakLoop(Exception):
@@ -490,7 +490,8 @@ class StdArchive(StdService):
         
         self.setup_database(config_dict)
         weewx.accum.initialize(config_dict)
-        
+        self.old_accumulator = None
+
         self.bind(weewx.STARTUP, self.startup)
         self.bind(weewx.PRE_LOOP, self.pre_loop)
         self.bind(weewx.POST_LOOP, self.post_loop)
@@ -517,27 +518,24 @@ class StdArchive(StdService):
             self.end_archive_period_ts = \
                 (int(self.engine._get_console_time() / self.archive_interval) + 1) * self.archive_interval
             self.end_archive_delay_ts  =  self.end_archive_period_ts + self.archive_delay
-        self.old_accumulator = None
 
     def new_loop_packet(self, event):
         """Called when A new LOOP record has arrived."""
         
-        the_time = event.packet['dateTime']
-        
         # Do we have an accumulator at all? If not, create one:
         if not hasattr(self, "accumulator"):
-            self.accumulator = self._new_accumulator(the_time)
+            self.accumulator = self._new_accumulator(event.packet['dateTime'])
 
         # Try adding the LOOP packet to the existing accumulator. If the
         # timestamp is outside the timespan of the accumulator, an exception
         # will be thrown:
         try:
-            self.accumulator.addRecord(event.packet, self.loop_hilo)
+            self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
         except weewx.accum.OutOfSpan:
             # Shuffle accumulators:
-            (self.old_accumulator, self.accumulator) = (self.accumulator, self._new_accumulator(the_time))
-            # Add the LOOP packet to the new accumulator:
-            self.accumulator.addRecord(event.packet, self.loop_hilo)
+            (self.old_accumulator, self.accumulator) = (self.accumulator, self._new_accumulator(event.packet['dateTime']))
+            # Try again:
+            self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
 
     def check_loop(self, event):
         """Called after any loop packets have been processed. This is the opportunity
@@ -582,9 +580,8 @@ class StdArchive(StdService):
 
         # If requested, extract any extra information we can out of the 
         # accumulator and put it in the record.
-        if self.old_accumulator \
-                and event.record['dateTime'] == self.old_accumulator.timespan.stop \
-                and self.record_augmentation:
+        if self.record_augmentation and self.old_accumulator \
+                and event.record['dateTime'] == self.old_accumulator.timespan.stop:
             self.old_accumulator.augmentRecord(event.record)
 
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
@@ -606,8 +603,6 @@ class StdArchive(StdService):
         # Back fill the daily summaries.
         _nrecs, _ndays = dbmanager.backfill_day_summary() # @UnusedVariable
         
-        self.old_accumulator = None
-
     def _catchup(self, generator):
         """Pull any unarchived records off the console and archive them.
         
@@ -712,16 +707,12 @@ class StdPrint(StdService):
         
     def new_loop_packet(self, event):
         """Print out the new LOOP packet"""
-        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), StdPrint.sort(event.packet)
+        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), to_sorted_string(event.packet)
     
     def new_archive_record(self, event):
         """Print out the new archive record."""
-        print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), StdPrint.sort(event.record)
-       
-    @staticmethod 
-    def sort(rec):
-        return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
-            
+        print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), to_sorted_string(event.record)
+
 
 #==============================================================================
 #                    Class StdReport

@@ -362,6 +362,11 @@ Version: 3.7
                         <td class='tty'>/usr/share/doc/weewx/</td>
                     </tr>
                     <tr>
+                        <td>Examples</td>
+                        <td class="symcode">EXAMPLE_ROOT</td>
+                        <td class='tty'>/usr/share/doc/weewx/examples/</td>
+                    </tr>
+                    <tr>
                         <td>PID file</td>
                         <td class="symcode"></td>
                         <td class='tty'>/var/run/weewx.pid</td>
@@ -396,7 +401,7 @@ Version: 3.7
                     <tr>
                         <td>Configuration directory</td>
                         <td class="symcode">CONFIG_ROOT</td>
-                        <td class='tty'>/etc/weewx</td>
+                        <td class='tty'>/etc/weewx/</td>
                     </tr>
                     <tr>
                         <td>Skins and templates</td>
@@ -417,6 +422,11 @@ Version: 3.7
                         <td>Documentation</td>
                         <td class="symcode">DOC_ROOT</td>
                         <td class='tty'>/usr/share/doc/weewx-x.y.z/</td>
+                    </tr>
+                    <tr>
+                        <td>Examples</td>
+                        <td class="symcode">EXAMPLE_ROOT</td>
+                        <td class='tty'>/usr/share/doc/weewx-x.y.z/examples/</td>
                     </tr>
                     <tr>
                         <td>PID file</td>
@@ -444,7 +454,7 @@ Version: 3.7
                     <tr>
                         <td>weeWX root directory</td>
                         <td class="symcode">WEEWX_ROOT</td>
-                        <td class="tty">/Users/Shared/weewx</td>
+                        <td class="tty">/Users/Shared/weewx/</td>
                     </tr>
                     <tr>
                         <td>Executables</td>
@@ -464,7 +474,7 @@ Version: 3.7
                     <tr>
                         <td>SQLite databases</td>
                         <td class="symcode">SQLITE_ROOT</td>
-                        <td class='tty'>/Users/Shared/weewx/archive</td>
+                        <td class='tty'>/Users/Shared/weewx/archive/</td>
                     </tr>
                     <tr>
                         <td>Web pages and images</td>
@@ -475,6 +485,11 @@ Version: 3.7
                         <td>Documentation</td>
                         <td class="symcode">DOC_ROOT</td>
                         <td class='tty'>/Users/Shared/weewx/docs/</td>
+                    </tr>
+                    <tr>
+                        <td>Examples</td>
+                        <td class="symcode">EXAMPLE_ROOT</td>
+                        <td class='tty'>/Users/Shared/weewx/examples/</td>
                     </tr>
                     <tr>
                         <td>PID file</td>
@@ -503,7 +518,7 @@ Version: 3.7
                     <tr>
                         <td>weeWX root directory</td>
                         <td class="symcode">WEEWX_ROOT</td>
-                        <td class="tty">/home/weewx</td>
+                        <td class="tty">/home/weewx/</td>
                     </tr>
                     <tr>
                         <td>Executables</td>
@@ -523,7 +538,7 @@ Version: 3.7
                     <tr>
                         <td>SQLite databases</td>
                         <td class="symcode">SQLITE_ROOT</td>
-                        <td class='tty'>/home/weewx/archive</td>
+                        <td class='tty'>/home/weewx/archive/</td>
                     </tr>
                     <tr>
                         <td>Web pages and images</td>
@@ -534,6 +549,11 @@ Version: 3.7
                         <td>Documentation</td>
                         <td class="symcode">DOC_ROOT</td>
                         <td class='tty'>/home/weewx/docs/</td>
+                    </tr>
+                    <tr>
+                        <td>Examples</td>
+                        <td class="symcode">EXAMPLE_ROOT</td>
+                        <td class='tty'>/home/weewx/examples/</td>
                     </tr>
                     <tr>
                         <td>PID file</td>
@@ -562,7 +582,7 @@ Version: 3.7
             as log messages. Once everything is working properly, run it as a
             daemon.</p>
 
-        <h2>Running directly</h2>
+        <h2 id="Running_directly">Running directly</h2>
 
         <p>To run weeWX directly, invoke
             the main program, <span class="code">weewxd</span>, giving
@@ -590,7 +610,7 @@ Version: 3.7
         <p>Note that this <em>only</em> rereads the configuration file. It will
             not reload any code.</p>
 
-        <h2>Running as a daemon</h2>
+        <h2 id="Running_as_a_daemon">Running as a daemon</h2>
 
         <p>For unattended operations it is best to have weeWX
             run as a daemon, started automatically when the server is rebooted. </p>
@@ -3043,8 +3063,9 @@ sqlite3 /home/weewx/archive/weewx.sdb</span>
 sqlite> <span class="cmd">delete from archive where dateTime > X;</span>
 sqlite> <span class="cmd">.exit</span></pre>
 
-        <p>The timestamp X is the current time as unix epoch (number of seconds
-            since 1 January 1970), or a time a minute or two in the future.</p>
+        <p>The timestamp X is the current time in unix epoch time (number of seconds
+            since 1 January 1970). <a href="https://www.epochconverter.com/">This website</a>
+            is useful for determining the current unix epoch time.</p>
 
         <h4>Corrupt station memory</h4>
         <p>If you have a Vantage station, the problem might be because the data on
@@ -3053,7 +3074,7 @@ sqlite> <span class="cmd">.exit</span></pre>
             asks the console for all archive data &quot;since&quot; some time. The
             console then downloads the records one at a time. After it gets to the
             very last one, the memory wraps around, and the timestamp will suddenly
-            jump backwards in time a couple weeks &mdash; this how the software
+            jump backwards in time a couple weeks &mdash; this is how the software
             knows it has downloaded the last record and so it stops.</p>
 
         <p>However, if the internal memory gets garbled, the console will immediately
