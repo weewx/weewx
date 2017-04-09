@@ -30,8 +30,8 @@ import weewx.drivers
 from math import exp
 
 DRIVER_NAME = 'WMR9x8'
-DRIVER_VERSION = "3.2.1"
-
+DRIVER_VERSION = "3.2.2"
+DEFAULT_PORT = '/dev/ttyS0'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return WMR9x8(**config_dict[DRIVER_NAME])
@@ -39,7 +39,18 @@ def loader(config_dict, engine):  # @UnusedVariable
 def confeditor_loader():
     return WMR9x8ConfEditor()
 
-DEFAULT_PORT = '/dev/ttyS0'
+def logmsg(level, msg):
+    syslog.syslog(level, 'wmr9x8: %s' % msg)
+
+def logdbg(msg):
+    logmsg(syslog.LOG_DEBUG, msg)
+
+def loginf(msg):
+    logmsg(syslog.LOG_INFO, msg)
+
+def logerr(msg):
+    logmsg(syslog.LOG_ERR, msg)
+
 
 class WMR9x8ProtocolError(weewx.WeeWxIOError):
     """Used to signal a protocol error condition"""
@@ -111,7 +122,7 @@ class SerialWrapper(object):
     def openPort(self):
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, **self.serialconfig)
-        syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Opened up serial port %s" % self.port)
+        logdbg("Opened up serial port %s" % self.port)
 
     def closePort(self):
         self.serial_port.close()
@@ -250,7 +261,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                 sent_checksum = pdata[-1]
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
                 if sent_checksum == calc_checksum:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Received WMR9x8 data packet.")
+                    logdbg("Received WMR9x8 data packet.")
                     payload = pdata[2:-1]
                     _record = wmr9x8_packet_type_decoder_map[ptype](self, payload)
                     _record = self._sensors_to_fields(_record, self.sensor_map)
@@ -259,7 +270,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                     # Eliminate all packet data from the buffer
                     buf = buf[psize:]
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Invalid data packet (%s)." % pdata)
+                    logdbg("Invalid data packet (%s)." % pdata)
                     # Drop the first byte of the buffer and start scanning again
                     buf.pop(0)
             # WM-918 packets have no framing
@@ -273,7 +284,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                 sent_checksum = pdata[-1]
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
                 if sent_checksum == calc_checksum:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Received WM-918 data packet.")
+                    logdbg("Received WM-918 data packet.")
                     payload = pdata[0:-1] # send all of packet but crc
                     _record = wm918_packet_type_decoder_map[ptype](self, payload)
                     _record = self._sensors_to_fields(_record, self.sensor_map)
@@ -282,11 +293,11 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                     # Eliminate all packet data from the buffer
                     buf = buf[psize:]
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Invalid data packet (%s)." % pdata)
+                    logdbg("Invalid data packet (%s)." % pdata)
                     # Drop the first byte of the buffer and start scanning again
                     buf.pop(0)
             else:
-                syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Advancing buffer by one for the next potential packet")
+                logdbg("Advancing buffer by one for the next potential packet")
                 buf.pop(0)
 
     @staticmethod

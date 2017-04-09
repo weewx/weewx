@@ -28,7 +28,7 @@ from weeutil.weeutil import TimeSpan, timestamp_to_string
 from weewx.manager import DaySummaryManager
 
 VERSION = weewx.__version__
-WEE_DEBUG_VERSION = '0.6'
+WEE_DEBUG_VERSION = '0.7'
 
 # keys/setting names to obfuscate in weewx.conf, key value will be obfuscated
 # if the key starts any element in the list. Can add additional string elements
@@ -198,18 +198,10 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
     """ Generate system/weewx debug info """
 
     # system/OS info
-    print "System info"
-    _system = platform.system()
-    if _system == 'Linux':
-        generateLinuxSysInfo(verbosity)
-    elif _system == 'BSD':
-        print "System info could not be provided, unsupported operating system(BSD)."
-    else:
-        print "System info could not be provided, unsupported operating system(%s)." % _system
-    print
+    generateSysInfo(verbosity)
 
     # weewx version info
-    print "General weewx info"
+    print "General Weewx info"
     print "  Weewx version %s detected." % VERSION
     print
 
@@ -307,27 +299,32 @@ def generateDebugConf(config_dict):
     # put obfuscated config_dict into weewx.conf form
     _obs_config_dict.write(sys.stdout)
 
-def generateLinuxSysInfo(verbosity):
-    """ Generate system info for a Linux system """
+def generateSysInfo(verbosity):
+    # % string operator deprecated Python 3.1 and up.
+    print "System info"
 
-    # get cpu info
-    cpuinfo = _readproc_dict('/proc/cpuinfo')
     if verbosity > 0:
-        for key in cpuinfo:
-            print "  {0: <23}".format(key + ":"), cpuinfo[key]
+       print "  Platform:       " + platform.platform()
+       print "  Python Version: " + platform.python_version()
 
-    # os info
+       # environment 
+       if verbosity > 1:
+          print "\nEnvironment"
+          for n in os.environ:
+             print "  %s=%s" % (n, os.environ[n])
+
+       # load info
+       try:
+           loadavg =  '%.2f %.2f %.2f' % os.getloadavg()
+           (load1, load5, load15) = loadavg.split(" ")
+   
+           print "\nLoad Information\n  1 minute load average:  " + load1
+           print "  5 minute load average:  " + load5
+           print "  15 minute load average: " + load15
+       except OSError:
+           print "Sorry, the load average not available on this platform"
+
     print
-    print "  Operating system:       %s" % ' '.join(platform.linux_distribution())
-    print "                          %s" % ' '.join(os.uname())
-
-    # load info
-    if verbosity > 0:
-        loadstr = _readproc_line('/proc/loadavg')
-        (load1, load5, load15, nproc) = loadstr.split()[0:4]  # @UnusedVariable
-        print "  1 minute load average:  %s" % load1
-        print "  5 minute load average:  %s" % load5
-        print "  15 minute load average: %s" % load15
 
 def obfuscateKey(src_dict, obfuscate_list, retain_list):
     """ Obfuscate any dictionary items whose key is contained in passed list.
