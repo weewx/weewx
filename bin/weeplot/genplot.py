@@ -34,8 +34,8 @@ class GeneralPlot(object):
         
         self.line_list = []
         
-        self.xscale = None
-        self.yscale = None
+        self.xscale = (None, None, None)
+        self.yscale = (None, None, None)
 
         self.anti_alias             = int(config_dict.get('anti_alias',  1))
 
@@ -74,6 +74,9 @@ class GeneralPlot(object):
         self.x_label_format         = to_unicode(config_dict.get('x_label_format'))
         self.y_label_format         = to_unicode(config_dict.get('y_label_format'))
         
+        self.x_nticks               = int(config_dict.get('x_nticks', 10))
+        self.y_nticks               = int(config_dict.get('y_nticks', 10))
+
         self.x_label_spacing        = int(config_dict.get('x_label_spacing', 2))
         self.y_label_spacing        = int(config_dict.get('y_label_spacing', 2))
         
@@ -456,10 +459,9 @@ class GeneralPlot(object):
         plots where the x-axis represents time.
         
         """
-        if self.xscale is None :
-            (xmin, xmax) = self._calcXMinMax()
-                
-            self.xscale = weeplot.utilities.scale(xmin, xmax)
+        (xmin, xmax) = self._calcXMinMax()
+
+        self.xscale = weeplot.utilities.scale(xmin, xmax, self.xscale, nsteps=self.x_nticks)
             
     def _calcYScaling(self):
         """Calculates y scaling. Can be used 'as-is' for most purposes."""
@@ -471,6 +473,7 @@ class GeneralPlot(object):
         for line in self.line_list:
             if line.plot_type == 'vector':
                 try:
+                    # For progressive vector plots, we want the magnitude of the complex vector
                     yline_max = max(abs(c) for c in filter(lambda v : v is not None, line.y))
                 except ValueError:
                     yline_max = None
@@ -485,7 +488,7 @@ class GeneralPlot(object):
             # No valid data. Pick an arbitrary scaling
             self.yscale=(0.0, 1.0, 0.2)
         else:
-            self.yscale = weeplot.utilities.scale(ymin, ymax, self.yscale)
+            self.yscale = weeplot.utilities.scale(ymin, ymax, self.yscale, nsteps=self.y_nticks)
 
     def _calcXLabelFormat(self):
         if self.x_label_format is None:
@@ -521,7 +524,7 @@ class TimePlot(GeneralPlot) :
     
     def _calcXScaling(self):
         """Specialized version for time plots."""
-        if self.xscale is None :
+        if None in self.xscale:
             (xmin, xmax) = self._calcXMinMax()
             self.xscale = weeplot.utilities.scaletime(xmin, xmax)
 
@@ -553,8 +556,7 @@ class PlotLine(object):
     """
     def __init__(self, x, y, label='', color=None, fill_color=None, width=None, plot_type='line',
                  line_type='solid', marker_type=None, marker_size=10, 
-                 bar_width=None, vector_rotate = None, gap_fraction=None,
-                 x_label_spacing=2, y_label_spacing=2):
+                 bar_width=None, vector_rotate = None, gap_fraction=None):
         self.x               = x
         self.y               = y
         self.label           = to_unicode(label)
@@ -568,8 +570,6 @@ class PlotLine(object):
         self.bar_width       = bar_width
         self.vector_rotate   = vector_rotate
         self.gap_fraction    = gap_fraction
-        self.x_label_spacing = x_label_spacing
-        self.y_label_spacing = y_label_spacing
 
 class UniDraw(ImageDraw.ImageDraw):
     """Supports non-Unicode fonts

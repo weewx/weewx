@@ -1,13 +1,12 @@
 checklist for doing a release:
 
-1. Check to make sure weewx.conf doesn't have any local changes.
-    In particular, check to make sure:
+1. Check weewx.conf for local changes.  In particular, check to make sure:
      1. WEEWX_ROOT points to /home/weewx
      2. debug=0 in weewx.conf
 2. Make sure the correct version has been entered:
      1. weewx.__init__.py
      2. weewx.conf
-     3. customizing.htm hardware.htm upgrading.htm usersguide.htm utilities.htm
+     3. docs/*.htm
 3. Make sure all changes have been logged
      1. docs/changes.txt
      2. pkg/debian/changelog
@@ -15,8 +14,7 @@ checklist for doing a release:
 4. Make sure the upgrading guide has been updated if necessary.
 5. If working off a branch, do a merge to master.
 6. Create the tarball:  ./setup.py sdist
-7. As a final sanity check, go to the production machine, unpack the
-     tarball, install, run.
+7. Sanity check on production machine: unpack the tarball, install, run.
 8. Tag it:  git tag -a v1.3.1 -m "Version 1.3.1 release"
 9. Upload to weewx.com:
      1. make upload-src
@@ -71,8 +69,11 @@ git clone https://github.com/weewx/website.git
 make upload-docs
 
 # move the new files into position
-mv development_versions/weewx-x.y.z* .
-mv development_versions/README.txt .
+make release
+
+# update the apt repository (requires aptly and local clone of the apt repo)
+make update-apt-repo
+make push-apt-repo
 
 
 howto -------------------------------------------------------------------------
