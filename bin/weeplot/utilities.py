@@ -72,7 +72,7 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     fmx = float(fmx)
 
     if fmx < fmn :
-        raise weeplot.ViolatedPrecondition, "scale() called with max value less than min value"
+        raise weeplot.ViolatedPrecondition("scale() called with max value less than min value")
 
     if _rel_approx_equal(fmn, fmx) :
         if fmn == 0.0 :
@@ -80,7 +80,12 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         else :
             fmx = fmn + .01*abs(fmn)
 
-    frange = fmx - fmn
+    if minscale is not None and maxscale is not None:
+        if maxscale < minscale:
+            raise weeplot.ViolatedPrecondition("scale() called with prescale max less than min")
+        frange = maxscale - minscale
+    else:
+        frange = fmx - fmn
     steps = frange / nsteps
     
     mag = math.floor(math.log10(steps))
