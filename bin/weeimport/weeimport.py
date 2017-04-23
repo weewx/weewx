@@ -32,7 +32,7 @@ from weewx.units import unit_constants, unit_nicknames, convertStd, to_std_syste
 from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool, _get_object
 
 # List of sources we support
-SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus']
+SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus', 'WeatherCat']
 
 # Minimum requirements in any explicit or implicit weeWX field-to-import field
 # map
@@ -329,7 +329,7 @@ class Source(object):
         with self.dbm as archive:
             # step through our periods of records until we reach the end. A
             # 'period' of records may comprise the contents of a file, a day
-            # of WU obs or a month of Cumulus obs
+            # of WU obs or a month of Cumulus or WeatherCat obs
             for period in self.period_generator():
 
                 # get the raw data
@@ -382,7 +382,7 @@ class Source(object):
         """Produce a source field-to-weeWX archive field map.
 
         Data from an external source can be mapped to the weeWX archive using:
-        - a fixed field map (WU),
+        - a fixed field map (WU, WeatherCat),
         - a fixed field map with user specified source units (Cumulus), or
         - a user defined field/units map.
 
