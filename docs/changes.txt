@@ -23,6 +23,8 @@ option `y_nticks`.
 Fixed bug that could cause tick crowding when hardwiring y-axis min and
 max values.
 
+The Wunderground uploader now includes extraTemp1, 2, 3 and 4.
+
 
 3.7.2 MM/DD/YYYY
 
