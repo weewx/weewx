@@ -1,19 +1,36 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2017 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Driver for the MySQL database"""
+"""weedb driver for the MySQL database"""
 
 import decimal
 
 import MySQLdb
-from _mysql_exceptions import IntegrityError, ProgrammingError, OperationalError
+from _mysql_exceptions import DatabaseError, IntegrityError, ProgrammingError, OperationalError
 
 from weeutil.weeutil import to_bool
 import weedb
 
 DEFAULT_ENGINE = 'INNODB'
+
+exception_map = {
+    1007: weedb.DatabaseExistsError,
+    1008: weedb.NoDatabaseError,
+    1044: weedb.PermissionError,
+    1045: weedb.BadPasswordError,
+    1049: weedb.NoDatabaseError,
+    1050: weedb.TableExistsError,
+    1054: weedb.NoColumnError,
+    1062: weedb.IntegrityError,
+    1146: weedb.NoTableError,
+    2002: weedb.CannotConnectError,
+    2003: weedb.CannotConnectError,
+    2005: weedb.CannotConnectError,
+    2006: weedb.CannotConnectError,
+    None: weedb.DatabaseError
+    }
 
 def guard(fn):
     """Decorator function that converts MySQL exceptions into weedb exceptions."""
@@ -21,79 +38,69 @@ def guard(fn):
     def guarded_fn(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except IntegrityError, e:
-            raise weedb.IntegrityError(e)
-        except ProgrammingError, e:
-            raise weedb.ProgrammingError(e)
-        except OperationalError, e:
-            raise weedb.OperationalError(e)
+        except DatabaseError, e:
+            # Default exception is weedb.DatabaseError
+            try:
+                errno = e[0]
+            except IndexError:
+                errno = None
+            klass = exception_map.get(errno, weedb.DatabaseError)
+            raise klass(e)
 
     return guarded_fn
 
 
-def connect(host='localhost', user='', password='', database_name='', 
-            driver='', engine=DEFAULT_ENGINE, **kwargs):
+def connect(host='localhost', user='', password='', database_name='',
+            driver='', port=3306, engine=DEFAULT_ENGINE, autocommit=True, **kwargs):
     """Connect to the specified database"""
-    if host not in ('localhost', '127.0.0.1'):
-        kwargs.setdefault('port', 3306)
-    return Connection(host=host, user=user, password=password, 
-                      database_name=database_name, engine=engine, **kwargs)
+    return Connection(host=host, port=int(port), user=user, password=password,
+                      database_name=database_name, engine=engine, autocommit=autocommit, **kwargs)
 
-def create(host='localhost', user='', password='', database_name='', 
-           driver='', engine=DEFAULT_ENGINE, **kwargs):
+def create(host='localhost', user='', password='', database_name='',
+           driver='', port=3306, engine=DEFAULT_ENGINE, autocommit=True, **kwargs):
     """Create the specified database. If it already exists,
-    an exception of type weedb.DatabaseExists will be thrown."""
+    an exception of type weedb.DatabaseExistsError will be thrown."""
     # Open up a connection w/o specifying the database.
-    if host not in ('localhost', '127.0.0.1'):
-        kwargs.setdefault('port', 3306)
+    connect = Connection(host=host,
+                         port=int(port),
+                         user=user,
+                         password=password,
+                         autocommit=autocommit,
+                         **kwargs)
+    cursor = connect.cursor()
+
     try:
-        connect = MySQLdb.connect(host=host,
-                                  user=user,
-                                  passwd=password, 
-                                  **kwargs)
-        set_engine(connect, engine)
-        cursor = connect.cursor()
-        # An exception will get thrown if the database already exists.
-        try:
-            # Now create the database.
-            cursor.execute("CREATE DATABASE %s" % (database_name,))
-        except ProgrammingError:
-            # The database already exists. Change the type of exception.
-            raise weedb.DatabaseExists("Database %s already exists" % (database_name,))
-        finally:
-            cursor.close()
-            connect.close()
-    except OperationalError, e:
-        raise weedb.OperationalError(e)
+        # Now create the database.
+        cursor.execute("CREATE DATABASE %s" % (database_name,))
+    finally:
+        cursor.close()
+        connect.close()
 
 
 def drop(host='localhost', user='', password='', database_name='', 
-         driver='', engine=DEFAULT_ENGINE, **kwargs):  # @UnusedVariable
+         driver='', port=3306, engine=DEFAULT_ENGINE, autocommit=True, **kwargs):  # @UnusedVariable
     """Drop (delete) the specified database."""
-    if host not in ('localhost', '127.0.0.1'):
-        kwargs.setdefault('port', 3306)
     # Open up a connection
+    connect = Connection(host=host,
+                         port=int(port),
+                         user=user,
+                         password=password,
+                         autocommit=autocommit,
+                         **kwargs)
+    cursor = connect.cursor()
+
     try:
-        connect = MySQLdb.connect(host=host,
-                                  user=user,
-                                  passwd=password, 
-                                  **kwargs)
-        cursor = connect.cursor()
-        try:
-            cursor.execute("DROP DATABASE %s" % database_name)
-        except OperationalError:
-            raise weedb.NoDatabase("""Attempt to drop non-existent database %s""" % (database_name,))
-        finally:
-            cursor.close()
-            connect.close()
-    except OperationalError, e:
-        raise weedb.OperationalError(e)
+        cursor.execute("DROP DATABASE %s" % database_name)
+    finally:
+        cursor.close()
+        connect.close()
 
-
+@guard
 class Connection(weedb.Connection):
     """A wrapper around a MySQL connection object."""
 
-    def __init__(self, host='localhost', user='', password='', database_name='', engine=DEFAULT_ENGINE, **kwargs):
+    def __init__(self, host='localhost', user='', password='', database_name='',
+                 port=3306, engine=DEFAULT_ENGINE, autocommit=True, **kwargs):
         """Initialize an instance of Connection.
 
         Parameters:
@@ -104,23 +111,12 @@ class Connection(weedb.Connection):
             database_name: The database to be used. (required)
             port: Its port number (optional; default is 3306)
             engine: The MySQL database engine to use (optional; default is 'INNODB')
+            autocommit: If True, autocommit is enabled (default is True)
             kwargs:   Any extra arguments you may wish to pass on to MySQL 
               connect statement. See the file MySQLdb/connections.py for a list (optional).
-            
-        If the operation fails, an exception of type weedb.OperationalError will be raised.
         """
-        if host not in ('localhost', '127.0.0.1'):
-            kwargs.setdefault('port', 3306)
-        try:
-            connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database_name, **kwargs)
-        except OperationalError, e:
-            # The MySQL driver does not include the database in the
-            # exception information. Tack it on, in case it might be useful.
-            msg = str(e) + " while opening database '%s'" % (database_name,)
-            if e.args[0] == 2002:
-                raise weedb.CannotConnect(msg)
-            else:
-                raise weedb.OperationalError(msg)
+        connection = MySQLdb.connect(host=host, port=int(port), user=user, passwd=password,
+                                     db=database_name, **kwargs)
 
         weedb.Connection.__init__(self, connection, database_name, 'mysql')
 
@@ -129,6 +125,7 @@ class Connection(weedb.Connection):
 
         # Set the transaction isolation level.
         self.connection.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED")
+        self.connection.autocommit(to_bool(autocommit))
 
     def cursor(self):
         """Return a cursor object."""
@@ -223,6 +220,7 @@ class Connection(weedb.Connection):
 class Cursor(object):
     """A wrapper around the MySQLdb cursor object"""
 
+    @guard
     def __init__(self, connection):
         """Initialize a Cursor from a connection.
         
@@ -251,9 +249,9 @@ class Cursor(object):
         return self
 
     def fetchone(self):
-        # Get a result from the MySQL cursor, then run it through the massage
+        # Get a result from the MySQL cursor, then run it through the _massage
         # filter below
-        return massage(self.cursor.fetchone())
+        return _massage(self.cursor.fetchone())
 
     def close(self):
         try:
@@ -274,13 +272,18 @@ class Cursor(object):
             raise StopIteration
         return result
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, etyp, einst, etb):  # @UnusedVariable
+        self.close()
 
 #
 # This is a utility function for converting a result set that might contain
 # longs or decimal.Decimals (which MySQLdb uses) to something containing just ints.
 #
-def massage(seq):
-    # Return the massaged sequence if it exists, otherwise, return None
+def _massage(seq):
+    # Return the _massaged sequence if it exists, otherwise, return None
     if seq is not None:
         return [int(i) if isinstance(i, long) or isinstance(i, decimal.Decimal) else i for i in seq]
 

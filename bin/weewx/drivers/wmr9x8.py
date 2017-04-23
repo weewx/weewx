@@ -30,8 +30,8 @@ import weewx.drivers
 from math import exp
 
 DRIVER_NAME = 'WMR9x8'
-DRIVER_VERSION = "3.2"
-
+DRIVER_VERSION = "3.2.2"
+DEFAULT_PORT = '/dev/ttyS0'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return WMR9x8(**config_dict[DRIVER_NAME])
@@ -39,7 +39,18 @@ def loader(config_dict, engine):  # @UnusedVariable
 def confeditor_loader():
     return WMR9x8ConfEditor()
 
-DEFAULT_PORT = '/dev/ttyS0'
+def logmsg(level, msg):
+    syslog.syslog(level, 'wmr9x8: %s' % msg)
+
+def logdbg(msg):
+    logmsg(syslog.LOG_DEBUG, msg)
+
+def loginf(msg):
+    logmsg(syslog.LOG_INFO, msg)
+
+def logerr(msg):
+    logmsg(syslog.LOG_ERR, msg)
+
 
 class WMR9x8ProtocolError(weewx.WeeWxIOError):
     """Used to signal a protocol error condition"""
@@ -111,7 +122,7 @@ class SerialWrapper(object):
     def openPort(self):
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, **self.serialconfig)
-        syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Opened up serial port %s" % self.port)
+        logdbg("Opened up serial port %s" % self.port)
 
     def closePort(self):
         self.serial_port.close()
@@ -132,7 +143,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         'windDir': 'wind_dir',
         'windGust': 'wind_gust',
         'windGustDir': 'wind_gust_dir',
-        'windBatteryStatus': 'wind_battery_status',
+        'windBatteryStatus': 'battery_status_wind',
         'inTemp': 'temperature_in',
         'outTemp': 'temperature_out',
         'extraTemp1': 'temperature_1',
@@ -180,7 +191,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         'hourRain': 'rain_hour',
         'rain24': 'rain_24',
         'yesterdayRain': 'rain_yesterday',
-        'rainBatteryStatus': 'rain_battery_status',
+        'rainBatteryStatus': 'battery_status_rain',
         'windchill': 'windchill'}
 
     def __init__(self, **stn_dict):
@@ -250,7 +261,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                 sent_checksum = pdata[-1]
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
                 if sent_checksum == calc_checksum:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Received WMR9x8 data packet.")
+                    logdbg("Received WMR9x8 data packet.")
                     payload = pdata[2:-1]
                     _record = wmr9x8_packet_type_decoder_map[ptype](self, payload)
                     _record = self._sensors_to_fields(_record, self.sensor_map)
@@ -259,7 +270,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                     # Eliminate all packet data from the buffer
                     buf = buf[psize:]
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Invalid data packet (%s)." % pdata)
+                    logdbg("Invalid data packet (%s)." % pdata)
                     # Drop the first byte of the buffer and start scanning again
                     buf.pop(0)
             # WM-918 packets have no framing
@@ -273,7 +284,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                 sent_checksum = pdata[-1]
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
                 if sent_checksum == calc_checksum:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Received WM-918 data packet.")
+                    logdbg("Received WM-918 data packet.")
                     payload = pdata[0:-1] # send all of packet but crc
                     _record = wm918_packet_type_decoder_map[ptype](self, payload)
                     _record = self._sensors_to_fields(_record, self.sensor_map)
@@ -282,11 +293,11 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                     # Eliminate all packet data from the buffer
                     buf = buf[psize:]
                 else:
-                    syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Invalid data packet (%s)." % pdata)
+                    logdbg("Invalid data packet (%s)." % pdata)
                     # Drop the first byte of the buffer and start scanning again
                     buf.pop(0)
             else:
-                syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Advancing buffer by one for the next potential packet")
+                logdbg("Advancing buffer by one for the next potential packet")
                 buf.pop(0)
 
     @staticmethod
@@ -340,7 +351,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         # The console returns wind speeds in m/s. Our metric system requires
         # kph, so the result needs to be multiplied by 3.6
         _record = {
-            'wind_battery_status': battery,
+            'battery_status_wind': battery,
             'wind_speed': ((avg10th / 10.0) + avg1 + (avg10 * 10)) * 3.6,
             'wind_dir': dir1 + (dir10 * 10) + (dir100 * 100),
             'dateTime': int(time.time() + 0.5),
@@ -372,7 +383,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         # station units are mm and mm/hr while the internal metric units are
         # cm and cm/hr. It is reported that total rainfall is biased by +0.5 mm
         _record = {
-            'rain_battery_status': battery,
+            'battery_status_rain': battery,
             'rain_rate': (cur1 + (cur10 * 10) + (cur100 * 100)) / 10.0,
             'rain_yesterday': (yest1 + (yest10 * 10) + (yest100 * 100) + (yest1000 * 1000)) / 10.0,
             'rain_total': (tot10th / 10.0 + tot1 + 10.0 * tot10 + 100.0 * tot100 + 1000.0 * tot1000) / 10.0,
@@ -706,7 +717,7 @@ class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
         print """
 Setting rainRate, windchill, and dewpoint calculations to hardware."""
         config_dict.setdefault('StdWXCalculate', {})
-        config_dict['StdWXCalculate'].setdefault('Calculatios', {})
+        config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['windchill'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['dewpoint'] = 'hardware'

@@ -30,7 +30,7 @@ import weewx.qc
 import weewx.station
 import weewx.reportengine
 import weeutil.weeutil
-from weeutil.weeutil import to_bool, to_int
+from weeutil.weeutil import to_bool, to_int, to_sorted_string
 from weewx import all_service_groups
 
 class BreakLoop(Exception):
@@ -375,7 +375,7 @@ class StdCalibrate(StdService):
             try:
                 event.packet[obs_type] = eval(self.corrections[obs_type], None, event.packet)
             except (TypeError, NameError), e:
-                syslog.syslog(syslog.LOG_DEBUG, "engine: calibration for '%s' ignored in loop: %s" % (obs_type, e))
+                pass
             except ValueError, e:
                 syslog.syslog(syslog.LOG_ERR, "engine: StdCalibration loop error %s" % e)
 
@@ -389,7 +389,7 @@ class StdCalibrate(StdService):
                 try:
                     event.record[obs_type] = eval(self.corrections[obs_type], None, event.record)
                 except (TypeError, NameError), e:
-                    syslog.syslog(syslog.LOG_DEBUG, "engine: calibration for '%s' ignored in archive: %s" % (obs_type, e))
+                    pass
                 except ValueError, e:
                     syslog.syslog(syslog.LOG_ERR, "engine: StdCalibration archive error %s" % e)
 
@@ -489,7 +489,9 @@ class StdArchive(StdService):
                       (self.loop_hilo,))
         
         self.setup_database(config_dict)
-        
+        weewx.accum.initialize(config_dict)
+        self.old_accumulator = None
+
         self.bind(weewx.STARTUP, self.startup)
         self.bind(weewx.PRE_LOOP, self.pre_loop)
         self.bind(weewx.POST_LOOP, self.post_loop)
@@ -520,22 +522,20 @@ class StdArchive(StdService):
     def new_loop_packet(self, event):
         """Called when A new LOOP record has arrived."""
         
-        the_time = event.packet['dateTime']
-        
         # Do we have an accumulator at all? If not, create one:
         if not hasattr(self, "accumulator"):
-            self.accumulator = self._new_accumulator(the_time)
+            self.accumulator = self._new_accumulator(event.packet['dateTime'])
 
         # Try adding the LOOP packet to the existing accumulator. If the
         # timestamp is outside the timespan of the accumulator, an exception
         # will be thrown:
         try:
-            self.accumulator.addRecord(event.packet, self.loop_hilo)
+            self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
         except weewx.accum.OutOfSpan:
             # Shuffle accumulators:
-            (self.old_accumulator, self.accumulator) = (self.accumulator, self._new_accumulator(the_time))
-            # Add the LOOP packet to the new accumulator:
-            self.accumulator.addRecord(event.packet, self.loop_hilo)
+            (self.old_accumulator, self.accumulator) = (self.accumulator, self._new_accumulator(event.packet['dateTime']))
+            # Try again:
+            self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
 
     def check_loop(self, event):
         """Called after any loop packets have been processed. This is the opportunity
@@ -554,8 +554,8 @@ class StdArchive(StdService):
         """The main packet loop has ended, so process the old accumulator."""
         # If weewx happens to startup in the small time interval between the end of
         # the archive interval and the end of the archive delay period, then
-        # there will be no old accumulator.
-        if hasattr(self, 'old_accumulator'):
+        # there will be no old accumulator. Check for this.
+        if self.old_accumulator:
             # If the user has requested software generation, then do that:
             if self.record_generation == 'software':
                 self._software_catchup()
@@ -580,9 +580,8 @@ class StdArchive(StdService):
 
         # If requested, extract any extra information we can out of the 
         # accumulator and put it in the record.
-        if self.old_accumulator \
-                and event.record['dateTime'] == self.old_accumulator.timespan.stop \
-                and self.record_augmentation:
+        if self.record_augmentation and self.old_accumulator \
+                and event.record['dateTime'] == self.old_accumulator.timespan.stop:
             self.old_accumulator.augmentRecord(event.record)
 
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
@@ -604,8 +603,6 @@ class StdArchive(StdService):
         # Back fill the daily summaries.
         _nrecs, _ndays = dbmanager.backfill_day_summary() # @UnusedVariable
         
-        self.old_accumulator = None
-
     def _catchup(self, generator):
         """Pull any unarchived records off the console and archive them.
         
@@ -710,16 +707,12 @@ class StdPrint(StdService):
         
     def new_loop_packet(self, event):
         """Print out the new LOOP packet"""
-        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), StdPrint.sort(event.packet)
+        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), to_sorted_string(event.packet)
     
     def new_archive_record(self, event):
         """Print out the new archive record."""
-        print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), StdPrint.sort(event.record)
-       
-    @staticmethod 
-    def sort(rec):
-        return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
-            
+        print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), to_sorted_string(event.record)
+
 
 #==============================================================================
 #                    Class StdReport
@@ -730,7 +723,7 @@ class StdReport(StdService):
     
     def __init__(self, engine, config_dict):
         super(StdReport, self).__init__(engine, config_dict)
-        self.max_wait = int(config_dict['StdReport'].get('max_wait', 60))
+        self.max_wait = int(config_dict['StdReport'].get('max_wait', 600))
         self.thread = None
         self.launch_time = None
         self.record = None
@@ -747,8 +740,18 @@ class StdReport(StdService):
         # Do not launch the reporting thread if an old one is still alive.
         # To guard against a zombie thread (alive, but doing nothing) launch
         # anyway if enough time has passed.
-        if self.thread and self.thread.isAlive() and time.time() - self.launch_time < self.max_wait:
-            return
+        if self.thread and self.thread.isAlive():
+            thread_age = time.time() - self.launch_time
+            if thread_age < self.max_wait:
+                syslog.syslog(syslog.LOG_INFO,
+                              "engine: Launch of report thread aborted: "
+                              "existing report thread still running")
+                return
+            else:
+                syslog.syslog(syslog.LOG_WARNING,
+                              "engine: Previous report thread has been running"
+                              " %s seconds.  Launching report thread anyway."
+                              % thread_age)
             
         try:
             self.thread = weewx.reportengine.StdReportEngine(self.config_dict,

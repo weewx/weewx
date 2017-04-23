@@ -16,9 +16,9 @@ my $KBD_INTERRUPTS = 'engine: keyboard interrupts';
 my $RESTARTS = 'engine: restarts';
 my $GARBAGE = 'engine: garbage collected';
 my $ARCHIVE_RECORDS_ADDED = 'archive: records added';
-my $IMAGES_GENERATED = 'genimages: images generated';
+my $IMAGES_GENERATED = 'imagegenerator: images generated';
 my $FILES_GENERATED = 'filegenerator: files generated';
-my $FILES_COPIED = 'reportengine: files copied';
+my $FILES_COPIED = 'copygenerator: files copied';
 my $RECORDS_PUBLISHED = 'restful: records published';
 my $RECORDS_SKIPPED = 'restful: records skipped';
 my $RECORDS_FAILED = 'restful: publish failed';
@@ -135,18 +135,18 @@ while(defined($_ = <STDIN>)) {
         $clockmin = $1 if $1 < $clockmin;
         $clockmax = $1 if $1 > $clockmax;
         $clockcount += 1;
-    } elsif (/manager: added record/ || /archive: added record/) {
+    } elsif (/manager: Added record/ || /archive: added record/) {
         $counts{$ARCHIVE_RECORDS_ADDED} += 1;
-    } elsif (/genimages: Generated (\d+) images/) {
+    } elsif (/imagegenerator: Generated (\d+) images/) {
         $counts{$IMAGES_GENERATED} += $1;
-    } elsif (/genimages: aggregate interval required for aggregate type/ ||
-             /genimages: line type \S+ skipped/) {
+    } elsif (/imagegenerator: aggregate interval required for aggregate type/ ||
+             /imagegenerator: line type \S+ skipped/) {
         $errors{$_} = $errors{$_} ? $errors{$_} + 1 : 1;
     } elsif (/cheetahgenerator: Generated (\d+)/ ||
              /cheetahgenerator: generated (\d+)/ ||
              /filegenerator: generated (\d+)/) {
         $counts{$FILES_GENERATED} += $1;
-    } elsif (/reportengine: copied (\d+) files/) {
+    } elsif (/copygenerator: copied (\d+) files/) {
         $counts{$FILES_COPIED} += $1;
     } elsif (/restful: Skipped record/) {
         $counts{$RECORDS_SKIPPED} += 1;
@@ -250,9 +250,9 @@ while(defined($_ = <STDIN>)) {
              /archive: Created and initialized/ ||
              /reportengine: Running reports for latest time/ ||
              /reportengine: Found configuration file/ ||
-             /reportengine: FTP upload not requested/ ||
+             /ftpgenerator: FTP upload not requested/ ||
              /reportengine: Running report / ||  # only when debug=1
-             /reportengine: rsync upload not requested/ ||
+             /rsyncgenerator: rsync upload not requested/ ||
              /restful: station will register with/ ||
              /restful: Registration interval/ ||
              /\*\*\*\*  Registration interval/ ||

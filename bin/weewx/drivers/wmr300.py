@@ -66,8 +66,8 @@ packet types from station:
 57 - station type/model; history count
 41 - ACK
 D2 - history; 128 bytes
-D3 - temperature/humidity/dewpoint; 61 bytes
-D4 - wind; 54 bytes
+D3 - temperature/humidity/dewpoint/heatindex; 61 bytes
+D4 - wind/windchill; 54 bytes
 D5 - rain; 40 bytes
 D6 - pressure; 46 bytes
 DB - forecast; 32 bytes
@@ -339,7 +339,7 @@ byte hex dec description                 decoded value
 10   2D      humidity                    45 %
 11   00      dewpoint                    7.0 C
 12   46
-13   7F      heat index?                 N/A
+13   7F      heat index                  N/A
 14   FD 
 15   00      temperature trend
 16   00      humidity trend
@@ -371,19 +371,19 @@ byte hex dec description                 decoded value
 42   08    8 minute
 43   FF      min_dewpoint_last_month     -1.0 C
 44   F6 
-45   0E   14 max_heat_index? year
+45   0E   14 max_heat_index year
 46   05    5 month
 47   09    9 day
 48   00    0 hour
 49   00    0 minute
-50   7F      max_heat_index?             N/A
+50   7F      max_heat_index              N/A
 51   FF 
-52   0E   14 min_heat_index? year
+52   0E   14 min_heat_index year
 53   05    5 month
 54   01    1 day
 55   00    0 hour
 56   00    0 minute
-57   7F      min_heat_index?             N/A
+57   7F      min_heat_index              N/A
 58   FF 
 59   0B      checksum
 60   63 
@@ -720,7 +720,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.18rc2'
+DRIVER_VERSION = '0.18'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -770,8 +770,8 @@ KNOWN_USB_MESSAGES = [
     'Nessun dato disponibile', 'Nessun errore',
     'Keine Daten verf',
     'No hay datos disponibles',
-    'Pas de donn'
-    ]
+    'Pas de donn',
+    'Ingen data er tilgjengelige']
 
 # these are the usb 'errors' that should be ignored
 def known_usb_err(e):
@@ -836,8 +836,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         'extraHeatindex6': 'heatindex_7',
         'extraHeatindex7': 'heatindex_8',
         'windchill': 'windchill',
-        'rainRate': 'rain_rate'
-        }
+        'rainRate': 'rain_rate'}
 
     def __init__(self, **stn_dict):
         loginf('driver version is %s' % DRIVER_VERSION)
@@ -914,8 +913,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_7x = time.time()
             except usb.USBError, e:
-                logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                       (e.errno, e.strerror, e.message, repr(e)))
+                if DEBUG_COMM:
+                    logdbg("loop: "
+                           "e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                           (e.errno, e.strerror, e.message, repr(e)))
                 if not known_usb_err(e):
                     logerr("usb failure: %s" % e)
                     raise weewx.WeeWxIOError(e)
@@ -982,8 +983,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     self.station.write(cmd)
                     self.last_65 = time.time()
             except usb.USBError, e:
-                logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                       (e.errno, e.strerror, e.message, repr(e)))
+                if DEBUG_COMM:
+                    logdbg("history: "
+                           "e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                           (e.errno, e.strerror, e.message, repr(e)))
                 if not known_usb_err(e):
                     logerr("usb failure: %s" % e)
                     raise weewx.WeeWxIOError(e)
@@ -1099,6 +1102,7 @@ class Station(object):
         if not self.handle:
             raise WMR300Error('Open USB device failed')
 
+        # FIXME: reset is actually a no-op for some versions of libusb/pyusb?
         self.handle.reset()
 
         # for HID devices on linux, be sure kernel does not claim the interface
@@ -1120,14 +1124,14 @@ class Station(object):
             try:
                 self.handle.releaseInterface()
             except (ValueError, usb.USBError), e:
-                loginf("Release interface failed: %s" % e)
+                logdbg("Release interface failed: %s" % e)
             self.handle = None
 
     def reset(self):
         self.handle.reset()
 
     def read(self, count=True):
-        buf = None
+        buf = []
         try:
             buf = self.handle.interruptRead(
                 Station.EP_IN, self.MESSAGE_LENGTH, self.timeout)
@@ -1136,8 +1140,9 @@ class Station(object):
             if DEBUG_COUNTS and count:
                 self.update_count(buf, self.recv_counts)
         except usb.USBError, e:
-            logdbg("e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                   (e.errno, e.strerror, e.message, repr(e)))
+            if DEBUG_COMM:
+                logdbg("read: e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                       (e.errno, e.strerror, e.message, repr(e)))
             if not known_usb_err(e):
                 raise
         return buf
@@ -1358,6 +1363,8 @@ class Station(object):
             buf[10:11], 1.0) # %
         pkt['dewpoint_%d' % pkt['channel']] = Station._extract_signed(
             buf[11], buf[12], 0.1) # C
+        pkt['heatindex_%d' % pkt['channel']] = Station._extract_signed(
+            buf[13], buf[14], 0.1) # C
         return pkt
 
     @staticmethod
@@ -1373,6 +1380,7 @@ class Station(object):
         pkt['wind_gust_dir'] = Station._extract_value(buf[10:12], 1.0) # degree
         pkt['wind_avg'] = Station._extract_value(buf[12:14], 0.1) # m/s
         pkt['wind_dir'] = Station._extract_value(buf[14:16], 1.0) # degree
+        pkt['windchill'] = Station._extract_signed(buf[18], buf[19], 0.1) # C
         return pkt
 
     @staticmethod
@@ -1443,7 +1451,7 @@ class WMR300ConfEditor(weewx.drivers.AbstractConfEditor):
         print """
 Setting rainRate, windchill, heatindex, and dewpoint calculations to hardware."""
         config_dict.setdefault('StdWXCalculate', {})
-        config_dict['StdWXCalculate'].setdefault('Calculatios', {})
+        config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['windchill'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['heatindex'] = 'hardware'
@@ -1471,13 +1479,12 @@ if __name__ == '__main__':
         print "wmr300 driver version %s" % DRIVER_VERSION
         exit(0)
 
-    stn_dict = {
+    driver_dict = {
         'debug_comm': 1,
         'debug_packet': 0,
         'debug_counts': 1,
-        'debug_decode': 0
-        }
-    stn = WMR300Driver(**stn_dict)
+        'debug_decode': 0}
+    stn = WMR300Driver(**driver_dict)
 
     for packet in stn.genLoopPackets():
         print packet

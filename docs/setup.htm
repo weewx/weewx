@@ -5,9 +5,9 @@
     <title>weewx: Installation using setup.py</title>
     <meta http-equiv="Content-Language" content="en-us"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
-    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link rel="icon" href="images/favicon.png" type="image/png"/>
 </head>
 
 <body>
@@ -37,7 +37,7 @@
     Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</span> from <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
 </p>
 
-<h2>Install Prerequisites</h2>
+<h2 id="setup_prerequisites">Install Prerequisites</h2>
 
 <p>Ensure that Python2 is installed. Python 2.6 or 2.7 will work,
     but Python 3 will not.</p>
@@ -238,7 +238,7 @@ sudo rm /etc/init.d/weewx</pre>
 <p>The installation will place weeWX in the
     <span class="code">/home/weewx</span> directory with the following
     layout: </p>
-<table class='locations' style="width:50%">
+<table class='locations' style="width: auto;">
     <tr>
         <td align='right'>executable:</td>
         <td class='tty'>/home/weewx/bin/weewxd</td>
@@ -262,6 +262,10 @@ sudo rm /etc/init.d/weewx</pre>
     <tr>
         <td align='right'>documentation:</td>
         <td class='tty'>/home/weewx/docs/</td>
+    </tr>
+    <tr>
+        <td align='right'>examples:</td>
+        <td class='tty'>/home/weewx/examples/</td>
     </tr>
     <tr>
         <td align='right'>utilities:</td>

@@ -6,7 +6,7 @@
 SIGN=1
 
 # destination for uploading releases
-RELDIR=weewx.com:/downloads/development_versions/
+UPLOADDIR=weewx.com:/downloads/development_versions/
 
 # destination for uploading docs
 DOCDST=weewx.com:/
@@ -63,7 +63,7 @@ info:
 	@echo "     VERSION: $(VERSION)"
 	@echo "   MMVERSION: $(MMVERSION)"
 	@echo "         CWD: $(CWD)"
-	@echo "      RELDIR: $(RELDIR)"
+	@echo "   UPLOADDIR: $(UPLOADDIR)"
 	@echo "      DOCDST: $(DOCDST)"
 	@echo "        USER: $(USER)"
 
@@ -113,11 +113,11 @@ src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
 	./setup.py sdist
 
 upload-src:
-	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) $(SRCPKG))
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(SRCPKG))
 
 # upload docs to the weewx web site
 upload-docs:
-	ftp -u $(USER)@$(DOCDST) $(DOCSRC)/*.htm $(DOCSRC)/changes.txt $(DOCSRC)/images/*.png $(DOCSRC)/images/*.jpg $(DOCSRC)/js/*.js $(DOCSRC)/css/weewx_$(DOCSRC).css $(DOCSRC)/css/jquery.tocify.css $(DOCSRC)/css/ui-lightness/*.css $(DOCSRC)/css/ui-lightness/images/*.png $(DOCSRC)/css/ui-lightness/images/*.gif
+	ftp -u $(USER)@$(DOCDST) $(DOCSRC)/*.htm $(DOCSRC)/changes.txt $(DOCSRC)/images/*.png $(DOCSRC)/images/*.jpg $(DOCSRC)/images/*.gif $(DOCSRC)/js/*.js $(DOCSRC)/css/weewx_$(DOCSRC).css $(DOCSRC)/css/jquery.tocify.css $(DOCSRC)/css/ui-lightness/*.css $(DOCSRC)/css/ui-lightness/images/*.png $(DOCSRC)/css/ui-lightness/images/*.gif
 
 # create the README.txt for uploading
 README_HEADER="\
@@ -148,7 +148,7 @@ readme: docs/changes.txt
 	pkg/mkchangelog.pl --ifile docs/changes.txt >> $(DSTDIR)/README.txt
 
 upload-readme: readme
-	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) README.txt)
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) README.txt)
 
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
@@ -174,7 +174,7 @@ fi
 # the latest version in the debian changelog must match the packaging version
 DEBARCH=all
 DEBBLDDIR=$(BLDDIR)/weewx-$(VERSION)
-DEBPKG=weewx_$(VERSION)-$(DEBREVISION)_$(DEBARCH).deb
+DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
@@ -208,7 +208,7 @@ check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
 upload-deb:
-	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) $(DEBPKG))
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(DEBPKG))
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
@@ -247,6 +247,36 @@ ifeq ("$(SIGN)","1")
 #	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
 endif
 
+# run rpmlint on the redhat package
+check-rpm:
+	rpmlint $(DSTDIR)/$(RPMPKG)
+
+upload-rpm:
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(RPMPKG))
+
+# shortcut to upload all packages from a single machine
+DEB_PKG=weewx_$(DEBVER)_$(DEBARCH).deb
+RHEL_PKG=weewx-$(RPMVER).rhel.$(RPMARCH).rpm
+SUSE_PKG=weewx-$(RPMVER).suse.$(RPMARCH).rpm
+upload-pkgs:
+	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(DEB_PKG) $(RHEL_PKG) $(SUSE_PKG))
+
+# move files from the upload directory to the release directory and set up the
+# symlinks to them from the download root directory
+DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
+RELDIR=$(WEEWX_DOWNLOADS)/released_versions
+ARTIFACTS=$(DEB_PKG) $(RHEL_PKG) $(SUSE_PKG) $(SRCPKG)
+release:
+	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
+	ssh $(USER)@weewx.com "rm -f $(WEEWX_DOWNLOADS)/weewx*"
+	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(RELDIR)/\$$f ]; then ln -s released_versions/\$$f $(WEEWX_DOWNLOADS); fi; done"
+	ssh $(USER)@weewx.com "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
+
+# make local copy of the published apt repository
+pull-apt-repo:
+	mkdir -p ~/.aptly
+	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly-test/ ~/.aptly
+
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
 	aptly repo add weewx $(DSTDIR)/$(DEBPKG)
@@ -254,24 +284,9 @@ update-apt-repo:
 	aptly -architectures="all" publish switch squeeze weewx-$(VERSION)
 
 # publish apt repo changes to the public weewx apt repo
-publish-apt-repo:
-	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly
+push-apt-repo:
+	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly-test
 
-# run rpmlint on the redhat package
-check-rpm:
-	rpmlint $(DSTDIR)/$(RPMPKG)
-
-upload-rpm:
-	(cd $(DSTDIR); ftp -u $(USER)@$(RELDIR) $(RPMPKG))
-
-# move files from development_versions to previous_versions and set up the
-# symlinks to them from the download root directory
-ARTIFACTS=weewx-$(RPMVER).rhel.noarch.rpm weewx-$(RPMVER).suse.noarch.rpm weewx-$(VERSION).tar.gz weewx_$(DEBVER)_all.deb
-release:
-	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do mv $(WEEWX_DOWNLOADS)/development_versions/$$f $(WEEWX_DOWNLOADS)/previous_versions; done"
-	ssh $(USER)@weewx.com "rm $(WEEWX_DOWNLOADS)/weewx*"
-	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do ln -s $$f $(WEEWX_DOWNLOADS); done"
-	ssh $(USER)@weewx.com "mv $(WEEWX_DOWNLOADS)/README.txt $(WEEWX_DOWNLOADS)"
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]

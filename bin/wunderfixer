@@ -75,12 +75,8 @@ all the records in a weewx archive for a given day, comparing to see whether a
 corresponding record exists on the Weather Underground. If not, it will publish
 a new record on the Weather Underground with the missing data.
 
-Because this version of wunderfixer now uses the weewx API this version no 
-longer supports wview. Wview users should use wunderfixer v0.5.2.
-Or, switch to weewx!
-
 Be sure to use the --test switch first to see whether you like what it 
-proposes !!"""
+proposes!"""
 
 __version__ = "1.1.0"
 
