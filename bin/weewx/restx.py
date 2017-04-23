@@ -775,10 +775,12 @@ class AmbientThread(RESTThread):
                 'dayRain'    : 'dailyrainin=%.2f',
                 'radiation'  : 'solarradiation=%.2f',
                 'UV'         : 'UV=%.2f',
-                'extraTemp1' : "temp2f=%.1f",
-                'extraTemp2' : "temp3f=%.1f",
-                'extraTemp3' : "temp4f=%.1f",
-                'extraTemp4' : "temp5f=%.1f",
+                # The following four formats have been commented out until the WU
+                # fixes the bug that causes them to be displayed as soil moisture.
+#                 'extraTemp1' : "temp2f=%.1f",
+#                 'extraTemp2' : "temp3f=%.1f",
+#                 'extraTemp3' : "temp4f=%.1f",
+#                 'extraTemp4' : "temp5f=%.1f",
                 'soilTemp1'  : "soiltempf=%.1f",
                 'soilTemp2'  : "soiltemp2f=%.1f",
                 'soilTemp3'  : "soiltemp3f=%.1f",
