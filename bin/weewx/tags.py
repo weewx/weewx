@@ -301,6 +301,9 @@ class ObservationBinder(object):
     def max_le(self, val):
         return self._do_query('max_le', val=val)
 
+    def min_ge(self, val):
+        return self._do_query('min_ge', val=val)
+
     def min_le(self, val):
         return self._do_query('min_le', val=val)
 
