@@ -9,6 +9,8 @@ MySQL error 2006 ("MySQL server has gone away") now gets mapped to
 Corrected formatting used to report indoor temp and humidity to the
 Weather Underground.
 
+Added inDewpoint to the observation group dictionary.
+
 
 3.7.1 03/22/2017
 
