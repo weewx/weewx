@@ -11,6 +11,8 @@ Weather Underground.
 
 Added inDewpoint to the observation group dictionary.
 
+Added missing aggregation type 'min_ge'. Thanks to user Christopher McAvaney!
+
 
 3.7.1 03/22/2017
 
