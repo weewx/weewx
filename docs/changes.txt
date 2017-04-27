@@ -23,6 +23,9 @@ option `y_nticks`.
 Fixed bug that could cause tick crowding when hardwiring y-axis min and
 max values.
 
+Fixed bug in wmr200 driver that resulted in archive records with no
+interval field and 'NOT NULL constraint failed: archive.interval' errors.
+
 
 3.7.2 MM/DD/YYYY
 
