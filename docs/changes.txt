@@ -13,6 +13,9 @@ Added inDewpoint to the observation group dictionary.
 
 Added missing aggregation type 'min_ge'. Thanks to user Christopher McAvaney!
 
+Fixed bug in wmr200 driver that resulted in archive records with no
+interval field and 'NOT NULL constraint failed: archive.interval' errors.
+
 
 3.7.1 03/22/2017
 
