@@ -156,36 +156,6 @@
         </td>
       </tr>
 
-      #if $day.inTemp.has_data
-      <tr>
-        <td class="label">$obs.label.inTemp</td>
-        #for $archive in $archive_data
-        <td class="data new_row hilo_$archive[0]">
-          <span title="$archive[1].inTemp.maxtime">
-            $archive[1].inTemp.max.formatted</span><br/>
-          <span title="$archive[1].inTemp.mintime">
-            $archive[1].inTemp.min.formatted</span>
-        </td>
-        #end for
-        <td class="units">$unit.label.inTemp</td>
-      </tr>
-      #end if
-
-      #if $day.extraTemp1.has_data
-      <tr>
-        <td class="label">$obs.label.extraTemp1</td>
-        #for $archive in $archive_data
-        <td class="data new_row hilo_$archive[0]">
-          <span title="$archive[1].extraTemp1.maxtime">
-            $archive[1].extraTemp1.max.formatted</span><br/>
-          <span title="$archive[1].extraTemp1.mintime">
-            $archive[1].extraTemp1.min.formatted</span>
-        </td>
-        #end for
-        <td class="units">$unit.label.extraTemp1</td>
-      </tr>
-      #end if
-
       #if $day.UV.has_data
       <tr>
         <td class="label">$obs.label.UV</td>
@@ -228,6 +198,66 @@
         </td>
         #end for
         <td class="units">$unit.label.radiation</td>
+      </tr>
+      #end if
+
+      #if $day.inTemp.has_data
+      <tr>
+        <td class="label">$obs.label.inTemp</td>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].inTemp.maxtime">
+            $archive[1].inTemp.max.formatted</span><br/>
+          <span title="$archive[1].inTemp.mintime">
+            $archive[1].inTemp.min.formatted</span>
+        </td>
+        #end for
+        <td class="units">$unit.label.inTemp</td>
+      </tr>
+      #end if
+
+      #if $day.extraTemp1.has_data
+      <tr>
+        <td class="label">$obs.label.extraTemp1</td>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].extraTemp1.maxtime">
+            $archive[1].extraTemp1.max.formatted</span><br/>
+          <span title="$archive[1].extraTemp1.mintime">
+            $archive[1].extraTemp1.min.formatted</span>
+        </td>
+        #end for
+        <td class="units">$unit.label.extraTemp1</td>
+      </tr>
+      #end if
+
+      #if $day.extraTemp2.has_data
+      <tr>
+        <td class="label">$obs.label.extraTemp2</td>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].extraTemp2.maxtime">
+            $archive[1].extraTemp2.max.formatted</span><br/>
+          <span title="$archive[1].extraTemp2.mintime">
+            $archive[1].extraTemp2.min.formatted</span>
+        </td>
+        #end for
+        <td class="units">$unit.label.extraTemp2</td>
+      </tr>
+      #end if
+
+      #if $day.extraTemp3.has_data
+      <tr>
+        <td class="label">$obs.label.extraTemp3</td>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].extraTemp3.maxtime">
+            $archive[1].extraTemp3.max.formatted</span><br/>
+          <span title="$archive[1].extraTemp3.mintime">
+            $archive[1].extraTemp3.min.formatted</span>
+        </td>
+        #end for
+        <td class="units">$unit.label.extraTemp3</td>
       </tr>
       #end if
     </tbody>

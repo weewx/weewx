@@ -75,6 +75,18 @@
         <td class="data">$current.extraTemp1</td>
       </tr>
 #end if
+#if $day.extraTemp2.has_data
+      <tr>
+        <td class="label">$obs.label.extraTemp2</td>
+        <td class="data">$current.extraTemp2</td>
+      </tr>
+#end if
+#if $day.extraTemp3.has_data
+      <tr>
+        <td class="label">$obs.label.extraTemp3</td>
+        <td class="data">$current.extraTemp3</td>
+      </tr>
+#end if
     </tbody>
   </table>
   </div>
