@@ -92,6 +92,47 @@ function get_cookie(name, default_value) {
   return unescape(cookie.substring(i + full_name.length + 2, j));
 }
 
+function get_parameter(name) {
+  var query = window.location.search.substring(1);
+  if (query) {
+    var vars = query.split("&");
+    for (var i=0; i<vars.length; i++) {
+      var pair = vars[i].split("=");
+      if (pair[0] == name) {
+        return pair[1];
+      }
+    }
+  }
+  return false;
+}
+
+function load_file(div_id, var_name) {
+  var content = '';
+  var file = get_parameter(var_name);
+  if (file) {
+    content = "Loading " + file;
+    var xhr = new XMLHttpRequest();
+    xhr.onload = function() {
+      var e = document.getElementById(div_id);
+      if (e) {
+        e.textContent = this.responseText;
+      }
+    };
+    xhr.open('GET', file);
+    xhr.send();
+  } else {
+    content = 'nothing specified';
+  }
+  var e = document.getElementById(div_id);
+  if (e) {
+    e.innerHTML = content;
+  }
+}
+
 function openNOAAFile(date) {
   window.location = "NOAA/NOAA-" + date + ".txt";
+}
+
+function openTabularFile(date) {
+  window.location = "tabular.html?report=NOAA/NOAA-" + date + ".txt";
 }
