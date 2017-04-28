@@ -45,6 +45,10 @@
         <td class="label">$obs.label.rainRate</td>
         <td class="data">$current.rainRate</td>
       </tr>
+      <tr>
+        <td class="label">$obs.label.rain_today</td>
+        <td class="data">$day.rain.sum</td>
+      </tr>
 #if $day.UV.has_data
       <tr>
         <td class="label">$obs.label.UV</td>
