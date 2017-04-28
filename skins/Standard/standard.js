@@ -130,9 +130,13 @@ function load_file(div_id, var_name) {
 }
 
 function openNOAAFile(date) {
-  window.location = "NOAA/NOAA-" + date + ".txt";
+  if (date.match(/^\d\d\d\d/)) {
+    window.location = "NOAA/NOAA-" + date + ".txt";
+  }
 }
 
 function openTabularFile(date) {
-  window.location = "tabular.html?report=NOAA/NOAA-" + date + ".txt";
+  if (date.match(/^\d\d\d\d/)) {
+    window.location = "tabular.html?report=NOAA/NOAA-" + date + ".txt";
+  }
 }
