@@ -477,7 +477,7 @@ class Almanac(SearchList):
         # a KeyError exception.
         try:
             archive = self.generator.db_binder.get_manager()
-        except (KeyError, weewx.UnknownBinding):
+        except (KeyError, weewx.UnknownBinding, weedb.NoDatabaseError):
             pass
         else:
             # If a specific time has not been specified, then use the timestamp

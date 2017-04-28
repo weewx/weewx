@@ -758,9 +758,8 @@ class AmbientThread(RESTThread):
         self.station = station
         self.password = password
         self.server_url = server_url
-        self.formats = AmbientThread._FORMATS
+        self.formats = dict(AmbientThread._FORMATS)
         if to_bool(post_indoor_observations):
-            self.formats = dict(AmbientThread._FORMATS)
             self.formats.update(AmbientThread._INDOOR_FORMATS)
 
     # Types and formats of the data to be published:
@@ -790,8 +789,8 @@ class AmbientThread(RESTThread):
                 'rtfreq'     : 'rtfreq=%s'}
 
     _INDOOR_FORMATS = {
-        'inTemp'    : 'intempf=%.1f',
-        'inHumidity': 'indoorhumidity=%03.0f'}
+        'inTemp'    : 'indoortempf=%.1f',
+        'inHumidity': 'indoorhumidity=%.0f'}
 
     def format_url(self, incoming_record):
         """Return an URL for posting using the Ambient protocol."""
