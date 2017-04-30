@@ -607,6 +607,7 @@ if __name__ == "__main__":
               'skins/Standard/statistics.html.tmpl',
               'skins/Standard/statistics.inc',
               'skins/Standard/sunmoon.inc',
+              'skins/Standard/tabular.html.tmpl',
               'skins/Standard/telemetry.html.tmpl',
               'skins/Standard/titlebar.inc']),
             ('skins/Standard/NOAA',
