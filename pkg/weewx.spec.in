@@ -80,13 +80,6 @@ cp -r util/logwatch %{buildroot}%{dst_cfg_dir}
 cp -r util/rsyslog.d %{buildroot}%{dst_cfg_dir}
 cp -r util/udev %{buildroot}%{dst_cfg_dir}
 
-# remove stuff that should not go out
-rm %{buildroot}%{dst_cfg_dir}/skins/Standard/backgrounds/butterfly.jpg
-rm %{buildroot}%{dst_cfg_dir}/skins/Standard/backgrounds/drops.gif
-rm %{buildroot}%{dst_cfg_dir}/skins/Standard/backgrounds/flower.jpg
-rm %{buildroot}%{dst_cfg_dir}/skins/Standard/backgrounds/leaf.jpg
-rm %{buildroot}%{dst_cfg_dir}/skins/Standard/backgrounds/night.gif
-
 # patch paths in files we care about
 cat weewx.conf | sed \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \
