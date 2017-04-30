@@ -61,14 +61,8 @@
             #if $day.inTemp.has_data
             <img src="daytempin.png"    alt="$obs.label.inTemp" />
             #end if
-            #if $day.extraTemp1.has_data
-            <img src="daytemp1.png"     alt="$obs.label.extraTemp1" />
-            #end if
-            #if $day.extraTemp2.has_data
-            <img src="daytemp2.png"     alt="$obs.label.extraTemp2" />
-            #end if
-            #if $day.extraTemp3.has_data
-            <img src="daytemp3.png"     alt="$obs.label.extraTemp3" />
+            #if $day.extraTemp1.has_data or $day.extraTemp2.has_data or $day.extraTemp3.has_data
+            <img src="daytemp.png"      alt="$obs.label.extraTemp1" />
             #end if
             #if $day.rxCheckPercent.has_data
             <img src="dayrx.png"        alt="$obs.label.rxCheckPercent"/>
@@ -92,14 +86,8 @@
             #if $week.inTemp.has_data
             <img src="weektempin.png"    alt="$obs.label.inTemp" />
             #end if
-            #if $week.extraTemp1.has_data
-            <img src="weektemp1.png"     alt="$obs.label.extraTemp1" />
-            #end if
-            #if $week.extraTemp2.has_data
-            <img src="weektemp2.png"     alt="$obs.label.extraTemp2" />
-            #end if
-            #if $week.extraTemp3.has_data
-            <img src="weektemp3.png"     alt="$obs.label.extraTemp3" />
+            #if $week.extraTemp1.has_data or $week.extraTemp2.has_data or $week.extraTemp3.has_data
+            <img src="weektemp.png"      alt="$obs.label.extraTemp1" />
             #end if
             #if $week.rxCheckPercent.has_data
             <img src="weekrx.png"        alt="$obs.label.rxCheckPercent"/>
@@ -123,14 +111,8 @@
             #if $month.inTemp.has_data
             <img src="monthtempin.png"    alt="$obs.label.inTemp" />
             #end if
-            #if $month.extraTemp1.has_data
-            <img src="monthtemp1.png"     alt="$obs.label.extraTemp1" />
-            #end if
-            #if $month.extraTemp2.has_data
-            <img src="monthtemp2.png"     alt="$obs.label.extraTemp2" />
-            #end if
-            #if $month.extraTemp3.has_data
-            <img src="monthtemp3.png"     alt="$obs.label.extraTemp3" />
+            #if $month.extraTemp1.has_data or $month.extraTemp2.has_data or $month.extraTemp3.has_data
+            <img src="monthtemp.png"      alt="$obs.label.extraTemp1" />
             #end if
             #if $month.rxCheckPercent.has_data
             <img src="monthrx.png"        alt="$obs.label.rxCheckPercent"/>
@@ -154,14 +136,8 @@
             #if $year.inTemp.has_data
             <img src="yeartempin.png"    alt="$obs.label.inTemp" />
             #end if
-            #if $year.extraTemp1.has_data
-            <img src="yeartemp1.png"     alt="$obs.label.extraTemp1" />
-            #end if
-            #if $year.extraTemp2.has_data
-            <img src="yeartemp2.png"     alt="$obs.label.extraTemp2" />
-            #end if
-            #if $year.extraTemp3.has_data
-            <img src="yeartemp3.png"     alt="$obs.label.extraTemp3" />
+            #if $year.extraTemp1.has_data or $year.extraTemp2.has_data or $year.extraTemp3.has_data
+            <img src="yeartemp.png"      alt="$obs.label.extraTemp1" />
             #end if
             #if $year.rxCheckPercent.has_data
             <img src="yearrx.png"        alt="$obs.label.rxCheckPercent"/>
