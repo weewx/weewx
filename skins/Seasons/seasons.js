@@ -1,6 +1,6 @@
-/* javascript for weewx standard report */
+/* javascript for weewx Seasons report */
 
-var cookie_prefix = "weewx.standard.";
+var cookie_prefix = "weewx.seasons.";
 
 function setup(widgets) {
   // set the state of the history widget

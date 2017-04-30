@@ -1,4 +1,4 @@
-## map module for standard skin
+## map module for weewx skins
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
 #errorCatcher Echo

@@ -1,4 +1,4 @@
-## sensors module for standard skin
+## sensors module for weewx skins
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
 #errorCatcher Echo

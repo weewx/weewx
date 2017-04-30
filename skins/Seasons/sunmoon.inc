@@ -1,4 +1,4 @@
-## sun/moon rise/set module for standard skin
+## sun/moon rise/set module for weewx skins
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
 #errorCatcher Echo

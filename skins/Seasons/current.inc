@@ -1,4 +1,4 @@
-## current module for standard skin
+## current module for weewx skins
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
 #errorCatcher Echo
