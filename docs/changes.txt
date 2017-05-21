@@ -16,6 +16,9 @@ Added missing aggregation type 'min_ge'. Thanks to user Christopher McAvaney!
 Fixed bug in wmr200 driver that resulted in archive records with no
 interval field and 'NOT NULL constraint failed: archive.interval' errors.
 
+When extracting observation type stormRain (Davis Vantage only), the
+accumulators now extract the last (instead of average) value.
+
 
 3.7.1 03/22/2017
 

@@ -460,6 +460,8 @@ defaults_ini = """
         extractor = last
     [[totalRain]]
         extractor = last
+    [[stormRain]]
+        extractor = last
     [[wind]]
         accumulator = vector
         extractor = wind
