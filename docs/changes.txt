@@ -19,6 +19,8 @@ interval field and 'NOT NULL constraint failed: archive.interval' errors.
 When extracting observation type stormRain (Davis Vantage only), the
 accumulators now extract the last (instead of average) value.
 
+Added additional accumulator extractors.
+
 
 3.7.1 03/22/2017
 
