@@ -100,6 +100,15 @@
           </td>
           #end for
         </tr>
+		#if $day.ET.has_data and $day.ET.sum.raw > 0.0
+          <tr>
+	      <td class="label">$obs.label.ET</td>
+          <td class="units">$unit.label.ET</td>
+          #for $archive in $archive_data
+          <td class="data new_row">$archive.ET.sum.formatted</td>
+          #end for
+          </tr>
+		#end if
         <tr>
           <td class="label">$obs.label.wind_max</td>
           <td class="units">
@@ -157,21 +166,6 @@
             <span class="timestamp">$archive.UV.maxtime</span><br/>
             $archive.UV.min.formatted<br/>
             <span class="timestamp">$archive.UV.mintime</span>
-          </td>
-          #end for
-        </tr>
-        #end if
-
-        #if $day.ET.has_data and $day.ET.sum.raw > 0.0
-        <tr>
-          <td class="label">$obs.label.ET</td>
-          <td class="units">$unit.label.ET</td>
-          #for $archive in $archive_data
-          <td class="data new_row">
-            $archive.ET.max.formatted<br/>
-            <span class="timestamp">$archive.ET.maxtime</span><br/>
-            $archive.ET.min.formatted<br/>
-            <span class="timestamp">$archive.ET.mintime</span>
           </td>
           #end for
         </tr>
