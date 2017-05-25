@@ -18,6 +18,7 @@ import weeutil.weeutil
 import weewx.reportengine
 import weewx.units
 from weeutil.weeutil import to_bool, to_int, to_float
+from weewx.units import ValueTuple
 
 #===============================================================================
 #                    Class ImageGenerator
@@ -143,6 +144,24 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     if weewx.debug:
                         assert(len(start_vec_t) == len(stop_vec_t))
 
+                    # Get the type of plot ("bar', 'line', or 'vector')
+                    plot_type = line_options.get('plot_type', 'line')
+
+                    try:
+                        if aggregate_type.lower() in ('avg', 'max', 'min') and plot_type != 'bar':
+                            # put the point in the middle of the aggregate_interval
+                            try:
+                                start_vec_t = ValueTuple([x - aggregate_interval / 2 for x in start_vec_t[0]], start_vec_t[1], start_vec_t[2])
+                            except TypeError:
+                                start_vec_t = ValueTuple(start_vec_t[0] - aggregate_interval / 2, start_vec_t[1], start_vec_t[2])
+                            try:
+                                stop_vec_t = ValueTuple([x - aggregate_interval / 2 for x in stop_vec_t[0]], stop_vec_t[1], stop_vec_t[2])
+                            except TypeError:
+                                stop_vec_t = ValueTuple(stop_vec_t[0] - aggregate_interval / 2, stop_vec_t[1], stop_vec_t[2])
+                    except AttributeError:
+                        # aggregate_type was none: exception raised, anyway no moving needed
+                        pass
+                    
                     # Do any necessary unit conversions:
                     new_start_vec_t = self.converter.convert(start_vec_t)
                     new_stop_vec_t  = self.converter.convert(stop_vec_t)
@@ -170,9 +189,6 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Get the line width, if explicitly requested.
                     width = to_int(line_options.get('width'))
                     
-                    # Get the type of plot ("bar', 'line', or 'vector')
-                    plot_type = line_options.get('plot_type', 'line')
-
                     interval_vec = None                        
 
                     # Some plot types require special treatments:
