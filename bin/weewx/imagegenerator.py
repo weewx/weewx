@@ -91,8 +91,12 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 
                 # Calculate a suitable min, max time for the requested time
                 # span and set it
+                timeinc_user = plot_options.get('x_interval', None)
                 (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(plotgen_ts - int(plot_options.get('time_length', 86400)), plotgen_ts)
+                if timeinc_user != None:
+                    timeinc = int(timeinc_user)
                 plot.setXScaling((minstamp, maxstamp, timeinc))
+
                 
                 # Set the y-scaling, using any user-supplied hints: 
                 plot.setYScaling(weeutil.weeutil.convertToFloat(plot_options.get('yscale', ['None', 'None', 'None'])))
@@ -200,6 +204,10 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     marker_type = line_options.get('marker_type')
                     marker_size = to_int(line_options.get('marker_size', 8))
                     
+                    # Get the spacings between labels, i.e. every how many lines a label is drawn
+                    x_label_spacing = plot_options.get('x_label_spacing', 2)
+                    y_label_spacing = plot_options.get('y_label_spacing', 2)
+
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(
                         new_stop_vec_t[0], new_data_vec_t[0],
@@ -212,7 +220,9 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         marker_size   = marker_size,
                         bar_width     = interval_vec,
                         vector_rotate = vector_rotate,
-                        gap_fraction  = gap_fraction))
+                        gap_fraction  = gap_fraction,
+                        x_label_spacing = x_label_spacing,
+                        y_label_spacing = y_label_spacing))
 
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()
