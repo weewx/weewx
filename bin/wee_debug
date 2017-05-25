@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/local/bin/python
 #
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com> and
 #                            Matthew Wall
@@ -202,14 +202,14 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
     _system = platform.system()
     if _system == 'Linux':
         generateLinuxSysInfo(verbosity)
-    elif _system == 'BSD':
-        print "System info could not be provided, unsupported operating system(BSD)."
+    elif _system.find ("BSD") != -1:
+        generateFreeBSDSysInfo(verbosity)
     else:
         print "System info could not be provided, unsupported operating system(%s)." % _system
     print
 
     # weewx version info
-    print "General weewx info"
+    print "General Weewx info"
     print "  Weewx version %s detected." % VERSION
     print
 
@@ -306,6 +306,25 @@ def generateDebugConf(config_dict):
                                     OBFUSCATE_MAP['do_not_obfuscate'])
     # put obfuscated config_dict into weewx.conf form
     _obs_config_dict.write(sys.stdout)
+
+def generateFreeBSDSysInfo(verbosity):
+    # % string operator deprecated Python 3.1 and up.
+    """ Generate system info for a *BSD system """
+    if verbosity > 0:
+       print "\n  Operating system: " + str(platform.uname())
+       print "  Release:   " + platform.release()
+       print "  Platform:  " + platform.platform()
+       print "  Processor: " + platform.processor()
+       print "  System:    " + platform.system()
+
+    # load info
+    if verbosity > 0:
+       loadavg =  '%.2f %.2f %.2f' % os.getloadavg()
+       (load1, load5, load15) = loadavg.split(" ")
+   
+       print "  1 minute load average:  " + load1
+       print "  5 minute load average:  " + load5
+       print "  15 minute load average: " + load15
 
 def generateLinuxSysInfo(verbosity):
     """ Generate system info for a Linux system """
