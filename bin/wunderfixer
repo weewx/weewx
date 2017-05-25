@@ -109,7 +109,11 @@ def main() :
                       "Default is to take from configuration file.")
     parser.add_option("-d", "--date", type="string", dest="date", metavar="YYYY-mm-dd",
                       help="Date to check as a string of form YYYY-mm-dd. Default is today.")
-    parser.add_option("-e", "--epsilon", type="int", dest="epsilon", metavar="SECONDS", 
+    parser.add_option("-r", "--range", type="int", dest="dayrange",  metavar="DAYS",
+                      default=1,
+                      help="The number (range) of days to be checked."
+                      "Starting from the date specified by --date going backward")
+    parser.add_option("-e", "--epsilon", type="int", dest="epsilon", metavar="SECONDS",
                       default=120,
                       help="Timestamps within this value in seconds compare true. Default "
                       "is 120.")
@@ -170,27 +174,35 @@ def main() :
 
     if options.date:
         date_tt = time.strptime(options.date, "%Y-%m-%d")
-        date_date = datetime.date(date_tt[0], date_tt[1], date_tt[2])
     else:
         # If no date option was specified on the command line, use today's date:
-        date_date = datetime.date.today()
+        date_tt = time.strptime(str(datetime.date.today()), "%Y-%m-%d")
+
+    drange = options.dayrange
+    if options.verbose:
+        print "\nWeather Underground Station:  ", options.station
+        print "Date to check:                 ", datetime.date(date_tt[0], date_tt[1], date_tt[2])
+        print "Number of days:                ", drange
 
     epsilon = options.epsilon
-    
-    if options.verbose:
-        print "Weather Underground Station:  ", options.station
-        print "Date to check:                ", date_date
-        wlog.slog(syslog.LOG_INFO, "Checking Weather Underground station '%s' data for date %s" % (options.station, date_date))
 
+    for day in range(0, drange):
 
-    # Get all the time stamps in the archive for the given day:
-    archive_results = getArchiveDayTimeStamps(dbmanager_t, date_date)
+        date_date = datetime.date(date_tt[0], date_tt[1], date_tt[2]) - datetime.timedelta(day)
 
-    if options.verbose :
-        print "Number of archive records:    ", len(archive_results)
+        if options.verbose:
+            print "\n=== Day %d === " % (day)
+            print "Date to check:                ", date_date
+            wlog.slog(syslog.LOG_INFO, "Checking Weather Underground station '%s' data for date %s" % (options.station, date_date))
 
-    # Get a WunderStation object so we can interact with Weather Underground
-    wunder = WunderStation(queue=None,  # Bogus queue. We will not be using it.
+        # Get all the time stamps in the archive for the given day:
+        archive_results = getArchiveDayTimeStamps(dbmanager_t, date_date)
+
+        if options.verbose :
+            print "Number of archive records:    ", len(archive_results)
+
+        # Get a WunderStation object so we can interact with Weather Underground
+        wunder = WunderStation(queue=None,  # Bogus queue. We will not be using it.
                            manager_dict=dbmanager_t,
                            station=options.station,
                            password=options.password,
@@ -198,96 +210,96 @@ def main() :
                            protocol_name = "wunderfixer",
                            softwaretype = "wunderfixer-%s" % __version__)
 
-    try:
-        # Get all the time stamps on the Weather Underground for the given day:
-        wunder_results = wunder.getDayTimeStamps(date_date)
-    except Exception:
-        wlog.slog(syslog.LOG_ERR, "Could not get Weather Underground data. Exiting.")
-        exit("Could not get Weather Underground data. Exiting.")
+        try:
+            # Get all the time stamps on the Weather Underground for the given day:
+            wunder_results = wunder.getDayTimeStamps(date_date)
+        except Exception:
+            wlog.slog(syslog.LOG_ERR, "Could not get Weather Underground data. Exiting.")
+            exit("Could not get Weather Underground data. Exiting.")
         
-    if options.verbose :
-        print "Number of WU records:         ", len(wunder_results)
-    wlog.slog(syslog.LOG_DEBUG, "Found %d archive records and %d WU records" % (len(archive_results), len(wunder_results)))
+        if options.verbose :
+            print "Number of WU records:         ", len(wunder_results)
+        wlog.slog(syslog.LOG_DEBUG, "Found %d archive records and %d WU records" % (len(archive_results), len(wunder_results)))
 
-    #===========================================================================
-    # Unfortunately, the WU does not signal an error if you ask for a CSV file
-    # on a non-existent station. So, there's no way to tell the difference
-    # between asking for results from a non-existent station, versus a
-    # legitimate station that has no data for the given day. Warn the user, then
-    # proceed. 
-    #===========================================================================
-    if len(wunder_results) == 0 :
-        sys.stdout.flush()
-        print >>sys.stderr, "\nNo results returned from Weather Underground (perhaps a bad station name??)."
-        print >>sys.stderr, "Publishing anyway."
-        wlog.slog(syslog.LOG_ERR, "No results returned from Weather Underground for station '%s'"
-                  "(perhaps a bad station name??). Publishing anyway." % options.station)
+        #===========================================================================
+        # Unfortunately, the WU does not signal an error if you ask for a CSV file
+        # on a non-existent station. So, there's no way to tell the difference
+        # between asking for results from a non-existent station, versus a
+        # legitimate station that has no data for the given day. Warn the user, then
+        # proceed. 
+        #===========================================================================
+        if len(wunder_results) == 0 :
+            sys.stdout.flush()
+            print >>sys.stderr, "\nNo results returned from Weather Underground (perhaps a bad station name??)."
+            print >>sys.stderr, "Publishing anyway."
+            wlog.slog(syslog.LOG_ERR, "No results returned from Weather Underground for station '%s'"
+                      "(perhaps a bad station name??). Publishing anyway." % options.station)
 
-    # Look for any records missing in the WU list, then sort the results:        
-    missing_records = sorted([x for x in archive_results if not x in wunder_results])
+        # Look for any records missing in the WU list, then sort the results:        
+        missing_records = sorted([x for x in archive_results if not x in wunder_results])
     
-    if options.verbose :
-        print "Number of missing records:    ", len(missing_records)
-        if missing_records:
-            print "\nMissing records:"
-    wlog.slog(syslog.LOG_INFO, "%d Weather Underground records missing." % len(missing_records))
+        if options.verbose :
+            print "Number of missing records:    ", len(missing_records)
+            if missing_records:
+                print "\nMissing records:"
+        wlog.slog(syslog.LOG_INFO, "%d Weather Underground records missing." % len(missing_records))
     
-    no_published = 0
-    # Loop through the missing time stamps:
-    for time_TS in missing_records:
-        ts = time_TS.ts
-        # Get the archive record for this timestamp:
-        record = dbmanager_t.getRecord(ts)
-        # Print it out:
-        print >>sys.stdout, print_record(record),
-        sys.stdout.flush()
+        no_published = 0
+        # Loop through the missing time stamps:
+        for time_TS in missing_records:
+            ts = time_TS.ts
+            # Get the archive record for this timestamp:
+            record = dbmanager_t.getRecord(ts)
+            # Print it out:
+            print >>sys.stdout, print_record(record),
+            sys.stdout.flush()
 
-        # If this is an interactive session (option "-q") see if the
-        # user wants to change it:
-        if options.query :
-            _ans=raw_input("...fix? (y/n/a/q):")
-            if _ans == "q" :
-                print "Quitting."
-                wlog.slog(syslog.LOG_DEBUG, "... exiting")
-                exit()
-            if _ans == "a" :
-                _ans = "y"
-                options.query=False
+            # If this is an interactive session (option "-q") see if the
+            # user wants to change it:
+            if options.query :
+                _ans=raw_input("...fix? (y/n/a/q):")
+                if _ans == "q" :
+                    print "Quitting."
+                    wlog.slog(syslog.LOG_DEBUG, "... exiting")
+                    exit()
+                if _ans == "a" :
+                    _ans = "y"
+                    options.query=False
             
-        if _ans=='y' :
-            try:
-                # Post the data to the WU:
-                wunder.process_record(record, dbmanager_t)
-                no_published += 1
-                print >>sys.stdout, " ...published."
-                wlog.slog(syslog.LOG_DEBUG, "%s ...published" % timestamp_to_string(record['dateTime']))
-            except weewx.restx.BadLogin, e:
-                print >>sys.stderr, "Bad login"
-                print >>sys.stderr, e
-                exit("Bad login")                
-            except weewx.restx.FailedPost, e:
-                print >>sys.stderr, e
-                print >>sys.stderr, "Aborted."
-                wlog.slog(syslog.LOG_ERR, "%s ...error %s. Aborting." % (timestamp_to_string(record['dateTime']), e))
-                exit("Failed post")
-            except IOError, e:
-                print >>sys.stderr, " ... not published."
-                print "Reason: ", e
-                wlog.slog(syslog.LOG_ERR, "%s ...not published. Reason '%s'" % (timestamp_to_string(record['dateTime']), e))
-                if hasattr(e, 'reason'):
-                    print >>sys.stderr, "Failed to reach server. Reason: %s" % e.reason
-                    wlog.slog(syslog.LOG_ERR, "%s ...not published. Failed to reach server. Reason '%s'" % 
-                              (timestamp_to_string(record['dateTime']), e.reason))
-                if hasattr(e, 'code'):
-                    print >>sys.stderr, "Failed to reach server. Error code: %s" % e.code
-                    wlog.slog(syslog.LOG_ERR, "%s ...not published. Failed to reach server. Error code '%s'" % 
-                              (timestamp_to_string(record['dateTime']), e.code))
+            if _ans=='y' :
+                try:
+                    # Post the data to the WU:
+                    wunder.process_record(record, dbmanager_t)
+                    no_published += 1
+                    print >>sys.stdout, " ...published."
+                    wlog.slog(syslog.LOG_DEBUG, "%s ...published" % timestamp_to_string(record['dateTime']))
+                except weewx.restx.BadLogin, e:
+                    print >>sys.stderr, "Bad login"
+                    print >>sys.stderr, e
+                    exit("Bad login")
+                except weewx.restx.FailedPost, e:
+                    print >>sys.stderr, e
+                    print >>sys.stderr, "Aborted."
+                    wlog.slog(syslog.LOG_ERR, "%s ...error %s. Aborting." % (timestamp_to_string(record['dateTime']), e))
+                    exit("Failed post")
+                except IOError, e:
+                    print >>sys.stderr, " ... not published."
+                    print "Reason: ", e
+                    wlog.slog(syslog.LOG_ERR, "%s ...not published. Reason '%s'" % (timestamp_to_string(record['dateTime']), e))
+                    if hasattr(e, 'reason'):
+                        print >>sys.stderr, "Failed to reach server. Reason: %s" % e.reason
+                        wlog.slog(syslog.LOG_ERR, "%s ...not published. Failed to reach server. Reason '%s'" %
+                                  (timestamp_to_string(record['dateTime']), e.reason))
+                    if hasattr(e, 'code'):
+                        print >>sys.stderr, "Failed to reach server. Error code: %s" % e.code
+                        wlog.slog(syslog.LOG_ERR, "%s ...not published. Failed to reach server. Error code '%s'" % 
+                                      (timestamp_to_string(record['dateTime']), e.code))
 
-        else :
-            print " ... skipped."
-            wlog.slog(syslog.LOG_DEBUG, "%s ...skipped" % timestamp_to_string(record['dateTime']))
-    wlog.slog(syslog.LOG_INFO, "%s out of %s missing records published to '%s' for date %s."
-              " Wunderfixer exiting." % (no_published, len(missing_records), options.station, date_date))
+            else :
+                print " ... skipped."
+                wlog.slog(syslog.LOG_DEBUG, "%s ...skipped" % timestamp_to_string(record['dateTime']))
+        wlog.slog(syslog.LOG_INFO, "%s out of %s missing records published to '%s' for date %s."
+                  " Wunderfixer exiting." % (no_published, len(missing_records), options.station, date_date))
 
 #===============================================================================
 #                             class WunderStation
