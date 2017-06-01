@@ -29,9 +29,9 @@
     #set $minutes = $seconds//60
     #set $seconds %= 60
     #if $difference > 0
-      #set $daylight_str = "%d hours, %d minutes, %d seconds <br/>%d seconds more than yesterday" % ($hours, $minutes, $seconds, $difference)
+      #set $daylight_str = "%d hours, %d minutes, %d seconds <br/>%d minutes, %d seconds more than yesterday" % ($hours, $minutes, $seconds, $difference // 60, $difference % 60 )
     #else
-      #set $daylight_str = "%d hours, %d minutes, %d seconds <br/>%d seconds less than yesterday" % ($hours, $minutes, $seconds, $difference)
+      #set $daylight_str = "%d hours, %d minutes, %d seconds <br/>%d minutes, %d seconds less than yesterday" % ($hours, $minutes, $seconds, abs($difference) // 60, abs($difference) % 60 )
     #end if
 
 
