@@ -28,12 +28,12 @@
     #set $seconds %= 3600
     #set $minutes = $seconds//60
     #set $seconds %= 60
-    #if $difference > 0
-      #set $daylight_str = "%d hours, %d minutes, %d seconds <br/>%d seconds more than yesterday" % ($hours, $minutes, $seconds, $difference)
-    #else
-      #set $daylight_str = "%d hours, %d minutes, %d seconds <br/>%d seconds less than yesterday" % ($hours, $minutes, $seconds, $difference)
-    #end if
 
+    #if $difference > 0
+      #set $daylight_str = "%d hours, %d minutes, %d seconds <br/>%s %d seconds more than yesterday" % ($hours, $minutes, $seconds, str(int($difference) // 60) + ' minutes,' if ($difference // 60) > 0 else '', $difference % 60 if ($difference // 60) > 0 else $difference)
+    #else
+      #set $daylight_str = "%d hours, %d minutes, %d seconds <br/>%s %d seconds less than yesterday" % ($hours, $minutes, $seconds, str(int($difference) // -60) + ' minutes,' if ($difference // -60) > 0 else '', abs($difference % -60) if ($difference // -60) > 0 else abs($difference))
+    #end if
 
   #end if
 #end if
