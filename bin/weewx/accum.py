@@ -373,6 +373,16 @@ class Accum(dict):
         
     def extract_avg(self, record, obs_type):
         record[obs_type] = self[obs_type].avg
+        
+    def extract_min(self, record, obs_type):
+        record[obs_type] = self[obs_type].min
+        
+    def extract_max(self, record, obs_type):
+        record[obs_type] = self[obs_type].max
+        
+    def extract_count(self, record, obs_type):
+        record[obs_type] = self[obs_type].count
+        
 
     #
     # Miscellaneous, utility functions
@@ -424,6 +434,9 @@ merge_functions = {'minmax' : Accum.merge_minmax,
 
 extract_functions = {'avg'  : Accum.extract_avg,
                      'sum'  : Accum.extract_sum,
+                     'min'  : Accum.extract_min,
+                     'max'  : Accum.extract_max,
+                     'count': Accum.extract_count,
                      'last' : Accum.extract_last,
                      'wind' : Accum.extract_wind,
                      'noop' : Accum.noop}
@@ -459,6 +472,8 @@ defaults_ini = """
     [[yearRain]]
         extractor = last
     [[totalRain]]
+        extractor = last
+    [[stormRain]]
         extractor = last
     [[wind]]
         accumulator = vector

@@ -1286,7 +1286,7 @@ class DaySummaryManager(Manager):
             _result = _row[0]
         
         elif aggregate_type in ['mintime', 'maxmintime', 'maxtime', 'minmaxtime', 'maxsumtime',
-                               'count', 'max_ge', 'max_le', 'min_le', 'sum_ge']:
+                               'count', 'max_ge', 'max_le', 'min_ge', 'min_le', 'sum_ge']:
             # These aggregates are always integers:
             _result = int(_row[0])
 

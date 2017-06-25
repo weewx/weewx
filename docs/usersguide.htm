@@ -132,7 +132,7 @@ Version: 3.7
         <p>The time on some stations is automatically synchronized with the
             weeWX server nominally every four hours.
             The synchronization frequency can be adjusted in the
-            <span class='code'>weewx</span> configuration.</p>
+            weeWX configuration.</p>
 
         <h2>Python</h2>
 
@@ -401,7 +401,7 @@ Version: 3.7
                     <tr>
                         <td>Configuration directory</td>
                         <td class="symcode">CONFIG_ROOT</td>
-                        <td class='tty'>/etc/weewx</td>
+                        <td class='tty'>/etc/weewx/</td>
                     </tr>
                     <tr>
                         <td>Skins and templates</td>
@@ -426,7 +426,7 @@ Version: 3.7
                     <tr>
                         <td>Examples</td>
                         <td class="symcode">EXAMPLE_ROOT</td>
-                        <td class='tty'>/usr/share/doc/weewx/examples/</td>
+                        <td class='tty'>/usr/share/doc/weewx-x.y.z/examples/</td>
                     </tr>
                     <tr>
                         <td>PID file</td>
@@ -454,7 +454,7 @@ Version: 3.7
                     <tr>
                         <td>weeWX root directory</td>
                         <td class="symcode">WEEWX_ROOT</td>
-                        <td class="tty">/Users/Shared/weewx</td>
+                        <td class="tty">/Users/Shared/weewx/</td>
                     </tr>
                     <tr>
                         <td>Executables</td>
@@ -474,7 +474,7 @@ Version: 3.7
                     <tr>
                         <td>SQLite databases</td>
                         <td class="symcode">SQLITE_ROOT</td>
-                        <td class='tty'>/Users/Shared/weewx/archive</td>
+                        <td class='tty'>/Users/Shared/weewx/archive/</td>
                     </tr>
                     <tr>
                         <td>Web pages and images</td>
@@ -518,7 +518,7 @@ Version: 3.7
                     <tr>
                         <td>weeWX root directory</td>
                         <td class="symcode">WEEWX_ROOT</td>
-                        <td class="tty">/home/weewx</td>
+                        <td class="tty">/home/weewx/</td>
                     </tr>
                     <tr>
                         <td>Executables</td>
@@ -538,7 +538,7 @@ Version: 3.7
                     <tr>
                         <td>SQLite databases</td>
                         <td class="symcode">SQLITE_ROOT</td>
-                        <td class='tty'>/home/weewx/archive</td>
+                        <td class='tty'>/home/weewx/archive/</td>
                     </tr>
                     <tr>
                         <td>Web pages and images</td>
@@ -582,7 +582,7 @@ Version: 3.7
             as log messages. Once everything is working properly, run it as a
             daemon.</p>
 
-        <h2>Running directly</h2>
+        <h2 id="Running_directly">Running directly</h2>
 
         <p>To run weeWX directly, invoke
             the main program, <span class="code">weewxd</span>, giving
@@ -610,7 +610,7 @@ Version: 3.7
         <p>Note that this <em>only</em> rereads the configuration file. It will
             not reload any code.</p>
 
-        <h2>Running as a daemon</h2>
+        <h2 id="Running_as_a_daemon">Running as a daemon</h2>
 
         <p>For unattended operations it is best to have weeWX
             run as a daemon, started automatically when the server is rebooted. </p>
