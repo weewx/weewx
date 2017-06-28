@@ -65,6 +65,7 @@ import configobj
 import Cheetah.Template
 import Cheetah.Filters
 
+import weedb
 import weeutil.weeutil
 import weewx.almanac
 import weewx.reportengine
@@ -476,7 +477,8 @@ class Almanac(SearchList):
         # weather database. The database might not exist, so be prepared for
         # a KeyError exception.
         try:
-            archive = self.generator.db_binder.get_manager()
+            binding = self.generator.skin_dict.get('data_binding', 'wx_binding')
+            archive = self.generator.db_binder.get_manager(binding)
         except (KeyError, weewx.UnknownBinding, weedb.NoDatabaseError):
             pass
         else:

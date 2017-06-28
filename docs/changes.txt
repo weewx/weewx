@@ -23,6 +23,8 @@ accumulators now extract the last (instead of average) value.
 
 Added additional accumulator extractors.
 
+Allow reports to be run against a binding other than `wx_binding`.
+
 
 3.7.1 03/22/2017
 
