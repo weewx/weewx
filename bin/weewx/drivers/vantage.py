@@ -2056,15 +2056,21 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     @staticmethod    
     def set_altitude(station, altitude_ft):
         """Set the console station altitude"""
-        # Hit the console to get the current barometer calibration data:
-        _bardata = station.getBarData()
-
         ans = None
         while ans not in ['y', 'n']:    
-            print "Proceeding will set the barometer value to %.3f and the station altitude to %.1f feet." % (_bardata[0], altitude_ft)
+            print "Proceeding will set the station altitude to %.0f feet." % altitude_ft
             ans = raw_input("Are you sure you wish to proceed (y/n)? ")
             if ans == 'y':
-                station.setBarData(_bardata[0], altitude_ft)
+                # Hit the console to get the current barometer calibration data and preserve it:
+                _bardata = station.getBarData()
+                _barcal = _bardata[6]
+                # Set new altitude to station and clear previous _barcal value
+                station.setBarData(0.0, altitude_ft)
+                if _barcal != 0.0:
+                    # Hit the console again to get the new barometer data:
+                    _bardata = station.getBarData()
+                    # Set previous _barcal value
+                    station.setBarData(_bardata[0] + _barcal, altitude_ft)
             elif ans == 'n':
                 print "Nothing done."
 
