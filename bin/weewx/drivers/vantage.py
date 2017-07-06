@@ -422,6 +422,8 @@ class Vantage(weewx.drivers.AbstractDevice):
     transmitter_type_dict = {0: 'iss', 1: 'temp', 2: 'hum', 3: 'temp_hum', 4: 'wind',
                              5: 'rain', 6: 'leaf', 7: 'soil', 8: 'leaf_soil',
                              9: 'sensorlink', 10: 'none'}
+    repeater_dict         = {0: 'none', 1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'E', 6: 'F', 7: 'G', 8: 'H'}
+    listen_dict           = {0: 'inactive',  1: 'active'}
     
     def __init__(self, **vp_dict):
         """Initialize an object of type Vantage.
@@ -897,7 +899,7 @@ class Vantage(weewx.drivers.AbstractDevice):
 
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Lamp set to '%s'" % onoff)
         
-    def setTransmitterType(self, new_channel, new_transmitter_type, new_extra_temp, new_extra_hum):
+    def setTransmitterType(self, new_channel, new_repeater, new_transmitter_type, new_extra_temp, new_extra_hum):
         """Set the transmitter type for one of the eight channels."""
         
         # Default value just for tidiness.
@@ -905,6 +907,8 @@ class Vantage(weewx.drivers.AbstractDevice):
 
         # Check arguments are consistent.
         if new_channel not in range(1, 9):
+            raise weewx.ViolatedPrecondition("Invalid channel %d" % new_channel)
+        if new_repeater not in range(0, 9):
             raise weewx.ViolatedPrecondition("Invalid channel %d" % new_channel)
         if new_transmitter_type not in range(0, 11):
             raise weewx.ViolatedPrecondition("Invalid transmitter type %d" % new_transmitter_type)
@@ -919,9 +923,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             # Extra humidity is origin 1.
             new_temp_hum_bits = new_temp_hum_bits & 0x0F | (new_extra_hum << 4)
 
-        # Preserve top nibble, is related to repeaters.
-        old_type_bits = self._getEEPROM_value(0x19 + (new_channel - 1) * 2)[0]
-        new_type_bits = old_type_bits & 0xF0 | new_transmitter_type
+        new_type_bits = (new_repeater << 7) | new_transmitter_type
         # Transmitter type 10 is "none"; turn off listening too.
         usetx = 1 if new_transmitter_type != 10 else 0
         old_usetx_bits = self._getEEPROM_value(0x17)[0]
@@ -939,8 +941,8 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_data("NEWSETUP\n")
         
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Transmitter type for channel %d set to %d (%s)" %
-                      (new_channel, new_transmitter_type, Vantage.transmitter_type_dict[new_transmitter_type]))
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Transmitter type for channel %d set to %d (%s), repeater: %d (%s), %s" %
+                      (new_channel, new_transmitter_type, Vantage.transmitter_type_dict[new_transmitter_type], new_repeater, Vantage.repeater_dict[new_repeater], Vantage.listen_dict[usetx]))
 
     def setCalibrationWindDir(self, offset):
         """Set the on-board wind direction calibration."""
@@ -1070,7 +1072,8 @@ class Vantage(weewx.drivers.AbstractDevice):
         for transmitter_id in range(8):
             transmitter_type = Vantage.transmitter_type_dict[transmitter_data[transmitter_id * 2] & 0x0F]
             transmitter = {"transmitter_type": transmitter_type,
-                           "listen": (use_tx >> transmitter_id) & 1 }
+                           "repeater": Vantage.repeater_dict[transmitter_data[transmitter_id * 2] >> 7],
+                           "listen": Vantage.listen_dict[(use_tx >> transmitter_id) & 1] }
             if transmitter_type in ['temp', 'temp_hum']:
                 # Extra temperature is origin 0.
                 transmitter['temp'] = (transmitter_data[transmitter_id * 2 + 1] & 0xF) + 1
@@ -1768,7 +1771,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     [--set-interval=MINUTES] [--set-altitude=FEET] [--set-barometer=inHg] 
     [--set-bucket=CODE] [--set-rain-year-start=MM] 
     [--set-offset=VARIABLE,OFFSET]
-    [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
+    [--set-transmitter-type=CHANNEL,REPEATER,TYPE,TEMP,HUM]
     [--set-time] [--set-dst=[AUTO|ON|OFF]]
     [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
     [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE]
@@ -1800,8 +1803,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                           help="Set the onboard offset for VARIABLE inTemp, outTemp, extraTemp[1-7], inHumid, outHumid, extraHumid[1-7], soilTemp[1-4], leafTemp[1-4], windDir) to OFFSET (Fahrenheit, %, degrees)")
         parser.add_option("--set-transmitter-type", type=str,
                           dest="set_transmitter_type",
-                          metavar="CHANNEL,TYPE,TEMP,HUM",
-                          help="Set the transmitter type for CHANNEL (1-8), TYPE (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain, 6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none), as extra TEMP station and extra HUM station (both 1-7, if applicable)")
+                          metavar="CHANNEL,REPEATER,TYPE,TEMP,HUM",
+                          help="Set the transmitter type for CHANNEL (1-8), REPEATER (0=None, 1=A, 2=B .. 8=H), TYPE (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain, 6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none), as extra TEMP station and extra HUM station (both 1-7, if applicable)")
         parser.add_option("--set-time", action="store_true", dest="set_time",
                           help="Set the onboard clock to the current time.")
         parser.add_option("--set-dst", dest="set_dst",
@@ -1940,9 +1943,12 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         try:
             transmitter_list = station.getStnTransmitters()
             print >> dest, "    TRANSMITTERS: "
+            print >> dest, "      Channel Receive  Repeater Type"
             for transmitter_id in range(0, 8):
                 comment = ""
                 transmitter_type = transmitter_list[transmitter_id]["transmitter_type"]
+                repeater         = transmitter_list[transmitter_id]["repeater"]
+                listen           = transmitter_list[transmitter_id]["listen"]
                 if transmitter_type == 'temp_hum':
                     comment = "(as extra temperature %d and extra humidity %d)" % \
                         (transmitter_list[transmitter_id]["temp"], transmitter_list[transmitter_id]["hum"])
@@ -1952,7 +1958,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     comment = "(as extra humidity %d)" % transmitter_list[transmitter_id]["hum"]
                 elif transmitter_type == 'none':
                     transmitter_type = "(N/A)"
-                print >> dest, "      Channel %d:                    %s %s" % (transmitter_id + 1, transmitter_type, comment)
+                print >> dest, "      %d:      %-8s %-8s %s %s" % (transmitter_id + 1, listen, repeater, transmitter_type, comment)
             print >> dest, ""
         except:
             pass
@@ -2229,9 +2235,14 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         if not 1 <= channel <= 8:
             print "Channel number must be between 1 and 8"
             return 
-        transmitter_type = transmitter_list[1]
-        extra_temp = transmitter_list[2] if len(transmitter_list) > 2 else None
-        extra_hum = transmitter_list[3] if len(transmitter_list) > 3 else None 
+        repeater = transmitter_list[1]
+        if not 0 <= repeater <= 8:
+            print "Repeater number must be between 0 and 8"
+            return
+        transmitter_type = transmitter_list[2]
+        extra_temp = transmitter_list[3] if len(transmitter_list) > 3 else None
+        extra_hum = transmitter_list[4] if len(transmitter_list) > 4 else None
+        usetx = 1 if transmitter_type != 10 else 0
 
         try:
             transmitter_type_name = Vantage.transmitter_type_dict[transmitter_type]
@@ -2246,15 +2257,17 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             return
         ans = None
         while ans not in ['y', 'n']:
-            print "Proceeding will set channel %d to type %d (%s)." % (channel, transmitter_type, transmitter_type_name)
+            print "Proceeding will set channel %d to type %d (%s), repeater: %d (%s), %s." % (
+                channel, transmitter_type, transmitter_type_name, repeater, Vantage.repeater_dict[repeater], Vantage.listen_dict[usetx])
             ans = raw_input("Are you sure you want to proceed (y/n)? ")
             if ans == 'y':
                 try:
-                    station.setTransmitterType(channel, transmitter_type, extra_temp, extra_hum)
+                    station.setTransmitterType(channel, repeater, transmitter_type, extra_temp, extra_hum)
                 except StandardError, e:
                     print >> sys.stderr, "Unable to set transmitter type. Reason:\n\t****", e
                 else:
-                    print "Transmitter %d now set to type %d." % (channel, transmitter_type)
+                    print "Transmitter type for channel %d set to %d (%s), repeater: %d (%s), %s." % (
+                        channel, transmitter_type, transmitter_type_name, repeater, Vantage.repeater_dict[repeater], Vantage.listen_dict[usetx])
             else:
                 print "Nothing done."
 
