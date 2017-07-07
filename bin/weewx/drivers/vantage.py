@@ -870,6 +870,42 @@ class Vantage(weewx.drivers.AbstractDevice):
         self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Set barometer calibration.")
         
+    def setLatitude(self, latitude_dg):
+        """Set the stations latitude.
+
+        latitude_dg: Must be in the closed range -90.0...90.0
+        """
+        latitude = int(round((latitude_dg * 10), 0))
+        if latitude not in range(-900, 901):
+            raise weewx.ViolatedPrecondition, "vantage: Invalid latitude %.1f degree" % (latitude_dg,)
+
+        # Tell the console to put one byte in hex location 0x0B
+        self.port.send_data("EEBWR 0B 02\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(latitude & 0x00ff) + chr((latitude / 256) & 0x00ff) , max_tries=1)
+        # Then call NEWSETUP to get it to stick:
+        self.port.send_data("NEWSETUP\n")
+
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Station latitude set to %.1f degree" % (latitude_dg,))
+
+    def setLongitude(self, longitude_dg):
+        """Set the stations longitude.
+
+        latitude_dg: Must be in the closed range -180.0...180.0
+        """
+        longitude = int(round((longitude_dg * 10), 0))
+        if longitude not in range(-1800, 1801):
+            raise weewx.ViolatedPrecondition, "vantage: Invalid longitude %.1f degree" % (longitude_dg,)
+
+        # Tell the console to put one byte in hex location 0x0D
+        self.port.send_data("EEBWR 0D 02\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(longitude & 0x00ff) + chr((longitude / 256) & 0x00ff) , max_tries=1)
+        # Then call NEWSETUP to get it to stick:
+        self.port.send_data("NEWSETUP\n")
+
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Station longitude set to %.1f degree" % (longitude_dg,))
+
     def setArchiveInterval(self, archive_interval_seconds):
         """Set the archive interval of the Vantage.
         
@@ -1808,6 +1844,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def usage(self):
         return """%prog [config_file] [--help] [--info] [--clear-memory]
     [--set-interval=MINUTES] [--set-log-average-temps=[ON|OFF]]
+    [--set-latitude=DEGREE] [set-longitude=DEGREE]
     [--set-altitude=FEET] [--set-barometer=inHg]
     [--set-bucket=CODE] [--set-rain-year-start=MM]
     [--set-offset=VARIABLE,OFFSET]
@@ -1830,6 +1867,12 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--set-log-average-temps", dest="set_log_average_temps",
                           metavar="ON|OFF",
                           help="Turn the console average temperatures logging 'ON' or 'OFF'.")
+        parser.add_option("--set-latitude", type=float, dest="set_latitude",
+                          metavar="DEGREE",
+                          help="Sets the latitude of the station to the specified number of tenth degree.")
+        parser.add_option("--set-longitude", type=float, dest="set_longitude",
+                          metavar="DEGREE",
+                          help="Sets the longitude of the station to the specified number of tenth degree.")
         parser.add_option("--set-altitude", type=float, dest="set_altitude",
                           metavar="FEET",
                           help="Sets the altitude of the station to the specified number of feet.") 
@@ -1850,7 +1893,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                           metavar="CHANNEL,REPEATER,TYPE,TEMP,HUM",
                           help="Set the transmitter type for CHANNEL (1-8), REPEATER (0=None, 1=A, 2=B .. 8=H), TYPE (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain, 6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none), as extra TEMP station and extra HUM station (both 1-7, if applicable)")
         parser.add_option("--set-retransmit-id", type=int, dest="set_retransmit_id", metavar="ID",
-                          help="Set the retransmit ID to station. (0=Off, 1=A, 2=B .. 8=H)")
+                          help="Set the retransmit ID to station. (0=Off, 1, 2 .. 8)")
         parser.add_option("--set-time", action="store_true", dest="set_time",
                           help="Set the onboard clock to the current time.")
         parser.add_option("--set-dst", dest="set_dst",
@@ -1889,6 +1932,10 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             self.set_interval(station, options.set_interval)
         if options.set_log_average_temps is not None:
             self.set_log_average_temps(station, options.set_log_average_temps)
+        if options.set_latitude is not None:
+            self.set_latitude(station, options.set_latitude)
+        if options.set_longitude is not None:
+            self.set_longitude(station, options.set_longitude)
         if options.set_altitude is not None:
             self.set_altitude(station, options.set_altitude)
         if options.set_barometer is not None:
@@ -2139,6 +2186,42 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     print >> sys.stderr, "Unable to set new 'average temperature logging'. Reason:\n\t****", e
                 else:
                     print "'Average temperature logging' now set to '%s'." % (on_off)
+            elif ans == 'n':
+                print "Nothing done."
+
+    @staticmethod
+    def set_latitude(station, latitude_dg):
+        """Set the console station latitude"""
+
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Proceeding will set the latitude value to %.1f degree." % latitude_dg
+            ans = raw_input("Are you sure you wish to proceed (y/n)? ")
+            if ans == 'y':
+                try:
+                    station.setLatitude(latitude_dg)
+                except StandardError, e:
+                    print >> sys.stderr, "Unable to set new latitude. Reason:\n\t****", e
+                else:
+                    print "Station latitude set to %.1f degree." % latitude_dg
+            elif ans == 'n':
+                print "Nothing done."
+
+    @staticmethod
+    def set_longitude(station, longitude_dg):
+        """Set the console station longitude"""
+
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Proceeding will set the longitude value to %.1f degree." % longitude_dg
+            ans = raw_input("Are you sure you wish to proceed (y/n)? ")
+            if ans == 'y':
+                try:
+                    station.setLongitude(longitude_dg)
+                except StandardError, e:
+                    print >> sys.stderr, "Unable to set new longitude. Reason:\n\t****", e
+                else:
+                    print "Station longitude set to %.1f degree." % longitude_dg
             elif ans == 'n':
                 print "Nothing done."
 
