@@ -2308,12 +2308,12 @@ confirmation before proceeding.
 
     <pre class="tty">
 Using configuration file /home/weewx/weewx.conf
-Using Vantage driver version 3.0.8 (weewx.drivers.vantage)
+Using Vantage driver version 3.0.10 (weewx.drivers.vantage)
 Usage: wee_device [config_file] [--help] [--info] [--clear-memory]
     [--set-interval=MINUTES] [--set-altitude=FEET] [--set-barometer=inHg]
     [--set-bucket=CODE] [--set-rain-year-start=MM]
     [--set-offset=VARIABLE,OFFSET]
-    [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
+    [--set-transmitter-type=CHANNEL,REPEATER,TYPE,TEMP,HUM]
     [--set-time] [--set-dst=[AUTO|ON|OFF]]
     [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
     [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE]
@@ -2347,11 +2347,12 @@ Options:
                         soilTemp[1-4], leafTemp[1-4], windDir) to OFFSET
                         (Fahrenheit, %, degrees)
   --set-transmitter-type=CHANNEL,TYPE,TEMP,HUM
-                        Set the transmitter type for CHANNEL (1-8), TYPE
-                        (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain,
-                        6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none),
-                        as extra TEMP station and extra HUM station (both 1-7,
-                        if applicable)
+                        Set the transmitter type for CHANNEL (1-8), REPEATER
+                        (0=None, 1=A, 2=B .. 8=H), TYPE (0=iss, 1=temp, 2=hum,
+                        3=temp_hum, 4=wind, 5=rain, 6=leaf, 7=soil,
+                        8=leaf_soil, 9=sensorlink, 10=none), as extra TEMP
+                        station and extra HUM station (both 1-7, if
+                        applicable)
   --set-time            Set the onboard clock to the current time.
   --set-dst=AUTO|ON|OFF
                         Set DST to 'ON', 'OFF', or 'AUTO'
@@ -2382,8 +2383,8 @@ confirmation before proceeding.</pre>
     CONSOLE TYPE:                   VantagePro2
 
     CONSOLE FIRMWARE:
-      Date:                         Dec 11 2012
-      Version:                      3.12
+      Date:                         Jun  3 2013
+      Version:                      3.15
 
     CONSOLE SETTINGS:
       <span class="highlight">Archive interval:             300 (seconds)</span>
@@ -2409,14 +2410,15 @@ confirmation before proceeding.</pre>
       <span class="highlight">GMT offset:                   N/A</span>
 
     TRANSMITTERS:
-      <span class="highlight">Channel 1:                    iss</span>
-      <span class="highlight">Channel 2:                    (N/A)</span>
-      <span class="highlight">Channel 3:                    temp (as extra temperature 1)</span>
-      <span class="highlight">Channel 4:                    (N/A)</span>
-      <span class="highlight">Channel 5:                    (N/A)</span>
-      <span class="highlight">Channel 6:                    (N/A)</span>
-      <span class="highlight">Channel 7:                    (N/A)</span>
-      <span class="highlight">Channel 8:                    (N/A)</span>
+      Channel Receive  Repeater Type
+      <span class="highlight">   1    active   A        iss</span>
+      <span class="highlight">   2    active   none     temp_hum (as extra temperature 1 and extra humidity 1)</span>
+      <span class="highlight">   3    active   none     leaf_soil</span>
+      <span class="highlight">   4    inactive none     (N/A)</span>
+      <span class="highlight">   5    inactive none     (N/A)</span>
+      <span class="highlight">   6    inactive none     (N/A)</span>
+      <span class="highlight">   7    inactive none     (N/A)</span>
+      <span class="highlight">   8    inactive none     (N/A)</span>
 
     RECEPTION STATS:
       Total packets received:       10670
@@ -2515,17 +2517,17 @@ confirmation before proceeding.</pre>
                     class="code">wee_device</span> can do this using the command <span class="code">--set-transmitter-type</span>.
         </p>
 
-        <p>For example, to add an extra temperature sensor to channel 3, do the following:</p>
-        <pre class="tty cmd">wee_device --set-transmitter-type=3,1,2</pre>
-        <p>This says to turn on channel 3, set its type to 1 ("Temperature only"), and have it show up in the database
+        <p>For example, to add an extra temperature sensor to channel 3 and no repeater is used, do the following:</p>
+        <pre class="tty cmd">wee_device --set-transmitter-type=3,0,1,2</pre>
+        <p>This says to turn on channel 3, set its type to 1 ("Temperature only"), not via repeater and have it show up in the database
             as <span class="code">extraTemp2</span>. Here's another example, this time for a combined temperature /
-            humidity sensor:</p>
-        <pre class="tty cmd">wee_device --set-transmitter-type=5,3,2,4</pre>
-        <p>This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"), and it will
+            humidity sensor retransmitted via repeater A:</p>
+        <pre class="tty cmd">wee_device --set-transmitter-type=5,1,3,2,4</pre>
+        <p>This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"), via Repeater A and it will
             show up in the database as <span class="code">extraTemp2</span> and <span class="code">extraHumid4</span>.
         </p>
 
-        <p>The <span class="code">--help</span> option will give you the code for each sensor type.</p>
+        <p>The <span class="code">--help</span> option will give you the code for each sensor type and repeater id.</p>
 
         <h3>Action <span class="code">--set-dst</span></h3>
 
