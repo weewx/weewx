@@ -2310,7 +2310,8 @@ confirmation before proceeding.
 Using configuration file /home/weewx/weewx.conf
 Using Vantage driver version 3.0.10 (weewx.drivers.vantage)
 Usage: wee_device [config_file] [--help] [--info] [--clear-memory]
-    [--set-interval=MINUTES] [--set-altitude=FEET] [--set-barometer=inHg]
+    [--set-interval=MINUTES] [--set-log-average=[ON|OFF]]
+    [--set-altitude=FEET] [--set-barometer=inHg]
     [--set-bucket=CODE] [--set-rain-year-start=MM]
     [--set-offset=VARIABLE,OFFSET]
     [--set-transmitter-type=CHANNEL,REPEATER,TYPE,TEMP,HUM]
@@ -2333,6 +2334,8 @@ Options:
                         Sets the archive interval to the specified number of
                         minutes. Valid values are 1, 5, 10, 15, 30, 60, or
                         1200.
+  --set-log-average=ON|OFF
+                        Turn console average temperature logging 'ON' or 'OFF'.
   --set-altitude=FEET   Sets the altitude of the station to the specified
                         number of feet.
   --set-barometer=inHg  Sets the barometer reading of the station to a known
@@ -2347,7 +2350,7 @@ Options:
                         extraTemp[1-7], inHumid, outHumid, extraHumid[1-7],
                         soilTemp[1-4], leafTemp[1-4], windDir) to OFFSET
                         (Fahrenheit, %, degrees)
-  --set-transmitter-type=CHANNEL,TYPE,TEMP,HUM
+  --set-transmitter-type=CHANNEL,REPEATER,TYPE,TEMP,HUM
                         Set the transmitter type for CHANNEL (1-8), REPEATER
                         (0=None, 1=A, 2=B .. 8=H), TYPE (0=iss, 1=temp, 2=hum,
                         3=temp_hum, 4=wind, 5=rain, 6=leaf, 7=soil,
@@ -2391,6 +2394,7 @@ confirmation before proceeding.</pre>
 
     CONSOLE SETTINGS:
       <span class="highlight">Archive interval:             300 (seconds)</span>
+      <span class="highlight">Average temperature logging:  OFF</span>
       <span class="highlight">Altitude:                     700 (foot)</span>
       Wind cup type:                large
       <span class="highlight">Rain bucket type:             0.01 inches</span>
@@ -2475,6 +2479,14 @@ confirmation before proceeding.</pre>
         <p>Example: to change the archive interval to 10 minutes:</p>
         <pre class="tty cmd">wee_device --set-interval=10</pre>
 
+        <h3 id="vantage_log_average">
+            Action <span class="code">--set-log-average</span></h3>
+        <p>Use this command to activate or deactivate the <em>Log Average Temperature Values</em> feature of your console.<br>
+            If activated the console will log the average temperature values over the archive interval.<br>
+            If deactivated the console will log the temperature values at the end of the archive interval.</p>
+        <p>Example: Set average logging on:</p>
+        <pre class="tty cmd">wee_device --set-log-average=on</pre>
+
         <h3>Action <span class="code">--set-altitude</span></h3>
 
         <p>Use this command to set the console's stored altitude. The altitude must be in <em>feet</em>. Example:</p>
@@ -2534,7 +2546,8 @@ confirmation before proceeding.</pre>
 
         <p>The <span class="code">--help</span> option will give you the code for each sensor type and repeater id.</p>
 
-        <h3>Action <span class="code">--set-retransmit-id</span></h3>
+        <h3 id="vantage_retransmit">
+            Action <span class="code">--set-retransmit-id</span></h3>
 
         <p>Use this command to tell your console whether or not to act as a retransmitter.</p>
         <p>Note: The ID is the channel number your Vantage console or <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis

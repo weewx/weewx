@@ -923,12 +923,12 @@ class Vantage(weewx.drivers.AbstractDevice):
         self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "vantage: archive interval set to %d seconds" % (archive_interval_seconds,))
     
-    def setLogAverageTemps(self, on_off='OFF'):
+    def setLogAverage(self, on_off='OFF'):
         """Set the 'Average Temperature logging' to ON or OFF."""
         try:
             _setting = {'off': 1, 'on': 0}[on_off.lower()]
         except KeyError:
-            raise ValueError("Unknown Average Temp. log setting '%s'" % on_off)
+            raise ValueError("Unknown Average Temperature log setting '%s'" % on_off)
         
         # Tell the console to put one byte in hex location 0x2B
         self.port.send_data("EEBWR FFC 01\n")
@@ -1843,7 +1843,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     @property
     def usage(self):
         return """%prog [config_file] [--help] [--info] [--clear-memory]
-    [--set-interval=MINUTES] [--set-log-average-temps=[ON|OFF]]
+    [--set-interval=MINUTES] [--set-log-average=[ON|OFF]]
     [--set-latitude=DEGREE] [set-longitude=DEGREE]
     [--set-altitude=FEET] [--set-barometer=inHg]
     [--set-bucket=CODE] [--set-rain-year-start=MM]
@@ -1864,9 +1864,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--set-interval", type=int, dest="set_interval",
                           metavar="MINUTES",
                           help="Sets the archive interval to the specified number of minutes. Valid values are 1, 5, 10, 15, 30, 60, or 1200.")
-        parser.add_option("--set-log-average-temps", dest="set_log_average_temps",
+        parser.add_option("--set-log-average", dest="set_log_average",
                           metavar="ON|OFF",
-                          help="Turn the console average temperatures logging 'ON' or 'OFF'.")
+                          help="Turn console average temperature logging 'ON' or 'OFF'.")
         parser.add_option("--set-latitude", type=float, dest="set_latitude",
                           metavar="DEGREE",
                           help="Sets the latitude of the station to the specified number of tenth degree.")
@@ -1930,8 +1930,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             self.clear_memory(station)
         if options.set_interval is not None:
             self.set_interval(station, options.set_interval)
-        if options.set_log_average_temps is not None:
-            self.set_log_average_temps(station, options.set_log_average_temps)
+        if options.set_log_average is not None:
+            self.set_log_average(station, options.set_log_average)
         if options.set_latitude is not None:
             self.set_latitude(station, options.set_latitude)
         if options.set_longitude is not None:
@@ -1984,9 +1984,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         except Exception:
             _firmware_version = '<Unavailable>'
         try:
-            log_average_temps = station.getLogAverageTemps()
+            log_average = station.getLogAverageTemps()
         except Exception:
-            log_average_temps = "<Unavailable>"
+            log_average = "<Unavailable>"
         
         console_time = station.getConsoleTime()
         altitude_converted = weewx.units.convert(station.altitude_vt, station.altitude_unit)[0]
@@ -2014,7 +2014,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
       Rain:                         %s
       Wind:                         %s
       """ % (station.hardware_name, _firmware_date, _firmware_version,
-             station.archive_interval, log_average_temps,
+             station.archive_interval, log_average,
              altitude_converted, station.altitude_unit,
              station.wind_cup_size, station.rain_bucket_size,
              station.rain_year_start, console_time,
@@ -2172,7 +2172,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     print "Nothing done."
 
     @staticmethod
-    def set_log_average_temps(station, on_off):
+    def set_log_average(station, on_off):
         """Set the 'Average Temperature logging' to ON or OFF."""
 
         ans = None
@@ -2181,7 +2181,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             ans = raw_input("Are you sure you want to proceed (y/n)? ")
             if ans == 'y':
                 try:
-                    station.setLogAverageTemps(on_off)
+                    station.setLogAverage(on_off)
                 except StandardError, e:
                     print >> sys.stderr, "Unable to set new 'average temperature logging'. Reason:\n\t****", e
                 else:
