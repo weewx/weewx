@@ -887,6 +887,22 @@ class Vantage(weewx.drivers.AbstractDevice):
         self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "vantage: archive interval set to %d seconds" % (archive_interval_seconds,))
     
+    def setLogAverageTemps(self, on_off='OFF'):
+        """Set the 'Average Temperature logging' to ON or OFF."""
+        try:
+            _setting = {'off': 1, 'on': 0}[on_off.lower()]
+        except KeyError:
+            raise ValueError("Unknown Average Temp. log setting '%s'" % on_off)
+        
+        # Tell the console to put one byte in hex location 0x2B
+        self.port.send_data("EEBWR FFC 01\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(_setting), max_tries=1)
+        # Then call NEWSETUP to get it to stick:
+        self.port.send_data("NEWSETUP\n")
+
+        syslog.syslog(syslog.LOG_NOTICE, "Vantage: 'Average temperature logging' now set to '%s'" % on_off)
+    
     def setLamp(self, onoff='OFF'):
         """Set the lamp on or off"""
         try:        
@@ -954,9 +970,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_data("NEWSETUP\n")
         
         self._setup()
-        on_off = 'on'
-        if new_id == 0:
-            on_off = 'off'
+        on_off = "ON" if new_id else "OFF"
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Retransmit ID set to %d (%s)" %
                       (new_id, on_off))
     
@@ -1063,6 +1077,11 @@ class Vantage(weewx.drivers.AbstractDevice):
     def getFirmwareVersion(self):
         """Return the firmware version as a string."""
         return self.port.send_command('NVER\n')[0]
+    
+    def getLogAverageTemps(self):
+        """Return 'average temperature logging' setting"""
+        log_average_temps = "OFF"  if self._getEEPROM_value(0xffc)[0] else "ON"
+        return log_average_temps
     
     def getStnInfo(self):
         """Return lat / lon, time zone, etc."""
@@ -1788,8 +1807,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     @property
     def usage(self):
         return """%prog [config_file] [--help] [--info] [--clear-memory]
-    [--set-interval=MINUTES] [--set-altitude=FEET] [--set-barometer=inHg] 
-    [--set-bucket=CODE] [--set-rain-year-start=MM] 
+    [--set-interval=MINUTES] [--set-log-average-temps=[ON|OFF]]
+    [--set-altitude=FEET] [--set-barometer=inHg]
+    [--set-bucket=CODE] [--set-rain-year-start=MM]
     [--set-offset=VARIABLE,OFFSET]
     [--set-transmitter-type=CHANNEL,REPEATER,TYPE,TEMP,HUM]
     [--set-retransmit-id=ID]
@@ -1807,6 +1827,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--set-interval", type=int, dest="set_interval",
                           metavar="MINUTES",
                           help="Sets the archive interval to the specified number of minutes. Valid values are 1, 5, 10, 15, 30, 60, or 1200.")
+        parser.add_option("--set-log-average-temps", dest="set_log_average_temps",
+                          metavar="ON|OFF",
+                          help="Turn the console average temperatures logging 'ON' or 'OFF'.")
         parser.add_option("--set-altitude", type=float, dest="set_altitude",
                           metavar="FEET",
                           help="Sets the altitude of the station to the specified number of feet.") 
@@ -1864,6 +1887,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             self.clear_memory(station)
         if options.set_interval is not None:
             self.set_interval(station, options.set_interval)
+        if options.set_log_average_temps is not None:
+            self.set_log_average_temps(station, options.set_log_average_temps)
         if options.set_altitude is not None:
             self.set_altitude(station, options.set_altitude)
         if options.set_barometer is not None:
@@ -1911,7 +1936,11 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             _firmware_version = station.getFirmwareVersion()
         except Exception:
             _firmware_version = '<Unavailable>'
-    
+        try:
+            log_average_temps = station.getLogAverageTemps()
+        except Exception:
+            log_average_temps = "<Unavailable>"
+        
         console_time = station.getConsoleTime()
         altitude_converted = weewx.units.convert(station.altitude_vt, station.altitude_unit)[0]
     
@@ -1925,6 +1954,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     
     CONSOLE SETTINGS:
       Archive interval:             %d (seconds)
+      Average temperature logging:  %s
       Altitude:                     %d (%s)
       Wind cup type:                %s
       Rain bucket type:             %s
@@ -1937,7 +1967,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
       Rain:                         %s
       Wind:                         %s
       """ % (station.hardware_name, _firmware_date, _firmware_version,
-             station.archive_interval, altitude_converted, station.altitude_unit,
+             station.archive_interval, log_average_temps,
+             altitude_converted, station.altitude_unit,
              station.wind_cup_size, station.rain_bucket_size,
              station.rain_year_start, console_time,
              station.barometer_unit, station.temperature_unit,
@@ -1991,9 +2022,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         # Add retransmit ID, if we can:
         try:
             retransmitID = station.getStnRetransmitID()
-            on_off = 'on'
-            if retransmitID == 0:
-                on_off = 'off'
+            on_off = "ON" if retransmitID else "OFF"
             print >> dest, """    RETRANSMIT ID:                  %d (%s)""" % (retransmitID, on_off)
             print >> dest, ""
         except:
@@ -2095,7 +2124,25 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 elif ans == 'n':
                     print "Nothing done."
 
-    @staticmethod    
+    @staticmethod
+    def set_log_average_temps(station, on_off):
+        """Set the 'Average Temperature logging' to ON or OFF."""
+
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Proceeding will change the 'average temperature logging' to '%s'." % (on_off)
+            ans = raw_input("Are you sure you want to proceed (y/n)? ")
+            if ans == 'y':
+                try:
+                    station.setLogAverageTemps(on_off)
+                except StandardError, e:
+                    print >> sys.stderr, "Unable to set new 'average temperature logging'. Reason:\n\t****", e
+                else:
+                    print "'Average temperature logging' now set to '%s'." % (on_off)
+            elif ans == 'n':
+                print "Nothing done."
+
+    @staticmethod
     def set_altitude(station, altitude_ft):
         """Set the console station altitude"""
         ans = None
@@ -2310,14 +2357,12 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     @staticmethod
     def set_retransmit_id(station, id):
         """Set the retransmit ID to station."""
-        on_off = 'on'
         if id != 0:
             transmitter_list = station.getStnTransmitters()
             if transmitter_list[id-1]["listen"] == "active":
                 print "ID in use. Please use another ID. Nothing done."
                 return
-        else:
-            on_off = 'off'
+        on_off = "ON" if id else "OFF"
         ans = None
         while ans not in ['y', 'n']:
             print "Proceeding will set stations retransmit ID to %d (%s)." % (id, on_off)
