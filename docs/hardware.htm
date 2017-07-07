@@ -2311,6 +2311,7 @@ Using configuration file /home/weewx/weewx.conf
 Using Vantage driver version 3.0.10 (weewx.drivers.vantage)
 Usage: wee_device [config_file] [--help] [--info] [--clear-memory]
     [--set-interval=MINUTES] [--set-log-average=[ON|OFF]]
+    [--set-latitude=DEGREE] [set-longitude=DEGREE]
     [--set-altitude=FEET] [--set-barometer=inHg]
     [--set-bucket=CODE] [--set-rain-year-start=MM]
     [--set-offset=VARIABLE,OFFSET]
@@ -2335,7 +2336,14 @@ Options:
                         minutes. Valid values are 1, 5, 10, 15, 30, 60, or
                         1200.
   --set-log-average=ON|OFF
-                        Turn console average temperature logging 'ON' or 'OFF'.
+                        Turn console average temperature logging 'ON' or
+                        'OFF'.
+  --set-latitude=DEGREE
+                        Sets the latitude of the station to the specified
+                        number of tenth degree.
+  --set-longitude=DEGREE
+                        Sets the longitude of the station to the specified
+                        number of tenth degree.
   --set-altitude=FEET   Sets the altitude of the station to the specified
                         number of feet.
   --set-barometer=inHg  Sets the barometer reading of the station to a known
@@ -2408,8 +2416,8 @@ confirmation before proceeding.</pre>
       Wind:                         mile_per_hour
 
     CONSOLE STATION INFO:
-      Latitude (onboard):           45.7
-      Longitude (onboard):          -121.6
+      <span class="highlight">Latitude (onboard):           45.7</span>
+      <span class="highlight">Longitude (onboard):          -121.6</span>
       <span class="highlight">Use manual or auto DST?       AUTO</span>
       <span class="highlight">DST setting:                  N/A</span>
       <span class="highlight">Use GMT offset or zone code?  ZONE_CODE</span>
@@ -2487,6 +2495,18 @@ confirmation before proceeding.</pre>
         <p>Example: Set average logging on:</p>
         <pre class="tty cmd">wee_device --set-log-average=on</pre>
 
+        <h3 id="vantage_latitude">
+            Action <span class="code">--set-latitude</span></h3>
+        <p>Use this command to set the console's stored latitude. The latitude must be in range <em>-90.0</em> ... <em>90.0</em> degree.</p>
+        <p>Example:</p>
+        <pre class="tty cmd">wee_device --set-latitude=45.7</pre>
+        
+        <h3 id="vantage_longitude">
+            Action <span class="code">--set-longitude</span></h3>
+        <p>Use this command to set the console's stored logitude. The longitude must be in range <em>-180.0</em> ... <em>180.0</em> degree.</p>
+        <p>Example:</p>
+        <pre class="tty cmd">wee_device --set-longitude=-121.6</pre>
+        
         <h3>Action <span class="code">--set-altitude</span></h3>
 
         <p>Use this command to set the console's stored altitude. The altitude must be in <em>feet</em>. Example:</p>
