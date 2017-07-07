@@ -2314,6 +2314,7 @@ Usage: wee_device [config_file] [--help] [--info] [--clear-memory]
     [--set-bucket=CODE] [--set-rain-year-start=MM]
     [--set-offset=VARIABLE,OFFSET]
     [--set-transmitter-type=CHANNEL,REPEATER,TYPE,TEMP,HUM]
+    [--set-retransmit-id=ID]
     [--set-time] [--set-dst=[AUTO|ON|OFF]]
     [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
     [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE]
@@ -2353,6 +2354,8 @@ Options:
                         8=leaf_soil, 9=sensorlink, 10=none), as extra TEMP
                         station and extra HUM station (both 1-7, if
                         applicable)
+  --set-retransmit-id=ID
+                        Set the retransmit ID to station. (0=Off, 1, 2 .. 8)
   --set-time            Set the onboard clock to the current time.
   --set-dst=AUTO|ON|OFF
                         Set DST to 'ON', 'OFF', or 'AUTO'
@@ -2420,6 +2423,8 @@ confirmation before proceeding.</pre>
       <span class="highlight">   7    inactive none     (N/A)</span>
       <span class="highlight">   8    inactive none     (N/A)</span>
 
+    RETRANSMIT ID:                 <span class="highlight">0 (OFF)</span>
+    
     RECEPTION STATS:
       Total packets received:       10670
       Total packets missed:         128
@@ -2528,6 +2533,18 @@ confirmation before proceeding.</pre>
         </p>
 
         <p>The <span class="code">--help</span> option will give you the code for each sensor type and repeater id.</p>
+
+        <h3>Action <span class="code">--set-retransmit-id</span></h3>
+
+        <p>Use this command to tell your console whether or not to act as a retransmitter.</p>
+        <p>Note: The ID is the channel number your Vantage console or <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis
+            Weather Envoy receiver</a> will use for retransmission.</p>
+        <p class="warning">You can only use channels not actively used for reception.</br>The command checks for this and will not accept ID's of actively used channels for reception of senor stations.</p>
+        <p>Example: Tell your console to retransmit on channel 8:</p>
+        <pre class="tty cmd">wee_device --set-retransmit-id=8</pre>
+
+        <p>Another example: Tell your console to turn off retransmission:</p>
+        <pre class="tty cmd">wee_device --set-retransmit-id=0</pre>
 
         <h3>Action <span class="code">--set-dst</span></h3>
 
