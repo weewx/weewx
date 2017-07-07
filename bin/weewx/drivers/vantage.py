@@ -944,6 +944,22 @@ class Vantage(weewx.drivers.AbstractDevice):
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Transmitter type for channel %d set to %d (%s), repeater: %d (%s), %s" %
                       (new_channel, new_transmitter_type, Vantage.transmitter_type_dict[new_transmitter_type], new_repeater, Vantage.repeater_dict[new_repeater], Vantage.listen_dict[usetx]))
 
+    def setRetransmitId(self, new_id):
+        """Set the retransmit ID to station."""
+        # Tell the console to put one byte in hex location 0x18
+        self.port.send_data("EEBWR 18 01\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(new_id), max_tries=1)
+        # Then call NEWSETUP to get it to stick:
+        self.port.send_data("NEWSETUP\n")
+        
+        self._setup()
+        on_off = 'on'
+        if new_id == 0:
+            on_off = 'off'
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Retransmit ID set to %d (%s)" %
+                      (new_id, on_off))
+    
     def setCalibrationWindDir(self, offset):
         """Set the on-board wind direction calibration."""
         if offset < -359 or offset > 359:
@@ -1083,6 +1099,10 @@ class Vantage(weewx.drivers.AbstractDevice):
             transmitters.append(transmitter)
         return transmitters
 
+    def getStnRetransmitID(self):
+        """ Get the retransmit ID."""
+        return self._getEEPROM_value(0x18)[0]
+    
     def getStnCalibration(self):
         """ Get the temperature/humidity/wind calibrations built into the console. """
         (inTemp, inTempComp, outTemp,
@@ -1772,6 +1792,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     [--set-bucket=CODE] [--set-rain-year-start=MM] 
     [--set-offset=VARIABLE,OFFSET]
     [--set-transmitter-type=CHANNEL,REPEATER,TYPE,TEMP,HUM]
+    [--set-retransmit-id=ID]
     [--set-time] [--set-dst=[AUTO|ON|OFF]]
     [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
     [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE]
@@ -1805,6 +1826,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                           dest="set_transmitter_type",
                           metavar="CHANNEL,REPEATER,TYPE,TEMP,HUM",
                           help="Set the transmitter type for CHANNEL (1-8), REPEATER (0=None, 1=A, 2=B .. 8=H), TYPE (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain, 6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none), as extra TEMP station and extra HUM station (both 1-7, if applicable)")
+        parser.add_option("--set-retransmit-id", type=int, dest="set_retransmit_id", metavar="ID",
+                          help="Set the retransmit ID to station. (0=Off, 1=A, 2=B .. 8=H)")
         parser.add_option("--set-time", action="store_true", dest="set_time",
                           help="Set the onboard clock to the current time.")
         parser.add_option("--set-dst", dest="set_dst",
@@ -1853,6 +1876,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             self.set_offset(station, options.set_offset)
         if options.set_transmitter_type is not None:
             self.set_transmitter_type(station, options.set_transmitter_type)
+        if options.set_retransmit_id is not None:
+            self.set_retransmit_id(station, options.set_retransmit_id)
         if options.set_time:
             self.set_time(station)
         if options.set_dst:
@@ -1958,7 +1983,18 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     comment = "(as extra humidity %d)" % transmitter_list[transmitter_id]["hum"]
                 elif transmitter_type == 'none':
                     transmitter_type = "(N/A)"
-                print >> dest, "      %d:      %-8s %-8s %s %s" % (transmitter_id + 1, listen, repeater, transmitter_type, comment)
+                print >> dest, "         %d    %-8s %-8s %s %s" % (transmitter_id + 1, listen, repeater, transmitter_type, comment)
+            print >> dest, ""
+        except:
+            pass
+    
+        # Add retransmit ID, if we can:
+        try:
+            retransmitID = station.getStnRetransmitID()
+            on_off = 'on'
+            if retransmitID == 0:
+                on_off = 'off'
+            print >> dest, """    RETRANSMIT ID:                  %d (%s)""" % (retransmitID, on_off)
             print >> dest, ""
         except:
             pass
@@ -1999,9 +2035,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             print >> dest, """    OFFSETS:
       Wind direction:               %(wind)+.0f deg
       Inside Temperature:           %(inTemp)+.1f F
-      Inside Humidity:              %(inHumid)+.0f%%
+      Inside Humidity:              %(inHumid)+.0f %%
       Outside Temperature:          %(outTemp)+.1f F
-      Outside Humidity:             %(outHumid)+.0f%%""" % calibration_dict
+      Outside Humidity:             %(outHumid)+.0f %%""" % calibration_dict
             if transmitter_list is not None:
                 # Only print the calibrations for channels that we are
                 # listening to.
@@ -2268,6 +2304,31 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 else:
                     print "Transmitter type for channel %d set to %d (%s), repeater: %d (%s), %s." % (
                         channel, transmitter_type, transmitter_type_name, repeater, Vantage.repeater_dict[repeater], Vantage.listen_dict[usetx])
+            else:
+                print "Nothing done."
+
+    @staticmethod
+    def set_retransmit_id(station, id):
+        """Set the retransmit ID to station."""
+        on_off = 'on'
+        if id != 0:
+            transmitter_list = station.getStnTransmitters()
+            if transmitter_list[id-1]["listen"] == "active":
+                print "ID in use. Please use another ID. Nothing done."
+                return
+        else:
+            on_off = 'off'
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Proceeding will set stations retransmit ID to %d (%s)." % (id, on_off)
+            ans = raw_input("Are you sure you want to proceed (y/n)? ")
+            if ans == 'y':
+                try:
+                    station.setRetransmitId(id)
+                except StandardError, e:
+                    print >> sys.stderr, "Unable to set retransmit ID. Reason:\n\t****", e
+                else:
+                    print "Stations retransmit ID set to %d (%s)." % (id, on_off)
             else:
                 print "Nothing done."
 
