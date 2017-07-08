@@ -1114,24 +1114,22 @@ class Vantage(weewx.drivers.AbstractDevice):
         """Return the firmware version as a string."""
         return self.port.send_command('NVER\n')[0]
     
-    def getLogAverageTemps(self):
-        """Return 'average temperature logging' setting"""
-        log_average_temps = "OFF"  if self._getEEPROM_value(0xffc)[0] else "ON"
-        return log_average_temps
-    
     def getStnInfo(self):
         """Return lat / lon, time zone, etc."""
         
         (stnlat, stnlon) = self._getEEPROM_value(0x0B, "<2h")
         stnlat /= 10.0
         stnlon /= 10.0
-        man_or_auto = "MANUAL"     if self._getEEPROM_value(0x12)[0] else "AUTO"
-        dst         = "ON"         if self._getEEPROM_value(0x13)[0] else "OFF"
-        gmt_or_zone = "GMT_OFFSET" if self._getEEPROM_value(0x16)[0] else "ZONE_CODE"
-        zone_code   = self._getEEPROM_value(0x11)[0]
-        gmt_offset  = self._getEEPROM_value(0x14, "<h")[0] / 100.0
+        man_or_auto  = "MANUAL"     if self._getEEPROM_value(0x12)[0] else "AUTO"
+        dst          = "ON"         if self._getEEPROM_value(0x13)[0] else "OFF"
+        gmt_or_zone  = "GMT_OFFSET" if self._getEEPROM_value(0x16)[0] else "ZONE_CODE"
+        zone_code    = self._getEEPROM_value(0x11)[0]
+        gmt_offset   = self._getEEPROM_value(0x14, "<h")[0] / 100.0
+        log_average  = "OFF"  if self._getEEPROM_value(0xffc)[0] else "ON"
+        retransmitID = self._getEEPROM_value(0x18)[0]
         
-        return (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset)
+        return (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset,
+                log_average, retransmitID)
 
     def getStnTransmitters(self):
         """ Get the types of transmitters on the eight channels."""
@@ -1154,10 +1152,6 @@ class Vantage(weewx.drivers.AbstractDevice):
             transmitters.append(transmitter)
         return transmitters
 
-    def getStnRetransmitID(self):
-        """ Get the retransmit ID."""
-        return self._getEEPROM_value(0x18)[0]
-    
     def getStnCalibration(self):
         """ Get the temperature/humidity/wind calibrations built into the console. """
         (inTemp, inTempComp, outTemp,
@@ -1983,14 +1977,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             _firmware_version = station.getFirmwareVersion()
         except Exception:
             _firmware_version = '<Unavailable>'
-        try:
-            log_average = station.getLogAverageTemps()
-        except Exception:
-            log_average = "<Unavailable>"
         
-        console_time = station.getConsoleTime()
-        altitude_converted = weewx.units.convert(station.altitude_vt, station.altitude_unit)[0]
-    
         print >> dest, """Davis Vantage EEPROM settings:
     
     CONSOLE TYPE:                   %s
@@ -1998,30 +1985,12 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     CONSOLE FIRMWARE:
       Date:                         %s
       Version:                      %s
+      """ % (station.hardware_name, _firmware_date, _firmware_version)
     
-    CONSOLE SETTINGS:
-      Archive interval:             %d (seconds)
-      Average temperature logging:  %s
-      Altitude:                     %d (%s)
-      Wind cup type:                %s
-      Rain bucket type:             %s
-      Rain year start:              %d
-      Onboard time:                 %s
-      
-    CONSOLE DISPLAY UNITS:
-      Barometer:                    %s
-      Temperature:                  %s
-      Rain:                         %s
-      Wind:                         %s
-      """ % (station.hardware_name, _firmware_date, _firmware_version,
-             station.archive_interval, log_average,
-             altitude_converted, station.altitude_unit,
-             station.wind_cup_size, station.rain_bucket_size,
-             station.rain_year_start, console_time,
-             station.barometer_unit, station.temperature_unit,
-             station.rain_unit, station.wind_unit)
         try:
-            (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset) = station.getStnInfo()
+            console_time = station.getConsoleTime()
+            (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset,
+             log_average, retransmitID) = station.getStnInfo()
             if man_or_auto == 'AUTO':
                 dst = 'N/A'
             if gmt_or_zone == 'ZONE_CODE':
@@ -2029,15 +1998,42 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             else:
                 gmt_offset_str = "%+.1f hours" % gmt_offset
                 zone_code = 'N/A'
+            on_off = "ON" if retransmitID else "OFF"
+            altitude_converted = weewx.units.convert(station.altitude_vt, station.altitude_unit)[0]
+
             print >> dest, """    CONSOLE STATION INFO:
-      Latitude (onboard):           %+0.1f
-      Longitude (onboard):          %+0.1f
+      Onboard time:                 %s
+      Latitude (onboard):           %+0.1f deg
+      Longitude (onboard):          %+0.1f deg
+      Altitude:                     %d (%s)
+
+    CONSOLE SETTINGS:
+      Archive interval:             %d (seconds)
+      Wind cup type:                %s
+      Rain bucket type:             %s
+      Rain year start:              %d
       Use manual or auto DST?       %s
       DST setting:                  %s
       Use GMT offset or zone code?  %s
       Time zone code:               %s
       GMT offset:                   %s
-        """ % (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset_str)
+      Average temperature logging:  %s
+      Retransmit ID:                %d (%s)
+      
+    CONSOLE DISPLAY UNITS:
+      Barometer:                    %s
+      Temperature:                  %s
+      Rain:                         %s
+      Wind:                         %s
+      """ % (console_time, stnlat, stnlon,
+             altitude_converted, station.altitude_unit,
+             station.archive_interval,
+             station.wind_cup_size, station.rain_bucket_size,
+             station.rain_year_start,
+             man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset_str,
+             log_average, retransmitID, on_off,
+             station.barometer_unit, station.temperature_unit,
+             station.rain_unit, station.wind_unit)
         except:
             pass
     
@@ -2046,7 +2042,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         try:
             transmitter_list = station.getStnTransmitters()
             print >> dest, "    TRANSMITTERS: "
-            print >> dest, "      Channel Receive  Repeater Type"
+            print >> dest, "      Channel   Receive   Repeater  Type"
             for transmitter_id in range(0, 8):
                 comment = ""
                 transmitter_type = transmitter_list[transmitter_id]["transmitter_type"]
@@ -2061,16 +2057,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     comment = "(as extra humidity %d)" % transmitter_list[transmitter_id]["hum"]
                 elif transmitter_type == 'none':
                     transmitter_type = "(N/A)"
-                print >> dest, "         %d    %-8s %-8s %s %s" % (transmitter_id + 1, listen, repeater, transmitter_type, comment)
-            print >> dest, ""
-        except:
-            pass
-    
-        # Add retransmit ID, if we can:
-        try:
-            retransmitID = station.getStnRetransmitID()
-            on_off = "ON" if retransmitID else "OFF"
-            print >> dest, """    RETRANSMIT ID:                  %d (%s)""" % (retransmitID, on_off)
+                print >> dest, "         %d      %-8s    %-4s    %s %s" % (transmitter_id + 1, listen, repeater, transmitter_type, comment)
             print >> dest, ""
         except:
             pass
