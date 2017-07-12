@@ -487,6 +487,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         else:
             # With Vantage Vue use model type 2 
             self.model_type = 2 # Vantage Vue same as Vantage Pro2
+        syslog.syslog(syslog.LOG_DEBUG, "vantage: __init__; hardware determined: %s" % self.hardware_name)
     
         # Read the EEPROM and fill in properties in this instance
         self._setup()
@@ -1349,7 +1350,6 @@ class Vantage(weewx.drivers.AbstractDevice):
             try:
                 self.port.send_data("WRD" + chr(0x12) + chr(0x4d) + "\n")
                 self.hardware_type = ord(self.port.read())
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: __init__; hardware type is %d" % self.hardware_type)
                 # 16 = Pro, Pro2, 17 = Vue
                 return self.hardware_type
             except weewx.WeeWxIOError:
@@ -1371,7 +1371,6 @@ class Vantage(weewx.drivers.AbstractDevice):
                     self.model_type = 1  # original Vantage Pro
                 else:
                     self.model_type = 2  # Vantage Pro2
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: __init__; model type is %d" % self.model_type)
                 return self.model_type
             except weewx.WeeWxIOError:
                 pass
