@@ -2551,7 +2551,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             if not -0.740 < offset < 0.740:
                 print >> sys.stderr, "barometer correction factor %+.3f is out of range." % (offset)
             else:
-                print "Proceeding will set barometer correction factor to %+d." % (offset)
+                print "Proceeding will set barometer correction factor to %+.3f." % (offset)
                 ans = None
                 while ans not in ['y', 'n']:
                     ans = raw_input("Are you sure you want to proceed (y/n)? ")
@@ -2564,7 +2564,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                         except StandardError, e:
                             print >> sys.stderr, "Unable to set new barometer correction factor. Reason:\n\t****", e
                         else:
-                            print "barometer correction factor now set to %+d." % (offset)
+                            print "barometer correction factor now set to %+.3f." % (offset)
         elif variable in temp_variables:
             offset = float(offset_str)
             if not -12.8 <= offset <= 12.7:
