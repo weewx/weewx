@@ -2299,6 +2299,9 @@ confirmation before proceeding.
 
         <h2 id="vantage_configuration">Configuring with <span class="code">wee_device</span></h2>
 
+        <h3 id="vantage_help">
+            Action <span class="code">--help</span></h3>
+
         <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
             <span class='code'>--help</span> option</p>
 
@@ -2308,17 +2311,22 @@ confirmation before proceeding.
 
     <pre class="tty">
 Using configuration file /home/weewx/weewx.conf
-Using Vantage driver version 3.0.10 (weewx.drivers.vantage)
+Using Vantage driver version 3.0.10.8 (weewx.drivers.vantage)
 Usage: wee_device [config_file] [--help] [--info] [--clear-memory]
-    [--set-interval=MINUTES] [--set-log-average=[ON|OFF]]
+    [--set-interval=MINUTES]
     [--set-latitude=DEGREE] [set-longitude=DEGREE]
     [--set-altitude=FEET] [--set-barometer=inHg]
-    [--set-bucket=CODE] [--set-rain-year-start=MM]
+    [--set-wind-cup=CODE] [--set-bucket=CODE]
+    [--set-rain-year-start=MM]
     [--set-offset=VARIABLE,OFFSET]
     [--set-transmitter-type=CHANNEL,REPEATER,TYPE,TEMP,HUM]
-    [--set-retransmit-id=ID]
+    [--set-retransmit=[ON|ON,CHANNEL|OFF]
+    [--set-log-average=[ON|OFF]]
     [--set-time] [--set-dst=[AUTO|ON|OFF]]
     [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
+    [--set-altitude-unit=CODE] [--set-barometer-unit=CODE]
+    [--set-temperature-unit=CODE] [--set-wind-unit=CODE]
+    [--set-rain-unit=CODE]
     [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE]
     [--start | --stop]
 
@@ -2334,10 +2342,7 @@ Options:
   --set-interval=MINUTES
                         Sets the archive interval to the specified number of
                         minutes. Valid values are 1, 5, 10, 15, 30, 60, or
-                        1200.
-  --set-log-average=ON|OFF
-                        Turn console average temperature logging 'ON' or
-                        'OFF'.
+                        120.
   --set-latitude=DEGREE
                         Sets the latitude of the station to the specified
                         number of tenth degree.
@@ -2349,15 +2354,17 @@ Options:
   --set-barometer=inHg  Sets the barometer reading of the station to a known
                         correct value in inches of mercury. Specify 0 (zero)
                         to have the console pick a sensible value.
+  --set-wind-cup=CODE   Set the type of wind cup. Specify '0' for small size;
+                        '1' for large size
   --set-bucket=CODE     Set the type of rain bucket. Specify '0' for 0.01
                         inches; '1' for 0.2 MM; '2' for 0.1 MM
   --set-rain-year-start=MM
                         Set the rain year start (1=Jan, 2=Feb, etc.).
   --set-offset=VARIABLE,OFFSET
                         Set the onboard offset for VARIABLE inTemp, outTemp,
-                        extraTemp[1-7], inHumid, outHumid, extraHumid[1-7],
-                        soilTemp[1-4], leafTemp[1-4], windDir) to OFFSET
-                        (Fahrenheit, %, degrees)
+                        windDir, barometer, extraTemp[1-7], inHumid, outHumid,
+                        extraHumid[1-7], soilTemp[1-4], leafTemp[1-4]) to
+                        OFFSET (Fahrenheit, degrees, inHg, %)
   --set-transmitter-type=CHANNEL,REPEATER,TYPE,TEMP,HUM
                         Set the transmitter type for CHANNEL (1-8), REPEATER
                         (0=None, 1=A, 2=B .. 8=H), TYPE (0=iss, 1=temp, 2=hum,
@@ -2365,8 +2372,11 @@ Options:
                         8=leaf_soil, 9=sensorlink, 10=none), as extra TEMP
                         station and extra HUM station (both 1-7, if
                         applicable)
-  --set-retransmit-id=ID
-                        Set the retransmit ID to station. (0=Off, 1, 2 .. 8)
+  --set-retransmit=[ON|ON,CHANNEL|OFF]
+                        Turn console retransmit function 'ON or 'OFF.
+  --set-log-average=ON|OFF
+                        Turn console average temperature logging 'ON' or
+                        'OFF'.
   --set-time            Set the onboard clock to the current time.
   --set-dst=AUTO|ON|OFF
                         Set DST to 'ON', 'OFF', or 'AUTO'
@@ -2374,6 +2384,20 @@ Options:
                         for valid codes.
   --set-tz-offset=HHMM  Set timezone offset to HHMM. E.g. '-0800' for U.S.
                         Pacific Time.
+  --set-altitude-unit=CODE
+                        Set the console display altitude unit. Specify '0' for
+                        feet; '1' for meters
+  --set-barometer-unit=CODE
+                        Set the console display baromter unit. Specify '0' for
+                        0.01 inHg; '1' for 0.1 mmHg; '2' for 0.1 hpa; '3' for
+                        0.1 mb
+  --set-temperature-unit=CODE
+                        Set the console display temperature unit. Specify '0'
+                        for 1°F; '1' for 0.1°F; '2' for 1°C; '3' for 0.1°C
+  --set-wind-unit=CODE  Set the console display wind unit. Specify '0' for
+                        mph; '1' for m/s; '2' for kph; '4' for knots
+  --set-rain-unit=CODE  Set the console display rain unit. Specify '0' for
+                        inches; '1' for milimeters
   --set-lamp=ON|OFF     Turn the console lamp 'ON' or 'OFF'.
   --start               Start the logger.
   --stop                Stop the logger.
@@ -2407,8 +2431,8 @@ confirmation before proceeding.</pre>
       <span class="highlight">Altitude:                     700 (foot)</span>
 
     CONSOLE SETTINGS:
-      <span class="highlight">Archive interval:             300 (seconds)</span>
-      Wind cup type:                large
+      <span class="highlight">Archive interval:             5 (minutes)</span>
+      <span class="highlight">Wind cup type:                large</span>
       <span class="highlight">Rain bucket type:             0.01 inches</span>
       <span class="highlight">Rain year start:              10</span>
       <span class="highlight">Use manual or auto DST?       AUTO</span>
@@ -2420,10 +2444,10 @@ confirmation before proceeding.</pre>
       <span class="highlight">Retransmit ID:                0 (OFF)</span>
 
     CONSOLE DISPLAY UNITS:
-      Barometer:                    inHg
-      Temperature:                  degree_F
-      Rain:                         inch
-      Wind:                         mile_per_hour
+      <span class="highlight">Barometer:                    inHg</span>
+      <span class="highlight">Temperature:                  degree_F</span>
+      <span class="highlight">Rain:                         inch</span>
+      <span class="highlight">Wind:                         mile_per_hour</span>
 
     TRANSMITTERS:
       Channel   Receive   Repeater  Type
@@ -2450,16 +2474,16 @@ confirmation before proceeding.</pre>
       Virtual temperature:          59 F
       Humidity correction factor:   27
       Correction ratio:             1.025
-      Correction constant:          +0.000 inHg
+      <span class="highlight">Correction constant:          +0.000 inHg</span>
       Gain:                         0.000
       Offset:                       -47.000
 
     OFFSETS:
       <span class="highlight">Wind direction:               +0 deg</span>
       <span class="highlight">Inside Temperature:           +0.0 F</span>
-      <span class="highlight">Inside Humidity:              +0%</span>
+      <span class="highlight">Inside Humidity:              +0 %</span>
       <span class="highlight">Outside Temperature:          +0.0 F</span>
-      <span class="highlight">Outside Humidity:             +0%</span>
+      <span class="highlight">Outside Humidity:             +0 %</span>
       <span class="highlight">Extra Temperature 1:          +0.0 F</span></pre>
         <p>The console version number is available only on consoles with firmware dates after about 2006.</p>
 
@@ -2486,14 +2510,6 @@ confirmation before proceeding.</pre>
         <p>Example: to change the archive interval to 10 minutes:</p>
         <pre class="tty cmd">wee_device --set-interval=10</pre>
 
-        <h3 id="vantage_log_average">
-            Action <span class="code">--set-log-average</span></h3>
-        <p>Use this command to activate or deactivate the <em>Log Average Temperature Values</em> feature of your console.<br>
-            If activated the console will log the average temperature values over the archive interval.<br>
-            If deactivated the console will log the temperature values at the end of the archive interval.</p>
-        <p>Example: Set average logging on:</p>
-        <pre class="tty cmd">wee_device --set-log-average=on</pre>
-
         <h3 id="vantage_latitude">
             Action <span class="code">--set-latitude</span></h3>
         <p>Use this command to set the console's stored latitude. The latitude must be in range <em>-90.0</em> ... <em>90.0</em> degree.</p>
@@ -2518,6 +2534,13 @@ confirmation before proceeding.</pre>
             to a known-correct station (perhaps a nearby airport) and perform the calibration there, or reduce the
             barometer reading to your altitude. Otherwise, specify the value zero and the station will pick a sensible
             value.</p>
+
+        <h3 id="vantage_wind_cup_type">
+            Action <span class="code">--set-wind-cup</span></h3>
+
+        <p>Normally, this is set by Davis, but if you have replaced your wind cup with a different kind, you might want to
+            reconfigure. For example, to change from a small size wind cup to a large size wind cup (wind cup code &quot;1&quot;), use the following:</p>
+        <pre class="tty cmd">wee_device --set-wind-cup=1</pre>
 
         <h3 id="vantage_rain_bucket_type">
             Action <span class="code">--set-bucket</span></h3>
@@ -2547,16 +2570,18 @@ confirmation before proceeding.</pre>
         <h3 id="vantage_configuring_additional_sensors">
             Action <span class="code">--set-transmitter-type</span></h3>
 
-        <p>If you have additional sensors for your Vantage station, you can configure them using your console. However,
-            if you have a <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis
-                Weather Envoy receiver</a>, it will not have a console! As an alternative, <span
-                    class="code">wee_device</span> can do this using the command <span class="code">--set-transmitter-type</span>.
+        <p>If you have additional sensors and/or repeaters for your Vantage station, you can configure them using your console.
+           However, if you have a
+           <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis Weather Envoy receiver</a>,
+           it will not have a console! As an alternative,
+           <span class="code">wee_device</span> can do this using the command <span class="code">--set-transmitter-type</span>.
         </p>
 
-        <p>For example, to add an extra temperature sensor to channel 3 and no repeater is used, do the following:</p>
+        <p>For example, to add an extra temperature sensor to channel 3 and no repeater, do the following:</p>
         <pre class="tty cmd">wee_device --set-transmitter-type=3,0,1,2</pre>
         <p>This says to turn on channel 3, set its type to 1 ("Temperature only"), not via repeater and have it show up in the database
-            as <span class="code">extraTemp2</span>. Here's another example, this time for a combined temperature /
+            as <span class="code">extraTemp2</span>.</p>
+        <p>Here's another example, this time for a combined temperature /
             humidity sensor retransmitted via repeater A:</p>
         <pre class="tty cmd">wee_device --set-transmitter-type=5,1,3,2,4</pre>
         <p>This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"), via Repeater A and it will
@@ -2564,19 +2589,33 @@ confirmation before proceeding.</pre>
         </p>
 
         <p>The <span class="code">--help</span> option will give you the code for each sensor type and repeater id.</p>
+        <p>If you have to use repeaters with your Vantage Pro2 station, please take a look at
+            <a href="http://www.davisnet.com/product_documents/weather/app_notes/AN_25-data-repeater-network.pdf">
+                Installing Repeater Networks for Vantage Pro2</a> how to setup.</p>
+
+        <p class="warning">Note: You only can use channels not actively used for retransmission. The command checks for this and will warn you.</p>
+
+        <h3 id="vantage_log_average">
+            Action <span class="code">--set-log-average</span></h3>
+        <p>Use this command to activate or deactivate the <em>Log Average Temperature Values</em> feature of your console.
+            If activated the console will log the average temperature values over the archive interval.
+            If deactivated the console will log the temperature values at the end of the archive interval.</p>
+        <p>Example: Set average logging on:</p>
+        <pre class="tty cmd">wee_device --set-log-average=on</pre>
 
         <h3 id="vantage_retransmit">
-            Action <span class="code">--set-retransmit-id</span></h3>
+            Action <span class="code">--set-retransmit</span></h3>
 
         <p>Use this command to tell your console whether or not to act as a retransmitter.</p>
-        <p>Note: The ID is the channel number your Vantage console or <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis
-            Weather Envoy receiver</a> will use for retransmission.</p>
-        <p class="warning">You can only use channels not actively used for reception.</br>The command checks for this and will not accept ID's of actively used channels for reception of senor stations.</p>
-        <p>Example: Tell your console to retransmit on channel 8:</p>
-        <pre class="tty cmd">wee_device --set-retransmit-id=8</pre>
+        <p>Example: Tell your console to turn retransmission 'ON' and let the software select the first available channel:</p>
+        <pre class="tty cmd">wee_device --set-retransmit=on</pre>
 
-        <p>Another example: Tell your console to turn off retransmission:</p>
-        <pre class="tty cmd">wee_device --set-retransmit-id=0</pre>
+        <p>Another example: Tell your console to turn retransmission 'OFF':</p>
+        <pre class="tty cmd">wee_device --set-retransmit=off</pre>
+
+        <p>Last example: Tell your console to turn retransmission 'ON' at channel 4:</p>
+        <pre class="tty cmd">wee_device --set-retransmit=on,4</pre>
+        <p class="warning">You only can use channels not actively used for reception. The command checks for this and will not accept channel numbers actively used for reception of senor stations.</p>
 
         <h3>Action <span class="code">--set-dst</span></h3>
 
@@ -2609,6 +2648,46 @@ confirmation before proceeding.</pre>
         <p>For example, to set the time zone offset for Newfoundland Standard
             Time (UTC-03:30), use the following:</p>
         <pre class="tty cmd">wee_device --set-tz-offset=-0330</pre>
+
+        <h3 id="vantage_altitude_unit">
+            Action <span class="code">--set-altitude-unit</span></h3>
+        <p>Normally you will use your console to setup the console display altitude units. However, if you have a
+        <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis Weather Envoy receiver</a>,
+        it will not have a console! As an alternative,
+        <span class="code">wee_device</span> can do this using the command <span class="code">--set-altitude-unit</span>.
+        </p>
+
+        <h3 id="vantage_barometer_unit">
+            Action <span class="code">--set-barometer-unit</span></h3>
+        <p>Normally you will use your console to setup the console display baromter units. However, if you have a
+        <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis Weather Envoy receiver</a>,
+        it will not have a console! As an alternative,
+        <span class="code">wee_device</span> can do this using the command <span class="code">--set-baromter-unit</span>.
+        </p>
+
+        <h3 id="vantage_temperature_unit">
+            Action <span class="code">--set-temperature-unit</span></h3>
+        <p>Normally you will use your console to setup the console display temperature units. However, if you have a
+        <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis Weather Envoy receiver</a>,
+        it will not have a console! As an alternative,
+        <span class="code">wee_device</span> can do this using the command <span class="code">--set-temperature-unit</span>.
+        </p>
+
+        <h3 id="vantage_wind_unit">
+            Action <span class="code">--set-wind-unit</span></h3>
+        <p>Normally you will use your console to setup the console display wind units. However, if you have a
+        <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis Weather Envoy receiver</a>,
+        it will not have a console! As an alternative,
+        <span class="code">wee_device</span> can do this using the command <span class="code">--set-wind-unit</span>.
+        </p>
+
+        <h3 id="vantage_rain_unit">
+            Action <span class="code">--set-rain-unit</span></h3>
+        <p>Normally you will use your console to setup the console display rain units. However, if you have a
+        <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis Weather Envoy receiver</a>,
+        it will not have a console! As an alternative,
+        <span class="code">wee_device</span> can do this using the command <span class="code">--set-rain-unit</span>.
+        </p>
 
         <h3>Action <span class="code">--set-lamp</span></h3>
 
