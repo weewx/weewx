@@ -2739,9 +2739,6 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_altitude_unit(station, new_altitude_unit_code):
         """Set the console altitude unit"""
 
-        if not 0 <= new_altitude_unit_code <= 1:
-            print "Altitude unit code out of range 0..1."
-            return
         print "Old altitude unit is %d (%s), new one is %d (%s)." % (
             station.altitude_unit_code,
             station.altitude_unit,
@@ -2768,9 +2765,6 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_barometer_unit(station, new_barometer_unit_code):
         """Set the console barometer unit"""
 
-        if not 0 <= new_barometer_unit_code <= 3:
-            print "Barometer unit code out of range 0..3."
-            return
         print "Old barometer unit is %d (%s), new one is %d (%s)." % (
             station.barometer_unit_code,
             station.barometer_unit,
@@ -2797,9 +2791,6 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_temperature_unit(station, new_temperature_unit_code):
         """Set the console temperature unit"""
 
-        if not 0 <= new_temperature_unit_code <= 3:
-            print "Temperature unit code out of range 0..3."
-            return
         print "Old temperature unit is %d (%s), new one is %d (%s)." % (
             station.temperature_unit_code,
             station.temperature_unit,
@@ -2826,9 +2817,6 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_rain_unit(station, new_rain_unit_code):
         """Set the console rain unit"""
 
-        if not 0 <= new_rain_unit_code <= 1:
-            print "Rain unit code out of range 0..1."
-            return
         print "Old rain unit is %d (%s), new one is %d (%s)." % (
             station.rain_unit_code,
             station.rain_unit,
@@ -2855,9 +2843,6 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_wind_unit(station, new_wind_unit_code):
         """Set the console wind unit"""
 
-        if not 0 <= new_wind_unit_code <= 3:
-            print "Wind unit code out of range 0..3."
-            return
         print "Old wind unit is %d (%s), new one is %d (%s)." % (
             station.wind_unit_code,
             station.wind_unit,
