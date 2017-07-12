@@ -1349,7 +1349,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             try:
                 self.port.send_data("WRD" + chr(0x12) + chr(0x4d) + "\n")
                 self.hardware_type = ord(self.port.read())
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: _setup; hardware type is %s" % self.hardware_type)
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: __init__; hardware type is %d" % self.hardware_type)
                 # 16 = Pro, Pro2, 17 = Vue
                 return self.hardware_type
             except weewx.WeeWxIOError:
@@ -1371,7 +1371,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                     self.model_type = 1  # original Vantage Pro
                 else:
                     self.model_type = 2  # Vantage Pro2
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: __init__; model type is %s" % self.model_type)
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: __init__; model type is %d" % self.model_type)
                 return self.model_type
             except weewx.WeeWxIOError:
                 pass
@@ -1384,7 +1384,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
         self.port.wakeup_console(max_tries=self.max_tries)
-        
+
         unit_bits              = self._getEEPROM_value(0x29)[0]
         setup_bits             = self._getEEPROM_value(0x2B)[0]
         self.rain_year_start   = self._getEEPROM_value(0x2C)[0]
