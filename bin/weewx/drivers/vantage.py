@@ -461,9 +461,6 @@ class Vantage(weewx.drivers.AbstractDevice):
 
         syslog.syslog(syslog.LOG_DEBUG, 'vantage: driver version is %s' % DRIVER_VERSION)
 
-        # TODO: These values should really be retrieved dynamically from the VP:
-        self.model_type = 2  # = 1 for original VantagePro, = 2 for VP2
-
         # These come from the configuration dictionary:
         self.max_tries = int(vp_dict.get('max_tries', 4))
         self.iss_id    = to_int(vp_dict.get('iss_id'))
@@ -477,6 +474,20 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Open it up:
         self.port.openPort()
 
+        # Wake up console
+        self.port.wakeup_console(max_tries=self.max_tries)
+        
+        # Get hardware type
+        self.hardware_type = self.determine_hardware()
+
+        # hardware_type: 16 := Vantage Pro or Vantage Pro2; 17 := Vantage Vue
+        if self.hardware_type == 16:
+            # Get Vantage Pro model type
+            self.model_type = self.determine_model()
+        else:
+            # With Vantage Vue use model type 2 
+            self.model_type = 2 # Vantage Vue same as Vantage Pro2
+    
         # Read the EEPROM and fill in properties in this instance
         self._setup()
         
@@ -1319,9 +1330,12 @@ class Vantage(weewx.drivers.AbstractDevice):
     @property
     def hardware_name(self):    
         if self.hardware_type == 16:
-            return "VantagePro2"
+            if self.model_type == 1:
+                return "Vantage Pro"
+            else:
+                return "Vantage Pro2"
         elif self.hardware_type == 17:
-            return "VantageVue"
+            return "Vantage Vue"
         else:
             raise weewx.UnsupportedFeature("Unknown hardware type %d" % self.hardware_type)
 
@@ -1342,17 +1356,35 @@ class Vantage(weewx.drivers.AbstractDevice):
                 pass
             syslog.syslog(syslog.LOG_DEBUG, "vantage: determine_hardware; retry #%d" % (count,))
 
-        syslog.syslog(syslog.LOG_ERR, "vantage: _setup; unable to read hardware type; raise WeeWxIOError")
+        syslog.syslog(syslog.LOG_ERR, "vantage: __init__; unable to read hardware type; raise WeeWxIOError")
         raise weewx.WeeWxIOError("Unable to read hardware type")
 
+    def determine_model(self):
+        # Determine the model type:
+        for count in xrange(self.max_tries):
+            try:
+                iss_channel_data = self._getEEPROM_value(0x19)[0]
+                # Vantage Pro will return 0x10 or 0x40.
+                # Vantage Pro2 will return 0x00 or with repeater 0x80..0xF0
+                # See: VantageSerialProtocolDocs_v261.pdf, Page: 46
+                if iss_channel_data in (0x10, 0x40):
+                    self.model_type = 1  # original Vantage Pro
+                else:
+                    self.model_type = 2  # Vantage Pro2
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: __init__; model type is %s" % self.model_type)
+                return self.model_type
+            except weewx.WeeWxIOError:
+                pass
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: determine_model; retry #%d" % (count,))
+        
+        syslog.syslog(syslog.LOG_ERR, "vantage: _init; unable to read model type; raise WeeWxIOError")
+        raise weewx.WeeWxIOError("Unable to read model type")
+    
     def _setup(self):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
         self.port.wakeup_console(max_tries=self.max_tries)
-        self.hardware_type = self.determine_hardware()
-
-        """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
-
+        
         unit_bits              = self._getEEPROM_value(0x29)[0]
         setup_bits             = self._getEEPROM_value(0x2B)[0]
         self.rain_year_start   = self._getEEPROM_value(0x2C)[0]
