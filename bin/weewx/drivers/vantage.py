@@ -2739,11 +2739,14 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_altitude_unit(station, new_altitude_unit_code):
         """Set the console altitude unit"""
 
+        try:
+            new_altitude_unit = Vantage.altitude_unit_dict[new_altitude_unit_code]
+        except KeyError:
+            print "Unknown altitude unit code (%d)" % new_altitude_unit_code
+            return
         print "Old altitude unit is %d (%s), new one is %d (%s)." % (
-            station.altitude_unit_code,
-            station.altitude_unit,
-            new_altitude_unit_code,
-            Vantage.altitude_unit_dict[new_altitude_unit_code])
+            station.altitude_unit_code, station.altitude_unit,
+            new_altitude_unit_code, new_altitude_unit)
         if station.altitude_unit_code == new_altitude_unit_code:
             print "Old and new altitude units are the same. Nothing done."
         else:
@@ -2765,11 +2768,14 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_barometer_unit(station, new_barometer_unit_code):
         """Set the console barometer unit"""
 
+        try:
+            new_barometer_unit = Vantage.barometer_unit_dict[new_barometer_unit_code]
+        except KeyError:
+            print "Unknown barometer unit code (%d)" % new_barometer_unit_code
+            return
         print "Old barometer unit is %d (%s), new one is %d (%s)." % (
-            station.barometer_unit_code,
-            station.barometer_unit,
-            new_barometer_unit_code,
-            Vantage.barometer_unit_dict[new_barometer_unit_code])
+            station.barometer_unit_code, station.barometer_unit,
+            new_barometer_unit_code, new_barometer_unit)
         if station.barometer_unit_code == new_barometer_unit_code:
             print "Old and new barometer units are the same. Nothing done."
         else:
@@ -2791,11 +2797,14 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_temperature_unit(station, new_temperature_unit_code):
         """Set the console temperature unit"""
 
+        try:
+            new_temperature_unit = Vantage.temperature_unit_dict[new_temperature_unit_code]
+        except KeyError:
+            print "Unknown temperature unit code (%d)" % new_temperature_unit_code
+            return
         print "Old temperature unit is %d (%s), new one is %d (%s)." % (
-            station.temperature_unit_code,
-            station.temperature_unit,
-            new_temperature_unit_code,
-            Vantage.temperature_unit_dict[new_temperature_unit_code])
+            station.temperature_unit_code, station.temperature_unit,
+            new_temperature_unit_code, new_temperature_unit)
         if station.temperature_unit_code == new_temperature_unit_code:
             print "Old and new temperature units are the same. Nothing done."
         else:
@@ -2817,11 +2826,14 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_rain_unit(station, new_rain_unit_code):
         """Set the console rain unit"""
 
+        try:
+            new_rain_unit = Vantage.rain_unit_dict[new_rain_unit_code]
+        except KeyError:
+            print "Unknown rain unit code (%d)" % new_rain_unit_code
+            return
         print "Old rain unit is %d (%s), new one is %d (%s)." % (
-            station.rain_unit_code,
-            station.rain_unit,
-            new_rain_unit_code,
-            Vantage.rain_unit_dict[new_rain_unit_code])
+            station.rain_unit_code, station.rain_unit,
+            new_rain_unit_code, new_rain_unit)
         if station.rain_unit_code == new_rain_unit_code:
             print "Old and new rain units are the same. Nothing done."
         else:
@@ -2843,11 +2855,14 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_wind_unit(station, new_wind_unit_code):
         """Set the console wind unit"""
 
+        try:
+            new_wind_unit = Vantage.wind_unit_dict[new_wind_unit_code]
+        except KeyError:
+            print "Unknown wind unit code (%d)" % new_wind_unit_code
+            return
         print "Old wind unit is %d (%s), new one is %d (%s)." % (
-            station.wind_unit_code,
-            station.wind_unit,
-            new_wind_unit_code,
-            Vantage.wind_unit_dict[new_wind_unit_code])
+            station.wind_unit_code, station.wind_unit,
+            new_wind_unit_code, new_wind_unit)
         if station.wind_unit_code == new_wind_unit_code:
             print "Old and new wind units are the same. Nothing done."
         else:
