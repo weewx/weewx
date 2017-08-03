@@ -141,6 +141,7 @@ a:hover {
     font-size: 80%;
     text-align: left;
     padding-top: 4px;
+    vertical-align: top;
 }
 
 .units {
@@ -229,6 +230,14 @@ a:hover {
     font-weight: normal;
     text-align: right;
     border-bottom: 1px solid #dddddd;
+}
+
+#sunmoon_widget table th {
+  text-align: center;
+}
+
+#sunmoon_widget .label {
+  padding-left: 10px;
 }
 
 #hilo_widget table th {

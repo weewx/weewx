@@ -35,33 +35,25 @@
       #if $almanac.hasExtras
         <div class="celestial_body">
           <table class="celestial">
-            <tr><th>&#9728</th></tr>
+            <tr>
+              <th colspan="2">&#9728</th>
+              <th colspan="2">&#9789</th>
+            </tr>
             <tr>
               <td class="label">Rise</td>
               <td class="data">$almanac.sun.rise.string($sun_None)</td>
-            </tr>
-            <tr>
-              <td class="label">Set</td>
-              <td class="data">$almanac.sun.set.string($sun_None)</td>
-            </tr>
-            <tr>
-              <td class="label">Daylight</td>
-              <td class="data">$daylight_str</td>
-            </tr>
-          </table>
-        </div>
-        <div class="celestial_body">
-          <table class="celestial">
-            <tr><th>&#9789</th></tr>
-            <tr>
               <td class="label">Rise</td>
               <td class="data">$almanac.moon.rise</td>
             </tr>
             <tr>
               <td class="label">Set</td>
+              <td class="data">$almanac.sun.set.string($sun_None)</td>
+              <td class="label">Set</td>
               <td class="data">$almanac.moon.set</td>
             </tr>
             <tr>
+              <td class="label">Daylight</td>
+              <td class="data">$daylight_str</td>
               <td class="label"></td>
               <td class="data">$almanac.moon_phase<br/>
                 $almanac.moon_fullness% full</td>
