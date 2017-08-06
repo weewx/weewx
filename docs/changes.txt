@@ -27,6 +27,10 @@ Allow reports to be run against a binding other than `wx_binding`.
 
 Include rain count in cc3000 status.
 
+Using the `set-altitude` command in `wee_device` no longer changes the
+barometer calibration constant in Vantage devices. See PR #263.
+Thanks to user dl1rf!
+
 
 3.7.1 03/22/2017
 
