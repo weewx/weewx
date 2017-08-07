@@ -5,6 +5,7 @@
 
 ## If extended almanac information is available, do extra calculations.
 #if $almanac.hasExtras
+
   #set $sun_altitude = $almanac.sun.alt
   #if $sun_altitude < 0
     #set $sun_None="<i>(Always down)</i>"
@@ -19,20 +20,27 @@
   #if $sunrise_ts and $sunset_ts
 
     #set $now = $current.dateTime.raw
-    #set $yesterday = $now - 24*3600
     #set $today_daylight = $sunset_ts -  $sunrise_ts
-    #set $yesterday_daylight = $almanac($almanac_time=$yesterday).sun.set.raw - $almanac($almanac_time=$yesterday).sun.rise.raw
-    #set $difference = $today_daylight - $yesterday_daylight
-    #set $seconds = $almanac.sun.set.raw - $almanac.sun.rise.raw
+
+    #set $seconds = $today_daylight
     #set $hours = $seconds //3600
     #set $seconds %= 3600
     #set $minutes = $seconds//60
     #set $seconds %= 60
+    #set $daylight_str = "%d hours, %d minutes, %d seconds" % ($hours, $minutes, $seconds)
 
-    #if $difference > 0
-      #set $daylight_str = "%d hours, %d minutes, %d seconds <br/>%s %d seconds more than yesterday" % ($hours, $minutes, $seconds, str(int($difference) // 60) + ' minutes,' if ($difference // 60) > 0 else '', $difference % 60 if ($difference // 60) > 0 else $difference)
-    #else
-      #set $daylight_str = "%d hours, %d minutes, %d seconds <br/>%s %d seconds less than yesterday" % ($hours, $minutes, $seconds, str(int($difference) // -60) + ' minutes,' if ($difference // -60) > 0 else '', abs($difference % -60) if ($difference // -60) > 0 else abs($difference))
+    #set $yesterday = $now - 24*3600
+    #set $yesterday_daylight = $almanac($almanac_time=$yesterday).sun.set.raw - $almanac($almanac_time=$yesterday).sun.rise.raw
+    #set $difference = $today_daylight - $yesterday_daylight
+    #if $difference
+      #set $delta = abs($difference)
+      #set $amt_str = "%s%d seconds" % (str(int($delta) // 60) + ' minutes, ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta)
+      #if $difference > 0
+        #set $delta_str = "%s more than yesterday" % $amt_str
+      #else
+        #set $delta_str = "%s less than yesterday" % $amt_str
+      #end if
+      #set $daylight_str = "%s<br/>%s" % ($daylight_str, $delta_str)
     #end if
 
   #end if
