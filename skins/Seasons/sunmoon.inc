@@ -35,7 +35,7 @@
       #if $almanac.hasExtras
         <div class="celestial_body">
           <table class="celestial">
-            <tr><th>&#9728</th></tr>
+            <tr><th>&#9728;</th></tr>
             <tr>
               <td class="label">Rise</td>
               <td class="data">$almanac.sun.rise.string($sun_None)</td>
@@ -52,7 +52,7 @@
         </div>
         <div class="celestial_body">
           <table class="celestial">
-            <tr><th>&#9789</th></tr>
+            <tr><th>&#9789;</th></tr>
             <tr>
               <td class="label">Rise</td>
               <td class="data">$almanac.moon.rise</td>
