@@ -203,6 +203,11 @@ delta = datetime.timedelta(seconds=10800)
 next_dt = time_dt + delta
 next_ts = int(time.mktime(next_dt.timetuple()))</pre>
         <p>Other time conversion problems are handled in a similar manner. </p>
+        <p>For astronomical calculations, weeWX uses the latitude and longitude
+          specified in the configuration file.  If that location does not
+          correspond to the computer's local time, reports with astronomical
+          times will probably be incorrect.
+        </p>
 
         <h1>Internationalization</h1>
         <p>Generally, weewx does not make much use of Unicode. This is because the Python 2.x libraries do not always
