@@ -203,6 +203,11 @@ delta = datetime.timedelta(seconds=10800)
 next_dt = time_dt + delta
 next_ts = int(time.mktime(next_dt.timetuple()))</pre>
         <p>Other time conversion problems are handled in a similar manner. </p>
+        <p>For astronomical calculations, weeWX uses the latitude and longitude
+          specified in the configuration file.  If that location does not
+          correspond to the computer's local time, reports with astronomical
+          times will probably be incorrect.
+        </p>
 
         <h1>Internationalization</h1>
         <p>Generally, weewx does not make much use of Unicode. This is because the Python 2.x libraries do not always
@@ -273,7 +278,7 @@ now = datetime.datetime()</pre>
         <a href="http://pydev.org/">PyDev Python extension</a>, is highly recommended. 
         It's free, easy to customize and extremely powerful. </p>
         <p><a href="http://www.jetbrains.com/pycharm/">JetBrain's PyCharm</a> is also good, 
-        but it costs money. Where it really shines is if you use a framework
+        and now there's a free Community Edition. Where it really shines is if you use a framework
         such as Django, or Backbone, but weeWX does not use any of these, so there is no real need
         for PyCharm's extra functionality when working with weeWX.</p>
 
