@@ -95,7 +95,7 @@ def drop(host='localhost', user='', password='', database_name='',
         cursor.close()
         connect.close()
 
-@guard
+
 class Connection(weedb.Connection):
     """A wrapper around a MySQL connection object."""
 
@@ -216,6 +216,7 @@ class Connection(weedb.Connection):
     @guard
     def rollback(self):
         self.connection.rollback()
+
 
 class Cursor(object):
     """A wrapper around the MySQLdb cursor object"""

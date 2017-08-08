@@ -57,7 +57,7 @@ Version: 3.7
 
       <p>
         This document starts with an overview of the architecture of
-        weewx. If you are only interested in customizing the generated
+        weeWX. If you are only interested in customizing the generated
         reports you can probably skip the overview and proceed directly
         to the section <em><a href="#standard_skin">The
             Standard <span class="code">skin.conf</span>
@@ -309,7 +309,7 @@ Version: 3.7
       <p>
         The default distribution of weeWX includes three reports:
       </p>
-      <table class="indent" summary="Standard reports included in weewx">
+      <table class="indent" summary="Standard reports included in weeWX">
         <tbody>
           <tr class="first_row">
             <td>Report</td>
@@ -394,7 +394,7 @@ Version: 3.7
         FTP/rsync them to remote locations. The default install of weeWX
           includes the following generators:
       </p>
-      <table class="indent" summary="Generators included in weewx">
+      <table class="indent" summary="Generators included in weeWX">
         <tbody>
           <tr class="first_row">
             <td>Generator</td>
@@ -2650,7 +2650,9 @@ $station.altitude</pre>
       </ul>
       <p>
         This example is included in the distribution as <span
-          class="code">examples/stats.py</span>:
+          class="code">examples/stats.py</span>. If you wish to use or modify it,
+          first copy it over to <span class="code">user/stats.py</span>
+          then modify it there.
       </p>
       <pre class="tty">import datetime
 import time
@@ -2852,11 +2854,13 @@ class MyStats(SearchList):                                                   # 1
     &lt;/tr&gt;
 &lt;/table&gt;</pre>
       <p>
-        If you place a custom generator somewhere other than the
-        hierarchy where <span class="code">weewxd</span> resides, you
-        may have to specify its location in the environment variable <span
-          class="code">PYTHONPATH</span> in the shell where you start
-        weeWX:
+        We put our addition in the file <span class="code">user/stats.py</span>,
+        which means it will be in the directory hierarchy 
+        where <span class="code">weewxd</span> resides. Python will search
+        this hierarchy by default, so it will find our addition. However, if
+        you put it somewhere else, may will have to specify its location with
+        the environment variable <a href="https://docs.python.org/2/using/cmdline.html#envvar-PYTHONPATH"><span
+          class="code">PYTHONPATH</span></a> when you start weeWX:
       </p>
       <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
 
@@ -6372,13 +6376,18 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
 
       <p>
         The <span class='code'>fileparse</span> driver is perhaps the
-        most simple example of a weeWX driver.
+        simplest example of a weeWX driver.
         It reads name-value pairs from a file and uses the values as
-        sensor 'readings'. The code is located in <span class="code">extensions/fileparse/bin/user/fileparse.py</span>
+        sensor 'readings'. The code is actually packaged as an extension, located in
+        <span class="code">examples/fileparse</span>, making it a good example
+         of not only writing a device driver, but also
+        of how to package an extension. The actual driver itself is in
+        <span class="code">examples/fileparse/bin/user/fileparse.py</span>.
       </p>
 
       <p>
-        Take a look at the simulator code in <span class='code'>bin/weewx/drivers/simulator.py</span>.
+        Another good example is the simulator code 
+        located in <span class='code'>weewx/drivers/simulator.py</span>.
         It's dirt simple and you can easily play with it. Many people
         have successfully used it as a starting point for writing their
         own custom driver.
@@ -6400,9 +6409,10 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         in the engine as a service.
       </p>
 
-      <p>Naturally, there are a lot of subtleties that I've glossed
-        over in this high-level description. If you're game, give it a
-        try — I'm happy to help you out!</p>
+      <p>Naturally, there are a lot of subtleties that have been glossed
+        over in this high-level description. If you run into trouble, 
+        look for help in the <a href="https://groups.google.com/forum/#!forum/weewx-development">
+        <span class="code">weewx-development</span> forum</a>.</p>
 
       <h1 id="extensions">Extensions</h1>
 

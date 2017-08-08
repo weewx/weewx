@@ -524,6 +524,8 @@ class Manager(object):
             # Is aggregation requested?
             if aggregate_type:
                 
+                aggregate_type = aggregate_type.lower()
+
                 # Check to make sure we have everything:
                 if not aggregate_interval:
                     raise weewx.ViolatedPrecondition("Aggregation interval missing")
@@ -534,12 +536,18 @@ class Manager(object):
                 # magnitude and direction do) we cannot do the aggregation
                 # in the SQL statement. We'll have to do it in Python.
                 # Do we know how to do it?
-                if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min']:
-                    raise weewx.ViolatedPrecondition("Invalid aggregation type" % aggregate_type)
+                if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min', 'last']:
+                    raise weewx.ViolatedPrecondition("Invalid aggregation type '%s'" % aggregate_type)
                 
-                # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % \
-                    (windvec_types[obs_type], self.table_name)
+                # Special select statement for 'last'
+                if aggregate_type == 'last':
+                    sql_str = "SELECT dateTime, %s, usUnits FROM %s WHERE dateTime = "\
+                        "(SELECT MAX(dateTime) FROM %s WHERE "\
+                        "dateTime > ? AND dateTime <= ?)" % (windvec_types[obs_type], self.table_name, 
+                                                             self.table_name)
+                else:
+                    sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % \
+                        (windvec_types[obs_type], self.table_name)
 
                 # Go through each aggregation interval, calculating the aggregation.
                 for stamp in weeutil.weeutil.intervalgen(timespan[0], timespan[1], aggregate_interval):
@@ -547,7 +555,6 @@ class Manager(object):
                     _mag_extreme = _dir_at_extreme = None
                     _xsum = _ysum = 0.0
                     _count = 0
-                    _last_time = None
     
                     for _rec in _cursor.execute(sql_str, stamp):
                         (_mag, _dir) = _rec[1:3]
@@ -558,7 +565,6 @@ class Manager(object):
                         # A good direction is necessary unless the mag is zero:
                         if _mag == 0.0  or _dir is not None:
                             _count += 1
-                            _last_time  = _rec[0]
                             if std_unit_system:
                                 if std_unit_system != _rec[3]:
                                     raise weewx.UnsupportedFeature("Unit type cannot change "\
@@ -576,11 +582,18 @@ class Manager(object):
                                     _mag_extreme = _mag
                                     _dir_at_extreme = _dir
                             else:
-                                # No need to do the arithmetic if mag is zero.
-                                # We also need a good direction
-                                if _mag > 0.0 and _dir is not None:
-                                    _xsum += _mag * math.cos(math.radians(90.0 - _dir))
-                                    _ysum += _mag * math.sin(math.radians(90.0 - _dir))
+                                # An undefined direction is OK (and expected) if the magnitude
+                                # is zero. But, in that case, it doesn't contribute to the sums either.
+                                if _dir is None:
+                                    # Sanity check
+                                    if weewx.debug:
+                                        assert(_mag == 0.0)
+                                    _xvec = _yvec = 0.0
+                                else:
+                                    _xvec = _mag * math.cos(math.radians(90.0 - _dir))
+                                    _yvec = _mag * math.sin(math.radians(90.0 - _dir))
+                                    _xsum += _xvec
+                                    _ysum += _yvec
                     # We've gone through the whole interval. Were there any
                     # good data?
                     if _count:
@@ -604,6 +617,8 @@ class Manager(object):
                             data_vec.append(complex(_xsum, _ysum))
                         elif aggregate_type == 'count':
                             data_vec.append(_count)
+                        elif aggregate_type == 'last':
+                            data_vec.append(complex(_xvec, _yvec))
                         else:
                             # Must be 'avg'
                             data_vec.append(complex(_xsum/_count, _ysum/_count))
@@ -722,15 +737,17 @@ class Manager(object):
     
             if aggregate_type :
                 
+                aggregate_type = aggregate_type.lower()
+
                 # Check to make sure we have everything:
                 if not aggregate_interval:
                     raise weewx.ViolatedPrecondition("Aggregation interval missing")
 
-                if aggregate_type.lower() == 'last':
-                    sql_str = "SELECT %s, MIN(usUnits), MAX(usUnits) FROM %s WHERE dateTime = "\
+                if aggregate_type == 'last':
+                    sql_str = "SELECT %s, usUnits, usUnits FROM %s WHERE dateTime = "\
                         "(SELECT MAX(dateTime) FROM %s WHERE "\
-                        "dateTime > ? AND dateTime <= ? AND %s IS NOT NULL)" % (sql_type, self.table_name, 
-                                                                                self.table_name, sql_type)
+                        "dateTime > ? AND dateTime <= ?)" % (sql_type, self.table_name, 
+                                                             self.table_name)
                 else:
                     sql_str = "SELECT %s(%s), MIN(usUnits), MAX(usUnits) FROM %s "\
                         "WHERE dateTime > ? AND dateTime <= ?" % (aggregate_type, sql_type, self.table_name)
@@ -1286,7 +1303,7 @@ class DaySummaryManager(Manager):
             _result = _row[0]
         
         elif aggregate_type in ['mintime', 'maxmintime', 'maxtime', 'minmaxtime', 'maxsumtime',
-                               'count', 'max_ge', 'max_le', 'min_le', 'sum_ge']:
+                               'count', 'max_ge', 'max_le', 'min_ge', 'min_le', 'sum_ge']:
             # These aggregates are always integers:
             _result = int(_row[0])
 
