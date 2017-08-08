@@ -139,6 +139,7 @@ a:hover {
 .data {
     font-weight: bold;
     font-size: 80%;
+    vertical-align: top;
     text-align: left;
     padding-top: 4px;
 }
