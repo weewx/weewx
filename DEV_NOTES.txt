@@ -199,7 +199,9 @@ unit tests --------------------------------------------------------------------
 prerequisites:
 
 python 2.7
+python-usb
 python-mock 0.6
+pyephem
 
 to set up mysql server with user and permissions for testing:
 
