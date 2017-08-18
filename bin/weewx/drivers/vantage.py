@@ -1740,7 +1740,7 @@ class VantageService(Vantage, weewx.engine.StdService):
         
         # Save the battery statuses:
         for k in self.loop_data:
-            self.loop_data[k] = event.packet[k]
+            self.loop_data[k] = event.packet.get(k)
         
     def end_archive_period(self, event):  # @UnusedVariable
         """Zero out the max gust seen since the start of the record"""
