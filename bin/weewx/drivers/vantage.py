@@ -1993,9 +1993,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             print >> dest, """    OFFSETS:
       Wind direction:               %(wind)+.0f deg
       Inside Temperature:           %(inTemp)+.1f F
-      Inside Humidity:              %(inHumid)+.0f%%
+      Inside Humidity:              %(inHumid)+.0f %%
       Outside Temperature:          %(outTemp)+.1f F
-      Outside Humidity:             %(outHumid)+.0f%%""" % calibration_dict
+      Outside Humidity:             %(outHumid)+.0f %%""" % calibration_dict
             if transmitter_list is not None:
                 # Only print the calibrations for channels that we are
                 # listening to.
