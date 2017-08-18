@@ -2171,7 +2171,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         # Wind direction can also be calibrated.
         if variable == "windDir":
             offset = int(offset_str)
-            if not -359 < offset < 359:
+            if not -359 <= offset <= 359:
                 print >> sys.stderr, "Wind direction offset %d is out of range." % (offset)
             else:
                 ans = None
@@ -2187,7 +2187,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                             print "Wind direction offset now set to %+d." % (offset)
         elif variable in temp_variables:
             offset = float(offset_str)
-            if not -12.8 < offset < 12.7:
+            if not -12.8 <= offset <= 12.7:
                 print >> sys.stderr, "Temperature offset %+.1f is out of range." % (offset)
             else:
                 ans = None
@@ -2203,7 +2203,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                             print "Temperature offset %s now set to %+.1f." % (variable, offset)
         elif variable in humid_variables:
             offset = int(offset_str)
-            if not -100 < offset < 100:
+            if not 0 <= offset <= 100:
                 print >> sys.stderr, "Humidity offset %+d is out of range." % (offset)
             else:
                 ans = None
