@@ -1029,7 +1029,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         _altitude  = float(_bardata[1].split()[1])
         _dewpoint  = float(_bardata[2].split()[2])
         _virt_temp = float(_bardata[3].split()[2])
-        _c         = float(_bardata[4].split()[1])
+        _c         = float(_bardata[4].split()[1])/10.0
         _r         = float(_bardata[5].split()[1])/1000.0
         _barcal    = float(_bardata[6].split()[1])/1000.0
         _gain      = float(_bardata[7].split()[1])
@@ -1978,7 +1978,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
       Altitude:                     %.0f feet
       Dew point:                    %.0f F
       Virtual temperature:          %.0f F
-      Humidity correction factor:   %.0f
+      Humidity correction factor:   %.1f
       Correction ratio:             %.3f
       Correction constant:          %+.3f inHg
       Gain:                         %.3f
