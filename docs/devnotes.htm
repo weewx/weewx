@@ -272,6 +272,35 @@ now = dt()</pre>
         <pre class="tty">import datetime
 now = datetime.datetime()</pre>
 
+        <h1>Git work flow</h1>
+            <p>We use git as the source control system.</p>
+            <p>
+                We generally follow Vincent Driessen's <a
+                    href="http://nvie.com/posts/a-successful-git-branching-model/">branching
+                    model</a>. Ignore the complicated diagram at the
+                beginning of the article, and just focus on the text. In
+                this model, there are two key branches:
+            </p>
+
+            <ul>
+                <li><span class="code">master</span>. Fixes go into
+                    this branch. We tend to use fewer "hot fix" branches
+                    and, instead, just incorporate any fixes directly
+                    into the branch. Releases are tagged relative to this
+                    branch.</li>
+                <li><span class="code">development</span> (called <span
+                    class="code">develop</span> in Vince's article).
+                    This is where new features go. Before a release,
+                    they will be merged into the <span class="code">master</span>
+                    branch.</li>
+            </ul>
+
+            <p>
+                What this means to you is that if you submit a pull request that includes a new
+                feature, make sure you commit your changes relative to the <span
+                    class="code"><em>development</em></span> branch.
+            </p>
+
         <h1>Tools</h1>
         <h2>Python</h2>
         <p><a href="http://www.eclipse.org/">Eclipse</a>, with the 
