@@ -110,7 +110,12 @@ class Page(object):
 
     def _append_htmlhead(self, title):
         self.lines.append('<html>')
-        self.lines.append('<head><title>%s</title></head>' % title)
+        self.lines.append('<head>')
+        self.lines.append('<title>%s</title>' % title)
+        self.lines.append('<style>')
+        self.lines.append('img { padding-bottom: 20px; }')
+        self.lines.append('</style>')
+        self.lines.append('</head>')
         self.lines.append('<body>')
 
     def _append_htmlfoot(self):
