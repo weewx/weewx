@@ -361,8 +361,23 @@ class ScaledDraw(object):
                                 (x+half_size, y+half_size),
                                 (x-half_size, y+half_size),
                                 (x-half_size, y-half_size)], **options)
+
+    def text(self, x, y, label, **options) :
+        """Draw text to a scaled location."""
+        xt = self.xtranslate(x)
+        yt = self.ytranslate(y)
+        label_size = self.draw.textsize(label, font=options.get('font'))
+        self.draw.text((xt + 2, yt - label_size[1]/2), label, **options)
                  
-        
+    def circle(self, x, y, r, **options) :
+        """Draw a scaled circle."""
+        rs = r * self.yscale
+        x1 = self.xtranslate(x) + rs
+        y1 = self.ytranslate(y) + rs
+        x2 = self.xtranslate(x) - rs
+        y2 = self.ytranslate(y) - rs
+        self.draw.ellipse([(x1,y1),(x2,y2)], **options)
+
     def rectangle(self, box, **options) :
         """Draw a scaled rectangle.
         
@@ -374,12 +389,12 @@ class ScaledDraw(object):
         box_scaled = [(coord[0]*self.xscale + self.xoffset + 0.5, coord[1]*self.yscale + self.yoffset + 0.5) for coord in box]
         self.draw.rectangle(box_scaled, **options)
         
-    def vector(self, x, vec, vector_rotate, **options):
+    def vector(self, x, vec, vector_rotate, line_type='solid', marker_type=None, marker_size=8, y=0, **options):
         
         if vec is None: 
             return
         xstart_scaled = self.xtranslate(x)
-        ystart_scaled = self.ytranslate(0)
+        ystart_scaled = self.ytranslate(y)
         
         vecinc_scaled = vec * self.yscale
         
@@ -392,8 +407,104 @@ class ScaledDraw(object):
         # downwards
         xend_scaled = xstart_scaled - vecinc_scaled.real
         yend_scaled = ystart_scaled + vecinc_scaled.imag
-        
-        self.draw.line(((xstart_scaled, ystart_scaled), (xend_scaled, yend_scaled)), **options)
+
+        if line_type is not None and line_type == 'solid':
+            self.draw.line(((xstart_scaled, ystart_scaled), (xend_scaled, yend_scaled)), **options)
+
+        if marker_type and marker_type.lower().strip() not in ['none', '']:
+            self.marker([(xend_scaled,yend_scaled)], marker_type, marker_size=marker_size, **options)
+
+    def sector(self, box, sector, nsectors, **options):
+        sector_size = 360.0 / nsectors
+        start = (float(sector) - 0.5) * sector_size - 90.0 - 0.5
+        end = start + sector_size + 0.5
+        self.draw.pieslice(box, int(start), int(end), **options)
+
+    def flag(self, x, y, vec, mag, draw_flags=True, stem_length=16,
+             flag_length=8, dot_radius=1, vector_rotate=0, **options):
+        """Draw a stem with flags.  Each flag has a stem plus zero or more
+        flags.  If drawflags is true then flags are drawn on the stem according
+        to the following scale:
+
+            50 - one pennant
+            10 - one flag
+             5 - one half-flag
+
+        Each stem is drawn from the specified coordinates, with a circle of the
+        specified radius at the stem base.
+
+        x: horizontal position of the stem base
+
+        y: vertical position of the stem base
+
+        vec: complex number, real and imag are x and y components, respectively
+
+        mag: magnitude of the vector (precalculated)
+
+        stem_length: length of the flag stem
+
+        flag_lenth: length of a full-length flag or pennant
+
+        draw_flags: whether to draw flags on the stems
+
+        dot_radius: radius of circle at base of stem
+        """
+        if vec is None:
+            return
+
+        r = math.atan2(vec.imag, vec.real) - math.pi
+        if vector_rotate:
+            r += math.radians(vector_rotate)
+        flagx = stem_length * math.cos(r)
+        flagy = stem_length * math.sin(r)
+
+        xstart_scaled = self.xtranslate(x)
+        ystart_scaled = self.ytranslate(y)
+        xend_scaled = xstart_scaled - flagx
+        yend_scaled = ystart_scaled + flagy
+
+        if dot_radius is not None:
+            self.draw.ellipse([(xstart_scaled-dot_radius,
+                                ystart_scaled-dot_radius),
+                               (xstart_scaled+dot_radius,
+                                ystart_scaled+dot_radius)],
+                              outline=options['fill'])
+        if mag > 0:
+            self.draw.line(((xstart_scaled, ystart_scaled),
+                            (xend_scaled, yend_scaled)), **options)
+        if draw_flags:
+            t1 = 50 # pennant threshold
+            t2 = 10 # flag threshold
+            t3 = 5  # half-flag threshold
+            np = int(mag/t1)                # number of pennants
+            nf = int((mag-np*t1)/t2)        # number of full-length lines
+            nh = int((mag-np*t1-nf*t2)/t3)  # number of half-length lines
+            flagspc = 4           # flag spacing, in pixels
+            penbase = flagspc - 1 # length of a pennant base, in pixels
+            flagidx = 0
+            for p in range(np):
+                x1 = xend_scaled + math.cos(r) * flagidx * flagspc
+                y1 = yend_scaled - math.sin(r) * flagidx * flagspc
+                x2 = x1 - math.sin(r) * flag_length
+                y2 = y1 - math.cos(r) * flag_length
+                x3 = x1 + math.cos(r) * penbase
+                y3 = y1 - math.sin(r) * penbase
+                self.draw.polygon(((x1, y1), (x2, y2), (x3, y3)), **options)
+                flagidx += 1
+            for p in range(nf):
+                x1 = xend_scaled + math.cos(r) * flagidx * flagspc
+                y1 = yend_scaled - math.sin(r) * flagidx * flagspc
+                x2 = x1 - math.sin(r) * flag_length
+                y2 = y1 - math.cos(r) * flag_length
+                self.draw.line(((x1, y1), (x2, y2)), **options)
+                flagidx += 1
+            for p in range(nh):
+                x1 = xend_scaled + math.cos(r) * flagidx * flagspc
+                y1 = yend_scaled - math.sin(r) * flagidx * flagspc
+                x2 = x1 - math.sin(r) * flag_length / 2
+                y2 = y1 - math.cos(r) * flag_length / 2
+                self.draw.line(((x1, y1), (x2, y2)), **options)
+                flagidx += 1
 
     def xtranslate(self, x):
         return int(x * self.xscale + self.xoffset + 0.5)

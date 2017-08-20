@@ -7,6 +7,9 @@
 """
 import colorsys
 import locale
+import math
+import re
+import syslog
 import time
 try:
     from PIL import Image, ImageDraw
@@ -17,14 +20,13 @@ import weeplot.utilities
 import weeutil.weeutil
 from weeutil.weeutil import to_unicode
 
-# NB: All labels passed in should be in UTF-8. They are then converted to Unicode, which
-# some fonts support, others don't. If the chosen font does not support Unicode, then the label
-# will be changed back to UTF-8, then tried again.        
+# NB: All labels passed in should be in UTF-8. They are then converted to
+# Unicode, which some fonts support, others don't. If the chosen font does not
+# support Unicode, then the label will be changed back to UTF-8, then tried
+# again.        
 
 class GeneralPlot(object):
-    """Holds various parameters necessary for a plot. It should be specialized by the type of plot.
-    
-    """
+    """Holds various parameters necessary for a plot."""
     def __init__(self, config_dict):
         """Initialize an instance of GeneralPlot.
         
@@ -73,6 +75,18 @@ class GeneralPlot(object):
 
         self.x_label_format         = to_unicode(config_dict.get('x_label_format'))
         self.y_label_format         = to_unicode(config_dict.get('y_label_format'))
+
+        self.show_x_axis            = weeutil.weeutil.tobool(config_dict.get('show_x_axis', True))
+        self.show_y_axis            = weeutil.weeutil.tobool(config_dict.get('show_y_axis', True))
+        self.show_units             = weeutil.weeutil.tobool(config_dict.get('show_units', True))
+
+        self.annotate_font_path     = config_dict.get('annotate_font_path')
+        self.annotate_font_size     = int(config_dict.get('annotate_font_size', 10))
+        self.latest_font_path       = config_dict.get('latest_font_path')
+        self.latest_font_size       = int(config_dict.get('latest_font_size', 10))
+        self.polar_grid_font_path   = config_dict.get('polar_grid_font_path')
+        self.polar_grid_font_size   = int(config_dict.get('polar_grid_font_size', 10))
+        self.polar_grid_color       = weeplot.utilities.tobgr(config_dict.get('polar_grid_color', '0xa0a0a0'))
         
         # Calculate sensible margins for the given image and font sizes.
         self.lmargin = int(4.0 * self.axis_label_font_size)
@@ -104,15 +118,11 @@ class GeneralPlot(object):
         self.daynight_gradient      = int(config_dict.get('daynight_gradient', 20))
 
     def setBottomLabel(self, bottom_label):
-        """Set the label to be put at the bottom of the plot.
-        
-        """
+        """Set the label to be put at the bottom of the plot."""
         self.bottom_label = to_unicode(bottom_label)
         
     def setUnitLabel(self, unit_label):
-        """Set the label to be used to show the units of the plot.
-        
-        """
+        """Set the label to be used to show the units of the plot."""
         self.unit_label = to_unicode(unit_label)
         
     def setXScaling(self, xscale):
@@ -133,10 +143,9 @@ class GeneralPlot(object):
         """Add a line to be plotted.
         
         line: an instance of PlotLine
-        
         """
         if None in line.x:
-            raise weeplot.ViolatedPrecondition, "X vector cannot have any values 'None' "
+            raise weeplot.ViolatedPrecondition, "X vector cannot have any 'None' values"
         self.line_list.append(line)
 
     def setLocation(self, lat, lon):
@@ -160,18 +169,21 @@ class GeneralPlot(object):
         self.daynight_edge_color = edgecolor
 
     def render(self):
-        """Traverses the universe of things that have to be plotted in this image, rendering
-        them and returning the results as a new Image object.
-        
+        """Traverses the universe of things that have to be plotted in this
+        image, rendering them and returning the results as a new Image object.
         """
 
-        # NB: In what follows the variable 'draw' is an instance of an ImageDraw object and is in pixel units.
-        # The variable 'sdraw' is an instance of ScaledDraw and its units are in the "scaled" units of the plot
-        # (e.g., the horizontal scaling might be for seconds, the vertical for degrees Fahrenheit.)
-        image = Image.new("RGB", (self.image_width, self.image_height), self.image_background_color)
+        # NB: In what follows the variable 'draw' is an instance of an
+        # ImageDraw object and is in pixel units.  The variable 'sdraw' is an
+        # instance of ScaledDraw and its units are in the "scaled" units of the
+        # plot e.g., the horizontal scaling might be for seconds, the vertical
+        # for degrees Fahrenheit.
+        image = Image.new("RGB", (self.image_width, self.image_height),
+                          self.image_background_color)
         draw = self._getImageDraw(image)
         draw.rectangle(((self.lmargin,self.tmargin), 
-                        (self.image_width - self.rmargin, self.image_height - self.bmargin)), 
+                        (self.image_width - self.rmargin,
+                         self.image_height - self.bmargin)), 
                         fill=self.chart_background_color)
         
         self._renderBottom(draw)
@@ -185,19 +197,25 @@ class GeneralPlot(object):
         sdraw = self._getScaledDraw(draw)
         if self.show_daynight:
             self._renderDayNight(sdraw)
-        self._renderXAxes(sdraw)
-        self._renderYAxes(sdraw)
+        if self.show_x_axis:
+            self._renderXAxes(sdraw)
+        if self.show_y_axis:
+            self._renderYAxes(sdraw)
         self._renderPlotLines(sdraw)
+        self._renderAnnotations(sdraw)
         if self.render_rose:
             self._renderRose(image, draw)
 
         if self.anti_alias != 1:
-            image.thumbnail((self.image_width / self.anti_alias, self.image_height / self.anti_alias), Image.ANTIALIAS)
+            image.thumbnail((self.image_width / self.anti_alias,
+                             self.image_height / self.anti_alias),
+                            Image.ANTIALIAS)
 
         return image
     
     def _getImageDraw(self, image):
-        """Returns an instance of ImageDraw with the proper dimensions and background color"""
+        """Returns an instance of ImageDraw with the proper dimensions and
+        background color"""
         draw = UniDraw(image)
         return draw
     
@@ -206,9 +224,13 @@ class GeneralPlot(object):
         
         draw: An instance of ImageDraw
         """
-        sdraw = weeplot.utilities.ScaledDraw(draw, ((self.lmargin + self.padding, self.tmargin + self.padding),
-                                                    (self.image_width - self.rmargin - self.padding, self.image_height - self.bmargin - self.padding)),
-                                                    ((self.xscale[0], self.yscale[0]), (self.xscale[1], self.yscale[1])))
+        sdraw = weeplot.utilities.ScaledDraw(
+            draw,
+            ((self.lmargin + self.padding, self.tmargin + self.padding),
+             (self.image_width - self.rmargin - self.padding,
+              self.image_height - self.bmargin - self.padding)),
+            ((self.xscale[0], self.yscale[0]),
+             (self.xscale[1], self.yscale[1])))
         return sdraw
         
     def _renderDayNight(self, sdraw):
@@ -259,30 +281,33 @@ class GeneralPlot(object):
                        fill=self.daynight_edge_color)
 
     def _renderXAxes(self, sdraw):
-        """Draws the x axis and vertical constant-x lines, as well as the labels.
-        
+        """Draws the x axis and vertical constant-x lines, as well as the
+        labels.
         """
 
-        axis_label_font = weeplot.utilities.get_font_handle(self.axis_label_font_path,
-                                                            self.axis_label_font_size)
+        axis_label_font = weeplot.utilities.get_font_handle(
+            self.axis_label_font_path,
+            self.axis_label_font_size)
 
         drawlabel = False
-        for x in weeutil.weeutil.stampgen(self.xscale[0], self.xscale[1], self.xscale[2]) :
-            sdraw.line((x, x), (self.yscale[0], self.yscale[1]), fill=self.chart_gridline_color,
+        for x in weeutil.weeutil.stampgen(self.xscale[0], self.xscale[1], self.xscale[2]):
+            sdraw.line((x, x), (self.yscale[0], self.yscale[1]),
+                       fill=self.chart_gridline_color,
                        width=self.anti_alias)
             drawlabel = not drawlabel
             if drawlabel:
                 xlabel = self._genXLabel(x)
                 axis_label_size = sdraw.draw.textsize(xlabel, font=axis_label_font)
                 xpos = sdraw.xtranslate(x)
-                sdraw.draw.text((xpos - axis_label_size[0]/2, self.image_height - self.bmargin + 2),
-                                xlabel, fill=self.axis_label_font_color, font=axis_label_font)
+                sdraw.draw.text((xpos - axis_label_size[0]/2,
+                                 self.image_height - self.bmargin + 2),
+                                xlabel, fill=self.axis_label_font_color,
+                                font=axis_label_font)
                 
 
     def _renderYAxes(self, sdraw):
-        """Draws the y axis and horizontal constant-y lines, as well as the labels.
-        Should be sufficient for most purposes.
-        
+        """Draws the y axis and horizontal constant-y lines, as well as the
+        labels.
         """
         nygridlines     = int((self.yscale[1] - self.yscale[0]) / self.yscale[2] + 1.5)
         axis_label_font = weeplot.utilities.get_font_handle(self.axis_label_font_path,
@@ -298,8 +323,25 @@ class GeneralPlot(object):
                 ylabel = self._genYLabel(y)
                 axis_label_size = sdraw.draw.textsize(ylabel, font=axis_label_font)
                 ypos = sdraw.ytranslate(y)
-                sdraw.draw.text((self.lmargin - axis_label_size[0] - 2, ypos - axis_label_size[1]/2),
-                                ylabel, fill=self.axis_label_font_color, font=axis_label_font)
+                sdraw.draw.text((self.lmargin - axis_label_size[0] - 2,
+                                 ypos - axis_label_size[1]/2),
+                                ylabel,
+                                fill=self.axis_label_font_color,
+                                font=axis_label_font)
+
+    def _renderPolarGrid(self, sdraw, x, y, radius, inc):
+        """Draws polar grid at the specified coordinates and radius."""
+        ncircles = 1 + int(radius / inc)
+        font = weeplot.utilities.get_font_handle(self.polar_grid_font_path,
+                                                 self.polar_grid_font_size)
+        sdraw.line((x-radius,x+radius), (y,y), fill=self.polar_grid_color)
+        sdraw.line((x,x), (y-radius,y+radius), fill=self.polar_grid_color)
+        for i in xrange(1,ncircles):
+            r = i * inc
+            sdraw.circle(x, y, r, outline=self.polar_grid_color)
+            if i%2 == 0:
+                label = self._genYLabel(r)
+                sdraw.text(x, y+r, label, font=font, fill=self.polar_grid_color)
 
     def _renderPlotLines(self, sdraw):
         """Draw the collection of lines, using a different color for each one. Because there is
@@ -351,11 +393,213 @@ class GeneralPlot(object):
                 self.rose_rotation = this_line.vector_rotate
                 if self.rose_color is None:
                     self.rose_color = color
+            elif this_line.plot_type == 'flags' :
+                mags = []
+                maxmag = 0
+                for vec in this_line.y:
+                    if vec is not None:
+                        mag = math.sqrt(vec.real*vec.real + vec.imag*vec.imag)
+                        mags.append(mag)
+                        if maxmag < mag:
+                            maxmag = mag
+                    else:
+                        mags.append(None)
+
+                if isinstance(this_line.flag_baseline, int):
+                    y = float(this_line.flag_baseline) / self.image_height
+                    y *= (self.yscale[1] - self.yscale[0])
+                elif isinstance(this_line.flag_baseline, basestring):
+                    if this_line.flag_baseline == 'top':
+                        y = self.yscale[1] - self.yscale[0]
+                    elif this_line.flag_baseline == 'bottom':
+                        y = 0
+                    elif this_line.flag_baseline == 'middle':
+                        y = (self.yscale[1] - self.yscale[0]) / 2
+                    elif this_line.flag_baseline == 'max':
+                        y = maxmag
+                    elif '%' in this_line.flag_baseline:
+                        m = re.match('([0-9]+)%', this_line.flag_baseline)
+                        if m.group(1):
+                            try:
+                                y = float(m.group(1))
+                                y /= 100.0
+                                y *= (self.yscale[1] - self.yscale[0])
+                            except ValueError:
+                                syslog.syslog(syslog.LOG_ERR, "bad format for flag_baseline '%s'" % this_line.flag_baseline)
+                        else:
+                            syslog.syslog(syslog.LOG_ERR, "bad format for flag_baseline '%s'" % this_line.flag_baseline)
+                            this_line.flag_baseline = None
+                    else:
+                        try:
+                            y = int(this_line.flag_baseline)
+                        except ValueError:
+                            syslog.syslog(syslog.LOG_ERR, "unrecognized flag_baseline '%s'" % this_line.flag_baseline)
+                            this_line.flag_baseline = None
+
+                for (x, vec, mag) in zip(this_line.x, this_line.y, mags):
+                    if this_line.flag_baseline is None:
+                        y = mag
+                    sdraw.flag(x, y, vec, mag,
+                               stem_length = this_line.flag_stem_length,
+                               flag_length = this_line.flag_length,
+                               draw_flags = this_line.draw_flags,
+                               dot_radius = this_line.flag_dot_radius,
+                               fill = color)
+            elif this_line.plot_type == 'polar':
+                x = self.xscale[0] + 0.5 * (self.xscale[1] - self.xscale[0])
+                y = 0
+                xo = x
+                yo = y
+                if this_line.polar_origin is not None:
+                    xo = self._xPixel2Scaled(this_line.polar_origin[0])
+                    yo = self._yPixel2Scaled(this_line.polar_origin[1])
+                if this_line.polar_grid:
+                    radius = (self.yscale[1] - self.yscale[0]) / 2
+                    self._renderPolarGrid(sdraw, x, y, radius, radius/8)
+                for i, vec in enumerate(this_line.y):
+                    c = blend_ls(color, self.image_background_color,
+                                 float(i)/float(len(this_line.y)))
+                    rgbc = int2rgbstr(c)
+                    sdraw.vector(x, vec, vector_rotate=0, y=y,
+                                 line_type=this_line.line_type,
+                                 marker_type=this_line.marker_type,
+                                 marker_size=this_line.marker_size,
+                                 fill=rgbc, width=width)
+                if this_line.highlight_latest:
+                    sdraw.vector(x, this_line.y[-1], vector_rotate=0,
+                                 fill=this_line.latest_color,
+                                 width=this_line.latest_width)
+                    sdraw.vector(x, this_line.y[-1], vector_rotate=0,
+                                 fill=color, width=1)
+                if this_line.annotate_latest:
+                    pw = self.image_width - self.rmargin -  self.lmargin - 2*self.padding
+                    x = self.lmargin + self.padding + pw/2
+                    ph = self.image_height - self.tmargin - self.bmargin - 2*self.padding
+                    y = self.image_height - self.bmargin - self.padding - ph/2
+                    v = this_line.y[-1]
+                    xp = v.real/(self.yscale[1]-self.yscale[0])
+                    yp = v.imag/(self.yscale[1]-self.yscale[0])
+                    x += pw * xp
+                    y -= ph * yp
+                    mag = math.sqrt(v.real*v.real + v.imag*v.imag)
+                    label = '%.1f' % mag
+                    font = weeplot.utilities.get_font_handle(
+                        self.latest_font_path, self.latest_font_size)
+                    size = sdraw.draw.textsize(label, font=font)
+                    if v.real < 0:
+                        x -= size[0]
+                    if v.imag > 0:
+                        y -= size[1]
+                    xlabel = int(x)
+                    ylabel = int(y)
+                    sdraw.draw.text((xlabel,ylabel),label,
+                                    fill=this_line.annotate_color,
+                                    font=font)
+            elif this_line.plot_type == 'polar_histogram' :
+                nsector = 16
+                bins = [0] * nsector
+                total = 0
+                for y in this_line.y:
+                    if y >= 0 and y <= 360:
+                        idx = int(round(y * nsector / 360.0))
+                        if idx == nsector:
+                            idx = 0
+                        bins[idx] += 1
+                        total += 1
+                binmin = min(bins)
+                binmax = max(bins)
+                pw = self.image_width - self.rmargin - self.lmargin - 2*self.padding
+                ph = self.image_height - self.tmargin - self.bmargin - 2*self.padding
+                d = pw if pw < ph else ph
+                x = self.lmargin + self.padding + pw/2
+                y = self.image_height - self.bmargin - self.padding - ph/2
+                box = (x-d/2,y-d/2,x+d/2,y+d/2)
+                if this_line.show_counts:
+                    font = weeplot.utilities.get_font_handle(
+                        self.latest_font_path, self.latest_font_size)
+                for s in xrange(nsector):
+#                    f = float(bins[s])/float(total)
+                    f = float(bins[s] - binmin) / binmax
+                    c = blend_ls(color, self.image_background_color, f)
+                    rgbc = int2rgbstr(c)
+                    sdraw.sector(box, s, nsector, fill=rgbc)
+                    if this_line.show_counts:
+                        label = str(bins[s])
+                        size = sdraw.draw.textsize(label, font=font)
+                        angle = (s * 360.0 / nsector - 90.0) * math.pi / 180.0
+                        xlabel = x + 100 * math.cos(angle)
+                        ylabel = y + 100 * math.sin(angle)
+                        sdraw.draw.text((xlabel,ylabel),label,
+                                        fill=this_line.annotate_color,
+                                        font=font)
+
+    def _renderAnnotations(self, sdraw):
+        font = weeplot.utilities.get_font_handle(self.annotate_font_path,
+                                                 self.annotate_font_size)
+        for j, this_line in enumerate(self.line_list[::-1]):
+            if this_line.plot_type == 'line':
+                ymax = this_line.y[0]
+                xmax = this_line.x[0]
+                ymin = this_line.y[0]
+                xmin = this_line.x[0]
+                for (x,y) in zip(this_line.x, this_line.y):
+                    if y > ymax:
+                        ymax = y
+                        xmax = x
+                    if y < ymin:
+                        ymin = y
+                        xmin = x
+                if this_line.annotate_high:
+                    label = '%.1f' % ymax
+                    size = sdraw.draw.textsize(label, font=font)
+                    xlabel = self._xScaled2Pixel(xmax) - 5
+                    ylabel = self._yScaled2Pixel(ymax) - size[1] - 2
+                    color = this_line.annotate_high_color
+                    sdraw.draw.text((xlabel,ylabel),label,fill=color,font=font)
+                    sdraw.line((xmax,xmax),(self.yscale[0],ymax),fill=color)
+                if this_line.annotate_low:
+                    label = '%.1f' % ymin
+                    size = sdraw.draw.textsize(label, font=font)
+                    xlabel = self._xScaled2Pixel(xmin) - 5
+                    ylabel = self._yScaled2Pixel(ymin) - size[1] - 2
+                    color = this_line.annotate_low_color
+                    sdraw.draw.text((xlabel,ylabel),label,fill=color,font=font)
+                    sdraw.line((xmin,xmin),(self.yscale[0],ymin),fill=color)
+            if this_line.annotate_text is not None:
+                sdraw.draw.text((this_line.annotate_text_x,
+                                 self.image_height - self.bmargin - self.padding - this_line.annotate_text_y),
+                                this_line.annotate_text,
+                                fill=this_line.annotate_color,
+                                font=font)
+
+    def _xScaled2Pixel(self, x):
+        p = self.image_width - self.rmargin - self.lmargin - 2*self.padding
+        p *= float(x - self.xscale[0]) / float(self.xscale[1] - self.xscale[0])
+        p = self.lmargin + self.padding + int(p)
+        return p
+
+    def _yScaled2Pixel(self, y):
+        p = self.image_height - self.tmargin - self.bmargin - 2*self.padding
+        p *= float(y - self.yscale[0]) / float(self.yscale[1] - self.yscale[0])
+        p = self.image_height - self.bmargin - self.padding - int(p)
+        return p
+
+    def _xPixel2Scaled(self, x):
+        s = x - self.lmargin - self.padding
+        s /= self.image_width - self.rmargin - self.lmargin - 2*self.padding
+        s *= self.xscale[1] - self.xscale[0]
+        s += self.xscale[0]
+        return s
+
+    def _yPixel2Scaled(self, y):
+        s = self.image_height - y - self.bmargin - self.padding
+        s /= self.image_height - self.tmargin - self.bmargin - 2*self.padding
+        s *= self.yscale[1] - self.yscale[0]
+        s += self.yscale[0]
+        return s
 
     def _renderBottom(self, draw):
-        """Draw anything at the bottom (just some text right now).
-        
-        """
+        """Draw anything at the bottom (just some text right now)."""
         bottom_label_font = weeplot.utilities.get_font_handle(self.bottom_label_font_path, self.bottom_label_font_size)
         bottom_label_size = draw.textsize(self.bottom_label, font=bottom_label_font)
         
@@ -366,9 +610,7 @@ class GeneralPlot(object):
                   font=bottom_label_font)
         
     def _renderTopBand(self, draw):
-        """Draw the top band and any text in it.
-        
-        """
+        """Draw the top band and any text in it."""
         # Draw the top band rectangle
         draw.rectangle(((0,0), 
                         (self.image_width, self.tbandht)), 
@@ -384,9 +626,9 @@ class GeneralPlot(object):
 
         top_label_font = weeplot.utilities.get_font_handle(self.top_label_font_path, self.top_label_font_size)
         
-        # The top label is the appended label_list. However, it has to be drawn in segments 
-        # because each label may be in a different color. For now, append them together to get
-        # the total width
+        # The top label is the appended label_list. However, it has to be drawn
+        # in segments because each label may be in a different color. For now,
+        # append them together to get the total width
         top_label = ' '.join([line.label for line in self.line_list])
         top_label_size = draw.textsize(top_label, font=top_label_font)
         
@@ -397,9 +639,10 @@ class GeneralPlot(object):
         for i, this_line in enumerate(self.line_list):
             color = self.chart_line_colors[i%ncolors] if this_line.color is None else this_line.color
             # Draw a label
-            draw.text( (x,y), this_line.label, fill = color, font = top_label_font)
-            # Now advance the width of the label we just drew, plus a space:
-            label_size = draw.textsize(this_line.label + ' ', font= top_label_font)
+            draw.text( (x,y), this_line.label, fill=color, font=top_label_font)
+            # Now advance the width of the label we just drew, plus a space
+            label_size = draw.textsize(this_line.label + ' ',
+                                       font=top_label_font)
             x += label_size[0]
 
     def _renderRose(self, image, draw):
@@ -410,22 +653,23 @@ class GeneralPlot(object):
         barb_width  = 3
         barb_height = 3
         # The background is all white with a zero alpha (totally transparent)
-        rose_image = Image.new("RGBA", (self.rose_width, self.rose_height), (0x00, 0x00, 0x00, 0x00))
+        rose_image = Image.new("RGBA", (self.rose_width, self.rose_height),
+                               (0x00, 0x00, 0x00, 0x00))
         rose_draw = ImageDraw.Draw(rose_image)
  
         fill_color = add_alpha(self.rose_color)
         # Draw the arrow straight up (North). First the shaft:
-        rose_draw.line( ((rose_center_x, 0), (rose_center_x, self.rose_height)), width = 1, fill = fill_color)
+        rose_draw.line( ((rose_center_x, 0), (rose_center_x, self.rose_height)), width=1, fill=fill_color)
         # Now the left barb:
-        rose_draw.line( ((rose_center_x - barb_width, barb_height), (rose_center_x, 0)), width = 1, fill = fill_color)
+        rose_draw.line( ((rose_center_x - barb_width, barb_height), (rose_center_x, 0)), width=1, fill=fill_color)
         # And the right barb:
-        rose_draw.line( ((rose_center_x, 0), (rose_center_x + barb_width, barb_height)), width = 1, fill = fill_color)
+        rose_draw.line( ((rose_center_x, 0), (rose_center_x + barb_width, barb_height)), width=1, fill=fill_color)
         
         rose_draw.ellipse(((rose_center_x - self.rose_diameter/2,
                             rose_center_y - self.rose_diameter/2),
                            (rose_center_x + self.rose_diameter/2,
                             rose_center_y + self.rose_diameter/2)),
-                          outline = fill_color)
+                          outline=fill_color)
 
         # Rotate if necessary:
         if self.rose_rotation:
@@ -452,7 +696,6 @@ class GeneralPlot(object):
     def _calcXScaling(self):
         """Calculates the x scaling. It will probably be specialized by
         plots where the x-axis represents time.
-        
         """
         if self.xscale is None :
             (xmin, xmax) = self._calcXMinMax()
@@ -467,7 +710,11 @@ class GeneralPlot(object):
         # ValueError exception.
         ymin = ymax = None
         for line in self.line_list:
-            if line.plot_type == 'vector':
+            if line.plot_type == 'polar_histogram':
+                continue
+            if (line.plot_type == 'vector' or
+                line.plot_type == 'flags' or
+                line.plot_type == 'polar'):
                 try:
                     yline_max = max(abs(c) for c in filter(lambda v : v is not None, line.y))
                 except ValueError:
@@ -544,14 +791,28 @@ class TimePlot(GeneralPlot) :
         # convert it to UTF8, then back again:
         xlabel = to_unicode(time.strftime(self.x_label_format.encode('utf8'), time_tuple))
         return xlabel
-    
+
+
 class PlotLine(object):
-    """Represents a single line (or bar) in a plot.
-    
-    """
-    def __init__(self, x, y, label='', color=None, width=None, plot_type='line',
+    """Represents a single line (or bar) in a plot."""
+    def __init__(self, x, y, label='', color=None, width=None,
+                 plot_type='line', bar_width=None,
                  line_type='solid', marker_type=None, marker_size=10, 
-                 bar_width=None, vector_rotate = None, gap_fraction=None):
+                 vector_rotate = None, gap_fraction=None,
+                 draw_flags=True, flag_baseline=None,
+                 flag_dot_radius=1, flag_stem_length=18, flag_length=8,
+                 annotate_font_size=10,
+                 annotate_color=None,
+                 annotate_high=False, annotate_high_color=None,
+                 annotate_high_font_size=None,
+                 annotate_low=False, annotate_low_color=None,
+                 annotate_low_font_size=None,
+                 highlight_latest=False,
+                 latest_color=None, latest_width=None,
+                 annotate_latest=False,
+                 annotate_text=None, annotate_text_x=0, annotate_text_y=0,
+                 show_counts=False,
+                 polar_grid=False, polar_origin=None):
         self.x           = x
         self.y           = y
         self.label       = to_unicode(label)
@@ -565,6 +826,41 @@ class PlotLine(object):
         self.bar_width   = bar_width
         self.vector_rotate = vector_rotate
         self.gap_fraction = gap_fraction
+        self.draw_flags        = draw_flags
+        self.flag_baseline     = flag_baseline
+        self.flag_dot_radius   = flag_dot_radius
+        self.flag_stem_length  = flag_stem_length
+        self.flag_length       = flag_length
+        self.annotate_font_size = annotate_font_size
+        self.annotate_color      = annotate_color
+        self.annotate_high       = annotate_high
+        self.annotate_high_color = annotate_high_color
+        self.annotate_high_font_size = annotate_high_font_size
+        self.annotate_low        = annotate_low
+        self.annotate_low_color  = annotate_low_color
+        self.annotate_low_font_size = annotate_low_font_size
+        self.highlight_latest = highlight_latest
+        self.latest_color = latest_color
+        self.latest_width = latest_width
+        self.annotate_latest = annotate_latest
+        self.annotate_text = annotate_text
+        self.annotate_text_x = annotate_text_x
+        self.annotate_text_y = annotate_text_y
+        self.show_counts = show_counts
+        self.polar_grid = polar_grid
+        self.polar_origin = polar_origin
+
+        if self.latest_width is None:
+            self.latest_width = 1
+        if self.latest_color is None:
+            self.latest_color = 'orange'
+        if self.annotate_color is None:
+            self.annotate_color = 0x000000
+        if self.annotate_high_font_size is None:
+            self.annotate_high_font_size = self.annotate_font_size
+        if self.annotate_low_font_size is None:
+            self.annotate_low_font_size = self.annotate_font_size
+
 
 class UniDraw(ImageDraw.ImageDraw):
     """Supports non-Unicode fonts

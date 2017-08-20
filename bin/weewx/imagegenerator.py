@@ -9,6 +9,7 @@ Needs to be refactored into smaller functions."""
 from __future__ import with_statement
 import time
 import datetime
+import math
 import syslog
 import os.path
 
@@ -19,9 +20,9 @@ import weewx.reportengine
 import weewx.units
 from weeutil.weeutil import to_bool, to_int, to_float
 
-#===============================================================================
+# =============================================================================
 #                    Class ImageGenerator
-#===============================================================================
+# =============================================================================
 
 class ImageGenerator(weewx.reportengine.ReportGenerator):
     """Class for managing the image generator."""
@@ -133,12 +134,28 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                             syslog.syslog(syslog.LOG_ERR, "imagegenerator: line type %s skipped" % var_type)
                             continue
 
-                    # Now its time to find and hit the database:
-                    binding = line_options['data_binding']
-                    archive = self.db_binder.get_manager(binding)
-                    (start_vec_t, stop_vec_t, data_vec_t) = \
-                            archive.getSqlVectors((minstamp, maxstamp), var_type, aggregate_type=aggregate_type,
-                                                  aggregate_interval=aggregate_interval)
+                    # Generate points or get them from the database
+                    if var_type == 'function':
+                        func_type = line_options.get('function_type')
+                        func_def = line_options.get('function_definition')
+                        if func_type is None or func_def is None:
+                            if func_type is None:
+                                syslog.syslog(syslog.LOG_ERR, "genimages: function specified but no function_type provided")
+                            if func_def is None:
+                                syslog.syslog(syslog.LOG_ERR, "genimages: function specified but no function_defintion provided")
+                            continue
+                        (start_vec_t, end_vec_t, data_vec_t) = generatePoints(
+                            func_type, func_def,
+                            minstamp, maxstamp, timeinc / 50)
+                    else:
+                        binding = line_options['data_binding']
+                        archive = self.db_binder.get_manager(binding)
+                        (start_vec_t, stop_vec_t, data_vec_t) = \
+                            archive.getSqlVectors(
+                            (minstamp, maxstamp),
+                            var_type,
+                            aggregate_type=aggregate_type,
+                            aggregate_interval=aggregate_interval)
 
                     if weewx.debug:
                         assert(len(start_vec_t) == len(stop_vec_t))
@@ -199,20 +216,101 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         
                     marker_type = line_options.get('marker_type')
                     marker_size = to_int(line_options.get('marker_size', 8))
-                    
+
+                    # Get flag settings
+                    draw_flags = weeutil.weeutil.tobool(
+                        line_options.get('draw_flags', True))
+                    flag_dot_radius = weeutil.weeutil.toint(
+                        line_options.get('flag_dot_radius', 1))
+                    flag_stem_length = weeutil.weeutil.toint(
+                        line_options.get('flag_stem_length', 18))
+                    flag_length = weeutil.weeutil.toint(
+                        line_options.get('flag_length', 8))
+                    flag_baseline = line_options.get('flag_baseline', None)
+
+                    # Get annotation settings
+                    annotate_font_size = line_options.get(
+                        'annotate_font_size', 10)
+                    annotate_color = weeplot.utilities.tobgr(
+                        line_options.get('annotate_color', '0x000000'))
+                    annotate_high = weeutil.weeutil.tobool(
+                        line_options.get('annotate_high', False))
+                    annotate_high_color = weeplot.utilities.tobgr(
+                        line_options.get('annotate_high_color',annotate_color))
+                    annotate_high_font_size = weeutil.weeutil.toint(
+                        line_options.get('annotate_high_font_size',
+                                         annotate_font_size))
+                    annotate_low = weeutil.weeutil.tobool(
+                        line_options.get('annotate_low', False))
+                    annotate_low_color = weeplot.utilities.tobgr(
+                        line_options.get('annotate_low_color', annotate_color))
+                    annotate_low_font_size = weeutil.weeutil.toint(
+                        line_options.get('annotate_low_font_size',
+                                         annotate_font_size))
+                    annotate_text = weeutil.weeutil.tostr(
+                        line_options.get('annotate_text', None))
+                    annotate_text_x = weeutil.weeutil.toint(
+                        line_options.get('annotate_text_x', 0))
+                    annotate_text_y = weeutil.weeutil.toint(
+                        line_options.get('annotate_text_y', 0))
+
+                    # Get latest value settings
+                    highlight_latest = weeutil.weeutil.tobool(
+                        line_options.get('highlight_latest', True))
+                    latest_color = weeplot.utilities.tobgr(
+                        line_options.get('latest_color', None))
+                    latest_width = weeutil.weeutil.toint(
+                        line_options.get('latest_width', None))
+                    annotate_latest = weeutil.weeutil.tobool(
+                        line_options.get('annotate_latest', False))
+
+                    # Polar settings
+                    polar_grid = weeutil.weeutil.tobool(
+                        line_options.get('polar_grid', False))
+                    polar_origin = weeutil.weeutil.option_as_list(
+                        line_options.get('polar_origin', None))
+                    if polar_origin is not None:
+                        polar_origin = [int(n) for n in polar_origin]
+
+                    show_counts = weeutil.weeutil.tobool(
+                        line_options.get('show_counts', False))
+
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(
                         new_stop_vec_t[0], new_data_vec_t[0],
-                        label         = label, 
-                        color         = color,
-                        width         = width,
-                        plot_type     = plot_type,
-                        line_type     = line_type,
-                        marker_type   = marker_type,
-                        marker_size   = marker_size,
-                        bar_width     = interval_vec,
-                        vector_rotate = vector_rotate,
-                        gap_fraction  = gap_fraction))
+                        label                   = label, 
+                        color                   = color,
+                        width                   = width,
+                        plot_type               = plot_type,
+                        line_type               = line_type,
+                        marker_type             = marker_type,
+                        marker_size             = marker_size,
+                        bar_width               = interval_vec,
+                        vector_rotate           = vector_rotate,
+                        gap_fraction            = gap_fraction,
+                        draw_flags              = draw_flags,
+                        flag_baseline           = flag_baseline,
+                        flag_dot_radius         = flag_dot_radius,
+                        flag_stem_length        = flag_stem_length,
+                        flag_length             = flag_length,
+                        annotate_high           = annotate_high,
+                        annotate_high_color     = annotate_high_color,
+                        annotate_high_font_size = annotate_high_font_size,
+                        annotate_low            = annotate_low,
+                        annotate_low_color      = annotate_low_color,
+                        annotate_low_font_size  = annotate_low_font_size,
+                        annotate_color          = annotate_color,
+                        highlight_latest        = highlight_latest,
+                        latest_color            = latest_color,
+                        latest_width            = latest_width,
+                        annotate_latest         = annotate_latest,
+                        annotate_text_x         = annotate_text_x,
+                        annotate_text_y         = annotate_text_y,
+                        annotate_text           = annotate_text,
+                        annotate_font_size      = annotate_font_size,
+                        show_counts             = show_counts,
+                        polar_grid              = polar_grid,
+                        polar_origin            = polar_origin))
 
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()
@@ -244,5 +342,33 @@ def skipThisPlot(time_ts, aggregate_interval, img_file):
     
     # Finally, if we're on an aggregation boundary, regenerate.
     time_dt = datetime.datetime.fromtimestamp(time_ts)
-    tdiff = time_dt -  time_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    tdiff = time_dt - time_dt.replace(hour=0, minute=0, second=0, microsecond=0)
     return abs(tdiff.seconds % aggregate_interval) > 1
+
+def generatePoints(func_type, func_def, xmin, xmax, xinc):
+    """Generate points for the specified function."""
+    std_unit_system = None
+    aggregate_type = None
+    start_vec = list()
+    stop_vec = list()
+    data_vec = list()
+    try:
+        for x in range(xmin, xmax, xinc):
+            expr = func_def.replace('x', '%d' % x)
+            result = eval(expr)
+            y = float(result)
+            start_vec.append(x)
+            stop_vec.append(x)
+            data_vec.append(y)
+    except Exception, e:
+        syslog.syslog(syslog.LOG_ERR, "generatePoints: eval failed for function '%s': %s" % (func_def, e))
+        start_vec = [0]
+        stop_vec = [0]
+        data_vec = [0]
+    (time_type, time_group) = weewx.units.getStandardUnitType(
+        std_unit_system, 'dateTime')
+    (data_type, data_group) = weewx.units.getStandardUnitType(
+        std_unit_system, func_type, aggregate_type)
+    return (weewx.units.ValueTuple(start_vec, time_type, time_group),
+            weewx.units.ValueTuple(stop_vec, time_type, time_group),
+            weewx.units.ValueTuple(data_vec, data_type, data_group))
