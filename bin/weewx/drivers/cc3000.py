@@ -81,7 +81,7 @@ import weeutil.weeutil
 import weewx.drivers
 
 DRIVER_NAME = 'CC3000'
-DRIVER_VERSION = '0.15'
+DRIVER_VERSION = '0.16'
 
 def loader(config_dict, engine):
     return CC3000Driver(**config_dict[DRIVER_NAME])
@@ -207,6 +207,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             print "channel:", self.driver.station.get_channel()
             print "charger:", self.driver.station.get_charger()
             print "baro:", self.driver.station.get_baro()
+            print "rain:", self.driver.station.get_rain()
         self.driver.closePort()
 
     def clear_memory(self, prompt):

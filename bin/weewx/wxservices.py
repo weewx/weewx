@@ -126,6 +126,8 @@ class WXCalculate(object):
             raise weewx.ViolatedPrecondition("Atmospheric transmission "
                                              "coefficient (%f) out of "
                                              "range [.7-.91]" % self.atc)
+        # atmospheric turbidity (2=clear, 4-5=smoggy)
+        self.nfac = float(svc_dict.get('nfac', 2))
 
         # height above ground at which wind is measured, in meters
         self.wind_height = float(svc_dict.get('wind_height', 2.0))

@@ -132,12 +132,13 @@ Version: 3.7
         <p>The time on some stations is automatically synchronized with the
             weeWX server nominally every four hours.
             The synchronization frequency can be adjusted in the
-            <span class='code'>weewx</span> configuration.</p>
+            weeWX configuration.</p>
 
         <h2>Python</h2>
 
-        <p>Python 2.5, 2.6, or 2.7 is required. Python 3 will not work. For Python 2.5, see
-            <a href="#python2_5">the special instructions below</a>.</p>
+        <p>Python 2.5, 2.6, or 2.7 is required. Python 3 will not work. See special notes
+        below for <a href="#python2_5">Python 2.5</a> and <a href="#python2_6">Python 2.6</a>
+        </p>
 
         <h2 id="permissions">Permissions</h2>
 
@@ -401,7 +402,7 @@ Version: 3.7
                     <tr>
                         <td>Configuration directory</td>
                         <td class="symcode">CONFIG_ROOT</td>
-                        <td class='tty'>/etc/weewx</td>
+                        <td class='tty'>/etc/weewx/</td>
                     </tr>
                     <tr>
                         <td>Skins and templates</td>
@@ -426,7 +427,7 @@ Version: 3.7
                     <tr>
                         <td>Examples</td>
                         <td class="symcode">EXAMPLE_ROOT</td>
-                        <td class='tty'>/usr/share/doc/weewx/examples/</td>
+                        <td class='tty'>/usr/share/doc/weewx-x.y.z/examples/</td>
                     </tr>
                     <tr>
                         <td>PID file</td>
@@ -454,7 +455,7 @@ Version: 3.7
                     <tr>
                         <td>weeWX root directory</td>
                         <td class="symcode">WEEWX_ROOT</td>
-                        <td class="tty">/Users/Shared/weewx</td>
+                        <td class="tty">/Users/Shared/weewx/</td>
                     </tr>
                     <tr>
                         <td>Executables</td>
@@ -474,7 +475,7 @@ Version: 3.7
                     <tr>
                         <td>SQLite databases</td>
                         <td class="symcode">SQLITE_ROOT</td>
-                        <td class='tty'>/Users/Shared/weewx/archive</td>
+                        <td class='tty'>/Users/Shared/weewx/archive/</td>
                     </tr>
                     <tr>
                         <td>Web pages and images</td>
@@ -518,7 +519,7 @@ Version: 3.7
                     <tr>
                         <td>weeWX root directory</td>
                         <td class="symcode">WEEWX_ROOT</td>
-                        <td class="tty">/home/weewx</td>
+                        <td class="tty">/home/weewx/</td>
                     </tr>
                     <tr>
                         <td>Executables</td>
@@ -538,7 +539,7 @@ Version: 3.7
                     <tr>
                         <td>SQLite databases</td>
                         <td class="symcode">SQLITE_ROOT</td>
-                        <td class='tty'>/home/weewx/archive</td>
+                        <td class='tty'>/home/weewx/archive/</td>
                     </tr>
                     <tr>
                         <td>Web pages and images</td>
@@ -582,7 +583,7 @@ Version: 3.7
             as log messages. Once everything is working properly, run it as a
             daemon.</p>
 
-        <h2>Running directly</h2>
+        <h2 id="Running_directly">Running directly</h2>
 
         <p>To run weeWX directly, invoke
             the main program, <span class="code">weewxd</span>, giving
@@ -610,7 +611,7 @@ Version: 3.7
         <p>Note that this <em>only</em> rereads the configuration file. It will
             not reload any code.</p>
 
-        <h2>Running as a daemon</h2>
+        <h2 id="Running_as_a_daemon">Running as a daemon</h2>
 
         <p>For unattended operations it is best to have weeWX
             run as a daemon, started automatically when the server is rebooted. </p>
@@ -3063,8 +3064,9 @@ sqlite3 /home/weewx/archive/weewx.sdb</span>
 sqlite> <span class="cmd">delete from archive where dateTime > X;</span>
 sqlite> <span class="cmd">.exit</span></pre>
 
-        <p>The timestamp X is the current time as unix epoch (number of seconds
-            since 1 January 1970), or a time a minute or two in the future.</p>
+        <p>The timestamp X is the current time in unix epoch time (number of seconds
+            since 1 January 1970). <a href="https://www.epochconverter.com/">This website</a>
+            is useful for determining the current unix epoch time.</p>
 
         <h4>Corrupt station memory</h4>
         <p>If you have a Vantage station, the problem might be because the data on
@@ -3073,7 +3075,7 @@ sqlite> <span class="cmd">.exit</span></pre>
             asks the console for all archive data &quot;since&quot; some time. The
             console then downloads the records one at a time. After it gets to the
             very last one, the memory wraps around, and the timestamp will suddenly
-            jump backwards in time a couple weeks &mdash; this how the software
+            jump backwards in time a couple weeks &mdash; this is how the software
             knows it has downloaded the last record and so it stops.</p>
 
         <p>However, if the internal memory gets garbled, the console will immediately
@@ -3523,6 +3525,13 @@ Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
 
         <p>Various possible complications:</p>
         <ul>
+            <li id="pyserial_requirements">If your hardware requires PySerial (check the <a href="hardware.htm"><em>Hardware Guide</em></a>), 
+            you must have the right version. Unfortunately, the current versions
+            of PySerial, and the ones that will get installed by default, 3.x, do not support Python 2.5 
+            (or 2.6 for that matter). You will have to install 
+            PySerial V2.7, which you can 
+            <a href="https://sourceforge.net/projects/pyserial/files/pyserial/2.7/">obtain from SourceForge</a>.</li>
+            
             <li>You may have to install the development environment of SQLite in
                 order to get <span class='code'>pysqlite</span> to install. This worked on my system:
 <pre class="tty cmd">
@@ -3563,6 +3572,11 @@ ImportError: The _imagingft C module is not installed</pre>
 find /usr/lib -name "libfreetype*" -print</pre>
             </li>
         </ul>
+
+
+        <h3 id="python2_6">Python 2.6</h3>
+        <p>See the <a href="#pyserial_requirements">note about PySerial</a>
+        that can be found under the secton on Python 2.5 above.</p>
 
         <h3>FreeBSD</h3>
 

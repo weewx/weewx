@@ -264,8 +264,9 @@ class SimulatorConfEditor(weewx.drivers.AbstractConfEditor):
     # Generator.  Emit LOOP packets as fast as possible (useful for testing).
     #mode = generator
 
-    # The start time. If not specified, the default is to use the present time.
-    #start = 2011-01-01 00:00
+    # The start time. Format is YYYY-mm-ddTHH:MM. If not specified, the default 
+    # is to use the present time.
+    #start = 2011-01-01T00:00
 
     # The driver to use:
     driver = weewx.drivers.simulator

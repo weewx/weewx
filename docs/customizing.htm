@@ -57,7 +57,7 @@ Version: 3.7
 
       <p>
         This document starts with an overview of the architecture of
-        weewx. If you are only interested in customizing the generated
+        weeWX. If you are only interested in customizing the generated
         reports you can probably skip the overview and proceed directly
         to the section <em><a href="#standard_skin">The
             Standard <span class="code">skin.conf</span>
@@ -309,7 +309,7 @@ Version: 3.7
       <p>
         The default distribution of weeWX includes three reports:
       </p>
-      <table class="indent" summary="Standard reports included in weewx">
+      <table class="indent" summary="Standard reports included in weeWX">
         <tbody>
           <tr class="first_row">
             <td>Report</td>
@@ -394,7 +394,7 @@ Version: 3.7
         FTP/rsync them to remote locations. The default install of weeWX
           includes the following generators:
       </p>
-      <table class="indent" summary="Generators included in weewx">
+      <table class="indent" summary="Generators included in weeWX">
         <tbody>
           <tr class="first_row">
             <td>Generator</td>
@@ -1315,7 +1315,7 @@ $month.outTemp.max</pre>
       <h4>Illegal conversions</h4>
 
       <p>
-        If an inappropriate or nonsense conversion is asked for, <em>e.g.</em>,
+        If an inappropriate or nonsense conversion is asked for, <i>e.g.</i>,
       </p>
       <pre class="tty">Today's minimum pressure in mbars: $day.barometer.min.mbar
 or in degrees C: $day.barometer.min.degree_C
@@ -1347,7 +1347,7 @@ or in foobar units: $day.barometer.min.foobar
             <td class='text_highlight'>(no tag)</td>
             <td>Value is returned as a string, formatted using an
               appropriate string format from <span class="code">skin.conf</span>.
-              A unit label (e.g., <span class='code'>&deg;F</span>) from
+              A unit label (<i>e.g.</i>, <span class='code'>&deg;F</span>) from
               <span class="code">skin.conf</span> is also attached at
               the end.
             </td>
@@ -1362,7 +1362,7 @@ or in foobar units: $day.barometer.min.foobar
               if given, otherwise the value for <span class="code">NONE</span>
               in <span class="code"> <a
                 href="#Units_StringFormats">[Units][[StringFormats]]</a>
-            </span> will be used. A unit label (e.g., <span class='code'>&deg;F</span>)
+              </span> will be used. A unit label (<i>e.g.</i>, <span class='code'>&deg;F</span>)
               from <span class="code">skin.conf</span> will be attached
               at the end.
             </td>
@@ -1385,7 +1385,7 @@ or in foobar units: $day.barometer.min.foobar
               given, otherwise the value for <span class="code">NONE</span>
               in <span class="code"> <a
                 href="#Units_StringFormats">[Units][[StringFormats]]</a>
-            </span> will be used. A unit label (e.g., <span class='code'>&deg;F</span>)
+            </span> will be used. A unit label (<i>e.g.</i>, <span class='code'>&deg;F</span>)
               from <span class="code">skin.conf</span> will be attached
               at the end.
             </td>
@@ -2650,7 +2650,9 @@ $station.altitude</pre>
       </ul>
       <p>
         This example is included in the distribution as <span
-          class="code">examples/stats.py</span>:
+          class="code">examples/stats.py</span>. If you wish to use or modify it,
+          first copy it over to <span class="code">user/stats.py</span>
+          then modify it there.
       </p>
       <pre class="tty">import datetime
 import time
@@ -2766,7 +2768,7 @@ class MyStats(SearchList):                                                   # 1
             </li>
             <li>The fourth should be an instance of <span
               class="code">weewx.units.Converter</span>, which contains
-              information about the target units (<em>e.g.</em>, <span
+              information about the target units (<i>e.g.</i>, <span
               class="code">degree_C</span>) that are to be used. Again,
               we just pass in the instance set up by the generator, <span
               class="code">self.generator.converter</span>.
@@ -2852,11 +2854,13 @@ class MyStats(SearchList):                                                   # 1
     &lt;/tr&gt;
 &lt;/table&gt;</pre>
       <p>
-        If you place a custom generator somewhere other than the
-        hierarchy where <span class="code">weewxd</span> resides, you
-        may have to specify its location in the environment variable <span
-          class="code">PYTHONPATH</span> in the shell where you start
-        weeWX:
+        We put our addition in the file <span class="code">user/stats.py</span>,
+        which means it will be in the directory hierarchy 
+        where <span class="code">weewxd</span> resides. Python will search
+        this hierarchy by default, so it will find our addition. However, if
+        you put it somewhere else, may will have to specify its location with
+        the environment variable <a href="https://docs.python.org/2/using/cmdline.html#envvar-PYTHONPATH"><span
+          class="code">PYTHONPATH</span></a> when you start weeWX:
       </p>
       <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
 
@@ -3202,7 +3206,7 @@ class MyStats(SearchList):                                                   # 1
     [[[[barometer]]]]</pre>
 
 
-      <h2 id="#Using_multiple_bindings">Using multiple bindings</h2>
+      <h2 id="Using_multiple_bindings">Using multiple bindings</h2>
 
       <p>
         It's easy to use more than one database in your reports. Here's
@@ -4273,7 +4277,7 @@ UV      = UV Index</pre>
         would cause the given labels to be used for plots of <span
           class="code">inTemp</span> and <span class="code">outTemp</span>.
         If no option is given, then the observation type itself will be
-        used (<em>e.g., </em><span class="code">outTemp</span>).
+        used (<i>e.g.</i>, <span class="code">outTemp</span>).
       </p>
 
       <h2 class="config_section">[Almanac]</h2>
@@ -4388,7 +4392,7 @@ UV      = UV Index</pre>
           <tr>
             <td class="code first_col">html_entities</td>
             <td>Non 7-bit characters will be represented as HTML
-              entities (<em>e.g.</em>, the degree sign will be
+              entities (<i>e.g.</i>, the degree sign will be
               represented as <span class="code">&amp;#176;</span>)
             </td>
           </tr>
@@ -6138,7 +6142,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         <li>The driver should emit only data it receives from the
           hardware (no "filling in the gaps").</li>
         <li>The driver should not modify the data unless the
-          modification is directly related to the hardware (e.g.,
+          modification is directly related to the hardware (<i>e.g.</i>,
           decoding a hardware-specific sensor value).</li>
         <li>If the hardware flags "bad data", then the driver
           should emit a null value for that datum (Python <span
@@ -6225,9 +6229,10 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         Every packet need not contain the same set of observation types.
         Different packets can use different unit systems, but all
         observations within a packet must use the same unit system. If
-        your hardware has an error and you don't have a value, you can
-        either leave it out of the dictionary or (preferred) set its
-        value to <span class="code">None</span>.
+        your hardware is capable of measuing an observation type but, for
+        whatever reason, its value is bad (maybe a bad checksum?), then set its
+        value to <span class="code">None</span>. If your hardware is incapable
+        of measuring an observation type, then leave it out of the dictionary.
       </p>
 
       <p>
@@ -6371,13 +6376,18 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
 
       <p>
         The <span class='code'>fileparse</span> driver is perhaps the
-        most simple example of a weeWX driver.
+        simplest example of a weeWX driver.
         It reads name-value pairs from a file and uses the values as
-        sensor 'readings'. The code is located in <span class="code">extensions/fileparse/bin/user/fileparse.py</span>
+        sensor 'readings'. The code is actually packaged as an extension, located in
+        <span class="code">examples/fileparse</span>, making it a good example
+         of not only writing a device driver, but also
+        of how to package an extension. The actual driver itself is in
+        <span class="code">examples/fileparse/bin/user/fileparse.py</span>.
       </p>
 
       <p>
-        Take a look at the simulator code in <span class='code'>bin/weewx/drivers/simulator.py</span>.
+        Another good example is the simulator code 
+        located in <span class='code'>weewx/drivers/simulator.py</span>.
         It's dirt simple and you can easily play with it. Many people
         have successfully used it as a starting point for writing their
         own custom driver.
@@ -6399,9 +6409,10 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         in the engine as a service.
       </p>
 
-      <p>Naturally, there are a lot of subtleties that I've glossed
-        over in this high-level description. If you're game, give it a
-        try — I'm happy to help you out!</p>
+      <p>Naturally, there are a lot of subtleties that have been glossed
+        over in this high-level description. If you run into trouble, 
+        look for help in the <a href="https://groups.google.com/forum/#!forum/weewx-development">
+        <span class="code">weewx-development</span> forum</a>.</p>
 
       <h1 id="extensions">Extensions</h1>
 
@@ -6687,7 +6698,19 @@ xstats/bin/user/xstats.py</pre>
             <td>X</td>
           </tr>
           <tr>
+            <td class="first_col code">leafTemp1</td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+          </tr>
+          <tr>
             <td class="first_col code">leafTemp2</td>
+            <td>X</td>
+            <td>X</td>
+            <td>X</td>
+          </tr>
+          <tr>
+            <td class="first_col code">leafWet1</td>
             <td>X</td>
             <td>X</td>
             <td>X</td>

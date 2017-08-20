@@ -48,7 +48,7 @@ import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR200'
-DRIVER_VERSION = "3.3.1"
+DRIVER_VERSION = "3.3.2"
 
 
 def loader(config_dict, engine):  # @UnusedVariable
@@ -2047,6 +2047,8 @@ class WMR200(weewx.drivers.AbstractDevice):
             if newrec:
                 newrec['dateTime'] = oldrec['dateTime']
                 newrec['usUnits'] = oldrec['usUnits']
+                if 'interval' in oldrec:
+                    newrec['interval'] = oldrec['interval']
                 return newrec
         return None
 

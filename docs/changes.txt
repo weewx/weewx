@@ -1,6 +1,37 @@
 weewx change history
 --------------------
 
+3.7.2 MM/DD/YYYY
+
+MySQL error 2006 ("MySQL server has gone away") now gets mapped to
+`weedb.CannotConnectError`. PR #246
+
+Corrected formatting used to report indoor temp and humidity to the
+Weather Underground.
+
+Added inDewpoint to the observation group dictionary.
+
+Added missing aggregation type 'min_ge'. Thanks to user Christopher McAvaney!
+
+Fixed bug in wmr200 driver that resulted in archive records with no
+interval field and 'NOT NULL constraint failed: archive.interval' errors.
+
+Plots can now use an `aggregate_type` of `last`. Fixes issue #261.
+
+When extracting observation type stormRain (Davis Vantage only), the
+accumulators now extract the last (instead of average) value.
+
+Added additional accumulator extractors.
+
+Allow reports to be run against a binding other than `wx_binding`.
+
+Include rain count in cc3000 status.
+
+Using the `set-altitude` command in `wee_device` no longer changes the
+barometer calibration constant in Vantage devices. See PR #263.
+Thanks to user dl1rf!
+
+
 3.7.1 03/22/2017
 
 Fixed log syntax in wmr100 and wmr9x8 drivers.

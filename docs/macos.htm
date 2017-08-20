@@ -59,10 +59,9 @@ sudo easy_install pyephem</pre>
 <h2>Run</h2>
 
 <p>Run the main program directly:</p>
-<pre class="tty cmd">cd /Users/Shared/weewx
-./bin/weewxd weewx.conf</pre>
+<pre class="tty cmd">/Users/Shared/weewx/bin/weewxd weewx.conf</pre>
 <p>Or as a daemon automatically when the computer starts:</p>
-<pre class="tty cmd">sudo cp util/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
+<pre class="tty cmd">sudo cp /Users/Shared/weewx/util/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
 sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
 
 <h2>Status</h2>
