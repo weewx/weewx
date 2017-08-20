@@ -99,6 +99,7 @@ def drop(host='localhost', user='', password='', database_name='',
 class Connection(weedb.Connection):
     """A wrapper around a MySQL connection object."""
 
+    @guard
     def __init__(self, host='localhost', user='', password='', database_name='',
                  port=3306, engine=DEFAULT_ENGINE, autocommit=True, **kwargs):
         """Initialize an instance of Connection.
