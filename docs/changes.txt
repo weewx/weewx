@@ -31,6 +31,9 @@ Using the `set-altitude` command in `wee_device` no longer changes the
 barometer calibration constant in Vantage devices. See PR #263.
 Thanks to user dl1rf!
 
+Do chdir at start of ImageGenerator so that skin.conf paths are treated the
+same as those of other generators.
+
 
 3.7.1 03/22/2017
 
