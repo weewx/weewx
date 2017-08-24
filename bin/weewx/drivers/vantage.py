@@ -1029,7 +1029,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         _altitude  = float(_bardata[1].split()[1])
         _dewpoint  = float(_bardata[2].split()[2])
         _virt_temp = float(_bardata[3].split()[2])
-        _c         = float(_bardata[4].split()[1])
+        _c         = float(_bardata[4].split()[1])/10.0
         _r         = float(_bardata[5].split()[1])/1000.0
         _barcal    = float(_bardata[6].split()[1])/1000.0
         _gain      = float(_bardata[7].split()[1])
@@ -1740,7 +1740,7 @@ class VantageService(Vantage, weewx.engine.StdService):
         
         # Save the battery statuses:
         for k in self.loop_data:
-            self.loop_data[k] = event.packet[k]
+            self.loop_data[k] = event.packet.get(k)
         
     def end_archive_period(self, event):  # @UnusedVariable
         """Zero out the max gust seen since the start of the record"""
@@ -1978,7 +1978,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
       Altitude:                     %.0f feet
       Dew point:                    %.0f F
       Virtual temperature:          %.0f F
-      Humidity correction factor:   %.0f
+      Humidity correction factor:   %.1f
       Correction ratio:             %.3f
       Correction constant:          %+.3f inHg
       Gain:                         %.3f
@@ -1993,9 +1993,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             print >> dest, """    OFFSETS:
       Wind direction:               %(wind)+.0f deg
       Inside Temperature:           %(inTemp)+.1f F
-      Inside Humidity:              %(inHumid)+.0f%%
+      Inside Humidity:              %(inHumid)+.0f %%
       Outside Temperature:          %(outTemp)+.1f F
-      Outside Humidity:             %(outHumid)+.0f%%""" % calibration_dict
+      Outside Humidity:             %(outHumid)+.0f %%""" % calibration_dict
             if transmitter_list is not None:
                 # Only print the calibrations for channels that we are
                 # listening to.
@@ -2056,15 +2056,21 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     @staticmethod    
     def set_altitude(station, altitude_ft):
         """Set the console station altitude"""
-        # Hit the console to get the current barometer calibration data:
-        _bardata = station.getBarData()
-
         ans = None
         while ans not in ['y', 'n']:    
-            print "Proceeding will set the barometer value to %.3f and the station altitude to %.1f feet." % (_bardata[0], altitude_ft)
+            print "Proceeding will set the station altitude to %.0f feet." % altitude_ft
             ans = raw_input("Are you sure you wish to proceed (y/n)? ")
             if ans == 'y':
-                station.setBarData(_bardata[0], altitude_ft)
+                # Hit the console to get the current barometer calibration data and preserve it:
+                _bardata = station.getBarData()
+                _barcal = _bardata[6]
+                # Set new altitude to station and clear previous _barcal value
+                station.setBarData(0.0, altitude_ft)
+                if _barcal != 0.0:
+                    # Hit the console again to get the new barometer data:
+                    _bardata = station.getBarData()
+                    # Set previous _barcal value
+                    station.setBarData(_bardata[0] + _barcal, altitude_ft)
             elif ans == 'n':
                 print "Nothing done."
 
@@ -2077,9 +2083,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         ans = None
         while ans not in ['y', 'n']:
             if barometer_inHg:
-                print "Proceeding will set the barometer value to %.3f and the station altitude to %.1f feet." % (barometer_inHg, _bardata[1])
+                print "Proceeding will set the barometer value to %.3f and the station altitude to %.0f feet." % (barometer_inHg, _bardata[1])
             else:
-                print "Proceeding will have the console pick a sensible barometer calibration and set the station altitude to %.1f feet," % (_bardata[1],)
+                print "Proceeding will have the console pick a sensible barometer calibration and set the station altitude to %.0f feet," % (_bardata[1],)
             ans = raw_input("Are you sure you wish to proceed (y/n)? ")
             if ans == 'y':
                 station.setBarData(barometer_inHg, _bardata[1])
@@ -2165,7 +2171,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         # Wind direction can also be calibrated.
         if variable == "windDir":
             offset = int(offset_str)
-            if not -359 < offset < 359:
+            if not -359 <= offset <= 359:
                 print >> sys.stderr, "Wind direction offset %d is out of range." % (offset)
             else:
                 ans = None
@@ -2181,7 +2187,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                             print "Wind direction offset now set to %+d." % (offset)
         elif variable in temp_variables:
             offset = float(offset_str)
-            if not -12.8 < offset < 12.7:
+            if not -12.8 <= offset <= 12.7:
                 print >> sys.stderr, "Temperature offset %+.1f is out of range." % (offset)
             else:
                 ans = None
@@ -2197,7 +2203,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                             print "Temperature offset %s now set to %+.1f." % (variable, offset)
         elif variable in humid_variables:
             offset = int(offset_str)
-            if not -100 < offset < 100:
+            if not 0 <= offset <= 100:
                 print >> sys.stderr, "Humidity offset %+d is out of range." % (offset)
             else:
                 ans = None

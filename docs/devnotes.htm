@@ -203,6 +203,11 @@ delta = datetime.timedelta(seconds=10800)
 next_dt = time_dt + delta
 next_ts = int(time.mktime(next_dt.timetuple()))</pre>
         <p>Other time conversion problems are handled in a similar manner. </p>
+        <p>For astronomical calculations, weeWX uses the latitude and longitude
+          specified in the configuration file.  If that location does not
+          correspond to the computer's local time, reports with astronomical
+          times will probably be incorrect.
+        </p>
 
         <h1>Internationalization</h1>
         <p>Generally, weewx does not make much use of Unicode. This is because the Python 2.x libraries do not always
@@ -267,13 +272,42 @@ now = dt()</pre>
         <pre class="tty">import datetime
 now = datetime.datetime()</pre>
 
+        <h1>Git work flow</h1>
+            <p>We use git as the source control system.</p>
+            <p>
+                We generally follow Vincent Driessen's <a
+                    href="http://nvie.com/posts/a-successful-git-branching-model/">branching
+                    model</a>. Ignore the complicated diagram at the
+                beginning of the article, and just focus on the text. In
+                this model, there are two key branches:
+            </p>
+
+            <ul>
+                <li><span class="code">master</span>. Fixes go into
+                    this branch. We tend to use fewer "hot fix" branches
+                    and, instead, just incorporate any fixes directly
+                    into the branch. Releases are tagged relative to this
+                    branch.</li>
+                <li><span class="code">development</span> (called <span
+                    class="code">develop</span> in Vince's article).
+                    This is where new features go. Before a release,
+                    they will be merged into the <span class="code">master</span>
+                    branch.</li>
+            </ul>
+
+            <p>
+                What this means to you is that if you submit a pull request that includes a new
+                feature, make sure you commit your changes relative to the <span
+                    class="code"><em>development</em></span> branch.
+            </p>
+
         <h1>Tools</h1>
         <h2>Python</h2>
         <p><a href="http://www.eclipse.org/">Eclipse</a>, with the 
         <a href="http://pydev.org/">PyDev Python extension</a>, is highly recommended. 
         It's free, easy to customize and extremely powerful. </p>
         <p><a href="http://www.jetbrains.com/pycharm/">JetBrain's PyCharm</a> is also good, 
-        but it costs money. Where it really shines is if you use a framework
+        and now there's a free Community Edition. Where it really shines is if you use a framework
         such as Django, or Backbone, but weeWX does not use any of these, so there is no real need
         for PyCharm's extra functionality when working with weeWX.</p>
 

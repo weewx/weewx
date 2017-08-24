@@ -20,9 +20,9 @@ import weewx.units
 from weeutil.weeutil import to_bool, to_int, to_float
 from weewx.units import ValueTuple
 
-#===============================================================================
+# =============================================================================
 #                    Class ImageGenerator
-#===============================================================================
+# =============================================================================
 
 class ImageGenerator(weewx.reportengine.ReportGenerator):
     """Class for managing the image generator."""
@@ -38,6 +38,10 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
         # determine how much logging is desired
         self.log_success = to_bool(self.image_dict.get('log_success', True))
+        # ensure that we are in a consistent right location
+        os.chdir(os.path.join(self.config_dict['WEEWX_ROOT'],
+                              self.skin_dict['SKIN_ROOT'],
+                              self.skin_dict['skin']))
 
     def genImages(self, gen_ts):
         """Generate the images.
