@@ -461,6 +461,7 @@ class Vantage(weewx.drivers.AbstractDevice):
 
         # TODO: These values should really be retrieved dynamically from the VP:
         self.model_type = 2  # = 1 for original VantagePro, = 2 for VP2
+        self.hardware_type = None
 
         # These come from the configuration dictionary:
         self.max_tries = int(vp_dict.get('max_tries', 4))
@@ -1169,7 +1170,10 @@ class Vantage(weewx.drivers.AbstractDevice):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
         self.port.wakeup_console(max_tries=self.max_tries)
-        self.hardware_type = self._determine_hardware()
+
+        # Get hardware type, if not done yet.
+        if self.hardware_type is None:
+            self.hardware_type = self._determine_hardware()
 
         unit_bits              = self._getEEPROM_value(0x29)[0]
         setup_bits             = self._getEEPROM_value(0x2B)[0]
