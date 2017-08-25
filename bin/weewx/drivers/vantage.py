@@ -1136,9 +1136,12 @@ class Vantage(weewx.drivers.AbstractDevice):
     @property
     def hardware_name(self):    
         if self.hardware_type == 16:
-            return "VantagePro2"
+            if self.model_type == 1:
+                return "Vantage Pro"
+            else:
+                return "Vantage Pro2"
         elif self.hardware_type == 17:
-            return "VantageVue"
+            return "Vantage Vue"
         else:
             raise weewx.UnsupportedFeature("Unknown hardware type %d" % self.hardware_type)
 
@@ -1146,18 +1149,18 @@ class Vantage(weewx.drivers.AbstractDevice):
     def archive_interval(self):
         return self.archive_interval_
     
-    def determine_hardware(self):
+    def _determine_hardware(self):
         # Determine the type of hardware:
         for count in xrange(self.max_tries):
             try:
                 self.port.send_data("WRD" + chr(0x12) + chr(0x4d) + "\n")
                 self.hardware_type = ord(self.port.read())
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: _setup; hardware type is %s" % self.hardware_type)
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: _setup: hardware type is %d" % self.hardware_type)
                 # 16 = Pro, Pro2, 17 = Vue
                 return self.hardware_type
             except weewx.WeeWxIOError:
                 pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: determine_hardware; retry #%d" % (count,))
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: _determine_hardware; retry #%d" % (count,))
 
         syslog.syslog(syslog.LOG_ERR, "vantage: _setup; unable to read hardware type; raise WeeWxIOError")
         raise weewx.WeeWxIOError("Unable to read hardware type")
@@ -1166,9 +1169,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
         self.port.wakeup_console(max_tries=self.max_tries)
-        self.hardware_type = self.determine_hardware()
-
-        """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
+        self.hardware_type = self._determine_hardware()
 
         unit_bits              = self._getEEPROM_value(0x29)[0]
         setup_bits             = self._getEEPROM_value(0x2B)[0]
