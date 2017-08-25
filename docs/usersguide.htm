@@ -136,8 +136,9 @@ Version: 3.7
 
         <h2>Python</h2>
 
-        <p>Python 2.5, 2.6, or 2.7 is required. Python 3 will not work. For Python 2.5, see
-            <a href="#python2_5">the special instructions below</a>.</p>
+        <p>Python 2.5, 2.6, or 2.7 is required. Python 3 will not work. See special notes
+        below for <a href="#python2_5">Python 2.5</a> and <a href="#python2_6">Python 2.6</a>
+        </p>
 
         <h2 id="permissions">Permissions</h2>
 
@@ -3524,6 +3525,13 @@ Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
 
         <p>Various possible complications:</p>
         <ul>
+            <li id="pyserial_requirements">If your hardware requires PySerial (check the <a href="hardware.htm"><em>Hardware Guide</em></a>), 
+            you must have the right version. Unfortunately, the current versions
+            of PySerial, and the ones that will get installed by default, 3.x, do not support Python 2.5 
+            (or 2.6 for that matter). You will have to install 
+            PySerial V2.7, which you can 
+            <a href="https://sourceforge.net/projects/pyserial/files/pyserial/2.7/">obtain from SourceForge</a>.</li>
+            
             <li>You may have to install the development environment of SQLite in
                 order to get <span class='code'>pysqlite</span> to install. This worked on my system:
 <pre class="tty cmd">
@@ -3564,6 +3572,11 @@ ImportError: The _imagingft C module is not installed</pre>
 find /usr/lib -name "libfreetype*" -print</pre>
             </li>
         </ul>
+
+
+        <h3 id="python2_6">Python 2.6</h3>
+        <p>See the <a href="#pyserial_requirements">note about PySerial</a>
+        that can be found under the secton on Python 2.5 above.</p>
 
         <h3>FreeBSD</h3>
 
