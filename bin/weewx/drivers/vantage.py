@@ -2427,6 +2427,9 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
     # How many times to try before giving up:
     max_tries = 4
 
+    # Vantage model Type: 1 = Vantage Pro; 2 = Vantage Pro2
+    model_type = 2
+
     # The driver to use:
     driver = weewx.drivers.vantage
 """
