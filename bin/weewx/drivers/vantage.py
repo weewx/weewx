@@ -1137,9 +1137,12 @@ class Vantage(weewx.drivers.AbstractDevice):
     @property
     def hardware_name(self):    
         if self.hardware_type == 16:
-            return "VantagePro2"
+            if self.model_type == 1:
+                return "Vantage Pro"
+            else:
+                return "Vantage Pro2"
         elif self.hardware_type == 17:
-            return "VantageVue"
+            return "Vantage Vue"
         else:
             raise weewx.UnsupportedFeature("Unknown hardware type %d" % self.hardware_type)
 
