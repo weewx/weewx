@@ -455,22 +455,18 @@ class Vantage(weewx.drivers.AbstractDevice):
         Default is 4]
         
         iss_id: The station number of the ISS [Optional. Default is 1]
-        
-        model_type: Vantage Pro model type. 1 := Vantage Pro; 2 := Vantage Pro2
-        [Optional. Default is 2]
         """
 
         syslog.syslog(syslog.LOG_DEBUG, 'vantage: driver version is %s' % DRIVER_VERSION)
 
+        # TODO: These values should really be retrieved dynamically from the VP:
+        self.model_type = 2  # = 1 for original VantagePro, = 2 for VP2
         self.hardware_type = None
 
         # These come from the configuration dictionary:
-        self.max_tries  = int(vp_dict.get('max_tries', 4))
-        self.iss_id     = to_int(vp_dict.get('iss_id'))
-        self.model_type = int(vp_dict.get('model_type', 2))
-        if self.model_type not in range (1, 3):
-            raise weewx.UnsupportedFeature("Unknown model_type (%d)" % self.model_type)
-
+        self.max_tries = int(vp_dict.get('max_tries', 4))
+        self.iss_id    = to_int(vp_dict.get('iss_id'))
+        
         self.save_monthRain = None
         self.max_dst_jump = 7200
 
@@ -1179,9 +1175,6 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Get hardware type, if not done yet.
         if self.hardware_type is None:
             self.hardware_type = self._determine_hardware()
-            # Overwrite model_type if we have Vantage Vue.
-            if self.hardware_type == 17:
-                self.model_type = 2
 
         unit_bits              = self._getEEPROM_value(0x29)[0]
         setup_bits             = self._getEEPROM_value(0x2B)[0]
