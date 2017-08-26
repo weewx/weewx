@@ -478,7 +478,6 @@ class Vantage(weewx.drivers.AbstractDevice):
 
         # Read the EEPROM and fill in properties in this instance
         self._setup()
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: __init__: hardware determined: %s" % self.hardware_name)
         
     def openPort(self):
         """Open up the connection to the console"""
