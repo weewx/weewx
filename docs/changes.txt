@@ -26,6 +26,9 @@ max values.
 Fixed bug in wmr200 driver that resulted in archive records with no
 interval field and 'NOT NULL constraint failed: archive.interval' errors.
 
+Vantage driver:
+Allow user to specify the Vantage Pro model type in weewx.conf.
+
 
 3.7.2 MM/DD/YYYY
 

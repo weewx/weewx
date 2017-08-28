@@ -455,17 +455,22 @@ class Vantage(weewx.drivers.AbstractDevice):
         Default is 4]
         
         iss_id: The station number of the ISS [Optional. Default is 1]
+        
+        model_type: Vantage Pro model type. 1 := Vantage Pro; 2 := Vantage Pro2
+        [Optional. Default is 2]
         """
 
         syslog.syslog(syslog.LOG_DEBUG, 'vantage: driver version is %s' % DRIVER_VERSION)
 
-        # TODO: These values should really be retrieved dynamically from the VP:
-        self.model_type = 2  # = 1 for original VantagePro, = 2 for VP2
+        self.hardware_type = None
 
         # These come from the configuration dictionary:
-        self.max_tries = int(vp_dict.get('max_tries', 4))
-        self.iss_id    = to_int(vp_dict.get('iss_id'))
-        
+        self.max_tries  = int(vp_dict.get('max_tries', 4))
+        self.iss_id     = to_int(vp_dict.get('iss_id'))
+        self.model_type = int(vp_dict.get('model_type', 2))
+        if self.model_type not in range (1, 3):
+            raise weewx.UnsupportedFeature("Unknown model_type (%d)" % self.model_type)
+
         self.save_monthRain = None
         self.max_dst_jump = 7200
 
@@ -477,6 +482,7 @@ class Vantage(weewx.drivers.AbstractDevice):
 
         # Read the EEPROM and fill in properties in this instance
         self._setup()
+        syslog.syslog(syslog.LOG_DEBUG, "vantage: __init__: hardware determined: %s" % self.hardware_name)
         
     def openPort(self):
         """Open up the connection to the console"""
@@ -1136,9 +1142,12 @@ class Vantage(weewx.drivers.AbstractDevice):
     @property
     def hardware_name(self):    
         if self.hardware_type == 16:
-            return "VantagePro2"
+            if self.model_type == 1:
+                return "Vantage Pro"
+            else:
+                return "Vantage Pro2"
         elif self.hardware_type == 17:
-            return "VantageVue"
+            return "Vantage Vue"
         else:
             raise weewx.UnsupportedFeature("Unknown hardware type %d" % self.hardware_type)
 
@@ -1146,18 +1155,18 @@ class Vantage(weewx.drivers.AbstractDevice):
     def archive_interval(self):
         return self.archive_interval_
     
-    def determine_hardware(self):
+    def _determine_hardware(self):
         # Determine the type of hardware:
         for count in xrange(self.max_tries):
             try:
                 self.port.send_data("WRD" + chr(0x12) + chr(0x4d) + "\n")
                 self.hardware_type = ord(self.port.read())
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: _setup; hardware type is %s" % self.hardware_type)
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: _setup: hardware type is %d" % self.hardware_type)
                 # 16 = Pro, Pro2, 17 = Vue
                 return self.hardware_type
             except weewx.WeeWxIOError:
                 pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: determine_hardware; retry #%d" % (count,))
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: _determine_hardware; retry #%d" % (count,))
 
         syslog.syslog(syslog.LOG_ERR, "vantage: _setup; unable to read hardware type; raise WeeWxIOError")
         raise weewx.WeeWxIOError("Unable to read hardware type")
@@ -1166,9 +1175,13 @@ class Vantage(weewx.drivers.AbstractDevice):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
         self.port.wakeup_console(max_tries=self.max_tries)
-        self.hardware_type = self.determine_hardware()
 
-        """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
+        # Get hardware type, if not done yet.
+        if self.hardware_type is None:
+            self.hardware_type = self._determine_hardware()
+            # Overwrite model_type if we have Vantage Vue.
+            if self.hardware_type == 17:
+                self.model_type = 2
 
         unit_bits              = self._getEEPROM_value(0x29)[0]
         setup_bits             = self._getEEPROM_value(0x2B)[0]
@@ -2413,6 +2426,9 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
 
     # How many times to try before giving up:
     max_tries = 4
+
+    # Vantage model Type: 1 = Vantage Pro; 2 = Vantage Pro2
+    model_type = 2
 
     # The driver to use:
     driver = weewx.drivers.vantage
