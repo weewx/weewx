@@ -73,7 +73,7 @@ class BaseWrapper(object):
                 _resp = self.read(2)
                 if _resp == '\n\r':  # LF, CR = 0x0a, 0x0d
                     # We're done; the console accepted our cancel LOOP command; nothing to flush
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: gentle wake up of console successful")
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Gentle wake up of console successful")
                     return
                 # That didn't work. Try a rude wake up.
                 # Flush any pending LOOP packets
@@ -81,14 +81,14 @@ class BaseWrapper(object):
                 # Look for the acknowledgment of the sent '\n'
                 _resp = self.read(2)
                 if _resp == '\n\r':
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: rude wake up of console successful")
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Rude wake up of console successful")
                     return
                 print "Unable to wake up console... sleeping"
                 time.sleep(self.wait_before_retry)
                 print "Unable to wake up console... retrying"
             except weewx.WeeWxIOError:
                 pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: retry  #%d failed" % count)
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: Retry  #%d failed" % count)
 
         syslog.syslog(syslog.LOG_ERR, "vantage: Unable to wake up console")
         raise weewx.WakeupError("Unable to wake up Vantage console")
@@ -460,7 +460,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         [Optional. Default is 2]
         """
 
-        syslog.syslog(syslog.LOG_DEBUG, 'vantage: driver version is %s' % DRIVER_VERSION)
+        syslog.syslog(syslog.LOG_DEBUG, 'vantage: Driver version is %s' % DRIVER_VERSION)
 
         self.hardware_type = None
 
@@ -482,7 +482,7 @@ class Vantage(weewx.drivers.AbstractDevice):
 
         # Read the EEPROM and fill in properties in this instance
         self._setup()
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: __init__: hardware determined: %s" % self.hardware_name)
+        syslog.syslog(syslog.LOG_DEBUG, "vantage: Hardware name: %s" % self.hardware_name)
         
     def openPort(self):
         """Open up the connection to the console"""
@@ -612,7 +612,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # by looking at the first 4 bytes (the date and time):
                 if _record_string[0:4] == 4 * chr(0xff) or _record_string[0:4] == 4 * chr(0x00):
                     # This record has never been used. We're done.
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: empty record page %d; index %d" \
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Empty record page %d; index %d" \
                                   % (ipage, _index))
                     return
                 
@@ -662,7 +662,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # by looking at the first 4 bytes (the date and time):
                 if _record_string[0:4] == 4 * chr(0xff) or _record_string[0:4] == 4 * chr(0x00):
                     # This record has never been used. Skip it
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: empty record page %d; index %d" \
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Empty record page %d; index %d" \
                                   % (ipage, _index))
                     continue
                 # Unpack the raw archive packet:
@@ -889,7 +889,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_command(command, max_tries=self.max_tries)
 
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: archive interval set to %d seconds" % (archive_interval_seconds,))
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Archive interval set to %d seconds" % (archive_interval_seconds,))
     
     def setLamp(self, onoff='OFF'):
         """Set the lamp on or off"""
@@ -1161,14 +1161,14 @@ class Vantage(weewx.drivers.AbstractDevice):
             try:
                 self.port.send_data("WRD" + chr(0x12) + chr(0x4d) + "\n")
                 self.hardware_type = ord(self.port.read())
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: _setup: hardware type is %d" % self.hardware_type)
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: Hardware type is %d" % self.hardware_type)
                 # 16 = Pro, Pro2, 17 = Vue
                 return self.hardware_type
             except weewx.WeeWxIOError:
                 pass
             syslog.syslog(syslog.LOG_DEBUG, "vantage: _determine_hardware; retry #%d" % (count,))
 
-        syslog.syslog(syslog.LOG_ERR, "vantage: _setup; unable to read hardware type; raise WeeWxIOError")
+        syslog.syslog(syslog.LOG_ERR, "vantage: Unable to read hardware type; raise WeeWxIOError")
         raise weewx.WeeWxIOError("Unable to read hardware type")
 
     def _setup(self):
