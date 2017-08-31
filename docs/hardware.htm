@@ -2320,12 +2320,13 @@ confirmation before proceeding.
 
     <pre class="tty">
 Using configuration file /home/weewx/weewx.conf
-Using Vantage driver version 3.0.8 (weewx.drivers.vantage)
+Using Vantage driver version 3.0.10 (weewx.drivers.vantage)
 Usage: wee_device [config_file] [--help] [--info] [--clear-memory]
     [--set-interval=MINUTES] [--set-altitude=FEET] [--set-barometer=inHg]
     [--set-bucket=CODE] [--set-rain-year-start=MM]
     [--set-offset=VARIABLE,OFFSET]
-    [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
+    [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM,REPEATER_ID]
+    [--set-retransmit=[ON|ON,CHANNEL|OFF]
     [--set-time] [--set-dst=[AUTO|ON|OFF]]
     [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
     [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE]
@@ -2343,7 +2344,7 @@ Options:
   --set-interval=MINUTES
                         Sets the archive interval to the specified number of
                         minutes. Valid values are 1, 5, 10, 15, 30, 60, or
-                        1200.
+                        120.
   --set-altitude=FEET   Sets the altitude of the station to the specified
                         number of feet.
   --set-barometer=inHg  Sets the barometer reading of the station to a known
@@ -2358,12 +2359,14 @@ Options:
                         extraTemp[1-7], inHumid, outHumid, extraHumid[1-7],
                         soilTemp[1-4], leafTemp[1-4], windDir) to OFFSET
                         (Fahrenheit, %, degrees)
-  --set-transmitter-type=CHANNEL,TYPE,TEMP,HUM
+  --set-transmitter-type=CHANNEL,TYPE,TEMP,HUM,REPEATER_ID
                         Set the transmitter type for CHANNEL (1-8), TYPE
                         (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain,
                         6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none),
                         as extra TEMP station and extra HUM station (both 1-7,
-                        if applicable)
+                        if applicable), REPEATER_ID ('A'-'H', if used)
+  --set-retransmit=[ON|ON,CHANNEL|OFF]
+                        Turn console retransmit function 'ON or 'OFF.
   --set-time            Set the onboard clock to the current time.
   --set-dst=AUTO|ON|OFF
                         Set DST to 'ON', 'OFF', or 'AUTO'
@@ -2419,16 +2422,18 @@ confirmation before proceeding.</pre>
       <span class="highlight">Use GMT offset or zone code?  ZONE_CODE</span>
       <span class="highlight">Time zone code:               4</span>
       <span class="highlight">GMT offset:                   N/A</span>
+      <span class="highlight">Retransmit ID:                0 (OFF)</span>
 
     TRANSMITTERS:
-      <span class="highlight">Channel 1:                    iss</span>
-      <span class="highlight">Channel 2:                    (N/A)</span>
-      <span class="highlight">Channel 3:                    temp (as extra temperature 1)</span>
-      <span class="highlight">Channel 4:                    (N/A)</span>
-      <span class="highlight">Channel 5:                    (N/A)</span>
-      <span class="highlight">Channel 6:                    (N/A)</span>
-      <span class="highlight">Channel 7:                    (N/A)</span>
-      <span class="highlight">Channel 8:                    (N/A)</span>
+      Channel   Receive   Repeater  Type
+      <span class="highlight">   1      active      A       iss</span>
+      <span class="highlight">   2      active      none    temp_hum (as extra temperature 1 and extra humidity 1)</span>
+      <span class="highlight">   3      active      none    leaf_soil</span>
+      <span class="highlight">   4      inactive    none    (N/A)</span>
+      <span class="highlight">   5      inactive    none    (N/A)</span>
+      <span class="highlight">   6      inactive    none    (N/A)</span>
+      <span class="highlight">   7      inactive    none    (N/A)</span>
+      <span class="highlight">   8      inactive    none    (N/A)</span>
 
     RECEPTION STATS:
       Total packets received:       10670
@@ -2521,23 +2526,47 @@ confirmation before proceeding.</pre>
         <h3 id="vantage_configuring_additional_sensors">
             Action <span class="code">--set-transmitter-type</span></h3>
 
-        <p>If you have additional sensors for your Vantage station, you can configure them using your console. However,
-            if you have a <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis
-                Weather Envoy receiver</a>, it will not have a console! As an alternative, <span
-                    class="code">wee_device</span> can do this using the command <span class="code">--set-transmitter-type</span>.
+        <p>If you have additional sensors and/or repeaters for your Vantage station, you can configure them using your console.
+           However, if you have a
+           <a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06316">Davis Weather Envoy receiver</a>,
+           it will not have a console! As an alternative,
+           <span class="code">wee_device</span> can do this using the command <span class="code">--set-transmitter-type</span>.
         </p>
 
-        <p>For example, to add an extra temperature sensor to channel 3, do the following:</p>
+        <p>For example, to add an extra temperature sensor to channel 3 and no repeater is used, do the following:</p>
         <pre class="tty cmd">wee_device --set-transmitter-type=3,1,2</pre>
-        <p>This says to turn on channel 3, set its type to 1 ("Temperature only"), and have it show up in the database
-            as <span class="code">extraTemp2</span>. Here's another example, this time for a combined temperature /
-            humidity sensor:</p>
-        <pre class="tty cmd">wee_device --set-transmitter-type=5,3,2,4</pre>
-        <p>This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"), and it will
+        <p>This says to turn on channel 3, set its type to 1 ("Temperature only"), without repeater use and it will show up in the database
+            as <span class="code">extraTemp2</span>.</p>
+        <p class="note">If you omit the repeater id, repeater id will be: 'no repeater'.</p>
+
+        <p>Here's another example, this time for a combined temperature /
+            humidity sensor retransmitted via repeater A:</p>
+        <pre class="tty cmd">wee_device --set-transmitter-type=5,3,2,4,a</pre>
+        <p>This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"), via Repeater A and it will
             show up in the database as <span class="code">extraTemp2</span> and <span class="code">extraHumid4</span>.
         </p>
 
-        <p>The <span class="code">--help</span> option will give you the code for each sensor type.</p>
+        <p>The <span class="code">--help</span> option will give you the code for each sensor type and repeater id.</p>
+        <p>If you have to use repeaters with your Vantage Pro2 station, please take a look at
+            <a href="http://www.davisnet.com/product_documents/weather/app_notes/AN_25-data-repeater-network.pdf">
+                Installing Repeater Networks for Vantage Pro2</a> how to setup.</p>
+
+        <p class="warning">You only can use channels not actively used for retransmission. The command checks for this and will not
+            accept channel numbers actively used for retransmission.</p>
+
+        <h3 id="vantage_retransmit">
+            Action <span class="code">--set-retransmit</span></h3>
+
+        <p>Use this command to tell your console whether or not to act as a retransmitter.</p>
+        <p>Example: Tell your console to turn retransmission 'ON' and let the software select the first available channel:</p>
+        <pre class="tty cmd">wee_device --set-retransmit=on</pre>
+
+        <p>Another example: Tell your console to turn retransmission 'OFF':</p>
+        <pre class="tty cmd">wee_device --set-retransmit=off</pre>
+
+        <p>Last example: Tell your console to turn retransmission 'ON' at channel 4:</p>
+        <pre class="tty cmd">wee_device --set-retransmit=on,4</pre>
+        <p class="warning">You only can use channels not actively used for reception. The command checks for this and will not accept channel numbers actively used for reception of senor stations.</p>
 
         <h3>Action <span class="code">--set-dst</span></h3>
 

@@ -28,6 +28,9 @@ interval field and 'NOT NULL constraint failed: archive.interval' errors.
 
 Vantage driver: Allow user to specify the Vantage Pro model type
 in weewx.conf. Thanks to user dl1rf! PR #270.
+Repeater support added to '-—set-transmitter-type' command.
+New command: '—-set-retransmit'.
+(Details explained in hardware.htm)
 
 
 3.7.2 MM/DD/YYYY
