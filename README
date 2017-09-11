@@ -40,8 +40,6 @@ Installation (debian systems):
 
 curl -s http://weewx.com/keys.html | sudo apt-key add -
 curl -s http://weewx.com/apt/weewx.list | sudo tee /etc/apt/sources.list.d/weewx.list
-echo "deb [arch=all] http://weewx.com/apt/ squeeze main" | \
-  sudo tee /etc/apt/sources.list.d/weewx.list
 
 sudo apt-get update
 sudo apt-get install weewx
