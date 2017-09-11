@@ -260,7 +260,7 @@ class StdReportEngine(threading.Thread):
 
 class ReportGenerator(object):
     """Base class for all report generators."""
-    def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info, record):
+    def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info, record=None):
         self.config_dict = config_dict
         self.skin_dict = skin_dict
         self.gen_ts = gen_ts
