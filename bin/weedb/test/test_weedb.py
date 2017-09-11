@@ -63,7 +63,7 @@ class Common(unittest.TestCase):
         self.assertRaises(weedb.DatabaseExists, weedb.create, self.db_dict)
         
     def test_no_db(self):        
-        self.assertRaises(weedb.OperationalError, weedb.connect, self.db_dict)
+        self.assertRaises(weedb.NoDatabaseError, weedb.connect, self.db_dict)
         
     def test_no_tables(self):
         weedb.create(self.db_dict)
