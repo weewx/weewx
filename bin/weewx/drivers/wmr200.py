@@ -48,7 +48,7 @@ import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR200'
-DRIVER_VERSION = "3.3.2"
+DRIVER_VERSION = "3.3.3"
 
 
 def loader(config_dict, engine):  # @UnusedVariable
@@ -1953,6 +1953,8 @@ class WMR200(weewx.drivers.AbstractDevice):
                     # Calculate the rain accumulation between valid archive 
                     # packets.
                     pkt.record_update(adjust_rain(pkt, PacketArchiveData))
+                    # Ensure that the packet has a valid 'interval' field
+                    pkt.record_update({'interval': int(timestamp_packet_interval / 60.0)})
 
                     timestamp_packet_previous = timestamp_packet_current
                     cnt += 1
