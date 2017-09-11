@@ -16,6 +16,9 @@ Added missing aggregation type 'min_ge'. Thanks to user Christopher McAvaney!
 Fixed bug in wmr200 driver that resulted in archive records with no
 interval field and 'NOT NULL constraint failed: archive.interval' errors.
 
+Fixed bug in wmr200 driver that resulted in "KeyError: 'interval'" errors when
+reading historical records during startup.
+
 Plots can now use an `aggregate_type` of `last`. Fixes issue #261.
 
 When extracting observation type stormRain (Davis Vantage only), the
@@ -30,6 +33,9 @@ Include rain count in cc3000 status.
 Using the `set-altitude` command in `wee_device` no longer changes the
 barometer calibration constant in Vantage devices. See PR #263.
 Thanks to user dl1rf!
+
+Do chdir at start of ImageGenerator so that skin.conf paths are treated the
+same as those of other generators.
 
 
 3.7.1 03/22/2017
