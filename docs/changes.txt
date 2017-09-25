@@ -19,6 +19,9 @@ interval field and 'NOT NULL constraint failed: archive.interval' errors.
 Fixed bug in wmr200 driver that resulted in "KeyError: 'interval'" errors when
 reading historical records during startup.
 
+Fixed bug in wmr200 driver that caused `windDir` to always be `None` when 
+`windSpeed` is zero.
+
 Plots can now use an `aggregate_type` of `last`. Fixes issue #261.
 
 When extracting observation type stormRain (Davis Vantage only), the
