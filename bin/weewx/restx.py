@@ -524,6 +524,10 @@ class RESTThread(threading.Thread):
         
         Return a simple 'None' if there is no POST payload. This is the default.
         """
+        # Maintain backwards compatibility with the old format_data() function.
+        body = self.format_data(record)
+        if body:
+            return (body, 'application/x-www-form-urlencoded')
         return None
 
 
