@@ -35,6 +35,8 @@ New commands: '—-set-retransmit',
               '--set-temperature-logging'
 Details explained in hardware.htm. Thanks to user dl1rf! PR #270, #272.
 
+The uploader framework in restx.py now allows POSTS with a JSON payload.
+
 
 3.7.2 MM/DD/YYYY
 
