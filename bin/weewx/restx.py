@@ -530,6 +530,12 @@ class RESTThread(threading.Thread):
             return (body, 'application/x-www-form-urlencoded')
         return None
 
+    def format_data(self, record):  # @UnusedVariable
+        """Return a POST payload as an urlencoded object.
+        
+        DEPRECATED. Use get_post_body() instead.
+        """
+        return None
 
 # ==============================================================================
 #                    Ambient protocols
