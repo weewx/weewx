@@ -40,6 +40,8 @@ Thanks to user dl1rf!
 Do chdir at start of ImageGenerator so that skin.conf paths are treated the
 same as those of other generators.
 
+Changed default value of `stale` for CWOP from 60 to 600 seconds. PR #277.
+ 
 
 3.7.1 03/22/2017
 
