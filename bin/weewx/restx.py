@@ -1012,7 +1012,7 @@ class CWOPThread(RESTThread):
     def __init__(self, queue, manager_dict,
                  station, passcode, latitude, longitude, station_type,
                  server_list=StdCWOP.default_servers,
-                 post_interval=600, max_backlog=sys.maxint, stale=60,
+                 post_interval=600, max_backlog=sys.maxint, stale=600,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, skip_upload=False):
 

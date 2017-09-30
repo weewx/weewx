@@ -48,7 +48,7 @@ import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'WMR200'
-DRIVER_VERSION = "3.3.2"
+DRIVER_VERSION = "3.3.4"
 
 
 def loader(config_dict, engine):  # @UnusedVariable
@@ -736,10 +736,7 @@ def decode_wind(pkt, pkt_data):
                      | (pkt_data[4] << 4)) / 10.0
         # Wind direction in steps of 22.5 degrees.
         # 0 is N, 1 is NNE and so on. See WIND_DIR_MAP for complete list.
-        # Default to none unless speed is above zero.
-        dir_deg = None
-        if avg_speed > 0.0:
-            dir_deg = (pkt_data[0] & 0x0f) * 22.5
+        dir_deg = (pkt_data[0] & 0x0f) * 22.5
 
         # Windchill temperature. The value is in degrees F.
         # Set default to no windchill as it may not exist.
@@ -1953,6 +1950,8 @@ class WMR200(weewx.drivers.AbstractDevice):
                     # Calculate the rain accumulation between valid archive 
                     # packets.
                     pkt.record_update(adjust_rain(pkt, PacketArchiveData))
+                    # Ensure that the packet has a valid 'interval' field
+                    pkt.record_update({'interval': int(timestamp_packet_interval / 60.0)})
 
                     timestamp_packet_previous = timestamp_packet_current
                     cnt += 1
