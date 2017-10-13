@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.8.0 10/xx/2017
+3.8.0a1 10/xx/2017
 
 The `stats.py` example now works with heating and cooling degree days.
 Fixes issue #224.
@@ -23,18 +23,6 @@ option `y_nticks`.
 Fixed bug that could cause tick crowding when hardwiring y-axis min and
 max values.
 
-Fixed bug in wmr200 driver that resulted in archive records with no
-interval field and 'NOT NULL constraint failed: archive.interval' errors.
-
-Vantage driver:
-Allow user to specify the Vantage Pro model type in weewx.conf. 
-Repeater support added to '-—set-transmitter-type' command.
-New commands: '—-set-retransmit',
-              '--set-latitude', '--set-longitude'
-              '--set-wind-cup',
-              '--set-temperature-logging'
-Details explained in hardware.htm. Thanks to user dl1rf! PR #270, #272.
-
 The uploader framework in restx.py now allows POSTS with a JSON payload.
 
 MySQL error 2006 ("MySQL server has gone away") now gets mapped to
@@ -47,15 +35,6 @@ Added inDewpoint to the observation group dictionary.
 
 Added missing aggregation type 'min_ge'. Thanks to user Christopher McAvaney!
 
-Fixed bug in wmr200 driver that resulted in archive records with no
-interval field and 'NOT NULL constraint failed: archive.interval' errors.
-
-Fixed bug in wmr200 driver that resulted in "KeyError: 'interval'" errors when
-reading historical records during startup.
-
-Fixed bug in wmr200 driver that caused `windDir` to always be `None` when 
-`windSpeed` is zero.
-
 Plots can now use an `aggregate_type` of `last`. Fixes issue #261.
 
 When extracting observation type stormRain (Davis Vantage only), the
@@ -65,17 +44,32 @@ Added additional accumulator extractors.
 
 Allow reports to be run against a binding other than `wx_binding`.
 
-Include rain count in cc3000 status.
+Do chdir at start of ImageGenerator so that skin.conf paths are treated the
+same as those of other generators.
+
+Changed default value of `stale` for CWOP from 60 to 600 seconds. PR #277.
+
+Vantage driver:
+Allow user to specify the Vantage Pro model type in weewx.conf. 
+Repeater support added to '-—set-transmitter-type' command.
+New commands: '—-set-retransmit',
+              '--set-latitude', '--set-longitude'
+              '--set-wind-cup',
+              '--set-temperature-logging'
+Details explained in hardware.htm. Thanks to user dl1rf! PR #270, #272.
 
 Using the `set-altitude` command in `wee_device` no longer changes the
 barometer calibration constant in Vantage devices. See PR #263.
 Thanks to user dl1rf!
 
-Do chdir at start of ImageGenerator so that skin.conf paths are treated the
-same as those of other generators.
+Fixed bug in wmr200 driver that resulted in archive records with no
+interval field and 'NOT NULL constraint failed: archive.interval' errors.
 
-Changed default value of `stale` for CWOP from 60 to 600 seconds. PR #277.
- 
+Fixed bug in wmr200 driver that caused `windDir` to always be `None` when 
+`windSpeed` is zero.
+
+Include rain count in cc3000 status.
+
 
 3.7.1 03/22/2017
 
