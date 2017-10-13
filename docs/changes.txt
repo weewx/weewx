@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.X.X MM/dd/YYYY
+3.8.0 10/xx/2017
 
 The `stats.py` example now works with heating and cooling degree days.
 Fixes issue #224.
@@ -36,9 +36,6 @@ New commands: '—-set-retransmit',
 Details explained in hardware.htm. Thanks to user dl1rf! PR #270, #272.
 
 The uploader framework in restx.py now allows POSTS with a JSON payload.
-
-
-3.7.2 MM/DD/YYYY
 
 MySQL error 2006 ("MySQL server has gone away") now gets mapped to
 `weedb.CannotConnectError`. PR #246
