@@ -23,7 +23,8 @@ option `y_nticks`.
 Fixed bug that could cause tick crowding when hardwiring y-axis min and
 max values.
 
-The uploader framework in restx.py now allows POSTS with a JSON payload.
+The uploader framework in restx.py now allows POSTS with a JSON payload,
+and allows additional headers to be added to the HTTP request object.
 
 MySQL error 2006 ("MySQL server has gone away") now gets mapped to
 `weedb.CannotConnectError`. PR #246
