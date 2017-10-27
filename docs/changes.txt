@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.8.0a1 10/xx/2017
+3.8.0a3 10/xx/2017
 
 The `stats.py` example now works with heating and cooling degree days.
 Fixes issue #224.
@@ -28,6 +28,9 @@ and allows additional headers to be added to the HTTP request object.
 
 MySQL error 2006 ("MySQL server has gone away") now gets mapped to
 `weedb.CannotConnectError`. PR #246
+
+Whether to use a FTP secure data connection is now set separately
+from whether to authenticate using TLS. Fixes issue #284.
 
 Corrected formatting used to report indoor temp and humidity to the
 Weather Underground.

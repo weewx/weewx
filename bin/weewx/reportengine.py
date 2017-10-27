@@ -314,7 +314,8 @@ class FtpGenerator(ReportGenerator):
                 passive=to_bool(self.skin_dict.get('passive', True)),
                 max_tries=int(self.skin_dict.get('max_tries', 3)),
                 secure=to_bool(self.skin_dict.get('secure_ftp', False)),
-                debug=int(self.skin_dict.get('debug', 0)))
+                debug=int(self.skin_dict.get('debug', 0)),
+                secure_data=to_bool(self.skin_dict.get('secure_data', True)))
         except Exception:
             syslog.syslog(syslog.LOG_DEBUG,
                           "ftpgenerator: FTP upload not requested. Skipped.")

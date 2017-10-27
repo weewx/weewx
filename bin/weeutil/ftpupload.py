@@ -27,7 +27,8 @@ class FtpUpload(object):
                  passive   = True, 
                  max_tries = 3,
                  secure    = False,
-                 debug     = 0):
+                 debug     = 0,
+                 secure_data = True):
         """Initialize an instance of FtpUpload.
         
         After initializing, call method run() to perform the upload.
@@ -50,6 +51,11 @@ class FtpUpload(object):
         secure: Set to True to attempt an FTP over TLS (FTPS) session.
         
         debug: Set to 1 for extra debug information, 0 otherwise.
+        
+        secure_data: If a secure session is requested (option secure=True),
+        should we attempt a secure data connection as well? This option is useful
+        due to a bug in the Python FTP client library. See Issue #284. 
+        [Optional. Default is True]
         """
         self.server      = server
         self.user        = user
@@ -62,6 +68,7 @@ class FtpUpload(object):
         self.max_tries   = max_tries
         self.secure      = secure
         self.debug       = debug
+        self.secure_data = secure_data
 
     def run(self):
         """Perform the actual upload.
@@ -99,9 +106,9 @@ class FtpUpload(object):
         
                     ftp_server.login(self.user, self.password)
                     ftp_server.set_pasv(self.passive)
-                    if self.secure:
+                    if self.secure and self.secure_data:
                         ftp_server.prot_p()
-                        syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Secure connection to %s" % self.server)
+                        syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Secure data connection to %s" % self.server)
                     else:
                         syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Connected to %s" % self.server)
                     break
