@@ -73,7 +73,7 @@ class BaseWrapper(object):
                 _resp = self.read(2)
                 if _resp == '\n\r':  # LF, CR = 0x0a, 0x0d
                     # We're done; the console accepted our cancel LOOP command; nothing to flush
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: gentle wake up of console successful")
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Gentle wake up of console successful")
                     return
                 # That didn't work. Try a rude wake up.
                 # Flush any pending LOOP packets
@@ -81,14 +81,14 @@ class BaseWrapper(object):
                 # Look for the acknowledgment of the sent '\n'
                 _resp = self.read(2)
                 if _resp == '\n\r':
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: rude wake up of console successful")
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Rude wake up of console successful")
                     return
                 print "Unable to wake up console... sleeping"
                 time.sleep(self.wait_before_retry)
                 print "Unable to wake up console... retrying"
             except weewx.WeeWxIOError:
                 pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: retry  #%d failed" % count)
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: Retry  #%d failed" % count)
 
         syslog.syslog(syslog.LOG_ERR, "vantage: Unable to wake up console")
         raise weewx.WakeupError("Unable to wake up Vantage console")
@@ -418,10 +418,13 @@ class Vantage(weewx.drivers.AbstractDevice):
     rain_unit_dict        = {0:'inch', 1:'mm'}
     wind_unit_dict        = {0:'mile_per_hour', 1:'meter_per_second', 2:'km_per_hour', 3:'knot'}
     wind_cup_dict         = {0:'small', 1:'large'}
-    rain_bucket_dict      = {0: "0.01 inches", 1: "0.2 MM", 2: "0.1 MM"}
-    transmitter_type_dict = {0: 'iss', 1: 'temp', 2: 'hum', 3: 'temp_hum', 4: 'wind',
-                             5: 'rain', 6: 'leaf', 7: 'soil', 8: 'leaf_soil',
-                             9: 'sensorlink', 10: 'none'}
+    rain_bucket_dict      = {0:'0.01 inches', 1:'0.2 mm', 2:'0.1 mm'}
+    transmitter_type_dict = {0:'iss', 1:'temp', 2:'hum', 3:'temp_hum', 4:'wind',
+                             5:'rain', 6:'leaf', 7:'soil', 8:'leaf_soil',
+                             9:'sensorlink', 10:'none'}
+    repeater_dict         = {0:'none', 1:'A', 2:'B', 3:'C', 4:'D',
+                             5:'E', 6:'F', 7:'G', 8:'H'}
+    listen_dict           = {0:'inactive',  1:'active'}
     
     def __init__(self, **vp_dict):
         """Initialize an object of type Vantage.
@@ -455,17 +458,22 @@ class Vantage(weewx.drivers.AbstractDevice):
         Default is 4]
         
         iss_id: The station number of the ISS [Optional. Default is 1]
+        
+        model_type: Vantage Pro model type. 1 := Vantage Pro; 2 := Vantage Pro2
+        [Optional. Default is 2]
         """
 
-        syslog.syslog(syslog.LOG_DEBUG, 'vantage: driver version is %s' % DRIVER_VERSION)
+        syslog.syslog(syslog.LOG_DEBUG, 'vantage: Driver version is %s' % DRIVER_VERSION)
 
-        # TODO: These values should really be retrieved dynamically from the VP:
-        self.model_type = 2  # = 1 for original VantagePro, = 2 for VP2
+        self.hardware_type = None
 
         # These come from the configuration dictionary:
-        self.max_tries = int(vp_dict.get('max_tries', 4))
-        self.iss_id    = to_int(vp_dict.get('iss_id'))
-        
+        self.max_tries  = int(vp_dict.get('max_tries', 4))
+        self.iss_id     = to_int(vp_dict.get('iss_id'))
+        self.model_type = int(vp_dict.get('model_type', 2))
+        if self.model_type not in range (1, 3):
+            raise weewx.UnsupportedFeature("Unknown model_type (%d)" % self.model_type)
+
         self.save_monthRain = None
         self.max_dst_jump = 7200
 
@@ -477,6 +485,7 @@ class Vantage(weewx.drivers.AbstractDevice):
 
         # Read the EEPROM and fill in properties in this instance
         self._setup()
+        syslog.syslog(syslog.LOG_DEBUG, "vantage: Hardware name: %s" % self.hardware_name)
         
     def openPort(self):
         """Open up the connection to the console"""
@@ -606,7 +615,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # by looking at the first 4 bytes (the date and time):
                 if _record_string[0:4] == 4 * chr(0xff) or _record_string[0:4] == 4 * chr(0x00):
                     # This record has never been used. We're done.
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: empty record page %d; index %d" \
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Empty record page %d; index %d" \
                                   % (ipage, _index))
                     return
                 
@@ -656,7 +665,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # by looking at the first 4 bytes (the date and time):
                 if _record_string[0:4] == 4 * chr(0xff) or _record_string[0:4] == 4 * chr(0x00):
                     # This record has never been used. Skip it
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: empty record page %d; index %d" \
+                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Empty record page %d; index %d" \
                                   % (ipage, _index))
                     continue
                 # Unpack the raw archive packet:
@@ -817,6 +826,26 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_data("EEBWR 14 02\n")
         self.port.send_data_with_crc16(struct.pack("<h", offset))
 
+    def setWindCupType(self, new_wind_cup_code):
+        """Set the wind cup type.
+
+        new_windCup_code: The new wind cup type. Must be one of 0 or 1
+        """
+        if new_wind_cup_code not in (0, 1):
+            raise weewx.ViolatedPrecondition("Invalid wind cup code %d" % new_wind_cup_code)
+        old_setup_bits = self._getEEPROM_value(0x2B)[0]
+        new_setup_bits = (old_setup_bits & 0xF7) | (new_wind_cup_code << 3)
+
+        # Tell the console to put one byte in hex location 0x2B
+        self.port.send_data("EEBWR 2B 01\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(new_setup_bits), max_tries=1)
+        # Then call NEWSETUP to get it to stick:
+        self.port.send_data("NEWSETUP\n")
+
+        self._setup()
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Wind cup type set to %d (%s)" % (self.wind_cup_type, self.wind_cup_size))
+
     def setBucketType(self, new_bucket_code):
         """Set the rain bucket type.
         
@@ -868,10 +897,46 @@ class Vantage(weewx.drivers.AbstractDevice):
         self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Set barometer calibration.")
         
+    def setLatitude(self, latitude_dg):
+        """Set the stations latitude.
+
+        latitude_dg: Must be in the closed range -90.0...90.0
+        """
+        latitude = int(round((latitude_dg * 10), 0))
+        if latitude not in range(-900, 901):
+            raise weewx.ViolatedPrecondition, "vantage: Invalid latitude %.1f degree" % (latitude_dg,)
+
+        # Tell the console to put one byte in hex location 0x0B
+        self.port.send_data("EEBWR 0B 02\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(latitude & 0x00ff) + chr((latitude / 256) & 0x00ff) , max_tries=1)
+        # Then call NEWSETUP to get it to stick:
+        self.port.send_data("NEWSETUP\n")
+
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Station latitude set to %.1f degree" % (latitude_dg,))
+
+    def setLongitude(self, longitude_dg):
+        """Set the stations longitude.
+
+        longitude_dg: Must be in the closed range -180.0...180.0
+        """
+        longitude = int(round((longitude_dg * 10), 0))
+        if longitude not in range(-1800, 1801):
+            raise weewx.ViolatedPrecondition, "vantage: Invalid longitude %.1f degree" % (longitude_dg,)
+
+        # Tell the console to put one byte in hex location 0x0D
+        self.port.send_data("EEBWR 0D 02\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(longitude & 0x00ff) + chr((longitude / 256) & 0x00ff) , max_tries=1)
+        # Then call NEWSETUP to get it to stick:
+        self.port.send_data("NEWSETUP\n")
+
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Station longitude set to %.1f degree" % (longitude_dg,))
+
     def setArchiveInterval(self, archive_interval_seconds):
         """Set the archive interval of the Vantage.
         
-        archive_interval_seconds: The new interval to use in minutes. Must be one of
+        archive_interval_seconds: The new interval to use in seconds. Must be one of
         60, 300, 600, 900, 1800, 3600, or 7200 
         """
         if archive_interval_seconds not in (60, 300, 600, 900, 1800, 3600, 7200):
@@ -883,7 +948,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_command(command, max_tries=self.max_tries)
 
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: archive interval set to %d seconds" % (archive_interval_seconds,))
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Archive interval set to %d seconds" % (archive_interval_seconds,))
     
     def setLamp(self, onoff='OFF'):
         """Set the lamp on or off"""
@@ -897,7 +962,7 @@ class Vantage(weewx.drivers.AbstractDevice):
 
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Lamp set to '%s'" % onoff)
         
-    def setTransmitterType(self, new_channel, new_transmitter_type, new_extra_temp, new_extra_hum):
+    def setTransmitterType(self, new_channel, new_transmitter_type, new_extra_temp, new_extra_hum, new_repeater):
         """Set the transmitter type for one of the eight channels."""
         
         # Default value just for tidiness.
@@ -906,22 +971,26 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Check arguments are consistent.
         if new_channel not in range(1, 9):
             raise weewx.ViolatedPrecondition("Invalid channel %d" % new_channel)
+        if new_repeater not in range(0, 9):
+            raise weewx.ViolatedPrecondition("Invalid repeater %d" % new_repeater)
         if new_transmitter_type not in range(0, 11):
             raise weewx.ViolatedPrecondition("Invalid transmitter type %d" % new_transmitter_type)
-        if Vantage.transmitter_type_dict[new_transmitter_type] in ['temp', 'temp_hum']:
+        if self.transmitter_type_dict[new_transmitter_type] in ['temp', 'temp_hum']:
             if new_extra_temp not in range(1, 9):
                 raise weewx.ViolatedPrecondition("Invalid extra temperature number %d" % new_extra_temp)
             # Extra temp is origin 0.
             new_temp_hum_bits = new_temp_hum_bits & 0xF0 | (new_extra_temp - 1)
-        if Vantage.transmitter_type_dict[new_transmitter_type] in ['hum', 'temp_hum']:
+        if self.transmitter_type_dict[new_transmitter_type] in ['hum', 'temp_hum']:
             if new_extra_hum not in range(1, 9):
                 raise weewx.ViolatedPrecondition("Invalid extra humidity number %d" % new_extra_hum)
             # Extra humidity is origin 1.
             new_temp_hum_bits = new_temp_hum_bits & 0x0F | (new_extra_hum << 4)
 
-        # Preserve top nibble, is related to repeaters.
-        old_type_bits = self._getEEPROM_value(0x19 + (new_channel - 1) * 2)[0]
-        new_type_bits = old_type_bits & 0xF0 | new_transmitter_type
+        if new_repeater == 0:
+            new_type_bits = (new_transmitter_type & 0x0F)
+        else:
+            new_type_bits = ((new_repeater + 7) << 4) | (new_transmitter_type & 0x0F)
+        
         # Transmitter type 10 is "none"; turn off listening too.
         usetx = 1 if new_transmitter_type != 10 else 0
         old_usetx_bits = self._getEEPROM_value(0x17)[0]
@@ -939,9 +1008,40 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_data("NEWSETUP\n")
         
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Transmitter type for channel %d set to %d (%s)" %
-                      (new_channel, new_transmitter_type, Vantage.transmitter_type_dict[new_transmitter_type]))
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Transmitter type for channel %d set to %d (%s), repeater: %s, %s" %
+                      (new_channel, new_transmitter_type, self.transmitter_type_dict[new_transmitter_type], self.repeater_dict[new_repeater], self.listen_dict[usetx]))
 
+    def setRetransmit(self, new_channel):
+        """Set console retransmit channel."""
+        # Tell the console to put one byte in hex location 0x18
+        self.port.send_data("EEBWR 18 01\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(new_channel), max_tries=1)
+        # Then call NEWSETUP to get it to stick:
+        self.port.send_data("NEWSETUP\n")
+        
+        self._setup()
+        if new_channel != 0:
+            syslog.syslog(syslog.LOG_NOTICE, "vantage: Retransmit set to 'ON' at channel: %d" % new_channel)
+        else:
+            syslog.syslog(syslog.LOG_NOTICE, "vantage: Retransmit set to 'OFF'")
+    
+    def setTempLogging(self, new_tempLogging='AVERAGE'):
+        """Set console temperature logging to 'AVERAGE' or 'LAST'."""
+        try:
+            _setting = {'LAST': 1, 'AVERAGE': 0}[new_tempLogging.upper()]
+        except KeyError:
+            raise ValueError("Unknown console temperature logging setting '%s'" % new_tempLogging.upper())
+        
+        # Tell the console to put one byte in hex location 0x2B
+        self.port.send_data("EEBWR FFC 01\n")
+        # Follow it up with the data:
+        self.port.send_data_with_crc16(chr(_setting), max_tries=1)
+        # Then call NEWSETUP to get it to stick:
+        self.port.send_data("NEWSETUP\n")
+
+        syslog.syslog(syslog.LOG_NOTICE, "vantage: Console temperature logging set to '%s'" % new_tempLogging.upper())
+    
     def setCalibrationWindDir(self, offset):
         """Set the on-board wind direction calibration."""
         if offset < -359 or offset > 359:
@@ -1057,8 +1157,11 @@ class Vantage(weewx.drivers.AbstractDevice):
         gmt_or_zone = "GMT_OFFSET" if self._getEEPROM_value(0x16)[0] else "ZONE_CODE"
         zone_code   = self._getEEPROM_value(0x11)[0]
         gmt_offset  = self._getEEPROM_value(0x14, "<h")[0] / 100.0
+        tempLogging = "LAST"  if self._getEEPROM_value(0xffc)[0] else "AVERAGE"
+        retransmit_channel = self._getEEPROM_value(0x18)[0]
         
-        return (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset)
+        return (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset,
+                tempLogging, retransmit_channel)
 
     def getStnTransmitters(self):
         """ Get the types of transmitters on the eight channels."""
@@ -1068,9 +1171,13 @@ class Vantage(weewx.drivers.AbstractDevice):
         transmitter_data = self._getEEPROM_value(0x19, "16B")
         
         for transmitter_id in range(8):
-            transmitter_type = Vantage.transmitter_type_dict[transmitter_data[transmitter_id * 2] & 0x0F]
+            transmitter_type = self.transmitter_type_dict[transmitter_data[transmitter_id * 2] & 0x0F]
+            repeater = 0
+            repeater = transmitter_data[transmitter_id * 2] & 0xF0
+            repeater = (repeater >> 4) - 7 if repeater > 127 else 0
             transmitter = {"transmitter_type": transmitter_type,
-                           "listen": (use_tx >> transmitter_id) & 1 }
+                           "repeater": self.repeater_dict[repeater],
+                           "listen": self.listen_dict[(use_tx >> transmitter_id) & 1] }
             if transmitter_type in ['temp', 'temp_hum']:
                 # Extra temperature is origin 0.
                 transmitter['temp'] = (transmitter_data[transmitter_id * 2 + 1] & 0xF) + 1
@@ -1136,9 +1243,12 @@ class Vantage(weewx.drivers.AbstractDevice):
     @property
     def hardware_name(self):    
         if self.hardware_type == 16:
-            return "VantagePro2"
+            if self.model_type == 1:
+                return "Vantage Pro"
+            else:
+                return "Vantage Pro2"
         elif self.hardware_type == 17:
-            return "VantageVue"
+            return "Vantage Vue"
         else:
             raise weewx.UnsupportedFeature("Unknown hardware type %d" % self.hardware_type)
 
@@ -1146,29 +1256,33 @@ class Vantage(weewx.drivers.AbstractDevice):
     def archive_interval(self):
         return self.archive_interval_
     
-    def determine_hardware(self):
+    def _determine_hardware(self):
         # Determine the type of hardware:
         for count in xrange(self.max_tries):
             try:
                 self.port.send_data("WRD" + chr(0x12) + chr(0x4d) + "\n")
                 self.hardware_type = ord(self.port.read())
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: _setup; hardware type is %s" % self.hardware_type)
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: Hardware type is %d" % self.hardware_type)
                 # 16 = Pro, Pro2, 17 = Vue
                 return self.hardware_type
             except weewx.WeeWxIOError:
                 pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: determine_hardware; retry #%d" % (count,))
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: _determine_hardware; retry #%d" % (count,))
 
-        syslog.syslog(syslog.LOG_ERR, "vantage: _setup; unable to read hardware type; raise WeeWxIOError")
+        syslog.syslog(syslog.LOG_ERR, "vantage: Unable to read hardware type; raise WeeWxIOError")
         raise weewx.WeeWxIOError("Unable to read hardware type")
 
     def _setup(self):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
         
         self.port.wakeup_console(max_tries=self.max_tries)
-        self.hardware_type = self.determine_hardware()
 
-        """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
+        # Get hardware type, if not done yet.
+        if self.hardware_type is None:
+            self.hardware_type = self._determine_hardware()
+            # Overwrite model_type if we have Vantage Vue.
+            if self.hardware_type == 17:
+                self.model_type = 2
 
         unit_bits              = self._getEEPROM_value(0x29)[0]
         setup_bits             = self._getEEPROM_value(0x2B)[0]
@@ -1765,13 +1879,18 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     @property
     def usage(self):
         return """%prog [config_file] [--help] [--info] [--clear-memory]
-    [--set-interval=MINUTES] [--set-altitude=FEET] [--set-barometer=inHg] 
-    [--set-bucket=CODE] [--set-rain-year-start=MM] 
+    [--set-interval=MINUTES]
+    [--set-latitude=DEGREE] [--set-longitude=DEGREE]
+    [--set-altitude=FEET] [--set-barometer=inHg]
+    [--set-wind-cup=CODE] [--set-bucket=CODE]
+    [--set-rain-year-start=MM]
     [--set-offset=VARIABLE,OFFSET]
-    [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM]
+    [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM,REPEATER_ID]
+    [--set-retransmit=[OFF|ON|ON,CHANNEL]]
+    [--set-temperature-logging=[LAST|AVERAGE]]
     [--set-time] [--set-dst=[AUTO|ON|OFF]]
     [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
-    [--set-lamp=[ON|OFF]] [--dump] [--logger_summary=FILE]
+    [--set-lamp=[ON|OFF]] [--dump] [--logger-summary=FILE]
     [--start | --stop]"""
 
     def add_options(self, parser):
@@ -1782,16 +1901,25 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                           help="To clear the memory of your weather station.")
         parser.add_option("--set-interval", type=int, dest="set_interval",
                           metavar="MINUTES",
-                          help="Sets the archive interval to the specified number of minutes. Valid values are 1, 5, 10, 15, 30, 60, or 1200.")
+                          help="Sets the archive interval to the specified number of minutes. Valid values are 1, 5, 10, 15, 30, 60, or 120.")
+        parser.add_option("--set-latitude", type=float, dest="set_latitude",
+                          metavar="DEGREE",
+                          help="Sets the latitude of the station to the specified number of tenth degree.")
+        parser.add_option("--set-longitude", type=float, dest="set_longitude",
+                          metavar="DEGREE",
+                          help="Sets the longitude of the station to the specified number of tenth degree.")
         parser.add_option("--set-altitude", type=float, dest="set_altitude",
                           metavar="FEET",
                           help="Sets the altitude of the station to the specified number of feet.") 
         parser.add_option("--set-barometer", type=float, dest="set_barometer",
                           metavar="inHg",
                           help="Sets the barometer reading of the station to a known correct value in inches of mercury. Specify 0 (zero) to have the console pick a sensible value.")
+        parser.add_option("--set-wind-cup", type=int, dest="set_wind_cup",
+                          metavar="CODE",
+                          help="Set the type of wind cup. Specify '0' for small size; '1' for large size")
         parser.add_option("--set-bucket", type=int, dest="set_bucket",
                           metavar="CODE",
-                          help="Set the type of rain bucket. Specify '0' for 0.01 inches; '1' for 0.2 MM; '2' for 0.1 MM")
+                          help="Set the type of rain bucket. Specify '0' for 0.01 inches; '1' for 0.2 mm; '2' for 0.1 mm")
         parser.add_option("--set-rain-year-start", type=int,
                           dest="set_rain_year_start", metavar="MM",
                           help="Set the rain year start (1=Jan, 2=Feb, etc.).")
@@ -1800,8 +1928,14 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                           help="Set the onboard offset for VARIABLE inTemp, outTemp, extraTemp[1-7], inHumid, outHumid, extraHumid[1-7], soilTemp[1-4], leafTemp[1-4], windDir) to OFFSET (Fahrenheit, %, degrees)")
         parser.add_option("--set-transmitter-type", type=str,
                           dest="set_transmitter_type",
-                          metavar="CHANNEL,TYPE,TEMP,HUM",
-                          help="Set the transmitter type for CHANNEL (1-8), TYPE (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain, 6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none), as extra TEMP station and extra HUM station (both 1-7, if applicable)")
+                          metavar="CHANNEL,TYPE,TEMP,HUM,REPEATER_ID",
+                          help="Set the transmitter type for CHANNEL (1-8), TYPE (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain, 6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none), as extra TEMP station and extra HUM station (both 1-7, if applicable), REPEATER_ID ('A'-'H', if used)")
+        parser.add_option("--set-retransmit", type=str, dest="set_retransmit",
+                          metavar="OFF|ON|ON,CHANNEL",
+                          help="Turn console retransmit function 'ON' or 'OFF'.")
+        parser.add_option("--set-temperature-logging", dest="set_temp_logging",
+                          metavar="LAST|AVERAGE",
+                          help="Set console temperature logging to either 'LAST' or 'AVERAGE'.")
         parser.add_option("--set-time", action="store_true", dest="set_time",
                           help="Set the onboard clock to the current time.")
         parser.add_option("--set-dst", dest="set_dst",
@@ -1838,10 +1972,16 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             self.clear_memory(station)
         if options.set_interval is not None:
             self.set_interval(station, options.set_interval)
+        if options.set_latitude is not None:
+            self.set_latitude(station, options.set_latitude)
+        if options.set_longitude is not None:
+            self.set_longitude(station, options.set_longitude)
         if options.set_altitude is not None:
             self.set_altitude(station, options.set_altitude)
         if options.set_barometer is not None:
             self.set_barometer(station, options.set_barometer)
+        if options.set_wind_cup is not None:
+            self.set_wind_cup(station, options.set_wind_cup)
         if options.set_bucket is not None:
             self.set_bucket(station, options.set_bucket)
         if options.set_rain_year_start is not None:
@@ -1850,6 +1990,10 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             self.set_offset(station, options.set_offset)
         if options.set_transmitter_type is not None:
             self.set_transmitter_type(station, options.set_transmitter_type)
+        if options.set_retransmit is not None:
+            self.set_retransmit(station, options.set_retransmit)
+        if options.set_temp_logging is not None:
+            self.set_temp_logging(station, options.set_temp_logging)
         if options.set_time:
             self.set_time(station)
         if options.set_dst:
@@ -1909,13 +2053,16 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
       Rain:                         %s
       Wind:                         %s
       """ % (station.hardware_name, _firmware_date, _firmware_version,
-             station.archive_interval, altitude_converted, station.altitude_unit,
+             station.archive_interval,
+             altitude_converted, station.altitude_unit,
              station.wind_cup_size, station.rain_bucket_size,
              station.rain_year_start, console_time,
              station.barometer_unit, station.temperature_unit,
              station.rain_unit, station.wind_unit)
+
         try:
-            (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset) = station.getStnInfo()
+            (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset,
+             tempLogging, retransmit_channel) = station.getStnInfo()
             if man_or_auto == 'AUTO':
                 dst = 'N/A'
             if gmt_or_zone == 'ZONE_CODE':
@@ -1923,15 +2070,19 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             else:
                 gmt_offset_str = "%+.1f hours" % gmt_offset
                 zone_code = 'N/A'
+            on_off = "ON" if retransmit_channel else "OFF"
             print >> dest, """    CONSOLE STATION INFO:
-      Latitude (onboard):           %+0.1f
-      Longitude (onboard):          %+0.1f
+      Latitude (onboard):           %+0.1f\xc2\xb0
+      Longitude (onboard):          %+0.1f\xc2\xb0
       Use manual or auto DST?       %s
       DST setting:                  %s
       Use GMT offset or zone code?  %s
       Time zone code:               %s
       GMT offset:                   %s
-        """ % (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset_str)
+      Temperature logging:          %s
+      Retransmit channel:           %s (%d)
+        """ % (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset_str,
+               tempLogging, on_off, retransmit_channel)
         except:
             pass
     
@@ -1940,9 +2091,12 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         try:
             transmitter_list = station.getStnTransmitters()
             print >> dest, "    TRANSMITTERS: "
+            print >> dest, "      Channel   Receive   Repeater  Type"
             for transmitter_id in range(0, 8):
                 comment = ""
                 transmitter_type = transmitter_list[transmitter_id]["transmitter_type"]
+                repeater         = transmitter_list[transmitter_id]["repeater"]
+                listen           = transmitter_list[transmitter_id]["listen"]
                 if transmitter_type == 'temp_hum':
                     comment = "(as extra temperature %d and extra humidity %d)" % \
                         (transmitter_list[transmitter_id]["temp"], transmitter_list[transmitter_id]["hum"])
@@ -1952,7 +2106,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     comment = "(as extra humidity %d)" % transmitter_list[transmitter_id]["hum"]
                 elif transmitter_type == 'none':
                     transmitter_type = "(N/A)"
-                print >> dest, "      Channel %d:                    %s %s" % (transmitter_id + 1, transmitter_type, comment)
+                print >> dest, "         %d      %-8s    %-4s    %s %s" % (transmitter_id + 1, listen, repeater, transmitter_type, comment)
             print >> dest, ""
         except:
             pass
@@ -2053,6 +2207,42 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 elif ans == 'n':
                     print "Nothing done."
 
+    @staticmethod
+    def set_latitude(station, latitude_dg):
+        """Set the console station latitude"""
+
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Proceeding will set the latitude value to %.1f degree." % latitude_dg
+            ans = raw_input("Are you sure you wish to proceed (y/n)? ")
+            if ans == 'y':
+                try:
+                    station.setLatitude(latitude_dg)
+                except StandardError, e:
+                    print >> sys.stderr, "Unable to set new latitude. Reason:\n\t****", e
+                else:
+                    print "Station latitude set to %.1f degree." % latitude_dg
+            elif ans == 'n':
+                print "Nothing done."
+
+    @staticmethod
+    def set_longitude(station, longitude_dg):
+        """Set the console station longitude"""
+
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Proceeding will set the longitude value to %.1f degree." % longitude_dg
+            ans = raw_input("Are you sure you wish to proceed (y/n)? ")
+            if ans == 'y':
+                try:
+                    station.setLongitude(longitude_dg)
+                except StandardError, e:
+                    print >> sys.stderr, "Unable to set new longitude. Reason:\n\t****", e
+                else:
+                    print "Station longitude set to %.1f degree." % longitude_dg
+            elif ans == 'n':
+                print "Nothing done."
+
     @staticmethod    
     def set_altitude(station, altitude_ft):
         """Set the console station altitude"""
@@ -2106,6 +2296,38 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 print "Archive records cleared."
             elif ans == 'n':
                 print "Nothing done."
+
+    @staticmethod
+    def set_wind_cup(station, new_wind_cup_type):
+        """Set the wind cup type on the console."""
+
+        if station.hardware_type != 16:
+            print >> sys.stderr, """Unable to set new wind cup type. Reason:
+    **** Command only valid with Vantage Pro or Vantage Pro2 station.
+    """
+            return
+
+        print "Old rain wind cup type is %d (%s), new one is %d (%s)." % (
+            station.wind_cup_type,
+            station.wind_cup_size,
+            new_wind_cup_type,
+            Vantage.wind_cup_dict[new_wind_cup_type])
+        if station.wind_cup_type == new_wind_cup_type:
+            print "Old and new wind cup types are the same. Nothing done."
+        else:
+            ans = None
+            while ans not in ['y', 'n']:
+                print "Proceeding will change the wind cup type."
+                ans = raw_input("Are you sure you want to proceed (y/n)? ")
+                if ans == 'y':
+                    try:
+                        station.setWindCupType(new_wind_cup_type)
+                    except StandardError, e:
+                        print >> sys.stderr, "Unable to set new wind cup type. Reason:\n\t****", e
+                    else:
+                        print "Wind cup type set to %d (%s)." % (station.wind_cup_type, station.wind_cup_size)
+                elif ans == 'n':
+                    print "Nothing done."
 
     @staticmethod
     def set_bucket(station, new_bucket_type):
@@ -2224,38 +2446,143 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_transmitter_type(station, transmitter_list):
         """Set the transmitter type for one of the eight channels."""
 
-        transmitter_list = map((lambda x: int(x) if x != "" else None), transmitter_list.split(','))
+        transmitter_list = map((lambda x: int(x) if x.isdigit() else x if x != "" else None), transmitter_list.split(','))
         channel = transmitter_list[0]
         if not 1 <= channel <= 8:
-            print "Channel number must be between 1 and 8"
-            return 
+            print "Channel number must be between 1 and 8."
+            return
+        
+        # Check new channel against retransmit channel.
+        # Warn and stop if new channel is used as retransmit channel.
+        retransmit_channel = station._getEEPROM_value(0x18)[0]
+        if retransmit_channel == channel:
+            print "This channel is used as retransmit channel. Please turn off retransmit function or choose another channel."
+            return
+        
+        # Init repeater to 'no repeater'
+        repeater = 0
+        # Check the last entry in transmitter_list to see if it is a repeater letter
+        try:
+            if transmitter_list[len(transmitter_list)-1].isalpha():
+                repeater_id = transmitter_list[len(transmitter_list)-1].upper()
+                del transmitter_list[len(transmitter_list)-1]
+                # Check with repeater_dict and get the ID number
+                for key in station.repeater_dict.keys():
+                    if station.repeater_dict[key] == repeater_id:
+                        repeater = key
+                        break
+                if repeater == 0:
+                    print "Repeater ID must be between 'A' and 'H'."
+                    return
+        except:
+            # No repeater letter
+            pass
+        
         transmitter_type = transmitter_list[1]
         extra_temp = transmitter_list[2] if len(transmitter_list) > 2 else None
-        extra_hum = transmitter_list[3] if len(transmitter_list) > 3 else None 
+        extra_hum = transmitter_list[3] if len(transmitter_list) > 3 else None
+        usetx = 1 if transmitter_type != 10 else 0
 
         try:
-            transmitter_type_name = Vantage.transmitter_type_dict[transmitter_type]
+            transmitter_type_name = station.transmitter_type_dict[transmitter_type]
         except KeyError:
             print "Unknown transmitter type (%s)" % transmitter_type
             return
+        
         if transmitter_type_name in ['temp', 'temp_hum'] and extra_temp not in range(1, 8):
             print "Transmitter type %s requires extra_temp in range 1-7'" % transmitter_type_name
             return
+        
         if transmitter_type_name in ['hum', 'temp_hum'] and extra_hum not in range(1, 8):
             print "Transmitter type %s requires extra_hum in range 1-7'" % transmitter_type_name
             return
+        
         ans = None
         while ans not in ['y', 'n']:
-            print "Proceeding will set channel %d to type %d (%s)." % (channel, transmitter_type, transmitter_type_name)
+            print "Proceeding will set channel %d to type %d (%s), repeater: %s, %s." % (
+                channel, transmitter_type, transmitter_type_name, station.repeater_dict[repeater], station.listen_dict[usetx])
             ans = raw_input("Are you sure you want to proceed (y/n)? ")
             if ans == 'y':
                 try:
-                    station.setTransmitterType(channel, transmitter_type, extra_temp, extra_hum)
+                    station.setTransmitterType(channel, transmitter_type, extra_temp, extra_hum, repeater)
                 except StandardError, e:
                     print >> sys.stderr, "Unable to set transmitter type. Reason:\n\t****", e
                 else:
-                    print "Transmitter %d now set to type %d." % (channel, transmitter_type)
+                    print "Transmitter type for channel %d set to %d (%s), repeater: %s, %s." % (
+                        channel, transmitter_type, transmitter_type_name, station.repeater_dict[repeater], station.listen_dict[usetx])
             else:
+                print "Nothing done."
+
+    @staticmethod
+    def set_retransmit(station, channel_on_off):
+        """Set console retransmit channel."""
+
+        channel = 0
+        channel_on_off = channel_on_off.strip().upper()
+        channel_on_off_list = channel_on_off.split(',')
+        on_off = channel_on_off_list[0]
+        if on_off != "OFF":
+            if len(channel_on_off_list) > 1:
+                channel = map((lambda x: int(x) if x != "" else None), channel_on_off_list[1])[0]
+                if not 0 < channel < 9:
+                    print "Channel out of range 1..8. Nothing done."
+                    return
+        
+            transmitter_list = station.getStnTransmitters()
+            if channel != 0:
+                if transmitter_list[channel-1]["listen"] == "active":
+                    print "Channel %d in use. Please select another channel. Nothing done." % channel
+                    return
+            else:
+                for i in range(0, 7):
+                    if transmitter_list[i]["listen"] == "inactive":
+                        channel = i+1
+                        break
+            if channel == 0:
+                print "All Channels in use. Retransmit can't be enabled. Nothing done."
+                return
+    
+        old_channel = station._getEEPROM_value(0x18)[0]
+        if old_channel == channel:
+            print "Old and new retransmit settings are the same. Nothing done."
+            return
+        
+        ans = None
+        while ans not in ['y', 'n']:
+            if channel != 0:
+                print "Proceeding will set retransmit to 'ON' at channel: %d." % channel
+            else:
+                print "Proceeding will set retransmit to 'OFF'."
+            ans = raw_input("Are you sure you want to proceed (y/n)? ")
+            if ans == 'y':
+                try:
+                    station.setRetransmit(channel)
+                except StandardError, e:
+                    print >> sys.stderr, "Unable to set retransmit. Reason:\n\t****", e
+                else:
+                    if channel != 0:
+                        print "Retransmit set to 'ON' at channel: %d." % channel
+                    else:
+                        print "Retransmit set to 'OFF'."
+            else:
+                print "Nothing done."
+
+    @staticmethod
+    def set_temp_logging(station, tempLogging):
+        """Set console temperature logging to 'LAST' or 'AVERAGE'."""
+
+        ans = None
+        while ans not in ['y', 'n']:
+            print "Proceeding will change the console temperature logging to '%s'." % (tempLogging.upper())
+            ans = raw_input("Are you sure you want to proceed (y/n)? ")
+            if ans == 'y':
+                try:
+                    station.setTempLogging(tempLogging)
+                except StandardError, e:
+                    print >> sys.stderr, "Unable to set new console temperature logging. Reason:\n\t****", e
+                else:
+                    print "Console temperature logging set to '%s'." % (tempLogging.upper())
+            elif ans == 'n':
                 print "Nothing done."
 
     @staticmethod
@@ -2413,6 +2740,9 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
 
     # How many times to try before giving up:
     max_tries = 4
+
+    # Vantage model Type: 1 = Vantage Pro; 2 = Vantage Pro2
+    model_type = 2
 
     # The driver to use:
     driver = weewx.drivers.vantage

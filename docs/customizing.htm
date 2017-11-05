@@ -39,7 +39,7 @@
         <a href='http://weewx.com'> <img src='images/logo-weewx.png'
           class='logo' align='right' alt="weewx logo" />
         </a><br /> <span class='version'> 
-Version: 3.7
+Version: 3.8
     </span>
       </div>
       <div class="title">weeWX Customization Guide</div>
@@ -2686,7 +2686,8 @@ class MyStats(SearchList):                                                   # 1
         all_stats = TimespanBinder(timespan,
                                    db_lookup,
                                    formatter=self.generator.formatter,
-                                   converter=self.generator.converter)       # 4
+                                   converter=self.generator.converter,
+                                   skin_dict=self.generator.skin_dict)       # 4
 
         # Now get a TimespanBinder object for the last seven days. This one we
         # will have to calculate. First, calculate the time at midnight, seven
@@ -2700,7 +2701,8 @@ class MyStats(SearchList):                                                   # 1
         seven_day_stats = TimespanBinder(TimeSpan(week_ts, timespan.stop),
                                          db_lookup,
                                          formatter=self.generator.formatter,
-                                         converter=self.generator.converter) # 7
+                                         converter=self.generator.converter,
+                                         skin_dict=self.generator.skin_dict) # 7
 
         # Now create a small dictionary with keys 'alltime' and 'seven_day':
         search_list_extension = {'alltime'   : all_stats,
@@ -2748,31 +2750,40 @@ class MyStats(SearchList):                                                   # 1
           have already met it in the introduction <em><a
             href="#how_tags_work">How tags work</a></em>. In our case, we
           will set it up to represent the statistics over all possible
-          times. The class takes 4 parameters.
+          times. The class takes 5 parameters.
           <ul>
-            <li>The first is the timespan over which the
+            <li>The first, <span class='code'>timespan</span>,
+              is the timespan over which the
               calculation is to be done. Here, we have a lucky
               coincidence: the variable <span class="code">timespan</span>
               already holds a <span class="code">TimeSpan</span> object
               representing the domain of all valid timespans, so we
               simply pass it in.
             </li>
-            <li>The second is the database lookup function to be
+            <li>The second, <span class='code'>db_lookup</span>,
+              is the database lookup function to be
               used. We simply pass in <span class="code">db_lookup</span>.
             </li>
-            <li>The third should be an instance of class <span
+            <li>The third, <span class="code">formatter</span>,
+              should be an instance of class <span
               class="code">weewx.units.Formatter</span>, which contains
               information about how the results should be formatted. We
               just pass in the formatter set up by the generator, <span
               class="code">self.generator.formatter</span>.
             </li>
-            <li>The fourth should be an instance of <span
+            <li>The fourth, <span class="code">converter</span>,
+              should be an instance of <span
               class="code">weewx.units.Converter</span>, which contains
               information about the target units (<i>e.g.</i>, <span
               class="code">degree_C</span>) that are to be used. Again,
               we just pass in the instance set up by the generator, <span
               class="code">self.generator.converter</span>.
             </li>
+            <li>The fifth, <span class="code">skin_dict</span>,
+            is an instance of <span class="code">configobj.ConfigObj</span>,
+            and contains the contents of the skin configuration file.
+            We pass it on in order to allow aggregations that need information
+            from the file, such as heating and cooling degree-days.</li>
           </ul>
         </li>
       </ol>
@@ -4766,6 +4777,35 @@ UV      = UV Index</pre>
         will be chosen automatically.
       </p>
 
+      <p class="config_option">x_interval</p>
+
+      <p>
+        The time interval in seconds between x-axis tick marks.	Optional.
+		If not given, a suitable default will be chosen.
+      </p>
+
+      <p class="config_option">x_label_spacing</p>
+
+      <p>
+        Specifies the ordinal increment between labels on the x-axis: 
+        For example, 3 means a label every 3rd tick mark.
+		Optional. The default is <span class='code'>2</span>.
+      </p>
+
+      <p class="config_option">y_label_spacing</p>
+
+      <p>
+        Specifies the ordinal increment between labels on the y-axis: 
+        For example, 3 means a label every 3rd tick mark.
+		Optional. The default is <span class='code'>2</span>.
+      </p>
+
+      <p class="config_option">y_nticks</p>
+
+      <p>
+        The nominal number of ticks along the y-axis. The default is <span class='code'>10</span>.
+      </p>
+
 
       <h3>Plot scaling options</h3>
 
@@ -4916,6 +4956,13 @@ UV      = UV Index</pre>
       <p>
         This option is to override the color for an individual line.
         Optional. Default is to use the color in <span class="code">chart_line_colors</span>.
+      </p>
+
+      <p class="config_option">fill_color</p>
+
+      <p>
+        This option is to override the fill color for a bar chart.
+        Optional. Default is to use the color in <span class="code">chart_fill_colors</span>.
       </p>
 
       <p class="config_option">line_type</p>

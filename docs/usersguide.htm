@@ -39,7 +39,7 @@
                 <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
             </a><br/>
 	<span class='version'>
-Version: 3.7
+Version: 3.8
         </span>
         </div>
         <div class="title">
@@ -1136,6 +1136,15 @@ sudo /etc/init.d/weewx start</pre>
         <p>Set to how often garbage collection should be performed by the Python
             runtime engine. Default is every 10,800 seconds (3 hours).</p>
 
+        <p class="config_option">loop_on_init</p>
+
+        <p>Normally, if the hardware driver fails to load, weewx will exit. The assumption
+        is that there is a configuration problem and so retries are useless. 
+        However, in some cases, drivers can fail to load for intermittent reasons,
+        such as a network failure. In these cases, it may be useful to have
+        weewx do a retry. Setting this option to 1 will cause weewx to keep retrying indefinitely.
+        </p>
+
         <h2 class="config_section">[Station]</h2>
 
         <p>This section covers options relating to your weather station setup. </p>
@@ -1927,7 +1936,7 @@ longitude = -77.0366</pre>
             clock time that it came in. This means that if your station is off the
             air for a long period of time, then when weeWX
             attempts a catch up, old data could be interpreted as the current
-            conditions. Optional. Default is 1800 seconds.</p>
+            conditions. Optional. Default is 600 seconds.</p>
 
         <p class="config_option">server_list</p>
 

@@ -36,8 +36,8 @@ class GeneralPlot(object):
         
         self.line_list = []
         
-        self.xscale = None
-        self.yscale = None
+        self.xscale = (None, None, None)
+        self.yscale = (None, None, None)
 
         self.anti_alias             = int(config_dict.get('anti_alias',  1))
 
@@ -87,6 +87,12 @@ class GeneralPlot(object):
         self.polar_grid_font_path   = config_dict.get('polar_grid_font_path')
         self.polar_grid_font_size   = int(config_dict.get('polar_grid_font_size', 10))
         self.polar_grid_color       = weeplot.utilities.tobgr(config_dict.get('polar_grid_color', '0xa0a0a0'))
+        
+        self.x_nticks               = int(config_dict.get('x_nticks', 10))
+        self.y_nticks               = int(config_dict.get('y_nticks', 10))
+
+        self.x_label_spacing        = int(config_dict.get('x_label_spacing', 2))
+        self.y_label_spacing        = int(config_dict.get('y_label_spacing', 2))
         
         # Calculate sensible margins for the given image and font sizes.
         self.lmargin = int(4.0 * self.axis_label_font_size)
@@ -289,13 +295,12 @@ class GeneralPlot(object):
             self.axis_label_font_path,
             self.axis_label_font_size)
 
-        drawlabel = False
+        drawlabelcount = 0
         for x in weeutil.weeutil.stampgen(self.xscale[0], self.xscale[1], self.xscale[2]):
             sdraw.line((x, x), (self.yscale[0], self.yscale[1]),
                        fill=self.chart_gridline_color,
                        width=self.anti_alias)
-            drawlabel = not drawlabel
-            if drawlabel:
+            if drawlabelcount % self.x_label_spacing == 0:
                 xlabel = self._genXLabel(x)
                 axis_label_size = sdraw.draw.textsize(xlabel, font=axis_label_font)
                 xpos = sdraw.xtranslate(x)
@@ -303,7 +308,7 @@ class GeneralPlot(object):
                                  self.image_height - self.bmargin + 2),
                                 xlabel, fill=self.axis_label_font_color,
                                 font=axis_label_font)
-                
+            drawlabelcount += 1
 
     def _renderYAxes(self, sdraw):
         """Draws the y axis and horizontal constant-y lines, as well as the
@@ -319,7 +324,7 @@ class GeneralPlot(object):
             sdraw.line((self.xscale[0], self.xscale[1]), (y, y), fill=self.chart_gridline_color,
                        width=self.anti_alias)
             # Draw a label on every other line:
-            if i%2 == 0 :
+            if i % self.y_label_spacing == 0 :
                 ylabel = self._genYLabel(y)
                 axis_label_size = sdraw.draw.textsize(ylabel, font=axis_label_font)
                 ypos = sdraw.ytranslate(y)
@@ -697,10 +702,9 @@ class GeneralPlot(object):
         """Calculates the x scaling. It will probably be specialized by
         plots where the x-axis represents time.
         """
-        if self.xscale is None :
-            (xmin, xmax) = self._calcXMinMax()
-                
-            self.xscale = weeplot.utilities.scale(xmin, xmax)
+        (xmin, xmax) = self._calcXMinMax()
+
+        self.xscale = weeplot.utilities.scale(xmin, xmax, self.xscale, nsteps=self.x_nticks)
             
     def _calcYScaling(self):
         """Calculates y scaling. Can be used 'as-is' for most purposes."""
@@ -716,6 +720,7 @@ class GeneralPlot(object):
                 line.plot_type == 'flags' or
                 line.plot_type == 'polar'):
                 try:
+                    # For progressive vector plots, we want the magnitude of the complex vector
                     yline_max = max(abs(c) for c in filter(lambda v : v is not None, line.y))
                 except ValueError:
                     yline_max = None
@@ -730,7 +735,7 @@ class GeneralPlot(object):
             # No valid data. Pick an arbitrary scaling
             self.yscale=(0.0, 1.0, 0.2)
         else:
-            self.yscale = weeplot.utilities.scale(ymin, ymax, self.yscale)
+            self.yscale = weeplot.utilities.scale(ymin, ymax, self.yscale, nsteps=self.y_nticks)
 
     def _calcXLabelFormat(self):
         if self.x_label_format is None:
@@ -766,7 +771,7 @@ class TimePlot(GeneralPlot) :
     
     def _calcXScaling(self):
         """Specialized version for time plots."""
-        if self.xscale is None :
+        if None in self.xscale:
             (xmin, xmax) = self._calcXMinMax()
             self.xscale = weeplot.utilities.scaletime(xmin, xmax)
 
@@ -795,7 +800,8 @@ class TimePlot(GeneralPlot) :
 
 class PlotLine(object):
     """Represents a single line (or bar) in a plot."""
-    def __init__(self, x, y, label='', color=None, width=None,
+    def __init__(self, x, y, label='',
+                 color=None, fille_color=None, width=None,
                  plot_type='line', bar_width=None,
                  line_type='solid', marker_type=None, marker_size=10, 
                  vector_rotate = None, gap_fraction=None,
@@ -821,7 +827,7 @@ class PlotLine(object):
         self.marker_type = marker_type
         self.marker_size = marker_size
         self.color       = color
-        self.fill_color  = color
+        self.fill_color  = fill_color
         self.width       = width
         self.bar_width   = bar_width
         self.vector_rotate = vector_rotate

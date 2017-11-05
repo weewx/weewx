@@ -63,7 +63,8 @@ class MyStats(SearchList):                                                   # 1
         all_stats = TimespanBinder(timespan, 
                                    db_lookup,
                                    formatter=self.generator.formatter,
-                                   converter=self.generator.converter)       # 4
+                                   converter=self.generator.converter,
+                                   skin_dict=self.generator.skin_dict)       # 4
         
         # Now get a TimespanBinder object for the last seven days. This one we
         # will have to calculate. First, calculate the time at midnight, seven
@@ -77,7 +78,8 @@ class MyStats(SearchList):                                                   # 1
         seven_day_stats = TimespanBinder(TimeSpan(week_ts, timespan.stop),
                                          db_lookup,
                                          formatter=self.generator.formatter,
-                                         converter=self.generator.converter) # 7
+                                         converter=self.generator.converter,
+                                         skin_dict=self.generator.skin_dict) # 7
 
         # Now create a small dictionary with keys 'alltime' and 'seven_day':
         search_list_extension = {'alltime'   : all_stats,

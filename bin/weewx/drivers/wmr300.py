@@ -720,7 +720,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.18'
+DRIVER_VERSION = '0.19rc2'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -870,6 +870,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         self.pressure_cache = dict()
         self.station = Station()
         self.station.open()
+        self.station.init()
 
     def closePort(self):
         self.station.close()
@@ -1129,6 +1130,23 @@ class Station(object):
 
     def reset(self):
         self.handle.reset()
+
+    def init(self):
+        # try to get the station to start talking by sending it a request.
+        # ignore the response.  we are trying to get over the first timeout
+        # that happends when the station has not been communicating for awhile,
+        # but libusb does not reliably provide an errno for timeout, so we
+        # cannot explicitly check for that.
+        #cmd = [0xa6, 0x91, 0xca, 0x45, 0x52, 0x00]
+        cmd = [0x73, 0xe5, 0x0a, 0x26, 0x88, 0x8b]
+        for i in range(5):
+            try:
+                self.write(cmd)
+                break
+            except usb.USBError, e:
+                loginf("init: e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                       (e.errno, e.strerror, e.message, repr(e)))
+            time.sleep(1)
 
     def read(self, count=True):
         buf = []
