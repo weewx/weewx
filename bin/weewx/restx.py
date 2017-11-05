@@ -386,17 +386,30 @@ class RESTThread(threading.Thread):
         _full_record = self.get_record(record, dbmanager)
         # ... format the URL, using the relevant protocol ...
         _url = self.format_url(_full_record)
-        #  ... and any POST payload.
-        _data = self.format_data(_full_record)
+        # ... get the Request to go with it...
+        _request = self.get_request(_url)
+        #  ... get any POST payload...
+        _payload = self.get_post_body(_full_record)
+        # ... add a proper Content-Type if needed...
+        if _payload:
+            _request.add_header('Content-Type', _payload[1])
+            data = _payload[0]
+        else:
+            data = None
+        # ... check to see if this is just a drill...            
         if self.skip_upload:
             raise AbortedPost()
-        # ... convert to a Request object ...
-        _request = urllib2.Request(_url)
-        _request.add_header("User-Agent", "weewx/%s" % weewx.__version__)
-        # ... then, finally, post it
-        self.post_with_retries(_request, _data)
 
-    def post_with_retries(self, request, payload=None):
+        # ... then, finally, post it
+        self.post_with_retries(_request, data)
+        
+    def get_request(self, url):
+        """Get a request object. This can be overridden to add any special headers."""
+        _request = urllib2.Request(url)
+        _request.add_header("User-Agent", "weewx/%s" % weewx.__version__)
+        return _request
+
+    def post_with_retries(self, request, data=None):
         """Post a request, retrying if necessary
         
         Attempts to post the request object up to max_tries times. 
@@ -404,17 +417,16 @@ class RESTThread(threading.Thread):
         
         request: An instance of urllib2.Request
         
-        payload: If given, the request will be done as a POST. Otherwise, 
-        as a GET. [optional]
+        data: The body of the POST. If not given, the request will be done as a GET.
         """
-
+        
         # Retry up to max_tries times:
         for _count in range(self.max_tries):
             try:
                 # Do a single post. The function post_request() can be
                 # specialized by a RESTful service to catch any unusual
                 # exceptions.
-                _response = self.post_request(request, payload)
+                _response = self.post_request(request, data)
                 if 200 <= _response.code <= 299:
                     # No exception thrown and we got a good response code, but
                     # we're still not done.  Some protocols encode a bad
@@ -458,7 +470,7 @@ class RESTThread(threading.Thread):
                       "restx: %s: Failed upload attempt %d: %s" %
                       (self.protocol_name, count, e))
 
-    def post_request(self, request, payload=None):
+    def post_request(self, request, data=None):
         """Post a request object. This version does not catch any HTTP
         exceptions.
         
@@ -467,17 +479,17 @@ class RESTThread(threading.Thread):
         
         request: An instance of urllib2.Request
         
-        payload: If given, the request will be done as a POST. Otherwise, 
+        data: If given, the request will be done as a POST. Otherwise, 
         as a GET. [optional]
         """
         try:
             # Python 2.5 and earlier do not have a "timeout" parameter.
             # Including one could cause a TypeError exception. Be prepared
             # to catch it.
-            _response = urllib2.urlopen(request, data=payload, timeout=self.timeout)
+            _response = urllib2.urlopen(request, data=data, timeout=self.timeout)
         except TypeError:
             # Must be Python 2.5 or early. Use a simple, unadorned request
-            _response = urllib2.urlopen(request, data=payload)
+            _response = urllib2.urlopen(request, data=data)
         return _response
 
     def skip_this_post(self, time_ts):
@@ -507,9 +519,27 @@ class RESTThread(threading.Thread):
         self.lastpost = time_ts
         return False
 
-    def format_data(self, record):
+    def get_post_body(self, record):      # @UnusedVariable
+        """Return any POST payload.
+        
+        The returned value should be a 2-way tuple. First element is the Python
+        object to be included as the payload. Second element is the MIME type it 
+        is in (such as "application/json").
+        
+        Return a simple 'None' if there is no POST payload. This is the default.
+        """
+        # Maintain backwards compatibility with the old format_data() function.
+        body = self.format_data(record)
+        if body:
+            return (body, 'application/x-www-form-urlencoded')
         return None
 
+    def format_data(self, record):  # @UnusedVariable
+        """Return a POST payload as an urlencoded object.
+        
+        DEPRECATED. Use get_post_body() instead.
+        """
+        return None
 
 # ==============================================================================
 #                    Ambient protocols
@@ -775,6 +805,12 @@ class AmbientThread(RESTThread):
                 'dayRain'    : 'dailyrainin=%.2f',
                 'radiation'  : 'solarradiation=%.2f',
                 'UV'         : 'UV=%.2f',
+                # The following four formats have been commented out until the WU
+                # fixes the bug that causes them to be displayed as soil moisture.
+#                 'extraTemp1' : "temp2f=%.1f",
+#                 'extraTemp2' : "temp3f=%.1f",
+#                 'extraTemp3' : "temp4f=%.1f",
+#                 'extraTemp4' : "temp5f=%.1f",
                 'soilTemp1'  : "soiltempf=%.1f",
                 'soilTemp2'  : "soiltemp2f=%.1f",
                 'soilTemp3'  : "soiltemp3f=%.1f",
@@ -898,7 +934,7 @@ class WOWThread(AmbientThread):
                                  "siteAuthenticationKey=XXX", _url))
         return _url
 
-    def post_request(self, request, payload=None):  # @UnusedVariable
+    def post_request(self, request, data=None):  # @UnusedVariable
         """Version of post_request() for the WOW protocol, which
         uses a response error code to signal a bad login."""
         try:
@@ -980,7 +1016,7 @@ class CWOPThread(RESTThread):
     def __init__(self, queue, manager_dict,
                  station, passcode, latitude, longitude, station_type,
                  server_list=StdCWOP.default_servers,
-                 post_interval=600, max_backlog=sys.maxint, stale=60,
+                 post_interval=600, max_backlog=sys.maxint, stale=600,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, skip_upload=False):
 

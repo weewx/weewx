@@ -35,6 +35,8 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     The third value is the step (increment) between them.
 
     Examples:
+    >>> print scale(1.1, 12.3, (0, 14, 2))
+    (0.0, 14.0, 2.0)
     >>> print scale(1.1, 12.3)
     (0.0, 14.0, 2.0)
     >>> print scale(-1.1, 12.3)
@@ -49,23 +51,28 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     (10.0, 10.1, 0.01)
     >>> print scale(0.0, 0.05, (None, None, .1), 10)
     (0.0, 1.0, 0.1)
+    >>> print scale(16.8, 21.5, (None, None, 2), 10)
+    (16.0, 36.0, 2.0)
+    >>> print scale(16.8, 21.5, (None, None, 2), 4)
+    (16.0, 22.0, 2.0)
     >>> print scale(0.0, 0.21, (None, None, .02))
     (0.0, 0.22, 0.02)
     
     """
     
-    if all(x is not None for x in prescale):
+    # If all the values are hard-wired in, then there's nothing to do:
+    if None not in prescale:
         return prescale
 
     (minscale, maxscale, min_interval) = prescale
-    
+
     # Make sure fmn and fmx are float values, in case a user passed
     # in integers:
     fmn = float(fmn)
     fmx = float(fmx)
 
     if fmx < fmn :
-        raise weeplot.ViolatedPrecondition, "scale() called with max value less than min value"
+        raise weeplot.ViolatedPrecondition("scale() called with max value less than min value")
 
     if _rel_approx_equal(fmn, fmx) :
         if fmn == 0.0 :
@@ -73,7 +80,12 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         else :
             fmx = fmn + .01*abs(fmn)
 
-    frange = fmx - fmn
+    if minscale is not None and maxscale is not None:
+        if maxscale < minscale:
+            raise weeplot.ViolatedPrecondition("scale() called with prescale max less than min")
+        frange = maxscale - minscale
+    else:
+        frange = fmx - fmn
     steps = frange / nsteps
     
     mag = math.floor(math.log10(steps))
@@ -106,7 +118,7 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         # Sometimes this can make for a plot with just one or
         # two intervals in it. Adjust the min and max values
         # to get a nice plot
-        interval = min_interval
+        interval = float(min_interval)
 
         if minscale is None:
             if maxscale is None:
@@ -184,7 +196,7 @@ def scaletime(tmin_ts, tmax_ts) :
     >>> time_ts = time.mktime(time.strptime("2013-05-17 07:46", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 15*3600, time_ts)
     >>> print to_string(xmin), to_string(xmax), xinc
-    2013-05-16 17:00:00 PDT (1368748800) 2013-05-17 08:00:00 PDT (1368802800) 3600
+    2013-05-16 17:00:00 PDT (1368748800) 2013-05-17 08:00:00 PDT (1368802800) 7200
     """
     if tmax_ts <= tmin_ts :
         raise weeplot.ViolatedPrecondition, "scaletime called with tmax <= tmin"

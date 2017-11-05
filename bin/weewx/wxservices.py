@@ -195,9 +195,9 @@ class WXCalculate(object):
     def adjust_winddir(self, data):
         """If wind speed is zero, then the wind direction is undefined.
         If there is no wind speed, then there is no wind direction."""
-        if 'windSpeed' in data and not data['windSpeed']:
+        if not data.get('windSpeed'):
             data['windDir'] = None
-        if 'windGust' in data and not data['windGust']:
+        if not data.get('windGust'):
             data['windGustDir'] = None
 
     def calc_dewpoint(self, data, data_type):  # @UnusedVariable
@@ -401,16 +401,9 @@ class WXCalculate(object):
                                         " FROM %s"
                                         " WHERE dateTime>? AND dateTime<=?" %
                                         dbmanager.table_name, (sts, ets)):
-                if row is None or None in row:
-                    continue
-                if row[1]:
-                    inc_hours = row[0] / 60.0
-                    if row[2] == weewx.METRICWX:
-                        run += mps_to_mph(row[1]) * inc_hours
-                    elif row[2] == weewx.METRIC:
-                        run += kph_to_mph(row[1]) * inc_hours
-                    else:
-                        run += row[1] * inc_hours
+                if row and None not in row:
+                    vals_us = weewx.units.to_US({'interval' : row[0], 'windSpeed' : row[1], 'usUnits' : row[2]})
+                    run += vals_us['windSpeed'] * vals_us['interval'] / 60.0
             data['windrun'] = run
         except weedb.DatabaseError:
             pass
