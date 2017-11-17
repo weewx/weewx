@@ -74,6 +74,9 @@ Fixed bug in wmr200 driver that caused `windDir` to always be `None` when
 
 Include rain count in cc3000 status.
 
+In the restx posting, catch all types of httplib.HTTPException, not just
+BadStatusLine and IncompleteRead.
+
 
 3.7.1 03/22/2017
 

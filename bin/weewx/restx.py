@@ -442,7 +442,7 @@ class RESTThread(threading.Thread):
                 # Provide method for derived classes to behave otherwise if
                 # necessary.
                 self.handle_code(_response.code, _count + 1)
-            except (urllib2.URLError, socket.error, httplib.BadStatusLine, httplib.IncompleteRead), e:
+            except (urllib2.URLError, socket.error, httplib.HTTPException), e:
                 # An exception was thrown. By default, log it and try again.
                 # Provide method for derived classes to behave otherwise if
                 # necessary.
