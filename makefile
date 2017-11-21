@@ -18,7 +18,7 @@ WEEWX_DOWNLOADS=$(WEEWX_COM_HOME)/html/downloads
 # extract version to be used in package controls and labels
 VERSION=$(shell grep "__version__.*=" bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
 # just the major.minor part of the version
-MMVERSION:=$(shell echo "$(VERSION)" | sed -E 's%.[0-9a-z]+$$%%')
+MMVERSION:=$(shell echo "$(VERSION)" | sed -e 's%.[0-9a-z]*$$%%')
 
 CWD = $(shell pwd)
 BLDDIR=build
