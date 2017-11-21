@@ -72,7 +72,8 @@ class ScalarStats(object):
         ts:  The timestamp.
         """
         if val is not None:
-            if not isinstance(val, (float, int)):
+            # Check for non-numbers and for NaN
+            if not isinstance(val, (float, int)) or val != val:
                 raise ValueError("accum: ScalarStats.addHiLo expected float or int, got %s" % val)
             if self.min is None or val < self.min:
                 self.min     = val
@@ -87,7 +88,8 @@ class ScalarStats(object):
     def addSum(self, val, weight=1):
         """Add a scalar value to my running sum and count."""
         if val is not None:
-            if not isinstance(val, (float, int)):
+            # Check for non-numbers and for NaN
+            if not isinstance(val, (float, int)) or val != val:
                 raise ValueError("accum: ScalarStats.addSum expected float or int, got %s" % val)
             self.sum     += val
             self.count   += 1
@@ -165,7 +167,8 @@ class VecStats(object):
         """
         speed, dirN = val
         if speed is not None:
-            if not isinstance(speed, (float, int)):
+            # Check for non-numbers and for NaN
+            if not isinstance(speed, (float, int)) or speed != speed:
                 raise ValueError("accum: VecStats.addHiLo expected float or int, got %s" % speed)
             if self.min is None or speed < self.min:
                 self.min = speed
@@ -184,7 +187,8 @@ class VecStats(object):
         """
         speed, dirN = val
         if speed is not None:
-            if not isinstance(speed, (float, int)):
+            # Check for non-numbers and for NaN
+            if not isinstance(speed, (float, int)) or speed != speed:
                 raise ValueError("accum: VecStats.addSum expected float or int, got %s" % speed)
             self.sum         += speed
             self.count       += 1
