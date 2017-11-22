@@ -12,7 +12,7 @@ UPLOADDIR=weewx.com:/downloads/development_versions/
 DOCDST=weewx.com:/
 
 # home directory at weewx.com
-WEEWX_COM_HOME=/home/content/t/o/m/tomkeffer
+WEEWX_COM_HOME=/var/chroot/home/content/73/4094873
 WEEWX_DOWNLOADS=$(WEEWX_COM_HOME)/html/downloads
 
 # extract version to be used in package controls and labels
