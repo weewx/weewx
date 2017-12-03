@@ -12,13 +12,13 @@ UPLOADDIR=weewx.com:/downloads/development_versions/
 DOCDST=weewx.com:/
 
 # home directory at weewx.com
-WEEWX_COM_HOME=/home/content/t/o/m/tomkeffer
+WEEWX_COM_HOME=/var/chroot/home/content/73/4094873
 WEEWX_DOWNLOADS=$(WEEWX_COM_HOME)/html/downloads
 
 # extract version to be used in package controls and labels
 VERSION=$(shell grep "__version__.*=" bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
 # just the major.minor part of the version
-MMVERSION:=$(shell echo "$(VERSION)" | sed -E 's%.[0-9a-z]+$$%%')
+MMVERSION:=$(shell echo "$(VERSION)" | sed -e 's%.[0-9a-z]*$$%%')
 
 CWD = $(shell pwd)
 BLDDIR=build
@@ -271,6 +271,7 @@ release:
 	ssh $(USER)@weewx.com "rm -f $(WEEWX_DOWNLOADS)/weewx*"
 	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(RELDIR)/\$$f ]; then ln -s released_versions/\$$f $(WEEWX_DOWNLOADS); fi; done"
 	ssh $(USER)@weewx.com "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
+	ssh $(USER)@weewx.com "chmod 644 $(WEEWX_DOWNLOADS)/released_versions/*"
 
 # make local copy of the published apt repository
 pull-apt-repo:
