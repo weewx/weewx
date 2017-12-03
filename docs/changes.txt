@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.8.0a3 10/xx/2017
+3.8.0 11/22/2017
 
 The `stats.py` example now works with heating and cooling degree days.
 Fixes issue #224.
@@ -73,6 +73,9 @@ Fixed bug in wmr200 driver that caused `windDir` to always be `None` when
 `windSpeed` is zero.
 
 Include rain count in cc3000 status.
+
+In the restx posting, catch all types of httplib.HTTPException, not just
+BadStatusLine and IncompleteRead.
 
 
 3.7.1 03/22/2017

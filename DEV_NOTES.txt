@@ -18,14 +18,14 @@ checklist for doing a release:
 8. Tag it:  git tag -a v1.3.1 -m "Version 1.3.1 release"
 9. Upload to weewx.com:
      1. make upload-src
-     2. make upload-readme
-10. Update docs on the web site:
-     1. make upload-docs
-11. Update the web site:
-     1. Add to the news page.
-     2. Upload news.htm to the web server.
-12. Run a backup on condor
-13. Announce the release to the weewx user's group.
+     2. make upload-deb
+     3. make upload-rpm RPMOS=.rhel
+     4. make upload-rpm RPMOS=.suse
+     5. make upload-readme
+     6. make upload-docs
+10. Update the deb repository
+11. Run a backup on condor
+12. Announce the release to the weewx user's group.
 
 
 
