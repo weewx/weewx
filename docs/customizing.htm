@@ -4806,7 +4806,16 @@ UV      = UV Index</pre>
         The nominal number of ticks along the y-axis. The default is <span class='code'>10</span>.
       </p>
 
+      <p class="config_option">stale_age</p>
 
+      <p>
+        Image file staleness age, in seconds. If the image file is older than
+        this age it will be generated. If no <span class="code">stale_age</span> 
+        is specified, then the image file will be generated every time the 
+        generator runs.
+      </p>
+
+      
       <h3>Plot scaling options</h3>
 
       <p class="config_option">time_length</p>

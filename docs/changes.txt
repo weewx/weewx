@@ -3,7 +3,8 @@ weewx change history
 
 3.X.Y MM/dd/YYYY
 
-
+The image generator now supports the use of a 'stale_age' option. Thanks to
+user John Smith. Fixes issue #290.
 
 3.8.0 11/22/2017
 
@@ -58,7 +59,7 @@ same as those of other generators.
 Changed default value of `stale` for CWOP from 60 to 600 seconds. PR #277.
 
 Vantage driver:
-Allow user to specify the Vantage Pro model type in weewx.conf. 
+Allow user to specify the Vantage Pro model type in weewx.conf.
 Repeater support added to '-—set-transmitter-type' command.
 New commands: '—-set-retransmit',
               '--set-latitude', '--set-longitude'
@@ -73,7 +74,7 @@ Thanks to user dl1rf!
 Fixed bug in wmr200 driver that resulted in archive records with no
 interval field and 'NOT NULL constraint failed: archive.interval' errors.
 
-Fixed bug in wmr200 driver that caused `windDir` to always be `None` when 
+Fixed bug in wmr200 driver that caused `windDir` to always be `None` when
 `windSpeed` is zero.
 
 Include rain count in cc3000 status.
@@ -164,19 +165,19 @@ Report the firmware version when initializing the cc3000 driver.
 Fixed bug in vantage driver that would prevent console wake up during
 retries when fetching EEPROM vales. Thanks to user Dan Begallie!
 
-The vantage driver no longer emits values for non-existent sensors. 
+The vantage driver no longer emits values for non-existent sensors.
 As a result, LOOP and archive packets are now much smaller. If this works
 out, other drivers will follow suit. Partial fix of issue #175.
 
-The vantage driver now emits the barometer trend in LOOP packets as 
+The vantage driver now emits the barometer trend in LOOP packets as
 field 'trendIcon'.
 
-The engine now logs locale. Additional information if a TERM signal is 
+The engine now logs locale. Additional information if a TERM signal is
 received.
 
 Removed the site-specific "Pond" extensions from the Standard skin.
 
-The Standard skin now includes plots of outside humidity. Fixes 
+The Standard skin now includes plots of outside humidity. Fixes
 issue #181.
 
 Fixed reference to index.html.tmpl in the xstats example.
@@ -228,7 +229,7 @@ Formerly, it was the max LOOP value. If you wish to patch your older
 daily summaries to interpret max windSpeed this way, use the tool wee_database
 with option --update. Fixes issue #195.
 
-The types of accumulators, and the strategies to put and extract records 
+The types of accumulators, and the strategies to put and extract records
 out of them, can now be specified by config stanzas. This will be of
 interest to extension writers. See issue #115.
 
@@ -245,7 +246,7 @@ Added better logging for cc3000 when the cc3000 loses contact with sensors
 for extended periods of time.
 
 How long to wait before retrying after a bad uploader login is now settable
-with option retry_login. Fixes issue #212. 
+with option retry_login. Fixes issue #212.
 
 The test suites now use dedicated users 'weewx1' and 'weewx2'. A shell script
 has been included to setup these users.
@@ -309,8 +310,8 @@ Fixed wee_config to handle config files that have no FTP or RSYNC.
 
 Fixed bug in StdWXCalculate that ignored setting of 'None' (#110).
 
-Which derived variables are to be calculated are now in a separate 
-subsection of [StdWXCalculate] called [[Calculations]]. 
+Which derived variables are to be calculated are now in a separate
+subsection of [StdWXCalculate] called [[Calculations]].
 Upgrade process takes care of upgrading your config file.
 
 Reset weewx launchtime when waiting for sane system clock (thanks to user
@@ -325,7 +326,7 @@ Consolidated unit conversions into module weewx.units.
 Plots longer than two years now use an x-axis increment of one year. Thanks to
 user Olivier!
 
-The WS1 driver now retries connection if it fails. Thanks to user 
+The WS1 driver now retries connection if it fails. Thanks to user
 Kevin Caccamo! PR #112.
 
 Major update to the CC3000 driver:
@@ -444,7 +445,7 @@ Fixed bug in almanac code that caused an incorrect sunrise or sunset to be
 calculated if it followed a calculation with an explicit horizon value.
 
 Localization of tags is now optional. Use function toString() with
-argument localize set to False. Example: 
+argument localize set to False. Example:
 $current.outTemp.toString($localize=False)
 Fixes issue #88.
 
@@ -470,7 +471,7 @@ Older versions of MySQL (v5.0 and later) are now supported.
 Fixed bug when posting to WOW.
 
 Fixed bug where the subsection for a custom report gets moved to the very
-end of the [StdReport] section of a configuration file on upgrade. 
+end of the [StdReport] section of a configuration file on upgrade.
 Fixes issue #81.
 
 
@@ -494,7 +495,7 @@ pressure. Thanks to user Mark Jenks for nagging me that something was wrong.
 
 Fixed bug that caused wind direction to be calculated incorrectly, depending
 on the ordering of a dictionary. Thanks to user Chris Matteri for not only
-spotting this subtle bug, but offering a solution. 
+spotting this subtle bug, but offering a solution.
 
 StdPrint now prints packets and records in (case-insensitive) alphabetical
 order.
@@ -528,7 +529,7 @@ These have been fixed.
 Changed logic that decides whether the configuration file includes a custom
 schema, or the name of an existing schema.
 
-Added new command-line utility wee_debug, for generating a troubleshooting 
+Added new command-line utility wee_debug, for generating a troubleshooting
 information report.
 
 Added option --log-label to specify the label that appears in syslog entries.
@@ -551,17 +552,17 @@ old one in the non-standard location.
 3.2.0 07/15/15
 
 There are now five command-line utilities, some new, some old
- - wee_config:    (New) For configuring weewx.conf, in particular, 
+ - wee_config:    (New) For configuring weewx.conf, in particular,
                   selecting a new device driver.
  - wee_extension: (New) For adding and removing extensions.
  - wee_database:  (Formerly called wee_config_database)
  - wee_device:    (Formerly called wee_config_device)
  - wee_reports:   No changes.
- 
+
 The script setup.py is no longer used to install or uninstall extensions.
 Instead, use the new utility wee_extension.
 
-Wunderfixer is now included with weewx --- no need to download it separately. 
+Wunderfixer is now included with weewx --- no need to download it separately.
 It now works with MySQL, as well as sqlite, databases. It also supports
 metric databases. Thanks to user Gary Roderick!
 
@@ -579,7 +580,7 @@ sets the value to null. Fixes issue #10.
 Added option to specify algorithm in StdWXCalculate.  So far this applies
 only to the altimeter calculation.
 
-Added option max_delta_12h in StdWXCalculate, a window in which a record will 
+Added option max_delta_12h in StdWXCalculate, a window in which a record will
 be accepted as being "12 hours ago." Default is 1800 seconds.
 
 Fixed bug in debian install script - 'Acurite' was not in the list of stations.
@@ -595,7 +596,7 @@ Failure to launch a report thread no longer crashes program.
 The WU uploader now publishes soil temperature and moisture, as well as
 leaf wetness.
 
-Increased precision of wind and wind gust posts to WU from 0 to 1 
+Increased precision of wind and wind gust posts to WU from 0 to 1
 decimal point.
 
 Increased precision of barometer posts to WOW from 1 to 3 decimal points.
@@ -644,17 +645,17 @@ Changes to the WMR9x8 driver include:
  - Correct bug that caused yesterday's rain to be decoded as dayRain
  - LOOP packet type 'battery' is now an int, instead of a bool
  - The driver can now be run standalone for debugging purposes.
- 
+
 The Vantage driver now catches undocumented termios exceptions and converts
 them to weewx exceptions. This allows retries if flushing input or output
 buffers fail. Fixes issue #34.
 
-Default values for databases are now defined in a new section [DatabaseTypes]. 
+Default values for databases are now defined in a new section [DatabaseTypes].
 New option "database_type" links databases to database type. Installer will
 automatically update old weewx.conf files.
 
 The RESTful services that come with weewx are now turned on and off by
-option "enable". Installer will automatically update old weewx.conf files. 
+option "enable". Installer will automatically update old weewx.conf files.
 Other RESTful services that don't use this method will continue to work.
 
 Option bar_gap_fraction is now ignored. Bar plot widths are rendered explicitly
@@ -662,7 +663,7 @@ since V3.0, making the option unnecessary. Fixes issue #25.
 
 Added additional debug logging to main engine loop.
 
-FTP uploader now retries several times to connect to a server, instead of 
+FTP uploader now retries several times to connect to a server, instead of
 giving up after one try. Thanks to user Craig Hunter!
 
 
@@ -672,7 +673,7 @@ Fixed setup.py bug that caused list-drivers to fail on deb and rpm installs.
 
 Added a wait-and-check to the stop option in the weewx.debian rc script.
 
-Fixed bug in the Vantage driver that causes below sea-level altitudes 
+Fixed bug in the Vantage driver that causes below sea-level altitudes
 to be read as a large positive number. Also, fixed problem with altitude
 units when doing --info (ticket #42).
 
@@ -771,7 +772,7 @@ Total rewrite of how data gets bound to a database. You now specify a
 "data binding" to indicate where data should be going, and where it is
 coming from. The default binding is "wx_binding," the weather binding,
 so most users will not have to change a thing.
- 
+
 Other database bindings can be used in tags. Example:
   $current($data_binding=$alt_binding).outTemp
 Alternate times can also be specified:
@@ -865,20 +866,20 @@ when starting with an empty database.
 2.7.0 10/11/14
 
 Added the ability to configure new Vantage sensor types without using
-the console. This will be useful to Envoy users.  Thanks to user Deborah 
-Pickett for this contribution! 
+the console. This will be useful to Envoy users.  Thanks to user Deborah
+Pickett for this contribution!
 
 Allow calibration constants to be set in the Vantage EEPROM. This will
 particularly be useful to southern hemisphere users who may want to
 align their ISS to true north (instead of south), then apply a 180
 correction. Thanks again to Deborah Pickett!
- 
+
 Enabled multiple rsync instances for a single weewx instance.
- 
+
 More extensive debug information for rscync users.
 
 Added the ability to localize the weewx and server uptime. See the
-Customizing Guide for details. This will also cause a minor backwards 
+Customizing Guide for details. This will also cause a minor backwards
 incompatibility. See the Upgrading Guide for details.
 
 Added catchup to the WS28xx driver, but still no hardware record generation.
@@ -963,7 +964,7 @@ Fixed a problem where the Ambient threads could crash if there were
 no rain database entries.
 
 Battery status values txBatteryStatus and consBatteryVoltage now appear in
-the archive record. The last LOOP value seen is used.  
+the archive record. The last LOOP value seen is used.
 
 CWOP posts are now slightly more robust.
 
@@ -984,7 +985,7 @@ Fixed bug that crashes WMR200 driver if outTemp is missing.
 
 Fixed bug that can crash RESTful threads if there is missing rain data.
 
-Sqlite connections can now explicitly specify a timeout and 
+Sqlite connections can now explicitly specify a timeout and
 isolation_level.
 
 Server uptime now reported for MacOS
@@ -1055,7 +1056,7 @@ The forecast extension is once again distributed separately from weewx.
 Minor cleanup to Standard skin for better out-of-the-box behavior:
  - default to no radar image instead of pointing every station to Oregon
  - not every WMR100 is a WMR100N
- 
+
 Failure to set an archive interval when using bar plots no longer results
 in an exception.
 
@@ -1143,7 +1144,7 @@ For WMR9x8 stations, wind chill is now retrieved from the console
 rather than calculated in software. Thank you user Peter Ferencz!
 
 For WMR9x8 stations, the first extra temperature sensor (packet code 4)
-now shows up as extraTemp1 (instead of outTemp). Thanks again to 
+now shows up as extraTemp1 (instead of outTemp). Thanks again to
 Peter Ferencz.
 
 For WMR9x8 stations, packet types 2 and 3 have been separated. Only the
@@ -1161,7 +1162,7 @@ multiple stations on the same USB.
 
 Fixed rain units in ws28xx driver.
 
-The LOOP value for daily ET on Vantages was too high by a factor of 10. 
+The LOOP value for daily ET on Vantages was too high by a factor of 10.
 This has been corrected.
 
 Fixed a bug that caused values of ET to be miscalculated when using
@@ -1169,7 +1170,7 @@ software record generation.
 
 Ported to Korora 19 (Fedora 19). Thanks to user zmodemguru!
 
-Plots under 16 hours in length, now use 1 hour increments (instead of 
+Plots under 16 hours in length, now use 1 hour increments (instead of
 3 hours).
 
 No longer emits "deprecation" warning when working with some versions
@@ -1214,7 +1215,7 @@ allows the logic to be changed by subclassing.
 Fixed a bug that did not allow plots with aggregations less than 60 minutes
 across a DST boundary.
 
-Fixed bug in the WMR100 driver that prevented UV indexes from being 
+Fixed bug in the WMR100 driver that prevented UV indexes from being
 reported.
 
 The driver for the LaCrosse WS-28XX weather series continues to evolve and
@@ -1304,7 +1305,7 @@ to make them more consistent:
 	VantagePro.py (Vantage)    vantage.py (Vantage)
 	WMR918.py     (WMR-918)    wmr9x8.py  (WMR9x8)
 	wmrx.py       (WMR-USB)    wmr100.py  (WMR100)
-	
+
 	new (experimental) drivers:
 	wmr200.py (WMR200)
 	ws28xx.py (WS28xx)
