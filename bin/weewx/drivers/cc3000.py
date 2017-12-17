@@ -81,7 +81,7 @@ import weeutil.weeutil
 import weewx.drivers
 
 DRIVER_NAME = 'CC3000'
-DRIVER_VERSION = '0.16'
+DRIVER_VERSION = '0.17'
 
 def loader(config_dict, engine):
     return CC3000Driver(**config_dict[DRIVER_NAME])
