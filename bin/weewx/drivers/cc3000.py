@@ -342,8 +342,8 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         'extraTemp1': 'TEMP 1',
         'extraTemp2': 'TEMP 2',
         'day_rain_total': 'RAIN',
-        'consBatteryVoltage': 'STATION BATTERY',
-        'bkupBatteryVoltage': 'BATTERY BACKUP',
+        'supplyVoltage': 'STATION BATTERY',
+        'consBatteryVoltage': 'BATTERY BACKUP',
         'radiation': 'SOLAR RADIATION',
         'UV': 'UV INDEX',
     }
