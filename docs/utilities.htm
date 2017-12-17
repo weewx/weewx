@@ -1326,14 +1326,14 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='csv_UV'>UV_sensor</h4>
 
-        <p>WeeWX records a <span class="code">None/NULL</span> for UV when no UV sensor is
+        <p>WeeWX records a <span class="code">None/null</span> for UV when no UV sensor is
             installed, whereas some weather station software records a value of 0 for UV index when there is no UV
             sensor installed. The <span class="code">UV_sensor</span> parameter enables <span
                     class="code">wee_import</span> to distinguish between the case where a UV sensor is present and the
             UV index is 0 and the case where no UV sensor is present and UV index is 0. <span 
                     class="code">UV_sensor = False</span> should be used when no UV sensor was used in producing 
             the source data. <span class="code">UV_sensor = False</span> will result in <span 
-                    class="code">None/Null</span> being recorded in the weeWX archive field <span 
+                    class="code">None/null</span> being recorded in the weeWX archive field <span 
                     class="code">UV</span> irrespective of any UV observations in the source data. <span 
                     class="code">UV_sensor = True</span> should be used when a UV sensor was used in producing 
             the source data. <span class="code">UV_sensor = True</span> will result in UV observations in the 
@@ -1342,14 +1342,14 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='csv_solar'>solar_sensor</h4>
 
-        <p>WeeWX records a <span class="code">None/NULL</span> when no solar radiation sensor
+        <p>WeeWX records a <span class="code">None/null</span> when no solar radiation sensor
             is installed, whereas some weather station software records a value of 0 for solar radiation when there is
             no solar radiation sensor installed. The <span class="code">solar_sensor</span> parameter enables <span
                     class="code">wee_import</span> to distinguish between the case where a solar radiation sensor is
             present and solar radiation is 0 and the case where no solar radiation sensor is present and solar radiation
             is 0. <span class="code">solar_sensor = False</span> should be used when no solar radiation sensor was used
             in producing the source data. <span class="code">solar_sensor = False</span> will result in <span
-                    class="code">None/Null</span> being recorded in the weeWX archive field
+                    class="code">None/null</span> being recorded in the weeWX archive field
             <span class="code">radiation</span> irrespective of any solar radiation observations in the source data.
             <span class="code">solar_sensor = True</span> should be used when a solar radiation sensor was used in
             producing the source data. <span class="code">solar_sensor = True</span> will result in solar radiation
@@ -1402,13 +1402,13 @@ summaries using the wee_database utility.</pre>
         <h4 class='config_option' id='csv_wind_direction'>wind_direction</h4>
 
         <p>WeeWX records wind direction in degrees as a number from 0 to 360 inclusive (no
-            wind direction is recorded as <span class="code">None/NULL</span>), whereas some data sources may provide
+            wind direction is recorded as <span class="code">None/null</span>), whereas some data sources may provide
             wind direction as number over a different range (e.g., -180 to +180) or may use a particular value when
             there is no wind direction (e.g., 0 may represent no wind direction and 360 may represent a northerly wind,
             or -9999 (or some similar clearly invalid number) to represent there being no wind direction). <span
                     class="code">wee_import</span> handles such variations in data by defining a range over which
             imported wind direction values are accepted. Any value outside of this range is treated as there being no
-            wind direction and is recorded as <span class="code">None/NULL</span>. Any value inside the range is
+            wind direction and is recorded as <span class="code">None/null</span>. Any value inside the range is
             normalised to the range 0 to 360 inclusive (e.g., -180 would be normalised to 180). The <span
                     class="code">wind_direction</span> option consists of two comma separated numbers of the
             format lower, upper where lower and upper are inclusive. The operation of the <span class="code">wind_direction</span>
@@ -1436,19 +1436,19 @@ summaries using the wee_database utility.</pre>
             </tr>
             <tr>
                 <td>500</td>
-                <td><span class="code">None/NULL</span></td>
+                <td><span class="code">None/null</span></td>
             </tr>
             <tr>
                 <td>-45</td>
-                <td><span class="code">None/NULL</span></td>
+                <td><span class="code">None/null</span></td>
             </tr>
             <tr>
                 <td>-9999</td>
-                <td><span class="code">None/NULL</span></td>
+                <td><span class="code">None/null</span></td>
             </tr>
             <tr>
                 <td>No data</td>
-                <td><span class="code">None/NULL</span></td>
+                <td><span class="code">None/null</span></td>
             </tr>
             <tr>
                 <td class="code first_col" rowspan='7'>-360, 360</td>
@@ -1465,7 +1465,7 @@ summaries using the wee_database utility.</pre>
             </tr>
             <tr>
                 <td>500</td>
-                <td><span class="code">None/NULL</span></td>
+                <td><span class="code">None/null</span></td>
             </tr>
             <tr>
                 <td>-45</td>
@@ -1473,11 +1473,11 @@ summaries using the wee_database utility.</pre>
             </tr>
             <tr>
                 <td>-9999</td>
-                <td><span class="code">None/NULL</span></td>
+                <td><span class="code">None/null</span></td>
             </tr>
             <tr>
                 <td>No data</td>
-                <td><span class="code">None/NULL</span></td>
+                <td><span class="code">None/null</span></td>
             </tr>
             <tr>
                 <td class="code first_col" rowspan='7'>-180, 180</td>
@@ -1490,11 +1490,11 @@ summaries using the wee_database utility.</pre>
             </tr>
             <tr>
                 <td>360</td>
-                <td><span class="code">None/NULL</span></td>
+                <td><span class="code">None/null</span></td>
             </tr>
             <tr>
                 <td>500</td>
-                <td><span class="code">None/NULL</span></td>
+                <td><span class="code">None/null</span></td>
             </tr>
             <tr>
                 <td>-45</td>
@@ -1502,11 +1502,11 @@ summaries using the wee_database utility.</pre>
             </tr>
             <tr>
                 <td>-9999</td>
-                <td><span class="code">None/NULL</span></td>
+                <td><span class="code">None/null</span></td>
             </tr>
             <tr>
                 <td>No data</td>
-                <td><span class="code">None/NULL</span></td>
+                <td><span class="code">None/null</span></td>
             </tr>
             </tbody>
         </table>
@@ -1946,10 +1946,10 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
                 <p class="note">
                     <strong>Note</strong><br/>If an appropriate field does not exist in the Weather Underground daily history then
-                    the corresponding weeWX archive field will be set to <span class="code">None/NULL</span>.
+                    the corresponding weeWX archive field will be set to <span class="code">None/null</span>.
                     For example, if there is no solar radiation sensor then <span class="code">radiation</span> will be
-                    NULL, or if <span class="code">outHumidity</span> was never uploaded to Weather Undeground then
-                    <span class="code">outHumidity</span> will be NULL. </p>
+                    null, or if <span class="code">outHumidity</span> was never uploaded to Weather Undeground then
+                    <span class="code">outHumidity</span> will be null. </p>
             </li>
 
             <li>The following weeWX archive fields will be populated from other settings or
@@ -1977,7 +1977,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 <p class="note">
                     <strong>Note</strong><br/>If <span class="code">calc_missing = False</span> is included in the <span
                         class="code">[WU]</span> section of the import configuration file being used then all of the
-                    above fields will be set to <span class="code">None/NULL</span>. The default setting of the <span
+                    above fields will be set to <span class="code">None/null</span>. The default setting of the <span
                         class="code">calc_missing</span> option is <span class="code">True</span>
                 </p>
             </li>
@@ -2049,7 +2049,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 or <span class="code">--to</span>.
                 <p>To perform a dry run enter the following command:</p>
 
-            <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --from=2016/01/20T22:30 --to=2016/01/23T06:00 --dry-run
+            <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --from=2016-01-20T22:30 --to=2016-01-23T06:00 --dry-run
 </pre>
 
                 <p>
@@ -2113,7 +2113,7 @@ Finished dry run import. 607 records were processed and 607 unique records would
 
             <li>Once the dry run results are satisfactory the source data can be imported using the following command:
 
-        <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --from=2016/01/20T22:30 --to=2016/01/23T06:00
+        <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --from=2016-01-20T22:30 --to=2016-01-23T06:00
 </pre>
 
                 <p>This will result in a short preamble similar to that of a dry run. At the end of the preamble there
@@ -2231,7 +2231,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
                 <p class="note">
                     <strong>Note</strong><br/>If a field in the Cumulus monthly log file has no data then the corresponding
-                    weeWX archive field will be set to <span class="code">None/NULL</span>. </p>
+                    weeWX archive field will be set to <span class="code">None/null</span>. </p>
             </li>
 
             <li>The following weeWX archive fields will be populated from other settings or
@@ -2257,7 +2257,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 <p class="note">
                     <strong>Note</strong><br/>If <span class="code">calc_missing = False</span> is included in the <span
                         class="code">[WU]</span> section of the import configuration file being used then all of the
-                    above fields will be set to <span class="code">None/NULL</span>. The default setting of the <span
+                    above fields will be set to <span class="code">None/null</span>. The default setting of the <span
                         class="code">calc_missing</span> option is <span class="code">True</span>
                 </p>
             </li>
