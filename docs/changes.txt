@@ -13,6 +13,9 @@ on any version of pyusb and libusb.  The driver will now delete history records
 from the logger before the logger fills up (the WMR300 logger is not a circular
 buffer).  Thanks to users Markus Biewer and Cameron.  Fixes issue #288.
 
+Added automatic clearing of logger for CC3000 driver to prevent logger
+overflow (the CC3000 logger is not a circular buffer).
+
 3.8.0 11/22/2017
 
 The `stats.py` example now works with heating and cooling degree days.
