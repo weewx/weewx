@@ -168,12 +168,16 @@ Version: 3.8
 
         <h1>Value &quot;<span class="code">None</span>&quot;</h1>
 
-        <p>The Python special value <span class="code">None</span> is used throughout to signal a missing data point.
-            All functions must be written to expect it. </p>
+        <p>The Python special value <span class="code">None</span> is used throughout to signal an 
+            invalid or bad data point. All functions must be written to expect it. </p>
 
         <p>Device drivers should be written to emit <span class="code">None</span> if a data value is bad (perhaps
             because of a failed checksum). If the hardware simply doesn't support it, then the driver should not emit a
             value at all.</p>
+            
+        <p>The same rule applies to derived values. If the input data for a derived value are missing, then no derived
+            value should be emitted. However, if the input values are present, but have value 
+            <span class="code">None</span></p>, then the derived value should be set to <span class="code">None</span>.
 
         <p>However, the time value must never be <span class="code">None</span>. This is because it is used as the
             primary key in the SQL database. </p>
