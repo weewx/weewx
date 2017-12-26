@@ -647,20 +647,6 @@ class CachedValues(object):
                 elif packet['usUnits'] != self.unit_system:
                     raise ValueError("Mixed units encountered in cache. %s vs %s" % \
                                      (self.unit_sytem, packet['usUnits']))
-            elif packet[k] is None:
-                # FIXME: the cache should not check for values of None.
-                # however, if we blindly accept None as a possible value, then
-                # any partial packet will break the cache.  the fix probably
-                # requires changes to the StdWXCalculate service and the
-                # drivers themselves.  if a driver knows a sensor has a bad
-                # value, only then it should use a value of None.  if a driver
-                # sends partial packets, it should send only the observed
-                # values, not a full packet with None in the unobserved fields.
-                # similarly for calculate service.  if the service does not
-                # have all the inputs for a given derived, it should not insert
-                # a derived with value of None.  it should insert a value of
-                # None only if all the inputs exist and the result is None.
-                continue
             else:
                 # cache each value, associating it with the it was cached
                 self.values[k] = {'value': packet[k], 'ts': ts}
