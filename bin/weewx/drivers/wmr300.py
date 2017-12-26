@@ -229,7 +229,7 @@ byte hex dec description         decoded value
  9   30  0
 10   32  2                       or 0x34
 11   2c  ,
-12   0e                          (3777 dec) or mine always 88 8b  (34955)
+12   0e                          (3777 dec) or mine always 88 8b (34955)
 13   c1
 14   00                          always?
 15   00
@@ -256,12 +256,13 @@ examples:
  57 4d 52 33 30 30 2c 41 30 30 34 2c 0e c1 00 00 2c 7f e0 2c 4b 2c 49 2c
  57 4d 52 33 30 30 2c 41 30 30 34 2c 88 8b 00 00 2c 7f e0 2c 4b 2c 49 2c
 
+
 message: history
 byte hex dec description                 decoded value
  0   d2      packet type
  1   80  128 packet length
- 2   31      count                       12694  - index number of this packet
- 3   96       "
+ 2   31      count (hi)                  12694  - index number of this packet
+ 3   96      count (lo)
  4   0f   15 year                        ee if not set
  5   08    8 month                       ee if not set
  6   0a   10 day                         ee if not set
@@ -527,7 +528,7 @@ byte hex dec description                 decoded value
  2   4B 
  3   D4      packet type
  4   01      channel number
- 5   8B     variable
+ 5   8B      variable
 
 examples:
  41 43 4b d4 01 20      - last byte: 20, 32, 67, 8b, d6, df
@@ -681,8 +682,8 @@ byte hex dec description                 decoded value
 27   00
 28   FE
 29   00
-30   05      checksum
-31   A5         "
+30   05      checksum (hi)
+31   A5      checksum (lo)
 
  0   41      ACK
  1   43 
@@ -770,8 +771,8 @@ byte hex dec description                 decoded value
 examples:
  41 43 4b dc 00 20     - last byte: 32, 67, 8b, d6
  41 43 4b dc 01 20     - last byte: 20, 32, 67, 8b, d6, df
- 41 43 4b dc 01 16
  41 43 4b dc 00 16
+ 41 43 4b dc 01 16
 
 """
 
@@ -785,7 +786,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.19rc1'
+DRIVER_VERSION = '0.19rc2'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -830,7 +831,7 @@ def _hi(x):
 # it wraps into USBError.  so we have to compare strings to figure out exactly
 # what type of USBError we are dealing with.  unfortunately, those strings are
 # localized, so we must compare in every language.
-USB_KNOWN_MESSAGES = [
+USB_NOERR_MESSAGES = [
     'No data available', 'No error',
     'Nessun dato disponibile', 'Nessun errore',
     'Keine Daten verf',
@@ -839,9 +840,9 @@ USB_KNOWN_MESSAGES = [
     'Ingen data er tilgjengelige']
 
 # these are the usb 'errors' that should be ignored
-def known_usb_err(e):
+def is_noerr(e):
     errmsg = repr(e)
-    for msg in USB_KNOWN_MESSAGES:
+    for msg in USB_NOERR_MESSAGES:
         if msg in errmsg:
             return True
     return False
@@ -954,6 +955,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         self.logged_rain_counter = 0
         self.logged_history_usage = 0
         self.log_interval = 24 * 3600 # how often to log station status
+
         self.heartbeat = 20 # how often to send a6 messages, in seconds
         self.history_retry = 60 # how often to retry history, in seconds
         self.last_rain = None # last rain total
@@ -1445,7 +1447,7 @@ class Station(object):
                        (e.errno, e.strerror, e.message, repr(e)))
             if ignore_timeouts and is_timeout(e):
                 return []
-            if ignore_non_errors and known_usb_err(e):
+            if ignore_non_errors and is_noerr(e):
                 return []
             raise
 
@@ -1460,11 +1462,13 @@ class Station(object):
             self.update_count(buf, self.send_counts)
         return sent
 
-    def write(self, buf, ignore_timeouts=True):
+    def write(self, buf, ignore_non_errors=True, ignore_timeouts=True):
         try:
             return self._write(buf)
         except usb.USBError, e:
             if ignore_timeouts and is_timeout(e):
+                return 0
+            if ignore_non_errors and is_noerr(e):
                 return 0
             raise
 
@@ -1807,7 +1811,7 @@ Dewpoint from hardware is truncated to integer so use software"""
 # define a main entry point for basic testing of the station.
 # invoke this as follows from the weewx root dir:
 #
-# PYTHONPATH=bin python bin/user/wmr300x.py
+# PYTHONPATH=bin python bin/user/wmr300.py
 
 if __name__ == '__main__':
     import optparse
@@ -1827,7 +1831,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "wmr300 driver version %s" % DRIVER_VERSION
+        print "%s driver version %s" % (DRIVER_NAME, DRIVER_VERSION)
         exit(0)
 
     driver_dict = {
