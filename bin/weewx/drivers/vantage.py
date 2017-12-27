@@ -2699,7 +2699,7 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
 
     # Connection type: serial or ethernet 
     #  serial (the classic VantagePro)
-    #  ethernet (the WeatherLinkIP)
+    #  ethernet (the WeatherLinkIP or Serial-Ethernet bridge)
     type = serial
 
     # If the connection type is serial, a port must be specified:
