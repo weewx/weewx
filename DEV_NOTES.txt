@@ -105,7 +105,7 @@ to display debconf variables:
   sudo debconf-show weewx
 
 to manually purge debconf variables:
-  sudo echo PURGE | debconf-communicate weewx
+  echo PURGE | sudo debconf-communicate weewx
 
 to sign rpm packages you need .rpmmacros in your home directory:
 ~/.rpmmacros
