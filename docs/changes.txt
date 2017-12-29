@@ -21,6 +21,9 @@ Parameterize the configuration directory in weewx-multi init script.
 In StdWXCalculate, use None for an observation only if the variables on which
 the derived depends are available and None.  Fixes issue #291.
 
+Fixed bug that prevented specifying an explicit alamanac time from working.
+
+
 3.8.0 11/22/2017
 
 The `stats.py` example now works with heating and cooling degree days.
