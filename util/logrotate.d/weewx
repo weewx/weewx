@@ -26,5 +26,5 @@
 #    reload rsyslog > /dev/null 2>&1
 # some debian systems do it this way
 #    invoke-rc.d rsyslog reload > /dev/null
-  endscript
+#  endscript
 }
