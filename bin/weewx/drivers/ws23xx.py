@@ -256,7 +256,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.26rc1'
+DRIVER_VERSION = '0.27'
 
 
 def loader(config_dict, _):
