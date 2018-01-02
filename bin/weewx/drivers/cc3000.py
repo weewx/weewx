@@ -446,9 +446,16 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                 # periodically check memory, clear if necessary
                 if time.time() - self.last_mem_check > self.mem_interval:
                     nrec = self.get_history_usage()
-                    if nrec >= self.history_limit:
+                    self.last_mem_check = time.time()
+                    if nrec is None:
+                        loginf("memory check: cannot determine memory usage")
+                    elif nrec >= self.history_limit:
                         loginf("clear memory: logger is at %s records" % nrec)
                         self.station.clear_memory()
+                    # FIXME: add something here to be certain that the database
+                    # has all of the data before we delete it from logger!  or
+                    # add a config option to disable automatic clearing of
+                    # of logger until user can validate.
 
                 if self.polling_interval:
                     time.sleep(self.polling_interval)
@@ -485,6 +492,8 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
             logdbg("genStartupRecords: nrec=%d" % nrec)
 
         totrec = self.get_history_usage()
+        if totrec is None:
+            raise weewx.WeeWxIOError("cannot determine logger memory status")
         loginf("download %d of %d records" % (nrec, totrec))
         i = 0
         last_rain = None
@@ -625,8 +634,11 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
 
     def get_history_usage(self):
         # return the number of records in the logger
-        return int(self.station.get_memory_status().split(',')[1].split()[0])
-
+        # FIXME: some firmware returns NOW when you query MEM=?
+        s = self.station.get_memory_status()
+        if 'records' in s:
+            return int(s.split(',')[1].split()[0])
+        return None
 
 def _to_ts(tstr, fmt="%Y/%m/%d %H:%M:%S"):
     return time.mktime(time.strptime(tstr, fmt))
