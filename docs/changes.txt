@@ -6,6 +6,9 @@ weewx change history
 The image generator now supports the use of a 'stale_age' option. Thanks to
 user John Smith. Fixes issue #290.
 
+The Felsius unit of temperature (see https://xkcd.com/1923/) is now supported.
+
+
 3.8.0 11/22/2017
 
 The `stats.py` example now works with heating and cooling degree days.
