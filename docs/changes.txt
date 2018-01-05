@@ -14,7 +14,12 @@ from the logger before the logger fills up (the WMR300 logger is not a circular
 buffer).  Thanks to users Markus Biewer and Cameron.  Fixes issue #288.
 
 Added automatic clearing of logger for CC3000 driver to prevent logger
-overflow (the CC3000 logger is not a circular buffer).
+overflow (the CC3000 logger is not a circular buffer).  The default is to
+not clear the history, but it is highly recommended that you add a logging
+threshold once you are confident that all logger data have been captured to
+the weewx database.
+
+Improved the robustness of reading from the CC3000 logger.
 
 Parameterize the configuration directory in weewx-multi init script.
 
