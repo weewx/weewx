@@ -471,6 +471,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                                "logger clearing threshold is %s" %
                                (nrec, self.logger_threshold))
                         if self.logger_threshold is not None and nrec >= self.logger_threshold:
+                            loginf("clearing all records from logger")
                             self.station.clear_memory()
 
                 if self.polling_interval:
