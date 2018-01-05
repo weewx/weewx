@@ -786,7 +786,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.19rc2'
+DRIVER_VERSION = '0.19rc3'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -849,6 +849,7 @@ def is_noerr(e):
 
 # strings for the timeout error
 USB_TIMEOUT_MESSAGES = [
+    'Connection timed out',
     'Operation timed out']
 
 # detect usb timeout error (errno 110)
