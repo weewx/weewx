@@ -98,7 +98,7 @@ class GeneralPlot(object):
         self.rose_label_font_path   = config_dict.get('rose_label_font_path', self.bottom_label_font_path)
         self.rose_label_font_size   = int(config_dict.get('rose_label_font_size', 10))  
         self.rose_label_font_color  = weeplot.utilities.tobgr(config_dict.get('rose_label_font_color', '0x000000'))
-        self.rose_line_width        = int(config_dict.get('rose_line_widght', 1))
+        self.rose_line_width        = int(config_dict.get('rose_line_width', 1))
         self.rose_color             = config_dict.get('rose_color')
         if self.rose_color is not None:
             self.rose_color = weeplot.utilities.tobgr(self.rose_color)
