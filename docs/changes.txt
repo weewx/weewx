@@ -1,10 +1,12 @@
 weewx change history
 --------------------
 
-3.X.Y MM/dd/YYYY
+3.9.0 MM/dd/YYYY
 
 The image generator now supports the use of a 'stale_age' option. Thanks to
 user John Smith. Fixes issue #290.
+
+Rose line width can now be specified with option rose_line_width.
 
 The Felsius unit of temperature (see https://xkcd.com/1923/) is now supported.
 
