@@ -786,7 +786,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.19rc3'
+DRIVER_VERSION = '0.19rc4'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -1010,7 +1010,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     read_cnt += 1
                     if buf and buf[0] == 0x57:
                         break
-                if buf is None or buf[0] != 0x57:
+                if not buf or buf[0] != 0x57:
                     raise ProtocolError("failed to read pkt 0x57")
                 pkt = Station._decode_57(buf)
                 if DEBUG_COMM:
@@ -1029,7 +1029,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     read_cnt += 1
                     if buf and buf[0] == 0x41:
                         break
-                if buf is None or buf[0] != 0x41:
+                if not buf or buf[0] != 0x41:
                     raise ProtocolError("failed to read ack 0x41 for pkt 0x73")
                 if DEBUG_COMM:
                     loginf("initialization completed in %s tries" % cnt)
@@ -1086,7 +1086,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     read_cnt += 1
                     if buf and buf[0] == 0x41 and buf[3] == cmd[0]:
                         break
-                if buf is None or buf[0] != 0x41:
+                if not buf or buf[0] != 0x41:
                     raise ProtocolError("failed to read ack to %02x" % cmd[0])
 
                 # send the request to start history packets
