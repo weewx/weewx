@@ -786,7 +786,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.19rc4'
+DRIVER_VERSION = '0.19rc5'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -1148,10 +1148,13 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
             pass
 
     def get_history(self, since_ts, clear_logger=False):
+        if self.latest_index is None:
+            loginf("read history skipped: index has not been set")
+            return
         if self.latest_index < 1:
             # this should never happen.  if it does, then either no 0x57 packet
             # was received or the index provided by the station was bogus.
-            logerr("read history failed: index has not been initialized")
+            logerr("read history failed: bad index: %s" % self.latest_index)
             return
 
         loginf("reading records since %s (last_index=%s latest_index=%s)" %
@@ -1221,10 +1224,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 msg = "count=%s last_index=%s latest_index=%s" % (
                     processed, self.last_record, self.latest_index)
                 if self.last_record + 1 >= self.latest_index:
-                    loginf("catchup complete: %s" % msg)
+                    loginf("get history complete: %s" % msg)
                     break
                 if buf and DEBUG_HISTORY:
-                    loginf("catchup in progress: %s" % msg)
+                    loginf("get history in progress: %s" % msg)
             except usb.USBError, e:
                 raise weewx.WeeWxIOError(e)
             except DecodeError, e:
@@ -1237,18 +1240,18 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
             try:
                 buf = self.station.read()
                 if buf:
-                    pkt = Station.decode(buf)
                     if buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
                         # compose ack for most data packets
                         cmd = [0x41, 0x43, 0x4b, buf[0], buf[7]]
                         # do not bother to send the ACK - console does not care
                         #self.station.write(cmd)
                         # we only care about packets with loop data
-                        if pkt['packet_type'] in [0xd3, 0xd4, 0xd5, 0xd6]:
+                        if buf[0] in [0xd3, 0xd4, 0xd5, 0xd6]:
+                            pkt = Station.decode(buf)
                             packet = self.convert_loop(pkt)
                             yield packet
                     elif buf[0] == 0x57:
-                        self.latest_index = pkt['latest_index']
+                        self.latest_index = Station.get_latest_index(buf)
                         if time.time() - self.logged_history_usage > self.log_interval:
                             pct = Station.get_history_usage(self.latest_index)
                             loginf("history buffer at %.1f%%" % pct)
@@ -1257,10 +1260,12 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     cmd = [0xa6, 0x91, 0xca, 0x45, 0x52]
                     self.station.write(cmd)
                     self.last_a6 = time.time()
-                pct = Station.get_history_usage(self.latest_index)
-                if pct >= self.history_limit:
-                    # if the logger usage exceeds the limit, clear it
-                    self.dump_history()
+                if self.latest_index is not None:
+                    pct = Station.get_history_usage(self.latest_index)
+                    if pct >= self.history_limit:
+                        # if the logger usage exceeds the limit, clear it
+                        self.dump_history()
+                        self.latest_index = None
             except usb.USBError, e:
                 raise weewx.WeeWxIOError(e)
             except (DecodeError, ProtocolError), e:
