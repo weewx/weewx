@@ -10,6 +10,8 @@ Rose line width can now be specified with option rose_line_width.
 
 The Felsius unit of temperature (see https://xkcd.com/1923/) is now supported.
 
+The almanac now supports calculating planet separations.
+
 
 3.8.0 11/22/2017
 

@@ -275,6 +275,9 @@ class Almanac(object):
 
         return almanac
         
+    def separation(self, body1, body2):
+        return ephem.separation(body1, body2)
+    
     def __getattr__(self, attr):
         # This is to get around bugs in the Python version of Cheetah's namemapper:
         if attr.startswith('__') or attr == 'has_key':

@@ -2136,10 +2136,11 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
           class="code">$almanac.hasExtras</span>.
       </p>
 
-      <p>The almanac information falls in two categories:</p>
+      <p>The almanac information falls into three categories:</p>
       <ul>
         <li>Calendar events</li>
         <li>Heavenly bodies</li>
+        <li>Functions</li>
       </ul>
       <p>We will cover each of these separately.</p>
       <h4>Calendar events</h4>
@@ -2289,7 +2290,17 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
           </tr>
         </tbody>
       </table>
-
+      
+      <h4>Functions</h4>
+     <p>There is actually one one function in this category: <span class="code">separation</span>.
+     It returns the angular separation between two heavenly bodies. For example, to calculate
+     the angular separation between Venus and Mars you would use:</p>
+     <pre class="tty">
+&lt;p&gt;The separation between Venus and Mars is
+      $almanac.separation(($almanac.venus.alt,$almanac.venus.az), ($almanac.mars.alt,$almanac.mars.az))&lt;/p&gt;
+     </pre>
+     <p>This would result in:</p>
+     <p class="example_output">The separation between Venus and Mars is 55:55:31.8</p>
 
       <h3>Wind</h3>
 
