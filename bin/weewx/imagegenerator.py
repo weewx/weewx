@@ -233,7 +233,9 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         marker_size   = marker_size,
                         bar_width     = interval_vec,
                         vector_rotate = vector_rotate,
-                        gap_fraction  = gap_fraction))
+                        gap_fraction  = gap_fraction,
+                        x_label_spacing = x_label_spacing,
+                        y_label_spacing = y_label_spacing))
 
                 # OK, the plot is ready. Render it onto an image
                 image = plot.render()
