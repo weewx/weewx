@@ -247,7 +247,7 @@ class WMR89(weewx.drivers.AbstractDevice):
                    _record = self._sensors_to_fields(_record, self.sensor_map)
                  
                  if _record is not None:
-                        print _record
+                        #print _record
                         yield _record
  
  
@@ -288,6 +288,9 @@ class WMR89(weewx.drivers.AbstractDevice):
 
     def _wmr89_wind_packet(self, packet):
         """Decode a wind packet. Wind speed will be in kph"""
+        ## 0  1  2  3  4  5  6  7  8  9  10 
+        ## b2 0b 00 00 00 00 00 02 7f 01 3e
+        ##    ?     Wa    Wg    Wd Wc ?  CS?
         Wa=(ord(packet[3])*0.36)
         Wg=(ord(packet[5])*0.36)
         Wd=(ord(packet[7])*22.5)
@@ -313,7 +316,10 @@ class WMR89(weewx.drivers.AbstractDevice):
     def _wmr89_rain_packet(self, packet):
         ## 0  1  2  3  4  5  6  7    8  9  10 11 12 13 14 15 16
         ## b1 11 ff fe 00 08 00 22   00 48 0e 01 01 0d 18 03 66
-        ##    ?  r/h-- rain  last24  Rtot  ?  ?  ?  ?  ?  ?  ?
+        ## b1 11 ff fe 00 11 00 11   00 95 0e 01 01 0d 18 03 ab: 4,3 mm  / 11 = 17
+        ## b1 11 ff fe 00 ca 00 db   00 5f 0e 01 01 0d 18 04 f8: 116,3 mm - 163,1 / db=219 / 
+        ## b1 11 ff fe 00 2a 00 3b   00 be 0e 01 01 0d 18 04 17: 270,8mm - 309,6 / 3b=59 / 
+        ##    ?  r/h-- rain  last24  Rtot  ?  ?  ?  ?  ?  ?  CS?
         # station units are inch and inch/hr while the internal metric units are
         # cm and cm/hr. 
 
@@ -341,22 +347,23 @@ class WMR89(weewx.drivers.AbstractDevice):
             'dateTime': int(time.time() + 0.5),
             'usUnits': weewx.METRIC
         }
-        # Because the WMR does not offer anything like bucket tips, we must
-        # calculate it by looking for the change in total rain. Of course,
-        # this won't work for the very first rain packet.
-        #_record['rain'] = (_record['rain_total'] - self.last_rain_total) if self.last_rain_total is not None else None
-        #self.last_rain_total = _record['rain_total']
-        #return _record
         return _record
 
 
     def _wmr89_temp_packet(self, packet):
+        ## b50b01006c005408fd0286
+        ## b50b027fff33ff7fff04f0
+        ## b50b037fff33ff7fff04f1
+        ## b50b0100da002f0afd02d1
+
         ## 0  1  2      3  4  5  6   7   8  9  10
         ## b5 0b 01     00 12 00 54  ff  fd 03 23
+        ## b5 0b 01     00 d7 00 2e  0a  fd 02 cd <<-- batterie low
+        ## b5 0b 01     00 d6 00 2e  09  fd 02 cb
         ##    ?  sensor temp  ?  hum dew ?  ?  ?
         temp=256*ord(packet[3])+ord(packet[4])
         if temp>=32768:
-           temp=Temp-65536
+           temp=temp-65536
         temp=(temp*0.1)
 
         if ord(packet[6])==254:
