@@ -31,6 +31,8 @@ Fixed bug that prevented specifying an explicit alamanac time from working.
 Fixed bug that prevented historical records from being downloaded from ws23xx
 stations. Thanks to user Matt Brown! Fixes issue #295
 
+Fixed bug that crashed program if a sqlite permission error occurred.
+
 
 3.8.0 11/22/2017
 
