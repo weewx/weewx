@@ -5,15 +5,19 @@
   compress
   delaycompress
   notifempty
+
+# on some older systems the permissions do not propagate, so force them
 # debian uses root:adm
 #  create 644 root adm
 # ubuntu uses syslog:adm
 #  create 644 syslog adm
-  sharedscripts
-  postrotate
+
+# on some older systems rsyslog must be restarted to send output to right file
+#  sharedscripts
+#  postrotate
 # standard way of invoking rc scripts
-    /etc/init.d/rsyslog stop
-    /etc/init.d/rsyslog start
+#    /etc/init.d/rsyslog stop
+#    /etc/init.d/rsyslog start
 # on some systems a reload will work
 #    /etc/init.d/rsyslog reload > /dev/null
 # some ubuntu systems use upstart
@@ -22,5 +26,5 @@
 #    reload rsyslog > /dev/null 2>&1
 # some debian systems do it this way
 #    invoke-rc.d rsyslog reload > /dev/null
-  endscript
+#  endscript
 }

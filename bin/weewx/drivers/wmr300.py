@@ -3,6 +3,8 @@
 # See the file LICENSE.txt for your rights.
 #
 # Credits:
+# Thanks to Cameron for diving deep into USB timing issues
+#
 # Thanks to Benji for the identification and decoding of 7 packet types
 #
 # Thanks to Eric G for posting USB captures and providing hardware for testing
@@ -22,16 +24,6 @@
 
 # FIXME: decode the 0xdb packets
 
-# FIXME: the read/write logic is rather brittle.  it appears that communication
-# must be initiated with an interrupt write.  after that, the station will
-# spew data.  this implementation starts with a read, which will fail with
-# a 'No data available' usb error.  that results in an empty buffer (instead
-# of an exception popping up the stack) so that a heartbeat write is sent.
-# the genLoopPacket and genStartupRecords logic should be refactored to make
-# this behiavor explicit.
-
-# FIXME: deal with initial usb timeout when starting usb communications
-
 # FIXME: warn if altitude in pressure packet does not match weewx altitude
 
 """Driver for Oregon Scientific WMR300 weather stations.
@@ -44,11 +36,31 @@ Sensor data transmission frequencies:
 The station supports 1 wind, 1 rain, 1 UV, and up to 8 temperature/humidity
 sensors.
 
+The station ships with "Weather OS PRO" software for windows.  This was used
+for the USB sniffing.
+
 Sniffing USB traffic shows all communication is interrupt.  The endpoint
 descriptors for the device show this as well.  Response timing is 1.
 
-The station ships with "Weather OS PRO" software for windows.  This was used
-for the USB sniffing.
+It appears that communication must be initiated with an interrupted write.
+After that, the station will spew data.  Sending commands to the station is
+not reliable - like other Oregon Scientific hardware, there is a certain
+amount of "send a command, wait to see what happens, then maybe send it again"
+in order to communicate with the hardware.  Once the station does start sending
+data, the driver basically just processes it based on the message type.  It
+must also send "heartbeat" messages to keep the data flowing from the hardware.
+
+Communication is confounded somewhat by the various libusb implementations.
+Some communication "fails" with a "No data available" usb error.  But in other
+libusb versions, this error does not appear.  USB timeouts are also tricky.
+Since the WMR protocol seems to expect timeouts, it is necessary for the
+driver to ignore them at some times, but not at others.  Since not every libusb
+version includes a code/class to indicate that a USB error is a timeout, the
+driver must do more work to figure it out.
+
+The driver ignores USB timeouts.  It would seem that a timeout just means that
+the station is not ready to communicate; it does not indicate a communication
+failure.
 
 Internal observation names use the convention name_with_specifier.  These are
 mapped to the wview or other schema as needed with a configuration setting.
@@ -63,7 +75,7 @@ rain data will not be recorded.
 Message types -----------------------------------------------------------------
 
 packet types from station:
-57 - station type/model; history count
+57 - station type/model; history count + other status
 41 - ACK
 D2 - history; 128 bytes
 D3 - temperature/humidity/dewpoint/heatindex; 61 bytes
@@ -74,29 +86,72 @@ DB - forecast; 32 bytes
 DC - temperature/humidity ranges; 62 bytes
 
 packet types from host:
-A6 - heartbeat
+A6 - heartbeat - response is 57 (usually)
 41 - ACK
-65 - ? each of these is ack-ed by the station
-cd - ? start history request? last two bytes are one after most recent read
-35 - ? finish history request? last two bytes are latest record count
-72 - ?
-73 - ?
+65 - do not delete history when it is reported.  each of these is ack-ed by
+       the station
+b3 - delete history after you give it to me.
+cd - start history request.  last two bytes are one after most recent read
+35 - finish history request.  last two bytes are latest record index that
+       was read.
+73 - some sort of initialisation packet
+72 - ? on rare occasions will be used in place of 73, in both observed cases
+       the console was already free-running transmitting data
 
-notes:
 WOP sends A6 message every 20 seconds
 WOP requests history at startup, then again every 120 minutes
-each A6 is followed by a 57 from the station
+each A6 is followed by a 57 from the station, except the one initiating history
 each data packet D* from the station is followed by an ack packet 41 from host
 D2 (history) records are recorded every minute
 D6 (pressure) packets seem to come every 15 minutes (900 seconds)
 4,5 of 7x match 12,13 of 57
 
+examples of 72/73 initialization packets:
+  73 e5 0a 26 0e c1
+  73 e5 0a 26 88 8b
+  72 a9 c1 60 52 00
+
+---- cameron's extra notes:
+
+Station will free-run transmitting data for about 100s without seeing an ACK.
+a6 will always be followed by 91 ca 45 42 but final byte may be 0, 20, 32, 67,
+8b, d6, df, or...
+    0 - when first packet after connection or program startup.
+    It looks like the final byte is just the last character that was previously
+    written to a static output buffer.  and hence it is meaningless.
+41 - ack in - 2 types
+41 - ack out - numerous types. combinations of packet type, channel, last byte.
+    For a6, it looks like the last byte is just uncleared residue.
+b3 59 0a 17 01 <eb>   - when you give me history, delete afterwards
+                      - final 2 bytes are probably ignored
+    response: ACK b3 59 0a 17
+65 19 e5 04 52 <b6>   - when you give me history, do not delete afterwards
+                      - final 2 bytes are probably ignored
+    response: ACK 65 19 e5 04
+cd 18 30 62 nn mm  - start history, starting at record 0xnnmm
+    response - if preceeded by 65, the ACK is the same string:  ACK 65 19 e5 04
+             - if preceeded by b3 then there is NO ACK.
+
+Initialisation:
+out: a6 91 ca 45 52
+     - note: null 6th byte.
+in:  57:  WMR300,A004,<b13><b14>\0\0,<history index>,<b21>,<b23>,
+     - where numbered bytes are unknown content
+then either...
+out: 73 e5 0a 26 <b5> <b6>
+     - b5 is set to b13 of pkt 57, b6 <= b14
+in:  41 43 4b 73 e5 0a 26 <b8> <b9>
+     - this is the full packet 73 prefixed by "ACK"
+or...
+out: 72 a9 c1 60 52
+     - occurs when console is already free-running (but how does WOsP know?)
+NO ACK
 
 Message field decodings -------------------------------------------------------
 
 Values are stored in 1 to 3 bytes in big endian order.  Negative numbers are
 stored as Two's Complement (if the first byte starts with F it is a negative
-number).
+number). Count values are unsigned.
 
 no data:
  7f ff
@@ -112,6 +167,7 @@ values for trend:
 0 - steady
 1 - rising
 2 - falling
+3 - no sensor data
 
 bitwise transformation for compass direction:
 1000 0000 0000 0000 = NNW
@@ -143,11 +199,11 @@ values for forecast:
 Message decodings -------------------------------------------------------------
 
 message: ACK
-byte hex dec description                 decoded value
- 0   41  A   acknowledgement             ACK
+byte hex dec description         decoded value
+ 0   41  A   acknowledgement     ACK
  1   43  C
  2   4b  K
- 3   73
+ 3   73                          command sent from PC
  4   e5
  5   0a
  6   26
@@ -155,35 +211,43 @@ byte hex dec description                 decoded value
  8   c1
 
 examples:
- 41 43 4b 73 e5 0a 26 0e c1
- 41 43 4b 65 19 e5 04
+ 41 43 4b 73 e5 0a 26 0e c1      last 2 bytes differ
+ 41 43 4b 65 19 e5 04            always same
 
 
 message: station info
-byte hex dec description                 decoded value
- 0   57  W   station type                WMR300
+byte hex dec description         decoded value
+ 0   57  W   station type        WMR300
  1   4d  M
  2   52  R
  3   33  3
  4   30  0
  5   30  0
  6   2c  ,
- 7   41  A   station model               A002
+ 7   41  A   station model       A002
  8   30  0
  9   30  0
-10   32  2
+10   32  2                       or 0x34
 11   2c  ,
-12   0e
+12   0e                          (3777 dec) or mine always 88 8b (34955)
 13   c1
-14   00
+14   00                          always?
 15   00
 16   2c  ,
-17   67      lastest history record      26391 (0x67*256 0x17)
+17   67      next history record 26391 (0x67*256 0x17) (0x7fe0 (32736) is full)
+                                 The value at this index has not been used yet.
 18   17
 19   2c  ,
-20   4b
+20   4b      usually 'K' (0x4b). occasionally was 0x43 when history is set to
+  or 43      delete after downloading.  This is a 1-bit change (1<<3)
+             NB: Does not return to 4b when latest history record is reset to
+             0x20 after history is deleted. 
 21   2c  ,
-22   52
+22   52      0x52 (82, 'R'), occasionally 0x49(73, 'G')
+             0b 0101 0010   (0x52) vs
+             0b 0100 1001   (0x49) lots of bits flipped!
+  or 49      this maybe has some link with one or other battery, but does not
+             make sense
 23   2c  ,
 
 examples:
@@ -192,12 +256,13 @@ examples:
  57 4d 52 33 30 30 2c 41 30 30 34 2c 0e c1 00 00 2c 7f e0 2c 4b 2c 49 2c
  57 4d 52 33 30 30 2c 41 30 30 34 2c 88 8b 00 00 2c 7f e0 2c 4b 2c 49 2c
 
+
 message: history
 byte hex dec description                 decoded value
  0   d2      packet type
  1   80  128 packet length
- 2   31      count                       12694
- 3   96
+ 2   31      count (hi)                  12694  - index number of this packet
+ 3   96      count (lo)
  4   0f   15 year                        ee if not set
  5   08    8 month                       ee if not set
  6   0a   10 day                         ee if not set
@@ -342,7 +407,7 @@ byte hex dec description                 decoded value
 13   7F      heat index                  N/A
 14   FD 
 15   00      temperature trend
-16   00      humidity trend
+16   00      humidity trend?             not sure - never saw a falling value
 17   0E   14 max_dewpoint_last_day year
 18   05    5 month
 19   09    9 day
@@ -393,11 +458,12 @@ byte hex dec description                 decoded value
  2   4B 
  3   D3      packet type
  4   01      channel number
- 5   8B                                  sometimes DF
+ 5   8B                                  sometimes DF and others
 
 examples:
- 41 43 4b d3 01 20
- 41 43 4b d3 00 20
+ 41 43 4b d3 00 20      - for last byte: 32, 67, 8b, d6
+ 41 43 4b d3 01 20      - for last byte: same + 20, df
+ for unused temps, last byte always 8b (or is it byte 14 of pkt 57?)
 
 
 message: wind
@@ -462,10 +528,10 @@ byte hex dec description                 decoded value
  2   4B 
  3   D4      packet type
  4   01      channel number
- 5   8B 
+ 5   8B      variable
 
 examples:
- 41 43 4b d4 01 20
+ 41 43 4b d4 01 20      - last byte: 20, 32, 67, 8b, d6, df
  41 43 4b d4 01 16
 
 
@@ -520,7 +586,7 @@ byte hex dec description                 decoded value
  5   8B
 
 examples:
- 41 43 4b d5 01 20
+ 41 43 4b d5 01 20     - last byte: 20, 32, 67, 8b, d6, df
  41 43 4b d5 01 16
 
 
@@ -540,8 +606,8 @@ byte hex dec description                 decoded value
 11   A9 
 12   01      altitude meter              300 m       (0x01<<8)+0x2c
 13   2C 
-14   03      ?
-15   00 
+14   03      barometric trend            have seen 0,1,2, and 3
+15   00      only ever observed 0 or 2.  is this battery?
 16   0E   14 max pressure today year
 17   05    5 max pressure today month
 18   0D   13 max pressure today day
@@ -581,33 +647,33 @@ byte hex dec description                 decoded value
  5   8B 
 
 examples:
- 41 43 4b d6 00 20
+ 41 43 4b d6 00 20     - last byte: 32, 67, 8b
 
 
 message: forecast
 byte hex dec description                 decoded value
  0   DB
- 1   20
+ 1   20         pkt length
  2   0F  15  year
  3   07   7  month
  4   09   9  day
  5   12  18  hour
  6   23  35  minute
- 7   00
- 8   FA
- 9   79
-10   FC
-11   40
-12   01
-13   4A
-14   06
-15   17
-16   14
-17   23
-18   06
-19   01
-20   00
-21   00
+ 7   00         below are alternate observations - little overlap
+ 8   FA         0a
+ 9   79         02, 22, 82, a2
+10   FC         05
+11   40         f9
+12   01         fe
+13   4A         fc
+14   06         variable
+15   17         variable
+16   14         variable
+17   23         variable
+18   06         00 to 07 (no 01)
+19   01 
+20   00         00 or 01
+21   00    remainder same     
 22   01
 23   01
 24   01
@@ -616,8 +682,8 @@ byte hex dec description                 decoded value
 27   00
 28   FE
 29   00
-30   05      checksum
-31   A5
+30   05      checksum (hi)
+31   A5      checksum (lo)
 
  0   41      ACK
  1   43 
@@ -627,7 +693,7 @@ byte hex dec description                 decoded value
  5   20
 
 examples:
- 41 43 4b db 00 20
+ 41 43 4b db 00 20     - last byte: 32, 67, 8b, d6
 
 
 message: temperature/humidity ranges
@@ -703,10 +769,10 @@ byte hex dec description                 decoded value
  5   8B 
 
 examples:
- 41 43 4b dc 01 20
- 41 43 4b dc 00 20
- 41 43 4b dc 01 16
+ 41 43 4b dc 00 20     - last byte: 32, 67, 8b, d6
+ 41 43 4b dc 01 20     - last byte: 20, 32, 67, 8b, d6, df
  41 43 4b dc 00 16
+ 41 43 4b dc 01 16
 
 """
 
@@ -720,7 +786,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.18'
+DRIVER_VERSION = '0.19rc5'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -765,7 +831,7 @@ def _hi(x):
 # it wraps into USBError.  so we have to compare strings to figure out exactly
 # what type of USBError we are dealing with.  unfortunately, those strings are
 # localized, so we must compare in every language.
-KNOWN_USB_MESSAGES = [
+USB_NOERR_MESSAGES = [
     'No data available', 'No error',
     'Nessun dato disponibile', 'Nessun errore',
     'Keine Daten verf',
@@ -774,9 +840,24 @@ KNOWN_USB_MESSAGES = [
     'Ingen data er tilgjengelige']
 
 # these are the usb 'errors' that should be ignored
-def known_usb_err(e):
+def is_noerr(e):
     errmsg = repr(e)
-    for msg in KNOWN_USB_MESSAGES:
+    for msg in USB_NOERR_MESSAGES:
+        if msg in errmsg:
+            return True
+    return False
+
+# strings for the timeout error
+USB_TIMEOUT_MESSAGES = [
+    'Connection timed out',
+    'Operation timed out']
+
+# detect usb timeout error (errno 110)
+def is_timeout(e):
+    if hasattr(e, 'errno') and e.errno == 110:
+        return True
+    errmsg = repr(e)
+    for msg in USB_TIMEOUT_MESSAGES:
         if msg in errmsg:
             return True
     return False
@@ -793,6 +874,7 @@ def get_usb_info():
 class WMR300Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with a WMR300 weather station."""
 
+    # map sensor values to the database schema fields
     # the default map is for the wview schema
     DEFAULT_MAP = {
         'pressure': 'pressure',
@@ -838,6 +920,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         'windchill': 'windchill',
         'rainRate': 'rain_rate'}
 
+    # threshold at which the history will be cleared, specified as an integer
+    # between 5 and 95, inclusive.
+    DEFAULT_HIST_LIMIT = 20
+
     def __init__(self, **stn_dict):
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('usb info: %s' % get_usb_info())
@@ -846,8 +932,14 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         if 'sensor_map' in stn_dict:
             self.sensor_map.update(stn_dict['sensor_map'])
         loginf('sensor map is %s' % self.sensor_map)
-        self.heartbeat = 20 # how often to send a6 messages, in seconds
-        self.history_retry = 60 # how often to retry history, in seconds
+        hlimit = int(stn_dict.get('history_limit', self.DEFAULT_HIST_LIMIT))
+        if hlimit < 5:
+            hlimit = 5
+        if hlimit > 95:
+            hlimit = 95
+        self.history_limit = hlimit
+        loginf('history limit is %d%%' % self.history_limit)
+
         global DEBUG_COMM
         DEBUG_COMM = int(stn_dict.get('debug_comm', DEBUG_COMM))
         global DEBUG_PACKET
@@ -860,16 +952,28 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         DEBUG_HISTORY = int(stn_dict.get('debug_history', DEBUG_HISTORY))
         global DEBUG_RAIN
         DEBUG_RAIN = int(stn_dict.get('debug_rain', DEBUG_RAIN))
-        self.last_rain = None
-        self.last_a6 = 0
-        self.last_65 = 0
-        self.last_7x = 0
-        self.last_record = 0
-        # FIXME: make the cache values age
-        # FIXME: do this generically so it can be used in other drivers
-        self.pressure_cache = dict()
+
+        self.logged_rain_counter = 0
+        self.logged_history_usage = 0
+        self.log_interval = 24 * 3600 # how often to log station status
+
+        self.heartbeat = 20 # how often to send a6 messages, in seconds
+        self.history_retry = 60 # how often to retry history, in seconds
+        self.last_rain = None # last rain total
+        self.last_a6 = 0 # timestamp of last 0xa6 message
+        self.last_65 = 0 # timestamp of last 0x65 message
+        self.last_7x = 0 # timestamp of last 0x7x message
+        self.last_record = Station.HISTORY_START_REC - 1
+        self.pressure_cache = dict() # FIXME: make the cache values age
         self.station = Station()
         self.station.open()
+        pkt = self.init_comm()
+        loginf("communication established: %s" % pkt)
+        self.latest_index = pkt['latest_index']
+        self.magic0 = pkt['magic0']
+        self.magic1 = pkt['magic1']
+        self.mystery0 = pkt['mystery0']
+        self.mystery1 = pkt['mystery1']
 
     def closePort(self):
         self.station.close()
@@ -879,125 +983,303 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
     def hardware_name(self):
         return self.model
 
+    def init_comm(self, max_tries=3, max_read_tries=10):
+        """initiate communication with the station:
+        1 send a special a6 packet
+        2 read the packet 57
+        3 send a type 73 packet
+        4 read the ack
+        """
+
+        cnt = 0
+        while cnt < max_tries:
+            cnt += 1
+            try:
+                buf = None
+                self.station.flush_read_buffer()
+                if DEBUG_COMM:
+                    loginf("init_comm: send initial heartbeat 0xa6")
+                cmd = [0xa6, 0x91, 0xca, 0x45, 0x52]
+                self.station.write(cmd)
+                self.last_a6 = time.time()
+                if DEBUG_COMM:
+                    loginf("init_comm: try to read 0x57")
+                read_cnt = 0
+                while read_cnt < max_read_tries:
+                    buf = self.station.read()
+                    read_cnt += 1
+                    if buf and buf[0] == 0x57:
+                        break
+                if not buf or buf[0] != 0x57:
+                    raise ProtocolError("failed to read pkt 0x57")
+                pkt = Station._decode_57(buf)
+                if DEBUG_COMM:
+                    loginf("init_comm: send initialization 0x73")
+                cmd = [0x73, 0xe5, 0x0a, 0x26, pkt['magic0'], pkt['magic1']]
+#                cmd = [0x72, 0xa9, 0xc1, 0x60, 0x52, 0x00]
+#                cmd = [0x73, 0xe5, 0x0a, 0x26, 0x88, 0x8b]
+#                cmd = [0x73, 0xe5, 0x0a, 0x26, 0x0e, 0xc1]
+                self.station.write(cmd)
+                self.last_7x = time.time()
+                if DEBUG_COMM:
+                    loginf("init_comm: try to read 0x41")
+                read_cnt = 0
+                while read_cnt < max_read_tries:
+                    buf = self.station.read()
+                    read_cnt += 1
+                    if buf and buf[0] == 0x41:
+                        break
+                if not buf or buf[0] != 0x41:
+                    raise ProtocolError("failed to read ack 0x41 for pkt 0x73")
+                if DEBUG_COMM:
+                    loginf("initialization completed in %s tries" % cnt)
+                return pkt
+            except ProtocolError, e:
+                if DEBUG_COMM:
+                    loginf("init_comm: failed attempt %d of %d: %s" %
+                           (cnt, max_tries, e))
+            time.sleep(0.1)
+        raise ProtocolError("Init comm failed after %d tries" % max_tries)
+
+    def init_history(self, clear_logger=False, max_tries=5, max_read_tries=10):
+        """initiate streaming of history records from the station:
+
+        1 if clear logger:
+          1a send 0xb3 packet
+        1 if not clear logger:
+          1a send special 0xa6 (like other 0xa6 packets, but no 0x57 reply)
+          1b send 0x65 packet
+        2 read the ACK
+        3 send a 0xcd packet
+        4 do not wait for ACK - it might not come
+
+        then return to reading packets
+        """
+
+        cnt = 0
+        while cnt < max_tries:
+            cnt += 1
+            try:
+                if DEBUG_HISTORY:
+                    loginf("init history attempt %d of %d" % (cnt, max_tries))
+                # eliminate anything that might be in the buffer
+                self.station.flush_read_buffer()
+                # send the sequence for initiating history packets
+                if clear_logger:
+                    cmd = [0xb3, 0x59, 0x0a, 0x17, 0x01, 0xeb]
+                    self.station.write(cmd)
+                    start_rec = Station.HISTORY_START_REC
+                else:
+                    cmd = [0xa6, 0x91, 0xca, 0x45, 0x52, 0x8b]
+                    self.station.write(cmd)
+                    self.last_a6 = time.time()
+                    cmd = [0x65, 0x19, 0xe5, 0x04, 0x52, 0x8b]
+                    self.station.write(cmd)
+                    self.last_65 = time.time()
+                    start_rec = self.last_record
+
+                # read the ACK.  there might be regular packets here, so be
+                # ready to read a few - just ignore them.
+                read_cnt = 0
+                while read_cnt < max_read_tries:
+                    buf = self.station.read()
+                    read_cnt += 1
+                    if buf and buf[0] == 0x41 and buf[3] == cmd[0]:
+                        break
+                if not buf or buf[0] != 0x41:
+                    raise ProtocolError("failed to read ack to %02x" % cmd[0])
+
+                # send the request to start history packets
+                nxt = Station.clip_index(start_rec)
+                if DEBUG_HISTORY:
+                    loginf("init history cmd=0x%02x rec=%d" % (cmd[0], nxt))
+                cmd = [0xcd, 0x18, 0x30, 0x62, _hi(nxt), _lo(nxt)]
+                self.station.write(cmd)
+
+                # do NOT wait for an ACK.  the console should start spewing
+                # history packets, and any ACK or 0x57 packets will be out of
+                # sequence.  so just drop into the normal reading loop and
+                # process whatever comes.
+                if DEBUG_HISTORY:
+                    loginf("init history completed after attempt %d of %d" %
+                           (cnt, max_tries))
+                return                
+            except ProtocolError, e:
+                if DEBUG_HISTORY:
+                    loginf("init_history: failed attempt %d of %d: %s" %
+                           (cnt, max_tries, e))
+            time.sleep(0.1)
+        raise ProtocolError("Init history failed after %d tries" % max_tries)
+
+    def finish_history(self, max_tries=3):
+        """conclude reading of history records.
+        1 final 0xa6 has been sent and 0x57 has been seen
+        2 send 0x35 packet
+        3 no ACK, but sometimes another 57:? - ignore it
+        """
+
+        cnt = 0
+        while cnt < max_tries:
+            cnt += 1
+            try:
+                if DEBUG_HISTORY:
+                    loginf("fini history attempt %d of %d" % (cnt, max_tries))
+                # eliminate anything that might be in the buffer
+                self.station.flush_read_buffer()
+                # send packet 0x35
+                cmd = [0x35, 0x0b, 0x1a, 0x87,
+                       _hi(self.last_record), _lo(self.last_record)]
+                self.station.write(cmd)
+                # do NOT wait for an ACK
+                if DEBUG_HISTORY:
+                    loginf("init history completed after attempt %d of %d" %
+                           (cnt, max_tries))
+                return
+            except ProtocolError, e:
+                if DEBUG_HISTORY:
+                    loginf("fini history failed attempt %d of %d: %s" %
+                           (cnt, max_tries, e))
+            time.sleep(0.1)
+        raise ProtocolError("Finish history failed after %d tries" % max_tries)
+
+    def dump_history(self):
+        loginf("dump history")
+        for rec in self.get_history(time.time(), clear_logger=True):
+            pass
+
+    def get_history(self, since_ts, clear_logger=False):
+        if self.latest_index is None:
+            loginf("read history skipped: index has not been set")
+            return
+        if self.latest_index < 1:
+            # this should never happen.  if it does, then either no 0x57 packet
+            # was received or the index provided by the station was bogus.
+            logerr("read history failed: bad index: %s" % self.latest_index)
+            return
+
+        loginf("reading records since %s (last_index=%s latest_index=%s)" %
+               (timestamp_to_string(since_ts),
+                self.last_record, self.latest_index))
+        self.init_history(clear_logger)
+        half_buf = None
+        last_ts = None
+        processed = 0
+        while True:
+            try:
+                buf = self.station.read()
+                if buf:
+                    # the message length is 64 bytes, but historical records
+                    # are 128 bytes.  so we have to assemble the two 64-byte
+                    # parts of each historical record into a single 128-byte
+                    # message for processing.  hopefully we do not get any
+                    # non-historical records interspersed between parts.
+                    if buf[0] == 0xd2:
+                        half_buf = buf
+                        buf = None
+                    elif buf[0] == 0x7f and half_buf is not None:
+                        buf = half_buf + buf
+                        half_buf = None
+                if buf and buf[0] == 0xd2:
+                    next_record = Station.get_record_index(buf)
+                    if next_record != self.last_record + 1:
+                        loginf("missing record: skipped from %d to %d" %
+                               (self.last_record, next_record))
+                    self.last_record = next_record
+                    ts = Station._extract_ts(buf[4:9])
+                    if ts is not None and ts > since_ts:
+                        pkt = Station.decode(buf)
+                        packet = self.convert_historical(pkt, ts, last_ts)
+                        last_ts = ts
+                        if 'interval' in packet:
+                            if DEBUG_HISTORY:
+                                loginf("historical record: %s: %s" %
+                                       (pkt['index'], packet))
+                            processed += 1
+                            yield packet
+                    elif ts is not None and DEBUG_HISTORY:
+                        loginf("skip record %s (%s)" %
+                               (next_record, timestamp_to_string(ts)))
+                if buf and buf[0] == 0x57:
+                    self.latest_index = Station.get_latest_index(buf)
+                    if DEBUG_HISTORY:
+                        loginf("got packet 0x57: latest_index=%s" %
+                               self.latest_index)
+                if buf and buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
+                    # ignore any packets other than history records.  this
+                    # means there will be no current data while the history
+                    # is being read.
+                    if DEBUG_HISTORY:
+                        loginf("ignored packet type 0x%2x" % buf[0])
+                    # do not ACK data packets.  the PC software does send ACKs
+                    # here, but they are ignored anyway.  so we just ignore.
+                    #cmd = [0x41, 0x43, 0x4b, buf[0], buf[7]]
+                    #self.stations.write(cmd)
+                if time.time() - self.last_a6 > self.heartbeat:
+                    if DEBUG_HISTORY:
+                        loginf("request station status: %s" % self.last_record)
+                    cmd = [0xa6, 0x91, 0xca, 0x45, 0x52]
+                    self.station.write(cmd)
+                    self.last_a6 = time.time()
+
+                msg = "count=%s last_index=%s latest_index=%s" % (
+                    processed, self.last_record, self.latest_index)
+                if self.last_record + 1 >= self.latest_index:
+                    loginf("get history complete: %s" % msg)
+                    break
+                if buf and DEBUG_HISTORY:
+                    loginf("get history in progress: %s" % msg)
+            except usb.USBError, e:
+                raise weewx.WeeWxIOError(e)
+            except DecodeError, e:
+                loginf("genLoopPackets: %s" % e)
+            time.sleep(0.001)        
+        self.finish_history()
+
     def genLoopPackets(self):
         while True:
             try:
                 buf = self.station.read()
                 if buf:
-                    pkt = Station.decode(buf)
                     if buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
-                        # send ack for most data packets
-                        # FIXME: what is last number in the ACK?
-                        # observed: 0x00 0x20 0xc1 0xc7 0xa0 0x99
-                        cmd = [0x41, 0x43, 0x4b, buf[0], buf[7], _lo(self.last_record)]
-                        self.station.write(cmd)
+                        # compose ack for most data packets
+                        cmd = [0x41, 0x43, 0x4b, buf[0], buf[7]]
+                        # do not bother to send the ACK - console does not care
+                        #self.station.write(cmd)
                         # we only care about packets with loop data
-                        if pkt['packet_type'] in [0xd3, 0xd4, 0xd5, 0xd6]:
+                        if buf[0] in [0xd3, 0xd4, 0xd5, 0xd6]:
+                            pkt = Station.decode(buf)
                             packet = self.convert_loop(pkt)
                             yield packet
+                    elif buf[0] == 0x57:
+                        self.latest_index = Station.get_latest_index(buf)
+                        if time.time() - self.logged_history_usage > self.log_interval:
+                            pct = Station.get_history_usage(self.latest_index)
+                            loginf("history buffer at %.1f%%" % pct)
+                            self.logged_history_usage = time.time()
                 if time.time() - self.last_a6 > self.heartbeat:
-                    logdbg("request station status: %s (%02x)" %
-                           (self.last_record, _lo(self.last_record)))
-                    cmd = [0xa6, 0x91, 0xca, 0x45, 0x52, _lo(self.last_record)]
+                    cmd = [0xa6, 0x91, 0xca, 0x45, 0x52]
                     self.station.write(cmd)
                     self.last_a6 = time.time()
-                if self.last_7x == 0:
-                    # FIXME: what are the 72/73 messages?
-                    # observed:
-                    # 73 e5 0a 26 0e c1
-                    # 73 e5 0a 26 88 8b
-                    # 72 a9 c1 60 52 00
-#                    cmd = [0x72, 0xa9, 0xc1, 0x60, 0x52, 0x00]
-                    cmd = [0x73, 0xe5, 0x0a, 0x26, 0x88, 0x8b]
-#                    cmd = [0x73, 0xe5, 0x0a, 0x26, 0x0e, 0xc1]
-                    self.station.write(cmd)
-                    self.last_7x = time.time()
+                if self.latest_index is not None:
+                    pct = Station.get_history_usage(self.latest_index)
+                    if pct >= self.history_limit:
+                        # if the logger usage exceeds the limit, clear it
+                        self.dump_history()
+                        self.latest_index = None
             except usb.USBError, e:
-                if DEBUG_COMM:
-                    logdbg("loop: "
-                           "e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                           (e.errno, e.strerror, e.message, repr(e)))
-                if not known_usb_err(e):
-                    logerr("usb failure: %s" % e)
-                    raise weewx.WeeWxIOError(e)
-            except (WrongLength, BadChecksum), e:
-                loginf(e)
+                raise weewx.WeeWxIOError(e)
+            except (DecodeError, ProtocolError), e:
+                loginf("genLoopPackets: %s" % e)
             time.sleep(0.001)
 
     def genStartupRecords(self, since_ts):
-        loginf("reading records since %s" % timestamp_to_string(since_ts))
-        hbuf = None
-        last_ts = None
-        cnt = 0
-        while True:
-            try:
-                buf = self.station.read()
-                if buf:
-                    if buf[0] == 0xd2:
-                        hbuf = buf
-                        buf = None
-                    elif buf[0] == 0x7f and hbuf is not None:
-                        # FIXME: need better indicator of second half history
-                        buf = hbuf + buf
-                        hbuf = None
-                if buf and buf[0] == 0xd2:
-                    self.last_record = Station.get_record_index(buf)
-                    ts = Station._extract_ts(buf[4:9])
-                    if ts is not None and ts > since_ts:
-                        keep = True if last_ts is not None else False
-                        pkt = Station.decode(buf)
-                        packet = self.convert_historical(pkt, ts, last_ts)
-                        last_ts = ts
-                        if keep:
-                            logdbg("historical record: %s" % packet)
-                            cnt += 1
-                            yield packet
-                if buf and buf[0] == 0x57:
-                    idx = Station.get_latest_index(buf)
-                    msg = "count=%s last_index=%s latest_index=%s" % (
-                        cnt, self.last_record, idx)
-                    if self.last_record + 1 >= idx:
-                        loginf("catchup complete: %s" % msg)
-                        break
-                    loginf("catchup in progress: %s" % msg)
-                if buf and buf[0] == 0x41 and buf[3] == 0x65:
-                    nxtrec = Station.get_next_index(self.last_record)
-                    logdbg("request records starting with %s" % nxtrec)
-                    cmd = [0xcd, 0x18, 0x30, 0x62, _hi(nxtrec), _lo(nxtrec)]
-                    self.station.write(cmd)
-                if time.time() - self.last_a6 > self.heartbeat:
-                    logdbg("request station status: %s (%02x)" %
-                           (self.last_record, _lo(self.last_record)))
-                    cmd = [0xa6, 0x91, 0xca, 0x45, 0x52, _lo(self.last_record)]
-                    self.station.write(cmd)
-                    self.last_a6 = time.time()
-                if self.last_7x == 0:
-                    # FIXME: what does 72/73 do?
-                    cmd = [0x73, 0xe5, 0x0a, 0x26, 0x88, 0x8b]
-                    self.station.write(cmd)
-                    self.last_7x = time.time()
-                if time.time() - self.last_65 > self.history_retry:
-                    logdbg("initiate record request: %s (%02x)" %
-                           (self.last_record, _lo(self.last_record)))
-                    cmd = [0x65, 0x19, 0xe5, 0x04, 0x52, _lo(self.last_record)]
-                    self.station.write(cmd)
-                    self.last_65 = time.time()
-            except usb.USBError, e:
-                if DEBUG_COMM:
-                    logdbg("history: "
-                           "e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                           (e.errno, e.strerror, e.message, repr(e)))
-                if not known_usb_err(e):
-                    logerr("usb failure: %s" % e)
-                    raise weewx.WeeWxIOError(e)
-            except (WrongLength, BadChecksum), e:
-                loginf(e)
-            time.sleep(0.001)        
+        for rec in self.get_history(since_ts):
+            yield rec
 
     def convert(self, pkt, ts):
         # if debugging packets, log everything we got
         if DEBUG_PACKET:
-            logdbg("raw packet: %s" % pkt)
+            loginf("raw packet: %s" % pkt)
         # timestamp and unit system are the same no matter what
         p = {'dateTime': ts, 'usUnits': weewx.METRICWX}
         # map hardware names to the requested database schema names
@@ -1011,19 +1293,21 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         if 'rain_total' in pkt:
             p['rain'] = self.calculate_rain(pkt['rain_total'], self.last_rain)
             if DEBUG_RAIN and pkt['rain_total'] != self.last_rain:
-                logdbg("rain=%s rain_total=%s last_rain=%s" %
+                loginf("rain=%s rain_total=%s last_rain=%s" %
                        (p['rain'], pkt['rain_total'], self.last_rain))
             self.last_rain = pkt['rain_total']
             if pkt['rain_total'] == Station.MAX_RAIN_MM:
-                loginf("rain counter maximum reached, counter reset required")
+                if time.time() - self.logged_rain_counter > self.log_interval:
+                    loginf("rain counter at maximum, reset required")
+                    self.logged_rain_counter = time.time()
         if DEBUG_PACKET:
-            logdbg("converted packet: %s" % p)
+            loginf("converted packet: %s" % p)
         return p
 
     def convert_historical(self, pkt, ts, last_ts):
         p = self.convert(pkt, ts)
         if last_ts is not None:
-            p['interval'] = ts - last_ts
+            p['interval'] = (ts - last_ts) / 60 # interval is in minutes
         return p
 
     def convert_loop(self, pkt):
@@ -1057,28 +1341,47 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
 class WMR300Error(weewx.WeeWxIOError):
     """map station errors to weewx io errors"""
 
-class WrongLength(WMR300Error):
+class ProtocolError(WMR300Error):
+    """communication protocol error"""
+
+class DecodeError(WMR300Error):
+    """decoding error"""
+
+class WrongLength(DecodeError):
     """bad packet length"""
 
-class BadChecksum(WMR300Error):
+class BadChecksum(DecodeError):
     """bogus checksum"""
 
+class BadTimestamp(DecodeError):
+    """bogus timestamp"""
+
+class BadBuffer(DecodeError):
+    """bogus buffer"""
+
+class UnknownPacketType(DecodeError):
+    """unknown packet type"""
 
 class Station(object):
     # these identify the weather station on the USB
     VENDOR_ID = 0x0FDE
     PRODUCT_ID = 0xCA08
-    MESSAGE_LENGTH = 64
+    # standard USB endpoint identifiers
     EP_IN = 0x81
     EP_OUT = 0x01
-    MAX_RECORDS = 50000 # FIXME: what is maximum number of records?
-    MAX_RAIN_MM = 10160 # maximum value of rain counter, in mm
+    # all USB messages for this device have the same length
+    MESSAGE_LENGTH = 64
+
+    HISTORY_START_REC = 0x20  # index to first history record
+    HISTORY_MAX_REC = 0x7fe0  # index to history record when full
+    HISTORY_N_RECORDS = 32704 # maximum number of records (MAX_REC - START_REC)
+    MAX_RAIN_MM = 10160       # maximum value of rain counter, in mm
 
     def __init__(self, vend_id=VENDOR_ID, prod_id=PRODUCT_ID):
         self.vendor_id = vend_id
         self.product_id = prod_id
         self.handle = None
-        self.timeout = 100
+        self.timeout = 500
         self.interface = 0
         self.recv_counts = dict()
         self.send_counts = dict()
@@ -1130,26 +1433,33 @@ class Station(object):
     def reset(self):
         self.handle.reset()
 
-    def read(self, count=True):
-        buf = []
-        try:
-            buf = self.handle.interruptRead(
-                Station.EP_IN, self.MESSAGE_LENGTH, self.timeout)
-            if DEBUG_COMM:
-                logdbg("read: %s" % _fmt_bytes(buf))
-            if DEBUG_COUNTS and count:
-                self.update_count(buf, self.recv_counts)
-        except usb.USBError, e:
-            if DEBUG_COMM:
-                logdbg("read: e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                       (e.errno, e.strerror, e.message, repr(e)))
-            if not known_usb_err(e):
-                raise
+    def _read(self, count=True, timeout=None):
+        if timeout is None:
+            timeout = self.timeout
+        buf = self.handle.interruptRead(
+            Station.EP_IN, self.MESSAGE_LENGTH, timeout)
+        if DEBUG_COMM:
+            loginf("read: %s" % _fmt_bytes(buf))
+        if DEBUG_COUNTS and count:
+            self.update_count(buf, self.recv_counts)
         return buf
 
-    def write(self, buf):
+    def read(self, count=True, timeout=None, ignore_non_errors=True, ignore_timeouts=True):
+        try:
+            return self._read(count, timeout)
+        except usb.USBError, e:
+            if DEBUG_COMM:
+                loginf("read: e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                       (e.errno, e.strerror, e.message, repr(e)))
+            if ignore_timeouts and is_timeout(e):
+                return []
+            if ignore_non_errors and is_noerr(e):
+                return []
+            raise
+
+    def _write(self, buf):
         if DEBUG_COMM:
-            logdbg("write: %s" % _fmt_bytes(buf))
+            loginf("write: %s" % _fmt_bytes(buf))
         # pad with zeros up to the standard message length
         while len(buf) < self.MESSAGE_LENGTH:
             buf.append(0x00)
@@ -1157,6 +1467,29 @@ class Station(object):
         if DEBUG_COUNTS:
             self.update_count(buf, self.send_counts)
         return sent
+
+    def write(self, buf, ignore_non_errors=True, ignore_timeouts=True):
+        try:
+            return self._write(buf)
+        except usb.USBError, e:
+            if ignore_timeouts and is_timeout(e):
+                return 0
+            if ignore_non_errors and is_noerr(e):
+                return 0
+            raise
+
+    def flush_read_buffer(self):
+        """discard anything read from the device"""
+        if DEBUG_COMM:
+            loginf("flush buffer")
+        cnt = 0
+        buf = self.read(False, 100)
+        while buf is not None and len(buf) > 0:
+            cnt += len(buf)
+            buf = self.read(False, 100)
+        if DEBUG_COMM:
+            loginf("flush: discarded %d bytes" % cnt)
+        return cnt
 
     # keep track of the message types for debugging purposes
     @staticmethod
@@ -1180,7 +1513,7 @@ class Station(object):
         cstr = []
         for k in sorted(count_dict):
             cstr.append('%s: %s' % (k, count_dict[k]))
-        logdbg('counts: %s' % ''.join(cstr))
+        loginf('counts: %s' % ''.join(cstr))
 
     @staticmethod
     def _find_dev(vendor_id, product_id):
@@ -1238,9 +1571,9 @@ class Station(object):
             minute = int(buf[4])
             return time.mktime((year, month, day, hour, minute, 0, -1, -1, -1))
         except IndexError:
-            raise WMR300Error("buffer too short for timestamp")
+            raise BadTimestamp("buffer too short for timestamp")
         except (OverflowError, ValueError), e:
-            raise WMR300Error(
+            raise BadTimestamp(
                 "cannot create timestamp from y:%s m:%s d:%s H:%s M:%s: %s" %
                 (buf[0], buf[1], buf[2], buf[3], buf[4], e))
 
@@ -1278,6 +1611,17 @@ class Station(object):
         return n + 1
 
     @staticmethod
+    def clip_index(n):
+        # given a history record index, clip it to a valid value
+        # the HISTORY_MAX_REC value is what it returned in packet 0x57 when the
+        # buffer is full. You cannot ask for it, only the one before.
+        if n < Station.HISTORY_START_REC:
+            return Station.HISTORY_START_REC
+        if n >= Station.HISTORY_MAX_REC - 1:
+            return Station.HISTORY_MAX_REC - 1 # wraparound never happens
+        return n
+
+    @staticmethod
     def get_record_index(buf):
         # extract the index from the history record
         if buf[0] != 0xd2:
@@ -1285,17 +1629,22 @@ class Station(object):
         return (buf[2] << 8) + buf[3]
 
     @staticmethod
+    def get_history_usage(index):
+        # return history usage as a percentage
+        return 100.0 * float(index - Station.HISTORY_START_REC) / Station.HISTORY_N_RECORDS
+
+    @staticmethod
     def decode(buf):
         try:
             pkt = getattr(Station, '_decode_%02x' % buf[0])(buf)
             if DEBUG_DECODE:
-                logdbg('decode: %s %s' % (_fmt_bytes(buf), pkt))
+                loginf('decode: %s %s' % (_fmt_bytes(buf), pkt))
             return pkt
         except IndexError, e:
-            raise WMR300Error("cannot decode buffer: %s" % e)
+            raise BadBuffer("cannot decode buffer: %s" % e)
         except AttributeError:
-            raise WMR300Error("unknown packet type %02x: %s" %
-                              (buf[0], _fmt_bytes(buf)))
+            raise UnknownPacketType("unknown packet type %02x: %s" %
+                                    (buf[0], _fmt_bytes(buf)))
 
     @staticmethod
     def _decode_57(buf):
@@ -1304,9 +1653,14 @@ class Station(object):
         pkt['packet_type'] = 0x57
         pkt['station_type'] = ''.join("%s" % chr(x) for x in buf[0:6])
         pkt['station_model'] = ''.join("%s" % chr(x) for x in buf[7:11])
+        pkt['magic0'] = buf[12]
+        pkt['magic1'] = buf[13]
+        pkt['history_cleared'] = (buf[20] == 0x43) # FIXME: verify this
+        pkt['mystery0'] = buf[22]
+        pkt['mystery1'] = buf[23]
+        pkt['latest_index'] = (buf[17] << 8) + buf[18]
         if DEBUG_HISTORY:
-            nrec = (buf[17] << 8) + buf[18]
-            logdbg("history records: %s" % nrec)
+            loginf("history index: %s" % pkt['latest_index'])
         return pkt
 
     @staticmethod
@@ -1323,6 +1677,7 @@ class Station(object):
         Station._verify_checksum("D2", buf[:0x80], msb_first=False)
         pkt = dict()
         pkt['packet_type'] = 0xd2
+        pkt['index'] = Station.get_record_index(buf)
         pkt['ts'] = Station._extract_ts(buf[4:9])
         for i in range(0, 9):
             pkt['temperature_%d' % i] = Station._extract_signed(
@@ -1449,42 +1804,56 @@ class WMR300ConfEditor(weewx.drivers.AbstractConfEditor):
 
     def modify_config(self, config_dict):
         print """
-Setting rainRate, windchill, heatindex, and dewpoint calculations to hardware."""
+Setting rainRate, windchill, heatindex calculations to hardware. 
+Dewpoint from hardware is truncated to integer so use software"""
         config_dict.setdefault('StdWXCalculate', {})
         config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['windchill'] = 'hardware'
         config_dict['StdWXCalculate']['Calculations']['heatindex'] = 'hardware'
-        config_dict['StdWXCalculate']['Calculations']['dewpoint'] = 'hardware'
+        config_dict['StdWXCalculate']['Calculations']['dewpoint'] = 'software'
 
 
-# define a main entry point for basic testing of the station without weewx
-# engine and service overhead.  invoke this as follows from the weewx root dir:
+# define a main entry point for basic testing of the station.
+# invoke this as follows from the weewx root dir:
 #
 # PYTHONPATH=bin python bin/user/wmr300.py
 
 if __name__ == '__main__':
     import optparse
+    from weeutil.weeutil import to_sorted_string
 
     usage = """%prog [options] [--help]"""
 
     syslog.openlog('wmr300', syslog.LOG_PID | syslog.LOG_CONS)
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option('--version', dest='version', action='store_true',
+    parser.add_option('--version', action='store_true',
                       help='display driver version')
+    parser.add_option('--get-current', action='store_true',
+                      help='get current packets')
+    parser.add_option('--get-history', action='store_true',
+                      help='get history records from station')
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "wmr300 driver version %s" % DRIVER_VERSION
+        print "%s driver version %s" % (DRIVER_NAME, DRIVER_VERSION)
         exit(0)
 
     driver_dict = {
-        'debug_comm': 1,
+        'debug_comm': 0,
         'debug_packet': 0,
-        'debug_counts': 1,
-        'debug_decode': 0}
+        'debug_counts': 0,
+        'debug_decode': 0,
+        'debug_history': 1,
+        'debug_rain': 0}
     stn = WMR300Driver(**driver_dict)
 
-    for packet in stn.genLoopPackets():
-        print packet
+    if options.get_history:
+        ts = time.time() - 3600 # get last hour of data
+        for pkt in stn.genStartupRecords(ts):
+            print to_sorted_string(pkt)
+
+    if options.get_current:
+        for packet in stn.genLoopPackets():
+            print to_sorted_string(packet)

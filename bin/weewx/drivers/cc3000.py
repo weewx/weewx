@@ -53,6 +53,10 @@ The rainwise rain bucket measures 0.01 inches per tip.  The logger firmware
 automatically converts the bucket tip count to the measure of rain in ENGLISH
 or METRIC units.
 
+The historical records appear to track amount of rain since midnight.  If there
+is any rainfall in the history, the count resets after midnight.  But the
+current rain counter appears to be an absolute count.
+
 Logger uses the following units:
                ENGLISH  METRIC
   wind         mph      m/s
@@ -60,15 +64,29 @@ Logger uses the following units:
   pressure     inHg     mbar
   temperature  F        C
 
+Reading the history logger at full speed seems to cause problems on some
+systems, specifically with syslog and the USB.  It seems like we have no data
+loss, but logging of the history reads is lossy, especially with debug enabled.
+
 This driver was tested with:
   Rainwise CC-3000 Version: 1.3 Build 006 Sep 04 2013
   Rainwise CC-3000 Version: 1.3 Build 016 Aug 21 2014
 """
 
-# FIXME: confirm that rain field in archive records is a total, not a delta
+# FIXME: come up with a way to deal with firmware inconsistencies.  if we do
+#        a strict protocol where we wait for an OK response, but one version of
+#        the firmware responds whereas another version does not, this leads to
+#        comm problems.  specializing the code to handle quirks of each
+#        firmware version is not desirable.  maybe just do a flush of the
+#        serial buffer before doing any command?
+
 # FIXME: figure out whether logger retains non-fixed interval data
-# FIXME: clear logger memory after successful read
-# FIXME: periodically clear the logger memory while running
+
+# FIXME: figure out why syslog messages are lost.  when reading from the logger
+#        there are many messages to syslog that just do not show up, or msgs
+#        that appear in one run but not in a second, identical run.  i suspect
+#        that syslog cannot handle the load?  or its buffer is not big enough?
+#        but it makes debugging obscenely difficult!
 
 from __future__ import with_statement
 import datetime
@@ -81,7 +99,7 @@ import weeutil.weeutil
 import weewx.drivers
 
 DRIVER_NAME = 'CC3000'
-DRIVER_VERSION = '0.16'
+DRIVER_VERSION = '0.19'
 
 def loader(config_dict, engine):
     return CC3000Driver(**config_dict[DRIVER_NAME])
@@ -342,8 +360,8 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         'extraTemp1': 'TEMP 1',
         'extraTemp2': 'TEMP 2',
         'day_rain_total': 'RAIN',
-        'consBatteryVoltage': 'STATION BATTERY',
-        'bkupBatteryVoltage': 'BATTERY BACKUP',
+        'supplyVoltage': 'STATION BATTERY',
+        'consBatteryVoltage': 'BATTERY BACKUP',
         'radiation': 'SOLAR RADIATION',
         'UV': 'UV INDEX',
     }
@@ -358,6 +376,8 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         global DEBUG_OPENCLOSE
         DEBUG_OPENCLOSE = int(stn_dict.get('debug_openclose', 0))
 
+        self.max_tries = int(stn_dict.get('max_tries', 5))
+        self.retry_wait = int(stn_dict.get('retry_wait', 60))
         self.model = stn_dict.get('model', 'CC3000')
         port = stn_dict.get('port', CC3000.DEFAULT_PORT)
         loginf('using serial port %s' % port)
@@ -367,13 +387,23 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
             stn_dict.get('use_station_time', True))
         loginf('using %s time for loop packets' %
                ('station' if self.use_station_time else 'computer'))
-        self.max_tries = int(stn_dict.get('max_tries', 5))
-        self.retry_wait = int(stn_dict.get('retry_wait', 60))
         # start with the default sensormap, then augment with user-specified
         self.sensor_map = dict(self.DEFAULT_SENSOR_MAP)
         if 'sensor_map' in stn_dict:
             self.sensor_map.update(stn_dict['sensor_map'])
         loginf('sensor map is %s' % self.sensor_map)
+
+        # periodically check the logger memory, then clear it if necessary.
+        # these track the last time a check was made, and how often to make
+        # the checks.  threshold of None indicates do not clear logger.
+        self.logger_threshold = weeutil.weeutil.to_int(
+            stn_dict.get('logger_threshold', None))
+        self.last_mem_check = 0
+        self.mem_interval = 7 * 24 * 3600
+        if self.logger_threshold is not None:
+            loginf('clear logger at %s records' % self.logger_threshold)
+
+        # track the last rain counter value so we can determine deltas
         self.last_rain = None
 
         self.station = CC3000(port)
@@ -391,17 +421,15 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         loginf('units: %s' % settings['units'])
         loginf('channel: %s' % settings['channel'])
         loginf('charger status: %s' % settings['charger'])
+        loginf('memory: %s' % self.station.get_memory_status())
 
     def genLoopPackets(self):
         cmd_mode = True
         if self.polling_interval == 0:
             self.station.set_auto()
             cmd_mode = False
-        # if logger loses contact with sensors, log it periodically
-        last_data_ts = int(time.time())
-        nodata_cnt = -1
-        nodata_interval = 1800 # seconds
-        # get data from the logger, with retries
+
+        logged_nodata = False
         ntries = 0
         while ntries < self.max_tries:
             ntries += 1
@@ -411,8 +439,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                 ntries = 0
                 logdbg("values: %s" % values)
                 if values:
-                    last_data_ts = now
-                    nodata_cnt = -1
+                    logged_nodata = False
                     packet = self._parse_current(
                         values, self.header, self.sensor_map)
                     logdbg("parsed: %s" % packet)
@@ -429,11 +456,24 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                         logdbg("packet: %s" % packet)
                         yield packet
                 else:
-                    cnt = (now - last_data_ts) / nodata_interval
-                    if cnt > nodata_cnt:
-                        loginf("no data from sensors since %s" %
-                               weeutil.weeutil.timestamp_to_string(last_data_ts))
-                    nodata_cnt = cnt
+                    if not logged_nodata:
+                        loginf("no data from sensors")
+                        logged_nodata = True
+
+                # periodically check memory, clear if necessary
+                if time.time() - self.last_mem_check > self.mem_interval:
+                    nrec = self.station.get_history_usage()
+                    self.last_mem_check = time.time()
+                    if nrec is None:
+                        loginf("memory check: cannot determine memory usage")
+                    else:
+                        loginf("logger is at %s records, "
+                               "logger clearing threshold is %s" %
+                               (nrec, self.logger_threshold))
+                        if self.logger_threshold is not None and nrec >= self.logger_threshold:
+                            loginf("clearing all records from logger")
+                            self.station.clear_memory()
+
                 if self.polling_interval:
                     time.sleep(self.polling_interval)
             except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
@@ -461,25 +501,16 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         if since_ts is not None:
             delta = int(time.time()) - since_ts
             nrec = int(delta / self.arcint)
-            logdbg("genStartupRecords: nrec=%d delta=%d" % (nrec, delta))
+            logdbg("genStartupRecords: nrec=%d ts_delta=%d" % (nrec, delta))
             if nrec == 0:
                 loginf("no need to read logger records")
                 return
         else:
             logdbg("genStartupRecords: nrec=%d" % nrec)
 
-        totrec = int(self.station.get_memory_status().split(',')[1].split()[0])
-        loginf("download %d of %d records" % (nrec, totrec))
-        i = 0
         last_rain = None
         for r in self.station.gen_records(nrec):
             logdbg("values: %s" % r)
-            i += 1
-            if i % 100 == 0:
-                loginf("record %d of %d (total=%d)" % (i, nrec, totrec))
-            if r[0] != 'REC':
-                logdbg("non REC item: %s" % r[0])
-                continue
             pkt = self._parse_historical(r[1:], self.header, self.sensor_map)
             logdbg("parsed: %s" % pkt)
             if 'dateTime' in pkt and pkt['dateTime'] > since_ts:
@@ -606,7 +637,6 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
     def get_current(self):
         data = self.station.get_current_data()
         return self._parse_current(data, self.header, self.sensor_map)
-
 
 def _to_ts(tstr, fmt="%Y/%m/%d %H:%M:%S"):
     return time.mktime(time.strptime(tstr, fmt))
@@ -871,15 +901,25 @@ class CC3000(object):
             raise weewx.WeeWxIOError("Failed to set baro: %s" % _fmt(data))
 
     def get_memory_status(self):
+        # query for logger memory use.  output is something like this:
+        # 6438 bytes, 111 records, 0%
         logdbg("get memory status")
         return self.command("MEM=?")
+
+    def get_history_usage(self):
+        # return the number of records in the logger
+        # FIXME: some firmware returns NOW when you query MEM=?
+        s = self.get_memory_status()
+        if 'records' in s:
+            return int(s.split(',')[1].split()[0])
+        return None
 
     def clear_memory(self):
         logdbg("clear memory")
         data = self.command("MEM=CLEAR")
         # FIXME: firmware 1.3 Build 016 Aug 21 2014 does not return OK
-        if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to clear memory: %s" % _fmt(data))
+#        if data != 'OK':
+#            raise weewx.WeeWxIOError("Failed to clear memory: %s" % _fmt(data))
 
     def get_rain(self):
         logdbg("get rain total")
@@ -891,47 +931,87 @@ class CC3000(object):
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to reset rain: %s" % _fmt(data))
 
-    def gen_records(self, nrec=0):
-        """generator function for getting nrec records from the device"""
+    def gen_records(self, nrec=0, specify_qty=False):
+        """
+        Generator function for getting nrec records from the device.  A value
+        of 0 indicates all records.
+        
+        The CC3000 documents say that passing a value such as DOWNLOAD=n
+        will download the n latest records.  They lie.
 
-        logdbg("download %s records" % nrec)
+        For firmware 1.3 Build 016, this works only if n<=1130 or n=>N where
+        N is the number of records in the logger.
+
+        So we have to download everything (which takes a long time if the
+        logger is full) and ignore the records we do not care about.
+
+        If using this driver with firmware that actually behaves as the docs
+        describe, then use True for specify_qty.
+
+        We would like to use the logger's record count to help us know which
+        records to keep, but that count appears to include MAX/MIN records
+        as well as the REC records that we actually want.  So brute force.
+        """
+
+        totrec = self.get_history_usage()
+        if totrec is None:
+            raise weewx.WeeWxIOError("cannot determine logger memory status")
+        loginf("requested %d latest of %d records" % (nrec, totrec))
+        loginf("this could take awhile...")
+
+        # on some platforms the comms get wedged, so we need a way to reset
         need_cmd = True
         cmd_max = 5
         cmd_cnt = 0
         n = 0
+        yielded = 0
+
         while True:
             if need_cmd:
-                if cmd_cnt >= cmd_max:
-                    logerr("download aborted after %d attempts" % cmd_max)
-                    break
                 cmd_cnt += 1
-                qty = nrec - n if nrec else 0 # FIXME
-                loginf("download attempt %s of %s" % (cmd_cnt, cmd_max))
-                cmd = "DOWNLOAD=%d" % qty if qty else "DOWNLOAD"
+                if cmd_cnt > cmd_max:
+                    msg = "download failed after %d attempts" % cmd_max
+                    logerr(msg)
+                    raise weewx.WeeWxIOError(msg)
+                cmd = "DOWNLOAD"
+                if specify_qty and nrec != 0:
+                    qty = nrec - n
+                    cmd = "DOWNLOAD=%d" % qty
+                loginf("%s (attempt %s of %s)" % (cmd, cmd_cnt, cmd_max))
                 self.send_cmd(cmd)
                 need_cmd = False
             try:
                 data = self.read()
                 if data == 'OK':
-                    logdbg("end of records")
+                    loginf("downloaded %d records, yielded %d" % (n, yielded))
                     break
-                values = data.split(',')
-                if values[0] == 'REC':
-                    logdbg("record %d" % n)
-                    n += 1
-                    cmd_cnt = 0
-                    yield values
-                elif (values[0] == 'HDR' or values[0] == 'MSG' or
-                      values[0] == 'MIN' or values[0] == 'MAX' or
-                      values[0].startswith('DOWNLOAD')):
+                elif ',' in data:
+                    values = data.split(',')
+                    if values[0] == 'REC':
+                        n += 1
+                        cmd_cnt = 0
+                        yielded += 1
+                        yield values
+                    elif (values[0] == 'HDR' or values[0] == 'MSG' or
+                          values[0] == 'MIN' or values[0] == 'MAX' or
+                          values[0].startswith('DOWNLOAD')):
+                        # skip any non-REC responses
+                        cmd_cnt = 0
+                    elif values[0] == '':
+                        # FIXME: observed 'input overrun' on rpi2 with debian 7
+                        # so try sending another download command to unhang it.
+                        logerr("download hung, initiate another download")
+                        need_cmd = True
+                    else:
+                        cmd_cnt = 0
+                        logerr("bad record %s '%s' (%s)" %
+                               (n, _fmt(values[0]), _fmt(data)))
+                elif 'DOWNLOAD' in data:
+                    # some firmware echos the command, but not always
                     pass
-                elif values[0] == '':
-                    # FIXME: this causes 'input overrun' on rpi2 with debian 7
-                    loginf("download hung, initiate another download")
-                    need_cmd = True
                 else:
-                    logerr("bad record %s '%s' (%s)" %
-                           (n, _fmt(values[0]), _fmt(data)))
+                    logerr("unexpected response to DOWNLOAD: '%s'" % data)
+                    need_cmd = True
             except ChecksumError, e:
                 logerr("download failed for record %s: %s" % (n, e))
 
@@ -960,8 +1040,7 @@ class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
         return {'port': port}
 
 
-# define a main entry point for basic testing without weewx engine and service
-# overhead.  invoke this as follows from the weewx root dir:
+# define a main entry point for basic testing.  invoke from the weewx root dir:
 #
 # PYTHONPATH=bin python bin/weewx/drivers/cc3000.py
 
@@ -973,14 +1052,13 @@ if __name__ == '__main__':
     syslog.openlog('cc3000', syslog.LOG_PID | syslog.LOG_CONS)
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option('--version', dest='version', action='store_true',
+    parser.add_option('--version', action='store_true',
                       help='display driver version')
-    parser.add_option('--debug', dest='debug', action='store_true',
-                      default=False,
+    parser.add_option('--debug', action='store_true', default=False,
                       help='emit additional diagnostic information')
     parser.add_option('--test-crc', dest='testcrc', action='store_true',
                       help='test crc')
-    parser.add_option('--port', dest='port', metavar='PORT',
+    parser.add_option('--port', metavar='PORT',
                       help='port to which the station is connected',
                       default=CC3000.DEFAULT_PORT)
     parser.add_option('--get-version', dest='getver', action='store_true',
@@ -1022,12 +1100,12 @@ if __name__ == '__main__':
                       help='clear logger memory')
     parser.add_option('--reset-rain', dest='reset', action='store_true',
                       help='reset rain counter')
-    parser.add_option('--poll', dest='poll', metavar='POLL_INTERVAL', type=int,
+    parser.add_option('--poll', metavar='POLL_INTERVAL', type=int,
                       help='poll interval in seconds')
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "CC3000 driver version %s" % DRIVER_VERSION
+        print "%s driver version %s" % (DRIVER_NAME, DRIVER_VERSION)
         exit(0)
 
     if options.debug:
@@ -1097,11 +1175,10 @@ if __name__ == '__main__':
         if options.reset:
             s.reset_rain()
         if options.poll is not None:
-            poll = int(options.poll)
             cmd_mode = True
-            if poll == 0:
+            if options.poll == 0:
                 cmd_mode = False
                 s.set_auto()
             while True:
                 print s.get_current_data(cmd_mode)
-                time.sleep(poll)
+                time.sleep(options.poll)
