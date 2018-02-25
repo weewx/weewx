@@ -21,6 +21,8 @@ the weewx database.
 
 Improved the robustness of reading from the CC3000 logger.
 
+Better CRC error message in Vantage driver.
+
 Parameterize the configuration directory in weewx-multi init script.
 
 In StdWXCalculate, use None for an observation only if the variables on which
