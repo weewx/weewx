@@ -66,7 +66,7 @@ def create(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVaria
             try:
                 os.makedirs(fileDirectory)
             except OSError:
-                raise weedb.PermissonError("No permission to create %s" % fileDirectory)
+                raise weedb.PermissionError("No permission to create %s" % fileDirectory)
         timeout = to_int(argv.get('timeout', 5))
         isolation_level = argv.get('isolation_level')
         # Open, then immediately close the database.

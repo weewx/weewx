@@ -2,13 +2,16 @@
 # Copyright 2016 Matthew Wall, all rights reserved
 # init script to run multiple instances of weewx
 #
-# this expects the following configuration:
+# each weewx instance is identified by name.  that name is used to identify the
+# configuration and pid files.
+#
+# this init script expects the following configuration:
 #   /etc/weewx/a.conf
 #   /etc/weewx/b.conf
 #   /var/run/weewx-a.pid
 #   /var/run/weewx-b.pid
 #
-# and with the appropriate rsyslog and logrotate configurations:
+# with the appropriate rsyslog and logrotate configurations:
 #   /var/log/weewx/a.log
 #   /var/log/weewx/b.log
 #
@@ -17,6 +20,7 @@
 #
 #   WEEWX_INSTANCES="vantage acurite"
 #   WEEWX_BINDIR=/opt/weewx/bin
+#   WEEWX_CFGDIR=/etc/weewx
 
 ### BEGIN INIT INFO
 # Provides:          weewx-multi
@@ -30,15 +34,15 @@
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-# this is a space-delimited string that contains all weewx instances
 WEEWX_INSTANCES="no_instances_specified"
 WEEWX_USER=root:root
 WEEWX_BINDIR=/home/weewx/bin
-DESC=weewx
+WEEWX_CFGDIR=/home/weewx
 
 # Read configuration variable file if it is present
 [ -r /etc/default/weewx-multi ] && . /etc/default/weewx-multi
 
+DESC=weewx
 DAEMON=$WEEWX_BINDIR/weewxd
 
 # Exit if the package is not installed
@@ -62,7 +66,7 @@ do_start() {
     INSTANCE=$1
     NAME=weewx-$INSTANCE
     PIDFILE=/var/run/$NAME.pid
-    CFGFILE=/etc/weewx/$INSTANCE.conf
+    CFGFILE=$WEEWX_CFGDIR/$INSTANCE.conf
     DAEMON_ARGS="--daemon --log-label $NAME --pidfile=$PIDFILE $CFGFILE"
 
     if [ ! -f "$CFGFILE" ]; then

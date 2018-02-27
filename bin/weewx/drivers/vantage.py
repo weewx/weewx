@@ -195,17 +195,17 @@ class BaseWrapper(object):
                 _buffer = self.read(nbytes)
                 if crc16(_buffer) == 0:
                     return _buffer
-            except weewx.WeeWxIOError:
-                pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16; try #%d failed" % (count + 1,))
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16; try #%d failed. CRC error" % (count + 1,))
+            except weewx.WeeWxIOError, e:
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16; try #%d failed: %s" % (count + 1, e))
             first_time = False
 
         if _buffer:
             syslog.syslog(syslog.LOG_ERR, "vantage: Unable to pass CRC16 check while getting data")
             raise weewx.CRCError("Unable to pass CRC16 check while getting data")
         else:
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16 time out")
-            raise weewx.WeeWxIOError("Time out in get_data_with_crc16")
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: Timeout in get_data_with_crc16")
+            raise weewx.WeeWxIOError("Timeout in get_data_with_crc16")
 
 #===============================================================================
 #                           class Serial Wrapper
@@ -2699,7 +2699,7 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
 
     # Connection type: serial or ethernet 
     #  serial (the classic VantagePro)
-    #  ethernet (the WeatherLinkIP)
+    #  ethernet (the WeatherLinkIP or Serial-Ethernet bridge)
     type = serial
 
     # If the connection type is serial, a port must be specified:
