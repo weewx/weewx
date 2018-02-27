@@ -256,7 +256,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.26rc1'
+DRIVER_VERSION = '0.27'
 
 
 def loader(config_dict, _):
@@ -343,7 +343,7 @@ class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
     def show_history(self, ts=None, count=0):
         """Show the indicated number of records or records since timestamp"""
         print "Querying the station for historical records..."
-        for i, r in enumerate(self.station.genStartupRecords(since_ts=ts,
+        for i, r in enumerate(self.station.genArchiveRecords(since_ts=ts,
                                                              count=count)):
             print r
             if count and i > count:

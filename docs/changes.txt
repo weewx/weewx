@@ -1,6 +1,41 @@
 weewx change history
 --------------------
 
+X.X.X XX/XX/XXXX
+
+Map cc3000 backup battery to consBatteryVoltage and station battery to
+supplyVoltage to more accurately reflect the battery functions.
+
+Update the syntax in the rsyslog configuration sample
+
+Significant overhaul to the WMR300 driver.  The driver should now work reliably
+on any version of pyusb and libusb.  The driver will now delete history records
+from the logger before the logger fills up (the WMR300 logger is not a circular
+buffer).  Thanks to users Markus Biewer and Cameron.  Fixes issue #288.
+
+Added automatic clearing of logger for CC3000 driver to prevent logger
+overflow (the CC3000 logger is not a circular buffer).  The default is to
+not clear the history, but it is highly recommended that you add a logging
+threshold once you are confident that all logger data have been captured to
+the weewx database.
+
+Improved the robustness of reading from the CC3000 logger.
+
+Better CRC error message in Vantage driver.
+
+Parameterize the configuration directory in weewx-multi init script.
+
+In StdWXCalculate, use None for an observation only if the variables on which
+the derived depends are available and None.  Fixes issue #291.
+
+Fixed bug that prevented specifying an explicit alamanac time from working.
+
+Fixed bug that prevented historical records from being downloaded from ws23xx
+stations. Thanks to user Matt Brown! Fixes issue #295
+
+Fixed bug that crashed program if a sqlite permission error occurred.
+
+
 3.8.0 11/22/2017
 
 The `stats.py` example now works with heating and cooling degree days.

@@ -232,7 +232,6 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         
                     marker_type = line_options.get('marker_type')
                     marker_size = to_int(line_options.get('marker_size', 8))
-<<<<<<< HEAD
 
                     # Get flag settings
                     draw_flags = weeutil.weeutil.tobool(
@@ -291,7 +290,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
 
                     show_counts = weeutil.weeutil.tobool(
                         line_options.get('show_counts', False))
-                    
+
                     # Get the spacings between labels, i.e. every how many
                     # lines a label is drawn
                     x_label_spacing = plot_options.get('x_label_spacing', 2)
