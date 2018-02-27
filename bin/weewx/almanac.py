@@ -207,7 +207,6 @@ class Almanac(object):
         to be used.
         """
         self.time_ts      = time_ts if time_ts else time.time()
-        self.time_djd     = timestamp_to_djd(self.time_ts)
         self.lat          = lat
         self.lon          = lon
         self.altitude     = altitude if altitude is not None else 0.0
@@ -216,7 +215,11 @@ class Almanac(object):
         self.horizon      = horizon if horizon is not None else 0.0
         self.moon_phases  = moon_phases
         self.formatter    = formatter
+        self._precalc()
 
+    def _precalc(self):
+        """Precalculate local variables."""
+        self.time_djd     = timestamp_to_djd(self.time_ts)
         (y,m,d) = time.localtime(self.time_ts)[0:3]
         (self.moon_index, self._moon_fullness) = weeutil.Moon.moon_phase(y, m, d)
         self.moon_phase = self.moon_phases[self.moon_index]
@@ -267,12 +270,12 @@ class Almanac(object):
         almanac = copy.copy(self)
         # Now set a new value for any named arguments.
         for key in kwargs:
-            if 'almanac_time' in kwargs:
+            if key == 'almanac_time':
                 almanac.time_ts = kwargs['almanac_time']
-                almanac.time_djd = timestamp_to_djd(self.time_ts)
             else:
                 setattr(almanac, key, kwargs[key])
-
+        almanac._precalc()
+        
         return almanac
         
     def __getattr__(self, attr):

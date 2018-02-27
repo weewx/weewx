@@ -633,25 +633,22 @@ class CachedValues(object):
     def update(self, packet, ts):
         # update the cache with values from the specified packet, using the
         # specified timestamp.
-        # FIXME: the cache should not check for values of None.  however, if
-        # values of None are included, that breaks the whole purpose of the
-        # cache.  the root cause of this is the StdWXCalculate service and the
-        # drivers themselves.  if a driver knows a sensor has a bad value, then
-        # it should use a value of None.  otherwise, it should not put the
-        # observation in the packet.  similarly for calculate service.  if the
-        # service does not have all the inputs for a given derived, it should
-        # not insert a derived with value of None.  it should insert a value of
-        # None only if all the inputs exist and the result is None.
         for k in packet:
-            if k is None or k == 'dateTime':
+            if k is None:
+                # well-formed packets do not have None as key, but just in case
+                continue
+            elif k == 'dateTime':
+                # do not cache the timestamp
                 continue
             elif k == 'usUnits':
+                # assume unit system of first packet, then enforce consistency
                 if self.unit_system is None:
                     self.unit_system = packet['usUnits']
                 elif packet['usUnits'] != self.unit_system:
                     raise ValueError("Mixed units encountered in cache. %s vs %s" % \
                                      (self.unit_sytem, packet['usUnits']))
             else:
+                # cache each value, associating it with the it was cached
                 self.values[k] = {'value': packet[k], 'ts': ts}
 
     def get_value(self, k, ts, stale_age):
