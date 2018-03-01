@@ -204,11 +204,15 @@ class VecStats(object):
  
     @property
     def vec_dir(self):
-        if self.dirsumtime:
+        if self.dirsumtime and self.ysum != 0 and self.xsum != 0:
             _result = 90.0 - math.degrees(math.atan2(self.ysum, self.xsum))
             if _result < 0.0:
                 _result += 360.0
             return _result
+        elif self.last:
+            # Return the last known direction when our vector sum is 0
+            return self.last[1]
+
 
 #===============================================================================
 #                             Class Accum
