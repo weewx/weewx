@@ -209,10 +209,8 @@ class VecStats(object):
             if _result < 0.0:
                 _result += 360.0
             return _result
-        elif self.last:
-            # Return the last known direction when our vector sum is 0
-            return self.last[1]
-
+		# Return the last known direction when our vector sum is 0
+        return self.last[1]:
 
 #===============================================================================
 #                             Class Accum
