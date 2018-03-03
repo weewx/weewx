@@ -81,6 +81,8 @@ import time
 import urllib
 import urllib2
 
+from collections import deque
+
 import weedb
 import weeutil.weeutil
 import weewx.engine
@@ -593,6 +595,7 @@ class StdWunderground(StdRESTful):
             _ambient_dict.setdefault('log_failure', False)
             _ambient_dict.setdefault('max_backlog', 0)
             _ambient_dict.setdefault('max_tries', 1)
+            _ambient_dict.setdefault('rtfreq_sma_window',  _ambient_dict.get('rtfreq_sma_window', 7))
             self.cached_values = CachedValues()
             self.loop_queue = Queue.Queue()
             self.loop_thread = AmbientLoopThread(
@@ -871,6 +874,56 @@ class AmbientThread(RESTThread):
 
 class AmbientLoopThread(AmbientThread):
     """Version used for the Rapidfire protocol."""
+    class SimpleMovingAverage():
+        def __init__(self, window):
+            assert window == int(window) and window > 0, "Simplemovingaverage: window must be a positive integer"
+            self.window = window
+            self.queue = deque()
+    
+        def __call__(self, x):
+            queue = self.queue
+            n = len(queue)
+            if n == self.window:
+                queue.popleft()
+            queue.append(x)
+            n = min(n+1, self.window)
+            return sum( queue ) / float(n)
+
+    def __init__(self, queue, manager_dict,
+                 station, password, server_url,
+                 protocol_name="Unknown-Ambient",
+                 post_interval=None, max_backlog=sys.maxint, stale=None, 
+                 log_success=True, log_failure=True,
+                 timeout=10, max_tries=3, retry_wait=5, rtfreq_sma_window=17):
+        """
+        Initializer for the AmbientLoopThread class.
+
+        Parameters specific to this class:
+          
+          rtfreq_sma_window: How many time samples to include when computing rtfreq for RapidFire
+        """
+        super(AmbientLoopThread, self).__init__(queue,
+                                            station=station,
+                                            password=password,
+                                            server_url=server_url,
+                                            protocol_name=protocol_name,
+                                            manager_dict=manager_dict,
+                                            post_interval=post_interval,
+                                            max_backlog=max_backlog,
+                                            stale=stale,
+                                            log_success=log_success,
+                                            log_failure=log_failure,
+                                            timeout=timeout,
+                                            max_tries=max_tries,
+                                            retry_wait=retry_wait)
+
+        self.sma = self.SimpleMovingAverage(int(rtfreq_sma_window))
+        self.prevtick = time.time()
+        self.formats.update(AmbientLoopThread.WUONLY_FORMATS)
+
+    # may also be used by non-rapidfire; this is the least invasive way to just fix rapidfire, which i know supports windGustDir, while the Ambient class is used elsewhere
+    WUONLY_FORMATS = {
+        'windGustDir'   : 'windgustdir=%03.0f'}
 
     def get_record(self, record, dbmanager):
         """Prepare a record for the Rapidfire protocol."""
@@ -879,7 +932,10 @@ class AmbientLoopThread(AmbientThread):
         _record = AmbientThread.get_record(self, record, dbmanager)
         # Add the Rapidfire-specific keywords:
         _record['realtime'] = '1'
-        _record['rtfreq'] = '2.5'
+        tick = time.time()
+        _record['rtfreq'] = str(round(self.sma(tick - self.prevtick), 1))
+        self.prevtick = tick
+
         return _record
 
 
