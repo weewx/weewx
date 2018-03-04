@@ -42,6 +42,8 @@ The almanac now supports calculating planet separations.
 
 Fixed bug that crashed program if a sqlite permission error occurred.
 
+Can now set Rapidfire parameter rtfreq. Thanks to user 'whorfin'. PR #304.
+
 
 3.8.0 11/22/2017
 
