@@ -593,7 +593,7 @@ class StdWunderground(StdRESTful):
             _ambient_dict.setdefault('log_failure', False)
             _ambient_dict.setdefault('max_backlog', 0)
             _ambient_dict.setdefault('max_tries', 1)
-            _ambient_dict.setdefault('rtfreq',  _ambient_dict.get('rtfreq', 2.5))
+            _ambient_dict.setdefault('rtfreq',  2.5)
             self.cached_values = CachedValues()
             self.loop_queue = Queue.Queue()
             self.loop_thread = AmbientLoopThread(
@@ -878,7 +878,7 @@ class AmbientLoopThread(AmbientThread):
                  protocol_name="Unknown-Ambient",
                  post_interval=None, max_backlog=sys.maxint, stale=None, 
                  log_success=True, log_failure=True,
-                 timeout=10, max_tries=3, retry_wait=5, rtfreq='2.5'):
+                 timeout=10, max_tries=3, retry_wait=5, rtfreq=2.5):
         """
         Initializer for the AmbientLoopThread class.
 
@@ -901,7 +901,7 @@ class AmbientLoopThread(AmbientThread):
                                             max_tries=max_tries,
                                             retry_wait=retry_wait)
 
-        self.rtfreq = rtfreq
+        self.rtfreq = float(rtfreq)
         self.formats.update(AmbientLoopThread.WUONLY_FORMATS)
 
     # may also be used by non-rapidfire; this is the least invasive way to just fix rapidfire, which i know supports windGustDir, while the Ambient class is used elsewhere
@@ -915,7 +915,7 @@ class AmbientLoopThread(AmbientThread):
         _record = AmbientThread.get_record(self, record, dbmanager)
         # Add the Rapidfire-specific keywords:
         _record['realtime'] = 1
-        _record['rtfreq'] = float(self.rtfreq)
+        _record['rtfreq'] = self.rtfreq
 
         return _record
 
