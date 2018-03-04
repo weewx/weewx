@@ -2052,7 +2052,8 @@ longitude = -77.0366</pre>
         enable = true
         station = KCASANFRA11
         password = XXX
-        rapidfire = False</pre>
+        rapidfire = False
+        rtfreq = 2.5</pre>
         <p class="config_important">enable</p>
 
         <p>
@@ -2083,10 +2084,10 @@ longitude = -77.0366</pre>
             support this. Optional. Default is <span class="code">False</span>.
         </p>
 
-        <p class="config_option">rtfreq_sma_window</p>
+        <p class="config_option">rtfreq</p>
 
-        <p>When <span class="config_option">rapidfire</span> is set, the <span class="code">rtfreq</span> parameter in the WU API is automatically calculated, 
-            using a moving window of this many packet time intervals.  Optional. Default is <span class="code">7</span></p>
+        <p>When <span class="config_option">rapidfire</span> is set, the <span class="code">rtfreq</span> parameter is sent, 
+            and should correspond to "the frequency of updates in seconds".  Optional. Default is <span class="code">2.5</span></p>
 
         <p class="config_option">archive_post</p>
 
