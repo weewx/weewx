@@ -30,8 +30,10 @@
 <p>Ensure that Python2 is installed. Python 2.6 or 2.7 will work,
     but Python 3 will not.</p>
 <pre class='tty cmd'>python -V</pre>
-<p>Install the required Python packages using <a href="https://pypi.python.org/pypi/pip">pip</a> (if pip is not included with
-your system, you may have to install it).</p>
+<p>Make sure that <a href="https://pypi.python.org/pypi/pip">pip</a> has been installed on
+your system. If not, it may be as simple as:</p>
+<pre class='tty cmd'>sudo easy_install pip</pre>
+<p>Now install the required Python packages using pip.</p>
 <pre class='tty cmd'>sudo pip pysqlite
 sudo pip configobj
 sudo pip Cheetah
