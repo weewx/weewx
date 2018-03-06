@@ -1241,7 +1241,6 @@ $month.outTemp.max</pre>
             <td>Example</td>
             <td>Meaning</td>
           </tr>
-        </tbody>
         <tr>
           <td class="first_col code">$hour($hours_ago=<i>h</i>)
           </td>
@@ -1273,6 +1272,7 @@ $month.outTemp.max</pre>
           <td class="code">$year($years_ago=1).outTemp.max</td>
           <td>The maximum temperature last year.</td>
         </tr>
+        </tbody>
       </table>
 
       <h3 id="unit_conversion_options">Unit conversion options</h3>
@@ -6053,11 +6053,29 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         the unit group <span class='code'>group_energy</span> (which
         already exists), so it can enjoy the labels and formats
         already provided for this group. This is done by extending the dictionary <span
-          class='code'>weewx.units.obs_group_dict</span>, typically by
-        adding Python code to the file <span class='code'>user/extensions.py</span>:
-      </p>
+          class='code'>weewx.units.obs_group_dict</span>.<br />
+        We can add the required Python code to the file
+        <span class='code'>user/extensions.py</span>:</p>
+
       <pre class='tty'>import weewx.units
 weewx.units.obs_group_dict['electricity'] = 'group_energy'</pre>
+
+        <p>Or that same Python code can be added to our new services file
+        <span class='code'>user/electricity.py</span>, following the last
+        import statement:</p>
+        <pre class="tty">import weewx
+from weewx.engine import StdService
+<span class="highlight">
+import weewx.units
+weewx.units.obs_group_dict['electricity'] = 'group_energy'</span>
+
+class AddElectricity(StdService):
+
+    def __init__(self, engine, config_dict):
+
+        # [...]
+
+        self.last_total = total_power</pre>
 
       <p>Once the observation has been associated with a unit group,
         the unit labels and other tag syntax will work for that
@@ -6078,13 +6096,14 @@ weewx.units.obs_group_dict['electricity'] = 'group_energy'</pre>
       </p>
       <p>
         We assume we have a new observation type, <span class='code'>force</span>,
-        that we are measuing over time. We will create a new unit group,
+        that we are measuring over time, for a service named <span class='code'>
+        user/rocket.py</span>. We will create a new unit group,
         <span class='code'>group_force</span>, and new units, <span
           class='code'>newton</span> and <span class='code'>pound</span>.
         Our new observation, <span class='code'>force</span>, will
         belong to <span class='code'>group_force</span>, and will be
         measured in units of <span class='code'>newton</span> or <span
-          class='code'>pound</span>.
+        class='code'>pound</span>.
       </p>
       <ol>
         <li>As before, we start by specifying what group our new
@@ -6114,6 +6133,15 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
 
         </li>
       </ol>
+        <p>As with the previous example of <span class='code'>group_energy</span>,
+        the last step is to extend the <span class='code'>
+        weewx.units.obs_group_dict</span> dictionary so that these new units can
+        be used by our service.<br /> We do this by adding the Python code from
+        steps 1 - 4 above, into <span class='code'>user/extensions.py</span>.<br />
+        Or for easier code management, we can choose to include it directly into
+        our new services file <span class='code'>user/rocket.py</span>, at the
+        head of that file and just after the last import statement (as in the
+        previous example).</p>
 
       <h2>Use the new types</h2>
 
