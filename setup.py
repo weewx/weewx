@@ -633,6 +633,8 @@ if __name__ == "__main__":
              ['util/newsyslog.d/weewx.conf']),
             ('util/rsyslog.d',
              ['util/rsyslog.d/weewx.conf']),
+            ('util/solaris',
+             ['util/solaris/weewx-smf.xml']),
             ('util/systemd',
              ['util/systemd/weewx.service']),
             ('util/udev/rules.d',
