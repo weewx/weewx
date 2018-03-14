@@ -398,6 +398,22 @@ class WMR89(weewx.drivers.AbstractDevice):
             'dateTime': int(time.time() + 0.5),
             'usUnits': weewx.METRIC
           }
+        elif (packet[2].encode('hex')=='02'):
+          _record = {
+            'humidity_1': hum,
+            'temperature_1': float(temp),
+            'dewpoint_1': dew,
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC
+          }
+        elif (packet[2].encode('hex')=='03'):
+          _record = {
+            'humidity_2': hum,
+            'temperature_2': float(temp),
+            'dewpoint_2': dew,
+            'dateTime': int(time.time() + 0.5),
+            'usUnits': weewx.METRIC
+          }
         else:
           _record=None
 
