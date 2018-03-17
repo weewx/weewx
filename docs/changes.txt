@@ -38,6 +38,12 @@ Fixed bug that crashed program if a sqlite permission error occurred.
 If wind speed is zero, accumulators now return last known wind direction
 (instead of None). Thanks to user DigitalDan05. PR #303.
 
+The Fine Offset driver provides an optional smoothing filter which uses
+a rolling average of the last n wind direction observations instead of
+the raw data.  This improves considerably the stability of the reported
+wind direction, at the expense of being slower to react to a genuine
+change of direction.
+
 
 3.8.0 11/22/2017
 

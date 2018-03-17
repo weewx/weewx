@@ -406,6 +406,11 @@ class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
 
     # The driver to use:
     driver = weewx.drivers.fousb
+
+    # Number of observations to average wind direction over,
+    # to smooth a jittery wind vane.  Zero means do not
+    # average.  A good starting point for experimentation is 15.
+    wind_direction_filter = 0
 """
 
     def get_conf(self, orig_stanza=None):
