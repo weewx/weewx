@@ -49,6 +49,7 @@ FineOffset stations are branded by many vendors, including
  * National Geographic
  * Elecsa
  * Tycon
+ * Aercus Instruments
 
 There are many variants, for example WS1080, WS1090, WH2080, WH2081, WA2080,
 WA2081, WH2081, WH1080, WH1081.  The variations include uv/luminance, solar
@@ -293,7 +294,7 @@ class FOUSBWindDirectionFilter:
     def reject_outliers(self):
         prevailing = self.prevailing_direction()
         filtered = [reading for reading in self.last_readings if self.close_enough(reading, prevailing)]
-        logdbg("*** Rejected %d outliers" % (len(self.last_readings) - len(filtered)))
+        # logdbg("Rejected %d outliers" % (len(self.last_readings) - len(filtered)))
         return filtered
 
     def average_reading(self):
@@ -327,17 +328,14 @@ class FOUSBWindDirectionFilter:
     # the same wind reading will be added again.
     def update_packet(self, packet):
         if packet["windDir"] is not None:
-            logdbg("windDir packet is %.2f" % (packet["windDir"]))
             if packet["windDir"] < 0 or packet["windDir"] > 359:
-                logdbg("*** Rejecting out of range wind direction - substituting average")
+                logdbg("Rejecting out of range wind direction - substituting average")
             else:
                 self.add_reading(packet["windDir"])
             aver = self.average_reading()
-            logdbg("*** WILL update windDir of %.2f to %.2f rolling average" % (packet["windDir"], aver))
+            # logdbg("Updating windDir of %.2f to %.2f rolling average" % (packet["windDir"], aver))
             packet["windDir"] = aver
             packet["windGustDir"] = aver
-        else:
-            logdbg("*** No windDir in packet")
 
 
 def stash(slist, s):
