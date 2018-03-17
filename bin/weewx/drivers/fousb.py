@@ -215,6 +215,7 @@ import sys
 import syslog
 import time
 import usb
+import math
 
 import weewx.drivers
 import weewx.wxformulas
@@ -235,6 +236,108 @@ def confeditor_loader():
 # flags for enabling/disabling debug verbosity
 DEBUG_SYNC = 0
 DEBUG_RAIN = 0
+
+# Helper class to smooth out fluctuating wind direction readings - this can give a better
+# overall indication of wind direction if you find the wind vane is very twitchy.
+
+class FOUSBWindDirectionFilter:
+    def __init__(self, max_readings):
+        # Consider this many recent readings when forming average
+        self.max_readings = max_readings
+
+        # List of recent readings - limited to at most max_readings.  The value is wind direction
+        # in degrees.  The Fine Offset sensor detects 16 possible directions, 22.5 degrees apart.
+        self.last_readings = []
+
+    def add_reading(self, reading):
+        # If our list is full, drop the oldest (i.e. zeroth) reading
+        if len(self.last_readings) >= self.max_readings:
+            self.last_readings = self.last_readings[1:self.max_readings]
+        # Append the new reading
+        self.last_readings.append(reading)
+        # print "self.last_readingsDirbuf is ", self.last_readings
+
+    # Compute the magnitude of the difference between two angles
+    def abs_diff_angle(self, a, b):
+        z = abs(a - b)
+        return min(360 - z, z)
+
+    # Determine whether angle a is close enough to angle b to consider it as part of
+    # the average.  The purpose of this test is to reject outlying readings that are a long
+    # way apart from the prevailing direction
+    def close_enough(self, a, b):
+        return self.abs_diff_angle(a, b) <= 45   ## was 22.5
+
+    # Determine the prevailing direction of the wind for the stored readings.
+    # The method here is not ideal, it just sees which of the 16 values is
+    # seen most often in the list.  It does not take account of the possibility
+    # that there could be a tie.  Could improve this.  Another approach would be
+    # to compute the angular average without removing outliers.
+    def prevailing_direction(self):
+        # This list will be used to count how many times each of the sixteen
+        # possible wind directions was seen
+        most = [0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0]
+
+        for val in self.last_readings:
+            most[int(val/22.5)] += 1
+
+        nb = ib = -1
+        for i in range(0, len(most)):
+            if most[i] > nb:
+                nb = most[i]
+                ib = i
+        return ib * 22.5
+
+    # Filter the readings and return a list with outliers removed
+    def reject_outliers(self):
+        prevailing = self.prevailing_direction()
+        filtered = [reading for reading in self.last_readings if self.close_enough(reading, prevailing)]
+        logdbg("*** Rejected %d outliers" % (len(self.last_readings) - len(filtered)))
+        return filtered
+
+    def average_reading(self):
+        if len(self.last_readings) == 0:
+            # If we have no readings yet we can't compute, just return 0
+            return 0
+        elif len(self.last_readings) < self.max_readings:
+            # We don't have enough readings to make an average, just return most recent one
+            return self.last_readings[-1]
+        else:
+            # Reject any readings that are wildly different to the most common reading
+            filtered = self.last_readings  ##self.reject_outliers()
+            # From the remaining readings, compute the average angle with trig
+            # A different approach would be possible that weights this by speed.
+            sumsin=0.0
+            sumcos=0.0
+            factor = 1.0 / len(filtered)
+
+            for i in range(len(filtered)):
+                a = filtered[i] * math.pi / 180;
+                sumsin+=factor*math.sin(a)
+                sumcos+=factor*math.cos(a)
+
+            average=math.atan2(sumsin,sumcos) * 180 / math.pi
+            if average < 0.0:
+                average = 360 + average
+            return average
+
+    # Update packet["windDir"] converting the wind direction into a kind of
+    # rolling average. It is inportant this is only called once per packet, otherwise
+    # the same wind reading will be added again.
+    def update_packet(self, packet):
+        if packet["windDir"] is not None:
+            logdbg("windDir packet is %.2f" % (packet["windDir"]))
+            if packet["windDir"] < 0 or packet["windDir"] > 359:
+                logdbg("*** Rejecting out of range wind direction - substituting average")
+            else:
+                self.add_reading(packet["windDir"])
+            aver = self.average_reading()
+            logdbg("*** WILL update windDir of %.2f to %.2f rolling average" % (packet["windDir"], aver))
+            packet["windDir"] = aver
+            packet["windGustDir"] = aver
+        else:
+            logdbg("*** No windDir in packet")
 
 
 def stash(slist, s):
@@ -928,6 +1031,19 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         self.pc_port           = stn_dict.get('power_cycle_port', None)
         if self.pc_port is not None:
             self.pc_port = int(self.pc_port)
+        
+        # Compute a rolling average of the wind direction over this number
+        # of consecutive readings.  Provides filtering when the wind vane
+        # is very twitchy.  Experiment with different values - 15 provides
+        # a good level of smoothing without unduly delaying reporting the
+        # change of prevailing direction.
+        wind_filter_steps = int(stn_dict.get('wind_direction_filter', 0))
+        if wind_filter_steps != 0:
+            loginf("Wind direction averaging over %d readings" % wind_filter_steps)
+            self.wind_direction_filter = FOUSBWindDirectionFilter(wind_filter_steps)
+        else:
+            loginf("Wind direction averaging off")
+            self.wind_direction_filter = None
 
         self.data_format   = stn_dict.get('data_format', '1080')
         self.vendor_id     = 0x1941
@@ -1085,6 +1201,10 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             packet = pywws2weewx(p, ts,
                                  self._last_rain_loop, self._last_rain_ts_loop,
                                  self.max_rain_rate)
+            # Note: this could be moved into pywws2weewx, but
+            # it is not a class method so has no access to self
+            if self.wind_direction_filter is not None:
+                self.wind_direction_filter.update_packet(packet)
             self._last_rain_loop = packet['rainTotal']
             self._last_rain_ts_loop = ts
             if packet['status'] != self._last_status:
@@ -1113,6 +1233,10 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             data = pywws2weewx(r['data'], ts,
                                self._last_rain_arc, self._last_rain_ts_arc,
                                self.max_rain_rate)
+            # Note: this could be moved into pywws2weewx, but
+            # it is not a class method so has no access to self
+            if self.wind_direction_filter is not None:
+                self.wind_direction_filter.update_packet(data)
             data['interval'] = r['interval']
             data['ptr'] = r['ptr']
             self._last_rain_arc = data['rainTotal']
