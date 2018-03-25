@@ -8,14 +8,41 @@ from a file of name=value pairs.
 
 Installation instructions:
 
-1) install the extension
+1) install the extension:
 
-wee_extension --install extensions/fileparse
+wee_extension --install=/home/weewx/examples/fileparse
 
-2) select the driver
+2) select the driver:
 
 wee_config --reconfigure
 
-3) start weewx:
+3) restart weewx:
 
+sudo /etc/init.d/weewx stop
+sudo /etc/init.d/weewx start
+
+
+Manual installation instructions:
+
+1) copy the fileparse driver to the weewx user directory:
+
+cp /home/weewx/examples/fileparse/bin/fileparse.py /home/weewx/bin/user
+
+2) add a new [FileParse] stanza in weewx.conf:
+
+[FileParse]
+    poll_interval = 10
+    path = /var/tmp/datafile
+    driver = user.fileparse
+
+3) in weewx.conf, modify the station_type setting under [Station] to use the 
+fileparse driver:
+
+[Station]
+    ...
+    station_type = FileParse
+
+4) restart weewx:
+
+sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start

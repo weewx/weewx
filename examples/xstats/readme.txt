@@ -20,9 +20,9 @@ This search list extension offers extra tags:
 
 Installation instructions:
 
-1) run the installer:
+1) install the extension:
 
-setup.py install --extension extensions/xstats
+wee_extension --install=/home/weewx/examples/xstats
 
 2) restart weewx:
 
@@ -48,7 +48,7 @@ cp bin/user/xstats.py /home/weewx/bin/user
         [[[CheetahGenerator]]]
             search_list_extensions = user.xstats.ExtendedStatistics
 
-3) restart weewx
+3) restart weewx:
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
