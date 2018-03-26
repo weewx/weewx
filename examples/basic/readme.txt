@@ -1,29 +1,29 @@
-basic - a very basic weewx skin
+basic - a very basic weeWX skin
 Copyright 2014 Matthew Wall
 
 This example illustrates how to implement a skin and package it so that it
 can be installed by the extension installer.
 
 
-Installation instructions:
+Installation instructions
 
-1) install the extension:
+1) install the extension
 
 wee_extension --install=/home/weewx/examples/basic
 
-2) restart weewx:
+2) restart weeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
 
 
-Manual installation instructions:
+Manual installation instructions
 
-1) copy files to the weewx skins directory:
+1) copy files to the weeWX skins directory
 
 cp -rp skins/basic /home/weewx/skins
 
-2) add a new report in weewx.conf:
+2) in the weeWX configuration file, add a report
 
 [StdReport]
     ...
@@ -31,7 +31,7 @@ cp -rp skins/basic /home/weewx/skins
         skin = basic
         HTML_ROOT = public_html/basic
 
-3) restart weewx:
+3) restart weeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
