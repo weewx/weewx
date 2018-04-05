@@ -131,7 +131,7 @@ def main():
 
     # get config_dict to use
     config_path, config_dict = weecfg.read_config(options.config_path, args)
-    print "Using configuration file %s" % config_path
+    print ("Using configuration file %s" % config_path)
 
     # set syslog level based
     if int(config_dict.get('debug', 0)):
@@ -141,7 +141,7 @@ def main():
 
     db_binding = options.binding
     database = config_dict['DataBindings'][db_binding]['database']
-    print "Using database binding '%s', which is bound to database '%s'" % (db_binding, database)
+    print ("Using database binding '%s', which is bound to database '%s'" % (db_binding, database))
 
     if options.create_database:
         createMainDatabase(config_dict, db_binding)
@@ -177,11 +177,11 @@ def createMainDatabase(config_dict, db_binding):
     # exists and is initialized. Otherwise, an exception will be thrown.
     try:
         with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
-            print "Database '%s' already exists. Nothing done." % (dbmanager.database_name,)
+            print ("Database '%s' already exists. Nothing done." % (dbmanager.database_name,))
     except weedb.OperationalError:
         # Database does not exist. Try again, but allow initialization:
         with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
-            print "Created database '%s'" % (dbmanager.database_name,)
+            print ("Created database '%s'" % (dbmanager.database_name,))
 
 def dropDaily(config_dict, db_binding):
     """Drop the daily summaries from a weeWX database"""
@@ -192,23 +192,23 @@ def dropDaily(config_dict, db_binding):
 
     ans = None
     while ans not in ['y', 'n']:
-        print "Proceeding will delete all your daily summaries from database '%s'" % database_name
+        print ("Proceeding will delete all your daily summaries from database '%s'" % database_name)
         ans = input("Are you sure you want to proceed (y/n)? ")
         if ans == 'y' :
             t1 = time.time()
-            print "Dropping daily summary tables from '%s' ... " % database_name
+            print ("Dropping daily summary tables from '%s' ... " % database_name)
             try:
                 with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
                     try:
                         dbmanager.drop_daily()
                     except weedb.OperationalError, e:
-                        print "Got error '%s'\nPerhaps there was no daily summary?" % e
+                        print ("Got error '%s'\nPerhaps there was no daily summary?" % e)
                     else:
                         tdiff = time.time() - t1
-                        print "Daily summary tables dropped from database '%s' in %.2f seconds" % (database_name, tdiff)
+                        print ("Daily summary tables dropped from database '%s' in %.2f seconds" % (database_name, tdiff))
             except weedb.OperationalError:
                 # No daily summaries. Nothing to be done.
-                print "No daily summaries found in database '%s'. Nothing done." % (database_name,)
+                print ("No daily summaries found in database '%s'. Nothing done." % (database_name,))
 
 def rebuildDaily(config_dict, db_binding, options):
     """Rebuild the daily summaries."""
@@ -241,7 +241,7 @@ def rebuildDaily(config_dict, db_binding, options):
         if ans == 'y':
             break
         elif ans == 'n':
-            print "Nothing done."
+            print ("Nothing done.")
             return
 
     t1 = time.time()
@@ -251,9 +251,9 @@ def rebuildDaily(config_dict, db_binding, options):
     with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
 
         syslog.syslog(syslog.LOG_INFO, "Rebuilding daily summaries in database '%s' ..." % database_name)
-        print "Rebuilding daily summaries in database '%s' ..." % database_name
+        print ("Rebuilding daily summaries in database '%s' ..." % database_name)
         if options.dry_run:
-            print "Dry run. Nothing done."
+            print ("Dry run. Nothing done.")
             return
         else:
             # now do the actual rebuild
@@ -266,12 +266,12 @@ def rebuildDaily(config_dict, db_binding, options):
     if nrecs:
         sys.stdout.flush()
         print
-        print "Processed %d records to rebuild %d day summaries in %.2f seconds      " % (nrecs,
+        print ("Processed %d records to rebuild %d day summaries in %.2f seconds      " % (nrecs,
                                                                                           ndays,
-                                                                                          tdiff)
-        print "Rebuild of daily summaries in database '%s' complete" % database_name
+                                                                                          tdiff))
+        print ("Rebuild of daily summaries in database '%s' complete" % database_name)
     else:
-        print "Daily summaries up to date in '%s'" % database_name
+        print ("Daily summaries up to date in '%s'" % database_name)
 
 def reconfigMainDatabase(config_dict, db_binding):
     """Create a new database, then populate it with the contents of an old database"""
@@ -295,7 +295,7 @@ def reconfigMainDatabase(config_dict, db_binding):
             if ans == 'y':
                 weedb.drop(new_database_dict)
             elif ans == 'n':
-                print "Nothing done."
+                print ("Nothing done.")
                 return
 
     # Get the unit system of the old archive:
@@ -303,7 +303,7 @@ def reconfigMainDatabase(config_dict, db_binding):
         old_unit_system = old_dbmanager.std_unit_system
 
     if old_unit_system is None:
-        print "Old database has not been initialized. Nothing to be done."
+        print ("Old database has not been initialized. Nothing to be done.")
         return
 
     # Get the unit system of the new archive:
@@ -317,8 +317,8 @@ def reconfigMainDatabase(config_dict, db_binding):
 
     ans = None
     while ans not in ['y', 'n']:
-        print "Copying database '%s' to '%s'" % (manager_dict['database_dict']['database_name'],
-                                                 new_database_dict['database_name'])
+        print ("Copying database '%s' to '%s'" % (manager_dict['database_dict']['database_name'],
+                                                 new_database_dict['database_name']))
         if target_unit_system is None or old_unit_system==target_unit_system:
             print ("The new database will use the same unit system as the old ('%s')." %
                    (weewx.units.unit_nicknames[old_unit_system],))
@@ -334,18 +334,18 @@ def reconfigMainDatabase(config_dict, db_binding):
                                    new_unit_system=target_unit_system,
                                    new_schema=manager_dict['schema'])
             tdiff = time.time() - t1
-            print "Database '%s' copied to '%s' in %.2f seconds." % (manager_dict['database_dict']['database_name'],
+            print ("Database '%s' copied to '%s' in %.2f seconds." % (manager_dict['database_dict']['database_name'],
                                                                      new_database_dict['database_name'],
-                                                                     tdiff)
+                                                                     tdiff))
         elif ans == 'n':
-            print "Nothing done."
+            print ("Nothing done.")
 
 def transferDatabase(config_dict, db_binding, options):
     """Transfer 'archive' data from one database to another"""
 
     # do we have enough to go on, must have a dest binding
     if options.dest_binding is None:
-        print "Destination binding not specified. Nothing Done. Aborting."
+        print ("Destination binding not specified. Nothing Done. Aborting.")
         return
     # get manager dict for our source binding
     src_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
@@ -358,25 +358,25 @@ def transferDatabase(config_dict, db_binding, options):
         # if we can't find the binding display a message then return
         print ("Unknown destination binding '%s', confirm destination binding." %
                (options.dest_binding, ))
-        print "Nothing Done. Aborting."
+        print ("Nothing Done. Aborting.")
         return
     except weewx.UnknownDatabase:
         # if we can't find the database display a message then return
-        print "Error accessing destination database, confirm destination binding and/or database."
-        print "Nothing Done. Aborting."
+        print ("Error accessing destination database, confirm destination binding and/or database.")
+        print ("Nothing Done. Aborting.")
         return
     except (ValueError, AttributeError):
         # maybe a schema issue
-        print "Error accessing destination database."
+        print ("Error accessing destination database.")
         print ("Maybe the destination schema is incorrectly specified in binding '%s' in weewx.conf?" %
                (options.dest_binding, ))
-        print "Nothing Done. Aborting."
+        print ("Nothing Done. Aborting.")
         return
     except (weewx.UnknownDatabaseType):
         # maybe a [Databases] issue
-        print "Error accessing destination database."
-        print "Maybe the destination database is incorrectly defined in weewx.conf?"
-        print "Nothing Done. Aborting."
+        print ("Error accessing destination database.")
+        print ("Maybe the destination database is incorrectly defined in weewx.conf?")
+        print ("Nothing Done. Aborting.")
         return
     # get a manager for our source
     with weewx.manager.Manager.open(src_manager_dict['database_dict']) as src_manager:
@@ -392,7 +392,7 @@ def transferDatabase(config_dict, db_binding, options):
             # we have no source records to transfer so abort with a message
             print ("No records found in source database '%s' for transfer." %
                    (src_manager.database_name, ))
-            print "Nothing done. Aborting."
+            print ("Nothing done. Aborting.")
             exit()
         ans = None
         if not options.dry_run: # is it a dry run ?
@@ -412,7 +412,7 @@ def transferDatabase(config_dict, db_binding, options):
                             # do the transfer, should be quick as it's done as a
                             # single transaction
                             dest_manager.addRecord(src_manager.genBatchRecords())
-                            print "complete"
+                            print ("complete")
                             # get first and last timestamps from the dest so we can
                             # count the records transferred and display a message
                             first_ts = dest_manager.firstGoodStamp()
@@ -432,25 +432,25 @@ def transferDatabase(config_dict, db_binding, options):
                         # Probably when trying to load db driver
                         print ("Error accessing destination database '%s'." %
                                (dest_manager_dict['database_dict']['database_name'], ))
-                        print "Nothing done. Aborting."
+                        print ("Nothing done. Aborting.")
                         raise
                     except (OSError, weedb.OperationalError):
                         # probably a weewx.conf typo or MySQL db not created
                         print ("Error accessing destination database '%s'." %
                                (dest_manager_dict['database_dict']['database_name'], ))
-                        print "Maybe it does not exist (MySQL) or is incorrectly defined in weewx.conf?"
-                        print "Nothing done. Aborting."
+                        print ("Maybe it does not exist (MySQL) or is incorrectly defined in weewx.conf?")
+                        print ("Nothing done. Aborting.")
                         return
 
                 elif ans == 'n':
                     # we decided not to do the transfer
-                    print "Nothing done."
+                    print ("Nothing done.")
                     return
         else:
             # it's a dry run so say what we would have done then return
             print ("Transfer %s records from source database '%s' to destination database '%s'." %
                    (num_recs, src_manager.database_name, dest_manager_dict['database_dict']['database_name']))
-            print "Dry run, nothing done."
+            print ("Dry run, nothing done.")
 
 def check(config_dict, db_binding, options):
     """Check database and report outstanding fixes/issues.
@@ -463,7 +463,7 @@ def check(config_dict, db_binding, options):
     t1 = time.time()
 
     # Check interval weighting
-    print "Checking daily summary tables version..."
+    print ("Checking daily summary tables version...")
 
     # Get a database manager object
     dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
@@ -480,8 +480,8 @@ def check(config_dict, db_binding, options):
         syslog.syslog(syslog.LOG_INFO, msg)
         print msg
     else:
-        print "Recommend running --update to recalculate interval weightings."
-    print "Daily summary tables version check completed in %0.2f seconds." % (time.time() - t1)
+        print ("Recommend running --update to recalculate interval weightings.")
+    print ("Daily summary tables version check completed in %0.2f seconds." % (time.time() - t1))
 
     # now check for null strings
     check_strings(config_dict, db_binding, options, fix=False)
@@ -516,7 +516,7 @@ def update(config_dict, db_binding, options):
 
     # notify if this is a dry run
     if options.dry_run:
-        print "This is a dry run: weighted intervals will be calculated but not saved."
+        print ("This is a dry run: weighted intervals will be calculated but not saved.")
 
     # Get a database manager object
     dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
@@ -575,7 +575,7 @@ def _fix_wind(config_dict, db_binding, options):
 
     # notify if this is a dry run
     if options.dry_run:
-        print "This is a dry run: maximum windSpeed will be calculated but not saved."
+        print ("This is a dry run: maximum windSpeed will be calculated but not saved.")
 
     # construct a windSpeed recalculation config dict
     wind_config_dict = {'name': 'Maximum windSpeed Fix',
@@ -610,12 +610,12 @@ def check_strings(config_dict, db_binding, options, fix=False):
         _log_level = syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_WARNING))
     if fix:
         syslog.syslog(syslog.LOG_INFO, "Preparing Null String Fix")
-        print "Preparing Null String Fix, this may take a while..."
+        print ("Preparing Null String Fix, this may take a while...")
         # notify if this is a dry run
         if options.dry_run:
-            print "This is a dry run: null strings will be detected but not fixed"
+            print ("This is a dry run: null strings will be detected but not fixed")
     else:
-        print "Preparing Null String Check, this may take awhile..."
+        print ("Preparing Null String Check, this may take awhile...")
 
     # open up the main database archive table
     with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
@@ -683,44 +683,44 @@ def check_strings(config_dict, db_binding, options, fix=False):
     tdiff = time.time() - t1
     # now display details of what we found if we found any null strings
     if len(_found) > 0:
-        print "The following null strings were found:"
+        print ("The following null strings were found:")
         for item in _found:
             if len(item) == 4:
-                print "Timestamp = %s; record['%s'] = %r; ... changed to %r" % item
+                print ("Timestamp = %s; record['%s'] = %r; ... changed to %r" % item)
             else:
-                print "Timestamp = %s; record['%s'] = %r; ... ignored" % item
+                print ("Timestamp = %s; record['%s'] = %r; ... ignored" % item)
     # how many did we fix?
     fixed = len([a for a in _found if len(a)==4])
     # summarise our results
     if len(_found) == 0:
         # found no null strings, log it and display on screen
         syslog.syslog(syslog.LOG_INFO, "No null strings found.")
-        print "No null strings found."
+        print ("No null strings found.")
     elif fixed == len(_found):
         # fixed all we found
         if options.dry_run:
             # its a dry run so display to screen but not to log
-            print "%d of %d null strings found would have been fixed." % (fixed,
-                                                                          len(_found))
+            print ("%d of %d null strings found would have been fixed." % (fixed,
+                                                                          len(_found)))
         else:
             # really did fix so log and display to screen
             syslog.syslog(syslog.LOG_INFO,
                           "%d of %d null strings found were fixed." % (fixed,
                                                                        len(_found)))
-            print "%d of %d null strings found were fixed." % (fixed, len(_found))
+            print ("%d of %d null strings found were fixed." % (fixed, len(_found)))
     elif fix:
         # this should never occur - found some but didn't fix them all when we
         # should have
         if options.dry_run:
             # its a dry run so say what would have happened
-            print "Could not fix all null strings. %d of %d null strings found would have been fixed." % (fixed,
-                                                                                                          len(_found))
+            print ("Could not fix all null strings. %d of %d null strings found would have been fixed." % (fixed,
+                                                                                                          len(_found)))
         else:
             # really did fix so log and display to screen
             syslog.syslog(syslog.LOG_INFO,
                           "Could not fix all null strings. %d of %d null strings found were fixed." % (fixed,
                                                                                                        len(_found)))
-            print "Could not fix all null strings. %d of %d null strings found were fixed." % (fixed,
+            print ("Could not fix all null strings. %d of %d null strings found were fixed." % (fixed,
                                                                                                len(_found))
     else:
         # found some null string but it was only a check not a fix, just
@@ -731,10 +731,10 @@ def check_strings(config_dict, db_binding, options, fix=False):
     # and finally details on time taken
     if fix:
         syslog.syslog(syslog.LOG_INFO, "Applied Null String Fix in %0.2f seconds." % tdiff)
-        print "Applied Null String Fix in %0.2f seconds." % tdiff
+        print ("Applied Null String Fix in %0.2f seconds." % tdiff)
     else:
         # it was a check not a fix so just display to screen
-        print "Completed Null String Check in %0.2f seconds." % tdiff
+        print ("Completed Null String Check in %0.2f seconds." % tdiff)
     # just in case, set the syslog level back where we found it
     if options.dry_run or not fix:
         syslog.setlogmask(_log_level)

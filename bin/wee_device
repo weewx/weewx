@@ -17,7 +17,7 @@ def main():
 
     # Load the configuration file
     config_fn, config_dict = weecfg.read_config(None, sys.argv[1:])
-    print 'Using configuration file %s' % config_fn
+    print ('Using configuration file %s' % config_fn)
 
     try:
         # Find the device type
@@ -36,8 +36,8 @@ def main():
         driver_name = driver_module.DRIVER_NAME
         driver_vers = driver_module.DRIVER_VERSION \
             if hasattr(driver_module, 'DRIVER_VERSION') else '?'
-        print 'Using %s driver version %s (%s)' % (
-            driver_name, driver_vers, driver)
+        print ('Using %s driver version %s (%s)' % (
+            driver_name, driver_vers, driver))
     except AttributeError, e:
         msg = "The driver %s does not include a configuration tool" % driver
         syslog.syslog(syslog.LOG_INFO, "%s: %s" % (msg, e))
@@ -45,7 +45,7 @@ def main():
     except Exception, e:
         msg = "Cannot load configurator for %s" % device_type
         syslog.syslog(syslog.LOG_ERR, "%s: %s" % (msg, e))
-        print msg
+        print (msg)
         exit(1)
 
     device.configure(config_dict)
