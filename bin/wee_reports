@@ -42,12 +42,12 @@ def main():
     # If the user specified a time, retrieve it. Otherwise, set to None
     gen_ts = int(args[0]) if args else None
     
-    print "Using configuration file %s" % config_path
+    print ("Using configuration file %s" % config_path)
 
     if gen_ts is None:
-        print "Generating for all time"
+        print ("Generating for all time")
     else:
-        print "Generating for requested time", timestamp_to_string(gen_ts)
+        print ("Generating for requested time", timestamp_to_string(gen_ts))
         
     # Look for the debug flag. If set, ask for extra logging
     weewx.debug = int(config_dict.get('debug', 0))

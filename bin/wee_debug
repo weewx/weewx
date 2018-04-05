@@ -107,9 +107,9 @@ def main():
     # check weewx version number for compatibility
     if VERSION[0] < 3:
         # incompatible version of weewx
-        print "Incompatible version of weewx detected (%s). Weewx v3.0.0 or greater required." % \
-            VERSION
-        print "Nothing done, exiting."
+        print ("Incompatible version of weewx detected (%s). Weewx v3.0.0 or greater required." % \
+            VERSION)
+        print ("Nothing done, exiting.")
         exit(1)
 
     # get config_dict to use
@@ -117,24 +117,24 @@ def main():
 
     # display wee_debug version info
     if options.version:
-        print "wee_debug version: %s" % WEE_DEBUG_VERSION
+        print ("wee_debug version: %s" % WEE_DEBUG_VERSION)
         exit(1)
 
     # display debug info
     if options.info:
         # first a message re verbosity
         if options.verbosity == 0:
-            print "Using verbosity=0, displaying minimal info"
+            print ("Using verbosity=0, displaying minimal info")
         elif options.verbosity == 1:
-            print "Using verbosity=1, displaying most info"
+            print ("Using verbosity=1, displaying most info")
         else:
-            print "Using verbosity=2, displaying all info"
+            print ("Using verbosity=2, displaying all info")
         print
         # then a message re output destination
         if options.debug_file is not None:
-            print "wee_debug output will be written to %s" % options.debug_file
+            print ("wee_debug output will be written to %s" % options.debug_file)
         else:
-            print "wee_debug output will be sent to stdout(console)"
+            print ("wee_debug output will be sent to stdout(console)")
         print
 
         # get some key weewx parameters
@@ -149,9 +149,9 @@ def main():
             _debug_file = open(options.debug_file, 'w')
             # redirect stdout to our file
             sys.stdout = _debug_file
-        print "Using configuration file %s" % config_path
-        print "Using database binding '%s', which is bound to database '%s'" % (db_binding_wx,
-                                                                                database_wx)
+        print ("Using configuration file %s" % config_path)
+        print ("Using database binding '%s', which is bound to database '%s'" % (db_binding_wx,
+                                                                                database_wx))
         print
         # generate our debug info
         generateDebugInfo(config_dict,
@@ -159,7 +159,7 @@ def main():
                           db_binding_wx,
                           options.verbosity)
         print
-        print "Parsed and obfuscated weewx.conf"
+        print ("Parsed and obfuscated weewx.conf")
         # generate our obfuscated weewx.conf
         generateDebugConf(config_dict)
         if options.debug_file is not None:
@@ -167,10 +167,10 @@ def main():
             _debug_file.close()
             # revert stdout
             sys.stdout = old_stdout
-            print "wee_debug output successfully written to %s" % options.debug_file
+            print ("wee_debug output successfully written to %s" % options.debug_file)
         else:
             print
-            print "wee_debug report successfully generated"
+            print ("wee_debug report successfully generated")
         exit(1)
 
     # if we have a compatible weewx version but did not use --version or --info
@@ -201,27 +201,27 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
     generateSysInfo(verbosity)
 
     # weewx version info
-    print "General Weewx info"
-    print "  Weewx version %s detected." % VERSION
+    print ("General Weewx info")
+    print ("  Weewx version %s detected." % VERSION)
     print
 
     # station info
-    print "Station info"
+    print ("Station info")
     stationType = config_dict['Station']['station_type']
-    print "  Station type: %s" % stationType
-    print "  Driver:       %s" % config_dict[stationType]['driver']
+    print ("  Station type: %s" % stationType)
+    print ("  Driver:       %s" % config_dict[stationType]['driver'])
     print
 
     # driver info
     if verbosity > 0:
-        print "Driver info"
+        print ("Driver info")
         driver_dict = {stationType: config_dict[stationType]}
         _config = ConfigObj(driver_dict)
         _config.write(sys.stdout)
         print
 
     # installed extensions info
-    print "Currently installed extensions"
+    print ("Currently installed extensions")
     ext = ExtensionEngine(config_path=config_path,
                           config_dict=config_dict)
     ext.enumerate_extensions()
@@ -231,61 +231,61 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
     try:
         manager_info_dict = getManagerInfo(config_dict, db_binding_wx)
     except weedb.CannotConnect, e:
-        print "Unable to connect to database:", e
+        print ("Unable to connect to database:", e)
         print
     except weedb.OperationalError, e:
-        print "Error hitting database. It may not be properly initialized:"
-        print e
+        print ("Error hitting database. It may not be properly initialized:")
+        print (e)
         print
     else:
         if manager_info_dict['units'] in weewx.units.unit_nicknames:
             units_nickname = weewx.units.unit_nicknames[manager_info_dict['units']]
         else:
             units_nickname = "Unknown unit constant"
-        print "Archive info"
-        print "  Database name:        %s" % manager_info_dict['db_name']
-        print "  Table name:           %s" % manager_info_dict['table_name']
-        print "  Unit system:          %s (%s)" % (manager_info_dict['units'],
-                                                  units_nickname)
-        print "  First good timestamp: %s" % timestamp_to_string(manager_info_dict['first_ts'])
-        print "  Last good timestamp:  %s" % timestamp_to_string(manager_info_dict['last_ts'])
+        print ("Archive info")
+        print ("  Database name:        %s" % manager_info_dict['db_name'])
+        print ("  Table name:           %s" % manager_info_dict['table_name'])
+        print ("  Unit system:          %s (%s)" % (manager_info_dict['units'],
+                                                  units_nickname))
+        print ("  First good timestamp: %s" % timestamp_to_string(manager_info_dict['first_ts']))
+        print ("  Last good timestamp:  %s" % timestamp_to_string(manager_info_dict['last_ts']))
         if manager_info_dict['ts_count']:
-            print "  Number of records:    %s" % manager_info_dict['ts_count'].value
+            print ("  Number of records:    %s" % manager_info_dict['ts_count'].value)
         else:
-            print "  Number of records:    %s (no archive records found)" % \
-                manager_info_dict['ts_count']
+            print ("  Number of records:    %s (no archive records found)" % \
+                manager_info_dict['ts_count'])
         # if we have a database and a table but no start or stop ts and no records
         # inform the user that the database/table exists but appears empty
         if (manager_info_dict['db_name'] and manager_info_dict['table_name']) and \
         not (manager_info_dict['ts_count'] or manager_info_dict['units'] or \
         manager_info_dict['first_ts'] or manager_info_dict['last_ts']):
-            print "                        It is likely that the database (%s) archive table (%s)" % \
-                (manager_info_dict['db_name'], manager_info_dict['table_name'])
-            print "                        exists but contains no data."
-        print "  weewx (weewx.conf) is set to use an archive interval of %s seconds." % \
-            config_dict['StdArchive']['archive_interval']
-        print "  The station hardware was not interrogated in determining archive interval."
+            print ("                        It is likely that the database (%s) archive table (%s)" % \
+                (manager_info_dict['db_name'], manager_info_dict['table_name']))
+            print ("                        exists but contains no data.")
+        print ("  weewx (weewx.conf) is set to use an archive interval of %s seconds." % \
+            config_dict['StdArchive']['archive_interval'])
+        print ("  The station hardware was not interrogated in determining archive interval.")
         print
 
     # weewx database info
     if verbosity > 0:
-        print "Databases configured in weewx.conf"
+        print ("Databases configured in weewx.conf")
         for db_keys in config_dict['Databases']:
             database_dict = weewx.manager.get_database_dict_from_config(config_dict,
                                                                         db_keys)
             _ = sorted(database_dict.keys())
-            print "  Database name:        %s" % database_dict['database_name']
-            print "  Database driver:      %s" % database_dict['driver']
+            print ("  Database name:        %s" % database_dict['database_name'])
+            print ("  Database driver:      %s" % database_dict['driver'])
             if 'host' in database_dict:
-                print "  Database host:        %s" % database_dict['host']
+                print ("  Database host:        %s" % database_dict['host'])
             print
 
     # sqlkeys/obskeys info
     if verbosity > 1:
-        print "Supported SQL keys"
+        print ("Supported SQL keys")
         formatListCols(manager_info_dict['sqlkeys'], 3)
         print
-        print "Supported observation keys"
+        print ("Supported observation keys")
         formatListCols(manager_info_dict['obskeys'], 3)
         print
 
@@ -301,28 +301,28 @@ def generateDebugConf(config_dict):
 
 def generateSysInfo(verbosity):
     # % string operator deprecated Python 3.1 and up.
-    print "System info"
+    print ("System info")
 
     if verbosity > 0:
-       print "  Platform:       " + platform.platform()
-       print "  Python Version: " + platform.python_version()
+       print ("  Platform:       " + platform.platform())
+       print ("  Python Version: " + platform.python_version())
 
        # environment 
        if verbosity > 1:
-          print "\nEnvironment"
+          print ("\nEnvironment")
           for n in os.environ:
-             print "  %s=%s" % (n, os.environ[n])
+             print ("  %s=%s" % (n, os.environ[n]))
 
        # load info
        try:
            loadavg =  '%.2f %.2f %.2f' % os.getloadavg()
            (load1, load5, load15) = loadavg.split(" ")
    
-           print "\nLoad Information\n  1 minute load average:  " + load1
-           print "  5 minute load average:  " + load5
-           print "  15 minute load average: " + load15
+           print ("\nLoad Information\n  1 minute load average:  " + load1)
+           print ("  5 minute load average:  " + load5)
+           print ("  15 minute load average: " + load15)
        except OSError:
-           print "Sorry, the load average not available on this platform"
+           print ("Sorry, the load average not available on this platform")
 
     print
 
@@ -421,7 +421,7 @@ def formatListCols(the_list, cols):
     justifyList = map(lambda x: x.ljust(max_width), the_list)
     lines = (' '.join(justifyList[i:i + cols])
              for i in xrange(0, len(justifyList), cols))
-    print "\n".join(lines)
+    print ("\n".join(lines))
 
 if __name__=="__main__" :
     main()

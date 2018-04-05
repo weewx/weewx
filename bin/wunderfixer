@@ -131,7 +131,7 @@ def main() :
     
     # get our config file
     config_fn, config_dict = weecfg.read_config(options.config, args)
-    print "Using configuration file %s." % config_fn
+    print ("Using configuration file %s." % config_fn)
     wlog.slog(syslog.LOG_INFO, "Using weewx configuration file %s." % config_fn)
 
     # Retrieve the station ID and password from the config file
@@ -146,15 +146,15 @@ def main() :
     
     # exit if any essential arguments are not present
     if not options.station or (not options.password and not options.simulate):
-        print "Missing argument(s).\n"
-        print parser.parse_args(["--help"])
+        print ("Missing argument(s).\n")
+        print (parser.parse_args(["--help"]))
         wlog.slog(syslog.LOG_ERR, "Missing argument(s). Wunderfixer exiting.")
         exit()
 
     # get our binding and database and say what we are using
     db_binding = options.binding
     database = config_dict['DataBindings'][db_binding]['database']
-    print "Using database binding '%s', which is bound to database '%s'" % (db_binding, database)
+    print ("Using database binding '%s', which is bound to database '%s'" % (db_binding, database))
     wlog.slog(syslog.LOG_INFO, "Using database binding '%s', which is bound to database '%s'" % (db_binding, database))
 
     # get the manager object for our db_binding
@@ -178,8 +178,8 @@ def main() :
     epsilon = options.epsilon
     
     if options.verbose:
-        print "Weather Underground Station:  ", options.station
-        print "Date to check:                ", date_date
+        print ("Weather Underground Station:  ", options.station)
+        print ("Date to check:                ", date_date)
         wlog.slog(syslog.LOG_INFO, "Checking Weather Underground station '%s' data for date %s" % (options.station, date_date))
 
 
@@ -187,7 +187,7 @@ def main() :
     archive_results = getArchiveDayTimeStamps(dbmanager_t, date_date)
 
     if options.verbose :
-        print "Number of archive records:    ", len(archive_results)
+        print ("Number of archive records:    ", len(archive_results))
 
     # Get a WunderStation object so we can interact with Weather Underground
     wunder = WunderStation(queue=None,  # Bogus queue. We will not be using it.
@@ -206,7 +206,7 @@ def main() :
         exit("Could not get Weather Underground data. Exiting.")
         
     if options.verbose :
-        print "Number of WU records:         ", len(wunder_results)
+        print ("Number of WU records:         ", len(wunder_results))
     wlog.slog(syslog.LOG_DEBUG, "Found %d archive records and %d WU records" % (len(archive_results), len(wunder_results)))
 
     #===========================================================================
@@ -227,9 +227,9 @@ def main() :
     missing_records = sorted([x for x in archive_results if not x in wunder_results])
     
     if options.verbose :
-        print "Number of missing records:    ", len(missing_records)
+        print ("Number of missing records:    ", len(missing_records))
         if missing_records:
-            print "\nMissing records:"
+            print ("\nMissing records:")
     wlog.slog(syslog.LOG_INFO, "%d Weather Underground records missing." % len(missing_records))
     
     no_published = 0
@@ -247,7 +247,7 @@ def main() :
         if options.query :
             _ans=input("...fix? (y/n/a/q):")
             if _ans == "q" :
-                print "Quitting."
+                print ("Quitting.")
                 wlog.slog(syslog.LOG_DEBUG, "... exiting")
                 exit()
             if _ans == "a" :
@@ -272,7 +272,7 @@ def main() :
                 exit("Failed post")
             except IOError, e:
                 print >>sys.stderr, " ... not published."
-                print "Reason: ", e
+                print ("Reason: ", e)
                 wlog.slog(syslog.LOG_ERR, "%s ...not published. Reason '%s'" % (timestamp_to_string(record['dateTime']), e))
                 if hasattr(e, 'reason'):
                     print >>sys.stderr, "Failed to reach server. Reason: %s" % e.reason
@@ -284,7 +284,7 @@ def main() :
                               (timestamp_to_string(record['dateTime']), e.code))
 
         else :
-            print " ... skipped."
+            print (" ... skipped.")
             wlog.slog(syslog.LOG_DEBUG, "%s ...skipped" % timestamp_to_string(record['dateTime']))
     wlog.slog(syslog.LOG_INFO, "%s out of %s missing records published to '%s' for date %s."
               " Wunderfixer exiting." % (no_published, len(missing_records), options.station, date_date))
