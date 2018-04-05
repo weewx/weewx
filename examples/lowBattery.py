@@ -101,7 +101,7 @@ class BatteryAlarm(StdService):
             # If we got this far, it's ok to start intercepting events:
             self.bind(weewx.NEW_LOOP_PACKET,    self.newLoopPacket)
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)
-        except KeyError, e:
+        except KeyError as e:
             syslog.syslog(syslog.LOG_INFO, "lowBattery: No alarm set.  Missing parameter: %s" % e)
 
     def newLoopPacket(self, event):
@@ -201,7 +201,7 @@ Low battery indicators:
             s.sendmail(msg['From'], self.TO,  msg.as_string())
             # Log out of the server:
             s.quit()
-        except Exception, e:
+        except Exception as e:
             syslog.syslog(syslog.LOG_ERR,
                           "lowBattery: send email failed: %s" % (e,))
             raise
