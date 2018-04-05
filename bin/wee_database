@@ -233,7 +233,7 @@ def rebuildDaily(config_dict, db_binding, options):
         _msg = "Daily summaries from %s through %s inclusive will be rebuilt." % (start_d, stop_d)
 
     syslog.syslog(syslog.LOG_INFO, _msg)
-    print _msg
+    print (_msg)
 
     ans = None
     while ans not in ['y', 'n']:
@@ -472,13 +472,13 @@ def check(config_dict, db_binding, options):
     _daily_summary_version = dbm._read_metadata('Version')
     msg = "Daily summary tables are at version %s" % _daily_summary_version
     syslog.syslog(syslog.LOG_INFO, msg)
-    print msg
+    print (msg)
 
     if _daily_summary_version is not None and _daily_summary_version >= '2.0':
         # interval weighting fix has been applied
         msg = "Interval Weighting Fix is not required."
         syslog.syslog(syslog.LOG_INFO, msg)
-        print msg
+        print (msg)
     else:
         print ("Recommend running --update to recalculate interval weightings.")
     print ("Daily summary tables version check completed in %0.2f seconds." % (time.time() - t1))
@@ -504,7 +504,7 @@ def update(config_dict, db_binding, options):
         # we decided not to update the summary tables
         msg = "Update cancelled"
         syslog.syslog(syslog.LOG_INFO, msg)
-        print msg
+        print (msg)
         return
 
     if options.dry_run:
@@ -512,7 +512,7 @@ def update(config_dict, db_binding, options):
 
     msg = "Preparing Interval Weighting Fix..."
     syslog.syslog(syslog.LOG_INFO, msg)
-    print msg
+    print (msg)
 
     # notify if this is a dry run
     if options.dry_run:
@@ -536,23 +536,23 @@ def update(config_dict, db_binding, options):
     _daily_summary_version = dbm._read_metadata('Version')
     msg = "Daily summary tables are at version %s" % _daily_summary_version
     syslog.syslog(syslog.LOG_INFO, msg)
-    print msg
+    print (msg)
 
     if _daily_summary_version is not None and _daily_summary_version >= '2.0':
         # interval weighting fix has been applied
         msg = "Interval Weighting Fix is not required."
         syslog.syslog(syslog.LOG_INFO, msg)
-        print msg
+        print (msg)
     else:
         # apply the interval weighting
         msg = "Calculating interval weights..."
         syslog.syslog(syslog.LOG_INFO, msg)
-        print msg
+        print (msg)
         t1 = time.time()
         weight_obj.run()
         msg = "Interval Weighting Fix completed in %0.2f seconds." % (time.time() - t1)
         syslog.syslog(syslog.LOG_INFO, msg)
-        print msg
+        print (msg)
 
     # recalc the max/maxtime windSpeed values
     _fix_wind(config_dict, db_binding, options)
@@ -571,7 +571,7 @@ def _fix_wind(config_dict, db_binding, options):
     t1 = time.time()
     msg = "Preparing Maximum windSpeed Fix..."
     syslog.syslog(syslog.LOG_INFO, msg)
-    print msg
+    print (msg)
 
     # notify if this is a dry run
     if options.dry_run:
@@ -592,11 +592,11 @@ def _fix_wind(config_dict, db_binding, options):
     except weedb.NoTableError, e:
         msg = "Maximum windSpeed Fix applied: no windSpeed found"
         syslog.syslog(syslog.LOG_INFO, msg)
-        print msg
+        print (msg)
     else:
         msg = "Maximum windSpeed Fix completed in %0.2f seconds" % (time.time() - t1)
         syslog.syslog(syslog.LOG_INFO, msg)
-        print msg
+        print (msg)
 
 def check_strings(config_dict, db_binding, options, fix=False):
     """Scan the archive table for null strings.

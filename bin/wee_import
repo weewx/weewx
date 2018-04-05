@@ -684,7 +684,7 @@ def main():
         parser.print_help()
         exit(1)
     except SystemExit, e:
-        print e
+        print (e)
         exit(0)
     except (ValueError, weewx.UnitError), e:
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
