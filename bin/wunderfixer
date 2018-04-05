@@ -245,7 +245,7 @@ def main() :
         # If this is an interactive session (option "-q") see if the
         # user wants to change it:
         if options.query :
-            _ans=raw_input("...fix? (y/n/a/q):")
+            _ans=input("...fix? (y/n/a/q):")
             if _ans == "q" :
                 print "Quitting."
                 wlog.slog(syslog.LOG_DEBUG, "... exiting")

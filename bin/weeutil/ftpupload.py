@@ -112,7 +112,7 @@ class FtpUpload(object):
                     else:
                         syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Connected to %s" % self.server)
                     break
-                except ftplib.all_errors, e:
+                except ftplib.all_errors as e:
                     syslog.syslog(syslog.LOG_NOTICE, "ftpupload: Unable to connect or log into server : %s" % e)
             else:
                 # This is executed only if the loop terminates naturally (without a break statement),
@@ -153,7 +153,7 @@ class FtpUpload(object):
                             # Hence, the open is in the inner loop:
                             fd = open(full_local_path, "r")
                             ftp_server.storbinary(STOR_cmd, fd)
-                        except ftplib.all_errors, e:
+                        except ftplib.all_errors as e:
                             # Unsuccessful. Log it and go around again.
                             syslog.syslog(syslog.LOG_ERR, "ftpupload: Attempt #%d. Failed uploading %s to %s. Reason: %s" %
                                                           (count+1, full_remote_path, self.server, e))
@@ -221,7 +221,7 @@ class FtpUpload(object):
         for unused_count in range(self.max_tries):
             try:
                 ftp_server.mkd(remote_dir_path)
-            except ftplib.all_errors, e:
+            except ftplib.all_errors as e:
                 # Got an exception. It might be because the remote directory already exists:
                 if sys.exc_info()[0] is ftplib.error_perm:
                     msg =str(e).strip()
@@ -237,7 +237,7 @@ class FtpUpload(object):
                 return
         else:
             syslog.syslog(syslog.LOG_ERR, "ftpupload: Unable to create remote directory %s" % remote_dir_path)
-            raise IOError, "Unable to create remote directory %s" % remote_dir_path
+            raise IOError("Unable to create remote directory %s" % remote_dir_path)
             
     def _skipThisDir(self, local_dir):
         
@@ -270,13 +270,13 @@ if __name__ == '__main__':
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
     if len(sys.argv) < 2 :
-        print """Usage: ftpupload.py path-to-configuration-file [path-to-be-ftp'd]"""
+        print ("""Usage: ftpupload.py path-to-configuration-file [path-to-be-ftp'd]""")
         sys.exit(weewx.CMD_ERROR)
         
     try :
         config_dict = configobj.ConfigObj(sys.argv[1], file_error=True)
     except IOError:
-        print "Unable to open configuration file ", sys.argv[1]
+        print ("Unable to open configuration file ", sys.argv[1])
         raise
 
     if len(sys.argv) == 2:
@@ -284,7 +284,7 @@ if __name__ == '__main__':
             ftp_dir = os.path.join(config_dict['WEEWX_ROOT'],
                                    config_dict['StdReport']['HTML_ROOT'])
         except KeyError:
-            print "No HTML_ROOT in configuration dictionary."
+            print ("No HTML_ROOT in configuration dictionary.")
             sys.exit(1)
     else:
         ftp_dir = sys.argv[2]

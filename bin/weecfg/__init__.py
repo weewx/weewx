@@ -12,7 +12,10 @@ import glob
 import os.path
 import shutil
 import sys
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import tempfile
 
 import configobj
@@ -126,7 +129,7 @@ class Logger(object):
         self.verbosity = verbosity
     def log(self, msg, level=0):
         if self.verbosity >= level:
-            print "%s%s" % ('  ' * (level - 1), msg)
+            print ("%s%s" % ('  ' * (level - 1), msg))
     def set_verbosity(self, verbosity):
         self.verbosity = verbosity
 
@@ -275,7 +278,7 @@ def modify_config(config_dict, stn_info, logger, debug=False):
             # Look up driver info:
             driver_editor, driver_name, driver_version = \
                 load_driver_editor(driver)
-        except Exception, e:
+        except Exception as e:
             sys.exit("Driver %s failed to load: %s" % (driver, e))
         stn_info['station_type'] = driver_name
         if debug:
@@ -972,6 +975,7 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
     driver_list = [os.path.basename(f) for f in glob.glob(os.path.join(driver_pkg_directory, "*.py"))]
 
     driver_info_dict = {}
+
     for filename in driver_list:
         if filename in excludes:
             continue
@@ -997,14 +1001,14 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
                     'driver_name': driver_module.DRIVER_NAME,
                     'version': driver_module_version,
                     'status': ''}
-        except ImportError, e:
+        except ImportError as e:
             # If the import fails, report it in the status
             driver_info_dict[driver_module_name] = {
                 'module_name': driver_module_name,
                 'driver_name': '?',
                 'version': '?',
                 'status': e}
-        except Exception, e:
+        except Exception as e:
             # Ignore anything else.  This might be a python file that is not
             # a driver, a python file with errors, or who knows what.
             pass
@@ -1015,10 +1019,10 @@ def print_drivers():
     """Get information about all the available drivers, then print it out."""
     driver_info_dict = get_all_driver_infos()
     keys = sorted(driver_info_dict)
-    print "%-25s%-15s%-9s%-25s" % (
-        "Module name", "Driver name", "Version", "Status")
+    print ("%-25s%-15s%-9s%-25s" % (
+        "Module name", "Driver name", "Version", "Status"))
     for d in keys:
-        print "  %(module_name)-25s%(driver_name)-15s%(version)-9s%(status)-25s" % driver_info_dict[d]
+        print ("  %(module_name)-25s%(driver_name)-15s%(version)-9s%(status)-25s" % driver_info_dict[d])
 
 def load_driver_editor(driver_module_name):
     """Load the configuration editor from the driver file
@@ -1050,20 +1054,20 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     #
     #  Description
     #
-    print "Enter a brief description of the station, such as its location.  For example:"
-    print "Santa's Workshop, North Pole"
+    print ("Enter a brief description of the station, such as its location.  For example:")
+    print ("Santa's Workshop, North Pole")
     loc = prompt_with_options("description", location)
 
     #
     #  Altitude
     #
-    print "Specify altitude, with units 'foot' or 'meter'.  For example:"
-    print "35, foot"
-    print "12, meter"
+    print ("Specify altitude, with units 'foot' or 'meter'.  For example:")
+    print ("35, foot")
+    print ("12, meter")
     msg = "altitude [%s]: " % weeutil.weeutil.list_as_string(altitude) if altitude else "altitude: "
     alt = None
     while alt is None:
-        ans = raw_input(msg).strip()
+        ans = input(msg).strip()
         if ans:
             parts = ans.split(',')
             if len(parts) == 2:
@@ -1079,20 +1083,20 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
             alt = altitude
 
         if not alt:
-            print "Unrecognized response. Try again."
+            print ("Unrecognized response. Try again.")
 
     #
     # Latitude & Longitude
     #
-    print "Specify latitude in decimal degrees, negative for south."
+    print ("Specify latitude in decimal degrees, negative for south.")
     lat = prompt_with_limits("latitude", latitude, -90, 90)
-    print "Specify longitude in decimal degrees, negative for west."
+    print ("Specify longitude in decimal degrees, negative for west.")
     lon = prompt_with_limits("longitude", longitude, -180, 180)
 
     #
     # Display units
     #
-    print "Indicate the preferred units for display: 'metric' or 'us'"
+    print ("Indicate the preferred units for display: 'metric' or 'us'")
     uni = prompt_with_options("units", units, ['us', 'metric'])
 
     return {'location': loc,
@@ -1107,17 +1111,16 @@ def prompt_for_driver(dflt_driver=None):
     infos = get_all_driver_infos()
     keys = sorted(infos)
     dflt_idx = None
-    print "Installed drivers include:"
     for i, d in enumerate(keys):
-        print " %2d) %-15s %-25s %s" % (i, infos[d].get('driver_name', '?'),
-                                        "(%s)" % d, infos[d].get('status', ''))
+        print (" %2d) %-15s %-25s %s" % (i, infos[d].get('driver_name', '?'),
+                                        "(%s)" % d, infos[d].get('status', '')))
         if dflt_driver == d:
             dflt_idx = i
     msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
     idx = 0
     ans = None
     while ans is None:
-        ans = raw_input(msg).strip()
+        ans = input(msg).strip()
         if not ans:
             ans = dflt_idx
         try:
@@ -1156,7 +1159,7 @@ def prompt_with_options(prompt, default=None, options=None):
     msg = "%s [%s]: " % (prompt, default) if default is not None else "%s: " % prompt
     value = None
     while value is None:
-        value = raw_input(msg).strip()
+        value = input(msg).strip()
         if value:
             if options and value not in options:
                 value = None
@@ -1183,7 +1186,7 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
     msg = "%s [%s]: " % (prompt, default) if default is not None else "%s: " % prompt
     value = None
     while value is None:
-        value = raw_input(msg).strip()
+        value = input(msg).strip()
         if value:
             try:
                 v = float(value)
@@ -1277,7 +1280,7 @@ def mkdir_p(path):
     """equivalent to 'mkdir -p'"""
     try:
         os.makedirs(path)
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.EEXIST and os.path.isdir(path):
             pass
         else:

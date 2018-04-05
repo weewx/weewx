@@ -193,7 +193,7 @@ def dropDaily(config_dict, db_binding):
     ans = None
     while ans not in ['y', 'n']:
         print "Proceeding will delete all your daily summaries from database '%s'" % database_name
-        ans = raw_input("Are you sure you want to proceed (y/n)? ")
+        ans = input("Are you sure you want to proceed (y/n)? ")
         if ans == 'y' :
             t1 = time.time()
             print "Dropping daily summary tables from '%s' ... " % database_name
@@ -237,7 +237,7 @@ def rebuildDaily(config_dict, db_binding, options):
 
     ans = None
     while ans not in ['y', 'n']:
-        ans = raw_input("Proceed (y/n)? ")
+        ans = input("Proceed (y/n)? ")
         if ans == 'y':
             break
         elif ans == 'n':
@@ -291,7 +291,7 @@ def reconfigMainDatabase(config_dict, db_binding):
     except weedb.DatabaseExists:
         ans = None
         while ans not in ['y', 'n']:
-            ans = raw_input("New database '%s' already exists. Delete it first (y/n)? " % (new_database_dict['database_name'],))
+            ans = input("New database '%s' already exists. Delete it first (y/n)? " % (new_database_dict['database_name'],))
             if ans == 'y':
                 weedb.drop(new_database_dict)
             elif ans == 'n':
@@ -326,7 +326,7 @@ def reconfigMainDatabase(config_dict, db_binding):
             print ("Units will be converted from the '%s' system to the '%s' system." %
                    (weewx.units.unit_nicknames[old_unit_system],
                     weewx.units.unit_nicknames[target_unit_system]))
-        ans = raw_input("Are you sure you wish to proceed (y/n)? ")
+        ans = input("Are you sure you wish to proceed (y/n)? ")
         if ans == 'y':
             t1 = time.time()
             weewx.manager.reconfig(manager_dict['database_dict'],
@@ -398,7 +398,7 @@ def transferDatabase(config_dict, db_binding, options):
         if not options.dry_run: # is it a dry run ?
             # not a dry run, actually do the transfer
             while ans not in ['y', 'n']:
-                ans = raw_input("Transfer %s records from source database '%s' to destination database '%s' (y/n)? " %
+                ans = input("Transfer %s records from source database '%s' to destination database '%s' (y/n)? " %
                                 (num_recs, src_manager.database_name, dest_manager_dict['database_dict']['database_name']))
                 if ans == 'y':
                     t1 = time.time()
@@ -499,7 +499,7 @@ def update(config_dict, db_binding, options):
     # prompt for confirmation if it is not a dry run
     ans = 'y' if options.dry_run else None
     while ans not in ['y', 'n']:
-        ans = raw_input("The update process does not affect archive data, but does alter the database.\nContinue (y/n)? ")
+        ans = input("The update process does not affect archive data, but does alter the database.\nContinue (y/n)? ")
     if ans == 'n':
         # we decided not to update the summary tables
         msg = "Update cancelled"

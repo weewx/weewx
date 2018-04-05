@@ -197,11 +197,11 @@ class UsbDevice(object):
         A specific device must have been found."""
         try:
             self.handle = self.dev.open()
-        except usb.USBError, exception:
+        except usb.USBError as exception:
             logcrt(('open_device() Unable to open USB interface.'
                     ' Reason: %s' % exception))
             raise weewx.WakeupError(exception)
-        except AttributeError, exception:
+        except AttributeError as exception:
             logcrt('open_device() Device not specified.')
             raise weewx.WakeupError(exception)
 
@@ -213,7 +213,7 @@ class UsbDevice(object):
 
         try:
             self.handle.claimInterface(self.interface)
-        except usb.USBError, exception:
+        except usb.USBError as exception:
             logcrt(('open_device() Unable to'
                     ' claim USB interface. Reason: %s' % exception))
             raise weewx.WakeupError(exception)
@@ -227,7 +227,7 @@ class UsbDevice(object):
         not be cross platform."""
         try:
             self.handle.releaseInterface()
-        except usb.USBError, exception:
+        except usb.USBError as exception:
             logcrt('close_device() Unable to'
                    ' release device interface. Reason: %s' % exception)
 
@@ -266,11 +266,11 @@ class UsbDevice(object):
                 logdbg('read_device(): %s' % buf)
             return report[1:report[0] + 1]
 
-        except IndexError, e:
+        except IndexError as e:
             # This indicates we failed an index range above.
             logerr('read_device() Failed the index rage %s: %s' % (report, e))
 
-        except usb.USBError, ex:
+        except usb.USBError as ex:
             # No data presented on the bus.  This is a normal part of
             # the process that indicates that the current live records
             # have been exhausted.  We have to send a heartbeat command
@@ -309,7 +309,7 @@ class UsbDevice(object):
                 value,                                # value
                 0x0000000,                            # index
                 _WMR200_USB_RESET_TIMEOUT)            # timeout
-        except usb.USBError, exception:
+        except usb.USBError as exception:
             msg = ('write_device() Unable to'
                    ' send USB control message %s' % exception)
             logerr(msg)
@@ -485,7 +485,7 @@ class Packet(object):
                    % len(self._pkt_data))
             raise WMR200ProtocolError(msg)
 
-        except (OverflowError, ValueError), exception:
+        except (OverflowError, ValueError) as exception:
             msg = ('Packet timestamp with bogus fields min:%d hr:%d day:%d'
                    ' m:%d y:%d %s' % (pkt_data[0], pkt_data[1],
                    pkt_data[2], pkt_data[3], pkt_data[4], exception))
@@ -1341,7 +1341,7 @@ class PollUsbDevice(threading.Thread):
             self._ok_to_read = True
             time.sleep(1)
 
-        except usb.USBError, exception:
+        except usb.USBError as exception:
             msg = ('reset_console() Unable to send USB control'
                    'message %s' % exception)
             logerr(msg)
@@ -1634,7 +1634,7 @@ class WMR200(weewx.drivers.AbstractDevice):
         buf = [0x01, cmd, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         try:
             self.usb_device.write_device(buf)
-        except usb.USBError, exception:
+        except usb.USBError as exception:
             msg = (('_write_cmd() Unable to send USB cmd:0x%02x control'
                     ' message' % cmd))
             logerr(msg)
@@ -1752,7 +1752,7 @@ class WMR200(weewx.drivers.AbstractDevice):
             else:
                 logdbg(('  Acknowledged control packet'
                         ' rx:%d') % PacketControl.pkt_rx)
-        except WMR200PacketParsingError, e:
+        except WMR200PacketParsingError as e:
             # Drop any bogus packets.
             logerr(self._pkt.to_string_raw('Discarding bogus packet: %s ' 
                    % e.msg))
@@ -2067,8 +2067,8 @@ class WMR200ConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def modify_config(self, config_dict):
-        print """
-Setting rainRate and windchill calculations to hardware."""
+        print ("""
+Setting rainRate and windchill calculations to hardware.""")
         config_dict.setdefault('StdWXCalculate', {})
         config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'

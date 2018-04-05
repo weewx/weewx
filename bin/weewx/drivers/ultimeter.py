@@ -193,7 +193,7 @@ class Station(object):
             logdbg("station time: day:%s min:%s (%s)" %
                    (d, m, timestamp_to_string(ts)))
             return ts
-        except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+        except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
             logerr("get_time failed: %s" % e)
         return int(time.time())
 
@@ -248,7 +248,7 @@ class Station(object):
                 buf = self.get_readings()
                 self.validate_string(buf)
                 return buf
-            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
                 loginf("Failed attempt %d of %d to get readings: %s" %
                        (ntries + 1, max_tries, e))
                 time.sleep(retry_wait)
@@ -323,7 +323,7 @@ class Station(object):
                     v -= (1 << bits)
             if multiplier is not None:
                 v *= multiplier
-        except ValueError, e:
+        except ValueError as e:
             if s != '----':
                 logdbg("decode failed for '%s': %s" % (s, e))
         return v
@@ -347,8 +347,8 @@ class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
 """ % Station.DEFAULT_PORT
 
     def prompt_for_settings(self):
-        print "Specify the serial port on which the station is connected, for"
-        print "example: /dev/ttyUSB0 or /dev/ttyS0 or /dev/cua0."
+        print ("Specify the serial port on which the station is connected, for")
+        print ("example: /dev/ttyUSB0 or /dev/ttyS0 or /dev/cua0.")
         port = self._prompt('port', Station.DEFAULT_PORT)
         return {'port': port}
 
@@ -376,10 +376,10 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "ultimeter driver version %s" % DRIVER_VERSION
+        print ("ultimeter driver version %s" % DRIVER_VERSION)
         exit(0)
 
     with Station(options.port, debug_serial=options.debug) as station:
         station.set_logger_mode()
         while True:
-            print time.time(), _fmt(station.get_readings())
+            print (time.time(), _fmt(station.get_readings()))

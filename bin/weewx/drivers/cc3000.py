@@ -159,286 +159,286 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                           help='display daylight savings settings')
         parser.add_option('--set-dst', dest='dst',
                           metavar='mm/dd HH:MM,mm/dd HH:MM,[MM]M',
-                          help='set daylight savings start, end, and amount')
-        parser.add_option("--get-channel", dest="getch", action="store_true",
-                          help="display the station channel")
-        parser.add_option("--set-channel", dest="ch", metavar="CHANNEL",
-                          type=int,
-                          help="set the station channel")
+                              help='set daylight savings start, end, and amount')
+            parser.add_option("--get-channel", dest="getch", action="store_true",
+                              help="display the station channel")
+            parser.add_option("--set-channel", dest="ch", metavar="CHANNEL",
+                              type=int,
+                              help="set the station channel")
 
-    def do_options(self, options, parser, config_dict, prompt):
-        self.driver = CC3000Driver(**config_dict[DRIVER_NAME])
-        if options.current:
-            print self.driver.get_current()
-        elif options.nrecords is not None:
-            for r in self.driver.station.gen_records(nrecords):
-                print r
-        elif options.clear:
-            self.clear_memory(prompt)
-        elif options.reset:
-            self.reset_rain(prompt)
-        elif options.getclock:
-            print self.driver.station.get_time()
-        elif options.setclock:
-            self.set_clock(prompt)
-        elif options.getdst:
-            print self.driver.station.get_dst()
-        elif options.dst is not None:
-            self.set_dst(options.setdst, prompt)
-        elif options.getint:
-            print self.driver.station.get_interval() * 60
-        elif options.interval is not None:
-            self.set_interval(options.interval / 60, prompt)
-        elif options.getunits:
-            print self.driver.station.get_units()
-        elif options.units is not None:
-            self.set_units(options.units, prompt)
-        elif options.getch:
-            print self.driver.station.get_channel()
-        elif options.ch is not None:
-            self.set_channel(options.ch, prompt)
-        else:
-            print "firmware:", self.driver.station.get_version()
-            print "time:", self.driver.station.get_time()
-            print "dst:", self.driver.station.get_dst()
-            print "units:", self.driver.station.get_units()
-            print "memory:", self.driver.station.get_memory_status()
-            print "interval:", self.driver.station.get_interval() * 60
-            print "channel:", self.driver.station.get_channel()
-            print "charger:", self.driver.station.get_charger()
-            print "baro:", self.driver.station.get_baro()
-            print "rain:", self.driver.station.get_rain()
-        self.driver.closePort()
-
-    def clear_memory(self, prompt):
-        ans = None
-        while ans not in ['y', 'n']:
-            print self.driver.station.get_memory_status()
-            if prompt:
-                ans = raw_input("Clear console memory (y/n)? ")
+        def do_options(self, options, parser, config_dict, prompt):
+            self.driver = CC3000Driver(**config_dict[DRIVER_NAME])
+            if options.current:
+                print (self.driver.get_current())
+            elif options.nrecords is not None:
+                for r in self.driver.station.gen_records(nrecords):
+                    print (r)
+            elif options.clear:
+                self.clear_memory(prompt)
+            elif options.reset:
+                self.reset_rain(prompt)
+            elif options.getclock:
+                print (self.driver.station.get_time())
+            elif options.setclock:
+                self.set_clock(prompt)
+            elif options.getdst:
+                print (self.driver.station.get_dst())
+            elif options.dst is not None:
+                self.set_dst(options.setdst, prompt)
+            elif options.getint:
+                print (self.driver.station.get_interval() * 60)
+            elif options.interval is not None:
+                self.set_interval(options.interval / 60, prompt)
+            elif options.getunits:
+                print (self.driver.station.get_units())
+            elif options.units is not None:
+                self.set_units(options.units, prompt)
+            elif options.getch:
+                print (self.driver.station.get_channel())
+            elif options.ch is not None:
+                self.set_channel(options.ch, prompt)
             else:
-                print 'Clearing console memory'
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.clear_memory()
+                print ("firmware:", self.driver.station.get_version())
+                print ("time:", self.driver.station.get_time())
+                print ("dst:", self.driver.station.get_dst())
+                print ("units:", self.driver.station.get_units())
+                print ("memory:", self.driver.station.get_memory_status())
+                print ("interval:", self.driver.station.get_interval() * 60)
+                print ("channel:", self.driver.station.get_channel())
+                print ("charger:", self.driver.station.get_charger())
+                print ("baro:", self.driver.station.get_baro())
+                print ("rain:", self.driver.station.get_rain())
+            self.driver.closePort()
+
+        def clear_memory(self, prompt):
+            ans = None
+            while ans not in ['y', 'n']:
                 print self.driver.station.get_memory_status()
-            elif ans == 'n':
-                print "Clear memory cancelled."
-
-    def reset_rain(self, prompt):
-        ans = None
-        while ans not in ['y', 'n']:
-            print self.driver.station.get_rain()
-            if prompt:
-                ans = raw_input("Reset rain counter (y/n)? ")
-            else:
-                print 'Resetting rain counter'
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.reset_rain()
-                print self.driver.station.get_rain()
-            elif ans == 'n':
-                print "Reset rain cancelled."
-
-    def set_interval(self, interval, prompt):
-        if interval < 0 or 60 < interval:
-            raise ValueError("Logger interval must be 0-60 minutes")
-        ans = None
-        while ans not in ['y', 'n']:
-            print "Interval is", self.driver.station.get_interval()
-            if prompt:
-                ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
-            else:
-                print "Setting interval to %d minutes" % interval
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.set_interval(interval)
-                print "Interval is now", self.driver.station.get_interval()
-            elif ans == 'n':
-                print "Set interval cancelled."
-
-    def set_clock(self, prompt):
-        ans = None
-        while ans not in ['y', 'n']:
-            print "Station clock is", self.driver.station.get_time()
-            now = datetime.datetime.now()
-            if prompt:
-                ans = raw_input("Set station clock to %s (y/n)? " % now)
-            else:
-                print "Setting station clock to %s" % now
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.set_time()
-                print "Station clock is now", self.driver.station.get_time()
-            elif ans == 'n':
-                print "Set clock cancelled."
-
-    def set_units(self, units, prompt):
-        if units.lower() not in ['metric', 'english']:
-            raise ValueError("Units must be METRIC or ENGLISH")
-        ans = None
-        while ans not in ['y', 'n']:
-            print "Station units is", self.driver.station.get_units()
-            if prompt:
-                ans = raw_input("Set station units to %s (y/n)? " % units)
-            else:
-                print "Setting station units to %s" % units
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.set_units(units)
-                print "Station units is now", self.driver.station.get_units()
-            elif ans == 'n':
-                print "Set units cancelled."
-
-    def set_dst(self, dst, prompt):
-        if dst != '0' and len(dst.split(',')) != 3:
-            raise ValueError("DST must be 0 (disabled) or start, stop, amount "
-                             "with the format mm/dd HH:MM, mm/dd HH:MM, [MM]M")
-        ans = None
-        while ans not in ['y', 'n']:
-            print "Station DST is", self.driver.station.get_dst()
-            if prompt:
-                ans = raw_input("Set DST to %s (y/n)? " % dst)
-            else:
-                print "Setting station DST to %s" % dst
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.set_dst(dst)
-                print "Station DST is now", self.driver.station.get_dst()
-            elif ans == 'n':
-                print "Set DST cancelled."
-
-    def set_channel(self, ch, prompt):
-        if ch not in [0, 1, 2, 3]:
-            raise ValueError("Channel must be one of 0, 1, 2, or 3")
-        ans = None
-        while ans not in ['y', 'n']:
-            print "Station channel is", self.driver.station.get_channel()
-            if prompt:
-                ans = raw_input("Set channel to %s (y/n)? " % ch)
-            else:
-                print "Setting station channel to %s" % ch
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.set_channel(ch)
-                print "Station channel is now", self.driver.station.get_ch()
-            elif ans == 'n':
-                print "Set channel cancelled."
-
-
-class CC3000Driver(weewx.drivers.AbstractDevice):
-    """weewx driver that communicates with a RainWise CC3000 data logger."""
-
-    # map rainwise names to database schema names
-    DEFAULT_SENSOR_MAP = {
-        'dateTime': 'TIMESTAMP',
-        'outTemp': 'TEMP OUT',
-        'outHumidity': 'HUMIDITY',
-        'windDir': 'WIND DIRECTION',
-        'windSpeed': 'WIND SPEED',
-        'windGust': 'WIND GUST',
-        'pressure': 'PRESSURE',
-        'inTemp': 'TEMP IN',
-        'extraTemp1': 'TEMP 1',
-        'extraTemp2': 'TEMP 2',
-        'day_rain_total': 'RAIN',
-        'consBatteryVoltage': 'STATION BATTERY',
-        'bkupBatteryVoltage': 'BATTERY BACKUP',
-        'radiation': 'SOLAR RADIATION',
-        'UV': 'UV INDEX',
-    }
-
-    def __init__(self, **stn_dict):
-        loginf('driver version is %s' % DRIVER_VERSION)
-
-        global DEBUG_SERIAL
-        DEBUG_SERIAL = int(stn_dict.get('debug_serial', 0))
-        global DEBUG_CHECKSUM
-        DEBUG_CHECKSUM = int(stn_dict.get('debug_checksum', 0))
-        global DEBUG_OPENCLOSE
-        DEBUG_OPENCLOSE = int(stn_dict.get('debug_openclose', 0))
-
-        self.model = stn_dict.get('model', 'CC3000')
-        port = stn_dict.get('port', CC3000.DEFAULT_PORT)
-        loginf('using serial port %s' % port)
-        self.polling_interval = float(stn_dict.get('polling_interval', 1))
-        loginf('polling interval is %s seconds' % self.polling_interval)
-        self.use_station_time = weeutil.weeutil.to_bool(
-            stn_dict.get('use_station_time', True))
-        loginf('using %s time for loop packets' %
-               ('station' if self.use_station_time else 'computer'))
-        self.max_tries = int(stn_dict.get('max_tries', 5))
-        self.retry_wait = int(stn_dict.get('retry_wait', 60))
-        # start with the default sensormap, then augment with user-specified
-        self.sensor_map = dict(self.DEFAULT_SENSOR_MAP)
-        if 'sensor_map' in stn_dict:
-            self.sensor_map.update(stn_dict['sensor_map'])
-        loginf('sensor map is %s' % self.sensor_map)
-        self.last_rain = None
-
-        self.station = CC3000(port)
-        self.station.open()
-
-        # report the station configuration
-        settings = self._init_station_with_retries(
-            self.station, self.max_tries, self.retry_wait)
-        loginf('firmware: %s' % settings['firmware'])
-        self.arcint = settings['arcint']
-        loginf('archive_interval: %s' % self.arcint)
-        self.header = settings['header']
-        loginf('header: %s' % self.header)
-        self.units = weewx.METRICWX if settings['units'] == 'METRIC' else weewx.US
-        loginf('units: %s' % settings['units'])
-        loginf('channel: %s' % settings['channel'])
-        loginf('charger status: %s' % settings['charger'])
-
-    def genLoopPackets(self):
-        cmd_mode = True
-        if self.polling_interval == 0:
-            self.station.set_auto()
-            cmd_mode = False
-        # if logger loses contact with sensors, log it periodically
-        last_data_ts = int(time.time())
-        nodata_cnt = -1
-        nodata_interval = 1800 # seconds
-        # get data from the logger, with retries
-        ntries = 0
-        while ntries < self.max_tries:
-            ntries += 1
-            try:
-                values = self.station.get_current_data(cmd_mode)
-                now = int(time.time())
-                ntries = 0
-                logdbg("values: %s" % values)
-                if values:
-                    last_data_ts = now
-                    nodata_cnt = -1
-                    packet = self._parse_current(
-                        values, self.header, self.sensor_map)
-                    logdbg("parsed: %s" % packet)
-                    if packet and 'dateTime' in packet:
-                        if not self.use_station_time:
-                            packet['dateTime'] = int(time.time() + 0.5)
-                        packet['usUnits'] = self.units
-                        if 'day_rain_total' in packet:
-                            packet['rain'] = self._rain_total_to_delta(
-                                packet['day_rain_total'], self.last_rain)
-                            self.last_rain = packet['day_rain_total']
-                        else:
-                            logdbg("no rain in packet: %s" % packet)
-                        logdbg("packet: %s" % packet)
-                        yield packet
+                if prompt:
+                    ans = input("Clear console memory (y/n)? ")
                 else:
-                    cnt = (now - last_data_ts) / nodata_interval
-                    if cnt > nodata_cnt:
-                        loginf("no data from sensors since %s" %
-                               weeutil.weeutil.timestamp_to_string(last_data_ts))
-                    nodata_cnt = cnt
-                if self.polling_interval:
-                    time.sleep(self.polling_interval)
-            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
-                logerr("Failed attempt %d of %d to get data: %s" %
-                       (ntries, self.max_tries, e))
+                    print ('Clearing console memory')
+                    ans = 'y'
+                if ans == 'y':
+                    self.driver.station.clear_memory()
+                    print self.driver.station.get_memory_status()
+                elif ans == 'n':
+                    print ("Clear memory cancelled.")
+
+        def reset_rain(self, prompt):
+            ans = None
+            while ans not in ['y', 'n']:
+                print self.driver.station.get_rain()
+                if prompt:
+                    ans = input("Reset rain counter (y/n)? ")
+                else:
+                    print ('Resetting rain counter')
+                    ans = 'y'
+                if ans == 'y':
+                    self.driver.station.reset_rain()
+                    print self.driver.station.get_rain()
+                elif ans == 'n':
+                    print ("Reset rain cancelled.")
+
+        def set_interval(self, interval, prompt):
+            if interval < 0 or 60 < interval:
+                raise ValueError("Logger interval must be 0-60 minutes")
+            ans = None
+            while ans not in ['y', 'n']:
+                print ("Interval is", self.driver.station.get_interval())
+                if prompt:
+                    ans = input("Set interval to %d minutes (y/n)? " % interval)
+                else:
+                    print ("Setting interval to %d minutes" % interval)
+                    ans = 'y'
+                if ans == 'y':
+                    self.driver.station.set_interval(interval)
+                    print ("Interval is now", self.driver.station.get_interval())
+                elif ans == 'n':
+                    print ("Set interval cancelled.")
+
+        def set_clock(self, prompt):
+            ans = None
+            while ans not in ['y', 'n']:
+                print ("Station clock is", self.driver.station.get_time())
+                now = datetime.datetime.now()
+                if prompt:
+                    ans = input("Set station clock to %s (y/n)? " % now)
+                else:
+                    print ("Setting station clock to %s" % now)
+                    ans = 'y'
+                if ans == 'y':
+                    self.driver.station.set_time()
+                    print ("Station clock is now", self.driver.station.get_time())
+                elif ans == 'n':
+                    print ("Set clock cancelled.")
+
+        def set_units(self, units, prompt):
+            if units.lower() not in ['metric', 'english']:
+                raise ValueError("Units must be METRIC or ENGLISH")
+            ans = None
+            while ans not in ['y', 'n']:
+                print ("Station units is", self.driver.station.get_units())
+                if prompt:
+                    ans = input("Set station units to %s (y/n)? " % units)
+                else:
+                    print ("Setting station units to %s" % units)
+                    ans = 'y'
+                if ans == 'y':
+                    self.driver.station.set_units(units)
+                    print ("Station units is now", self.driver.station.get_units())
+                elif ans == 'n':
+                    print ("Set units cancelled.")
+
+        def set_dst(self, dst, prompt):
+            if dst != '0' and len(dst.split(',')) != 3:
+                raise ValueError("DST must be 0 (disabled) or start, stop, amount "
+                                 "with the format mm/dd HH:MM, mm/dd HH:MM, [MM]M")
+            ans = None
+            while ans not in ['y', 'n']:
+                print ("Station DST is", self.driver.station.get_dst())
+                if prompt:
+                    ans = input("Set DST to %s (y/n)? " % dst)
+                else:
+                    print ("Setting station DST to %s" % dst)
+                    ans = 'y'
+                if ans == 'y':
+                    self.driver.station.set_dst(dst)
+                    print ("Station DST is now", self.driver.station.get_dst())
+                elif ans == 'n':
+                    print ("Set DST cancelled.")
+
+        def set_channel(self, ch, prompt):
+            if ch not in [0, 1, 2, 3]:
+                raise ValueError("Channel must be one of 0, 1, 2, or 3")
+            ans = None
+            while ans not in ['y', 'n']:
+                print ("Station channel is", self.driver.station.get_channel())
+                if prompt:
+                    ans = input("Set channel to %s (y/n)? " % ch)
+                else:
+                    print ("Setting station channel to %s" % ch)
+                    ans = 'y'
+                if ans == 'y':
+                    self.driver.station.set_channel(ch)
+                    print ("Station channel is now", self.driver.station.get_ch())
+                elif ans == 'n':
+                    print ("Set channel cancelled.")
+
+
+    class CC3000Driver(weewx.drivers.AbstractDevice):
+        """weewx driver that communicates with a RainWise CC3000 data logger."""
+
+        # map rainwise names to database schema names
+        DEFAULT_SENSOR_MAP = {
+            'dateTime': 'TIMESTAMP',
+            'outTemp': 'TEMP OUT',
+            'outHumidity': 'HUMIDITY',
+            'windDir': 'WIND DIRECTION',
+            'windSpeed': 'WIND SPEED',
+            'windGust': 'WIND GUST',
+            'pressure': 'PRESSURE',
+            'inTemp': 'TEMP IN',
+            'extraTemp1': 'TEMP 1',
+            'extraTemp2': 'TEMP 2',
+            'day_rain_total': 'RAIN',
+            'consBatteryVoltage': 'STATION BATTERY',
+            'bkupBatteryVoltage': 'BATTERY BACKUP',
+            'radiation': 'SOLAR RADIATION',
+            'UV': 'UV INDEX',
+        }
+
+        def __init__(self, **stn_dict):
+            loginf('driver version is %s' % DRIVER_VERSION)
+
+            global DEBUG_SERIAL
+            DEBUG_SERIAL = int(stn_dict.get('debug_serial', 0))
+            global DEBUG_CHECKSUM
+            DEBUG_CHECKSUM = int(stn_dict.get('debug_checksum', 0))
+            global DEBUG_OPENCLOSE
+            DEBUG_OPENCLOSE = int(stn_dict.get('debug_openclose', 0))
+
+            self.model = stn_dict.get('model', 'CC3000')
+            port = stn_dict.get('port', CC3000.DEFAULT_PORT)
+            loginf('using serial port %s' % port)
+            self.polling_interval = float(stn_dict.get('polling_interval', 1))
+            loginf('polling interval is %s seconds' % self.polling_interval)
+            self.use_station_time = weeutil.weeutil.to_bool(
+                stn_dict.get('use_station_time', True))
+            loginf('using %s time for loop packets' %
+                   ('station' if self.use_station_time else 'computer'))
+            self.max_tries = int(stn_dict.get('max_tries', 5))
+            self.retry_wait = int(stn_dict.get('retry_wait', 60))
+            # start with the default sensormap, then augment with user-specified
+            self.sensor_map = dict(self.DEFAULT_SENSOR_MAP)
+            if 'sensor_map' in stn_dict:
+                self.sensor_map.update(stn_dict['sensor_map'])
+            loginf('sensor map is %s' % self.sensor_map)
+            self.last_rain = None
+
+            self.station = CC3000(port)
+            self.station.open()
+
+            # report the station configuration
+            settings = self._init_station_with_retries(
+                self.station, self.max_tries, self.retry_wait)
+            loginf('firmware: %s' % settings['firmware'])
+            self.arcint = settings['arcint']
+            loginf('archive_interval: %s' % self.arcint)
+            self.header = settings['header']
+            loginf('header: %s' % self.header)
+            self.units = weewx.METRICWX if settings['units'] == 'METRIC' else weewx.US
+            loginf('units: %s' % settings['units'])
+            loginf('channel: %s' % settings['channel'])
+            loginf('charger status: %s' % settings['charger'])
+
+        def genLoopPackets(self):
+            cmd_mode = True
+            if self.polling_interval == 0:
+                self.station.set_auto()
+                cmd_mode = False
+            # if logger loses contact with sensors, log it periodically
+            last_data_ts = int(time.time())
+            nodata_cnt = -1
+            nodata_interval = 1800 # seconds
+            # get data from the logger, with retries
+            ntries = 0
+            while ntries < self.max_tries:
+                ntries += 1
+                try:
+                    values = self.station.get_current_data(cmd_mode)
+                    now = int(time.time())
+                    ntries = 0
+                    logdbg("values: %s" % values)
+                    if values:
+                        last_data_ts = now
+                        nodata_cnt = -1
+                        packet = self._parse_current(
+                            values, self.header, self.sensor_map)
+                        logdbg("parsed: %s" % packet)
+                        if packet and 'dateTime' in packet:
+                            if not self.use_station_time:
+                                packet['dateTime'] = int(time.time() + 0.5)
+                            packet['usUnits'] = self.units
+                            if 'day_rain_total' in packet:
+                                packet['rain'] = self._rain_total_to_delta(
+                                    packet['day_rain_total'], self.last_rain)
+                                self.last_rain = packet['day_rain_total']
+                            else:
+                                logdbg("no rain in packet: %s" % packet)
+                            logdbg("packet: %s" % packet)
+                            yield packet
+                    else:
+                        cnt = (now - last_data_ts) / nodata_interval
+                        if cnt > nodata_cnt:
+                            loginf("no data from sensors since %s" %
+                                   weeutil.weeutil.timestamp_to_string(last_data_ts))
+                        nodata_cnt = cnt
+                    if self.polling_interval:
+                        time.sleep(self.polling_interval)
+                except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
+                    logerr("Failed attempt %d of %d to get data: %s" %
+                           (ntries, self.max_tries, e))
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)
                 time.sleep(self.retry_wait)
         else:
@@ -506,7 +506,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         try:
             v = self.station.get_time()
             return _to_ts(v)
-        except ValueError, e:
+        except ValueError as e:
             logerr("getTime failed: %s" % e)
         return 0
 
@@ -518,7 +518,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         for cnt in xrange(max_tries):
             try:
                 return CC3000Driver._init_station(station)
-            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
                 logerr("Failed attempt %d of %d to initialize station: %s" %
                        (cnt + 1, max_tries, e))
                 logdbg("Waiting %d seconds before retry" % retry_wait)
@@ -588,7 +588,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                     pkt[label] = _to_ts(v, fmt)
                 else:
                     pkt[label] = float(v)
-            except ValueError, e:
+            except ValueError as e:
                 logerr("parse failed for '%s' '%s': %s (idx=%s values=%s)" %
                        (header[i], v, e, i, values))
                 return dict()
@@ -651,7 +651,7 @@ def _check_crc(buf):
         b = int(cs, 16) # checksum provided in data
         if a != b:
             raise ChecksumMismatch(a, b, buf)
-    except ValueError, e:
+    except ValueError as e:
         raise BadCRC(a, cs, buf)
 
 # for some reason we sometimes get null characters randomly mixed in with the
@@ -932,7 +932,7 @@ class CC3000(object):
                 else:
                     logerr("bad record %s '%s' (%s)" %
                            (n, _fmt(values[0]), _fmt(data)))
-            except ChecksumError, e:
+            except ChecksumError as e:
                 logerr("download failed for record %s: %s" % (n, e))
 
 
@@ -954,8 +954,8 @@ class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
 """ % (CC3000.DEFAULT_PORT,)
 
     def prompt_for_settings(self):
-        print "Specify the serial port on which the station is connected, for"
-        print "example /dev/ttyUSB0 or /dev/ttyS0."
+        print ("Specify the serial port on which the station is connected, for")
+        print ("example /dev/ttyUSB0 or /dev/ttyS0.")
         port = self._prompt('port', CC3000.DEFAULT_PORT)
         return {'port': port}
 
@@ -1027,7 +1027,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "CC3000 driver version %s" % DRIVER_VERSION
+        print ("CC3000 driver version %s" % DRIVER_VERSION)
         exit(0)
 
     if options.debug:
@@ -1049,18 +1049,18 @@ if __name__ == '__main__':
         if options.getver:
             print s.get_version()
         if options.status:
-            print "firmware:", s.get_version()
-            print "time:", s.get_time()
-            print "dst:", s.get_dst()
-            print "units:", s.get_units()
-            print "memory:", s.get_memory_status()
-            print "interval:", s.get_interval() * 60
-            print "channel:", s.get_channel()
-            print "charger:", s.get_charger()
-            print "baro:", s.get_baro()
-            print "rain:", s.get_rain()
+            print ("firmware:", s.get_version())
+            print ("time:", s.get_time())
+            print ("dst:", s.get_dst())
+            print ("units:", s.get_units())
+            print ("memory:", s.get_memory_status())
+            print ("interval:", s.get_interval() * 60)
+            print ("channel:", s.get_channel())
+            print ("charger:", s.get_charger())
+            print ("baro:", s.get_baro())
+            print ("rain:", s.get_rain())
         if options.getch:
-            print s.get_channel()
+            print (s.get_channel())
         if options.setch is not None:
             s.set_channel(int(options.setch))
         if options.getbat:

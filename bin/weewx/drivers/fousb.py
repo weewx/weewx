@@ -270,21 +270,21 @@ def getvalues(station, name, value):
     return values
 
 def raw_dump(date, pos, data):
-    print date,
-    print "%04x" % pos,
+    print (date),
+    print ("%04x" % pos),
     for item in data:
-        print "%02x" % item,
+        print ("%02x" % item),
     print
 
 def table_dump(date, data, showlabels=False):
     if showlabels:
-        print '# date time',
+        print ('# date time'),
         for key in data.keys():
-            print key,
+            print (key),
         print
-    print date,
+    print (date),
     for key in data.keys():
-        print data[key],
+        print (data[key]),
     print
 
 
@@ -311,22 +311,22 @@ class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
         import configobj
         stanza = configobj.ConfigObj(orig_stanza.splitlines())
         if 'pressure_offset' in stanza[DRIVER_NAME]:
-            print """
+            print ("""
 The pressure_offset is no longer supported by the FineOffsetUSB driver.  Move
-the pressure calibration constant to [StdCalibrate] instead."""
+the pressure calibration constant to [StdCalibrate] instead.""")
         if ('polling_mode' in stanza[DRIVER_NAME] and
             stanza[DRIVER_NAME]['polling_mode'] == 'ADAPTIVE'):
-            print """
-Using ADAPTIVE as the polling_mode can lead to USB lockups."""
+            print ("""
+Using ADAPTIVE as the polling_mode can lead to USB lockups.""")
         if ('polling_interval' in stanza[DRIVER_NAME] and
             int(stanza[DRIVER_NAME]['polling_interval']) < 48):
-            print """
-A polling_interval of anything less than 48 seconds is not recommened."""
+            print ("""
+A polling_interval of anything less than 48 seconds is not recommened.""")
         return orig_stanza
 
     def modify_config(self, config_dict):
-        print """
-Setting record_generation to software."""
+        print ("""
+Setting record_generation to software.""")
         config_dict['StdArchive']['record_generation'] = 'software'
 
 
@@ -403,14 +403,14 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
     def show_info(self):
         """Query the station then display the settings."""
 
-        print "Querying the station..."
+        print ("Querying the station...")
         val = getvalues(self.station, '', fixed_format)
 
-        print 'Fine Offset station settings:'
-        print '%s: %s' % ('local time'.rjust(30),
+        print ('Fine Offset station settings:')
+        print ('%s: %s' % ('local time'.rjust(30),
                           time.strftime('%Y.%m.%d %H:%M:%S %Z',
-                                        time.localtime()))
-        print '%s: %s' % ('polling mode'.rjust(30), self.station.polling_mode)
+                                        time.localtime())))
+        print ('%s: %s' % ('polling mode'.rjust(30), self.station.polling_mode))
 
         slist = {'values':[], 'minmax_values':[], 'settings':[],
                  'display_settings':[], 'alarm_settings':[]}
@@ -425,17 +425,17 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
                 slist = stash(slist, s)
         for k in ('values', 'minmax_values', 'settings',
                   'display_settings', 'alarm_settings'):
-            print ''
+            print ('')
             for s in slist[k]:
-                print s
+                print (s)
 
     def check_usb(self):
         """Run diagnostics on the USB connection."""
-        print "This will read from the station console repeatedly to see if"
-        print "there are errors in the USB communications.  Leave this running"
-        print "for an hour or two to see if any bad reads are encountered."
-        print "Bad reads will be reported in the system log.  A few bad reads"
-        print "per hour is usually acceptable."
+        print ("This will read from the station console repeatedly to see if")
+        print ("there are errors in the USB communications.  Leave this running")
+        print ("for an hour or two to see if any bad reads are encountered.")
+        print ("Bad reads will be reported in the system log.  A few bad reads")
+        print ("per hour is usually acceptable.")
         ptr = data_start
         total_count = 0
         bad_count = 0
@@ -456,25 +456,25 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
                 syslog.syslog(syslog.LOG_INFO, '  %s' % str(result_2))
                 bad_count += 1
             total_count += 1
-            print "\rbad/total: %d/%d " % (bad_count, total_count),
+            print ("\rbad/total: %d/%d " % (bad_count, total_count)),
             sys.stdout.flush()
 
     def check_fixedblock(self):
         """Display changes to fixed block as they occur."""
-        print 'This will read the fixed block then display changes as they'
-        print 'occur.  Typically the most common change is the incrementing'
-        print 'of the data pointer, which happens whenever readings are saved'
-        print 'to the station memory.  For example, if the logging interval'
-        print 'is set to 5 minutes, the fixed block should change at least'
-        print 'every 5 minutes.'
+        print ('This will read the fixed block then display changes as they')
+        print ('occur.  Typically the most common change is the incrementing')
+        print ('of the data pointer, which happens whenever readings are saved')
+        print ('to the station memory.  For example, if the logging interval')
+        print ('is set to 5 minutes, the fixed block should change at least')
+        print ('every 5 minutes.')
         raw_fixed = self.station.get_raw_fixed_block()
         while True:
             new_fixed = self.station.get_raw_fixed_block(unbuffered=True)
             for ptr in range(len(new_fixed)):
                 if new_fixed[ptr] != raw_fixed[ptr]:
-                    print datetime.datetime.now().strftime('%H:%M:%S'),
-                    print ' %04x (%d) %02x -> %02x' % (
-                        ptr, ptr, raw_fixed[ptr], new_fixed[ptr])
+                    print (datetime.datetime.now().strftime('%H:%M:%S')),
+                    print (' %04x (%d) %02x -> %02x' % (
+                        ptr, ptr, raw_fixed[ptr], new_fixed[ptr]))
                     raw_fixed = new_fixed
                     time.sleep(0.5)
 
@@ -482,22 +482,22 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
         """Display the raw fixed block contents."""
         fb = self.station.get_raw_fixed_block(unbuffered=True)
         for i, ptr in enumerate(range(len(fb))):
-            print '%02x' % fb[ptr],
+            print ('%02x' % fb[ptr],)
             if (i+1) % 16 == 0:
                 print
 
     def show_readings(self, logged_only):
         """Display live readings from the station."""
         for data,ptr,_ in self.station.live_data(logged_only):
-            print '%04x' % ptr,
-            print data['idx'].strftime('%H:%M:%S'),
+            print ('%04x' % ptr),
+            print (data['idx'].strftime('%H:%M:%S')),
             del data['idx']
-            print data
+            print (data)
 
     def show_current(self):
         """Display latest readings from the station."""
         for packet in self.station.genLoopPackets():
-            print packet
+            print (packet)
             break
 
     def show_history(self, ts=0, count=0, fmt='raw'):
@@ -510,59 +510,59 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
             elif fmt.lower() == 'table':
                 table_dump(r['datetime'], r['data'], i==0)
             else:
-                print r['datetime'], r['data']
+                print (r['datetime'], r['data'])
 
     def clear_history(self, prompt):
         ans = None
         while ans not in ['y', 'n']:
             v = self.station.get_fixed_block(['data_count'], True)
-            print "Records in memory:", v
+            print ("Records in memory:", v)
             if prompt:
-                ans = raw_input("Clear console memory (y/n)? ")
+                ans = input("Clear console memory (y/n)? ")
             else:
-                print 'Clearing console memory'
+                print ('Clearing console memory')
                 ans = 'y'
             if ans == 'y' :
                 self.station.clear_history()
                 v = self.station.get_fixed_block(['data_count'], True)
-                print "Records in memory:", v
+                print ("Records in memory:", v)
             elif ans == 'n':
-                print "Clear memory cancelled."
+                print ("Clear memory cancelled.")
 
     def set_interval(self, interval, prompt):
         v = self.station.get_fixed_block(['read_period'], True)
         ans = None
         while ans not in ['y', 'n']:
-            print "Interval is", v
+            print ("Interval is", v)
             if prompt:
-                ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
+                ans = input("Set interval to %d minutes (y/n)? " % interval)
             else:
-                print "Setting interval to %d minutes" % interval
+                print ("Setting interval to %d minutes" % interval)
                 ans = 'y'
             if ans == 'y' :
                 self.station.set_read_period(interval)
                 v = self.station.get_fixed_block(['read_period'], True)
-                print "Interval is now", v
+                print ("Interval is now", v)
             elif ans == 'n':
-                print "Set interval cancelled."
+                print ("Set interval cancelled.")
 
     def set_clock(self, prompt):
         ans = None
         while ans not in ['y', 'n']:
             v = self.station.get_fixed_block(['date_time'], True)
-            print "Station clock is", v
+            print ("Station clock is", v)
             now = datetime.datetime.now()
             if prompt:
-                ans = raw_input("Set station clock to %s (y/n)? " % now)
+                ans = input("Set station clock to %s (y/n)? " % now)
             else:
-                print "Setting station clock to %s" % now
+                print ("Setting station clock to %s" % now)
                 ans = 'y'
             if ans == 'y' :
                 self.station.set_clock()
                 v = self.station.get_fixed_block(['date_time'], True)
-                print "Station clock is now", v
+                print ("Station clock is now", v)
             elif ans == 'n':
-                print "Set clock cancelled."
+                print ("Set clock cancelled.")
 
 
 # these are the raw data we get from the station:
@@ -1014,7 +1014,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             try:
                 ival = self.get_fixed_block(['read_period'])
                 break
-            except usb.USBError, e:
+            except usb.USBError as e:
                 logcrt("get archive interval failed attempt %d of %d: %s"
                        % (i+1, self.max_tries, e))
         else:
@@ -1045,7 +1045,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         # attempt to claim the interface
         try:
             self.devh.claimInterface(self.usb_interface)
-        except usb.USBError, e:
+        except usb.USBError as e:
             self.closePort()
             logcrt("Unable to claim USB interface %s: %s" %
                    (self.usb_interface, e))
@@ -1165,7 +1165,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 else:
                     raise Exception("unknown polling mode '%s'" % self.polling_mode)
 
-            except (IndexError, usb.USBError, ObservationError), e:
+            except (IndexError, usb.USBError, ObservationError) as e:
                 logerr('get_observations failed: %s' % e)
                 nerr += 1
                 if nerr > self.max_tries:
@@ -1334,7 +1334,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                         dts -= datetime.timedelta(minutes=data['delay'])
                     ptr = self.dec_ptr(ptr)
                 return records
-            except (IndexError, usb.USBError, ObservationError), e:
+            except (IndexError, usb.USBError, ObservationError) as e:
                 logerr('get_records failed: %s' % e)
                 nerr += 1
                 if nerr > self.max_tries:

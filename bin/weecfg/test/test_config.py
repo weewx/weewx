@@ -6,7 +6,10 @@
 """Test the configuration utilities."""
 from __future__ import with_statement
 
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import unittest
 import tempfile
 import os.path
@@ -24,7 +27,7 @@ try:
     import __builtin__  # @UnusedImport
     have_mock = True
 except ImportError:
-    print "Module 'mock' not installed. Testing will be restricted."
+    print ("Module 'mock' not installed. Testing will be restricted.")
     have_mock = False
 
 # Redirect the import of setup:

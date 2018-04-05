@@ -88,7 +88,7 @@ class weewx_install_lib(install_lib):
         # Save any existing 'bin' subdirectory:
         if os.path.exists(self.install_dir):
             bin_savedir = weeutil.weeutil.move_with_timestamp(self.install_dir)
-            print "Saved bin subdirectory as %s" % bin_savedir
+            print ("Saved bin subdirectory as %s" % bin_savedir)
         else:
             bin_savedir = None
 
@@ -159,9 +159,9 @@ class weewx_install_data(install_data):
         # Open up and parse the distribution config file:
         try:        
             dist_config_dict = configobj.ConfigObj(f, file_error=True)
-        except IOError, e:
+        except IOError as e:
             sys.exit(str(e))
-        except SyntaxError, e:
+        except SyntaxError as e:
             sys.exit("Syntax error in distribution configuration file '%s': %s"
                      % (f, e))
 
@@ -173,7 +173,7 @@ class weewx_install_data(install_data):
             # Yes. Read it
             config_path, config_dict = weecfg.read_config(install_path, None)
             if DEBUG:
-                print "Old configuration file found at", config_path
+                print ("Old configuration file found at", config_path)
 
             # Update the old configuration file to the current version,
             # then merge it into the distribution file
@@ -189,7 +189,7 @@ class weewx_install_data(install_data):
                 stn_info['driver'] = driver
                 stn_info.update(weecfg.prompt_for_driver_settings(driver))
                 if DEBUG:
-                    print "Station info =", stn_info
+                    print ("Station info =", stn_info)
             weecfg.modify_config(config_dict, stn_info, DEBUG)
 
         # Set the WEEWX_ROOT
@@ -214,7 +214,7 @@ class weewx_install_data(install_data):
         # Save the old config file if it exists:
         if not self.dry_run and os.path.exists(install_path):
             backup_path = weeutil.weeutil.move_with_timestamp(install_path)
-            print "Saved old configuration file as %s" % backup_path
+            print ("Saved old configuration file as %s" % backup_path)
 
         # Now install the temporary file (holding the merged config data)
         # into the proper place:

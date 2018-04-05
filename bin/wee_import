@@ -626,13 +626,13 @@ def main():
 
     # check weewx version number for compatibility
     if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX):
-        print "weewx %s or greater is required, found %s. Nothing done, exiting." % (REQUIRED_WEEWX,
-                                                                                     weewx.__version__)
+        print ("weewx %s or greater is required, found %s. Nothing done, exiting." % (REQUIRED_WEEWX,
+                                                                                     weewx.__version__))
         exit(1)
 
     # display wee_import version info
     if options.version:
-        print "wee_import version: %s" % WEE_IMPORT_VERSION
+        print ("wee_import version: %s" % WEE_IMPORT_VERSION)
         exit(0)
 
     # Set up logging
@@ -654,31 +654,31 @@ def main():
     except weeimport.weeimport.WeeImportOptionError, e:
         wlog.printlog(syslog.LOG_INFO, "**** Command line option error.")
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print "**** Nothing done, exiting."
+        print ("**** Nothing done, exiting.")
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
     except weeimport.weeimport.WeeImportIOError, e:
         wlog.printlog(syslog.LOG_INFO, "**** Unable to load source file.")
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print "**** Nothing done, exiting."
+        print ("**** Nothing done, exiting.")
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
     except weeimport.weeimport.WeeImportFieldError, e:
         wlog.printlog(syslog.LOG_INFO, "**** Unable to map source data.")
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print "**** Nothing done, exiting."
+        print ("**** Nothing done, exiting.")
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
     except weeimport.weeimport.WeeImportMapError, e:
         wlog.printlog(syslog.LOG_INFO,
                       "**** Unable to parse source-to-weewx field map.")
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print "**** Nothing done, exiting."
+        print ("**** Nothing done, exiting.")
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
     except (weewx.ViolatedPrecondition, weewx.UnsupportedFeature), e:
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print "**** Nothing done, exiting."
+        print ("**** Nothing done, exiting.")
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         print
         parser.print_help()
@@ -688,13 +688,13 @@ def main():
         exit(0)
     except (ValueError, weewx.UnitError), e:
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print "**** Nothing done, exiting."
+        print ("**** Nothing done, exiting.")
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
     except IOError, e:
         wlog.printlog(syslog.LOG_INFO, "**** Unable to load config file.")
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print "**** Nothing done, exiting."
+        print ("**** Nothing done, exiting.")
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
 

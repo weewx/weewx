@@ -94,7 +94,7 @@ class RsyncUpload(object):
         
             stdout = rsynccmd.communicate()[0]
             stroutput = stdout.encode("utf-8").strip()
-        except OSError, e:
+        except OSError as e:
             if e.errno == errno.ENOENT:
                 syslog.syslog(syslog.LOG_ERR, "rsyncupload: rsync does not appear to be installed on this system. (errno %d, \"%s\")" % (e.errno, e.strerror))
             raise
@@ -145,13 +145,13 @@ if __name__ == '__main__':
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
     if len(sys.argv) < 2 :
-        print """Usage: rsyncupload.py path-to-configuration-file [path-to-be-rsync'd]"""
+        print ("""Usage: rsyncupload.py path-to-configuration-file [path-to-be-rsync'd]""")
         sys.exit(weewx.CMD_ERROR)
         
     try :
         config_dict = configobj.ConfigObj(sys.argv[1], file_error=True)
     except IOError:
-        print "Unable to open configuration file ", sys.argv[1]
+        print ("Unable to open configuration file ", sys.argv[1])
         raise
 
     if len(sys.argv) == 2:
@@ -159,7 +159,7 @@ if __name__ == '__main__':
             rsync_dir = os.path.join(config_dict['WEEWX_ROOT'],
                                    config_dict['StdReport']['HTML_ROOT'])
         except KeyError:
-            print "No HTML_ROOT in configuration dictionary."
+            print ("No HTML_ROOT in configuration dictionary.")
             sys.exit(1)
     else:
         rsync_dir = sys.argv[2]

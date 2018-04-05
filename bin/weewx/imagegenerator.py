@@ -242,7 +242,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Now save the image
                     image.save(img_file)
                     ngen += 1
-                except IOError, e:
+                except IOError as e:
                     syslog.syslog(syslog.LOG_CRIT, "imagegenerator: Unable to save to file '%s' %s:" % (img_file, e))
         t2 = time.time()
 

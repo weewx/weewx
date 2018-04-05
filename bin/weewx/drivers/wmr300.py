@@ -912,7 +912,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
 #                    cmd = [0x73, 0xe5, 0x0a, 0x26, 0x0e, 0xc1]
                     self.station.write(cmd)
                     self.last_7x = time.time()
-            except usb.USBError, e:
+            except usb.USBError as e:
                 if DEBUG_COMM:
                     logdbg("loop: "
                            "e.errno=%s e.strerror=%s e.message=%s repr=%s" %
@@ -920,7 +920,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 if not known_usb_err(e):
                     logerr("usb failure: %s" % e)
                     raise weewx.WeeWxIOError(e)
-            except (WrongLength, BadChecksum), e:
+            except (WrongLength, BadChecksum) as e:
                 loginf(e)
             time.sleep(0.001)
 
@@ -982,7 +982,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     cmd = [0x65, 0x19, 0xe5, 0x04, 0x52, _lo(self.last_record)]
                     self.station.write(cmd)
                     self.last_65 = time.time()
-            except usb.USBError, e:
+            except usb.USBError as e:
                 if DEBUG_COMM:
                     logdbg("history: "
                            "e.errno=%s e.strerror=%s e.message=%s repr=%s" %
@@ -990,7 +990,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 if not known_usb_err(e):
                     logerr("usb failure: %s" % e)
                     raise weewx.WeeWxIOError(e)
-            except (WrongLength, BadChecksum), e:
+            except (WrongLength, BadChecksum) as e:
                 loginf(e)
             time.sleep(0.001)        
 
@@ -1114,7 +1114,7 @@ class Station(object):
         # attempt to claim the interface
         try:
             self.handle.claimInterface(self.interface)
-        except usb.USBError, e:
+        except usb.USBError as e:
             self.close()
             raise WMR300Error("Unable to claim interface %s: %s" %
                               (self.interface, e))
@@ -1123,7 +1123,7 @@ class Station(object):
         if self.handle is not None:
             try:
                 self.handle.releaseInterface()
-            except (ValueError, usb.USBError), e:
+            except (ValueError, usb.USBError) as e:
                 logdbg("Release interface failed: %s" % e)
             self.handle = None
 
@@ -1139,7 +1139,7 @@ class Station(object):
                 logdbg("read: %s" % _fmt_bytes(buf))
             if DEBUG_COUNTS and count:
                 self.update_count(buf, self.recv_counts)
-        except usb.USBError, e:
+        except usb.USBError as e:
             if DEBUG_COMM:
                 logdbg("read: e.errno=%s e.strerror=%s e.message=%s repr=%s" %
                        (e.errno, e.strerror, e.message, repr(e)))
@@ -1208,7 +1208,7 @@ class Station(object):
             if cs1 != cs2:
                 raise BadChecksum("%s: bad checksum: %04x != %04x" %
                                   (label, cs1, cs2))
-        except IndexError, e:
+        except IndexError as e:
             raise BadChecksum("%s: not enough bytes for checksum: %s" %
                               (label, e))
 
@@ -1239,7 +1239,7 @@ class Station(object):
             return time.mktime((year, month, day, hour, minute, 0, -1, -1, -1))
         except IndexError:
             raise WMR300Error("buffer too short for timestamp")
-        except (OverflowError, ValueError), e:
+        except (OverflowError, ValueError) as e:
             raise WMR300Error(
                 "cannot create timestamp from y:%s m:%s d:%s H:%s M:%s: %s" %
                 (buf[0], buf[1], buf[2], buf[3], buf[4], e))
@@ -1291,7 +1291,7 @@ class Station(object):
             if DEBUG_DECODE:
                 logdbg('decode: %s %s' % (_fmt_bytes(buf), pkt))
             return pkt
-        except IndexError, e:
+        except IndexError as e:
             raise WMR300Error("cannot decode buffer: %s" % e)
         except AttributeError:
             raise WMR300Error("unknown packet type %02x: %s" %
@@ -1448,8 +1448,8 @@ class WMR300ConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def modify_config(self, config_dict):
-        print """
-Setting rainRate, windchill, heatindex, and dewpoint calculations to hardware."""
+        print ("""
+Setting rainRate, windchill, heatindex, and dewpoint calculations to hardware.""")
         config_dict.setdefault('StdWXCalculate', {})
         config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
@@ -1476,7 +1476,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "wmr300 driver version %s" % DRIVER_VERSION
+        print ("wmr300 driver version %s" % DRIVER_VERSION)
         exit(0)
 
     driver_dict = {
@@ -1487,4 +1487,4 @@ if __name__ == '__main__':
     stn = WMR300Driver(**driver_dict)
 
     for packet in stn.genLoopPackets():
-        print packet
+        print (packet)

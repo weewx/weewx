@@ -246,16 +246,16 @@ class CumulusSource(weeimport.Source):
                                                                         unit_nicknames[self.archive_unit_sys])
         self.wlog.printlog(syslog.LOG_INFO, _msg)
         if self.calc_missing:
-            print "Missing derived observations will be calculated."
+            print ("Missing derived observations will be calculated.")
         if not self.UV_sensor:
-            print "All weeWX UV fields will be set to None."
+            print ("All weeWX UV fields will be set to None.")
         if not self.solar_sensor:
-            print "All weeWX radiation fields will be set to None."
+            print ("All weeWX radiation fields will be set to None.")
         if options.date or options.date_from:
-            print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
-            print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
+            print ("Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), ))
+            print ("including %s will be imported." % (timestamp_to_string(self.last_ts), ))
         if self.dry_run:
-            print "This is a dry run, imported data will not be saved to archive."
+            print ("This is a dry run, imported data will not be saved to archive.")
 
     def getRawData(self, period):
         """Get raw observation data and construct a map from Cumulus monthly

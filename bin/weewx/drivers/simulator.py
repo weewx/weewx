@@ -276,4 +276,4 @@ class SimulatorConfEditor(weewx.drivers.AbstractConfEditor):
 if __name__ == "__main__":
     station = Simulator(mode='simulator',loop_interval=2.0)
     for packet in station.genLoopPackets():
-        print weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet
+        print (weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet)
