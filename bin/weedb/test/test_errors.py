@@ -80,7 +80,7 @@ class Common(unittest.TestCase):
      
     def test_drop_nopermission(self):
         weedb.create(mysql1_dict)
-        with self.assertRaises(weedb.BadPasswordError):
+        with self.assertRaises(weedb.PermissionError):
             weedb.drop(mysql2_dict)
         weedb.create(sqdb1_dict)
         # Can't really test this one without setting up a file where
@@ -89,7 +89,7 @@ class Common(unittest.TestCase):
             weedb.drop(sqdb2_dict)
  
     def test_create_nopermission(self):
-        with self.assertRaises(weedb.BadPasswordError):
+        with self.assertRaises(weedb.PermissionError):
             weedb.create(mysql2_dict)
         with self.assertRaises(weedb.PermissionError):
             weedb.create(sqdb2_dict)
