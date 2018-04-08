@@ -297,7 +297,7 @@ class RESTThread(threading.Thread):
                 else:
                     _datadict['dayRain'] = None
 
-        except weedb.OperationalError, e:
+        except weedb.OperationalError as e:
             syslog.syslog(syslog.LOG_DEBUG,
                           "restx: %s: Database OperationalError '%s'" %
                           (self.protocol_name, e))
@@ -352,13 +352,13 @@ class RESTThread(threading.Thread):
                                               "waiting %s minutes then retrying" %
                               (self.protocol_name, self.retry_login / 60.0))
                 time.sleep(self.retry_login)
-            except FailedPost, e:
+            except FailedPost as e:
                 if self.log_failure:
                     _time_str = timestamp_to_string(_record['dateTime'])
                     syslog.syslog(syslog.LOG_ERR,
                                   "restx: %s: Failed to publish record %s: %s"
                                   % (self.protocol_name, _time_str, e))
-            except Exception, e:
+            except Exception as e:
                 # Some unknown exception occurred. This is probably a serious
                 # problem. Exit.
                 syslog.syslog(syslog.LOG_CRIT,
@@ -442,7 +442,7 @@ class RESTThread(threading.Thread):
                 # Provide method for derived classes to behave otherwise if
                 # necessary.
                 self.handle_code(_response.code, _count + 1)
-            except (urllib2.URLError, socket.error, httplib.HTTPException), e:
+            except (urllib2.URLError, socket.error, httplib.HTTPException) as e:
                 # An exception was thrown. By default, log it and try again.
                 # Provide method for derived classes to behave otherwise if
                 # necessary.
@@ -976,7 +976,7 @@ class WOWThread(AmbientThread):
                 _response = urllib2.urlopen(request, timeout=self.timeout)
             except TypeError:
                 _response = urllib2.urlopen(request)
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             # WOW signals a bad login with a HTML Error 400 or 403 code:
             if e.code == 400 or e.code == 403:
                 raise BadLogin(e)
@@ -1226,12 +1226,12 @@ class CWOPThread(RESTThread):
                         return
                     finally:
                         _sock.close()
-                except ConnectError, e:
+                except ConnectError as e:
                     syslog.syslog(
                         syslog.LOG_DEBUG,
                         "restx: %s: Attempt %d to %s:%d. Connection error: %s"
                         % (self.protocol_name, _count + 1, _server, _port, e))
-                except SendError, e:
+                except SendError as e:
                     syslog.syslog(
                         syslog.LOG_DEBUG,
                         "restx: %s: Attempt %d to %s:%d. Socket send error: %s"
@@ -1249,11 +1249,12 @@ class CWOPThread(RESTThread):
         try:
             _sock = socket.socket()
             _sock.connect((server, port))
-        except IOError, e:
+        except IOError as e:
             # Unsuccessful. Close it in case it was open:
             try:
                 _sock.close()
-            except AttributeError, socket.error:
+            except AttributeError as xxx_todo_changeme:
+                socket.error = xxx_todo_changeme
                 pass
             raise ConnectError(e)
 
@@ -1264,7 +1265,7 @@ class CWOPThread(RESTThread):
 
         try:
             sock.send(msg)
-        except IOError, e:
+        except IOError as e:
             # Unsuccessful. Log it and go around again for another try
             raise SendError("Packet %s; Error %s" % (dbg_msg, e))
         else:
@@ -1272,7 +1273,7 @@ class CWOPThread(RESTThread):
             try:
                 _resp = sock.recv(1024)
                 return _resp
-            except IOError, e:
+            except IOError as e:
                 syslog.syslog(
                     syslog.LOG_DEBUG,
                     "restx: %s: Exception %s (%s) when looking for response to %s packet" %
@@ -1763,7 +1764,7 @@ def get_site_dict(config_dict, service, *args):
         for option in args:
             if site_dict[option] == 'replace_me':
                 raise KeyError(option)
-    except KeyError, e:
+    except KeyError as e:
         syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
                                         "Data will not be posted: Missing option %s" %
                       (service, e))

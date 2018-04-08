@@ -38,7 +38,7 @@ def guard(fn):
     def guarded_fn(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except DatabaseError, e:
+        except DatabaseError as e:
             # Default exception is weedb.DatabaseError
             try:
                 errno = e[0]

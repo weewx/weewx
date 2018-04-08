@@ -368,7 +368,7 @@ class WXCalculate(object):
             # archive interval, so multiply by the length of the archive
             # interval in hours.
             data['ET'] = ET_rate * interval / 3600.0 if ET_rate is not None else None
-        except ValueError, e:
+        except ValueError as e:
             weeutil.weeutil.log_traceback()
             syslog.syslog(syslog.LOG_ERR, "wxservices: Calculation of evapotranspiration failed: %s" % e)
         except weedb.DatabaseError:

@@ -145,14 +145,14 @@ class StdReportEngine(threading.Thread):
                     syslog.LOG_DEBUG,
                     "reportengine: Found configuration file %s for report %s" %
                     (skin_config_path, report))
-            except IOError, e:
+            except IOError as e:
                 syslog.syslog(
                     syslog.LOG_ERR, "reportengine: "
                     "Cannot read skin configuration file %s for report %s: %s"
                     % (skin_config_path, report, e))
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored")
                 continue
-            except SyntaxError, e:
+            except SyntaxError as e:
                 syslog.syslog(
                     syslog.LOG_ERR, "reportengine: "
                     "Failed to read skin configuration file %s for report %s: %s"
@@ -224,7 +224,7 @@ class StdReportEngine(threading.Thread):
                         self.first_run,
                         self.stn_info,
                         self.record)
-                except Exception, e:
+                except Exception as e:
                     syslog.syslog(
                         syslog.LOG_CRIT, "reportengine: "
                         "Unable to instantiate generator %s" % generator)
@@ -238,7 +238,7 @@ class StdReportEngine(threading.Thread):
                     # Call its start() method
                     obj.start()
 
-                except Exception, e:
+                except Exception as e:
                     # Caught unrecoverable error. Log it, continue on to the
                     # next generator.
                     syslog.syslog(
@@ -323,7 +323,7 @@ class FtpGenerator(ReportGenerator):
 
         try:
             n = ftp_data.run()
-        except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError), e:
+        except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError) as e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
             syslog.syslog(syslog.LOG_ERR, "ftpgenerator: "
                           "Caught exception %s: %s" % (cl, e))
@@ -372,7 +372,7 @@ class RsyncGenerator(ReportGenerator):
 
         try:
             rsync_data.run()
-        except IOError, e:
+        except IOError as e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
             syslog.syslog(syslog.LOG_ERR, "rsyncgenerator: "
                           "Caught exception %s: %s" % (cl, e))
@@ -553,7 +553,7 @@ class ReportTiming(object):
             # if we are this far then our line is valid so return True and no
             # error message
             return (True, None)
-        except ValueError, e:
+        except ValueError as e:
             # we picked up a ValueError in self.parse_field() so return False
             # and the error message
             return (False, e)

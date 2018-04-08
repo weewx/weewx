@@ -220,7 +220,7 @@ def guard_termios(fn):
         def guarded_fn(*args, **kwargs):
             try:
                 return fn(*args, **kwargs)
-            except termios.error, e:
+            except termios.error as e:
                 raise weewx.WeeWxIOError(e)
     except ImportError:
         def guarded_fn(*args, **kwargs):
@@ -253,7 +253,7 @@ class SerialWrapper(BaseWrapper):
         import serial
         try:
             _buffer = self.serial_port.read(chars)
-        except serial.serialutil.SerialException, e:
+        except serial.serialutil.SerialException as e:
             syslog.syslog(syslog.LOG_ERR, "vantage: SerialException on read.")
             syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
             syslog.syslog(syslog.LOG_ERR, "   ****  Is there a competing process running??")
@@ -268,7 +268,7 @@ class SerialWrapper(BaseWrapper):
         import serial
         try:
             N = self.serial_port.write(data)
-        except serial.serialutil.SerialException, e:
+        except serial.serialutil.SerialException as e:
             syslog.syslog(syslog.LOG_ERR, "vantage: SerialException on write.")
             syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
             # Reraise as a Weewx error I/O error:
@@ -315,7 +315,7 @@ class EthernetWrapper(BaseWrapper):
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(self.timeout)
             self.socket.connect((self.host, self.port))
-        except (socket.error, socket.timeout, socket.herror), ex:
+        except (socket.error, socket.timeout, socket.herror) as ex:
             syslog.syslog(syslog.LOG_ERR, "vantage: Socket error while opening port %d to ethernet host %s." % (self.port, self.host))
             # Reraise as a weewx I/O error:
             raise weewx.WeeWxIOError(ex)
@@ -378,7 +378,7 @@ class EthernetWrapper(BaseWrapper):
             _N = min(4096, _remaining)
             try:
                 _recv = self.socket.recv(_N)
-            except (socket.timeout, socket.error), ex:
+            except (socket.timeout, socket.error) as ex:
                 syslog.syslog(syslog.LOG_ERR, "vantage: ip-read error: %s" % ex)
                 # Reraise as a weewx I/O error:
                 raise weewx.WeeWxIOError(ex)
@@ -397,7 +397,7 @@ class EthernetWrapper(BaseWrapper):
             # A delay of 0.0 gives socket write error; 0.01 gives no ack error; 0.05 is OK for weewx program
             # Note: a delay of 0.5 s is required for wee_device --logger=logger_info
             time.sleep(self.tcp_send_delay)
-        except (socket.timeout, socket.error), ex:
+        except (socket.timeout, socket.error) as ex:
             syslog.syslog(syslog.LOG_ERR, "vantage: ip-write error: %s" % ex)
             # Reraise as a weewx I/O error:
             raise weewx.WeeWxIOError(ex)
@@ -506,7 +506,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                     # on the VP (somewhere around 220).
                     for _loop_packet in self.genDavisLoopPackets(200):
                         yield _loop_packet
-                except weewx.WeeWxIOError, e:
+                except weewx.WeeWxIOError as e:
                     syslog.syslog(syslog.LOG_ERR, "vantage: LOOP try #%d; error: %s" % (count + 1, e))
                     break
 
@@ -559,7 +559,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                     yield _record
                 # The generator loop exited. We're done.
                 return
-            except weewx.WeeWxIOError, e:
+            except weewx.WeeWxIOError as e:
                 # Problem. Increment retry count
                 count += 1
                 syslog.syslog(syslog.LOG_ERR, "vantage: DMPAFT try #%d; error: %s" % (count, e))
@@ -2195,7 +2195,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 if ans == 'y':
                     try:
                         station.setArchiveInterval(new_interval_minutes * 60)
-                    except StandardError, e:
+                    except StandardError as e:
                         print >> sys.stderr, "Unable to set new archive interval. Reason:\n\t****", e
                     else:
                         print "Archive interval now set to %d seconds." % (station.archive_interval,)
@@ -2218,7 +2218,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             if ans == 'y':
                 try:
                     station.setLatitude(latitude_dg)
-                except StandardError, e:
+                except StandardError as e:
                     print >> sys.stderr, "Unable to set new latitude. Reason:\n\t****", e
                 else:
                     print "Station latitude set to %.1f degree." % latitude_dg
@@ -2236,7 +2236,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             if ans == 'y':
                 try:
                     station.setLongitude(longitude_dg)
-                except StandardError, e:
+                except StandardError as e:
                     print >> sys.stderr, "Unable to set new longitude. Reason:\n\t****", e
                 else:
                     print "Station longitude set to %.1f degree." % longitude_dg
@@ -2322,7 +2322,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 if ans == 'y':
                     try:
                         station.setWindCupType(new_wind_cup_type)
-                    except StandardError, e:
+                    except StandardError as e:
                         print >> sys.stderr, "Unable to set new wind cup type. Reason:\n\t****", e
                     else:
                         print "Wind cup type set to %d (%s)." % (station.wind_cup_type, station.wind_cup_size)
@@ -2348,7 +2348,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 if ans == 'y':
                     try:
                         station.setBucketType(new_bucket_type)
-                    except StandardError, e:
+                    except StandardError as e:
                         print >> sys.stderr, "Unable to set new bucket type. Reason:\n\t****", e
                     else:
                         print "Bucket type now set to %d." % (station.rain_bucket_type,)
@@ -2370,7 +2370,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 if ans == 'y':
                     try:
                         station.setRainYearStart(rain_year_start)
-                    except StandardError, e:
+                    except StandardError as e:
                         print >> sys.stderr, "Unable to set new rain year start. Reason:\n\t****", e
                     else:
                         print "Rain year start now set to %d." % (station.rain_year_start,)
@@ -2403,7 +2403,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     if ans == 'y':
                         try:
                             station.setCalibrationWindDir(offset)
-                        except StandardError, e:
+                        except StandardError as e:
                             print >> sys.stderr, "Unable to set new wind offset. Reason:\n\t****", e
                         else:
                             print "Wind direction offset now set to %+d." % (offset)
@@ -2419,7 +2419,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     if ans == 'y':
                         try:
                             station.setCalibrationTemp(variable, offset)
-                        except StandardError, e:
+                        except StandardError as e:
                             print >> sys.stderr, "Unable to set new temperature offset. Reason:\n\t****", e
                         else:
                             print "Temperature offset %s now set to %+.1f." % (variable, offset)
@@ -2435,7 +2435,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     if ans == 'y':
                         try:
                             station.setCalibrationHumid(variable, offset)
-                        except StandardError, e:
+                        except StandardError as e:
                             print >> sys.stderr, "Unable to set new humidity offset. Reason:\n\t****", e
                         else:
                             print "Humidity offset %s now set to %+d." % (variable, offset)
@@ -2505,7 +2505,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             if ans == 'y':
                 try:
                     station.setTransmitterType(channel, transmitter_type, extra_temp, extra_hum, repeater)
-                except StandardError, e:
+                except StandardError as e:
                     print >> sys.stderr, "Unable to set transmitter type. Reason:\n\t****", e
                 else:
                     print "Transmitter type for channel %d set to %d (%s), repeater: %s, %s." % (
@@ -2557,7 +2557,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             if ans == 'y':
                 try:
                     station.setRetransmit(channel)
-                except StandardError, e:
+                except StandardError as e:
                     print >> sys.stderr, "Unable to set retransmit. Reason:\n\t****", e
                 else:
                     if channel != 0:
@@ -2578,7 +2578,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             if ans == 'y':
                 try:
                     station.setTempLogging(tempLogging)
-                except StandardError, e:
+                except StandardError as e:
                     print >> sys.stderr, "Unable to set new console temperature logging. Reason:\n\t****", e
                 else:
                     print "Console temperature logging set to '%s'." % (tempLogging.upper())
@@ -2664,7 +2664,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def logger_summary(station, dest_path):
         try:
             dest = open(dest_path, mode="w")
-        except IOError, e:
+        except IOError as e:
             print >> sys.stderr, "Unable to open destination '%s' for write" % dest_path
             print >> sys.stderr, "Reason: %s" % e
             return

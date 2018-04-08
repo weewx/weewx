@@ -166,7 +166,7 @@ class Source(object):
                 altitude_vt = weewx.units.ValueTuple(float(altitude_t[0]),
                                                      altitude_t[1],
                                                      "group_altitude")
-            except KeyError, e:
+            except KeyError as e:
                 raise weewx.ViolatedPrecondition(
                     "Value 'altitude' needs a unit (%s)" % e)
             latitude_f = float(stn_dict['latitude'])

@@ -67,9 +67,9 @@ class ConfigEngine(object):
             try:        
                 dist_config_dict = configobj.ConfigObj(options.dist_config,
                                                        file_error=True)
-            except IOError, e:
+            except IOError as e:
                 sys.exit("Unable to open distribution configuration file: %s" % e)
-            except SyntaxError, e:
+            except SyntaxError as e:
                 sys.exit("Syntax error in distribution configuration file '%s': %s" %
                          (options.dist_config, e))
 
@@ -81,9 +81,9 @@ class ConfigEngine(object):
             try:
                 config_path, config_dict = weecfg.read_config(
                     options.config_path, args)
-            except SyntaxError, e:
+            except SyntaxError as e:
                 sys.exit("Syntax error in configuration file: %s" % e)
-            except IOError, e:
+            except IOError as e:
                 sys.exit("Unable to open configuration file: %s" % e)
             self.logger.log("Using configuration file %s" % config_path)
 

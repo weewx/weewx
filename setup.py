@@ -159,9 +159,9 @@ class weewx_install_data(install_data):
         # Open up and parse the distribution config file:
         try:        
             dist_config_dict = configobj.ConfigObj(f, file_error=True)
-        except IOError, e:
+        except IOError as e:
             sys.exit(str(e))
-        except SyntaxError, e:
+        except SyntaxError as e:
             sys.exit("Syntax error in distribution configuration file '%s': %s"
                      % (f, e))
 

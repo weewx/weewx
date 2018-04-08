@@ -1034,7 +1034,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 if DEBUG_COMM:
                     loginf("initialization completed in %s tries" % cnt)
                 return pkt
-            except ProtocolError, e:
+            except ProtocolError as e:
                 if DEBUG_COMM:
                     loginf("init_comm: failed attempt %d of %d: %s" %
                            (cnt, max_tries, e))
@@ -1104,7 +1104,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     loginf("init history completed after attempt %d of %d" %
                            (cnt, max_tries))
                 return                
-            except ProtocolError, e:
+            except ProtocolError as e:
                 if DEBUG_HISTORY:
                     loginf("init_history: failed attempt %d of %d: %s" %
                            (cnt, max_tries, e))
@@ -1135,7 +1135,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     loginf("init history completed after attempt %d of %d" %
                            (cnt, max_tries))
                 return
-            except ProtocolError, e:
+            except ProtocolError as e:
                 if DEBUG_HISTORY:
                     loginf("fini history failed attempt %d of %d: %s" %
                            (cnt, max_tries, e))
@@ -1228,9 +1228,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     break
                 if buf and DEBUG_HISTORY:
                     loginf("get history in progress: %s" % msg)
-            except usb.USBError, e:
+            except usb.USBError as e:
                 raise weewx.WeeWxIOError(e)
-            except DecodeError, e:
+            except DecodeError as e:
                 loginf("genLoopPackets: %s" % e)
             time.sleep(0.001)        
         self.finish_history()
@@ -1266,9 +1266,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                         # if the logger usage exceeds the limit, clear it
                         self.dump_history()
                         self.latest_index = None
-            except usb.USBError, e:
+            except usb.USBError as e:
                 raise weewx.WeeWxIOError(e)
-            except (DecodeError, ProtocolError), e:
+            except (DecodeError, ProtocolError) as e:
                 loginf("genLoopPackets: %s" % e)
             time.sleep(0.001)
 
@@ -1417,7 +1417,7 @@ class Station(object):
         # attempt to claim the interface
         try:
             self.handle.claimInterface(self.interface)
-        except usb.USBError, e:
+        except usb.USBError as e:
             self.close()
             raise WMR300Error("Unable to claim interface %s: %s" %
                               (self.interface, e))
@@ -1426,7 +1426,7 @@ class Station(object):
         if self.handle is not None:
             try:
                 self.handle.releaseInterface()
-            except (ValueError, usb.USBError), e:
+            except (ValueError, usb.USBError) as e:
                 logdbg("Release interface failed: %s" % e)
             self.handle = None
 
@@ -1447,7 +1447,7 @@ class Station(object):
     def read(self, count=True, timeout=None, ignore_non_errors=True, ignore_timeouts=True):
         try:
             return self._read(count, timeout)
-        except usb.USBError, e:
+        except usb.USBError as e:
             if DEBUG_COMM:
                 loginf("read: e.errno=%s e.strerror=%s e.message=%s repr=%s" %
                        (e.errno, e.strerror, e.message, repr(e)))
@@ -1471,7 +1471,7 @@ class Station(object):
     def write(self, buf, ignore_non_errors=True, ignore_timeouts=True):
         try:
             return self._write(buf)
-        except usb.USBError, e:
+        except usb.USBError as e:
             if ignore_timeouts and is_timeout(e):
                 return 0
             if ignore_non_errors and is_noerr(e):
@@ -1541,7 +1541,7 @@ class Station(object):
             if cs1 != cs2:
                 raise BadChecksum("%s: bad checksum: %04x != %04x" %
                                   (label, cs1, cs2))
-        except IndexError, e:
+        except IndexError as e:
             raise BadChecksum("%s: not enough bytes for checksum: %s" %
                               (label, e))
 
@@ -1572,7 +1572,7 @@ class Station(object):
             return time.mktime((year, month, day, hour, minute, 0, -1, -1, -1))
         except IndexError:
             raise BadTimestamp("buffer too short for timestamp")
-        except (OverflowError, ValueError), e:
+        except (OverflowError, ValueError) as e:
             raise BadTimestamp(
                 "cannot create timestamp from y:%s m:%s d:%s H:%s M:%s: %s" %
                 (buf[0], buf[1], buf[2], buf[3], buf[4], e))
@@ -1640,7 +1640,7 @@ class Station(object):
             if DEBUG_DECODE:
                 loginf('decode: %s %s' % (_fmt_bytes(buf), pkt))
             return pkt
-        except IndexError, e:
+        except IndexError as e:
             raise BadBuffer("cannot decode buffer: %s" % e)
         except AttributeError:
             raise UnknownPacketType("unknown packet type %02x: %s" %

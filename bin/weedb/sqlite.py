@@ -27,9 +27,9 @@ def guard(fn):
     def guarded_fn(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except sqlite3.IntegrityError, e:
+        except sqlite3.IntegrityError as e:
             raise weedb.IntegrityError(e)
-        except sqlite3.OperationalError, e:
+        except sqlite3.OperationalError as e:
             msg = str(e).lower()
             if msg.startswith("unable to open"):
                 raise weedb.PermissionError(e)
@@ -41,7 +41,7 @@ def guard(fn):
                 raise weedb.NoColumnError(e)
             else:
                 raise weedb.OperationalError(e)
-        except sqlite3.ProgrammingError, e:
+        except sqlite3.ProgrammingError as e:
             raise weedb.ProgrammingError(e)
 
     return guarded_fn
@@ -77,7 +77,7 @@ def drop(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariabl
     file_path = _get_filepath(SQLITE_ROOT, database_name, **argv)
     try:
         os.remove(file_path)
-    except OSError, e:
+    except OSError as e:
         errno = getattr(e, 'errno', 2)
         if errno == 13:
             raise weedb.PermissionError("No permission to drop database %s" % file_path)
