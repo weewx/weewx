@@ -187,126 +187,126 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
     def do_options(self, options, parser, config_dict, prompt):
         self.driver = CC3000Driver(**config_dict[DRIVER_NAME])
         if options.current:
-            print self.driver.get_current()
+            print((self.driver.get_current()))
         elif options.nrecords is not None:
             for r in self.driver.station.gen_records(nrecords):
-                print r
+                print(r)
         elif options.clear:
             self.clear_memory(prompt)
         elif options.reset:
             self.reset_rain(prompt)
         elif options.getclock:
-            print self.driver.station.get_time()
+            print((self.driver.station.get_time()))
         elif options.setclock:
             self.set_clock(prompt)
         elif options.getdst:
-            print self.driver.station.get_dst()
+            print((self.driver.station.get_dst()))
         elif options.dst is not None:
             self.set_dst(options.setdst, prompt)
         elif options.getint:
-            print self.driver.station.get_interval() * 60
+            print((self.driver.station.get_interval() * 60))
         elif options.interval is not None:
             self.set_interval(options.interval / 60, prompt)
         elif options.getunits:
-            print self.driver.station.get_units()
+            print((self.driver.station.get_units()))
         elif options.units is not None:
             self.set_units(options.units, prompt)
         elif options.getch:
-            print self.driver.station.get_channel()
+            print((self.driver.station.get_channel()))
         elif options.ch is not None:
             self.set_channel(options.ch, prompt)
         else:
-            print "firmware:", self.driver.station.get_version()
-            print "time:", self.driver.station.get_time()
-            print "dst:", self.driver.station.get_dst()
-            print "units:", self.driver.station.get_units()
-            print "memory:", self.driver.station.get_memory_status()
-            print "interval:", self.driver.station.get_interval() * 60
-            print "channel:", self.driver.station.get_channel()
-            print "charger:", self.driver.station.get_charger()
-            print "baro:", self.driver.station.get_baro()
-            print "rain:", self.driver.station.get_rain()
+            print(("firmware:", self.driver.station.get_version()))
+            print(("time:", self.driver.station.get_time()))
+            print(("dst:", self.driver.station.get_dst()))
+            print(("units:", self.driver.station.get_units()))
+            print(("memory:", self.driver.station.get_memory_status()))
+            print(("interval:", self.driver.station.get_interval() * 60))
+            print(("channel:", self.driver.station.get_channel()))
+            print(("charger:", self.driver.station.get_charger()))
+            print(("baro:", self.driver.station.get_baro()))
+            print(("rain:", self.driver.station.get_rain()))
         self.driver.closePort()
 
     def clear_memory(self, prompt):
         ans = None
         while ans not in ['y', 'n']:
-            print self.driver.station.get_memory_status()
+            print((self.driver.station.get_memory_status()))
             if prompt:
                 ans = raw_input("Clear console memory (y/n)? ")
             else:
-                print 'Clearing console memory'
+                print('Clearing console memory')
                 ans = 'y'
             if ans == 'y':
                 self.driver.station.clear_memory()
-                print self.driver.station.get_memory_status()
+                print((self.driver.station.get_memory_status()))
             elif ans == 'n':
-                print "Clear memory cancelled."
+                print("Clear memory cancelled.")
 
     def reset_rain(self, prompt):
         ans = None
         while ans not in ['y', 'n']:
-            print self.driver.station.get_rain()
+            print((self.driver.station.get_rain()))
             if prompt:
                 ans = raw_input("Reset rain counter (y/n)? ")
             else:
-                print 'Resetting rain counter'
+                print('Resetting rain counter')
                 ans = 'y'
             if ans == 'y':
                 self.driver.station.reset_rain()
-                print self.driver.station.get_rain()
+                print((self.driver.station.get_rain()))
             elif ans == 'n':
-                print "Reset rain cancelled."
+                print("Reset rain cancelled.")
 
     def set_interval(self, interval, prompt):
         if interval < 0 or 60 < interval:
             raise ValueError("Logger interval must be 0-60 minutes")
         ans = None
         while ans not in ['y', 'n']:
-            print "Interval is", self.driver.station.get_interval()
+            print(("Interval is", self.driver.station.get_interval()))
             if prompt:
                 ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
             else:
-                print "Setting interval to %d minutes" % interval
+                print(("Setting interval to %d minutes" % interval))
                 ans = 'y'
             if ans == 'y':
                 self.driver.station.set_interval(interval)
-                print "Interval is now", self.driver.station.get_interval()
+                print(("Interval is now", self.driver.station.get_interval()))
             elif ans == 'n':
-                print "Set interval cancelled."
+                print("Set interval cancelled.")
 
     def set_clock(self, prompt):
         ans = None
         while ans not in ['y', 'n']:
-            print "Station clock is", self.driver.station.get_time()
+            print(("Station clock is", self.driver.station.get_time()))
             now = datetime.datetime.now()
             if prompt:
                 ans = raw_input("Set station clock to %s (y/n)? " % now)
             else:
-                print "Setting station clock to %s" % now
+                print(("Setting station clock to %s" % now))
                 ans = 'y'
             if ans == 'y':
                 self.driver.station.set_time()
-                print "Station clock is now", self.driver.station.get_time()
+                print(("Station clock is now", self.driver.station.get_time()))
             elif ans == 'n':
-                print "Set clock cancelled."
+                print("Set clock cancelled.")
 
     def set_units(self, units, prompt):
         if units.lower() not in ['metric', 'english']:
             raise ValueError("Units must be METRIC or ENGLISH")
         ans = None
         while ans not in ['y', 'n']:
-            print "Station units is", self.driver.station.get_units()
+            print(("Station units is", self.driver.station.get_units()))
             if prompt:
                 ans = raw_input("Set station units to %s (y/n)? " % units)
             else:
-                print "Setting station units to %s" % units
+                print(("Setting station units to %s" % units))
                 ans = 'y'
             if ans == 'y':
                 self.driver.station.set_units(units)
-                print "Station units is now", self.driver.station.get_units()
+                print(("Station units is now", self.driver.station.get_units()))
             elif ans == 'n':
-                print "Set units cancelled."
+                print("Set units cancelled.")
 
     def set_dst(self, dst, prompt):
         if dst != '0' and len(dst.split(',')) != 3:
@@ -314,34 +314,34 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                              "with the format mm/dd HH:MM, mm/dd HH:MM, [MM]M")
         ans = None
         while ans not in ['y', 'n']:
-            print "Station DST is", self.driver.station.get_dst()
+            print(("Station DST is", self.driver.station.get_dst()))
             if prompt:
                 ans = raw_input("Set DST to %s (y/n)? " % dst)
             else:
-                print "Setting station DST to %s" % dst
+                print(("Setting station DST to %s" % dst))
                 ans = 'y'
             if ans == 'y':
                 self.driver.station.set_dst(dst)
-                print "Station DST is now", self.driver.station.get_dst()
+                print(("Station DST is now", self.driver.station.get_dst()))
             elif ans == 'n':
-                print "Set DST cancelled."
+                print("Set DST cancelled.")
 
     def set_channel(self, ch, prompt):
         if ch not in [0, 1, 2, 3]:
             raise ValueError("Channel must be one of 0, 1, 2, or 3")
         ans = None
         while ans not in ['y', 'n']:
-            print "Station channel is", self.driver.station.get_channel()
+            print(("Station channel is", self.driver.station.get_channel()))
             if prompt:
                 ans = raw_input("Set channel to %s (y/n)? " % ch)
             else:
-                print "Setting station channel to %s" % ch
+                print(("Setting station channel to %s" % ch))
                 ans = 'y'
             if ans == 'y':
                 self.driver.station.set_channel(ch)
-                print "Station channel is now", self.driver.station.get_ch()
+                print(("Station channel is now", self.driver.station.get_ch()))
             elif ans == 'n':
-                print "Set channel cancelled."
+                print("Set channel cancelled.")
 
 
 class CC3000Driver(weewx.drivers.AbstractDevice):
@@ -1034,8 +1034,8 @@ class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
 """ % (CC3000.DEFAULT_PORT,)
 
     def prompt_for_settings(self):
-        print "Specify the serial port on which the station is connected, for"
-        print "example /dev/ttyUSB0 or /dev/ttyS0."
+        print("Specify the serial port on which the station is connected, for")
+        print("example /dev/ttyUSB0 or /dev/ttyS0.")
         port = self._prompt('port', CC3000.DEFAULT_PORT)
         return {'port': port}
 
@@ -1105,7 +1105,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "%s driver version %s" % (DRIVER_NAME, DRIVER_VERSION)
+        print(("%s driver version %s" % (DRIVER_NAME, DRIVER_VERSION)))
         exit(0)
 
     if options.debug:
@@ -1125,49 +1125,49 @@ if __name__ == '__main__':
         s.wakeup()
         s.set_echo()
         if options.getver:
-            print s.get_version()
+            print((s.get_version()))
         if options.status:
-            print "firmware:", s.get_version()
-            print "time:", s.get_time()
-            print "dst:", s.get_dst()
-            print "units:", s.get_units()
-            print "memory:", s.get_memory_status()
-            print "interval:", s.get_interval() * 60
-            print "channel:", s.get_channel()
-            print "charger:", s.get_charger()
-            print "baro:", s.get_baro()
-            print "rain:", s.get_rain()
+            print(("firmware:", s.get_version()))
+            print(("time:", s.get_time()))
+            print(("dst:", s.get_dst()))
+            print(("units:", s.get_units()))
+            print(("memory:", s.get_memory_status()))
+            print(("interval:", s.get_interval() * 60))
+            print(("channel:", s.get_channel()))
+            print(("charger:", s.get_charger()))
+            print(("baro:", s.get_baro()))
+            print(("rain:", s.get_rain()))
         if options.getch:
-            print s.get_channel()
+            print((s.get_channel()))
         if options.setch is not None:
             s.set_channel(int(options.setch))
         if options.getbat:
-            print s.get_charger()
+            print((s.get_charger()))
         if options.getcur:
-            print s.get_current_data()
+            print((s.get_current_data()))
         if options.getmem:
-            print s.get_memory_status()
+            print((s.get_memory_status()))
         if options.getrec is not None:
             i = 0
             for r in s.gen_records(int(options.getrec)):
-                print i, r
+                print((i, r))
                 i += 1
         if options.gethead:
-            print s.get_header()
+            print((s.get_header()))
         if options.getunits:
-            print s.get_units()
+            print((s.get_units()))
         if options.setunits:
             s.set_units(options.setunits)
         if options.gettime:
-            print s.get_time()
+            print((s.get_time()))
         if options.settime:
             s.set_time()
         if options.getdst:
-            print s.get_dst()
+            print((s.get_dst()))
         if options.setdst:
             s.set_dst(options.setdst)
         if options.getint:
-            print s.get_interval() * 60
+            print((s.get_interval() * 60))
         if options.setint:
             s.set_interval(int(options.setint) / 60)
         if options.clear:
@@ -1180,5 +1180,5 @@ if __name__ == '__main__':
                 cmd_mode = False
                 s.set_auto()
             while True:
-                print s.get_current_data(cmd_mode)
+                print((s.get_current_data(cmd_mode)))
                 time.sleep(options.poll)

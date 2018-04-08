@@ -25,7 +25,7 @@ class ConfigEngine(object):
     
     def run(self, args, options):
         if options.version:
-            print weewx.__version__
+            print((weewx.__version__))
             sys.exit(0)
     
         if options.list_drivers:

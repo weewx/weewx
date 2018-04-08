@@ -5,6 +5,7 @@
 #
 """Classes and functions for interfacing with a weewx archive."""
 from __future__ import with_statement
+from __future__ import print_function
 import math
 import syslog
 import sys
@@ -1057,8 +1058,8 @@ def drop_database_with_config(config_dict, data_binding,
 
 def show_progress(nrec, last_time):
     """Utility function to show our progress while backfilling"""
-    print >>sys.stdout, "Records processed: %d; Last date: %s\r" % \
-        (nrec, weeutil.weeutil.timestamp_to_string(last_time)),
+    print("Records processed: %d; Last date: %s\r" % \
+        (nrec, weeutil.weeutil.timestamp_to_string(last_time)), end=' ', file=sys.stdout)
     sys.stdout.flush()
         
 class DaySummaryManager(Manager):
@@ -1617,7 +1618,7 @@ if __name__ == '__main__':
 #     nrecs, ndays = mgr.backfill_day_summary(start_d, stop_d)
     nrecs, ndays = mgr.backfill_day_summary(None, None)
     t2 = time.time()
-    print nrecs, ndays, t2-t1
+    print(nrecs, ndays, t2-t1)
     
     import doctest
 

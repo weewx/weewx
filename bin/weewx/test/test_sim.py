@@ -6,6 +6,7 @@
 """Test the accumulators by using the simulator wx station"""
 
 from __future__ import with_statement
+from __future__ import print_function
 import sys
 import syslog
 import time
@@ -66,7 +67,7 @@ class Common(unittest.TestCase):
         try:
             with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as dbmanager:
                 if dbmanager.firstGoodStamp() == first_ts and dbmanager.lastGoodStamp() == last_ts:
-                    print "\nSimulator need not be run"
+                    print("\nSimulator need not be run")
                     return 
         except weedb.OperationalError:
             pass
@@ -107,7 +108,7 @@ class Stopper(weewx.engine.StdService):
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         
     def new_archive_record(self, event):
-        print >>sys.stdout, "Archive record %s" % (weeutil.weeutil.timestamp_to_string(event.record['dateTime']))
+        print("Archive record %s" % (weeutil.weeutil.timestamp_to_string(event.record['dateTime'])), file=sys.stdout)
         sys.stdout.flush()
         if event.record['dateTime'] >= self.last_ts:
             raise weewx.StopNow("Time to stop!")

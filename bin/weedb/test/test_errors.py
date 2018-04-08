@@ -1,5 +1,6 @@
 """Test the weedb exception hierarchy"""
 from __future__ import with_statement
+from __future__ import print_function
 import os
 import stat
 import unittest
@@ -22,16 +23,16 @@ try:
     fd = open(sqdb1_dict['database_name'], 'w')
     fd.close()
 except:
-    print >>sys.stderr, "For tests to work properly, you must have permission to write to '%s'." % sqdb1_dict['database_name']
-    print >>sys.stderr, "Change the permissions and try again."
+    print("For tests to work properly, you must have permission to write to '%s'." % sqdb1_dict['database_name'], file=sys.stderr)
+    print("Change the permissions and try again.", file=sys.stderr)
 try:
     fd = open(sqdb2_dict['database_name'], 'w')
     fd.close()
 except IOError:
     pass
 else:
-    print >>sys.stderr, "For tests to work properly, you must NOT have permission to write to '%s'." % sqdb2_dict['database_name']
-    print >>sys.stderr, "Change the permissions and try again."
+    print("For tests to work properly, you must NOT have permission to write to '%s'." % sqdb2_dict['database_name'], file=sys.stderr)
+    print("Change the permissions and try again.", file=sys.stderr)
 
 class Cursor(object):
     """Class to be used to wrap a cursor in a 'with' clause."""

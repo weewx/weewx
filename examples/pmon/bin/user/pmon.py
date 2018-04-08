@@ -185,17 +185,17 @@ if __name__ == "__main__":
 
     nowts = lastts = int(time.time())
     rec = svc.get_data(nowts, lastts)
-    print rec
+    print(rec)
 
     time.sleep(5)
     nowts = int(time.time())
     rec = svc.get_data(nowts, lastts)
-    print rec
+    print(rec)
 
     time.sleep(5)
     lastts = nowts
     nowts = int(time.time())
     rec = svc.get_data(nowts, lastts)
-    print rec
+    print(rec)
 
     os.remove('/var/tmp/pmon.sdb')

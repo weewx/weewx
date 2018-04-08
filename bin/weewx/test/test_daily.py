@@ -7,6 +7,7 @@
 """Unit test module weewx.wxstats"""
 
 from __future__ import with_statement
+from __future__ import print_function
 import datetime
 import math
 import os.path
@@ -69,9 +70,9 @@ class Common(unittest.TestCase):
             shutil.rmtree(test_html_dir)
         except OSError, e:
             if os.path.exists(test_html_dir):
-                print >>sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
-                print >>sys.stderr, "Reason:", e
-                print >>sys.stderr, "Aborting"
+                print("\nUnable to remove old test directory %s", test_html_dir, file=sys.stderr)
+                print("Reason:", e, file=sys.stderr)
+                print("Aborting", file=sys.stderr)
                 exit(1)
 
         # This will generate the test databases if necessary:

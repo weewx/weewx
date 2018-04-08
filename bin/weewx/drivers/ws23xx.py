@@ -328,24 +328,24 @@ class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
 
     def show_info(self):
         """Query the station then display the settings."""
-        print 'Querying the station for the configuration...'
+        print('Querying the station for the configuration...')
         config = self.station.getConfig()
         for key in sorted(config):
-            print '%s: %s' % (key, config[key])
+            print(('%s: %s' % (key, config[key])))
 
     def show_current(self):
         """Get current weather observation."""
-        print 'Querying the station for current weather data...'
+        print('Querying the station for current weather data...')
         for packet in self.station.genLoopPackets():
-            print packet
+            print(packet)
             break
 
     def show_history(self, ts=None, count=0):
         """Show the indicated number of records or records since timestamp"""
-        print "Querying the station for historical records..."
+        print("Querying the station for historical records...")
         for i, r in enumerate(self.station.genArchiveRecords(since_ts=ts,
                                                              count=count)):
-            print r
+            print(r)
             if count and i > count:
                 break
 
@@ -355,54 +355,54 @@ class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
         while ans not in ['y', 'n']:
             v = self.station.getTime()
             vstr = weeutil.weeutil.timestamp_to_string(v)
-            print "Station clock is", vstr
+            print(("Station clock is", vstr))
             if prompt:
                 ans = raw_input("Set station clock (y/n)? ")
             else:
-                print "Setting station clock"
+                print("Setting station clock")
                 ans = 'y'
             if ans == 'y':
                 self.station.setTime()
                 v = self.station.getTime()
                 vstr = weeutil.weeutil.timestamp_to_string(v)
-                print "Station clock is now", vstr
+                print(("Station clock is now", vstr))
             elif ans == 'n':
-                print "Set clock cancelled."
+                print("Set clock cancelled.")
 
     def set_interval(self, interval, prompt):
-        print "Changing the interval will clear the station memory."
+        print("Changing the interval will clear the station memory.")
         v = self.station.getArchiveInterval()
         ans = None
         while ans not in ['y', 'n']:
-            print "Interval is", v
+            print(("Interval is", v))
             if prompt:
                 ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
             else:
-                print "Setting interval to %d minutes" % interval
+                print(("Setting interval to %d minutes" % interval))
                 ans = 'y'
             if ans == 'y':
                 self.station.setArchiveInterval(interval)
                 v = self.station.getArchiveInterval()
-                print "Interval is now", v
+                print(("Interval is now", v))
             elif ans == 'n':
-                print "Set interval cancelled."
+                print("Set interval cancelled.")
 
     def clear_history(self, prompt):
         ans = None
         while ans not in ['y', 'n']:
             v = self.station.getRecordCount()
-            print "Records in memory:", v
+            print(("Records in memory:", v))
             if prompt:
                 ans = raw_input("Clear console memory (y/n)? ")
             else:
-                print 'Clearing console memory'
+                print('Clearing console memory')
                 ans = 'y'
             if ans == 'y':
                 self.station.clearHistory()
                 v = self.station.getRecordCount()
-                print "Records in memory:", v
+                print(("Records in memory:", v))
             elif ans == 'n':
-                print "Clear memory cancelled."
+                print("Clear memory cancelled.")
 
 
 class WS23xxDriver(weewx.drivers.AbstractDevice):
@@ -2064,14 +2064,14 @@ class WS23xxConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def prompt_for_settings(self):
-        print "Specify the serial port on which the station is connected, for"
-        print "example /dev/ttyUSB0 or /dev/ttyS0."
+        print("Specify the serial port on which the station is connected, for")
+        print("example /dev/ttyUSB0 or /dev/ttyS0.")
         port = self._prompt('port', '/dev/ttyUSB0')
         return {'port': port}
 
     def modify_config(self, config_dict):
-        print """
-Setting record_generation to software."""
+        print("""
+Setting record_generation to software.""")
         config_dict['StdArchive']['record_generation'] = 'software'
 
 
@@ -2107,7 +2107,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "ws23xx driver version %s" % DRIVER_VERSION
+        print(("ws23xx driver version %s" % DRIVER_VERSION))
         exit(1)
 
     if options.debug is not None:
@@ -2118,13 +2118,13 @@ if __name__ == '__main__':
     with WS23xx(port) as s:
         if options.readings:
             data = s.get_raw_data(SENSOR_IDS)
-            print data
+            print(data)
         if options.records is not None:
             for ts,record in s.gen_records(count=options.records):
-                print ts,record
+                print((ts,record))
         if options.measure:
             data = s.get_raw_data([options.measure])
-            print data
+            print(data)
         if options.hm:
             for m in Measure.IDS:
-                print "%s\t%s" % (m, Measure.IDS[m].name)
+                print(("%s\t%s" % (m, Measure.IDS[m].name)))
