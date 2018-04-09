@@ -210,6 +210,8 @@ It is used as: A200 1A20 A2AA 0020 to indicate a data refresh.
 The WH1080 acknowledges the write with an 8 byte chunk: A5A5 A5A5.
 """
 
+from __future__ import print_function
+
 import datetime
 import sys
 import syslog
