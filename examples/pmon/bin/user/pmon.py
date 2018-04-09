@@ -139,7 +139,7 @@ class ProcessMonitor(StdService):
                     if m:
                         record['mem_vsz'] = int(m.group(1))
                         record['mem_rss'] = int(m.group(2))
-        except (ValueError, IOError, KeyError), e:
+        except (ValueError, IOError, KeyError) as e:
             logerr('apcups_info failed: %s' % e)
         return record
 

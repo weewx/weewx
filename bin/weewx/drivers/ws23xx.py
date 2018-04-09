@@ -491,7 +491,7 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
                                (conn_info[1], conn_info[0]))
                         self._poll_wait = conn_info[1]
                 time.sleep(self._poll_wait)
-            except Ws2300.Ws2300Exception, e:
+            except Ws2300.Ws2300Exception as e:
                 logerr("Failed attempt %d of %d to get LOOP data: %s" %
                        (ntries, self.max_tries, e))
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)
@@ -901,7 +901,7 @@ class LinuxSerialPort(SerialPort):
         #
         try:
             self.serial_port = os.open(self.device, os.O_RDWR)
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             raise FatalError(self.device, "can't open tty device - %s." % str(e))
         try:
             fcntl.flock(self.serial_port, fcntl.LOCK_EX)

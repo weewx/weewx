@@ -94,7 +94,7 @@ class RsyncUpload(object):
         
             stdout = rsynccmd.communicate()[0]
             stroutput = stdout.encode("utf-8").strip()
-        except OSError, e:
+        except OSError as e:
             if e.errno == errno.ENOENT:
                 syslog.syslog(syslog.LOG_ERR, "rsyncupload: rsync does not appear to be installed on this system. (errno %d, \"%s\")" % (e.errno, e.strerror))
             raise

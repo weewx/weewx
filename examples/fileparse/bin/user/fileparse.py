@@ -73,7 +73,7 @@ def _get_as_float(d, s):
     if s in d:
         try:
             v = float(d[s])
-        except ValueError, e:
+        except ValueError as e:
             logerr("cannot read value for '%s': %s" % (s, e))
     return v
 
@@ -106,7 +106,7 @@ class FileParseDriver(weewx.drivers.AbstractDevice):
                         name = line[:eq_index].strip()
                         value = line[eq_index + 1:].strip()
                         data[name] = value
-            except Exception, e:
+            except Exception as e:
                 logerr("read failed: %s" % e)
 
             # map the data into a weewx loop packet

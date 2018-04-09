@@ -95,7 +95,7 @@ class MyAlarm(StdService):
             
             # If we got this far, it's ok to start intercepting events:
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)    # NOTE 1
-        except KeyError, e:
+        except KeyError as e:
             syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set.  Missing parameter: %s" % e)
             
     def newArchiveRecord(self, event):
@@ -120,7 +120,7 @@ class MyAlarm(StdService):
                     t.start()
                     # Record when the message went out:
                     self.last_msg_ts = time.time()
-            except NameError, e:
+            except NameError as e:
                 # The record was missing a named variable. Write a debug message, then keep going
                 syslog.syslog(syslog.LOG_DEBUG, "alarm: %s" % e)
 
@@ -166,7 +166,7 @@ class MyAlarm(StdService):
             s.sendmail(msg['From'], self.TO,  msg.as_string())
             # Log out of the server:
             s.quit()
-        except Exception, e:
+        except Exception as e:
             syslog.syslog(syslog.LOG_ERR, "alarm: SMTP mailer refused message with error %s" % (e,))
             raise
         

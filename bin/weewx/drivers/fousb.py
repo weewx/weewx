@@ -1014,7 +1014,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             try:
                 ival = self.get_fixed_block(['read_period'])
                 break
-            except usb.USBError, e:
+            except usb.USBError as e:
                 logcrt("get archive interval failed attempt %d of %d: %s"
                        % (i+1, self.max_tries, e))
         else:
@@ -1045,7 +1045,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         # attempt to claim the interface
         try:
             self.devh.claimInterface(self.usb_interface)
-        except usb.USBError, e:
+        except usb.USBError as e:
             self.closePort()
             logcrt("Unable to claim USB interface %s: %s" %
                    (self.usb_interface, e))
@@ -1165,7 +1165,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 else:
                     raise Exception("unknown polling mode '%s'" % self.polling_mode)
 
-            except (IndexError, usb.USBError, ObservationError), e:
+            except (IndexError, usb.USBError, ObservationError) as e:
                 logerr('get_observations failed: %s' % e)
                 nerr += 1
                 if nerr > self.max_tries:
@@ -1334,7 +1334,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                         dts -= datetime.timedelta(minutes=data['delay'])
                     ptr = self.dec_ptr(ptr)
                 return records
-            except (IndexError, usb.USBError, ObservationError), e:
+            except (IndexError, usb.USBError, ObservationError) as e:
                 logerr('get_records failed: %s' % e)
                 nerr += 1
                 if nerr > self.max_tries:

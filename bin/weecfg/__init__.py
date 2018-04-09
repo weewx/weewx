@@ -275,7 +275,7 @@ def modify_config(config_dict, stn_info, logger, debug=False):
             # Look up driver info:
             driver_editor, driver_name, driver_version = \
                 load_driver_editor(driver)
-        except Exception, e:
+        except Exception as e:
             sys.exit("Driver %s failed to load: %s" % (driver, e))
         stn_info['station_type'] = driver_name
         if debug:
@@ -997,14 +997,14 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
                     'driver_name': driver_module.DRIVER_NAME,
                     'version': driver_module_version,
                     'status': ''}
-        except ImportError, e:
+        except ImportError as e:
             # If the import fails, report it in the status
             driver_info_dict[driver_module_name] = {
                 'module_name': driver_module_name,
                 'driver_name': '?',
                 'version': '?',
                 'status': e}
-        except Exception, e:
+        except Exception as e:
             # Ignore anything else.  This might be a python file that is not
             # a driver, a python file with errors, or who knows what.
             pass
@@ -1277,7 +1277,7 @@ def mkdir_p(path):
     """equivalent to 'mkdir -p'"""
     try:
         os.makedirs(path)
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.EEXIST and os.path.isdir(path):
             pass
         else:

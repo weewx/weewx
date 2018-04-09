@@ -419,7 +419,7 @@ class ExtensionEngine(object):
             if not self.dry_run:
                 os.remove(filename)
                 return 1
-        except OSError, e:
+        except OSError as e:
             if report_errors:
                 self.logger.log("Delete failed: %s" % e, level=4)
         return 0
@@ -439,7 +439,7 @@ class ExtensionEngine(object):
                 self.logger.log("Deleting directory %s" % directory, level=2)
                 if not self.dry_run:
                     shutil.rmtree(directory)
-        except OSError, e:
+        except OSError as e:
             if report_errors:
                 self.logger.log("Delete failed on directory '%s': %s" %
                                 (directory, e), level=2)

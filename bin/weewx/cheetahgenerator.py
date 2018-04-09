@@ -330,7 +330,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 with open(tmpname, mode='w') as _file:
                     print(compiled_template, file=_file)
                 os.rename(tmpname, _fullname)
-            except Exception, e:
+            except Exception as e:
                 # We would like to get better feedback when there are cheetah
                 # compiler failures, but there seem to be no hooks for this.
                 # For example, if we could get make cheetah emit the source

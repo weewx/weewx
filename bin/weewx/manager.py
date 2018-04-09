@@ -177,7 +177,7 @@ class Manager(object):
         try:
             with weedb.Transaction(self.connection) as _cursor:
                 _cursor.execute("CREATE TABLE %s (%s);" % (self.table_name, _sqltypestr, ))
-        except weedb.DatabaseError, e:
+        except weedb.DatabaseError as e:
             syslog.syslog(syslog.LOG_ERR, "manager: "
                           "Unable to create table '%s' in database '%s': %s" % 
                           (self.table_name, self.database_name, e))
@@ -247,7 +247,7 @@ class Manager(object):
 
                     min_ts = min(min_ts, record['dateTime']) if min_ts is not None else record['dateTime']
                     max_ts = max(max_ts, record['dateTime'])
-                except (weedb.IntegrityError, weedb.OperationalError), e:
+                except (weedb.IntegrityError, weedb.OperationalError) as e:
                     syslog.syslog(syslog.LOG_ERR, "manager: "
                                   "Unable to add record %s to database '%s': %s" %
                                   (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
@@ -920,7 +920,7 @@ def get_database_dict_from_config(config_dict, database):
     """
     try:
         database_dict = dict(config_dict['Databases'][database])
-    except KeyError, e:
+    except KeyError as e:
         raise weewx.UnknownDatabase("Unknown database '%s'" % e)
     
     # See if a 'database_type' is specified. This is something
@@ -958,7 +958,7 @@ def get_manager_dict_from_config(config_dict, data_binding,
     # will be adding to it):
     try:
         manager_dict = dict(config_dict['DataBindings'][data_binding])
-    except KeyError, e:
+    except KeyError as e:
         raise weewx.UnknownBinding("Unknown data binding '%s'" % e)
 
     # If anything is missing, substitute from the default dictionary:
@@ -970,7 +970,7 @@ def get_manager_dict_from_config(config_dict, data_binding,
             database = manager_dict.pop('database')
             manager_dict['database_dict'] = get_database_dict_from_config(config_dict,
                                                                           database)
-        except KeyError, e:
+        except KeyError as e:
             raise weewx.UnknownDatabase("Unknown database '%s'" % e)
         
     # The schema may be specified as a string, in which case we resolve the
@@ -1548,7 +1548,7 @@ class DaySummaryManager(Manager):
             # be prepared to catch an exception:
             try:
                 cursor.execute(_sql_replace_str, _write_tuple)
-            except weedb.OperationalError, e:
+            except weedb.OperationalError as e:
                 syslog.syslog(syslog.LOG_ERR, "manager: "
                               "Replace failed for database %s: %s"
                               % (self.database_name, e))
@@ -1599,7 +1599,7 @@ class DaySummaryManager(Manager):
                         _cursor.execute("DROP TABLE %s" % _table_name)
 
             del self.daykeys
-        except weedb.OperationalError, e:
+        except weedb.OperationalError as e:
             syslog.syslog(syslog.LOG_ERR, "manager: "
                           "Drop summaries failed for database '%s': %s"
                           % (self.connection.database_name, e))
