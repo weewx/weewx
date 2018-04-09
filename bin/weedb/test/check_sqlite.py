@@ -7,6 +7,7 @@
 # script "setup_mysql" will set them up with the necessary permissions.
 #
 from __future__ import with_statement
+from __future__ import print_function
 import unittest
 import sys
 import os
@@ -24,16 +25,16 @@ try:
     fd = open(sqdb1, 'w')
     fd.close()
 except:
-    print >>sys.stderr, "For tests to work properly, you must have permission to write to '%s'." % sqdb1
-    print >>sys.stderr, "Change the permissions and try again."
+    print("For tests to work properly, you must have permission to write to '%s'." % sqdb1, file=sys.stderr)
+    print("Change the permissions and try again.", file=sys.stderr)
 try:
     fd = open(sqdb2, 'w')
     fd.close()
 except IOError:
     pass
 else:
-    print >>sys.stderr, "For tests to work properly, you must NOT have permission to write to '%s'." % sqdb2
-    print >>sys.stderr, "Change the permissions and try again."
+    print("For tests to work properly, you must NOT have permission to write to '%s'." % sqdb2, file=sys.stderr)
+    print("Change the permissions and try again.", file=sys.stderr)
 
 class Cursor(object):
     """Class to be used to wrap a cursor in a 'with' clause."""

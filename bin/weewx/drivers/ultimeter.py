@@ -347,8 +347,8 @@ class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
 """ % Station.DEFAULT_PORT
 
     def prompt_for_settings(self):
-        print "Specify the serial port on which the station is connected, for"
-        print "example: /dev/ttyUSB0 or /dev/ttyS0 or /dev/cua0."
+        print("Specify the serial port on which the station is connected, for")
+        print("example: /dev/ttyUSB0 or /dev/ttyS0 or /dev/cua0.")
         port = self._prompt('port', Station.DEFAULT_PORT)
         return {'port': port}
 
@@ -376,10 +376,10 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "ultimeter driver version %s" % DRIVER_VERSION
+        print(("ultimeter driver version %s" % DRIVER_VERSION))
         exit(0)
 
     with Station(options.port, debug_serial=options.debug) as station:
         station.set_logger_mode()
         while True:
-            print time.time(), _fmt(station.get_readings())
+            print((time.time(), _fmt(station.get_readings())))

@@ -6,6 +6,7 @@
 #
 """Test tag notation for template generation."""
 from __future__ import with_statement
+from __future__ import print_function
 import locale
 import os.path
 import shutil
@@ -91,9 +92,9 @@ class Common(unittest.TestCase):
             shutil.rmtree(test_html_dir)
         except OSError as e:
             if os.path.exists(test_html_dir):
-                print >> sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
-                print >> sys.stderr, "Reason:", e
-                print >> sys.stderr, "Aborting"
+                print("\nUnable to remove old test directory %s", test_html_dir, file=sys.stderr)
+                print("Reason:", e, file=sys.stderr)
+                print("Aborting", file=sys.stderr)
                 exit(1)
 
         # This will generate the test databases if necessary:
@@ -106,7 +107,7 @@ class Common(unittest.TestCase):
         
         # The generation time should be the same as the last record in the test database:
         testtime_ts = gen_fake_data.stop_ts
-        print "\ntest time is ", weeutil.weeutil.timestamp_to_string(testtime_ts)
+        print("\ntest time is ", weeutil.weeutil.timestamp_to_string(testtime_ts))
 
         stn_info = weewx.station.StationInfo(**self.config_dict['Station'])
         
@@ -125,9 +126,9 @@ class Common(unittest.TestCase):
         t.config_dict['StdReport']['SKIN_ROOT'] = os.path.join(test_dir, 'test_skins')
         
         # Although the report engine inherits from Thread, we can just run it in the main thread:
-        print "Starting report engine test"
+        print("Starting report engine test")
         t.run()
-        print "Done."
+        print("Done.")
         
         test_html_dir = os.path.join(t.config_dict['WEEWX_ROOT'], t.config_dict['StdReport']['HTML_ROOT'])
         expected_dir  = os.path.join(test_dir, 'expected')
@@ -156,7 +157,7 @@ class Common(unittest.TestCase):
                     self.assertEqual(actual_line, expected_line, msg="%s[%d]:\n%r vs\n%r" % 
                                      (actual_filename_abs, n, actual_line, expected_line))
                 
-                print "Checked %d lines" % (n,)
+                print("Checked %d lines" % (n,))
 
 class TestSqlite(Common):
 

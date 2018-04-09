@@ -1040,9 +1040,9 @@ def index_to_addr(idx):
 def print_dict(data):
     for x in sorted(data.keys()):
         if x == 'dateTime':
-            print '%s: %s' % (x, weeutil.weeutil.timestamp_to_string(data[x]))
+            print(('%s: %s' % (x, weeutil.weeutil.timestamp_to_string(data[x]))))
         else:
-            print '%s: %s' % (x, data[x])
+            print(('%s: %s' % (x, data[x])))
 
 
 class WS28xxConfEditor(weewx.drivers.AbstractConfEditor):
@@ -1064,8 +1064,8 @@ class WS28xxConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def prompt_for_settings(self):
-        print "Specify the frequency used between the station and the"
-        print "transceiver, either 'US' (915 MHz) or 'EU' (868.3 MHz)."
+        print("Specify the frequency used between the station and the")
+        print("transceiver, either 'US' (915 MHz) or 'EU' (868.3 MHz).")
         freq = self._prompt('frequency', 'US', ['US', 'EU'])
         return {'transceiver_frequency': freq}
 
@@ -1115,30 +1115,30 @@ class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
 
     def check_transceiver(self, maxtries):
         """See if the transceiver is installed and operational."""
-        print 'Checking for transceiver...'
+        print('Checking for transceiver...')
         ntries = 0
         while ntries < maxtries:
             ntries += 1
             if self.station.transceiver_is_present():
-                print 'Transceiver is present'
+                print('Transceiver is present')
                 sn = self.station.get_transceiver_serial()
-                print 'serial: %s' % sn
+                print(('serial: %s' % sn))
                 tid = self.station.get_transceiver_id()
-                print 'id: %d (0x%04x)' % (tid, tid)
+                print(('id: %d (0x%04x)' % (tid, tid)))
                 break
-            print 'Not found (attempt %d of %d) ...' % (ntries, maxtries)
+            print(('Not found (attempt %d of %d) ...' % (ntries, maxtries)))
             time.sleep(5)
         else:
-            print 'Transceiver not responding.'
+            print('Transceiver not responding.')
 
     def pair(self, maxtries):
         """Pair the transceiver with the station console."""
-        print 'Pairing transceiver with console...'
+        print('Pairing transceiver with console...')
         maxwait = 90 # how long to wait between button presses, in seconds
         ntries = 0
         while ntries < maxtries or maxtries == 0:
             if self.station.transceiver_is_paired():
-                print 'Transceiver is paired to console'
+                print('Transceiver is paired to console')
                 break
             ntries += 1
             msg = 'Press and hold the [v] key until "PC" appears'
@@ -1146,14 +1146,14 @@ class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
                 msg += ' (attempt %d of %d)' % (ntries, maxtries)
             else:
                 msg += ' (attempt %d)' % ntries
-            print msg
+            print(msg)
             now = start_ts = int(time.time())
             while (now - start_ts < maxwait and
                    not self.station.transceiver_is_paired()):
                 time.sleep(5)
                 now = int(time.time())
         else:
-            print 'Transceiver not paired to console.'
+            print('Transceiver not paired to console.')
 
     def get_interval(self, maxtries):
         cfg = self.get_config(maxtries)
@@ -1173,24 +1173,24 @@ class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
                 start_ts = int(time.time())
             else:
                 dur = int(time.time()) - start_ts
-                print 'No data after %d seconds (press SET to sync)' % dur
+                print(('No data after %d seconds (press SET to sync)' % dur))
             time.sleep(30)
         return None
 
     def set_interval(self, maxtries, interval, prompt):
         """Set the station archive interval"""
-        print "This feature is not yet implemented"
+        print("This feature is not yet implemented")
 
     def show_info(self, maxtries):
         """Query the station then display the settings."""
-        print 'Querying the station for the configuration...'
+        print('Querying the station for the configuration...')
         cfg = self.get_config(maxtries)
         if cfg is not None:
             print_dict(cfg)
 
     def show_current(self, maxtries):
         """Get current weather observation."""
-        print 'Querying the station for current weather data...'
+        print('Querying the station for current weather data...')
         start_ts = None
         ntries = 0
         while ntries < maxtries or maxtries == 0:
@@ -1203,20 +1203,20 @@ class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
                 start_ts = int(time.time())
             else:
                 dur = int(time.time()) - start_ts
-                print 'No data after %d seconds (press SET to sync)' % dur
+                print(('No data after %d seconds (press SET to sync)' % dur))
             time.sleep(30)
 
     def show_history(self, maxtries, ts=0, count=0):
         """Display the indicated number of records or the records since the 
         specified timestamp (local time, in seconds)"""
-        print "Querying the station for historical records..."
+        print("Querying the station for historical records...")
         ntries = 0
         last_n = nrem = None
         last_ts = int(time.time())
         self.station.start_caching_history(since_ts=ts, num_rec=count)
         while nrem is None or nrem > 0:
             if ntries >= maxtries:
-                print 'Giving up after %d tries' % ntries
+                print(('Giving up after %d tries' % ntries))
                 break
             time.sleep(30)
             ntries += 1
@@ -1224,7 +1224,7 @@ class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
             n = self.station.get_num_history_scanned()
             if n == last_n:
                 dur = now - last_ts
-                print 'No data after %d seconds (press SET to sync)' % dur
+                print(('No data after %d seconds (press SET to sync)' % dur))
             else:
                 ntries = 0
                 last_ts = now
@@ -1238,10 +1238,10 @@ class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
         self.station.stop_caching_history()
         records = self.station.get_history_cache_records()
         self.station.clear_history_cache()
-        print
-        print 'Found %d records' % len(records)
+        print()
+        print(('Found %d records' % len(records)))
         for r in records:
-            print r
+            print(r)
 
 
 class WS28xxDriver(weewx.drivers.AbstractDevice):

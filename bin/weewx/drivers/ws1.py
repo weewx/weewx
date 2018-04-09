@@ -464,20 +464,20 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def prompt_for_settings(self):
-        print "How is the station connected? tcp, udp, or serial."
+        print("How is the station connected? tcp, udp, or serial.")
         con_mode = self._prompt('mode', 'serial')
         con_mode = con_mode.lower()
 
         if con_mode == 'serial':
-            print "Specify the serial port on which the station is connected, "
+            print("Specify the serial port on which the station is connected, ")
             "for example: /dev/ttyUSB0 or /dev/ttyS0."
             port = self._prompt('port', '/dev/ttyUSB0')
         elif con_mode == 'tcp' or con_mode == 'udp':
-            print "Specify the IP address and port of the station. For "
+            print("Specify the IP address and port of the station. For ")
             "example: 192.168.36.40:3000."
             port = self._prompt('port', '192.168.36.40:3000')
 
-        print "Specify how long to wait for a response, in seconds."
+        print("Specify how long to wait for a response, in seconds.")
         timeout = self._prompt('timeout', 3)
 
         return {'mode': con_mode, 'port': port, 'timeout': timeout}
@@ -504,9 +504,9 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "ADS WS1 driver version %s" % DRIVER_VERSION
+        print(("ADS WS1 driver version %s" % DRIVER_VERSION))
         exit(0)
 
     with StationSerial(options.port) as s:
         while True:
-            print time.time(), s.get_readings()
+            print((time.time(), s.get_readings()))

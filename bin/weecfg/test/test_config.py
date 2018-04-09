@@ -24,7 +24,7 @@ try:
     import __builtin__  # @UnusedImport
     have_mock = True
 except ImportError:
-    print "Module 'mock' not installed. Testing will be restricted."
+    print("Module 'mock' not installed. Testing will be restricted.")
     have_mock = False
 
 # Redirect the import of setup:

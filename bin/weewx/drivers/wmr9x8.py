@@ -339,7 +339,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
     def log_packet(self, packet):
         packet_str = ','.join(["x%x" % v for v in packet])
-        print "%d, %s, %s" % (int(time.time() + 0.5), time.asctime(), packet_str)
+        print(("%d, %s, %s" % (int(time.time() + 0.5), time.asctime(), packet_str)))
 
     @wmr9x8_registerpackettype(typecode=0x00, size=11)
     def _wmr9x8_wind_packet(self, packet):
@@ -708,14 +708,14 @@ class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def prompt_for_settings(self):
-        print "Specify the serial port on which the station is connected, for"
-        print "example /dev/ttyUSB0 or /dev/ttyS0."
+        print("Specify the serial port on which the station is connected, for")
+        print("example /dev/ttyUSB0 or /dev/ttyS0.")
         port = self._prompt('port', '/dev/ttyUSB0')
         return {'port': port}
 
     def modify_config(self, config_dict):
-        print """
-Setting rainRate, windchill, and dewpoint calculations to hardware."""
+        print("""
+Setting rainRate, windchill, and dewpoint calculations to hardware.""")
         config_dict.setdefault('StdWXCalculate', {})
         config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
@@ -750,7 +750,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "WMR9x8 driver version %s" % DRIVER_VERSION
+        print(("WMR9x8 driver version %s" % DRIVER_VERSION))
         exit(0)
 
     if options.gen_packets:
@@ -759,4 +759,4 @@ if __name__ == '__main__':
         stn = WMR9x8(**stn_dict)
         
         for packet in stn.genLoopPackets():
-            print packet
+            print(packet)

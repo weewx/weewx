@@ -6,6 +6,7 @@
 #
 
 from __future__ import with_statement
+from __future__ import print_function
 
 """Module providing the base classes and API for importing observational data
 into weeWX.
@@ -375,8 +376,8 @@ class Source(object):
                                                                                                                                self.total_unique_rec,
                                                                                                                                self.tdiff)
                     self.wlog.printlog(syslog.LOG_INFO, _msg)
-                    print "Those records with a timestamp already in the archive will not have been"
-                    print "imported. Confirm successful import in the weeWX log file."
+                    print("Those records with a timestamp already in the archive will not have been")
+                    print("imported. Confirm successful import in the weeWX log file.")
 
     def parseMap(self, source_type, source, import_config_dict):
         """Produce a source field-to-weeWX archive field map.
@@ -764,25 +765,25 @@ class Source(object):
             if _diff_interval and self.interval_ans != 'y':
                 # we had more than one unique value for interval, warn the user
                 self.wlog.printlog(syslog.LOG_INFO, "Warning: Records to be imported contain multiple different 'interval' values.")
-                print "         This may mean the imported data is missing some records and it may lead"
-                print "         to data integrity issues. If the raw data has a known, fixed interval"
-                print "         value setting the relevant 'interval' setting in wee_import config to"
-                print "         this value may give a better result."
+                print("         This may mean the imported data is missing some records and it may lead")
+                print("         to data integrity issues. If the raw data has a known, fixed interval")
+                print("         value setting the relevant 'interval' setting in wee_import config to")
+                print("         this value may give a better result.")
                 while self.interval_ans not in ['y', 'n']:
                     self.interval_ans = raw_input('Are you sure you want to proceed (y/n)? ')
                 if self.interval_ans == 'n':
                     # the user chose to abort, but we may have already
                     # processed some records. So log it then raise a SystemExit()
                     if self.dry_run:
-                        print "Dry run import aborted by user. %d records were processed." % self.total_rec_proc
+                        print("Dry run import aborted by user. %d records were processed." % self.total_rec_proc)
                     else:
                         if self.total_rec_proc > 0:
-                            print "Those records with a timestamp already in the archive will not have been"
-                            print "imported. As the import was aborted before completion refer to the weeWX log"
-                            print "file to confirm which records were imported."
+                            print("Those records with a timestamp already in the archive will not have been")
+                            print("imported. As the import was aborted before completion refer to the weeWX log")
+                            print("file to confirm which records were imported.")
                             raise SystemExit('Exiting.')
                         else:
-                            print "Import aborted by user. No records saved to archive."
+                            print("Import aborted by user. No records saved to archive.")
                         _msg = "User chose to abort import. %d records were processed. Exiting." % self.total_rec_proc
                         self.wlog.logonly(syslog.LOG_INFO, _msg)
                         raise SystemExit('Exiting. Nothing done.')
@@ -957,9 +958,9 @@ class Source(object):
             self.t1 = time.time()
             # it's convenient to give this message now
             if self.dry_run:
-                print 'Starting dry run import ...'
+                print('Starting dry run import ...')
             else:
-                print 'Starting import ...'
+                print('Starting import ...')
         # do we have any records?
         if records and len(records) > 0:
             # if this is the first period then give a little summary about what
@@ -967,13 +968,13 @@ class Source(object):
             if self.first_period:
                 if self.last_period:
                     # there is only 1 period, so we can count them
-                    print "%s records identified for import." % len(records)
+                    print("%s records identified for import." % len(records))
                 else:
                     # there are more periods so say so
-                    print "Records covering multiple periods have been identified for import."
+                    print("Records covering multiple periods have been identified for import.")
             # we do, confirm the user actually wants to save them
             while self.ans not in ['y', 'n'] and not self.dry_run:
-                print "Proceeding will save all imported records in the weeWX archive."
+                print("Proceeding will save all imported records in the weeWX archive.")
                 self.ans = raw_input("Are you sure you want to proceed (y/n)? ")
             if self.ans == 'y' or self.dry_run:
                 # we are going to save them
@@ -987,7 +988,7 @@ class Source(object):
                 # if we are importing multiple periods of data then tell the
                 # user what period we are up to
                 if not (self.first_period and self.last_period):
-                    print "Period %d ..." % self.period_no
+                    print("Period %d ..." % self.period_no)
                 # step through each record in this period
                 for _rec in records:
                     # convert our record
@@ -1014,7 +1015,7 @@ class Source(object):
                         _msg = "Records processed: %d; Unique records: %d; Last timestamp: %s\r" % (nrecs,
                                                                                                     len(unique_set),
                                                                                                     timestamp_to_string(_final_rec['dateTime']))
-                        print >> sys.stdout, _msg,
+                        print(_msg, end=' ', file=sys.stdout)
                         sys.stdout.flush()
                         _tranche = []
                 # we have processed all records but do we have any records left
@@ -1032,8 +1033,8 @@ class Source(object):
                     _msg = "Records processed: %d; Unique records: %d; Last timestamp: %s\r" % (nrecs,
                                                                                                 len(unique_set),
                                                                                                 timestamp_to_string(_final_rec['dateTime']))
-                    print >> sys.stdout, _msg,
-                print
+                    print(_msg, end=' ', file=sys.stdout)
+                print()
                 sys.stdout.flush()
                 # update our counts
                 self.total_rec_proc += nrecs
@@ -1053,7 +1054,7 @@ class Source(object):
             else:
                 # multiple periods
                 _msg = 'Period %d - no records identified for import.' % self.period_no
-            print _msg
+            print(_msg)
         # if we have finished record the time taken for our summary
         if self.last_period:
             self.tdiff = time.time() - self.t1
@@ -1113,14 +1114,14 @@ class WeeImportLog(object):
     def printlog(self, level, message):
         """Print to screen and log to file."""
 
-        print message
+        print(message)
         self.logonly(level, message)
 
     def verboselog(self, level, message):
         """Print to screen if --verbose and log to file always."""
 
         if self.verbose:
-            print message
+            print(message)
             self.logonly(level, message)
 
 

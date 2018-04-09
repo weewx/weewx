@@ -128,4 +128,4 @@ if __name__ == "__main__":
     import weeutil.weeutil
     driver = FileParseDriver()
     for packet in driver.genLoopPackets():
-        print weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet
+        print(weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet)

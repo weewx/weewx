@@ -91,7 +91,7 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
                                          annual_phase_offset=annual_phase_offset,
                                          weather_phase_offset=weather_phase_offset))
         t2 = time.time()
-        print "\nTime to create synthetic archive database = %6.2fs" % (t2-t1,)
+        print(("\nTime to create synthetic archive database = %6.2fs" % (t2-t1,)))
         
     with weewx.manager.open_manager_with_config(config_dict, binding, initialize=True) as archive:
 
@@ -103,9 +103,9 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
         nrecs, ndays = archive.backfill_day_summary()
         tdiff = time.time() - t1
         if nrecs:
-            print "\nProcessed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff)
+            print(("\nProcessed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff)))
         else:
-            print "Daily summaries up to date."
+            print("Daily summaries up to date.")
 
     
 def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval, 

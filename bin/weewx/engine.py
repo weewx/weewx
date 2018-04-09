@@ -707,11 +707,11 @@ class StdPrint(StdService):
         
     def new_loop_packet(self, event):
         """Print out the new LOOP packet"""
-        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), to_sorted_string(event.packet)
+        print(("LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), to_sorted_string(event.packet)))
     
     def new_archive_record(self, event):
         """Print out the new archive record."""
-        print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), to_sorted_string(event.record)
+        print(("REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), to_sorted_string(event.record)))
 
 
 #==============================================================================

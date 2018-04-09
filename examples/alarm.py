@@ -202,11 +202,11 @@ if __name__ == '__main__':
     try :
         config_dict = configobj.ConfigObj(config_path, file_error=True)
     except IOError:
-        print "Unable to open configuration file ", config_path
+        print("Unable to open configuration file ", config_path)
         exit()
         
     if 'Alarm' not in config_dict:
-        print >>sys.stderr, "No [Alarm] section in the configuration file %s" % config_path
+        print("No [Alarm] section in the configuration file %s" % config_path, file=sys.stderr)
         exit(1)
     
     engine = None

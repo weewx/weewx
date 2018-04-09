@@ -807,50 +807,50 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
 
     @staticmethod
     def show_info(station, fmt='dict'):
-        print 'Querying the station for the configuration...'
+        print('Querying the station for the configuration...')
         data = station.get_config()
         TE923Configurator.print_data(data, fmt)
 
     @staticmethod
     def show_current(station, fmt='dict'):
-        print 'Querying the station for current weather data...'
+        print('Querying the station for current weather data...')
         data = station.get_readings()
         TE923Configurator.print_data(data, fmt)
 
     @staticmethod
     def show_history(station, ts=0, count=None, fmt='dict'):
-        print "Querying the station for historical records..."
+        print("Querying the station for historical records...")
         for r in station.gen_records(ts, count):
             TE923Configurator.print_data(r, fmt)
 
     @staticmethod
     def show_minmax(station):
-        print "Querying the station for historical min/max data"
+        print("Querying the station for historical min/max data")
         data = station.get_minmax()
-        print "Console Temperature Min : %s" % data['t_in_min']
-        print "Console Temperature Max : %s" % data['t_in_max']
-        print "Console Humidity Min    : %s" % data['h_in_min']
-        print "Console Humidity Max    : %s" % data['h_in_max']
+        print(("Console Temperature Min : %s" % data['t_in_min']))
+        print(("Console Temperature Max : %s" % data['t_in_max']))
+        print(("Console Humidity Min    : %s" % data['h_in_min']))
+        print(("Console Humidity Max    : %s" % data['h_in_max']))
         for i in range(1, 6):
-            print "Channel %d Temperature Min : %s" % (i, data['t_%d_min' % i])
-            print "Channel %d Temperature Max : %s" % (i, data['t_%d_max' % i])
-            print "Channel %d Humidity Min    : %s" % (i, data['h_%d_min' % i])
-            print "Channel %d Humidity Max    : %s" % (i, data['h_%d_max' % i])
-        print "Wind speed max since midnight : %s" % data['windspeed_max']
-        print "Wind gust max since midnight  : %s" % data['windgust_max']
-        print "Rain yesterday  : %s" % data['rain_yesterday']
-        print "Rain this week  : %s" % data['rain_week']
-        print "Rain this month : %s" % data['rain_month']
-        print "Last Barometer reading : %s" % time.strftime(
-            "%Y %b %d %H:%M", time.localtime(data['barometer_ts']))
+            print(("Channel %d Temperature Min : %s" % (i, data['t_%d_min' % i])))
+            print(("Channel %d Temperature Max : %s" % (i, data['t_%d_max' % i])))
+            print(("Channel %d Humidity Min    : %s" % (i, data['h_%d_min' % i])))
+            print(("Channel %d Humidity Max    : %s" % (i, data['h_%d_max' % i])))
+        print(("Wind speed max since midnight : %s" % data['windspeed_max']))
+        print(("Wind gust max since midnight  : %s" % data['windgust_max']))
+        print(("Rain yesterday  : %s" % data['rain_yesterday']))
+        print(("Rain this week  : %s" % data['rain_week']))
+        print(("Rain this month : %s" % data['rain_month']))
+        print(("Last Barometer reading : %s" % time.strftime(
+            "%Y %b %d %H:%M", time.localtime(data['barometer_ts']))))
         for i in range(25):
-            print "   T-%02d Hours : %.1f" % (i, data['barometer_%d' % i])
+            print(("   T-%02d Hours : %.1f" % (i, data['barometer_%d' % i])))
 
     @staticmethod
     def show_date(station):
         ts = station.get_date()
         tt = time.localtime(ts)
-        print "Date: %02d/%02d/%d" % (tt[2], tt[1], tt[0])
+        print(("Date: %02d/%02d/%d" % (tt[2], tt[1], tt[0])))
         TE923Configurator.print_alignment()
 
     @staticmethod
@@ -858,16 +858,16 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
         if datestr is not None:
             date_list = datestr.split(',')
             if len(date_list) != 3:
-                print "Bad date '%s', format is YEAR,MONTH,DAY" % datestr
+                print(("Bad date '%s', format is YEAR,MONTH,DAY" % datestr))
                 return
             if int(date_list[0]) < 2000 or int(date_list[0]) > 2099:
-                print "Year must be between 2000 and 2099 inclusive"
+                print("Year must be between 2000 and 2099 inclusive")
                 return
             if int(date_list[1]) < 1 or int(date_list[1]) > 12:
-                print "Month must be between 1 and 12 inclusive"
+                print("Month must be between 1 and 12 inclusive")
                 return
             if int(date_list[2]) < 1 or int(date_list[2]) > 31:
-                print "Day must be between 1 and 31 inclusive"
+                print("Day must be between 1 and 31 inclusive")
                 return
             tt = time.localtime()
             offset = 1 if tt[3] < 12 else 0
@@ -879,17 +879,17 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
 
     def show_location(self, station, loc_type):
         data = station.get_loc(loc_type)
-        print "City     : %s (%s)" % (self.city_dict[data['city_time']][9],
-                                      self.city_dict[data['city_time']][0])
+        print(("City     : %s (%s)" % (self.city_dict[data['city_time']][9],
+                                      self.city_dict[data['city_time']][0])))
         degree_sign= u'\N{DEGREE SIGN}'.encode('iso-8859-1')
-        print "Location : %03d%s%02d'%s %02d%s%02d'%s" % (
+        print(("Location : %03d%s%02d'%s %02d%s%02d'%s" % (
             data['long_deg'], degree_sign, data['long_min'], data['long_dir'],
-            data['lat_deg'], degree_sign, data['lat_min'], data['lat_dir'])
+            data['lat_deg'], degree_sign, data['lat_min'], data['lat_dir'])))
         if data['dst_always_on']:
-            print "DST      : Always on"
+            print("DST      : Always on")
         else:
-            print "DST      : %s (%s)" % (self.dst_dict[data['dst']][1],
-                                          self.dst_dict[data['dst']][0])
+            print(("DST      : %s (%s)" % (self.dst_dict[data['dst']][1],
+                                          self.dst_dict[data['dst']][0])))
 
     def set_location(self, station, loc_type, location):
         dst_on = 1
@@ -902,7 +902,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
                     city_index = idx
                     break
             if city_index is None:
-                print "City code '%s' not recognized - consult station manual for valid city codes" % location_list[0]
+                print(("City code '%s' not recognized - consult station manual for valid city codes" % location_list[0]))
                 return
             long_deg = self.city_dict[city_index][6]
             long_min = self.city_dict[city_index][7]
@@ -916,32 +916,32 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
             dst_index = self.city_dict[city_index][2]
         elif len(location_list) == 9 and location_list[0] == "USR":
             if int(location_list[1]) < 0 or int(location_list[1]) > 180:
-                print "Longitude degrees must be between 0 and 180 inclusive"
+                print("Longitude degrees must be between 0 and 180 inclusive")
                 return
             if int(location_list[2]) < 0 or int(location_list[2]) > 180:
-                print "Longitude minutes must be between 0 and 59 inclusive"
+                print("Longitude minutes must be between 0 and 59 inclusive")
                 return
             if location_list[3] != "E" and location_list[3] != "W":
-                print "Longitude direction must be E or W"
+                print("Longitude direction must be E or W")
                 return
             if int(location_list[4]) < 0 or int(location_list[4]) > 180:
-                print "Latitude degrees must be between 0 and 90 inclusive"
+                print("Latitude degrees must be between 0 and 90 inclusive")
                 return
             if int(location_list[5]) < 0 or int(location_list[5]) > 180:
-                print "Latitude minutes must be between 0 and 59 inclusive"
+                print("Latitude minutes must be between 0 and 59 inclusive")
                 return
             if location_list[6] != "N" and location_list[6] != "S":
-                print "Longitude direction must be N or S"
+                print("Longitude direction must be N or S")
                 return
             tz_list = location_list[7].split(':')
             if len(tz_list) != 2:
-                print "Bad timezone '%s', format is HOUR:MINUTE" % location_list[7]
+                print(("Bad timezone '%s', format is HOUR:MINUTE" % location_list[7]))
                 return
             if int(tz_list[0]) < -12 or int(tz_list[0]) > 12:
-                print "Timezone hour must be between -12 and 12 inclusive"
+                print("Timezone hour must be between -12 and 12 inclusive")
                 return
             if int(tz_list[1]) != 0 and int(tz_list[1]) != 30:
-                print "Timezone minute must be 0 or 30"
+                print("Timezone minute must be 0 or 30")
                 return
             if location_list[8].lower() != 'on':
                 dst_on = 0
@@ -951,7 +951,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
                         dst_index = idx
                         break
                 if dst_index is None:
-                    print "DST code '%s' not recognized - consult station manual for valid DST codes" % location_list[8]
+                    print(("DST code '%s' not recognized - consult station manual for valid DST codes" % location_list[8]))
                     return
             else:
                 dst_on = 1
@@ -966,8 +966,8 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
             tz_hr = int(tz_list[0])
             tz_min = int(tz_list[1])
         else:
-            print "Bad location '%s'" % location
-            print "Location format is: %s" % self.LOCSTR
+            print(("Bad location '%s'" % location))
+            print(("Location format is: %s" % self.LOCSTR))
             return
         station.set_loc(loc_type, city_index, dst_on, dst_index, tz_hr, tz_min,
                         lat_deg, lat_min, lat_dir,
@@ -976,98 +976,98 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
     @staticmethod
     def show_altitude(station):
         altitude = station.get_alt()
-        print "Altitude: %d meters" % altitude
+        print(("Altitude: %d meters" % altitude))
 
     @staticmethod
     def set_altitude(station, altitude):
         if altitude < -200 or altitude > 5000:
-            print "Altitude must be between -200 and 5000 inclusive"
+            print("Altitude must be between -200 and 5000 inclusive")
             return
         station.set_alt(altitude)
 
     @staticmethod
     def show_alarms(station):
         data = station.get_alarms()
-        print "Weekday alarm : %02d:%02d (%s)" % (
-            data['weekday_hour'], data['weekday_min'], data['weekday_active'])
-        print "Single  alarm : %02d:%02d (%s)" % (
-            data['single_hour'], data['single_min'], data['single_active'])
-        print "Pre-alarm     : %s (%s)" % (
-            data['prealarm_period'], data['prealarm_active'])
+        print(("Weekday alarm : %02d:%02d (%s)" % (
+            data['weekday_hour'], data['weekday_min'], data['weekday_active'])))
+        print(("Single  alarm : %02d:%02d (%s)" % (
+            data['single_hour'], data['single_min'], data['single_active'])))
+        print(("Pre-alarm     : %s (%s)" % (
+            data['prealarm_period'], data['prealarm_active'])))
         if data['snooze'] > 0:
-            print "Snooze        : %d mins" % data['snooze']
+            print(("Snooze        : %d mins" % data['snooze']))
         else:
-            print "Snooze        : Invalid"
-        print "Max Temperature Alarm : %s" % data['max_temp']
-        print "Min Temperature Alarm : %s" % data['min_temp']
-        print "Rain Alarm            : %d mm (%s)" % (
-            data['rain'], data['rain_active'])
-        print "Wind Speed Alarm      : %s (%s)" % (
-            data['windspeed'], data['windspeed_active'])
-        print "Wind Gust  Alarm      : %s (%s)" % (
-            data['windgust'], data['windgust_active'])
+            print("Snooze        : Invalid")
+        print(("Max Temperature Alarm : %s" % data['max_temp']))
+        print(("Min Temperature Alarm : %s" % data['min_temp']))
+        print(("Rain Alarm            : %d mm (%s)" % (
+            data['rain'], data['rain_active'])))
+        print(("Wind Speed Alarm      : %s (%s)" % (
+            data['windspeed'], data['windspeed_active'])))
+        print(("Wind Gust  Alarm      : %s (%s)" % (
+            data['windgust'], data['windgust_active'])))
 
     @staticmethod
     def set_alarms(station, alarm):
         alarm_list = alarm.split(',')
         if len(alarm_list) != 9:
-            print "Bad alarm '%s'" % alarm
-            print "Alarm format is: %s" % TE923Configurator.ALMSTR
+            print(("Bad alarm '%s'" % alarm))
+            print(("Alarm format is: %s" % TE923Configurator.ALMSTR))
             return
         weekday = alarm_list[0]
         if weekday.lower() != 'off':
             weekday_list = weekday.split(':')
             if len(weekday_list) != 2:
-                print "Bad alarm '%s', expected HOUR:MINUTE or OFF" % weekday
+                print(("Bad alarm '%s', expected HOUR:MINUTE or OFF" % weekday))
                 return
             if int(weekday_list[0]) < 0 or int(weekday_list[0]) > 23:
-                print "Alarm hours must be between 0 and 23 inclusive"
+                print("Alarm hours must be between 0 and 23 inclusive")
                 return
             if int(weekday_list[1]) < 0 or int(weekday_list[1]) > 59:
-                print "Alarm minutes must be between 0 and 59 inclusive"
+                print("Alarm minutes must be between 0 and 59 inclusive")
                 return
         single = alarm_list[1]
         if single.lower() != 'off':
             single_list = single.split(':')
             if len(single_list) != 2:
-                print "Bad alarm '%s', expected HOUR:MINUTE or OFF" % single
+                print(("Bad alarm '%s', expected HOUR:MINUTE or OFF" % single))
                 return
             if int(single_list[0]) < 0 or int(single_list[0]) > 23:
-                print "Alarm hours must be between 0 and 23 inclusive"
+                print("Alarm hours must be between 0 and 23 inclusive")
                 return
             if int(single_list[1]) < 0 or int(single_list[1]) > 59:
-                print "Alarm minutes must be between 0 and 59 inclusive"
+                print("Alarm minutes must be between 0 and 59 inclusive")
                 return
         if alarm_list[2].lower() != 'off' and alarm_list[2] not in ['15', '30', '45', '60', '90']:
-            print "Prealarm must be 15, 30, 45, 60, 90 or OFF"
+            print("Prealarm must be 15, 30, 45, 60, 90 or OFF")
             return
         if int(alarm_list[3]) < 1 or int(alarm_list[3]) > 15:
-            print "Snooze must be between 1 and 15 inclusive"
+            print("Snooze must be between 1 and 15 inclusive")
             return
         if float(alarm_list[4]) < -50 or float(alarm_list[4]) > 70:
-            print "Temperature alarm must be between -50 and 70 inclusive"
+            print("Temperature alarm must be between -50 and 70 inclusive")
             return
         if float(alarm_list[5]) < -50 or float(alarm_list[5]) > 70:
-            print "Temperature alarm must be between -50 and 70 inclusive"
+            print("Temperature alarm must be between -50 and 70 inclusive")
             return
         if alarm_list[6].lower() != 'off' and (int(alarm_list[6]) < 1 or int(alarm_list[6]) > 9999):
-            print "Rain alarm must be between 1 and 999 inclusive or OFF"
+            print("Rain alarm must be between 1 and 999 inclusive or OFF")
             return
         if alarm_list[7].lower() != 'off' and (float(alarm_list[7]) < 1 or float(alarm_list[7]) > 199):
-            print "Wind alarm must be between 1 and 199 inclusive or OFF"
+            print("Wind alarm must be between 1 and 199 inclusive or OFF")
             return
         if alarm_list[8].lower() != 'off' and (float(alarm_list[8]) < 1 or float(alarm_list[8]) > 199):
-            print "Wind alarm must be between 1 and 199 inclusive or OFF"
+            print("Wind alarm must be between 1 and 199 inclusive or OFF")
             return
         station.set_alarms(alarm_list[0], alarm_list[1], alarm_list[2],
                            alarm_list[3], alarm_list[4], alarm_list[5],
                            alarm_list[6], alarm_list[7], alarm_list[8])
-        print "Temperature alarms can only be modified via station controls"
+        print("Temperature alarms can only be modified via station controls")
 
     @staticmethod
     def show_interval(station):
         idx = station.get_interval()
-        print "Interval: %s" % TE923Configurator.idx_to_interval.get(idx, 'unknown')
+        print(("Interval: %s" % TE923Configurator.idx_to_interval.get(idx, 'unknown')))
 
     @staticmethod
     def set_interval(station, interval):
@@ -1082,8 +1082,8 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
             except ValueError:
                 pass
         if idx is None:
-            print "Bad interval '%s'" % interval
-            print "Valid intervals are %s" % ','.join(TE923Configurator.interval_to_idx.keys())
+            print(("Bad interval '%s'" % interval))
+            print(("Valid intervals are %s" % ','.join(TE923Configurator.interval_to_idx.keys())))
             return
         station.set_interval(idx)
 
@@ -1092,17 +1092,17 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
         if fmt.lower() == 'table':
             TE923Configurator.print_table(data)
         else:
-            print data
+            print(data)
 
     @staticmethod
     def print_table(data):
         for key in sorted(data):
-            print "%s: %s" % (key.rjust(16), data[key])
+            print(("%s: %s" % (key.rjust(16), data[key])))
 
     @staticmethod
     def print_alignment():
-        print "  If computer time is not aligned to station time then date"
-        print "  may be incorrect by 1 day"
+        print("  If computer time is not aligned to station time then date")
+        print("  may be incorrect by 1 day")
 
 
 class TE923Driver(weewx.drivers.AbstractDevice):
@@ -2339,7 +2339,7 @@ if __name__ == '__main__':
         (options, _) = parser.parse_args()
 
         if options.version:
-            print "te923 driver version %s" % DRIVER_VERSION
+            print(("te923 driver version %s" % DRIVER_VERSION))
             exit(1)
 
         if options.debug is not None:
@@ -2350,8 +2350,8 @@ if __name__ == '__main__':
         if (options.format.lower() != FMT_TE923TOOL and
             options.format.lower() != FMT_TABLE and
             options.format.lower() != FMT_DICT):
-            print "Unknown format '%s'.  Known formats include: %s" % (
-                options.format, ','.join([FMT_TE923TOOL, FMT_TABLE, FMT_DICT]))
+            print(("Unknown format '%s'.  Known formats include: %s" % (
+                options.format, ','.join([FMT_TE923TOOL, FMT_TABLE, FMT_DICT]))))
             exit(1)
 
         with TE923Station() as station:
@@ -2382,23 +2382,23 @@ if __name__ == '__main__':
         if fmt.lower() == FMT_TABLE:
             print_table(data)
         else:
-            print data
+            print(data)
 
     def print_hex(ptr, data):
-        print "0x%06x %s" % (ptr, _fmt(data))
+        print(("0x%06x %s" % (ptr, _fmt(data))))
 
     def print_table(data):
         """output entire dictionary contents in two columns"""
         for key in sorted(data):
-            print "%s: %s" % (key.rjust(16), data[key])
+            print(("%s: %s" % (key.rjust(16), data[key])))
 
     def print_status(data):
         """output status fields in te923tool format"""
-        print "0x%x:0x%x:0x%x:0x%x:0x%x:%d:%d:%d:%d:%d:%d:%d:%d" % (
+        print(("0x%x:0x%x:0x%x:0x%x:0x%x:%d:%d:%d:%d:%d:%d:%d:%d" % (
             data['version_sys'], data['version_bar'], data['version_uv'],
             data['version_rcc'], data['version_wind'],
             data['bat_rain'], data['bat_uv'], data['bat_wind'], data['bat_5'],
-            data['bat_4'], data['bat_3'], data['bat_2'], data['bat_1'])
+            data['bat_4'], data['bat_3'], data['bat_2'], data['bat_1'])))
 
     def print_readings(data):
         """output sensor readings in te923tool format"""
@@ -2417,7 +2417,7 @@ if __name__ == '__main__':
         output.append(getvalue(data, 'windgust', '%0.1f'))
         output.append(getvalue(data, 'windchill', '%0.1f'))
         output.append(getvalue(data, 'rain', '%d'))
-        print ':'.join(output)
+        print((':'.join(output)))
 
     def getvalue(data, label, fmt):
         if label + '_state' in data:

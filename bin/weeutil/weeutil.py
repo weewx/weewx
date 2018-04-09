@@ -1318,10 +1318,10 @@ def print_dict(d, margin=0, increment=4):
     """
     for k in d:
         if type(d[k]) is dict:
-            print margin * ' ', k
+            print((margin * ' ', k))
             print_dict(d[k], margin + increment, increment)
         else:
-            print margin * ' ', k, '=', d[k]
+            print((margin * ' ', k, '=', d[k]))
 
 def move_with_timestamp(filepath):
     """Save a file to a path with a timestamp."""
