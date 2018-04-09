@@ -261,16 +261,16 @@ def main() :
                 no_published += 1
                 print >>sys.stdout, " ...published."
                 wlog.slog(syslog.LOG_DEBUG, "%s ...published" % timestamp_to_string(record['dateTime']))
-            except weewx.restx.BadLogin, e:
+            except weewx.restx.BadLogin as e:
                 print >>sys.stderr, "Bad login"
                 print >>sys.stderr, e
                 exit("Bad login")                
-            except weewx.restx.FailedPost, e:
+            except weewx.restx.FailedPost as e:
                 print >>sys.stderr, e
                 print >>sys.stderr, "Aborted."
                 wlog.slog(syslog.LOG_ERR, "%s ...error %s. Aborting." % (timestamp_to_string(record['dateTime']), e))
                 exit("Failed post")
-            except IOError, e:
+            except IOError as e:
                 print >>sys.stderr, " ... not published."
                 print "Reason: ", e
                 wlog.slog(syslog.LOG_ERR, "%s ...not published. Reason '%s'" % (timestamp_to_string(record['dateTime']), e))
@@ -314,11 +314,11 @@ class WunderStation(weewx.restx.AmbientThread):
         try :
             # Hit the weather underground site:
             _wudata = urllib2.urlopen(_url)
-        except urllib2.URLError, e :
+        except urllib2.URLError as e :
             print >>sys.stderr, "Unable to open Weather Underground station " + self.station, " or ", e
             wlog.slog(syslog.LOG_ERR, "Unable to open Weather Underground station %s or %s" % (self.station, e))
             raise
-        except socket.timeout, e:
+        except socket.timeout as e:
             print >>sys.stderr, "Socket timeout for Weather Underground station " + self.station
             wlog.slog(syslog.LOG_ERR, "Socket timeout for Weather Underground station %s" % self.station)
             raise

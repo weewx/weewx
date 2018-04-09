@@ -196,7 +196,7 @@ class WindSpeedRecalculation(DatabaseFix):
             self.do_fix()
         except weedb.NoTableError:
             raise
-        except weewx.ViolatedPrecondition, e:
+        except weewx.ViolatedPrecondition as e:
             syslog.syslog(syslog.LOG_ERR,
                           "maxwindspeed: %s not applied: %s" % (self.name, e))
             # raise the error so caller can deal with it if they want
@@ -447,7 +447,7 @@ class IntervalWeighting(DatabaseFix):
                     if not self.dry_run:
                         with weedb.Transaction(self.dbm.connection) as _cursor:
                             self.dbm._write_metadata('Version', '2.0', _cursor)
-                except weewx.ViolatedPrecondition, e:
+                except weewx.ViolatedPrecondition as e:
                     syslog.syslog(syslog.LOG_INFO,
                                   "intervalweighting: %s not applied: %s"
                                   % (self.name, e))
@@ -518,7 +518,7 @@ class IntervalWeighting(DatabaseFix):
                                     _day_accum[_day_key].xsum *= _weight
                                     _day_accum[_day_key].ysum *= _weight
                                     _day_accum[_day_key].dirsumtime *= _weight
-                        except Exception, e:
+                        except Exception as e:
                             # log the exception and re-raise it
                             syslog.syslog(syslog.LOG_INFO,
                                           "intervalweighting: Interval weighting of '%s' daily summary "

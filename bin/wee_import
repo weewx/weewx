@@ -651,47 +651,47 @@ def main():
                                                               args,
                                                               wlog)
         source_obj.run()
-    except weeimport.weeimport.WeeImportOptionError, e:
+    except weeimport.weeimport.WeeImportOptionError as e:
         wlog.printlog(syslog.LOG_INFO, "**** Command line option error.")
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
-    except weeimport.weeimport.WeeImportIOError, e:
+    except weeimport.weeimport.WeeImportIOError as e:
         wlog.printlog(syslog.LOG_INFO, "**** Unable to load source file.")
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
-    except weeimport.weeimport.WeeImportFieldError, e:
+    except weeimport.weeimport.WeeImportFieldError as e:
         wlog.printlog(syslog.LOG_INFO, "**** Unable to map source data.")
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
-    except weeimport.weeimport.WeeImportMapError, e:
+    except weeimport.weeimport.WeeImportMapError as e:
         wlog.printlog(syslog.LOG_INFO,
                       "**** Unable to parse source-to-weewx field map.")
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
-    except (weewx.ViolatedPrecondition, weewx.UnsupportedFeature), e:
+    except (weewx.ViolatedPrecondition, weewx.UnsupportedFeature) as e:
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         print
         parser.print_help()
         exit(1)
-    except SystemExit, e:
+    except SystemExit as e:
         print e
         exit(0)
-    except (ValueError, weewx.UnitError), e:
+    except (ValueError, weewx.UnitError) as e:
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
         exit(1)
-    except IOError, e:
+    except IOError as e:
         wlog.printlog(syslog.LOG_INFO, "**** Unable to load config file.")
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."

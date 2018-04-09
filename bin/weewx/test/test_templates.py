@@ -89,7 +89,7 @@ class Common(unittest.TestCase):
         try:
             test_html_dir = os.path.join(self.config_dict['WEEWX_ROOT'], self.config_dict['StdReport']['HTML_ROOT'])
             shutil.rmtree(test_html_dir)
-        except OSError, e:
+        except OSError as e:
             if os.path.exists(test_html_dir):
                 print >> sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
                 print >> sys.stderr, "Reason:", e

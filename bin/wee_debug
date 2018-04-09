@@ -230,10 +230,10 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
     # weewx archive info
     try:
         manager_info_dict = getManagerInfo(config_dict, db_binding_wx)
-    except weedb.CannotConnect, e:
+    except weedb.CannotConnect as e:
         print "Unable to connect to database:", e
         print
-    except weedb.OperationalError, e:
+    except weedb.OperationalError as e:
         print "Error hitting database. It may not be properly initialized:"
         print e
         print
