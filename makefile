@@ -91,10 +91,8 @@ done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
 	@echo "see $(BLDDIR)/test-results"
 
-MYSQLSETUP="create user 'weewx'@'localhost' identified by 'weewx';\n\
-grant all on *.* to 'weewx'@'localhost';\n"
 test-setup:
-	echo $(MYSQLSETUP) | mysql --user=root -p
+	bin/weedb/test/setup_mysql
 
 TESTDIR=/var/tmp/weewx_test
 MYSQLCLEAN="drop database test_weewx;\n\
@@ -103,6 +101,7 @@ drop database test_sim;\n"
 test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
+	rm /var/tmp/sqdb1.sdb >/dev/null 2>&1
 
 install:
 	./setup.py --install

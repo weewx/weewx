@@ -210,6 +210,7 @@ make test-setup
 to run all unit tests:
 
 make test
+(note: do not run this as root)
 
 to clean up after running tests:
 
