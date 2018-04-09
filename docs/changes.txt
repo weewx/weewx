@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-X.X.X XX/XX/XXXX
+3.8.1 XX/XX/XXXX
 
 Map cc3000 backup battery to consBatteryVoltage and station battery to
 supplyVoltage to more accurately reflect the battery functions.
