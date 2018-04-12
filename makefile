@@ -5,11 +5,17 @@
 # if you do not want to sign the packages, set SIGN to 0
 SIGN=1
 
+# WWW server
+WEEWX_COM=52.41.198.22
+
+# Location of html directory on the server
+WWW_DESTINATION=/var/www/html
+
+# Arguments to be given to rsync
+RSYNC_ARGS=-avR -e ssh
+
 # destination for uploading releases
 UPLOADDIR=weewx.com:/downloads/development_versions/
-
-# destination for uploading docs
-DOCDST=weewx.com:/
 
 # home directory at weewx.com
 WEEWX_COM_HOME=/var/chroot/home/content/73/4094873
@@ -23,7 +29,6 @@ MMVERSION:=$(shell echo "$(VERSION)" | sed -e 's%.[0-9a-z]*$$%%')
 CWD = $(shell pwd)
 BLDDIR=build
 DSTDIR=dist
-DOCSRC=docs
 
 PYTHON=python
 
@@ -64,8 +69,8 @@ info:
 	@echo "   MMVERSION: $(MMVERSION)"
 	@echo "         CWD: $(CWD)"
 	@echo "   UPLOADDIR: $(UPLOADDIR)"
-	@echo "      DOCDST: $(DOCDST)"
 	@echo "        USER: $(USER)"
+	@echo "  WWW SERVER: $(WEEWX_COM)"
 
 realclean:
 	rm -f MANIFEST
@@ -117,7 +122,10 @@ upload-src:
 
 # upload docs to the weewx web site
 upload-docs:
-	ftp -u $(USER)@$(DOCDST) $(DOCSRC)/*.htm $(DOCSRC)/changes.txt $(DOCSRC)/images/*.png $(DOCSRC)/images/*.jpg $(DOCSRC)/images/*.gif $(DOCSRC)/js/*.js $(DOCSRC)/css/weewx_$(DOCSRC).css $(DOCSRC)/css/jquery.tocify.css $(DOCSRC)/css/ui-lightness/*.css $(DOCSRC)/css/ui-lightness/images/*.png $(DOCSRC)/css/ui-lightness/images/*.gif
+	rsync $(RSYNC_ARGS) docs/*.htm docs/changes.txt docs/images/*.png docs/images/*.jpg \
+	    docs/images/*.gif docs/js/*.js docs/css/weewx_docs.css docs/css/jquery.tocify.css \
+	    docs/css/ui-lightness/*.css docs/css/ui-lightness/images/*.png \
+	    docs/css/ui-lightness/images/*.gif $(USER)@$(WEEWX_COM):$(WWW_DESTINATION)
 
 # create the README.txt for uploading
 README_HEADER="\
