@@ -141,13 +141,13 @@ $(SRCPKG)\n\
 --------------------\n\
 weewx change history\n\
 --------------------\n"
-readme: docs/changes.txt
+readme.txt: docs/changes.txt
 	mkdir -p $(DSTDIR)
 	rm -f $(DSTDIR)/README.txt
 	echo $(README_HEADER) > $(DSTDIR)/README.txt
 	pkg/mkchangelog.pl --ifile docs/changes.txt >> $(DSTDIR)/README.txt
 
-upload-readme: readme
+upload-readme: readme.txt
 	scp $(DSTDIR)/README.txt $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # update the version in all relevant places
