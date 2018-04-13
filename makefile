@@ -8,18 +8,12 @@ SIGN=1
 # WWW server
 WEEWX_COM=52.41.198.22
 
-# Location of html directory on the server
-WWW_DESTINATION=/var/www/html
-
-# Arguments to be given to rsync
-RSYNC_ARGS=-avR -e ssh
-
-# destination for uploading releases
-UPLOADDIR=weewx.com:/downloads/development_versions/
-
-# home directory at weewx.com
-WEEWX_COM_HOME=/var/chroot/home/content/73/4094873
-WEEWX_DOWNLOADS=$(WEEWX_COM_HOME)/html/downloads
+# location of the html documentation
+WEEWX_HTMLDIR=/var/www/html
+# location of weewx downloads
+WEEWX_DOWNLOADS=$(WEEWX_HTMLDIR)/downloads
+# location for staging weewx package uploads
+WEEWX_STAGING=$(WEEWX_HTMLDIR)/downloads/development_versions
 
 # extract version to be used in package controls and labels
 VERSION=$(shell grep "__version__.*=" bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
@@ -117,15 +111,13 @@ src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
 	rm -f MANIFEST
 	./setup.py sdist
 
+# upload the source tarball to the web site
 upload-src:
-	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(SRCPKG))
+	scp $(DSTDIR)/$(SRCPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
-# upload docs to the weewx web site
+# upload docs to the web site
 upload-docs:
-	rsync $(RSYNC_ARGS) docs/*.htm docs/changes.txt docs/images/*.png docs/images/*.jpg \
-	    docs/images/*.gif docs/js/*.js docs/css/weewx_docs.css docs/css/jquery.tocify.css \
-	    docs/css/ui-lightness/*.css docs/css/ui-lightness/images/*.png \
-	    docs/css/ui-lightness/images/*.gif $(USER)@$(WEEWX_COM):$(WWW_DESTINATION)
+	rsync -arv docs/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)
 
 # create the README.txt for uploading
 README_HEADER="\
@@ -156,7 +148,7 @@ readme: docs/changes.txt
 	pkg/mkchangelog.pl --ifile docs/changes.txt >> $(DSTDIR)/README.txt
 
 upload-readme: readme
-	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) README.txt)
+	scp $(DSTDIR)/README.txt $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
@@ -216,7 +208,7 @@ check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
 upload-deb:
-	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(DEBPKG))
+	scp $(DSTDIR)/$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
@@ -260,14 +252,14 @@ check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
 
 upload-rpm:
-	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(RPMPKG))
+	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # shortcut to upload all packages from a single machine
 DEB_PKG=weewx_$(DEBVER)_$(DEBARCH).deb
 RHEL_PKG=weewx-$(RPMVER).rhel.$(RPMARCH).rpm
 SUSE_PKG=weewx-$(RPMVER).suse.$(RPMARCH).rpm
 upload-pkgs:
-	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(DEB_PKG) $(RHEL_PKG) $(SUSE_PKG))
+	scp $(DSTDIR)/$(DEB_PKG) $(DSTDIR)/RHEL_PKG) $(DSTDIR)/$(SUSE_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
@@ -275,16 +267,16 @@ DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
 ARTIFACTS=$(DEB_PKG) $(RHEL_PKG) $(SUSE_PKG) $(SRCPKG)
 release:
-	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
-	ssh $(USER)@weewx.com "rm -f $(WEEWX_DOWNLOADS)/weewx*"
-	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(RELDIR)/\$$f ]; then ln -s released_versions/\$$f $(WEEWX_DOWNLOADS); fi; done"
-	ssh $(USER)@weewx.com "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
-	ssh $(USER)@weewx.com "chmod 644 $(WEEWX_DOWNLOADS)/released_versions/*"
+	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
+	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
+	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(RELDIR)/\$$f ]; then ln -s released_versions/\$$f $(WEEWX_DOWNLOADS); fi; done"
+	ssh $(USER)@$(WEEWX_COM) "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
+	ssh $(USER)@$(WEEWX_COM) "chmod 644 $(WEEWX_DOWNLOADS)/released_versions/*"
 
 # make local copy of the published apt repository
 pull-apt-repo:
 	mkdir -p ~/.aptly
-	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly-test/ ~/.aptly
+	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_COM_HOME)/html/aptly-test/ ~/.aptly
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
@@ -294,7 +286,7 @@ update-apt-repo:
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:
-	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly-test
+	rsync -arv ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_COM_HOME)/html/aptly-test
 
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
