@@ -276,7 +276,7 @@ release:
 # make local copy of the published apt repository
 pull-apt-repo:
 	mkdir -p ~/.aptly
-	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_COM_HOME)/html/aptly-test/ ~/.aptly
+	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test/ ~/.aptly
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
@@ -286,7 +286,7 @@ update-apt-repo:
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:
-	rsync -arv ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_COM_HOME)/html/aptly-test
+	rsync -arv ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
 
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
