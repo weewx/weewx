@@ -6,7 +6,7 @@
 SIGN=1
 
 # WWW server
-WEEWX_COM=52.41.198.22
+WEEWX_COM=weewx.com
 
 # location of the html documentation
 WEEWX_HTMLDIR=/var/www/html
