@@ -2251,19 +2251,24 @@ longitude = -77.0366</pre>
 
         <p class="config_important">server </p>
 
-        <p>Set to the name of your web server (<em>e.g.</em>,
+        <p>Set to the name of your web server (<i>e.g.</i>,
             <a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required.
             No default </p>
 
         <p class="config_important">user </p>
 
         <p>Set to the ssh username you use for your rsync connection to your web server.
-            The local user that weeWX runs as must have passwordless ssh configured for
-            user@server. Required. No default. </p>
+           The local user that weeWX runs as must have
+           <a href='https://www.tecmint.com/ssh-passwordless-login-using-ssh-keygen-in-5-easy-steps/'>
+           passwordless ssh</a> configured for <em>user@server</em>.
+           Required. No default.
+        </p>
 
         <p class="config_important">path </p>
 
-        <p>Set to the path where the weather data will be stored on your webserver (<em>e.g.</em>, <span class="code">/weather</span>).
+        <p>Set to the path where the weather data will be stored on your webserver
+           (<i>e.g.</i>, <span class="code">/var/www/html/weather</span>). Make sure
+            <span class='code'>user</span> has write privileges in this directory.
             Required. No default. </p>
 
         <p class="config_important">delete </p>
