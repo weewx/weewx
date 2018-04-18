@@ -1397,9 +1397,10 @@ longitude = -77.0366</pre>
             In <span class='code'>ADAPTIVE</span> mode,
             weeWX attempts to query the
             console at times when it is not reading data from the sensors or writing
-            data to memory. See the section <a href="#polling_mode_and_the_polling_interval">
-                Polling Mode and the Polling Interval</a>
-            for details. The default is <span class='code'>PERIODIC</span>.</p>
+            data to memory. See the section <a
+                    href="hardware.htm#polling_mode_and_the_polling_interval">
+                Polling Mode and interval</a> in the Hardware Guide
+            for more details. The default is <span class='code'>PERIODIC</span>.</p>
 
         <p class='config_option'>polling_interval</p>
 
@@ -2299,13 +2300,14 @@ longitude = -77.0366</pre>
             in the Customization Guide.</p>
 
         <p class='note'><strong>Note!</strong><br/> This service only
-            affects the units used in the <i>databases</i>. In particular,
+            affects the units used in the <em>databases</em>. In particular,
             it has nothing to do with what units are displayed in plots or
             files. Those units are specified in the skin configuration
             file, <span class="code">skin.conf</span>, as described in
             the <a href="customizing.htm">Customization Guide</a>, under
             section
-            <em><a href="customizing.htm#Changing_options">Changing
+            <em><!--suppress HtmlUnknownAnchorTarget -->
+                <a href="customizing.htm#Changing_options">Changing
                 options</a></em>. Because of this, unless you have a special
             purpose application, there is really no good reason to change
             from the default, which is <span class="code">US</span>.</p>
@@ -2565,8 +2567,8 @@ longitude = -77.0366</pre>
 
         <p class="config_option" id="record_augmentation">record_augmentation</p>
         <p>When performing hardware record generation, this option will attempt to augment the
-            record with any additional data that it can extract out of the LOOP packets. Default
-            is <span class="code">True</span>.</p>
+            record with any additional observation types that it can extract out of the LOOP
+            packets. Default is <span class="code">True</span>.</p>
 
         <p class="config_option">loop_hilo</p>
 
@@ -3188,7 +3190,8 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
         <p>
             See the <a href="https://github.com/weewx/weewx/wiki">Wiki</a>
             for up-to-date information on
-            <a href="https://github.com/weewx/weewx/wiki/Raspberry%20Pi"><i>Running weeWX on a Raspberry Pi</i></a>.
+            <a href="https://github.com/weewx/weewx/wiki/Raspberry%20Pi"><em>Running weeWX on a
+                                                                            Raspberry Pi<em/></a>.
         </p>
 
         <h3>Fine Offset USB lockups</h3>
@@ -3209,7 +3212,8 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
             need to restart weeWX.</p>
 
         <p>More details
-            about <a href="https://github.com/weewx/weewx/wiki/FineOffset%20USB%20lockup"><i>Fine Offset lockups</i></a>
+            about <a href="https://github.com/weewx/weewx/wiki/FineOffset%20USB%20lockup"><em>Fine
+                                                                                             Offset lockups<em/></a>
             can be found in the
             <a href="https://github.com/weewx/weewx/wiki">Wiki</a>.</p>
 
@@ -3615,7 +3619,7 @@ port = /dev/cuaU0</pre>
 
         <p>If your plots have strange looking symbols for units, such as
             degrees Fahrenheit (&deg;F), that look something like this:</p>
-        <img src='images/funky_degree.png'/>
+        <img src='images/funky_degree.png' alt='funky degree sign'/>
 
         <p>Then the problem may be that you are missing the fonts
             specified for the option
