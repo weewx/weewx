@@ -4438,12 +4438,14 @@ UV      = UV Index</pre>
       <p>
         The name of a template file. A template filename must end with <span
           class="code">.tmpl</span>. Filenames are case-sensitive. If
-        the template filename has the letters <span class="code">YYYY</span>
-        or <span class="code">MM</span> in its name, these will be
-        substituted for the year and month, respectively. So, a template
-        with the name <span class="code">summary-YYYY-MM.html.tmpl</span>
-        would have name <span class="code">summary-2010-03.html</span>
-        for the month of March, 2010.
+        the template filename has the letters <span class="code">YYYY</span>,
+        <span class="code">MM</span>, <span class="code">WW</span> or 
+	<span class="code">DD</span> in its name, these will be
+        substituted for the year, month, week and day of month, respectively. 
+	So, a template with the name 
+	<span class="code">summary-YYYY-MM.html.tmpl</span> would have name 
+	<span class="code">summary-2010-03.html</span> for the month of 
+	March, 2010.
       </p>
 
       <p class="config_option">stale_age</p>
