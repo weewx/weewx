@@ -14,6 +14,8 @@ The almanac now supports calculating planet separations.
 
 Can now set Rapidfire parameter rtfreq. Thanks to user 'whorfin'. PR #304.
 
+Template names can now include the week number. Thanks to user 'stimpy23'. PR #319.
+
 
 3.8.1 XX/XX/XXXX
 
