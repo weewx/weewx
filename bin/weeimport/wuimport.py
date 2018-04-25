@@ -139,8 +139,9 @@ class WUSource(weeimport.Source):
                                                         options.date_from,
                                                         options.date_to)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
-        _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
-                                                     self.calc_missing)
+        _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
+                                                                             self.calc_missing,
+                                                                             self.ignore_invalid_data)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     tranche=%s, interval=%s, wind_direction=%s" % (self.tranche,
                                                                     self.interval,

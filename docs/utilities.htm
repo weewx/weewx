@@ -660,7 +660,6 @@ Archive info
   Database name:        weewx
   Table name:           archive
   Unit system:          16(METRIC)
-  Version:              2.0
   First good timestamp: 2013-01-01 00:00:00 AEST (1356962400)
   Last good timestamp:  2015-09-06 02:15:00 AEST (1441469700)
   Number of records:    281178
@@ -1316,6 +1315,14 @@ summaries using the wee_database utility.</pre>
                     href="usersguide.htm#StdWXCalculate">[StdWXCalculate]</a> section of the <a href="usersguide.htm">User's
                 Guide</a>. The default is <span class="code">True</span>. </p>
 
+        <h4 class='config_option' id='csv_ignore_invalid_data'>ignore_invalid_data</h4>
+
+        <p>Determines whether invalid data in a source field is ignored or the import aborted. If invalid data is found 
+            in a source field and <span class="code">ignore_invalid_data</span> is <span class="code">True</span> the 
+            corresponding weeWX destination field is set to <span class="code">None</span> and the import continues. If 
+            invalid data is found in a source field and <span class="code">ignore_invalid_data</span> is 
+            <span class="code">False</span> the import is aborted. The default is <span class="code">True</span>.</p>
+        
         <h4 class='config_option' id='csv_tranche'>tranche</h4>
 
         <p>To speed up database operations imported records are committed to database in groups of records rather than
@@ -1583,6 +1590,12 @@ summaries using the wee_database utility.</pre>
             identical in operation to the CSV <em><a href="#csv_calc_missing">calc_missing</a></em> option but applies
             to Weather Underground imports only. The default is <span class="code">True</span>. </p>
 
+        <h4 class='config_option' id='wu_ignore_invalid_data'>ignore_invalid_data</h4>
+
+        <p>Determines whether invalid data in a source field is ignored or the import aborted. This option is identical 
+            in operation to the CSV <em><a href="#csv_ignore_invalid_data">ignore_invalid_data</a></em> option but 
+            applies to Weather Underground imports only. The default is <span class="code">True</span>.</p>
+            
         <h4 class='config_option' id='wu_tranche'>tranche</h4>
 
         <p>The number of records written to the weeWX database in each transaction. This
@@ -1655,6 +1668,12 @@ summaries using the wee_database utility.</pre>
             it may be another character depending on the settings on the machine that produced the Cumulus monthly log
             files. This parameter must be included in quotation marks. Default is <span class="code">'.'</span>.
         </p>
+
+        <h4 class='config_option' id='cumulus_ignore_invalid_data'>ignore_invalid_data</h4>
+
+        <p>Determines whether invalid data in a source field is ignored or the import aborted. This option is identical 
+            in operation to the CSV <em><a href="#csv_ignore_invalid_data">ignore_invalid_data</a></em> option but 
+            applies to Cumulus monthly log file imports only. The default is <span class="code">True</span>.</p>
 
         <h4 class='config_option' id='cumulus_tranche'>tranche</h4>
 
@@ -1782,38 +1801,41 @@ summaries using the wee_database utility.</pre>
 
 
                 <ul>
-                    <li><strong><span class="code"><a href="#csv_file">file</a></span></strong>. The full path and file
+                    <li><a href="#csv_file"><strong><span class="code">file</span></strong></a>. The full path and file
                         name of the file containing the CSV formatted data to be imported.
                     </li>
-                    <li><strong><span class="code"><a href="#csv_interval">interval</a></span></strong>. Determines how
+                    <li><a href="#csv_interval"><strong><span class="code">interval</span></strong></a>. Determines how
                         the weeWX interval field is derived.
                     </li>
-                    <li><strong><span class="code"><a href="#csv_qc">qc</a></span></strong>. Determines whether quality
+                    <li><a href="#csv_qc"><strong><span class="code">qc</span></strong></a>. Determines whether quality
                         control checks are performed on the imported data.
                     </li>
-                    <li><strong><span class="code"><a href="#csv_calc_missing">calc_missing</a></span></strong>.
+                    <li><a href="#csv_calc_missing"><strong><span class="code">calc_missing</span></strong></a>.
                         Determines whether missing derived observations will be calculated from the imported data.
                     </li>
-                    <li><strong><span class="code"><a href="#csv_tranche">tranche</a></span></strong>. The number of
+                    <li><a href="#csv_ignore_invalid_data"><strong><span class="code">ignore_invalid_data</span></strong></a>. 
+                        Determines whether invalid data in a source field is ignored or the import aborted.
+                    </li>
+                    <li><a href="#csv_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
                         records written to the weeWX database in each transaction.
                     </li>
-                    <li><strong><span class="code"><a href="#csv_UV">UV_sensor</a></span></strong>. Whether a UV sensor
+                    <li><a href="#csv_UV"><strong><span class="code">UV_sensor</span></strong></a>. Whether a UV sensor
                         was installed when the source data was produced.
                     </li>
-                    <li><strong><span class="code"><a href="#csv_solar">solar_sensor</a></span></strong>. Whether a
+                    <li><a href="#csv_solar"><strong><span class="code">solar_sensor</span></strong></a>. Whether a
                         solar radiation sensor was installed when the source data was produced.
                     </li>
-                    <li><strong><span class="code"><a
-                            href="#csv_raw_datetime_format">raw_datetime_format</a></span></strong>. The format of the
+                    <li><a
+                            href="#csv_raw_datetime_format"><strong><span class="code">raw_datetime_format</span></strong></a>. The format of the
                         imported date time field.
                     </li>
-                    <li><strong><span class="code"><a href="#csv_rain">rain</a></span></strong>. Determines how the
+                    <li><a href="#csv_rain"><strong><span class="code">rain</span></strong></a>. Determines how the
                         weeWX rain field is derived.
                     </li>
-                    <li><strong><span class="code"><a href="#csv_wind_direction">wind_direction</a></span></strong>.
+                    <li><a href="#csv_wind_direction"><strong><span class="code">wind_direction</span></strong></a>.
                         Determines how imported wind direction fields are interpreted.
                     </li>
-                    <li><strong><span class="code"><a href="#csv_fieldmap">[[FieldMap]]</a></span></strong>. Defines the
+                    <li><a href="#csv_fieldmap"><strong><span class="code">[[FieldMap]]</span></strong></a>. Defines the
                         mapping between imported data fields and weeWX archive fields. Also 
                         defines the units of measure for each imported field.
                     </li>
@@ -2014,14 +2036,14 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             <li>Confirm that the following options in the <span class="code">[WU]</span> section are correctly set:
 
                 <ul>
-                    <li><strong><span class="code"><a href="#wu_station_id">station_id</a></span></strong>. The 11 or 12
+                    <li><a href="#wu_station_id"><strong><span class="code">station_id</span></strong></a>. The 11 or 12
                         character weather station ID of the Weather Underground PWS that will be the source of the
                         imported data.
                     </li>
-                    <li><strong><span class="code"><a href="#wu_interval">interval</a></span></strong>. Determines how
+                    <li><a href="#wu_interval"><strong><span class="code">interval</span></strong></a>. Determines how
                         the weeWX interval field is derived.
                     </li>
-                    <li><strong><span class="code"><a href="#wu_qc">qc</a></span></strong>. Determines whether quality
+                    <li><a href="#wu_qc"><strong><span class="code">qc</span></strong></a>. Determines whether quality
                         control checks are performed on the imported data.
 
                         <p class="note">
@@ -2031,8 +2053,11 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                             being imported and contaminating the weeWX database. </p>
                     </li>
 
-                    <li><strong><span class="code"><a href="#wu_calc_missing">calc_missing</a></span></strong>.
+                    <li><a href="#wu_calc_missing"><strong><span class="code">calc_missing</span></strong></a>.
                         Determines whether missing derived observations will be calculated from the imported data.
+                    </li>
+                    <li><a href="#wu_ignore_invalid_data"><strong><span class="code">ignore_invalid_data</span></strong></a>. 
+                        Determines whether invalid data in a source field is ignored or the import aborted.
                     </li>
                     <li><a href="#wu_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
                         records written to the weeWX database in each transaction.
@@ -2314,6 +2339,9 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     </li>
                     <li><a href="#cumulus_decimal"><strong><span class="code">decimal</span></strong></a>. The decimal
                         point character used in the Cumulus monthly log files.
+                    </li>
+                    <li><a href="#cumulus_ignore_invalid_data"><strong><span class="code">ignore_invalid_data</span></strong></a>. 
+                        Determines whether invalid data in a source field is ignored or the import aborted.
                     </li>
                     <li><a href="#cumulus_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
                         records written to the weeWX database in each transaction.

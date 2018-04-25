@@ -230,8 +230,9 @@ class CumulusSource(weeimport.Source):
             # we must have --from and --to
             _msg = "     from=%s, to=%s" % (options.date_from, options.date_to)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
-        _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
-                                                     self.calc_missing)
+        _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
+                                                                             self.calc_missing,
+                                                                             self.ignore_invalid_data)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     tranche=%s, interval=%s" % (self.tranche,
                                                  self.interval)
