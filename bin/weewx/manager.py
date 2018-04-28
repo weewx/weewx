@@ -748,6 +748,10 @@ class Manager(object):
                         "(SELECT MAX(dateTime) FROM %s WHERE "\
                         "dateTime > ? AND dateTime <= ?)" % (sql_type, self.table_name, 
                                                              self.table_name)
+                elif aggregate_type == 'cumulative':
+                    sql_str = "SELECT sum(%s), MIN(usUnits), MAX(usUnits) FROM %s "\
+                        "WHERE dateTime > ? AND dateTime <= ?" % (sql_type, self.table_name)
+                    accumulated = 0
                 else:
                     sql_str = "SELECT %s(%s), MIN(usUnits), MAX(usUnits) FROM %s "\
                         "WHERE dateTime > ? AND dateTime <= ?" % (aggregate_type, sql_type, self.table_name)
@@ -767,7 +771,17 @@ class Manager(object):
                             std_unit_system = _rec[1]
                         start_vec.append(stamp.start)
                         stop_vec.append(stamp.stop)
-                        data_vec.append(_rec[0])
+                        if aggregate_type.lower() == 'cumulative':
+                            accumulated += _rec[0]
+                            data_vec.append(accumulated)
+                        else:
+                            data_vec.append(_rec[0])
+                            
+                    elif aggregate_type.lower() == 'cumulative': # unless it is accumulated
+                        start_vec.append(stamp.start)
+                        stop_vec.append(stamp.stop)
+                        data_vec.append(accumulated)
+
             else:
                 # No aggregation
                 sql_str = "SELECT dateTime, %s, usUnits, `interval` FROM %s "\
@@ -1113,6 +1127,7 @@ class DaySummaryManager(Manager):
                'gustdir'    : "SELECT max_dir FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
                               "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
                'sum'        : "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'cumulative' : "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
                'count'      : "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
                'avg'        : "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
                'rms'        : "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
@@ -1235,6 +1250,9 @@ class DaySummaryManager(Manager):
         type is unknown. The second element is the unit type (eg, 'degree_F').
         The third element is the unit group (eg, "group_temperature") """
         
+        if aggregate_type.lower() == 'cumulative':
+            aggregate_type = 'sum'
+
         # We can use the day summary optimizations if the starting and ending times of
         # the aggregation interval sit on midnight boundaries, or are the first or last
         # records in the database.
