@@ -26,7 +26,6 @@ import daemon
 import weedb
 import weewx.accum
 import weewx.manager
-import weewx.qc
 import weewx.station
 import weewx.reportengine
 import weeutil.weeutil
@@ -401,28 +400,50 @@ class StdQC(StdService):
     """Service that performs quality check on incoming data.
 
     A StdService wrapper for a QC object so it may be called as a service. This 
-    also allows the weewx.qc.QC class to be used elsewhere without the 
+    also allows the QC classes to be used elsewhere without the 
     overheads of running it as a weewx service.
     """
     
     def __init__(self, engine, config_dict):
         super(StdQC, self).__init__(engine, config_dict)
 
-        # Get a QC object to apply the QC checks to our data
-        self.qc = weewx.qc.QC(config_dict)
-        
+        # Get a Cache Record for QC Classes
+        self.max_delta = int(config_dict['StdQC'].get('max_delta', 300))
+
+        data_binding = config_dict['StdArchive'].get('data_binding', 'wx_binding')
+        try:
+            dbmanager = self.engine.db_binder.get_manager(data_binding)
+            db_record = dbmanager.lastGoodRecord(self.max_delta)
+        except weedb.NoDatabaseError:
+            db_record = None
+
+        # Get the QC Objects to apply QC checks to our data
+        self.qc_obj = []
+
+        for obj in weeutil.weeutil.option_as_list(config_dict['StdQC'].get('objects', [])):
+            if obj == '':
+                syslog.syslog(syslog.LOG_DEBUG, "engine: No QC objects to load")
+                continue
+            # For each QC object, instantiates an instance of the class,
+            # passing the configuration dictionary and teh last good db_record as the
+            # arguments:
+            syslog.syslog(syslog.LOG_DEBUG, "engine: Loading QC object %s" % obj)
+            self.qc_obj.append(weeutil.weeutil._get_object(obj)(config_dict, db_record=db_record))
+
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         
     def new_loop_packet(self, event):
         """Apply quality check to the data in a loop packet"""
-        
-        self.qc.apply_qc(event.packet, 'LOOP')
+
+        for obj in self.qc_obj:
+            obj.apply_qc(event.packet, 'LOOP')
 
     def new_archive_record(self, event):
         """Apply quality check to the data in an archive record"""
         
-        self.qc.apply_qc(event.record, 'Archive')
+        for obj in self.qc_obj:
+            obj.apply_qc(event.record, 'Archive')
 
 #==============================================================================
 #                    Class StdArchive

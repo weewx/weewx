@@ -94,11 +94,11 @@ source = CSV
     #   interval = (derive | conf | x)
     interval = derive
 
-    # Should the [StdQC] max/min limits in weewx.conf be applied to the
+    # Should the [StdQC] objects in weewx.conf be applied to the
     # imported data. This may be useful if the source has extreme values that
     # are clearly incorrect for some observations. Available options are:
-    #   True  - weewx.conf [StdQC] max/min limits are applied.
-    #   False - weewx.conf [StdQC] max/min limits are not applied.
+    #   True  - weewx.conf [StdQC] QC objects are applied.
+    #   False - weewx.conf [StdQC] QC objects are not applied.
     # Format is:
     #   qc = (True | False)
     qc = True

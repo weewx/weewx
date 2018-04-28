@@ -206,6 +206,15 @@ class Manager(object):
         _row = self.getSql("SELECT MAX(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
     
+    def lastGoodRecord(self, max_delta=None):
+        """Returns the last good Record in the archive
+        
+        max_delta: The largest difference in time that is acceptable. 
+        [Optional. The default is no difference]
+        """
+        timestamp = self.lastGoodStamp()
+        return self.getRecord(timestamp, max_delta) if timestamp else None
+
     def firstGoodStamp(self):
         """Retrieves earliest timestamp in the archive.
         
@@ -213,6 +222,15 @@ class Manager(object):
         None if there are no records."""
         _row = self.getSql("SELECT MIN(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
+
+    def firstGoodRecord(self, max_delta=None):
+        """Returns the first good Record in the archive
+
+        max_delta: The largest difference in time that is acceptable. 
+        [Optional. The default is no difference]
+        """
+        timestamp = self.firstGoodStamp()
+        return self.getRecord(timestamp, max_delta) if timestamp else None
 
     def addRecord(self, record_obj, log_level=syslog.LOG_NOTICE, accumulator=None):
         """Commit a single record or a collection of records to the archive.

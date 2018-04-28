@@ -184,8 +184,14 @@ class Source(object):
         else:
             self.wxcalculate = None
 
-        # get ourselves a QC object to do QC on imported records
-        self.import_QC = weewx.qc.QC(config_dict, parent='weeimport')
+        # get ourselves a QC objects to do QC on imported records
+        self.import_QC_obj = []
+        for obj in weeutil.weeutil.option_as_list(config_dict['StdQC'].get('objects', [])):
+            if obj == '':
+                continue
+            # For each QC object, instantiates an instance of the class,
+            # passing the configuration dictionary and logging parent as arguments
+            self.import_QC_obj.append(weeutil.weeutil._get_object(obj)(config_dict, parent='weeimport'))
 
         # Process our command line options
         self.dry_run = options.dry_run
@@ -907,18 +913,19 @@ class Source(object):
         """ Apply weewx.conf QC to a record.
 
         If qc option is set in the import config file then apply any StdQC
-        min/max checks specfied in weewx.conf.
+        object checks specified in weewx.conf.
 
         Input parameters:
 
             data_dict: A weeWX compatible archive record.
 
         Returns nothing. data_dict is modified directly with obs outside of QC
-        limits set to None.
+        object parameters set to None.
         """
 
         if self.apply_qc:
-            self.import_QC.apply_qc(data_dict, data_type=data_type)
+            for obj in self.import_QC_obj:
+                obj.apply_qc(data_dict, data_type=data_type)
 
     def calcMissing(self, record):
         """ Add missing observations to a record.

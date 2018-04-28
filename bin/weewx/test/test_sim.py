@@ -60,6 +60,8 @@ class Common(unittest.TestCase):
 
         # Fiddle with config_dict to reflect the database in use:
         self.config_dict['DataBindings']['wx_binding']['database'] = self.database
+        # Fiddle with config_dict to reflect if we are generating spikes
+        self.config_dict['Simulator']['spike'] = self.spike
         
         (first_ts, last_ts) = _get_first_last(self.config_dict)
 
@@ -92,7 +94,7 @@ class Common(unittest.TestCase):
                 # Calculate the average (throw away min and max):
                 (_, _, obs_avg) = calc_stats(self.config_dict, start_ts, record['dateTime'])
                 for obs_type in test_types:
-                    self.assertAlmostEqual(obs_avg[obs_type], record[obs_type], 2)
+                    self.assertAlmostEqual(obs_avg[obs_type], record[obs_type], self.test_decimal_places)
                     
         
 class Stopper(weewx.engine.StdService):
@@ -111,19 +113,55 @@ class Stopper(weewx.engine.StdService):
         sys.stdout.flush()
         if event.record['dateTime'] >= self.last_ts:
             raise weewx.StopNow("Time to stop!")
-        
+
+
 class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
         self.database = "archive_sqlite"
+        # Plain test without spikes
+        self.spike = 0
+        # When testing plain simulator without spikes the comparison should be correct to 2 decimal places
+        self.test_decimal_places = 2
         super(TestSqlite, self).__init__(*args, **kwargs)
-        
+
+
+class TestSqliteSpike(Common):
+
+    def __init__(self, *args, **kwargs):
+        self.database = "archive_sqlite_spike"
+        # Test with spike magnitude of 2
+        self.spike = 2
+        # When testing with spikes, the database run should have spikes removed.
+        # When testing against a plain simulator run the comparison should be correct to one decimal place
+        # as the plain simulator will not have spikes
+        self.test_decimal_places = 1
+        super(TestSqliteSpike, self).__init__(*args, **kwargs)
+
+
 class TestMySQL(Common):
     
     def __init__(self, *args, **kwargs):
         self.database = "archive_mysql"
+        # Plain test without spikes
+        self.spike = 0
+        # When testing plain simulator without spikes the comparison should be correct to 2 decimal places
+        self.test_decimal_places = 2
         super(TestMySQL, self).__init__(*args, **kwargs)
-        
+
+
+class TestMySQLSpike(Common):
+    def __init__(self, *args, **kwargs):
+        self.database = "archive_mysql_spike"
+        # Test with spike magnitude of 2
+        self.spike = 2
+        # When testing with spikes, the database run should have spikes removed.
+        # When testing against a plain simulator run the comparison should be correct to one decimal place
+        # as the plain simulator will not have spikes
+        self.test_decimal_places = 1
+        super(TestMySQLSpike, self).__init__(*args, **kwargs)
+
+
 def _get_first_last(config_dict):
     """Get the first and last archive record timestamps."""
     start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%dT%H:%M")
@@ -132,8 +170,11 @@ def _get_first_last(config_dict):
     last_ts = start_ts + run_length *3600.0
     return (first_ts, last_ts)
 
+
 def calc_stats(config_dict, start_ts, stop_ts):
-    """Calculate the statistics directly from the simulator output."""
+    """Calculate the statistics directly from the simulator output.
+    This is always done without spikes which allows checking
+    of spike QC code when spikes are generated versus good simulator output."""
     global test_types
     
     sim_start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%dT%H:%M")
@@ -164,9 +205,10 @@ def calc_stats(config_dict, start_ts, stop_ts):
 
     return (obs_min, obs_max, obs_avg)
 
+
 def suite():
     tests = ['test_archive_data']
-    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
+    return unittest.TestSuite(map(TestSqlite, tests) + map(TestSqliteSpike, tests) + map(TestMySQL, tests) + map(TestMySQLSpike, tests))
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

@@ -8,13 +8,14 @@
 from __future__ import with_statement
 import math
 import time
+import random
 
 import weedb
 import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'Simulator'
-DRIVER_VERSION = "3.0"
+DRIVER_VERSION = "4.0"
 
 def loader(config_dict, engine):
 
@@ -94,23 +95,27 @@ class Simulator(weewx.drivers.AbstractDevice):
 
         # default to simulator mode
         self.mode = stn_dict.get('mode', 'simulator')
+
+        # whether to generate spikes
+        spike = float(stn_dict.get('spike', 0))
+        Spike.start_ts = start_ts
         
         # The following doesn't make much meteorological sense, but it is
         # easy to program!
         self.observations = {
-            'outTemp'    : Observation(magnitude=20.0,  average= 50.0, period=24.0, phase_lag=14.0, start=start_ts),
-            'inTemp'     : Observation(magnitude=5.0,   average= 68.0, period=24.0, phase_lag=12.0, start=start_ts),
-            'barometer'  : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
-            'pressure'   : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts),
-            'windSpeed'  : Observation(magnitude=5.0,   average=  5.0, period=48.0, phase_lag=24.0, start=start_ts),
-            'windDir'    : Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
-            'windGust'   : Observation(magnitude=6.0,   average=  6.0, period=48.0, phase_lag=24.0, start=start_ts),
-            'windGustDir': Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts),
-            'outHumidity': Observation(magnitude=30.0,  average= 50.0, period=48.0, phase_lag= 0.0, start=start_ts),
-            'inHumidity' : Observation(magnitude=10.0,  average= 20.0, period=24.0, phase_lag= 0.0, start=start_ts),
-            'radiation'  : Solar(magnitude=1000, solar_start=6, solar_length=12),
-            'UV'         : Solar(magnitude=14,   solar_start=6, solar_length=12),
-            'rain'       : Rain(rain_start=0, rain_length=3, total_rain=0.2, loop_interval=self.loop_interval),
+            'outTemp'    : Observation(magnitude=20.0,  average= 50.0, period=24.0, phase_lag=14.0, start=start_ts, spike=spike),
+            'inTemp'     : Observation(magnitude=5.0,   average= 68.0, period=24.0, phase_lag=12.0, start=start_ts, spike=spike),
+            'barometer'  : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts, spike=spike),
+            'pressure'   : Observation(magnitude=1.0,   average= 30.1, period=48.0, phase_lag= 0.0, start=start_ts, spike=spike),
+            'windSpeed'  : Observation(magnitude=5.0,   average=  5.0, period=48.0, phase_lag=24.0, start=start_ts, spike=spike),
+            'windDir'    : Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts, spike=spike),
+            'windGust'   : Observation(magnitude=6.0,   average=  6.0, period=48.0, phase_lag=24.0, start=start_ts, spike=spike),
+            'windGustDir': Observation(magnitude=180.0, average=180.0, period=48.0, phase_lag= 0.0, start=start_ts, spike=spike),
+            'outHumidity': Observation(magnitude=30.0,  average= 50.0, period=48.0, phase_lag= 0.0, start=start_ts, spike=spike),
+            'inHumidity' : Observation(magnitude=10.0,  average= 20.0, period=24.0, phase_lag= 0.0, start=start_ts, spike=spike),
+            'radiation'  : Solar(magnitude=1000, solar_start=6, solar_length=12, spike=spike),
+            'UV'         : Solar(magnitude=14,   solar_start=6, solar_length=12, spike=spike),
+            'rain'       : Rain(rain_start=0, rain_length=3, total_rain=0.2, loop_interval=self.loop_interval, spike=spike),
             }
 
         # calculate only the specified observations, or all if none specified
@@ -162,7 +167,7 @@ class Simulator(weewx.drivers.AbstractDevice):
         
 class Observation(object):
     
-    def __init__(self, magnitude=1.0, average=0.0, period=96.0, phase_lag=0.0, start=None):
+    def __init__(self, magnitude=1.0, average=0.0, period=96.0, phase_lag=0.0, start=None, spike=0):
         """Initialize an observation function.
         
         magnitude: The value at max. The range will be twice this value
@@ -170,7 +175,9 @@ class Observation(object):
         period: The cycle period in hours.
         phase_lag: The number of hours after the start time when the
                      observation hits its max
-        start: Time zero for the observation in unix epoch time."""
+        start: Time zero for the observation in unix epoch time.
+        spike: Whether to generate spikes. A non-zero value generates 
+                     spikes at the spike value times the magintude"""
          
         if not start:
             raise ValueError("No start time specified")
@@ -179,6 +186,7 @@ class Observation(object):
         self.period    = period * 3600.0
         self.phase_lag = phase_lag * 3600.0
         self.start     = start
+        self.spike     = Spike(magnitude * spike, period) 
         
     def value_at(self, time_ts):
         """Return the observation value at the given time.
@@ -186,14 +194,13 @@ class Observation(object):
         time_ts: The time in unix epoch time."""
 
         phase = 2.0 * math.pi * (time_ts - self.start - self.phase_lag) / self.period
-        return self.magnitude * math.cos(phase) + self.average
-        
+        return self.magnitude * math.cos(phase) + self.average + self.spike.spike(time_ts)
 
 class Rain(object):
     
     bucket_tip = 0.01
 
-    def __init__(self, rain_start=0, rain_length=1, total_rain=0.1, loop_interval=None):
+    def __init__(self, rain_start=0, rain_length=1, total_rain=0.1, loop_interval=None, spike=0):
         """Initialize a rain simulator"""
         npackets = 3600 * rain_length / loop_interval
         n_rain_packets = total_rain / Rain.bucket_tip
@@ -201,6 +208,8 @@ class Rain(object):
         self.rain_start = 3600* rain_start
         self.rain_end = self.rain_start + 3600 * rain_length
         self.packet_number = 0
+        # Will generate spikes per rain_length period even when not in a rain period
+        self.spike = Spike(total_rain * spike, rain_length)
         
     def value_at(self, time_ts):
         time_tt = time.localtime(time_ts)
@@ -211,12 +220,14 @@ class Rain(object):
         else:
             self.packet_number = 0
             amt = 0
+        # Add a spike value if spike is due
+        amt += self.spike.spike(time_ts)
         return amt
         
 
 class Solar(object):
     
-    def __init__(self, magnitude=10, solar_start=6, solar_length=12):
+    def __init__(self, magnitude=10, solar_start=6, solar_length=12, spike=0):
         """Initialize a solar simulator
             Simulated ob will follow a single wave sine function starting at 0
             and ending at 0.  The solar day starts at time solar_start and
@@ -234,6 +245,7 @@ class Solar(object):
         self.solar_start = 3600 * solar_start
         self.solar_end = self.solar_start + 3600 * solar_length
         self.solar_length = 3600 * solar_length
+        self.spike = Spike(magnitude * spike, solar_length)
         
     def value_at(self, time_ts):
         time_tt = time.localtime(time_ts)
@@ -242,8 +254,96 @@ class Solar(object):
             amt = self.magnitude * (1 + math.cos(math.pi * (1 + 2.0 * ((secs_since_midnight - self.solar_start) / self.solar_length - 1))))/2
         else:
             amt = 0
+        # Add a spike value if spike is due
+        amt += self.spike.spike(time_ts)
         return amt
 
+class Spike(object):
+    # Static variable to base time and seed
+    start_ts = None
+
+    def __init__(self, magnitude=1, period=1, frequency=4):
+        """Initialize a spike generator
+            Spikes will be generated based on random timings of a
+            Poisson distribution. See http://bit.ly/1wNxBfg.
+
+            Python random() module is guaranteed to return 
+            repeatable random numbers given the same seed.
+            Spike class also saves and restores the random
+            state to main simulator spike predictability.
+
+            If the static variable start_ts is set Spike class
+            will use this as a base to regenerate spike times.
+            So for a simulator that sets the same start_ts and 
+            has the same obervation parameters the spikes will 
+            be the same.
+
+            magnitude: the magnitude of the spike
+
+            period: the period over which to generate spikes
+                    in hours
+
+            frequency: the average frequency over the period.
+                        On average there will be this many
+                        spikes returned by the member function
+                        spike()
+        """
+
+        if Spike.start_ts is None:
+            raise ValueError("Spike class start_ts has not been primed")
+
+        self.magnitude  = magnitude
+        self.frequency  = frequency
+        self.period     = period
+        self.p_lambda   = frequency / (period * 3600.0)
+        self.next_ts    = None
+        self.random_state = None
+
+    def spike(self, time_ts):
+        """Return a spike value at a given time.
+            If our magnitude is 0 we are not ever returning spikes
+            
+            time_ts: The time in unix epoch time."""
+        return self._spike(time_ts) if self.magnitude > 0 else 0
+
+    def _spike(self, time_ts):
+        """Return a spike value at the given time
+        Checks if a spike is due. If so returns the magnitude 
+        as a value and regenerates the next spike time.
+
+        time_ts: The time in unix epoch time."""
+        spikeval = 0
+        if self.next_ts is None:
+            # The spike sequence may included this time 
+            # So regenerate to just before this time
+            self._regenerate(time_ts - 1)
+      
+        if time_ts >= self.next_ts:
+            spikeval = self.magnitude
+            self._regenerate(time_ts)
+        return spikeval
+
+    def _regenerate(self, time_ts):
+        """Calculate the next spike time.
+
+        time_ts: The time in unix epoch time
+                    which is the base for the next spike time."""
+
+        print_debug = False
+        if self.next_ts is None:
+            random.seed(Spike.start_ts + self.period * 3600 + self.magnitude)
+            spike_ts = Spike.start_ts
+        else:
+            random.setstate(self.random_state)
+            spike_ts = self.next_ts
+
+        # Catch up and/or generate the next spike time
+        while spike_ts <= time_ts:
+            spike_ts = spike_ts + random.expovariate(self.p_lambda) 
+
+        # Save our random state to make spikes deterministic
+        self.random_state   = random.getstate()
+        self.next_ts        = spike_ts
 
 def confeditor_loader():
     return SimulatorConfEditor()
@@ -267,6 +367,11 @@ class SimulatorConfEditor(weewx.drivers.AbstractConfEditor):
     # The start time. Format is YYYY-mm-ddTHH:MM. If not specified, the default 
     # is to use the present time.
     #start = 2011-01-01T00:00
+
+    # Are we generating spikes?
+    # A non-zero value will generate spikes at the multiplier of the simulated
+    # observation magnitude
+    #spike=2
 
     # The driver to use:
     driver = weewx.drivers.simulator
