@@ -38,6 +38,8 @@ Fixed bug that crashed program if a sqlite permission error occurred.
 If wind speed is zero, accumulators now return last known wind direction
 (instead of None). Thanks to user DigitalDan05. PR #303.
 
+Windrun calculations now include the "current" record. Fixes issue #294.
+
 
 3.8.0 11/22/2017
 
