@@ -2390,16 +2390,10 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             <td>The direction of the gust.</td>
           </tr>
           <tr>
-            <td class="first_col code">$day.windSpeed.avg</td>
+            <td class="first_col code">$day.wind.avg</td>
             <td>The average wind speed since midnight. If the wind
               blows east at 5 m/s for 2 hours, then west at 5 m/s for 2
               hours, the average wind speed is 5 m/s.</td>
-          </tr>
-          <tr>
-            <td class="first_col code">$day.wind.avg</td>
-            <td>The average wind speed since midnight. Same as <span
-              class="code">$day.windSpeed.avg</span> above.
-            </td>
           </tr>
           <tr>
             <td class="first_col code">$day.wind.vecavg</td>
@@ -2410,17 +2404,29 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             </td>
           </tr>
           <tr>
+            <td class="first_col code">$day.wind.vecdir</td>
+            <td>The direction of the vector averaged wind speed. If
+                the wind blows northwest for two hours, then southwest for
+                two hours, the vector averaged direction is west.</td>
+          </tr>
+          <tr>
+            <td class="first_col code">$day.wind.max</td>
+            <td>The maximum wind gust since midnight.</td>
+          </tr>
+          <tr>
+            <td class="first_col code">$day.wind.gustdir</td>
+            <td>The direction of the maximum wind gust.</td>
+          </tr>
+          <tr>
+            <td class="first_col code">$day.wind.maxtime</td>
+            <td>The time of the maximum wind gust.</td>
+          </tr>
+          <tr>
             <td class="first_col code">$day.windSpeed.max</td>
             <td>The max average wind speed. The wind is averaged
               over each of the archive intervals. Then the maximum of
               these values is taken. Note that this is <em>not</em> the
-              same as the maximum observed wind speed.
-            </td>
-          </tr>
-          <tr>
-            <td class="first_col code">$day.windGust.max</td>
-            <td>The maximum observed wind speed since midnight, <i>i.e.,</i>
-              the maximum gust.
+              same as the maximum wind gust.
             </td>
           </tr>
           <tr>
@@ -2428,12 +2434,6 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             <td>Not a very useful quantity. This is the strict,
               arithmetic average of all the compass wind direction.
               Probably not what you want.</td>
-          </tr>
-          <tr>
-            <td class="first_col code">$day.wind.vecdir</td>
-            <td>The direction of the vector averaged wind speed. If
-              the wind blows northwest for two hours, then southwest for
-              two hours, the vector averaged direction is west.</td>
           </tr>
         </tbody>
       </table>
