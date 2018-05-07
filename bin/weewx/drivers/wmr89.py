@@ -347,6 +347,10 @@ class WMR89(weewx.drivers.AbstractDevice):
             'dateTime': int(time.time() + 0.5),
             'usUnits': weewx.METRIC
         }
+	
+	_record['rain'] = weewx.wxformulas.calculate_rain(_record['rain_total'], self.last_rain_total)            
+        self.last_rain_total = _record['rain_total']
+	
         return _record
 
 
@@ -366,10 +370,13 @@ class WMR89(weewx.drivers.AbstractDevice):
            temp=temp-65536
         temp=(temp*0.1)
 
+        # According to specifications the WMR89 humidity range are 25/95% 
         if ord(packet[6])==254:
-	  hum=100
+            hum=95
+        elif ord(packet[6])==252:
+            hum=25
         else:
-          hum=float(ord(packet[6]))
+            hum=float(ord(packet[6]))
 
         dew=(ord(packet[7]))
         if dew==125:
