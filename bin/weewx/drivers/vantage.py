@@ -21,7 +21,7 @@ import weewx.units
 import weewx.engine
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.0.10'
+DRIVER_VERSION = '3.0.11'
 
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
@@ -1344,6 +1344,8 @@ class Vantage(weewx.drivers.AbstractDevice):
                             break
                     else:
                         self.iss_id = 1  # Pick a reasonable default.
+
+        syslog.syslog(syslog.LOG_DEBUG, "vantage: ISS ID is %s" % self.iss_id)
 
     def _getEEPROM_value(self, offset, v_format="B"):
         """Return a list of values from the EEPROM starting at a specified offset, using a specified format"""
