@@ -398,7 +398,7 @@ class WXCalculate(object):
             data['windrun'] = None
         else:
             # Include the "current" record
-            if data['windSpeed'] is not None:
+            if data.get('windSpeed') is not None:
                 run += data['windSpeed'] * data['interval'] / 60.0
             data['windrun'] = run
 
