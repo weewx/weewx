@@ -96,6 +96,13 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 
                 # Calculate a suitable min, max time for the requested time.
                 (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(plotgen_ts - int(plot_options.get('time_length', 86400)), plotgen_ts)
+                
+                # If last_year = true generate graph for last calender year
+                if plot_options.get('last_year', False):
+                    year = datetime.date.today().year
+                    minstamp = time.mktime((year - 1, 1, 1, 0, 0, 0, 0, 0, 0))
+                    maxstamp = time.mktime((year, 1, 1, 0, 0, 0, 0, 0, 0))
+                
                 # Override the x interval if the user has given an explicit interval:
                 timeinc_user = to_int(plot_options.get('x_interval'))
                 if timeinc_user is not None:
