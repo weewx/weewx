@@ -3415,15 +3415,17 @@ class MyStats(SearchList):                                                   # 1
         generation time</h2>
 
       <p>
-        Normal weeWX operation is to run each
-        report defined in <span class="code">weewx.conf</span> every
-        archive period. Whilst this may suit most situations, there may
-        be occasions when it is desirable to run a report less
-        frequently than every archive period. For example, the archive
-        interval might be 5 minutes, but you only want to FTP files
-        every 30 minutes, or once per day. In such cases the <span
-          class="code">report_timing</span> option can be used to
-        control when individual reports are run.
+        Normal weeWX operation is to run each <em><a href="#Reports">report</a></em>
+        defined in <span class="code">weewx.conf</span> every archive period. Whilst 
+        this may suit most situations, there may be occasions when it is desirable 
+        to run a report less frequently than every archive period. For example, the 
+        archive interval might be 5 minutes, but you only want to FTP files every
+        30 minutes, once per day or at a set time each day. Weewx has two mechanisms 
+        that provide the ability to control when files are generated. The 
+        <em><a href="#File_generation_options"><span class="code">stale_age</span></a></em>
+        option allows control over the age of a file before it is regenerated and 
+        the <span class="code">report_timing</span> option allows precisle control 
+        over when individual reports are run.
       </p>
       
       <p class="note" style="display: inline-block; width: 70%">
@@ -4454,7 +4456,17 @@ UV      = UV Index</pre>
         File staleness age, in seconds. If the file is older than this
         age it will be generated from the template. If no <span
           class="code">stale_age</span> is specified, then the file will
-        be generated every time the generator runs.
+        be generated every time the generator runs. 
+      </p>
+
+      <p class="note" style="display: inline-block; width: 70%">
+        <b>Note</b><br />Precise control over when a
+        <em><a href="#Reports">report</a></em> is run is available through 
+        use of the <span class="code">report_timing</span> option in 
+        <span class="code">weewx.conf</span>. The <span class="code">report_timing</span>
+        option uses a CRON-like setting to control precisely when a report is run.
+        See the <em><a href="#customizing_gen_time">Customizing the report generation time</a></em>
+        section for details on the <span class="code">report_timing</span> option.
       </p>
 
       <p class="config_option">[[SummaryByMonth]]</p>
