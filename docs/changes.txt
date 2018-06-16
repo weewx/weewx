@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-X.X.X XX/XX/XXXX
+3.8.1 XX/XX/XXXX
 
 Map cc3000 backup battery to consBatteryVoltage and station battery to
 supplyVoltage to more accurately reflect the battery functions.
@@ -34,6 +34,15 @@ Fixed bug that prevented historical records from being downloaded from ws23xx
 stations. Thanks to user Matt Brown! Fixes issue #295
 
 Fixed bug that crashed program if a sqlite permission error occurred.
+
+If wind speed is zero, accumulators now return last known wind direction
+(instead of None). Thanks to user DigitalDan05. PR #303.
+
+Windrun calculations now include the "current" record. Fixes issue #294.
+
+Fixed bug involving stations that report windGust, but not windGustDir, in
+their LOOP data (e.g., Fine Offset), which prevented the direction of max
+wind from appearing in statistics. Fixes issue #320.
 
 
 3.8.0 11/22/2017

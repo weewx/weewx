@@ -204,11 +204,13 @@ class VecStats(object):
  
     @property
     def vec_dir(self):
-        if self.dirsumtime:
+        if self.dirsumtime and (self.ysum or self.xsum):
             _result = 90.0 - math.degrees(math.atan2(self.ysum, self.xsum))
             if _result < 0.0:
                 _result += 360.0
             return _result
+        # Return the last known direction when our vector sum is 0
+        return self.last[1]
 
 #===============================================================================
 #                             Class Accum
@@ -312,12 +314,17 @@ class Accum(dict):
         # treat it like a vector.
         self.add_value(record, obs_type, add_hilo, weight)
         
-        # If the type has not been seen before, initialize it
+        # If the type has not been seen before, initialize it.
         self._init_type('wind')
-        # Then add to highs/lows, and to the running sum:
+        # Then add to highs/lows.
         if add_hilo:
-            self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir')), record['dateTime'])
-            self['wind'].addHiLo((record.get('windSpeed'), record.get('windDir')), record['dateTime'])
+            self['wind'].addHiLo((record.get('windSpeed'), record.get('windDir')),
+                                 record['dateTime'])
+            # If the station does not provide windGustDir, then substitute windDir.
+            # See issue #320, https://bit.ly/2HSo0ju
+            self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir', record.get('windDir'))),
+                                 record['dateTime'])
+        # Add to the running sum.
         self['wind'].addSum((record['windSpeed'], record.get('windDir')), weight=weight)
         
     def check_units(self, record, obs_type, add_hilo, weight):  # @UnusedVariable
