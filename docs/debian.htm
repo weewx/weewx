@@ -12,13 +12,12 @@
 <body>
 
 <h1 class="title">weeWX: Installation on Debian-based systems
-    <div class='os-icons'>
+    <span class='os-icons'>
         <img class='logo' src='images/logo-debian.png' alt=""/>
         <img class='logo' src='images/logo-ubuntu.png' alt=""/>
         <img class='logo' src='images/logo-mint.png' alt=""/>
         <img class='logo' src='images/logo-rpi.png' alt=""/>
-    </div>
-    <div style="clear: both"></div>
+    </span>
 </h1>
 
 <p>This is a guide to installing weeWX from a DEB package on Debian-based systems, including Ubuntu, Mint, and Raspbian.
@@ -47,10 +46,9 @@ sudo apt-get install weewx</pre>
 
 <h2>Verify</h2>
 <p>After about 5 minutes, open the station web page in a web browser. You should see your station information and data.
+If your hardware supports hardware archiving, then how long you wait will depend on the <a href="usersguide.htm#archive_interval">archive interval</a> set in your hardware.
 </p>
 <pre class='tty'><a href="file:///var/www/html/weewx/index.html">file:///var/www/html/weewx/index.html</a></pre>
-<p>If your hardware supports hardware archiving, then how long you wait will depend on the <a href="usersguide.htm#archive_interval">archive interval</a> set in your hardware.
-</p>
 
 <h2>Customize</h2>
 <p>To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span class='code'>/etc/weewx/weewx.conf</span>. See the <a href="usersguide.htm">User Guide</a> and <a href="customizing.htm">Customization Guide</a> for details.

@@ -21,7 +21,7 @@ import weewx.units
 import weewx.engine
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.0.10'
+DRIVER_VERSION = '3.0.11'
 
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
@@ -195,17 +195,17 @@ class BaseWrapper(object):
                 _buffer = self.read(nbytes)
                 if crc16(_buffer) == 0:
                     return _buffer
-            except weewx.WeeWxIOError:
-                pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16; try #%d failed" % (count + 1,))
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16; try #%d failed. CRC error" % (count + 1,))
+            except weewx.WeeWxIOError, e:
+                syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16; try #%d failed: %s" % (count + 1, e))
             first_time = False
 
         if _buffer:
             syslog.syslog(syslog.LOG_ERR, "vantage: Unable to pass CRC16 check while getting data")
             raise weewx.CRCError("Unable to pass CRC16 check while getting data")
         else:
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16 time out")
-            raise weewx.WeeWxIOError("Time out in get_data_with_crc16")
+            syslog.syslog(syslog.LOG_DEBUG, "vantage: Timeout in get_data_with_crc16")
+            raise weewx.WeeWxIOError("Timeout in get_data_with_crc16")
 
 #===============================================================================
 #                           class Serial Wrapper
@@ -1344,6 +1344,8 @@ class Vantage(weewx.drivers.AbstractDevice):
                             break
                     else:
                         self.iss_id = 1  # Pick a reasonable default.
+
+        syslog.syslog(syslog.LOG_DEBUG, "vantage: ISS ID is %s" % self.iss_id)
 
     def _getEEPROM_value(self, offset, v_format="B"):
         """Return a list of values from the EEPROM starting at a specified offset, using a specified format"""
