@@ -153,7 +153,7 @@ Options:
   --output=OUT_CONFIG   Save to configuration file OUT_CONFIG.  If not
                         specified then replace existing configuration file.
   --driver=DRIVER       Use the driver DRIVER. For example,
-                        weewx.driver.vantage
+                        weewx.drivers.vantage
   --latitude=yy.y       The station latitude in decimal degrees.
   --longitude=xx.x      The station longitude in decimal degrees.
   --altitude=zz,(foot|meter)
@@ -904,8 +904,8 @@ Options:
         <p>Use this action to install an extension.  You must specify the
             path to a .zip archive, a .tgz/.tar.gz archive, or a directory.</p>
 
-        <pre class='tty cmd'>wee_extension --install extensions/basic
-wee_extension --install basic.tar.gz</pre>
+        <pre class='tty cmd'>wee_extension --install=examples/basic
+wee_extension --install=basic.tar.gz</pre>
 
         <h3>Action <span class="code">--list</span></h3>
         <p>This action will list all the extensions that you have

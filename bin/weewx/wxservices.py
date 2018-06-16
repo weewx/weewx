@@ -382,8 +382,8 @@ class WXCalculate(object):
             return
         ets = data['dateTime']
         sts = weeutil.weeutil.startOfDay(ets)
+        run = 0.0
         try:
-            run = 0.0
             dbmanager = self.db_binder.get_manager(self.binding)
             for row in dbmanager.genSql("SELECT `interval`,windSpeed,usUnits"
                                         " FROM %s"
@@ -394,9 +394,13 @@ class WXCalculate(object):
                                                  'windSpeed' : row[1],
                                                  'usUnits' : row[2]})
                     run += vals_us['windSpeed'] * vals_us['interval'] / 60.0
-            data['windrun'] = run
         except weedb.DatabaseError:
-            pass
+            data['windrun'] = None
+        else:
+            # Include the "current" record
+            if data.get('windSpeed') is not None:
+                run += data['windSpeed'] * data['interval'] / 60.0
+            data['windrun'] = run
 
     def _get_archive_interval(self, data):
         if 'interval' in data and data['interval']:

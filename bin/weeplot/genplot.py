@@ -61,7 +61,8 @@ class GeneralPlot(object):
         self.unit_label_font_color  = weeplot.utilities.tobgr(config_dict.get('unit_label_font_color', '0x000000'))
         self.unit_label_font_size   = int(config_dict.get('unit_label_font_size', 10)) * self.anti_alias
         self.unit_label_position    = (10 * self.anti_alias, 0)
-        
+
+        self.bottom_label           = ""
         self.bottom_label_font_path = config_dict.get('bottom_label_font_path')
         self.bottom_label_font_color= weeplot.utilities.tobgr(config_dict.get('bottom_label_font_color', '0x000000'))
         self.bottom_label_font_size = int(config_dict.get('bottom_label_font_size', 10)) * self.anti_alias
@@ -108,6 +109,9 @@ class GeneralPlot(object):
         self.daynight_night_color   = weeplot.utilities.tobgr(config_dict.get('daynight_night_color', '0xf0f0f0'))
         self.daynight_edge_color    = weeplot.utilities.tobgr(config_dict.get('daynight_edge_color', '0xefefef'))
         self.daynight_gradient      = int(config_dict.get('daynight_gradient', 20))
+
+        self.latitude               = None
+        self.longitude              = None
 
     def setBottomLabel(self, bottom_label):
         """Set the label to be put at the bottom of the plot.
@@ -201,7 +205,8 @@ class GeneralPlot(object):
             image.thumbnail((self.image_width / self.anti_alias, self.image_height / self.anti_alias), Image.ANTIALIAS)
 
         return image
-    
+
+    # noinspection PyMethodMayBeStatic
     def _getImageDraw(self, image):
         """Returns an instance of ImageDraw with the proper dimensions and background color"""
         draw = UniDraw(image)

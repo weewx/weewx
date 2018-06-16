@@ -1241,7 +1241,6 @@ $month.outTemp.max</pre>
             <td>Example</td>
             <td>Meaning</td>
           </tr>
-        </tbody>
         <tr>
           <td class="first_col code">$hour($hours_ago=<i>h</i>)
           </td>
@@ -1273,6 +1272,7 @@ $month.outTemp.max</pre>
           <td class="code">$year($years_ago=1).outTemp.max</td>
           <td>The maximum temperature last year.</td>
         </tr>
+        </tbody>
       </table>
 
       <h3 id="unit_conversion_options">Unit conversion options</h3>
@@ -2390,16 +2390,10 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             <td>The direction of the gust.</td>
           </tr>
           <tr>
-            <td class="first_col code">$day.windSpeed.avg</td>
+            <td class="first_col code">$day.wind.avg</td>
             <td>The average wind speed since midnight. If the wind
               blows east at 5 m/s for 2 hours, then west at 5 m/s for 2
               hours, the average wind speed is 5 m/s.</td>
-          </tr>
-          <tr>
-            <td class="first_col code">$day.wind.avg</td>
-            <td>The average wind speed since midnight. Same as <span
-              class="code">$day.windSpeed.avg</span> above.
-            </td>
           </tr>
           <tr>
             <td class="first_col code">$day.wind.vecavg</td>
@@ -2410,17 +2404,29 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             </td>
           </tr>
           <tr>
+            <td class="first_col code">$day.wind.vecdir</td>
+            <td>The direction of the vector averaged wind speed. If
+                the wind blows northwest for two hours, then southwest for
+                two hours, the vector averaged direction is west.</td>
+          </tr>
+          <tr>
+            <td class="first_col code">$day.wind.max</td>
+            <td>The maximum wind gust since midnight.</td>
+          </tr>
+          <tr>
+            <td class="first_col code">$day.wind.gustdir</td>
+            <td>The direction of the maximum wind gust.</td>
+          </tr>
+          <tr>
+            <td class="first_col code">$day.wind.maxtime</td>
+            <td>The time of the maximum wind gust.</td>
+          </tr>
+          <tr>
             <td class="first_col code">$day.windSpeed.max</td>
             <td>The max average wind speed. The wind is averaged
               over each of the archive intervals. Then the maximum of
               these values is taken. Note that this is <em>not</em> the
-              same as the maximum observed wind speed.
-            </td>
-          </tr>
-          <tr>
-            <td class="first_col code">$day.windGust.max</td>
-            <td>The maximum observed wind speed since midnight, <i>i.e.,</i>
-              the maximum gust.
+              same as the maximum wind gust.
             </td>
           </tr>
           <tr>
@@ -2428,12 +2434,6 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             <td>Not a very useful quantity. This is the strict,
               arithmetic average of all the compass wind direction.
               Probably not what you want.</td>
-          </tr>
-          <tr>
-            <td class="first_col code">$day.wind.vecdir</td>
-            <td>The direction of the vector averaged wind speed. If
-              the wind blows northwest for two hours, then southwest for
-              two hours, the vector averaged direction is west.</td>
           </tr>
         </tbody>
       </table>
@@ -6053,13 +6053,26 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         the unit group <span class='code'>group_energy</span> (which
         already exists), so it can enjoy the labels and formats
         already provided for this group. This is done by extending the dictionary <span
-          class='code'>weewx.units.obs_group_dict</span>, typically by
-        adding Python code to the file <span class='code'>user/extensions.py</span>:
-      </p>
-      <pre class='tty'>import weewx.units
-weewx.units.obs_group_dict['electricity'] = 'group_energy'</pre>
+          class='code'>weewx.units.obs_group_dict</span>.</p>
 
-      <p>Once the observation has been associated with a unit group,
+        <p>Add the following to our new services file
+        <span class='code'>user/electricity.py</span>, just after the last
+        import statement:</p>
+        <pre class="tty">import weewx
+from weewx.engine import StdService
+<span class="highlight">
+import weewx.units
+weewx.units.obs_group_dict['electricity'] = 'group_energy'</span>
+
+class AddElectricity(StdService):
+
+   # [...]</pre>
+
+      <p>When our new service gets loaded by the WeeWX engine, these few lines
+      will get run. They tell WeeWX that our new observation type, 
+      <span class='code'>electricity</span>, is part of the unit group
+      <span class='code'>group_energy</span>.
+        Once the observation has been associated with a unit group,
         the unit labels and other tag syntax will work for that
         observation. So, now a tag like:</p>
       <pre class='tty'>$month.electricity.sum</pre>
@@ -6069,7 +6082,7 @@ weewx.units.obs_group_dict['electricity'] = 'group_energy'</pre>
       <h2>Creating a new unit group</h2>
       <p>
         That was an easy one, because there was already an existing
-        group, <span class='code'>group_amp</span>, that covered our new
+        group, <span class='code'>group_energy</span>, that covered our new
         observation type. But, what if we are measuring something entirely new, like
         force with time? There is nothing in the existing system of
         units that covers things like newtons or pounds. We will have to
@@ -6078,13 +6091,14 @@ weewx.units.obs_group_dict['electricity'] = 'group_energy'</pre>
       </p>
       <p>
         We assume we have a new observation type, <span class='code'>force</span>,
-        that we are measuing over time. We will create a new unit group,
+        that we are measuring over time, for a service named <span class='code'>
+        user/rocket.py</span>. We will create a new unit group,
         <span class='code'>group_force</span>, and new units, <span
           class='code'>newton</span> and <span class='code'>pound</span>.
         Our new observation, <span class='code'>force</span>, will
         belong to <span class='code'>group_force</span>, and will be
         measured in units of <span class='code'>newton</span> or <span
-          class='code'>pound</span>.
+        class='code'>pound</span>.
       </p>
       <ol>
         <li>As before, we start by specifying what group our new
@@ -6114,6 +6128,14 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
 
         </li>
       </ol>
+        <p>As with the previous example of <span class='code'>group_energy</span>,
+        the last step is to extend the <span class='code'>
+        weewx.units.obs_group_dict</span> dictionary so that these new units can
+        be used by our service. We do this by adding the Python code from
+        steps 1 - 4 above into
+        our new services file <span class='code'>user/rocket.py</span>, at the
+        head of that file and just after the last import statement (as in the
+        previous example).</p>
 
       <h2>Use the new types</h2>
 

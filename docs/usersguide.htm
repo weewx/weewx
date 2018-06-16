@@ -61,9 +61,9 @@ Version: 3.8
             interacts with a weather station to produce plots, reports, and HTML
             pages. It can optionally upload the reports to a remote Web server as
             well as publish to weather services such as
-            <a href="http://www.wunderground.com">WeatherUnderground</a>,
+            <a href="https://www.wunderground.com">WeatherUnderground</a>,
             <a href="http://wxqa.com">CWOP</a>, or
-            <a href="http://www.pwsweather.com/">PWSweather.com</a>.</p>
+            <a href="https://www.pwsweather.com/">PWSweather.com</a>.</p>
 
         <p>Initial development began in the winter of 2008-2009, with the first
             release in 2009.</p>
@@ -1397,9 +1397,10 @@ longitude = -77.0366</pre>
             In <span class='code'>ADAPTIVE</span> mode,
             weeWX attempts to query the
             console at times when it is not reading data from the sensors or writing
-            data to memory. See the section <a href="#polling_mode_and_the_polling_interval">
-                Polling Mode and the Polling Interval</a>
-            for details. The default is <span class='code'>PERIODIC</span>.</p>
+            data to memory. See the section <a
+                    href="hardware.htm#polling_mode_and_the_polling_interval">
+                Polling Mode and interval</a> in the Hardware Guide
+            for more details. The default is <span class='code'>PERIODIC</span>.</p>
 
         <p class='config_option'>polling_interval</p>
 
@@ -1774,9 +1775,9 @@ longitude = -77.0366</pre>
 
         <p>This section is for configuring the <span class="code">StdRESTful</span>
             services, which upload to simple
-            <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a>
-            servers such as the <a href="http://www.wunderground.com/">Weather Underground</a>,
-            <a href="http://www.pwsweather.com/">PWSweather.com</a>, or
+            <a href="https://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a>
+            servers such as the <a href="https://www.wunderground.com/">Weather Underground</a>,
+            <a href="https://www.pwsweather.com/">PWSweather.com</a>, or
             <a href="http://www.wxqa.com/">CWOP</a>. </p>
 
         <h3 class="config_section" id="station_registry">[[StationRegistry]]</h3>
@@ -1844,7 +1845,7 @@ longitude = -77.0366</pre>
         <h3 class="config_section">[[AWEKAS]]</h3>
 
         <p class="config_section">WeeWX can send your
-            current data to the <a href="http://www.awekas.at/">Automatisches
+            current data to the <a href="https://www.awekas.at/">Automatisches
                 Wetterkarten System</a> (AWEKAS). If you wish
             to do this, set the option <span class='code'>enable</span> to
             <span class="code">true</span>, then set options <span class='code'>username</span>
@@ -1955,7 +1956,7 @@ longitude = -77.0366</pre>
         <h3 class="config_section">[[PWSweather]]</h3>
 
         <p>WeeWX can send your current data to the
-            <a href="http://www.pwsweather.com/">PWSweather.com</a> service. If you
+            <a href="https://www.pwsweather.com/">PWSweather.com</a> service. If you
             wish to do this, set the option
             <span class='code'>enable</span> to <span class='code'>true</span>,
             then set the options <span class='code'>station</span> and
@@ -2041,7 +2042,7 @@ longitude = -77.0366</pre>
 
         <p>
             WeeWX can send your current data to the
-            <a href="http://www.wunderground.com/">Weather Underground</a>. If
+            <a href="https://www.wunderground.com/">Weather Underground</a>. If
             you wish to do this, set the option <span class="code">enable</span> to
             <span class="code">true</span>, then set the options
             <span class='code'>station</span> and <span class="code">password</span> appropriately.
@@ -2075,7 +2076,7 @@ longitude = -77.0366</pre>
 
         <p>
             Set to <span class="code">True</span> to have weeWX
-            post using the <a href="http://www.wunderground.com/weatherstation/rapidfirehelp.asp">Weather Underground's
+            post using the <a href="https://www.wunderground.com/weatherstation/rapidfirehelp.asp">Weather Underground's
             "Rapidfire" protocol</a>.
             This will send a post to the
             WU site with every LOOP packet, which can be as often as every 2.5
@@ -2094,6 +2095,13 @@ longitude = -77.0366</pre>
             option <span class="code">rapidfire</span>. However, if for some
             reason you want to do both, then you may set both options to <span
                 class="code">True</span>.
+        </p>
+
+        <p class='config_option'>post_indoor_observations</p>
+        <p>In the interest of respecting your privacy, weeWX does not
+        post indoor temperature or humidity to the Weather Underground unless you 
+        set this option to <span class="code">True</span>. Default is
+        <span class="code">False</span>.
         </p>
 
         <p class='config_option'>log_success</p>
@@ -2244,19 +2252,24 @@ longitude = -77.0366</pre>
 
         <p class="config_important">server </p>
 
-        <p>Set to the name of your web server (<em>e.g.</em>,
+        <p>Set to the name of your web server (<i>e.g.</i>,
             <a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required.
             No default </p>
 
         <p class="config_important">user </p>
 
         <p>Set to the ssh username you use for your rsync connection to your web server.
-            The local user that weeWX runs as must have passwordless ssh configured for
-            user@server. Required. No default. </p>
+           The local user that weeWX runs as must have
+           <a href='https://www.tecmint.com/ssh-passwordless-login-using-ssh-keygen-in-5-easy-steps/'>
+           passwordless ssh</a> configured for <em>user@server</em>.
+           Required. No default.
+        </p>
 
         <p class="config_important">path </p>
 
-        <p>Set to the path where the weather data will be stored on your webserver (<em>e.g.</em>, <span class="code">/weather</span>).
+        <p>Set to the path where the weather data will be stored on your webserver
+           (<i>e.g.</i>, <span class="code">/var/www/html/weather</span>). Make sure
+            <span class='code'>user</span> has write privileges in this directory.
             Required. No default. </p>
 
         <p class="config_important">delete </p>
@@ -2287,13 +2300,14 @@ longitude = -77.0366</pre>
             in the Customization Guide.</p>
 
         <p class='note'><strong>Note!</strong><br/> This service only
-            affects the units used in the <i>databases</i>. In particular,
+            affects the units used in the <em>databases</em>. In particular,
             it has nothing to do with what units are displayed in plots or
             files. Those units are specified in the skin configuration
             file, <span class="code">skin.conf</span>, as described in
             the <a href="customizing.htm">Customization Guide</a>, under
             section
-            <em><a href="customizing.htm#Changing_options">Changing
+            <em><!--suppress HtmlUnknownAnchorTarget -->
+                <a href="customizing.htm#Changing_options">Changing
                 options</a></em>. Because of this, unless you have a special
             purpose application, there is really no good reason to change
             from the default, which is <span class="code">US</span>.</p>
@@ -2553,8 +2567,8 @@ longitude = -77.0366</pre>
 
         <p class="config_option" id="record_augmentation">record_augmentation</p>
         <p>When performing hardware record generation, this option will attempt to augment the
-            record with any additional data that it can extract out of the LOOP packets. Default
-            is <span class="code">True</span>.</p>
+            record with any additional observation types that it can extract out of the LOOP
+            packets. Default is <span class="code">True</span>.</p>
 
         <p class="config_option">loop_hilo</p>
 
@@ -3176,7 +3190,8 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
         <p>
             See the <a href="https://github.com/weewx/weewx/wiki">Wiki</a>
             for up-to-date information on
-            <a href="https://github.com/weewx/weewx/wiki/Raspberry%20Pi"><i>Running weeWX on a Raspberry Pi</i></a>.
+            <a href="https://github.com/weewx/weewx/wiki/Raspberry%20Pi"><em>Running weeWX on a
+                                                                            Raspberry Pi<em/></a>.
         </p>
 
         <h3>Fine Offset USB lockups</h3>
@@ -3197,7 +3212,8 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
             need to restart weeWX.</p>
 
         <p>More details
-            about <a href="https://github.com/weewx/weewx/wiki/FineOffset%20USB%20lockup"><i>Fine Offset lockups</i></a>
+            about <a href="https://github.com/weewx/weewx/wiki/FineOffset%20USB%20lockup"><em>Fine
+                                                                                             Offset lockups<em/></a>
             can be found in the
             <a href="https://github.com/weewx/weewx/wiki">Wiki</a>.</p>
 
@@ -3603,7 +3619,7 @@ port = /dev/cuaU0</pre>
 
         <p>If your plots have strange looking symbols for units, such as
             degrees Fahrenheit (&deg;F), that look something like this:</p>
-        <img src='images/funky_degree.png'/>
+        <img src='images/funky_degree.png' alt='funky degree sign'/>
 
         <p>Then the problem may be that you are missing the fonts
             specified for the option
