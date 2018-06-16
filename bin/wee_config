@@ -78,7 +78,7 @@ def main():
                       "specified then replace existing configuration file.")
     parser.add_option("--driver", metavar="DRIVER",
                       help="Use the driver DRIVER. "
-                      "For example, weewx.driver.vantage")
+                      "For example, weewx.drivers.vantage")
     parser.add_option("--latitude", metavar="yy.y",
                       help="The station latitude in decimal degrees.")
     parser.add_option("--longitude", metavar="xx.x",

@@ -786,7 +786,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.19rc5'
+DRIVER_VERSION = '0.19rc6'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -1143,9 +1143,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         raise ProtocolError("Finish history failed after %d tries" % max_tries)
 
     def dump_history(self):
-        loginf("dump history")
-        for rec in self.get_history(time.time(), clear_logger=True):
-            pass
+        loginf("dump history is disabled")
+#        loginf("dump history")
+#        for rec in self.get_history(time.time(), clear_logger=True):
+#            pass
 
     def get_history(self, since_ts, clear_logger=False):
         if self.latest_index is None:
@@ -1845,7 +1846,7 @@ if __name__ == '__main__':
         'debug_packet': 0,
         'debug_counts': 0,
         'debug_decode': 0,
-        'debug_history': 1,
+        'debug_history': 0,
         'debug_rain': 0}
     stn = WMR300Driver(**driver_dict)
 

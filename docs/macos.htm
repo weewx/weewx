@@ -12,10 +12,9 @@
 <body>
 
 <h1 class="title">weeWX: Installation on macOS systems
-    <div class='os-icons'>
+    <span class='os-icons'>
         <img class='logo' src='images/logo-apple.png' alt=""/>
-    </div>
-    <div style="clear: both"></div>
+    </span>
 </h1>
 
 <p>This is a guide to installing weeWX on macOS.</p>
@@ -30,18 +29,21 @@
 <p>Ensure that Python2 is installed. Python 2.6 or 2.7 will work,
     but Python 3 will not.</p>
 <pre class='tty cmd'>python -V</pre>
-<p>Install the required Python packages using easy_install:</p>
-<pre class='tty cmd'>sudo easy_install pysqlite
-sudo easy_install configobj
-sudo easy_install Cheetah
-sudo easy_install PIL
-sudo easy_install pyserial
-sudo easy_install pyusb
-sudo easy_install pyephem</pre>
+<p>Make sure that <a href="https://pypi.python.org/pypi/pip">pip</a> has been installed on
+your system. If not, it may be as simple as:</p>
+<pre class='tty cmd'>sudo easy_install pip</pre>
+<p>Now install the required Python packages using pip.</p>
+<pre class='tty cmd'>sudo pip install pysqlite
+sudo pip install configobj
+sudo pip install Cheetah
+sudo pip install PIL
+sudo pip install pyserial
+sudo pip install pyusb
+sudo pip install pyephem</pre>
 <p>Depending on the macOS and Python versions, you might have to use <span class="code">Pillow</span> instead of <span class="code">PIL</span>.</p>
 <p>If the PIL or Cheetah installation fails, you might have to install xcode:</p>
 <pre class='tty cmd'>xcode-select --install</pre>
-<p>then try the easy_install again.</p>
+<p>then try the pip install again.</p>
 
 <h2>Install weeWX</h2>
 <p>Expand the source archive:</p>
@@ -59,7 +61,8 @@ sudo easy_install pyephem</pre>
 <h2>Run</h2>
 
 <p>Run the main program directly:</p>
-<pre class="tty cmd">/Users/Shared/weewx/bin/weewxd weewx.conf</pre>
+<pre class="tty cmd">cd /Users/Shared/weewx
+./bin/weewxd weewx.conf</pre>
 <p>Or as a daemon automatically when the computer starts:</p>
 <pre class="tty cmd">sudo cp /Users/Shared/weewx/util/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
 sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
@@ -70,10 +73,9 @@ sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
 
 <h2>Verify</h2>
 <p>After about 5 minutes, open the station web page in a web browser. You should see your station information and data.
+If your hardware supports hardware archiving, then how long you wait will depend on the <a href="usersguide.htm#archive_interval">archive interval</a> set in your hardware.
 </p>
 <pre class='tty'><a href="file:///Users/Shared/weewx/public_html/index.html">file:///Users/Shared/weewx/public_html/index.html</a></pre>
-<p>If your hardware supports hardware archiving, then how long you wait will depend on the <a href="usersguide.htm#archive_interval">archive interval</a> set in your hardware.
-</p>
 
 <h2>Customize</h2>
 <p>To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span class='code'>/Users/Shared/weewx/weewx.conf</span>. See the <a href="usersguide.htm">User Guide</a> and <a href="customizing.htm">Customization Guide</a> for details.
