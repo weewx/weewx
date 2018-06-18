@@ -37,7 +37,8 @@ StandardError
 | `CannotConnectError`  | *N/A*              | `OperationalError` |         2002         | Server down                     |
 | `CannotConnectError`  | *N/A*              | `OperationalError` |         2003         | Host error                      |
 | `CannotConnectError`  | *N/A*              | `OperationalError` |         2005         | Unknown host                    |
-| `CannotConnectError`  | *N/A*              | `OperationalError` |         2006         | Server gone                     |
+| `DisconnectError`     | *N/A*              | `OperationalError` |         2006         | Server gone                     |
+| `DisconnectError`     | *N/A*              | `OperationalError` |         2013         | Lost connection during query    |
 | `BadPasswordError`    | *N/A*              | `OperationalError` |         1045         | Bad or non-existent password    |
 | `NoDatabaseError`     | *N/A*              | `OperationalError` |         1008         | Drop non-existent database      |
 | `PermissionError`     | `OperationalError` | `OperationalError` |         1044         | No permission                   |
@@ -62,6 +63,7 @@ StandardError
    |__OperationalError
       |__NoDatabaseError
       |__CannotConnectError
+      |__DisconnectError
       |__NoColumnError
       |__BadPasswordError
       |__PermissionError

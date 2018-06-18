@@ -46,6 +46,9 @@ class NoDatabaseError(OperationalError):
 class CannotConnectError(OperationalError):
     """Unable to connect to the database server."""
 
+class DisconnectError(OperationalError):
+    """Database went away."""
+
 class NoColumnError(OperationalError):
     """Attempt to operate on a column that does not exist."""
 

@@ -28,7 +28,8 @@ exception_map = {
     2002: weedb.CannotConnectError,
     2003: weedb.CannotConnectError,
     2005: weedb.CannotConnectError,
-    2006: weedb.CannotConnectError,
+    2006: weedb.DisconnectError,
+    2013: weedb.DisconnectError,
     None: weedb.DatabaseError
     }
 

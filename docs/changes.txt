@@ -18,6 +18,8 @@ Template names can now include the week number. Thanks to user 'stimpy23'. PR #3
 
 New aggregation type for plots: 'cumulative'. Thanks to user 'henrikost'. PR #302.
 
+Fixed problem where MySQL error 2013 could crash WeeWX. Fixes issue #327.
+
 
 3.8.1 XX/XX/XXXX
 
