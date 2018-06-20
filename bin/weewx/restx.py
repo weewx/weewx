@@ -467,7 +467,7 @@ class RESTThread(threading.Thread):
         """Raises exception AbortedPost if the record should not be posted.
         Otherwise, does nothing"""
         for obs_type in self.essentials:
-            if self.essentials[obs_type] and obs_type not in record:
+            if self.essentials[obs_type] and record.get(obs_type) is None:
                 raise AbortedPost("Observation type %s missing" % obs_type)
 
     def check_response(self, response):
