@@ -2125,6 +2125,16 @@ longitude = -77.0366</pre>
 
         <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
 
+        <p class='config_option'>[[[Essentials]]]</p>
+        <p>Occasionally (but not always!) when the Weather Underground is missing a data
+           point it will substitute the value zero (<span class='code'>0.0</span>),
+           thus messing up statistics and plots.
+        For all observation types listed in this section, the post will be skipped if that
+        type is missing. For example,</p>
+        <pre class='tty'>[[[Essentials]]]
+    outTemp = True</pre>
+        <p>would cause the post to be skipped if there is no outside temperature (observation
+        type <span class='code'>outTemp</span>).</p>
 
         <h2 class="config_section">[StdReport]</h2>
 

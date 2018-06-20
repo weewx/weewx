@@ -20,6 +20,9 @@ New aggregation type for plots: 'cumulative'. Thanks to user 'henrikost'. PR #30
 
 Fixed problem where MySQL error 2013 could crash WeeWX. Fixes issue #327.
 
+Posts to the Weather Underground will be skipped if an observation type is
+listed in the [[[Essentials]]]  subsection is missing. Fixes issue #329.
+
 
 3.8.1 XX/XX/XXXX
 

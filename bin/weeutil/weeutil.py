@@ -41,18 +41,22 @@ def search_up(d, k, *default):
     Example: 
     
     >>> import configobj
-    >>> c = configobj.ConfigObj({"color":"blue", "size":10, "dayimage":{"color":"red"}});
-    >>> print search_up(c['dayimage'], 'size')
+    >>> c = configobj.ConfigObj({"color":"blue", "size":10, "robin":{"color":"red", "sound": {"volume": "loud"}}})
+    >>> print search_up(c['robin'], 'size')
     10
     >>> print search_up(c, 'color')
     blue
-    >>> print search_up(c['dayimage'], 'color')
+    >>> print search_up(c['robin'], 'color')
     red
-    >>> print search_up(c['dayimage'], 'flavor', 'salty')
+    >>> print search_up(c['robin'], 'flavor', 'salty')
     salty
-    >>> print search_up(c['dayimage'], 'flavor')
+    >>> print search_up(c['robin'], 'flavor')
     Traceback (most recent call last):
     AttributeError: flavor
+    >>> print search_up(c['robin'], 'sound')
+    {'volume': 'loud'}
+    >>> print search_up(c['robin'], 'smell', {})
+    {}
     """
     if k in d:
         return d[k]

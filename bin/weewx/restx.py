@@ -84,7 +84,8 @@ import urllib2
 import weedb
 import weeutil.weeutil
 import weewx.engine
-from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, accumulateLeaves, to_sorted_string
+from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, search_up, \
+    accumulateLeaves, to_sorted_string
 
 import weewx.manager
 import weewx.units
@@ -151,7 +152,9 @@ class RESTThread(threading.Thread):
     
     Offers a few bits of common functionality."""
 
-    def __init__(self, queue, protocol_name, manager_dict=None,
+    def __init__(self, queue, protocol_name,
+                 essentials={},
+                 manager_dict=None,
                  post_interval=None, max_backlog=sys.maxint, stale=None,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, retry_login=3600,
@@ -165,7 +168,10 @@ class RESTThread(threading.Thread):
           protocol_name: A string holding the name of the protocol.
           
         Optional parameters:
-        
+
+          essentials: A dictionary that holds observation types that must
+          not be None for the post to go ahead.
+
           manager_dict: A manager dictionary, to be used to open up a
           database manager. Default is None.
         
@@ -210,6 +216,7 @@ class RESTThread(threading.Thread):
 
         self.queue = queue
         self.protocol_name = protocol_name
+        self.essentials = essentials
         self.manager_dict = manager_dict
         self.log_success = to_bool(log_success)
         self.log_failure = to_bool(log_failure)
@@ -341,12 +348,12 @@ class RESTThread(threading.Thread):
                 # Process the record, using whatever method the specializing
                 # class provides
                 self.process_record(_record, dbmanager)
-            except AbortedPost:
+            except AbortedPost as e:
                 if self.log_success:
                     _time_str = timestamp_to_string(_record['dateTime'])
                     syslog.syslog(syslog.LOG_INFO,
-                                  "restx: %s: Skipped record %s" %
-                                  (self.protocol_name, _time_str))
+                                  "restx: %s: Skipped record %s: %s" %
+                                  (self.protocol_name, _time_str, e))
             except BadLogin:
                 syslog.syslog(syslog.LOG_ERR, "restx: %s: Bad login; "
                                               "waiting %s minutes then retrying" %
@@ -384,6 +391,8 @@ class RESTThread(threading.Thread):
 
         # Get the full record by querying the database ...
         _full_record = self.get_record(record, dbmanager)
+        # ... check it ...
+        self.check_this_record(_full_record)
         # ... format the URL, using the relevant protocol ...
         _url = self.format_url(_full_record)
         # ... get the Request to go with it...
@@ -398,7 +407,7 @@ class RESTThread(threading.Thread):
             data = None
         # ... check to see if this is just a drill...            
         if self.skip_upload:
-            raise AbortedPost()
+            raise AbortedPost("Skip post")
 
         # ... then, finally, post it
         self.post_with_retries(_request, data)
@@ -453,6 +462,13 @@ class RESTThread(threading.Thread):
             # the upload failed max_tries times. Raise an exception. Caller
             # can decide what to do with it.
             raise FailedPost("Failed upload after %d tries" % (self.max_tries,))
+
+    def check_this_record(self, record):
+        """Raises exception AbortedPost if the record should not be posted.
+        Otherwise, does nothing"""
+        for obs_type in self.essentials:
+            if self.essentials[obs_type] and obs_type not in record:
+                raise AbortedPost("Observation type %s missing" % obs_type)
 
     def check_response(self, response):
         """Check the response from a HTTP post. This version does nothing."""
@@ -563,6 +579,8 @@ class StdWunderground(StdRESTful):
         if _ambient_dict is None:
             return
 
+        _essentials_dict = search_up(config_dict['StdRESTful']['Wunderground'], 'Essentials', {})
+
             # Get the manager dictionary:
         _manager_dict = weewx.manager.get_manager_dict_from_config(
             config_dict, 'wx_binding')
@@ -580,6 +598,7 @@ class StdWunderground(StdRESTful):
                 self.archive_queue,
                 _manager_dict,
                 protocol_name="Wunderground-PWS",
+                essentials=_essentials_dict,
                 **_ambient_dict)
             self.archive_thread.start()
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
@@ -600,6 +619,7 @@ class StdWunderground(StdRESTful):
                 self.loop_queue,
                 _manager_dict,
                 protocol_name="Wunderground-RF",
+                essentials=_essentials_dict,
                 **_ambient_dict)
             self.loop_thread.start()
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
@@ -747,10 +767,13 @@ class AmbientThread(RESTThread):
     """Concrete class for threads posting from the archive queue,
        using the Ambient PWS protocol."""
 
-    def __init__(self, queue, manager_dict,
+    def __init__(self,
+                 queue,
+                 manager_dict,
                  station, password, server_url,
                  post_indoor_observations=False,
                  protocol_name="Unknown-Ambient",
+                 essentials={},
                  post_interval=None, max_backlog=sys.maxint, stale=None,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, retry_login=3600,
@@ -771,6 +794,7 @@ class AmbientThread(RESTThread):
         """
         super(AmbientThread, self).__init__(queue,
                                             protocol_name=protocol_name,
+                                            essentials=essentials,
                                             manager_dict=manager_dict,
                                             post_interval=post_interval,
                                             max_backlog=max_backlog,
@@ -876,6 +900,7 @@ class AmbientLoopThread(AmbientThread):
     def __init__(self, queue, manager_dict,
                  station, password, server_url,
                  protocol_name="Unknown-Ambient",
+                 essentials={},
                  post_interval=None, max_backlog=sys.maxint, stale=None, 
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, rtfreq=2.5):
@@ -891,6 +916,7 @@ class AmbientLoopThread(AmbientThread):
                                             password=password,
                                             server_url=server_url,
                                             protocol_name=protocol_name,
+                                            essentials=essentials,
                                             manager_dict=manager_dict,
                                             post_interval=post_interval,
                                             max_backlog=max_backlog,
@@ -1112,7 +1138,7 @@ class CWOPThread(RESTThread):
         _login = self.get_login_string()
         _tnc_packet = self.get_tnc_packet(_us_record)
         if self.skip_upload:
-            raise AbortedPost()
+            raise AbortedPost("Skip post")
         # ... then post them:
         self.send_packet(_login, _tnc_packet)
 
@@ -1665,7 +1691,7 @@ class AWEKASThread(RESTThread):
         r = self.get_record(record, dbmanager)
         url = self.get_url(r)
         if self.skip_upload:
-            raise AbortedPost()
+            raise AbortedPost("Skip post")
         req = urllib2.Request(url)
         req.add_header("User-Agent", "weewx/%s" % weewx.__version__)
         self.post_with_retries(req)
