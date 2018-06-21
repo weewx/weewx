@@ -581,6 +581,8 @@ class StdWunderground(StdRESTful):
 
         _essentials_dict = search_up(config_dict['StdRESTful']['Wunderground'], 'Essentials', {})
 
+        syslog.syslog(syslog.LOG_DEBUG, "restx: WU essentials: %s" % _essentials_dict)
+
             # Get the manager dictionary:
         _manager_dict = weewx.manager.get_manager_dict_from_config(
             config_dict, 'wx_binding')
