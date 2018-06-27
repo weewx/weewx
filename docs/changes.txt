@@ -44,6 +44,9 @@ Fixed bug involving stations that report windGust, but not windGustDir, in
 their LOOP data (e.g., Fine Offset), which prevented the direction of max
 wind from appearing in statistics. Fixes issue #320.
 
+The engine now waits until the system time is greater than the creation time
+of the weewx.conf file before starting up. Fixes issue #330.
+
 
 3.8.0 11/22/2017
 
