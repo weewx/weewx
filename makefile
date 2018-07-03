@@ -34,7 +34,7 @@ help: info
 	@echo "       install  run the generic python install"
 	@echo "       version  get version from __init__ and insert elsewhere"
 	@echo ""
-	@echo "        readme  create README.txt suitable for distribution"
+	@echo "    readme.txt  create README.txt suitable for distribution"
 	@echo " deb-changelog  prepend stub changelog entry for deb"
 	@echo " rpm-changelog  prepend stub changelog entry for rpm"
 	@echo ""
