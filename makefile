@@ -48,7 +48,8 @@ help: info
 	@echo ""
 	@echo "    upload-src  upload the src package"
 	@echo "    upload-deb  upload the deb package"
-	@echo "    upload-rpm  upload the rpm package"
+	@echo "   upload-rhel  upload the redhat rpm package"
+	@echo "   upload-suse  upload the suse rpm package"
 	@echo " upload-readme  upload the README.txt"
 	@echo ""
 	@echo "   upload-docs  upload docs to weewx.com"
@@ -253,6 +254,12 @@ check-rpm:
 
 upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+
+upload-rhel:
+	make upload-rpm RPMOS=.rhel
+
+upload-suse:
+	make upload-rpm RPMOS=.suse
 
 # shortcut to upload all packages from a single machine
 DEB_PKG=weewx_$(DEBVER)_$(DEBARCH).deb
