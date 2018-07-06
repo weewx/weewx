@@ -47,6 +47,9 @@ wind from appearing in statistics. Fixes issue #320.
 The engine now waits until the system time is greater than the creation time
 of the weewx.conf file before starting up. Fixes issue #330.
 
+Added flag to weewx-multi init script to prevent systemd from breaking it.
+Thanks to users Timo, Glenn McKechnie, and Paul Oversmith.
+
 
 3.8.0 11/22/2017
 
