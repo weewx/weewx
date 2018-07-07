@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Tom Keffer <tkeffer@gmail.com>
 Standards-Version: 3.9.2
 Homepage: http://www.weewx.com
+Build-Depends: debhelper (>=9)
 
 Package: weewx
 Architecture: all
