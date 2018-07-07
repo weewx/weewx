@@ -229,4 +229,6 @@ esac
 # let debconf know that we are finished
 db_stop
 
+#DEBHELPER#
+
 exit 0
