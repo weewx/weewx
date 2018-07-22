@@ -5766,40 +5766,26 @@ class AddElectricity(StdService):
 <h2 id="add_archive_type">Add a new type to the database</h2>
 
       <p>
-        It is not unusual to have some observation types included in loop 
-        packets and archive records that are not stored in the database. 
-        Some stations/drivers may result in observation types being emitted 
-        or calculated that are not stored in the database or if you followed 
-        the example above, <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>, 
-        you created a new observation type, <span class="code">electricity</span> 
-        that is also not stored in the database. If you wish to use historical 
-        or aggregagte data based on any of these observation types then it 
-        is necessary to store the observation type concerend in the database.
-        Trouble is if there is no corresponding type in the schema of the 
-        SQL database weeWX will not know where to store such an observation
-        type. So how would you add such a type?
+        It is not unusual to have observation types that exist in the loop
+        packets and/or archive records, but are not in the database schema.
+        An example is the new observation type <span class="code">electricity</span>,
+        from the example above, <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>.
+        If a type is not in the database schema, then it will be a second class citizen in weeWX's world:
+        it cannot be used in a plot, nor for most statistics.
+        So how would you add such a type to the database schema?
       </p>
 
       <p>
         The utility <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> 
-        can be used to do this. It will create a new database that is 
+        can do this. It will create a new database that is
         similar to the old database, except it will have the new type 
         in its schema.
       </p>
 
         <p class="note" style="display: inline-block; width: 70%">
-          <b>Note</b><br />WeeWX only stores in the database those observation 
-          types that are defined in the schema. However, weeWX generated loop 
-          packets and archive records may contain additional observation types 
-          not included in the schema (e.g., a driver may emit observation type 
-          <span class="code">uvBatteryStatus</span> or the 
-          <a href="usersguide.htm#StdWXCalculate">StdWXCalculate service</a> 
-          may add additional derived observation types such as 
-          <span class="code">humidex</span> and <span class="code">maxSolarRad</span>). 
-          These additional observation types will not be stored in the default
-          database. It is possible to observe all of the observation types 
-          included in loop packets and archive records whether they are stored 
-          in the database or not by 
+          <b>Note</b><br />It is possible to observe all of the observation types
+          included in the loop packets and archive records, whether or not they are stored
+          in the database, by
           <a href="usersguide.htm#Running_directly">running weeWX directly</a>.
         </p>
           
@@ -5825,46 +5811,42 @@ class AddElectricity(StdService):
       <ol>
         <li>
           <p>
-            <strong>Add the new type to our existing schema.</strong> The schema 
+            <strong>Extend the existing schema with the new type.</strong> The schema
             that comes with weeWX is the same as what wview uses. It's located 
             in the file <span class="code">schemas/wview.py</span> &mdash; take 
             a look at it now. We could just modify it <em>in situ</em>, but that
             would run the risk of confusing the two versions. Alternatively, we 
             could copy the file over to a new location, and then modify that. 
             But, because our change is just a simple addition, we're going to 
-            import the wview schema and just add on our new type. The file 
-            <span class="code">user/extensions.py</span> has been purposely made 
-            to allow inclusion of user extensions to the weeWX code. So if we are 
-            just adding an existing (but unstored) type (e.g., <span class="code">humidex</span>) 
-            we can add the following code to the bottom of the file:
-          </p> 
-          <pre class="tty">import schemas.wview
-schema_with_humidex = schemas.wview.schema + [('humidex', 'REAL')]</pre>
-          <p>
-            This creates a new schema (it will have the name 
-            <span class="code">user.extensions.schema_with_humdiex</span>),
-            that is just like the old one, except it has a new type 
-            <span class="code">humidex</span> tacked on to the end.
+            import the wview schema and just add on our new type.</p>
+          <p>For this example,
+            we are going to add the new type <span class="code">electricity</span>.
+            Add the following code to the bottom of a file:
           </p>
-          <p>
-            If you have followed the example above, 
-            <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>, 
-            you will want to add the new observation type 
-            <span class="code">electriciry</span>. In this case there is no reason 
-            to alter <span class="code">user/extensions.py</span> rather you can
-            add the code to the file we already have, 
-            <span class="code">user/electricity.py</span>. Add the following
-            code to the bottom of the file:
-          </p> 
           <pre class="tty">import schemas.wview
 schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
           <p>
-            This creates a new schema (it will have the name 
-            <span class="code">user.electricity.schema_with_electricity</span>),
-            that is just like the old one, except it has a new type 
+            This creates a new schema with the name
+            <span class="code">user.electricity.schema_with_electricity</span>,
+            that is just like the old one, except it has a new type
             <span class="code">electricity</span> tacked on to the end.
           </p>
-        </li>
+          <p>Now, where do we put this bit of code? Really, it can be put in any file that
+          is guaranteed to run before we try and store our new type. With this in mind, there
+          are two obvious choices:</p>
+          <ol type="a">
+            <li>Add it to the bottom of <span class="code">user/extensions.py</span>. This is a
+            special file, provided by weeWX, which is guaranteed to run before the engine's main loop.
+              It's a good place to add types that already exist in the
+              archive records (an example would be <span class="code">humidex</span>),
+              but don't yet exist in the database schema.</li>
+            <li>If you've been following the example above, <a href="#Adding_2nd_source"><em>Adding a second
+              data source</em></a>, then you can just simply add the code to the bottom of the file
+              you already have, <span class="code">user/electricity.py</span>. This way, it will
+            run before any use of the new type. It has the added advantage that it keeps all
+            "electricity" related modifications in one place, making it easy to package up your changes
+            as a new weeWX extension.</li>
+          </ol>
         <li>
           <p>
             <strong>Modify <span class="code">wx_binding</span>.</strong> When 
@@ -5872,8 +5854,9 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
             needs to know to use your new schema instead of the old, wview 
             schema. You do this by changing the option <span class="code">schema</span> 
             in section <span class="code">[DataBindings]</span> in 
-            <span class="code">weewx.conf</span>. In the case of using schema 
-            <span class="code">user.extensions.schema_with_humidex</span> it 
+            <span class="code">weewx.conf</span>.</p>
+        <p> If you made the code additions in step 1 in
+            file <span class="code">user/extensions.py</span>, then it
             will look like this when you're done:
           </p> 
           
@@ -5882,9 +5865,9 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
         database = archive_sqlite
         table_name = archive
         manager = weewx.wxmanager.WXDaySummaryManager
-        <span class="highlight">schema = user.extensions.schema_with_humidex</span></pre>
+        <span class="highlight">schema = user.extensions.schema_with_electricity</span></pre>
         
-        <p>In the case of adding type <span class="code">user.electricity.schema_with_electricity</span> 
+        <p>If you used <span class="code">user/electricity.py</span>, then
           it will look like this:
         </p> 
         
