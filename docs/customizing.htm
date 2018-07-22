@@ -3472,21 +3472,21 @@ class MyStats(SearchList):                                                   # 1
       generation time</h2>
 
     <p>
-      Normal weeWX operation is to run each <em><a href="#Reports">report</a></em>
+      Normal weeWX operation is to run each <em><a href="usersguide.htm#Reports">report</a></em>
       defined in <span class="code">weewx.conf</span> every archive period. Whilst
       this may suit most situations, there may be occasions when it is desirable
       to run a report less frequently than every archive period. For example, the
       archive interval might be 5 minutes, but you only want to FTP files every
       30 minutes, once per day or at a set time each day. Weewx has two mechanisms
       that provide the ability to control when files are generated. The
-      <em><a href="#File_generation_options"><span class="code">stale_age</span></a></em>
+      <em><a href="#stale_age"><span class="code">stale_age</span></a></em>
       option allows control over the age of a file before it is regenerated and
-      the <span class="code">report_timing</span> option allows precisle control
+      the <span class="code">report_timing</span> option allows precise control
       over when individual reports are run.
     </p>
 
     <p class="note" style="display: inline-block; width: 70%">
-      <b>Note</b><br/>Whilst the <span class="code">report_timing</span>
+      <strong>Note</strong><br/>Whilst the <span class="code">report_timing</span>
       option allows the user to specify when a given report is generated, it
       should be noted that the generation of reports is still controlled by
       the weeWX report cycle and as such the <span class="code">report_timing</span>
@@ -3645,7 +3645,7 @@ class MyStats(SearchList):                                                   # 1
     </p>
 
     <p class="note" style="display: inline-block; width: 70%">
-      <b>Note</b><br/>Report time does not refer to the time at
+      <strong>Note</strong><br/>Report time does not refer to the time at
       which the report is run, but rather the date and time of the
       latest data the report is based upon. If you like, it is the
       effective date and time of the report. For normal weeWX
@@ -3659,7 +3659,7 @@ class MyStats(SearchList):                                                   # 1
     </p>
 
     <p class="note" style="display: inline-block; width: 70%">
-      <b>Note</b><br/>The day a report is to be run can be specified
+      <strong>Note</strong><br/>The day a report is to be run can be specified
       by two parameters; day of month and/or day of week. If both
       parameters are restricted (i.e., not an asterisk), the report
       will be run when either field matches the current time. For
@@ -3688,7 +3688,7 @@ class MyStats(SearchList):                                                   # 1
       of each report cycle, and provided a <span class="code">report_timing</span>
       option is set, weeWX will check each minute boundary from the current
       report time back until the report time of the previous report cycle. If
-      a match is found on <b>any</b> of these one minute boundaries the
+      a match is found on <strong>any</strong> of these one minute boundaries the
       report will be run during the report cycle. This may be best described
       through some examples:
     </p>
@@ -4521,7 +4521,7 @@ UV      = UV Index</pre>
       March, 2010.
     </p>
 
-    <p class="config_option">stale_age</p>
+    <p class="config_option" id="stale_age">stale_age</p>
 
     <p>
       File staleness age, in seconds. If the file is older than this
@@ -4531,8 +4531,8 @@ UV      = UV Index</pre>
     </p>
 
     <p class="note" style="display: inline-block; width: 70%">
-      <b>Note</b><br/>Precise control over when a
-      <em><a href="#Reports">report</a></em> is run is available through
+      <strong>Note</strong><br/>Precise control over when a
+      <em><a href="usersguide.htm#Reports">report</a></em> is run is available through
       use of the <span class="code">report_timing</span> option in
       <span class="code">weewx.conf</span>. The <span class="code">report_timing</span>
       option uses a CRON-like setting to control precisely when a report is run.
@@ -5855,7 +5855,7 @@ class AddElectricity(StdService):
     </p>
 
     <p class="note" style="display: inline-block; width: 70%">
-      <b>Note</b><br/>It is possible to observe all of the observation types
+      <strong>Note</strong><br/>It is possible to observe all of the observation types
       included in the loop packets and archive records, whether or not they are stored
       in the database, by
       <a href="usersguide.htm#Running_directly">running weeWX directly</a>.
