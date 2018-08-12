@@ -1620,6 +1620,7 @@ class DaySummaryManager(Manager):
             syslog.syslog(syslog.LOG_ERR, "manager: "
                           "Drop summaries failed for database '%s': %s"
                           % (self.connection.database_name, e))
+            raise
         else:
             syslog.syslog(syslog.LOG_INFO, "manager: "
                           "Dropped daily summary tables from database '%s'"
