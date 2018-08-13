@@ -1618,7 +1618,7 @@ class DaySummaryManager(Manager):
             del self.daykeys
         except weedb.OperationalError as e:
             syslog.syslog(syslog.LOG_ERR, "manager: "
-                          "Drop summaries failed for database '%s': %s"
+                          "Drop daily summary tables failed for database '%s': %s"
                           % (self.connection.database_name, e))
             raise
         else:

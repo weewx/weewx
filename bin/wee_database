@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 #    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
 #
@@ -202,7 +202,8 @@ def dropDaily(config_dict, db_binding):
                     try:
                         dbmanager.drop_daily()
                     except weedb.OperationalError as e:
-                        print "Got error '%s'\nPerhaps there was no daily summary?" % e
+                        print "Error '%s'" % e
+                        print "Drop daily summary tables failed for database '%s'" % database_name
                     else:
                         tdiff = time.time() - t1
                         print "Daily summary tables dropped from database '%s' in %.2f seconds" % (database_name, tdiff)
