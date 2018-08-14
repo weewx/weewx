@@ -50,6 +50,10 @@ of the weewx.conf file before starting up. Fixes issue #330.
 Added flag to weewx-multi init script to prevent systemd from breaking it.
 Thanks to users Timo, Glenn McKechnie, and Paul Oversmith.
 
+Fixed problem that caused wind direction in archive records to always be
+calculated in software, even with stations that provide it in hardware.
+Fixes issue #336.
+
 
 3.8.0 11/22/2017
 
