@@ -367,13 +367,13 @@ class Accum(dict):
     def extract_wind(self, record, obs_type):
         """Extract wind values from myself, and put in a record."""
         # Wind records must be flattened into the separate categories:
-        if record.get('windSpeed') is None:
+        if 'windSpeed' not in record:
             record['windSpeed']   = self[obs_type].avg
-        if record.get('windDir') is None:
+        if 'windDir' not in record:
             record['windDir']     = self[obs_type].vec_dir
-        if record.get('windGust') is None:
+        if 'windGust' not in record:
             record['windGust']    = self[obs_type].max
-        if record.get('windGustDir') is None:
+        if 'windGustDir' not in record:
             record['windGustDir'] = self[obs_type].max_dir
         
     def extract_sum(self, record, obs_type):
