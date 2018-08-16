@@ -43,7 +43,7 @@ git commit -a -m "release x.y.z"
 git push
 
 # generate the readme then upload it to development_versions
-make readme upload-readme
+make readme.txt upload-readme
 
 # build src, upload to development_versions
 rm -rf build dist
@@ -79,7 +79,7 @@ make push-apt-repo
 howto -------------------------------------------------------------------------
 
 create README.txt:
-  make readme
+  make readme.txt
 
 how to update the version number:
   perl -pi -e 's/__version__=".*"/__version__="x.y.z"/' bin/weewx/__init__.py

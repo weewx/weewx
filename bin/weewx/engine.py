@@ -9,6 +9,7 @@
 # Python imports
 import gc
 import locale
+import os
 import os.path
 import platform
 import signal
@@ -160,16 +161,16 @@ class StdEngine(object):
             
             syslog.syslog(syslog.LOG_INFO, "engine: Starting main packet loop.")
 
-            last_gc = int(time.time())
+            last_gc = time.time()
 
             # This is the outer loop. 
             while True:
 
                 # See if garbage collection is scheduled:
-                if int(time.time()) - last_gc > self.gc_interval:
+                if time.time() - last_gc > self.gc_interval:
                     ngc = gc.collect()
-                    syslog.syslog(syslog.LOG_INFO, "engine: garbage collected %d objects" % ngc)
-                    last_gc = int(time.time())
+                    syslog.syslog(syslog.LOG_INFO, "engine: Garbage collected %d objects" % ngc)
+                    last_gc = time.time()
 
                 # First, let any interested services know the packet LOOP is
                 # about to start
@@ -819,20 +820,26 @@ def main(options, args, engine_class=StdEngine):
     # change it. In case of a restart, we need to change it back.
     cwd = os.getcwd()
 
+    # Get the path to the configuration file
+    config_path = os.path.abspath(args[0])
+
     if options.daemon:
         syslog.syslog(syslog.LOG_INFO, "engine: pid file is %s" % options.pidfile)
         daemon.daemonize(pidfile=options.pidfile)
 
-    # for backward compatibility, recognize loop_on_init from command-line
+    # For backward compatibility, recognize loop_on_init from command-line
     loop_on_init = options.loop_on_init
 
-    # be sure that the system has a reasonable time (at least 1 jan 2000).
-    # log any problems every minute.
+    # Make sure the system time is not out of date (a common problem with the Raspberry Pi).
+    # Do this by making sure the system time is later than the creation time of the config file
+    sane = os.stat(config_path).st_ctime
+
     n = 0
-    while weewx.launchtime_ts < 946684800:
+    while weewx.launchtime_ts < sane:
+        # Log any problems every minute.
         if n % 120 == 0:
             syslog.syslog(syslog.LOG_INFO,
-                          "engine: waiting for sane time.  current time is %s"
+                          "engine: Waiting for sane time. Current time is %s"
                           % weeutil.weeutil.timestamp_to_string(weewx.launchtime_ts))
         n += 1
         time.sleep(0.5)
@@ -842,7 +849,6 @@ def main(options, args, engine_class=StdEngine):
 
         os.chdir(cwd)
 
-        config_path = os.path.abspath(args[0])
         config_dict = getConfiguration(config_path)
 
         # Look for the debug flag. If set, ask for extra logging
@@ -851,7 +857,7 @@ def main(options, args, engine_class=StdEngine):
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
         else:
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
-        syslog.syslog(syslog.LOG_DEBUG, "engine: debug is %s" % weewx.debug)
+        syslog.syslog(syslog.LOG_DEBUG, "engine: Debug is %s" % weewx.debug)
 
         # See if there is a loop_on_init directive in the configuration, but
         # use it only if nothing was specified via command-line.
