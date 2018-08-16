@@ -1,4 +1,8 @@
-#!/bin/sh -e
+#!/bin/sh
+
+# abort if any command returns error
+set -e
+
 # prompt for configuration settings that are required and have no default
 
 # load the debconf functions
