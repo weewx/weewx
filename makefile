@@ -215,7 +215,7 @@ RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
 # add a skeleton entry to rpm changelog
 rpm-changelog:
-	if [ "`grep $(RPMVER)1 pkg/changelog.rpm`" = "" ]; then \
+	if [ "`grep $(RPMVER) pkg/changelog.rpm`" = "" ]; then \
   pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.rpm.new; \
   cat pkg/changelog.rpm >> pkg/changelog.rpm.new; \
   mv pkg/changelog.rpm.new pkg/changelog.rpm; \
