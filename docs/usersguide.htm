@@ -3639,7 +3639,7 @@ port = /dev/cuaU0</pre>
             <span class="code">unit_label_font_path</span> in your
             <span class="code">skin.conf</span> file and, instead,
             weeWX is substituting a default font, which does not
-            support the UTF-8 character necessary to make a degree sign. Look in
+            support the Unicode character necessary to make a degree sign. Look in
             section <span class="code">[ImageGenerator]</span> for a line
             that looks like:</p>
         <pre class="tty">unit_label_font_path = /usr/share/fonts/truetype/freefont/FreeMonoBold.ttf</pre>
@@ -3658,7 +3658,7 @@ sudo fc-cache -f -v</pre>
         <pre class="tty cmd">sudo apt-get install fontconfig</pre>
         <p>If none of this works, or if you are on a different operating
             system, then you will have to change the option <span class="code">unit_label_font_path</span>
-            to point to something on your system which does support UTF-8 characters.</p>
+            to point to something on your system which does support the Unicode characters you plan to use.</p>
 
         <h3>UnicodeEncodeError</h3>
 
