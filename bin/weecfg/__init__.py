@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -354,16 +354,18 @@ def modify_config(config_dict, stn_info, logger, debug=False):
 #              Utilities that update and merge ConfigObj objects
 #==============================================================================
 
-def update_and_merge(config_dict, template_dict):
-    
-    update_config(config_dict)
-    merge_config(config_dict, template_dict)
-    
-    # We use the number of comment lines for the 'Station' section as a
-    # heuristic of whether the config dict has been updated to the new
-    # comment structure
-    if len(config_dict.comments['Station']) <= 3:
-        transfer_comments(config_dict, template_dict)
+# No longer needed
+
+# def update_and_merge(config_dict, template_dict):
+#
+#     update_config(config_dict)
+#     merge_config(config_dict, template_dict)
+#
+#     # We use the number of comment lines for the 'Station' section as a
+#     # heuristic of whether the config dict has been updated to the new
+#     # comment structure
+#     if len(config_dict.comments['Station']) <= 3:
+#         transfer_comments(config_dict, template_dict)
     
 def update_config(config_dict):
     """Update a (possibly old) configuration dictionary to the latest format.
@@ -371,34 +373,23 @@ def update_config(config_dict):
     Raises exception of type ValueError if it cannot be done.
     """
 
-    # Get the version number. If it does not appear at all, then
-    # assume a very old version:
-    config_version = config_dict.get('version') or '1.0.0'
-
-    # Updates only care about the major and minor numbers
-    parts = config_version.split('.')
-    major = parts[0]
-    minor = parts[1]
-
-    # Take care of the collation problem when comparing things like
-    # version '1.9' to '1.10' by prepending a '0' to the former:
-    if len(minor) < 2:
-        minor = '0' + minor
+    major, minor = get_version_info(config_dict)
 
     # I don't know how to merge older, V1.X configuration files, only
     # newer V2.X ones.
     if major == '1':
-        raise ValueError("Cannot merge version %s. Too old" % config_version)
+        raise ValueError("Cannot update version V%s.%s. Too old" % (major, minor))
 
-    if major == '2' and minor < '07':
-        update_to_v27(config_dict)
+    update_to_v26(config_dict)
 
-    if major < '3':
-        update_to_v30(config_dict)
+    update_to_v27(config_dict)
+
+    update_to_v30(config_dict)
         
     update_to_v32(config_dict)
     
     update_to_v36(config_dict)
+
 
 def merge_config(config_dict, template_dict):
     """Merge the configuration dictionary into the template dictionary,
@@ -425,9 +416,27 @@ def merge_config(config_dict, template_dict):
 
     return config_dict
 
+def update_to_v26(config_dict):
+
+    major, minor = get_version_info(config_dict)
+    if major <= '2' and minor < '06':
+        if 'StationRegistry' not in config_dict['StdRESTful']:
+            config_dict['StdRESTful']['StationRegistry'] = {
+                'register_this_station' : False
+                }
+            config_dict['StdRESTful']['StationRegistry'].comments['register_this_station'] = \
+              ['        # To register this weather station with weewx, set this to true']
+
+        config_dict['version'] = '2.6.0'
+
 def update_to_v27(config_dict):
     """Updates a configuration file to the latest V2.X version.
     Since V2.7 was the last 2.X version, that's our target"""
+
+    major, minor = get_version_info(config_dict)
+
+    if major > '2' or minor >= '07':
+        return
 
     service_map_v2 = {'weewx.wxengine.StdTimeSynch' : 'prep_services',
                       'weewx.wxengine.StdConvert'   : 'process_services',
@@ -583,6 +592,12 @@ def update_to_v27(config_dict):
 
 def update_to_v30(config_dict):
     """Update a configuration file to V3.0"""
+
+    major, minor = get_version_info(config_dict)
+
+    if major >= '3':
+        return
+
     old_database = None
 
     v3_additions = """[DataBindings]
@@ -671,6 +686,11 @@ def update_to_v30(config_dict):
 
 def update_to_v32(config_dict):
     """Update a configuration file to V3.2"""
+
+    major, minor = get_version_info(config_dict)
+
+    if major > '3' or minor > '02':
+        return
     
     # For interpolation to work, it's critical that WEEWX_ROOT not end
     # with a trailing slash ('/'). Convert it to the normative form:
@@ -759,6 +779,11 @@ def update_to_v32(config_dict):
         
 def update_to_v36(config_dict):
     """Update a configuration file to V3.6"""
+
+    major, minor = get_version_info(config_dict)
+
+    if major > '3' or minor > '06':
+        return
     
     # Perform the following only if the dictionary has a StdWXCalculate section
     if config_dict.get('StdWXCalculate'):
@@ -793,6 +818,8 @@ def update_to_v36(config_dict):
                 config_dict['StdWXCalculate']['Calculations'].comments[first] = comment
             except IndexError:
                 pass
+
+    config_dict['version'] = '3.6.0'
 
 def transfer_comments(config_dict, template_dict):
     
@@ -1304,3 +1331,20 @@ def get_extension_installer(extension_installer_dir):
         sys.path = old_path
 
     return (install_module.__file__, installer)
+
+def get_version_info(config_dict):
+    # Get the version number. If it does not appear at all, then
+    # assume a very old version:
+    config_version = config_dict.get('version') or '1.0.0'
+
+    # Updates only care about the major and minor numbers
+    parts = config_version.split('.')
+    major = parts[0]
+    minor = parts[1]
+
+    # Take care of the collation problem when comparing things like
+    # version '1.9' to '1.10' by prepending a '0' to the former:
+    if len(minor) < 2:
+        minor = '0' + minor
+
+    return major, minor
