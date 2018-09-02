@@ -358,9 +358,13 @@ def update_to_v25(config_dict):
         station_url = config_dict['Station'].get('station_url')
         if webpath is not None and station_url is None:
             config_dict['Station']['station_url'] = webpath
-        config_dict['Station'].pop('webpath')
+        config_dict['Station'].pop('webpath', None)
     except KeyError:
         pass
+
+    if 'StdArchive' in config_dict:
+        # Option stats_types is no longer used. Get rid of it.
+        config_dict['StdArchive'].pop('stats_types', None)
 
     try:
         # V2.5 saw the introduction of the station registry:
@@ -498,7 +502,7 @@ def update_to_v26(config_dict):
             config_dict['Engines']['WxEngine']['restful_services'].append('weewx.restx.StdStationRegistry')
 
         # Get rid of the no longer needed service_list:
-        config_dict['Engines']['WxEngine'].pop('service_list')
+        config_dict['Engines']['WxEngine'].pop('service_list', None)
 
     # V2.6 introduced "log_success" and "log_failure" options.
     # The "driver" option was removed.
@@ -510,7 +514,7 @@ def update_to_v26(config_dict):
         if 'log_failure' not in config_dict['StdRESTful'][section]:
             config_dict['StdRESTful'][section]['log_failure'] = True
         config_dict['StdRESTful'][section].comments['log_success'] = comments
-        config_dict['StdRESTful'][section].pop('driver')
+        config_dict['StdRESTful'][section].pop('driver', None)
 
     # Option 'rapidfire' was new:
     try:
@@ -588,17 +592,6 @@ def update_to_v27(config_dict):
     if major > '2' or minor >= '07':
         return
 
-    # webpath is now station_url
-    webpath = config_dict['Station'].get('webpath', None)
-    station_url = config_dict['Station'].get('station_url', None)
-    if webpath is not None and station_url is None:
-        config_dict['Station']['station_url'] = webpath
-    config_dict['Station'].pop('webpath', None)
-
-    if 'StdArchive' in config_dict:
-        # Option stats_types is no longer used. Get rid of it.
-        config_dict['StdArchive'].pop('stats_types', None)
-
     # --- Davis Vantage series ---
     if 'Vantage' in config_dict:
         try:
@@ -673,11 +666,6 @@ def update_to_v27(config_dict):
         # included in the default weewx.conf, so just pop it.
         if 'server' in config_dict['StdRESTful']['CWOP']:
             config_dict['StdRESTful']['CWOP'].pop('server')
-
-    # Remove the no longer needed "driver" from all the RESTful services:
-    if 'StdRESTful' in config_dict:
-        for section in config_dict['StdRESTful'].sections:
-            config_dict['StdRESTful'][section].pop('driver', None)
 
     config_dict['version'] = '2.7.0'
 

@@ -288,7 +288,7 @@ class ConfigTest(unittest.TestCase):
         # Start with the Version 2.5 weewx.conf file:
         config_dict = configobj.ConfigObj('weewx25.conf')
 
-        # Upgrade the V2.0 configuration dictionary to V2.6:
+        # Upgrade the V2.5 configuration dictionary to V2.6:
         weecfg.update_to_v26(config_dict)
 
         self._check_against_expected(config_dict, 'expected/weewx26_expected.conf')
