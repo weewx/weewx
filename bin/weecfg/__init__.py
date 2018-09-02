@@ -353,6 +353,16 @@ def update_to_v25(config_dict):
         return
 
     try:
+        # webpath is now station_url
+        webpath = config_dict['Station'].get('webpath')
+        station_url = config_dict['Station'].get('station_url')
+        if webpath is not None and station_url is None:
+            config_dict['Station']['station_url'] = webpath
+        config_dict['Station'].pop('webpath')
+    except KeyError:
+        pass
+
+    try:
         # V2.5 saw the introduction of the station registry:
         if 'StationRegistry' not in config_dict['StdRESTful']:
             stnreg_dict = configobj.ConfigObj(StringIO.StringIO("""[StdRESTful]
@@ -377,6 +387,7 @@ def update_to_v25(config_dict):
         pass
 
     config_dict['version'] = '2.5.0'
+
 
 def update_to_v26(config_dict):
     """Update a configuration diction to V2.6"""
