@@ -23,72 +23,7 @@ from weewx import all_service_groups
 minor_comment_block = [""]
 major_comment_block = ["", "##############################################################################", ""]
 
-#==============================================================================
-#                  Section tuples
-# Each ConfigObj section is recursively described by a "section tuple." This is
-# a 3-way tuple with elements:
-#
-#   0: The name of the section;
-#   1: A list of any subsection tuples;
-#   2: A list of any scalar names.
 
-canonical_order = ('',
-[('Station', [], ['location', 'latitude', 'longitude', 'altitude',
-                  'station_type', 'rain_year_start', 'week_start']), 
- ('AcuRite', [], []),
- ('CC3000', [], []),
- ('FineOffsetUSB', [], []),
- ('Simulator', [], []),
- ('TE923', [], []),
- ('Ultimeter', [], []),
- ('Vantage', [], []),
- ('WMR100', [], []),
- ('WMR200', [], []),
- ('WMR300', [], []),
- ('WMR9x8', [], []),
- ('WS1', [], []),
- ('WS23xx', [], []),
- ('WS28xx', [], []),
- ('StdRESTful', [('StationRegistry', [], ['register_this_station']), 
-                 ('AWEKAS', [], ['enable', 'username', 'password']), 
-                 ('CWOP', [], ['enable', 'station']), 
-                 ('PWSweather', [], ['enable', 'station', 'password']), 
-                 ('WOW', [], ['enable', 'station', 'password']), 
-                 ('Wunderground', [], ['enable', 'station', 'password', 'rapidfire'])], []), 
- ('StdReport', [('StandardReport', [('Units', [('Groups', [], ['group_altitude', 'group_speed2', 'group_pressure', 'group_rain', 'group_rainrate', 'group_temperature', 'group_degree_day', 'group_speed'])], [])], ['skin']), 
-                ('FTP', [], ['skin', 'secure_ftp', 'port', 'passive']), 
-                ('RSYNC', [], ['skin', 'delete'])], 
-  ['SKIN_ROOT', 'HTML_ROOT', 'data_binding']), 
- ('StdConvert', [], ['target_unit']), ('StdCalibrate', [('Corrections', [], [])], []), 
- ('StdQC', [('MinMax', [], ['barometer', 'outTemp', 'inTemp',
-                            'outHumidity', 'inHumidity', 'windSpeed'])], []),
- ('StdWXCalculate', [('Calculations', [], ['pressure', 'barometer', 'altimeter', 'windchill',
-                                           'heatindex', 'dewpoint', 'inDewpoint', 'rainRate']),
-                     ('Algorithms', [], ['altimeter', 'maxSolarRad'])],
-  ['ignore_zero_wind', 'rain_period', 'et_period', 'wind_height', 'atc', 'nfac', 'max_delta_12h']),
- ('StdTimeSynch', [], ['clock_check', 'max_drift']), 
- ('StdArchive', [], ['archive_interval', 'archive_delay', 'record_generation',
-                     'loop_hilo', 'data_binding']), 
- ('DataBindings', [('wx_binding', [], ['database', 'table_name', 'manager',
-                                       'schema'])], []), 
- ('Databases', [('archive_sqlite', [], ['database_type', 'database_name']), 
-                ('archive_mysql',  [], ['database_type', 'database_name'])], []),
- ('DatabaseTypes', [('SQLite', [], ['driver', 'SQLITE_ROOT']),
-                    ('MySQL',  [], ['driver', 'host', 'user', 'password'])], []),
- ('Engine', [('Services', [], ['prep_services', 'data_services',
-                               'process_services', 'archive_services',
-                               'restful_services', 'report_services'])], [])], 
-['debug', 'WEEWX_ROOT', 'socket_timeout', 'version'])
-
-def get_section_tuple(c_dict, section_name=''):
-    """ The above "canonical" ordering can be  generated from a config file
-    by using this function:
-    c = configobj.ConfigObj('weewx.conf')
-    print get_section_tuple(c)"""
-
-    subsections = [get_section_tuple(c_dict[ss], ss) for ss in c_dict.sections]
-    section_tuple = (section_name, subsections, c_dict.scalars)
-    return section_tuple
 #==============================================================================
 
 us_group = {'group_altitude': 'foot',
@@ -118,23 +53,29 @@ metricwx_group = {'group_altitude': 'meter',
                   'group_speed2': 'meter_per_second2',
                   'group_temperature': 'degree_C'}
 
+
 class ExtensionError(IOError):
     """Errors when installing or uninstalling an extension"""
-    
+
+
 class Logger(object):
     def __init__(self, verbosity=0):
         self.verbosity = verbosity
+
     def log(self, msg, level=0):
         if self.verbosity >= level:
             print "%s%s" % ('  ' * (level - 1), msg)
+
     def set_verbosity(self, verbosity):
         self.verbosity = verbosity
 
-#==============================================================================
+
+# ==============================================================================
 #              Utilities that find and save ConfigObj objects
-#==============================================================================
+# ==============================================================================
 
 DEFAULT_LOCATIONS = ['../..', '/etc/weewx', '/home/weewx']
+
 
 def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
               file_name='weewx.conf'):
@@ -197,6 +138,7 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
 
     return file_path
 
+
 def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
                 file_name='weewx.conf'):
     """Read the specified configuration file, return an instance of ConfigObj
@@ -223,15 +165,17 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
     config_dict = configobj.ConfigObj(config_path, file_error=True)
     return config_path, config_dict
 
+
 def save_with_backup(config_dict, config_path):
     return save(config_dict, config_path, backup=True)
 
+
 def save(config_dict, config_path, backup=False):
     """Save the config file, backing up as necessary."""
-    
+
     # Check to see if the file exists and we are supposed to make backup:
     if os.path.exists(config_path) and backup:
-        
+
         # Yes. We'll have to back it up.
         backup_path = weeutil.weeutil.move_with_timestamp(config_path)
 
@@ -246,7 +190,7 @@ def save(config_dict, config_path, backup=False):
         shutil.copyfile(tmpfile.name, config_path)
 
     else:
-        
+
         # No existing file or no backup required. Just write.
         with open(config_path, 'w') as fd:
             config_dict.write(fd)
@@ -254,9 +198,10 @@ def save(config_dict, config_path, backup=False):
 
     return backup_path
 
-#==============================================================================
+
+# ==============================================================================
 #              Utilities that modify ConfigObj objects
-#==============================================================================
+# ==============================================================================
 
 def modify_config(config_dict, stn_info, logger, debug=False):
     """If a driver has a configuration editor, then use that to insert the
@@ -335,38 +280,34 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                 config_dict['Station'][p] = stn_info[p]
         # Update units display with any stn_info overrides
         if (stn_info.get('units') is not None and
-            'StdReport' in config_dict and
-            'StandardReport' in config_dict['StdReport']):
+                'StdReport' in config_dict and
+                'StandardReport' in config_dict['StdReport']):
             if stn_info.get('units') in ['metric', 'metricwx']:
                 if debug:
                     logger.log("Using Metric units for display", level=2)
                 config_dict['StdReport']['StandardReport'].update({
-                        'Units': {
-                            'Groups': metricwx_group}})
+                    'Units': {
+                        'Groups': metricwx_group}})
             elif stn_info.get('units') == 'us':
                 if debug:
                     logger.log("Using US units for display", level=2)
                 config_dict['StdReport']['StandardReport'].update({
-                        'Units': {
-                            'Groups': us_group}})
+                    'Units': {
+                        'Groups': us_group}})
 
-#==============================================================================
+
+# ==============================================================================
 #              Utilities that update and merge ConfigObj objects
-#==============================================================================
+# ==============================================================================
 
-# No longer needed
 
-# def update_and_merge(config_dict, template_dict):
-#
-#     update_config(config_dict)
-#     merge_config(config_dict, template_dict)
-#
-#     # We use the number of comment lines for the 'Station' section as a
-#     # heuristic of whether the config dict has been updated to the new
-#     # comment structure
-#     if len(config_dict.comments['Station']) <= 3:
-#         transfer_comments(config_dict, template_dict)
-    
+def update_and_merge(config_dict, template_dict):
+    """First update a configuration file, then merge it with the distribution template"""
+
+    update_config(config_dict)
+    merge_config(config_dict, template_dict)
+
+
 def update_config(config_dict):
     """Update a (possibly old) configuration dictionary to the latest format.
 
@@ -380,54 +321,252 @@ def update_config(config_dict):
     if major == '1':
         raise ValueError("Cannot update version V%s.%s. Too old" % (major, minor))
 
+    update_to_v25(config_dict)
+
     update_to_v26(config_dict)
 
     update_to_v27(config_dict)
 
     update_to_v30(config_dict)
-        
+
     update_to_v32(config_dict)
-    
+
     update_to_v36(config_dict)
 
 
 def merge_config(config_dict, template_dict):
-    """Merge the configuration dictionary into the template dictionary,
-    overriding any options. Return the results.
+    """Merge the template (distribution) dictionary into the user's dictionary.
     
     config_dict: An existing, older configuration dictionary.
     
     template_dict: A newer dictionary supplied by the installer.
     """
 
-    # Turn off interpolation so what gets merged is the symbolic name
-    # (such as WEEWX_ROOT), and not its interpolated value. 
-    csave, config_dict.interpolation = config_dict.interpolation, False
-    tsave, template_dict.interpolation = template_dict.interpolation, False
-
-    # Merge new stuff from the template:
-    weeutil.weeutil.conditional_merge(config_dict, template_dict)
-    
-    config_dict.interpolation = csave
-    template_dict.interpolation = tsave
-
-    # Finally, update the version number:
+    # All we need to do is update the version number:
     config_dict['version'] = template_dict['version']
 
-    return config_dict
+
+def update_to_v25(config_dict):
+    major, minor = get_version_info(config_dict)
+
+    if major > '2' or minor >= '05':
+        return
+
+    try:
+        # V2.5 saw the introduction of the station registry:
+        if 'StationRegistry' not in config_dict['StdRESTful']:
+            stnreg_dict = configobj.ConfigObj(StringIO.StringIO("""[StdRESTful]
+
+        [[StationRegistry]]
+            # Uncomment the following line to register this weather station.
+            #register_this_station = True
+    
+            # Specify a station URL, otherwise the station_url from [Station]
+            # will be used.
+            #station_url = http://example.com/weather/
+    
+            # Specify a description of the station, otherwise the location from
+            # [Station] will be used.
+            #description = The greatest station on earth
+    
+            driver = weewx.restful.StationRegistry
+    
+    """))
+            config_dict.merge(stnreg_dict)
+    except KeyError:
+        pass
+
+    config_dict['version'] = '2.5.0'
 
 def update_to_v26(config_dict):
+    """Update a configuration diction to V2.6"""
 
     major, minor = get_version_info(config_dict)
-    if major <= '2' and minor < '06':
-        if 'StationRegistry' not in config_dict['StdRESTful']:
-            config_dict['StdRESTful']['StationRegistry'] = {
-                'register_this_station' : False
-                }
-            config_dict['StdRESTful']['StationRegistry'].comments['register_this_station'] = \
-              ['        # To register this weather station with weewx, set this to true']
+    if major > '2' or minor >= '06':
+        return
 
-        config_dict['version'] = '2.6.0'
+    try:
+        if 'model' not in config_dict['WMR100']:
+            config_dict['WMR100']['model'] = 'WMR100'
+            config_dict['WMR100'].comments['model'] = \
+              ["", "    # The station model, e.g., WMR100, WMR100N, WMRS200"]
+    except KeyError:
+        pass
+
+    try:
+        if 'model' not in config_dict['WMR200']:
+            config_dict['WMR200']['model'] = 'WMR200'
+            config_dict['WMR200'].comments['model'] = \
+              ["", "    # The station model, e.g., WMR200, WMR200A, Radio Shack W200"]
+    except KeyError:
+        pass
+
+    try:
+        if 'model' not in config_dict['WMR9x8']:
+            config_dict['WMR9x8']['model'] = 'WMR968'
+            config_dict['WMR9x8'].comments['model'] = \
+              ["", "    # The station model, e.g., WMR918, Radio Shack 63-1016"]
+    except KeyError:
+        pass
+
+
+    # Option METRICWX was introduced. Include it in the inline comment
+    try:
+        config_dict['StdConvert'].inline_comments['target_unit'] = "# Options are 'US', 'METRICWX', or 'METRIC'"
+    except KeyError:
+        pass
+
+    # New default values for inHumidity, rain, and windSpeed Quality Controls
+    try:
+        if 'inHumidity' not in config_dict['StdQC']['MinMax']:
+            config_dict['StdQC']['MinMax']['inHumidity'] = [0, 100]
+        if 'rain' not in config_dict['StdQC']['MinMax']:
+            config_dict['StdQC']['MinMax']['rain'] = [0, 60, "inch"]
+        if 'windSpeed' not in config_dict['StdQC']['MinMax']:
+            config_dict['StdQC']['MinMax']['windSpeed'] = [0, 120, "mile_per_hour"]
+        if 'inTemp' not in config_dict['StdQC']['MinMax']:
+            config_dict['StdQC']['MinMax']['inTemp'] = [10, 20, "degree_F"]
+    except KeyError:
+        pass
+
+    service_map_v2 = {'weewx.wxengine.StdTimeSynch': 'prep_services',
+                      'weewx.wxengine.StdConvert': 'process_services',
+                      'weewx.wxengine.StdCalibrate': 'process_services',
+                      'weewx.wxengine.StdQC': 'process_services',
+                      'weewx.wxengine.StdArchive': 'archive_services',
+                      'weewx.wxengine.StdPrint': 'report_services',
+                      'weewx.wxengine.StdReport': 'report_services'}
+
+    # See if the engine configuration section has the old-style "service_list":
+    if 'Engines' in config_dict and 'service_list' in config_dict['Engines']['WxEngine']:
+        # It does. Break it up into five, smaller lists. If a service
+        # does not appear in the dictionary "service_map_v2", meaning we
+        # do not know what it is, then stick it in the last group we
+        # have seen. This should get its position about right.
+        last_group = 'prep_services'
+
+        # Set up a bunch of empty groups in the right order
+        for group in ['prep_services', 'process_services', 'archive_services',
+                      'restful_services', 'report_services']:
+            config_dict['Engines']['WxEngine'][group] = list()
+
+        # Add a helpful comment
+        config_dict['Engines']['WxEngine'].comments['prep_services'] = \
+            ['', ' # The list of services the main weewx engine should run:']
+
+        # Now map the old service names to the right group
+        for _svc_name in config_dict['Engines']['WxEngine']['service_list']:
+            svc_name = _svc_name.strip()
+            # Skip the no longer needed StdRESTful service:
+            if svc_name == 'weewx.wxengine.StdRESTful':
+                continue
+            # Do we know about this service?
+            if svc_name in service_map_v2:
+                # Yes. Get which group it belongs to, and put it there
+                group = service_map_v2[svc_name]
+                config_dict['Engines']['WxEngine'][group].append(svc_name)
+                last_group = group
+            else:
+                # No. Put it in the last group.
+                config_dict['Engines']['WxEngine'][last_group].append(svc_name)
+
+        # Now add the restful services, using the old driver name to help us
+        for section in config_dict['StdRESTful'].sections:
+            svc = config_dict['StdRESTful'][section]['driver']
+            # weewx.restful has changed to weewx.restx
+            if svc.startswith('weewx.restful'):
+                svc = 'weewx.restx.Std' + section
+            # awekas is in weewx.restx since 2.6
+            if svc.endswith('AWEKAS'):
+                svc = 'weewx.restx.AWEKAS'
+            config_dict['Engines']['WxEngine']['restful_services'].append(svc)
+
+        # Depending on how old a version the user has, the station registry
+        # may have to be included:
+        if 'weewx.restx.StdStationRegistry' not in config_dict['Engines']['WxEngine']['restful_services']:
+            config_dict['Engines']['WxEngine']['restful_services'].append('weewx.restx.StdStationRegistry')
+
+        # Get rid of the no longer needed service_list:
+        config_dict['Engines']['WxEngine'].pop('service_list')
+
+    # V2.6 introduced "log_success" and "log_failure" options.
+    # The "driver" option was removed.
+    for section in config_dict['StdRESTful']:
+        # Save comments before popping driver
+        comments = config_dict['StdRESTful'][section].comments.get('driver', [])
+        if 'log_success' not in config_dict['StdRESTful'][section]:
+            config_dict['StdRESTful'][section]['log_success'] = True
+        if 'log_failure' not in config_dict['StdRESTful'][section]:
+            config_dict['StdRESTful'][section]['log_failure'] = True
+        config_dict['StdRESTful'][section].comments['log_success'] = comments
+        config_dict['StdRESTful'][section].pop('driver')
+
+    # Option 'rapidfire' was new:
+    try:
+        if 'rapidfire' not in config_dict['StdRESTful']['Wunderground']:
+            config_dict['StdRESTful']['Wunderground']['rapidfire'] = False
+            config_dict['StdRESTful']['Wunderground'].comments['rapidfire'] = \
+                ['',
+                 '        # Set the following to True to have weewx use the WU "Rapidfire"',
+                 '        # protocol']
+    except KeyError:
+        pass
+
+    # Support for the WOW uploader was introduced
+    try:
+        if 'WOW' not in config_dict['StdRESTful']:
+            config_dict.merge(configobj.ConfigObj(StringIO.StringIO("""[StdRESTful]
+
+            [[WOW]]
+                # This section is for configuring posts to WOW
+
+                # If you wish to do this, uncomment the following station and password
+                # lines and fill them with your station and password:
+                #station = your WOW station ID
+                #password = your WOW password
+
+                log_success = True
+                log_failure = True
+
+        """)))
+            config_dict['StdRESTful'].comments['WOW'] = ['']
+    except KeyError:
+        pass
+
+    # Support for the AWEKAS uploader was introduced
+    try:
+        if 'AWEKAS' not in config_dict['StdRESTful']:
+            config_dict.merge(configobj.ConfigObj(StringIO.StringIO("""[StdRESTful]
+
+            [[AWEKAS]]
+                # This section is for configuring posts to AWEKAS
+
+                # If you wish to do this, uncomment the following username and password
+                # lines and fill them with your username and password:
+                #username = your AWEKAS username
+                #password = your AWEKAS password
+
+                log_success = True
+                log_failure = True
+
+        """)))
+            config_dict['StdRESTful'].comments['AWEKAS'] = ['']
+    except KeyError:
+        pass
+
+    # The CWOP option "interval" has changed to "post_interval"
+    try:
+        if 'interval' in config_dict['StdRESTful']['CWOP']:
+            comment = config_dict['StdRESTful']['CWOP'].comments['interval']
+            config_dict['StdRESTful']['CWOP']['post_interval'] = \
+                config_dict['StdRESTful']['CWOP']['interval']
+            config_dict['StdRESTful']['CWOP'].pop('interval')
+            config_dict['StdRESTful']['CWOP'].comments['post_interval'] = comment
+    except KeyError:
+        pass
+
+    config_dict['version'] = '2.6.0'
+
 
 def update_to_v27(config_dict):
     """Updates a configuration file to the latest V2.X version.
@@ -437,14 +576,6 @@ def update_to_v27(config_dict):
 
     if major > '2' or minor >= '07':
         return
-
-    service_map_v2 = {'weewx.wxengine.StdTimeSynch' : 'prep_services',
-                      'weewx.wxengine.StdConvert'   : 'process_services',
-                      'weewx.wxengine.StdCalibrate' : 'process_services',
-                      'weewx.wxengine.StdQC'        : 'process_services',
-                      'weewx.wxengine.StdArchive'   : 'archive_services',
-                      'weewx.wxengine.StdPrint'     : 'report_services',
-                      'weewx.wxengine.StdReport'    : 'report_services'}
 
     # webpath is now station_url
     webpath = config_dict['Station'].get('webpath', None)
@@ -515,7 +646,7 @@ def update_to_v27(config_dict):
     except KeyError:
         pass
 
-    #--- The weewx Simulator ---
+    # --- The weewx Simulator ---
 
     try:
         if config_dict['Simulator']['driver'].strip() == 'weewx.simulator':
@@ -523,61 +654,10 @@ def update_to_v27(config_dict):
     except KeyError:
         pass
 
-    # See if the engine configuration section has the old-style "service_list":
-    if 'Engines' in config_dict and 'service_list' in config_dict['Engines']['WxEngine']:
-        # It does. Break it up into five, smaller lists. If a service
-        # does not appear in the dictionary "service_map_v2", meaning we
-        # do not know what it is, then stick it in the last group we
-        # have seen. This should get its position about right.
-        last_group = 'prep_services'
 
-        # Set up a bunch of empty groups in the right order
-        for group in ['prep_services', 'process_services', 'archive_services',
-                      'restful_services', 'report_services']:
-            config_dict['Engines']['WxEngine'][group] = list()
-
-        # Now map the old service names to the right group
-        for _svc_name in config_dict['Engines']['WxEngine']['service_list']:
-            svc_name = _svc_name.strip()
-            # Skip the no longer needed StdRESTful service:
-            if svc_name == 'weewx.wxengine.StdRESTful':
-                continue
-            # Do we know about this service?
-            if svc_name in service_map_v2:
-                # Yes. Get which group it belongs to, and put it there
-                group = service_map_v2[svc_name]
-                config_dict['Engines']['WxEngine'][group].append(svc_name)
-                last_group = group
-            else:
-                # No. Put it in the last group.
-                config_dict['Engines']['WxEngine'][last_group].append(svc_name)
-
-        # Now add the restful services, using the old driver name to help us
-        for section in config_dict['StdRESTful'].sections:
-            svc = config_dict['StdRESTful'][section]['driver']
-            # weewx.restful has changed to weewx.restx
-            if svc.startswith('weewx.restful'):
-                svc = 'weewx.restx.Std' + section
-            # awekas is in weewx.restx since 2.6
-            if svc.endswith('AWEKAS'):
-                svc = 'weewx.restx.AWEKAS'
-            config_dict['Engines']['WxEngine']['restful_services'].append(svc)
-
-        # Depending on how old a version the user has, the station registry
-        # may have to be included:
-        if 'weewx.restx.StdStationRegistry' not in config_dict['Engines']['WxEngine']['restful_services']:
-            config_dict['Engines']['WxEngine']['restful_services'].append('weewx.restx.StdStationRegistry')
-
-        # Get rid of the no longer needed service_list:
-        config_dict['Engines']['WxEngine'].pop('service_list')
 
     # Clean up the CWOP configuration
     if 'StdRESTful' in config_dict and 'CWOP' in config_dict['StdRESTful']:
-        # Option "interval" has changed to "post_interval"
-        if 'interval' in config_dict['StdRESTful']['CWOP']:
-            config_dict['StdRESTful']['CWOP']['post_interval'] = \
-                config_dict['StdRESTful']['CWOP']['interval']
-            config_dict['StdRESTful']['CWOP'].pop('interval')
         # Option "server" has become "server_list". It is also no longer
         # included in the default weewx.conf, so just pop it.
         if 'server' in config_dict['StdRESTful']['CWOP']:
@@ -589,6 +669,7 @@ def update_to_v27(config_dict):
             config_dict['StdRESTful'][section].pop('driver', None)
 
     config_dict['version'] = '2.7.0'
+
 
 def update_to_v30(config_dict):
     """Update a configuration file to V3.0"""
@@ -684,6 +765,7 @@ def update_to_v30(config_dict):
 
     config_dict['version'] = '3.0.0'
 
+
 def update_to_v32(config_dict):
     """Update a configuration file to V3.2"""
 
@@ -691,16 +773,16 @@ def update_to_v32(config_dict):
 
     if major > '3' or minor > '02':
         return
-    
+
     # For interpolation to work, it's critical that WEEWX_ROOT not end
     # with a trailing slash ('/'). Convert it to the normative form:
     config_dict['WEEWX_ROOT'] = os.path.normpath(config_dict['WEEWX_ROOT'])
-    
+
     # Add a default database-specific top-level stanzas if necessary
     if 'DatabaseTypes' not in config_dict:
         # Do SQLite first. Start with a sanity check:
         try:
-            assert(config_dict['Databases']['archive_sqlite']['driver'] == 'weedb.sqlite')
+            assert (config_dict['Databases']['archive_sqlite']['driver'] == 'weedb.sqlite')
         except KeyError:
             pass
         # Set the default [[SQLite]] section. Turn off interpolation first, so the
@@ -725,10 +807,10 @@ def update_to_v32(config_dict):
             config_dict['Databases']['archive_sqlite'].pop('driver', None)
         except KeyError:
             pass
-    
+
         # Now do MySQL. Start with a sanity check:
         try:
-            assert(config_dict['Databases']['archive_mysql']['driver'] == 'weedb.mysql')
+            assert (config_dict['Databases']['archive_mysql']['driver'] == 'weedb.mysql')
         except KeyError:
             pass
         config_dict['DatabaseTypes']['MySQL'] = {'driver': 'weedb.mysql',
@@ -746,7 +828,7 @@ def update_to_v32(config_dict):
             config_dict['Databases']['archive_mysql']['database_type'] = 'MySQL'
         except KeyError:
             pass
-            
+
     # Version 3.2 introduces the 'enable' keyword for RESTful protocols. Set
     # it appropriately
     def set_enable(c, service, keyword):
@@ -774,9 +856,10 @@ def update_to_v32(config_dict):
     set_enable(config_dict, 'PWSweather', 'station')
     set_enable(config_dict, 'WOW', 'station')
     set_enable(config_dict, 'Wunderground', 'station')
-    
+
     config_dict['version'] = '3.2.0'
-        
+
+
 def update_to_v36(config_dict):
     """Update a configuration file to V3.6"""
 
@@ -784,7 +867,7 @@ def update_to_v36(config_dict):
 
     if major > '3' or minor > '06':
         return
-    
+
     # Perform the following only if the dictionary has a StdWXCalculate section
     if config_dict.get('StdWXCalculate'):
         # No need to update if it already has a 'Calculations' section:
@@ -807,8 +890,8 @@ def update_to_v36(config_dict):
             scalars = list(config_dict['StdWXCalculate'].scalars)
             for scalar in scalars:
                 # These scalars don't get moved:
-                if not scalar in ['ignore_zero_wind', 'rain_period', 
-                                  'et_period', 'wind_height', 'atc', 
+                if not scalar in ['ignore_zero_wind', 'rain_period',
+                                  'et_period', 'wind_height', 'atc',
                                   'nfac', 'max_delta_12h']:
                     config_dict['StdWXCalculate']['Calculations'][scalar] = config_dict['StdWXCalculate'][scalar]
                     config_dict['StdWXCalculate'].pop(scalar)
@@ -821,31 +904,28 @@ def update_to_v36(config_dict):
 
     config_dict['version'] = '3.6.0'
 
-def transfer_comments(config_dict, template_dict):
-    
-    # If this is the top-level, transfer the initial comments
-    if config_dict.parent is config_dict:
-        config_dict.initial_comment = template_dict.initial_comment
-    
-    # Now go through each section, transferring its comments
-    for section in config_dict.sections:
-        try:
-            config_dict.comments[section] = template_dict.comments[section]
-            # Recursively transfer the subsection comments:
-            transfer_comments(config_dict[section], template_dict[section])
-        except KeyError:
-            pass
 
-    # Finally, do the section's scalars:
-    for scalar in config_dict.scalars:
-        try:
-            config_dict.comments[scalar] = template_dict.comments[scalar]
-        except KeyError:
-            pass
-
-#==============================================================================
+# ==============================================================================
 #              Utilities that extract from ConfigObj objects
-#==============================================================================
+# ==============================================================================
+
+def get_version_info(config_dict):
+    # Get the version number. If it does not appear at all, then
+    # assume a very old version:
+    config_version = config_dict.get('version') or '1.0.0'
+
+    # Updates only care about the major and minor numbers
+    parts = config_version.split('.')
+    major = parts[0]
+    minor = parts[1]
+
+    # Take care of the collation problem when comparing things like
+    # version '1.9' to '1.10' by prepending a '0' to the former:
+    if len(minor) < 2:
+        minor = '0' + minor
+
+    return major, minor
+
 
 def get_station_info(config_dict):
     """Extract station info from config dictionary."""
@@ -865,6 +945,7 @@ def get_station_info(config_dict):
 
     return stn_info
 
+
 def get_unit_info(config_dict):
     """Intuit what unit system the reports are in."""
     try:
@@ -879,12 +960,11 @@ def get_unit_info(config_dict):
     except KeyError:
         return None
 
-#==============================================================================
-#                Utilities that manipulate ConfigObj objects
-#==============================================================================
 
-# The following utility is probably not necessary any longer.
-# reorder_to_ref() should be used instead.
+# ==============================================================================
+#                Utilities that manipulate ConfigObj objects
+# ==============================================================================
+
 def reorder_sections(config_dict, src, dst, after=False):
     """Move the section with key src to just before (after=False) or after
     (after=True) the section with key dst. """
@@ -903,51 +983,54 @@ def reorder_sections(config_dict, src, dst, after=False):
     config_dict.sections = config_dict.sections[:dst_idx + bump] + [src] + \
                            config_dict.sections[dst_idx + bump:]
 
-def reorder_to_ref(config_dict, section_tuple=canonical_order):
-    """Reorder any sections in concordance with a reference ordering.
-    
-    See the definition for canonical_ordering for the details of the tuple
-    used to describe a section.
-    """
-    if not len(section_tuple):
-        return
-    # Get the names of any subsections in the order they should be in:
-    subsection_order = [x[0] for x in section_tuple[1]]
-    # Reorder the subsections, then the scalars
-    config_dict.sections = reorder(config_dict.sections, subsection_order)
-    config_dict.scalars = reorder(config_dict.scalars, section_tuple[2])
-    
-    # Now recursively go through each of my subsections,
-    # allowing them to reorder their contents
-    for ss_tuple in section_tuple[1]:
-        ss_name = ss_tuple[0]
-        if ss_name in config_dict:
-            reorder_to_ref(config_dict[ss_name], ss_tuple)
-    
-def reorder(name_list, ref_list):
-    """Reorder the names in name_list, according to a reference list."""
-    result = []
-    # Use the ordering in ref_list, to reassemble the name list:
-    for name in ref_list:
-        # These always come at the end
-        if name in ['FTP', 'RSYNC']:
-            continue
-        if name in name_list:
-            result.append(name)
-    # For any that were not in the reference list and are left over, tack
-    # them on to the end:
-    for name in name_list:
-        if name not in ref_list:
-            result.append(name)
-    # Finally, add these, so they are at the very end
-    for name in ref_list:
-        if name in name_list and name in ['FTP', 'RSYNC']:
-            result.append(name)
-            
-    # Make sure I have the same number I started with
-    assert(len(name_list) == len(result))
-    return result
-    
+
+# def reorder_to_ref(config_dict, section_tuple=canonical_order):
+#     """Reorder any sections in concordance with a reference ordering.
+#
+#     See the definition for canonical_ordering for the details of the tuple
+#     used to describe a section.
+#     """
+#     if not len(section_tuple):
+#         return
+#     # Get the names of any subsections in the order they should be in:
+#     subsection_order = [x[0] for x in section_tuple[1]]
+#     # Reorder the subsections, then the scalars
+#     config_dict.sections = reorder(config_dict.sections, subsection_order)
+#     config_dict.scalars = reorder(config_dict.scalars, section_tuple[2])
+#
+#     # Now recursively go through each of my subsections,
+#     # allowing them to reorder their contents
+#     for ss_tuple in section_tuple[1]:
+#         ss_name = ss_tuple[0]
+#         if ss_name in config_dict:
+#             reorder_to_ref(config_dict[ss_name], ss_tuple)
+#
+#
+# def reorder(name_list, ref_list):
+#     """Reorder the names in name_list, according to a reference list."""
+#     result = []
+#     # Use the ordering in ref_list, to reassemble the name list:
+#     for name in ref_list:
+#         # These always come at the end
+#         if name in ['FTP', 'RSYNC']:
+#             continue
+#         if name in name_list:
+#             result.append(name)
+#     # For any that were not in the reference list and are left over, tack
+#     # them on to the end:
+#     for name in name_list:
+#         if name not in ref_list:
+#             result.append(name)
+#     # Finally, add these, so they are at the very end
+#     for name in ref_list:
+#         if name in name_list and name in ['FTP', 'RSYNC']:
+#             result.append(name)
+#
+#     # Make sure I have the same number I started with
+#     assert (len(name_list) == len(result))
+#     return result
+
+
 def remove_and_prune(a_dict, b_dict):
     """Remove fields from a_dict that are present in b_dict"""
     for k in b_dict:
@@ -959,6 +1042,7 @@ def remove_and_prune(a_dict, b_dict):
         elif k in a_dict:
             a_dict.pop(k)
 
+
 def prepend_path(a_dict, label, value):
     """Prepend the value to every instance of the label in dict a_dict"""
     for k in a_dict:
@@ -967,6 +1051,7 @@ def prepend_path(a_dict, label, value):
         elif k == label:
             a_dict[k] = os.path.join(value, a_dict[k])
 
+
 # def replace_string(a_dict, label, value):
 #    for k in a_dict:
 #        if isinstance(a_dict[k], dict):
@@ -974,9 +1059,9 @@ def prepend_path(a_dict, label, value):
 #        else:
 #            a_dict[k] = a_dict[k].replace(label, value)
 
-#==============================================================================
+# ==============================================================================
 #                Utilities that work on drivers
-#==============================================================================
+# ==============================================================================
 
 def get_all_driver_infos():
     # first look in the drivers directory
@@ -984,6 +1069,7 @@ def get_all_driver_infos():
     # then add any drivers in the user directory
     infos.update(get_driver_infos('user'))
     return infos
+
 
 def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
     """Scan the drivers folder, extracting information about each available
@@ -1007,7 +1093,7 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
         # 'weewx.drivers.fousb'
         driver_module_name = os.path.splitext("%s.%s" % (driver_pkg_name,
                                                          filename))[0]
-        
+
         try:
             # Try importing the module
             __import__(driver_module_name)
@@ -1038,6 +1124,7 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
 
     return driver_info_dict
 
+
 def print_drivers():
     """Get information about all the available drivers, then print it out."""
     driver_info_dict = get_all_driver_infos()
@@ -1046,6 +1133,7 @@ def print_drivers():
         "Module name", "Driver name", "Version", "Status")
     for d in keys:
         print "  %(module_name)-25s%(driver_name)-15s%(version)-9s%(status)-25s" % driver_info_dict[d]
+
 
 def load_driver_editor(driver_module_name):
     """Load the configuration editor from the driver file
@@ -1068,9 +1156,9 @@ def load_driver_editor(driver_module_name):
     return editor, driver_name, driver_version
 
 
-#==============================================================================
+# ==============================================================================
 #                Utilities that seek info from the command line
-#==============================================================================
+# ==============================================================================
 
 def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
                     altitude=['0', 'meter'], units='metric', **kwargs):
@@ -1155,6 +1243,7 @@ def prompt_for_driver(dflt_driver=None):
             ans = None
     return keys[idx]
 
+
 def prompt_for_driver_settings(driver):
     """Let the driver prompt for any required settings.  If the driver does
     not define a method for prompting, return an empty dictionary."""
@@ -1168,6 +1257,7 @@ def prompt_for_driver_settings(driver):
     except AttributeError:
         pass
     return settings
+
 
 def prompt_with_options(prompt, default=None, options=None):
     """Ask the user for an input with an optional default value.
@@ -1192,6 +1282,7 @@ def prompt_with_options(prompt, default=None, options=None):
 
     return value
 
+
 def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
     """Ask the user for an input with an optional default value. The
     returned value must lie between optional upper and lower bounds.
@@ -1215,7 +1306,7 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
             try:
                 v = float(value)
                 if (low_limit is not None and v < low_limit) or \
-                   (high_limit is not None and v > high_limit):
+                        (high_limit is not None and v > high_limit):
                     value = None
             except (ValueError, TypeError):
                 value = None
@@ -1224,13 +1315,14 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
 
     return value
 
-#==============================================================================
+
+# ==============================================================================
 #            Miscellaneous utilities
-#==============================================================================
+# ==============================================================================
 
 def extract_roots(config_path, config_dict, bin_root):
     """Get the location of the various root directories used by weewx."""
-    
+
     root_dict = {'WEEWX_ROOT': config_dict['WEEWX_ROOT'],
                  'CONFIG_ROOT': os.path.dirname(config_path)}
     # If bin_root has not been defined, then figure out where it is using
@@ -1239,7 +1331,7 @@ def extract_roots(config_path, config_dict, bin_root):
         root_dict['BIN_ROOT'] = bin_root
     else:
         root_dict['BIN_ROOT'] = os.path.abspath(os.path.join(
-                os.path.dirname(__file__), '..'))
+            os.path.dirname(__file__), '..'))
     # The user subdirectory:
     root_dict['USER_ROOT'] = os.path.join(root_dict['BIN_ROOT'], 'user')
     # The extensions directory is in the user directory:
@@ -1247,12 +1339,13 @@ def extract_roots(config_path, config_dict, bin_root):
     # Add SKIN_ROOT if it can be found:
     try:
         root_dict['SKIN_ROOT'] = os.path.abspath(os.path.join(
-                root_dict['WEEWX_ROOT'],
-                config_dict['StdReport']['SKIN_ROOT']))
+            root_dict['WEEWX_ROOT'],
+            config_dict['StdReport']['SKIN_ROOT']))
     except KeyError:
         pass
-    
+
     return root_dict
+
 
 def extract_tar(filename, target_dir, logger=None):
     """Extract files from a tar archive into a given directory
@@ -1272,6 +1365,7 @@ def extract_tar(filename, target_dir, logger=None):
         if tar_archive is not None:
             tar_archive.close()
 
+
 def extract_zip(filename, target_dir, logger=None):
     """Extract files from a zip archive into the specified directory.
 
@@ -1285,7 +1379,7 @@ def extract_zip(filename, target_dir, logger=None):
         zip_archive = zipfile.ZipFile(open(filename, mode='r'))
         member_names = zip_archive.namelist()
         # manually extract files since extractall is only in python 2.6+
-#        zip_archive.extractall(target_dir)
+        #        zip_archive.extractall(target_dir)
         for f in member_names:
             if f.endswith('/'):
                 dst = "%s/%s" % (target_dir, f)
@@ -1300,6 +1394,7 @@ def extract_zip(filename, target_dir, logger=None):
         if zip_archive is not None:
             zip_archive.close()
 
+
 def mkdir_p(path):
     """equivalent to 'mkdir -p'"""
     try:
@@ -1309,6 +1404,7 @@ def mkdir_p(path):
             pass
         else:
             raise
+
 
 def get_extension_installer(extension_installer_dir):
     """Get the installer in the given extension installer subdirectory"""
@@ -1332,19 +1428,4 @@ def get_extension_installer(extension_installer_dir):
 
     return (install_module.__file__, installer)
 
-def get_version_info(config_dict):
-    # Get the version number. If it does not appear at all, then
-    # assume a very old version:
-    config_version = config_dict.get('version') or '1.0.0'
 
-    # Updates only care about the major and minor numbers
-    parts = config_version.split('.')
-    major = parts[0]
-    minor = parts[1]
-
-    # Take care of the collation problem when comparing things like
-    # version '1.9' to '1.10' by prepending a '0' to the former:
-    if len(minor) < 2:
-        minor = '0' + minor
-
-    return major, minor
