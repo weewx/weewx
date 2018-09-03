@@ -347,6 +347,13 @@ def merge_config(config_dict, template_dict):
 
 
 def update_to_v25(config_dict):
+    """Major changes for V2.5:
+
+    - Option webpath is now station_url
+    - Drivers are now in their own package
+    - Introduction of the station registry
+
+    """
     major, minor = get_version_info(config_dict)
 
     if major > '2' or minor >= '05':
@@ -461,7 +468,19 @@ def update_to_v25(config_dict):
 
 
 def update_to_v26(config_dict):
-    """Update a configuration diction to V2.6"""
+    """Update a configuration diction to V2.6.
+
+    Major changes:
+
+    - Addition of "model" option for WMR100, WMR200, and WMR9x8
+    - New option METRICWX
+    - Engine service list now broken up into separate sublists
+    - Introduction of 'log_success' and 'log_failure' options
+    - Introduction of rapidfire
+    - Support of uploaders for WOW and AWEKAS
+    - CWOP option 'interval' changed to 'post_interval'
+    - CWOP option 'server' changed to 'server_list' (and is not in default weewx.conf)
+    """
 
     major, minor = get_version_info(config_dict)
     if major > '2' or minor >= '06':
