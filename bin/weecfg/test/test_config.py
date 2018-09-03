@@ -294,20 +294,6 @@ class ConfigTest(unittest.TestCase):
         self._check_against_expected(config_dict, 'expected/weewx26_expected.conf')
 
 
-    # def test_upgrade_v27(self):
-    #
-    #     # Start with the Version 2.6 weewx.conf file:
-    #     config_dict = configobj.ConfigObj('weewx26.conf')
-    #
-    #     # Upgrade the V2.0 configuration dictionary to V2.7:
-    #     weecfg.update_to_v27(config_dict)
-    #
-    #     # with open('expected/weewx27_expected.conf', 'wb') as fd:
-    #     #     config_dict.write(fd)
-    #
-    #     self._check_against_expected(config_dict, 'expected/weewx27_expected.conf')
-
-
     # def test_upgrade_30(self):
     #
     #     # Start with the Version 2.7 weewx.conf file:

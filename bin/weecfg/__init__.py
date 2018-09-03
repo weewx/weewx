@@ -362,6 +362,73 @@ def update_to_v25(config_dict):
     except KeyError:
         pass
 
+    # Drivers are now in their own Python package. Change the names.
+
+    # --- Davis Vantage series ---
+    try:
+        if config_dict['Vantage']['driver'].strip() == 'weewx.VantagePro':
+            config_dict['Vantage']['driver'] = 'weewx.drivers.vantage'
+    except KeyError:
+        pass
+
+    # --- Oregon Scientific WMR100 ---
+
+    # The section name has changed from WMR-USB to WMR100
+    if 'WMR-USB' in config_dict:
+        if 'WMR100' in config_dict:
+            sys.exit("\n*** Configuration file has both a 'WMR-USB' "
+                     "section and a 'WMR100' section. Aborting ***\n\n")
+        config_dict.rename('WMR-USB', 'WMR100')
+    # If necessary, reflect the section name in the station type:
+    try:
+        if config_dict['Station']['station_type'].strip() == 'WMR-USB':
+            config_dict['Station']['station_type'] = 'WMR100'
+    except KeyError:
+        pass
+    # Finally, the name of the driver has been changed
+    try:
+        if config_dict['WMR100']['driver'].strip() == 'weewx.wmrx':
+            config_dict['WMR100']['driver'] = 'weewx.drivers.wmr100'
+    except KeyError:
+        pass
+
+    # --- Oregon Scientific WMR9x8 series ---
+
+    # The section name has changed from WMR-918 to WMR9x8
+    if 'WMR-918' in config_dict:
+        if 'WMR9x8' in config_dict:
+            sys.exit("\n*** Configuration file has both a 'WMR-918' "
+                     "section and a 'WMR9x8' section. Aborting ***\n\n")
+        config_dict.rename('WMR-918', 'WMR9x8')
+    # If necessary, reflect the section name in the station type:
+    try:
+        if config_dict['Station']['station_type'].strip() == 'WMR-918':
+            config_dict['Station']['station_type'] = 'WMR9x8'
+    except KeyError:
+        pass
+    # Finally, the name of the driver has been changed
+    try:
+        if config_dict['WMR9x8']['driver'].strip() == 'weewx.WMR918':
+            config_dict['WMR9x8']['driver'] = 'weewx.drivers.wmr9x8'
+    except KeyError:
+        pass
+
+    # --- Fine Offset instruments ---
+
+    try:
+        if config_dict['FineOffsetUSB']['driver'].strip() == 'weewx.fousb':
+            config_dict['FineOffsetUSB']['driver'] = 'weewx.drivers.fousb'
+    except KeyError:
+        pass
+
+    # --- The weewx Simulator ---
+
+    try:
+        if config_dict['Simulator']['driver'].strip() == 'weewx.simulator':
+            config_dict['Simulator']['driver'] = 'weewx.drivers.simulator'
+    except KeyError:
+        pass
+
     if 'StdArchive' in config_dict:
         # Option stats_types is no longer used. Get rid of it.
         config_dict['StdArchive'].pop('stats_types', None)
@@ -580,94 +647,20 @@ def update_to_v26(config_dict):
     except KeyError:
         pass
 
-    config_dict['version'] = '2.6.0'
-
-
-def update_to_v27(config_dict):
-    """Updates a configuration file to the latest V2.X version.
-    Since V2.7 was the last 2.X version, that's our target"""
-
-    major, minor = get_version_info(config_dict)
-
-    if major > '2' or minor >= '07':
-        return
-
-    # --- Davis Vantage series ---
-    if 'Vantage' in config_dict:
-        try:
-            if config_dict['Vantage']['driver'].strip() == 'weewx.VantagePro':
-                config_dict['Vantage']['driver'] = 'weewx.drivers.vantage'
-        except KeyError:
-            pass
-
-    # --- Oregon Scientific WMR100 ---
-
-    # The section name has changed from WMR-USB to WMR100
-    if 'WMR-USB' in config_dict:
-        if 'WMR100' in config_dict:
-            sys.exit("\n*** Configuration file has both a 'WMR-USB' "
-                     "section and a 'WMR100' section. Aborting ***\n\n")
-        config_dict.rename('WMR-USB', 'WMR100')
-    # If necessary, reflect the section name in the station type:
     try:
-        if config_dict['Station']['station_type'].strip() == 'WMR-USB':
-            config_dict['Station']['station_type'] = 'WMR100'
-    except KeyError:
-        pass
-    # Finally, the name of the driver has been changed
-    try:
-        if config_dict['WMR100']['driver'].strip() == 'weewx.wmrx':
-            config_dict['WMR100']['driver'] = 'weewx.drivers.wmr100'
-    except KeyError:
-        pass
-
-    # --- Oregon Scientific WMR9x8 series ---
-
-    # The section name has changed from WMR-918 to WMR9x8
-    if 'WMR-918' in config_dict:
-        if 'WMR9x8' in config_dict:
-            sys.exit("\n*** Configuration file has both a 'WMR-918' "
-                     "section and a 'WMR9x8' section. Aborting ***\n\n")
-        config_dict.rename('WMR-918', 'WMR9x8')
-    # If necessary, reflect the section name in the station type:
-    try:
-        if config_dict['Station']['station_type'].strip() == 'WMR-918':
-            config_dict['Station']['station_type'] = 'WMR9x8'
-    except KeyError:
-        pass
-    # Finally, the name of the driver has been changed
-    try:
-        if config_dict['WMR9x8']['driver'].strip() == 'weewx.WMR918':
-            config_dict['WMR9x8']['driver'] = 'weewx.drivers.wmr9x8'
-    except KeyError:
-        pass
-
-    # --- Fine Offset instruments ---
-
-    try:
-        if config_dict['FineOffsetUSB']['driver'].strip() == 'weewx.fousb':
-            config_dict['FineOffsetUSB']['driver'] = 'weewx.drivers.fousb'
-    except KeyError:
-        pass
-
-    # --- The weewx Simulator ---
-
-    try:
-        if config_dict['Simulator']['driver'].strip() == 'weewx.simulator':
-            config_dict['Simulator']['driver'] = 'weewx.drivers.simulator'
-    except KeyError:
-        pass
-
-
-
-    # Clean up the CWOP configuration
-    if 'StdRESTful' in config_dict and 'CWOP' in config_dict['StdRESTful']:
-        # Option "server" has become "server_list". It is also no longer
-        # included in the default weewx.conf, so just pop it.
         if 'server' in config_dict['StdRESTful']['CWOP']:
-            config_dict['StdRESTful']['CWOP'].pop('server')
+            # Save the old comments, as they are useful for setting up CWOP
+            comments = filter(lambda c : 'Comma' not in c, config_dict['StdRESTful']['CWOP'].comments.get('server'))
+            # Option "server" has become "server_list". It is also no longer
+            # included in the default weewx.conf, so just pop it.
+            config_dict['StdRESTful']['CWOP'].pop('server', None)
+            # Put the saved comments in front of the first scalar.
+            key = config_dict['StdRESTful']['CWOP'].scalars[0]
+            config_dict['StdRESTful']['CWOP'].comments[key] = comments
+    except KeyError:
+        pass
 
-    config_dict['version'] = '2.7.0'
+    config_dict['version'] = '2.6.0'
 
 
 def update_to_v30(config_dict):
