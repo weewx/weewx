@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 # postrm script for weewx debian package
 # Copyright 2013 Matthew Wall
 #
@@ -12,6 +12,9 @@
 # new-postrm abort-install
 # new-postrm abort-install old-version
 # new-postrm abort-upgrade old-version
+
+# abort if any command returns error
+set -e
 
 case "$1" in
 remove)
@@ -43,5 +46,7 @@ abort-upgrade)
         ;;
 
 esac
+
+#DEBHELPER#
 
 exit 0
