@@ -1,7 +1,16 @@
 weewx change history
 --------------------
 
-3.8.1 XX/XX/XXXX
+3.8.2 08/15/2018
+
+Added flag to weewx-multi init script to prevent systemd from breaking it.
+Thanks to users Timo, Glenn McKechnie, and Paul Oversmith.
+
+Fixed problem that caused wind direction in archive records to always be
+calculated in software, even with stations that provide it in hardware.
+Fixes issue #336.
+
+3.8.1 06/27/2018
 
 Map cc3000 backup battery to consBatteryVoltage and station battery to
 supplyVoltage to more accurately reflect the battery functions.
@@ -43,6 +52,9 @@ Windrun calculations now include the "current" record. Fixes issue #294.
 Fixed bug involving stations that report windGust, but not windGustDir, in
 their LOOP data (e.g., Fine Offset), which prevented the direction of max
 wind from appearing in statistics. Fixes issue #320.
+
+The engine now waits until the system time is greater than the creation time
+of the weewx.conf file before starting up. Fixes issue #330.
 
 
 3.8.0 11/22/2017

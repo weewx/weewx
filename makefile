@@ -34,7 +34,7 @@ help: info
 	@echo "       install  run the generic python install"
 	@echo "       version  get version from __init__ and insert elsewhere"
 	@echo ""
-	@echo "        readme  create README.txt suitable for distribution"
+	@echo "    readme.txt  create README.txt suitable for distribution"
 	@echo " deb-changelog  prepend stub changelog entry for deb"
 	@echo " rpm-changelog  prepend stub changelog entry for rpm"
 	@echo ""
@@ -48,7 +48,8 @@ help: info
 	@echo ""
 	@echo "    upload-src  upload the src package"
 	@echo "    upload-deb  upload the deb package"
-	@echo "    upload-rpm  upload the rpm package"
+	@echo "   upload-rhel  upload the redhat rpm package"
+	@echo "   upload-suse  upload the suse rpm package"
 	@echo " upload-readme  upload the README.txt"
 	@echo ""
 	@echo "   upload-docs  upload docs to weewx.com"
@@ -214,7 +215,7 @@ RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
 # add a skeleton entry to rpm changelog
 rpm-changelog:
-	if [ "`grep $(RPMVER)1 pkg/changelog.rpm`" = "" ]; then \
+	if [ "`grep $(RPMVER) pkg/changelog.rpm`" = "" ]; then \
   pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.rpm.new; \
   cat pkg/changelog.rpm >> pkg/changelog.rpm.new; \
   mv pkg/changelog.rpm.new pkg/changelog.rpm; \
@@ -253,6 +254,12 @@ check-rpm:
 
 upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+
+upload-rhel:
+	make upload-rpm RPMOS=.rhel
+
+upload-suse:
+	make upload-rpm RPMOS=.suse
 
 # shortcut to upload all packages from a single machine
 DEB_PKG=weewx_$(DEBVER)_$(DEBARCH).deb

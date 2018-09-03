@@ -1,3 +1,9 @@
+weewx (3.8.2-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 16 Aug 2018 11:40:52 -0400
+weewx (3.8.1-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Fri, 22 Jun 2018 17:48:03 -0400
 weewx (3.8.0-1) unstable; urgency=low
   * new upstream release
  -- mwall <mwall@users.sourceforge.net>  Tue, 21 Nov 2017 19:49:56 -0500

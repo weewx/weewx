@@ -38,10 +38,18 @@
 
 <h2 id="setup_prerequisites">Install Prerequisites</h2>
 
-<p>Ensure that Python2 is installed. Python 2.6 or 2.7 will work,
+<p>Ensure that Python 2 is installed. Python 2.6 or 2.7 will work,
     but Python 3 will not.</p>
 <pre class='tty cmd'>python -V</pre>
-<p>Then install required python packages using the package management software for your system (<em>e.g.</em>, <span class='code'>apt-get</span>, <span class='code'>yum</span>, <span class='code'>yast</span>) or the Python Package Management System (<span class='code'>pip</span>). Select the appropriate tab for specific instructions.</p>
+
+<p>If this does not work, then you may have to install Python 2. Instructions below.</p>
+
+<p>Install the required python packages using the package management software for your system
+   (<i>e.g.</i>,
+    <span class='code'>apt-get</span>,
+    <span class='code'>yum</span>,
+    <span class='code'>yast</span>) or the Python Package Management System
+   (<span class='code'>pip</span>). Select the appropriate tab for specific instructions.</p>
 
 <div class='tabs'>
     <div id='prereq-tab-debian' class='tab selected' onclick="showprereq('debian')">Debian <img src='images/logo-debian.png' class='thumbnail' alt=""/> <img src='images/logo-ubuntu.png' class='thumbnail' alt=""/> <img src='images/logo-mint.png' class='thumbnail' alt=""/></div>
@@ -53,11 +61,18 @@
     <div id='prereq-debian'>
         <pre class='tty'># debian, ubuntu, mint, raspbian
 
-# required packages:
+# for systems that do not have python 2 installed (for example, ubuntu 18.04 and later):
+<span class='cmd'>sudo apt-get install python</span>
+
+# install the python imaging library. try this first:
+<span class='cmd'>sudo apt-get install python-pil</span>
+# if that doesn't work, try this:
+<span class='cmd'>sudo apt-get install python-imaging</span>
+
+# other required packages:
 <span class="cmd">sudo apt-get install python-configobj
-sudo apt-get install python-cheetah
-sudo apt-get install python-imaging</span>
-          
+sudo apt-get install python-cheetah</span>
+
 # required if hardware is serial or USB:
 <span class="cmd">sudo apt-get install python-serial
 sudo apt-get install python-usb</span>

@@ -1,12 +1,14 @@
-Format: http://dep.debian.net/deps/dep5
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: weewx
 Source: http://www.weewx.com
 
 Files: *
 Copyright: Copyright (C) 2009-2016 Tom Keffer <tkeffer@gmail.com>
+License: GPL-3.0+
 
 Files: debian/*
 Copyright: Copyright (C) 2009-2016 Tom Keffer <tkeffer@gmail.com>
+License: GPL-3.0+
 
 License: GPL-3.0+
  This program is free software: you can redistribute it and/or modify

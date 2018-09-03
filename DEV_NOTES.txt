@@ -3,29 +3,35 @@ checklist for doing a release:
 1. Check weewx.conf for local changes.  In particular, check to make sure:
      1. WEEWX_ROOT points to /home/weewx
      2. debug=0 in weewx.conf
-2. Make sure the correct version has been entered:
+2. Make sure the version is correct
      1. weewx.__init__.py
-     2. weewx.conf
-     3. docs/*.htm
+     2. make version
 3. Make sure all changes have been logged
      1. docs/changes.txt
-     2. pkg/debian/changelog
-     3. pkg/changelog.rpm
-4. Make sure the upgrading guide has been updated if necessary.
-5. If working off a branch, do a merge to master.
-6. Create the tarball:  ./setup.py sdist
-7. Sanity check on production machine: unpack the tarball, install, run.
-8. Tag it:  git tag -a v1.3.1 -m "Version 1.3.1 release"
-9. Upload to weewx.com:
+     2. make deb-changelog
+     3. make rpm-changelog
+     4. docs/upgrading.htm
+4. Create the packages
+     1. make src-package
+     2. make deb-package
+     3. make rpm-package (redhat)
+     4. make rpm-package (suse)
+5. Sanity check on production machine: unpack the tarball, install, run
+6. Tag it
+     1. git tag -a v1.3.1 -m "Version 1.3.1 release"
+7. Upload to weewx.com
      1. make upload-src
      2. make upload-deb
      3. make upload-rpm RPMOS=.rhel
      4. make upload-rpm RPMOS=.suse
      5. make upload-readme
      6. make upload-docs
-10. Update the deb repository
-11. Run a backup on condor
-12. Announce the release to the weewx user's group.
+8. Update the deb repository
+     1. make pull-apt-repo
+     2. make update-apt-repo
+     3. make push-apt-repo
+     4. ssh weewx.com rsync -arv /var/www/html/aptly-test/ /var/www/html/aptly
+9. Announce the release to the weewx user's group.
 
 
 
@@ -43,7 +49,7 @@ git commit -a -m "release x.y.z"
 git push
 
 # generate the readme then upload it to development_versions
-make readme upload-readme
+make readme.txt upload-readme
 
 # build src, upload to development_versions
 rm -rf build dist
@@ -79,7 +85,7 @@ make push-apt-repo
 howto -------------------------------------------------------------------------
 
 create README.txt:
-  make readme
+  make readme.txt
 
 how to update the version number:
   perl -pi -e 's/__version__=".*"/__version__="x.y.z"/' bin/weewx/__init__.py
