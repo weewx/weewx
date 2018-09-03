@@ -39,6 +39,9 @@ WEEWX_USER=root:root
 WEEWX_BINDIR=/home/weewx/bin
 WEEWX_CFGDIR=/home/weewx
 
+# Try to keep systemd from screwing everything up
+export SYSTEMCTL_SKIP_REDIRECT=1
+
 # Read configuration variable file if it is present
 [ -r /etc/default/weewx-multi ] && . /etc/default/weewx-multi
 

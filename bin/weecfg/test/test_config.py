@@ -378,24 +378,20 @@ class ConfigTest(unittest.TestCase):
         check_fileend(out_str)
         out_str.seek(0)
 
-        fd_expected = open('expected/weewx_user_expected.conf')
-        N = 0
-        for expected in fd_expected:
-            actual = out_str.readline()
-            N += 1
-            if actual.startswith('version ='):
-                actual = actual[:10]
-                expected = expected[:10]
-            else:
-                # i would rather not strip, but damned if i can figure out
-                # the root cause of the failed tests that result otherwise.
-                actual = actual.strip()
-                expected = expected.strip()
-                self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
+        with open('expected/weewx_user_expected.conf') as fd_expected:
+            N = 0
+            for expected in fd_expected:
+                actual = out_str.readline()
+                N += 1
+                if actual.startswith('version ='):
+                    actual = actual[:10]
+                    expected = expected[:10]
+                else:
+                    self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
 
-        # Make sure there are no extra lines in the updated config:
-        more = out_str.readline()
-        self.assertEqual(more, '')
+            # Make sure there are no extra lines in the updated config:
+            more = out_str.readline()
+            self.assertEqual(more, '')
 
 class ExtensionUtilityTest(unittest.TestCase):
     """Tests of utility functions used by the extension installer."""
