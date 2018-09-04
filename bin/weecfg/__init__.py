@@ -23,8 +23,7 @@ from weewx import all_service_groups
 minor_comment_block = [""]
 major_comment_block = ["", "##############################################################################", ""]
 
-
-#==============================================================================
+# ==============================================================================
 
 us_group = {'group_altitude': 'foot',
             'group_degree_day': 'degree_F_day',
@@ -325,8 +324,6 @@ def update_config(config_dict):
 
     update_to_v26(config_dict)
 
-    update_to_v27(config_dict)
-
     update_to_v30(config_dict)
 
     update_to_v32(config_dict)
@@ -490,7 +487,7 @@ def update_to_v26(config_dict):
         if 'model' not in config_dict['WMR100']:
             config_dict['WMR100']['model'] = 'WMR100'
             config_dict['WMR100'].comments['model'] = \
-              ["", "    # The station model, e.g., WMR100, WMR100N, WMRS200"]
+                ["", "    # The station model, e.g., WMR100, WMR100N, WMRS200"]
     except KeyError:
         pass
 
@@ -498,7 +495,7 @@ def update_to_v26(config_dict):
         if 'model' not in config_dict['WMR200']:
             config_dict['WMR200']['model'] = 'WMR200'
             config_dict['WMR200'].comments['model'] = \
-              ["", "    # The station model, e.g., WMR200, WMR200A, Radio Shack W200"]
+                ["", "    # The station model, e.g., WMR200, WMR200A, Radio Shack W200"]
     except KeyError:
         pass
 
@@ -506,10 +503,9 @@ def update_to_v26(config_dict):
         if 'model' not in config_dict['WMR9x8']:
             config_dict['WMR9x8']['model'] = 'WMR968'
             config_dict['WMR9x8'].comments['model'] = \
-              ["", "    # The station model, e.g., WMR918, Radio Shack 63-1016"]
+                ["", "    # The station model, e.g., WMR918, Radio Shack 63-1016"]
     except KeyError:
         pass
-
 
     # Option METRICWX was introduced. Include it in the inline comment
     try:
@@ -546,8 +542,9 @@ def update_to_v26(config_dict):
         # have seen. This should get its position about right.
         last_group = 'prep_services'
 
-        # Set up a bunch of empty groups in the right order
-        for group in ['prep_services', 'process_services', 'archive_services',
+        # Set up a bunch of empty groups in the right order. Option 'data_services' was actually introduced
+        # in v3.0, but it can be included without harm here.
+        for group in ['prep_services', 'data_services', 'process_services', 'archive_services',
                       'restful_services', 'report_services']:
             config_dict['Engines']['WxEngine'][group] = list()
 
@@ -669,7 +666,7 @@ def update_to_v26(config_dict):
     try:
         if 'server' in config_dict['StdRESTful']['CWOP']:
             # Save the old comments, as they are useful for setting up CWOP
-            comments = filter(lambda c : 'Comma' not in c, config_dict['StdRESTful']['CWOP'].comments.get('server'))
+            comments = filter(lambda c: 'Comma' not in c, config_dict['StdRESTful']['CWOP'].comments.get('server'))
             # Option "server" has become "server_list". It is also no longer
             # included in the default weewx.conf, so just pop it.
             config_dict['StdRESTful']['CWOP'].pop('server', None)
@@ -683,7 +680,11 @@ def update_to_v26(config_dict):
 
 
 def update_to_v30(config_dict):
-    """Update a configuration file to V3.0"""
+    """Update a configuration file to V3.0
+
+     - Introduction of the new database structure
+     - Introduction of StdWXCalculate
+    """
 
     major, minor = get_version_info(config_dict)
 
@@ -692,21 +693,14 @@ def update_to_v30(config_dict):
 
     old_database = None
 
-    v3_additions = """[DataBindings]
-    # This section binds a data store to a database
-
-    [[wx_binding]]
-        # The database must match one of the sections in [Databases] 
-        database = archive_sqlite
-        # The name of the table within the database
-        table_name = archive
-        # The manager handles aggregation of data for historical summaries
-        manager = weewx.wxmanager.WXDaySummaryManager
-        # The schema defines the structure of the database.
-        # It is *only* used when the database is created.
-        schema = schemas.wview.schema
-
-"""
+    if 'StdReport' in config_dict:
+        # The key "data_binding" is now used instead of these:
+        config_dict['StdReport'].pop('archive_database', None)
+        config_dict['StdReport'].pop('stats_database', None)
+        if 'data_binding' not in config_dict['StdReport']:
+            config_dict['StdReport']['data_binding'] = 'wx_binding'
+            config_dict['StdReport'].comments['data_binding'] = \
+                ['', "    # The database binding indicates which data should be used in reports"]
 
     if 'Databases' in config_dict:
         # The stats database no longer exists. Remove it from the [Databases]
@@ -719,16 +713,76 @@ def update_to_v30(config_dict):
                 config_dict['Databases'][stanza].rename('database',
                                                         'database_name')
 
-    if 'StdReport' in config_dict:
-        # The key "data_binding" is now used instead of these:
-        config_dict['StdReport'].pop('archive_database', None)
-        config_dict['StdReport'].pop('stats_database', None)
-
     if 'StdArchive' in config_dict:
+        # Save the old database, if it exists
         old_database = config_dict['StdArchive'].pop('archive_database', None)
+        # Get rid of the no longer needed options
         config_dict['StdArchive'].pop('stats_database', None)
         config_dict['StdArchive'].pop('archive_schema', None)
         config_dict['StdArchive'].pop('stats_schema', None)
+        # Add the data_binding option
+        if 'data_binding' not in config_dict['StdArchive']:
+            config_dict['StdArchive']['data_binding'] = 'wx_binding'
+            config_dict['StdArchive'].comments['data_binding'] = \
+                ['', "    # The data binding to be used"]
+
+    if 'DataBindings' not in config_dict:
+        # Insert a [DataBindings] section. First create it
+        c = configobj.ConfigObj(StringIO.StringIO("""[DataBindings]
+            # This section binds a data store to a database
+
+            [[wx_binding]]
+                # The database must match one of the sections in [Databases] 
+                database = archive_sqlite
+                # The name of the table within the database
+                table_name = archive
+                # The manager handles aggregation of data for historical summaries
+                manager = weewx.wxmanager.WXDaySummaryManager
+                # The schema defines the structure of the database.
+                # It is *only* used when the database is created.
+                schema = schemas.wview.schema
+
+        """))
+        # Now merge it in:
+        config_dict.merge(c)
+        # For some reason, ConfigObj strips any leading comments. Put them back:
+        config_dict.comments['DataBindings'] = major_comment_block
+        # Move the new section to just before [Databases]
+        reorder_sections(config_dict, 'DataBindings', 'Databases')
+        # No comments between the [DataBindings] and [Databases] sections:
+        config_dict.comments['Databases'] = [""]
+        config_dict.inline_comments['Databases'] = []
+
+        # If there was an old database, add it in the new, correct spot:
+        if old_database:
+            try:
+                config_dict['DataBindings']['wx_binding']['database'] = old_database
+            except KeyError:
+                pass
+
+    # StdWXCalculate is new
+    if 'StdWXCalculate' not in config_dict:
+        c = configobj.ConfigObj(StringIO.StringIO("""[StdWXCalculate]
+    # Derived quantities are calculated by this service.  Possible values are:
+    #  hardware        - use the value provided by hardware
+    #  software        - use the value calculated by weewx
+    #  prefer_hardware - use value provide by hardware if available,
+    #                      otherwise use value calculated by weewx
+
+    pressure = prefer_hardware
+    barometer = prefer_hardware
+    altimeter = prefer_hardware
+    windchill = prefer_hardware
+    heatindex = prefer_hardware
+    dewpoint = prefer_hardware
+    inDewpoint = prefer_hardware
+    rainRate = prefer_hardware"""))
+        # Now merge it in:
+        config_dict.merge(c)
+        # For some reason, ConfigObj strips any leading comments. Put them back:
+        config_dict.comments['StdWXCalculate'] = major_comment_block
+        # Move the new section to just before [StdArchive]
+        reorder_sections(config_dict, 'StdWXCalculate', 'StdArchive')
 
     # Section ['Engines'] got renamed to ['Engine']
     if 'Engine' not in config_dict and 'Engines' in config_dict:
@@ -753,26 +807,6 @@ def update_to_v30(config_dict):
                 config_dict['Engine']['Services']['process_services'].append('weewx.wxservices.StdWXCalculate')
         except KeyError:
             pass
-
-    if 'DataBindings' not in config_dict:
-        # Insert a [DataBindings] section. First create it
-        c = configobj.ConfigObj(StringIO.StringIO(v3_additions))
-        # Now merge it in:
-        config_dict.merge(c)
-        # For some reason, ConfigObj strips any leading comments. Put them back:
-        config_dict.comments['DataBindings'] = major_comment_block
-        # Move the new section to just before [Databases]
-        reorder_sections(config_dict, 'DataBindings', 'Databases')
-        # No comments between the [DataBindings] and [Databases] sections:
-        config_dict.comments['Databases'] = [""]
-        config_dict.inline_comments['Databases'] = []
-
-        # If there was an old database, add it in the new, correct spot:
-        if old_database:
-            try:
-                config_dict['DataBindings']['wx_binding']['database'] = old_database
-            except KeyError:
-                pass
 
     config_dict['version'] = '3.0.0'
 
@@ -995,51 +1029,22 @@ def reorder_sections(config_dict, src, dst, after=False):
                            config_dict.sections[dst_idx + bump:]
 
 
-# def reorder_to_ref(config_dict, section_tuple=canonical_order):
-#     """Reorder any sections in concordance with a reference ordering.
-#
-#     See the definition for canonical_ordering for the details of the tuple
-#     used to describe a section.
-#     """
-#     if not len(section_tuple):
-#         return
-#     # Get the names of any subsections in the order they should be in:
-#     subsection_order = [x[0] for x in section_tuple[1]]
-#     # Reorder the subsections, then the scalars
-#     config_dict.sections = reorder(config_dict.sections, subsection_order)
-#     config_dict.scalars = reorder(config_dict.scalars, section_tuple[2])
-#
-#     # Now recursively go through each of my subsections,
-#     # allowing them to reorder their contents
-#     for ss_tuple in section_tuple[1]:
-#         ss_name = ss_tuple[0]
-#         if ss_name in config_dict:
-#             reorder_to_ref(config_dict[ss_name], ss_tuple)
-#
-#
-# def reorder(name_list, ref_list):
-#     """Reorder the names in name_list, according to a reference list."""
-#     result = []
-#     # Use the ordering in ref_list, to reassemble the name list:
-#     for name in ref_list:
-#         # These always come at the end
-#         if name in ['FTP', 'RSYNC']:
-#             continue
-#         if name in name_list:
-#             result.append(name)
-#     # For any that were not in the reference list and are left over, tack
-#     # them on to the end:
-#     for name in name_list:
-#         if name not in ref_list:
-#             result.append(name)
-#     # Finally, add these, so they are at the very end
-#     for name in ref_list:
-#         if name in name_list and name in ['FTP', 'RSYNC']:
-#             result.append(name)
-#
-#     # Make sure I have the same number I started with
-#     assert (len(name_list) == len(result))
-#     return result
+def reorder(name_list, ref_list):
+    """Reorder the names in name_list, according to a reference list."""
+    result = []
+    # Use the ordering in ref_list, to reassemble the name list:
+    for name in ref_list:
+        # These always come at the end
+        if name in ['FTP', 'RSYNC']:
+            continue
+        if name in name_list:
+            result.append(name)
+    # Finally, add these, so they are at the very end
+    for name in ref_list:
+        if name in name_list and name in ['FTP', 'RSYNC']:
+            result.append(name)
+
+    return result
 
 
 def remove_and_prune(a_dict, b_dict):
@@ -1438,5 +1443,3 @@ def get_extension_installer(extension_installer_dir):
         sys.path = old_path
 
     return (install_module.__file__, installer)
-
-
