@@ -927,7 +927,10 @@ def update_to_v32(config_dict):
 
 
 def update_to_v36(config_dict):
-    """Update a configuration file to V3.6"""
+    """Update a configuration file to V3.6
+
+    - New subsection [[Calculations]]
+    """
 
     major, minor = get_version_info(config_dict)
 
@@ -935,9 +938,9 @@ def update_to_v36(config_dict):
         return
 
     # Perform the following only if the dictionary has a StdWXCalculate section
-    if config_dict.get('StdWXCalculate'):
+    if 'StdWXCalculate' in config_dict:
         # No need to update if it already has a 'Calculations' section:
-        if not config_dict['StdWXCalculate'].get('Calculations'):
+        if 'Calculations' not in config_dict:
             # Save the comment attached to the first scalar
             try:
                 first = config_dict['StdWXCalculate'].scalars[0]
