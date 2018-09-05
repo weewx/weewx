@@ -304,6 +304,19 @@ class ConfigTest(unittest.TestCase):
 
         self._check_against_expected(config_dict, 'expected/weewx30_expected.conf')
 
+    def test_upgrade_v32(self):
+
+        # Start with the Version 3.0 weewx.conf file:
+        config_dict = configobj.ConfigObj('weewx30.conf')
+
+        # Upgrade the V3.0 configuration dictionary to V3.2:
+        weecfg.update_to_v32(config_dict)
+
+        with open('expected/weewx32_expected.conf', 'wb') as fd:
+            config_dict.write(fd)
+
+        self._check_against_expected(config_dict, 'expected/weewx32_expected.conf')
+
     # def test_upgrade_36(self):
     #
     #     # Start with the Version 3.5 weewx.conf file:

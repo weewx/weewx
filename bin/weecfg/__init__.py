@@ -812,7 +812,11 @@ def update_to_v30(config_dict):
 
 
 def update_to_v32(config_dict):
-    """Update a configuration file to V3.2"""
+    """Update a configuration file to V3.2
+
+    - Introduction of section [DatabaseTypes]
+    - New option in [Databases] points to DatabaseType
+    """
 
     major, minor = get_version_info(config_dict)
 
@@ -836,6 +840,7 @@ def update_to_v32(config_dict):
         config_dict['DatabaseTypes'] = {
             'SQLite': {'driver': 'weedb.sqlite',
                        'SQLITE_ROOT': '%(WEEWX_ROOT)s/archive'}}
+        config_dict['DatabaseTypes'].comments['SQLite'] = ['', '    # Defaults for SQLite databases']
         config_dict.interpolation = save
         try:
             root = config_dict['Databases']['archive_sqlite']['root']
@@ -846,6 +851,8 @@ def update_to_v32(config_dict):
             # we can keep the interpolation used to specify SQLITE_ROOT above.
             if dirname != config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT']:
                 config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'] = dirname
+            config_dict['DatabaseTypes']['SQLite'].comments['SQLITE_ROOT'] = \
+                ['        # Directory in which the database files are located']
             config_dict['Databases']['archive_sqlite']['database_name'] = os.path.basename(fullpath)
             config_dict['Databases']['archive_sqlite']['database_type'] = 'SQLite'
             config_dict['Databases']['archive_sqlite'].pop('root', None)
@@ -858,14 +865,19 @@ def update_to_v32(config_dict):
             assert (config_dict['Databases']['archive_mysql']['driver'] == 'weedb.mysql')
         except KeyError:
             pass
-        config_dict['DatabaseTypes']['MySQL'] = {'driver': 'weedb.mysql',
-                                                 'host': 'localhost',
-                                                 'user': 'weewx',
-                                                 'password': 'weewx'}
+        config_dict['DatabaseTypes']['MySQL'] = {}
+        config_dict['DatabaseTypes'].comments['MySQL'] = ['', '    # Defaults for MySQL databases']
         try:
-            config_dict['DatabaseTypes']['MySQL']['host'] = config_dict['Databases']['archive_mysql']['host']
-            config_dict['DatabaseTypes']['MySQL']['user'] = config_dict['Databases']['archive_mysql']['user']
-            config_dict['DatabaseTypes']['MySQL']['password'] = config_dict['Databases']['archive_mysql']['password']
+            config_dict['DatabaseTypes']['MySQL']['host'] = \
+                config_dict['Databases']['archive_mysql'].get('host', 'localhost')
+            config_dict['DatabaseTypes']['MySQL']['user'] = \
+                config_dict['Databases']['archive_mysql'].get('user', 'weewx')
+            config_dict['DatabaseTypes']['MySQL']['password'] = \
+                config_dict['Databases']['archive_mysql'].get('password', 'weewx')
+            config_dict['DatabaseTypes']['MySQL']['driver'] = 'weedb.mysql'
+            config_dict['DatabaseTypes']['MySQL'].comments['host']=["        # The host where the database is located"]
+            config_dict['DatabaseTypes']['MySQL'].comments['user']=["        # The user name for logging into the host"]
+            config_dict['DatabaseTypes']['MySQL'].comments['password']=["        # The password for the user name"]
             config_dict['Databases']['archive_mysql'].pop('host', None)
             config_dict['Databases']['archive_mysql'].pop('user', None)
             config_dict['Databases']['archive_mysql'].pop('password', None)
@@ -873,6 +885,13 @@ def update_to_v32(config_dict):
             config_dict['Databases']['archive_mysql']['database_type'] = 'MySQL'
         except KeyError:
             pass
+
+        # Move the new section to just before [Engine]
+        reorder_sections(config_dict, 'DatabaseTypes', 'Engine')
+        # Add a major comment deliminator:
+        config_dict.comments['DatabaseTypes'] = \
+            major_comment_block + \
+            ['#   This section defines defaults for the different types of databases', '']
 
     # Version 3.2 introduces the 'enable' keyword for RESTful protocols. Set
     # it appropriately
@@ -895,6 +914,8 @@ def update_to_v32(config_dict):
             c['StdRESTful'][service]['enable'] = 'true'
         else:
             c['StdRESTful'][service]['enable'] = 'false'
+        # Add a comment for it
+        c['StdRESTful'][service].comments['enable'] = ['', '    # Set to true to enable this uploader']
 
     set_enable(config_dict, 'AWEKAS', 'username')
     set_enable(config_dict, 'CWOP', 'station')
