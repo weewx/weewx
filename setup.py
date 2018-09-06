@@ -194,9 +194,7 @@ class weewx_install_data(install_data):
 
         # Set the WEEWX_ROOT
         config_dict['WEEWX_ROOT'] = os.path.normpath(install_dir)
-        # Finally, reorder it to the canonical form
-        weecfg.reorder_to_ref(config_dict)
-    
+
         # NB: use mkstemp instead of NamedTemporaryFile because we need to
         # do the delete (windows gets mad otherwise) and there is no delete
         # parameter in NamedTemporaryFile in python 2.5.
